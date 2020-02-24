@@ -1,0 +1,266 @@
+---
+layout: default
+title: Adding a new fuzzer
+parent: Getting started
+nav_order: 3
+permalink: /getting-started/adding-a-new-fuzzer/
+---
+
+# Adding a new fuzzer
+{: .no_toc}
+
+This page explains how to add your fuzzer so it can be benchmarked using
+FuzzBench.
+
+- TOC
+{:toc}
+
+## Create fuzzer directory
+
+Create a subdirectory under the root `fuzzers` directory. The name of this
+subdirectory will be the name of the fuzzer. The fuzzer name can contain
+alphanumeric characters and underscores and must be a valid python module.
+
+```bash
+$ export FUZZER_NAME=<your_fuzzer_name>
+$ cd fuzzers
+$ mkdir $FUZZER_NAME
+```
+
+You can verify the name of your fuzzer is valid by running `make run-presubmit`
+from the root of the project.
+
+## Create fuzzer files
+
+### builder.Dockerfile
+
+This file defines the image that will build your fuzzer and benchmarks for use
+with your fuzzer. For most projects, this will look like:
+
+```dockerfile
+ARG parent_image=gcr.io/fuzzbench/base-builder
+FROM $parent_image                         # Base builder image (Ubuntu 16.04, with latest Clang).
+
+RUN apt-get update && \                    # Install any system dependencies to build your fuzzer.
+    apt-get install -y pkg1 pkg2
+
+RUN git clone <git_url> /fuzzer_src        # Clone your fuzzer's sources.
+
+RUN cd /fuzzer_src && make                 # Build your fuzzer using its preferred build system.
+
+# Build your `FUZZER_LIB`.
+# See section below on "What is `FUZZER_LIB`?" for more details.
+RUN git clone <git_url> /fuzzer_lib_src
+
+RUN cd /fuzzer_lib_src && clang++ fuzzer_lib.o
+```
+
+Example [afl](https://github.com/google/fuzzbench/blob/master/fuzzers/afl/builder.Dockerfile).
+
+### runner.Dockerfile
+
+This file defines the image that will be used to run benchmarks with your
+fuzzer. Keep this as lightweight as possible, as this helps spin up trial
+instances faster.
+
+```dockerfile
+FROM gcr.io/fuzzbench/base-runner   # Base runner image (Ubuntu 16.04).
+
+RUN apt-get update && \                    # Install any runtime dependencies for your fuzzer.
+    apt-get install pkg1 pkg2
+```
+
+Example [honggfuzz](https://github.com/google/fuzzbench/blob/master/fuzzers/honggfuzz/runner.Dockerfile).
+
+As you can see by looking at the runner.Dockerfile of other projects, in most
+cases only the `FROM` line is needed since most fuzzers do not have any special
+runtime dependencies.
+
+### fuzzer.py
+
+This file specifies how to build benchmarks using your fuzzer. We hope to have
+accommodated most common use cases but please open up an issue if you're having
+trouble building benchmarks with your fuzzer.
+In your fuzzer directory, create a Python file named `fuzzer.py`. It must
+contain two functions:
+```
+def build():
+```
+A function that accepts no arguments and returns nothing. This function must do
+two things:
+1. Build the benchmark.
+This is usually done by setting the necessary environment variables, including
+`CFLAGS`, `CXXFLAGS`, `CC`, `CXX` and `FUZZER_LIB`. Note that `CFLAGS` and
+`CXXFLAGS` should be appended to (using `utils.append_flags`) in most cases, and
+not set directly (i.e. overwritten).
+1. Copy everything your fuzzer needs to run to the `$OUT` directory.
+
+```python
+def fuzz(fuzz_config):
+```
+This function accepts a dictionary `fuzz_config` as an argument and returns
+ nothing. `fuzz_config` contains keys, `'input_corpus'`, `'output_corpus'` and
+`'target_binary'`. `fuzz` should use the values of these keys to fuzz the
+`target_binary` using your fuzzer.
+
+We have provided an example `fuzzer.py` with comments explaining the necessary
+parts below:
+
+
+```python
+import os
+import subprocess
+import ...  # Import any other python libs you need.
+
+# Helper library that contains important functions for building.
+from fuzzers import utils
+
+def build():
+    """Build benchmark and copy fuzzer to $OUT."""
+    flags = [
+        # List of flags to append to CFLAGS, CXXFLAGS during
+        # benchmark compilation.
+    ]
+    utils.append_flags('CFLAGS', flags)     # Adds flags to existing CFLAGS.
+    utils.append_flags('CXXFLAGS', flags)   # Adds flags to existing CXXFLAGS.
+
+    os.environ['CC'] = 'clang'              # C compiler.
+    os.environ['CXX'] = 'clang++'           # C++ compiler.
+
+    os.environ['FUZZER_LIB'] = 'fuzzer.a'   # Path to your compiled fuzzer lib.
+
+    # Helper function that actually builds benchmarks using the environment you
+    # have prepared.
+    utils.build_benchmark()
+
+    # You should copy any fuzzer binaries that you need at runtime to the
+    # $OUT directory. E.g. for AFL:
+    # shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
+
+
+def fuzz(fuzz_config):
+    """Run fuzzer."""
+    # Directory containing the initial seed corpus for the benchmark.
+    input_corpus = fuzz_config['input_corpus']
+
+    # Output directory to place the newly generated corpus from fuzzer run.
+    output_corpus = fuzz_config['output_corpus']
+
+    # Absolute path to the fuzz target binary.
+    target_binary = fuzz_config['target_binary']
+
+    # Run your fuzzer on the benchmark.
+    subprocess.call([
+        your_fuzzer,
+        '<flag-for-input-corpus>',
+        input_corpus,
+        '<flag for-output-corpus',
+        output_corpus,
+        '<other command-line options>',
+        target_binary,
+    ])
+```
+
+Example: [afl](https://github.com/google/fuzzbench/blob/master/fuzzers/afl/fuzzer.py).
+
+### What is `FUZZER_LIB`?
+
+`FUZZER_LIB` is a library that gets linked against the benchmark which allows
+your fuzzer to fuzz the benchmark.
+For fuzzers like libFuzzer which run entirely in process, `FUZZER_LIB` is the
+fuzzer itself.
+For out-of-process fuzzers like AFL, `FUZZER_LIB` is a shim that allows them to
+fuzz our benchmarks which have libFuzzer harnesses. In a libFuzzer harness:
+fuzzer data is passed to targeted code through a
+function called `LLVMFuzzerTestOneInput`:
+
+```c
+LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size);
+```
+Therefore, the shim, in this case, takes data from AFL and passes it to
+`LLVMFuzzerTestOneInput`.
+
+If, like AFL, your fuzzer has a [persistent mode](https://lcamtuf.blogspot.com/2015/06/new-in-afl-persistent-mode.html),
+your `FUZZER_LIB` should be a library that will call `LLVMFuzzerTestOneInput`
+in a loop during fuzzing.
+For example, in [afl's builder.Dockerfile](https://github.com/google/fuzzbench/blob/master/fuzzers/afl/builder.Dockerfile)
+you can see how [afl_driver.cpp](https://github.com/llvm/llvm-project/blob/master/compiler-rt/lib/fuzzer/afl/afl_driver.cpp#L223-L276)
+is built. In
+[afl's fuzzer.py](https://github.com/google/fuzzbench/blob/master/fuzzers/afl/fuzzer.py)
+this gets used as the `FUZZER_LIB`.
+
+If your fuzzer does not support persistent mode, you can use the
+[StandAloneFuzzTargetMain.cpp](https://github.com/llvm/llvm-project/blob/master/compiler-rt/lib/fuzzer/standalone/StandaloneFuzzTargetMain.c)
+file as your `FUZZER_LIB`. This file takes files as arguments, reads them, and
+invokes `LLVMFuzzerTestOneInput` using their data as input
+(See [Eclipser](https://github.com/google/fuzzbench/blob/master/fuzzers/eclipser/builder.Dockerfile)
+for an example of this). This can be used for a fuzzer that must restart the
+target after executing each input.
+
+### Reusing existing integrations
+
+Most fuzzers, such as FairFuzz are based off other fuzzers such as AFL.
+In many cases such as these, the derivative fuzzer can simply reuse the
+original's integration. For example, FairFuzz's
+[fuzzer.py](https://github.com/google/fuzzbench/blob/master/fuzzers/fairfuzz/fuzzer.py)
+imports AFL's `build` and `fuzz` functions and calls them from its own.
+And its [builder.Dockerfile](https://github.com/google/fuzzbench/blob/master/fuzzers/fairfuzz/builder.Dockerfile)
+is essentially a copy of AFL's [builder.Dockerfile](https://github.com/google/fuzzbench/blob/master/fuzzers/AFL/builder.Dockerfile)
+that simply clones FairFuzz from a different source (Dockerfile functionality
+should be copied to be reused, inheriting using `FROM` can't be used for this
+purpose).
+
+In the case of AFL, we have tried to write the `fuzzer.py` file to be modular
+enough to support different usecases than needing the exact same binaries and
+fuzzing invocation as AFL. Example:
+[aflplusplus](https://github.com/google/fuzzbench/blob/master/fuzzers/aflplusplus/fuzzer.py).
+
+## Testing it out
+
+Once you've got a fuzzer integrated, you should test that it builds and runs
+successfully:
+
+* Build a specific benchmark:
+
+```shell
+$ export FUZZER_NAME=afl
+$ export BENCHMARK_NAME=libpng-1.2.56
+$ make build-$FUZZER_NAME-$BENCHMARK_NAME
+```
+
+* Run the fuzzer in the docker image:
+
+```shell
+$ make run-$FUZZER_NAME-$BENCHMARK_NAME
+```
+
+* Building all benchmarks for a fuzzer:
+
+```shell
+$ make build-$FUZZER_NAME-all
+```
+
+*Tips*:
+* To debug fuzzer run-time issues, you can either:
+
+  * Start a new shell and run fuzzer there:
+
+  ```shell
+  $ make debug-$FUZZER_NAME-$BENCHMARK_NAME
+  ```
+
+  * Or, debug an existing fuzzer run in the `make run-*` docker container:
+
+  ```shell
+  $ docker container ls
+  $ docker exec -ti <container-id> /bin/bash
+
+  # E.g. check corpus.
+  $ ls /out/corpus
+  ```
+
+* To do builds in parallel, pass -j <number_of_parallel_jobs> to make:
+
+  ```shell
+  $ make -j6 build-$FUZZER_NAME-all
+  ```

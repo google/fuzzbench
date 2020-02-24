@@ -1,0 +1,144 @@
+<!--
+     Copyright 2020 Google LLC
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{{ experiment.name }} results</title>
+
+        <!-- Import Materialize CSS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+    </head>
+<body>
+    <div class="container"><div class="row"><div class="col s12 m10 l10">
+
+        <h1 class="center-align brown-text text-darken-3">
+            {{ experiment.name }} report
+        </h1>
+
+        <div id="experiment" class="section scrollspy">
+            <h2 class="green-text text-darken-3">experiment summary</h2>
+            Aggregate critical difference diagram showing average ranks when
+            ranking fuzzers on each benchmark according to their median reached
+            coverages. Critical difference is based on Friedman/Nemenyi post-hoc
+            test.
+
+            <div class="row">
+                <div class="col s7 offset-s3">
+                    <img class="responsive-img materialboxed"
+                         src="{{ experiment.critical_difference_plot }}">
+                </div>
+            </div>
+
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Median coverages on each benchmark
+                    </div>
+                    <div class="collapsible-body">
+                        {{ experiment.summary_table.to_html() }}
+                    </div>
+                </li>
+            </ul>
+        </div> <!-- id="experiment" -->
+
+        {% for benchmark in experiment.benchmarks %}
+
+        <div id="{{ benchmark.name }}" class="section scrollspy">
+
+            <h2 class="green-text text-darken-3">{{ benchmark.name }} summary</h2>
+
+            <div class="row">
+                <div class="col s6">
+                    <h5 class="center-align">Ranking by median reached coverage</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.ranking_plot }}">
+                </div>
+                <div class="col s6">
+                    <h5 class="center-align">Reached coverage distribution</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.violin_plot }}">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12">
+                    <h5 class="center-align">Mean coverage growth over time</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.coverage_growth_plot }}">
+                    <div class="center-align">* The error bands show the 95% confidence interval around the mean coverage.</div>
+                </div>
+            </div>
+
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Sample statistics and statistical significance
+                    </div>
+                    <div class="collapsible-body">
+
+                        <h5 class="center-align">Coverage sample statistics</h5>
+                        {{ benchmark.summary_table.to_html() }}
+                        <br>
+
+                        <div class="row">
+                            <div class="col s6 offset-s3">
+                                <h5 class="center-align">Mann-Whitney U test</h4>
+                                    <img class="responsive-img materialboxed"
+                                         src="{{ benchmark.mann_whitney_plot }}">
+                                    The table summarizes the p values of
+                                    pairwise Mann-Whitney U tests.
+                                    Green cells indicate that the reached
+                                    coverage distribution of a given fuzzer pair
+                                    is significantly different.
+                            </div>
+                        </div> <!-- row -->
+
+                    </div>
+                </li>
+            </ul>
+
+
+        </div> <!-- id="{{ benchmark.name }}" -->
+        {% endfor %}
+
+    </div> <!-- class="col" -->
+
+    <div class="col hide-on-med-and-down l2">
+        <ul class="section table-of-contents">
+            <li><a href="#experiment">benchmark</a></li>
+            {% for benchmark in experiment.benchmarks %}
+            <li><a href="#{{ benchmark.name }}">{{ benchmark.name }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    </div> <!-- class="row" -->
+    </div> <!-- class="container" -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+     M.AutoInit();
+     document.addEventListener('DOMContentLoaded', function() {
+         var toc = document.querySelectorAll('.table-of-contents');
+         M.Pushpin.init(toc);
+
+         var scrollspy_elems = document.querySelectorAll('.scrollspy');
+         var scrollspy_options = {scrollOffset: 0};
+         M.ScrollSpy.init(scrollspy_elems, scrollspy_options);
+     });
+    </script>
+</body>
+</html>

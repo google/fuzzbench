@@ -1,0 +1,3 @@
+[submodule "third_party/oss-fuzz"]
+	path = third_party/oss-fuzz
+	url = https://github.com/google/oss-fuzz.git

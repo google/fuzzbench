@@ -1,0 +1,397 @@
+diff --git a/compiler-rt/lib/fuzzer/FuzzerCorpus.h b/compiler-rt/lib/fuzzer/FuzzerCorpus.h
+index 6a95ef3a8e6..2922cb4da01 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerCorpus.h
++++ b/compiler-rt/lib/fuzzer/FuzzerCorpus.h
+@@ -21,6 +21,7 @@
+ #include <numeric>
+ #include <random>
+ #include <unordered_set>
++#include <unordered_map>
+ 
+ namespace fuzzer {
+ 
+@@ -38,18 +39,28 @@ struct InputInfo {
+   bool HasFocusFunction = false;
+   Vector<uint32_t> UniqFeatureSet;
+   Vector<uint8_t> DataFlowTraceForFocusFunction;
++  // Power schedule.
++  bool NeedsUpdate;
++  double Energy;
++  long double Sum_Y;
++  std::unordered_map<size_t, size_t> RareFeaturesFreqMap;
+ };
+ 
+ class InputCorpus {
+   static const size_t kFeatureSetSize = 1 << 21;
+  public:
++  size_t g_NumExecutedMutations = 0;
+   InputCorpus(const std::string &OutputCorpus) : OutputCorpus(OutputCorpus) {
+     memset(InputSizesPerFeature, 0, sizeof(InputSizesPerFeature));
+     memset(SmallestElementPerFeature, 0, sizeof(SmallestElementPerFeature));
++    memset(FeaturesFreqMap, 0, sizeof(FeaturesFreqMap));
+   }
+   ~InputCorpus() {
+-    for (auto II : Inputs)
++    for (auto II : Inputs) {
++      II->RareFeaturesFreqMap.clear();
+       delete II;
++    }
++    RareFeatures.clear();
+   }
+   size_t size() const { return Inputs.size(); }
+   size_t SizeInBytes() const {
+@@ -70,6 +81,12 @@ class InputCorpus {
+         Res = std::max(Res, II->U.size());
+     return Res;
+   }
++  size_t NumSingletons() const {
++    size_t singletons = 0;
++    for (uint32_t Idx : RareFeatures)
++      if (FeaturesFreqMap[Idx] == 1) singletons ++;
++    return singletons;
++  }
+ 
+   size_t NumInputsThatTouchFocusFunction() {
+     return std::count_if(Inputs.begin(), Inputs.end(), [](const InputInfo *II) {
+@@ -99,6 +116,10 @@ class InputCorpus {
+     II.MayDeleteFile = MayDeleteFile;
+     II.UniqFeatureSet = FeatureSet;
+     II.HasFocusFunction = HasFocusFunction;
++    // Assign max. energy
++    II.Energy = RareFeatures.empty() ? 1.0 : logl(RareFeatures.size());
++    II.Sum_Y = RareFeatures.size();
++    II.NeedsUpdate = false;
+     std::sort(II.UniqFeatureSet.begin(), II.UniqFeatureSet.end());
+     ComputeSHA1(U.data(), U.size(), II.Sha1);
+     auto Sha1Str = Sha1ToString(II.Sha1);
+@@ -111,7 +132,7 @@ class InputCorpus {
+     // But if we don't, we'll use the DFT of its base input.
+     if (II.DataFlowTraceForFocusFunction.empty() && BaseII)
+       II.DataFlowTraceForFocusFunction = BaseII->DataFlowTraceForFocusFunction;
+-    UpdateCorpusDistribution();
++    DistributionNeedsUpdate = true;
+     PrintCorpus();
+     // ValidateFeatureSet();
+     return &II;
+@@ -162,12 +183,13 @@ class InputCorpus {
+     Hashes.insert(Sha1ToString(II->Sha1));
+     II->U = U;
+     II->Reduced = true;
+-    UpdateCorpusDistribution();
++    DistributionNeedsUpdate = true;
+   }
+ 
+   bool HasUnit(const Unit &U) { return Hashes.count(Hash(U)); }
+   bool HasUnit(const std::string &H) { return Hashes.count(H); }
+   InputInfo &ChooseUnitToMutate(Random &Rand) {
++    UpdateCorpusDistribution();
+     InputInfo &II = *Inputs[ChooseUnitIdxToMutate(Rand)];
+     assert(!II.U.empty());
+     return II;
+@@ -210,10 +232,63 @@ class InputCorpus {
+     InputInfo &II = *Inputs[Idx];
+     DeleteFile(II);
+     Unit().swap(II.U);
++    II.Energy = 0.0;
++    II.NeedsUpdate = false;
++    DistributionNeedsUpdate = true;
+     if (FeatureDebug)
+       Printf("EVICTED %zd\n", Idx);
+   }
+ 
++  void AddRareFeature(size_t Idx) {
++    // Maintain *at least* 100 rare features
++    // AND if the top100 rare features have an abundance below 0xFF,
++    //     then maintain even more features
++
++    // Remove most abundant feature until we are "under the line".
++    while (RareFeatures.size() > 100 && MostAbundant_RareFeature > 0xFF) {
++      size_t st_mostAbundant_RareFeature_Idx = RareFeatures[0]; // 1st most abd feature index
++      size_t nd_mostAbundant_RareFeature_Idx = RareFeatures[0]; // 2nd most abd feature index
++
++      // Note: Optimally we'd keep and ordered_map to avoid looping all the
++      // time. But since this is supposed to be quite small, no big deal.
++      for (size_t Idx2 : RareFeatures) {
++        if (FeaturesFreqMap[Idx2] >= FeaturesFreqMap[st_mostAbundant_RareFeature_Idx]) {
++          nd_mostAbundant_RareFeature_Idx = st_mostAbundant_RareFeature_Idx;
++          st_mostAbundant_RareFeature_Idx = Idx2;
++        }
++      }
++
++      // Remove most abundant rare feature
++      RareFeatures.erase(remove(RareFeatures.begin(), RareFeatures.end(), st_mostAbundant_RareFeature_Idx), RareFeatures.end());
++      for (auto II2 : Inputs) {
++        auto it = II2->RareFeaturesFreqMap.find(st_mostAbundant_RareFeature_Idx);
++        if (it != II2->RareFeaturesFreqMap.end()) {
++          II2->RareFeaturesFreqMap.erase(st_mostAbundant_RareFeature_Idx);
++          II2->NeedsUpdate = true;
++        }
++      }
++
++      // Set 2nd most abundant as the new most abundant fnd_eature count
++      MostAbundant_RareFeature = FeaturesFreqMap[nd_mostAbundant_RareFeature_Idx];
++    }
++
++    // Handle collisions
++    FeaturesFreqMap[Idx] = 0;
++    for (auto II : Inputs) II->RareFeaturesFreqMap.erase(Idx);
++
++    RareFeatures.push_back(Idx);
++
++    // Make that feature locally undiscovered, globally discovered
++    for (auto II : Inputs) {
++      if (II->Energy > 0.0) {
++        II->Sum_Y += 1;
++        II->Energy += logl(II->Sum_Y) / II->Sum_Y;
++      }
++    }
++
++    DistributionNeedsUpdate = true;
++  }
++
+   bool AddFeature(size_t Idx, uint32_t NewSize, bool Shrink) {
+     assert(NewSize);
+     Idx = Idx % kFeatureSetSize;
+@@ -228,6 +303,7 @@ class InputCorpus {
+           DeleteInput(OldIdx);
+       } else {
+         NumAddedFeatures++;
++        AddRareFeature(Idx);
+       }
+       NumUpdatedFeatures++;
+       if (FeatureDebug)
+@@ -239,6 +315,34 @@ class InputCorpus {
+     return false;
+   }
+ 
++  void UpdateFeatureFrequency(InputInfo *II, size_t Idx) {
++    Idx = Idx % kFeatureSetSize;
++
++    size_t freq = FeaturesFreqMap[Idx]++;
++
++    // skip if abundant
++    if (freq > MostAbundant_RareFeature
++        || std::find(RareFeatures.begin(), RareFeatures.end(), Idx)
++           == RareFeatures.end())
++      return;
++
++    // update global hit count
++    if (freq == MostAbundant_RareFeature)
++      MostAbundant_RareFeature++;
++
++    // update local hit count
++    if (II) {
++      auto it = II->RareFeaturesFreqMap.find(Idx);
++      if (it == II->RareFeaturesFreqMap.end()) {
++        II->RareFeaturesFreqMap[Idx] = 1;
++      } else {
++        II->RareFeaturesFreqMap[Idx] = it->second + 1;
++      }
++      II->NeedsUpdate = true;
++    }
++
++  }
++
+   size_t NumFeatures() const { return NumAddedFeatures; }
+   size_t NumFeatureUpdates() const { return NumUpdatedFeatures; }
+ 
+@@ -262,6 +366,52 @@ private:
+     }
+   }
+ 
++  void UpdateEnergy(InputInfo *II) {
++    if (!II->NeedsUpdate || II->Energy == 0.0)
++      return;
++
++    II->NeedsUpdate = false;
++    II->Energy = 0.0;
++    II->Sum_Y = 0;
++
++    long double Y, Z;
++    long double sum_Y = 0, sum_Z = 0;
++    long double energy = 0.0L;
++
++    // locally discovered, globally rare features
++    for (auto it = II->RareFeaturesFreqMap.begin(); it != II->RareFeaturesFreqMap.end(); ++it ) {
++      Y = (long double) it->second + 1;
++      energy -= Y * logl(Y);
++      sum_Y += Y;
++    }
++
++    // locally undiscovered, globally rare features
++    //   energy -= 0; // since logl(1.0) == 0)
++    sum_Y += (RareFeatures.size() - II->RareFeaturesFreqMap.size());
++
++    // locally abundant feature
++    Y = (long double) II->NumExecutedMutations + 1;
++    energy -= Y * logl(Y);
++    sum_Y += Y;
++
++    // used during incremental update when new feature is discovered
++    II->Sum_Y = sum_Y;
++
++    if (sum_Y != 0)
++      energy = (energy / sum_Y) + logl(sum_Y);
++
++    //if ((double) energy <= 0.0) {
++    //  if (II->NumExecutedMutations > 1000) {
++    //    II->Energy = 0.0;
++    //  } else {
++    //    II->Energy = RareFeatures.empty() ? 1.0 : logl(RareFeatures.size());
++    //    II->NeedsUpdate = true;
++    //  }
++    //} else {
++      II->Energy = (double) energy;
++    //}
++  }
++
+   // Updates the probability distribution for the units in the corpus.
+   // Must be called whenever the corpus or unit weights are changed.
+   //
+@@ -269,15 +419,49 @@ private:
+   //
+   // Hypothesis: inputs with infrequent features are more interesting.
+   void UpdateCorpusDistribution() {
++    // Skip update if no seeds or rare features were added/deleted.
++    // Sparse updates for local change of feature frequencies, i.e., randomly do not skip.
++    if (!DistributionNeedsUpdate && random() % 10000) return;
++    DistributionNeedsUpdate = false;
++
+     size_t N = Inputs.size();
+     assert(N);
+     Intervals.resize(N + 1);
+     Weights.resize(N);
+     std::iota(Intervals.begin(), Intervals.end(), 0);
+-    for (size_t i = 0; i < N; i++)
+-      Weights[i] = Inputs[i]->NumFeatures
++
++    bool aggressiveSchedule = rand() % 100 > 20; // Zero energy to seeds with below average entropy.
++
++    long double avgEnergy = 0;
++    for (auto II : Inputs) {
++      UpdateEnergy(II);
++      avgEnergy += II->Energy * II->NumExecutedMutations / (long double) g_NumExecutedMutations;
++    }
++
++    bool vanillaSchedule = true;
++    for (size_t i = 0; i < N; i++) {
++      Weights[i] = Inputs[i]->NumFeatures == 0
++                     || Inputs[i]->NumExecutedMutations / 20 > g_NumExecutedMutations / Inputs.size()
++                     || (aggressiveSchedule && Inputs[i]->Energy < avgEnergy)
++                   ? 0.
++                   : aggressiveSchedule ? Inputs[i]->Energy - avgEnergy : Inputs[i]->Energy;
++
++      // Fall back to vanilla schedule if energy for all seeds is zero,
++      //   or a seed exercises the focus function.
++      if (Weights[i] > 0.0) vanillaSchedule = false;
++      if (Inputs[i]->HasFocusFunction) {
++        vanillaSchedule = true;
++        break;
++      }
++    }
++
++    if (vanillaSchedule) {
++      for (size_t i = 0; i < N; i++)
++        Weights[i] = Inputs[i]->NumFeatures
+                        ? (i + 1) * (Inputs[i]->HasFocusFunction ? 1000 : 1)
+                        : 0.;
++    }
++
+     if (FeatureDebug) {
+       for (size_t i = 0; i < N; i++)
+         Printf("%zd ", Inputs[i]->NumFeatures);
+@@ -302,6 +486,11 @@ private:
+   uint32_t InputSizesPerFeature[kFeatureSetSize];
+   uint32_t SmallestElementPerFeature[kFeatureSetSize];
+ 
++  size_t MostAbundant_RareFeature = 0xFF;
++  bool DistributionNeedsUpdate = true;
++  size_t FeaturesFreqMap[kFeatureSetSize];
++  Vector<size_t> RareFeatures;
++
+   std::string OutputCorpus;
+ };
+ 
+diff --git a/compiler-rt/lib/fuzzer/FuzzerInternal.h b/compiler-rt/lib/fuzzer/FuzzerInternal.h
+index 31096ce804b..8157a9cebdb 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerInternal.h
++++ b/compiler-rt/lib/fuzzer/FuzzerInternal.h
+@@ -95,7 +95,7 @@ private:
+   void InterruptCallback();
+   void MutateAndTestOne();
+   void PurgeAllocator();
+-  void ReportNewCoverage(InputInfo *II, const Unit &U);
++  void ReportNewCoverage(bool reduced, InputInfo *II, const Unit &U);
+   void PrintPulseAndReportSlowInput(const uint8_t *Data, size_t Size);
+   void WriteUnitToFileWithPrefix(const Unit &U, const char *Prefix);
+   void PrintStats(const char *Where, const char *End = "\n", size_t Units = 0,
+diff --git a/compiler-rt/lib/fuzzer/FuzzerLoop.cpp b/compiler-rt/lib/fuzzer/FuzzerLoop.cpp
+index 451a4c17316..d70cffba155 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerLoop.cpp
++++ b/compiler-rt/lib/fuzzer/FuzzerLoop.cpp
+@@ -339,6 +339,7 @@ void Fuzzer::PrintStats(const char *Where, const char *End, size_t Units,
+       else
+         Printf("/%zdMb", N >> 20);
+     }
++    Printf(" singltn: %zd", Corpus.NumSingletons());
+     if (size_t FF = Corpus.NumInputsThatTouchFocusFunction())
+       Printf(" focus: %zd", FF);
+   }
+@@ -475,6 +476,7 @@ bool Fuzzer::RunOne(const uint8_t *Data, size_t Size, bool MayDeleteFile,
+   TPC.CollectFeatures([&](size_t Feature) {
+     if (Corpus.AddFeature(Feature, Size, Options.Shrink))
+       UniqFeatureSetTmp.push_back(Feature);
++    Corpus.UpdateFeatureFrequency(II, Feature);
+     if (Options.ReduceInputs && II)
+       if (std::binary_search(II->UniqFeatureSet.begin(),
+                              II->UniqFeatureSet.end(), Feature))
+@@ -602,10 +604,10 @@ void Fuzzer::PrintStatusForNewUnit(const Unit &U, const char *Text) {
+   }
+ }
+ 
+-void Fuzzer::ReportNewCoverage(InputInfo *II, const Unit &U) {
++void Fuzzer::ReportNewCoverage(bool reduced, InputInfo *II, const Unit &U) {
+   II->NumSuccessfullMutations++;
+   MD.RecordSuccessfulMutationSequence();
+-  PrintStatusForNewUnit(U, II->Reduced ? "REDUCE" : "NEW   ");
++  PrintStatusForNewUnit(U, reduced ? "REDUCE" : "NEW   ");
+   WriteToOutputCorpus(U);
+   NumberOfNewUnitsAdded++;
+   CheckExitOnSrcPosOrItem(); // Check only after the unit is saved to corpus.
+@@ -693,19 +695,22 @@ void Fuzzer::MutateAndTestOne() {
+     assert(NewSize <= CurrentMaxMutationLen && "Mutator return oversized unit");
+     Size = NewSize;
+     II.NumExecutedMutations++;
++    Corpus.g_NumExecutedMutations++;
+ 
+     bool FoundUniqFeatures = false;
++    size_t old_size = Corpus.size();
+     bool NewCov = RunOne(CurrentUnitData, Size, /*MayDeleteFile=*/true, &II,
+                          &FoundUniqFeatures);
+     TryDetectingAMemoryLeak(CurrentUnitData, Size,
+                             /*DuringInitialCorpusExecution*/ false);
+     if (NewCov) {
+-      ReportNewCoverage(&II, {CurrentUnitData, CurrentUnitData + Size});
++      ReportNewCoverage(old_size == Corpus.size(), &II, {CurrentUnitData, CurrentUnitData + Size});
+       break;  // We will mutate this input more in the next rounds.
+     }
+     if (Options.ReduceDepth && !FoundUniqFeatures)
+       break;
+   }
++  II.NeedsUpdate = true;
+ }
+ 
+ void Fuzzer::PurgeAllocator() {
+diff --git a/compiler-rt/lib/fuzzer/build.sh b/compiler-rt/lib/fuzzer/build.sh
+index 504e54e3a81..cf0690271e4 100755
+--- a/compiler-rt/lib/fuzzer/build.sh
++++ b/compiler-rt/lib/fuzzer/build.sh
+@@ -2,7 +2,7 @@
+ LIBFUZZER_SRC_DIR=$(dirname $0)
+ CXX="${CXX:-clang}"
+ for f in $LIBFUZZER_SRC_DIR/*.cpp; do
+-  $CXX -g -O2 -fno-omit-frame-pointer -std=c++11 $f -c &
++  $CXX -stdlib=libc++ -g -O2 -fno-omit-frame-pointer -std=c++11 $f -c &
+ done
+ wait
+ rm -f libFuzzer.a
