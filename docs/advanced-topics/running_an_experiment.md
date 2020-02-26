@@ -2,7 +2,7 @@
 layout: default
 title: Running an experiment
 parent: Advanced topics
-nav_order: 1
+nav_order: 3
 permalink: /advanced-topics/running-an-experiment/
 ---
 
@@ -11,6 +11,10 @@ permalink: /advanced-topics/running-an-experiment/
 This page explains how to run an experiment. It requires using Google Cloud.
 Because most "users" of FuzzBench will be using it as a service and not running
 it themselves, we consider this an advanced topic.
+This page assumes a certain level of knowledge about Google Cloud and FuzzBench.
+If you haven't already, please check out the [guide on setting up a Google Cloud
+Project]({{ site.baseurl }}/advanced-topic/setting-up-a-google-cloud-project/)
+to run FuzzBench.
 
 - TOC
 {:toc}
@@ -26,13 +30,6 @@ dispatcher instance on Google Compute Engine which:
 This page will walkthrough on how to use `run_experiment.py`.
 
 # run_experiment.py
-
-This page assumes a certain level of knowledge about Google Cloud and FuzzBench.
-If you haven't already, please check out the guide on setting up a Google Cloud
-Project to run FuzzBench.
-{% comment %}
-TODO(metzman): Write this doc.
-{% endcomment %}
 
 ## Experiment configuration file
 
