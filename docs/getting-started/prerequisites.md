@@ -81,3 +81,11 @@ presubmit checks.
 ```bash
 $ make run-presubmit
 ```
+
+### Formatting
+
+You can format your changes using the following command:
+
+```bash
+$ make run-format
+```

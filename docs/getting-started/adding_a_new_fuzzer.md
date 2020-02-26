@@ -10,7 +10,8 @@ permalink: /getting-started/adding-a-new-fuzzer/
 {: .no_toc}
 
 This page explains how to add your fuzzer so it can be benchmarked using
-FuzzBench.
+FuzzBench. Before you begin make sure you've followed the
+[prerequisites]({{ site.baseurl }}/getting-started/prerequisites/).
 
 - TOC
 {:toc}
@@ -264,3 +265,7 @@ $ make build-$FUZZER_NAME-all
   ```shell
   $ make -j6 build-$FUZZER_NAME-all
   ```
+
+* Run `make run-presubmit` to lint your code and ensure all tests are passing.
+
+* Run `make run-format` to format your code.

@@ -73,7 +73,7 @@ Example: [libxml2](https://github.com/google/fuzzbench/blob/master/benchmarks/li
 
 This file builds the fuzz target for your benchmark, taking into account
 the compiler options - `CC`, `CXX`, `CFLAGS`, `CXXFLAGS` and the fuzzer library
-`FUZZER_LIB` ([what?]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/#what-is-fuzzer_lib))
+`FUZZER_LIB` ([explanation]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/#what-is-fuzzer_lib))
 as input.
 
 Once the build is finished, copy the fuzz target binary, any library
