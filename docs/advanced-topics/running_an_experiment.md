@@ -9,12 +9,15 @@ permalink: /advanced-topics/running-an-experiment/
 # Running an experiment
 
 This page explains how to run an experiment. It requires using Google Cloud.
-Because most "users" of FuzzBench will be using it as a service and not running
-it themselves, we consider this an advanced topic.
+Note that most users of FuzzBench should simply
+[add a fuzzer]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/) and use
+the service, we don't recommend running experiments on your own. This document
+is intended for those wishing to validate/reproduce results.
 This page assumes a certain level of knowledge about Google Cloud and FuzzBench.
-If you haven't already, please check out the [guide on setting up a Google Cloud
+If you haven't already, please follow the [guide on setting up a Google Cloud
 Project]({{ site.baseurl }}/advanced-topics/setting-up-a-google-cloud-project/)
-to run FuzzBench.
+to run FuzzBench as this document assumes you already have set up your cloud
+project.
 
 - TOC
 {:toc}
@@ -36,7 +39,7 @@ This page will walkthrough on how to use `run_experiment.py`.
 You need to create an experiment configuration yaml file.
 This will contain the configuration parameters for experiments that do not
 change very often.
-Below is an example configuation file with explanations of each required
+Below is an example configuration file with explanations of each required
 parameter.
 
 ```yaml
@@ -44,23 +47,32 @@ parameter.
 trials: 5
 
 # The amount of time in seconds that each trial is run for.
+# 1 day = 24 * 60 * 60 = 86400
 max_total_time: 86400
 
 # The name of your Google Cloud project.
-cloud_project: fuzzbench
+cloud_project: $PROJECT_NAME
 
 # The Google Compute Engine zone to run the experiment in.
-cloud_compute_zone: us-central1-a
+cloud_compute_zone: $PROJECT_REGION
 
 # The Google Cloud Storage bucket that will store most of the experiment data.
-cloud_experiment_bucket: gs://fuzzbench-data
+cloud_experiment_bucket: gs://$DATA_BUCKET_NAME
 
 # The bucket where HTML reports and summary data will be stored.
-cloud_web_bucket: gs://fuzzbench-reports
+cloud_web_bucket: gs://$REPORT_BUCKET_NAME
 
 # The connection to use to connect to the Google Cloud SQL instance.
-cloud_sql_instance_connection_name: "fuzzbench:us-central1:postgres-experiment-db=tcp:5432"
+cloud_sql_instance_connection_name: "$PROJECT_NAME:$PROJECT_REGION:$POSTGRES_INSTANCE=tcp:5432"
 ```
+
+**NOTE* The values `$PROJECT_NAME`, `$PROJECT_REGION` `$DATA_BUCKET_NAME`,
+`$REPORT_BUCKET_NAME` `$POSTGRES_INSTANCE` refer to the values of those
+environment variables that were set in the [guide on setting up a Google Cloud
+Project]({{ site.baseurl }}/advanced-topics/setting-up-a-google-cloud-project/).
+For example if `$PROJECT_NAME=my-fuzzbench-project` use `my-fuzzbench-project`
+and not `$PROJECT_NAME`.
+
 ## Setting the database password
 
 Find the password for the PostgreSQL instance you are using in your
@@ -68,7 +80,7 @@ experiment config.
 Set it using the environment variable `POSTGRES_PASSWORD` like so:
 
 ```bash
-export POSTGRESS_PASSWORD="my-super-secret-password"
+export POSTGRES_PASSWORD="my-super-secret-password"
 ```
 
 ## Benchmarks

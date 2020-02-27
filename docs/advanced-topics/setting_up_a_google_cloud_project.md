@@ -6,23 +6,27 @@ nav_order: 2
 permalink: /advanced-topics/setting-up-a-google-cloud-project/
 ---
 
-Currently, fuzzbench requires Google Cloud to run (though this
-may change, see
-[FAQ]({{ site.baseurl }}faq/#how-can-i-reproduce-the-results-or-run-fuzzbench-myself)).
+**NOTE**: Most users of FuzzBench should simply [add a fuzzer]({{ site.baseurl
+}}/getting-started/adding-a-new-fuzzer/) and use the service, we don't recommend
+running experiments on your own. This document is intended for those wishing to
+validate/reproduce results.
+
 This page will walk you through how to set up a Google Cloud Project to run an
-experiment for the first time.
+experiment for the first time. Currently, FuzzBench requires Google Cloud to run
+(though this may change, see
+[FAQ]({{ site.baseurl }}/faq/#how-can-i-reproduce-the-results-or-run-fuzzbench-myself)).
 
 ## Create the Project
 
 * [Create a new Google Cloud Project](https://console.cloud.google.com/projectcreate).
 
-* Set $PROJECT_NAME in the enviornment:
+* Set `$PROJECT_NAME` in the environment:
 
 ```bash
 export PROJECT_NAME=<your-project-name>
 ```
 
-For the rest of this document, replace $PROJECT_NAME with the name of the
+For the rest of this document, replace `$PROJECT_NAME` with the name of the
 project you created.
 
 * [Install Google Cloud SDK](https://console.cloud.google.com/sdk/install).
@@ -33,27 +37,32 @@ project you created.
 gcloud config set project $PROJECT_NAME
 ```
 
+* Enable billing when prompted.
+
 ## Set up the database
 
-* [Enable the Compute Engine API](https://bconsole.cloud.google.com/apis/library/compute.googleapis.com?q=compute%20engine)
+* [Enable the Compute Engine API](https://console.cloud.google.com/apis/library/compute.googleapis.com?q=compute%20engine)
 
 * Create a PostgreSQL (we use PostgreSQL 11) instance using
 [Google Cloud SQL](https://console.cloud.google.com/sql/create-instance-postgres).
 This will take a few minutes.
+We recommend using "us-central1" as the region and zone "a" as the zone.
+Certain links provided in this document assume "us-central1".
 Note that the region you choose should be the region you use later for running
 experiments.
 
-* For the rest of this document, we will use $POSTGRES_INSTANCE,
-$POSTGRES_REGION, and $POSTGRES_PASSWORD to refer to the name of the PostgreSQL
-instance you created, its region and its password. Set them in your environment:
+* For the rest of this document, we will use `$POSTGRES_INSTANCE`,
+`$PROJECT_REGION`, and `$POSTGRES_PASSWORD` to refer to the name of the
+PostgreSQL instance you created, its region, and its password. Set them in your
+environment:
 
 ```bash
+export PROJECT_REGION=<your-postgres-region>
 export POSTGRES_INSTANCE=<your-postgres-instance-name>
-export POSTGRES_REGION=<your-postgres-region>
-export POSTGRES_PASSWORD=<your-postgress-password>
+export POSTGRES_PASSWORD=<your-postgres-password>
 ```
 
-* [Download and install cloud_sql_proxy](https://console.cloud.google.com/sql/docs/postgres/sql-proxy)
+* [Download and install cloud_sql_proxy](https://cloud.google.com/sql/docs/postgres/sql-proxy)
 
 ```bash
 wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O cloud_sql_proxy
@@ -62,7 +71,7 @@ wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O cloud_sql_pro
 * Connect to your postgres instance using cloud_sql_proxy:
 
 ```bash
-./cloud_sql_proxy -instances=$PROJECT_NAME:$POSTGRES_REGION:$POSTGRES_NAME=tcp:5432
+./cloud_sql_proxy -instances=$PROJECT_NAME:$PROJECT_REGION:$POSTGRES_INSTANCE=tcp:5432
 ```
 
 * (optional, but recommended) Connect to your instance to ensure you
@@ -82,16 +91,20 @@ PYTHONPATH=. alembic upgrade head
 
 If this command fails, double check you set `POSTGRES_PASSWORD`.
 
-## Google Cloud Storage Buckets
+## Google Cloud Storage buckets
 
 * Set up Google Cloud Storage Buckets:
 
 ```bash
+# Bucket for storing experiment artifacts such as corpora, coverage binaries
+# crashes etc.
 gsutil mb gs://$DATA_BUCKET_NAME
+
+# Bucket for storing HTML reports.
 gsutil mb gs://$REPORT_BUCKET_NAME
 ```
 
-## Dispatcher Image
+## Dispatcher image and container registry setup
 
 * Build dispatcher image:
 
@@ -109,11 +122,49 @@ docker push gcr.io/$PROJECT_NAME/dispatcher-image
 
 * [Make the registry's visibility public](https://console.cloud.google.com/gcr/settings).
 
-## Enable APIs
+## Enable required APIs
 
-* [Enable the IAM API](https://console.cloud.google.com/apis/api/iam.googleapis.com/landing)
+* [Enable the IAM API](https://console.cloud.google.com/apis/api/iam.googleapis.com/landing).
+This allows FuzzBench to authenticate to various Google Cloud APIs and services.
 
-* [Enable the error reporting API](https://console.cloud.google.com/apis/library/clouderrorreporting.googleapis.com)
+* [Enable the error reporting API](https://console.cloud.google.com/apis/library/clouderrorreporting.googleapis.com).
+This allows experiments to report errors to the
+[Google Cloud error reporting dashboard](https://console.cloud.google.com/errors).
+
+* [Enable Cloud Build API](https://console.cloud.google.com/apis/library/cloudbuild.googleapis.com).
+This allows experiments to build docker images using Google Cloud Build, a
+platform optimized for doing so.
+
+* [Enable Cloud SQL Admin API](https://console.cloud.google.com/apis/library/sqladmin.googleapis.com)
+This allows experiments to connect to the database.
+
+## Configure networking
+
+* Go to the networking page for the network you want to run your experiment in.
+[Here](https://cloud.console.google.com/networking/subnetworks/details/us-central1/default)
+is the networking page for the default network in "us-central1". It is best if
+you use `$POSTGRES_REGION` for this.
+
+* Click the edit icon. Turn "Private Google access" to "On". Press "Save"
+
+* This allows the trial runner instances to use Google Cloud APIs since they do
+  not have external IP addresses.
+
+## Request CPU quota increase
+
+* FuzzBench uses a 96 core Google Compute Engine instance for measuring trials
+and a single core instance for each trial in your experiment.
+
+* Go to the quotas page for the region you will use for experiments.
+[This](https://console.cloud.google.com/iam-admin/quotas?location=us-central1)
+is the quotas page for the "us-central1" region.
+
+* Select the "Compute Engine API" "CPUs" quota, fill out contact details and
+request a quota increase. We recommend requesting a quota limit of "1000" as
+it is likely to be approved and is sufficiently large for reproducing results in
+a reasonable amount of time.
+
+* Wait until you receive an email confirming the quota increase.
 
 ## Run an experiment
 
