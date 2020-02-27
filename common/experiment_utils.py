@@ -16,8 +16,10 @@
 import os
 import posixpath
 
+IS_LOCAL = bool(os.getenv('IS_LOCAL'))
+
 # Time interval for collecting experiment data (e.g. corpus, crashes).
-SNAPSHOT_PERIOD = 15 * 60  # Seconds.
+SNAPSHOT_PERIOD = 1 * 60  # Seconds.
 
 
 def get_work_dir():
