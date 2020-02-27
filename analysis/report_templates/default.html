@@ -20,6 +20,8 @@
 
         <!-- Import Materialize CSS -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+        <!-- Import Materialize Icons -->
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     </head>
 <body>
@@ -28,6 +30,27 @@
         <h1 class="center-align brown-text text-darken-3">
             {{ experiment.name }} report
         </h1>
+
+        <div class="card-panel amber lighten-5">
+            <div class="row">
+                <div class="col s1">
+                    <i class="medium material-icons">warning</i>
+                </div>
+                <div class="col s11">
+                    <span class="black-text">
+                        Please consider this as a preliminary report to
+                        demonstrate the capabilities of FuzzBench. While we have
+                        tried our best, we have not confirmed that we configured
+                        everything correctly. We are hoping to work together
+                        with the community to validate results and improve the
+                        set of fuzzers, benchmarks, and their configurations in
+                        the future.
+                        See <a href="https://google.github.io/fuzzbench/faq">FAQ</a>
+                        for more details.
+                    </span>
+                </div>
+            </div>
+        </div>
 
         <div id="experiment" class="section scrollspy">
             <h2 class="green-text text-darken-3">experiment summary</h2>
