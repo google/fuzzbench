@@ -13,7 +13,7 @@ Because most "users" of FuzzBench will be using it as a service and not running
 it themselves, we consider this an advanced topic.
 This page assumes a certain level of knowledge about Google Cloud and FuzzBench.
 If you haven't already, please check out the [guide on setting up a Google Cloud
-Project]({{ site.baseurl }}/advanced-topic/setting-up-a-google-cloud-project/)
+Project]({{ site.baseurl }}/advanced-topics/setting-up-a-google-cloud-project/)
 to run FuzzBench.
 
 - TOC

@@ -117,4 +117,4 @@ docker push gcr.io/$PROJECT_NAME/dispatcher-image
 
 ## Run an experiment
 
-* Follow the [guide on running an experiment]({{ site.baseurl }}/advanced-topic/running-an-experiment/)
+* Follow the [guide on running an experiment]({{ site.baseurl }}/advanced-topics/running-an-experiment/)
