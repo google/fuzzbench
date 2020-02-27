@@ -125,3 +125,5 @@ $ export BENCHMARK_NAME=libpng-1.2.56
 $ make build-$FUZZER_NAME-$BENCHMARK_NAME
 $ make run-$FUZZER_NAME-$BENCHMARK_NAME
 ```
+
+If everything works, submit the integration code via a GitHub pull request.

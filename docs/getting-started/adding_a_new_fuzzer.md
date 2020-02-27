@@ -264,6 +264,8 @@ $ make build-$FUZZER_NAME-all
   $ make -j6 build-$FUZZER_NAME-all
   ```
 
+* Run `make run-format` to format your code.
+
 * Run `make run-presubmit` to lint your code and ensure all tests are passing.
 
-* Run `make run-format` to format your code.
+* Submit the integration code in a GitHub pull request.
