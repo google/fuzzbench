@@ -92,7 +92,9 @@ def dispatcher_main():
     # Set this here because we get failures if we do it in measurer for some
     # reason.
     multiprocessing.set_start_method('spawn')
-    builder.gcb_build_base_images()
+
+    # !!!
+    # builder.gcb_build_base_images()
 
     experiment_config_file_path = os.path.join(fuzzer_config_utils.get_dir(),
                                                'experiment.yaml')
