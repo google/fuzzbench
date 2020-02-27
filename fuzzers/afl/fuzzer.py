@@ -100,12 +100,8 @@ def run_afl_fuzz(input_corpus,
     subprocess.call(command, stdout=output_stream, stderr=output_stream)
 
 
-def fuzz(fuzz_config):
+def fuzz(input_corpus, output_corpus, target_binary):
     """Run afl-fuzz on target."""
-    input_corpus = fuzz_config['input_corpus']
-    output_corpus = fuzz_config['output_corpus']
-    target_binary = fuzz_config['target_binary']
-
     prepare_fuzz_environment(input_corpus)
 
     run_afl_fuzz(input_corpus, output_corpus, target_binary)

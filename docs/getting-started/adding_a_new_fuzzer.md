@@ -97,12 +97,11 @@ not set directly (i.e. overwritten).
 1. Copy everything your fuzzer needs to run to the `$OUT` directory.
 
 ```python
-def fuzz(fuzz_config):
+def fuzz(input_corpus, output_corpus, target_binary):
 ```
-This function accepts a dictionary `fuzz_config` as an argument and returns
- nothing. `fuzz_config` contains keys, `'input_corpus'`, `'output_corpus'` and
-`'target_binary'`. `fuzz` should use the values of these keys to fuzz the
-`target_binary` using your fuzzer.
+A function that accepts three arguments `'input_corpus'`, `'output_corpus'` and
+`'target_binary'` and returns nothing. `fuzz` should use these arguments to
+fuzz the `target_binary` using your fuzzer.
 
 We have provided an example `fuzzer.py` with comments explaining the necessary
 parts below:
@@ -139,17 +138,16 @@ def build():
     # shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
 
 
-def fuzz(fuzz_config):
-    """Run fuzzer."""
-    # Directory containing the initial seed corpus for the benchmark.
-    input_corpus = fuzz_config['input_corpus']
+def fuzz(input_corpus, output_corpus, target_binary):
+    """Run fuzzer.
 
-    # Output directory to place the newly generated corpus from fuzzer run.
-    output_corpus = fuzz_config['output_corpus']
-
-    # Absolute path to the fuzz target binary.
-    target_binary = fuzz_config['target_binary']
-
+    Arguments:
+      input_corpus: Directory containing the initial seed corpus for
+                    the benchmark.
+      output_corpus: Output directory to place the newly generated corpus
+                     from fuzzer run.
+      target_binary: Absolute path to the fuzz target binary.
+    """
     # Run your fuzzer on the benchmark.
     subprocess.call([
         your_fuzzer,
