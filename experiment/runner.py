@@ -17,6 +17,7 @@
 from collections import namedtuple
 import os
 import posixpath
+import shlex
 import shutil
 import subprocess
 import sys
@@ -170,11 +171,6 @@ def run_fuzzer(max_total_time, log_filename):
     _unpack_clusterfuzz_seed_corpus(target_binary, input_corpus)
     _clean_seed_corpus(input_corpus)
 
-    config = {
-        'input_corpus': input_corpus,
-        'output_corpus': output_corpus,
-        'target_binary': target_binary,
-    }
     if max_total_time is None:
         logs.warning('max_total_time is None. Fuzzing indefinitely.')
 
@@ -187,7 +183,12 @@ def run_fuzzer(max_total_time, log_filename):
             new_process.execute([
                 'nice', '-n',
                 str(0 - runner_niceness), 'python3', '-u', '-c',
-                'import fuzzer; fuzzer.fuzz({})'.format(config)
+                ('import fuzzer; '
+                 'fuzzer.fuzz('
+                 "'{input_corpus}', '{output_corpus}', '{target_binary}')"
+                ).format(input_corpus=shlex.quote(input_corpus),
+                         output_corpus=shlex.quote(output_corpus),
+                         target_binary=shlex.quote(target_binary))
             ],
                                 timeout=max_total_time,
                                 output_files=[log_file],

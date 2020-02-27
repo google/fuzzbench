@@ -40,12 +40,8 @@ def build():
     utils.build_benchmark()
 
 
-def fuzz(fuzz_config):
+def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    input_corpus = fuzz_config['input_corpus']
-    output_corpus = fuzz_config['output_corpus']
-    target_binary = fuzz_config['target_binary']
-
     # Create an encoded temp corpus directory.
     encoded_temp_corpus = os.path.join(os.path.dirname(input_corpus),
                                        'temp-corpus')

@@ -44,9 +44,7 @@ def test_run_fuzzer_log_file(fs):
         runner.run_fuzzer(max_total_time, log_filename)
         assert mocked_popen.commands == [[
             'nice', '-n', '5', 'python3', '-u', '-c', "import fuzzer; "
-            "fuzzer.fuzz({'input_corpus': '/out/seeds', "
-            "'output_corpus': '/out/corpus', "
-            "'target_binary': '/out/fuzz-target'})"
+            "fuzzer.fuzz('/out/seeds', '/out/corpus', '/out/fuzz-target')"
         ]]
     assert os.path.exists(log_filename)
 

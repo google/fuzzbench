@@ -41,12 +41,8 @@ def build():
     utils.build_benchmark()
 
 
-def fuzz(fuzz_config):
+def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    input_corpus = fuzz_config['input_corpus']
-    output_corpus = fuzz_config['output_corpus']
-    target_binary = fuzz_config['target_binary']
-
     # Start up the binary directly for libFuzzer.
     print('[run_fuzzer] Running target with libFuzzer')
 
