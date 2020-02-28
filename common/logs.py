@@ -156,6 +156,8 @@ def log(logger, severity, message, *args, extras=None):
     then |extras| is also logged (in addition to default extras)."""
     message = str(message)
     if utils.is_local():
+        if extras:
+            message += ' extras: ' + str(extras)
         logging.log(severity, message, *args)
         return
     if logger is None:
@@ -183,18 +185,18 @@ def error(message, *args, extras=None, logger=None):
     def _report_error_with_retries(message):
         _error_reporting_client.report(message)
 
-    if utils.is_local():
-        logging.error(message, *args)
-        return
     if not any(sys.exc_info()):
-        _report_error_with_retries(message % args)
+        if not utils.is_local():
+            _report_error_with_retries(message % args)
         log(logger, logging.ERROR, message, *args, extras=extras)
         return
     # I can't figure out how to include both the message and the exception
     # other than this having the exception message preceed the log message
     # (without using private APIs).
-    _report_error_with_retries(traceback.format_exc() + '\nMessage: ' +
-                               message % args)
+    if not utils.is_local():
+        _report_error_with_retries(traceback.format_exc() + '\nMessage: ' +
+                                   message % args)
+
     extras = {} if extras is None else extras
     extras['traceback'] = traceback.format_exc()
     log(logger, logging.ERROR, message, *args, extras=extras)

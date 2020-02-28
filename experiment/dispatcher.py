@@ -36,7 +36,7 @@ from experiment import measurer
 from experiment import reporter
 from experiment import scheduler
 
-LOOP_WAIT_SECONDS = 5 * 60
+LOOP_WAIT_SECONDS = 5
 
 # TODO(metzman): Convert more uses of os.path.join to exp_path.path.
 
@@ -69,10 +69,14 @@ class Experiment:
     """Class representing an experiment."""
 
     def __init__(self, experiment_config_filepath: str):
+        print(experiment_config_filepath)
         self.config = yaml_utils.read(experiment_config_filepath)
 
         benchmarks = self.config['benchmarks'].split(',')
-        self.benchmarks = builder.build_all_measurers(benchmarks)
+
+        # !!!
+        # self.benchmarks = builder.build_all_measurers(benchmarks)
+        self.benchmarks = benchmarks #builder.build_all_measurers(benchmarks)
 
         self.fuzzers = [
             fuzzer_config_utils.get_fuzzer_name(filename) for filename in
@@ -95,6 +99,9 @@ def dispatcher_main():
 
     # !!!
     # builder.gcb_build_base_images()
+    db_utils.initialize()
+    from database import models
+    models.Base.metadata.create_all(db_utils.engine)
 
     experiment_config_file_path = os.path.join(fuzzer_config_utils.get_dir(),
                                                'experiment.yaml')
@@ -106,7 +113,8 @@ def dispatcher_main():
         fuzzer_config_utils.get_underlying_fuzzer_name(f)
         for f in experiment.fuzzers
     })
-    builder.build_all_fuzzer_benchmarks(unique_fuzzers, experiment.benchmarks)
+    #!!!
+    # builder.build_all_fuzzer_benchmarks(unique_fuzzers, experiment.benchmarks)
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])
 
@@ -114,7 +122,7 @@ def dispatcher_main():
     scheduler_loop_thread = threading.Thread(target=scheduler.schedule_loop,
                                              args=(experiment.config,))
     scheduler_loop_thread.start()
-    measurer_loop_thread = threading.Thread(
+    measurer_loop_thread = multiprocessing.Process(
         target=measurer.measure_loop,
         args=(
             experiment.config['experiment'],
