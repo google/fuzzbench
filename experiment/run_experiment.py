@@ -30,6 +30,7 @@ from common import filesystem
 from common import gcloud
 from common import gsutil
 from common import logs
+from common import new_process
 from common import utils
 from common import yaml_utils
 from experiment import stop_experiment
@@ -188,17 +189,24 @@ def start_experiment(experiment_name: str, config_filename: str,
             file_handle.write('fuzzer: ' + fuzzer)
 
     # Make sure we can connect to database.
-    if 'POSTGRES_PASSWORD' not in os.environ:
+    local_experiment = config.get('local_experiment')
+    if 'POSTGRES_PASSWORD' not in os.environ and not local_experiment:
         raise Exception('Must set POSTGRES_PASSWORD environment variable.')
 
-    gcloud.set_default_project(config['cloud_project'])
+    # !!!
+    # gcloud.set_default_project(config['cloud_project'])
 
-    dispatcher = Dispatcher(config)
+    dispatcher = get_dispatcher(config)
     if not os.getenv('MANUAL_EXPERIMENT'):
         dispatcher.create_async()
     copy_resources_to_bucket(config_dir, config)
     if not os.getenv('MANUAL_EXPERIMENT'):
         dispatcher.start()
+
+def get_dispatcher(config):
+    if config['local_experiment']:
+        return LocalDispatcher(config)
+    return GoogleCloudDispatcher(config)
 
 
 def copy_resources_to_bucket(config_dir: str, config: Dict):
@@ -225,14 +233,68 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
     gsutil.rsync(config_dir, destination)
 
 
-class Dispatcher:
-    """Class representing the dispatcher instance."""
-
+class BaseDispatcher:
+    """Class representing the dispatcher."""
     def __init__(self, config: Dict):
         self.config = config
         self.instance_name = experiment_utils.get_dispatcher_instance_name(
             config['experiment'])
         self.process = None
+
+    def create_async(self):
+        """Creates the dispatcher asynchronously."""
+        raise NotImplementedError
+
+    def start(self):
+        """Start the experiment on the dispatcher."""
+        raise NotImplementedError
+
+
+class LocalDispatcher:
+    """Class representing the local dispatcher."""
+    def __init__(self, config: Dict):
+        self.config = config
+        self.instance_name = experiment_utils.get_dispatcher_instance_name(
+            config['experiment'])
+        self.process = None
+
+    def create_async(self):
+        """Creates the dispatcher asynchronously."""
+        pass
+
+    def start(self):
+        """Start the experiment on the dispatcher."""
+        base_docker_tag = experiment_utils.get_base_docker_tag(
+            self.config['cloud_project'])
+        set_instance_name_arg = 'INSTANCE_NAME={instance_name}'.format(instance_name=self.instance_name)
+        set_experiment_arg = 'EXPERIMENT={experiment}'.format(experiment=self.config['experiment'])
+        set_cloud_project_arg = 'CLOUD_PROJECT={cloud_project}'.format(cloud_project=self.config['cloud_project'])
+        set_cloud_experiment_bucket_arg = 'CLOUD_EXPERIMENT_BUCKET={cloud_experiment_bucket}'.format(cloud_experiment_bucket=self.config['cloud_experiment_bucket'])
+        docker_image_url = '{base_docker_tag}/dispatcher-image'.format(base_docker_tag=base_docker_tag)
+        volume_arg = '{home}/.config/gcloud:/root/.config/gcloud'.format(home=os.environ['HOME'])
+        command = [
+            'docker', 'run', '-ti', '--rm', '-v', volume_arg,
+            '-v', '/var/run/docker.sock:/var/run/docker.sock',
+            '-e', set_instance_name_arg,
+            '-e', set_experiment_arg,
+            '-e', set_cloud_project_arg,
+            '-e', 'SQL_DATABASE_URL=sqlite:///local.db',
+            '-e', set_cloud_experiment_bucket_arg,
+            '-e', 'LOCAL_EXPERIMENT=True',
+            '--cap-add=SYS_PTRACE', '--cap-add=SYS_NICE',
+            '--name=dispatcher-container',
+            docker_image_url, '/bin/bash', '-c',
+            'echo ${CLOUD_EXPERIMENT_BUCKET}/${EXPERIMENT}/input && '
+            'gsutil -m rsync -r "${CLOUD_EXPERIMENT_BUCKET}/${EXPERIMENT}/input" ${WORK} && '
+            'source "/work/.venv/bin/activate" && '
+            'pip3 install -r "/work/src/requirements.txt" && '
+            'PYTHONPATH=/work/src python3 "/work/src/experiment/dispatcher.py" || /bin/bash'
+        ]
+        return new_process.execute(command)
+
+
+class GoogleCloudDispatcher(BaseDispatcher):
+    """Class representing the dispatcher instance on Google Cloud."""
 
     def create_async(self):
         """Creates the instance asynchronously."""
