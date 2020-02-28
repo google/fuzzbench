@@ -30,7 +30,7 @@ $ mkdir $BENCHMARK_NAME
 
 FuzzBench supports two kinds of benchmarks, OSS-Fuzz and standard.
 OSS-Fuzz benchmarks are OSS-Fuzz projects that are built for use as benchmarks.
-Standard benchmarks allow using abitrary code as benchmarks and are thus more
+Standard benchmarks allow using arbitrary code as benchmarks and are thus more
 powerful but also more work.
 
 ## Using existing OSS-Fuzz projects
@@ -116,7 +116,7 @@ Example [libpng-1.2.56](https://github.com/google/fuzzbench/blob/master/benchmar
 ## Testing it out
 
 Once you've got a benchmark integrated, you should test that it builds and runs
-successfully with atleast one fuzzer (e.g. afl):
+successfully with at least one fuzzer (e.g. afl):
 
 ```shell
 $ export FUZZER_NAME=afl

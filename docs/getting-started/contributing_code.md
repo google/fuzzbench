@@ -20,7 +20,7 @@ FuzzBench.
 * **benchmarks/** - benchmarks integrated in the FuzzBench platform (e.g. OpenSSL).
 * **common/** - common helper modules (e.g. logging, new process handling, etc).
 * **database/** - database handling code.
-* **docker/** - dockerfiles for infra images (does not include fuzzer images).
+* **docker/** - Dockerfiles for infra images (does not include fuzzer images).
 * **docs/** - this documentation.
 * **experiment/** - code for running FuzzBench experiments.
 * **fuzzers/** - fuzzers integrated in the FuzzBench platform (e.g. AFL).
@@ -42,5 +42,3 @@ separately:
 * `make check-linter` - Runs the linter checks.
 * `make check-type` - Runs type checker using `pytype`.
 * `make check-license` - Runs the license header checks.
-
-
