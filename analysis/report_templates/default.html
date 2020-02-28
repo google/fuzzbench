@@ -16,7 +16,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>{{ experiment.name }} results</title>
+        <title>FuzzBench: {{ experiment.name }} results</title>
 
         <!-- Import Materialize CSS -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
@@ -52,7 +52,7 @@
             </div>
         </div>
 
-        <div id="experiment" class="section scrollspy">
+        <div id="summary" class="section scrollspy">
             <h2 class="green-text text-darken-3">experiment summary</h2>
             Aggregate critical difference diagram showing average ranks when
             ranking fuzzers on each benchmark according to their median reached
@@ -141,7 +141,7 @@
 
     <div class="col hide-on-med-and-down l2">
         <ul class="section table-of-contents">
-            <li><a href="#experiment">benchmark</a></li>
+            <li><a href="#summary">experiment summary</a></li>
             {% for benchmark in experiment.benchmarks %}
             <li><a href="#{{ benchmark.name }}">{{ benchmark.name }}</a></li>
             {% endfor %}
