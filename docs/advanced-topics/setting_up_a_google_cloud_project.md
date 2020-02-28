@@ -12,8 +12,8 @@ permalink: /advanced-topics/setting-up-a-google-cloud-project/
 }}/getting-started/adding-a-new-fuzzer/) and use the FuzzBench service. This
 document isn't needed for using the FuzzBench service. This document explains
 how to set up a Google Cloud project for running an experiment for the first
-time. We don't recommend running experiments on your own for
-most users.
+time. We don't recommend running experiments on your own for most users.
+Validating FuzzBench results is a good reason to run an experiment on your own.
 
 Currently, FuzzBench requires Google Cloud to run experiments (though this may
 change, see
