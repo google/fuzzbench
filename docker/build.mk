@@ -45,7 +45,7 @@ dispatcher-image: base-image
 
 define fuzzer_template
 
-$(1)-builder: base-builder
+.$(1)-builder: base-builder
 	docker build \
     --tag $(BASE_TAG)/builders/$(1) \
     --file fuzzers/$(1)/builder.Dockerfile \
@@ -60,7 +60,7 @@ $(foreach fuzzer,$(FUZZERS),$(eval $(call fuzzer_template,$(fuzzer))))
 
 
 define fuzzer_benchmark_template
-.$(1)-$(2)-builder: $(1)-builder
+.$(1)-$(2)-builder: .$(1)-builder
 	docker build \
     --tag $(BASE_TAG)/builders/$(1)/$(2) \
     --build-arg fuzzer=$(1) \
