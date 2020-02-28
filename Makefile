@@ -31,13 +31,13 @@ format: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py format
 
 licensecheck: install-dependencies
-	source ${VENV_ACTIVATE} && python3 presubmit.py license
+	source ${VENV_ACTIVATE} && python3 presubmit.py licensecheck
 
-linter: install-dependencies
+lint: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py lint
 
 typecheck: install-dependencies
-	source ${VENV_ACTIVATE} && python3 presubmit.py type
+	source ${VENV_ACTIVATE} && python3 presubmit.py typecheck
 
 docs-serve:
 	cd docs && bundle exec jekyll serve
