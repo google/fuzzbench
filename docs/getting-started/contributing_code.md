@@ -39,6 +39,6 @@ You can also run the following to format your code or do different checks
 separately:
 
 * `make format` - Formats source code using `yapf`.
-* `make linter` - Runs the linter checks.
+* `make lint` - Runs the linter checks.
 * `make typecheck` - Runs type checker using `pytype`.
 * `make licensecheck` - Runs the license header checks.
