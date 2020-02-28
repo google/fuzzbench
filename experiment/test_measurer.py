@@ -25,7 +25,7 @@ from common import experiment_utils
 from common import new_process
 from database import models
 from database import utils as db_utils
-from experiment import builder
+from experiment.build import build_utils
 from experiment import dispatcher
 from experiment import measurer
 from experiment import scheduler
@@ -210,7 +210,7 @@ def get_test_data_path(*subpaths):
 @pytest.fixture
 def create_measurer(experiment):
     """Fixture that provides a function for creating a SnapshotMeasurer."""
-    os.mkdir(builder.get_coverage_binaries_dir())
+    os.mkdir(build_utils.get_coverage_binaries_dir())
 
     def _create_measurer(fuzzer, benchmark, trial_num):
         return measurer.SnapshotMeasurer(fuzzer, benchmark, trial_num,
@@ -232,7 +232,7 @@ class TestIntegrationMeasurement:
         coverage_binary_src = get_test_data_path(
             'test_measure_snapshot_coverage', benchmark + '-coverage')
         benchmark_cov_binary_dir = os.path.join(
-            builder.get_coverage_binaries_dir(), benchmark)
+            build_utils.get_coverage_binaries_dir(), benchmark)
 
         os.makedirs(benchmark_cov_binary_dir)
         coverage_binary_dst_dir = os.path.join(benchmark_cov_binary_dir,
