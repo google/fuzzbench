@@ -19,32 +19,34 @@ techniques.
 FuzzBench provides:
 
 * An easy API for integrating fuzzers.
-* Benchmarks from real-world projects, adding an
-  [OSS-Fuzz](https://github.com/google/oss-fuzz) benchmark is a three-line
-  change.
+* Benchmarks from real-world projects. FuzzBench can use any
+  [OSS-Fuzz](https://github.com/google/oss-fuzz) project as a benchmark.
 * A reporting library that produces reports with graphs and statistical tests
   to help you understand the significance of results.
 
 To participate, submit your fuzzer to run on the FuzzBench platform by following
 [our simple guide](
-https://google.github.io/fuzzbench/getting-started/adding-a-new-fuzzer/).
+{{ site.baseurl }}/fuzzbench/getting-started/adding-a-new-fuzzer/).
 After your integration is accepted, we will run a large-scale experiment using
-your fuzzer and generate a report comparing your fuzzer to others.
-See [sample report](https://github.com/google/fuzzbench#sample-report).
+your fuzzer and generate a report comparing your fuzzer to others, such as AFL
+and libFuzzer.
+See [an example report](https://www.fuzzbench.com/reports/sample/index.html).
 
 ## Overview
 
 ![FuzzBench Service diagram](images/FuzzBench-service.png)
 The process works like this:
-1. A developer of a fuzzer (or someone else interested)
-[integrates]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/) their
-fuzzer with FuzzBench.
-1. The integration is merged into the official FuzzBench repo.
+1. A fuzzer developer (or someone else interested)
+[integrates a fuzzer]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/)
+with FuzzBench.
+1. The integration is merged into the [
+FuzzBench repo](https://github.com/google/fuzzbench).
 1. FuzzBench runs an experiment with the new fuzzer on the benchmarks.
 1. FuzzBench publishes a report comparing the performance of the fuzzer to other
 fuzzers both on individual benchmarks and in aggregate.
 
 ## Sample Report
+
 You can view a sample report
 [here](https://www.fuzzbench.com/reports/sample/index.html).
 This report is generated using 10 fuzzers against 24 real-world benchmarks,
@@ -56,14 +58,17 @@ When analyzing reports, we recommend:
   result.
 
 Please provide feedback on any inaccuracies and potential improvements (such as
-integration changes, new benchmarks, etc) by opening a GitHub issue
+integration changes, new benchmarks, etc.) by opening a GitHub issue
 [here](https://github.com/google/fuzzbench/issues/new).
 
 ## Documentation
+
 Read our [detailed documentation](https://google.github.io/fuzzbench/) to learn
 how to use FuzzBench.
 
 ## Contact
+
 Join our [mailing list](https://groups.google.com/g/fuzzbench-users) for
-discussions and announcements.
+discussions and announcements, or send us a private email at
+[fuzzbench@google.com](mailto:fuzzbench@google.com).
 
