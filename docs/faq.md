@@ -22,7 +22,7 @@ analyzed 32 fuzzing research papers and has
 [found](http://www.pl-enthusiast.net/2018/08/23/evaluating-empirical-evaluations-for-fuzz-testing/)
 that "_no paper adheres to a sufficiently high standard of evidence to justify
 general claims of effectiveness_". This is a problem because it can lead to
-[unreproducable](https://andreas-zeller.blogspot.com/2019/10/when-results-are-all-that-matters-case.html)
+[unreproducible](https://andreas-zeller.blogspot.com/2019/10/when-results-are-all-that-matters-case.html)
 results.
 
 We created FuzzBench, so that all researchers and developers can evaluate their
