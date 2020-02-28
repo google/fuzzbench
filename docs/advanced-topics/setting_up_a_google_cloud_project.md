@@ -26,6 +26,8 @@ FuzzBench.
 
 * [Create a new Google Cloud Project](https://console.cloud.google.com/projectcreate).
 
+* Enable billing when prompted on the Google Cloud website.
+
 * Set `$PROJECT_NAME` in the environment:
 
 ```bash
@@ -43,8 +45,6 @@ project you created.
 gcloud config set project $PROJECT_NAME
 ```
 
-* Enable billing when prompted on the Google Cloud website.
-
 ## Set up the database
 
 * [Enable the Compute Engine API](https://console.cloud.google.com/apis/library/compute.googleapis.com?q=compute%20engine)
@@ -58,8 +58,8 @@ Note that the region you choose should be the region you use later for running
 experiments.
 
 * For the rest of this document, we will use `$PROJECT_REGION`,
-`$POSTGRES_INSTANCE`, and `$POSTGRES_PASSWORD` to refer to the name of the
-PostgreSQL instance you created, its region, and its password. Set them in your
+`$POSTGRES_INSTANCE`, and `$POSTGRES_PASSWORD` to refer to the region of the
+PostgreSQL instance you created, its name, and its password. Set them in your
 environment:
 
 ```bash
@@ -100,7 +100,7 @@ At this point you can kill the `cloud_sql_proxy` process.
 
 ## Google Cloud Storage buckets
 
-* Set up Google Cloud Storage Buckets:
+* Set up Google Cloud Storage Buckets by running the commands below:
 
 ```bash
 # Bucket for storing experiment artifacts such as corpora, coverage binaries,
@@ -111,12 +111,22 @@ gsutil mb gs://$DATA_BUCKET_NAME
 gsutil mb gs://$REPORT_BUCKET_NAME
 ```
 
+You can pick any (globally unique) names you'd like for `$DATA_BUCKET_NAME` and
+`$REPORT_BUCKET_NAME`.
+
+* Make the report bucket public so it can be viewed from your browser:
+
+```bash
+gsutil iam ch allUsers:objectViewer gs://$REPORT_BUCKET_NAME
+```
+
 ## Dispatcher image and container registry setup
 
 * Build the dispatcher image:
 
 ```bash
-docker build -f docker/dispatcher-image/Dockerfile -t gcr.io/$PROJECT_NAME/dispatcher-image docker/dispatcher-image/
+docker build -f docker/dispatcher-image/Dockerfile \
+    -t gcr.io/$PROJECT_NAME/dispatcher-image docker/dispatcher-image/
 ```
 
 FuzzBench uses an instance running this image to manage most of the experiment.
@@ -142,16 +152,16 @@ so that FuzzBench can report errors to the
 [Google Cloud error reporting dashboard](https://console.cloud.google.com/errors)
 
 * [Enable Cloud Build API](https://console.cloud.google.com/apis/library/cloudbuild.googleapis.com)
-So that FuzzBench can build docker images using Google Cloud Build, a platform
+so that FuzzBench can build docker images using Google Cloud Build, a platform
 optimized for doing so.
 
 * [Enable Cloud SQL Admin API](https://console.cloud.google.com/apis/library/sqladmin.googleapis.com)
-So that FuzzBench can connect to the database.
+so that FuzzBench can connect to the database.
 
 ## Configure networking
 
 * Go to the networking page for the network you want to run your experiment in.
-[Here](https://cloud.console.google.com/networking/subnetworks/details/us-central1/default)
+[This](https://cloud.console.google.com/networking/subnetworks/details/us-central1/default)
 is the networking page for the default network in "us-central1". It is best if
 you use `$POSTGRES_REGION` for this.
 
@@ -163,7 +173,7 @@ you use `$POSTGRES_REGION` for this.
 ## Request CPU quota increase
 
 * FuzzBench uses a 96 core Google Compute Engine instance for measuring trials
-and a single core instance for each trial in your experiment.
+and single core instances for each trial in your experiment.
 
 * Go to the quotas page for the region you will use for experiments.
 [This](https://console.cloud.google.com/iam-admin/quotas?location=us-central1)

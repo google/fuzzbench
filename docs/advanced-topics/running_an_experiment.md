@@ -89,6 +89,7 @@ export POSTGRES_PASSWORD="my-super-secret-password"
 ```
 
 ## Benchmarks
+
 Pick the benchmarks you want to use from the `benchmarks/` directory.
 
 For example: `freetype2-2017` and `bloaty_fuzz_target`.
@@ -106,9 +107,19 @@ Now that everything is ready, execute `run_experiment.py`:
 PYTHONPATH=. python3 experiment/run_experiment.py \
 --experiment-config experiment-config.yaml \
 --benchmarks freetype2-2017 bloaty_fuzz_target \
---experiment-name experiment-name \
+--experiment-name $EXPERIMENT_NAME \
 --fuzzers afl libfuzzer
 ```
+
+where `$EXPERIMENT_NAME` is the name you want to give the experiment.
+
+## Viewing reports
+
+You should eventually be able to see reports from your experiment, that are
+update at some interval throughout the experiment. However, you may have to wait
+a while until they first appear since a lot must happen before there is data to
+generate report. Once they are available, you should be able to view them at:
+`https://storage.googleapis.com/$REPORT_BUCKET_NAME/$EXPERIMENT_NAME/index.html`
 
 # Advanced usage
 
