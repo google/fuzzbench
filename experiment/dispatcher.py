@@ -31,7 +31,7 @@ from common import logs
 from common import yaml_utils
 from database import models
 from database import utils as db_utils
-from experiment import builder
+from experiment.build import builder
 from experiment import measurer
 from experiment import reporter
 from experiment import scheduler
@@ -93,7 +93,7 @@ def dispatcher_main():
     # reason.
     multiprocessing.set_start_method('spawn')
 
-    builder.gcb_build_base_images()
+    builder.build_base_images()
     db_utils.initialize()
     from database import models
     models.Base.metadata.create_all(db_utils.engine)

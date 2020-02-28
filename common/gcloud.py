@@ -149,7 +149,6 @@ def local_create_instance(instance_name: str,
                           **kwargs) -> bool:
     """Does the equivalent of "create_instance" for local experiments, runs
     |startup_script| in the background."""
-    assert utils.is_local_experiment()
     command = ['/bin/bash', startup_script]
     subprocess.Popen(command)
     return new_process.ProcessResult(0, '', False)

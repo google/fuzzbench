@@ -38,7 +38,7 @@ from common import logs
 from common import utils
 from database import utils as db_utils
 from database import models
-from experiment import builder
+from experiment.build import builder
 from experiment import run_coverage
 from experiment import scheduler
 from third_party import sancov
