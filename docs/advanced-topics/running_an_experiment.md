@@ -26,7 +26,7 @@ Google Cloud Project, since running an experiment requires Google Cloud.
 
 This page will walk you through on how to use `run_experiment.py`.
 Experiments are started by the `run_experiment.py` script. The script will
-create a dispatcher instance on Google Compute Engine which runs the experiment
+create a dispatcher instance on Google Compute Engine which runs the experiment,
 including:
 1. Building desired fuzzer-benchmark combinations.
 1. Starting instances to run fuzzing trials with the fuzzer-benchmark
@@ -39,7 +39,7 @@ including:
 ## Experiment configuration file
 
 You need to create an experiment configuration yaml file.
-This will contain the configuration parameters for experiments that do not
+This file contains the configuration parameters for experiments that do not
 change very often.
 Below is an example configuration file with explanations of each required
 parameter.
@@ -68,12 +68,12 @@ cloud_web_bucket: gs://$REPORT_BUCKET_NAME
 cloud_sql_instance_connection_name: "$PROJECT_NAME:$PROJECT_REGION:$POSTGRES_INSTANCE=tcp:5432"
 ```
 
-**NOTE* The values `$PROJECT_NAME`, `$PROJECT_REGION` `$DATA_BUCKET_NAME`,
+**NOTE:** The values `$PROJECT_NAME`, `$PROJECT_REGION` `$DATA_BUCKET_NAME`,
 `$REPORT_BUCKET_NAME` `$POSTGRES_INSTANCE` refer to the values of those
 environment variables that were set in the [guide on setting up a Google Cloud
 Project]({{ site.baseurl }}/advanced-topics/setting-up-a-google-cloud-project/).
-For example if `$PROJECT_NAME=my-fuzzbench-project` use `my-fuzzbench-project`
-and not `$PROJECT_NAME`.
+For example if `$PROJECT_NAME` is `my-fuzzbench-project`, use
+`my-fuzzbench-project` and not `$PROJECT_NAME`.
 
 ## Setting the database password
 
@@ -87,14 +87,18 @@ export POSTGRES_PASSWORD="my-super-secret-password"
 
 ## Benchmarks
 Pick the benchmarks you want to use from the `benchmarks/` directory.
+
 For example: `freetype2-2017` and `bloaty_fuzz_target`.
 
 ## Fuzzers
+
 Pick the fuzzers you want to use from the `fuzzers/` directory.
 For example: `libfuzzer` and `afl`.
 
 ## Executing run_experiment.py
-Now that everything is ready, execute `run_experiment.py`:
+
+Now that everything is ready, execute `run_experiment.py` from the root of
+FuzzBench.
 
 ```bash
 PYTHONPATH=. python3 experiment/run_experiment.py \

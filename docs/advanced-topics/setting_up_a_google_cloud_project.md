@@ -86,7 +86,8 @@ psql "host=127.0.0.1 sslmode=disable user=postgres"
 
 Use `$POSTGRES_PASSWORD` when prompted.
 
-* Initialize the postgres database:
+* Initialize the postgres database by running this command from the root of
+FuzzBench:
 
 ```bash
 PYTHONPATH=. alembic upgrade head
