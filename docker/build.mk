@@ -19,7 +19,7 @@ OSS_FUZZ_PROJECTS := $(notdir $(shell find benchmarks -type f -name oss-fuzz.yam
 BASE_TAG := gcr.io/fuzzbench
 
 
-build-all: $(addprefix build-all-,$(FUZZERS))
+build-all: $(addsuffix -all, $(addprefix build-,$(FUZZERS)))
 
 
 base-image:
@@ -51,7 +51,7 @@ $(1)-builder: base-builder
     --file fuzzers/$(1)/builder.Dockerfile \
     fuzzers/$(1)
 
-build-all-$(1): $(addprefix build-$(1)-,$(BENCHMARKS))
+build-$(1)-all: $(addprefix build-$(1)-,$(BENCHMARKS))
 
 endef
 
