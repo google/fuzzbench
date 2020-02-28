@@ -8,16 +8,18 @@ permalink: /advanced-topics/running-an-experiment/
 
 # Running an experiment
 
-This page explains how to run an experiment. It requires using Google Cloud.
-Note that most users of FuzzBench should simply
-[add a fuzzer]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/) and use
-the FuzzBench service, we don't recommend running experiments on your own. This
-document is intended for those wishing to validate/reproduce results.
-This page assumes a certain level of knowledge about Google Cloud and FuzzBench.
-If you haven't already, please follow the [guide on setting up a Google Cloud
-Project]({{ site.baseurl }}/advanced-topics/setting-up-a-google-cloud-project/)
-to run FuzzBench as this document assumes you already have set up your cloud
-project.
+**NOTE**: Most users of FuzzBench should simply [add a fuzzer]({{ site.baseurl
+}}/getting-started/adding-a-new-fuzzer/) and use the FuzzBench service. This
+document isn't needed for using the FuzzBench service. This document explains
+how to run an experiment on your own. We don't recommend running experiments on
+your own for most users.
+
+A good reason to run an experiment on your own is to validate the results of the
+FuzzBench service. This document assumes a certain level of knowledge about
+Google Cloud and FuzzBench. If you haven't already, please follow the
+[guide on setting up a Google Cloud Project]({{ site.baseurl}}/advanced-topics/setting-up-a-google-cloud-project/)
+to run your own experiment as this document assumes you already have set up your
+Google Cloud Project, since running an experiment requires Google Cloud.
 
 - TOC
 {:toc}
