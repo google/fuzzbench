@@ -18,7 +18,7 @@ an experiment on your own.
 This document assumes a certain level of knowledge about
 Google Cloud and FuzzBench. If you haven't already, please follow the
 [guide on setting up a Google Cloud Project]({{ site.baseurl}}/advanced-topics/setting-up-a-google-cloud-project/)
-to run your own experiment as this document assumes you already have set up your
+to run your own experiments. This document assumes you already have set up a
 Google Cloud Project, since running an experiment requires Google Cloud.
 
 - TOC
