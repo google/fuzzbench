@@ -14,9 +14,8 @@ parent: Reference
 
 ## Reports
 
-All FuzzBench reports are stored in the Google Cloud Storage bucket
-`fuzzbench-reports`. You can access the reports
-[here](http://commondatastorage.googleapis.com/fuzzbench-reports/index.html).
+All FuzzBench reports are available on our website `fuzzbench.com`. You can
+access them [here](https://www.fuzzbench.com/reports/index.html).
 
 ## Blog posts
 
