@@ -2,42 +2,48 @@
 layout: default
 title: Running an experiment
 parent: Advanced topics
-nav_order: 1
+nav_order: 3
 permalink: /advanced-topics/running-an-experiment/
 ---
 
 # Running an experiment
 
-This page explains how to run an experiment. It requires using Google Cloud.
-Because most "users" of FuzzBench will be using it as a service and not running
-it themselves, we consider this an advanced topic.
+**NOTE**: Most users of FuzzBench should simply [add a fuzzer]({{ site.baseurl
+}}/getting-started/adding-a-new-fuzzer/) and use the FuzzBench service. This
+document isn't needed for using the FuzzBench service. This document explains
+how to run an [experiment]({{ site.baseurl }}/reference/glossary/#Experiment) on
+your own. We don't recommend running experiments on your own for most users.
+Validating results from the FuzzBench service is a good reason to run an
+experiment on your own.
+
+This document assumes a certain level of knowledge about
+Google Cloud and FuzzBench. If you haven't already, please follow the
+[guide on setting up a Google Cloud Project]({{ site.baseurl}}/advanced-topics/setting-up-a-google-cloud-project/)
+to run your own experiments. This document assumes you already have set up a
+Google Cloud Project, since running an experiment requires Google Cloud.
 
 - TOC
 {:toc}
 
-Experiments are started by the `run_experiment.py` script. This will create a
-dispatcher instance on Google Compute Engine which:
-1. Builds desired fuzzer-benchmark combinations.
-1. Starts instances to run fuzzing trials with the fuzzer-benchmark
-   builds and stops them when they are done.
-1. Measures the coverage from these trials.
-1. Generates reports based on these measurements.
+This page will walk you through on how to use `run_experiment.py`.
+Experiments are started by the `run_experiment.py` script. The script will
+create a dispatcher instance on Google Compute Engine which runs the experiment,
+including:
+1. Building desired fuzzer-benchmark combinations.
+1. Starting instances to run fuzzing trials with the fuzzer-benchmark
+   builds and stopping them when they are done.
+1. Measuring the coverage from these trials.
+1. Generating reports based on these measurements.
 
-This page will walkthrough on how to use `run_experiment.py`.
+The rest of this document will assume all commands are run from the root of
+FuzzBench.
 
 # run_experiment.py
-
-This page assumes a certain level of knowledge about Google Cloud and FuzzBench.
-If you haven't already, please check out the guide on setting up a Google Cloud
-Project to run FuzzBench.
-{% comment %}
-TODO(metzman): Write this doc.
-{% endcomment %}
 
 ## Experiment configuration file
 
 You need to create an experiment configuration yaml file.
-This will contain the configuration parameters for experiments that do not
+This file contains the configuration parameters for experiments that do not
 change very often.
 Below is an example configuration file with explanations of each required
 parameter.
@@ -47,23 +53,32 @@ parameter.
 trials: 5
 
 # The amount of time in seconds that each trial is run for.
+# 1 day = 24 * 60 * 60 = 86400
 max_total_time: 86400
 
 # The name of your Google Cloud project.
-cloud_project: fuzzbench
+cloud_project: $PROJECT_NAME
 
 # The Google Compute Engine zone to run the experiment in.
-cloud_compute_zone: us-central1-a
+cloud_compute_zone: $PROJECT_REGION
 
 # The Google Cloud Storage bucket that will store most of the experiment data.
-cloud_experiment_bucket: gs://fuzzbench-data
+cloud_experiment_bucket: gs://$DATA_BUCKET_NAME
 
 # The bucket where HTML reports and summary data will be stored.
-cloud_web_bucket: gs://fuzzbench-reports
+cloud_web_bucket: gs://$REPORT_BUCKET_NAME
 
 # The connection to use to connect to the Google Cloud SQL instance.
-cloud_sql_instance_connection_name: "fuzzbench:us-central1:postgres-experiment-db=tcp:5432"
+cloud_sql_instance_connection_name: "$PROJECT_NAME:$PROJECT_REGION:$POSTGRES_INSTANCE=tcp:5432"
 ```
+
+**NOTE:** The values `$PROJECT_NAME`, `$PROJECT_REGION` `$DATA_BUCKET_NAME`,
+`$REPORT_BUCKET_NAME` `$POSTGRES_INSTANCE` refer to the values of those
+environment variables that were set in the [guide on setting up a Google Cloud
+Project]({{ site.baseurl }}/advanced-topics/setting-up-a-google-cloud-project/).
+For example if `$PROJECT_NAME` is `my-fuzzbench-project`, use
+`my-fuzzbench-project` and not `$PROJECT_NAME`.
+
 ## Setting the database password
 
 Find the password for the PostgreSQL instance you are using in your
@@ -71,27 +86,41 @@ experiment config.
 Set it using the environment variable `POSTGRES_PASSWORD` like so:
 
 ```bash
-export POSTGRESS_PASSWORD="my-super-secret-password"
+export POSTGRES_PASSWORD="my-super-secret-password"
 ```
 
 ## Benchmarks
+
 Pick the benchmarks you want to use from the `benchmarks/` directory.
+
 For example: `freetype2-2017` and `bloaty_fuzz_target`.
 
 ## Fuzzers
+
 Pick the fuzzers you want to use from the `fuzzers/` directory.
 For example: `libfuzzer` and `afl`.
 
 ## Executing run_experiment.py
+
 Now that everything is ready, execute `run_experiment.py`:
 
 ```bash
 PYTHONPATH=. python3 experiment/run_experiment.py \
 --experiment-config experiment-config.yaml \
 --benchmarks freetype2-2017 bloaty_fuzz_target \
---experiment-name experiment-name \
+--experiment-name $EXPERIMENT_NAME \
 --fuzzers afl libfuzzer
 ```
+
+where `$EXPERIMENT_NAME` is the name you want to give the experiment.
+
+## Viewing reports
+
+You should eventually be able to see reports from your experiment, that are
+update at some interval throughout the experiment. However, you may have to wait
+a while until they first appear since a lot must happen before there is data to
+generate report. Once they are available, you should be able to view them at:
+`https://storage.googleapis.com/$REPORT_BUCKET_NAME/$EXPERIMENT_NAME/index.html`
 
 # Advanced usage
 

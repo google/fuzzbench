@@ -2,7 +2,7 @@
 layout: default
 title: Statistical Analysis
 parent: Advanced topics
-nav_order: 2
+nav_order: 1
 permalink: /getting-started/statistical-analysis/
 ---
 
