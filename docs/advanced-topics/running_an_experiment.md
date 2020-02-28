@@ -39,7 +39,7 @@ TODO(metzman): Write this doc.
 You need to create an experiment configuration yaml file.
 This will contain the configuration parameters for experiments that do not
 change very often.
-Below is an example configuation file with explanations of each required
+Below is an example configuration file with explanations of each required
 parameter.
 
 ```yaml

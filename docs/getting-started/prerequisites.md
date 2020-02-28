@@ -65,7 +65,7 @@ make install-dependencies
 ```
 
 This installs all the dependencies in a virtualenv `.venv`. Activate this
-virtualenv before running furthur commands.
+virtualenv before running further commands.
 
 ```bash
 source .venv/bin/activate

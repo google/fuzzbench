@@ -210,7 +210,7 @@ should be copied to be reused, inheriting using `FROM` can't be used for this
 purpose).
 
 In the case of AFL, we have tried to write the `fuzzer.py` file to be modular
-enough to support different usecases than needing the exact same binaries and
+enough to support different use cases than needing the exact same binaries and
 fuzzing invocation as AFL. Example:
 [aflplusplus](https://github.com/google/fuzzbench/blob/master/fuzzers/aflplusplus/fuzzer.py).
 
