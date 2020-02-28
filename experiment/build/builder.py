@@ -19,6 +19,7 @@ import itertools
 from multiprocessing import pool as mp_pool
 import os
 import random
+import subprocess
 import sys
 import tarfile
 import time
@@ -32,7 +33,11 @@ from common import gsutil
 from common import logs
 from common import utils
 from experiment.build import build_utils
-import experiment.build.gcb_build as buildlib
+
+if not utils.is_local_experiment():
+    import experiment.build.gcb_build as buildlib
+else:
+    import experiment.build.local_build as buildlib
 
 # FIXME: Make this configurable for users with the default quota of 10.
 # Even though it says queueing happen, we end up exceeding limits on "get", so
@@ -144,6 +149,20 @@ def retry_build_loop(build_func: Callable, inputs: List[Tuple]) -> List:
     return successes
 
 
+def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
+    """Wrapper around buildlib.build_fuzzer_benchmark that logs and catches
+    exceptions."""
+    logger.info('Building benchmark: %s, fuzzer: %s.', benchmark, fuzzer)
+    try:
+        buildlib.build_fuzzer_benchmark(fuzzer, benchmark)
+    except subprocess.CalledProcessError:
+        logger.error('Failed to build benchmark: %s, fuzzer: %s.', benchmark,
+                     fuzzer)
+        return False
+    logs.info('Done building benchmark: %s, fuzzer: %s.', benchmark, fuzzer)
+    return True
+
+
 def build_all_fuzzer_benchmarks(fuzzers: List[str],
                                 benchmarks: List[str]) -> List[str]:
     """Call buildlib.build_fuzzer_benchmark on each fuzzer,benchmark pair
@@ -152,7 +171,7 @@ def build_all_fuzzer_benchmarks(fuzzers: List[str],
     product = list(itertools.product(fuzzers, benchmarks))
     # TODO(metzman): Use an asynchronous unordered map variant to schedule
     # eagerly.
-    results = retry_build_loop(buildlib.build_fuzzer_benchmark, product)
+    results = retry_build_loop(build_fuzzer_benchmark, product)
     logger.info('Done building fuzzer benchmarks.')
     return results
 
