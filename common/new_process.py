@@ -86,7 +86,6 @@ def execute(  # pylint: disable=too-many-locals,too-many-branches
         assert output_file is None
     elif not output_file:
         output_file = subprocess.PIPE
-
     kwargs['stdout'] = output_file
     kwargs['stderr'] = subprocess.STDOUT
     if kill_children:
