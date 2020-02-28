@@ -28,6 +28,7 @@ from typing import List
 from common import experiment_utils
 from common import fuzzer_config_utils
 from common import logs
+from common import utils
 from common import yaml_utils
 from database import models
 from database import utils as db_utils
@@ -97,8 +98,7 @@ def dispatcher_main():
     # reason.
     multiprocessing.set_start_method('spawn')
 
-    # !!!
-    # builder.gcb_build_base_images()
+    builder.gcb_build_base_images()
     db_utils.initialize()
     from database import models
     models.Base.metadata.create_all(db_utils.engine)

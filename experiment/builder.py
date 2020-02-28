@@ -76,7 +76,7 @@ def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
     """Builds |benchmark| for |fuzzer|."""
     logger.info('Building benchmark: %s, fuzzer: %s.', benchmark, fuzzer)
     try:
-        if experiment_utils.IS_LOCAL:
+        if utils.is_local():
             image_name = 'build-{}-{}'.format(fuzzer, benchmark)
             make(image_name)
         elif benchmark_utils.is_oss_fuzz(benchmark):
@@ -124,7 +124,7 @@ def gcb_build_oss_fuzz_project_fuzzer(benchmark: str,
 
 def gcb_build_benchmark_coverage(benchmark: str) -> Tuple[int, str]:
     """Build a coverage build of |benchmark| on GCB."""
-    if experiment_utils.IS_LOCAL:
+    if utils.is_local():
         image_name = 'coverage-{}-oss-fuzz-builder'.format(benchmark)
         result = make(image_name)
         if result.returncode:
@@ -162,7 +162,7 @@ def local_copy_coverage_binaries(benchmark):
 
 def gcb_build_oss_fuzz_project_coverage(benchmark: str) -> Tuple[int, str]:
     """Build a coverage build of OSS-Fuzz-based benchmark |benchmark| on GCB."""
-    if experiment_utils.IS_LOCAL:
+    if utils.is_local():
         image_name = 'coverage-{}-oss-fuzz-builder'.format(benchmark)
         result = make(image_name)
         if result.retcode:
@@ -250,7 +250,7 @@ def gcb_build(config_file: str,
 
 def gcb_build_base_images() -> Tuple[int, str]:
     """Build base images on GCB."""
-    if experiment_utils.IS_LOCAL:
+    if utils.is_local():
         return make('base-runner', 'base-builder')
     return gcb_build(get_build_config_file('base-images.yaml'), 'base-images')
 
