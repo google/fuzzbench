@@ -109,7 +109,7 @@ It should satisfy these criteria:
 * Should have a non-trivial codebase (Not a hash function for example).
 
 Please follow the instructions
-[here]({{ site.baseurl }}/getting-started/adding-a-new-benchmark/) to add
+[here]({{ site.baseurl }}/developing-fuzzbench/adding-a-new-benchmark/) to add
 a new benchmark.
 
 ## I've found an issue with FuzzBench. What can I do?
