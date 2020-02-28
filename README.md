@@ -10,9 +10,8 @@ techniques.
 FuzzBench provides:
 
 * An easy API for integrating fuzzers.
-* Benchmarks from real-world projects, adding an
-  [OSS-Fuzz](https://github.com/google/oss-fuzz) benchmark is a three-line
-  change.
+* Benchmarks from real-world projects. FuzzBench can use any
+  [OSS-Fuzz](https://github.com/google/oss-fuzz) project as a benchmark.
 * A reporting library that produces reports with graphs and statistical tests
   to help you understand the significance of results.
 
@@ -21,14 +20,15 @@ To participate, submit your fuzzer to run on the FuzzBench platform by following
 https://google.github.io/fuzzbench/getting-started/adding-a-new-fuzzer/).
 After your integration is accepted, we will run a large-scale experiment using
 your fuzzer and generate a report comparing your fuzzer to others.
-See [sample report](https://github.com/google/fuzzbench#sample-report).
+See [an example report](https://www.fuzzbench.com/reports/sample/index.html).
 
 ## Overview
 ![FuzzBench Service diagram](docs/images/FuzzBench-service.png)
 
 ## Sample Report
-You can view a sample report
-[here](https://www.fuzzbench.com/reports/sample/index.html).
+
+You can view an example report
+[here](http://www.fuzzbench.com/reports/sample/index.html).
 This report is generated using 10 fuzzers against 24 real-world benchmarks,
 with 20 trials each and over a duration of 24 hours.
 
@@ -38,13 +38,16 @@ When analyzing reports, we recommend:
   result.
 
 Please provide feedback on any inaccuracies and potential improvements (such as
-integration changes, new benchmarks, etc) by opening a GitHub issue
+integration changes, new benchmarks, etc.) by opening a GitHub issue
 [here](https://github.com/google/fuzzbench/issues/new).
 
 ## Documentation
+
 Read our [detailed documentation](https://google.github.io/fuzzbench/) to learn
 how to use FuzzBench.
 
 ## Contact
+
 Join our [mailing list](https://groups.google.com/g/fuzzbench-users) for
-discussions and announcements.
+discussions and announcements, or send us a private email at
+[fuzzbench@google.com](mailto:fuzzbench@google.com).
