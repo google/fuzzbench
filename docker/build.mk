@@ -45,7 +45,7 @@ dispatcher-image: base-image
 
 define fuzzer_template
 
-$(1)-builder: base-builder
+.$(1)-builder: base-builder
 	docker build \
     --tag $(BASE_TAG)/builders/$(1) \
     --file fuzzers/$(1)/builder.Dockerfile \
@@ -60,7 +60,7 @@ $(foreach fuzzer,$(FUZZERS),$(eval $(call fuzzer_template,$(fuzzer))))
 
 
 define fuzzer_benchmark_template
-$(1)-$(2)-builder: $(1)-builder
+.$(1)-$(2)-builder: .$(1)-builder
 	docker build \
     --tag $(BASE_TAG)/builders/$(1)/$(2) \
     --build-arg fuzzer=$(1) \
@@ -68,13 +68,13 @@ $(1)-$(2)-builder: $(1)-builder
     --file docker/benchmark-builder/Dockerfile \
     .
 
-$(1)-$(2)-intermediate-runner: base-runner
+.$(1)-$(2)-intermediate-runner: base-runner
 	docker build \
     --tag $(BASE_TAG)/runners/$(1)/$(2)-intermediate \
     --file fuzzers/$(1)/runner.Dockerfile \
     fuzzers/$(1)
 
-$(1)-$(2)-runner: $(1)-$(2)-builder $(1)-$(2)-intermediate-runner
+.$(1)-$(2)-runner: .$(1)-$(2)-builder .$(1)-$(2)-intermediate-runner
 	docker build \
     --tag $(BASE_TAG)/runners/$(1)/$(2) \
     --build-arg fuzzer=$(1) \
@@ -82,9 +82,9 @@ $(1)-$(2)-runner: $(1)-$(2)-builder $(1)-$(2)-intermediate-runner
     --file docker/benchmark-runner/Dockerfile \
     .
 
-build-$(1)-$(2): $(1)-$(2)-runner
+build-$(1)-$(2): .$(1)-$(2)-runner
 
-run-$(1)-$(2): $(1)-$(2)-runner
+run-$(1)-$(2): .$(1)-$(2)-runner
 	docker run \
     --cap-add SYS_NICE \
     --cap-add SYS_PTRACE \
@@ -95,7 +95,7 @@ run-$(1)-$(2): $(1)-$(2)-runner
     -it \
     $(BASE_TAG)/runners/$(1)/$(2)
 
-debug-$(1)-$(2): $(1)-$(2)-runner
+debug-$(1)-$(2): .$(1)-$(2)-runner
 	docker run \
     --cap-add SYS_NICE \
     --cap-add SYS_PTRACE \
@@ -132,14 +132,14 @@ $(foreach oss_fuzz_project,$(OSS_FUZZ_PROJECTS), \
 
 define fuzzer_oss_fuzz_project_template
 
-$(1)-$(2)-oss-fuzz-builder-intermediate:
+.$(1)-$(2)-oss-fuzz-builder-intermediate:
 	docker build \
     --tag $(BASE_TAG)/oss-fuzz/builders/$(1)/$($(2)-project-name)-intermediate \
     --file=fuzzers/$(1)/builder.Dockerfile \
     --build-arg parent_image=gcr.io/fuzzbench/oss-fuzz/$($(2)-project-name)@sha256:$($(2)-oss-fuzz-builder-hash) \
     fuzzers/$(1)
 
-$(1)-$(2)-oss-fuzz-builder: $(1)-$(2)-oss-fuzz-builder-intermediate
+.$(1)-$(2)-oss-fuzz-builder: .$(1)-$(2)-oss-fuzz-builder-intermediate
 	docker build \
     --tag $(BASE_TAG)/oss-fuzz/builders/$(1)/$($(2)-project-name) \
     --file=docker/oss-fuzz-builder/Dockerfile \
@@ -147,13 +147,13 @@ $(1)-$(2)-oss-fuzz-builder: $(1)-$(2)-oss-fuzz-builder-intermediate
     --build-arg fuzzer=$(1) \
     .
 
-$(1)-$(2)-oss-fuzz-intermediate-runner: base-runner
+.$(1)-$(2)-oss-fuzz-intermediate-runner: base-runner
 	docker build \
     --tag $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name)-intermediate \
     --file fuzzers/$(1)/runner.Dockerfile \
     fuzzers/$(1)
 
-$(1)-$(2)-oss-fuzz-runner: $(1)-$(2)-oss-fuzz-builder $(1)-$(2)-oss-fuzz-intermediate-runner
+.$(1)-$(2)-oss-fuzz-runner: .$(1)-$(2)-oss-fuzz-builder .$(1)-$(2)-oss-fuzz-intermediate-runner
 	docker build \
     --tag $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name) \
     --build-arg fuzzer=$(1) \
@@ -161,9 +161,9 @@ $(1)-$(2)-oss-fuzz-runner: $(1)-$(2)-oss-fuzz-builder $(1)-$(2)-oss-fuzz-interme
     --file docker/oss-fuzz-runner/Dockerfile \
     .
 
-build-$(1)-$(2): $(1)-$(2)-oss-fuzz-runner
+build-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
 
-run-$(1)-$(2): $(1)-$(2)-oss-fuzz-runner
+run-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
 	docker run \
     --cap-add SYS_NICE \
     --cap-add SYS_PTRACE \
@@ -174,7 +174,7 @@ run-$(1)-$(2): $(1)-$(2)-oss-fuzz-runner
     -e FUZZ_TARGET=$($(2)-fuzz-target) \
     -it $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name)
 
-debug-$(1)-$(2): $(1)-$(2)-oss-fuzz-runner
+debug-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
 	docker run \
     --cap-add SYS_NICE \
     --cap-add SYS_PTRACE \
