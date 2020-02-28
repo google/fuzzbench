@@ -23,9 +23,9 @@ subdirectory will be the name of the fuzzer. The fuzzer name can contain
 alphanumeric characters and underscores and must be a valid python module.
 
 ```bash
-$ export FUZZER_NAME=<your_fuzzer_name>
-$ cd fuzzers
-$ mkdir $FUZZER_NAME
+export FUZZER_NAME=<your_fuzzer_name>
+cd fuzzers
+mkdir $FUZZER_NAME
 ```
 
 You can verify the name of your fuzzer is valid by running `make run-presubmit`
@@ -222,21 +222,21 @@ successfully:
 * Build a specific benchmark:
 
 ```shell
-$ export FUZZER_NAME=afl
-$ export BENCHMARK_NAME=libpng-1.2.56
-$ make build-$FUZZER_NAME-$BENCHMARK_NAME
+export FUZZER_NAME=afl
+export BENCHMARK_NAME=libpng-1.2.56
+make build-$FUZZER_NAME-$BENCHMARK_NAME
 ```
 
 * Run the fuzzer in the docker image:
 
 ```shell
-$ make run-$FUZZER_NAME-$BENCHMARK_NAME
+make run-$FUZZER_NAME-$BENCHMARK_NAME
 ```
 
 * Building all benchmarks for a fuzzer:
 
 ```shell
-$ make build-$FUZZER_NAME-all
+make build-$FUZZER_NAME-all
 ```
 
 *Tips*:
@@ -245,23 +245,23 @@ $ make build-$FUZZER_NAME-all
   * Start a new shell and run fuzzer there:
 
   ```shell
-  $ make debug-$FUZZER_NAME-$BENCHMARK_NAME
+  make debug-$FUZZER_NAME-$BENCHMARK_NAME
   ```
 
   * Or, debug an existing fuzzer run in the `make run-*` docker container:
 
   ```shell
-  $ docker container ls
-  $ docker exec -ti <container-id> /bin/bash
+  docker container ls
+  docker exec -ti <container-id> /bin/bash
 
   # E.g. check corpus.
-  $ ls /out/corpus
+  ls /out/corpus
   ```
 
 * To do builds in parallel, pass -j <number_of_parallel_jobs> to make:
 
   ```shell
-  $ make -j6 build-$FUZZER_NAME-all
+  make -j6 build-$FUZZER_NAME-all
   ```
 
 * Run `make run-format` to format your code.

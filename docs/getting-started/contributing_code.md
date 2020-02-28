@@ -32,7 +32,7 @@ FuzzBench.
 You can run all checks and unit tests for the core functionality using:
 
 ```bash
-$ make run-presubmit
+make run-presubmit
 ```
 
 You can also run the following to format your code or do different checks
