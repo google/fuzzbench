@@ -14,15 +14,19 @@
 """Code for starting and ending trials."""
 import datetime
 import multiprocessing
+import os
 import shlex
 import sys
 import time
+
+import jinja2
 
 from common import benchmark_utils
 from common import experiment_utils
 from common import fuzzer_config_utils
 from common import gcloud
 from common import logs
+from common import utils
 from common import yaml_utils
 from database import models
 from database import utils as db_utils
@@ -35,6 +39,13 @@ GRACE_TIME_SECONDS = 5 * 60
 FAIL_WAIT_SECONDS = 10 * 60
 
 logger = logs.Logger('scheduler')  # pylint: disable=invalid-name
+
+RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
+
+jinja_env = jinja2.Environment(
+    undefined=jinja2.StrictUndefined,
+    loader=jinja2.FileSystemLoader(RESOURCES_DIR),
+)
 
 
 def datetime_now() -> datetime.datetime:
@@ -218,12 +229,8 @@ def _start_trial(trial: TrialProxy, experiment_config: dict):
     return None
 
 
-def create_trial_instance(benchmark: str, fuzzer: str, trial_id: int,
-                          experiment_config: dict) -> bool:
-    """Create or start a trial instance for a specific
-    trial_id,fuzzer,benchmark."""
-    instance_name = experiment_utils.get_trial_instance_name(
-        experiment_config['experiment'], trial_id)
+def render_startup_script(instance_name: str, benchmark: str, fuzzer: str, trial_id: int,
+                          experiment_config: dict):
     fuzzer_config = fuzzer_config_utils.get_by_variant_name(fuzzer)
     underlying_fuzzer_name = fuzzer_config['fuzzer']
     docker_image_url = benchmark_utils.get_runner_image_url(
@@ -239,24 +246,9 @@ def create_trial_instance(benchmark: str, fuzzer: str, trial_id: int,
             for k, v in fuzzer_config['env'].items()
         ])
 
-    startup_script = '''#!/bin/bash
-echo 0 > /proc/sys/kernel/yama/ptrace_scope
-echo core >/proc/sys/kernel/core_pattern
-
-# while ! docker pull {docker_image_url}
-# do
-#   echo 'Error pulling image, retrying...'
-# done
-
-docker run -v ~/.config/gcloud:/root/.config/gcloud --privileged --cpuset-cpus=0 --rm \
--e INSTANCE_NAME={instance_name} -e FUZZER={fuzzer} -e BENCHMARK={benchmark} \
--e FUZZER_VARIANT_NAME={fuzzer_variant_name} -e EXPERIMENT={experiment} \
--e TRIAL_ID={trial_id} -e MAX_TOTAL_TIME={max_total_time} \
--e CLOUD_PROJECT={cloud_project} -e CLOUD_COMPUTE_ZONE={cloud_compute_zone} \
--e CLOUD_EXPERIMENT_BUCKET={cloud_experiment_bucket} \
--e FUZZ_TARGET={fuzz_target} {additional_env} \
---cap-add SYS_NICE --cap-add SYS_PTRACE \
-{docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''.format(
+    local_experiment = utils.is_local_experiment()
+    template = jinja_env.get_template('runner-startup-script-template.sh')
+    return template.render(
         instance_name=instance_name,
         benchmark=benchmark,
         experiment=experiment_config['experiment'],
@@ -269,8 +261,18 @@ docker run -v ~/.config/gcloud:/root/.config/gcloud --privileged --cpuset-cpus=0
         cloud_experiment_bucket=experiment_config['cloud_experiment_bucket'],
         fuzz_target=fuzz_target,
         docker_image_url=docker_image_url,
-        additional_env=additional_env)
+        additional_env=additional_env,
+        local_experiment=local_experiment)
 
+
+def create_trial_instance(benchmark: str, fuzzer: str, trial_id: int,
+                          experiment_config: dict) -> bool:
+    """Create or start a trial instance for a specific
+    trial_id,fuzzer,benchmark."""
+    instance_name = experiment_utils.get_trial_instance_name(
+        experiment_config['experiment'], trial_id)
+    startup_script = render_startup_script(instance_name,
+        benchmark, fuzzer, trial_id, experiment_config)
     startup_script_path = '/tmp/%s-start-docker.sh' % instance_name
     with open(startup_script_path, 'w') as file_handle:
         file_handle.write(startup_script)

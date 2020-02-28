@@ -183,19 +183,19 @@ def error(message, *args, extras=None, logger=None):
     @retry.wrap(NUM_RETRIES, RETRY_DELAY,
                 'common.logs.error._report_error_with_retries')
     def _report_error_with_retries(message):
+        if utils.is_local():
+            return
         _error_reporting_client.report(message)
 
     if not any(sys.exc_info()):
-        if not utils.is_local():
-            _report_error_with_retries(message % args)
+        _report_error_with_retries(message % args)
         log(logger, logging.ERROR, message, *args, extras=extras)
         return
     # I can't figure out how to include both the message and the exception
     # other than this having the exception message preceed the log message
     # (without using private APIs).
-    if not utils.is_local():
-        _report_error_with_retries(traceback.format_exc() + '\nMessage: ' +
-                                   message % args)
+    _report_error_with_retries(traceback.format_exc() + '\nMessage: ' +
+                               message % args)
 
     extras = {} if extras is None else extras
     extras['traceback'] = traceback.format_exc()
