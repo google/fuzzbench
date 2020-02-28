@@ -196,7 +196,6 @@ def error(message, *args, extras=None, logger=None):
     # (without using private APIs).
     _report_error_with_retries(traceback.format_exc() + '\nMessage: ' +
                                message % args)
-
     extras = {} if extras is None else extras
     extras['traceback'] = traceback.format_exc()
     log(logger, logging.ERROR, message, *args, extras=extras)
