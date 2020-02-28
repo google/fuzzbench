@@ -19,6 +19,9 @@ Currently, FuzzBench requires Google Cloud to run experiments (though this may
 change, see
 [FAQ]({{ site.baseurl }}/faq/#how-can-i-reproduce-the-results-or-run-fuzzbench-myself)).
 
+The rest of this document will assume all commands are run from the root of
+FuzzBench.
+
 ## Create the Project
 
 * [Create a new Google Cloud Project](https://console.cloud.google.com/projectcreate).
@@ -40,7 +43,7 @@ project you created.
 gcloud config set project $PROJECT_NAME
 ```
 
-* Enable billing when prompted.
+* Enable billing when prompted on the Google Cloud website.
 
 ## Set up the database
 
@@ -86,8 +89,7 @@ psql "host=127.0.0.1 sslmode=disable user=postgres"
 
 Use `$POSTGRES_PASSWORD` when prompted.
 
-* Initialize the postgres database by running this command from the root of
-FuzzBench:
+* Initialize the postgres database:
 
 ```bash
 PYTHONPATH=. alembic upgrade head

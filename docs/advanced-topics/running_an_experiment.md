@@ -34,6 +34,9 @@ including:
 1. Measuring the coverage from these trials.
 1. Generating reports based on these measurements.
 
+The rest of this document will assume all commands are run from the root of
+FuzzBench.
+
 # run_experiment.py
 
 ## Experiment configuration file
@@ -97,8 +100,7 @@ For example: `libfuzzer` and `afl`.
 
 ## Executing run_experiment.py
 
-Now that everything is ready, execute `run_experiment.py` from the root of
-FuzzBench.
+Now that everything is ready, execute `run_experiment.py`:
 
 ```bash
 PYTHONPATH=. python3 experiment/run_experiment.py \
