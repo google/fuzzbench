@@ -21,9 +21,9 @@ This page explains how to set up your environment for using FuzzBench.
 Clone the FuzzBench repository to your machine by running the following command:
 
 ```bash
-$ git clone https://github.com/google/fuzzbench
-$ cd fuzzbench
-$ git submodule update --init
+git clone https://github.com/google/fuzzbench
+cd fuzzbench
+git submodule update --init
 ```
 
 ## Installing prerequisites
@@ -45,7 +45,7 @@ docker images periodically.
 Install make for your linux distribution. E.g. for Ubuntu:
 
 ```bash
-$ sudo apt-get install build-essential
+sudo apt-get install build-essential
 ```
 
 ### Python programming language
@@ -61,14 +61,14 @@ If you already have Python installed, you can verify its version by running
 Install the python dependencies by running the following command:
 
 ```bash
-$ make install-dependencies
+make install-dependencies
 ```
 
 This installs all the dependencies in a virtualenv `.venv`. Activate this
 virtualenv before running furthur commands.
 
 ```bash
-$ source .venv/bin/activate
+source .venv/bin/activate
 ```
 
 You can exit from this virtualenv anytime using the `deactivate` command.
@@ -79,7 +79,7 @@ You can verify that your local setup is working correctly by running the
 presubmit checks.
 
 ```bash
-$ make run-presubmit
+make run-presubmit
 ```
 
 ### Formatting
@@ -87,5 +87,5 @@ $ make run-presubmit
 You can format your changes using the following command:
 
 ```bash
-$ make run-format
+make run-format
 ```
