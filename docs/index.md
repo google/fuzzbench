@@ -26,7 +26,7 @@ FuzzBench provides:
 
 To participate, submit your fuzzer to run on the FuzzBench platform by following
 [our simple guide](
-{{ site.baseurl }}/fuzzbench/getting-started/adding-a-new-fuzzer/).
+{{ site.baseurl }}/getting-started/adding-a-new-fuzzer/).
 After your integration is accepted, we will run a large-scale experiment using
 your fuzzer and generate a report comparing your fuzzer to others, such as AFL
 and libFuzzer.
@@ -44,6 +44,11 @@ FuzzBench repo](https://github.com/google/fuzzbench).
 1. FuzzBench runs an experiment with the new fuzzer on the benchmarks.
 1. FuzzBench publishes a report comparing the performance of the fuzzer to other
 fuzzers both on individual benchmarks and in aggregate.
+
+## Add Your Fuzzer
+
+Follow [this guide]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/)
+to add a fuzzer to FuzzBench, submit it, and get benchmark results.
 
 ## Sample Report
 
@@ -66,4 +71,3 @@ integration changes, new benchmarks, etc.) by opening a GitHub issue
 Join our [mailing list](https://groups.google.com/g/fuzzbench-users) for
 discussions and announcements, or send us a private email at
 [fuzzbench@google.com](mailto:fuzzbench@google.com).
-

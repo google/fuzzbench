@@ -2,7 +2,7 @@
 layout: default
 title: FAQ
 has_children: true
-nav_order: 5
+nav_order: 6
 permalink: /faq/
 ---
 
@@ -55,7 +55,7 @@ platform. Contributions and suggestions to make the platform better are welcome.
 We are running the free FuzzBench service on Google Cloud, and the current
 implementation has some Google Cloud specific bits in it. You can use the code
 to run FuzzBench yourself on Google Cloud. Our docs explain how to do this
-[here]({{ site.baseurl }}/advanced-topics/running-an-experiment/).
+[here]({{ site.baseurl }}/running-your-own-experiment/running-an-experiment/).
 
 We are also working on making it easier to run in other environments (local
 cluster, other cloud providers, kubernetes, etc.). Community contributions for
