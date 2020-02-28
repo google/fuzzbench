@@ -38,6 +38,22 @@ or a custom one where you explicitly define the steps to checkout code and build
 the fuzz target
 ([example integration](https://github.com/google/fuzzbench/blob/master/benchmarks/vorbis-2017-12-11/build.sh)).
 
+### Trial
+
+A single fuzzing run on a particular benchmark. For example, we might compare
+AFL and honggfuzz by running 20 trials of each fuzzer on the libxml2-v2.9.2
+benchmark.
+
+### Experiment
+
+A group of [trials](#trial) that are run together to compare fuzzer performance.
+This usually includes trials from multiple benchmarks and multiple fuzzers. For
+example, to compare libFuzzer, AFL and honggfuzz, we might run an experiment
+where each of them fuzz every benchmark. Experiments use the same number of
+trials for each fuzzer-benchmark pair and a specific amount of time for each
+trial (typically, 24 hours) so that results are comparable. FuzzBench generates
+reports for experiments while they are running and after they complete.
+
 [fuzzing]: https://en.wikipedia.org/wiki/Fuzzing
 [fuzz target]: https://github.com/google/fuzzing/blob/master/docs/glossary.md#fuzz-target
 

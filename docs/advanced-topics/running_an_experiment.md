@@ -11,9 +11,10 @@ permalink: /advanced-topics/running-an-experiment/
 **NOTE**: Most users of FuzzBench should simply [add a fuzzer]({{ site.baseurl
 }}/getting-started/adding-a-new-fuzzer/) and use the FuzzBench service. This
 document isn't needed for using the FuzzBench service. This document explains
-how to run an experiment on your own. We don't recommend running experiments on
-your own for most users. Validating FuzzBench results is a good reason to run
-an experiment on your own.
+how to run an [experiment]({{ site.baseurl }}/reference/glossary/#Experiment) on
+your own. We don't recommend running experiments on your own for most users.
+Validating results from the FuzzBench service is a good reason to run an
+experiment on your own.
 
 This document assumes a certain level of knowledge about
 Google Cloud and FuzzBench. If you haven't already, please follow the
