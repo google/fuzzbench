@@ -229,8 +229,9 @@ def _start_trial(trial: TrialProxy, experiment_config: dict):
     return None
 
 
-def render_startup_script(instance_name: str, benchmark: str, fuzzer: str, trial_id: int,
-                          experiment_config: dict):
+def render_startup_script_template(
+    instance_name: str, benchmark: str, fuzzer: str, trial_id: int,
+    experiment_config: dict):
     fuzzer_config = fuzzer_config_utils.get_by_variant_name(fuzzer)
     underlying_fuzzer_name = fuzzer_config['fuzzer']
     docker_image_url = benchmark_utils.get_runner_image_url(
@@ -271,8 +272,8 @@ def create_trial_instance(benchmark: str, fuzzer: str, trial_id: int,
     trial_id,fuzzer,benchmark."""
     instance_name = experiment_utils.get_trial_instance_name(
         experiment_config['experiment'], trial_id)
-    startup_script = render_startup_script(instance_name,
-        benchmark, fuzzer, trial_id, experiment_config)
+    startup_script = render_startup_script_template(instance_name,
+                                                    benchmark, fuzzer, trial_id, experiment_config)
     startup_script_path = '/tmp/%s-start-docker.sh' % instance_name
     with open(startup_script_path, 'w') as file_handle:
         file_handle.write(startup_script)
