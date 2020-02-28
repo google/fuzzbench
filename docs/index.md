@@ -61,11 +61,6 @@ Please provide feedback on any inaccuracies and potential improvements (such as
 integration changes, new benchmarks, etc.) by opening a GitHub issue
 [here](https://github.com/google/fuzzbench/issues/new).
 
-## Documentation
-
-Read our [detailed documentation](https://google.github.io/fuzzbench/) to learn
-how to use FuzzBench.
-
 ## Contact
 
 Join our [mailing list](https://groups.google.com/g/fuzzbench-users) for
