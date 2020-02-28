@@ -11,8 +11,8 @@ permalink: /advanced-topics/running-an-experiment/
 This page explains how to run an experiment. It requires using Google Cloud.
 Note that most users of FuzzBench should simply
 [add a fuzzer]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/) and use
-the service, we don't recommend running experiments on your own. This document
-is intended for those wishing to validate/reproduce results.
+the FuzzBench service, we don't recommend running experiments on your own. This
+document is intended for those wishing to validate/reproduce results.
 This page assumes a certain level of knowledge about Google Cloud and FuzzBench.
 If you haven't already, please follow the [guide on setting up a Google Cloud
 Project]({{ site.baseurl }}/advanced-topics/setting-up-a-google-cloud-project/)
@@ -22,15 +22,15 @@ project.
 - TOC
 {:toc}
 
-Experiments are started by the `run_experiment.py` script. This will create a
-dispatcher instance on Google Compute Engine which:
-1. Builds desired fuzzer-benchmark combinations.
-1. Starts instances to run fuzzing trials with the fuzzer-benchmark
-   builds and stops them when they are done.
-1. Measures the coverage from these trials.
-1. Generates reports based on these measurements.
-
-This page will walkthrough on how to use `run_experiment.py`.
+This page will walk you through on how to use `run_experiment.py`.
+Experiments are started by the `run_experiment.py` script. The script will
+create a dispatcher instance on Google Compute Engine which runs the experiment
+including:
+1. Building desired fuzzer-benchmark combinations.
+1. Starting instances to run fuzzing trials with the fuzzer-benchmark
+   builds and stopping them when they are done.
+1. Measuring the coverage from these trials.
+1. Generating reports based on these measurements.
 
 # run_experiment.py
 

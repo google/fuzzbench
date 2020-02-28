@@ -6,14 +6,16 @@ nav_order: 2
 permalink: /advanced-topics/setting-up-a-google-cloud-project/
 ---
 
+# Setting up a Google Cloud Project
+
 **NOTE**: Most users of FuzzBench should simply [add a fuzzer]({{ site.baseurl
-}}/getting-started/adding-a-new-fuzzer/) and use the service, we don't recommend
-running experiments on your own. This document is intended for those wishing to
-validate/reproduce results.
+}}/getting-started/adding-a-new-fuzzer/) and use the FuzzBench service, we don't
+recommend running experiments on your own. This document is intended for those
+wishing to validate/reproduce results.
 
 This page will walk you through how to set up a Google Cloud Project to run an
 experiment for the first time. Currently, FuzzBench requires Google Cloud to run
-(though this may change, see
+experiments (though this may change, see
 [FAQ]({{ site.baseurl }}/faq/#how-can-i-reproduce-the-results-or-run-fuzzbench-myself)).
 
 ## Create the Project
@@ -51,8 +53,8 @@ Certain links provided in this document assume "us-central1".
 Note that the region you choose should be the region you use later for running
 experiments.
 
-* For the rest of this document, we will use `$POSTGRES_INSTANCE`,
-`$PROJECT_REGION`, and `$POSTGRES_PASSWORD` to refer to the name of the
+* For the rest of this document, we will use `$PROJECT_REGION`,
+`$POSTGRES_INSTANCE`, and `$POSTGRES_PASSWORD` to refer to the name of the
 PostgreSQL instance you created, its region, and its password. Set them in your
 environment:
 
@@ -81,7 +83,7 @@ wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O cloud_sql_pro
 psql "host=127.0.0.1 sslmode=disable user=postgres"
 ```
 
-Use $POSTGRES_PASSWORD when prompted.
+Use `$POSTGRES_PASSWORD` when prompted.
 
 * Initialize the postgres database:
 
@@ -89,14 +91,15 @@ Use $POSTGRES_PASSWORD when prompted.
 PYTHONPATH=. alembic upgrade head
 ```
 
-If this command fails, double check you set `POSTGRES_PASSWORD`.
+If this command fails, double check you set `POSTGRES_PASSWORD` correctly.
+At this point you can kill the `cloud_sql_proxy` process.
 
 ## Google Cloud Storage buckets
 
 * Set up Google Cloud Storage Buckets:
 
 ```bash
-# Bucket for storing experiment artifacts such as corpora, coverage binaries
+# Bucket for storing experiment artifacts such as corpora, coverage binaries,
 # crashes etc.
 gsutil mb gs://$DATA_BUCKET_NAME
 
@@ -106,13 +109,16 @@ gsutil mb gs://$REPORT_BUCKET_NAME
 
 ## Dispatcher image and container registry setup
 
-* Build dispatcher image:
+* Build the dispatcher image:
 
 ```bash
 docker build -f docker/dispatcher-image/Dockerfile -t gcr.io/$PROJECT_NAME/dispatcher-image docker/dispatcher-image/
 ```
 
+FuzzBench uses an instance running this image to manage most of the experiment.
+
 * [Enable Google Container Registry API](https://console.console.cloud.google.com/apis/api/containerregistry.googleapis.com/overview)
+to use the container registry.
 
 * Push `dispatcher-image` to the docker registry:
 
@@ -120,23 +126,23 @@ docker build -f docker/dispatcher-image/Dockerfile -t gcr.io/$PROJECT_NAME/dispa
 docker push gcr.io/$PROJECT_NAME/dispatcher-image
 ```
 
-* [Make the registry's visibility public](https://console.cloud.google.com/gcr/settings).
+* [Switch the registry's visibility to public](https://console.cloud.google.com/gcr/settings).
 
 ## Enable required APIs
 
-* [Enable the IAM API](https://console.cloud.google.com/apis/api/iam.googleapis.com/landing).
-This allows FuzzBench to authenticate to various Google Cloud APIs and services.
+* [Enable the IAM API](https://console.cloud.google.com/apis/api/iam.googleapis.com/landing)
+so that FuzzBench can authenticate to Google Cloud APIs and services.
 
-* [Enable the error reporting API](https://console.cloud.google.com/apis/library/clouderrorreporting.googleapis.com).
-This allows experiments to report errors to the
-[Google Cloud error reporting dashboard](https://console.cloud.google.com/errors).
+* [Enable the error reporting API](https://console.cloud.google.com/apis/library/clouderrorreporting.googleapis.com)
+so that FuzzBench can report errors to the
+[Google Cloud error reporting dashboard](https://console.cloud.google.com/errors)
 
-* [Enable Cloud Build API](https://console.cloud.google.com/apis/library/cloudbuild.googleapis.com).
-This allows experiments to build docker images using Google Cloud Build, a
-platform optimized for doing so.
+* [Enable Cloud Build API](https://console.cloud.google.com/apis/library/cloudbuild.googleapis.com)
+So that FuzzBench can build docker images using Google Cloud Build, a platform
+optimized for doing so.
 
 * [Enable Cloud SQL Admin API](https://console.cloud.google.com/apis/library/sqladmin.googleapis.com)
-This allows experiments to connect to the database.
+So that FuzzBench can connect to the database.
 
 ## Configure networking
 
@@ -145,7 +151,7 @@ This allows experiments to connect to the database.
 is the networking page for the default network in "us-central1". It is best if
 you use `$POSTGRES_REGION` for this.
 
-* Click the edit icon. Turn "Private Google access" to "On". Press "Save"
+* Click the edit icon. Turn "Private Google access" to "On". Press "Save".
 
 * This allows the trial runner instances to use Google Cloud APIs since they do
   not have external IP addresses.
@@ -161,8 +167,8 @@ is the quotas page for the "us-central1" region.
 
 * Select the "Compute Engine API" "CPUs" quota, fill out contact details and
 request a quota increase. We recommend requesting a quota limit of "1000" as
-it is likely to be approved and is sufficiently large for reproducing results in
-a reasonable amount of time.
+will probably be approved and is large enough for running experiments in a
+reasonable amount of time.
 
 * Wait until you receive an email confirming the quota increase.
 
