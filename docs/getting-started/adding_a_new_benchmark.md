@@ -21,9 +21,9 @@ subdirectory will be the name of the benchmark. The benchmark name can contain
 alphanumeric characters, dots, hyphens and underscores.
 
 ```bash
-$ export BENCHMARK_NAME=<your_benchmark_name>
-$ cd benchmarks
-$ mkdir $BENCHMARK_NAME
+export BENCHMARK_NAME=<your_benchmark_name>
+cd benchmarks
+mkdir $BENCHMARK_NAME
 ```
 
 ## OSS-Fuzz benchmarks vs standard benchmarks
@@ -119,11 +119,11 @@ Once you've got a benchmark integrated, you should test that it builds and runs
 successfully with at least one fuzzer (e.g. afl):
 
 ```shell
-$ export FUZZER_NAME=afl
-$ export BENCHMARK_NAME=libpng-1.2.56
+export FUZZER_NAME=afl
+export BENCHMARK_NAME=libpng-1.2.56
 
-$ make build-$FUZZER_NAME-$BENCHMARK_NAME
-$ make run-$FUZZER_NAME-$BENCHMARK_NAME
+make build-$FUZZER_NAME-$BENCHMARK_NAME
+make run-$FUZZER_NAME-$BENCHMARK_NAME
 ```
 
 If everything works, submit the integration code via a GitHub pull request.
