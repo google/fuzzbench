@@ -150,19 +150,23 @@ def make(*args):
 
 def local_copy_coverage_binaries(benchmark):
     """Copy coverage binaries in a local experiment."""
-    coverage_binaries_dir = exp_path.gcs(get_coverage_binaries_dir())
+    coverage_binaries_dir = get_coverage_binaries_dir()
     mount_arg = '{}:/host-out'.format(coverage_binaries_dir)
     runner_image_url = benchmark_utils.get_runner_image_url(
         benchmark, 'coverage', environment.get('CLOUD_PROJECT'))
     if benchmark_utils.is_oss_fuzz(benchmark):
         runner_image_url = runner_image_url.replace('runners', 'builders')
     docker_name = benchmark_utils.get_docker_name(benchmark)
-    command = 'cd /out; tar -czvf /host-out/coverage-build-{}.tar.gz *'.format(
-        docker_name)
-    return new_process.execute([
+    coverage_build_archive = 'coverage-build-{}.tar.gz'.format(docker_name)
+    command = 'cd /out; tar -czvf /host-out/{} *'.format(coverage_build_archive)
+    new_process.execute([
         'docker', 'run', '-v', mount_arg, runner_image_url, '/bin/bash', '-c',
         command
     ])
+    coverage_build_archive_path = os.path.join(coverage_binaries_dir,
+                                               coverage_build_archive)
+    return gsutil.cp(coverage_build_archive_path,
+                     exp_path.gcs(coverage_build_archive_path))
 
 
 def gcb_build_oss_fuzz_project_coverage(benchmark: str) -> Tuple[int, str]:
