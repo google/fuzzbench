@@ -79,7 +79,7 @@ You can verify that your local setup is working correctly by running the
 presubmit checks.
 
 ```bash
-make run-presubmit
+make presubmit
 ```
 
 ### Formatting
@@ -87,5 +87,5 @@ make run-presubmit
 You can format your changes using the following command:
 
 ```bash
-make run-format
+make format
 ```

@@ -24,19 +24,19 @@ ${VENV_ACTIVATE}:
 
 install-dependencies: ${VENV_ACTIVATE}
 
-run-presubmit: install-dependencies
+presubmit: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py
 
 format: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py format
 
-check-license: install-dependencies
+licensecheck: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py license
 
-check-linter: install-dependencies
+linter: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py lint
 
-check-type: install-dependencies
+typecheck: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py type
 
 docs-serve:
