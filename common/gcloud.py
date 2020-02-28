@@ -14,10 +14,12 @@
 """Google cloud related code."""
 
 import enum
+import subprocess
 import time
 from typing import List
 
 from common import logs
+from common import experiment_utils
 from common import new_process
 
 # Constants for dispatcher specs.
@@ -66,6 +68,15 @@ class InstanceType(enum.Enum):
     RUNNER = 1
 
 
+def local_create_instance(instance_name: str,
+                          instance_type: InstanceType,
+                          config: dict,
+                          metadata: dict = None,
+                          startup_script: str = None,
+                          **kwargs) -> bool:
+    p = subprocess.Popen(['/bin/bash', startup_script], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+
+
 def create_instance(instance_name: str,
                     instance_type: InstanceType,
                     config: dict,
@@ -74,6 +85,10 @@ def create_instance(instance_name: str,
                     **kwargs) -> bool:
     """Creates a GCE instance with name, |instance_name|, type, |instance_type|
     and with optionally provided |metadata| and |startup_script|."""
+
+    if experiment_utils.IS_LOCAL:
+        local_create_instance(instance_name, instance_type, config, metadata, startup_script, **kwargs)
+        return new_process.ProcessResult(0, '', False)
     command = [
         'gcloud',
         'compute',

@@ -50,7 +50,7 @@ SnapshotMeasureRequest = collections.namedtuple(
 
 NUM_RETRIES = 3
 RETRY_DELAY = 3
-FAIL_WAIT_SECONDS = 30
+FAIL_WAIT_SECONDS = 1
 SNAPSHOT_QUEUE_GET_TIMEOUT = 1
 SNAPSHOTS_BATCH_SAVE_SIZE = 100
 
@@ -67,6 +67,10 @@ def remote_dir_exists(directory: pathlib.Path) -> bool:
 
 def measure_loop(experiment: str, max_total_time: int):
     """Continuously measure trials for |experiment|."""
+    db_utils.initialize()
+    logs.initialize(default_extras={
+        'component': 'dispatcher',
+    })
     with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
         # Using Multiprocessing.Queue will fail with a complaint about
         # inheriting queue.

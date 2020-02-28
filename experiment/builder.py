@@ -27,6 +27,7 @@ import time
 from typing import Callable, Dict, List, Tuple
 
 from common import benchmark_utils
+from common import environment
 from common import experiment_path as exp_path
 from common import experiment_utils
 from common import filesystem
@@ -75,7 +76,10 @@ def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
     """Builds |benchmark| for |fuzzer|."""
     logger.info('Building benchmark: %s, fuzzer: %s.', benchmark, fuzzer)
     try:
-        if benchmark_utils.is_oss_fuzz(benchmark):
+        if experiment_utils.IS_LOCAL:
+            image_name = 'build-{}-{}'.format(fuzzer, benchmark)
+            make(image_name)
+        elif benchmark_utils.is_oss_fuzz(benchmark):
             gcb_build_oss_fuzz_project_fuzzer(benchmark, fuzzer)
         else:
             gcb_build_benchmark_fuzzer(benchmark, fuzzer)
@@ -120,6 +124,14 @@ def gcb_build_oss_fuzz_project_fuzzer(benchmark: str,
 
 def gcb_build_benchmark_coverage(benchmark: str) -> Tuple[int, str]:
     """Build a coverage build of |benchmark| on GCB."""
+    if experiment_utils.IS_LOCAL:
+        image_name = 'coverage-{}-oss-fuzz-builder'.format(benchmark)
+        result = make(image_name)
+        if result.returncode:
+            return result
+        local_copy_coverage_binaries(benchmark)
+        return result
+
     substitutions = {
         '_GCS_COVERAGE_BINARIES_DIR': exp_path.gcs(get_coverage_binaries_dir()),
         '_BENCHMARK': benchmark,
@@ -129,8 +141,35 @@ def gcb_build_benchmark_coverage(benchmark: str) -> Tuple[int, str]:
     return gcb_build(config_file, config_name, substitutions)
 
 
+def make(*args):
+    assert args
+    command = ['make'] + list(args)
+    return new_process.execute(command)
+
+
+def local_copy_coverage_binaries(benchmark):
+    coverage_binaries_dir = exp_path.gcs(get_coverage_binaries_dir())
+    mount_arg = '{}:/host-out'.format(coverage_binaries_dir)
+    runner_image_url = benchmark_utils.get_runner_image_url(
+        benchmark, 'coverage', environment.get('CLOUD_PROJECT'))
+    if benchmark_utils.is_oss_fuzz(benchmark):
+        runner_image_url = runner_image_url.replace('runners', 'builders')
+    docker_name = benchmark_utils.get_docker_name(benchmark)
+    command = 'cd /out; tar -czvf /host-out/coverage-build-{}.tar.gz *'.format(docker_name)
+    return new_process.execute(
+        ['docker', 'run', '-v', mount_arg, runner_image_url, '/bin/bash', '-c', command])
+
+
 def gcb_build_oss_fuzz_project_coverage(benchmark: str) -> Tuple[int, str]:
     """Build a coverage build of OSS-Fuzz-based benchmark |benchmark| on GCB."""
+    if experiment_utils.IS_LOCAL:
+        image_name = 'coverage-{}-oss-fuzz-builder'.format(benchmark)
+        result = make(image_name)
+        if result.retcode:
+            return result
+        local_copy_coverage_binaries(benchmark)
+        return result
+
     project = benchmark_utils.get_project(benchmark)
     oss_fuzz_builder_hash = benchmark_utils.get_oss_fuzz_builder_hash(benchmark)
     substitutions = {
@@ -211,6 +250,8 @@ def gcb_build(config_file: str,
 
 def gcb_build_base_images() -> Tuple[int, str]:
     """Build base images on GCB."""
+    if experiment_utils.IS_LOCAL:
+        return make('base-runner', 'base-builder')
     return gcb_build(get_build_config_file('base-images.yaml'), 'base-images')
 
 
