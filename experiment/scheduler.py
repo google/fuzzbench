@@ -42,7 +42,7 @@ logger = logs.Logger('scheduler')  # pylint: disable=invalid-name
 
 RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
 
-jinja_env = jinja2.Environment(
+JINJA_ENV = jinja2.Environment(
     undefined=jinja2.StrictUndefined,
     loader=jinja2.FileSystemLoader(RESOURCES_DIR),
 )
@@ -229,9 +229,11 @@ def _start_trial(trial: TrialProxy, experiment_config: dict):
     return None
 
 
-def render_startup_script_template(
-    instance_name: str, benchmark: str, fuzzer: str, trial_id: int,
-    experiment_config: dict):
+def render_startup_script_template(instance_name: str, benchmark: str,
+                                   fuzzer: str, trial_id: int,
+                                   experiment_config: dict):
+    """Render the startup script using the template and the parameters
+    provided and return the result."""
     fuzzer_config = fuzzer_config_utils.get_by_variant_name(fuzzer)
     underlying_fuzzer_name = fuzzer_config['fuzzer']
     docker_image_url = benchmark_utils.get_runner_image_url(
@@ -248,7 +250,7 @@ def render_startup_script_template(
         ])
 
     local_experiment = utils.is_local_experiment()
-    template = jinja_env.get_template('runner-startup-script-template.sh')
+    template = JINJA_ENV.get_template('runner-startup-script-template.sh')
     return template.render(
         instance_name=instance_name,
         benchmark=benchmark,
@@ -272,8 +274,9 @@ def create_trial_instance(benchmark: str, fuzzer: str, trial_id: int,
     trial_id,fuzzer,benchmark."""
     instance_name = experiment_utils.get_trial_instance_name(
         experiment_config['experiment'], trial_id)
-    startup_script = render_startup_script_template(instance_name,
-                                                    benchmark, fuzzer, trial_id, experiment_config)
+    startup_script = render_startup_script_template(instance_name, benchmark,
+                                                    fuzzer, trial_id,
+                                                    experiment_config)
     startup_script_path = '/tmp/%s-start-docker.sh' % instance_name
     with open(startup_script_path, 'w') as file_handle:
         file_handle.write(startup_script)
