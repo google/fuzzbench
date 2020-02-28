@@ -34,7 +34,6 @@ docker run {% if local_experiment %}-v ~/.config/gcloud:/root/.config/gcloud {% 
 -e CLOUD_COMPUTE_ZONE={{cloud_compute_zone}} \
 -e CLOUD_EXPERIMENT_BUCKET={{cloud_experiment_bucket}} \
 -e FUZZ_TARGET={{fuzz_target}} \
-{{additional_env}} \
-{% if not local_experiment %}--name=runner-container \{% endif %}
+{{additional_env}} {% if not local_experiment %}--name=runner-container {% endif %}\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \
 {{docker_image_url}} 2>&1 | tee /tmp/runner-log.txt
