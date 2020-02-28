@@ -17,7 +17,7 @@ import os
 import posixpath
 
 # Time interval for collecting experiment data (e.g. corpus, crashes).
-SNAPSHOT_PERIOD = 1 * 60  # Seconds.
+SNAPSHOT_PERIOD = 15 * 60  # Seconds.
 
 
 def get_work_dir():

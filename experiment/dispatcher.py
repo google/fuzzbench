@@ -70,14 +70,11 @@ class Experiment:
     """Class representing an experiment."""
 
     def __init__(self, experiment_config_filepath: str):
-        print(experiment_config_filepath)
         self.config = yaml_utils.read(experiment_config_filepath)
 
         benchmarks = self.config['benchmarks'].split(',')
 
-        # !!!
-        # self.benchmarks = builder.build_all_measurers(benchmarks)
-        self.benchmarks = benchmarks #builder.build_all_measurers(benchmarks)
+        self.benchmarks = builder.build_all_measurers(benchmarks)
 
         self.fuzzers = [
             fuzzer_config_utils.get_fuzzer_name(filename) for filename in
@@ -113,8 +110,7 @@ def dispatcher_main():
         fuzzer_config_utils.get_underlying_fuzzer_name(f)
         for f in experiment.fuzzers
     })
-    #!!!
-    # builder.build_all_fuzzer_benchmarks(unique_fuzzers, experiment.benchmarks)
+    builder.build_all_fuzzer_benchmarks(unique_fuzzers, experiment.benchmarks)
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])
 
