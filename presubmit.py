@@ -260,7 +260,7 @@ def license_check(paths: List[Path]) -> bool:
 
 def get_changed_files() -> List[Path]:
     """Return a list of absolute paths of files changed in this git branch."""
-    diff_command = ['git', 'diff', '--name-only', 'FETCH_HEAD']
+    diff_command = ['git', 'diff', '--name-only', 'origin...']
     return [
         Path(path).absolute()
         for path in subprocess.check_output(diff_command).decode().splitlines()
