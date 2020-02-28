@@ -70,9 +70,13 @@ def pending_trials(db, experiment_config):
       'fuzz_target')])
 @mock.patch('common.gcloud.create_instance')
 @mock.patch('common.fuzzer_config_utils.get_by_variant_name')
-def test_create_trial_instance(  # pylint: disable=too-many-arguments
-        mocked_get_by_variant_name, mocked_create_instance, benchmark,
-        expected_image, expected_target, experiment_config):
+def test_create_trial_instance(
+        mocked_get_by_variant_name,  # pylint: disable=too-many-arguments
+        mocked_create_instance,
+        benchmark,
+        expected_image,
+        expected_target,
+        experiment_config):
     """Test that create_trial_instance invokes create_instance
     and creates a startup script for the instance, as we expect it to."""
     instance_name = 'instance1'
@@ -98,6 +102,19 @@ def test_create_trial_instance(  # pylint: disable=too-many-arguments
         experiment_config,
         startup_script=expected_startup_script_path)
     expected_format_string = '''#!/bin/bash
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 echo 0 > /proc/sys/kernel/yama/ptrace_scope
 echo core >/proc/sys/kernel/core_pattern
