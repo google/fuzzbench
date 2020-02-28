@@ -28,7 +28,7 @@ cd fuzzers
 mkdir $FUZZER_NAME
 ```
 
-You can verify the name of your fuzzer is valid by running `make run-presubmit`
+You can verify the name of your fuzzer is valid by running `make presubmit`
 from the root of the project.
 
 ## Create fuzzer files
@@ -264,8 +264,8 @@ make build-$FUZZER_NAME-all
   make -j6 build-$FUZZER_NAME-all
   ```
 
-* Run `make run-format` to format your code.
+* Run `make format` to format your code.
 
-* Run `make run-presubmit` to lint your code and ensure all tests are passing.
+* Run `make presubmit` to lint your code and ensure all tests are passing.
 
 * Submit the integration code in a GitHub pull request.

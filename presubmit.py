@@ -310,7 +310,10 @@ def main() -> int:
     logs.initialize()
     parser = argparse.ArgumentParser(
         description='Presubmit script for fuzzbench.')
-    choices = ['format', 'lint', 'type', 'license', 'test_changed_integrations']
+    choices = [
+        'format', 'lint', 'typecheck', 'licensecheck',
+        'test_changed_integrations'
+    ]
     parser.add_argument('command', choices=choices, nargs='?')
 
     args = parser.parse_args()
@@ -325,11 +328,11 @@ def main() -> int:
         success = lint(changed_files)
         return bool_to_returncode(success)
 
-    if args.command == 'type':
+    if args.command == 'typecheck':
         success = pytype(changed_files)
         return bool_to_returncode(success)
 
-    if args.command == 'license':
+    if args.command == 'licensecheck':
         success = license_check(changed_files)
         return bool_to_returncode(success)
 

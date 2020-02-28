@@ -32,13 +32,13 @@ FuzzBench.
 You can run all checks and unit tests for the core functionality using:
 
 ```bash
-make run-presubmit
+make presubmit
 ```
 
 You can also run the following to format your code or do different checks
 separately:
 
 * `make format` - Formats source code using `yapf`.
-* `make check-linter` - Runs the linter checks.
-* `make check-type` - Runs type checker using `pytype`.
-* `make check-license` - Runs the license header checks.
+* `make lint` - Runs the linter checks.
+* `make typecheck` - Runs type checker using `pytype`.
+* `make licensecheck` - Runs the license header checks.

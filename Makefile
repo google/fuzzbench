@@ -24,20 +24,20 @@ ${VENV_ACTIVATE}:
 
 install-dependencies: ${VENV_ACTIVATE}
 
-run-presubmit: install-dependencies
+presubmit: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py
 
 format: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py format
 
-check-license: install-dependencies
-	source ${VENV_ACTIVATE} && python3 presubmit.py license
+licensecheck: install-dependencies
+	source ${VENV_ACTIVATE} && python3 presubmit.py licensecheck
 
-check-linter: install-dependencies
+lint: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py lint
 
-check-type: install-dependencies
-	source ${VENV_ACTIVATE} && python3 presubmit.py type
+typecheck: install-dependencies
+	source ${VENV_ACTIVATE} && python3 presubmit.py typecheck
 
 docs-serve:
 	cd docs && bundle exec jekyll serve
