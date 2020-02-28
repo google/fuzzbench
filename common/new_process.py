@@ -19,7 +19,6 @@ import subprocess
 import threading
 from typing import List
 
-from common import experiment_utils
 from common import logs
 
 LOG_LIMIT_FIELD = 10 * 1024  # 10 KB.
