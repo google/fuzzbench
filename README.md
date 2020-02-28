@@ -28,7 +28,7 @@ See [an example report](https://www.fuzzbench.com/reports/sample/index.html).
 ## Sample Report
 
 You can view an example report
-[here](http://www.fuzzbench.com/reports/sample/index.html).
+[here](https://www.fuzzbench.com/reports/sample/index.html).
 This report is generated using 10 fuzzers against 24 real-world benchmarks,
 with 20 trials each and over a duration of 24 hours.
 
