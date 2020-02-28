@@ -98,6 +98,7 @@ def test_create_trial_instance(  # pylint: disable=too-many-arguments
         experiment_config,
         startup_script=expected_startup_script_path)
     expected_format_string = '''#!/bin/bash
+
 echo 0 > /proc/sys/kernel/yama/ptrace_scope
 echo core >/proc/sys/kernel/core_pattern
 
@@ -106,14 +107,22 @@ do
   echo 'Error pulling image, retrying...'
 done
 
-docker run --privileged --cpuset-cpus=0 --rm \
--e INSTANCE_NAME=r-test-experiment-9 \
--e FUZZER=fuzzer-a -e BENCHMARK={benchmark} -e FUZZER_VARIANT_NAME=variant \
--e EXPERIMENT=test-experiment -e TRIAL_ID=9 -e MAX_TOTAL_TIME=86400 \
--e CLOUD_PROJECT=fuzzbench -e CLOUD_COMPUTE_ZONE=us-central1-a \
--e CLOUD_EXPERIMENT_BUCKET=gs://experiment-data \
--e FUZZ_TARGET={oss_fuzz_target} -e C1=custom -e C2=custom2 \
---cap-add SYS_NICE --cap-add SYS_PTRACE --name=runner-container \
+docker run \\
+--privileged --cpuset-cpus=0 --rm \\
+-e INSTANCE_NAME=r-test-experiment-9 \\
+-e FUZZER=fuzzer-a \\
+-e BENCHMARK={benchmark} \\
+-e FUZZER_VARIANT_NAME=variant \\
+-e EXPERIMENT=test-experiment \\
+-e TRIAL_ID=9 \\
+-e MAX_TOTAL_TIME=86400 \\
+-e CLOUD_PROJECT=fuzzbench \\
+-e CLOUD_COMPUTE_ZONE=us-central1-a \\
+-e CLOUD_EXPERIMENT_BUCKET=gs://experiment-data \\
+-e FUZZ_TARGET={oss_fuzz_target} \\
+-e C1=custom -e C2=custom2 \\
+--name=runner-container \\
+--cap-add SYS_NICE --cap-add SYS_PTRACE \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
 
     with open(expected_startup_script_path) as file_handle:

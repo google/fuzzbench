@@ -18,6 +18,8 @@ import os
 import urllib.request
 import urllib.error
 
+from common import environment
+
 ROOT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 # pylint: disable=invalid-name
@@ -46,6 +48,11 @@ def is_local():
     except urllib.error.URLError:
         _is_local = True
     return _is_local
+
+
+def is_local_experiment():
+    """Returns True if running a local experiment."""
+    return bool(environment.get('LOCAL_EXPERIMENT'))
 
 
 def string_hash(obj):

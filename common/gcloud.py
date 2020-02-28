@@ -68,18 +68,6 @@ class InstanceType(enum.Enum):
     RUNNER = 1
 
 
-def local_create_instance(instance_name: str,
-                          instance_type: InstanceType,
-                          config: dict,
-                          metadata: dict = None,
-                          startup_script: str = None,
-                          **kwargs) -> bool:
-    command = ['/bin/bash', startup_script]
-    subprocess.Popen(
-        command, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-    return new_process.ProcessResult(0, '', False)
-
-
 def create_instance(instance_name: str,
                     instance_type: InstanceType,
                     config: dict,
@@ -89,8 +77,10 @@ def create_instance(instance_name: str,
     """Creates a GCE instance with name, |instance_name|, type, |instance_type|
     and with optionally provided |metadata| and |startup_script|."""
 
-    if utils.is_local():
-        return local_create_instance(instance_name, instance_type, config, metadata, startup_script, **kwargs)
+    if utils.is_local_experiment():
+        return local_create_instance(instance_name, instance_type, config,
+                                     metadata, startup_script, **kwargs)
+
     command = [
         'gcloud',
         'compute',
@@ -150,3 +140,20 @@ def set_default_project(cloud_project: str):
     """Set default project for future gcloud and gsutil commands."""
     return new_process.execute(
         ['gcloud', 'config', 'set', 'project', cloud_project])
+
+
+# pylint: disable=unused-argument
+def local_create_instance(instance_name: str,
+                          instance_type: InstanceType,
+                          config: dict,
+                          metadata: dict = None,
+                          startup_script: str = None,
+                          **kwargs) -> bool:
+    """Does the equivalent of "create_instance" for local experiments, runs
+    |startup_script| in the background."""
+    assert utils.is_local_experiment()
+    command = ['/bin/bash', startup_script]
+    subprocess.Popen(command,
+                     stderr=subprocess.DEVNULL,
+                     stdout=subprocess.DEVNULL)
+    return new_process.ProcessResult(0, '', False)
