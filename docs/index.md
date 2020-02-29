@@ -11,10 +11,10 @@ has_toc: false
 
 FuzzBench is a free service that evaluates fuzzers on a wide variety of
 real-world benchmarks, at Google scale. The goal of FuzzBench is to make it
-painless and affordable to rigorously evaluate fuzzing research and make fuzzing
-research easier for the community to adopt. We invite members of the research
-community to contribute their fuzzers and give us feedback on improving our
-evaluation techniques.
+painless to rigorously evaluate fuzzing research and make fuzzing research
+easier for the community to adopt. We invite members of the research community
+to contribute their fuzzers and give us feedback on improving our evaluation
+techniques.
 
 FuzzBench provides:
 
@@ -44,7 +44,7 @@ FuzzBench repo](https://github.com/google/fuzzbench).
 1. FuzzBench publishes a report comparing the performance of the fuzzer to other
 fuzzers both on individual benchmarks and in aggregate.
 
-## Add your fuzzer
+## Adding a fuzzer
 
 Follow [this guide]({{ site.baseurl }}/getting-started/) to add a fuzzer to
 FuzzBench, submit it, and get benchmark results.
