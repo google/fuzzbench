@@ -114,5 +114,5 @@ a new benchmark.
 
 ## I've found an issue with FuzzBench. What can I do?
 
-Please [file an issue on GitHub}(https://github.com/google/fuzzbench/issues/new)
+Please [file an issue on GitHub](https://github.com/google/fuzzbench/issues/new)
 or send a pull request fixing the problem.
