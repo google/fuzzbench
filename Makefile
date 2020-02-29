@@ -40,4 +40,4 @@ typecheck: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py typecheck
 
 docs-serve:
-	cd docs && bundle exec jekyll serve
+	cd docs && bundle exec jekyll serve --livereload
