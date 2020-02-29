@@ -11,7 +11,7 @@ permalink: /getting-started/adding-a-new-fuzzer/
 
 This page explains how to add your fuzzer so it can be benchmarked using
 FuzzBench. Before you begin make sure you've followed the
-[prerequisites]({{ site.baseurl }}/getting-started/prerequisites/).
+[prerequisites]({{ site.baseurl }}/getting-started/prerequisites/) section.
 
 - TOC
 {:toc}
@@ -19,7 +19,7 @@ FuzzBench. Before you begin make sure you've followed the
 ## Create fuzzer directory
 
 Create a subdirectory under the root `fuzzers` directory. The name of this
-subdirectory will be the name fuzzbench uses for your fuzzer. The fuzzer name
+subdirectory will be the name FuzzBench uses for your fuzzer. The fuzzer name
 can contain alphanumeric characters and underscores and must be a valid python
 module.
 
@@ -65,7 +65,7 @@ This file defines the image that will be used to run benchmarks with your
 fuzzer. Making this lightweight allows trial instances to be spun up fast.
 
 ```dockerfile
-FROM gcr.io/fuzzbench/base-runner   # Base runner image (Ubuntu 16.04).
+FROM gcr.io/fuzzbench/base-runner          # Base runner image (Ubuntu 16.04).
 
 RUN apt-get update && \                    # Install any runtime dependencies for your fuzzer.
     apt-get install pkg1 pkg2
@@ -93,8 +93,8 @@ two things:
 1. Build the benchmark.
 This is usually done by setting the necessary environment variables, including
 `CFLAGS`, `CXXFLAGS`, `CC`, `CXX` and `FUZZER_LIB`. Note that `CFLAGS` and
-`CXXFLAGS` should be appended to (using `utils.append_flags`) in most cases, and
-not set directly (i.e. overwritten).
+`CXXFLAGS` should be appended to (using `utils.append_flags` functions) in most
+cases, and not set directly (i.e. overwritten).
 1. Copy everything your fuzzer needs to run to the `$OUT` directory.
 
 ```python
@@ -175,7 +175,7 @@ fuzzer data is passed to targeted code through a
 function called `LLVMFuzzerTestOneInput`:
 
 ```c
-LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size);
+int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size);
 ```
 Therefore, AFL's shim takes data from AFL and passes it to
 `LLVMFuzzerTestOneInput`.
@@ -245,19 +245,19 @@ make build-$FUZZER_NAME-all
 
   * Start a new shell and run fuzzer there:
 
-  ```shell
-  make debug-$FUZZER_NAME-$BENCHMARK_NAME
-  ```
+    ```shell
+    make debug-$FUZZER_NAME-$BENCHMARK_NAME
+    ```
 
   * Or, debug an existing fuzzer run in the `make run-*` docker container:
 
-  ```shell
-  docker container ls
-  docker exec -ti <container-id> /bin/bash
+    ```shell
+    docker container ls
+    docker exec -ti <container-id> /bin/bash
 
-  # E.g. check corpus.
-  ls /out/corpus
-  ```
+    # E.g. check corpus.
+    ls /out/corpus
+    ```
 
 * To do builds in parallel, pass -j <number_of_parallel_jobs> to make:
 
@@ -269,4 +269,5 @@ make build-$FUZZER_NAME-all
 
 * Run `make presubmit` to lint your code and ensure all tests are passing.
 
-* Submit the integration in a GitHub pull request.
+* Submit the integration in a
+[GitHub pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).

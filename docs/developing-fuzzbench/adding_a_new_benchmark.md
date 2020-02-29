@@ -77,7 +77,7 @@ the compiler options - `CC`, `CXX`, `CFLAGS`, `CXXFLAGS` and the fuzzer library
 as input.
 
 Once the build is finished, copy the fuzz target binary, any library
-dependencies and seeds directory into the output directory (`$OUT`).
+dependencies and the seeds directory into the output directory (`$OUT`).
 **NOTE**: Only build artifacts added in `$OUT` directory are available when
 running the fuzzer. You should not have any dependencies outside of `$OUT`.
 
@@ -115,7 +115,7 @@ Example: [libpng-1.2.56](https://github.com/google/fuzzbench/blob/master/benchma
 
 ## Testing it out
 
-Once you've got a benchmark integrated, you should test that it builds and runs
+Once you integrated a benchmark, you should test that it builds and runs
 successfully with at least one fuzzer (e.g. afl):
 
 ```shell
@@ -126,4 +126,5 @@ make build-$FUZZER_NAME-$BENCHMARK_NAME
 make run-$FUZZER_NAME-$BENCHMARK_NAME
 ```
 
-If everything works, submit the integration in a GitHub pull request.
+If everything works, submit the integration in a
+[GitHub pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).

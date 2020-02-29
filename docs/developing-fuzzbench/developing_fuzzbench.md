@@ -8,6 +8,6 @@ permalink: /developing-fuzzbench/
 
 # Developing FuzzBench
 
-These pages walk you through making code changes to FuzzBench that aren't fuzzer
-integrations. They assume you have already read the docs on
-[Getting started]({{site.baseurl }}/getting-started/)
+This section walks you through making code changes to FuzzBench that aren't
+fuzzer integrations. They assume you have already read the docs on
+[Getting started]({{site.baseurl }}/getting-started/).

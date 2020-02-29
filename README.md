@@ -2,10 +2,10 @@
 
 FuzzBench is a free service that evaluates fuzzers on a wide variety of
 real-world benchmarks, at Google scale. The goal of FuzzBench is to make it
-painless to rigorously evaluate fuzzing research and make fuzzing research
-easier for the community to adopt. We invite members of the research community
-to contribute their fuzzers and give us feedback on improving our evaluation
-techniques.
+painless and affordable to rigorously evaluate fuzzing research and make fuzzing
+research easier for the community to adopt. We invite members of the research
+community to contribute their fuzzers and give us feedback on improving our
+evaluation techniques.
 
 FuzzBench provides:
 
@@ -17,7 +17,7 @@ FuzzBench provides:
 
 To participate, submit your fuzzer to run on the FuzzBench platform by following
 [our simple guide](
-https://google.github.io/fuzzbench/getting-started/adding-a-new-fuzzer/).
+https://google.github.io/fuzzbench/getting-started/).
 After your integration is accepted, we will run a large-scale experiment using
 your fuzzer and generate a report comparing your fuzzer to others.
 See [an example report](https://www.fuzzbench.com/reports/sample/index.html).
