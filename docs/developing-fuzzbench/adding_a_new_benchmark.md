@@ -1,15 +1,15 @@
 ---
 layout: default
 title: Adding a new benchmark
-parent: Getting started
-nav_order: 4
-permalink: /getting-started/adding-a-new-benchmark/
+parent: Developing FuzzBench
+nav_order: 1
+permalink: /developing-fuzzbench/adding-a-new-benchmark/
 ---
 
 # Adding a new benchmark
 {: .no_toc}
 
-This page explains how to add and test a new benchmark in FuzzBench environment.
+This page explains how to add a new benchmark to FuzzBench and test it.
 
 - TOC
 {:toc}
@@ -17,8 +17,8 @@ This page explains how to add and test a new benchmark in FuzzBench environment.
 ## Create benchmark directory
 
 Create a subdirectory under the root `benchmarks` directory. The name of this
-subdirectory will be the name of the benchmark. The benchmark name can contain
-alphanumeric characters, dots, hyphens and underscores.
+subdirectory will be the name FuzzBench uses for the benchmark. The benchmark
+name can contain alphanumeric characters, dots, hyphens and underscores.
 
 ```bash
 export BENCHMARK_NAME=<your_benchmark_name>
@@ -33,7 +33,7 @@ OSS-Fuzz benchmarks are OSS-Fuzz projects that are built for use as benchmarks.
 Standard benchmarks allow using arbitrary code as benchmarks and are thus more
 powerful but also more work.
 
-## Using existing OSS-Fuzz projects
+## OSS-Fuzz benchmarks
 
 You can use any existing OSS-Fuzz project as a benchmark. You just need to
 create a single file `oss-fuzz.yaml` in the benchmark directory.
@@ -52,7 +52,7 @@ Therefore, let us know the benchmark you want incorporated and we will produce a
 build that can be used here.
 Example: [wireshark_fuzzshark_ip](https://github.com/google/fuzzbench/blob/master/benchmarks/wireshark_fuzzshark_ip/oss-fuzz.yaml).
 
-### Standard Benchmarks: Create benchmark files
+### Standard benchmarks: Create benchmark files
 
 ### fuzz_target.cc
 
@@ -111,7 +111,7 @@ Example: [libxml2](https://github.com/google/fuzzbench/blob/master/benchmarks/li
 This directory should contain a set of test input files for the fuzz target that
 provide good code coverage to start from. This should be copied to `$OUT/seeds`
 
-Example [libpng-1.2.56](https://github.com/google/fuzzbench/blob/master/benchmarks/libpng-1.2.56/seeds).
+Example: [libpng-1.2.56](https://github.com/google/fuzzbench/blob/master/benchmarks/libpng-1.2.56/seeds).
 
 ## Testing it out
 
@@ -126,4 +126,4 @@ make build-$FUZZER_NAME-$BENCHMARK_NAME
 make run-$FUZZER_NAME-$BENCHMARK_NAME
 ```
 
-If everything works, submit the integration code via a GitHub pull request.
+If everything works, submit the integration in a GitHub pull request.

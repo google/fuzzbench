@@ -1,25 +1,25 @@
 ---
 layout: default
 title: Running an experiment
-parent: Advanced topics
-nav_order: 3
-permalink: /advanced-topics/running-an-experiment/
+parent: Running your own experiment
+nav_order: 2
+permalink: /running-your-own-experiment/running-an-experiment/
 ---
 
 # Running an experiment
 
 **NOTE**: Most users of FuzzBench should simply [add a fuzzer]({{ site.baseurl
 }}/getting-started/adding-a-new-fuzzer/) and use the FuzzBench service. This
-document isn't needed for using the FuzzBench service. This document explains
+page isn't needed for using the FuzzBench service. This page explains
 how to run an [experiment]({{ site.baseurl }}/reference/glossary/#Experiment) on
 your own. We don't recommend running experiments on your own for most users.
 Validating results from the FuzzBench service is a good reason to run an
 experiment on your own.
 
-This document assumes a certain level of knowledge about
+This page assumes a certain level of knowledge about
 Google Cloud and FuzzBench. If you haven't already, please follow the
-[guide on setting up a Google Cloud Project]({{ site.baseurl}}/advanced-topics/setting-up-a-google-cloud-project/)
-to run your own experiments. This document assumes you already have set up a
+[guide on setting up a Google Cloud Project]({{ site.baseurl}}/running-your-own-experiment/setting-up-a-google-cloud-project/)
+to run your own experiments. This page assumes you already have set up a
 Google Cloud Project, since running an experiment requires Google Cloud.
 
 - TOC
@@ -35,7 +35,7 @@ including:
 1. Measuring the coverage from these trials.
 1. Generating reports based on these measurements.
 
-The rest of this document will assume all commands are run from the root of
+The rest of this page will assume all commands are run from the root of
 FuzzBench.
 
 # run_experiment.py
@@ -75,7 +75,7 @@ cloud_sql_instance_connection_name: "$PROJECT_NAME:$PROJECT_REGION:$POSTGRES_INS
 **NOTE:** The values `$PROJECT_NAME`, `$PROJECT_REGION` `$DATA_BUCKET_NAME`,
 `$REPORT_BUCKET_NAME` `$POSTGRES_INSTANCE` refer to the values of those
 environment variables that were set in the [guide on setting up a Google Cloud
-Project]({{ site.baseurl }}/advanced-topics/setting-up-a-google-cloud-project/).
+Project]({{ site.baseurl }}/running-your-own-experiment/setting-up-a-google-cloud-project/).
 For example if `$PROJECT_NAME` is `my-fuzzbench-project`, use
 `my-fuzzbench-project` and not `$PROJECT_NAME`.
 

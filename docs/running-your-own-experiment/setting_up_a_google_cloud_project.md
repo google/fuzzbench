@@ -1,16 +1,16 @@
 ---
 layout: default
 title: Setting up a Google Cloud Project
-parent: Advanced topics
-nav_order: 2
-permalink: /advanced-topics/setting-up-a-google-cloud-project/
+parent: Running your own experiment
+nav_order: 1
+permalink: /running-your-own-experiment/setting-up-a-google-cloud-project/
 ---
 
 # Setting up a Google Cloud Project
 
 **NOTE**: Most users of FuzzBench should simply [add a fuzzer]({{ site.baseurl
 }}/getting-started/adding-a-new-fuzzer/) and use the FuzzBench service. This
-document isn't needed for using the FuzzBench service. This document explains
+page isn't needed for using the FuzzBench service. This page explains
 how to set up a Google Cloud project for running an [experiment]({{ site.baseurl
 }}/reference/glossary/#Experiment) for the first time. We don't recommend
 running experiments on your own for most users. Validating results from the
@@ -20,7 +20,7 @@ Currently, FuzzBench requires Google Cloud to run experiments (though this may
 change, see
 [FAQ]({{ site.baseurl }}/faq/#how-can-i-reproduce-the-results-or-run-fuzzbench-myself)).
 
-The rest of this document will assume all commands are run from the root of
+The rest of this page will assume all commands are run from the root of
 FuzzBench.
 
 ## Create the Project
@@ -35,7 +35,7 @@ FuzzBench.
 export PROJECT_NAME=<your-project-name>
 ```
 
-For the rest of this document, replace `$PROJECT_NAME` with the name of the
+For the rest of this page, replace `$PROJECT_NAME` with the name of the
 project you created.
 
 * [Install Google Cloud SDK](https://console.cloud.google.com/sdk/install).
@@ -54,11 +54,11 @@ gcloud config set project $PROJECT_NAME
 [Google Cloud SQL](https://console.cloud.google.com/sql/create-instance-postgres).
 This will take a few minutes.
 We recommend using "us-central1" as the region and zone "a" as the zone.
-Certain links provided in this document assume "us-central1".
+Certain links provided in this page assume "us-central1".
 Note that the region you choose should be the region you use later for running
 experiments.
 
-* For the rest of this document, we will use `$PROJECT_REGION`,
+* For the rest of this page, we will use `$PROJECT_REGION`,
 `$POSTGRES_INSTANCE`, and `$POSTGRES_PASSWORD` to refer to the region of the
 PostgreSQL instance you created, its name, and its password. Set them in your
 environment:
@@ -189,4 +189,4 @@ reasonable amount of time.
 
 ## Run an experiment
 
-* Follow the [guide on running an experiment]({{ site.baseurl }}/advanced-topics/running-an-experiment/)
+* Follow the [guide on running an experiment]({{ site.baseurl }}/running-your-own-experiment/running-an-experiment/)

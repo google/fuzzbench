@@ -1,9 +1,9 @@
 ---
 layout: default
 title: Statistical Analysis
-parent: Advanced topics
-nav_order: 1
-permalink: /getting-started/statistical-analysis/
+parent: Reference
+nav_order: 3
+permalink: /reference/statistical-analysis/
 ---
 
 # Statistical Analysis

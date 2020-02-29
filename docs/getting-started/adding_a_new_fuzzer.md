@@ -19,8 +19,9 @@ FuzzBench. Before you begin make sure you've followed the
 ## Create fuzzer directory
 
 Create a subdirectory under the root `fuzzers` directory. The name of this
-subdirectory will be the name of the fuzzer. The fuzzer name can contain
-alphanumeric characters and underscores and must be a valid python module.
+subdirectory will be the name fuzzbench uses for your fuzzer. The fuzzer name
+can contain alphanumeric characters and underscores and must be a valid python
+module.
 
 ```bash
 export FUZZER_NAME=<your_fuzzer_name>
@@ -56,13 +57,12 @@ RUN git clone <git_url> /fuzzer_lib_src
 RUN cd /fuzzer_lib_src && clang++ fuzzer_lib.o
 ```
 
-Example [afl](https://github.com/google/fuzzbench/blob/master/fuzzers/afl/builder.Dockerfile).
+Example: [afl](https://github.com/google/fuzzbench/blob/master/fuzzers/afl/builder.Dockerfile).
 
 ### runner.Dockerfile
 
 This file defines the image that will be used to run benchmarks with your
-fuzzer. Keep this as lightweight as possible, as this helps spin up trial
-instances faster.
+fuzzer. Making this lightweight allows trial instances to be spun up fast.
 
 ```dockerfile
 FROM gcr.io/fuzzbench/base-runner   # Base runner image (Ubuntu 16.04).
@@ -71,7 +71,7 @@ RUN apt-get update && \                    # Install any runtime dependencies fo
     apt-get install pkg1 pkg2
 ```
 
-Example [honggfuzz](https://github.com/google/fuzzbench/blob/master/fuzzers/honggfuzz/runner.Dockerfile).
+Example: [honggfuzz](https://github.com/google/fuzzbench/blob/master/fuzzers/honggfuzz/runner.Dockerfile).
 
 As you can see by looking at the runner.Dockerfile of other projects, in most
 cases only the `FROM` line is needed since most fuzzers do not have any special
@@ -79,9 +79,10 @@ runtime dependencies.
 
 ### fuzzer.py
 
-This file specifies how to build benchmarks using your fuzzer. We hope to have
-accommodated most common use cases but please open up an issue if you're having
-trouble building benchmarks with your fuzzer.
+This file specifies how to build and fuzz benchmarks using your fuzzer. We hope
+to have accommodated most common use cases but please [file an issue](https://github.com/google/fuzzbench/issues/new) if
+you're having trouble.
+
 In your fuzzer directory, create a Python file named `fuzzer.py`. It must
 contain two functions:
 ```
@@ -176,7 +177,7 @@ function called `LLVMFuzzerTestOneInput`:
 ```c
 LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size);
 ```
-Therefore, the shim, in this case, takes data from AFL and passes it to
+Therefore, AFL's shim takes data from AFL and passes it to
 `LLVMFuzzerTestOneInput`.
 
 If, like AFL, your fuzzer has a [persistent mode](https://lcamtuf.blogspot.com/2015/06/new-in-afl-persistent-mode.html),
@@ -190,7 +191,7 @@ this gets used as the `FUZZER_LIB`.
 
 If your fuzzer does not support persistent mode, you can use the
 [StandAloneFuzzTargetMain.cpp](https://github.com/llvm/llvm-project/blob/master/compiler-rt/lib/fuzzer/standalone/StandaloneFuzzTargetMain.c)
-file as your `FUZZER_LIB`. This file takes files as arguments, reads them, and
+as your `FUZZER_LIB`. This file takes files as arguments, reads them, and
 invokes `LLVMFuzzerTestOneInput` using their data as input
 (See [Eclipser](https://github.com/google/fuzzbench/blob/master/fuzzers/eclipser/builder.Dockerfile)
 for an example of this). This can be used for a fuzzer that must restart the
@@ -268,4 +269,4 @@ make build-$FUZZER_NAME-all
 
 * Run `make presubmit` to lint your code and ensure all tests are passing.
 
-* Submit the integration code in a GitHub pull request.
+* Submit the integration in a GitHub pull request.

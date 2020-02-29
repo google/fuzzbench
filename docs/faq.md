@@ -2,7 +2,7 @@
 layout: default
 title: FAQ
 has_children: true
-nav_order: 5
+nav_order: 6
 permalink: /faq/
 ---
 
@@ -22,7 +22,7 @@ analyzed 32 fuzzing research papers and has
 [found](http://www.pl-enthusiast.net/2018/08/23/evaluating-empirical-evaluations-for-fuzz-testing/)
 that "_no paper adheres to a sufficiently high standard of evidence to justify
 general claims of effectiveness_". This is a problem because it can lead to
-[unreproducable](https://andreas-zeller.blogspot.com/2019/10/when-results-are-all-that-matters-case.html)
+[unreproducible](https://andreas-zeller.blogspot.com/2019/10/when-results-are-all-that-matters-case.html)
 results.
 
 We created FuzzBench, so that all researchers and developers can evaluate their
@@ -55,7 +55,7 @@ platform. Contributions and suggestions to make the platform better are welcome.
 We are running the free FuzzBench service on Google Cloud, and the current
 implementation has some Google Cloud specific bits in it. You can use the code
 to run FuzzBench yourself on Google Cloud. Our docs explain how to do this
-[here]({{ site.baseurl }}/advanced-topics/running-an-experiment/).
+[here]({{ site.baseurl }}/running-your-own-experiment/running-an-experiment/).
 
 We are also working on making it easier to run in other environments (local
 cluster, other cloud providers, kubernetes, etc.). Community contributions for
@@ -109,7 +109,7 @@ It should satisfy these criteria:
 * Should have a non-trivial codebase (Not a hash function for example).
 
 Please follow the instructions
-[here]({{ site.baseurl }}/getting-started/adding-a-new-benchmark/) to add
+[here]({{ site.baseurl }}/developing-fuzzbench/adding-a-new-benchmark/) to add
 a new benchmark.
 
 ## I've found an issue with FuzzBench. What can I do?
