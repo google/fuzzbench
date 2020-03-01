@@ -2,7 +2,7 @@
 layout: default
 title: Custom analysis and reports
 parent: Developing FuzzBench
-nav_order: 1
+nav_order: 2
 permalink: /developing-fuzzbench/custom_analysis_and_reports
 ---
 
