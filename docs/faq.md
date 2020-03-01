@@ -32,7 +32,7 @@ and
 [guidelines](http://www.sigplan.org/Resources/EmpiricalEvaluation),
 with minimal effort and for free.
 
-## Why are you measuring coverage? Isn't the point of fuzzing finding bugs?
+## Why are you measuring coverage? Isn't the point of fuzzing to find bugs?
 
 We are planning to extend the system to measure bugs as well.
 
@@ -106,7 +106,7 @@ integrated in our community fuzzing service
 We welcome recommendations on adding a new benchmark on the FuzzBench platform.
 It should satisfy these criteria:
 * Should be a commonly used OSS project.
-* Should have a non-trivial codebase (Not a hash function for example).
+* Should have a non-trivial codebase (e.g. not a CRC32 implementation).
 
 Please follow the instructions
 [here]({{ site.baseurl }}/developing-fuzzbench/adding-a-new-benchmark/) to add
@@ -114,4 +114,5 @@ a new benchmark.
 
 ## I've found an issue with FuzzBench. What can I do?
 
-Please file an issue on GitHub or send a pull request fixing the problem.
+Please [file an issue on GitHub](https://github.com/google/fuzzbench/issues/new)
+or send a pull request fixing the problem.

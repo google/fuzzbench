@@ -38,7 +38,7 @@ make presubmit
 You can also run the following to format your code or do different checks
 separately:
 
-* `make format` - Formats source code using `yapf`.
-* `make lint` - Runs the linter checks.
-* `make typecheck` - Runs type checker using `pytype`.
-* `make licensecheck` - Runs the license header checks.
+* `make format` - formats source code using `yapf`.
+* `make lint` - runs the linter checks.
+* `make typecheck` - runs type checker using `pytype`.
+* `make licensecheck` - runs the license header checks.
