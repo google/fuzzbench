@@ -75,7 +75,7 @@ def generate_report(experiment_names,
 
     filesystem.create_directory(report_directory)
 
-    data_path = os.path.join(report_directory, 'data.csv.zip')
+    data_path = os.path.join(report_directory, 'data.csv.gz')
     if from_cached_data and os.path.exists(data_path):
         experiment_df = pd.read_csv(data_path)
     else:
