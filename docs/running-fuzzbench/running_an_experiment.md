@@ -74,7 +74,7 @@ cloud_sql_instance_connection_name: "$PROJECT_NAME:$PROJECT_REGION:$POSTGRES_INS
 
 **NOTE:** The values `$PROJECT_NAME`, `$PROJECT_REGION` `$DATA_BUCKET_NAME`,
 `$REPORT_BUCKET_NAME` `$POSTGRES_INSTANCE` refer to the values of those
-environment variables that were set in the[guide on setting up a Google Cloud
+environment variables that were set in the [guide on setting up a Google Cloud
 Project]({{ site.baseurl }}/running-fuzzbench/setting-up-a-google-cloud-project/).
 For example if `$PROJECT_NAME` is `my-fuzzbench-project`, use
 `my-fuzzbench-project` and not `$PROJECT_NAME`.
