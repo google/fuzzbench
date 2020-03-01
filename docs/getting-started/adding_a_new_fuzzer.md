@@ -85,7 +85,7 @@ you're having trouble.
 
 In your fuzzer directory, create a Python file named `fuzzer.py`. It must
 contain two functions:
-```
+```python
 def build():
 ```
 A function that accepts no arguments and returns nothing. This function must do
