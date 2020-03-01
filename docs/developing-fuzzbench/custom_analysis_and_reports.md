@@ -16,10 +16,10 @@ permalink: /developing-fuzzbench/custom_analysis_and_reports
 
 ## Custom analysis and reports
 
-The default report shows the results of an experiment using plots, ranking
-methods, and statistical tests that are commonly used in the literature.
-However, these defaults are not the only way to rank fuzzers, visualize results,
-or determine statistical significance.
+The [default report]({{site.baseurl}}/reference/report/) shows the results of an
+experiment using plots, ranking methods, and statistical tests that are commonly
+used in the literature. However, these defaults are not the only way to rank
+fuzzers, visualize results, or determine statistical significance.
 
 We encourage researchers to look at the data from different points of view as
 well. We provide a library of alternative analysis, statistical tests and

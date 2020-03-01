@@ -85,7 +85,7 @@ you're having trouble.
 
 In your fuzzer directory, create a Python file named `fuzzer.py`. It must
 contain two functions:
-```
+```python
 def build():
 ```
 A function that accepts no arguments and returns nothing. This function must do
@@ -100,8 +100,8 @@ cases, and not set directly (i.e. overwritten).
 ```python
 def fuzz(input_corpus, output_corpus, target_binary):
 ```
-A function that accepts three arguments `'input_corpus'`, `'output_corpus'` and
-`'target_binary'` and returns nothing. `fuzz` should use these arguments to
+A function that accepts three arguments `input_corpus`, `output_corpus` and
+`target_binary` and returns nothing. `fuzz` should use these arguments to
 fuzz the `target_binary` using your fuzzer.
 
 We have provided an example `fuzzer.py` with comments explaining the necessary
