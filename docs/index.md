@@ -67,6 +67,6 @@ integration changes, new benchmarks, etc.) by opening a GitHub issue
 
 ## Contacts
 
-Join our [mailing list](https://groups.google.com/g/fuzzbench-users) for
-discussions and announcements, or send us a private email at
+Join our [mailing list](https://groups.google.com/forum/#!forum/fuzzbench-users)
+for discussions and announcements, or send us a private email at
 [fuzzbench@google.com](mailto:fuzzbench@google.com).
