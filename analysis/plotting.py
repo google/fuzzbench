@@ -22,6 +22,7 @@ import seaborn as sns
 from analysis import data_utils
 
 _DEFAULT_SPINE_OFFSET = 10
+_DEFAULT_TICKS_COUNT = 12
 _DEFAULT_LABEL_ROTATION = 30
 
 
@@ -131,8 +132,13 @@ class Plotter:
 
         axes.set(ylabel='Edge coverage')
         axes.set(xlabel='Time (hour:minute)')
-        axes.set_xticklabels(
-            [_formatted_hour_min(t) for t in axes.get_xticks()])
+
+        ticks = np.arange(
+            0,
+            snapshot_time + 1,  # Include tick at end time.
+            snapshot_time / _DEFAULT_TICKS_COUNT)
+        axes.set_xticks(ticks)
+        axes.set_xticklabels([_formatted_hour_min(t) for t in ticks])
 
     def write_coverage_growth_plot(self, benchmark_df, image_path, wide=False):
         """Writes coverage growth plot."""
