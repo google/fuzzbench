@@ -1,9 +1,9 @@
 ---
 layout: default
 title: Setting up a Google Cloud Project
-parent: Running your own experiment
+parent: Running FuzzBench
 nav_order: 1
-permalink: /running-your-own-experiment/setting-up-a-google-cloud-project/
+permalink: /running-fuzzbench/setting-up-a-google-cloud-project/
 ---
 
 # Setting up a Google Cloud Project
@@ -189,4 +189,4 @@ reasonable amount of time.
 
 ## Run an experiment
 
-* Follow the [guide on running an experiment]({{ site.baseurl }}/running-your-own-experiment/running-an-experiment/)
+* Follow the [guide on running an experiment]({{ site.baseurl }}/running-fuzzbench/running-an-experiment/)

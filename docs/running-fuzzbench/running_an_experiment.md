@@ -1,9 +1,9 @@
 ---
 layout: default
 title: Running an experiment
-parent: Running your own experiment
+parent: Running FuzzBench
 nav_order: 2
-permalink: /running-your-own-experiment/running-an-experiment/
+permalink: /running-fuzzbench/running-an-experiment/
 ---
 
 # Running an experiment
@@ -18,7 +18,7 @@ experiment on your own.
 
 This page assumes a certain level of knowledge about
 Google Cloud and FuzzBench. If you haven't already, please follow the
-[guide on setting up a Google Cloud Project]({{ site.baseurl}}/running-your-own-experiment/setting-up-a-google-cloud-project/)
+[guide on setting up a Google Cloud Project]({{ site.baseurl}}/running-fuzzbench/setting-up-a-google-cloud-project/)
 to run your own experiments. This page assumes you already have set up a
 Google Cloud Project, since running an experiment requires Google Cloud.
 
@@ -74,8 +74,8 @@ cloud_sql_instance_connection_name: "$PROJECT_NAME:$PROJECT_REGION:$POSTGRES_INS
 
 **NOTE:** The values `$PROJECT_NAME`, `$PROJECT_REGION` `$DATA_BUCKET_NAME`,
 `$REPORT_BUCKET_NAME` `$POSTGRES_INSTANCE` refer to the values of those
-environment variables that were set in the [guide on setting up a Google Cloud
-Project]({{ site.baseurl }}/running-your-own-experiment/setting-up-a-google-cloud-project/).
+environment variables that were set in the[guide on setting up a Google Cloud
+Project]({{ site.baseurl }}/running-fuzzbench/setting-up-a-google-cloud-project/).
 For example if `$PROJECT_NAME` is `my-fuzzbench-project`, use
 `my-fuzzbench-project` and not `$PROJECT_NAME`.
 
