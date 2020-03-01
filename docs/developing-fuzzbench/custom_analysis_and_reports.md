@@ -33,7 +33,7 @@ visualization of the data to the library.
 ## Generating reports
 
 You can use the `generate_report.py` tool for creating reports. For example, you
-can regenerated the report from the raw data of our [sample
+can re-generate the report from the raw data of our [sample
 experiment](https://www.fuzzbench.com/reports/sample/index.html) like this:
 
 ```bash
