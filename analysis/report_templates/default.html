@@ -16,7 +16,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>FuzzBench: {{ experiment.name }} results</title>
+        <title>FuzzBench: {{ experiment.name }} report</title>
 
         <!-- Import Materialize CSS -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
@@ -28,7 +28,7 @@
     <div class="container"><div class="row"><div class="col s12 m10 l10">
 
         <h1 class="center-align brown-text text-darken-3">
-            {{ experiment.name }} report
+            FuzzBench: {{ experiment.name }} report
         </h1>
 
         <div class="card-panel amber lighten-5">
@@ -101,7 +101,10 @@
                     <h5 class="center-align">Mean coverage growth over time</h5>
                     <img class="responsive-img materialboxed"
                          src="{{ benchmark.coverage_growth_plot }}">
-                    <div class="center-align">* The error bands show the 95% confidence interval around the mean coverage.</div>
+                    <div class="center-align">
+                        * The error bands show the 95% confidence interval
+                          around the mean coverage.
+                    </div>
                 </div>
             </div>
 
