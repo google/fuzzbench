@@ -46,7 +46,7 @@ on a post-hoc [Nemenyi test](https://en.wikipedia.org/wiki/Nemenyi_test)
 performed after the [Friedman
 test](https://en.wikipedia.org/wiki/Friedman_test).
 
-The pivot table under the critifical difference diagram shows the median reached
+The pivot table under the critical difference diagram shows the median reached
 coverage numbers.
 
 ### Per-benchmark summary
