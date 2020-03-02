@@ -29,7 +29,7 @@ To participate, submit your fuzzer to run on the FuzzBench platform by following
 After your integration is accepted, we will run a large-scale experiment using
 your fuzzer and generate a report comparing your fuzzer to others, such as AFL
 and libFuzzer.
-See [an example report](https://www.fuzzbench.com/reports/sample/index.html).
+See [a sample report](https://www.fuzzbench.com/reports/sample/index.html).
 
 ## Overview
 
