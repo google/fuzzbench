@@ -76,9 +76,9 @@ instances on Google Compute Engine. The scheduler will continuously try to
 create instances for trials that haven't run yet. This means that if an
 experiment requires too many resources from Google Cloud to complete at once, it
 can still be run anyway after some resources are freed up by trials that have
-stopped. The scheduler stops trials after they have run for the amount of time
-specified when starting the experiment. The scheduler stops running after all
-trials finish running.
+finished running. The scheduler stops trials after they have run for the amount
+of time specified when starting the experiment. The scheduler stops running
+after all trials finish running.
 
 ## Trial runners
 
