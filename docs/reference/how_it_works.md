@@ -27,7 +27,7 @@ most of these details.
 
 As mentioned in the [guide to running an experiment]({{
 site.baseurl}}/running-your-own-experiment/running-an-experiment/),
-`run_experiment.py` creates a [Google Compute Engine
+`run_experiment.py` creates a [Google Compute Engine (GCE)
 instance](https://cloud.google.com/compute) called the dispatcher to run an
 experiment. In addition to referring to the instance, "dispatcher" can also
 refer to the [script/process the instance
@@ -46,9 +46,9 @@ produces a build for each fuzzer-benchmark
 pair needed by the experiment and does a coverage build for each benchmark.
 The builder uses the [Google Cloud Build](https://cloud.google.com/cloud-build)
 service for building the docker images needed by the experiment since it is
-faster and simpler than building them on Compute Engine instances. When the
-builder finishes doing the needed builds, it terminates. Thus, unlike other
-components, it isn't running for the duration of an experiment.
+faster and simpler than building them on GCE instances. When the builder
+finishes doing the needed builds, it terminates. Thus, unlike other components,
+it isn't running for the duration of an experiment.
 
 ### Builds
 
@@ -72,19 +72,20 @@ from coverage builds, it simply runs the binaries directly on the dispatcher.
 
 Once the builder has finished, the dispatcher starts the scheduler. The
 scheduler is responsible for starting and stopping trial runners, which are
-instances on Google Compute Engine. The scheduler will continuously try to
-create instances for trials that haven't run yet. This means that if an
-experiment requires too many resources from Google Cloud to complete at once, it
-can still be run anyway after some resources are freed up by trials that have
-finished running. The scheduler stops trials after they have run for the amount
-of time specified when starting the experiment. The scheduler stops running
-after all trials finish running.
+instances on GCE. The scheduler will continuously try to create instances for
+trials that haven't run yet. This means that if an experiment requires too many
+resources from Google Cloud to complete at once, it can still be run anyway
+after some resources are freed up by trials that have finished running. The
+scheduler stops trials after they have run for the amount of time specified when
+[starting the experiment]({{
+site.baseurl}}/running-your-own-experiment/running-an-experiment/#experiment-configuration-file).
+The scheduler stops running after all trials finish running.
 
 ## Trial runners
 
-Trial runners are compute engine instances that fuzz benchmarks. They start by
-pulling the docker images that were produced by the [builder](/#Builder) and
-uploaded to the container registry. Then, from within the container, they run
+Trial runners are GCE instances that fuzz benchmarks. They start by pulling the
+docker images that were produced by the [builder](/#Builder) and uploaded to the
+container registry. Then, from within the container, they run
 [runner.py](https://github.com/google/fuzzbench/blob/master/experiment/runner.py)
 which calls the `fuzz` function from the `fuzzer.py` file for the specified
 fuzzer
@@ -92,8 +93,9 @@ fuzzer
 The runner will also periodically archive the current `output_corpus` and sync
 it to [Google Cloud Storage](https://cloud.google.com/storage) (this is
 sometimes referred to as a "corpus snapshot"). The runner terminates when it has
-run the `fuzz` function for the time specified for each trial when starting an
-experiment.
+run the `fuzz` function for the time specified for each trial when [starting the
+experiment]({{
+site.baseurl}}/running-your-own-experiment/running-an-experiment/#experiment-configuration-file).
 
 ## Measurer
 
