@@ -36,7 +36,8 @@ The dispatcher (script) doesn't actually do much on its own. It does some
 basic initialization like saving details about the experiment to the database
 and then starts four other major components - the builder, the scheduler, the
 measurer, and the reporter. All of these components run on the dispatcher
-instance.
+instance (note that we don't include it in the architecture diagram because of
+its unique role).
 
 ## Builder
 
@@ -58,15 +59,6 @@ new benchmark]({{ site.baseurl}}/developing-fuzzbench/adding-a-new-benchmark/).
 Note that we use AddressSanitizer for the benchmark builds of most fuzzers
 (i.e. all of them support it) so that it will be easier to add support for
 measuring performance based on crashes.
-
-### Coverage builds
-
-Running coverage builds does not require any dependencies that aren't available
-on the dispatcher image. One reason for this is because OSS-Fuzz only allows
-projects (which are used as benchmarks) to install dependencies in the docker
-container they use for building, not the one they use for fuzzing. Therefore,
-the consumer of coverage builds, the measurer, doesn't actually use the images
-from coverage builds, it simply runs the binaries directly on the dispatcher.
 
 ## Scheduler
 
@@ -111,6 +103,15 @@ hasn't been measured. Because the measurer is run on the dispatcher instance, it
 can't scale with the size of an experiment, so it can actually finish after the
 experiment is done (usually a few hours after the end of an experiment). The
 dispatcher instance terminates after the measurer terminates itself.
+
+### Coverage builds
+
+Running coverage builds does not require any dependencies that aren't available
+on the dispatcher. One reason for this is because OSS-Fuzz only allows projects
+(which are used as benchmarks) to install dependencies in the docker container
+they use for building, and not in the one they use for fuzzing. Therefore, the
+measurer, doesn't actually use the images from coverage builds, it simply runs
+the binaries directly on the dispatcher.
 
 ## Reporter
 
