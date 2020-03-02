@@ -34,8 +34,9 @@ refer to the [script/process the instance
 runs](https://github.com/google/fuzzbench/blob/master/experiment/dispatcher.py).
 The dispatcher (script) doesn't actually do much on its own. It does some
 basic initialization like saving details about the experiment to the database
-and then starts four other major components the builder, the scheduler, the
-measurer, the reporter, which are all run on the same instance.
+and then starts four other major components - the builder, the scheduler, the
+measurer, and the reporter. All of these components run on the dispatcher
+instance.
 
 ## Builder
 
@@ -69,14 +70,14 @@ from coverage builds, it simply runs the binaries directly on the dispatcher.
 
 ## Scheduler
 
-Once the builder has finished the dispatcher starts the scheduler. The scheduler
-is responsible for starting and stopping trial runners, which are instances on
-Google Compute Engine. The scheduler will continuously try to create instances
-for trials without one. This means that if an experiment requires too many
-resources from Google Cloud to complete at once, it can still be run anyway
-(after some resources are freed up by trials that have ended. The scheduler
-stops running after all trials that need to be run have run for their budgeted
-time, which is specified when starting an experiment.
+Once the builder has finished, the dispatcher starts the scheduler. The
+scheduler is responsible for starting and stopping trial runners, which are
+instances on Google Compute Engine. The scheduler will continuously try to
+create instances for trials without one. This means that if an experiment
+requires too many resources from Google Cloud to complete at once, it can still
+be run anyway after some resources are freed up by trials that have ended. The
+scheduler stops running after all trials that need to be run have run for their
+specified time. This is specified when starting an experiment.
 
 ## Trial runners
 
@@ -96,7 +97,7 @@ experiment.
 ## Measurer
 
 The role of the
-[measuer](https://github.com/google/fuzzbench/blob/master/experiment/measurer.py)
+[measurer](https://github.com/google/fuzzbench/blob/master/experiment/measurer.py)
 is to take the output of the trial runners and make it usable for generating
 reports. To do this, the measurer downloads coverage builds for each benchmark
 and then continuously downloads corpus snapshots, measures their coverage, and
