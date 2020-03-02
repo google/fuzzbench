@@ -42,7 +42,7 @@ instance.
 
 The
 [builder](https://github.com/google/fuzzbench/blob/master/experiment/builder.py)
-does a build for each fuzzer-benchmark
+produces a build for each fuzzer-benchmark
 pair needed by the experiment and does a coverage build for each benchmark.
 The builder uses the [Google Cloud Build](https://cloud.google.com/cloud-build)
 service for building the docker images needed by the experiment since it is
@@ -59,7 +59,7 @@ Note that we use AddressSanitizer for the benchmark builds of most fuzzers
 (i.e. all of them support it) so that it will be easier to add support for
 measuring performance based on crashes.
 
-### Coverage builds vs Fuzzer builds
+### Coverage builds
 
 Running coverage builds does not require any dependencies that aren't available
 on the dispatcher image. One reason for this is because OSS-Fuzz only allows
@@ -73,17 +73,18 @@ from coverage builds, it simply runs the binaries directly on the dispatcher.
 Once the builder has finished, the dispatcher starts the scheduler. The
 scheduler is responsible for starting and stopping trial runners, which are
 instances on Google Compute Engine. The scheduler will continuously try to
-create instances for trials without one. This means that if an experiment
-requires too many resources from Google Cloud to complete at once, it can still
-be run anyway after some resources are freed up by trials that have ended. The
-scheduler stops running after all trials that need to be run have run for their
-specified time. This is specified when starting an experiment.
+create instances for trials that haven't run yet. This means that if an
+experiment requires too many resources from Google Cloud to complete at once, it
+can still be run anyway after some resources are freed up by trials that have
+stopped. The scheduler stops trials after they have run for the amount of time
+specified when starting the experiment. The scheduler stops running after all
+trials finish running.
 
 ## Trial runners
 
 Trial runners are compute engine instances that fuzz benchmarks. They start by
-pulling docker images produced by the [builder](/#Builder) the container
-registry. Then, from within the container, they run
+pulling the docker images that were produced by the [builder](/#Builder) and
+uploaded to the container registry. Then, from within the container, they run
 [runner.py](https://github.com/google/fuzzbench/blob/master/experiment/runner.py)
 which calls the `fuzz` function from the `fuzzer.py` file for the specified
 fuzzer
