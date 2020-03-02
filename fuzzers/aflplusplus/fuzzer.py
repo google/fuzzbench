@@ -46,6 +46,4 @@ def fuzz(input_corpus, output_corpus, target_binary):
             # is also recommended in a short-time scale evaluation.
             '-L',
             '0',
-            # Enable Radamsa mutator.
-            '-R',
         ])

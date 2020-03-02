@@ -21,8 +21,7 @@ FROM $parent_image
 RUN git clone https://github.com/vanhauser-thc/AFLplusplus.git /afl && \
     cd /afl && \
     git checkout 842cd9dec3c4c83d660d96dcdb3f5cf0c6e6f4fb && \
-    AFL_NO_X86=1 make PYTHON_INCLUDE=/ && \
-    make radamsa
+    AFL_NO_X86=1 make PYTHON_INCLUDE=/
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
 RUN apt-get update && \
