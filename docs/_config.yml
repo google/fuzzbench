@@ -23,7 +23,7 @@ markdown: kramdown
 remote_theme: pmarsceill/just-the-docs
 search_enabled: true
 
-ga_tracking: 
+ga_tracking: UA-88024544-6
 
 aux_links:
 
