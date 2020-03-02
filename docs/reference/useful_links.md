@@ -19,4 +19,4 @@ access them [here](https://www.fuzzbench.com/reports/index.html).
 
 ## Blog posts
 
-TODO: Add link to launch blog post.
+[Announcement blogpost](https://security.googleblog.com/2020/03/fuzzbench-fuzzer-benchmarking-as-service.html)
