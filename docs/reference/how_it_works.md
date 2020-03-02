@@ -52,9 +52,9 @@ components, it isn't running for the duration of an experiment.
 
 ### Builds
 
-Details on how builds work are provided in the [guide to adding a fuzzer]({{
-site.baseurl}}/getting-started/adding-a-fuzzer/) and the [guide to adding a
-benchmark]({{ site.baseurl}}/developing-fuzzbench/adding-a-benchmark/).
+Details on how builds work are provided in the [guide to adding a new fuzzer]({{
+site.baseurl}}/getting-started/adding-a-new-fuzzer/) and the [guide to adding a
+new benchmark]({{ site.baseurl}}/developing-fuzzbench/adding-a-new-benchmark/).
 Note that we use AddressSanitizer for the benchmark builds of most fuzzers
 (i.e. all of them support it) so that it will be easier to add support for
 measuring performance based on crashes.
