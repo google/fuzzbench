@@ -20,14 +20,14 @@ To participate, submit your fuzzer to run on the FuzzBench platform by following
 https://google.github.io/fuzzbench/getting-started/).
 After your integration is accepted, we will run a large-scale experiment using
 your fuzzer and generate a report comparing your fuzzer to others.
-See [an example report](https://www.fuzzbench.com/reports/sample/index.html).
+See [a sample report](https://www.fuzzbench.com/reports/sample/index.html).
 
 ## Overview
 ![FuzzBench Service diagram](docs/images/FuzzBench-service.png)
 
 ## Sample Report
 
-You can view an example report
+You can view a sample report
 [here](https://www.fuzzbench.com/reports/sample/index.html).
 This report is generated using 10 fuzzers against 24 real-world benchmarks,
 with 20 trials each and over a duration of 24 hours.
