@@ -14,6 +14,7 @@
 
 include docker/build.mk
 
+SHELL := /bin/bash
 VENV_ACTIVATE := .venv/bin/activate
 
 ${VENV_ACTIVATE}:
