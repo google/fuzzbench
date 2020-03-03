@@ -18,10 +18,10 @@ FROM $parent_image
 # honggfuzz requires libfd and libunwid.
 RUN apt-get update -y && apt-get install -y libbfd-dev libunwind-dev libblocksruntime-dev
 
-# Download honggfuz version 2.0.
+# Download honggfuz version 2.1 + 77ea4dc4b499799e20ba33ef5df0152ecd113925
 # Set CFLAGS use honggfuzz's defaults except for -mnative which can build CPU
 # dependent code that may not work on the machines we actually fuzz on.
 RUN git clone https://github.com/google/honggfuzz.git /honggfuzz && \
     cd /honggfuzz && \
-    git checkout d1de86d03b2b4e332915ee1eda06e62c43daa9b6 && \
+    git checkout 77ea4dc4b499799e20ba33ef5df0152ecd113925 && \
     CFLAGS="-O3 -funroll-loops" make
