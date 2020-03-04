@@ -269,5 +269,8 @@ make build-$FUZZER_NAME-all
 
 * Run `make presubmit` to lint your code and ensure all tests are passing.
 
+* Add your fuzzer to the list in `.github/workflows/ci.yml` to enable building
+  it on continous integration.
+
 * Submit the integration in a
 [GitHub pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
