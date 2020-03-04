@@ -46,6 +46,7 @@ RUN apt-get update -y && apt-get install -y \
 
 # Copy clang binaries and libs.
 COPY --from=base-clang /usr/local/bin/clang* /usr/local/bin/
+COPY --from=base-clang /usr/local/bin/llvm-* /usr/local/bin/
 COPY --from=base-clang /usr/local/lib/clang /usr/local/lib/clang
 COPY --from=base-clang /usr/local/lib/libc++*.a /usr/local/lib/
 COPY --from=base-clang /usr/local/include/ /usr/local/include
