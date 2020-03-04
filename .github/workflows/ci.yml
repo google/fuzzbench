@@ -34,5 +34,19 @@ jobs:
       run: |
         make install-dependencies
         source .venv/bin/activate
-        make presubmit
         make build-$FUZZER_NAME-all
+
+  presubmit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Python environment
+      uses: actions/setup-python@v1.1.1
+      with:
+        python-version: 3.7
+    - name: Build benchmarks
+      run: |
+        make install-dependencies
+        source .venv/bin/activate
+        make presubmit
+    
