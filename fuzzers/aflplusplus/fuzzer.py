@@ -24,6 +24,7 @@ from fuzzers.afl import fuzzer as afl_fuzzer
 def build():
     """Build fuzzer."""
     afl_fuzzer.build()
+    shutil.copy('/afl/libradamsa.so', os.environ['OUT'])
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
