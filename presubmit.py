@@ -260,12 +260,19 @@ def license_check(paths: List[Path]) -> bool:
 
 def get_changed_files() -> List[Path]:
     """Return a list of absolute paths of files changed in this git branch."""
-    diff_command = ['git', 'diff', '--name-only', 'origin...']
-    return [
-        Path(path).absolute()
-        for path in subprocess.check_output(diff_command).decode().splitlines()
-        if Path(path).is_file()
-    ]
+    diff_command = ['git', 'diff', '--name-only', 'FETCH_HEAD']
+    try:
+        output = subprocess.check_output(diff_command).decode().splitlines()
+        return [
+            Path(path).absolute()
+            for path in output
+            if Path(path).is_file()
+        ]
+    except subprocess.CalledProcessError as error:
+        print(
+            ('"%s" failed. Please run "git pull origin master --rebase" and try'
+             'again.') % ' '.join(diff_command))
+        raise error
 
 
 def do_tests() -> bool:
@@ -319,7 +326,6 @@ def main() -> int:
     args = parser.parse_args()
     os.chdir(_SRC_ROOT)
     changed_files = get_changed_files()
-    print(changed_files)
 
     if args.command == 'format':
         success = yapf(changed_files, False)

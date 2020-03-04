@@ -24,6 +24,7 @@ Clone the FuzzBench repository to your machine by running the following command:
 git clone https://github.com/google/fuzzbench
 cd fuzzbench
 git submodule update --init
+git pull --rebase # So that presubmit scripts work.
 ```
 
 ## Installing prerequisites
