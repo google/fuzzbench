@@ -27,5 +27,4 @@ def test_transform_for_progress_report_fuzzer_label():
                    'fuzzer':
                    ['fuzzer-1-experiment-a', 'fuzzer-2-experiment-b']})
 
-    from remote_pdb import RemotePdb; RemotePdb('127.0.0.1', 4444).set_trace()
     assert (transformed_df['fuzzer'] == expected_fuzzers_df['fuzzer']).all()
