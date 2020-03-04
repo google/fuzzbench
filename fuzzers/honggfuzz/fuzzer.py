@@ -33,9 +33,11 @@ def build():
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
+    # honggfuzz doesn't need additional libraries when code is compiled
+    # with hfuzz-clang(++)
     os.environ['CC'] = '/honggfuzz/hfuzz_cc/hfuzz-clang'
     os.environ['CXX'] = '/honggfuzz/hfuzz_cc/hfuzz-clang++'
-    os.environ['FUZZER_LIB'] = '/honggfuzz/libhfuzz/persistent.o'
+    os.environ['FUZZER_LIB'] = '/honggfuzz/empty_lib.o'
 
     utils.build_benchmark()
 
