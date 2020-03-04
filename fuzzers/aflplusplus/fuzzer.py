@@ -25,9 +25,6 @@ def build():
     """Build fuzzer."""
     afl_fuzzer.build()
 
-    print('[post_build] Copying libradamsa.so to $OUT directory')
-    shutil.copy('/afl/libradamsa.so', os.environ['OUT'])
-
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
