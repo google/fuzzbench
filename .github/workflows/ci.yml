@@ -11,10 +11,8 @@ jobs:
       uses: actions/setup-python@v1.1.1
       with:
         python-version: 3.7
-    - name: Build benchmarks
+    - name: Run presubmit checks
       run: |
-        make install-dependencies
-        source .venv/bin/activate
         make presubmit
 
   build:
@@ -46,6 +44,4 @@ jobs:
         python-version: 3.7
     - name: Build benchmarks
       run: |
-        make install-dependencies
-        source .venv/bin/activate
         make build-$FUZZER_NAME-all
