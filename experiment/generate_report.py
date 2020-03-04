@@ -53,6 +53,13 @@ def get_arg_parser():
         default=False,
         help='If set, plots are created faster, but contain less details.')
     parser.add_argument(
+        '-p',
+        '--track_progress',
+        action='store_true',
+        default=False,
+        help='If set, then the report will track progress made in experiments')
+
+    parser.add_argument(
         '-c',
         '--from_cached_data',
         action='store_true',
@@ -63,10 +70,21 @@ def get_arg_parser():
     return parser
 
 
+def transform_for_progress_report(experiment_df):
+    """Transforms |experiment_df| so that it will produce a report that shows
+    the progress made by fuzzers between the different experiments and returns
+    the transformed data."""
+    experiment_df['fuzzer'] = (experiment_df['fuzzer'] +
+                               '-' + experiment_df['experiment'])
+    return experiment_df
+
+
+
 # pylint: disable=too-many-arguments
 def generate_report(experiment_names,
                     report_directory,
                     report_name=None,
+                    track_progress=False,
                     report_type='default',
                     quick=False,
                     from_cached_data=False):
@@ -82,6 +100,9 @@ def generate_report(experiment_names,
         experiment_df = queries.get_experiment_data(experiment_names)
         # Save the raw data along with the report.
         experiment_df.to_csv(data_path)
+
+    if track_progress:
+        experiment_df = transform_for_progress_report(experiment_df)
 
     fuzzer_names = experiment_df.fuzzer.unique()
     plotter = plotting.Plotter(fuzzer_names, quick)
@@ -102,7 +123,7 @@ def main():
     parser = get_arg_parser()
     args = parser.parse_args()
 
-    generate_report(args.experiment, args.report_dir, args.report_name,
+    generate_report(args.experiment, args.report_dir, args.report_name, args.track_progress,
                     args.report_type, args.quick, args.from_cached_data)
 
 
