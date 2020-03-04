@@ -266,11 +266,11 @@ def get_changed_files() -> List[Path]:
         return [
             Path(path).absolute() for path in output if Path(path).is_file()
         ]
-    except subprocess.CalledProcessError as error:
-        print(
-            ('"%s" failed. Please run "git pull origin master --rebase" and try'
-             'again.') % ' '.join(diff_command))
-        raise error
+    except subprocess.CalledProcessError:
+        pass
+    raise Exception(
+        ('"%s" failed. Please run "git pull origin master --rebase" and try'
+         ' again.') % ' '.join(diff_command))
 
 
 def do_tests() -> bool:
