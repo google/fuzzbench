@@ -264,9 +264,7 @@ def get_changed_files() -> List[Path]:
     try:
         output = subprocess.check_output(diff_command).decode().splitlines()
         return [
-            Path(path).absolute()
-            for path in output
-            if Path(path).is_file()
+            Path(path).absolute() for path in output if Path(path).is_file()
         ]
     except subprocess.CalledProcessError as error:
         print(
