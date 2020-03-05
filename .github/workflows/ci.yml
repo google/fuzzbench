@@ -1,8 +1,9 @@
 name: CI
 
+on: [pull_request]
+
 jobs:
   presubmit:
-    on: [pull_request]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -13,42 +14,3 @@ jobs:
     - name: Run presubmit checks
       run: |
         make presubmit
-
-  build:
-    runs-on: ubuntu-latest
-    on:
-      pull_request:
-        paths:
-          - 'docker/**'
-          - 'common/**'
-          - 'fuzzers/**'
-          - 'benchmarks/**'
-          - 'experiment/runner.py'
-
-    strategy:
-      fail-fast: false
-      matrix:
-        fuzzer:
-          - afl
-          - aflfast
-          - aflplusplus
-          - eclipser
-          - entropic
-          - fairfuzz
-          - honggfuzz
-          - libfuzzer
-          - mopt
-          - qsym
-
-    env:
-      FUZZER_NAME: ${{ matrix.fuzzer }}
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup Python environment
-      uses: actions/setup-python@v1.1.1
-      with:
-        python-version: 3.7
-    - name: Build benchmarks
-      run: |
-        make build-$FUZZER_NAME-all

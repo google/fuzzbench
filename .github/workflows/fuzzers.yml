@@ -1,0 +1,38 @@
+name: Build fuzzers
+on:
+  pull_request:
+    paths:
+      - 'docker/**'  # Base images changes.
+      - 'fuzzers/**' # Changes to fuzzers themselves.
+      - 'benchmarks/**'  # Changes to benchmarks.
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        fuzzer:
+          - afl
+          - aflfast
+          - aflplusplus
+          - eclipser
+          - entropic
+          - fairfuzz
+          - honggfuzz
+          - libfuzzer
+          - mopt
+          - qsym
+
+    env:
+      FUZZER_NAME: ${{ matrix.fuzzer }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Python environment
+      uses: actions/setup-python@v1.1.1
+      with:
+        python-version: 3.7
+    - name: Build benchmarks
+      run: |
+        make build-$FUZZER_NAME-all
