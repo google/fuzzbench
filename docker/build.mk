@@ -88,7 +88,7 @@ run-$(1)-$(2): .$(1)-$(2)-runner
 	docker run \
     --cap-add SYS_NICE \
     --cap-add SYS_PTRACE \
-    -e LOCAL_EXPERIMENT=1 \
+    -e FUZZ_OUTSIDE_EXPERIMENT=1 \
     -e TRIAL_ID=1 \
     -e FUZZER=$(1) \
     -e BENCHMARK=$(2) \
@@ -99,7 +99,7 @@ debug-$(1)-$(2): .$(1)-$(2)-runner
 	docker run \
     --cap-add SYS_NICE \
     --cap-add SYS_PTRACE \
-    -e LOCAL_EXPERIMENT=1 \
+    -e FUZZ_OUTSIDE_EXPERIMENT=1 \
     -e TRIAL_ID=1 \
     -e FUZZER=$(1) \
     -e BENCHMARK=$(2) \
@@ -167,7 +167,7 @@ run-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
 	docker run \
     --cap-add SYS_NICE \
     --cap-add SYS_PTRACE \
-    -e LOCAL_EXPERIMENT=1 \
+    -e FUZZ_OUTSIDE_EXPERIMENT=1 \
     -e TRIAL_ID=1 \
     -e FUZZER=$(1) \
     -e BENCHMARK=$($(2)-project-name) \
@@ -178,7 +178,7 @@ debug-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
 	docker run \
     --cap-add SYS_NICE \
     --cap-add SYS_PTRACE \
-    -e LOCAL_EXPERIMENT=1 \
+    -e FUZZ_OUTSIDE_EXPERIMENT=1 \
     -e TRIAL_ID=1 \
     -e FUZZER=$(1) \
     -e BENCHMARK=$($(2)-project-name) \

@@ -69,11 +69,10 @@ def pending_trials(db, experiment_config):
      ('bloaty_fuzz_target', 'gcr.io/fuzzbench/oss-fuzz/runners/fuzzer-a/bloaty',
       'fuzz_target')])
 @mock.patch('common.gcloud.create_instance')
-@mock.patch('common.fuzzer_config_utils.get_by_variant_name')  # pylint: disable=too-many-arguments
-def test_create_trial_instance(mocked_get_by_variant_name,
-                               mocked_create_instance, benchmark,
-                               expected_image, expected_target,
-                               experiment_config):
+@mock.patch('common.fuzzer_config_utils.get_by_variant_name')
+def test_create_trial_instance(  # pylint: disable=too-many-arguments
+        mocked_get_by_variant_name, mocked_create_instance, benchmark,
+        expected_image, expected_target, experiment_config):
     """Test that create_trial_instance invokes create_instance
     and creates a startup script for the instance, as we expect it to."""
     instance_name = 'instance1'
@@ -97,8 +96,7 @@ def test_create_trial_instance(mocked_get_by_variant_name,
         instance_name,
         gcloud.InstanceType.RUNNER,
         experiment_config,
-        startup_script=expected_startup_script_path,
-        write_to_stdout=False)
+        startup_script=expected_startup_script_path)
     expected_format_string = '''#!/bin/bash
 echo 0 > /proc/sys/kernel/yama/ptrace_scope
 echo core >/proc/sys/kernel/core_pattern

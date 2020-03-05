@@ -100,9 +100,7 @@ def end_expired_trials(experiment_config: dict):
         i for i in expired_instances if i in running_instances
     ]
     if instances_to_delete and not gcloud.delete_instances(
-            instances_to_delete,
-            experiment_config['cloud_compute_zone'],
-            write_to_stdout=False):
+            instances_to_delete, experiment_config['cloud_compute_zone']):
         # If we failed to delete some instances, then don't update the status
         # of expired trials in database as we don't know which instances were
         # successfully deleted. Wait for next iteration of end_expired_trials.
@@ -280,8 +278,7 @@ docker run --privileged --cpuset-cpus=0 --rm \
     return gcloud.create_instance(instance_name,
                                   gcloud.InstanceType.RUNNER,
                                   experiment_config,
-                                  startup_script=startup_script_path,
-                                  write_to_stdout=False)
+                                  startup_script=startup_script_path)
 
 
 def main():

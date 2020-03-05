@@ -177,23 +177,33 @@ def run_fuzzer(max_total_time, log_filename):
     runner_niceness = environment.get('RUNNER_NICENESS', 0)
 
     try:
-        with open(log_filename, 'w') as log_file:
-            # Because the runner is launched at a higher priority,
-            # set it back to the default(0) for fuzzing processes.
-            new_process.execute([
-                'nice', '-n',
-                str(0 - runner_niceness), 'python3', '-u', '-c',
-                ('import fuzzer; '
-                 'fuzzer.fuzz('
-                 "'{input_corpus}', '{output_corpus}', '{target_binary}')"
-                ).format(input_corpus=shlex.quote(input_corpus),
-                         output_corpus=shlex.quote(output_corpus),
-                         target_binary=shlex.quote(target_binary))
-            ],
+        # Because the runner is launched at a higher priority,
+        # set it back to the default(0) for fuzzing processes.
+        command = [
+            'nice', '-n',
+            str(0 - runner_niceness), 'python3', '-u', '-c',
+            ('import fuzzer; '
+             'fuzzer.fuzz('
+             "'{input_corpus}', '{output_corpus}', '{target_binary}')").format(
+                 input_corpus=shlex.quote(input_corpus),
+                 output_corpus=shlex.quote(output_corpus),
+                 target_binary=shlex.quote(target_binary))
+        ]
+        # Write output to stdout if user is fuzzing from command line.
+        # Otherwise, write output to the log file.
+        if environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
+            new_process.execute(command,
                                 timeout=max_total_time,
-                                output_files=[log_file],
                                 kill_children=True,
                                 env=_get_fuzzer_environment())
+        else:
+            with open(log_filename, 'wb') as log_file:
+                new_process.execute(command,
+                                    timeout=max_total_time,
+                                    output_file=log_file,
+                                    kill_children=True,
+                                    env=_get_fuzzer_environment())
+
     except subprocess.CalledProcessError:
         logs.error('Fuzz process returned nonzero.')
 
@@ -204,7 +214,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
     def __init__(self):
         benchmark_fuzzer_directory = '%s-%s' % (environment.get(
             'BENCHMARK'), environment.get('FUZZER_VARIANT_NAME'))
-        if not environment.get('LOCAL_EXPERIMENT'):
+        if not environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
             bucket = environment.get('CLOUD_EXPERIMENT_BUCKET')
             experiment_name = environment.get('EXPERIMENT')
             trial = 'trial-%d' % environment.get('TRIAL_ID')
@@ -246,17 +256,23 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
 
         max_total_time = environment.get('MAX_TOTAL_TIME')
         args = (max_total_time, log_file)
-        thread = threading.Thread(target=run_fuzzer, args=args)
-        thread.start()
+        fuzz_thread = threading.Thread(target=run_fuzzer, args=args)
+        fuzz_thread.start()
 
-        while thread.is_alive():
+        if environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
+            # Hack so that the fuzz_thread has some time to fail if something is
+            # wrong. Without this we will sleep for a long time before checking
+            # if the fuzz thread is alive.
+            time.sleep(5)
+
+        while fuzz_thread.is_alive():
             self.sleep_until_next_sync()
             self.do_sync()
             self.cycle += 1
 
         logs.info('Doing final sync.')
         self.do_sync(final_sync=True)
-        thread.join()
+        fuzz_thread.join()
 
     def sleep_until_next_sync(self):
         """Sleep until it is time to do the next sync."""

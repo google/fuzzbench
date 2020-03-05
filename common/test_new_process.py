@@ -49,20 +49,14 @@ class TestIntegrationExecute:
         assert result.retcode != 0
 
     @mock.patch('common.logs.info')
-    def test_output_files(self, mocked_info):
-        """Test that execute handles the output_files argument as intended."""
-        mocked_output_file = mock.Mock()
+    def test_output_file(self, mocked_info, tmp_path):
+        """Test that execute handles the output_file argument as intended."""
+        output_file_path = tmp_path / 'output'
+        with open(output_file_path, 'w') as output_file:
+            new_process.execute(self.COMMAND,
+                                timeout=1,
+                                output_file=output_file,
+                                expect_zero=False)
 
-        def mock_write(data):
-            assert data == 'Hello, World!\n'
-            # Assert that the log.info call hasn't been made yet since it
-            # happens after process termination.
-            assert not mocked_info.call_count
-            return len(data)
-
-        mocked_output_file.write.side_effect = mock_write
-        new_process.execute(self.COMMAND,
-                            timeout=1,
-                            output_files=[mocked_output_file],
-                            expect_zero=False)
-        mocked_output_file.write.assert_called()
+        with open(output_file_path, 'r') as output_file:
+            assert output_file.read() == 'Hello, World!\n'
