@@ -17,6 +17,14 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    on:
+      pull_request:
+        paths:
+          - 'docker/**'
+          - 'common/**'
+          - 'fuzzers/**'
+          - 'benchmarks/**'
+          - 'experiment/runner.py'
 
     strategy:
       fail-fast: false
