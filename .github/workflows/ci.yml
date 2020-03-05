@@ -1,9 +1,8 @@
 name: CI
 
-on: [pull_request]
-
 jobs:
   presubmit:
+    on: [pull_request]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
