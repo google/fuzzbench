@@ -15,6 +15,19 @@ jobs:
       run: |
         make presubmit
 
+
+  build-nonfuzzer-images:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Python environment
+      uses: actions/setup-python@v1.1.1
+      with:
+        python-version: 3.7
+    - name: Build base images and dispatcher-image
+      run: |
+        make base-runner base-builder dispatcher-image
+
   build:
     runs-on: ubuntu-latest
 
