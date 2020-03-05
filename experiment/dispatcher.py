@@ -86,13 +86,6 @@ class Experiment:
                                          experiment_utils.get_experiment_name())
 
 
-def initialize_global_state(project: str):
-    """Set up any global state needed by the dispatcher, including
-    authenticating to docker and gcloud and setting the project for gcloud."""
-    # TODO(metzman): Move global state set up into startup script.
-    gcloud.set_default_project(project)
-
-
 def dispatcher_main():
     """Do the experiment and report results."""
     logs.info('Starting experiment.')
@@ -100,9 +93,6 @@ def dispatcher_main():
     # Set this here because we get failures if we do it in measurer for some
     # reason.
     multiprocessing.set_start_method('spawn')
-
-    initialize_global_state(experiment_utils.get_cloud_project())
-
     builder.gcb_build_base_images()
 
     experiment_config_file_path = os.path.join(fuzzer_config_utils.get_dir(),
