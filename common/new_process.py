@@ -71,9 +71,7 @@ def _mirror_output(process: subprocess.Popen, output_files: List) -> str:
     while True:
         # See if we can get a line from the queue.
         try:
-            # TODO(metzman): Handle cases where the process does not have utf-8
-            # encoded output.
-            line = out_queue.get_nowait().decode('utf-8', errors='ignore')
+            line = out_queue.get().decode('utf-8', errors='ignore')
         except queue.Empty:
             if not thread.is_alive():
                 break
