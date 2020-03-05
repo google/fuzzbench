@@ -21,6 +21,12 @@ from unittest import mock
 import pytest
 import sqlalchemy
 
+from common import new_process
+
+# Never wait for a timeout so that tests don't take any longer than they need
+# to.
+new_process.WAIT_SECONDS = 0
+
 # Set this to an in-memory instance of SQLite so that db_utils can be imported
 # without running a real Postgres database.
 # pylint: disable=wrong-import-position

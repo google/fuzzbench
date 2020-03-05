@@ -26,6 +26,7 @@ from typing import List, Tuple
 from common import logs
 
 LOG_LIMIT_FIELD = 10 * 1024  # 10 KB.
+WAIT_SECONDS = 5
 
 
 def _enqueue_file_lines(process: subprocess.Popen,
@@ -71,7 +72,7 @@ def _mirror_output(process: subprocess.Popen, output_files: List) -> str:
     while True:
         # See if we can get a line from the queue.
         try:
-            line = out_queue.get().decode('utf-8', errors='ignore')
+            line = out_queue.get(timeout=WAIT_SECONDS).decode('utf-8', errors='ignore')
         except queue.Empty:
             if not thread.is_alive():
                 break
