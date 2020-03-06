@@ -39,7 +39,7 @@ def build():
 
     # Some benchmarks like lcms
     # (see: https://github.com/mm2/Little-CMS/commit/ab1093539b4287c233aca6a3cf53b234faceb792#diff-f0e6d05e72548974e852e8e55dffc4ccR212)
-    # fail to compile if the compiler outputs things to stderr in unexepcted
+    # fail to compile if the compiler outputs things to stderr in unexpected
     # cases. Prevent these failures by using AFL_QUIET to stop afl-clang-fast
     # from writing AFL specific messages to stderr.
     os.environ['AFL_QUIET'] = '1'
