@@ -15,6 +15,8 @@
 
 import os
 import shutil
+import contextlib
+import tempfile
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers import utils
@@ -71,7 +73,7 @@ def build():
         # twice in the same directory without this.
         utils.build_benchmark()
 
-    if "cmplog" in BUILD_MODES and "qemu" not in BUILD_MODES:
+    if "cmplog" in build_modes and "qemu" not in build_modes:
 
         # CmpLog requires an build with different instrumentation.
         new_env = os.environ.copy()
@@ -116,3 +118,36 @@ def fuzz(input_corpus, output_corpus, target_binary):
                             output_corpus,
                             target_binary,
                             additional_flags=flags)
+
+@contextlib.contextmanager
+def restore_directory(directory):
+    """Helper contextmanager that when created saves a backup of |directory| and
+    when closed/exited replaces |directory| with the backup.
+
+    Example usage:
+
+    directory = 'my-directory'
+    with restore_directory(directory):
+       shutil.rmtree(directory)
+    # At this point directory is in the same state where it was before we
+    # deleted it.
+    """
+    # TODO(metzman): Figure out if this is worth it, so far it only allows QSYM
+    # to compile bloaty.
+    if not directory:
+        # Don't do anything if directory is None.
+        yield
+        return
+    # Save cwd so that if it gets deleted we can just switch into the restored
+    # version without code that runs after us running into issues.
+    initial_cwd = os.getcwd()
+    with tempfile.TemporaryDirectory() as temp_dir:
+        backup = os.path.join(temp_dir, os.path.basename(directory))
+        shutil.copytree(directory, backup)
+        yield
+        shutil.rmtree(directory)
+        shutil.move(backup, directory)
+        try:
+            os.getcwd()
+        except FileNotFoundError:
+            os.chdir(initial_cwd)
