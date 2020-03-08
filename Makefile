@@ -18,7 +18,6 @@ SHELL := /bin/bash
 VENV_ACTIVATE := .venv/bin/activate
 
 ${VENV_ACTIVATE}:
-	python3 -m pip install --user virtualenv
 	rm -rf .venv
 	python3 -m venv .venv
 	source ${VENV_ACTIVATE} && python3 -m pip install -r requirements.txt
