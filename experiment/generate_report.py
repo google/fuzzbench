@@ -73,11 +73,10 @@ def get_arg_parser():
 def label_fuzzers_by_experiment(experiment_df):
     """Returns a dataframe where every fuzzer is labeled by the experiment it
     was run in."""
-    experiment_df['fuzzer'] = (
-        experiment_df['fuzzer'] + '-' + experiment_df['experiment'])
+    experiment_df['fuzzer'] = (experiment_df['fuzzer'] + '-' +
+                               experiment_df['experiment'])
 
     return experiment_df
-
 
 
 # pylint: disable=too-many-arguments

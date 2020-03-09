@@ -16,15 +16,17 @@ import pandas as pd
 
 from experiment import generate_report
 
-def label_fuzzers_by_experiment:
+
+def label_fuzzers_by_experiment():
     """Tests that label_fuzzers_by_experiment includes the experiment name in
     the fuzzer name"""
-    input_df = pd.DataFrame({'experiment': ['experiment-a', 'experiment-b'],
-                  'fuzzer': ['fuzzer-1', 'fuzzer-2']})
+    input_df = pd.DataFrame({
+        'experiment': ['experiment-a', 'experiment-b'],
+        'fuzzer': ['fuzzer-1', 'fuzzer-2']
+    })
     labeled_df = generate_report.label_fuzzers_by_experiment(input_df)
 
-    expected_fuzzers_df = pd.DataFrame({
-                   'fuzzer':
-                   ['fuzzer-1-experiment-a', 'fuzzer-2-experiment-b']})
+    expected_fuzzers_df = pd.DataFrame(
+        {'fuzzer': ['fuzzer-1-experiment-a', 'fuzzer-2-experiment-b']})
 
     assert (labeled_df['fuzzer'] == expected_fuzzers_df['fuzzer']).all()
