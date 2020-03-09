@@ -17,7 +17,6 @@ import os
 import signal
 import subprocess
 import threading
-
 from typing import List
 
 from common import logs
@@ -74,14 +73,19 @@ def execute(  # pylint: disable=too-many-locals,too-many-branches
         *args,
         expect_zero: bool = True,
         timeout: int = None,
+        write_to_stdout=False,
+        # If not set, will default to PIPE.
+        output_file=None,
         # Not True by default because we can't always set group on processes.
-        output_file=subprocess.PIPE,
         kill_children: bool = False,
         **kwargs) -> ProcessResult:
     """Execute |command| and return the returncode and the output"""
-    if output_file:
-        kwargs['stdout'] = output_file
-        kwargs['stderr'] = subprocess.STDOUT
+    if write_to_stdout:
+        assert output_file is None
+        output_file = sys.stdout.fileno()
+
+    kwargs['stdout'] = output_file
+    kwargs['stderr'] = subprocess.STDOUT
     if kill_children:
         kwargs['preexec_fn'] = os.setsid
 
