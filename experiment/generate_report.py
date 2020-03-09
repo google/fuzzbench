@@ -30,7 +30,7 @@ from common import logs
 def get_arg_parser():
     """Returns argument parser."""
     parser = argparse.ArgumentParser(description='Report generator.')
-    parser.add_argument('experiment', nargs='+', help='Experiment name')
+    parser.add_argument('experiments', nargs='+', help='Experiment names')
     parser.add_argument(
         '-n',
         '--report-name',
@@ -56,8 +56,7 @@ def get_arg_parser():
     parser.add_argument('-f',
                         '--fuzzers',
                         nargs='*',
-                        help='Names of the fuzzers to include in the report. '
-                        'All of them in the experiments by default.')
+                        help='Names of the fuzzers to include in the report. ')
     parser.add_argument(
         '-l',
         '--label-by-experiment',
@@ -138,7 +137,7 @@ def main():
     parser = get_arg_parser()
     args = parser.parse_args()
 
-    generate_report(args.experiment, args.report_dir, args.report_name,
+    generate_report(args.experiments, args.report_dir, args.report_name,
                     args.label_by_experiment, args.fuzzers, args.report_type,
                     args.quick, args.from_cached_data)
 
