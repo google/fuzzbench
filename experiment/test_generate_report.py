@@ -16,15 +16,15 @@ import pandas as pd
 
 from experiment import generate_report
 
-def test_transform_for_progress_report_fuzzer_label():
-    """Tests that transform_for_progress_report includes the
-    experiment name in the fuzzer name"""
+def label_fuzzers_by_experiment:
+    """Tests that label_fuzzers_by_experiment includes the experiment name in
+    the fuzzer name"""
     input_df = pd.DataFrame({'experiment': ['experiment-a', 'experiment-b'],
                   'fuzzer': ['fuzzer-1', 'fuzzer-2']})
-    transformed_df = generate_report.transform_for_progress_report(input_df)
+    labeled_df = generate_report.label_fuzzers_by_experiment(input_df)
 
     expected_fuzzers_df = pd.DataFrame({
                    'fuzzer':
                    ['fuzzer-1-experiment-a', 'fuzzer-2-experiment-b']})
 
-    assert (transformed_df['fuzzer'] == expected_fuzzers_df['fuzzer']).all()
+    assert (labeled_df['fuzzer'] == expected_fuzzers_df['fuzzer']).all()
