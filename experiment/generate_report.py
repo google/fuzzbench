@@ -33,17 +33,17 @@ def get_arg_parser():
     parser.add_argument('experiment', nargs='+', help='Experiment name')
     parser.add_argument(
         '-n',
-        '--report_name',
+        '--report-name',
         help='Name of the report. Default: name of the first experiment.')
     parser.add_argument(
         '-t',
-        '--report_type',
+        '--report-type',
         choices=['default'],
         default='default',
         help='Type of the report (which template to use). Default: default.')
     parser.add_argument(
         '-d',
-        '--report_dir',
+        '--report-dir',
         default='./report',
         help='Directory for writing a report. Default: ./report')
     parser.add_argument(
@@ -53,8 +53,15 @@ def get_arg_parser():
         default=False,
         help='If set, plots are created faster, but contain less details.')
     parser.add_argument(
+        '-l',
+        '--label-by-experiment',
+        action='store_true',
+        default=False,
+        help='If set, then the report will track progress made in experiments')
+
+    parser.add_argument(
         '-c',
-        '--from_cached_data',
+        '--from-cached-data',
         action='store_true',
         default=False,
         help=('If set, and the experiment data is already cached, '
@@ -63,10 +70,20 @@ def get_arg_parser():
     return parser
 
 
+def label_fuzzers_by_experiment(experiment_df):
+    """Returns a dataframe where every fuzzer is labeled by the experiment it
+    was run in."""
+    experiment_df['fuzzer'] = (experiment_df['fuzzer'] + '-' +
+                               experiment_df['experiment'])
+
+    return experiment_df
+
+
 # pylint: disable=too-many-arguments
 def generate_report(experiment_names,
                     report_directory,
                     report_name=None,
+                    label_by_experiment=False,
                     report_type='default',
                     quick=False,
                     from_cached_data=False):
@@ -82,6 +99,9 @@ def generate_report(experiment_names,
         experiment_df = queries.get_experiment_data(experiment_names)
         # Save the raw data along with the report.
         experiment_df.to_csv(data_path)
+
+    if label_by_experiment:
+        experiment_df = label_fuzzers_by_experiment(experiment_df)
 
     fuzzer_names = experiment_df.fuzzer.unique()
     plotter = plotting.Plotter(fuzzer_names, quick)
@@ -103,7 +123,8 @@ def main():
     args = parser.parse_args()
 
     generate_report(args.experiment, args.report_dir, args.report_name,
-                    args.report_type, args.quick, args.from_cached_data)
+                    args.label_by_experiment, args.report_type, args.quick,
+                    args.from_cached_data)
 
 
 if __name__ == '__main__':
