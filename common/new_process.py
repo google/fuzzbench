@@ -75,14 +75,13 @@ def execute(  # pylint: disable=too-many-locals,too-many-branches
         expect_zero: bool = True,
         timeout: int = None,
         # Not True by default because we can't always set group on processes.
-        output_file: str = None,
+        output_file=subprocess.PIPE,
         kill_children: bool = False,
         **kwargs) -> ProcessResult:
     """Execute |command| and return the returncode and the output"""
-    if not output_file:
-        output_file = subprocess.PIPE
-    kwargs['stdout'] = output_file
-    kwargs['stderr'] = subprocess.STDOUT
+    if output_file:
+        kwargs['stdout'] = output_file
+        kwargs['stderr'] = subprocess.STDOUT
     if kill_children:
         kwargs['preexec_fn'] = os.setsid
 

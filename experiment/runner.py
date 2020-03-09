@@ -196,6 +196,7 @@ def run_fuzzer(max_total_time, log_filename):
         if environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
             new_process.execute(command,
                                 timeout=max_total_time,
+                                output_file=sys.stdout.fileno(),
                                 kill_children=True,
                                 env=fuzzer_environment)
         else:
