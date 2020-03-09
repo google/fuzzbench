@@ -81,8 +81,11 @@ def execute(  # pylint: disable=too-many-locals,too-many-branches
         **kwargs) -> ProcessResult:
     """Execute |command| and return the returncode and the output"""
     if write_to_stdout:
+        # Don't set stdout, it's default value None, causes it to be set to
+        # stdout.
         assert output_file is None
-        output_file = sys.stdout.fileno()
+    elif not output_file:
+        output_file = subprocess.PIPE
 
     kwargs['stdout'] = output_file
     kwargs['stderr'] = subprocess.STDOUT
