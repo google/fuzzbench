@@ -52,6 +52,12 @@ def get_arg_parser():
         action='store_true',
         default=False,
         help='If set, plots are created faster, but contain less details.')
+
+    parser.add_argument('-f',
+                        '--fuzzers',
+                        nargs='*',
+                        help='Names of the fuzzers to include in the report. '
+                        'All of them in the experiments by default.')
     parser.add_argument(
         '-l',
         '--label-by-experiment',
@@ -79,11 +85,18 @@ def label_fuzzers_by_experiment(experiment_df):
     return experiment_df
 
 
+def filter_fuzzers(experiment_df, included_fuzzers):
+    """Returns a DataFrame of rows in |experiment_df| where each row's fuzzer is
+    in |included_fuzzers|."""
+    return experiment_df[experiment_df['fuzzer'].isin(included_fuzzers)]
+
+
 # pylint: disable=too-many-arguments
 def generate_report(experiment_names,
                     report_directory,
                     report_name=None,
                     label_by_experiment=False,
+                    fuzzers=None,
                     report_type='default',
                     quick=False,
                     from_cached_data=False):
@@ -99,6 +112,9 @@ def generate_report(experiment_names,
         experiment_df = queries.get_experiment_data(experiment_names)
         # Save the raw data along with the report.
         experiment_df.to_csv(data_path)
+
+    if fuzzers is not None:
+        experiment_df = filter_fuzzers(experiment_df, fuzzers)
 
     if label_by_experiment:
         experiment_df = label_fuzzers_by_experiment(experiment_df)
@@ -123,8 +139,8 @@ def main():
     args = parser.parse_args()
 
     generate_report(args.experiment, args.report_dir, args.report_name,
-                    args.label_by_experiment, args.report_type, args.quick,
-                    args.from_cached_data)
+                    args.label_by_experiment, args.fuzzers, args.report_type,
+                    args.quick, args.from_cached_data)
 
 
 if __name__ == '__main__':
