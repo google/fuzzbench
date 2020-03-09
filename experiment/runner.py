@@ -189,20 +189,22 @@ def run_fuzzer(max_total_time, log_filename):
                  output_corpus=shlex.quote(output_corpus),
                  target_binary=shlex.quote(target_binary))
         ]
+
+        fuzzer_environment = _get_fuzzer_environment()
         # Write output to stdout if user is fuzzing from command line.
         # Otherwise, write output to the log file.
         if environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
             new_process.execute(command,
                                 timeout=max_total_time,
                                 kill_children=True,
-                                env=_get_fuzzer_environment())
+                                env=fuzzer_environment)
         else:
             with open(log_filename, 'wb') as log_file:
                 new_process.execute(command,
                                     timeout=max_total_time,
                                     output_file=log_file,
                                     kill_children=True,
-                                    env=_get_fuzzer_environment())
+                                    env=fuzzer_environment)
 
     except subprocess.CalledProcessError:
         logs.error('Fuzz process returned nonzero.')
