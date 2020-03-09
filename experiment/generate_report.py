@@ -52,7 +52,6 @@ def get_arg_parser():
         action='store_true',
         default=False,
         help='If set, plots are created faster, but contain less details.')
-
     parser.add_argument('-f',
                         '--fuzzers',
                         nargs='*',
