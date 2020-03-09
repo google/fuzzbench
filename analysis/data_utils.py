@@ -28,6 +28,20 @@ def drop_uninteresting_columns(experiment_df):
     ]]
 
 
+def filter_fuzzers(experiment_df, included_fuzzers):
+    """Returns table with only rows where fuzzer in in |included_fuzzers|."""
+    return experiment_df[experiment_df['fuzzer'].isin(included_fuzzers)]
+
+
+def label_fuzzers_by_experiment(experiment_df):
+    """Returns table where every fuzzer is labeled by the experiment it
+    was run in."""
+    experiment_df['fuzzer'] = (experiment_df['fuzzer'] + '-' +
+                               experiment_df['experiment'])
+
+    return experiment_df
+
+
 # Creating "snapshots" (see README.md for definition).
 
 _DEFAULT_FUZZER_SAMPLE_NUM_THRESHOLD = 0.8
