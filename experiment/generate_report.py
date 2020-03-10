@@ -19,6 +19,7 @@ import sys
 
 import pandas as pd
 
+from analysis import data_utils
 from analysis import experiment_results
 from analysis import plotting
 from analysis import queries
@@ -74,21 +75,6 @@ def get_arg_parser():
     return parser
 
 
-def label_fuzzers_by_experiment(experiment_df):
-    """Returns a dataframe where every fuzzer is labeled by the experiment it
-    was run in."""
-    experiment_df['fuzzer'] = (experiment_df['fuzzer'] + '-' +
-                               experiment_df['experiment'])
-
-    return experiment_df
-
-
-def filter_fuzzers(experiment_df, included_fuzzers):
-    """Returns a DataFrame of rows in |experiment_df| where each row's fuzzer is
-    in |included_fuzzers|."""
-    return experiment_df[experiment_df['fuzzer'].isin(included_fuzzers)]
-
-
 # pylint: disable=too-many-arguments
 def generate_report(experiment_names,
                     report_directory,
@@ -112,10 +98,10 @@ def generate_report(experiment_names,
         experiment_df.to_csv(data_path)
 
     if fuzzers is not None:
-        experiment_df = filter_fuzzers(experiment_df, fuzzers)
+        experiment_df = data_utils.filter_fuzzers(experiment_df, fuzzers)
 
     if label_by_experiment:
-        experiment_df = label_fuzzers_by_experiment(experiment_df)
+        experiment_df = data_utils.label_fuzzers_by_experiment(experiment_df)
 
     fuzzer_names = experiment_df.fuzzer.unique()
     plotter = plotting.Plotter(fuzzer_names, quick)
