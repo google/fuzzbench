@@ -103,15 +103,6 @@ def get_directories(parent_dir):
 
 def validate_benchmarks(benchmarks: List[str]):
     """Parses and validates list of benchmarks."""
-    benchmark_directories = get_directories(BENCHMARKS_DIR)
-    if not os.path.exists(OSS_FUZZ_PROJECTS_DIR):
-        logs.warning('OSS-Fuzz repository is not checked out.'
-                     'skipping OSS-Fuzz benchmarks.')
-
-    for benchmark in benchmarks:
-        if benchmark not in benchmark_directories:
-            raise Exception('Benchmark "%s" does not exist.' % benchmark)
-
     for benchmark in set(benchmarks):
         if benchmarks.count(benchmark) > 1:
             raise Exception('Benchmark "%s" is included more than once.' %
