@@ -33,6 +33,12 @@ def filter_fuzzers(experiment_df, included_fuzzers):
     return experiment_df[experiment_df['fuzzer'].isin(included_fuzzers)]
 
 
+def filter_benchmarks(experiment_df, included_benchmarks):
+    """Returns table with only rows where benchmark in in |included_benchmarks|.
+    """
+    return experiment_df[experiment_df['benchmark'].isin(included_benchmarks)]
+
+
 def label_fuzzers_by_experiment(experiment_df):
     """Returns table where every fuzzer is labeled by the experiment it
     was run in."""
