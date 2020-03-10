@@ -28,9 +28,11 @@ from test_libs import utils as test_utils
 # pylint: disable=invalid-name,unused-argument,redefined-outer-name
 
 
-def test_run_fuzzer_log_file(fs):
+@mock.patch('subprocess.Popen.communicate')
+def test_run_fuzzer_log_file(mocked_communicate, fs):
     """Test that run_fuzzer invokes the fuzzer defined run_fuzzer function as
     expected."""
+    mocked_communicate.return_value = ('', 0)
     max_total_time = 1
     log_filename = '/log.txt'
     os.environ['MAX_TOTAL_TIME'] = str(max_total_time)
@@ -153,14 +155,12 @@ def test_do_sync_changed(mocked_execute, mocked_is_corpus_dir_same, fs,
             ('gs://bucket/experiment-name/experiment-folders/'
              'benchmark-1-fuzzer-name-a/trial-1/corpus/'
              'corpus-archive-1337.tar.gz')
-        ],
-                  write_to_stdout=False),
+        ]),
         mock.call([
             'gsutil', 'rsync', '-d', '-r', 'results-copy',
             ('gs://bucket/experiment-name/experiment-folders/'
              'benchmark-1-fuzzer-name-a/trial-1/results')
-        ],
-                  write_to_stdout=False)
+        ])
     ]
     unchanged_cycles_path = os.path.join(trial_runner.results_dir,
                                          'unchanged-cycles')

@@ -57,7 +57,6 @@ def do_coverage_run(  # pylint: disable=too-many-locals
         env = os.environ.copy()
         env['UBSAN_OPTIONS'] = 'coverage_dir=%s' % sancov_dir
         result = new_process.execute(command,
-                                     write_to_stdout=False,
                                      env=env,
                                      cwd=coverage_binary_dir,
                                      expect_zero=False,
