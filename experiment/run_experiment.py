@@ -300,10 +300,10 @@ def get_all_benchmarks():
     for benchmark in os.listdir(benchmarks_dir):
         benchmark_path = os.path.join(benchmarks_dir, benchmark)
         if os.path.isfile(os.path.join(benchmark_path, 'oss-fuzz.yaml')):
-            # Is it an OSS-Fuzz benchmark?
+            # Benchmark is an OSS-Fuzz benchmark.
             all_benchmarks.append(benchmark)
-        if os.path.isfile(os.path.join(benchmark_path, 'build.sh')):
-            # Is it a standard benchmark?
+        elif os.path.isfile(os.path.join(benchmark_path, 'build.sh')):
+            # Benchmark is a standard benchmark.
             all_benchmarks.append(benchmark)
     return all_benchmarks
 
