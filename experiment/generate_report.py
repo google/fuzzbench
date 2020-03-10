@@ -53,10 +53,16 @@ def get_arg_parser():
         action='store_true',
         default=False,
         help='If set, plots are created faster, but contain less details.')
-    parser.add_argument('-f',
-                        '--fuzzers',
-                        nargs='*',
-                        help='Names of the fuzzers to include in the report. ')
+    parser.add_argument(
+        '-b',
+        '--benchmarks',
+        nargs='*',
+        help='Names of the benchmarks to include in the report.')
+    parser.add_argument(
+        '-f',
+        '--fuzzers',
+        nargs='*',
+        help='Names of the fuzzers to include in the report.')
     parser.add_argument(
         '-l',
         '--label-by-experiment',
@@ -75,11 +81,18 @@ def get_arg_parser():
     return parser
 
 
+def filter_benchmarks(experiment_df, included_fuzzers):
+    """Returns a DataFrame of rows in |experiment_df| where each row's fuzzer is
+    in |included_fuzzers|."""
+    return experiment_df[experiment_df['fuzzer'].isin(included_fuzzers)]
+
+
 # pylint: disable=too-many-arguments
 def generate_report(experiment_names,
                     report_directory,
                     report_name=None,
                     label_by_experiment=False,
+                    benchmarks=None,
                     fuzzers=None,
                     report_type='default',
                     quick=False,
@@ -123,7 +136,7 @@ def main():
     args = parser.parse_args()
 
     generate_report(args.experiments, args.report_dir, args.report_name,
-                    args.label_by_experiment, args.fuzzers, args.report_type,
+                    args.label_by_experiment, args.fuzzers, args.benchmarks, args.report_type,
                     args.quick, args.from_cached_data)
 
 
