@@ -53,10 +53,16 @@ def get_arg_parser():
         action='store_true',
         default=False,
         help='If set, plots are created faster, but contain less details.')
-    parser.add_argument('-f',
-                        '--fuzzers',
-                        nargs='*',
-                        help='Names of the fuzzers to include in the report. ')
+    parser.add_argument(
+        '-b',
+        '--benchmarks',
+        nargs='*',
+        help='Names of the benchmarks to include in the report.')
+    parser.add_argument(
+        '-f',
+        '--fuzzers',
+        nargs='*',
+        help='Names of the fuzzers to include in the report.')
     parser.add_argument(
         '-l',
         '--label-by-experiment',
@@ -80,6 +86,7 @@ def generate_report(experiment_names,
                     report_directory,
                     report_name=None,
                     label_by_experiment=False,
+                    benchmarks=None,
                     fuzzers=None,
                     report_type='default',
                     quick=False,
@@ -96,6 +103,9 @@ def generate_report(experiment_names,
         experiment_df = queries.get_experiment_data(experiment_names)
         # Save the raw data along with the report.
         experiment_df.to_csv(data_path)
+
+    if benchmarks is not None:
+        experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks)
 
     if fuzzers is not None:
         experiment_df = data_utils.filter_fuzzers(experiment_df, fuzzers)
@@ -123,7 +133,7 @@ def main():
     args = parser.parse_args()
 
     generate_report(args.experiments, args.report_dir, args.report_name,
-                    args.label_by_experiment, args.fuzzers, args.report_type,
+                    args.label_by_experiment, args.benchmarks, args.fuzzers, args.report_type,
                     args.quick, args.from_cached_data)
 
 
