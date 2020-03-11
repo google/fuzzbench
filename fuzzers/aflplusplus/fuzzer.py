@@ -31,7 +31,9 @@ def get_cmplog_build_directory(target_directory):
 
 def build():
     """Build fuzzer."""
-    build_modes = []
+    # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
+    # a default configuration
+    build_modes = ["instrim", "laf"]
     if "BUILD_MODES" in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
 
