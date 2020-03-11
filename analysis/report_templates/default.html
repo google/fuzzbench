@@ -142,8 +142,10 @@
         </div> <!-- id="{{ benchmark.name }}" -->
         {% endfor %}
 
-        <div class="divider"></div>
-        See the <a href="data.csv.gz">raw data</a> for this report.
+        <div id="data" class="section scrollspy">
+            <h2 class="green-text text-darken-3">experiment data</h2>
+            You can download the raw data for this report <a href="data.csv.gz">here</a>.
+        </div>    <!-- id="data" -->
 
     </div> <!-- class="col" -->
 
@@ -153,6 +155,7 @@
             {% for benchmark in experiment.benchmarks %}
             <li><a href="#{{ benchmark.name }}">{{ benchmark.name }}</a></li>
             {% endfor %}
+            <li><a href="#data">experiment data</a></li>
         </ul>
     </div>
 

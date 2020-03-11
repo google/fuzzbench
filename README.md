@@ -27,10 +27,13 @@ See [a sample report](https://www.fuzzbench.com/reports/sample/index.html).
 
 ## Sample Report
 
-You can view a sample report
-[here](https://www.fuzzbench.com/reports/sample/index.html).
-This report is generated using 10 fuzzers against 24 real-world benchmarks,
-with 20 trials each and over a duration of 24 hours.
+You can view our sample report
+[here](https://www.fuzzbench.com/reports/sample/index.html) and
+our periodically generated reports
+[here](https://www.fuzzbench.com/reports/index.html).
+The sample report is generated using 10 fuzzers against 24 real-world
+benchmarks, with 20 trials each and over a duration of 24 hours.
+The raw data in compressed CSV format can be found at the end of the report.
 
 When analyzing reports, we recommend:
 * Checking the strengths and weaknesses of a fuzzer against various benchmarks.
