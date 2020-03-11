@@ -24,7 +24,7 @@ RUN apt-get update && \
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/vanhauser-thc/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout c159b872ef17d4c09238f99ac11021e12975cb3a && \
+    git checkout 684f4dd1c44053517c6685a8a3137691535ecd84 && \
     AFL_NO_X86=1 make PYTHON_INCLUDE=/ && \
     cd libdislocator && make && cd .. && \
     cd llvm_mode && CXXFLAGS= make
