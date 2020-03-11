@@ -37,5 +37,5 @@ RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsof
 # Build Eclipser.
 RUN git clone https://github.com/SoftSec-KAIST/Eclipser /Eclipser && \
     cd /Eclipser && \
-    git checkout 8a00591ce3158c2860739725d4362213f587ec72 && \
+    git checkout b072f045324869c607d3cdfa8fae0cdfed944492 && \
     make
