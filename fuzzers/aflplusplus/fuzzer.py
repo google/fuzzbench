@@ -56,11 +56,11 @@ def build():
             os.environ['AFL_LLVM_LAF_SPLIT_SWITCHES'] = '1'
             os.environ['AFL_LLVM_LAF_TRANSFORM_COMPARES'] = '1'
             os.environ['AFL_LLVM_LAF_SPLIT_COMPARES'] = '1'
-        
+
         if "instrim" in build_modes:
             # I avoid to put also AFL_LLVM_INSTRIM_LOOPHEAD
-            os.environ["AFL_LLVM_INSTRIM"] = "1";
-            os.environ["AFL_LLVM_INSTRIM_SKIPSINGLEBLOCK"] = "1";
+            os.environ["AFL_LLVM_INSTRIM"] = "1"
+            os.environ["AFL_LLVM_INSTRIM_SKIPSINGLEBLOCK"] = "1"
 
     os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
 
@@ -115,7 +115,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
-    flags = ["-d"] # FidgetyAFL is better when runnign alone
+    flags = ["-d"]  # FidgetyAFL is better when runnign alone
     if os.path.exists(cmplog_target_binary):
         flags += ["-c", cmplog_target_binary]
     if 'ADDITIONAL_ARGS' in os.environ:
@@ -125,6 +125,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
                             output_corpus,
                             target_binary,
                             additional_flags=flags)
+
 
 @contextlib.contextmanager
 def restore_directory(directory):
