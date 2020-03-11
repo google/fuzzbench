@@ -19,15 +19,15 @@ FROM $parent_image
 RUN apt-get update && \
     apt-get install wget libstdc++-5-dev -y
 
-# Download and compile afl++ (v2.60c).
+# Download and compile afl++ (v2.62d).
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/vanhauser-thc/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 842cd9dec3c4c83d660d96dcdb3f5cf0c6e6f4fb && \
+    git checkout c159b872ef17d4c09238f99ac11021e12975cb3a && \
     AFL_NO_X86=1 make PYTHON_INCLUDE=/ && \
-    cd llvm_mode && \
-    CXXFLAGS= make
+    cd libdislocator && make && cd .. \
+    cd llvm_mode && CXXFLAGS= make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
