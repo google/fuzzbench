@@ -51,11 +51,11 @@ FuzzBench, submit it, and get benchmark results.
 
 ## Sample report
 
-You can view a sample report
-[here](https://www.fuzzbench.com/reports/sample/index.html).
-This report is generated using 10 fuzzers against 24 real-world benchmarks,
+You can view our periodically generated reports
+[here](https://www.fuzzbench.com/reports/index.html).
+These reports are generated using 10 fuzzers against 24 real-world benchmarks,
 with 20 trials each and over a duration of 24 hours.
-See [raw data](https://www.fuzzbench.com/reports/sample/data.csv.gz).
+The raw data in compressed CSV format can be found at the end of each report.
 
 When analyzing reports, we recommend:
 * Checking the strengths and weaknesses of a fuzzer against various benchmarks.
