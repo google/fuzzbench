@@ -64,7 +64,6 @@ NO_SANITIZER_COMPAT_CFLAGS = [
 NO_SANITIZER_COMPAT_CXXFLAGS = ['-stdlib=libc++'] + NO_SANITIZER_COMPAT_CFLAGS
 
 
-
 def set_no_sanitizer_compilation_flags(env=None):
     """Set compilation flags (CFLAGS and CXXFLAGS) in |env| so that a benchmark
     can be compiled without a sanitizer. If |env| is not provided, the program's
