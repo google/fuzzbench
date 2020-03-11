@@ -14,5 +14,6 @@
 
 FROM gcr.io/fuzzbench/base-runner
 
-RUN apt-get install mono-complete -y && \
-    apt-get install tzdata -y
+RUN apt-get update -y && apt-get install -y \
+    mono-complete \
+    tzdata
