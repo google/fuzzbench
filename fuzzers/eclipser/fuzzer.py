@@ -66,7 +66,13 @@ def fuzz(input_corpus, output_corpus, target_binary):
         '-f',
         'foo',
         '--maxfilelen',
-        str(10 * 1024 * 1024),  # Increase since default is too low (8 bytes).
+        # Default is too low (8 bytes), match experiment config at:
+        # https://github.com/SoftSec-KAIST/Eclipser-Artifact/blob/6aadf02eeadb0416bd4c5edeafc8627bc24ebc82/docker-scripts/experiment-scripts/package-exp/run_eclipser.sh#L25
+        '1048576',
+        # Default is low (0.5 sec), recommended to use higher:
+        # https://github.com/google/fuzzbench/issues/70#issuecomment-596060572
+        '--exectimeout',
+        '2000',
     ]
     if os.listdir(input_corpus):  # Important, otherwise Eclipser crashes.
         command += ['-i', input_corpus]

@@ -28,6 +28,9 @@ if os.getenv('FORCE_NOT_LOCAL'):
     # like stackdriver logging to happen when running code locally.
     _is_local = False
 
+if os.getenv('FORCE_LOCAL'):
+    _is_local = True
+
 
 def is_local():
     """Returns True if called on a local development machine.
@@ -37,6 +40,7 @@ def is_local():
     if _is_local is not None:
         return _is_local
     try:
+        # TODO(github.com/google/fuzzbench/issues/82): Get rid of this.
         urllib.request.urlopen('http://metadata.google.internal')
         _is_local = False
     except urllib.error.URLError:

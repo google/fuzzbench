@@ -19,6 +19,7 @@ import sys
 
 import pandas as pd
 
+from analysis import data_utils
 from analysis import experiment_results
 from analysis import plotting
 from analysis import queries
@@ -30,20 +31,20 @@ from common import logs
 def get_arg_parser():
     """Returns argument parser."""
     parser = argparse.ArgumentParser(description='Report generator.')
-    parser.add_argument('experiment', nargs='+', help='Experiment name')
+    parser.add_argument('experiments', nargs='+', help='Experiment names')
     parser.add_argument(
         '-n',
-        '--report_name',
+        '--report-name',
         help='Name of the report. Default: name of the first experiment.')
     parser.add_argument(
         '-t',
-        '--report_type',
+        '--report-type',
         choices=['default'],
         default='default',
         help='Type of the report (which template to use). Default: default.')
     parser.add_argument(
         '-d',
-        '--report_dir',
+        '--report-dir',
         default='./report',
         help='Directory for writing a report. Default: ./report')
     parser.add_argument(
@@ -53,8 +54,25 @@ def get_arg_parser():
         default=False,
         help='If set, plots are created faster, but contain less details.')
     parser.add_argument(
+        '-b',
+        '--benchmarks',
+        nargs='*',
+        help='Names of the benchmarks to include in the report.')
+    parser.add_argument(
+        '-f',
+        '--fuzzers',
+        nargs='*',
+        help='Names of the fuzzers to include in the report.')
+    parser.add_argument(
+        '-l',
+        '--label-by-experiment',
+        action='store_true',
+        default=False,
+        help='If set, then the report will track progress made in experiments')
+
+    parser.add_argument(
         '-c',
-        '--from_cached_data',
+        '--from-cached-data',
         action='store_true',
         default=False,
         help=('If set, and the experiment data is already cached, '
@@ -67,6 +85,9 @@ def get_arg_parser():
 def generate_report(experiment_names,
                     report_directory,
                     report_name=None,
+                    label_by_experiment=False,
+                    benchmarks=None,
+                    fuzzers=None,
                     report_type='default',
                     quick=False,
                     from_cached_data=False):
@@ -82,6 +103,15 @@ def generate_report(experiment_names,
         experiment_df = queries.get_experiment_data(experiment_names)
         # Save the raw data along with the report.
         experiment_df.to_csv(data_path)
+
+    if benchmarks is not None:
+        experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks)
+
+    if fuzzers is not None:
+        experiment_df = data_utils.filter_fuzzers(experiment_df, fuzzers)
+
+    if label_by_experiment:
+        experiment_df = data_utils.label_fuzzers_by_experiment(experiment_df)
 
     fuzzer_names = experiment_df.fuzzer.unique()
     plotter = plotting.Plotter(fuzzer_names, quick)
@@ -102,8 +132,9 @@ def main():
     parser = get_arg_parser()
     args = parser.parse_args()
 
-    generate_report(args.experiment, args.report_dir, args.report_name,
-                    args.report_type, args.quick, args.from_cached_data)
+    generate_report(args.experiments, args.report_dir, args.report_name,
+                    args.label_by_experiment, args.benchmarks, args.fuzzers, args.report_type,
+                    args.quick, args.from_cached_data)
 
 
 if __name__ == '__main__':

@@ -123,8 +123,7 @@ def delete_instances(instance_names: List[str], zone: str, **kwargs) -> bool:
 
 def list_instances() -> List[str]:
     """Return list of current running instances."""
-    result = new_process.execute(['gcloud', 'compute', 'instances', 'list'],
-                                 write_to_stdout=False)
+    result = new_process.execute(['gcloud', 'compute', 'instances', 'list'])
     return [instance.split(' ')[0] for instance in result.output.splitlines()]
 
 

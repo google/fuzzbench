@@ -22,18 +22,14 @@ logger = logs.Logger('gsutil')
 
 def gsutil_command(arguments, *args, parallel=True, **kwargs):
     """Executes a gsutil command with |arguments| and returns the result."""
-    if environment.get('LOCAL_EXPERIMENT'):
-        logger.info('LOCAL_EXPERIMENT set, not running \'gsutil %s\'.',
+    if environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
+        logger.info('FUZZ_OUTSIDE_EXPERIMENT set, not running \'gsutil %s\'.',
                     ' '.join(arguments))
         return 0, ''
     command = ['gsutil']
     if parallel:
         command.append('-m')
-    write_to_stdout = kwargs.pop('write_to_stdout', False)
-    return new_process.execute(command + arguments,
-                               *args,
-                               write_to_stdout=write_to_stdout,
-                               **kwargs)
+    return new_process.execute(command + arguments, *args, **kwargs)
 
 
 def cp(*cp_arguments, **kwargs):  # pylint: disable=invalid-name
@@ -54,7 +50,9 @@ def ls(*ls_arguments, must_exist=True, **kwargs):  # pylint: disable=invalid-nam
                             parallel=False,
                             expect_zero=must_exist,
                             **kwargs)
-    return result.retcode, result.output.splitlines()
+    retcode = result.retcode  # pytype: disable=attribute-error
+    output = result.output.splitlines()  # pytype: disable=attribute-error
+    return retcode, output
 
 
 def rm(*rm_arguments, recursive=True, force=False, **kwargs):  # pylint: disable=invalid-name

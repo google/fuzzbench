@@ -164,8 +164,7 @@ def store_build_logs(build_config, build_result):
         build_log_filename = build_config + '.txt'
         gsutil.cp(tmp.name,
                   exp_path.gcs(get_build_logs_dir() / build_log_filename),
-                  parallel=False,
-                  write_to_stdout=False)
+                  parallel=False)
 
 
 def gcb_build(config_file: str,
@@ -204,7 +203,6 @@ def gcb_build(config_file: str,
     # Don't write to stdout to make concurrent building faster. Otherwise
     # writing becomes the bottleneck.
     result = new_process.execute(command,
-                                 write_to_stdout=False,
                                  kill_children=True,
                                  timeout=timeout_seconds)
     store_build_logs(config_name, result)
@@ -235,8 +233,7 @@ def build_measurer(benchmark: str) -> bool:
                                                  archive_name)
         gsutil.cp(cloud_bucket_archive_path,
                   str(benchmark_coverage_binary_dir),
-                  parallel=False,
-                  write_to_stdout=False)
+                  parallel=False)
 
         archive_path = benchmark_coverage_binary_dir / archive_name
         tar = tarfile.open(archive_path, 'r:gz')

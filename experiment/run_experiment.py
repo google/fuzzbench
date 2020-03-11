@@ -103,15 +103,6 @@ def get_directories(parent_dir):
 
 def validate_benchmarks(benchmarks: List[str]):
     """Parses and validates list of benchmarks."""
-    benchmark_directories = get_directories(BENCHMARKS_DIR)
-    if not os.path.exists(OSS_FUZZ_PROJECTS_DIR):
-        logs.warning('OSS-Fuzz repository is not checked out.'
-                     'skipping OSS-Fuzz benchmarks.')
-
-    for benchmark in benchmarks:
-        if benchmark not in benchmark_directories:
-            raise Exception('Benchmark "%s" does not exist.' % benchmark)
-
     for benchmark in set(benchmarks):
         if benchmarks.count(benchmark) > 1:
             raise Exception('Benchmark "%s" is included more than once.' %
@@ -302,17 +293,38 @@ class Dispatcher:
                           zone=self.config['cloud_compute_zone'])
 
 
+def get_all_benchmarks():
+    """Returns the list of all benchmarks."""
+    benchmarks_dir = os.path.join(utils.ROOT_DIR, 'benchmarks')
+    all_benchmarks = []
+    for benchmark in os.listdir(benchmarks_dir):
+        benchmark_path = os.path.join(benchmarks_dir, benchmark)
+        if os.path.isfile(os.path.join(benchmark_path, 'oss-fuzz.yaml')):
+            # Benchmark is an OSS-Fuzz benchmark.
+            all_benchmarks.append(benchmark)
+        elif os.path.isfile(os.path.join(benchmark_path, 'build.sh')):
+            # Benchmark is a standard benchmark.
+            all_benchmarks.append(benchmark)
+    return all_benchmarks
+
+
 def main():
     """Run an experiment in the cloud."""
+    logs.initialize()
+
     parser = argparse.ArgumentParser(
         description='Begin an experiment that evaluates fuzzers on one or '
         'more benchmarks.')
 
+    all_benchmarks = get_all_benchmarks()
+
     parser.add_argument('-b',
                         '--benchmarks',
-                        help='Benchmark names.',
+                        help='Benchmark names. All of them by default.',
                         nargs='+',
-                        required=True)
+                        required=False,
+                        default=all_benchmarks,
+                        choices=all_benchmarks)
     parser.add_argument('-c',
                         '--experiment-config',
                         help='Path to the experiment configuration yaml file.',
@@ -335,7 +347,6 @@ def main():
                         default=[])
     args = parser.parse_args()
 
-    logs.initialize()
     start_experiment(args.experiment_name, args.experiment_config,
                      args.benchmarks, args.fuzzers, args.fuzzer_configs)
     if not os.getenv('MANUAL_EXPERIMENT'):
