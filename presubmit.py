@@ -262,17 +262,27 @@ def get_changed_files() -> List[Path]:
     """Return a list of absolute paths of files changed in this git branch."""
     uncommitted_diff_command = ['git', 'diff', '--name-only', 'HEAD']
     output = subprocess.check_output(
-        uncomitted_diff_command).decode().splitlines()
+        uncommitted_diff_command).decode().splitlines()
     changed_files = set(
-        Path(path).absolute() for path in output if Path(path).is_file()
-    )
+        Path(path).absolute() for path in output if Path(path).is_file())
+
     committed_diff_command = ['git', 'diff', '--name-only', 'origin...']
-    output = subprocess.check_output(
-        committed_diff_command).decode().splitlines()
-    changed_files = changed_files.union(set(
-        Path(path).absolute() for path in output if Path(path).is_file()
-    ))
-    return changed_files
+    try:
+        output = subprocess.check_output(
+            committed_diff_command).decode().splitlines()
+        return changed_files.union(
+            set(
+                Path(path).absolute()
+                for path in output
+                if Path(path).is_file()))
+    except subprocess.CalledProcessError:
+        # This probably won't happen to anyone. It can happen if your copy
+        # of the repo wasn't cloned so give instructions on how to handle.
+        pass
+    raise Exception(
+        ('"%s" failed. Please run "git symbolic-ref refs/remotes/origin/HEAD'
+         'refs/remotes/origin/master" and try again.') %
+        ' '.join(committed_diff_command))
 
 
 def do_tests() -> bool:
@@ -326,7 +336,6 @@ def main() -> int:
     args = parser.parse_args()
     os.chdir(_SRC_ROOT)
     changed_files = get_changed_files()
-    print('CHANGED FILES', changed_files)
 
     if args.command == 'format':
         success = yapf(changed_files, False)
