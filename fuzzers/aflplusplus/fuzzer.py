@@ -115,7 +115,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
-    flags = []
+    flags = ["-d"] # FidgetyAFL is better when runnign alone
     if os.path.exists(cmplog_target_binary):
         flags += ["-c", cmplog_target_binary]
     if 'ADDITIONAL_ARGS' in os.environ:
