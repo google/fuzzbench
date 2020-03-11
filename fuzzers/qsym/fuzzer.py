@@ -16,7 +16,6 @@
 import shutil
 import subprocess
 import os
-import tempfile
 import threading
 import time
 
