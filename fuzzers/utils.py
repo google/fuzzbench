@@ -61,7 +61,8 @@ NO_SANITIZER_COMPAT_CFLAGS = [
     '-pthread', '-Wl,--no-as-needed', '-Wl,-ldl', '-Wl,-lm',
     '-Wno-unused-command-line-argument'
 ]
-NO_SANITIZER_COMPAT_CXXFLAGS = ['-stdlib=libc++'] + NO_SANITIZER_COMPAT_CFLAGS
+NO_SANITIZER_COMPAT_CXXFLAGS = ['-stdlib=libc++', '-pthread'] + \
+    NO_SANITIZER_COMPAT_CFLAGS
 
 
 def set_no_sanitizer_compilation_flags(env=None):

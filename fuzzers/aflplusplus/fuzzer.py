@@ -15,6 +15,8 @@
 
 import os
 import shutil
+import contextlib
+import tempfile
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers import utils
@@ -22,19 +24,44 @@ from fuzzers import utils
 # OUT environment variable is the location of build directory (default is /out).
 
 
+def get_cmplog_build_directory(target_directory):
+    """Return path to CmpLog target directory."""
+    return os.path.join(target_directory, 'cmplog')
+
+
 def build():
     """Build fuzzer."""
+    # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
+    # a default configuration
+    build_modes = ["instrim", "laf"]
+    if "BUILD_MODES" in os.environ:
+        build_modes = os.environ['BUILD_MODES'].split(',')
+
     cflags = [
         '-O2',
         '-fno-omit-frame-pointer',
         '-gline-tables-only',
-        '-fsanitize=address',
     ]
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
-    os.environ['CC'] = '/afl/afl-clang-fast'
-    os.environ['CXX'] = '/afl/afl-clang-fast++'
+    if "qemu" in build_modes:
+        os.environ['CC'] = 'clang'
+        os.environ['CXX'] = 'clang++'
+    else:
+        os.environ['CC'] = '/afl/afl-clang-fast'
+        os.environ['CXX'] = '/afl/afl-clang-fast++'
+
+        if "laf" in build_modes:
+            os.environ['AFL_LLVM_LAF_SPLIT_SWITCHES'] = '1'
+            os.environ['AFL_LLVM_LAF_TRANSFORM_COMPARES'] = '1'
+            os.environ['AFL_LLVM_LAF_SPLIT_COMPARES'] = '1'
+
+        if "instrim" in build_modes:
+            # I avoid to put also AFL_LLVM_INSTRIM_LOOPHEAD
+            os.environ["AFL_LLVM_INSTRIM"] = "1"
+            os.environ["AFL_LLVM_INSTRIM_SKIPSINGLEBLOCK"] = "1"
+
     os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
 
     # Some benchmarks like lcms
@@ -44,25 +71,91 @@ def build():
     # from writing AFL specific messages to stderr.
     os.environ['AFL_QUIET'] = '1'
 
-    utils.build_benchmark()
+    src = os.getenv('SRC')
+    work = os.getenv('WORK')
+    with restore_directory(src), restore_directory(work):
+        # Restore SRC to its initial state so we can build again without any
+        # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
+        # twice in the same directory without this.
+        utils.build_benchmark()
+
+    if "cmplog" in build_modes and "qemu" not in build_modes:
+
+        # CmpLog requires an build with different instrumentation.
+        new_env = os.environ.copy()
+        new_env["AFL_LLVM_CMPLOG"] = "1"
+
+        # For CmpLog build, set the OUT and FUZZ_TARGET environment
+        # variable to point to the new CmpLog build directory.
+        build_directory = os.environ['OUT']
+        cmplog_build_directory = get_cmplog_build_directory(build_directory)
+        os.mkdir(cmplog_build_directory)
+        new_env['OUT'] = cmplog_build_directory
+        fuzz_target = os.getenv('FUZZ_TARGET')
+        if fuzz_target:
+            new_env['FUZZ_TARGET'] = os.path.join(cmplog_build_directory,
+                                                  os.path.basename(fuzz_target))
+
+        print('Re-building benchmark for CmpLog fuzzing target')
+        utils.build_benchmark(env=new_env)
+
     shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    afl_fuzzer.prepare_fuzz_environment(input_corpus)
+    # Calculate CmpLog binary path from the instrumented target binary.
+    target_binary_directory = os.path.dirname(target_binary)
+    cmplog_target_binary_directory = (
+        get_cmplog_build_directory(target_binary_directory))
+    target_binary_name = os.path.basename(target_binary)
+    cmplog_target_binary = os.path.join(cmplog_target_binary_directory,
+                                        target_binary_name)
 
-    afl_fuzzer.run_afl_fuzz(
-        input_corpus,
-        output_corpus,
-        target_binary,
-        additional_flags=[
-            # Enable AFLFast's power schedules with default exponential
-            # schedule.
-            '-p',
-            'fast',
-            # Enable Mopt mutator with pacemaker fuzzing mode at first. This
-            # is also recommended in a short-time scale evaluation.
-            '-L',
-            '0',
-        ])
+    afl_fuzzer.prepare_fuzz_environment(input_corpus)
+    os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
+
+    flags = ["-d"]  # FidgetyAFL is better when runnign alone
+    if os.path.exists(cmplog_target_binary):
+        flags += ["-c", cmplog_target_binary]
+    if 'ADDITIONAL_ARGS' in os.environ:
+        flags += os.environ['ADDITIONAL_ARGS'].split(' ')
+
+    afl_fuzzer.run_afl_fuzz(input_corpus,
+                            output_corpus,
+                            target_binary,
+                            additional_flags=flags)
+
+
+@contextlib.contextmanager
+def restore_directory(directory):
+    """Helper contextmanager that when created saves a backup of |directory| and
+    when closed/exited replaces |directory| with the backup.
+
+    Example usage:
+
+    directory = 'my-directory'
+    with restore_directory(directory):
+       shutil.rmtree(directory)
+    # At this point directory is in the same state where it was before we
+    # deleted it.
+    """
+    # TODO(metzman): Figure out if this is worth it, so far it only allows QSYM
+    # to compile bloaty.
+    if not directory:
+        # Don't do anything if directory is None.
+        yield
+        return
+    # Save cwd so that if it gets deleted we can just switch into the restored
+    # version without code that runs after us running into issues.
+    initial_cwd = os.getcwd()
+    with tempfile.TemporaryDirectory() as temp_dir:
+        backup = os.path.join(temp_dir, os.path.basename(directory))
+        shutil.copytree(directory, backup)
+        yield
+        shutil.rmtree(directory)
+        shutil.move(backup, directory)
+        try:
+            os.getcwd()
+        except FileNotFoundError:
+            os.chdir(initial_cwd)
