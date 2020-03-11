@@ -33,8 +33,8 @@ def build():
     """Build fuzzer."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration
-    build_modes = ["instrim", "laf"]
-    if "BUILD_MODES" in os.environ:
+    build_modes = ['instrim', 'laf']
+    if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
 
     cflags = [
@@ -45,22 +45,22 @@ def build():
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
-    if "qemu" in build_modes:
+    if 'qemu' in build_modes:
         os.environ['CC'] = 'clang'
         os.environ['CXX'] = 'clang++'
     else:
         os.environ['CC'] = '/afl/afl-clang-fast'
         os.environ['CXX'] = '/afl/afl-clang-fast++'
 
-        if "laf" in build_modes:
+        if 'laf' in build_modes:
             os.environ['AFL_LLVM_LAF_SPLIT_SWITCHES'] = '1'
             os.environ['AFL_LLVM_LAF_TRANSFORM_COMPARES'] = '1'
             os.environ['AFL_LLVM_LAF_SPLIT_COMPARES'] = '1'
 
-        if "instrim" in build_modes:
+        if 'instrim' in build_modes:
             # I avoid to put also AFL_LLVM_INSTRIM_LOOPHEAD
-            os.environ["AFL_LLVM_INSTRIM"] = "1"
-            os.environ["AFL_LLVM_INSTRIM_SKIPSINGLEBLOCK"] = "1"
+            os.environ['AFL_LLVM_INSTRIM'] = '1'
+            os.environ['AFL_LLVM_INSTRIM_SKIPSINGLEBLOCK'] = '1'
 
     os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
 
@@ -79,11 +79,11 @@ def build():
         # twice in the same directory without this.
         utils.build_benchmark()
 
-    if "cmplog" in build_modes and "qemu" not in build_modes:
+    if 'cmplog' in build_modes and 'qemu' not in build_modes:
 
         # CmpLog requires an build with different instrumentation.
         new_env = os.environ.copy()
-        new_env["AFL_LLVM_CMPLOG"] = "1"
+        new_env['AFL_LLVM_CMPLOG'] = '1'
 
         # For CmpLog build, set the OUT and FUZZ_TARGET environment
         # variable to point to the new CmpLog build directory.
@@ -115,9 +115,9 @@ def fuzz(input_corpus, output_corpus, target_binary):
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
-    flags = ["-d"]  # FidgetyAFL is better when runnign alone
+    flags = ['-d']  # FidgetyAFL is better when running alone.
     if os.path.exists(cmplog_target_binary):
-        flags += ["-c", cmplog_target_binary]
+        flags += ['-c', cmplog_target_binary]
     if 'ADDITIONAL_ARGS' in os.environ:
         flags += os.environ['ADDITIONAL_ARGS'].split(' ')
 
