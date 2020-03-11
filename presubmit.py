@@ -260,17 +260,19 @@ def license_check(paths: List[Path]) -> bool:
 
 def get_changed_files() -> List[Path]:
     """Return a list of absolute paths of files changed in this git branch."""
-    diff_command = ['git', 'diff', '--name-only', 'FETCH_HEAD']
-    try:
-        output = subprocess.check_output(diff_command).decode().splitlines()
-        return [
-            Path(path).absolute() for path in output if Path(path).is_file()
-        ]
-    except subprocess.CalledProcessError:
-        pass
-    raise Exception(
-        ('"%s" failed. Please run "git pull origin master --rebase" and try'
-         ' again.') % ' '.join(diff_command))
+    uncommitted_diff_command = ['git', 'diff', '--name-only', 'HEAD']
+    output = subprocess.check_output(
+        uncomitted_diff_command).decode().splitlines()
+    changed_files = set(
+        Path(path).absolute() for path in output if Path(path).is_file()
+    )
+    committed_diff_command = ['git', 'diff', '--name-only', 'origin...']
+    output = subprocess.check_output(
+        committed_diff_command).decode().splitlines()
+    changed_files = changed_files.union(set(
+        Path(path).absolute() for path in output if Path(path).is_file()
+    ))
+    return changed_files
 
 
 def do_tests() -> bool:
