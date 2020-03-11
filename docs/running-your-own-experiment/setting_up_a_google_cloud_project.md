@@ -38,7 +38,7 @@ export PROJECT_NAME=<your-project-name>
 For the rest of this page, replace `$PROJECT_NAME` with the name of the
 project you created.
 
-* [Install Google Cloud SDK](https://console.cloud.google.com/sdk/install).
+* [Install Google Cloud SDK](https://cloud.google.com/sdk/install).
 
 * Set your default project using gcloud:
 
@@ -132,7 +132,7 @@ docker build -f docker/dispatcher-image/Dockerfile \
 
 FuzzBench uses an instance running this image to manage most of the experiment.
 
-* [Enable Google Container Registry API](https://console.console.cloud.google.com/apis/api/containerregistry.googleapis.com/overview)
+* [Enable Google Container Registry API](https://console.cloud.google.com/apis/api/containerregistry.googleapis.com/overview)
 to use the container registry.
 
 * Push `dispatcher-image` to the docker registry:
@@ -162,7 +162,7 @@ so that FuzzBench can connect to the database.
 ## Configure networking
 
 * Go to the networking page for the network you want to run your experiment in.
-[This](https://cloud.console.google.com/networking/subnetworks/details/us-central1/default)
+[This](https://console.cloud.google.com/networking/subnetworks/details/us-central1/default)
 is the networking page for the default network in "us-central1". It is best if
 you use `$POSTGRES_REGION` for this.
 
