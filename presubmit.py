@@ -324,7 +324,7 @@ def main() -> int:
     args = parser.parse_args()
     os.chdir(_SRC_ROOT)
     changed_files = get_changed_files()
-    print(changed_files)
+    print('CHANGED FILES', changed_files)
 
     if args.command == 'format':
         success = yapf(changed_files, False)
