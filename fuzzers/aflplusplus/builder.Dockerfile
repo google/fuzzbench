@@ -26,7 +26,7 @@ RUN git clone https://github.com/vanhauser-thc/AFLplusplus.git /afl && \
     cd /afl && \
     git checkout c159b872ef17d4c09238f99ac11021e12975cb3a && \
     AFL_NO_X86=1 make PYTHON_INCLUDE=/ && \
-    cd libdislocator && make && cd .. \
+    cd libdislocator && make && cd .. && \
     cd llvm_mode && CXXFLAGS= make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
