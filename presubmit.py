@@ -278,8 +278,10 @@ def get_changed_files() -> List[Path]:
         # of the repo wasn't cloned so give instructions on how to handle.
         pass
     raise Exception(
-        ('"%s" failed. Please run "git symbolic-ref refs/remotes/origin/HEAD '
-         'refs/remotes/origin/master" and try again. '
+        ('"%s" failed.\n'
+         'Please run "git fetch origin master && '
+        'git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master" '
+        'and try again.\n'
          'Please file an issue if this doesn\'t fix things.') %
         ' '.join(committed_diff_command))
 
