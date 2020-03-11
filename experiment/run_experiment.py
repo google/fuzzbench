@@ -169,10 +169,6 @@ def start_experiment(experiment_name: str, config_filename: str,
     with open(experiment_config_filename, 'w') as experiment_config_file:
         yaml.dump(config, experiment_config_file, default_flow_style=False)
 
-    if not fuzzers and not fuzzer_configs:
-        raise Exception('Need to provide either a list of fuzzers or '
-                        'a list of fuzzer configs.')
-
     fuzzer_config_dir = os.path.join(config_dir, 'fuzzer-configs')
     filesystem.recreate_directory(fuzzer_config_dir)
     for fuzzer_config in fuzzer_configs:
@@ -308,6 +304,16 @@ def get_all_benchmarks():
     return all_benchmarks
 
 
+def get_all_fuzzers():
+    """Returns the list of all fuzzers."""
+    fuzzers_dir = os.path.join(utils.ROOT_DIR, 'fuzzers')
+    return [
+        fuzzer for fuzzer in os.listdir(fuzzers_dir)
+        if (os.path.isfile(
+            os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')) and
+            fuzzer != 'coverage')
+    ]
+
 def main():
     """Run an experiment in the cloud."""
     logs.initialize()
@@ -347,8 +353,13 @@ def main():
                         default=[])
     args = parser.parse_args()
 
+    if not args.fuzzers and not args.fuzzer_configs:
+        fuzzers = get_all_fuzzers()
+    else:
+        fuzzers = args.fuzzers
+
     start_experiment(args.experiment_name, args.experiment_config,
-                     args.benchmarks, args.fuzzers, args.fuzzer_configs)
+                     args.benchmarks, fuzzers, args.fuzzer_configs)
     if not os.getenv('MANUAL_EXPERIMENT'):
         stop_experiment.stop_experiment(args.experiment_name,
                                         args.experiment_config)
