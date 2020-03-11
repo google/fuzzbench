@@ -52,4 +52,4 @@ COPY --from=base-clang /usr/local/lib/libc++*.a /usr/local/lib/
 COPY --from=base-clang /usr/local/include/ /usr/local/include
 
 # Use libc++ thoughout the build.
-ENV CXXFLAGS -stdlib=libc++ -pthread
+ENV CXXFLAGS -stdlib=libc++
