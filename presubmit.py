@@ -260,17 +260,30 @@ def license_check(paths: List[Path]) -> bool:
 
 def get_changed_files() -> List[Path]:
     """Return a list of absolute paths of files changed in this git branch."""
-    diff_command = ['git', 'diff', '--name-only', 'FETCH_HEAD']
+    uncommitted_diff_command = ['git', 'diff', '--name-only', 'HEAD']
+    output = subprocess.check_output(
+        uncommitted_diff_command).decode().splitlines()
+    uncommitted_changed_files = set(
+        Path(path).absolute() for path in output if Path(path).is_file())
+
+    committed_diff_command = ['git', 'diff', '--name-only', 'origin...']
     try:
-        output = subprocess.check_output(diff_command).decode().splitlines()
-        return [
-            Path(path).absolute() for path in output if Path(path).is_file()
-        ]
+        output = subprocess.check_output(
+            committed_diff_command).decode().splitlines()
+        committed_changed_files = set(
+            Path(path).absolute() for path in output if Path(path).is_file())
+        return list(committed_changed_files.union(uncommitted_changed_files))
     except subprocess.CalledProcessError:
+        # This probably won't happen to anyone. It can happen if your copy
+        # of the repo wasn't cloned so give instructions on how to handle.
         pass
-    raise Exception(
-        ('"%s" failed. Please run "git pull origin master --rebase" and try'
-         ' again.') % ' '.join(diff_command))
+    raise Exception((
+        '"%s" failed.\n'
+        'Please run "git fetch origin master && '
+        'git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master" '
+        'and try again.\n'
+        'Please file an issue if this doesn\'t fix things.') %
+                    ' '.join(committed_diff_command))
 
 
 def do_tests() -> bool:
