@@ -27,7 +27,7 @@ RUN rm -rf /afl
 
 RUN git clone https://github.com/alifahmed/aflmod /afl && \
     cd /afl && \
-    git checkout 45a7513bbf9890e54e7593449cd6404efdb3ee16 && \
+    git checkout 94824320335dc24da1f713c7714fe9ae4ec9eb94 && \
     export AFL_LLVM_LAF_SPLIT_SWITCHES=1 && \
     export AFL_LLVM_LAF_TRANSFORM_COMPARES=1 && \
     export AFL_LLVM_LAF_SPLIT_COMPARES=1 && \
