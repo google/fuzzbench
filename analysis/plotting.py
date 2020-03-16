@@ -306,8 +306,7 @@ class Plotter:
         critical_difference = Orange.evaluation.compute_CD(
             average_ranks.values, num_of_benchmarks)
 
-        Orange.evaluation.graph_ranks(average_ranks.values,
-                                      average_ranks.index,
+        Orange.evaluation.graph_ranks(average_ranks.values, average_ranks.index,
                                       critical_difference)
         fig = plt.gcf()
         try:
