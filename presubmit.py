@@ -260,16 +260,9 @@ def license_check(paths: List[Path]) -> bool:
 
 def get_changed_files() -> List[Path]:
     """Return a list of absolute paths of files changed in this git branch."""
-    uncommitted_diff_command = ['git', 'diff', '--name-only', 'HEAD']
-    output = subprocess.check_output(
-        uncommitted_diff_command).decode().splitlines()
-    uncommitted_changed_files = set(
-        Path(path).absolute() for path in output if Path(path).is_file())
-
-    committed_diff_command = ['git', 'diff', '--name-only', 'origin...']
+    diff_command = ['git', 'diff', '--name-only', 'origin...']
     try:
-        output = subprocess.check_output(
-            committed_diff_command).decode().splitlines()
+        output = subprocess.check_output(committed_diff_command).decode().splitlines()
         committed_changed_files = set(
             Path(path).absolute() for path in output if Path(path).is_file())
         return list(committed_changed_files.union(uncommitted_changed_files))
