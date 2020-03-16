@@ -15,6 +15,9 @@
 ARG parent_image=gcr.io/fuzzbench/base-builder
 FROM $parent_image
 
+
+RUN printf "hi"
+
 # install AFLSmart dependencies
 RUN dpkg --add-architecture i386 && \
     apt-get update -y && apt-get install -y \
