@@ -20,6 +20,7 @@ jobs:
           - eclipser
           - entropic
           - fairfuzz
+          - fastcgs
           - honggfuzz
           - libfuzzer
           - mopt
