@@ -260,19 +260,15 @@ def license_check(paths: List[Path]) -> bool:
 
 def get_changed_files() -> List[Path]:
     """Return a list of absolute paths of files changed in this git branch."""
-    uncommitted_diff_command = ['git', 'diff', '--name-only', 'HEAD']
-    output = subprocess.check_output(
-        uncommitted_diff_command).decode().splitlines()
-    uncommitted_changed_files = set(
-        Path(path).absolute() for path in output if Path(path).is_file())
-
-    committed_diff_command = ['git', 'diff', '--name-only', 'origin...']
+    diff_command = ['git', 'diff', '--name-only', 'origin...']
     try:
-        output = subprocess.check_output(
-            committed_diff_command).decode().splitlines()
-        committed_changed_files = set(
-            Path(path).absolute() for path in output if Path(path).is_file())
-        return list(committed_changed_files.union(uncommitted_changed_files))
+        output = subprocess.check_output(diff_command).decode().splitlines()
+        changed_files = list(
+            set(
+                Path(path).absolute()
+                for path in output
+                if Path(path).is_file()))
+        return changed_files
     except subprocess.CalledProcessError:
         # This probably won't happen to anyone. It can happen if your copy
         # of the repo wasn't cloned so give instructions on how to handle.
@@ -283,7 +279,7 @@ def get_changed_files() -> List[Path]:
         'git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master" '
         'and try again.\n'
         'Please file an issue if this doesn\'t fix things.') %
-                    ' '.join(committed_diff_command))
+                    ' '.join(diff_command))
 
 
 def do_tests() -> bool:
