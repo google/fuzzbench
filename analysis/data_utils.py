@@ -223,8 +223,8 @@ def experiment_pivot_table(experiment_snapshots_df,
     are the scores according to the per benchmark ranking."""
     benchmark_blocks = experiment_snapshots_df.groupby('benchmark')
     groups_ranked = benchmark_blocks.apply(per_benchmark_ranking_function)
-    num_benchmarks = groups_ranked.shape[0]
-    pivot_df = groups_ranked if num_benchmarks == 1 else groups_ranked.unstack()
+    already_unstacked = groups_ranked.index.names == ['benchmark']
+    pivot_df = groups_ranked if already_unstacked else groups_ranked.unstack()
     return pivot_df
 
 
