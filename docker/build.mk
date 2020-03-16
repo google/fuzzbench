@@ -51,7 +51,7 @@ define fuzzer_template
     --file fuzzers/$(1)/builder.Dockerfile \
     fuzzers/$(1)
 
-build-$(1)-all: $(addprefix build-$(1)-,$(BENCHMARKS))
+build-$(1)-all: $(addprefix build-$(1)-,$(BENCHMARKS)) $(addprefix build-$(1)-,$(OSS_FUZZ_PROJECTS))
 
 endef
 
