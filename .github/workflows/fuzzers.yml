@@ -25,33 +25,9 @@ jobs:
           - libfuzzer
           - mopt
           - qsym
-        benchmark:
-          - bloaty_fuzz_target
-          - curl_curl_fuzzer_http
-          - freetype2-2017
-          - harfbuzz-1.3.2
-          - irssi_server-fuzz
-          - jsoncpp_jsoncpp_fuzzer
-          - lcms-2017-03-21
-          - libjpeg-turbo-07-2017
-          - libpcap_fuzz_both
-          - libpng-1.2.56
-          - libxml2-v2.9.2
-          - mbedtls_fuzz_dtlsclient
-          - openssl_x509
-          - openthread-2019-12-23
-          - proj4-2017-08-14
-          - re2-2014-12-09
-          - sqlite3_ossfuzz
-          - systemd_fuzz-link-parser
-          - vorbis-2017-12-11
-          - woff2-2016-05-06
-          - wpantund-2018-02-27
-          - zlib_zlib_uncompress_fuzzer
 
     env:
       FUZZER_NAME: ${{ matrix.fuzzer }}
-      BENCHMARK_NAME: ${{ matrix.benchmark }}
 
     steps:
     - uses: actions/checkout@v2
@@ -64,4 +40,25 @@ jobs:
         docker pull gcr.io/fuzzbench/base-image || 0
         docker pull gcr.io/fuzzbench/base-builder || 0
         docker pull gcr.io/fuzzbench/base-runner || 0
-        make build-$FUZZER_NAME-$BENCHMARK_NAME
+        make build-$FUZZER_NAME-bloaty_fuzz_target \
+          build-$FUZZER_NAME-curl_curl_fuzzer_http \
+          build-$FUZZER_NAME-freetype2-2017 \
+          build-$FUZZER_NAME-harfbuzz-1.3.2 \
+          build-$FUZZER_NAME-irssi_server-fuzz \
+          build-$FUZZER_NAME-jsoncpp_jsoncpp_fuzzer \
+          build-$FUZZER_NAME-lcms-2017-03-21 \
+          build-$FUZZER_NAME-libjpeg-turbo-07-2017 \
+          build-$FUZZER_NAME-libpcap_fuzz_both \
+          build-$FUZZER_NAME-libpng-1.2.56 \
+          build-$FUZZER_NAME-libxml2-v2.9.2 \
+          build-$FUZZER_NAME-mbedtls_fuzz_dtlsclient \
+          build-$FUZZER_NAME-openssl_x509 \
+          build-$FUZZER_NAME-openthread-2019-12-23 \
+          build-$FUZZER_NAME-proj4-2017-08-14 \
+          build-$FUZZER_NAME-re2-2014-12-09 \
+          build-$FUZZER_NAME-sqlite3_ossfuzz \
+          build-$FUZZER_NAME-systemd_fuzz-link-parser \
+          build-$FUZZER_NAME-vorbis-2017-12-11 \
+          build-$FUZZER_NAME-woff2-2016-05-06 \
+          build-$FUZZER_NAME-wpantund-2018-02-27 \
+          build-$FUZZER_NAME-zlib_zlib_uncompress_fuzzer
