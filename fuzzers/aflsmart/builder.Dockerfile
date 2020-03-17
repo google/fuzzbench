@@ -15,6 +15,12 @@
 ARG parent_image=gcr.io/fuzzbench/base-builder
 FROM $parent_image
 
+# Download and compile AFLSmart
+RUN git clone https://github.com/aflsmart/aflsmart /afl && \
+    cd /afl && \
+    git checkout df095901ea379f033d4d82345023de004f28b9a7 && \
+    AFL_NO_X86=1 make
+
 # install AFLSmart dependencies
 RUN dpkg --add-architecture i386 && \
     apt-get update -y && apt-get install -y \
@@ -34,12 +40,6 @@ RUN add-apt-repository --keyserver hkps://keyserver.ubuntu.com:443 ppa:ubuntu-to
     unzip \
     wget \
     tzdata
-
-# Download and compile AFLSmart
-RUN git clone https://github.com/aflsmart/aflsmart /afl && \
-    cd afl && \
-    git checkout df095901ea379f033d4d82345023de004f28b9a7 && \
-    AFL_NO_X86=1 make
 
 # setup Peach
 RUN cd /afl && \
