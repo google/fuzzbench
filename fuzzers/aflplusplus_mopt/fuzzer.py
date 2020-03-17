@@ -21,11 +21,6 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 # OUT environment variable is the location of build directory (default is /out).
 
 
-def get_cmplog_build_directory(target_directory):
-    """Return path to CmpLog target directory."""
-    return os.path.join(target_directory, 'cmplog')
-
-
 def build():
     """Build fuzzer."""
     aflplusplus_fuzzer.build()
@@ -36,7 +31,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # Calculate CmpLog binary path from the instrumented target binary.
     target_binary_directory = os.path.dirname(target_binary)
     cmplog_target_binary_directory = (
-        get_cmplog_build_directory(target_binary_directory))
+        aflplusplus_fuzzer.get_cmplog_build_directory(target_binary_directory))
     target_binary_name = os.path.basename(target_binary)
     cmplog_target_binary = os.path.join(cmplog_target_binary_directory,
                                         target_binary_name)
