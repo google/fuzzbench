@@ -37,7 +37,8 @@ def build():
 
     utils.set_no_sanitizer_compilation_flags()
     optimization_cflags = [
-        '-O3', '-march=native',
+        '-O3',
+        '-march=native',
     ]
     utils.append_flags('CFLAGS', optimization_cflags)
     utils.append_flags('CXXFLAGS', optimization_cflags)
@@ -112,8 +113,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
-    flags = ['-L0']     # afl++ MOpt activation at once
-    flags += ['-pfast'] # fast scheduling
+    flags = ['-L0']  # afl++ MOpt activation at once
+    flags += ['-pfast']  # fast scheduling
     if os.path.exists(cmplog_target_binary):
         flags += ['-c', cmplog_target_binary]
     if 'ADDITIONAL_ARGS' in os.environ:
