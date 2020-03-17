@@ -37,9 +37,9 @@ jobs:
         python-version: 3.7
     - name: Build benchmarks
       run: |
-        docker pull gcr.io/fuzzbench/base-image || 0
-        docker pull gcr.io/fuzzbench/base-builder || 0
-        docker pull gcr.io/fuzzbench/base-runner || 0
+        docker pull gcr.io/fuzzbench/base-image
+        docker pull gcr.io/fuzzbench/base-builder
+        docker pull gcr.io/fuzzbench/base-runner
         make build-$FUZZER_NAME-bloaty_fuzz_target \
           build-$FUZZER_NAME-curl_curl_fuzzer_http \
           build-$FUZZER_NAME-freetype2-2017 \
