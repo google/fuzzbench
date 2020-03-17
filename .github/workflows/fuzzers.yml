@@ -54,6 +54,12 @@ jobs:
           build-$FUZZER_NAME-woff2-2016-05-06 \
           build-$FUZZER_NAME-wpantund-2018-02-27 \
 
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Python environment
+      uses: actions/setup-python@v1.1.1
+      with:
+        python-version: 3.7          
     - name: Build OSS-Fuzz Benchmarks
       run: |
         docker pull gcr.io/fuzzbench/base-runner
