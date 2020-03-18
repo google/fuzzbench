@@ -71,8 +71,7 @@ def pull_base_images():
                    check=True)
 
 
-
-def make_builds(build_targets, is_oss_fuzz):
+def make_builds(build_targets):
     """Use make to build each target in |build_targets|."""
     success = True
     for target in build_targets:
@@ -95,7 +94,7 @@ def do_build(build_type, fuzzer):
         raise Exception('Invalid build_type: %s' % build_type)
 
     build_targets = get_build_targets(benchmarks, fuzzer)
-    return make_builds(build_targets, build_type == 'oss-fuzz')
+    return make_builds(build_targets)
 
 
 def main():
