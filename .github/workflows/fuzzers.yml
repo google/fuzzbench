@@ -26,7 +26,7 @@ jobs:
           - mopt
           - qsym
 
-        benchmark-type:
+        benchmark_type:
           - oss-fuzz
           - standard
 
@@ -62,18 +62,18 @@ jobs:
       uses: actions/setup-python@v1.1.1
       with:
         python-version: 3.7
-    - name: Build Benchmarks
+    - name: Build OSS-Fuzz Benchmarks
       if: ${{ matrix.benchmark_type == 'oss-fuzz' }}
       run: |
         docker pull gcr.io/fuzzbench/base-runner
         make \
-        build-$FUZZER_NAME-bloaty_fuzz_target \
-        build-$FUZZER_NAME-curl_curl_fuzzer_http \
-        build-$FUZZER_NAME-irssi_server-fuzz \
-        build-$FUZZER_NAME-jsoncpp_jsoncpp_fuzzer \
-        build-$FUZZER_NAME-libpcap_fuzz_both \
-        build-$FUZZER_NAME-mbedtls_fuzz_dtlsclient \
-        build-$FUZZER_NAME-openssl_x509 \
-        build-$FUZZER_NAME-sqlite3_ossfuzz \
-        build-$FUZZER_NAME-systemd_fuzz-link-parser \
-        build-$FUZZER_NAME-zlib_zlib_uncompress_fuzzer
+          build-$FUZZER_NAME-bloaty_fuzz_target \
+          build-$FUZZER_NAME-curl_curl_fuzzer_http \
+          build-$FUZZER_NAME-irssi_server-fuzz \
+          build-$FUZZER_NAME-jsoncpp_jsoncpp_fuzzer \
+          build-$FUZZER_NAME-libpcap_fuzz_both \
+          build-$FUZZER_NAME-mbedtls_fuzz_dtlsclient \
+          build-$FUZZER_NAME-openssl_x509 \
+          build-$FUZZER_NAME-sqlite3_ossfuzz \
+          build-$FUZZER_NAME-systemd_fuzz-link-parser \
+          build-$FUZZER_NAME-zlib_zlib_uncompress_fuzzer
