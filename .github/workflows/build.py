@@ -70,7 +70,7 @@ def make_builds(build_targets, is_oss_fuzz):
         if not is_oss_fuzz:
             subprocess.run(['docker', 'pull', 'gcr.io/fuzzbench/base-builder'],
                            check=True)
-        result = subprocess.run(['make', '1', target], check=False)
+        result = subprocess.run(['make', target], check=False)
         if not result.returncode == 0:
             success = False
         # Delete docker images so disk doesn't fill up.
