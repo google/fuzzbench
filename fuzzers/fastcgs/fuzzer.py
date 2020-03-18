@@ -25,10 +25,10 @@ from fuzzers import utils
 def build():
     """Build fuzzer."""
     cflags = [
-        '-O2',
+        '-O3',
         '-fno-omit-frame-pointer',
         '-gline-tables-only',
-        '-fsanitize=address',
+        '-pthread',
     ]
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
@@ -65,4 +65,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
             # is also recommended in a short-time scale evaluation.
             '-L',
             '0',
+            # Skip deterministic fuzzing steps
+            '-d'
         ])
