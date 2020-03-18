@@ -25,16 +25,19 @@ build-all: $(addsuffix -all, $(addprefix build-,$(FUZZERS)))
 base-image:
 	docker build \
     --tag $(BASE_TAG)/base-image \
+    --cache-from $(BASE_TAG)/base-image \
     docker/base-image
 
 base-builder: base-image
 	docker build \
     --tag $(BASE_TAG)/base-builder \
+    --cache-from $(BASE_TAG)/base-builder \
     docker/base-builder
 
 base-runner: base-image
 	docker build \
     --tag $(BASE_TAG)/base-runner \
+    --cache-from $(BASE_TAG)/base-runner \
     docker/base-runner
 
 dispatcher-image: base-image

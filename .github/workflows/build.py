@@ -27,7 +27,7 @@ OSS_FUZZ_BENCHMARKS = [
     'openssl_x509',
     'sqlite3_ossfuzz',
     'systemd_fuzz-link-parser',
-    'zlib_zlib_uncompress_fuzz',
+    'zlib_zlib_uncompress_fuzzer',
 ]
 
 STANDARD_BENCHMARKS = [
@@ -65,10 +65,14 @@ def delete_docker_images():
 
 def pull_base_images():
     """Pull base images."""
+    # Pull base-image so that make doesn't rebuild it from scratch.
+    subprocess.run(['docker', 'pull', 'gcr.io/fuzzbench/base-image'],
+                   check=True)
     subprocess.run(['docker', 'pull', 'gcr.io/fuzzbench/base-builder'],
                    check=True)
     subprocess.run(['docker', 'pull', 'gcr.io/fuzzbench/base-runner'],
                    check=True)
+
 
 
 def make_builds(build_targets):
