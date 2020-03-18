@@ -63,13 +63,20 @@ def delete_docker_images():
     subprocess.run(['docker', 'rmi', '-f'] + image_names, check=False)
 
 
+def pull_base_images():
+    """Pull base images."""
+    subprocess.run(['docker', 'pull', 'gcr.io/fuzzbench/base-builder'],
+                   check=True)
+    subprocess.run(['docker', 'pull', 'gcr.io/fuzzbench/base-runner'],
+                   check=True)
+
+
+
 def make_builds(build_targets, is_oss_fuzz):
     """Use make to build each target in |build_targets|."""
     success = True
     for target in build_targets:
-        if not is_oss_fuzz:
-            subprocess.run(['docker', 'pull', 'gcr.io/fuzzbench/base-builder'],
-                           check=True)
+        pull_base_images()
         result = subprocess.run(['make', target], check=False)
         if not result.returncode == 0:
             success = False
