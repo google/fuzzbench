@@ -74,7 +74,6 @@ def pull_base_images():
                    check=True)
 
 
-
 def make_builds(build_targets):
     """Use make to build each target in |build_targets|."""
     success = True
