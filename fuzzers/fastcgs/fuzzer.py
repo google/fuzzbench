@@ -24,12 +24,8 @@ from fuzzers import utils
 
 def build():
     """Build fuzzer."""
-    cflags = [
-        '-O3',
-        '-fno-omit-frame-pointer',
-        '-gline-tables-only',
-        '-pthread',
-    ]
+    cflags = ['-O3']
+    utils.set_no_sanitizer_compilation_flags()
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
