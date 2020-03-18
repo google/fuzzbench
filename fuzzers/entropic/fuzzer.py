@@ -22,13 +22,9 @@ from fuzzers.libfuzzer import fuzzer as libfuzzer_fuzzer
 
 
 def build():
-    """Build fuzzer."""
-    cflags = [
-        '-O2',
-        '-fno-omit-frame-pointer',
-        '-gline-tables-only',
-        '-fsanitize=address,fuzzer-no-link',
-    ]
+    """Build benchmark."""
+    utils.set_no_sanitizer_compilation_flags()
+    cflags = ['-O2', '-fsanitize=fuzzer-no-link']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 

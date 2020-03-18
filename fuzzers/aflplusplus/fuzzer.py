@@ -28,7 +28,7 @@ def get_cmplog_build_directory(target_directory):
 
 
 def build():
-    """Build fuzzer."""
+    """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration.
     build_modes = ['instrim', 'laf']
@@ -36,11 +36,9 @@ def build():
         build_modes = os.environ['BUILD_MODES'].split(',')
 
     utils.set_no_sanitizer_compilation_flags()
-    optimization_cflags = [
-        '-O3',
-    ]
-    utils.append_flags('CFLAGS', optimization_cflags)
-    utils.append_flags('CXXFLAGS', optimization_cflags)
+    cflags = ['-O3']
+    utils.append_flags('CFLAGS', cflags)
+    utils.append_flags('CXXFLAGS', cflags)
 
     if 'qemu' in build_modes:
         os.environ['CC'] = 'clang'
