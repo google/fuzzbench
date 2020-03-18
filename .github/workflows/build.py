@@ -1,3 +1,18 @@
+#!/usr/bin/env python3
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""Script for building fuzzer,benchmark pairs in CI."""
 import sys
 import subprocess
 
@@ -34,17 +49,18 @@ STANDARD_BENCHMARKS = [
 def get_build_targets(benchmarks, fuzzer):
     """Get build targets for |fuzzer| and each benchmark in |benchmarks| to
     pass to make."""
-    return [
-        'build-%s-%s' % (fuzzer, benchmark)
-        for benchmark in benchmarks
-    ]
+    return ['build-%s-%s' % (fuzzer, benchmark) for benchmark in benchmarks]
 
 
 def delete_docker_images():
-    result = subprocess.run(['docker', 'images', '-q'], stdout=subprocess.PIPE)
+    """Delete docker images."""
+    # TODO(metzman): Don't delete base-runner/base-builder so it
+    # doesn't need to be pulled for every target.
+    result = subprocess.run(['docker', 'images', '-q'],
+                            stdout=subprocess.PIPE,
+                            check=True)
     image_names = result.stdout.splitlines()
     subprocess.run(['docker', 'rmi', '-f'] + image_names, check=False)
-
 
 
 def make_builds(build_targets, is_oss_fuzz):
@@ -52,11 +68,12 @@ def make_builds(build_targets, is_oss_fuzz):
     success = True
     for target in build_targets:
         if not is_oss_fuzz:
-            subprocess.run(['docker', 'pull', 'gcr.io/fuzzbench/base-builder'])
-        try:
-            subprocess.run(['make', target])
-        except subprocess.CalledProcessError:
+            subprocess.run(['docker', 'pull', 'gcr.io/fuzzbench/base-builder'],
+                           check=True)
+        result = subprocess.run(['make', '1', target], check=False)
+        if not result.returncode == 0:
             success = False
+        # Delete docker images so disk doesn't fill up.
         delete_docker_images()
     return success
 
@@ -74,8 +91,8 @@ def do_build(build_type, fuzzer):
     return make_builds(build_targets, build_type == 'oss-fuzz')
 
 
-
 def main():
+    """Build OSS-Fuzz or standard benchmarks with a fuzzer."""
     if len(sys.argv) != 3:
         print('Usage: %s <build_type> <fuzzer>' % sys.argv[0])
         return 1
@@ -83,6 +100,7 @@ def main():
     fuzzer = sys.argv[2]
     result = do_build(build_type, fuzzer)
     return 0 if result else 1
+
 
 if __name__ == '__main__':
     sys.exit(main())
