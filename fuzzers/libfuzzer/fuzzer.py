@@ -25,7 +25,7 @@ def build():
     # /usr/lib/libFuzzer.a as the FUZZER_LIB for the main fuzzing binary. This
     # allows us to link against a version of LibFuzzer that we specify.
     utils.set_no_sanitizer_compilation_flags()
-    cflags = ['-O2', '-fsanitize=fuzzer-no-link']
+    cflags = ['-O3', '-fsanitize=fuzzer-no-link']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 

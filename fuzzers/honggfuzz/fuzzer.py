@@ -26,7 +26,7 @@ def build():
     """Build benchmark."""
     utils.set_no_sanitizer_compilation_flags()
 
-    cflags = ['-O2']
+    cflags = ['-O3']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 

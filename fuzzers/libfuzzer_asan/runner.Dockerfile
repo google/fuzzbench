@@ -11,22 +11,5 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for coverage builds."""
 
-import os
-
-from fuzzers import utils
-
-
-def build():
-    """Build benchmark."""
-    utils.set_no_sanitizer_compilation_flags()
-    cflags = ['-O3', '-fsanitize-coverage=trace-pc-guard']
-    utils.append_flags('CFLAGS', cflags)
-    utils.append_flags('CXXFLAGS', cflags)
-
-    os.environ['CC'] = 'clang'
-    os.environ['CXX'] = 'clang++'
-    os.environ['FUZZER_LIB'] = '/usr/lib/libFuzzer.a'
-
-    utils.build_benchmark()
+FROM gcr.io/fuzzbench/base-runner

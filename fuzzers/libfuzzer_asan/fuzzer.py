@@ -11,18 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for Entropic fuzzer."""
+"""Integration code for libFuzzer fuzzer."""
 
+import subprocess
 import os
 
-from fuzzers import utils
 from fuzzers.libfuzzer import fuzzer as libfuzzer_fuzzer
-
-# TODO(metzman): Delete entropic before making the project public.
+from fuzzers import utils
 
 
 def build():
     """Build benchmark."""
+    # With LibFuzzer we use -fsanitize=fuzzer-no-link for build CFLAGS and then
+    # /usr/lib/libFuzzer.a as the FUZZER_LIB for the main fuzzing binary. This
+    # allows us to link against a version of LibFuzzer that we specify.
     utils.set_no_sanitizer_compilation_flags()
     cflags = ['-O3', '-fsanitize=fuzzer-no-link']
     utils.append_flags('CFLAGS', cflags)
@@ -30,7 +32,7 @@ def build():
 
     os.environ['CC'] = 'clang'
     os.environ['CXX'] = 'clang++'
-    os.environ['FUZZER_LIB'] = '/libEntropic.a'
+    os.environ['FUZZER_LIB'] = '/usr/lib/libFuzzer.a'
 
     utils.build_benchmark()
 

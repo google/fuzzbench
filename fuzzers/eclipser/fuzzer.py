@@ -26,7 +26,7 @@ def build():
     # QEMU does not work with sanitizers, so skip -fsanitize=. See
     # https://github.com/SoftSec-KAIST/Eclipser/issues/5
     utils.set_no_sanitizer_compilation_flags()
-    cflags = ['-O2']
+    cflags = ['-O3']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 

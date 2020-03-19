@@ -11,22 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for coverage builds."""
 
-import os
+ARG parent_image=gcr.io/fuzzbench/base-builder
+FROM $parent_image
 
-from fuzzers import utils
-
-
-def build():
-    """Build benchmark."""
-    utils.set_no_sanitizer_compilation_flags()
-    cflags = ['-O3', '-fsanitize-coverage=trace-pc-guard']
-    utils.append_flags('CFLAGS', cflags)
-    utils.append_flags('CXXFLAGS', cflags)
-
-    os.environ['CC'] = 'clang'
-    os.environ['CXX'] = 'clang++'
-    os.environ['FUZZER_LIB'] = '/usr/lib/libFuzzer.a'
-
-    utils.build_benchmark()
+RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
+    cd /llvm-project/ && \
+    git checkout 6d07802d63a8589447de0a697696447a583de9d8 && \
+    cd compiler-rt/lib/fuzzer && \
+    (for f in *.cpp; do \
+      clang++ -stdlib=libc++ -fPIC -gline-tables-only -O2 -fno-omit-frame-pointer -std=c++11 $f -c & \
+    done && wait) && \
+    ar r /usr/lib/libFuzzer.a *.o
