@@ -28,6 +28,7 @@ def build():
         '-O2',
         '-fno-omit-frame-pointer',
         '-gline-tables-only',
+        '-fsanitize=address',
     ]
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
