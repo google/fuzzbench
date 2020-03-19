@@ -26,6 +26,10 @@ jobs:
           - libfuzzer
           - mopt
 
+        benchmark_type:
+          - oss-fuzz
+          - standard
+
     env:
       FUZZER_NAME: ${{ matrix.fuzzer }}
 
@@ -35,6 +39,15 @@ jobs:
       uses: actions/setup-python@v1.1.1
       with:
         python-version: 3.7
-    - name: Build benchmarks
+    - name: Build Benchmarks
+      if: ${{ matrix.benchmark_type == 'standard' }}
       run: |
-        make build-$FUZZER_NAME-all
+        python .github/workflows/build.py standard $FUZZER_NAME
+    - name: Setup Python environment
+      uses: actions/setup-python@v1.1.1
+      with:
+        python-version: 3.7
+    - name: Build OSS-Fuzz Benchmarks
+      if: ${{ matrix.benchmark_type == 'oss-fuzz' }}
+      run: |
+        python .github/workflows/build.py oss-fuzz $FUZZER_NAME
