@@ -37,18 +37,19 @@ RUN add-apt-repository --keyserver hkps://keyserver.ubuntu.com:443 ppa:ubuntu-to
 
 # Download and compile AFLSmart
 RUN git clone https://github.com/aflsmart/aflsmart /afl && \
-    cd afl && \
+    cd /afl && \
     git checkout df095901ea379f033d4d82345023de004f28b9a7 && \
     AFL_NO_X86=1 make
 
-# setup Peach
+# Setup Peach.
+# Set CFLAGS="" so that we don't use the CFLAGS defined in OSS-Fuzz images.
 RUN cd /afl && \
     wget https://sourceforge.net/projects/peachfuzz/files/Peach/3.0/peach-3.0.202-source.zip && \
     unzip peach-3.0.202-source.zip && \
     patch -p1 < peach-3.0.202.patch && \
     cd peach-3.0.202-source && \
-    CC=gcc-4.4 CXX=g++-4.4 CXXFLAGS="-std=c++0x" ./waf configure && \
-    CC=gcc-4.4 CXX=g++-4.4 CXXFLAGS="-std=c++0x" ./waf install
+    CC=gcc-4.4 CXX=g++-4.4 CFLAGS="" CXXFLAGS="-std=c++0x" ./waf configure && \
+    CC=gcc-4.4 CXX=g++-4.4 CFLAGS="" CXXFLAGS="-std=c++0x" ./waf install
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \

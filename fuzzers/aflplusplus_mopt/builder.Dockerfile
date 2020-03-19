@@ -15,19 +15,21 @@
 ARG parent_image=gcr.io/fuzzbench/base-builder
 FROM $parent_image
 
-# QSym runs on afl instrumented binaries.
+# Install wget to download afl_driver.cpp. Install libstdc++ to use llvm_mode.
+RUN apt-get update && \
+    apt-get install wget libstdc++-5-dev -y
 
-# Download and compile AFL v2.56b.
+# Download and compile afl++ (v2.62d).
+# Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
-RUN git clone https://github.com/google/AFL.git /afl && \
+RUN git clone https://github.com/vanhauser-thc/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 8da80951dd7eeeb3e3b5a3bcd36c485045f40274 && \
-    AFL_NO_X86=1 make
+    git checkout 35720304be17b94c3167cd3ce2bb8afe64bfe538 && \
+    AFL_NO_X86=1 make PYTHON_INCLUDE=/ && \
+    cd libdislocator && make && cd .. && \
+    cd llvm_mode && CXXFLAGS= make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
-RUN apt-get update && \
-    apt-get install wget -y && \
-    wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
-    clang -Wno-pointer-sign -c /afl/llvm_mode/afl-llvm-rt.o.c -I/afl && \
+RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
     clang++ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp && \
-    ar r /libQSYM.a *.o
+    ar ru /libAFLDriver.a *.o

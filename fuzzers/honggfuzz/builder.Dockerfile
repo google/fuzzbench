@@ -16,16 +16,21 @@ ARG parent_image=gcr.io/fuzzbench/base-builder
 FROM $parent_image
 
 # honggfuzz requires libfd and libunwid.
-RUN apt-get update -y && apt-get install -y libbfd-dev libunwind-dev libblocksruntime-dev
+RUN apt-get update -y && \
+    apt-get install -y \
+    libbfd-dev \
+    libunwind-dev \
+    libblocksruntime-dev \
+    liblzma-dev
 
-# Download honggfuz version 2.1 + 815ccf8e9580b8c83ee673211da9fa217d354b5f
+# Download honggfuz version 2.1 + 539ea048d6273864e396ad95b08911c69cd2ac51
 # Set CFLAGS use honggfuzz's defaults except for -mnative which can build CPU
 # dependent code that may not work on the machines we actually fuzz on.
 # Create an empty object file which will become the FUZZER_LIB lib (since
 # honggfuzz doesn't need this when hfuzz-clang(++) is used).
 RUN git clone https://github.com/google/honggfuzz.git /honggfuzz && \
     cd /honggfuzz && \
-    git checkout 815ccf8e9580b8c83ee673211da9fa217d354b5f && \
+    git checkout 539ea048d6273864e396ad95b08911c69cd2ac51 && \
     CFLAGS="-O3 -funroll-loops" make && \
     touch empty_lib.c && \
     cc -c -o empty_lib.o empty_lib.c

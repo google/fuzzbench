@@ -50,39 +50,6 @@ def label_fuzzers_by_experiment(experiment_df):
 
 # Creating "snapshots" (see README.md for definition).
 
-_DEFAULT_FUZZER_SAMPLE_NUM_THRESHOLD = 0.8
-
-
-def _filter_fuzzers_with_few_samples(
-        benchmark_snapshot_df, threshold=_DEFAULT_FUZZER_SAMPLE_NUM_THRESHOLD):
-    """Takes a benchmark snapshot and filters out fuzzers that have a sample
-    size that is smaller than 80% of the largest sample size.
-
-    This is especially useful to use after finding a good snapshot time
-    somewhere at the end of the experiment where most of the trials are still
-    running. If a fuzzer have much fewer trials at that snapshot time then the
-    others it's better to drop it entirely.
-
-    Returns the filtered benchmark snapshot.
-    """
-    samples_per_fuzzer = benchmark_snapshot_df.fuzzer.value_counts()
-    max_samples = samples_per_fuzzer.max()
-    criteria = samples_per_fuzzer > threshold * max_samples
-    ok_fuzzers = samples_per_fuzzer[criteria].index
-
-    # Log the list of bad fuzzers.
-    bad_fuzzers = sorted(
-        set(benchmark_snapshot_df.fuzzer.unique().tolist()) -
-        set(ok_fuzzers.tolist()))
-    if bad_fuzzers:
-        benchmark_name = benchmark_snapshot_df.benchmark.unique()[0]
-        logs.error(
-            'Filtered bad fuzzers from {benchmark_name}: {bad_fuzzers}'.format(
-                bad_fuzzers=bad_fuzzers, benchmark_name=benchmark_name))
-
-    return benchmark_snapshot_df[benchmark_snapshot_df.fuzzer.isin(ok_fuzzers)]
-
-
 _DEFAULT_BENCHMARK_SAMPLE_NUM_THRESHOLD = 0.8
 
 
@@ -104,9 +71,7 @@ def get_benchmark_snapshot(benchmark_df,
     ok_times = trials_running_at_time[criteria]
     latest_ok_time = ok_times.index.max()
     benchmark_snapshot_df = benchmark_df[benchmark_df.time == latest_ok_time]
-    # Also drop the samples that belong to fuzzer that has too few at the
-    # snapshot time.
-    return _filter_fuzzers_with_few_samples(benchmark_snapshot_df)
+    return benchmark_snapshot_df
 
 
 def get_experiment_snapshots(experiment_df):

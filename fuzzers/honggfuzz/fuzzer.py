@@ -54,6 +54,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     print('[run_fuzzer] Running target with honggfuzz')
     subprocess.call([
-        './honggfuzz', '--sanitizers', '--persistent', '--input', input_corpus,
-        '--output', output_corpus, '--', target_binary
+        './honggfuzz', '--persistent', '--rlimit_rss', '2048',
+        '--sanitizers_del_report=true', '--input', input_corpus, '--output',
+        output_corpus, '--', target_binary
     ])
