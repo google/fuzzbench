@@ -25,7 +25,6 @@ jobs:
           - honggfuzz
           - libfuzzer
           - mopt
-          - qsym
 
     env:
       FUZZER_NAME: ${{ matrix.fuzzer }}
