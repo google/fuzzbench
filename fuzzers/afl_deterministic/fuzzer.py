@@ -13,12 +13,9 @@
 # limitations under the License.
 """Integration code for AFL fuzzer."""
 
-import shutil
 import subprocess
-import os
 
 from fuzzers.afl import fuzzer as afl_fuzzer
-from fuzzers import utils
 
 # OUT environment variable is the location of build directory (default is /out).
 
@@ -64,6 +61,6 @@ def run_afl_fuzz(input_corpus,
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run afl-fuzz on target."""
-    prepare_fuzz_environment(input_corpus)
+    afl_fuzzer.prepare_fuzz_environment(input_corpus)
 
     run_afl_fuzz(input_corpus, output_corpus, target_binary)
