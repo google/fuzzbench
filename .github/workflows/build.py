@@ -67,18 +67,19 @@ def delete_docker_images():
 def make_builds(benchmarks, fuzzer):
     """Use make to build each target in |build_targets|."""
     make_targets = get_make_targets(benchmarks, fuzzer)
-    success = True
     for pull_target, build_target in make_targets:
         # Pull target first.
         subprocess.run(['make', '-j', pull_target], check=False)
 
         # Then build.
-        result = subprocess.run(['make', build_target], check=False)
+        print('Building', build_target)
+        build_command = ['make', '-j', build_target]
+        result = subprocess.run(build_command, check=False)
         if not result.returncode == 0:
-            success = False
+            return False
         # Delete docker images so disk doesn't fill up.
         delete_docker_images()
-    return success
+    return True
 
 
 def do_build(build_type, fuzzer):
