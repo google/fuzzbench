@@ -22,9 +22,9 @@ RUN apt-get update && \
 # Download and compile afl++ (v2.62d).
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
-RUN git clone https://github.com/vanhauser-thc/AFLplusplus.git /afl && \
+RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 684f4dd1c44053517c6685a8a3137691535ecd84 && \
+    git checkout 0e1d82dd9f5cfe48b294e876924acea2f5094f01 && \
     AFL_NO_X86=1 make PYTHON_INCLUDE=/ && \
     cd libdislocator && make && cd .. && \
     cd llvm_mode && CXXFLAGS= make
