@@ -16,7 +16,12 @@ ARG parent_image=gcr.io/fuzzbench/base-builder
 FROM $parent_image
 
 # honggfuzz requires libfd and libunwid.
-RUN apt-get update -y && apt-get install -y libbfd-dev libunwind-dev libblocksruntime-dev liblzma-dev
+RUN apt-get update -y && \
+    apt-get install -y \
+    libbfd-dev \
+    libunwind-dev \
+    libblocksruntime-dev \
+    liblzma-dev
 
 # Download honggfuz version 2.1 + 539ea048d6273864e396ad95b08911c69cd2ac51
 # Set CFLAGS use honggfuzz's defaults except for -mnative which can build CPU
