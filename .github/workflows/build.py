@@ -46,10 +46,13 @@ STANDARD_BENCHMARKS = [
 ]
 
 
-def get_build_targets(benchmarks, fuzzer):
-    """Get build targets for |fuzzer| and each benchmark in |benchmarks| to
-    pass to make."""
-    return ['build-%s-%s' % (fuzzer, benchmark) for benchmark in benchmarks]
+def get_make_targets(benchmarks, fuzzer):
+    """Return pull and build targets for |fuzzer| and each benchmark
+    in |benchmarks| to pass to make."""
+    return [
+        ('pull-%s-%s' % (fuzzer, benchmark),
+         'build-%s-%s' % (fuzzer, benchmark))
+        for benchmark in benchmarks]
 
 
 def delete_docker_images():
@@ -63,22 +66,15 @@ def delete_docker_images():
     subprocess.run(['docker', 'rmi', '-f'] + image_names, check=False)
 
 
-def pull_base_images():
-    """Pull base images."""
-    # Pull base-image so that make doesn't rebuild it from scratch.
-    subprocess.run(['docker', 'pull', 'gcr.io/fuzzbench/base-image'],
-                   check=True)
-    subprocess.run(['docker', 'pull', 'gcr.io/fuzzbench/base-builder'],
-                   check=True)
-    subprocess.run(['docker', 'pull', 'gcr.io/fuzzbench/base-runner'],
-                   check=True)
-
-
-def make_builds(build_targets):
+def make_builds(benchmark, fuzzer):
     """Use make to build each target in |build_targets|."""
+    make_targets = get_make_targets(benchmarks, fuzzer)
     success = True
-    for target in build_targets:
-        pull_base_images()
+    for pull_target, build_target in make_targets:
+        # Pull target first.
+        subprocess.run(['make', '-j', pull_target], check=False)
+
+        # Then build.
         result = subprocess.run(['make', target], check=False)
         if not result.returncode == 0:
             success = False
@@ -96,8 +92,7 @@ def do_build(build_type, fuzzer):
     else:
         raise Exception('Invalid build_type: %s' % build_type)
 
-    build_targets = get_build_targets(benchmarks, fuzzer)
-    return make_builds(build_targets)
+    return make_builds(benchmarks, fuzzer)
 
 
 def main():
