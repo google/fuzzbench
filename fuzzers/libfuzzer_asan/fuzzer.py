@@ -13,7 +13,6 @@
 # limitations under the License.
 """Integration code for libFuzzer fuzzer."""
 
-import subprocess
 import os
 
 from fuzzers.libfuzzer import fuzzer as libfuzzer_fuzzer
