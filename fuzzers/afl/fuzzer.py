@@ -83,6 +83,9 @@ def run_afl_fuzz(input_corpus,
         input_corpus,
         '-o',
         output_corpus,
+        # Use deterministic mode as it does best when we don't have
+        # seeds which is often the case.
+        '-d',
         # Use no memory limit as ASAN doesn't play nicely with one.
         '-m',
         'none'
