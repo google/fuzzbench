@@ -23,9 +23,10 @@ from fuzzers import utils
 
 
 def build():
-    """Build fuzzer."""
-    cflags = ['-O3']
+    """Build benchmark."""
     utils.set_no_sanitizer_compilation_flags()
+
+    cflags = ['-O2']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
