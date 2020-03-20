@@ -11,16 +11,5 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for FairFuzz fuzzer."""
 
-from fuzzers.afl import fuzzer as afl_fuzzer
-
-
-def build():
-    """Build benchmark."""
-    afl_fuzzer.build()
-
-
-def fuzz(input_corpus, output_corpus, target_binary):
-    """Run fuzzer."""
-    afl_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
+FROM gcr.io/fuzzbench/base-runner

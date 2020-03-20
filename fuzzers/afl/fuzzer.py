@@ -24,10 +24,9 @@ from fuzzers import utils
 
 def prepare_build_environment():
     """Set environment variables used to build AFL-based fuzzers."""
-    cflags = [
-        '-O2', '-fno-omit-frame-pointer', '-gline-tables-only',
-        '-fsanitize=address', '-fsanitize-coverage=trace-pc-guard'
-    ]
+    utils.set_no_sanitizer_compilation_flags()
+
+    cflags = ['-O3', '-fsanitize-coverage=trace-pc-guard']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
@@ -37,7 +36,7 @@ def prepare_build_environment():
 
 
 def build():
-    """Build fuzzer."""
+    """Build benchmark."""
     prepare_build_environment()
 
     utils.build_benchmark()
