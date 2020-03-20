@@ -13,57 +13,16 @@
 # limitations under the License.
 """Integration code for AFL fuzzer."""
 
-import shutil
 import subprocess
-import os
 
-from fuzzers import utils
+from fuzzers.afl import fuzzer as afl_fuzzer
 
 # OUT environment variable is the location of build directory (default is /out).
 
 
-def prepare_build_environment():
-    """Set environment variables used to build AFL-based fuzzers."""
-    cflags = [
-        '-O2', '-fno-omit-frame-pointer', '-gline-tables-only',
-        '-fsanitize=address', '-fsanitize-coverage=trace-pc-guard'
-    ]
-    utils.append_flags('CFLAGS', cflags)
-    utils.append_flags('CXXFLAGS', cflags)
-
-    os.environ['CC'] = 'clang'
-    os.environ['CXX'] = 'clang++'
-    os.environ['FUZZER_LIB'] = '/libAFL.a'
-
-
 def build():
     """Build fuzzer."""
-    prepare_build_environment()
-
-    utils.build_benchmark()
-
-    print('[post_build] Copying afl-fuzz to $OUT directory')
-    # Copy out the afl-fuzz binary as a build artifact.
-    shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
-
-
-def prepare_fuzz_environment(input_corpus):
-    """Prepare to fuzz with AFL or another AFL-based fuzzer."""
-    # Tell AFL to not use its terminal UI so we get usable logs.
-    os.environ['AFL_NO_UI'] = '1'
-    # Skip AFL's CPU frequency check (fails on Docker).
-    os.environ['AFL_SKIP_CPUFREQ'] = '1'
-    # No need to bind affinity to one core, Docker enforces 1 core usage.
-    os.environ['AFL_NO_AFFINITY'] = '1'
-    # AFL will abort on startup if the core pattern sends notifications to
-    # external programs. We don't care about this.
-    os.environ['AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES'] = '1'
-
-    # AFL needs at least one non-empty seed to start.
-    if len(os.listdir(input_corpus)) == 0:
-        with open(os.path.join(input_corpus, 'default_seed'),
-                  'w') as file_handle:
-            file_handle.write('hi')
+    afl_fuzzer.build()
 
 
 def run_afl_fuzz(input_corpus,
@@ -83,9 +42,6 @@ def run_afl_fuzz(input_corpus,
         input_corpus,
         '-o',
         output_corpus,
-        # Use deterministic mode as it does best when we don't have
-        # seeds which is often the case.
-        '-d',
         # Use no memory limit as ASAN doesn't play nicely with one.
         '-m',
         'none'
@@ -105,6 +61,6 @@ def run_afl_fuzz(input_corpus,
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run afl-fuzz on target."""
-    prepare_fuzz_environment(input_corpus)
+    afl_fuzzer.prepare_fuzz_environment(input_corpus)
 
     run_afl_fuzz(input_corpus, output_corpus, target_binary)
