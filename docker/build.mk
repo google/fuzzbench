@@ -14,7 +14,7 @@
 
 FUZZERS    := $(notdir $(shell find fuzzers -mindepth 1 -maxdepth 1 -type d))
 BENCHMARKS := $(notdir $(shell find benchmarks -type f -name build.sh | xargs dirname))
-OSS_FUZZ_PROJECTS := $(notdir $(shell find benchmarks -type f -name oss-fuzz.yaml | xargs dirname))
+OSS_FUZZ_BENCHMARKS := $(notdir $(shell find benchmarks -type f -name oss-fuzz.yaml | xargs dirname))
 
 BASE_TAG := gcr.io/fuzzbench
 
@@ -74,8 +74,8 @@ define fuzzer_template
 .pull-$(1)-builder: pull-base-builder
 	docker pull $(BASE_TAG)/builders/$(1)
 
-build-$(1)-all: $(addprefix build-$(1)-,$(BENCHMARKS)) $(addprefix build-$(1)-,$(OSS_FUZZ_PROJECTS))
-pull-$(1)-all: $(addprefix pull-$(1)-,$(BENCHMARKS)) $(addprefix pull-$(1)-,$(OSS_FUZZ_PROJECTS))
+build-$(1)-all: $(addprefix build-$(1)-,$(BENCHMARKS)) $(addprefix build-$(1)-,$(OSS_FUZZ_BENCHMARKS))
+pull-$(1)-all: $(addprefix pull-$(1)-,$(BENCHMARKS)) $(addprefix pull-$(1)-,$(OSS_FUZZ_BENCHMARKS))
 
 endef
 
@@ -95,6 +95,8 @@ define fuzzer_benchmark_template
 
 .pull-$(1)-$(2)-builder: .pull-$(1)-builder
 	docker pull $(BASE_TAG)/builders/$(1)/$(2)
+
+ifneq ($(1), coverage)
 
 .$(1)-$(2)-intermediate-runner: base-runner
 	docker build \
@@ -119,7 +121,6 @@ define fuzzer_benchmark_template
 	docker pull $(BASE_TAG)/runners/$(1)/$(2)
 
 build-$(1)-$(2): .$(1)-$(2)-runner
-
 pull-$(1)-$(2): .pull-$(1)-$(2)-runner
 
 run-$(1)-$(2): .$(1)-$(2)-runner
@@ -145,6 +146,13 @@ debug-$(1)-$(2): .$(1)-$(2)-runner
     -it \
     $(BASE_TAG)/runners/$(1)/$(2)
 
+else
+
+build-$(1)-$(2): .$(1)-$(2)-builder
+pull-$(1)-$(2): .pull-$(1)-$(2)-builder
+
+endif
+
 endef
 
 # Instantiate the above template with the cross product of all fuzzers and
@@ -154,7 +162,7 @@ $(foreach fuzzer,$(FUZZERS), \
     $(eval $(call fuzzer_benchmark_template,$(fuzzer),$(benchmark)))))
 
 
-define oss_fuzz_project_template
+define oss_fuzz_benchmark_template
 $(1)-project-name := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
                              grep project | cut -d ':' -f2 | tr -d ' ')
 $(1)-fuzz-target  := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
@@ -164,11 +172,11 @@ $(1)-oss-fuzz-builder-hash := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
                                       cut -d ':' -f2 | tr -d ' ')
 endef
 # Instantiate the above template with all OSS-Fuzz projects.
-$(foreach oss_fuzz_project,$(OSS_FUZZ_PROJECTS), \
-  $(eval $(call oss_fuzz_project_template,$(oss_fuzz_project))))
+$(foreach oss_fuzz_benchmark,$(OSS_FUZZ_BENCHMARKS), \
+  $(eval $(call oss_fuzz_benchmark_template,$(oss_fuzz_benchmark))))
 
 
-define fuzzer_oss_fuzz_project_template
+define fuzzer_oss_fuzz_benchmark_template
 
 .$(1)-$(2)-oss-fuzz-builder-intermediate:
 	docker build \
@@ -192,6 +200,8 @@ define fuzzer_oss_fuzz_project_template
 
 .pull-$(1)-$(2)-oss-fuzz-builder: .pull-$(1)-$(2)-oss-fuzz-builder-intermediate
 	docker pull $(BASE_TAG)/oss-fuzz/builders/$(1)/$($(2)-project-name)
+
+ifneq ($(1), coverage)
 
 .$(1)-$(2)-oss-fuzz-intermediate-runner: base-runner
 	docker build \
@@ -242,10 +252,17 @@ debug-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
     --entrypoint "/bin/bash" \
     -it $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name)
 
+else
+
+build-$(1)-$(2): .$(1)-$(2)-oss-fuzz-builder
+pull-$(1)-$(2): .pull-$(1)-$(2)-oss-fuzz-builder
+
+endif
+
 endef
 
 # Instantiate the above template with the cross product of all fuzzers and
 # OSS-Fuzz projects.
 $(foreach fuzzer,$(FUZZERS), \
-  $(foreach oss_fuzz_project,$(OSS_FUZZ_PROJECTS), \
-    $(eval $(call fuzzer_oss_fuzz_project_template,$(fuzzer),$(oss_fuzz_project)))))
+  $(foreach oss_fuzz_benchmark,$(OSS_FUZZ_BENCHMARKS), \
+    $(eval $(call fuzzer_oss_fuzz_benchmark_template,$(fuzzer),$(oss_fuzz_benchmark)))))
