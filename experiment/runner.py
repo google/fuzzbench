@@ -206,6 +206,7 @@ def run_fuzzer(max_total_time, log_filename):
                                     output_file=log_file,
                                     kill_children=True,
                                     env=fuzzer_environment)
+    except subprocess.CalledProcessError:
         logs.error('Fuzz process returned nonzero.')
 
 

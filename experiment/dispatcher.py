@@ -92,11 +92,12 @@ def dispatcher_main():
     # Set this here because we get failures if we do it in measurer for some
     # reason.
     multiprocessing.set_start_method('spawn')
+    db_utils.initialize()
+    if os.getenv('LOCAL_EXPERIMENT'):
+        models.Base.metadata.create_all(db_utils.engine)
 
     builder.build_base_images()
-    db_utils.initialize()
-    from database import models
-    models.Base.metadata.create_all(db_utils.engine)
+
 
     experiment_config_file_path = os.path.join(fuzzer_config_utils.get_dir(),
                                                'experiment.yaml')
