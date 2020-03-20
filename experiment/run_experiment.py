@@ -157,31 +157,17 @@ def validate_experiment_name(experiment_name: str):
                         (experiment_name, EXPERIMENT_CONFIG_REGEX.pattern))
 
 
-def set_up_experiment_config_file
-
-
-def start_experiment(experiment_name: str, config_filename: str,
-                     benchmarks: List[str], fuzzers: List[str],
-                     fuzzer_configs: List[str]):
-    """Start a fuzzer benchmarking experiment."""
-    validate_experiment_name(experiment_name)
-    validate_benchmarks(benchmarks)
-
+def set_up_experiment_config_file(config):
     filesystem.recreate_directory(CONFIG_DIR)
-    set_up_experiment_config_file(
-
-    config = read_and_validate_experiment_config(config_filename)
-    config['benchmarks'] = ','.join(benchmarks)
-    config['experiment'] = experiment_name
-
     experiment_config_filename = os.path.join(CONFIG_DIR, 'experiment.yaml')
     with open(experiment_config_filename, 'w') as experiment_config_file:
         yaml.dump(config, experiment_config_file, default_flow_style=False)
 
+
+def set_up_fuzzer_config_files(fuzzers, fuzzer_configs):
     if not fuzzers and not fuzzer_configs:
         raise Exception('Need to provide either a list of fuzzers or '
                         'a list of fuzzer configs.')
-
     fuzzer_config_dir = os.path.join(CONFIG_DIR, 'fuzzer-configs')
     filesystem.recreate_directory(fuzzer_config_dir)
     for fuzzer_config in fuzzer_configs:
@@ -200,13 +186,29 @@ def start_experiment(experiment_name: str, config_filename: str,
         with open(fuzzer_config_file_path, 'w') as file_handle:
             file_handle.write('fuzzer: ' + fuzzer)
 
-    # Make sure we can connect to database.
-    local_experiment = config.get('local_experiment')
-    if 'POSTGRES_PASSWORD' not in os.environ and not local_experiment:
-        raise Exception('Must set POSTGRES_PASSWORD environment variable.')
 
-    # !!!
-    # gcloud.set_default_project(config['cloud_project'])
+
+def start_experiment(experiment_name: str, config_filename: str,
+                     benchmarks: List[str], fuzzers: List[str],
+                     fuzzer_configs: List[str]):
+    """Start a fuzzer benchmarking experiment."""
+    validate_experiment_name(experiment_name)
+    validate_benchmarks(benchmarks)
+
+
+    config = read_and_validate_experiment_config(config_filename)
+    config['benchmarks'] = ','.join(benchmarks)
+    config['experiment'] = experiment_name
+
+    set_up_experiment_config_file(config)
+    set_up_fuzzer_config_files(fuzzers, fuzzer_configs)
+
+    # Make sure we can connect to database.
+    local_experiment = config.get('local_experiment', False)
+    if not local_experiment:
+        if 'POSTGRES_PASSWORD' not in os.environ:
+            raise Exception('Must set POSTGRES_PASSWORD environment variable.')
+        gcloud.set_default_project(config['cloud_project'])
 
     start_dispatcher(config, CONFIG_DIR)
 
@@ -306,7 +308,8 @@ class LocalDispatcher:
             'pip3 install -r "/work/src/requirements.txt" && '
             'PYTHONPATH=/work/src python3 "/work/src/experiment/dispatcher.py" || /bin/bash'
         ]
-        return new_process.execute(command)
+        print('hello') # !!!
+        return new_process.execute(command, write_to_stdout=True)
 
 
 class GoogleCloudDispatcher(BaseDispatcher):
@@ -396,7 +399,7 @@ def get_all_fuzzers():
 def get_dispatcher(config: Dict) -> BaseDispatcher:
     """Return a dispatcher object created from the right class (i.e. dispatcher
     factory)."""
-    if config['local_experiment']:
+    if config.get('local_experiment'):
         return LocalDispatcher(config)
     return GoogleCloudDispatcher(config)
 
