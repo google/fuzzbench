@@ -37,7 +37,7 @@ def build():
 
     utils.set_no_sanitizer_compilation_flags()
     optimization_cflags = [
-        '-O2',
+        '-O3',
     ]
     utils.append_flags('CFLAGS', optimization_cflags)
     utils.append_flags('CXXFLAGS', optimization_cflags)
