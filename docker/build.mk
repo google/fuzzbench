@@ -226,7 +226,7 @@ run-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
     -e FUZZ_OUTSIDE_EXPERIMENT=1 \
     -e TRIAL_ID=1 \
     -e FUZZER=$(1) \
-    -e BENCHMARK=$($(2)-project-name) \
+    -e BENCHMARK=$(2) \
     -e FUZZ_TARGET=$($(2)-fuzz-target) \
     -it $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name)
 
@@ -237,7 +237,7 @@ debug-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
     -e FUZZ_OUTSIDE_EXPERIMENT=1 \
     -e TRIAL_ID=1 \
     -e FUZZER=$(1) \
-    -e BENCHMARK=$($(2)-project-name) \
+    -e BENCHMARK=$(2) \
     -e FUZZ_TARGET=$($(2)-fuzz-target) \
     --entrypoint "/bin/bash" \
     -it $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name)
