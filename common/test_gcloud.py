@@ -75,10 +75,18 @@ def test_create_instance():
         gcloud.create_instance(INSTANCE_NAME, gcloud.InstanceType.DISPATCHER,
                                CONFIG)
         assert mocked_popen.commands == [[
-            'gcloud', 'compute', 'instances', 'create', 'instance-a',
-            '--image-family=cos-stable', '--image-project=cos-cloud',
-            '--zone=zone-a', '--scopes=cloud-platform',
-            '--machine-type=n1-standard-96', '--boot-disk-size=4TB'
+            'gcloud',
+            'compute',
+            'instances',
+            'create',
+            'instance-a',
+            '--image-family=cos-stable',
+            '--image-project=cos-cloud',
+            '--zone=zone-a',
+            '--scopes=cloud-platform',
+            '--machine-type=n1-standard-96',
+            '--boot-disk-size=4TB',
+            '--boot-disk-type=pd-ssd',
         ]]
 
 
