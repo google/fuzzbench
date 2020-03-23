@@ -108,7 +108,9 @@ def fuzz(input_corpus, output_corpus, target_binary):
                                         target_binary_name)
 
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
-    os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
+    # decomment this to enable libdislocator
+    # os.environ['AFL_ALIGNED_ALLOC'] = '1' # align malloc to max_align_t
+    # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
     flags = []
     if os.path.exists(cmplog_target_binary):
