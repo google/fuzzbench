@@ -129,7 +129,7 @@ def test_create_trial_instance_local_experiment(benchmark, expected_image,
     startup script for the instance, as we expect it to when running a
     local_experiment."""
     os.environ['LOCAL_EXPERIMENT'] = str(True)
-
+    os.environ['HOST_GCLOUD_CONFIG'] = '~/.config/gcloud'
     expected_format_string = '''#!/bin/bash
 # Copyright 2020 Google LLC
 #
@@ -198,8 +198,7 @@ def _test_create_trial_instance(benchmark, expected_image, expected_target,
         instance_name,
         gcloud.InstanceType.RUNNER,
         experiment_config,
-        startup_script=expected_startup_script_path,
-        write_to_stdout=False)
+        startup_script=expected_startup_script_path)
 
     with open(expected_startup_script_path) as file_handle:
         assert file_handle.read() == expected_format_string.format(
