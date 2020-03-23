@@ -23,16 +23,12 @@ RUN apt-get update && \
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 
-RUN rm -rf /afl
-
-RUN git clone https://github.com/alifahmed/aflmod /afl && \
+RUN rm -rf /afl && git clone https://github.com/alifahmed/aflmod /afl && \
     cd /afl && \
-    git checkout b1be4ff2f6f86767e263a27be471220867721ef7 && \
-    AFL_NO_X86=1 make PYTHON_INCLUDE=/ && \
-    cd llvm_mode && \
-    CXXFLAGS= make
+    git checkout af232ce29db2339e1696675420166daf78c7aefc && \
+    AFL_NO_X86=1 make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
-RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
-    clang++ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp && \
-    ar ru /libAFLDriver.a *.o
+RUN cd /afl && clang++ -stdlib=libc++ -std=c++11 -O3 -c cgs_driver.cpp && \
+    clang -Wno-pointer-sign -c /afl/llvm_mode/afl-llvm-rt.o.c -I/afl && \
+    ar r /libAFL.a *.o
