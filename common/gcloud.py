@@ -23,6 +23,7 @@ from common import new_process
 # Constants for dispatcher specs.
 DISPATCHER_MACHINE_TYPE = 'n1-standard-96'
 DISPATCHER_BOOT_DISK_SIZE = '4TB'
+DISPATCHER_BOOT_DISK_TYPE = 'pd-ssd'
 
 # Constants for runner specs.
 RUNNER_MACHINE_TYPE = 'n1-standard-1'
@@ -88,6 +89,7 @@ def create_instance(instance_name: str,
         command.extend([
             '--machine-type=%s' % DISPATCHER_MACHINE_TYPE,
             '--boot-disk-size=%s' % DISPATCHER_BOOT_DISK_SIZE,
+            '--boot-disk-type=%s' % DISPATCHER_BOOT_DISK_TYPE,
         ])
     else:
         command.extend([
