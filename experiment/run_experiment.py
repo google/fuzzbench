@@ -278,6 +278,19 @@ class LocalDispatcher:
 
     def start(self):
         """Start the experiment on the dispatcher."""
+        shared_volume_dir = os.path.abspath('shared-volume')
+        if not os.path.exists(shared_volume_dir):
+            os.mkdir(shared_volume_dir)
+        shared_volume_volume_arg = '{0}:{0}'.format(shared_volume_dir)
+        shared_volume_env_arg = 'SHARED_VOLUME={}'.format(shared_volume_dir)
+        sql_database_arg = 'SQL_DATABASE_URL=sqlite:///{}'.format(
+            os.path.join(shared_volume_dir, 'local.db'))
+
+        home = os.environ['HOME']
+        host_gcloud_config_arg = (
+            'HOST_GCLOUD_CONFIG={home}/{gcloud_config_dir}'.format(
+                home=home, gcloud_config_dir='.config/gcloud'))
+
         base_docker_tag = experiment_utils.get_base_docker_tag(
             self.config['cloud_project'])
         set_instance_name_arg = 'INSTANCE_NAME={instance_name}'.format(
@@ -292,12 +305,14 @@ class LocalDispatcher:
         docker_image_url = '{base_docker_tag}/dispatcher-image'.format(
             base_docker_tag=base_docker_tag)
         volume_arg = '{home}/.config/gcloud:/root/.config/gcloud'.format(
-            home=os.environ['HOME'])
+            home=home)
         command = [
             'docker', 'run', '-ti', '--rm', '-v', volume_arg, '-v',
-            '/var/run/docker.sock:/var/run/docker.sock', '-e',
-            set_instance_name_arg, '-e', set_experiment_arg, '-e',
-            set_cloud_project_arg, '-e', 'SQL_DATABASE_URL=sqlite:///local.db',
+            '/var/run/docker.sock:/var/run/docker.sock', '-v',
+            shared_volume_volume_arg, '-e', shared_volume_env_arg,
+            '-e', host_gcloud_config_arg,
+            '-e', set_instance_name_arg, '-e', set_experiment_arg, '-e',
+            set_cloud_project_arg, '-e', sql_database_arg,
             '-e', set_cloud_experiment_bucket_arg, '-e',
             'LOCAL_EXPERIMENT=True', '--cap-add=SYS_PTRACE',
             '--cap-add=SYS_NICE', '--name=dispatcher-container',

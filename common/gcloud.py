@@ -152,5 +152,5 @@ def local_create_instance(instance_name: str,
     """Does the equivalent of "create_instance" for local experiments, runs
     |startup_script| in the background."""
     command = ['/bin/bash', startup_script]
-    subprocess.Popen(command)
+    subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     return new_process.ProcessResult(0, '', False)

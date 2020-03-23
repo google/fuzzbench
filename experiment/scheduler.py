@@ -251,21 +251,26 @@ def render_startup_script_template(instance_name: str, benchmark: str,
 
     local_experiment = utils.is_local_experiment()
     template = JINJA_ENV.get_template('runner-startup-script-template.sh')
-    return template.render(
-        instance_name=instance_name,
-        benchmark=benchmark,
-        experiment=experiment_config['experiment'],
-        fuzzer=underlying_fuzzer_name,
-        fuzzer_variant_name=fuzzer,
-        trial_id=trial_id,
-        max_total_time=experiment_config['max_total_time'],
-        cloud_project=experiment_config['cloud_project'],
-        cloud_compute_zone=experiment_config['cloud_compute_zone'],
-        cloud_experiment_bucket=experiment_config['cloud_experiment_bucket'],
-        fuzz_target=fuzz_target,
-        docker_image_url=docker_image_url,
-        additional_env=additional_env,
-        local_experiment=local_experiment)
+    kwargs = {
+        'instance_name': instance_name,
+        'benchmark': benchmark,
+        'experiment': experiment_config['experiment'],
+        'fuzzer': underlying_fuzzer_name,
+        'fuzzer_variant_name': fuzzer,
+        'trial_id': trial_id,
+        'max_total_time': experiment_config['max_total_time'],
+        'cloud_project': experiment_config['cloud_project'],
+        'cloud_compute_zone': experiment_config['cloud_compute_zone'],
+        'cloud_experiment_bucket': experiment_config['cloud_experiment_bucket'],
+        'fuzz_target': fuzz_target,
+        'docker_image_url': docker_image_url,
+        'additional_env': additional_env,
+        'local_experiment': local_experiment
+    }
+    if local_experiment:
+        kwargs['host_gcloud_config'] = os.environ['HOST_GCLOUD_CONFIG']
+
+    return template.render(**kwargs)
 
 
 def create_trial_instance(benchmark: str, fuzzer: str, trial_id: int,
