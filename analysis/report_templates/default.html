@@ -16,7 +16,12 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>FuzzBench: {{ experiment.name }} report</title>
+        <title>
+            FuzzBench: {{ experiment.name }} report
+            {% if in_progress %}
+            (running)
+            {% endif %}
+        </title>
 
         <!-- Import Materialize CSS -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
@@ -30,6 +35,11 @@
         <h1 class="center-align brown-text text-darken-3">
             FuzzBench: {{ experiment.name }} report
         </h1>
+        {% if in_progress %}
+        <h4 class="center-align brown-text text-darken-4">
+            (experiment incomplete/still running...)
+        </h4>
+        {% endif %}
 
         <div class="card-panel amber lighten-5">
             <div class="row">

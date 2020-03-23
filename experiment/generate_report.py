@@ -80,7 +80,7 @@ def get_arg_parser():
     return parser
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments,too-many-locals
 def generate_report(experiment_names,
                     report_directory,
                     report_name=None,
@@ -89,7 +89,8 @@ def generate_report(experiment_names,
                     fuzzers=None,
                     report_type='default',
                     quick=False,
-                    from_cached_data=False):
+                    from_cached_data=False,
+                    in_progress=False):
     """Generate report helper."""
     report_name = report_name or experiment_names[0]
 
@@ -118,7 +119,8 @@ def generate_report(experiment_names,
         experiment_df, report_directory, plotter, experiment_name=report_name)
 
     template = report_type + '.html'
-    detailed_report = rendering.render_report(experiment_ctx, template)
+    detailed_report = rendering.render_report(experiment_ctx, template,
+                                              in_progress)
 
     filesystem.write(os.path.join(report_directory, 'index.html'),
                      detailed_report)
