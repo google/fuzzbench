@@ -310,21 +310,46 @@ class LocalDispatcher:
         volume_arg = '{home}/.config/gcloud:/root/.config/gcloud'.format(
             home=home)
         command = [
-            'docker', 'run', '-ti', '--rm', '-v', volume_arg, '-v',
-            '/var/run/docker.sock:/var/run/docker.sock', '-v',
-            shared_volume_volume_arg, '-e', shared_volume_env_arg, '-e',
-            host_gcloud_config_arg, '-e', set_instance_name_arg, '-e',
-            set_experiment_arg, '-e', set_cloud_project_arg, '-e',
-            sql_database_arg, '-e', set_cloud_experiment_bucket_arg, '-e',
-            'LOCAL_EXPERIMENT=True', '--cap-add=SYS_PTRACE',
-            '--cap-add=SYS_NICE', '--name=dispatcher-container',
-            docker_image_url, '/bin/bash', '-c',
+            'docker',
+            'run',
+            '-ti',
+            '--rm',
+            '-v',
+            volume_arg,
+            '-v',
+            '/var/run/docker.sock:/var/run/docker.sock',
+            '-v',
+            shared_volume_volume_arg,
+            '-e',
+            shared_volume_env_arg,
+            '-e',
+            host_gcloud_config_arg,
+            '-e',
+            set_instance_name_arg,
+            '-e',
+            set_experiment_arg,
+            '-e',
+            set_cloud_project_arg,
+            '-e',
+            sql_database_arg,
+            '-e',
+            set_cloud_experiment_bucket_arg,
+            '-e',
+            'LOCAL_EXPERIMENT=True',
+            '--cap-add=SYS_PTRACE',
+            '--cap-add=SYS_NICE',
+            '--name=dispatcher-container',
+            docker_image_url,
+            '/bin/bash',
+            '-c',
             'echo ${CLOUD_EXPERIMENT_BUCKET}/${EXPERIMENT}/input && '
             'gsutil -m rsync -r '
             '"${CLOUD_EXPERIMENT_BUCKET}/${EXPERIMENT}/input" ${WORK} && '
             'source "/work/.venv/bin/activate" && '
             'pip3 install -r "/work/src/requirements.txt" && '
-            'PYTHONPATH=/work/src python3 "/work/src/experiment/dispatcher.py"'
+            'PYTHONPATH=/work/src python3 '
+            '/work/src/experiment/dispatcher.py || '
+            '/bin/bash'  # Open shell if experiment fails.
         ]
         return new_process.execute(command, write_to_stdout=True)
 
