@@ -98,7 +98,6 @@ def dispatcher_main():
 
     builder.build_base_images()
 
-
     experiment_config_file_path = os.path.join(fuzzer_config_utils.get_dir(),
                                                'experiment.yaml')
     experiment = Experiment(experiment_config_file_path)

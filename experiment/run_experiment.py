@@ -158,6 +158,8 @@ def validate_experiment_name(experiment_name: str):
 
 
 def set_up_experiment_config_file(config):
+    """Set up the config file that will actually be used in the
+    experiment (not the one given to run_experiment.py)."""
     filesystem.recreate_directory(CONFIG_DIR)
     experiment_config_filename = os.path.join(CONFIG_DIR, 'experiment.yaml')
     with open(experiment_config_filename, 'w') as experiment_config_file:
@@ -165,6 +167,8 @@ def set_up_experiment_config_file(config):
 
 
 def set_up_fuzzer_config_files(fuzzers, fuzzer_configs):
+    """Set up config files for each fuzzer in |fuzzers| and each
+    config file provided in |fuzzer_configs|."""
     if not fuzzers and not fuzzer_configs:
         raise Exception('Need to provide either a list of fuzzers or '
                         'a list of fuzzer configs.')
@@ -187,14 +191,12 @@ def set_up_fuzzer_config_files(fuzzers, fuzzer_configs):
             file_handle.write('fuzzer: ' + fuzzer)
 
 
-
 def start_experiment(experiment_name: str, config_filename: str,
                      benchmarks: List[str], fuzzers: List[str],
                      fuzzer_configs: List[str]):
     """Start a fuzzer benchmarking experiment."""
     validate_experiment_name(experiment_name)
     validate_benchmarks(benchmarks)
-
 
     config = read_and_validate_experiment_config(config_filename)
     config['benchmarks'] = ','.join(benchmarks)
@@ -211,6 +213,7 @@ def start_experiment(experiment_name: str, config_filename: str,
         gcloud.set_default_project(config['cloud_project'])
 
     start_dispatcher(config, CONFIG_DIR)
+
 
 def start_dispatcher(config: Dict, config_dir: str):
     """Start the dispatcher instance and run the dispatcher code on it."""
@@ -309,21 +312,20 @@ class LocalDispatcher:
         command = [
             'docker', 'run', '-ti', '--rm', '-v', volume_arg, '-v',
             '/var/run/docker.sock:/var/run/docker.sock', '-v',
-            shared_volume_volume_arg, '-e', shared_volume_env_arg,
-            '-e', host_gcloud_config_arg,
-            '-e', set_instance_name_arg, '-e', set_experiment_arg, '-e',
-            set_cloud_project_arg, '-e', sql_database_arg,
-            '-e', set_cloud_experiment_bucket_arg, '-e',
+            shared_volume_volume_arg, '-e', shared_volume_env_arg, '-e',
+            host_gcloud_config_arg, '-e', set_instance_name_arg, '-e',
+            set_experiment_arg, '-e', set_cloud_project_arg, '-e',
+            sql_database_arg, '-e', set_cloud_experiment_bucket_arg, '-e',
             'LOCAL_EXPERIMENT=True', '--cap-add=SYS_PTRACE',
             '--cap-add=SYS_NICE', '--name=dispatcher-container',
             docker_image_url, '/bin/bash', '-c',
             'echo ${CLOUD_EXPERIMENT_BUCKET}/${EXPERIMENT}/input && '
-            'gsutil -m rsync -r "${CLOUD_EXPERIMENT_BUCKET}/${EXPERIMENT}/input" ${WORK} && '
+            'gsutil -m rsync -r '
+            '"${CLOUD_EXPERIMENT_BUCKET}/${EXPERIMENT}/input" ${WORK} && '
             'source "/work/.venv/bin/activate" && '
             'pip3 install -r "/work/src/requirements.txt" && '
-            'PYTHONPATH=/work/src python3 "/work/src/experiment/dispatcher.py" || /bin/bash'
+            'PYTHONPATH=/work/src python3 "/work/src/experiment/dispatcher.py"'
         ]
-        print('hello') # !!!
         return new_process.execute(command, write_to_stdout=True)
 
 
@@ -405,8 +407,7 @@ def get_all_fuzzers():
     fuzzers_dir = os.path.join(utils.ROOT_DIR, 'fuzzers')
     return [
         fuzzer for fuzzer in os.listdir(fuzzers_dir)
-        if (os.path.isfile(
-            os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')) and
+        if (os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')) and
             fuzzer != 'coverage')
     ]
 
@@ -464,7 +465,7 @@ def main():
         fuzzers = args.fuzzers
 
     start_experiment(args.experiment_name, args.experiment_config,
-                     args.benchmarks, args.fuzzers, args.fuzzer_configs)
+                     args.benchmarks, fuzzers, args.fuzzer_configs)
     if not MANUAL_EXPERIMENT:
         stop_experiment.stop_experiment(args.experiment_name,
                                         args.experiment_config)
