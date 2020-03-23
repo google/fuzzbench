@@ -126,7 +126,8 @@ def dispatcher_main():
                        not measurer_loop_thread.is_alive())
 
         # Generate periodic output reports.
-        reporter.output_report(experiment.web_bucket)
+        reporter.output_report(experiment.web_bucket,
+                               in_progress=not is_complete)
 
         if is_complete:
             # Experiment is complete, bail out.

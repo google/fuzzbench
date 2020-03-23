@@ -36,4 +36,4 @@ def test_output_report_bucket(fs, experiment):
                 'rsync', '-d', '-r', reports_dir, 'gs://web-bucket/experiment'
             ]]
             mocked_generate_report.assert_called_with(
-                [os.environ['EXPERIMENT']], reports_dir)
+                [os.environ['EXPERIMENT']], reports_dir, in_progress=False)
