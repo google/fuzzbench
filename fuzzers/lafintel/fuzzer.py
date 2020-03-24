@@ -28,9 +28,12 @@ def prepare_build_environment():
     # -std=libc++ and why -std=libc++ is not needed. This hack isn't
     # such a problem unless it affects other users (presubmably it
     # won't because their compilers are newer.
-    cflags = ['-O3', '-stdlib=libc++', '-pthread']
-    utils.append_flags('CFLAGS', cflags)
-    utils.append_flags('CXXFLAGS', cflags)
+    CFLAGS = ' '.join([
+    '-pthread', '-Wl,--no-as-needed', '-Wl,-ldl', '-Wl,-lm',
+    '-Wno-unused-command-line-argument', '-O3', '-stdlib=libc++'
+    ])
+    os.environ['CFLAGS'] = CFLAGS
+    os.environ['CXXFLAGS'] = CFLAGS
     print(os.environ['CFLAGS'])
 
     # Enable LAF-INTEL changes
@@ -42,8 +45,6 @@ def prepare_build_environment():
 
     os.environ['CC'] = '/afl/afl-clang-fast'
     os.environ['CXX'] = '/afl/afl-clang-fast++'
-    os.environ['CFLAGS'] = ' '.join(cflags)
-    os.environ['CXXFLAGS'] = ' '.join(cflags)
     os.environ['FUZZER_LIB'] = '/libAFL.a'
 
 def build():
