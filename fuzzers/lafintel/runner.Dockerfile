@@ -12,4 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+<<<<<<< HEAD
 FROM gcr.io/fuzzbench/base-runner
+=======
+FROM gcr.io/fuzzbench/base-runner
+>>>>>>> 441e502... [lafintel] Add fuzzer
