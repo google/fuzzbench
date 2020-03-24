@@ -30,7 +30,7 @@ def get_reports_dir():
     return exp_path.path('reports')
 
 
-def output_report(web_bucket):
+def output_report(web_bucket, in_progress=False):
     """Generate the HTML report and write it to |web_bucket|."""
     experiment_name = experiment_utils.get_experiment_name()
     reports_dir = get_reports_dir()
@@ -38,7 +38,9 @@ def output_report(web_bucket):
     try:
         logger.debug('Generating report.')
         filesystem.recreate_directory(reports_dir)
-        generate_report.generate_report([experiment_name], str(reports_dir))
+        generate_report.generate_report([experiment_name],
+                                        str(reports_dir),
+                                        in_progress=in_progress)
         gsutil.rsync(str(reports_dir),
                      web_bucket,
                      gsutil_options=[
