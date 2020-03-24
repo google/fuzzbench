@@ -132,5 +132,10 @@ def get_dictionary_path(target_binary):
     for section in config.sections():
         for key, value in config.items(section):
             if key == 'dict':
-                return os.path.join(os.path.dirname(target_binary), value)
+                dictionary_path = os.path.join(os.path.dirname(target_binary),
+                                               value)
+                if not os.path.exists(dictionary_path):
+                    raise ValueError('Bad dictionary path in options file: ' +
+                                     options_file_path)
+                return dictionary_path
     return None
