@@ -26,4 +26,8 @@ def get_experiment_data(experiment_names):
         sqlalchemy.orm.joinedload('trial')).filter(
             models.Snapshot.trial.has(
                 models.Trial.experiment.in_(experiment_names)))
-    return pd.read_sql_query(snapshots_query.statement, db_utils.engine)
+
+    # id must be loaded to do the join but get rid of it now since
+    # trial_id provides the same info.
+    data = pd.read_sql_query(snapshots_query.statement, db_utils.engine)
+    return data.drop(columns=['id'])
