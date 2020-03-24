@@ -129,7 +129,7 @@ def test_create_trial_instance_local_experiment(benchmark, expected_image,
     startup script for the instance, as we expect it to when running a
     local_experiment."""
     os.environ['LOCAL_EXPERIMENT'] = str(True)
-    os.environ['HOST_GCLOUD_CONFIG'] = '/.config/gcloud'
+    os.environ['HOST_GCLOUD_CONFIG'] = '~/.config/gcloud'
     expected_format_string = '''#!/bin/bash
 # Copyright 2020 Google LLC
 #
