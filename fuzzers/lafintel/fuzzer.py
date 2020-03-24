@@ -28,14 +28,13 @@ def prepare_build_environment():
     # -std=libc++ and why -std=libc++ is not needed. This hack isn't
     # such a problem unless it affects other users (presubmably it
     # won't because their compilers are newer.
-    CFLAGS = ' '.join([
-    '-pthread', '-Wl,--no-as-needed', '-Wl,-ldl', '-Wl,-lm',
-    '-Wno-unused-command-line-argument', '-O3', '-stdlib=libc++',
-    '-I/usr/local/include/c++/v1/'
+    cflags = ' '.join([
+        '-pthread', '-Wl,--no-as-needed', '-Wl,-ldl', '-Wl,-lm',
+        '-Wno-unused-command-line-argument', '-O3', '-stdlib=libc++',
+        '-I/usr/local/include/c++/v1/'
     ])
-    os.environ['CFLAGS'] = CFLAGS
-    os.environ['CXXFLAGS'] = CFLAGS
-    print(os.environ['CFLAGS'])
+    os.environ['CFLAGS'] = cflags
+    os.environ['CXXFLAGS'] = cflags
 
     # Enable LAF-INTEL changes
     os.environ['LAF_SPLIT_SWITCHES'] = '1'
@@ -48,6 +47,7 @@ def prepare_build_environment():
     os.environ['CXX'] = '/afl/afl-clang-fast++'
     os.environ['FUZZER_LIB'] = '/libAFL.a'
 
+
 def build():
     """Build benchmark."""
     prepare_build_environment()
@@ -59,6 +59,6 @@ def build():
     shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
 
 
-def fuzz(fuzz_config):
+def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    afl_fuzzer.fuzz(fuzz_config)
+    afl_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
