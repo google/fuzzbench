@@ -58,6 +58,10 @@ def fuzz(input_corpus, output_corpus, target_binary):
     ]
     if 'ADDITIONAL_ARGS' in os.environ:
         flags += os.environ['ADDITIONAL_ARGS'].split(' ')
+    dictionary_path = utils.get_dictionary_path(target_binary)
+    if dictionary_path:
+        flags.append('-dict=' + dictionary_path)
 
     command = [target_binary, output_corpus, input_corpus] + flags
+    print('[run_fuzzer] Running command: ' + ' '.join(command))
     subprocess.call(command)
