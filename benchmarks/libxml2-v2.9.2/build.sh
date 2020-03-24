@@ -26,8 +26,7 @@ build_lib() {
 }
 
 get_git_tag https://gitlab.gnome.org/GNOME/libxml2.git v2.9.2 SRC
-get_git_revision https://github.com/google/afl f10d601b3f3026461c669251696e6f1328ce6c00 afl
 build_lib
 
 $CXX $CXXFLAGS -std=c++11 $SCRIPT_DIR/target.cc -I BUILD/include BUILD/.libs/libxml2.a $FUZZER_LIB -lz -o $FUZZ_TARGET
-cp afl/dictionaries/xml.dict $FUZZ_TARGET.dict
+wget https://raw.githubusercontent.com/google/AFL/debe27037b9444bbf090a0ffbd5d24889bb887ae/dictionaries/xml.dict -O $FUZZ_TARGET.dict

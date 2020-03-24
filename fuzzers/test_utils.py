@@ -13,6 +13,7 @@
 # limitations under the License.
 """Tests for utils.py."""
 
+import os
 import pytest
 
 from fuzzers import utils
@@ -59,3 +60,10 @@ def test_dictionary_options_file_with_dict(fs):
     fs.create_file('/fuzz.dict', contents='A')
     fs.create_file('/fuzz-target.options', contents='[test]\ndict = fuzz.dict')
     assert utils.get_dictionary_path('/fuzz-target') == '/fuzz.dict'
+
+
+def test_dictionary_skip(fs, environ):
+    """Test that None is return when SKIP_DICT is set."""
+    os.environ['SKIP_DICT'] = '1'
+    fs.create_file('/fuzz-target.dict', contents='A')
+    assert utils.get_dictionary_path('/fuzz-target') is None

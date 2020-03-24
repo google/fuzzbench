@@ -113,6 +113,9 @@ def restore_directory(directory):
 
 def get_dictionary_path(target_binary):
     """Return dictionary path for a target binary."""
+    if os.getenv('SKIP_DICT'):
+        return None
+
     dictionary_path = target_binary + '.dict'
     if os.path.exists(dictionary_path):
         return dictionary_path
