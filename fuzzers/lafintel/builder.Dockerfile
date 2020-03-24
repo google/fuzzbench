@@ -45,6 +45,8 @@ RUN cd /afl/llvm_mode && \
     CXXFLAGS= CFLAGS= make
 
 
+
+RUN ls /usr/local/include/c++/v1/
 # Use afl_driver.cpp from LLVM as our fuzzing library.
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/master/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
     clang++ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp && \

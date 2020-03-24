@@ -30,7 +30,8 @@ def prepare_build_environment():
     # won't because their compilers are newer.
     CFLAGS = ' '.join([
     '-pthread', '-Wl,--no-as-needed', '-Wl,-ldl', '-Wl,-lm',
-    '-Wno-unused-command-line-argument', '-O3', '-stdlib=libc++'
+    '-Wno-unused-command-line-argument', '-O3', '-stdlib=libc++',
+    '-I/usr/local/include/c++/v1/'
     ])
     os.environ['CFLAGS'] = CFLAGS
     os.environ['CXXFLAGS'] = CFLAGS
