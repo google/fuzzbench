@@ -37,4 +37,4 @@ def build():
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    libfuzzer_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
+    libfuzzer_fuzzer.run_fuzzer(input_corpus, output_corpus, target_binary, ['-entropic=1'])
