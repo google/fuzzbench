@@ -30,7 +30,7 @@ from common import oss_fuzz
 BUILD_ARCHIVE_EXTENSION = '.tar.gz'
 LEN_BUILD_ARCHIVE_EXTENSION = len(BUILD_ARCHIVE_EXTENSION)
 COVERAGE_BUILD_PREFIX = 'coverage-build-'
-LEN_COVERAGE_BUILD_PREFIX = len(BUILD_ARCHIVE_EXTENSION)
+LEN_COVERAGE_BUILD_PREFIX = len(COVERAGE_BUILD_PREFIX)
 
 GUARDS_REGEX = re.compile(r'INFO:.*\((?P<num_guards>\d+) guards\).*')
 
@@ -100,7 +100,7 @@ def get_seed_count(benchmark_path, fuzz_target_path):
     """Count the number of seeds for a benchmark."""
     standard_seeds_path = os.path.join(benchmark_path, 'seeds')
     if os.path.exists(standard_seeds_path):
-        count_standard_seeds(standard_seeds_path)
+        seeds = count_standard_seeds(standard_seeds_path)
     else:
         seeds = count_oss_fuzz_seeds(fuzz_target_path)
     return seeds
