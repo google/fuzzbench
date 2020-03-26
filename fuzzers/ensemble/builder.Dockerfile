@@ -120,4 +120,4 @@ RUN apt-get update && \
      wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /aflfast/afl_driver.cpp && \
      clang -Wno-pointer-sign -c /aflfast/llvm_mode/afl-llvm-rt.o.c -I/aflfast && \
      clang++ -stdlib=libc++ -std=c++11 -O2 -c /aflfast/afl_driver.cpp && \
-     ar r /libAFL.a *.o
+     ar r /libAFLDriver.a *.o
