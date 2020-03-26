@@ -29,7 +29,7 @@ The table below was generated using benchmarks.py.
 | php_php-fuzz-parser         | php-fuzz-parser        | True            | 2782                  | 123767                   | 15.57                |
 | proj4-2017-08-14            | fuzz-target            | False           | 44                    | 6156                     | 6.17                 |
 | re2-2014-12-09              | fuzz-target            | False           | 0                     | 6547                     | 6.02                 |
-| sqlite3_ossfuzz             | ossfuzz                | False           | 1258                  | 45136                    | 7.9                  |
+| sqlite3_ossfuzz             | ossfuzz                | True            | 1258                  | 45136                    | 7.9                  |
 | systemd_fuzz-link-parser    | fuzz-link-parser       | False           | 6                     | 53453                    | 5.91                 |
 | vorbis-2017-12-11           | fuzz-target            | False           | 1                     | 5022                     | 6.0                  |
 | woff2-2016-05-06            | fuzz-target            | False           | 62                    | 10923                    | 6.72                 |

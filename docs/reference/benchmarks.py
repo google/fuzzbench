@@ -94,7 +94,7 @@ def count_oss_fuzz_seeds(fuzz_target_path):
 
 def count_standard_seeds(seeds_dir):
     """Count the number of seeds for a standard benchmark."""
-    len([p for p in Path(seeds_dir).glob('**/*') if p.is_file()])
+    return len([p for p in Path(seeds_dir).glob('**/*') if p.is_file()])
 
 
 def get_seed_count(benchmark_path, fuzz_target_path):
