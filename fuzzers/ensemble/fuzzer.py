@@ -14,17 +14,21 @@
 """Integration code for AFL fuzzer."""
 
 import collections
+import glob
 import shutil
 import subprocess
 import os
 import tempfile
 
 from fuzzers import utils
-
+from fuzzers.afl import fuzzer as afl_fuzzer
 # OUT environment variable is the location of build directory (default is /out).
 
-# Fuzz each fuzzer for 1 hour before rotating.
-SECONDS_PER_FUZZER = 3600
+# Fuzz each fuzzer for 2 hour before rotating.
+SECONDS_PER_FUZZER = 30
+
+# List of fuzzers used for ensemble fuzzing.
+FUZZER_LIST = ['aflfast', 'fairfuzz', 'mopt', 'aflplusplus', 'aflsmart']
 
 
 def prepare_build_environment():
@@ -37,7 +41,7 @@ def prepare_build_environment():
 
     os.environ['CC'] = 'clang'
     os.environ['CXX'] = 'clang++'
-    os.environ['FUZZER_LIB'] = '/libAFL.a'
+    os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
 
 
 def build():
@@ -48,31 +52,20 @@ def build():
 
     print('[post_build] Copying afl-fuzz to $OUT directory')
     # Copy out the afl-fuzz binary as a build artifact.
-    shutil.copy('/afl/afl-fuzz', os.path.join(os.environ['OUT'], 'afl'))
-    shutil.copy('/aflpp/afl-fuzz', os.path.join(os.environ['OUT'], 'aflpp'))
-    shutil.copy('/aflsmart/afl-fuzz', os.path.join(os.environ['OUT'],
-                                                   'aflsmart'))
-    shutil.copy('/fair/afl-fuzz', os.path.join(os.environ['OUT'], 'fair'))
-    shutil.copy('/mopt/afl-fuzz', os.path.join(os.environ['OUT'], 'mopt'))
+    for fuzzer in FUZZER_LIST:
+        shutil.copy(os.path.join('/' + fuzzer, 'afl-fuzz'),
+                    os.path.join(os.environ['OUT'], fuzzer))
 
+    # AFLSmart Setup
+    # Copy Peach binaries to OUT
+    shutil.copytree(
+        '/aflsmart/peach-3.0.202-source/output/linux_x86_64_debug/bin',
+        os.environ['OUT'] + '/peach-3.0.202')
 
-def prepare_fuzz_environment(input_corpus):
-    """Prepare to fuzz with AFL or another AFL-based fuzzer."""
-    # Tell AFL to not use its terminal UI so we get usable logs.
-    os.environ['AFL_NO_UI'] = '1'
-    # Skip AFL's CPU frequency check (fails on Docker).
-    os.environ['AFL_SKIP_CPUFREQ'] = '1'
-    # No need to bind affinity to one core, Docker enforces 1 core usage.
-    os.environ['AFL_NO_AFFINITY'] = '1'
-    # AFL will abort on startup if the core pattern sends notifications to
-    # external programs. We don't care about this.
-    os.environ['AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES'] = '1'
-
-    # AFL needs at least one non-empty seed to start.
-    if len(os.listdir(input_corpus)) == 0:
-        with open(os.path.join(input_corpus, 'default_seed'),
-                  'w') as file_handle:
-            file_handle.write('hi')
+    # Copy supported input models
+    for file in glob.glob('/aflsmart/input_models/*.xml'):
+        print(file)
+        shutil.copy(file, os.environ['OUT'])
 
 
 # pylint: disable=too-many-arguments
@@ -120,19 +113,52 @@ def run_afl_fuzz(fuzzer_name,
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run afl-fuzz on target."""
-    prepare_fuzz_environment(input_corpus)
-    fuzzer_queue = collections.deque(
-        ['fair', 'mopt', 'afl', 'aflpp', 'aflsmart'], maxlen=5)
+    afl_fuzzer.prepare_fuzz_environment(input_corpus)
+    os.environ['AFL_FAST_CAL'] = '1'
+    os.environ['PATH'] += os.pathsep + '/out/peach-3.0.202/'
+    fuzzer_queue = collections.deque(FUZZER_LIST, maxlen=5)
 
     tmp_dir = tempfile.TemporaryDirectory()
     next_fuzzer_input_corpus = os.path.join(str(tmp_dir), 'input_corpus')
     shutil.copytree(input_corpus, next_fuzzer_input_corpus)
     while True:
         fuzzer_name = fuzzer_queue[0]
+        additional_flags = None
+        if fuzzer_name == 'mopt':
+            additional_flags = [
+                # Enable Mopt mutator with pacemaker fuzzing mode at first. This
+                # is also recommended in a short-time scale evaluation.
+                '-L',
+                '0',
+            ]
+        if fuzzer_name == 'aflsmart':
+            input_model = ''
+            benchmark_name = os.environ['BENCHMARK']
+            if benchmark_name == 'libpng-1.2.56':
+                input_model = 'png.xml'
+            if benchmark_name == 'libpcap_fuzz_both':
+                input_model = 'pcap.xml'
+            if benchmark_name == 'libjpeg-turbo-07-2017':
+                input_model = 'jpeg.xml'
+            if input_model:
+                additional_flags = [
+                    # Enable stacked mutations
+                    '-h',
+                    # Enable structure-aware fuzzing
+                    '-w',
+                    'peach',
+                    # Select input model
+                    '-g',
+                    input_model,
+                ]
         try:
             fuzzer_output_dir = os.path.join(output_corpus, fuzzer_name)
-            run_afl_fuzz(fuzzer_name, next_fuzzer_input_corpus,
-                         fuzzer_output_dir, target_binary, SECONDS_PER_FUZZER)
+            run_afl_fuzz(fuzzer_name,
+                         next_fuzzer_input_corpus,
+                         fuzzer_output_dir,
+                         target_binary,
+                         SECONDS_PER_FUZZER,
+                         additional_flags=additional_flags)
         except subprocess.TimeoutExpired:
             tmp_dir.cleanup()
             fuzzer_queue.rotate(1)
