@@ -16,6 +16,7 @@
 import collections
 import multiprocessing
 import os
+from pathlib import Path
 import re
 import subprocess
 import sys
@@ -23,16 +24,17 @@ import tarfile
 import zipfile
 
 from common import benchmark_utils
-from common import fuzzer_utils
-from common import utils
+from common import filesystem
+from common import fuzzer_utils as common_fuzzer_utils
 from common import oss_fuzz
+from common import utils
+from fuzzers import utils as fuzzer_utils
 
 BUILD_ARCHIVE_EXTENSION = '.tar.gz'
-LEN_BUILD_ARCHIVE_EXTENSION = len(BUILD_ARCHIVE_EXTENSION)
 COVERAGE_BUILD_PREFIX = 'coverage-build-'
 LEN_COVERAGE_BUILD_PREFIX = len(COVERAGE_BUILD_PREFIX)
 
-GUARDS_REGEX = re.compile(r'INFO:.*\((?P<num_guards>\d+) guards\).*')
+GUARDS_REGEX = re.compile(rb'INFO:.*\((?P<num_guards>\d+) guards\).*')
 
 ONE_MB = 1024**2
 
@@ -58,18 +60,21 @@ def get_real_benchmark_name(benchmark):
     builds instead. This function figures out the actual benchmark based on
     the project name."""
     benchmarks_dir = os.path.join(utils.ROOT_DIR, 'benchmarks')
-    real_benchmarks = [
-        real_benchmark for real_benchmark in os.listdir(benchmarks_dir)
-        if os.path.isdir(os.path.join(benchmarks_dir, real_benchmark))
-    ]
+    real_benchmarks = os.listdir(benchmarks_dir)
     if benchmark in real_benchmarks:
         return benchmark
+
     for real_benchmark in real_benchmarks:
+        if not os.path.isdir(os.path.join(benchmarks_dir, real_benchmark)):
+            continue
+
         if not benchmark_utils.is_oss_fuzz(real_benchmark):
             continue
+
         config = oss_fuzz.get_config(real_benchmark)
         if config['project'] == benchmark:
             return real_benchmark
+
     return None
 
 
@@ -79,74 +84,80 @@ def count_oss_fuzz_seeds(fuzz_target_path):
     zip_file_name = fuzz_target_path + '_seed_corpus.zip'
     if not os.path.exists(zip_file_name):
         return 0
-    seeds = 0
+
     with zipfile.ZipFile(zip_file_name) as zip_file:
-        for info in zip_file.infolist():
-            if info.filename.endswith('/'):
-                continue
-            seeds += 1
-    return seeds
+        return len([
+            filename for filename in zip_file.namelist()
+            if not filename.endswith('/')
+        ])
 
 
-def count_standard_seeds(seeds_path):
+def count_standard_seeds(seeds_dir):
     """Count the number of seeds for a standard benchmark."""
-    seeds = 0
-    for _, _, files in os.walk(seeds_path):
-        seeds += len(files)
-    return seeds
+    len([p for p in Path(seeds_dir).glob('**/*') if p.is_file()])
 
 
 def get_seed_count(benchmark_path, fuzz_target_path):
     """Count the number of seeds for a benchmark."""
-    standard_seeds_path = os.path.join(benchmark_path, 'seeds')
-    if os.path.exists(standard_seeds_path):
-        seeds = count_standard_seeds(standard_seeds_path)
+    standard_seeds_dir = os.path.join(benchmark_path, 'seeds')
+    if os.path.exists(standard_seeds_dir):
+        return count_standard_seeds(standard_seeds_dir)
+    return count_oss_fuzz_seeds(fuzz_target_path)
+
+
+def get_num_guards(fuzz_target_path):
+    """Returns the number of guards in |fuzz_target_path|."""
+    result = subprocess.run([fuzz_target_path, '-runs=0'],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT,
+                            check=True)
+    output = result.stdout
+    match = GUARDS_REGEX.search(output)
+    assert match, 'Couldn\'t determine guards for ' + fuzz_target_path
+    return int(match.groupdict()['num_guards'])
+
+
+def get_binary_size_mb(fuzz_target_path):
+    """Returns the size of |fuzz_target_path| in MB, rounded to two
+    decimal places."""
+    size = os.path.getsize(fuzz_target_path)
+    return round(size / ONE_MB, 2)
+
+
+def get_fuzz_target(benchmark, benchmark_path):
+    """Returns the fuzz target and its path for |benchmark|."""
+    if benchmark_utils.is_oss_fuzz(benchmark):
+        fuzz_target = oss_fuzz.get_config(benchmark)['fuzz_target']
     else:
-        seeds = count_oss_fuzz_seeds(fuzz_target_path)
-    return seeds
+        fuzz_target = common_fuzzer_utils.DEFAULT_FUZZ_TARGET_NAME
+
+    fuzz_target_path = common_fuzzer_utils.get_fuzz_target_binary(
+        benchmark_path, fuzz_target)
+    assert fuzz_target_path, 'Couldn\'t find fuzz target for ' + benchmark
+
+    return fuzz_target, fuzz_target_path
 
 
 def get_benchmark_info(build_path):
     """Get BenchmarkInfo for the benchmark in |build_path|."""
     basename = os.path.basename(build_path)
-    benchmark = basename[LEN_COVERAGE_BUILD_PREFIX:-LEN_BUILD_ARCHIVE_EXTENSION]
+    benchmark = basename[len(COVERAGE_BUILD_PREFIX
+                            ):-len(BUILD_ARCHIVE_EXTENSION)]
     benchmark = get_real_benchmark_name(benchmark)
     parent_dir = os.path.dirname(build_path)
     benchmark_path = os.path.join(parent_dir, benchmark)
 
-    try:
-        os.mkdir(benchmark_path)
-    except FileExistsError:
-        pass  # So that function is idempotent.
+    filesystem.create_directory(benchmark_path)
 
     with tarfile.open(build_path) as tar_file:
         tar_file.extractall(benchmark_path)
 
-    if benchmark_utils.is_oss_fuzz(benchmark):
-        fuzz_target = oss_fuzz.get_config(benchmark)['fuzz_target']
-    else:
-        fuzz_target = fuzzer_utils.DEFAULT_FUZZ_TARGET_NAME
-
-    fuzz_target_path = fuzzer_utils.get_fuzz_target_binary(
-        benchmark_path, fuzz_target)
-    assert fuzz_target_path, benchmark
-
-    has_dictionary = os.path.exists(fuzz_target_path + '.dict')
+    fuzz_target, fuzz_target_path = get_fuzz_target(benchmark, benchmark_path)
+    has_dictionary = bool(fuzzer_utils.get_dictionary_path(fuzz_target_path))
 
     seeds = get_seed_count(benchmark_path, fuzz_target_path)
-
-    result = subprocess.run([fuzz_target_path, '-runs=0'],
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT,
-                            check=True)
-
-    output = result.stdout.decode()
-    search = GUARDS_REGEX.search(output)
-    assert search, benchmark
-    num_guards = int(search.groupdict()['num_guards'])
-
-    size = os.path.getsize(fuzz_target_path)
-    size = round(size / ONE_MB, 2)
+    num_guards = get_num_guards(fuzz_target_path)
+    size = get_binary_size_mb(fuzz_target_path)
     return BenchmarkInfo(benchmark, fuzz_target, has_dictionary, seeds,
                          num_guards, size)
 
