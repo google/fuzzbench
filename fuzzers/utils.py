@@ -13,6 +13,7 @@
 # limitations under the License.
 """Utility functions for running fuzzers."""
 
+import configparser
 import contextlib
 import os
 import shutil
@@ -108,3 +109,36 @@ def restore_directory(directory):
             os.getcwd()
         except FileNotFoundError:
             os.chdir(initial_cwd)
+
+
+def get_dictionary_path(target_binary):
+    """Return dictionary path for a target binary."""
+    if os.getenv('SKIP_DICT'):
+        return None
+
+    dictionary_path = target_binary + '.dict'
+    if os.path.exists(dictionary_path):
+        return dictionary_path
+
+    options_file_path = target_binary + '.options'
+    if not os.path.exists(options_file_path):
+        return None
+
+    config = configparser.ConfigParser()
+    with open(options_file_path, 'r') as file_handle:
+        try:
+            config.read_file(file_handle)
+        except configparser.Error:
+            raise Exception('Failed to parse fuzzer options file: ' +
+                            options_file_path)
+
+    for section in config.sections():
+        for key, value in config.items(section):
+            if key == 'dict':
+                dictionary_path = os.path.join(os.path.dirname(target_binary),
+                                               value)
+                if not os.path.exists(dictionary_path):
+                    raise ValueError('Bad dictionary path in options file: ' +
+                                     options_file_path)
+                return dictionary_path
+    return None

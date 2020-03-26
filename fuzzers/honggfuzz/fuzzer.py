@@ -50,8 +50,21 @@ def fuzz(input_corpus, output_corpus, target_binary):
         os.makedirs(output_corpus)
 
     print('[run_fuzzer] Running target with honggfuzz')
-    subprocess.call([
-        './honggfuzz', '--persistent', '--rlimit_rss', '2048',
-        '--sanitizers_del_report=true', '--input', input_corpus, '--output',
-        output_corpus, '--', target_binary
-    ])
+    command = [
+        './honggfuzz',
+        '--persistent',
+        '--rlimit_rss',
+        '2048',
+        '--sanitizers_del_report=true',
+        '--input',
+        input_corpus,
+        '--output',
+        output_corpus,
+    ]
+    dictionary_path = utils.get_dictionary_path(target_binary)
+    if dictionary_path:
+        command.extend(['--dict', dictionary_path])
+    command.extend(['--', target_binary])
+
+    print('[run_fuzzer] Running command: ' + ' '.join(command))
+    subprocess.call(command)

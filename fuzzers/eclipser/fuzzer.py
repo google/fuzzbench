@@ -73,6 +73,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     ]
     if os.listdir(input_corpus):  # Important, otherwise Eclipser crashes.
         command += ['-i', input_corpus]
+    print('[run_fuzzer] Running command: ' + ' '.join(command))
     subprocess.Popen(command)
 
     process = Process(target=copy_corpus_directory,
