@@ -42,6 +42,9 @@ RUN cd /afl/llvm_mode && \
     wget https://gitlab.com/laf-intel/laf-llvm-pass/raw/master/src/compare-transform-pass.so.cc && \
     wget https://gitlab.com/laf-intel/laf-llvm-pass/raw/master/src/split-compares-pass.so.cc && \
     wget https://gitlab.com/laf-intel/laf-llvm-pass/raw/master/src/split-switches-pass.so.cc && \
+    sed -i 's/errs()/outs()/g' split-switches-pass.so.cc && \
+    sed -i 's/errs()/outs()/g' split-compares-pass.so.cc && \
+    sed -i 's/errs()/outs()/g' compare-transform-pass.so.cc && \
     CXXFLAGS= CFLAGS= make
 
 
