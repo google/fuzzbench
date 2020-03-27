@@ -6,6 +6,8 @@ permalink: /reference/benchmarks/
 parent: Reference
 ---
 
+# Benchmarks
+
 This page describes each benchmark that is part of fuzzbench.
 
 The table below was generated using benchmarks.py.
