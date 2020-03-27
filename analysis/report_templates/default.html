@@ -159,7 +159,7 @@
         <div id="data" class="section scrollspy">
             <h2 class="green-text text-darken-3">experiment data</h2>
             {% if experiment.git_hash %}
-            The experiment was generated from this FuzzBench commit:
+            The experiment was conducted using this FuzzBench commit:
             <a href="https://github.com/google/fuzzbench/commits/{{ experiment.git_hash }}">{{ experiment.git_hash }}</a>
             <br><br>
             {% endif %}
