@@ -27,10 +27,9 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /aflplusplus && \
     cd llvm_mode && CXXFLAGS= make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
-RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /aflplusplus/afl_driver.cpp && \
-    clang++ -stdlib=libc++ -std=c++11 -O2 -c /aflplusplus/afl_driver.cpp && \
-    ar ru /libAFLDriver.a *.o
-
+RUN mkdir /afl  && wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
+    clang++ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp && \
+    ar r /libAFLDriver.a *.o
 # *********************** AFLSmart Download and Compile ***************************
 # install AFLSmart dependencies
 RUN dpkg --add-architecture i386 && \
@@ -69,9 +68,7 @@ RUN cd /aflsmart && \
     CC=gcc-4.4 CXX=g++-4.4 CFLAGS="" CXXFLAGS="-std=c++0x" ./waf install
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
-RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /aflsmart/afl_driver.cpp && \
-    clang -Wno-pointer-sign -c /aflsmart/llvm_mode/afl-llvm-rt.o.c -I/aflsmart && \
-    clang++ -stdlib=libc++ -std=c++11 -O2 -c /aflsmart/afl_driver.cpp && \
+RUN clang -Wno-pointer-sign -c /aflsmart/llvm_mode/afl-llvm-rt.o.c -I/aflsmart && \
     ar r /libAFLDriver.a *.o
 
 # *********************** Fairfuzz Download and Compile ***************************
@@ -82,12 +79,9 @@ RUN git clone https://github.com/carolemieux/afl-rb.git /fairfuzz && \
     AFL_NO_X86=1 make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
-RUN apt-get update && \
-    apt-get install wget -y && \
-    wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /fairfuzz/afl_driver.cpp && \
-    clang -Wno-pointer-sign -c /fairfuzz/llvm_mode/afl-llvm-rt.o.c -I/fairfuzz && \
-    clang++ -stdlib=libc++ -std=c++11 -O2 -c /fairfuzz/afl_driver.cpp && \
+RUN clang -Wno-pointer-sign -c /fairfuzz/llvm_mode/afl-llvm-rt.o.c -I/fairfuzz && \
     ar r /libAFLDriver.a *.o
+
 
 # *********************** Mopt Download and Compile ***************************
 # Set AFL_NO_X86 to skip flaky tests.
@@ -99,11 +93,7 @@ RUN git clone https://github.com/puppet-meteor/MOpt-AFL.git && \
     AFL_NO_X86=1 make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
-RUN apt-get update && \
-    apt-get install wget -y && \
-    wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /mopt/afl_driver.cpp && \
-    clang -Wno-pointer-sign -c /mopt/llvm_mode/afl-llvm-rt.o.c -I/mopt && \
-    clang++ -stdlib=libc++ -std=c++11 -O2 -c /mopt/afl_driver.cpp && \
+RUN clang -Wno-pointer-sign -c /mopt/llvm_mode/afl-llvm-rt.o.c -I/mopt && \
     ar r /libAFLDriver.a *.o
 
  # *********************** AFLFast Download and Compile ************************
@@ -115,9 +105,5 @@ RUN apt-get update && \
      AFL_NO_X86=1 make
 
  # Use afl_driver.cpp from LLVM as our fuzzing library.
- RUN apt-get update && \
-     apt-get install wget -y && \
-     wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /aflfast/afl_driver.cpp && \
-     clang -Wno-pointer-sign -c /aflfast/llvm_mode/afl-llvm-rt.o.c -I/aflfast && \
-     clang++ -stdlib=libc++ -std=c++11 -O2 -c /aflfast/afl_driver.cpp && \
+ RUN clang -Wno-pointer-sign -c /aflfast/llvm_mode/afl-llvm-rt.o.c -I/aflfast && \
      ar r /libAFLDriver.a *.o
