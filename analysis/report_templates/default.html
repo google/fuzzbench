@@ -35,11 +35,6 @@
         <h1 class="center-align brown-text text-darken-3">
             FuzzBench: {{ experiment.name }} report
         </h1>
-        {% if git_hash %}
-        <h5 class="center-align brown-text text-darken-3">
-            Commit hash: <a href="https://github.com/google/fuzzbench/commits/{{ git_hash }}">{{ git_hash }}</a>
-        </h5>
-        {% endif %}
         {% if in_progress %}
         <h5 class="center-align brown-text text-darken-4">
             (experiment incomplete/still running...)
@@ -163,6 +158,11 @@
 
         <div id="data" class="section scrollspy">
             <h2 class="green-text text-darken-3">experiment data</h2>
+            {% if experiment.git_hash %}
+            The experiment was generated from this FuzzBench commit:
+            <a href="https://github.com/google/fuzzbench/commits/{{ experiment.git_hash }}">{{ experiment.git_hash }}</a>
+            <br><br>
+            {% endif %}
             You can download the raw data for this report <a href="data.csv.gz">here</a>.
         </div>    <!-- id="data" -->
 

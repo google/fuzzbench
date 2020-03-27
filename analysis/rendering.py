@@ -20,7 +20,7 @@ import jinja2
 from common import utils
 
 
-def render_report(experiment_results, template, git_hash, in_progress):
+def render_report(experiment_results, template, in_progress):
     """Renders report with |template| using data provided by the
     |experiment_results| context.
 
@@ -38,5 +38,4 @@ def render_report(experiment_results, template, git_hash, in_progress):
     )
     template = environment.get_template(template)
     return template.render(experiment=experiment_results,
-                           git_hash=git_hash,
                            in_progress=in_progress)

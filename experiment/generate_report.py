@@ -26,8 +26,6 @@ from analysis import queries
 from analysis import rendering
 from common import filesystem
 from common import logs
-from database import models
-from database import utils as db_utils
 
 
 def get_arg_parser():
@@ -106,13 +104,6 @@ def generate_report(experiment_names,
         # Save the raw data along with the report.
         experiment_df.to_csv(data_path)
 
-    if len(experiment_names) == 1:
-        git_hash = db_utils.query(models.Experiment).filter(
-            models.Experiment.name == experiment_names[0]).first().git_hash
-    else:
-        # Not possible to represent hashes for multiple experiments.
-        git_hash = None
-
     if benchmarks is not None:
         experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks)
 
@@ -129,7 +120,7 @@ def generate_report(experiment_names,
 
     template = report_type + '.html'
     detailed_report = rendering.render_report(experiment_ctx, template,
-                                              git_hash, in_progress)
+                                              in_progress)
 
     filesystem.write(os.path.join(report_directory, 'index.html'),
                      detailed_report)
