@@ -158,12 +158,12 @@
 
         <div id="data" class="section scrollspy">
             <h2 class="green-text text-darken-3">experiment data</h2>
+            You can download the raw data for this report <a href="data.csv.gz">here</a>.
             {% if experiment.git_hash %}
+            <br><br>
             The experiment was conducted using this FuzzBench commit:
             <a href="https://github.com/google/fuzzbench/commits/{{ experiment.git_hash }}">{{ experiment.git_hash }}</a>
-            <br><br>
             {% endif %}
-            You can download the raw data for this report <a href="data.csv.gz">here</a>.
         </div>    <!-- id="data" -->
 
     </div> <!-- class="col" -->
