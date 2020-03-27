@@ -24,8 +24,8 @@ class Experiment(Base):
     __tablename__ = 'experiment'
 
     name = Column(String, nullable=False, primary_key=True)
-    git_hash = Column(String, nullable=True)
     time_created = Column(DateTime(), server_default=sqlalchemy.func.now())
+    git_hash = Column(String, nullable=True)
 
 
 class Trial(Base):
