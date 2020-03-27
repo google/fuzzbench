@@ -37,9 +37,15 @@ def build():
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
+    """Run fuzzer. Wrapper that uses the defaults when calling
+    run_fuzzer."""
+    run_fuzzer(input_corpus, output_corpus, target_binary)
+
+
+def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     """Run fuzzer."""
-    # Start up the binary directly for libFuzzer.
-    print('[run_fuzzer] Running target with libFuzzer')
+    if extra_flags is None:
+        extra_flags = []
 
     flags = [
         '-print_final_stats=1',
@@ -56,6 +62,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
         # using it will cause libFuzzer to find "crashes" no one cares about.
         '-detect_leaks=0',
     ]
+    flags += extra_flags
     if 'ADDITIONAL_ARGS' in os.environ:
         flags += os.environ['ADDITIONAL_ARGS'].split(' ')
     dictionary_path = utils.get_dictionary_path(target_binary)
