@@ -25,7 +25,7 @@ from fuzzers.afl import fuzzer as afl_fuzzer
 # OUT environment variable is the location of build directory (default is /out).
 
 # Fuzz each fuzzer for 2 hour before rotating.
-SECONDS_PER_FUZZER = 60 * 60 * 2 
+SECONDS_PER_FUZZER = 60 * 60 * 2
 
 # List of fuzzers used for ensemble fuzzing.
 FUZZER_LIST = ['aflfast', 'fairfuzz', 'mopt', 'aflplusplus', 'aflsmart']
