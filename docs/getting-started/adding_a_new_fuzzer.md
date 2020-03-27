@@ -247,6 +247,8 @@ make build-$FUZZER_NAME-all
 
     ```shell
     make debug-$FUZZER_NAME-$BENCHMARK_NAME
+    
+    $ROOT_DIR/docker/benchmark-runner/startup-runner.sh
     ```
 
   * Or, debug an existing fuzzer run in the `make run-*` docker container:
