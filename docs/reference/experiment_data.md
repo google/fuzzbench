@@ -14,20 +14,19 @@ It does not include the metrics used to generate a report, that data is linked
 to in the report itself.
 
 This page is written for users of the FuzzBench service. The same concepts apply
-to users running fuzzbench on their own however, the Google Cloud Storage buckets
-will be different.
+to users running FuzzBench on their own. However, the Google Cloud Storage
+buckets will be different.
 
 ## Getting the data
 
-[commondatastorage.googleapis.com/fuzzbench-data/](http://commondatastorage.googleapis.com/fuzzbench-data/)
-provides an XML file listing every from every experiment that is available for
-download. It isn't very usable for use in a browser but can probably be used by
-any S3 compatible tool.
+We store experiment data in the Google cloud storage bucket: "gs://fuzzbench-data".
+[commondatastorage.googleapis.com/fuzzbench-data/index.html](http://commondatastorage.googleapis.com/fuzzbench-data/index.html)
+Provides a web interface for browsing and downloading the experiment data.
 
 We use gsutil for obtaining this data. Follow [these instructions to install
 gsutil](https://cloud.google.com/storage/docs/gsutil_install#install).
 
-With gsutil you can do `gsutil ls gs://experiment-data/$EXPERIMENT_NAME/` list
+With gsutil you can do `gsutil ls gs://fuzzbench-data/$EXPERIMENT_NAME/` to list
 files in cloud storage directories for your project and you can use `gsutil cp`
 to copy them.
 
@@ -36,7 +35,7 @@ to copy them.
 Let's see what the layout of this data directory looks like:
 
 ```
-gs://$EXPERIMENT_NAME
+$EXPERIMENT_NAME
 │
 └───build-logs
 │       build-log-1.txt
@@ -73,15 +72,15 @@ gs://$EXPERIMENT_NAME
 
 ### Corpus archive and unchanged-cycles
 
-A trial is a run of a specific fuzzer on a specific benchmark.
-For each trial, FuzzBench archives the `output_directory` used in `fuzzer.py`
-every 15 minutes, this is sometimes referred to as a "snapshot" (or "cycle"). As an
-optimization, if the directory hasn't changed since the last cycle, the archiving step
-is skipped and the cycle number is added to `unchanged-cycles`. For some fuzzers
-like AFL, we ignore frequently changing non-corpus files like `fuzzer_stats`
-when determining if this cycle has changes. Because `fuzzer_stats` is included
-in the archive, you can obtain stats for an AFL-based fuzzer using the last
-archive in a trial.
+A trial is a run of a specific fuzzer on a specific benchmark. For each trial,
+FuzzBench archives the `output_corpus` used in `fuzzer.py` every 15 minutes,
+this is sometimes referred to as a "snapshot" (or "cycle"). As an optimization,
+if the directory hasn't changed since the last cycle, the archiving step is
+skipped and the cycle number is added to the `unchanged-cycles` file. For some
+fuzzers like AFL, we ignore frequently changing non-corpus files like
+`fuzzer_stats` when determining if the corpus changed since last cycle. Because
+`fuzzer_stats` is included in the archive, you can obtain stats for an AFL-based
+fuzzer using the last archive in a trial.
 
 ### Crashes
 
