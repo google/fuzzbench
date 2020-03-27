@@ -38,7 +38,8 @@ Let's see what the layout of this data directory looks like:
 $EXPERIMENT_NAME
 │
 └───build-logs
-│       build-log-1.txt
+│       oss-fuzz-$OSS_FUZZ_PROJECT-fuzzer-$FUZZER-hash-$DOCKER_HASH.txt  # Logs for an OSS-Fuzz benchmark build.
+│       benchmark-$BENCHMARK-fuzzer-$FUZZER-hash-$DOCKER_HASH.txt  # Logs for an standard benchmark build.
 │       ...
 │
 └───coverage-binaries
