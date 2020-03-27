@@ -19,6 +19,7 @@ jobs:
           - aflplusplus_mopt
           - aflsmart
           - eclipser
+          - ensemble_afl
           - entropic
           - fairfuzz
           - fastcgs
