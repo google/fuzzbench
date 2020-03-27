@@ -39,7 +39,7 @@ $EXPERIMENT_NAME
 │
 └───build-logs
 │       oss-fuzz-$OSS_FUZZ_PROJECT-fuzzer-$FUZZER-hash-$DOCKER_HASH.txt  # Logs for an OSS-Fuzz benchmark build.
-│       benchmark-$BENCHMARK-fuzzer-$FUZZER-hash-$DOCKER_HASH.txt  # Logs for an standard benchmark build.
+│       benchmark-$BENCHMARK-fuzzer-$FUZZER-hash-$DOCKER_HASH.txt  # Logs for a standard benchmark build.
 │       ...
 │
 └───coverage-binaries
