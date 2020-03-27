@@ -47,9 +47,6 @@ RUN cd /afl/llvm_mode && \
     sed -i 's/errs()/outs()/g' compare-transform-pass.so.cc && \
     CXXFLAGS= CFLAGS= make
 
-
-
-RUN ls /usr/local/include/c++/v1/
 # Use afl_driver.cpp from LLVM as our fuzzing library.
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/master/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
     $CXX -I/usr/local/include/c++/v1/ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp && \
