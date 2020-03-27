@@ -35,10 +35,15 @@
         <h1 class="center-align brown-text text-darken-3">
             FuzzBench: {{ experiment.name }} report
         </h1>
+        {% if git_hash %}
+        <h5 class="center-align brown-text text-darken-3">
+            Commit hash: <a href="https://github.com/google/fuzzbench/commits/{{ git_hash }}">{{ git_hash }}</a>
+        </h5>
+        {% endif %}
         {% if in_progress %}
-        <h4 class="center-align brown-text text-darken-4">
+        <h5 class="center-align brown-text text-darken-4">
             (experiment incomplete/still running...)
-        </h4>
+        </h5>
         {% endif %}
 
         <div class="card-panel amber lighten-5">

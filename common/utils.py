@@ -15,6 +15,7 @@
 
 import hashlib
 import os
+import subprocess
 import urllib.request
 import urllib.error
 
@@ -64,3 +65,9 @@ def file_hash(file_path):
             chunk = file_handle.read(chunk_size)
 
     return digest.hexdigest()
+
+
+def git_hash():
+    """Return the git hash for the last commit in the local repo."""
+    output = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT_DIR)
+    return output.strip().decode('utf-8')

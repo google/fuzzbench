@@ -162,6 +162,7 @@ def start_experiment(experiment_name: str, config_filename: str,
     config['benchmarks'] = ','.join(benchmarks)
     validate_experiment_name(experiment_name)
     config['experiment'] = experiment_name
+    config['git_hash'] = utils.git_hash()
 
     config_dir = 'config'
     filesystem.recreate_directory(config_dir)
@@ -309,10 +310,10 @@ def get_all_fuzzers():
     fuzzers_dir = os.path.join(utils.ROOT_DIR, 'fuzzers')
     return [
         fuzzer for fuzzer in os.listdir(fuzzers_dir)
-        if (os.path.isfile(
-            os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')) and
+        if (os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')) and
             fuzzer != 'coverage')
     ]
+
 
 def main():
     """Run an experiment in the cloud."""
