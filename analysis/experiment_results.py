@@ -56,6 +56,8 @@ class ExperimentResults:
 
         self._plotter = plotter
 
+        self.git_hash = data_utils.get_git_hash(experiment_df)
+
     def _get_full_path(self, filename):
         return os.path.join(self._output_directory, filename)
 

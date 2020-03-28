@@ -18,7 +18,8 @@
 # pylint: skip-file
 
 from analysis import stat_tests
-from common import logs
+from database import models
+from database import utils
 
 
 def drop_uninteresting_columns(experiment_df):
@@ -220,3 +221,13 @@ def experiment_rank_by_num_firsts(experiment_pivot_df):
     firsts = pivot_ranked[pivot_ranked == 1]
     num_firsts = firsts.sum().sort_values(ascending=False)
     return num_firsts
+
+
+def get_git_hash(experiment_df):
+    """Return git hash for the experiment."""
+    if len(experiment_df.experiment.unique()) != 1:
+        # Not possible to represent hashes for multiple experiments.
+        return None
+
+    return utils.query(models.Experiment).filter(
+        models.Experiment.name == experiment_df.experiment[0]).first().git_hash

@@ -20,9 +20,9 @@ import multiprocessing
 import os
 import re
 import shutil
+import subprocess
 import sys
 from typing import Dict, List
-
 import yaml
 
 from common import experiment_utils
@@ -152,16 +152,33 @@ def validate_experiment_name(experiment_name: str):
                         (experiment_name, EXPERIMENT_CONFIG_REGEX.pattern))
 
 
+def check_no_local_changes():
+    """Make sure that there are no uncommitted changes."""
+    assert not subprocess.check_output(
+        ['git', 'diff'],
+        cwd=utils.ROOT_DIR), 'Local uncommitted changes found, exiting.'
+
+
+def get_git_hash():
+    """Return the git hash for the last commit in the local repo."""
+    output = subprocess.check_output(['git', 'rev-parse', 'HEAD'],
+                                     cwd=utils.ROOT_DIR)
+    return output.strip().decode('utf-8')
+
+
 def start_experiment(experiment_name: str, config_filename: str,
                      benchmarks: List[str], fuzzers: List[str],
                      fuzzer_configs: List[str]):
     """Start a fuzzer benchmarking experiment."""
+    check_no_local_changes()
+
     validate_benchmarks(benchmarks)
 
     config = read_and_validate_experiment_config(config_filename)
     config['benchmarks'] = ','.join(benchmarks)
     validate_experiment_name(experiment_name)
     config['experiment'] = experiment_name
+    config['git_hash'] = get_git_hash()
 
     config_dir = 'config'
     filesystem.recreate_directory(config_dir)
@@ -309,10 +326,10 @@ def get_all_fuzzers():
     fuzzers_dir = os.path.join(utils.ROOT_DIR, 'fuzzers')
     return [
         fuzzer for fuzzer in os.listdir(fuzzers_dir)
-        if (os.path.isfile(
-            os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')) and
+        if (os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')) and
             fuzzer != 'coverage')
     ]
+
 
 def main():
     """Run an experiment in the cloud."""

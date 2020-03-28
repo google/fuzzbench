@@ -36,9 +36,9 @@
             FuzzBench: {{ experiment.name }} report
         </h1>
         {% if in_progress %}
-        <h4 class="center-align brown-text text-darken-4">
+        <h5 class="center-align brown-text text-darken-4">
             (experiment incomplete/still running...)
-        </h4>
+        </h5>
         {% endif %}
 
         <div class="card-panel amber lighten-5">
@@ -159,6 +159,11 @@
         <div id="data" class="section scrollspy">
             <h2 class="green-text text-darken-3">experiment data</h2>
             You can download the raw data for this report <a href="data.csv.gz">here</a>.
+            {% if experiment.git_hash %}
+            <br><br>
+            The experiment was conducted using this FuzzBench commit:
+            <a href="https://github.com/google/fuzzbench/commits/{{ experiment.git_hash }}">{{ experiment.git_hash }}</a>
+            {% endif %}
         </div>    <!-- id="data" -->
 
     </div> <!-- class="col" -->
