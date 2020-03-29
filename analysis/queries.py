@@ -23,9 +23,13 @@ def get_experiment_data(experiment_names):
     """Get measurements (such as coverage) on experiments from the database."""
 
     snapshots_query = db_utils.query(
-        Experiment.git_hash, Trial.experiment, Trial.fuzzer, Trial.benchmark,
-        Trial.time_started, Trial.time_ended, Snapshot.trial_id, Snapshot.time,
-        Snapshot.edges_covered).select_from(Experiment).join(Trial).join(
-            Snapshot).filter(Experiment.name.in_(experiment_names))
+        Experiment.git_hash,\
+        Trial.experiment, Trial.fuzzer, Trial.benchmark,\
+        Trial.time_started, Trial.time_ended,\
+        Snapshot.trial_id, Snapshot.time, Snapshot.edges_covered)\
+        .select_from(Experiment)\
+        .join(Trial)\
+        .join(Snapshot)\
+        .filter(Experiment.name.in_(experiment_names))
 
     return pd.read_sql_query(snapshots_query.statement, db_utils.engine)
