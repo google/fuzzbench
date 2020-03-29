@@ -14,20 +14,18 @@
 """Database queries for acquiring experiment data."""
 
 import pandas as pd
-import sqlalchemy
 
-from database import models
+from database.models import Experiment, Trial, Snapshot
 from database import utils as db_utils
 
 
 def get_experiment_data(experiment_names):
     """Get measurements (such as coverage) on experiments from the database."""
-    snapshots_query = db_utils.query(models.Snapshot).options(
-        sqlalchemy.orm.joinedload('trial')).filter(
-            models.Snapshot.trial.has(
-                models.Trial.experiment.in_(experiment_names)))
 
-    # id must be loaded to do the join but get rid of it now since
-    # trial_id provides the same info.
-    data = pd.read_sql_query(snapshots_query.statement, db_utils.engine)
-    return data.drop(columns=['id'])
+    snapshots_query = db_utils.query(
+        Experiment.git_hash, Trial.experiment, Trial.fuzzer, Trial.benchmark,
+        Trial.time_started, Trial.time_ended, Snapshot.trial_id, Snapshot.time,
+        Snapshot.edges_covered).select_from(Experiment).join(Trial).join(
+            Snapshot).filter(Experiment.name.in_(experiment_names))
+
+    return pd.read_sql_query(snapshots_query.statement, db_utils.engine)
