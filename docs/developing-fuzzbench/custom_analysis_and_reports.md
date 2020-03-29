@@ -38,12 +38,15 @@ experiment](https://www.fuzzbench.com/reports/sample/index.html) like this:
 
 ```bash
 mkdir ~/my-report; cd ~/my-report
-wget https://www.fuzzbench.com/reports/sample/data.csv.zip
+wget https://www.fuzzbench.com/reports/sample/data.csv.gz
 PYTHONPATH=<fuzzbench_root> python3 experiment/generate_report.py \
   [experiment_name] \
-  --report_dir ~/my-report \
-  --from_cached_data
+  --report-dir ~/my-report \
+  --from-cached-data
 ```
+
+You can find the link to the raw data file at the bottom of each [previously
+published report](https://www.fuzzbench.com/reports/index.html).
 
 You can also create a custom report using a template of your own (see
 `--report_type` option). See all command line options with:
