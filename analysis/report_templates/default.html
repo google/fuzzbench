@@ -100,6 +100,24 @@
 
             <h2 class="green-text text-darken-3">{{ benchmark.name }} summary</h2>
 
+            {% if benchmark.fuzzers_with_not_enough_samples %}
+            <div class="card-panel deep-orange lighten-3">
+                <div class="row valign-wrapper">
+                    <div class="col s4 m2">
+                        <i class="medium material-icons">error</i>
+                    </div>
+                    <div class="col s8 m10">
+                        <span class="black-text">
+                            The following fuzzers do not have enough samples:
+                            <strong>
+                                {{ ', '.join(benchmark.fuzzers_with_not_enough_samples) }}.
+                            </strong>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <div class="row">
                 <div class="col s6">
                     <h5 class="center-align">Ranking by median reached coverage</h5>

@@ -75,6 +75,23 @@ def get_benchmark_snapshot(benchmark_df,
     return benchmark_snapshot_df
 
 
+_DEFAULT_FUZZER_SAMPLE_NUM_THRESHOLD = 0.8
+
+
+def get_fuzzers_with_not_enough_samples(
+        benchmark_snapshot_df, threshold=_DEFAULT_FUZZER_SAMPLE_NUM_THRESHOLD):
+    """Retruns fuzzers that didn't have enough trials running at snapshot time.
+    It takes a benchmark snapshot and finds the fuzzers that have a sample size
+    smaller than 80% of the largest sample size. Default threshold can be
+    overridden.
+    """
+    samples_per_fuzzer = benchmark_snapshot_df.fuzzer.value_counts()
+    max_samples = samples_per_fuzzer.max()
+    few_sample_criteria = samples_per_fuzzer < threshold * max_samples
+    few_sample_fuzzers = samples_per_fuzzer[few_sample_criteria].index
+    return few_sample_fuzzers.tolist()
+
+
 def get_experiment_snapshots(experiment_df):
     """Finds a good snapshot time for each benchmark in the experiment data.
 

@@ -59,6 +59,12 @@ class BenchmarkResults:  # pylint: disable=too-many-public-methods
         return data_utils.get_benchmark_snapshot(self._benchmark_df)
 
     @property
+    def fuzzers_with_not_enough_samples(self):
+        """Fuzzers with not enough samples."""
+        return data_utils.get_fuzzers_with_not_enough_samples(
+            self._benchmark_snapshot_df)
+
+    @property
     def summary_table(self):
         """Statistical summary table."""
         return data_utils.benchmark_summary(self._benchmark_snapshot_df)
