@@ -42,6 +42,13 @@ class ExperimentResults:
             # Take name from first row.
             self.name = experiment_df.experiment[0]
 
+        # FuzzBench repo commit hash.
+        self.git_hash = None
+        if 'git_hash' in experiment_df.columns:
+            # Not possible to represent hashes for multiple experiments.
+            if len(experiment_df.experiment.unique()) == 1:
+                self.git_hash = experiment_df.git_hash[0]
+
         # Earliest trial start time.
         self.started = experiment_df.time_started.min()
         # Latest trial end time.
@@ -55,8 +62,6 @@ class ExperimentResults:
         self._output_directory = output_directory
 
         self._plotter = plotter
-
-        self.git_hash = data_utils.get_git_hash(experiment_df)
 
     def _get_full_path(self, filename):
         return os.path.join(self._output_directory, filename)
