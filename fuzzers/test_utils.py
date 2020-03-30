@@ -67,3 +67,46 @@ def test_dictionary_skip(fs, environ):
     os.environ['SKIP_DICT'] = '1'
     fs.create_file('/fuzz-target.dict', contents='A')
     assert utils.get_dictionary_path('/fuzz-target') is None
+
+
+def test_initialize_flags_in_environment(environ):
+    """Test that CFLAGS and CXXFLAGS are correctly initialized in
+    environment."""
+    utils.initialize_flags()
+    assert os.getenv('CFLAGS') == (
+        '-pthread -Wl,--no-as-needed -Wl,-ldl -Wl,-lm '
+        '-Wno-unused-command-line-argument -O3')
+    assert os.getenv('CXXFLAGS') == (
+        '-stdlib=libc++ -pthread -Wl,--no-as-needed -Wl,-ldl -Wl,-lm '
+        '-Wno-unused-command-line-argument -O3')
+
+
+def test_initialize_flags_in_var():
+    """Test that CFLAGS and CXXFLAGS are correctly initializedin variable."""
+    env = {}
+    utils.initialize_flags(env)
+    assert env.get('CFLAGS') == ('-pthread -Wl,--no-as-needed -Wl,-ldl -Wl,-lm '
+                                 '-Wno-unused-command-line-argument -O3')
+    assert env.get('CXXFLAGS') == (
+        '-stdlib=libc++ -pthread -Wl,--no-as-needed -Wl,-ldl -Wl,-lm '
+        '-Wno-unused-command-line-argument -O3')
+
+
+def test_set_default_optimization_flag_in_environment(environ):
+    """Test default optimization flags are set in environment."""
+    os.environ['CFLAGS'] = '-flag1 -flag2'
+    os.environ['CXXFLAGS'] = '-flag3 -O2'
+    utils.set_default_optimization_flag()
+    assert os.getenv('CFLAGS') == ('-flag1 -flag2 -O3')
+    assert os.getenv('CXXFLAGS') == ('-flag3 -O2 -O3')
+
+
+def test_set_default_optimization_flag_in_var():
+    """Test default optimization flags are set in variable."""
+    env = {
+        'CFLAGS': '-flag1 -flag2',
+        'CXXFLAGS': '-flag3 -O2',
+    }
+    utils.set_default_optimization_flag(env)
+    assert env.get('CFLAGS') == ('-flag1 -flag2 -O3')
+    assert env.get('CXXFLAGS') == ('-flag3 -O2 -O3')
