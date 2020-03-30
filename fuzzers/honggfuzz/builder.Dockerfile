@@ -23,14 +23,14 @@ RUN apt-get update -y && \
     libblocksruntime-dev \
     liblzma-dev
 
-# Download honggfuz version 2.1 + 274f2f149237e412fb39cea407f0b19555cb6a35
+# Download honggfuz version 2.1 + 4ff004700c3da264a2e8a867af1d97ed1d93ebd0
 # Set CFLAGS use honggfuzz's defaults except for -mnative which can build CPU
 # dependent code that may not work on the machines we actually fuzz on.
 # Create an empty object file which will become the FUZZER_LIB lib (since
 # honggfuzz doesn't need this when hfuzz-clang(++) is used).
 RUN git clone https://github.com/google/honggfuzz.git /honggfuzz && \
     cd /honggfuzz && \
-    git checkout 274f2f149237e412fb39cea407f0b19555cb6a35 && \
+    git checkout 4ff004700c3da264a2e8a867af1d97ed1d93ebd0 && \
     CFLAGS="-O3 -funroll-loops" make && \
     touch empty_lib.c && \
     cc -c -o empty_lib.o empty_lib.c
