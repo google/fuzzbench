@@ -16,6 +16,11 @@ ARG parent_image=gcr.io/fuzzbench/base-builder
 FROM $parent_image
 
 # *********************** AFL++ Download and Compile ***************************
+
+# Install wget to download afl_driver.cpp. Install libstdc++ to use llvm_mode.
+RUN apt-get update && \
+    apt-get install wget libstdc++-5-dev -y
+
 # Download and compile afl++ (v2.62d).
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
