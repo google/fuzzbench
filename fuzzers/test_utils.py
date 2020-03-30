@@ -92,21 +92,21 @@ def test_initialize_flags_in_var():
         '-Wno-unused-command-line-argument -O3')
 
 
-def test_set_default_optimization_flag_if_needed_in_environment(environ):
+def test_set_default_optimization_flag_in_environment(environ):
     """Test default optimization flags are set in environment."""
     os.environ['CFLAGS'] = '-flag1 -flag2'
     os.environ['CXXFLAGS'] = '-flag3 -O2'
-    utils.set_default_optimization_flag_if_needed()
+    utils.set_default_optimization_flag()
     assert os.getenv('CFLAGS') == ('-flag1 -flag2 -O3')
-    assert os.getenv('CXXFLAGS') == ('-flag3 -O2')
+    assert os.getenv('CXXFLAGS') == ('-flag3 -O2 -O3')
 
 
-def test_set_default_optimization_flag_if_needed_in_var():
+def test_set_default_optimization_flag_in_var():
     """Test default optimization flags are set in variable."""
     env = {
         'CFLAGS': '-flag1 -flag2',
         'CXXFLAGS': '-flag3 -O2',
     }
-    utils.set_default_optimization_flag_if_needed(env)
+    utils.set_default_optimization_flag(env)
     assert env.get('CFLAGS') == ('-flag1 -flag2 -O3')
-    assert env.get('CXXFLAGS') == ('-flag3 -O2')
+    assert env.get('CXXFLAGS') == ('-flag3 -O2 -O3')

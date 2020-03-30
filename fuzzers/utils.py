@@ -23,9 +23,6 @@ import tempfile
 # Keep all fuzzers at same optimization level until fuzzer explicitly needs or
 # specifies it.
 DEFAULT_OPTIMIZATION_LEVEL = '-O3'
-ALLOWED_OPTIMIZATION_FLAGS = [
-    '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Oz', '-Og', '-O', '-O4'
-]
 
 OSS_FUZZ_LIB_FUZZING_ENGINE_PATH = '/usr/lib/libFuzzingEngine.a'
 
@@ -151,25 +148,19 @@ def get_dictionary_path(target_binary):
     return None
 
 
-def set_default_optimization_flag_if_needed(env=None):
+def set_default_optimization_flag(env=None):
     """Set default optimization flag if none is already set."""
     if not env:
         env = os.environ
 
     for flag_var in ['CFLAGS', 'CXXFLAGS']:
-        flag_var_value = env.get(flag_var)
-        if flag_var_value:
-            flags = flag_var_value.split(' ')
-            if set(flags).intersection(set(ALLOWED_OPTIMIZATION_FLAGS)):
-                # Found an optimization level, skip setting one.
-                continue
         append_flags(flag_var, [DEFAULT_OPTIMIZATION_LEVEL], env=env)
 
 
 def initialize_flags(env=None):
     """Set initial flags before fuzzer.build() is called."""
     set_no_sanitizer_compilation_flags(env)
-    set_default_optimization_flag_if_needed(env)
+    set_default_optimization_flag(env)
 
     for flag_var in ['CFLAGS', 'CXXFLAGS']:
         print('{flag_var} = {flag_value}'.format(
