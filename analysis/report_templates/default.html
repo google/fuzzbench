@@ -124,6 +124,24 @@
                 </div>
             </div>
 
+            {% if benchmark.fuzzers_with_not_enough_samples and not in_progress %}
+            <div class="card-panel deep-orange lighten-3">
+                <div class="row valign-wrapper">
+                    <div class="col s4 m2">
+                        <i class="medium material-icons">error</i>
+                    </div>
+                    <div class="col s8 m10">
+                        <span class="black-text">
+                            The following fuzzers do not have enough samples:
+                            <strong>
+                                {{ ', '.join(benchmark.fuzzers_with_not_enough_samples) }}.
+                            </strong>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <ul class="collapsible">
                 <li>
                     <div class="collapsible-header">
