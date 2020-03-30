@@ -24,12 +24,6 @@ from fuzzers import utils
 
 def build():
     """Build benchmark."""
-    utils.set_no_sanitizer_compilation_flags()
-
-    cflags = ['-O3']
-    utils.append_flags('CFLAGS', cflags)
-    utils.append_flags('CXXFLAGS', cflags)
-
     # honggfuzz doesn't need additional libraries when code is compiled
     # with hfuzz-clang(++)
     os.environ['CC'] = '/honggfuzz/hfuzz_cc/hfuzz-clang'

@@ -24,9 +24,7 @@ from fuzzers import utils
 
 def prepare_build_environment():
     """Set environment variables used to build AFL-based fuzzers."""
-    utils.set_no_sanitizer_compilation_flags()
-
-    cflags = ['-O3', '-fsanitize-coverage=trace-pc-guard']
+    cflags = ['-fsanitize-coverage=trace-pc-guard']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 

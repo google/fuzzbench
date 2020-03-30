@@ -23,12 +23,8 @@ from fuzzers import utils
 
 def build():
     """Build benchmark."""
-    # QEMU does not work with sanitizers, so skip -fsanitize=. See
-    # https://github.com/SoftSec-KAIST/Eclipser/issues/5
-    utils.set_no_sanitizer_compilation_flags()
-    cflags = ['-O3']
-    utils.append_flags('CFLAGS', cflags)
-    utils.append_flags('CXXFLAGS', cflags)
+    # QEMU does not work with sanitizers.
+    # See https://github.com/SoftSec-KAIST/Eclipser/issues/5
 
     os.environ['CC'] = 'clang'
     os.environ['CXX'] = 'clang++'
