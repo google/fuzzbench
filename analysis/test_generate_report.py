@@ -14,7 +14,7 @@
 """Tests for generate_report.py"""
 import pandas as pd
 
-from experiment import generate_report
+from analysis import generate_report
 
 
 def label_fuzzers_by_experiment():
