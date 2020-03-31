@@ -27,12 +27,6 @@ from common import new_process
 from common import utils
 from experiment.build import build_utils
 
-# Maximum time to wait for a GCB config to finish build.
-GCB_BUILD_TIMEOUT = 2 * 60 * 60  # 2 hours.
-
-# High cpu configuration for faster builds.
-GCB_MACHINE_TYPE = 'n1-highcpu-8'
-
 logger = logs.Logger('builder')  # pylint: disable=invalid-name
 
 
@@ -44,12 +38,12 @@ def make(*args):
 
 
 def build_base_images() -> Tuple[int, str]:
-    """Build base images on GCB."""
+    """Build base images locally."""
     return make('base-runner', 'base-builder')
 
 
 def build_coverage(benchmark):
-    """Build coverage image for benchmark on GCB."""
+    """Build (locally) coverage image for benchmark."""
     image_name = 'build-coverage-{}'.format(benchmark)
     result = make(image_name)
     if result.retcode:
@@ -99,4 +93,3 @@ def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
     """Builds |benchmark| for |fuzzer|."""
     image_name = 'build-{}-{}'.format(fuzzer, benchmark)
     make(image_name)
-    return False

@@ -147,7 +147,7 @@ debug-$(1)-$(2): .$(1)-$(2)-runner
     $(BASE_TAG)/runners/$(1)/$(2)
 
 else
-
+# Coverage builds don't need runners.
 build-$(1)-$(2): .$(1)-$(2)-builder
 pull-$(1)-$(2): .pull-$(1)-$(2)-builder
 
