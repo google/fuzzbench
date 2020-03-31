@@ -40,7 +40,14 @@ class ExperimentResults:
             self.name = experiment_name
         else:
             # Take name from first row.
-            self.name = experiment_df.experiment[0]
+            self.name = experiment_df.experiment.iloc[0]
+
+        # FuzzBench repo commit hash.
+        self.git_hash = None
+        if 'git_hash' in experiment_df.columns:
+            # Not possible to represent hashes for multiple experiments.
+            if len(experiment_df.experiment.unique()) == 1:
+                self.git_hash = experiment_df.git_hash.iloc[0]
 
         # Earliest trial start time.
         self.started = experiment_df.time_started.min()

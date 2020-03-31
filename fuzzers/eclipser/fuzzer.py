@@ -23,12 +23,8 @@ from fuzzers import utils
 
 def build():
     """Build benchmark."""
-    # QEMU does not work with sanitizers, so skip -fsanitize=. See
-    # https://github.com/SoftSec-KAIST/Eclipser/issues/5
-    utils.set_no_sanitizer_compilation_flags()
-    cflags = ['-O3']
-    utils.append_flags('CFLAGS', cflags)
-    utils.append_flags('CXXFLAGS', cflags)
+    # QEMU does not work with sanitizers.
+    # See https://github.com/SoftSec-KAIST/Eclipser/issues/5
 
     os.environ['CC'] = 'clang'
     os.environ['CXX'] = 'clang++'
@@ -73,6 +69,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     ]
     if os.listdir(input_corpus):  # Important, otherwise Eclipser crashes.
         command += ['-i', input_corpus]
+    print('[run_fuzzer] Running command: ' + ' '.join(command))
     subprocess.Popen(command)
 
     process = Process(target=copy_corpus_directory,

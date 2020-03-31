@@ -42,6 +42,7 @@ _LICENSE_CHECK_EXTENSIONS = [
     '.yaml',
 ]
 _LICENSE_CHECK_IGNORE_DIRECTORIES = [
+    'alembic',
     'third_party',
 ]
 _LICENSE_CHECK_STRING = 'http://www.apache.org/licenses/LICENSE-2.0'

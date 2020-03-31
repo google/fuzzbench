@@ -32,4 +32,4 @@ RUN touch $SRC/__init__.py
 ENV ASAN_OPTIONS="detect_leaks=0"
 
 ENV OSS_FUZZ 1
-RUN PYTHONPATH=$SRC python3 -u -c "import fuzzer; fuzzer.build()"
+RUN PYTHONPATH=$SRC python3 -u -c "from fuzzers import utils; utils.initialize_flags(); import fuzzer; fuzzer.build()"
