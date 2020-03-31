@@ -108,6 +108,9 @@ def fuzz(input_corpus, output_corpus, target_binary):
         if ".ktest" in seedfile:
             continue
 
+        if not os.path.isfile(seedfile):
+            continue
+
         if os.path.getsize(seedfile) > 4096:
             continue 
         
