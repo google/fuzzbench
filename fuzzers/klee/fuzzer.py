@@ -26,8 +26,7 @@ from fuzzers.afl import fuzzer as afl_fuzzer
 
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
-    utils.set_no_sanitizer_compilation_flags()
-
+    
     # see https://klee.github.io/tutorials/testing-function/
     cflags = ['-O0', '-Xclang', '-disable-O0-optnone']
     utils.append_flags('CFLAGS', cflags)

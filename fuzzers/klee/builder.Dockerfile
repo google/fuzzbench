@@ -18,7 +18,8 @@ FROM $parent_image
 # Install Clang/LLVM 6.0.
 RUN apt-get update -y && \
     apt-get -y install llvm-6.0 \
-    clang-6.0 llvm-6.0-dev llvm-6.0-tools
+    clang-6.0 llvm-6.0-dev llvm-6.0-tools \
+    wget
 
 # Install KLEE dependencies
 RUN apt-get install -y \
@@ -51,6 +52,7 @@ RUN git clone https://github.com/stp/stp.git /stp && \
 # Install klee-uclibc. TODO: do we need libcxx?
 RUN git clone https://github.com/lmrs2/klee-uclibc.git /klee-uclibc && \
     cd /klee-uclibc && \
+    CC=`which clang-6.0` CXX=`which clang++-6.0` \
     ./configure --make-llvm-lib --with-llvm-config=`which llvm-config-6.0` && \
     make -j`nproc` && make install
 
@@ -70,7 +72,7 @@ RUN git clone https://github.com/lmrs2/klee.git /klee && \
 # debugging
 #RUN apt-get -y install vim less apt-file
 
-# Install golang and wllvm
+# Install golang and gllvm
 ENV GOPATH=/
 ENV PATH=$PATH:$GOPATH/bin
 RUN apt-get -y install \
@@ -91,8 +93,8 @@ ENV CXX=gclang++
 # Compile the harness klee_driver.cpp.
 COPY klee_driver.cpp /klee_driver.cpp
 COPY klee_mock.c /klee_mock.c
-RUN $CXX -stdlib=libc++ -std=c++11 -O2 -c /klee_driver.cpp && \ 
+RUN $CXX -stdlib=libc++ -std=c++11 -O2 -c /klee_driver.cpp -o /klee_driver.o && \ 
     ar r /libAFL.a /klee_driver.o && \
-    $LLVM_CC_NAME -O2 -c -fPIC /klee_mock.c && \
+    $LLVM_CC_NAME -O2 -c -fPIC /klee_mock.c -o /klee_mock.o && \
     $LLVM_CC_NAME -shared -o /libKleeMock.so /klee_mock.o
 
