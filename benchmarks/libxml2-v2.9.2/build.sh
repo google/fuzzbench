@@ -20,7 +20,7 @@ build_lib() {
   cp -rf SRC BUILD
   (cd BUILD && \
     ./autogen.sh && \
-    CCLD="$CXX $CXXFLAGS" ./configure --without-python && \
+    CCLD="$CXX $CXXFLAGS" ./configure --without-python --with-threads=no --with-zlib=no --with-lzma=no && \
     make -j $JOBS
   )
 }
@@ -28,4 +28,4 @@ build_lib() {
 get_git_tag https://gitlab.gnome.org/GNOME/libxml2.git v2.9.2 SRC
 build_lib
 
-$CXX $CXXFLAGS -std=c++11 $SCRIPT_DIR/target.cc -I BUILD/include BUILD/.libs/libxml2.a $FUZZER_LIB -lz -o $FUZZ_TARGET
+$CXX $CXXFLAGS -std=c++11 $SCRIPT_DIR/target.cc -I BUILD/include BUILD/.libs/libxml2.a $FUZZER_LIB -o $FUZZ_TARGET
