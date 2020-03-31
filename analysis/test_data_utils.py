@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions andsss
 # limitations under the License.
-"""Tests for generate_report.py"""
+"""Tests for data_utils.py"""
 import pandas as pd
 
-from analysis import generate_report
+from analysis import data_utils
 
 
 def label_fuzzers_by_experiment():
@@ -24,7 +24,7 @@ def label_fuzzers_by_experiment():
         'experiment': ['experiment-a', 'experiment-b'],
         'fuzzer': ['fuzzer-1', 'fuzzer-2']
     })
-    labeled_df = generate_report.label_fuzzers_by_experiment(input_df)
+    labeled_df = data_utils.label_fuzzers_by_experiment(input_df)
 
     expected_fuzzers_df = pd.DataFrame(
         {'fuzzer': ['fuzzer-1-experiment-a', 'fuzzer-2-experiment-b']})
