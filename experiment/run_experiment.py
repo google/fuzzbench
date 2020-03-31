@@ -42,8 +42,6 @@ OSS_FUZZ_PROJECTS_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz',
 FUZZER_NAME_REGEX = re.compile('^[a-z0-9_]+$')
 EXPERIMENT_CONFIG_REGEX = re.compile('^[a-z0-9-]{0,30}$')
 
-# Is dispatcher code being run manually (useful for debugging)?
-MANUAL_EXPERIMENT = os.getenv('MANUAL_EXPERIMENT')
 CONFIG_DIR = 'config'
 
 
@@ -218,10 +216,12 @@ def start_experiment(experiment_name: str, config_filename: str,
 def start_dispatcher(config: Dict, config_dir: str):
     """Start the dispatcher instance and run the dispatcher code on it."""
     dispatcher = get_dispatcher(config)
-    if not MANUAL_EXPERIMENT:
+    # Is dispatcher code being run manually (useful for debugging)?
+    manual_experiment = os.getenv('MANUAL_EXPERIMENT')
+    if not manual_experiment:
         dispatcher.create_async()
     copy_resources_to_bucket(config_dir, config)
-    if not MANUAL_EXPERIMENT:
+    if not manual_experiment:
         dispatcher.start()
 
 
@@ -491,7 +491,7 @@ def main():
 
     start_experiment(args.experiment_name, args.experiment_config,
                      args.benchmarks, fuzzers, args.fuzzer_configs)
-    if not MANUAL_EXPERIMENT:
+    if not os.getenv('MANUAL_EXPERIMENT'):
         stop_experiment.stop_experiment(args.experiment_name,
                                         args.experiment_config)
     return 0
