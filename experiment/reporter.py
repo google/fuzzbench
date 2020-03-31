@@ -20,7 +20,7 @@ from common import experiment_path as exp_path
 from common import filesystem
 from common import gsutil
 from common import logs
-from experiment import generate_report
+from analysis import generate_report
 
 logger = logs.Logger('reporter')  # pylint: disable=invalid-name
 

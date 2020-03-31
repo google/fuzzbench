@@ -52,5 +52,5 @@ You can also create a custom report using a template of your own (see
 `--report_type` option). See all command line options with:
 
 ```bash
-PYTHONPATH=<fuzzbench_root> python3 experiment/generate_report.py --help
+PYTHONPATH=<fuzzbench_root> python3 analysis/generate_report.py --help
 ```
