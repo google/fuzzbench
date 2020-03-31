@@ -24,6 +24,7 @@ jobs:
           - fairfuzz
           - fastcgs
           - honggfuzz
+          - lafintel
           - libfuzzer
           - mopt
 
