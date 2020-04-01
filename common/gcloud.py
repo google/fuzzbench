@@ -78,8 +78,7 @@ def create_instance(instance_name: str,
     and with optionally provided |metadata| and |startup_script|."""
 
     if utils.is_local_experiment():
-        return local_create_instance(instance_name, instance_type, config,
-                                     metadata, startup_script, **kwargs)
+        return run_local_instance(startup_script)
 
     command = [
         'gcloud',
@@ -142,13 +141,7 @@ def set_default_project(cloud_project: str):
         ['gcloud', 'config', 'set', 'project', cloud_project])
 
 
-# pylint: disable=unused-argument
-def local_create_instance(instance_name: str,
-                          instance_type: InstanceType,
-                          config: dict,
-                          metadata: dict = None,
-                          startup_script: str = None,
-                          **kwargs) -> bool:
+def run_local_instance(startup_script: str = None) -> bool:
     """Does the equivalent of "create_instance" for local experiments, runs
     |startup_script| in the background."""
     command = ['/bin/bash', startup_script]
