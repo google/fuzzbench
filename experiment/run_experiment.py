@@ -20,9 +20,9 @@ import multiprocessing
 import os
 import re
 import shutil
+import subprocess
 import sys
 from typing import Dict, List
-
 import yaml
 
 from common import experiment_utils
@@ -162,6 +162,39 @@ def set_up_experiment_config_file(config):
     experiment_config_filename = os.path.join(CONFIG_DIR, 'experiment.yaml')
     with open(experiment_config_filename, 'w') as experiment_config_file:
         yaml.dump(config, experiment_config_file, default_flow_style=False)
+
+
+def check_no_local_changes():
+    """Make sure that there are no uncommitted changes."""
+    assert not subprocess.check_output(
+        ['git', 'diff'],
+        cwd=utils.ROOT_DIR), 'Local uncommitted changes found, exiting.'
+
+
+def get_git_hash():
+    """Return the git hash for the last commit in the local repo."""
+    output = subprocess.check_output(['git', 'rev-parse', 'HEAD'],
+                                     cwd=utils.ROOT_DIR)
+    return output.strip().decode('utf-8')
+
+
+def start_experiment(experiment_name: str, config_filename: str,
+                     benchmarks: List[str], fuzzers: List[str],
+                     fuzzer_configs: List[str]):
+    """Start a fuzzer benchmarking experiment."""
+    check_no_local_changes()
+
+    validate_benchmarks(benchmarks)
+
+    config = read_and_validate_experiment_config(config_filename)
+    config['benchmarks'] = ','.join(benchmarks)
+    validate_experiment_name(experiment_name)
+    config['experiment'] = experiment_name
+    config['git_hash'] = get_git_hash()
+
+    config_dir = 'config'
+    filesystem.recreate_directory(config_dir)
+    experiment_config_filename = os.path.join(config_dir, 'experiment.yaml')
 
 
 def set_up_fuzzer_config_files(fuzzers, fuzzer_configs):

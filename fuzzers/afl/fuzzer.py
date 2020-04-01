@@ -23,10 +23,9 @@ from fuzzers import utils
 
 
 def prepare_build_environment():
-    """Set environment variables used to build AFL-based fuzzers."""
-    utils.set_no_sanitizer_compilation_flags()
-
-    cflags = ['-O3', '-fsanitize-coverage=trace-pc-guard']
+    """Set environment variables used to build targets for AFL-based
+    fuzzers."""
+    cflags = ['-fsanitize-coverage=trace-pc-guard']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
@@ -91,6 +90,9 @@ def run_afl_fuzz(input_corpus,
     ]
     if additional_flags:
         command.extend(additional_flags)
+    dictionary_path = utils.get_dictionary_path(target_binary)
+    if dictionary_path:
+        command.extend(['-x', dictionary_path])
     command += [
         '--',
         target_binary,
@@ -98,6 +100,7 @@ def run_afl_fuzz(input_corpus,
         # performs.
         '2147483647'
     ]
+    print('[run_fuzzer] Running command: ' + ' '.join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
     subprocess.call(command, stdout=output_stream, stderr=output_stream)
 

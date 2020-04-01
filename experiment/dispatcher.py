@@ -47,12 +47,16 @@ def create_work_subdirs(subdirs: List[str]):
         os.mkdir(os.path.join(experiment_utils.get_work_dir(), subdir))
 
 
-def _initialize_experiment_in_db(experiment: str, benchmarks: List[str],
-                                 fuzzers: List[str], num_trials: int):
+def _initialize_experiment_in_db(experiment: str, git_hash: str,
+                                 benchmarks: List[str], fuzzers: List[str],
+                                 num_trials: int):
     """Initializes |experiment| in the database by creating the experiment
     entity and entities for each trial in the experiment."""
-    db_utils.add_all(
-        [db_utils.get_or_create(models.Experiment, name=experiment)])
+    db_utils.add_all([
+        db_utils.get_or_create(models.Experiment,
+                               name=experiment,
+                               git_hash=git_hash)
+    ])
 
     trials_args = itertools.product(sorted(benchmarks), range(num_trials),
                                     sorted(fuzzers))
@@ -79,8 +83,10 @@ class Experiment:
             os.listdir(fuzzer_config_utils.get_fuzzer_configs_dir())
         ]
 
-        _initialize_experiment_in_db(self.config['experiment'], self.benchmarks,
+        _initialize_experiment_in_db(self.config['experiment'],
+                                     self.config['git_hash'], self.benchmarks,
                                      self.fuzzers, self.config['trials'])
+
         self.web_bucket = posixpath.join(self.config['cloud_web_bucket'],
                                          experiment_utils.get_experiment_name())
 
