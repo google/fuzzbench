@@ -1,0 +1,7 @@
+trials: 20
+max_total_time: 86400
+cloud_project: fuzzbench
+cloud_compute_zone: us-central1-a
+cloud_experiment_bucket: gs://fuzzbench-data
+cloud_web_bucket: gs://fuzzbench-reports
+cloud_sql_instance_connection_name: "fuzzbench:us-central1:postgres-experiment-db=tcp:5432"
