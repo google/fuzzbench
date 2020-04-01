@@ -18,6 +18,7 @@ jobs:
           - aflplusplus
           - aflplusplus_mopt
           - aflplusplus_noalloc
+          - aflplusplus_fortify
           - aflsmart
           - eclipser
           - entropic
