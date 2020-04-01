@@ -41,6 +41,7 @@ FUZZERS = ['fuzzer-a', 'fuzzer-b']
 BENCHMARKS = ['benchmark-1', 'benchmark-2']
 NUM_TRIALS = 4
 MAX_TOTAL_TIME = 100
+GIT_HASH = 'FAKE-GIT-HASH'
 
 SNAPSHOT_LOGGER = measurer.logger
 
@@ -118,7 +119,8 @@ def test_measure_all_trials(_, __, mocked_execute, db, fs):
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
 
     dispatcher._initialize_experiment_in_db(
-        experiment_utils.get_experiment_name(), BENCHMARKS, FUZZERS, NUM_TRIALS)
+        experiment_utils.get_experiment_name(), GIT_HASH, BENCHMARKS, FUZZERS,
+        NUM_TRIALS)
     trials = scheduler.get_pending_trials(
         experiment_utils.get_experiment_name()).all()
     for trial in trials:

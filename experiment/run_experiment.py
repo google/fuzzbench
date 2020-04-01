@@ -178,25 +178,6 @@ def get_git_hash():
     return output.strip().decode('utf-8')
 
 
-def start_experiment(experiment_name: str, config_filename: str,
-                     benchmarks: List[str], fuzzers: List[str],
-                     fuzzer_configs: List[str]):
-    """Start a fuzzer benchmarking experiment."""
-    check_no_local_changes()
-
-    validate_benchmarks(benchmarks)
-
-    config = read_and_validate_experiment_config(config_filename)
-    config['benchmarks'] = ','.join(benchmarks)
-    validate_experiment_name(experiment_name)
-    config['experiment'] = experiment_name
-    config['git_hash'] = get_git_hash()
-
-    config_dir = 'config'
-    filesystem.recreate_directory(config_dir)
-    experiment_config_filename = os.path.join(config_dir, 'experiment.yaml')
-
-
 def set_up_fuzzer_config_files(fuzzers, fuzzer_configs):
     """Set up config files for each fuzzer in |fuzzers| and each
     config file provided in |fuzzer_configs|."""
@@ -226,12 +207,15 @@ def start_experiment(experiment_name: str, config_filename: str,
                      benchmarks: List[str], fuzzers: List[str],
                      fuzzer_configs: List[str]):
     """Start a fuzzer benchmarking experiment."""
+    check_no_local_changes()
+
     validate_experiment_name(experiment_name)
     validate_benchmarks(benchmarks)
 
     config = read_and_validate_experiment_config(config_filename)
     config['benchmarks'] = ','.join(benchmarks)
     config['experiment'] = experiment_name
+    config['git_hash'] = get_git_hash()
 
     set_up_experiment_config_file(config)
     set_up_fuzzer_config_files(fuzzers, fuzzer_configs)
