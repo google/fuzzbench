@@ -200,8 +200,8 @@ def start_experiment(experiment_name: str, config_filename: str,
         with open(fuzzer_config, 'rb') as handle:
             hasher = hashlib.sha256(handle.read())
             basename = hasher.hexdigest() + '.yaml'
-            shutil.copy(
-                fuzzer_config, os.path.join(fuzzer_config_dir, basename))
+            shutil.copy(fuzzer_config, os.path.join(fuzzer_config_dir,
+                                                    basename))
     for fuzzer in fuzzers:
         if fuzzers.count(fuzzer) > 1:
             raise Exception('Fuzzer "%s" provided more than once.' % fuzzer)
