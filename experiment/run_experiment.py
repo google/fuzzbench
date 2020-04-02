@@ -16,6 +16,7 @@
 it needs to begin an experiment."""
 
 import argparse
+import hashlib
 import multiprocessing
 import os
 import re
@@ -194,7 +195,13 @@ def start_experiment(experiment_name: str, config_filename: str,
                             fuzzer_config)
         # Validate the fuzzer yaml attributes e.g. fuzzer, env, etc.
         validate_fuzzer_config(fuzzer_config)
-        shutil.copy(fuzzer_config, fuzzer_config_dir)
+
+        # Use the hash of the config data as a filename to avoid collisions.
+        with open(fuzzer_config, 'rb') as handle:
+            hasher = hashlib.sha256(handle.read())
+            basename = hasher.hexdigest() + '.yaml'
+            shutil.copy(
+                fuzzer_config, os.path.join(fuzzer_config_dir, basename))
     for fuzzer in fuzzers:
         if fuzzers.count(fuzzer) > 1:
             raise Exception('Fuzzer "%s" provided more than once.' % fuzzer)
@@ -321,14 +328,25 @@ def get_all_benchmarks():
     return all_benchmarks
 
 
-def get_all_fuzzers():
+def get_all_fuzzer_configs():
     """Returns the list of all fuzzers."""
+    configs = []
     fuzzers_dir = os.path.join(utils.ROOT_DIR, 'fuzzers')
-    return [
-        fuzzer for fuzzer in os.listdir(fuzzers_dir)
-        if (os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')) and
-            fuzzer != 'coverage')
-    ]
+    for fuzzer in os.listdir(fuzzers_dir):
+        # Don't create a configuration for the coverage build.
+        if fuzzer == 'coverage':
+            continue
+
+        # Ensure that this is a fuzzer directory.
+        if not os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')):
+            continue
+
+        # Load the config of each variant of this fuzzer.
+        variants_dir = os.path.join(fuzzers_dir, fuzzer, 'variants')
+        for variant in os.listdir(variants_dir):
+            configs.append(os.path.join(variants_dir, variant))
+
+    return configs
 
 
 def main():
@@ -371,12 +389,12 @@ def main():
     args = parser.parse_args()
 
     if not args.fuzzers and not args.fuzzer_configs:
-        fuzzers = get_all_fuzzers()
+        fuzzer_configs = get_all_fuzzer_configs()
     else:
-        fuzzers = args.fuzzers
+        fuzzer_configs = args.fuzzer_configs
 
     start_experiment(args.experiment_name, args.experiment_config,
-                     args.benchmarks, fuzzers, args.fuzzer_configs)
+                     args.benchmarks, args.fuzzers, fuzzer_configs)
     if not os.getenv('MANUAL_EXPERIMENT'):
         stop_experiment.stop_experiment(args.experiment_name,
                                         args.experiment_config)
