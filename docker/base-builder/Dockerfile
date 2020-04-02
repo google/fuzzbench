@@ -22,24 +22,16 @@ RUN apt-get update -y && apt-get install -y \
     automake \
     cmake \
     git \
-    golang \
     libarchive-dev \
-    libbfd-dev \
     libboost-dev \
-    libbz2-dev \
     libcairo2-dev \
     libdbus-1-dev \
     libfreetype6-dev \
-    libgcrypt20-dev \
     libglib2.0-dev \
-    libgss-dev \
-    liblzma-dev \
-    libssl-dev \
     libtool \
     libunwind-dev \
     libxml2-dev \
     nasm \
-    openssl \
     ragel \
     subversion \
     wget
