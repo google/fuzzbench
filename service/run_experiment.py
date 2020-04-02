@@ -24,29 +24,35 @@ from common import logs
 from common import utils
 from experiment import run_experiment
 
-experiment_config_file = os.path.join(utils.ROOT_DIR, 'service', 'experiment-config.yaml')
+EXPERIMENT_CONFIG_FILE = os.path.join(utils.ROOT_DIR, 'service',
+                                      'experiment-config.yaml')
+
 
 def get_experiment_name():
     """Returns the name of the experiment to run."""
-    tz = pytz.timezone('America/Los_Angeles')
-    time_now = datetime.datetime.now(tz)
+    timezone = pytz.timezone('America/Los_Angeles')
+    time_now = datetime.datetime.now(timezone)
     return time_now.strftime('%Y-%m-%d')
 
 
 def run_diff_experiment():
+    """Run a diff expeirment. This is an experiment that runs only on
+    fuzzers that have changed since the last experiment."""
     # TODO(metzman): Finish this.
     raise NotImplementedError('Diff experiments not implemented yet.')
 
 
 def run_full_experiment():
+    """Run a full experiment."""
     experiment_name = get_experiment_name()
     fuzzers = utils.get_all_fuzzers()
     benchmarks = utils.get_all_benchmarks()
-    run_experiment.start_experiment(
-        experiment_name, experiment_config_file, benchmarks, fuzzers, [])
+    run_experiment.start_experiment(experiment_name, EXPERIMENT_CONFIG_FILE,
+                                    benchmarks, fuzzers, [])
 
 
 def main():
+    """Run an experiment."""
     logs.initialize()
     parser = argparse.ArgumentParser(
         description='Run a full or diff experiment (if needed).')

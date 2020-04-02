@@ -39,7 +39,6 @@ _LICENSE_CHECK_EXTENSIONS = [
     '.proto',
     '.py',
     '.sh',
-    '.yaml',
 ]
 _LICENSE_CHECK_IGNORE_DIRECTORIES = [
     'alembic',
