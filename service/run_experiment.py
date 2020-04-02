@@ -15,6 +15,7 @@
 """Determines if an experiment should be run and runs one if necessary."""
 import argparse
 import datetime
+import os
 import sys
 
 import pytz
@@ -34,7 +35,7 @@ def get_experiment_name():
 
 def run_diff_experiment():
     # TODO(metzman): Finish this.
-    pass
+    raise NotImplementedError('Diff experiments not implemented yet.')
 
 
 def run_full_experiment():
