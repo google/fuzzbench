@@ -29,7 +29,7 @@ def get_experiment_name():
     """Returns the name of the experiment to run."""
     tz = pytz.timezone('America/Los_Angeles')
     time_now = datetime.datetime.now(tz)
-    return time_now.strftime('%Y-%M-%d')
+    return time_now.strftime('%Y-%m-%d')
 
 
 def run_diff_experiment():
