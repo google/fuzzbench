@@ -28,6 +28,9 @@ RUN wget https://lcamtuf.coredump.cx/afl/releases/afl-2.26b.tgz -O /afl-2.26b.tg
     tar xvzf /afl-2.26b.tgz -C / && \
     mv /afl-2.26b /afl && \
     cd /afl && \
+    git clone https://github.com/google/AFL.git /afl/recent_afl && \
+    cp /afl/recent_afl/*.c /afl/ && \
+    cp /afl/recent_afl/*.h /afl/ && \
     AFL_NO_X86=1 make
 
 # Set the env variables for LLVM passes and test units.
