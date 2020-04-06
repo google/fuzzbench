@@ -42,7 +42,6 @@ STANDARD_BENCHMARKS = [
     're2-2014-12-09',
     'vorbis-2017-12-11',
     'woff2-2016-05-06',
-    'wpantund-2018-02-27',
 ]
 
 
