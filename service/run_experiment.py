@@ -12,7 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Determines if an experiment should be run and runs one if necessary."""
+"""Determines if an experiment should be run and runs one if necessary.
+Note that this code uses a config file for experiments that is not generic.
+Thus, it only works on the official fuzzbench service."""
 import argparse
 import datetime
 import os
@@ -21,7 +23,10 @@ import sys
 import pytz
 
 from common import logs
+from common import benchmark_utils
+from common import fuzzer_utils
 from common import utils
+
 from experiment import run_experiment
 
 EXPERIMENT_CONFIG_FILE = os.path.join(utils.ROOT_DIR, 'service',
@@ -38,17 +43,17 @@ def get_experiment_name():
 def run_diff_experiment():
     """Run a diff expeirment. This is an experiment that runs only on
     fuzzers that have changed since the last experiment."""
-    # TODO(metzman): Finish this.
+    # TODO(metzman): Implement this.
     raise NotImplementedError('Diff experiments not implemented yet.')
 
 
 def run_full_experiment():
     """Run a full experiment."""
     experiment_name = get_experiment_name()
-    fuzzers = utils.get_all_fuzzers()
-    benchmarks = utils.get_all_benchmarks()
+    fuzzers = fuzzer_utils.get_all_fuzzers()
+    benchmarks = benchmark_utils.get_all_benchmarks()
     run_experiment.start_experiment(experiment_name, EXPERIMENT_CONFIG_FILE,
-                                    benchmarks, fuzzers, [])
+                                    benchmarks, fuzzers, fuzzer_configs=[])
 
 
 def main():

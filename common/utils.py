@@ -64,28 +64,3 @@ def file_hash(file_path):
             chunk = file_handle.read(chunk_size)
 
     return digest.hexdigest()
-
-
-def get_all_benchmarks():
-    """Returns the list of all benchmarks."""
-    benchmarks_dir = os.path.join(ROOT_DIR, 'benchmarks')
-    all_benchmarks = []
-    for benchmark in os.listdir(benchmarks_dir):
-        benchmark_path = os.path.join(benchmarks_dir, benchmark)
-        if os.path.isfile(os.path.join(benchmark_path, 'oss-fuzz.yaml')):
-            # Benchmark is an OSS-Fuzz benchmark.
-            all_benchmarks.append(benchmark)
-        elif os.path.isfile(os.path.join(benchmark_path, 'build.sh')):
-            # Benchmark is a standard benchmark.
-            all_benchmarks.append(benchmark)
-    return all_benchmarks
-
-
-def get_all_fuzzers():
-    """Returns the list of all fuzzers."""
-    fuzzers_dir = os.path.join(ROOT_DIR, 'fuzzers')
-    return [
-        fuzzer for fuzzer in os.listdir(fuzzers_dir)
-        if (os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')) and
-            fuzzer != 'coverage')
-    ]

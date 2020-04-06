@@ -25,8 +25,10 @@ import sys
 from typing import Dict, List
 import yaml
 
+from common import benchmark_utils
 from common import experiment_utils
 from common import filesystem
+from common import fuzzer_utils
 from common import gcloud
 from common import gsutil
 from common import logs
@@ -314,7 +316,7 @@ def main():
         description='Begin an experiment that evaluates fuzzers on one or '
         'more benchmarks.')
 
-    all_benchmarks = utils.get_all_benchmarks()
+    all_benchmarks = benchmark_utils.get_all_benchmarks()
 
     parser.add_argument('-b',
                         '--benchmarks',
@@ -346,7 +348,7 @@ def main():
     args = parser.parse_args()
 
     if not args.fuzzers and not args.fuzzer_configs:
-        fuzzers = utils.get_all_fuzzers()
+        fuzzers = fuzzer_utils.get_all_fuzzers()
     else:
         fuzzers = args.fuzzers
 

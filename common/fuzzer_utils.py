@@ -74,3 +74,13 @@ def validate(fuzzer):
         logs.error('Encountered "%s" while trying to import %s.', error,
                    module_name)
         return False
+
+
+def get_all_fuzzers():
+    """Returns the list of all fuzzers."""
+    fuzzers_dir = os.path.join(ROOT_DIR, 'fuzzers')
+    return [
+        fuzzer for fuzzer in os.listdir(fuzzers_dir)
+        if (os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')) and
+            fuzzer != 'coverage')
+    ]
