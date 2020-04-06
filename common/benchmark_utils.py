@@ -77,11 +77,7 @@ def validate(benchmark):
         logs.error('%s does not conform to %s pattern.', benchmark,
                    VALID_BENCHMARK_REGEX.pattern)
         return False
-    benchmark_dir = os.path.join(utils.ROOT_DIR, 'benchmarks', benchmark)
-    build_sh = os.path.join(benchmark_dir, 'build.sh')
-    oss_fuzz_config = os.path.join(benchmark_dir, 'oss-fuzz.yaml')
-    valid = os.path.exists(build_sh) or os.path.exists(oss_fuzz_config)
-    if valid:
+    if benchmark in get_all_benchmarks():
         return True
     logs.error('%s must have a build.sh or oss-fuzz.yaml.', benchmark)
     return False
@@ -89,7 +85,7 @@ def validate(benchmark):
 
 def get_all_benchmarks():
     """Returns the list of all benchmarks."""
-    benchmarks_dir = os.path.join(ROOT_DIR, 'benchmarks')
+    benchmarks_dir = os.path.join(utils.ROOT_DIR, 'benchmarks')
     all_benchmarks = []
     for benchmark in os.listdir(benchmarks_dir):
         benchmark_path = os.path.join(benchmarks_dir, benchmark)

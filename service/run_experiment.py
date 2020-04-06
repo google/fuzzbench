@@ -52,8 +52,11 @@ def run_full_experiment():
     experiment_name = get_experiment_name()
     fuzzers = fuzzer_utils.get_all_fuzzers()
     benchmarks = benchmark_utils.get_all_benchmarks()
-    run_experiment.start_experiment(experiment_name, EXPERIMENT_CONFIG_FILE,
-                                    benchmarks, fuzzers, fuzzer_configs=[])
+    run_experiment.start_experiment(experiment_name,
+                                    EXPERIMENT_CONFIG_FILE,
+                                    benchmarks,
+                                    fuzzers,
+                                    fuzzer_configs=[])
 
 
 def main():
