@@ -25,8 +25,10 @@ import sys
 from typing import Dict, List
 import yaml
 
+from common import benchmark_utils
 from common import experiment_utils
 from common import filesystem
+from common import fuzzer_utils
 from common import gcloud
 from common import gsutil
 from common import logs
@@ -429,31 +431,6 @@ class GoogleCloudDispatcher(BaseDispatcher):
                           zone=self.config['cloud_compute_zone'])
 
 
-def get_all_benchmarks():
-    """Returns the list of all benchmarks."""
-    benchmarks_dir = os.path.join(utils.ROOT_DIR, 'benchmarks')
-    all_benchmarks = []
-    for benchmark in os.listdir(benchmarks_dir):
-        benchmark_path = os.path.join(benchmarks_dir, benchmark)
-        if os.path.isfile(os.path.join(benchmark_path, 'oss-fuzz.yaml')):
-            # Benchmark is an OSS-Fuzz benchmark.
-            all_benchmarks.append(benchmark)
-        elif os.path.isfile(os.path.join(benchmark_path, 'build.sh')):
-            # Benchmark is a standard benchmark.
-            all_benchmarks.append(benchmark)
-    return all_benchmarks
-
-
-def get_all_fuzzers():
-    """Returns the list of all fuzzers."""
-    fuzzers_dir = os.path.join(utils.ROOT_DIR, 'fuzzers')
-    return [
-        fuzzer for fuzzer in os.listdir(fuzzers_dir)
-        if (os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')) and
-            fuzzer != 'coverage')
-    ]
-
-
 def get_dispatcher(config: Dict) -> BaseDispatcher:
     """Return a dispatcher object created from the right class (i.e. dispatcher
     factory)."""
@@ -470,7 +447,7 @@ def main():
         description='Begin an experiment that evaluates fuzzers on one or '
         'more benchmarks.')
 
-    all_benchmarks = get_all_benchmarks()
+    all_benchmarks = benchmark_utils.get_all_benchmarks()
 
     parser.add_argument('-b',
                         '--benchmarks',
@@ -502,7 +479,7 @@ def main():
     args = parser.parse_args()
 
     if not args.fuzzers and not args.fuzzer_configs:
-        fuzzers = get_all_fuzzers()
+        fuzzers = fuzzer_utils.get_all_fuzzers()
     else:
         fuzzers = args.fuzzers
 

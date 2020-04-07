@@ -17,7 +17,12 @@ jobs:
           - aflfast
           - aflplusplus
           - aflplusplus_mopt
-          - aflplusplus_noalloc
+          - aflplusplus_fast
+          - aflplusplus_coe
+          - aflplusplus_quad
+          - aflplusplus_lin
+          - aflplusplus_mmopt
+          - aflplusplus_rare
           - aflsmart
           - eclipser
           - entropic

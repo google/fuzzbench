@@ -25,6 +25,7 @@ OSS_FUZZ_BENCHMARKS = [
     'libpcap_fuzz_both',
     'mbedtls_fuzz_dtlsclient',
     'openssl_x509',
+    'proxygen_ProxygenHTTP1xFuzzer',
     'sqlite3_ossfuzz',
     'systemd_fuzz-link-parser',
     'zlib_zlib_uncompress_fuzzer',
@@ -42,7 +43,6 @@ STANDARD_BENCHMARKS = [
     're2-2014-12-09',
     'vorbis-2017-12-11',
     'woff2-2016-05-06',
-    'wpantund-2018-02-27',
 ]
 
 

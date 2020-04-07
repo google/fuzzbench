@@ -35,7 +35,6 @@ The table below was generated using benchmarks.py.
 | systemd_fuzz-link-parser    | fuzz-link-parser       | False           | 6                     | 53453                    | 5.91                 |
 | vorbis-2017-12-11           | fuzz-target            | False           | 1                     | 5022                     | 6.0                  |
 | woff2-2016-05-06            | fuzz-target            | False           | 62                    | 10923                    | 6.72                 |
-| wpantund-2018-02-27         | fuzz-target            | False           | 8                     | 28888                    | 7.35                 |
 | zlib_zlib_uncompress_fuzzer | zlib_uncompress_fuzzer | False           | 0                     | 875                      | 5.69                 |
 
 \*Number of program edges is the number of

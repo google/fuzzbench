@@ -148,6 +148,7 @@ def get_specified_benchmarks():
     return fuzzers
 
 
+# TODO(metzman): Fix failures caused by copying logs to GCS.
 class TestBuildChangedBenchmarksOrFuzzers:
     """Integration tests for integrations of changed fuzzers or benchmarks.
     Needs TEST_BUILD_CHANGED_BENCHMARKS or TEST_BUILD_CHANGED_FUZZERS to run."""
