@@ -157,7 +157,7 @@ def log(logger, severity, message, *args, extras=None):
     message = str(message)
     if utils.is_local():
         if extras:
-            message += '. Extras: ' + str(extras)
+            message += ' Extras: ' + str(extras)
         logging.log(severity, message, *args)
         return
     if logger is None:
