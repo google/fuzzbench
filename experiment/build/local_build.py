@@ -69,7 +69,6 @@ def build_coverage(benchmark):
 
 def copy_coverage_binaries(benchmark):
     """Copy coverage binaries in a local experiment."""
-    import pdb; pdb.set_trace()
     shared_coverage_binaries_dir = get_shared_coverage_binaries_dir()
     mount_arg = '{0}:{0}'.format(shared_coverage_binaries_dir)
     builder_image_url = benchmark_utils.get_builder_image_url(
