@@ -62,25 +62,25 @@ def build_coverage(benchmark):
     result = make(image_name)
     if result.retcode:
         return result
-    make_shared_coverage_binaries_volume()
+    make_shared_coverage_binaries_dir()
     copy_coverage_binaries(benchmark)
     return result
 
 
 def copy_coverage_binaries(benchmark):
     """Copy coverage binaries in a local experiment."""
-    shared_dir = get_shared_coverage_binaries_dir()
-    mount_arg = '{0}:{0}'.format(shared_dir)
+    shared_coverage_binaries_dir = get_shared_coverage_binaries_dir()
+    mount_arg = '{0}:{0}'.format(shared_coverage_binaries_dir)
     runner_image_url = benchmark_utils.get_runner_image_url(
         benchmark, 'coverage', environment.get('CLOUD_PROJECT'))
     if benchmark_utils.is_oss_fuzz(benchmark):
         runner_image_url = runner_image_url.replace('runners', 'builders')
     docker_name = benchmark_utils.get_docker_name(benchmark)
     coverage_build_archive = 'coverage-build-{}.tar.gz'.format(docker_name)
-    coverage_build_archive_shared_volume_path = os.path.join(
-        shared_coverage_binaries_volume, coverage_build_archive)
+    coverage_build_archive_shared_dir_path = os.path.join(
+        shared_coverage_binaries_dir, coverage_build_archive)
     command = 'cd /out; tar -czvf {} *'.format(
-        coverage_build_archive_shared_volume_path)
+        coverage_build_archive_shared_dir_path)
     new_process.execute([
         'docker', 'run', '-v', mount_arg, runner_image_url, '/bin/bash', '-c',
         command
@@ -89,7 +89,7 @@ def copy_coverage_binaries(benchmark):
     coverage_build_archive_gcs_path = posixpath.join(
         exp_path.gcs(coverage_binaries_dir), coverage_build_archive)
 
-    return gsutil.cp(coverage_build_archive_shared_volume_path,
+    return gsutil.cp(coverage_build_archive_shared_dir_path,
                      coverage_build_archive_gcs_path)
 
 

@@ -30,6 +30,7 @@ from common import experiment_path as exp_path
 from common import experiment_utils
 from common import filesystem
 from common import fuzzer_utils
+from common import utils
 from common import gsutil
 from common import logs
 

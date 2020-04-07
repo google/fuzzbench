@@ -17,7 +17,6 @@ import tempfile
 
 from common import experiment_path as exp_path
 from common import gsutil
-from common import logs
 
 
 def store_build_logs(build_config, build_result):

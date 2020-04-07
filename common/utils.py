@@ -18,8 +18,6 @@ import os
 import urllib.request
 import urllib.error
 
-from common import environment
-
 ROOT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 # pylint: disable=invalid-name
