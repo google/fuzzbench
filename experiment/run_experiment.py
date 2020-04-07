@@ -361,7 +361,6 @@ class LocalDispatcher:
             docker_image_url,
             '/bin/bash',
             '-c',
-            'echo ${CLOUD_EXPERIMENT_BUCKET}/${EXPERIMENT}/input && '
             'gsutil -m rsync -r '
             '"${CLOUD_EXPERIMENT_BUCKET}/${EXPERIMENT}/input" ${WORK} && '
             'source "/work/.venv/bin/activate" && '
@@ -412,7 +411,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
             '-v /var/run/docker.sock:/var/run/docker.sock '
             '--name=dispatcher-container '
             '{base_docker_tag}/dispatcher-image '
-            '/work/startup-dispatcher.sh || /bin/bash'
+            '/work/startup-dispatcher.sh'
         ).format(
             instance_name=self.instance_name,
             postgres_password=os.environ['POSTGRES_PASSWORD'],
