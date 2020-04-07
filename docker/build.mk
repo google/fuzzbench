@@ -16,7 +16,7 @@ FUZZERS    := $(notdir $(shell find fuzzers -mindepth 1 -maxdepth 1 -type d))
 BENCHMARKS := $(notdir $(shell find benchmarks -type f -name build.sh | xargs dirname))
 OSS_FUZZ_BENCHMARKS := $(notdir $(shell find benchmarks -type f -name oss-fuzz.yaml | xargs dirname))
 
-BASE_TAG := gcr.io/fuzzbench
+BASE_TAG ?= gcr.io/fuzzbench
 
 
 build-all: $(addsuffix -all, $(addprefix build-,$(FUZZERS)))
