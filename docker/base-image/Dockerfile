@@ -31,6 +31,7 @@ RUN apt-get update -y && apt-get install -y \
     libbz2-dev \
     liblzma-dev \
     libsqlite3-dev
+
 RUN cd /tmp/ && \
     curl -O https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz && \
     tar -xvf Python-$PYTHON_VERSION.tar.xz && \
