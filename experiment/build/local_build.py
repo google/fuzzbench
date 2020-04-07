@@ -73,8 +73,8 @@ def copy_coverage_binaries(benchmark):
     mount_arg = '{0}:{0}'.format(shared_coverage_binaries_dir)
     runner_image_url = benchmark_utils.get_runner_image_url(
         benchmark, 'coverage', environment.get('CLOUD_PROJECT'))
-    if benchmark_utils.is_oss_fuzz(benchmark):
-        runner_image_url = runner_image_url.replace('runners', 'builders')
+    # if benchmark_utils.is_oss_fuzz(benchmark):
+    #     runner_image_url = runner_image_url.replace('runners', 'builders')
     docker_name = benchmark_utils.get_docker_name(benchmark)
     coverage_build_archive = 'coverage-build-{}.tar.gz'.format(docker_name)
     coverage_build_archive_shared_dir_path = os.path.join(
