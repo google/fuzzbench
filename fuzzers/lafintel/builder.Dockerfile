@@ -29,6 +29,9 @@ RUN wget https://lcamtuf.coredump.cx/afl/releases/afl-2.26b.tgz -O /afl-2.26b.tg
     mv /afl-2.26b /afl && \
     cd /afl && \
     git clone https://github.com/google/AFL.git /afl/recent_afl && \
+    cd /afl/recent_afl && \ 
+    git checkout 8da80951dd7eeeb3e3b5a3bcd36c485045f40274 && \
+    cd /afl/ && \
     cp /afl/recent_afl/*.c /afl/ && \
     cp /afl/recent_afl/*.h /afl/ && \
     AFL_NO_X86=1 make
