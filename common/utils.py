@@ -50,11 +50,6 @@ def is_local():
     return _is_local
 
 
-def is_local_experiment():
-    """Returns True if running a local experiment."""
-    return bool(environment.get('LOCAL_EXPERIMENT'))
-
-
 def string_hash(obj):
     """Returns a SHA-1 hash of the object. Not used for security purposes."""
     return hashlib.sha1(str(obj).encode('utf-8')).hexdigest()

@@ -18,9 +18,9 @@ import subprocess
 import time
 from typing import List
 
+from common import experiment_utils
 from common import logs
 from common import new_process
-from common import utils
 
 # Constants for dispatcher specs.
 DISPATCHER_MACHINE_TYPE = 'n1-standard-96'
@@ -77,7 +77,7 @@ def create_instance(instance_name: str,
     """Creates a GCE instance with name, |instance_name|, type, |instance_type|
     and with optionally provided |metadata| and |startup_script|."""
 
-    if utils.is_local_experiment():
+    if experiment_utils.is_local_experiment():
         return run_local_instance(startup_script)
 
     command = [

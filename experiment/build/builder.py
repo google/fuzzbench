@@ -27,14 +27,15 @@ from typing import Callable, List, Tuple
 
 from common import benchmark_utils
 from common import experiment_path as exp_path
+from common import experiment_utils
 from common import filesystem
 from common import fuzzer_utils
 from common import gsutil
 from common import logs
-from common import utils
+
 from experiment.build import build_utils
 
-if not utils.is_local_experiment():
+if not experiment_utils.is_local_experiment():
     import experiment.build.gcb_build as buildlib
 else:
     import experiment.build.local_build as buildlib

@@ -412,7 +412,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
             '-v /var/run/docker.sock:/var/run/docker.sock '
             '--name=dispatcher-container '
             '{base_docker_tag}/dispatcher-image '
-            '/work/startup-dispatcher.sh'
+            '/work/startup-dispatcher.sh || /bin/bash'
         ).format(
             instance_name=self.instance_name,
             postgres_password=os.environ['POSTGRES_PASSWORD'],

@@ -33,7 +33,7 @@ logger = logs.Logger('builder')  # pylint: disable=invalid-name
 def make(*args):
     """Invoke |make| with |args| and return the result."""
     assert args
-    command = ['make'] + list(args)
+    command = ['make', '-j'] + list(args)
     return new_process.execute(command, cwd=utils.ROOT_DIR)
 
 
@@ -42,31 +42,35 @@ def build_base_images() -> Tuple[int, str]:
     return make('base-runner', 'base-builder')
 
 
+def get_shared_coverage_binaries_dir():
+    """Returns the shared coverage binaries directory."""
+    shared_volume = os.environ['SHARED_VOLUME']
+    return os.path.join(shared_volume, 'coverage-binaries')
+
+
+def make_shared_coverage_binaries_dir():
+    """Make the shared coverage binaries directory."""
+    shared_coverage_binaries_dir = get_shared_coverage_binaries_dir()
+    if os.path.exists(shared_coverage_binaries_dir):
+        return
+    os.mkdir(shared_coverage_binaries_dir)
+
+
 def build_coverage(benchmark):
     """Build (locally) coverage image for benchmark."""
     image_name = 'build-coverage-{}'.format(benchmark)
     result = make(image_name)
     if result.retcode:
         return result
-    local_copy_coverage_binaries(benchmark)
+    make_shared_coverage_binaries_volume()
+    copy_coverage_binaries(benchmark)
     return result
 
 
-def local_copy_coverage_binaries(benchmark):
+def copy_coverage_binaries(benchmark):
     """Copy coverage binaries in a local experiment."""
-    shared_volume = os.environ['SHARED_VOLUME']
-
-    shared_coverage_binaries_volume = os.path.join(shared_volume,
-                                                   'coverage-binaries')
-
-    # Use try-except to avoid a race by checking if it exists before
-    # creating it.
-    try:
-        os.mkdir(shared_coverage_binaries_volume)
-    except FileExistsError:
-        pass
-
-    mount_arg = '{0}:{0}'.format(shared_volume)
+    shared_dir = get_shared_coverage_binaries_dir()
+    mount_arg = '{0}:{0}'.format(shared_dir)
     runner_image_url = benchmark_utils.get_runner_image_url(
         benchmark, 'coverage', environment.get('CLOUD_PROJECT'))
     if benchmark_utils.is_oss_fuzz(benchmark):

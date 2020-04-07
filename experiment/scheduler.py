@@ -26,6 +26,7 @@ from common import experiment_utils
 from common import fuzzer_config_utils
 from common import gcloud
 from common import logs
+from common import experiment_utils
 from common import utils
 from common import yaml_utils
 from database import models
@@ -249,7 +250,7 @@ def render_startup_script_template(instance_name: str, benchmark: str,
             for k, v in fuzzer_config['env'].items()
         ])
 
-    local_experiment = utils.is_local_experiment()
+    local_experiment = experiment_utils.is_local_experiment()
     template = JINJA_ENV.get_template('runner-startup-script-template.sh')
     kwargs = {
         'instance_name': instance_name,

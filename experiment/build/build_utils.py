@@ -19,8 +19,6 @@ from common import experiment_path as exp_path
 from common import gsutil
 from common import logs
 
-logger = logs.Logger('builder')  # pylint: disable=invalid-name
-
 
 def store_build_logs(build_config, build_result):
     """Save build results in the build logs bucket."""
