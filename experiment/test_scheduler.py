@@ -97,7 +97,7 @@ do
 done
 
 docker run \\
---privileged --cpuset-cpus=0 --rm \\
+--privileged --cpus=1 --rm \\
 -e INSTANCE_NAME=r-test-experiment-9 \\
 -e FUZZER=fuzzer-a \\
 -e BENCHMARK={benchmark} \\

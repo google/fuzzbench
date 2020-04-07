@@ -22,7 +22,7 @@ do
 done{% endif %}
 
 docker run {% if local_experiment %}-v {{host_gcloud_config}}:/root/.config/gcloud {% endif %}\
---privileged --cpuset-cpus=0 --rm \
+--privileged --cpus=1 --rm \
 -e INSTANCE_NAME={{instance_name}} \
 -e FUZZER={{fuzzer}} \
 -e BENCHMARK={{benchmark}} \
