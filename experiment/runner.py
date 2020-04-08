@@ -156,7 +156,7 @@ def _unpack_clusterfuzz_seed_corpus(fuzz_target_path, corpus_directory):
               seed_corpus_archive_path)
 
 
-fuzzer_errored_out = False
+fuzzer_errored_out = False  # pylint:disable=invalid-name
 
 
 def run_fuzzer(max_total_time, log_filename):
@@ -211,7 +211,7 @@ def run_fuzzer(max_total_time, log_filename):
                                     env=fuzzer_environment)
 
     except subprocess.CalledProcessError:
-        global fuzzer_errored_out
+        global fuzzer_errored_out  # pylint:disable=invalid-name
         fuzzer_errored_out = True
         logs.error('Fuzz process returned nonzero.')
 
@@ -266,12 +266,6 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         args = (max_total_time, log_file)
         fuzz_thread = threading.Thread(target=run_fuzzer, args=args)
         fuzz_thread.start()
-
-        if environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
-            # Hack so that the fuzz_thread has some time to fail if something is
-            # wrong. Without this we will sleep for a long time before checking
-            # if the fuzz thread is alive.
-            time.sleep(5)
 
         while fuzz_thread.is_alive():
             self.sleep_until_next_sync()

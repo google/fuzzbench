@@ -18,6 +18,8 @@ import pytest
 
 from common import fuzzer_utils
 
+# pylint: disable=invalid-name,unused-argument
+
 
 def _get_fuzzer_module(fuzzer):
     """Get the module for |fuzzer|'s fuzzer.py."""
@@ -27,8 +29,11 @@ def _get_fuzzer_module(fuzzer):
 def _get_all_fuzzer_modules():
     """Returns the fuzzer.py modules for all fuzzers."""
     fuzzers = fuzzer_utils.get_all_fuzzers()
-    return [importlib.import_module(_get_fuzzer_module(fuzzer))
-            for fuzzer in fuzzers]
+    return [
+        importlib.import_module(_get_fuzzer_module(fuzzer))
+        for fuzzer in fuzzers
+    ]
+
 
 @pytest.mark.parametrize('fuzzer_module', _get_all_fuzzer_modules())
 def test_build_function_errors(fuzzer_module, fs):
@@ -42,6 +47,7 @@ def test_build_function_errors(fuzzer_module, fs):
     # so fail if we see one. If that is not the case than this assert
     # should be removed.
     assert not isinstance(error.value, TypeError)
+
 
 @pytest.mark.parametrize('fuzzer_module', _get_all_fuzzer_modules())
 def test_fuzz_function_errors(fuzzer_module, fs):
