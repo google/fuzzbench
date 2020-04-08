@@ -31,7 +31,7 @@ def build():
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration.
-    build_modes = ['instrim']
+    build_modes = ['cmplog']
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
 
