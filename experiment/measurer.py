@@ -38,7 +38,7 @@ from common import logs
 from common import utils
 from database import utils as db_utils
 from database import models
-from experiment import builder
+from experiment.build import builder
 from experiment import run_coverage
 from experiment import scheduler
 from third_party import sancov
@@ -67,6 +67,10 @@ def remote_dir_exists(directory: pathlib.Path) -> bool:
 
 def measure_loop(experiment: str, max_total_time: int):
     """Continuously measure trials for |experiment|."""
+    db_utils.initialize()
+    logs.initialize(default_extras={
+        'component': 'dispatcher',
+    })
     with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
         # Using Multiprocessing.Queue will fail with a complaint about
         # inheriting queue.
