@@ -24,8 +24,7 @@ def build():
     # With LibFuzzer we use -fsanitize=fuzzer-no-link for build CFLAGS and then
     # /usr/lib/libFuzzer.a as the FUZZER_LIB for the main fuzzing binary. This
     # allows us to link against a version of LibFuzzer that we specify.
-    utils.set_no_sanitizer_compilation_flags()
-    cflags = ['-O3', '-fsanitize=fuzzer-no-link']
+    cflags = ['-fsanitize=fuzzer-no-link']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
@@ -37,9 +36,15 @@ def build():
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
+    """Run fuzzer. Wrapper that uses the defaults when calling
+    run_fuzzer."""
+    run_fuzzer(input_corpus, output_corpus, target_binary)
+
+
+def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     """Run fuzzer."""
-    # Start up the binary directly for libFuzzer.
-    print('[run_fuzzer] Running target with libFuzzer')
+    if extra_flags is None:
+        extra_flags = []
 
     flags = [
         '-print_final_stats=1',
@@ -56,6 +61,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
         # using it will cause libFuzzer to find "crashes" no one cares about.
         '-detect_leaks=0',
     ]
+    flags += extra_flags
     if 'ADDITIONAL_ARGS' in os.environ:
         flags += os.environ['ADDITIONAL_ARGS'].split(' ')
     dictionary_path = utils.get_dictionary_path(target_binary)

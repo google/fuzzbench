@@ -39,7 +39,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
 
     flags = ['-L0']  # afl++ MOpt activation at once.
-    flags += ['-pfast']  # Fast scheduling.
+    flags += ['-prare']  # rare branch scheduling.
+    flags += ['-s123']  # fixed random seed.
     if os.path.exists(cmplog_target_binary):
         flags += ['-c', cmplog_target_binary]
     if 'ADDITIONAL_ARGS' in os.environ:

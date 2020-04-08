@@ -23,10 +23,9 @@ from fuzzers import utils
 
 
 def prepare_build_environment():
-    """Set environment variables used to build AFL-based fuzzers."""
-    utils.set_no_sanitizer_compilation_flags()
-
-    cflags = ['-O3', '-fsanitize-coverage=trace-pc-guard']
+    """Set environment variables used to build targets for AFL-based
+    fuzzers."""
+    cflags = ['-fsanitize-coverage=trace-pc-guard']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
@@ -74,7 +73,7 @@ def run_afl_fuzz(input_corpus,
     # Spawn the afl fuzzing process.
     # FIXME: Currently AFL will exit if it encounters a crashing input in seed
     # corpus (usually timeouts). Add a way to skip/delete such inputs and
-    # re-run AFL. This currently happens with a seed in wpantund benchmark.
+    # re-run AFL.
     print('[run_fuzzer] Running target with afl-fuzz')
     command = [
         './afl-fuzz',

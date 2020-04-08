@@ -31,14 +31,9 @@ def build():
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration.
-    build_modes = ['instrim', 'laf']
+    build_modes = ['instrim']
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
-
-    utils.set_no_sanitizer_compilation_flags()
-    cflags = ['-O3']
-    utils.append_flags('CFLAGS', cflags)
-    utils.append_flags('CXXFLAGS', cflags)
 
     if 'qemu' in build_modes:
         os.environ['CC'] = 'clang'
@@ -112,7 +107,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # os.environ['AFL_ALIGNED_ALLOC'] = '1' # align malloc to max_align_t
     # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
-    flags = []
+    flags = ['-p explore']  # modified MOpt scheduling.
     if os.path.exists(cmplog_target_binary):
         flags += ['-c', cmplog_target_binary]
     if 'ADDITIONAL_ARGS' in os.environ:
