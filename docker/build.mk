@@ -143,7 +143,6 @@ test-run-$(1)-$(2): .$(1)-$(2)-runner
     -e BENCHMARK=$(2) \
     -e MAX_TOTAL_TIME=20 \
     -e SNAPSHOT_PERIOD=10 \
-    -it \
     $(BASE_TAG)/runners/$(1)/$(2)
 
 debug-$(1)-$(2): .$(1)-$(2)-runner
@@ -254,7 +253,7 @@ test-run-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
     -e FUZZ_TARGET=$($(2)-fuzz-target) \
     -e MAX_TOTAL_TIME=20 \
     -e SNAPSHOT_PERIOD=10 \
-    -it $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name)
+    $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name)
 
 debug-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
 	docker run \
