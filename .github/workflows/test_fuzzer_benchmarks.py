@@ -79,7 +79,7 @@ def make_builds(benchmarks, fuzzer):
         if not result.returncode == 0:
             return False
         # Delete docker images so disk doesn't fill up.
-        # delete_docker_images()
+        delete_docker_images()
     return True
 
 

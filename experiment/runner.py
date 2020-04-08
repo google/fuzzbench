@@ -266,6 +266,11 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         args = (max_total_time, log_file)
         fuzz_thread = threading.Thread(target=run_fuzzer, args=args)
         fuzz_thread.start()
+        if environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
+            # Hack so that the fuzz_thread has some time to fail if something is
+            # wrong. Without this we will sleep for a long time before checking
+            # if the fuzz thread is alive.
+            time.sleep(5)
 
         while fuzz_thread.is_alive():
             self.sleep_until_next_sync()
