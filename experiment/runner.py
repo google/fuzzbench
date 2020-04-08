@@ -61,6 +61,8 @@ SEED_CORPUS_ARCHIVE_SUFFIX = '_seed_corpus.zip'
 
 File = namedtuple('File', ['path', 'modified_time', 'change_time'])
 
+fuzzer_errored_out = False  # pylint:disable=invalid-name
+
 
 def _clean_seed_corpus(seed_corpus_dir):
     """Moves seed corpus files from sub-directories into the corpus directory
@@ -154,9 +156,6 @@ def _unpack_clusterfuzz_seed_corpus(fuzz_target_path, corpus_directory):
 
     logs.info('Unarchived %d files from seed corpus %s.', idx,
               seed_corpus_archive_path)
-
-
-fuzzer_errored_out = False  # pylint:disable=invalid-name
 
 
 def run_fuzzer(max_total_time, log_filename):
