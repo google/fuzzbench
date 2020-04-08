@@ -150,7 +150,7 @@ echo core >/proc/sys/kernel/core_pattern
 
 
 docker run -v ~/.config/gcloud:/root/.config/gcloud \\
---privileged --cpuset-cpus=0 --rm \\
+--privileged --cpus=1 --rm \\
 -e INSTANCE_NAME=r-test-experiment-9 \\
 -e FUZZER=fuzzer-a \\
 -e BENCHMARK={benchmark} \\
