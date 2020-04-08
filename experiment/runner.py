@@ -156,6 +156,9 @@ def _unpack_clusterfuzz_seed_corpus(fuzz_target_path, corpus_directory):
               seed_corpus_archive_path)
 
 
+fuzzer_errored_out = False
+
+
 def run_fuzzer(max_total_time, log_filename):
     """Runs the fuzzer using its script. Logs stdout and stderr of the fuzzer
     script to |log_filename| if provided."""
@@ -208,6 +211,8 @@ def run_fuzzer(max_total_time, log_filename):
                                     env=fuzzer_environment)
 
     except subprocess.CalledProcessError:
+        global fuzzer_errored_out
+        fuzzer_errored_out = True
         logs.error('Fuzz process returned nonzero.')
 
 
@@ -467,6 +472,8 @@ def main():
             'trial_id': str(environment.get('TRIAL_ID')),
         })
     experiment_main()
+    if fuzzer_errored_out:
+        return 1
     return 0
 
 

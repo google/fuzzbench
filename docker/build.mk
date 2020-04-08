@@ -133,6 +133,18 @@ run-$(1)-$(2): .$(1)-$(2)-runner
     -it \
     $(BASE_TAG)/runners/$(1)/$(2)
 
+test-$(1)-$(2): .$(1)-$(2)-runner
+	docker run \
+    --cap-add SYS_NICE \
+    --cap-add SYS_PTRACE \
+    -e FUZZ_OUTSIDE_EXPERIMENT=1 \
+    -e TRIAL_ID=1 \
+    -e FUZZER=$(1) \
+    -e BENCHMARK=$(2) \
+    -e MAX_TOTAL_TIME=30 \
+    -it \
+    $(BASE_TAG)/runners/$(1)/$(2)
+
 debug-$(1)-$(2): .$(1)-$(2)-runner
 	docker run \
     --cap-add SYS_NICE \
@@ -228,6 +240,18 @@ run-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
     -e FUZZER=$(1) \
     -e BENCHMARK=$(2) \
     -e FUZZ_TARGET=$($(2)-fuzz-target) \
+    -it $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name)
+
+test-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
+	docker run \
+    --cap-add SYS_NICE \
+    --cap-add SYS_PTRACE \
+    -e FUZZ_OUTSIDE_EXPERIMENT=1 \
+    -e TRIAL_ID=1 \
+    -e FUZZER=$(1) \
+    -e BENCHMARK=$(2) \
+    -e FUZZ_TARGET=$($(2)-fuzz-target) \
+    -e MAX_TOTAL_TIME=30 \
     -it $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name)
 
 debug-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
