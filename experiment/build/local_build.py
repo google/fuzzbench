@@ -30,16 +30,15 @@ from experiment.build import build_utils
 logger = logs.Logger('builder')  # pylint: disable=invalid-name
 
 
-def make(*args):
-    """Invoke |make| with |args| and return the result."""
-    assert args
-    command = ['make', '-j'] + list(args)
+def make(targets):
+    """Invoke |make| with |targets| and return the result."""
+    command = ['make', '-j'] + targets
     return new_process.execute(command, cwd=utils.ROOT_DIR)
 
 
 def build_base_images() -> Tuple[int, str]:
     """Build base images locally."""
-    return make('base-runner', 'base-builder')
+    return make(['base-runner', 'base-builder'])
 
 
 def get_shared_coverage_binaries_dir():
@@ -59,7 +58,7 @@ def make_shared_coverage_binaries_dir():
 def build_coverage(benchmark):
     """Build (locally) coverage image for benchmark."""
     image_name = 'build-coverage-{}'.format(benchmark)
-    result = make(image_name)
+    result = make([image_name])
     if result.retcode:
         return result
     make_shared_coverage_binaries_dir()
@@ -94,4 +93,4 @@ def copy_coverage_binaries(benchmark):
 def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
     """Builds |benchmark| for |fuzzer|."""
     image_name = 'build-{}-{}'.format(fuzzer, benchmark)
-    make(image_name)
+    make([image_name])
