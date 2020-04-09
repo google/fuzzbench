@@ -18,11 +18,4 @@ build_lib() {
 
 build_lib
 
-# XXX FIX THIS
-if [[ ! -d $OUT/seeds ]]; then
-  mkdir $OUT/seeds
-#  cp BUILD/test/shaping/fonts/sha1sum/* $OUT/seeds/
-fi
-
-# XXX UNTESTED
-$CXX $CXXFLAGS -std=c++11 -I BUILD/libaudiofile/ audiofile_sfconvert_fuzz.c BUILD/libaudiofile/.libs/libaudiofile.a ./BUILD/libaudiofile/modules/.libs/libmodules.a ./BUILD/libaudiofile/alac/.libs/libalac.a  $FUZZER_LIB -o $FUZZ_TARGET
+$CXX $CXXFLAGS -std=c++11 -IBUILD -IBUILD/libaudiofile audiofile_sfconvert_fuzz.cc BUILD/libaudiofile/.libs/libaudiofile.a ./BUILD/libaudiofile/modules/.libs/libmodules.a ./BUILD/libaudiofile/alac/.libs/libalac.a  $FUZZER_LIB -o $FUZZ_TARGET
