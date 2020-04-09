@@ -287,11 +287,20 @@ copyaudiodata (AFfilehandle infile, AFfilehandle outfile, int trackid)
 	return success;
 }
 
+// Used to test that we still crash on the known_bugs
+#ifdef _HAVE_MAIN
+int
+main(int argc, char **argv)
+{
+	const char *inFileName = argv[1];
+
+#else
 extern "C"
 int
 LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
 	const char *inFileName = buf_to_file(data, size, "./input_file-XXXXXX");
+#endif
 	const char *outFileName = "./foo.mp3";
 
 	int outFileFormat = AF_FILE_AIFF;
