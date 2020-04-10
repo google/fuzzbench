@@ -39,11 +39,15 @@ extern "C"
 int
 delete_file(const char *pathname)
 {
+#ifdef _HAS_MAIN
+	return 0;
+#else
 	int ret = unlink(pathname);
 	if (ret == -1) {
 		warn("failed to delete \"%s\"", pathname);
 	}
 	return ret;
+#endif
 }
 
 extern "C"
@@ -302,7 +306,7 @@ copyaudiodata (AFfilehandle infile, AFfilehandle outfile, int trackid)
 }
 
 // Used to test that we still crash on the known_bugs
-#ifdef _HAVE_MAIN
+#ifdef _HAS_MAIN
 int
 main(int argc, char **argv)
 {
