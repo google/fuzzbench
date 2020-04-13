@@ -17,4 +17,4 @@ install:
 matrix:
   include:
     - name: "presubmit"
-      script: FORCE_LOCAL=True PYTHONPATH=. pytest -vv -k make presubmit
+      script: FORCE_LOCAL=True PYTHONPATH=. make presubmit
