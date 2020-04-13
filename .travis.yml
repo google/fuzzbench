@@ -59,13 +59,9 @@ matrix:
     - FUZZER=mopt BENCHMARK_TYPE=standard
     - FUZZER=mopt BENCHMARK_TYPE=oss-fuzz
 
-script: BENCHMARK_TYPE=standard
+script: 
+  python ci/test_build.py $BENCHMARK_TYPE $FUZZER
 
-script: BENCHMARK_TYPE=oss-fuzz
-  python ci/test_build.py $BENCHMARK_TYPE $FUZZER
- BENCHMARK_TYPE=standard
-  python ci/test_build.py $BENCHMARK_TYPE $FUZZER
- BENCHMARK_TYPE=oss-fuzz
 jobs:
   include: BENCHMARK_TYPE=standard
   bs:
