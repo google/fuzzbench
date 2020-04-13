@@ -31,7 +31,7 @@ def build():
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration.
-    build_modes = ['instrim']
+    build_modes = ['cfg']
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
 
@@ -47,9 +47,21 @@ def build():
             os.environ['AFL_LLVM_LAF_TRANSFORM_COMPARES'] = '1'
             os.environ['AFL_LLVM_LAF_SPLIT_COMPARES'] = '1'
 
+        if 'default' in build_modes:
+            os.environ['AFL_LLVM_INSTRUMENT'] = 'default'
+
+        if 'ctx' in build_modes:
+            os.environ['AFL_LLVM_INSTRUMENT'] = 'ctx'
+
+        if 'ngram-2' in build_modes:
+            os.environ['AFL_LLVM_INSTRUMENT'] = 'ngram-2'
+
+        if 'ngram-2' in build_modes:
+            os.environ['AFL_LLVM_INSTRUMENT'] = 'ngram-4'
+
         if 'instrim' in build_modes:
             # I avoid to put also AFL_LLVM_INSTRIM_LOOPHEAD
-            os.environ['AFL_LLVM_INSTRIM'] = '1'
+            os.environ['AFL_LLVM_INSTRUMENT'] = 'cfg'
             os.environ['AFL_LLVM_INSTRIM_SKIPSINGLEBLOCK'] = '1'
 
     os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
@@ -107,7 +119,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # os.environ['AFL_ALIGNED_ALLOC'] = '1' # align malloc to max_align_t
     # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
-    flags = ['-p', 'lin']
+    flags = ['-p', 'explore']
     if os.path.exists(cmplog_target_binary):
         flags += ['-c', cmplog_target_binary]
     if 'ADDITIONAL_ARGS' in os.environ:

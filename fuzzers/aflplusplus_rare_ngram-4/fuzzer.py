@@ -31,7 +31,7 @@ def build():
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration.
-    build_modes = ['default']
+    build_modes = ['ngram-4']
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
 
@@ -119,7 +119,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # os.environ['AFL_ALIGNED_ALLOC'] = '1' # align malloc to max_align_t
     # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
-    flags = ['-p', 'explore']
+    flags = ['-p', 'rare']
     if os.path.exists(cmplog_target_binary):
         flags += ['-c', cmplog_target_binary]
     if 'ADDITIONAL_ARGS' in os.environ:

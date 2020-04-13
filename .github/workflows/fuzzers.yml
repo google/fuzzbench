@@ -17,12 +17,21 @@ jobs:
           - aflfast
           - aflplusplus
           - aflplusplus_mopt
-          - aflplusplus_fast
-          - aflplusplus_coe
-          - aflplusplus_quad
-          - aflplusplus_lin
-          - aflplusplus_mmopt
-          - aflplusplus_rare
+          - aflplusplus_mopt_extra
+          - aflplusplus_explore_cfg
+          - aflplusplus_explore_ctx
+          - aflplusplus_explore_ngram-2
+          - aflplusplus_explore_ngram-4
+          - aflplusplus_mmopt_cfg
+          - aflplusplus_mmopt_ctx
+          - aflplusplus_mmopt_default
+          - aflplusplus_mmopt_ngram-2
+          - aflplusplus_mmopt_ngram-4
+          - aflplusplus_rare_cfg
+          - aflplusplus_rare_ctx
+          - aflplusplus_rare_default
+          - aflplusplus_rare_ngram-2
+          - aflplusplus_rare_ngram-4
           - aflsmart
           - eclipser
           - entropic
