@@ -16,90 +16,132 @@ before_install:
 
 matrix:
   include:
-    env:
-    - FUZZER=afl BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=afl BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=aflfast BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=aflfast BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=aflplusplus BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=aflplusplus BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=aflplusplus_mopt BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=aflplusplus_mopt BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=aflplusplus_fast BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=aflplusplus_fast BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=aflplusplus_coe BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=aflplusplus_coe BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=aflplusplus_quad BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=aflplusplus_quad BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=aflplusplus_lin BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=aflplusplus_lin BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=aflplusplus_mmopt BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=aflplusplus_mmopt BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=aflplusplus_rare BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=aflplusplus_rare BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=aflsmart BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=aflsmart BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=eclipser BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=eclipser BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=entropic BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=entropic BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=fairfuzz BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=fairfuzz BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=fastcgs BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=fastcgs BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=fastcgs_lm BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=fastcgs_lm BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=fastcgs_br BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=fastcgs_br BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=honggfuzz BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=honggfuzz BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=lafintel BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=lafintel BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=libfuzzer BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=libfuzzer BENCHMARK_TYPE=oss-fuzz
-    env:
-      - FUZZER=mopt BENCHMARK_TYPE=standard
-    env:
-      - FUZZER=mopt BENCHMARK_TYPE=oss-fuzz
+    - name: "afl standard"
+      env:
+        - FUZZER=afl BENCHMARK_TYPE=standard
+    - name: "afl oss-fuzz"
+      env:
+        - FUZZER=afl BENCHMARK_TYPE=oss-fuzz
+    - name: "aflfast standard"
+      env:
+        - FUZZER=aflfast BENCHMARK_TYPE=standard
+    - name: "aflfast oss-fuzz"
+      env:
+        - FUZZER=aflfast BENCHMARK_TYPE=oss-fuzz
+    - name: "aflplusplus standard"
+      env:
+        - FUZZER=aflplusplus BENCHMARK_TYPE=standard
+    - name: "aflplusplus oss-fuzz"
+      env:
+        - FUZZER=aflplusplus BENCHMARK_TYPE=oss-fuzz
+    - name: "aflplusplus_mopt standard"
+      env:
+        - FUZZER=aflplusplus_mopt BENCHMARK_TYPE=standard
+    - name: "aflplusplus_mopt oss-fuzz"
+      env:
+        - FUZZER=aflplusplus_mopt BENCHMARK_TYPE=oss-fuzz
+    - name: "aflplusplus_fast standard"
+      env:
+        - FUZZER=aflplusplus_fast BENCHMARK_TYPE=standard
+    - name: "aflplusplus_fast oss-fuzz"
+      env:
+        - FUZZER=aflplusplus_fast BENCHMARK_TYPE=oss-fuzz
+    - name: "aflplusplus_coe standard"
+      env:
+        - FUZZER=aflplusplus_coe BENCHMARK_TYPE=standard
+    - name: "aflplusplus_coe oss-fuzz"
+      env:
+        - FUZZER=aflplusplus_coe BENCHMARK_TYPE=oss-fuzz
+    - name: "aflplusplus_quad standard"
+      env:
+        - FUZZER=aflplusplus_quad BENCHMARK_TYPE=standard
+    - name: "aflplusplus_quad oss-fuzz"
+      env:
+        - FUZZER=aflplusplus_quad BENCHMARK_TYPE=oss-fuzz
+    - name: "aflplusplus_lin standard"
+      env:
+        - FUZZER=aflplusplus_lin BENCHMARK_TYPE=standard
+    - name: "aflplusplus_lin oss-fuzz"
+      env:
+        - FUZZER=aflplusplus_lin BENCHMARK_TYPE=oss-fuzz
+    - name: "aflplusplus_mmopt standard"
+      env:
+        - FUZZER=aflplusplus_mmopt BENCHMARK_TYPE=standard
+    - name: "aflplusplus_mmopt oss-fuzz"
+      env:
+        - FUZZER=aflplusplus_mmopt BENCHMARK_TYPE=oss-fuzz
+    - name: "aflplusplus_rare standard"
+      env:
+        - FUZZER=aflplusplus_rare BENCHMARK_TYPE=standard
+    - name: "aflplusplus_rare oss-fuzz"
+      env:
+        - FUZZER=aflplusplus_rare BENCHMARK_TYPE=oss-fuzz
+    - name: "aflsmart standard"
+      env:
+        - FUZZER=aflsmart BENCHMARK_TYPE=standard
+    - name: "aflsmart oss-fuzz"
+      env:
+        - FUZZER=aflsmart BENCHMARK_TYPE=oss-fuzz
+    - name: "eclipser standard"
+      env:
+        - FUZZER=eclipser BENCHMARK_TYPE=standard
+    - name: "eclipser oss-fuzz"
+      env:
+        - FUZZER=eclipser BENCHMARK_TYPE=oss-fuzz
+    - name: "entropic standard"
+      env:
+        - FUZZER=entropic BENCHMARK_TYPE=standard
+    - name: "entropic oss-fuzz"
+      env:
+        - FUZZER=entropic BENCHMARK_TYPE=oss-fuzz
+    - name: "fairfuzz standard"
+      env:
+        - FUZZER=fairfuzz BENCHMARK_TYPE=standard
+    - name: "fairfuzz oss-fuzz"
+      env:
+        - FUZZER=fairfuzz BENCHMARK_TYPE=oss-fuzz
+    - name: "fastcgs standard"
+      env:
+        - FUZZER=fastcgs BENCHMARK_TYPE=standard
+    - name: "fastcgs oss-fuzz"
+      env:
+        - FUZZER=fastcgs BENCHMARK_TYPE=oss-fuzz
+    - name: "fastcgs_lm standard"
+      env:
+        - FUZZER=fastcgs_lm BENCHMARK_TYPE=standard
+    - name: "fastcgs_lm oss-fuzz"
+      env:
+        - FUZZER=fastcgs_lm BENCHMARK_TYPE=oss-fuzz
+    - name: "fastcgs_br standard"
+      env:
+        - FUZZER=fastcgs_br BENCHMARK_TYPE=standard
+    - name: "fastcgs_br oss-fuzz"
+      env:
+        - FUZZER=fastcgs_br BENCHMARK_TYPE=oss-fuzz
+    - name: "honggfuzz standard"
+      env:
+        - FUZZER=honggfuzz BENCHMARK_TYPE=standard
+    - name: "honggfuzz oss-fuzz"
+      env:
+        - FUZZER=honggfuzz BENCHMARK_TYPE=oss-fuzz
+    - name: "lafintel standard"
+      env:
+        - FUZZER=lafintel BENCHMARK_TYPE=standard
+    - name: "lafintel oss-fuzz"
+      env:
+        - FUZZER=lafintel BENCHMARK_TYPE=oss-fuzz
+    - name: "libfuzzer standard"
+      env:
+        - FUZZER=libfuzzer BENCHMARK_TYPE=standard
+    - name: "libfuzzer oss-fuzz"
+      env:
+        - FUZZER=libfuzzer BENCHMARK_TYPE=oss-fuzz
+    - name: "mopt standard"
+      env:
+        - FUZZER=mopt BENCHMARK_TYPE=standard
+    - name: "mopt oss-fuzz"
+      env:
+        - FUZZER=mopt BENCHMARK_TYPE=oss-fuzz
 
 script: 
   python ci/test_build.py $BENCHMARK_TYPE $FUZZER
