@@ -17,4 +17,4 @@ install:
 matrix:
   include:
     - name: "presubmit"
-      script: make presubmit
+      script: PYTHONPATH=. pytest -vv -k test_ssh
