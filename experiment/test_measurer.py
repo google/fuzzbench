@@ -227,6 +227,9 @@ def create_measurer(experiment):
 class TestIntegrationMeasurement:
     """Integration tests for measurement."""
 
+    @pytest.mark.skip(
+        'Binary requires libarchive.so which may not be available on all '
+        'machines.')
     def test_measure_snapshot_coverage(self, create_measurer, db, experiment):
         """Integration test for measure_snapshot_coverage."""
         # Set up the coverage binary.

@@ -58,6 +58,9 @@ class TestIntegrationRunCoverage:
 
     COVERAGE_BINARY_PATH = os.path.join(TEST_DATA_PATH, 'fuzz-target')
 
+    @pytest.mark.skip(
+        'Binary requires glibc version which may not be available on all '
+        'machines.')
     def test_integration_do_coverage_run_crash(self, tmp_path):
         """Test that do_coverage_run returns crashing inputs."""
         units = _get_test_data_dir('crash-corpus')
@@ -71,6 +74,9 @@ class TestIntegrationRunCoverage:
         assert crashing_units == ['86f7e437faa5a7fce15d1ddcb9eaeaea377667b8']
         _assert_sancov_files(sancov_dir)
 
+    @pytest.mark.skip(
+        'Binary requires glibc version which may not be available on all '
+        'machines.')
     def test_integration_do_coverage_run_no_crash(self, tmp_path):
         """Test that do_coverage_run doesn't return crashing inputs when there
         are none."""
