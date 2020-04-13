@@ -63,10 +63,6 @@ script:
   python ci/test_build.py $BENCHMARK_TYPE $FUZZER
 
 jobs:
-  include: BENCHMARK_TYPE=standard
-  bs:
-  include: BENCHMARK_TYPE=oss-fuzz
+  include:
     - name: "presubmit"
       script: FORCE_LOCAL=True PYTHONPATH=. make presubmit BENCHMARK_TYPE=standard
-      - name: "presubmit"
-      script: FORCE_LOCAL=True PYTHONPATH=. make presubmit BENCHMARK_TYPE=oss-fuzz
