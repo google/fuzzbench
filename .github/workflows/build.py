@@ -72,7 +72,7 @@ def make_builds(benchmarks, fuzzer):
 
         # Then build.
         print('Building', build_target)
-        build_command = ['make', '-j', build_target]
+        build_command = ['make', 'RUNNING_ON_CI=yes', '-j', build_target]
         result = subprocess.run(build_command, check=False)
         if not result.returncode == 0:
             return False
