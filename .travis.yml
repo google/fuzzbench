@@ -15,41 +15,103 @@ before_install:
 #   - pip install -r requirements.txt
 
 matrix:
-  fuzzer:
-    - afl
-    - aflfast
-    - aflplusplus
-    - aflplusplus_mopt
-    - aflplusplus_fast
-    - aflplusplus_coe
-    - aflplusplus_quad
-    - aflplusplus_lin
-    - aflplusplus_mmopt
-    - aflplusplus_rare
-    - aflsmart
-    - eclipser
-    - entropic
-    - fairfuzz
-    - fastcgs
-    - fastcgs_lm
-    - fastcgs_br
-    - honggfuzz
-    - lafintel
-    - libfuzzer
-    - mopt
-
-  benchmark_type:
-    - oss-fuzz
-    - standard
-
   env:
-    FUZZER=${{ matrix.fuzzer }}
-    BENCHMARK_TYPE:=${{ matrix.benchmark_type }}
+    FUZZER=afl BENCHMARK_TYPE=standard
+  env:
+    FUZZER=afl BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=aflfast BENCHMARK_TYPE=standard
+  env:
+    FUZZER=aflfast BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=aflplusplus BENCHMARK_TYPE=standard
+  env:
+    FUZZER=aflplusplus BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=aflplusplus_mopt BENCHMARK_TYPE=standard
+  env:
+    FUZZER=aflplusplus_mopt BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=aflplusplus_fast BENCHMARK_TYPE=standard
+  env:
+    FUZZER=aflplusplus_fast BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=aflplusplus_coe BENCHMARK_TYPE=standard
+  env:
+    FUZZER=aflplusplus_coe BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=aflplusplus_quad BENCHMARK_TYPE=standard
+  env:
+    FUZZER=aflplusplus_quad BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=aflplusplus_lin BENCHMARK_TYPE=standard
+  env:
+    FUZZER=aflplusplus_lin BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=aflplusplus_mmopt BENCHMARK_TYPE=standard
+  env:
+    FUZZER=aflplusplus_mmopt BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=aflplusplus_rare BENCHMARK_TYPE=standard
+  env:
+    FUZZER=aflplusplus_rare BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=aflsmart BENCHMARK_TYPE=standard
+  env:
+    FUZZER=aflsmart BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=eclipser BENCHMARK_TYPE=standard
+  env:
+    FUZZER=eclipser BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=entropic BENCHMARK_TYPE=standard
+  env:
+    FUZZER=entropic BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=fairfuzz BENCHMARK_TYPE=standard
+  env:
+    FUZZER=fairfuzz BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=fastcgs BENCHMARK_TYPE=standard
+  env:
+    FUZZER=fastcgs BENCHMARK_TYPE=oss-fuzz
+  env:
+    FU BENCHMARK_TYPE=standardZZER=fastcgs_lm
+  env:
+    FUZZER=fastcgs_lm BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=fastcgs_br BENCHMARK_TYPE=standard
+  env:
+    FUZZER=fastcgs_br BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=honggfuzz BENCHMARK_TYPE=standard
+  env:
+    FUZZER=honggfuzz BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=lafintel BENCHMARK_TYPE=standard
+  env:
+    FUZZER=lafintel BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=libfuzzer BENCHMARK_TYPE=standard
+  env:
+    FUZZER=libfuzzer BENCHMARK_TYPE=oss-fuzz
+  env:
+    FUZZER=mopt BENCHMARK_TYPE=standard
+  env:
+    FUZZER=mopt BENCHMARK_TYPE=oss-fuzz
 
-script:
+script: BENCHMARK_TYPE=standard
+
+script: BENCHMARK_TYPE=oss-fuzz
   python ci/test_build.py $BENCHMARK_TYPE $FUZZER
-
+ BENCHMARK_TYPE=standard
+  python ci/test_build.py $BENCHMARK_TYPE $FUZZER
+ BENCHMARK_TYPE=oss-fuzz
 jobs:
-  include:
+  include: BENCHMARK_TYPE=standard
+  bs:
+  include: BENCHMARK_TYPE=oss-fuzz
     - name: "presubmit"
-      script: FORCE_LOCAL=True PYTHONPATH=. make presubmit
+      script: FORCE_LOCAL=True PYTHONPATH=. make presubmit BENCHMARK_TYPE=standard
+      - name: "presubmit"
+      script: FORCE_LOCAL=True PYTHONPATH=. make presubmit BENCHMARK_TYPE=oss-fuzz
