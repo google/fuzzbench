@@ -1,0 +1,19 @@
+language: python
+dist: xenial
+
+services:
+  - docker
+
+before_install:
+  - git fetch origin +refs/heads/$TRAVIS_BRANCH
+
+install:
+  - pip install -r infra/travis/requirements.txt
+
+
+matrix:
+  include:
+    - name: "presubmit"
+      install:
+        - pip install -r infra/dev-requirements.txt
+      script: PYTHONPATH=. python presubmit.py
