@@ -46,8 +46,8 @@ matrix:
     FUZZER: ${{ matrix.fuzzer }}
     BENCHMARK_TYPE: ${{ matrix.benchmark_type }}
 
-  script:
-    python ci/test_build.py $BENCHMARK_TYPE $FUZZER
+script:
+  python ci/test_build.py $BENCHMARK_TYPE $FUZZER
 
 jobs:
   include:
