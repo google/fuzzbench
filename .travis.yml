@@ -11,8 +11,8 @@ services:
 before_install:
   - git fetch origin +refs/heads/$TRAVIS_BRANCH
 
-install:
-  - pip install -r requirements.txt
+# install:
+#   - pip install -r requirements.txt
 
 matrix:
   fuzzer:
@@ -43,8 +43,8 @@ matrix:
     - standard
 
   env:
-    FUZZER: ${{ matrix.fuzzer }}
-    BENCHMARK_TYPE: ${{ matrix.benchmark_type }}
+    FUZZER=${{ matrix.fuzzer }}
+    BENCHMARK_TYPE:=${{ matrix.benchmark_type }}
 
 script:
   python ci/test_build.py $BENCHMARK_TYPE $FUZZER
