@@ -15,6 +15,41 @@ install:
   - pip install -r requirements.txt
 
 matrix:
+  fuzzer:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflplusplus_mopt
+    - aflplusplus_fast
+    - aflplusplus_coe
+    - aflplusplus_quad
+    - aflplusplus_lin
+    - aflplusplus_mmopt
+    - aflplusplus_rare
+    - aflsmart
+    - eclipser
+    - entropic
+    - fairfuzz
+    - fastcgs
+    - fastcgs_lm
+    - fastcgs_br
+    - honggfuzz
+    - lafintel
+    - libfuzzer
+    - mopt
+
+  benchmark_type:
+    - oss-fuzz
+    - standard
+
+  env:
+    FUZZER: ${{ matrix.fuzzer }}
+    BENCHMARK_TYPE: ${{ matrix.benchmark_type }}
+
+  script:
+    python ci/test_build.py $BENCHMARK_TYPE $FUZZER
+
+jobs:
   include:
     - name: "presubmit"
       script: FORCE_LOCAL=True PYTHONPATH=. make presubmit
