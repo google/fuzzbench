@@ -19,6 +19,8 @@ import os
 from unittest import mock
 import glob
 
+import pytest
+
 from experiment import run_coverage
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data',
