@@ -32,6 +32,7 @@ from common import fuzzer_utils
 from common import gcloud
 from common import gsutil
 from common import logs
+from common import new_process
 from common import utils
 from common import yaml_utils
 from experiment import stop_experiment
@@ -42,6 +43,8 @@ OSS_FUZZ_PROJECTS_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz',
                                      'projects')
 FUZZER_NAME_REGEX = re.compile('^[a-z0-9_]+$')
 EXPERIMENT_CONFIG_REGEX = re.compile('^[a-z0-9-]{0,30}$')
+
+CONFIG_DIR = 'config'
 
 
 def read_and_validate_experiment_config(config_filename: str) -> Dict:
@@ -154,6 +157,15 @@ def validate_experiment_name(experiment_name: str):
                         (experiment_name, EXPERIMENT_CONFIG_REGEX.pattern))
 
 
+def set_up_experiment_config_file(config):
+    """Set up the config file that will actually be used in the
+    experiment (not the one given to run_experiment.py)."""
+    filesystem.recreate_directory(CONFIG_DIR)
+    experiment_config_filename = os.path.join(CONFIG_DIR, 'experiment.yaml')
+    with open(experiment_config_filename, 'w') as experiment_config_file:
+        yaml.dump(config, experiment_config_file, default_flow_style=False)
+
+
 def check_no_local_changes():
     """Make sure that there are no uncommitted changes."""
     assert not subprocess.check_output(
@@ -168,27 +180,13 @@ def get_git_hash():
     return output.strip().decode('utf-8')
 
 
-def start_experiment(experiment_name: str, config_filename: str,
-                     benchmarks: List[str], fuzzers: List[str],
-                     fuzzer_configs: List[str]):
-    """Start a fuzzer benchmarking experiment."""
-    check_no_local_changes()
-
-    validate_benchmarks(benchmarks)
-
-    config = read_and_validate_experiment_config(config_filename)
-    config['benchmarks'] = ','.join(benchmarks)
-    validate_experiment_name(experiment_name)
-    config['experiment'] = experiment_name
-    config['git_hash'] = get_git_hash()
-
-    config_dir = 'config'
-    filesystem.recreate_directory(config_dir)
-    experiment_config_filename = os.path.join(config_dir, 'experiment.yaml')
-    with open(experiment_config_filename, 'w') as experiment_config_file:
-        yaml.dump(config, experiment_config_file, default_flow_style=False)
-
-    fuzzer_config_dir = os.path.join(config_dir, 'fuzzer-configs')
+def set_up_fuzzer_config_files(fuzzers, fuzzer_configs):
+    """Set up config files for each fuzzer in |fuzzers| and each
+    config file provided in |fuzzer_configs|."""
+    if not fuzzers and not fuzzer_configs:
+        raise Exception('Need to provide either a list of fuzzers or '
+                        'a list of fuzzer configs.')
+    fuzzer_config_dir = os.path.join(CONFIG_DIR, 'fuzzer-configs')
     filesystem.recreate_directory(fuzzer_config_dir)
     for fuzzer_config in fuzzer_configs:
         if fuzzer_configs.count(fuzzer_config) > 1:
@@ -206,17 +204,43 @@ def start_experiment(experiment_name: str, config_filename: str,
         with open(fuzzer_config_file_path, 'w') as file_handle:
             file_handle.write('fuzzer: ' + fuzzer)
 
+
+def start_experiment(experiment_name: str, config_filename: str,
+                     benchmarks: List[str], fuzzers: List[str],
+                     fuzzer_configs: List[str]):
+    """Start a fuzzer benchmarking experiment."""
+    check_no_local_changes()
+
+    validate_experiment_name(experiment_name)
+    validate_benchmarks(benchmarks)
+
+    config = read_and_validate_experiment_config(config_filename)
+    config['benchmarks'] = ','.join(benchmarks)
+    config['experiment'] = experiment_name
+    config['git_hash'] = get_git_hash()
+
+    set_up_experiment_config_file(config)
+    set_up_fuzzer_config_files(fuzzers, fuzzer_configs)
+
     # Make sure we can connect to database.
-    if 'POSTGRES_PASSWORD' not in os.environ:
-        raise Exception('Must set POSTGRES_PASSWORD environment variable.')
+    local_experiment = config.get('local_experiment', False)
+    if not local_experiment:
+        if 'POSTGRES_PASSWORD' not in os.environ:
+            raise Exception('Must set POSTGRES_PASSWORD environment variable.')
+        gcloud.set_default_project(config['cloud_project'])
 
-    gcloud.set_default_project(config['cloud_project'])
+    start_dispatcher(config, CONFIG_DIR)
 
-    dispatcher = Dispatcher(config)
-    if not os.getenv('MANUAL_EXPERIMENT'):
+
+def start_dispatcher(config: Dict, config_dir: str):
+    """Start the dispatcher instance and run the dispatcher code on it."""
+    dispatcher = get_dispatcher(config)
+    # Is dispatcher code being run manually (useful for debugging)?
+    manual_experiment = os.getenv('MANUAL_EXPERIMENT')
+    if not manual_experiment:
         dispatcher.create_async()
     copy_resources_to_bucket(config_dir, config)
-    if not os.getenv('MANUAL_EXPERIMENT'):
+    if not manual_experiment:
         dispatcher.start()
 
 
@@ -244,14 +268,112 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
     gsutil.rsync(config_dir, destination)
 
 
-class Dispatcher:
-    """Class representing the dispatcher instance."""
+class BaseDispatcher:
+    """Class representing the dispatcher."""
 
     def __init__(self, config: Dict):
         self.config = config
         self.instance_name = experiment_utils.get_dispatcher_instance_name(
             config['experiment'])
         self.process = None
+
+    def create_async(self):
+        """Creates the dispatcher asynchronously."""
+        raise NotImplementedError
+
+    def start(self):
+        """Start the experiment on the dispatcher."""
+        raise NotImplementedError
+
+
+class LocalDispatcher:
+    """Class representing the local dispatcher."""
+
+    def __init__(self, config: Dict):
+        self.config = config
+        self.instance_name = experiment_utils.get_dispatcher_instance_name(
+            config['experiment'])
+        self.process = None
+
+    def create_async(self):
+        """Noop in local experiments."""
+
+    def start(self):
+        """Start the experiment on the dispatcher."""
+        shared_volume_dir = os.path.abspath('shared-volume')
+        if not os.path.exists(shared_volume_dir):
+            os.mkdir(shared_volume_dir)
+        shared_volume_volume_arg = '{0}:{0}'.format(shared_volume_dir)
+        shared_volume_env_arg = 'SHARED_VOLUME={}'.format(shared_volume_dir)
+        sql_database_arg = 'SQL_DATABASE_URL=sqlite:///{}'.format(
+            os.path.join(shared_volume_dir, 'local.db'))
+
+        home = os.environ['HOME']
+        host_gcloud_config_arg = (
+            'HOST_GCLOUD_CONFIG={home}/{gcloud_config_dir}'.format(
+                home=home, gcloud_config_dir='.config/gcloud'))
+
+        base_docker_tag = experiment_utils.get_base_docker_tag(
+            self.config['cloud_project'])
+        set_instance_name_arg = 'INSTANCE_NAME={instance_name}'.format(
+            instance_name=self.instance_name)
+        set_experiment_arg = 'EXPERIMENT={experiment}'.format(
+            experiment=self.config['experiment'])
+        set_cloud_project_arg = 'CLOUD_PROJECT={cloud_project}'.format(
+            cloud_project=self.config['cloud_project'])
+        set_cloud_experiment_bucket_arg = (
+            'CLOUD_EXPERIMENT_BUCKET={cloud_experiment_bucket}'.format(
+                cloud_experiment_bucket=self.config['cloud_experiment_bucket']))
+        docker_image_url = '{base_docker_tag}/dispatcher-image'.format(
+            base_docker_tag=base_docker_tag)
+        volume_arg = '{home}/.config/gcloud:/root/.config/gcloud'.format(
+            home=home)
+        command = [
+            'docker',
+            'run',
+            '-ti',
+            '--rm',
+            '-v',
+            volume_arg,
+            '-v',
+            '/var/run/docker.sock:/var/run/docker.sock',
+            '-v',
+            shared_volume_volume_arg,
+            '-e',
+            shared_volume_env_arg,
+            '-e',
+            host_gcloud_config_arg,
+            '-e',
+            set_instance_name_arg,
+            '-e',
+            set_experiment_arg,
+            '-e',
+            set_cloud_project_arg,
+            '-e',
+            sql_database_arg,
+            '-e',
+            set_cloud_experiment_bucket_arg,
+            '-e',
+            'LOCAL_EXPERIMENT=True',
+            '--cap-add=SYS_PTRACE',
+            '--cap-add=SYS_NICE',
+            '--name=dispatcher-container',
+            docker_image_url,
+            '/bin/bash',
+            '-c',
+            'gsutil -m rsync -r '
+            '"${CLOUD_EXPERIMENT_BUCKET}/${EXPERIMENT}/input" ${WORK} && '
+            'source "/work/.venv/bin/activate" && '
+            'pip3 install -r "/work/src/requirements.txt" && '
+            'PYTHONPATH=/work/src python3 '
+            '/work/src/experiment/dispatcher.py || '
+            '/bin/bash'  # Open shell if experiment fails.
+        ]
+        return new_process.execute(command, write_to_stdout=True)
+
+
+class GoogleCloudDispatcher(BaseDispatcher):
+    """Class representing the dispatcher instance on Google Cloud."""
 
     def create_async(self):
         """Creates the instance asynchronously."""
@@ -306,6 +428,14 @@ class Dispatcher:
         return gcloud.ssh(self.instance_name,
                           command=command,
                           zone=self.config['cloud_compute_zone'])
+
+
+def get_dispatcher(config: Dict) -> BaseDispatcher:
+    """Return a dispatcher object created from the right class (i.e. dispatcher
+    factory)."""
+    if config.get('local_experiment'):
+        return LocalDispatcher(config)
+    return GoogleCloudDispatcher(config)
 
 
 def main():
