@@ -28,25 +28,7 @@ def build():
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    # Calculate CmpLog binary path from the instrumented target binary.
-    target_binary_directory = os.path.dirname(target_binary)
-    cmplog_target_binary_directory = (
-        aflplusplus_fuzzer.get_cmplog_build_directory(target_binary_directory))
-    target_binary_name = os.path.basename(target_binary)
-    cmplog_target_binary = os.path.join(cmplog_target_binary_directory,
-                                        target_binary_name)
-
-    afl_fuzzer.prepare_fuzz_environment(input_corpus)
-
-    flags = ['-L0']  # afl++ MOpt activation at once.
-    flags += ['-prare']  # rare branch scheduling.
-    flags += ['-s123']  # fixed random seed.
-    if os.path.exists(cmplog_target_binary):
-        flags += ['-c', cmplog_target_binary]
-    if 'ADDITIONAL_ARGS' in os.environ:
-        flags += os.environ['ADDITIONAL_ARGS'].split(' ')
-
-    afl_fuzzer.run_afl_fuzz(input_corpus,
+    aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
-                            additional_flags=flags)
+                            flags=("-L", "0"))

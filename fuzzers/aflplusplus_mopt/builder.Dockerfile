@@ -23,8 +23,8 @@ RUN apt-get update && \
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && \
-    git checkout d40866add2d44c88a40f6f55afa23f02162b0969 && \
+    cd /afl && git checkout dev && \
+    git checkout 8440aaea5a68669c71172c41712185d57c961046 && \
     AFL_NO_X86=1 make PYTHON_INCLUDE=/ && \
     cd libdislocator && make && cd .. && \
     cd llvm_mode && CXXFLAGS= make
