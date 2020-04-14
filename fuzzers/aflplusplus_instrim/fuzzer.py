@@ -25,6 +25,4 @@ def build():
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    aflplusplus_fuzzer.fuzz(input_corpus,
-                            output_corpus,
-                            target_binary)
+    aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
