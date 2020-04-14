@@ -18,7 +18,7 @@ jobs:
           - aflplusplus
           - aflplusplus_mopt
           - aflplusplus_cmplog
-          - aflplusplus_andrea
+          - aflplusplus_mopt_cmplog
           - aflsmart
           - eclipser
           - entropic
