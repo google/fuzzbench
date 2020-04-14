@@ -20,7 +20,6 @@ COPY patch.diff /
 RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
     cd /llvm-project && \
     git checkout d8981ce5b9f8caa567613b2bf5aa3095e0156130 && \
-    cd /llvm-project/compiler-rt/ && \
     patch -p1 < /patch.diff && \
     cd /llvm-project/compiler-rt/lib/fuzzer && \
     (for f in *.cpp; do \
