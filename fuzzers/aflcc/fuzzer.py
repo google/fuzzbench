@@ -27,7 +27,8 @@ def prepare_build_environment():
     """Set environment variables used to build benchmark."""
 
     # Update compiler flags for clang-3.8
-    # -lstdc++
+    utils.set_no_sanitizer_compilation_flags()
+
     cflags = ['-fPIC']
     cppflags = cflags + ['-I/usr/local/include/c++/v1/', '-stdlib=libc++', '-std=c++11']
     utils.append_flags('CFLAGS', cflags)
@@ -47,8 +48,9 @@ def build():
     utils.build_benchmark()
 
     print('[post_build] Extracting .bc file')
-    out_dir = os.environ['OUT']
-    fuzz_target = os.path.join(out_dir, 'fuzz-target')
+    fuzz_target = os.getenv('FUZZ_TARGET', None)
+    if fuzz_target is None:
+        raise valueError('FUZZ_TARGET is not defined')
     getbc_cmd = "/afl/aflc-get-bc {target}".format(target=fuzz_target)
     if 0 != os.system(getbc_cmd):
         raise ValueError("get-bc failed")
@@ -134,8 +136,15 @@ def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
 
-    # Note: dictionary automatically added by run_afl_fuzz
+    # Note: dictionary automatically added by run_fuzz()
+
+    # Use a dictionary for original afl as well
     print('[run_fuzzer] Running AFL for original binary')
+    src_file = "{target}-normalized-none-opt.dict".format(target=target_binary)
+    dst_file = "{target}-original.dict".format(target=target_binary)
+    shutil.copy(src_file, dst_file)
+    # instead of generating a new dict, just hack this one to be non-optimized to prvent AFL from aborting
+    os.system("sed -i 's/OPTIMIZED/NORMAL/g' {dict}".format(dict=dst_file))
     afl_fuzz_thread1 = threading.Thread(target=run_fuzz,
                                        args=(input_corpus, output_corpus,
                                              "{target}-original".format(target=target_binary), 
