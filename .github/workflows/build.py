@@ -25,7 +25,6 @@ OSS_FUZZ_BENCHMARKS = [
     'libpcap_fuzz_both',
     'mbedtls_fuzz_dtlsclient',
     'openssl_x509',
-    'proxygen_ProxygenHTTP1xFuzzer',
     'sqlite3_ossfuzz',
     'systemd_fuzz-link-parser',
     'zlib_zlib_uncompress_fuzzer',
@@ -73,7 +72,7 @@ def make_builds(benchmarks, fuzzer):
 
         # Then build.
         print('Building', build_target)
-        build_command = ['make', '-j', build_target]
+        build_command = ['make', 'RUNNING_ON_CI=yes', '-j', build_target]
         result = subprocess.run(build_command, check=False)
         if not result.returncode == 0:
             return False

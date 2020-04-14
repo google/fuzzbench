@@ -16,6 +16,8 @@
 import os
 import posixpath
 
+from common import environment
+
 # Time interval for collecting experiment data (e.g. corpus, crashes).
 SNAPSHOT_PERIOD = 15 * 60  # Seconds.
 
@@ -70,3 +72,8 @@ def get_base_docker_tag(cloud_project=None):
     if cloud_project is None:
         cloud_project = get_cloud_project()
     return posixpath.join('gcr.io', cloud_project)
+
+
+def is_local_experiment():
+    """Returns True if running a local experiment."""
+    return bool(environment.get('LOCAL_EXPERIMENT'))

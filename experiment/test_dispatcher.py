@@ -47,7 +47,7 @@ def mock_split_successes_and_failures(inputs, results):
 
 @pytest.fixture
 @mock.patch('multiprocessing.pool.ThreadPool', test_utils.MockPool)
-@mock.patch('experiment.builder.split_successes_and_failures',
+@mock.patch('experiment.build.builder.split_successes_and_failures',
             mock_split_successes_and_failures)
 def dispatcher_experiment(fs, db, experiment):
     """Creates a dispatcher.Experiment object."""

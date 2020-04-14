@@ -25,7 +25,7 @@ from common import experiment_utils
 from common import new_process
 from database import models
 from database import utils as db_utils
-from experiment import builder
+from experiment.build import build_utils
 from experiment import dispatcher
 from experiment import measurer
 from experiment import scheduler
@@ -41,6 +41,7 @@ FUZZERS = ['fuzzer-a', 'fuzzer-b']
 BENCHMARKS = ['benchmark-1', 'benchmark-2']
 NUM_TRIALS = 4
 MAX_TOTAL_TIME = 100
+GIT_HASH = 'FAKE-GIT-HASH'
 
 SNAPSHOT_LOGGER = measurer.logger
 
@@ -118,7 +119,8 @@ def test_measure_all_trials(_, __, mocked_execute, db, fs):
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
 
     dispatcher._initialize_experiment_in_db(
-        experiment_utils.get_experiment_name(), BENCHMARKS, FUZZERS, NUM_TRIALS)
+        experiment_utils.get_experiment_name(), GIT_HASH, BENCHMARKS, FUZZERS,
+        NUM_TRIALS)
     trials = scheduler.get_pending_trials(
         experiment_utils.get_experiment_name()).all()
     for trial in trials:
@@ -210,7 +212,7 @@ def get_test_data_path(*subpaths):
 @pytest.fixture
 def create_measurer(experiment):
     """Fixture that provides a function for creating a SnapshotMeasurer."""
-    os.mkdir(builder.get_coverage_binaries_dir())
+    os.mkdir(build_utils.get_coverage_binaries_dir())
 
     def _create_measurer(fuzzer, benchmark, trial_num):
         return measurer.SnapshotMeasurer(fuzzer, benchmark, trial_num,
@@ -232,7 +234,7 @@ class TestIntegrationMeasurement:
         coverage_binary_src = get_test_data_path(
             'test_measure_snapshot_coverage', benchmark + '-coverage')
         benchmark_cov_binary_dir = os.path.join(
-            builder.get_coverage_binaries_dir(), benchmark)
+            build_utils.get_coverage_binaries_dir(), benchmark)
 
         os.makedirs(benchmark_cov_binary_dir)
         coverage_binary_dst_dir = os.path.join(benchmark_cov_binary_dir,
