@@ -16,7 +16,23 @@ jobs:
           - afl
           - aflfast
           - aflplusplus
+          - aflplusplus_cmplog
           - aflplusplus_mopt
+          - aflplusplus_mopt_cmplog
+          - aflplusplus_ctx
+          - aflplusplus_ctx_mmopt
+          - aflplusplus_ctx_rare
+          - aflplusplus_instrim
+          - aflplusplus_instrim_mmopt
+          - aflplusplus_instrim_rare
+          - aflplusplus_mmopt
+          - aflplusplus_ngram2
+          - aflplusplus_ngram2_mmopt
+          - aflplusplus_ngram2_rare
+          - aflplusplus_ngram4
+          - aflplusplus_ngram4_mmopt
+          - aflplusplus_ngram4_rare
+          - aflplusplus_rare
           - aflsmart
           - eclipser
           - entropic

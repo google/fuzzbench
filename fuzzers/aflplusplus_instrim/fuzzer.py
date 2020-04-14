@@ -14,6 +14,7 @@
 """Integration code for AFLplusplus fuzzer."""
 
 import os
+import shutil
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
@@ -23,12 +24,9 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 def build():
     """Build benchmark."""
-    aflplusplus_fuzzer.build()
+    aflplusplus_fuzzer.build("instrim")
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    aflplusplus_fuzzer.fuzz(input_corpus,
-                            output_corpus,
-                            target_binary,
-                            flags=("-L", "0"))
+    aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, target_binary)

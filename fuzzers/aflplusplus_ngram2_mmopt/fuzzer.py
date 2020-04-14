@@ -23,7 +23,7 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 def build():
     """Build benchmark."""
-    aflplusplus_fuzzer.build()
+    aflplusplus_fuzzer.build("ngram2")
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
@@ -31,4 +31,4 @@ def fuzz(input_corpus, output_corpus, target_binary):
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
-                            flags=("-L", "0"))
+                            flags=("-p", "mmopt"))

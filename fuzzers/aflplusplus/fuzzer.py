@@ -27,13 +27,27 @@ def get_cmplog_build_directory(target_directory):
     return os.path.join(target_directory, 'cmplog')
 
 
-def build():
+def build(*args):
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration.
-    build_modes = ['instrim']
+    build_modes = list(args)
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
+
+    # Enable context sentitivity for LLVM mode
+    if 'ctx' in build_modes:
+        os.environ['AFL_LLVM_CTX'] = '1'
+
+    # Enable N-gram coverage for LLVM mode
+    if 'ngram2' in build_modes:
+        os.environ['AFL_LLVM_NGRAM_SIZE'] = '2'
+    elif 'ngram4' in build_modes:
+        os.environ['AFL_LLVM_NGRAM_SIZE'] = '4'
+    elif 'ngram8' in build_modes:
+        os.environ['AFL_LLVM_NGRAM_SIZE'] = '8'
+    elif 'ngram16' in build_modes:
+        os.environ['AFL_LLVM_NGRAM_SIZE'] = '16'
 
     if 'qemu' in build_modes:
         os.environ['CC'] = 'clang'
@@ -46,6 +60,7 @@ def build():
             os.environ['AFL_LLVM_LAF_SPLIT_SWITCHES'] = '1'
             os.environ['AFL_LLVM_LAF_TRANSFORM_COMPARES'] = '1'
             os.environ['AFL_LLVM_LAF_SPLIT_COMPARES'] = '1'
+            os.environ['AFL_LLVM_LAF_SPLIT_FLOATS'] = '1'
 
         if 'instrim' in build_modes:
             # I avoid to put also AFL_LLVM_INSTRIM_LOOPHEAD
@@ -92,7 +107,7 @@ def build():
     shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
 
 
-def fuzz(input_corpus, output_corpus, target_binary):
+def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):
     """Run fuzzer."""
     # Calculate CmpLog binary path from the instrumented target binary.
     target_binary_directory = os.path.dirname(target_binary)
@@ -107,7 +122,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # os.environ['AFL_ALIGNED_ALLOC'] = '1' # align malloc to max_align_t
     # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
-    flags = []
+    flags = list(flags)
     if os.path.exists(cmplog_target_binary):
         flags += ['-c', cmplog_target_binary]
     if 'ADDITIONAL_ARGS' in os.environ:
