@@ -15,7 +15,6 @@
 
 . $(dirname $0)/../common.sh
 
-
 #
 # XXX There is no hash to check. Git repo for this only goes back to 1.9x.
 #
