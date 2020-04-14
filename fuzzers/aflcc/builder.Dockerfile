@@ -34,14 +34,13 @@ ENV AFL_CONVERT_COMPARISON_TYPE=NONE
 ENV AFL_COVERAGE_TYPE=ORIGINAL
 ENV AFL_BUILD_TYPE=FUZZING
 ENV AFL_DICT_TYPE=NORMAL
-# TODO: update of recompile
 ENV LLVM_CONFIG=llvm-config-3.8
 
+
 # Download and compile aflcc.
-# TODO: update of recompile
 RUN git clone https://github.com/Samsung/afl_cc.git /afl && \
     cd /afl && \
-    git checkout e4bed7e1113bcdfc3605b7e015a11b06604f02a3 && \
+    git checkout nodebug && \
     AFL_NO_X86=1 make && \
     cd /afl/llvm_mode && \
     CC=clang-3.8 CXX=clang++-3.8 CFLAGS= CXXFLAGS= make
@@ -50,15 +49,16 @@ RUN git clone https://github.com/Samsung/afl_cc.git /afl && \
 RUN cd /afl && \
     sh ./setup-aflc-gclang.sh
 
-RUN apt-get install -y p7zip-full vim
+#RUN apt-get install -y p7zip-full vim
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
 ENV CC=/afl/aflc-gclang
 ENV CXX=/afl/aflc-gclang++
 COPY aflcc_mock.c /aflcc_mock.c
-# TODO: update of recompile
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/master/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
-    $CXX -I/usr/local/include/c++/v1/ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp && \
-    ar r /libAFL.a afl_driver.o /afl/afl-llvm-rt.o && \
+    sed -i -e '/decide_deferred_forkserver/,+8d' /afl/afl_driver.cpp && \
+    $CXX -I/usr/local/include/c++/v1/ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp -o /afl/afl_driver.o && \
+    ar r /libAFL.a /afl/afl_driver.o && \
     clang-3.8 -O2 -c -fPIC /aflcc_mock.c -o /aflcc_mock.o && \
     clang-3.8 -shared -o /libAflccMock.so /aflcc_mock.o
+    

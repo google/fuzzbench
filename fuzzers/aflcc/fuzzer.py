@@ -15,6 +15,8 @@
 
 import shutil
 import os
+import threading
+import subprocess
 
 from fuzzers import utils
 
@@ -25,6 +27,7 @@ def prepare_build_environment():
     """Set environment variables used to build benchmark."""
 
     # Update compiler flags for clang-3.8
+    # -lstdc++
     cflags = ['-fPIC']
     cppflags = cflags + ['-I/usr/local/include/c++/v1/', '-stdlib=libc++', '-std=c++11']
     utils.append_flags('CFLAGS', cflags)
@@ -34,7 +37,7 @@ def prepare_build_environment():
     os.environ['LLVM_CONFIG'] = 'llvm-config-3.8'
     os.environ['CC'] = '/afl/aflc-gclang'
     os.environ['CXX'] = '/afl/aflc-gclang++'
-    os.environ['FUZZER_LIB'] = '/libAFL.a -L / -lAflccMock'
+    os.environ['FUZZER_LIB'] = '/libAFL.a -L/ -lAflccMock -lpthread'
 
 
 def build():
@@ -52,13 +55,15 @@ def build():
 
     # create the different build types
     os.environ['AFL_BUILD_TYPE'] = 'FUZZING'
+    cppflags = ' '.join(['-I/usr/local/include/c++/v1/', '-stdlib=libc++', '-std=c++11'])
+    ldflags = ' '.join(['-lpthread', '-lm', ' -lz'])
 
     # the original afl binary
     print('[post_build] Generating original afl build')
     os.environ['AFL_COVERAGE_TYPE'] = 'ORIGINAL'
     os.environ['AFL_CONVERT_COMPARISON_TYPE'] = 'NONE'
     os.environ['AFL_DICT_TYPE'] = 'NORMAL'
-    bin1_cmd = "{compiler} -O3 {target}.bc -o {target}-original".format(compiler='/afl/aflc-clang-fast++', target=fuzz_target)
+    bin1_cmd = "{compiler} {flags} -O3 {target}.bc -o {target}-original {ldflags}".format(compiler='/afl/aflc-clang-fast++', flags=cppflags, target=fuzz_target, ldflags=ldflags)
     if 0 != os.system(bin1_cmd):
         raise ValueError("command '{command}' failed".format(command=bin1_cmd))
 
@@ -67,7 +72,7 @@ def build():
     os.environ['AFL_COVERAGE_TYPE'] = 'ORIGINAL'
     os.environ['AFL_CONVERT_COMPARISON_TYPE'] = 'NONE'
     os.environ['AFL_DICT_TYPE'] = 'OPTIMIZED'
-    bin2_cmd = "{compiler} {target}.bc -o {target}-normalized-none-opt".format(compiler='/afl/aflc-clang-fast++', target=fuzz_target)
+    bin2_cmd = "{compiler} {flags} {target}.bc -o {target}-normalized-none-opt {ldflags}".format(compiler='/afl/aflc-clang-fast++', flags=cppflags, target=fuzz_target, ldflags=ldflags)
     if 0 != os.system(bin2_cmd):
         raise ValueError("command '{command}' failed".format(command=bin2_cmd))
 
@@ -76,7 +81,7 @@ def build():
     os.environ['AFL_COVERAGE_TYPE'] = 'NO_COLLISION'
     os.environ['AFL_CONVERT_COMPARISON_TYPE'] = 'ALL'
     os.environ['AFL_DICT_TYPE'] = 'OPTIMIZED'
-    bin3_cmd = "{compiler} {target}.bc -o {target}-no-collision-all-opt".format(compiler='/afl/aflc-clang-fast++', target=fuzz_target)
+    bin3_cmd = "{compiler} {flags} {target}.bc -o {target}-no-collision-all-opt {ldflags}".format(compiler='/afl/aflc-clang-fast++', flags=cppflags, target=fuzz_target, ldflags=ldflags)
     if 0 != os.system(bin3_cmd):
         raise ValueError("command '{command}' failed".format(command=bin3_cmd))
 
@@ -85,13 +90,66 @@ def build():
     shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
 
 
+def run_fuzz(input_corpus,
+                 output_corpus,
+                 target_binary,
+                 additional_flags=None,
+                 hide_output=False):
+    """Run afl-fuzz."""
+    # Spawn the afl fuzzing process.
+    # FIXME: Currently AFL will exit if it encounters a crashing input in seed
+    # corpus (usually timeouts). Add a way to skip/delete such inputs and
+    # re-run AFL.
+    print('[run_fuzzer] Running target with afl-fuzz')
+    command = [
+        './afl-fuzz',
+        '-i',
+        input_corpus,
+        '-o',
+        output_corpus,
+        # Use no memory limit as ASAN doesn't play nicely with one.
+        '-m',
+        'none'
+    ]
+    if additional_flags:
+        command.extend(additional_flags)
+    dictionary_path = utils.get_dictionary_path(target_binary)
+    if dictionary_path:
+        command.extend(['-x', dictionary_path])
+    command += [
+        '--',
+        target_binary,
+        # Pass INT_MAX to afl the maximize the number of persistent loops it
+        # performs.
+        '2147483647'
+    ]
+    print('[run_fuzzer] Running command: ' + ' '.join(command))
+    output_stream = subprocess.DEVNULL if hide_output else None
+    subprocess.call(command, stdout=output_stream, stderr=output_stream)
+
+
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
 
-    # print('[run_fuzzer] Running AFL for binary1')
-    # afl_fuzz_thread = threading.Thread(target=afl_fuzzer.run_afl_fuzz,
-    #                                    args=(input_corpus, output_corpus,
-    #                                          target_binary, ['-S',
-    #                                                          'afl-slave']))
-    # afl_fuzz_thread.start()
+    # Note: dictionary automatically added by run_afl_fuzz
+    print('[run_fuzzer] Running AFL for original binary')
+    afl_fuzz_thread1 = threading.Thread(target=run_fuzz,
+                                       args=(input_corpus, output_corpus,
+                                             "{target}-original".format(target=target_binary), 
+                                             ['-S', 'afl-slave-original']))
+    afl_fuzz_thread1.start()
+
+    print('[run_fuzzer] Running AFL for normalized and optimized dictionary')
+    afl_fuzz_thread2 = threading.Thread(target=run_fuzz,
+                                       args=(input_corpus, output_corpus,
+                                             "{target}-normalized-none-opt".format(target=target_binary), 
+                                             ['-S', 'afl-slave-normalized-opt']))
+    afl_fuzz_thread2.start()
+
+    print('[run_fuzzer] Running AFL for FBSP and optimized dictionary')
+    run_fuzz(input_corpus,
+                        output_corpus,
+                        "{target}-no-collision-all-opt".format(target=target_binary), 
+                        ['-S', 'afl-slave-no-collision-all-opt'],
+                        hide_output=False)
