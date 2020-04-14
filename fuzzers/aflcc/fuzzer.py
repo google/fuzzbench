@@ -53,11 +53,13 @@ def build():
     if 0 != os.system(getbc_cmd):
         raise ValueError("get-bc failed")
 
+    # set the flags. ldflags is here temporarily until the benchmarks are cleaned up and standalone
+    cppflags = ' '.join(['-I/usr/local/include/c++/v1/', '-stdlib=libc++', '-std=c++11'])
+    ldflags = ' '.join(['-lpthread', '-lm', ' -lz', '-larchive'])
+
     # create the different build types
     os.environ['AFL_BUILD_TYPE'] = 'FUZZING'
-    cppflags = ' '.join(['-I/usr/local/include/c++/v1/', '-stdlib=libc++', '-std=c++11'])
-    ldflags = ' '.join(['-lpthread', '-lm', ' -lz'])
-
+    
     # the original afl binary
     print('[post_build] Generating original afl build')
     os.environ['AFL_COVERAGE_TYPE'] = 'ORIGINAL'
@@ -137,19 +139,19 @@ def fuzz(input_corpus, output_corpus, target_binary):
     afl_fuzz_thread1 = threading.Thread(target=run_fuzz,
                                        args=(input_corpus, output_corpus,
                                              "{target}-original".format(target=target_binary), 
-                                             ['-S', 'afl-slave-original']))
+                                             ['-S', 'slave-original']))
     afl_fuzz_thread1.start()
 
     print('[run_fuzzer] Running AFL for normalized and optimized dictionary')
     afl_fuzz_thread2 = threading.Thread(target=run_fuzz,
                                        args=(input_corpus, output_corpus,
                                              "{target}-normalized-none-opt".format(target=target_binary), 
-                                             ['-S', 'afl-slave-normalized-opt']))
+                                             ['-S', 'slave-normalized-opt']))
     afl_fuzz_thread2.start()
 
     print('[run_fuzzer] Running AFL for FBSP and optimized dictionary')
     run_fuzz(input_corpus,
                         output_corpus,
                         "{target}-no-collision-all-opt".format(target=target_binary), 
-                        ['-S', 'afl-slave-no-collision-all-opt'],
+                        ['-S', 'slave-no-collision-all-opt'],
                         hide_output=False)
