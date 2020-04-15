@@ -19,6 +19,7 @@ import unittest
 
 import pytest
 
+from common import fuzzer_utils
 from experiment import run_experiment
 
 BENCHMARKS_DIR = os.path.abspath(
@@ -161,6 +162,13 @@ def test_validate_fuzzer_config():
         config['env'] = {'a': 'b'}
         run_experiment.validate_fuzzer_config(config)
     assert 'must be a list' in str(exception.value)
+
+
+def test_variant_configs_valid():
+    """Ensure that all variant configs (variants.yaml files) are valid."""
+    fuzzer_configs = fuzzer_utils.get_fuzzer_configs()
+    for config in fuzzer_configs:
+        run_experiment.validate_fuzzer_config(config)
 
 
 def test_validate_fuzzer():
