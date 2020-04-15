@@ -134,31 +134,33 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
                     read_and_validate_experiment_config('config_file'))
 
 
-@mock.patch('common.yaml_utils.read')
-def test_validate_fuzzer_config(mock_read):
+def test_validate_fuzzer_config():
     """Tests that validate_fuzzer_config says that a valid fuzzer config name is
     valid and that an invalid one is not."""
-    mock_read.return_value = {
-        'fuzzer': 'afl',
-        'variant_name': 'name',
-        'env': []
-    }
-    run_experiment.validate_fuzzer_config('test_fuzzer.yaml')
+    config = {'fuzzer': 'afl', 'variant_name': 'name', 'env': []}
+    run_experiment.validate_fuzzer_config(config)
 
     with pytest.raises(Exception) as exception:
-        mock_read.return_value['fuzzer'] = 'afl:'
-        run_experiment.validate_fuzzer_config('test_fuzzer.yaml')
+        config['fuzzer'] = 'afl:'
+        run_experiment.validate_fuzzer_config(config)
     assert 'may only contain' in str(exception.value)
 
     with pytest.raises(Exception) as exception:
-        mock_read.return_value['fuzzer'] = 'not_exist'
-        run_experiment.validate_fuzzer_config('test_fuzzer.yaml')
+        config['fuzzer'] = 'not_exist'
+        run_experiment.validate_fuzzer_config(config)
     assert 'does not exist' in str(exception.value)
+    config['fuzzer'] = 'afl'
 
     with pytest.raises(Exception) as exception:
-        mock_read.return_value['invalid_key'] = 'invalid'
-        run_experiment.validate_fuzzer_config('test_fuzzer.yaml')
+        config['invalid_key'] = 'invalid'
+        run_experiment.validate_fuzzer_config(config)
     assert 'Invalid entry' in str(exception.value)
+    del config['invalid_key']
+
+    with pytest.raises(Exception) as exception:
+        config['env'] = {'a': 'b'}
+        run_experiment.validate_fuzzer_config(config)
+    assert 'must be a list' in str(exception.value)
 
 
 def test_validate_fuzzer():

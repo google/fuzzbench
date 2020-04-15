@@ -50,13 +50,10 @@ def run_diff_experiment():
 def run_full_experiment():
     """Run a full experiment."""
     experiment_name = get_experiment_name()
-    fuzzers = fuzzer_utils.get_all_fuzzers()
+    fuzzer_configs = fuzzer_utils.get_fuzzer_configs()
     benchmarks = benchmark_utils.get_all_benchmarks()
-    run_experiment.start_experiment(experiment_name,
-                                    EXPERIMENT_CONFIG_FILE,
-                                    benchmarks,
-                                    fuzzers,
-                                    fuzzer_configs=[])
+    run_experiment.start_experiment(experiment_name, EXPERIMENT_CONFIG_FILE,
+                                    benchmarks, fuzzer_configs)
 
 
 def main():

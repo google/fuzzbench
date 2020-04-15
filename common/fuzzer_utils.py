@@ -20,6 +20,7 @@ from typing import Optional
 
 from common import logs
 from common import utils
+from common import yaml_utils
 
 DEFAULT_FUZZ_TARGET_NAME = 'fuzz-target'
 FUZZ_TARGET_SEARCH_STRING = b'LLVMFuzzerTestOneInput'
@@ -77,11 +78,32 @@ def validate(fuzzer):
         return False
 
 
-def get_all_fuzzers():
+def get_fuzzer_configs(fuzzers=None):
     """Returns the list of all fuzzers."""
     fuzzers_dir = os.path.join(utils.ROOT_DIR, 'fuzzers')
-    return [
-        fuzzer for fuzzer in os.listdir(fuzzers_dir)
-        if (os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')) and
-            fuzzer != 'coverage')
-    ]
+    fuzzer_configs = []
+    for fuzzer in os.listdir(fuzzers_dir):
+        if not os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')):
+            continue
+        if fuzzer == 'coverage':
+            continue
+
+        if not fuzzers or fuzzer in fuzzers:
+            # Auto-generate the default configuration for each base fuzzer.
+            fuzzer_configs.append({'fuzzer': fuzzer})
+
+        variant_config_path = os.path.join(fuzzers_dir, fuzzer, 'variants.yaml')
+        if not os.path.isfile(variant_config_path):
+            continue
+
+        variant_config = yaml_utils.read(variant_config_path)
+        for variant in variant_config['variants']:
+            if not fuzzers or variant['name'] in fuzzers:
+                # Modify the config from the variants.yaml format to the
+                # format expected by a fuzzer config.
+                variant['variant_name'] = variant['name']
+                del variant['name']
+                variant['fuzzer'] = fuzzer
+                fuzzer_configs.append(variant)
+
+    return fuzzer_configs
