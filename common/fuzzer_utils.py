@@ -97,10 +97,15 @@ def get_fuzzer_configs(fuzzers=None):
             continue
 
         variant_config = yaml_utils.read(variant_config_path)
+        assert 'variants' in variant_config, (
+            'Missing "variants" section of {}'.format(variant_config_path))
         for variant in variant_config['variants']:
             if not fuzzers or variant['name'] in fuzzers:
                 # Modify the config from the variants.yaml format to the
                 # format expected by a fuzzer config.
+                assert 'name' in variant, (
+                    'Missing name attribute for fuzzer variant in {}'.format(
+                        variant_config_path))
                 variant['variant_name'] = variant['name']
                 del variant['name']
                 variant['fuzzer'] = fuzzer
