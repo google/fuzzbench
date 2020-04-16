@@ -19,7 +19,6 @@ import argparse
 import multiprocessing
 import os
 import re
-import shutil
 import subprocess
 import sys
 from typing import Dict, List
@@ -126,17 +125,18 @@ def validate_fuzzer(fuzzer: str):
         raise Exception('Fuzzer "%s" does not exist.' % fuzzer)
 
 
-def validate_fuzzer_config(fuzzer_config_name: str):
-    """Validate |fuzzer_config_name|."""
+def validate_fuzzer_config(fuzzer_config):
+    """Validate |fuzzer_config|."""
     allowed_fields = ['variant_name', 'env', 'fuzzer']
-    fuzzer_config = yaml_utils.read(fuzzer_config_name)
     if 'fuzzer' not in fuzzer_config:
         raise Exception('Fuzzer configuration must include the "fuzzer" field.')
 
     for key in fuzzer_config:
         if key not in allowed_fields:
-            raise Exception('Invalid entry "%s" in fuzzer configuration "%s"' %
-                            (key, fuzzer_config_name))
+            raise Exception('Invalid entry "%s" in fuzzer configuration.' % key)
+
+    if 'env' in fuzzer_config and not isinstance(fuzzer_config['env'], list):
+        raise Exception('Fuzzer environment must be a list.')
 
     variant_name = fuzzer_config.get('variant_name')
     if variant_name:
@@ -180,34 +180,31 @@ def get_git_hash():
     return output.strip().decode('utf-8')
 
 
-def set_up_fuzzer_config_files(fuzzers, fuzzer_configs):
-    """Set up config files for each fuzzer in |fuzzers| and each
-    config file provided in |fuzzer_configs|."""
-    if not fuzzers and not fuzzer_configs:
+def get_full_fuzzer_name(fuzzer_config):
+    """Get the full fuzzer name in the form <base fuzzer>_<variant name>."""
+    if 'variant_name' not in fuzzer_config:
+        return fuzzer_config['fuzzer']
+    return fuzzer_config['fuzzer'] + '_' + fuzzer_config['variant_name']
+
+
+def set_up_fuzzer_config_files(fuzzer_configs):
+    """Write configurations specified by |fuzzer_configs| to yaml files that
+    will be used to store configurations."""
+    if not fuzzer_configs:
         raise Exception('Need to provide either a list of fuzzers or '
                         'a list of fuzzer configs.')
     fuzzer_config_dir = os.path.join(CONFIG_DIR, 'fuzzer-configs')
     filesystem.recreate_directory(fuzzer_config_dir)
     for fuzzer_config in fuzzer_configs:
-        if fuzzer_configs.count(fuzzer_config) > 1:
-            raise Exception('Fuzzer config "%s" provided more than once.' %
-                            fuzzer_config)
         # Validate the fuzzer yaml attributes e.g. fuzzer, env, etc.
         validate_fuzzer_config(fuzzer_config)
-        shutil.copy(fuzzer_config, fuzzer_config_dir)
-    for fuzzer in fuzzers:
-        if fuzzers.count(fuzzer) > 1:
-            raise Exception('Fuzzer "%s" provided more than once.' % fuzzer)
-        validate_fuzzer(fuzzer)
-        fuzzer_config_file_path = os.path.join(fuzzer_config_dir, fuzzer)
-        # Create a simple yaml with just the fuzzer attribute.
-        with open(fuzzer_config_file_path, 'w') as file_handle:
-            file_handle.write('fuzzer: ' + fuzzer)
+        config_file_name = os.path.join(fuzzer_config_dir,
+                                        get_full_fuzzer_name(fuzzer_config))
+        yaml_utils.write(config_file_name, fuzzer_config)
 
 
 def start_experiment(experiment_name: str, config_filename: str,
-                     benchmarks: List[str], fuzzers: List[str],
-                     fuzzer_configs: List[str]):
+                     benchmarks: List[str], fuzzer_configs: List[dict]):
     """Start a fuzzer benchmarking experiment."""
     check_no_local_changes()
 
@@ -220,7 +217,7 @@ def start_experiment(experiment_name: str, config_filename: str,
     config['git_hash'] = get_git_hash()
 
     set_up_experiment_config_file(config)
-    set_up_fuzzer_config_files(fuzzers, fuzzer_configs)
+    set_up_fuzzer_config_files(fuzzer_configs)
 
     # Make sure we can connect to database.
     local_experiment = config.get('local_experiment', False)
@@ -477,13 +474,16 @@ def main():
                         default=[])
     args = parser.parse_args()
 
-    if not args.fuzzers and not args.fuzzer_configs:
-        fuzzers = fuzzer_utils.get_all_fuzzers()
+    if not args.fuzzer_configs:
+        fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=args.fuzzers)
     else:
-        fuzzers = args.fuzzers
+        fuzzer_configs = [
+            yaml_utils.read(fuzzer_config)
+            for fuzzer_config in args.fuzzer_configs
+        ]
 
     start_experiment(args.experiment_name, args.experiment_config,
-                     args.benchmarks, fuzzers, args.fuzzer_configs)
+                     args.benchmarks, fuzzer_configs)
     if not os.getenv('MANUAL_EXPERIMENT'):
         stop_experiment.stop_experiment(args.experiment_name,
                                         args.experiment_config)
