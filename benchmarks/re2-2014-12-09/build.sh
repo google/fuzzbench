@@ -27,3 +27,4 @@ get_git_revision https://github.com/google/re2.git 499ef7eff7455ce9c9fae86111d4a
 build_lib
 
 $CXX $CXXFLAGS ${SCRIPT_DIR}/target.cc  -I BUILD/ BUILD/obj/libre2.a -lpthread $FUZZER_LIB -o $FUZZ_TARGET
+wget -qO $FUZZ_TARGET.dict https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/regexp.dict

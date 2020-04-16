@@ -28,3 +28,4 @@ build_lib
 
 $CXX $CXXFLAGS -std=c++11 $SCRIPT_DIR/target.cc BUILD/.libs/libpng12.a $FUZZER_LIB -I BUILD/ -I BUILD -lz -o $FUZZ_TARGET
 cp -r $SCRIPT_DIR/seeds $OUT/
+wget -qO $FUZZ_TARGET.dict https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/png.dict
