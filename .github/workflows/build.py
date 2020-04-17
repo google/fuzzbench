@@ -56,7 +56,7 @@ def delete_docker_images():
     """Delete docker images."""
     # TODO(metzman): Don't delete base-runner/base-builder so it
     # doesn't need to be pulled for every target.
-    result = subprocess.run(['docker', 'images', '-q'],
+    result = subprocess.run(['docker', 'images', '-a', '-q'],
                             stdout=subprocess.PIPE,
                             check=True)
     image_names = result.stdout.splitlines()

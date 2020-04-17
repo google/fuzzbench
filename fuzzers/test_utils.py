@@ -82,7 +82,7 @@ def test_initialize_flags_in_environment(environ):
 
 
 def test_initialize_flags_in_var():
-    """Test that CFLAGS and CXXFLAGS are correctly initializedin variable."""
+    """Test that CFLAGS and CXXFLAGS are correctly initialized in variable."""
     env = {}
     utils.initialize_flags(env)
     assert env.get('CFLAGS') == ('-pthread -Wl,--no-as-needed -Wl,-ldl -Wl,-lm '
