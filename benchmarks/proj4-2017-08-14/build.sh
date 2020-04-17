@@ -30,3 +30,4 @@ if [[ ! -d $OUT/seeds ]]; then
 fi
 
 $CXX $CXXFLAGS -std=c++11 -I BUILD/src BUILD/test/fuzzers/standard_fuzzer.cpp BUILD/src/.libs/libproj.a $FUZZER_LIB -o $FUZZ_TARGET -lpthread
+wget -qO $FUZZ_TARGET.dict https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/proj4.dict

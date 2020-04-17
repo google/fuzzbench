@@ -26,3 +26,4 @@ build_lib
 
 $CXX $CXXFLAGS ${SCRIPT_DIR}/cms_transform_fuzzer.cc -I BUILD/include/ BUILD/src/.libs/liblcms2.a $FUZZER_LIB -o $FUZZ_TARGET
 cp -r $SCRIPT_DIR/seeds $OUT/
+wget -qO $FUZZ_TARGET.dict https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/icc.dict
