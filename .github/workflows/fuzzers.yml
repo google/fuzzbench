@@ -42,12 +42,9 @@ jobs:
 
     - name: Clear unnecessary files
       run: |
-        df -h
         sudo swapoff -a
         sudo rm -f /swapfile
-        df -h
         sudo apt clean
-        df -h
         docker rmi $(docker images -a -q)
         df -h
 
