@@ -22,17 +22,34 @@ from fuzzers import utils
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 
+def is_benchmark(name):
+    """ Check if the benchmark contains the string 'name' """
+    src_dir = os.getenv("SRC", None)
+    if src_dir is None:
+        raise ValueError('SRC not defined')
+
+    buildfile = os.path.join(src_dir, "benchmark/build.sh")
+    with open(buildfile, 'r') as file:
+        content = file.read()
+        if name in content:
+            return True
+    return False
 
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
-
-    # Update compiler flags for clang-3.8
     utils.set_no_sanitizer_compilation_flags()
 
+    # Update compiler flags for clang-3.8
     cflags = ['-fPIC']
     cppflags = cflags + ['-I/usr/local/include/c++/v1/', '-stdlib=libc++', '-std=c++11']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cppflags)
+
+    # Ignore some errors for openthread
+    if is_benchmark('openthread'):
+        openthread_flags = ['-Wno-error=embedded-directive', '-Wno-error=gnu-zero-variadic-macro-arguments', '-Wno-error=overlength-strings', '-Wno-error=c++11-long-long', '-Wno-error=c++11-extensions', '-Wno-error=variadic-macros']
+        utils.append_flags('CFLAGS', openthread_flags)
+        utils.append_flags('CXXFLAGS', openthread_flags)
    
     # Setup aflcc compiler
     os.environ['LLVM_CONFIG'] = 'llvm-config-3.8'
@@ -57,7 +74,7 @@ def build():
 
     # set the flags. ldflags is here temporarily until the benchmarks are cleaned up and standalone
     cppflags = ' '.join(['-I/usr/local/include/c++/v1/', '-stdlib=libc++', '-std=c++11'])
-    ldflags = ' '.join(['-lpthread', '-lm', ' -lz', '-larchive'])
+    ldflags = ' '.join(['-lpthread', '-lm', ' -lz', '-larchive', '-lglib-2.0'])
 
     # create the different build types
     os.environ['AFL_BUILD_TYPE'] = 'FUZZING'
