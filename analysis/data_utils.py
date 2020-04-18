@@ -128,7 +128,7 @@ def experiment_summary(experiment_snapshots_df):
 # Per-benchmark fuzzer ranking options.
 
 
-def rank_by_mean(benchmark_snapshot_df):
+def benchmark_rank_by_mean(benchmark_snapshot_df):
     """Returns ranking of fuzzers based on mean coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
     means = benchmark_snapshot_df.groupby('fuzzer')['edges_covered'].mean()
@@ -136,7 +136,7 @@ def rank_by_mean(benchmark_snapshot_df):
     return means.sort_values(ascending=False)
 
 
-def rank_by_median(benchmark_snapshot_df):
+def benchmark_rank_by_median(benchmark_snapshot_df):
     """Returns ranking of fuzzers based on median coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
     medians = benchmark_snapshot_df.groupby('fuzzer')['edges_covered'].median()
@@ -144,7 +144,7 @@ def rank_by_median(benchmark_snapshot_df):
     return medians.sort_values(ascending=False)
 
 
-def rank_by_average_rank(benchmark_snapshot_df):
+def benchmark_rank_by_average_rank(benchmark_snapshot_df):
     """Ranks all coverage measurements in the snapshot across fuzzers.
 
     Returns the average rank by fuzzer.
@@ -158,7 +158,7 @@ def rank_by_average_rank(benchmark_snapshot_df):
     return avg_rank['avg rank']
 
 
-def rank_by_stat_test_wins(benchmark_snapshot_df):
+def benchmark_rank_by_stat_test_wins(benchmark_snapshot_df):
     """Carries out one-tailed statistical tests for each fuzzer pair.
 
     Returns ranking according to the number of statistical test wins.
@@ -198,12 +198,12 @@ def create_better_than_table(benchmark_snapshot_df):
 
 
 def experiment_pivot_table(experiment_snapshots_df,
-                           per_benchmark_ranking_function):
+                           benchmark_level_ranking_function):
     """Creates a pivot table according to a given per benchmark ranking, where
     the columns are the fuzzers, the rows are the benchmarks, and the values
     are the scores according to the per benchmark ranking."""
     benchmark_blocks = experiment_snapshots_df.groupby('benchmark')
-    groups_ranked = benchmark_blocks.apply(per_benchmark_ranking_function)
+    groups_ranked = benchmark_blocks.apply(benchmark_level_ranking_function)
     already_unstacked = groups_ranked.index.names == ['benchmark']
     pivot_df = groups_ranked if already_unstacked else groups_ranked.unstack()
     return pivot_df
@@ -221,8 +221,7 @@ def experiment_rank_by_average_rank(experiment_pivot_df):
                                             na_option='keep',
                                             ascending=False)
     average_ranks = pivot_ranked.mean().sort_values()
-    average_ranks.rename('avg rank', inplace=True)
-    return average_ranks
+    return average_ranks.rename('average rank')
 
 
 def experiment_rank_by_num_firsts(experiment_pivot_df):
@@ -235,4 +234,24 @@ def experiment_rank_by_num_firsts(experiment_pivot_df):
     # Count first places for each fuzzer.
     firsts = pivot_ranked[pivot_ranked == 1]
     num_firsts = firsts.sum().sort_values(ascending=False)
-    return num_firsts
+    return num_firsts.rename('number of wins')
+
+
+def experiment_rank_by_average_normalized_score(experiment_pivot_df):
+    """Creates experiment level ranking by taking the average of normalized per
+    benchmark scores from 0 to 100, where 100 is the highest reach coverage."""
+    # Normalize coverage values.
+    benchmark_maximum = experiment_pivot_df.max(axis='columns')
+    normalized_score = experiment_pivot_df.div(benchmark_maximum,
+                                               axis='index').mul(100)
+
+    average_score = normalized_score.mean().sort_values(ascending=False)
+    return average_score.rename('average normalized score')
+
+
+def experiment_level_ranking(experiment_snapshots_df,
+                             benchmark_level_ranking_function,
+                             experiment_level_ranking_function):
+    pivot_table = experiment_pivot_table(experiment_snapshots_df,
+                                         benchmark_level_ranking_function)
+    return experiment_level_ranking_function(pivot_table)
