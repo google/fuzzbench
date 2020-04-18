@@ -23,9 +23,10 @@ RUN apt-get update && \
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && git checkout dev && \
+    cd /afl && \
     git checkout 16ce55584512274804eadd71b4790be3d1bfbf97 && \
     AFL_NO_X86=1 make PYTHON_INCLUDE=/ && \
+    cd libdislocator && make && cd .. && \
     cd llvm_mode && CXXFLAGS= make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.

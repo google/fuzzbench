@@ -20,7 +20,7 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 def build():
     """Build benchmark."""
-    aflplusplus_fuzzer.build()
+    aflplusplus_fuzzer.build("cmplog")
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
