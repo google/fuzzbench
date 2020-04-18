@@ -35,22 +35,45 @@ def is_benchmark(name):
             return True
     return False
 
+def openthread_suppress_error_flags():
+    """Suppress errors for openthread"""
+    return ['-Wno-error=embedded-directive', 
+            '-Wno-error=gnu-zero-variadic-macro-arguments', 
+            '-Wno-error=overlength-strings', 
+            '-Wno-error=c++11-long-long', 
+            '-Wno-error=c++11-extensions', 
+            '-Wno-error=variadic-macros']
+
+def libjpeg_turbo_asm_object_files():
+    """
+        Additional .o files compiled from .asm files
+        and absent from the LLVM .bc file we extracted
+    """
+    return ['./BUILD/simd/jidctred-sse2-64.o',
+            './BUILD/simd/jidctint-sse2-64.o',
+            './BUILD/simd/jidctfst-sse2-64.o',
+            './BUILD/simd/jdmerge-sse2-64.o',
+            './BUILD/simd/jidctflt-sse2-64.o',
+            './BUILD/simd/jdsample-sse2-64.o',
+            './BUILD/simd/jdcolor-sse2-64.o']
+
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
     utils.set_no_sanitizer_compilation_flags()
 
     # Update compiler flags for clang-3.8
     cflags = ['-fPIC']
-    cppflags = cflags + ['-I/usr/local/include/c++/v1/', '-stdlib=libc++', '-std=c++11']
+    cppflags = cflags + ['-I/usr/local/include/c++/v1/', 
+                         '-stdlib=libc++', '-std=c++11']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cppflags)
 
     # Ignore some errors for openthread
     if is_benchmark('openthread'):
-        openthread_flags = ['-Wno-error=embedded-directive', '-Wno-error=gnu-zero-variadic-macro-arguments', '-Wno-error=overlength-strings', '-Wno-error=c++11-long-long', '-Wno-error=c++11-extensions', '-Wno-error=variadic-macros']
+        openthread_flags = openthread_suppress_error_flags()
         utils.append_flags('CFLAGS', openthread_flags)
         utils.append_flags('CXXFLAGS', openthread_flags)
-   
+
     # Setup aflcc compiler
     os.environ['LLVM_CONFIG'] = 'llvm-config-3.8'
     os.environ['CC'] = '/afl/aflc-gclang'
@@ -67,14 +90,23 @@ def build():
     print('[post_build] Extracting .bc file')
     fuzz_target = os.getenv('FUZZ_TARGET', None)
     if fuzz_target is None:
-        raise valueError('FUZZ_TARGET is not defined')
+        raise ValueError('FUZZ_TARGET is not defined')
     getbc_cmd = "/afl/aflc-get-bc {target}".format(target=fuzz_target)
-    if 0 != os.system(getbc_cmd):
+    if os.system(getbc_cmd) != 0:
         raise ValueError("get-bc failed")
 
-    # set the flags. ldflags is here temporarily until the benchmarks are cleaned up and standalone
-    cppflags = ' '.join(['-I/usr/local/include/c++/v1/', '-stdlib=libc++', '-std=c++11'])
-    ldflags = ' '.join(['-lpthread', '-lm', ' -lz', '-larchive', '-lglib-2.0'])
+    # set the flags. ldflags is here temporarily until the benchmarks
+    # are cleaned up and standalone
+    cppflags_arr = ['-I/usr/local/include/c++/v1/', '-stdlib=libc++', '-std=c++11']
+    ldflags_arr = ['-lpthread', '-lm', ' -lz', '-larchive', '-lglib-2.0']
+
+    # fix assembly for libjpeg
+    if is_benchmark('libjpeg'):
+        ldflags_arr += libjpeg_turbo_asm_object_files()
+
+    # stringigy the flags arrays
+    cppflags = ' '.join(cppflags_arr)
+    ldflags = ' '.join(ldflags_arr)
 
     # create the different build types
     os.environ['AFL_BUILD_TYPE'] = 'FUZZING'
@@ -85,7 +117,7 @@ def build():
     os.environ['AFL_CONVERT_COMPARISON_TYPE'] = 'NONE'
     os.environ['AFL_DICT_TYPE'] = 'NORMAL'
     bin1_cmd = "{compiler} {flags} -O3 {target}.bc -o {target}-original {ldflags}".format(compiler='/afl/aflc-clang-fast++', flags=cppflags, target=fuzz_target, ldflags=ldflags)
-    if 0 != os.system(bin1_cmd):
+    if os.system(bin1_cmd) != 0:
         raise ValueError("command '{command}' failed".format(command=bin1_cmd))
 
     # the normalized build with optimized dictionary
@@ -94,7 +126,7 @@ def build():
     os.environ['AFL_CONVERT_COMPARISON_TYPE'] = 'NONE'
     os.environ['AFL_DICT_TYPE'] = 'OPTIMIZED'
     bin2_cmd = "{compiler} {flags} {target}.bc -o {target}-normalized-none-opt {ldflags}".format(compiler='/afl/aflc-clang-fast++', flags=cppflags, target=fuzz_target, ldflags=ldflags)
-    if 0 != os.system(bin2_cmd):
+    if os.system(bin2_cmd) != 0:
         raise ValueError("command '{command}' failed".format(command=bin2_cmd))
 
     # the no-collision split-condition optimized dictionary
@@ -103,7 +135,7 @@ def build():
     os.environ['AFL_CONVERT_COMPARISON_TYPE'] = 'ALL'
     os.environ['AFL_DICT_TYPE'] = 'OPTIMIZED'
     bin3_cmd = "{compiler} {flags} {target}.bc -o {target}-no-collision-all-opt {ldflags}".format(compiler='/afl/aflc-clang-fast++', flags=cppflags, target=fuzz_target, ldflags=ldflags)
-    if 0 != os.system(bin3_cmd):
+    if os.system(bin3_cmd) != 0:
         raise ValueError("command '{command}' failed".format(command=bin3_cmd))
 
     print('[post_build] Copying afl-fuzz to $OUT directory')
@@ -112,10 +144,10 @@ def build():
 
 
 def run_fuzz(input_corpus,
-                 output_corpus,
-                 target_binary,
-                 additional_flags=None,
-                 hide_output=False):
+             output_corpus,
+             target_binary,
+             additional_flags=None,
+             hide_output=False):
     """Run afl-fuzz."""
     # Spawn the afl fuzzing process.
     # FIXME: Currently AFL will exit if it encounters a crashing input in seed
@@ -160,24 +192,25 @@ def fuzz(input_corpus, output_corpus, target_binary):
     src_file = "{target}-normalized-none-opt.dict".format(target=target_binary)
     dst_file = "{target}-original.dict".format(target=target_binary)
     shutil.copy(src_file, dst_file)
-    # instead of generating a new dict, just hack this one to be non-optimized to prvent AFL from aborting
+    # instead of generating a new dict, just hack this one 
+    # to be non-optimized to prvent AFL from aborting
     os.system("sed -i 's/OPTIMIZED/NORMAL/g' {dict}".format(dict=dst_file))
     afl_fuzz_thread1 = threading.Thread(target=run_fuzz,
-                                       args=(input_corpus, output_corpus,
-                                             "{target}-original".format(target=target_binary), 
-                                             ['-S', 'slave-original']))
+                                        args=(input_corpus, output_corpus,
+                                              "{target}-original".format(target=target_binary), 
+                                              ['-S', 'slave-original']))
     afl_fuzz_thread1.start()
 
     print('[run_fuzzer] Running AFL for normalized and optimized dictionary')
     afl_fuzz_thread2 = threading.Thread(target=run_fuzz,
-                                       args=(input_corpus, output_corpus,
-                                             "{target}-normalized-none-opt".format(target=target_binary), 
-                                             ['-S', 'slave-normalized-opt']))
+                                        args=(input_corpus, output_corpus,
+                                              "{target}-normalized-none-opt".format(target=target_binary), 
+                                              ['-S', 'slave-normalized-opt']))
     afl_fuzz_thread2.start()
 
     print('[run_fuzzer] Running AFL for FBSP and optimized dictionary')
     run_fuzz(input_corpus,
-                        output_corpus,
-                        "{target}-no-collision-all-opt".format(target=target_binary), 
-                        ['-S', 'slave-no-collision-all-opt'],
-                        hide_output=False)
+             output_corpus,
+             "{target}-no-collision-all-opt".format(target=target_binary), 
+             ['-S', 'slave-no-collision-all-opt'],
+             hide_output=False)
