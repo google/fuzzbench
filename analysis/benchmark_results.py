@@ -72,22 +72,24 @@ class BenchmarkResults:  # pylint: disable=too-many-public-methods
     @property
     def rank_by_mean(self):
         """Fuzzer ranking by mean coverage."""
-        return data_utils.rank_by_mean(self._benchmark_snapshot_df)
+        return data_utils.benchmark_rank_by_mean(self._benchmark_snapshot_df)
 
     @property
     def rank_by_median(self):
         """Fuzzer ranking by median coverage."""
-        return data_utils.rank_by_median(self._benchmark_snapshot_df)
+        return data_utils.benchmark_rank_by_median(self._benchmark_snapshot_df)
 
     @property
     def rank_by_average_rank(self):
         """Fuzzer ranking by coverage rank average."""
-        return data_utils.rank_by_average_rank(self._benchmark_snapshot_df)
+        return data_utils.benchmark_rank_by_average_rank(
+            self._benchmark_snapshot_df)
 
     @property
     def rank_by_stat_test_wins(self):
         """Fuzzer ranking by then number of pairwise statistical test wins."""
-        return data_utils.rank_by_stat_test_wins(self._benchmark_snapshot_df)
+        return data_utils.benchmark_rank_by_stat_test_wins(
+            self._benchmark_snapshot_df)
 
     @property
     @functools.lru_cache()
