@@ -39,10 +39,9 @@ def _get_fuzzer_module(fuzzer):
 
 def _get_all_fuzzer_modules():
     """Returns the fuzzer.py modules for all fuzzers."""
-    fuzzers = fuzzer_utils.get_all_fuzzer_dirs()
     return [
         importlib.import_module(_get_fuzzer_module(fuzzer))
-        for fuzzer in fuzzers
+        for fuzzer in get_all_fuzzer_dirs()
     ]
 
 
