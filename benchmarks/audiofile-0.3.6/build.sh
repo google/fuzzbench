@@ -17,6 +17,11 @@
 
 get_git_tag https://github.com/mpruett/audiofile.git  audiofile-0.3.6 SRC
 
+# XXX roachspray: funny, no sig for this version :/
+wget ftp://ftp.gnu.org/gnu/libtool/libtool-1.4.2.tar.gz || (printf "wget failed" && exit 1)
+tar zxvf libtool-1.4.2.tar.gz || (printf "unzip failed" && exit 1)
+(cd libtool-1.4.2 && mkdir install && ./configure --prefix=`pwd`/install &&
+ make && make install)
 
 build_lib() {
   rm -rf BUILD
@@ -26,7 +31,7 @@ build_lib() {
   # . not all crashes happen in 64-bit mode. Building default to 32-bit and
   #    must set CFLAGS b/c it's part C++ and part C.
   #
-  (cd BUILD && ./autogen.sh &&
+  (cd BUILD && PATH=`pwd`/../libtool-1.4.2/install/bin:$PATH ./autogen.sh &&
    CXXFLAGS="$CXXFLAGS -fpermissive -m32 -march=i686"   \
      CFLAGS="$CFLAGS -m32 -march=i686" ./configure      \
      --disable-docs --disable-examples --enable-static --disable-shared  && 
