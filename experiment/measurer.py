@@ -20,7 +20,6 @@ import multiprocessing
 import os
 import pathlib
 import posixpath
-import subprocess
 import sys
 import tarfile
 import time
@@ -107,13 +106,6 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
 
     experiment_folders_dir = get_experiment_folders_dir()
     if not remote_dir_exists(experiment_folders_dir):
-        return True
-
-    try:
-        gsutil.rsync(exp_path.gcs(experiment_folders_dir),
-                     str(experiment_folders_dir))
-    except subprocess.CalledProcessError:
-        logger.error('Rsyncing experiment folders failed.')
         return True
 
     max_cycle = _time_to_cycle(max_total_time)
@@ -410,9 +402,6 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
     def extract_corpus(self, corpus_archive_path) -> bool:
         """Extract the corpus archive for this cycle if it exists."""
-        if not os.path.exists(corpus_archive_path):
-            self.logger.warning('%s not found.', corpus_archive_path)
-
         if not os.path.exists(corpus_archive_path):
             self.logger.warning('Corpus not found: %s.', corpus_archive_path)
             return False
