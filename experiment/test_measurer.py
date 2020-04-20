@@ -191,6 +191,7 @@ def test_run_cov_new_units(mocked_execute, fs, environ):
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)
+    snapshot_measurer.initialize_measurement_dirs()
     shared_units = ['shared1', 'shared2']
     for unit in shared_units:
         fs.create_file(os.path.join(snapshot_measurer.prev_corpus_dir, unit))
@@ -213,6 +214,8 @@ def test_run_cov_new_units(mocked_execute, fs, environ):
                               '/work/measurement-folders/benchmark-a/fuzzer-a'
                               '/trial-12/sancovs'),
             'WORK': '/work',
+            'CLOUD_EXPERIMENT_BUCKET': 'gs://bucket',
+            'EXPERIMENT': 'experiment',
         },
         'expect_zero': False,
     }
