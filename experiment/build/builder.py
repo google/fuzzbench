@@ -21,17 +21,12 @@ import os
 import random
 import subprocess
 import sys
-import tarfile
 import time
 from typing import Callable, List, Tuple
 
-from common import benchmark_utils
-from common import experiment_path as exp_path
 from common import experiment_utils
 from common import filesystem
-from common import fuzzer_utils
 from common import utils
-from common import gsutil
 from common import logs
 
 from experiment.build import build_utils
@@ -60,37 +55,11 @@ def build_base_images() -> Tuple[int, str]:
     return buildlib.build_base_images()
 
 
-def get_coverage_binary(benchmark: str) -> str:
-    """Get the coverage binary for benchmark."""
-    coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
-    fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
-    return fuzzer_utils.get_fuzz_target_binary(coverage_binaries_dir /
-                                               benchmark,
-                                               fuzz_target_name=fuzz_target)
-
-
 def build_measurer(benchmark: str) -> bool:
     """Do a coverage build for a benchmark."""
     try:
         logger.info('Building measurer for benchmark: %s.', benchmark)
         buildlib.build_coverage(benchmark)
-        docker_name = benchmark_utils.get_docker_name(benchmark)
-        archive_name = 'coverage-build-%s.tar.gz' % docker_name
-
-        coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
-        benchmark_coverage_binary_dir = coverage_binaries_dir / benchmark
-        os.mkdir(benchmark_coverage_binary_dir)
-        cloud_bucket_archive_path = exp_path.gcs(coverage_binaries_dir /
-                                                 archive_name)
-        gsutil.cp(cloud_bucket_archive_path,
-                  str(benchmark_coverage_binary_dir),
-                  parallel=False,
-                  write_to_stdout=False)
-
-        archive_path = benchmark_coverage_binary_dir / archive_name
-        tar = tarfile.open(archive_path, 'r:gz')
-        tar.extractall(benchmark_coverage_binary_dir)
-        os.remove(archive_path)
         logs.info('Done building measurer for benchmark: %s.', benchmark)
         return True
     except Exception:  # pylint: disable=broad-except
