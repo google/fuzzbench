@@ -32,7 +32,8 @@ build_lib() {
   #    must set CFLAGS b/c it's part C++ and part C.
   #
   (cd BUILD && PATH=`pwd`/../libtool-1.4.2/install/bin:$PATH ./autogen.sh &&
-   CXXFLAGS="$CXXFLAGS -fpermissive -m32 -march=i686"   \
+   PATH=`pwd`/../libtool-1.4.2/install/bin:$PATH    \ 
+     CXXFLAGS="$CXXFLAGS -fpermissive -m32 -march=i686"   \
      CFLAGS="$CFLAGS -m32 -march=i686" ./configure      \
      --disable-docs --disable-examples --enable-static --disable-shared  && 
    make -C libaudiofile)
