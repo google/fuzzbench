@@ -132,6 +132,7 @@ pull-$(1)-$(2): .pull-$(1)-$(2)-runner
 
 run-$(1)-$(2): .$(1)-$(2)-runner
 	docker run \
+    --cpus=1 \
     --cap-add SYS_NICE \
     --cap-add SYS_PTRACE \
     -e FUZZ_OUTSIDE_EXPERIMENT=1 \
@@ -143,6 +144,7 @@ run-$(1)-$(2): .$(1)-$(2)-runner
 
 debug-$(1)-$(2): .$(1)-$(2)-runner
 	docker run \
+    --cpus=1 \
     --cap-add SYS_NICE \
     --cap-add SYS_PTRACE \
     -e FUZZ_OUTSIDE_EXPERIMENT=1 \
@@ -238,6 +240,7 @@ pull-$(1)-$(2): .pull-$(1)-$(2)-oss-fuzz-runner
 
 run-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
 	docker run \
+    --cpus=1 \
     --cap-add SYS_NICE \
     --cap-add SYS_PTRACE \
     -e FUZZ_OUTSIDE_EXPERIMENT=1 \
@@ -249,6 +252,7 @@ run-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
 
 debug-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
 	docker run \
+    --cpus=1 \
     --cap-add SYS_NICE \
     --cap-add SYS_PTRACE \
     -e FUZZ_OUTSIDE_EXPERIMENT=1 \
