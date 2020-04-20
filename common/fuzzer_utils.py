@@ -80,6 +80,7 @@ def validate(fuzzer):
 def get_fuzzer_configs(fuzzers=None):
     """Returns the list of all fuzzers."""
     # Import it here to avoid yaml dependency in runner.
+    # pylint: disable=import-outside-toplevel
     from common import yaml_utils
 
     fuzzers_dir = os.path.join(utils.ROOT_DIR, 'fuzzers')
