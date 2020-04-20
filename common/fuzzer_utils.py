@@ -20,7 +20,6 @@ from typing import Optional
 
 from common import logs
 from common import utils
-from common import yaml_utils
 
 DEFAULT_FUZZ_TARGET_NAME = 'fuzz-target'
 FUZZ_TARGET_SEARCH_STRING = b'LLVMFuzzerTestOneInput'
@@ -80,6 +79,10 @@ def validate(fuzzer):
 
 def get_fuzzer_configs(fuzzers=None):
     """Returns the list of all fuzzers."""
+    # Import it here to avoid yaml dependency in runner.
+    # pylint: disable=import-outside-toplevel
+    from common import yaml_utils
+
     fuzzers_dir = os.path.join(utils.ROOT_DIR, 'fuzzers')
     fuzzer_configs = []
     for fuzzer in os.listdir(fuzzers_dir):
