@@ -12,13 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for fuzzers/."""
+import os
 import importlib
 
 import pytest
 
-from common import fuzzer_utils
+from common import utils
 
 # pylint: disable=invalid-name,unused-argument
+
+
+def get_all_fuzzer_dirs():
+    """Returns the list of all fuzzers."""
+    fuzzers_dir = os.path.join(utils.ROOT_DIR, 'fuzzers')
+    return [
+        fuzzer for fuzzer in os.listdir(fuzzers_dir)
+        if (os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')) and
+            fuzzer != 'coverage')
+    ]
 
 
 def _get_fuzzer_module(fuzzer):
@@ -28,7 +39,7 @@ def _get_fuzzer_module(fuzzer):
 
 def _get_all_fuzzer_modules():
     """Returns the fuzzer.py modules for all fuzzers."""
-    fuzzers = fuzzer_utils.get_all_fuzzers()
+    fuzzers = fuzzer_utils.get_all_fuzzer_dirs()
     return [
         importlib.import_module(_get_fuzzer_module(fuzzer))
         for fuzzer in fuzzers
