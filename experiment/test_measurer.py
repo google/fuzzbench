@@ -183,7 +183,11 @@ def test_is_cycle_unchanged_no_file(mocked_cat, fs, experiment):
 @mock.patch('common.new_process.execute')
 def test_run_cov_new_units(mocked_execute, fs, environ):
     """Tests that run_cov_new_units does a coverage run as we expect."""
-    os.environ = {'WORK': '/work'}
+    os.environ = {
+        'WORK': '/work',
+        'CLOUD_EXPERIMENT_BUCKET': 'gs://bucket',
+        'EXPERIMENT': 'experiment',
+    }
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)
@@ -301,10 +305,11 @@ def test_extract_corpus(archive_name, tmp_path):
 
 
 @mock.patch('experiment.scheduler.all_trials_ended')
+@mock.patch('experiment.measurer.set_up_coverage_binaries')
 @mock.patch('experiment.measurer.measure_all_trials')
 @mock.patch('multiprocessing.Manager')
 @mock.patch('multiprocessing.pool')
-def test_measure_loop_end(_, mocked_manager, mocked_measure_all_trials,
+def test_measure_loop_end(_, mocked_manager, mocked_measure_all_trials, __,
                           mocked_all_trials_ended):
     """Tests that measure_loop stops when there is nothing left to measure."""
     call_count = 0
