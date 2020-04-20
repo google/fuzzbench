@@ -31,7 +31,6 @@ OSS_FUZZ_BENCHMARKS = [
 ]
 
 STANDARD_BENCHMARKS = [
-    'audiofile-0.3.6',
     'freetype2-2017',
     'harfbuzz-1.3.2',
     'jasper-1.701.0',
