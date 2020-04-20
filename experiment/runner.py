@@ -208,7 +208,6 @@ def run_fuzzer(max_total_time, log_filename):
                                     output_file=log_file,
                                     kill_children=True,
                                     env=fuzzer_environment)
-
     except subprocess.CalledProcessError:
         global fuzzer_errored_out  # pylint:disable=invalid-name
         fuzzer_errored_out = True

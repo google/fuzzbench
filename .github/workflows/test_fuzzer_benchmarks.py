@@ -57,7 +57,7 @@ def delete_docker_images():
     """Delete docker images."""
     # TODO(metzman): Don't delete base-runner/base-builder so it
     # doesn't need to be pulled for every target.
-    result = subprocess.run(['docker', 'images', '-q'],
+    result = subprocess.run(['docker', 'images', '-a', '-q'],
                             stdout=subprocess.PIPE,
                             check=True)
     image_names = result.stdout.splitlines()
@@ -72,8 +72,7 @@ def make_builds(benchmarks, fuzzer):
         subprocess.run(['make', '-j', pull_target], check=False)
 
         # Then build.
-        print('Building', build_target)
-        build_command = ['make', '-j', build_target]
+        build_command = ['make', 'RUNNING_ON_CI=yes', '-j', build_target]
         print('Running command:', ' '.join(['make', '-j', build_target]))
         result = subprocess.run(build_command, check=False)
         if not result.returncode == 0:

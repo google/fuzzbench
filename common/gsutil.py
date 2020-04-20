@@ -13,7 +13,6 @@
 # limitations under the License.
 """Helper functions for using the gsutil tool."""
 
-from common import environment
 from common import logs
 from common import new_process
 
@@ -22,10 +21,6 @@ logger = logs.Logger('gsutil')
 
 def gsutil_command(arguments, *args, parallel=True, **kwargs):
     """Executes a gsutil command with |arguments| and returns the result."""
-    if environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
-        logger.info('FUZZ_OUTSIDE_EXPERIMENT set, not running \'gsutil %s\'.',
-                    ' '.join(arguments))
-        return 0, ''
     command = ['gsutil']
     if parallel:
         command.append('-m')
