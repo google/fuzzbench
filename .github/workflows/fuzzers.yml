@@ -53,10 +53,20 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
+    - name: Clear unnecessary files
+      run: |
+        sudo swapoff -a
+        sudo rm -f /swapfile
+        sudo apt clean
+        docker rmi $(docker images -a -q)
+        df -h
+
     - name: Setup Python environment
       uses: actions/setup-python@v1.1.1
       with:
         python-version: 3.7
+
     - name: Build Benchmarks
       run: |
         python .github/workflows/build.py $BENCHMARK_TYPE $FUZZER
