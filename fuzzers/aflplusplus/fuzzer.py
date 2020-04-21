@@ -37,34 +37,41 @@ def build(*args):
 
     # Enable context sentitivity for LLVM mode
     if 'ctx' in build_modes:
-        os.environ['AFL_LLVM_CTX'] = '1'
-
+        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'CTX'
     # Enable N-gram coverage for LLVM mode
-    if 'ngram2' in build_modes:
-        os.environ['AFL_LLVM_NGRAM_SIZE'] = '2'
+    elif 'ngram2' in build_modes:
+        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-2'
+    elif 'ngram3' in build_modes:
+        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-3'
     elif 'ngram4' in build_modes:
-        os.environ['AFL_LLVM_NGRAM_SIZE'] = '4'
+        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-4'
     elif 'ngram8' in build_modes:
-        os.environ['AFL_LLVM_NGRAM_SIZE'] = '8'
+        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-8'
     elif 'ngram16' in build_modes:
-        os.environ['AFL_LLVM_NGRAM_SIZE'] = '16'
+        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-16'
+    elif 'instrim' in build_modes:
+        # I avoid to put also AFL_LLVM_INSTRIM_LOOPHEAD
+        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'CFG'
+        os.environ['AFL_LLVM_INSTRIM_SKIPSINGLEBLOCK'] = '1'
 
     if 'qemu' in build_modes:
         os.environ['CC'] = 'clang'
         os.environ['CXX'] = 'clang++'
+    elif 'lto' in build_modes:
+        os.environ['CC'] = '/afl/afl-clang-lto'
+        os.environ['CXX'] = '/afl/afl-clang-lto++'
     else:
         os.environ['CC'] = '/afl/afl-clang-fast'
         os.environ['CXX'] = '/afl/afl-clang-fast++'
 
-        if 'laf' in build_modes:
-            os.environ['AFL_LLVM_LAF_SPLIT_SWITCHES'] = '1'
+    if 'laf' in build_modes:
+        os.environ['AFL_LLVM_LAF_SPLIT_SWITCHES'] = '1'
+        os.environ['AFL_LLVM_LAF_SPLIT_COMPARES'] = '1'
+        if not 'autodict' in build_modes:
             os.environ['AFL_LLVM_LAF_TRANSFORM_COMPARES'] = '1'
-            os.environ['AFL_LLVM_LAF_SPLIT_COMPARES'] = '1'
-
-        if 'instrim' in build_modes:
-            # I avoid to put also AFL_LLVM_INSTRIM_LOOPHEAD
-            os.environ['AFL_LLVM_INSTRIM'] = '1'
-            os.environ['AFL_LLVM_INSTRIM_SKIPSINGLEBLOCK'] = '1'
+            
+    if 'autodict' in build_modes:
+        os.environ['AFL_LLVM_LTO_AUTODICTIONARY'] = '1'
 
     os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
 
