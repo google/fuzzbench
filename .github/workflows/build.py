@@ -41,6 +41,7 @@ STANDARD_BENCHMARKS = [
     'openthread-2019-12-23',
     'proj4-2017-08-14',
     're2-2014-12-09',
+    'tcpdump-4.9.0',
     'vorbis-2017-12-11',
     'woff2-2016-05-06',
     'wpantund-2018-02-27',
