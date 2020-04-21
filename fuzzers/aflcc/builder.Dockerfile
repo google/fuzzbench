@@ -28,6 +28,12 @@ RUN apt-get update -y && \
     bison \
     software-properties-common
 
+# Install some libraries needed by some oss-fuzz benchmarks
+RUN apt-get install -y zlib1g-dev \
+    libarchive-dev \
+    libglib2.0-dev \
+    libpsl-dev \
+    libbsd-dev
 
 # Set env variables.
 ENV AFL_CONVERT_COMPARISON_TYPE=NONE
