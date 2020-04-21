@@ -61,6 +61,8 @@ SEED_CORPUS_ARCHIVE_SUFFIX = '_seed_corpus.zip'
 
 File = namedtuple('File', ['path', 'modified_time', 'change_time'])
 
+fuzzer_errored_out = False  # pylint:disable=invalid-name
+
 
 def _clean_seed_corpus(seed_corpus_dir):
     """Moves seed corpus files from sub-directories into the corpus directory
@@ -207,6 +209,8 @@ def run_fuzzer(max_total_time, log_filename):
                                     kill_children=True,
                                     env=fuzzer_environment)
     except subprocess.CalledProcessError:
+        global fuzzer_errored_out  # pylint:disable=invalid-name
+        fuzzer_errored_out = True
         logs.error('Fuzz process returned nonzero.')
 
 
@@ -260,7 +264,6 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         args = (max_total_time, log_file)
         fuzz_thread = threading.Thread(target=run_fuzzer, args=args)
         fuzz_thread.start()
-
         if environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
             # Hack so that the fuzz_thread has some time to fail if something is
             # wrong. Without this we will sleep for a long time before checking
@@ -280,20 +283,21 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         """Sleep until it is time to do the next sync."""
         if self.last_sync_time is not None:
             next_sync_time = (self.last_sync_time +
-                              experiment_utils.SNAPSHOT_PERIOD)
+                              experiment_utils.get_snapshot_seconds())
             sleep_time = next_sync_time - time.time()
             if sleep_time < 0:
-                # Log error if a sync has taken longer than SNAPSHOT_PERIOD and
-                # messed up our time synchronization.
+                # Log error if a sync has taken longer than
+                # get_snapshot_seconds() and messed up our time
+                # synchronization.
                 logs.warning('Sleep time on cycle %d is %d', self.cycle,
                              sleep_time)
                 sleep_time = 0
         else:
-            sleep_time = experiment_utils.SNAPSHOT_PERIOD
+            sleep_time = experiment_utils.get_snapshot_seconds()
         logs.debug('Sleeping for %d seconds.', sleep_time)
         time.sleep(sleep_time)
         # last_sync_time is recorded before the sync so that each sync happens
-        # roughly SNAPSHOT_PERIOD after each other.
+        # roughly get_snapshot_seconds() after each other.
         self.last_sync_time = time.time()
 
     def _set_corpus_dir_contents(self):
@@ -466,6 +470,8 @@ def main():
             'trial_id': str(environment.get('TRIAL_ID')),
         })
     experiment_main()
+    if fuzzer_errored_out:
+        return 1
     return 0
 
 

@@ -142,6 +142,18 @@ run-$(1)-$(2): .$(1)-$(2)-runner
     -it \
     $(BASE_TAG)/runners/$(1)/$(2)
 
+test-run-$(1)-$(2): .$(1)-$(2)-runner
+	docker run \
+    --cap-add SYS_NICE \
+    --cap-add SYS_PTRACE \
+    -e FUZZ_OUTSIDE_EXPERIMENT=1 \
+    -e TRIAL_ID=1 \
+    -e FUZZER=$(1) \
+    -e BENCHMARK=$(2) \
+    -e MAX_TOTAL_TIME=20 \
+    -e SNAPSHOT_PERIOD=10 \
+    $(BASE_TAG)/runners/$(1)/$(2)
+
 debug-$(1)-$(2): .$(1)-$(2)-runner
 	docker run \
     --cpus=1 \
@@ -249,6 +261,19 @@ run-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
     -e BENCHMARK=$(2) \
     -e FUZZ_TARGET=$($(2)-fuzz-target) \
     -it $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name)
+
+test-run-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
+	docker run \
+    --cap-add SYS_NICE \
+    --cap-add SYS_PTRACE \
+    -e FUZZ_OUTSIDE_EXPERIMENT=1 \
+    -e TRIAL_ID=1 \
+    -e FUZZER=$(1) \
+    -e BENCHMARK=$(2) \
+    -e FUZZ_TARGET=$($(2)-fuzz-target) \
+    -e MAX_TOTAL_TIME=20 \
+    -e SNAPSHOT_PERIOD=10 \
+    $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name)
 
 debug-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
 	docker run \

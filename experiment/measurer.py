@@ -171,7 +171,7 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
 
 def _time_to_cycle(time_in_seconds: float) -> int:
     """Converts |time_in_seconds| to the corresponding cycle and returns it."""
-    return time_in_seconds // experiment_utils.SNAPSHOT_PERIOD
+    return time_in_seconds // experiment_utils.get_snapshot_seconds()
 
 
 def _query_ids_of_measured_trials(experiment: str):
@@ -486,7 +486,7 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
                                 snapshot_measurer.trial_dir)
         return None
 
-    this_time = cycle * experiment_utils.SNAPSHOT_PERIOD
+    this_time = cycle * experiment_utils.get_snapshot_seconds()
     if snapshot_measurer.is_cycle_unchanged(cycle):
         snapshot_logger.info('Cycle: %d is unchanged.', cycle)
 

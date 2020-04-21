@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Script for building fuzzer,benchmark pairs in CI."""
+"""Script for building and briefly running fuzzer,benchmark pairs in CI."""
 import sys
 import subprocess
 
@@ -45,10 +45,11 @@ STANDARD_BENCHMARKS = [
 
 
 def get_make_targets(benchmarks, fuzzer):
-    """Return pull and build targets for |fuzzer| and each benchmark
+    """Return pull and test targets for |fuzzer| and each benchmark
     in |benchmarks| to pass to make."""
     return [('pull-%s-%s' % (fuzzer, benchmark),
-             'build-%s-%s' % (fuzzer, benchmark)) for benchmark in benchmarks]
+             'test-run-%s-%s' % (fuzzer, benchmark))
+            for benchmark in benchmarks]
 
 
 def delete_docker_images():
@@ -70,8 +71,8 @@ def make_builds(benchmarks, fuzzer):
         subprocess.run(['make', '-j', pull_target], check=False)
 
         # Then build.
-        print('Building', build_target)
         build_command = ['make', 'RUNNING_ON_CI=yes', '-j', build_target]
+        print('Running command:', ' '.join(build_command))
         result = subprocess.run(build_command, check=False)
         if not result.returncode == 0:
             return False

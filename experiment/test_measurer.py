@@ -269,7 +269,7 @@ class TestIntegrationMeasurement:
                 snapshot_measurer.fuzzer, snapshot_measurer.benchmark,
                 snapshot_measurer.trial_num, cycle)
         assert snapshot
-        assert snapshot.time == cycle * experiment_utils.SNAPSHOT_PERIOD
+        assert snapshot.time == cycle * experiment_utils.get_snapshot_seconds()
         assert snapshot.edges_covered == 3798
 
 
