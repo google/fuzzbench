@@ -20,7 +20,9 @@ FROM gcr.io/fuzzbench/base-image
 RUN apt-get update -y && apt-get install -y \
     autoconf-archive \
     automake \
+    bison \
     cmake \
+    flex \
     git \
     golang \
     libarchive-dev \
