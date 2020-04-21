@@ -473,10 +473,10 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     snapshot_measurer = SnapshotMeasurer(fuzzer, benchmark, trial_num,
                                          snapshot_logger)
 
+    snapshot_logger.info('Measuring cycle: %d.', cycle)
     this_time = cycle * experiment_utils.SNAPSHOT_PERIOD
     if snapshot_measurer.is_cycle_unchanged(cycle):
         snapshot_logger.info('Cycle: %d is unchanged.', cycle)
-
         current_pcs = snapshot_measurer.get_current_pcs()
         return models.Snapshot(time=this_time,
                                trial_id=trial_num,
