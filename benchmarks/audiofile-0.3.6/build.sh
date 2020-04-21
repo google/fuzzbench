@@ -45,4 +45,8 @@ build_lib
 # and disable any fuzzer in sanitizer flag.
 #
 
-$CXX $CXXFLAGS -std=c++11 -nopie -m32 -march=i686 -IBUILD -IBUILD/libaudiofile audiofile_sfconvert_fuzz.cc BUILD/libaudiofile/.libs/libaudiofile.a ./BUILD/libaudiofile/modules/.libs/libmodules.a ./BUILD/libaudiofile/alac/.libs/libalac.a  $FUZZER_LIB -o $FUZZ_TARGET
+$CXX $CXXFLAGS -std=c++11 -nopie -m32 -march=i686 -IBUILD  \
+  -IBUILD/libaudiofile ${SCRIPT_DIR}/audiofile_sfconvert_fuzz.cc   \
+  ./BUILD/libaudiofile/.libs/libaudiofile.a   \
+  ./BUILD/libaudiofile/modules/.libs/libmodules.a
+  ./BUILD/libaudiofile/alac/.libs/libalac.a  $FUZZER_LIB -o $FUZZ_TARGET
