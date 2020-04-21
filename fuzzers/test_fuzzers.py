@@ -47,9 +47,10 @@ def _get_all_fuzzer_modules():
 
 
 def test_build_function_errors():
-    """Test that calling the build function will cause an error when
-    the benchmark can't be built. Test also ensures that there are no
-    type errors which can be made by having the wrong signature."""
+    """This test calls fuzzer_module.build() under circumstances in
+    which it should throw an exception. If the call exceptions, the
+    test passes, otherwise the test fails. This ensures that we can
+    properly detect build failures."""
     for fuzzer_module in _get_all_fuzzer_modules():
         with pytest.raises(Exception) as error, Patcher():
             fuzzer_module.build()
@@ -61,12 +62,10 @@ def test_build_function_errors():
 
 
 def test_fuzz_function_errors():
-    """Test that calling the fuzz function will cause an error when
-    the benchmark can't be built. Test also ensures that there are no
-    type errors which can be made by having the wrong signature.
-    This test is needed to that make .test-run-$fuzzer-$benchmark
-    fails when it is supposed to."""
-
+    """This test calls fuzzer_module.fuzz() under circumstances in
+    which it should throw an exception. If the call exceptions, the
+    test passes, otherwise the test fails. This ensures that we can
+    properly detect failures during fuzzing."""
     for fuzzer_module in _get_all_fuzzer_modules():
         with pytest.raises(Exception) as error, Patcher():
             fuzzer_module.fuzz('/input-corpus', '/output-corpus',
