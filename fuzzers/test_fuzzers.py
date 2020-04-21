@@ -69,7 +69,8 @@ def test_fuzz_function_errors():
 
     for fuzzer_module in _get_all_fuzzer_modules():
         with pytest.raises(Exception) as error, Patcher():
-            fuzzer_module.fuzz('/input-corpus', '/output-corpus', '/target-binary')
+            fuzzer_module.fuzz('/input-corpus', '/output-corpus',
+                               '/target-binary')
 
         # Type error probably means module is doing something else wrong,
         # so fail if we see one. If that is not the case than this assert
