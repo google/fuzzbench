@@ -25,7 +25,7 @@ RUN apt-get update && \
 
 RUN rm -rf /afl && git clone https://github.com/alifahmed/aflmod /afl && \
     cd /afl && \
-    git checkout 1124baa6339a3b6614371388ead169154fdde89e && \
+    git checkout 7968f079c28977aa38bb08a64ebfc273807724ec && \
     AFL_NO_X86=1 make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.

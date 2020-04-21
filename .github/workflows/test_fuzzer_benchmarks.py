@@ -20,7 +20,6 @@ import subprocess
 OSS_FUZZ_BENCHMARKS = [
     'bloaty_fuzz_target',
     'curl_curl_fuzzer_http',
-    'irssi_server-fuzz',
     'jsoncpp_jsoncpp_fuzzer',
     'libpcap_fuzz_both',
     'mbedtls_fuzz_dtlsclient',
