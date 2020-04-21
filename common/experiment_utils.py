@@ -18,8 +18,13 @@ import posixpath
 
 from common import environment
 
-# Time interval for collecting experiment data (e.g. corpus, crashes).
-SNAPSHOT_PERIOD = environment.get('SNAPSHOT_PERIOD', 15 * 60)  # Seconds.
+_DEFAULT_SNAPSHOT_SECONDS = 15 * 60  # Seconds.
+
+
+def get_snapshot_seconds():
+    """Returns the amount of time in seconds between snapshots of a
+    fuzzer's corpus during an experiment."""
+    return environment.get('SNAPSHOT_PERIOD', _DEFAULT_SNAPSHOT_SECONDS)
 
 
 def get_work_dir():

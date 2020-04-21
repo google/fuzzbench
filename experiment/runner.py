@@ -283,20 +283,21 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         """Sleep until it is time to do the next sync."""
         if self.last_sync_time is not None:
             next_sync_time = (self.last_sync_time +
-                              experiment_utils.SNAPSHOT_PERIOD)
+                              experiment_utils.get_snapshot_seconds())
             sleep_time = next_sync_time - time.time()
             if sleep_time < 0:
-                # Log error if a sync has taken longer than SNAPSHOT_PERIOD and
-                # messed up our time synchronization.
+                # Log error if a sync has taken longer than
+                # get_snapshot_seconds() and messed up our time
+                # synchronization.
                 logs.warning('Sleep time on cycle %d is %d', self.cycle,
                              sleep_time)
                 sleep_time = 0
         else:
-            sleep_time = experiment_utils.SNAPSHOT_PERIOD
+            sleep_time = experiment_utils.get_snapshot_seconds()
         logs.debug('Sleeping for %d seconds.', sleep_time)
         time.sleep(sleep_time)
         # last_sync_time is recorded before the sync so that each sync happens
-        # roughly SNAPSHOT_PERIOD after each other.
+        # roughly get_snapshot_seconds() after each other.
         self.last_sync_time = time.time()
 
     def _set_corpus_dir_contents(self):
