@@ -108,7 +108,6 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
     if not remote_dir_exists(experiment_folders_dir):
         return True
 
-    max_cycle = _time_to_cycle(max_total_time)
     unmeasured_snapshots = get_unmeasured_snapshots(experiment, max_total_time)
 
     if not unmeasured_snapshots:
