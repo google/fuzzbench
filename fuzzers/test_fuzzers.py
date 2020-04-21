@@ -15,6 +15,7 @@
 import os
 import importlib
 
+from pyfakefs.fake_filesystem_unittest import Patcher
 import pytest
 
 from common import utils
@@ -45,32 +46,32 @@ def _get_all_fuzzer_modules():
     ]
 
 
-@pytest.mark.parametrize('fuzzer_module', _get_all_fuzzer_modules())
-def test_build_function_errors(fuzzer_module, fs):
+def test_build_function_errors():
     """Test that calling the build function will cause an error when
     the benchmark can't be built. Test also ensures that there are no
     type errors which can be made by having the wrong signature."""
-    with pytest.raises(Exception) as error:
-        fuzzer_module.build()
+    for fuzzer_module in _get_all_fuzzer_modules():
+        with pytest.raises(Exception) as error, Patcher():
+            fuzzer_module.build()
 
-    # Type error probably means module is doing something else wrong,
-    # so fail if we see one. If that is not the case than this assert
-    # should be removed.
-    assert not isinstance(error.value, TypeError)
+        # Type error probably means module is doing something else
+        # wrong, so fail if we see one. If that is not the case than
+        # this assert should be removed.
+        assert not isinstance(error.value, TypeError)
 
 
-@pytest.mark.parametrize('fuzzer_module', _get_all_fuzzer_modules())
-def test_fuzz_function_errors(fuzzer_module, fs):
+def test_fuzz_function_errors():
     """Test that calling the fuzz function will cause an error when
     the benchmark can't be built. Test also ensures that there are no
     type errors which can be made by having the wrong signature.
     This test is needed to that make .test-run-$fuzzer-$benchmark
     fails when it is supposed to."""
 
-    with pytest.raises(Exception) as error:
-        fuzzer_module.fuzz('/input-corpus', '/output-corpus', '/target-binary')
+    for fuzzer_module in _get_all_fuzzer_modules():
+        with pytest.raises(Exception) as error, Patcher():
+            fuzzer_module.fuzz('/input-corpus', '/output-corpus', '/target-binary')
 
-    # Type error probably means module is doing something else wrong,
-    # so fail if we see one. If that is not the case than this assert
-    # should be removed.
-    assert not isinstance(error.value, TypeError)
+        # Type error probably means module is doing something else wrong,
+        # so fail if we see one. If that is not the case than this assert
+        # should be removed.
+        assert not isinstance(error.value, TypeError)
