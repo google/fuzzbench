@@ -272,8 +272,8 @@ class TestIntegrationRunner:
                               benchmark)
         with mock.patch('common.fuzzer_utils.get_fuzz_target_binary',
                         return_value=str(target_binary_path)):
-            with mock.patch('common.experiment_utils.SNAPSHOT_PERIOD',
-                            max_total_time / 10):
+            with mock.patch('common.experiment_utils.get_snapshot_seconds',
+                            return_value=max_total_time / 10):
                 runner.main()
 
         gcs_corpus_directory = posixpath.join(gcs_directory, 'corpus')

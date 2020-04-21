@@ -69,4 +69,4 @@ jobs:
 
     - name: Build Benchmarks
       run: |
-        python .github/workflows/build.py $BENCHMARK_TYPE $FUZZER
+        python .github/workflows/test_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER
