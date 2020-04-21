@@ -31,9 +31,9 @@ from sqlalchemy import orm
 
 from common import benchmark_utils
 from common import experiment_utils
-from common import fuzzer_utils
 from common import experiment_path as exp_path
 from common import filesystem
+from common import fuzzer_utils
 from common import gsutil
 from common import logs
 from common import utils
@@ -108,12 +108,12 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
     if not remote_dir_exists(experiment_folders_dir):
         return True
 
-    unmeasured_snapshots = get_unmeasured_snapshots(experiment, max_total_time)
+    max_cycle = _time_to_cycle(max_total_time)
+    unmeasured_snapshots = get_unmeasured_snapshots(experiment, max_cycle)
 
     if not unmeasured_snapshots:
         return False
 
-    max_cycle = _time_to_cycle(max_total_time)
     measure_trial_coverage_args = [
         (unmeasured_snapshot, max_cycle, q)
         for unmeasured_snapshot in unmeasured_snapshots
@@ -481,18 +481,16 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
                                trial_id=trial_num,
                                edges_covered=len(current_pcs))
 
-    corpus_archive_path = os.path.join(
+    corpus_archive_dst = os.path.join(
         snapshot_measurer.trial_dir, 'corpus',
         experiment_utils.get_corpus_archive_name(cycle))
-    corpus_archive_src = corpus_archive_path.replace(
-        experiment_utils.get_work_dir(),
-        experiment_utils.get_cloud_experiment_path())
+    corpus_archive_src = exp_path.gcs(corpus_archive_dst)
 
-    corpus_archive_dir = os.path.dirname(corpus_archive_path)
+    corpus_archive_dir = os.path.dirname(corpus_archive_dst)
     if not os.path.exists(corpus_archive_dir):
         os.makedirs(corpus_archive_dir)
     if gsutil.cp(corpus_archive_src,
-                 corpus_archive_path,
+                 corpus_archive_dst,
                  expect_zero=False,
                  parallel=False,
                  write_to_stdout=False)[0] != 0:
@@ -500,9 +498,9 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
         return None
 
     snapshot_measurer.initialize_measurement_dirs()
-    snapshot_measurer.extract_corpus(corpus_archive_path)
+    snapshot_measurer.extract_corpus(corpus_archive_dst)
     # Don't keep corpus archives around longer than they need to be.
-    os.remove(corpus_archive_path)
+    os.remove(corpus_archive_dst)
 
     # Get the coverage of the new corpus units.
     snapshot_measurer.run_cov_new_units()
