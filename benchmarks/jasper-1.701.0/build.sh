@@ -42,4 +42,4 @@ build_lib
 $CXX $CXXFLAGS -std=c++11 -IBUILD/src/libjasper/include  \
   ${SCRIPT_DIR}/jasper_fuzz.cc   \
   BUILD/src/libjasper/.libs/libjasper.a $FUZZER_LIB -o $FUZZ_TARGET
-
+cp -r $SCRIPT_DIR/seeds $OUT/

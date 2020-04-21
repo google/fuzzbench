@@ -50,3 +50,4 @@ $CXX $CXXFLAGS -std=c++11 -nopie -m32 -march=i686 -IBUILD  \
   ./BUILD/libaudiofile/.libs/libaudiofile.a   \
   ./BUILD/libaudiofile/modules/.libs/libmodules.a
   ./BUILD/libaudiofile/alac/.libs/libalac.a  $FUZZER_LIB -o $FUZZ_TARGET
+cp -r $SCRIPT_DIR/seeds $OUT/

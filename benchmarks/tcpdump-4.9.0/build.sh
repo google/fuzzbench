@@ -35,3 +35,4 @@ build_lib
 $CXX $CXXFLAGS -std=c++11 -IBUILD/libpcap -IBUILD/tcpdump  \
   ${SCRIPT_DIR}/tcpdump_fuzz.cc BUILD/libpcap/libpcap.a  \
   BUILD/tcpdump/libnetdissect.a $FUZZER_LIB -o $FUZZ_TARGET
+cp -r $SCRIPT_DIR/seeds $OUT/
