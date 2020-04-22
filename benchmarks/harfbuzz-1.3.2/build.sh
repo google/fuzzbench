@@ -21,7 +21,9 @@ apt-get update && \
   autoconf \
   automake \
   libtool \
-  ragel
+  ragel \
+  pkg-config \
+  libcairo2-dev
 
 get_git_revision https://github.com/behdad/harfbuzz.git  f73a87d9a8c76a181794b74b527ea268048f78e3 SRC
 

@@ -17,7 +17,9 @@ FROM gcr.io/oss-fuzz-base/base-clang AS base-clang
 
 FROM gcr.io/fuzzbench/base-image
 
-RUN apt-get update -y && apt-get install -y \
+# Don't install recommended packages since x11 seems to get
+# recommended for some reason.
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
     automake \
     git \
     libtool \

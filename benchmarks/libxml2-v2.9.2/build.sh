@@ -20,7 +20,8 @@ apt-get update && \
   make \
   autoconf \
   automake \
-  libtool
+  libtool \
+  libglib2.0-dev
 
 build_lib() {
   rm -rf BUILD
