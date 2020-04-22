@@ -77,6 +77,9 @@ steps:
     '--build-arg',
     'fuzzer=coverage',
 
+    '--build-arg',
+    'benchmark=${_BENCHMARK}',
+
     '.',
   ]
   wait_for: ['pull-coverage-benchmark-builder', 'build-coverage-benchmark-builder-intermediate']
