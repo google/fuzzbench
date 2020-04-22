@@ -33,6 +33,7 @@ OSS_FUZZ_BENCHMARKS = [
 STANDARD_BENCHMARKS = [
     'freetype2-2017',
     'harfbuzz-1.3.2',
+    'jasper-1.701.0',
     'lcms-2017-03-21',
     'libjpeg-turbo-07-2017',
     'libpng-1.2.56',

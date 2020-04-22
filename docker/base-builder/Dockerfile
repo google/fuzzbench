@@ -42,6 +42,7 @@ RUN apt-get update -y && apt-get install -y \
     openssl \
     ragel \
     subversion \
+    unzip \
     wget
 
 # Copy clang binaries and libs.
