@@ -15,6 +15,14 @@
 
 . $(dirname $0)/../common.sh
 
+apt-get update && \
+  apt-get install -y \
+  make \
+  autoconf \
+  automake \
+  libtool \
+  ragel
+
 get_git_revision https://github.com/behdad/harfbuzz.git  f73a87d9a8c76a181794b74b527ea268048f78e3 SRC
 
 build_lib() {

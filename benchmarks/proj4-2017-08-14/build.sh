@@ -1,3 +1,4 @@
+
 #!/bin/bash -ex
 # Copyright 2020 Google LLC
 #
@@ -14,6 +15,15 @@
 # limitations under the License.
 
 . $(dirname $0)/../common.sh
+
+apt-get update && \
+  apt-get install -y \
+  make \
+  automake \
+  autoconf \
+  libtool \
+  sqlite3 \
+  libsqlite3-dev
 
 build_lib() {
   rm -rf BUILD

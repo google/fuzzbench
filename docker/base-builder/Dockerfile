@@ -28,8 +28,6 @@ RUN apt-get update -y && apt-get install -y \
     libtool \
     libunwind-dev \
     libxml2-dev \
-    nasm \
-    ragel \
     subversion \
     wget
 

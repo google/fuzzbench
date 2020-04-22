@@ -1,3 +1,4 @@
+
 #!/bin/bash -ex
 # Copyright 2020 Google LLC
 #
@@ -14,6 +15,13 @@
 # limitations under the License.
 
 . $(dirname $0)/../common.sh
+
+apt-get update && \
+  apt-get install -y \
+  make \
+  automake \
+  autoconf \
+  libtool
 
 get_git_revision https://github.com/google/woff2.git  9476664fd6931ea6ec532c94b816d8fbbe3aed90 SRC
 get_git_revision https://github.com/google/brotli.git 3a9032ba8733532a6cd6727970bade7f7c0e2f52 BROTLI
