@@ -18,8 +18,6 @@ FROM gcr.io/fuzzbench/base-image
 RUN apt-get update -y && apt-get install -y \
     libglib2.0-0 \
     libxml2 \
-    libarchive13 \
-    libgss3
 
 ENV WORKDIR /out
 WORKDIR $WORKDIR
