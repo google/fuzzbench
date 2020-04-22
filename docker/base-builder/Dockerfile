@@ -19,13 +19,10 @@ FROM gcr.io/fuzzbench/base-image
 
 RUN apt-get update -y && apt-get install -y \
     automake \
-    cmake \
     git \
     libcairo2-dev \
     libglib2.0-dev \
     libtool \
-    libunwind-dev \
-    libxml2-dev \
     subversion \
     wget
 
