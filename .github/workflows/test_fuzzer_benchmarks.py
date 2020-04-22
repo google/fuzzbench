@@ -71,7 +71,7 @@ def make_builds(benchmarks, fuzzer):
         subprocess.run(['make', '-j', pull_target], check=False)
 
         # Then build.
-        build_command = ['make', 'RUNNING_ON_CI=yes', '-j', build_target]
+        build_command = ['make', 'RUNNING_ON_CI=yes', build_target]
         print('Running command:', ' '.join(build_command))
         result = subprocess.run(build_command, check=False)
         if not result.returncode == 0:
