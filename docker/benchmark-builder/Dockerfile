@@ -48,9 +48,6 @@ COPY fuzzers/$fuzzer/fuzzer.py fuzzer.py
 # Copy the entire fuzzers directory tree to allow for module dependencies.
 COPY fuzzers fuzzers
 
-# Create empty __init__.py to allow python deps to work.
-RUN touch __init__.py
-
 # Create output directory for build artifacts.
 RUN mkdir -p $OUT
 
