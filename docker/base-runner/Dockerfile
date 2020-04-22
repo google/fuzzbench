@@ -17,7 +17,7 @@ FROM gcr.io/fuzzbench/base-image
 # Install runtime dependencies for benchmarks.
 RUN apt-get update -y && apt-get install -y \
     libglib2.0-0 \
-    libxml2 \
+    libxml2
 
 ENV WORKDIR /out
 WORKDIR $WORKDIR
