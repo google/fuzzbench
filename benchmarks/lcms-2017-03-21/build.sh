@@ -21,7 +21,6 @@ apt-get update && \
   automake \
   libtool
 
-
 build_lib() {
   rm -rf BUILD
   cp -rf SRC BUILD

@@ -1,4 +1,3 @@
-
 #!/bin/bash -ex
 # Copyright 2020 Google LLC
 #
