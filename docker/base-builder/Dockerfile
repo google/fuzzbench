@@ -20,8 +20,6 @@ FROM gcr.io/fuzzbench/base-image
 RUN apt-get update -y && apt-get install -y \
     automake \
     git \
-    libcairo2-dev \
-    libglib2.0-dev \
     libtool \
     subversion \
     wget
