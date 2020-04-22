@@ -72,17 +72,20 @@ def libjpeg_turbo_asm_object_files():
             './BUILD/simd/jdsample-sse2-64.o',
             './BUILD/simd/jdcolor-sse2-64.o']
 
-# def fix_fuzzer_lib():
-#     """Fix FUZZER_LIB for certain benchmarks"""
-#     if is_benchmark('irssi'):
-#         # workaround the meson call
-#         os.environ['FUZZER_LIB'] = '/libAFL.a -Dwith-fuzzer-lib=-L/ -Dwith-fuzzer-lib=-lAflccMock -Dwith-fuzzer-lib=-lpthread'
-#     elif is_benchmark('systemd'):
-#         os.environ['FUZZER_LIB'] = '/libAFL.a'
-#         utils.append_flags('LDFLAGS', ['-L/', '-lAflccMock'])
-#     elif is_benchmark('bloaty'):
-#         #os.environ['FUZZER_LIB'] = '/libAFL.a -L/ -lAflccMock -lpthread'
-#         assert(0 and "what to do")
+def fix_fuzzer_lib():
+    """Fix FUZZER_LIB for certain benchmarks"""
+    
+    if '--warn-unresolved-symbols' not in os.environ['CFLAGS']:
+       os.environ['FUZZER_LIB'] += ' -L/ -lAflccMock -lpthread'
+    # if is_benchmark('systemd'):
+    #     os.environ['FUZZER_LIB'] = '/libAFL.a'
+    #     os.environ['LDFLAGS'] = '-L/ -lAflccMock'
+    # if is_benchmark('irssi'):
+    #     # workaround the meson call
+    #     os.environ['FUZZER_LIB'] = '/libAFL.a -Dwith-fuzzer-lib=-L/ -Dwith-fuzzer-lib=-lAflccMock -Dwith-fuzzer-lib=-lpthread'
+    # elif is_benchmark('bloaty'):
+    #     #os.environ['FUZZER_LIB'] = '/libAFL.a -L/ -lAflccMock -lpthread'
+    #     assert(0 and "what to do")
 
 def add_compilation_cflags():
     """Add custom flags for certain benchmarks"""
@@ -91,10 +94,15 @@ def add_compilation_cflags():
         utils.append_flags('CFLAGS', openthread_flags)
         utils.append_flags('CXXFLAGS', openthread_flags)
 
-    if is_benchmark('php'):
+    elif is_benchmark('php'):
         php_flags = ['-D__builtin_cpu_supports\\(x\\)=0']
         utils.append_flags('CFLAGS', php_flags)
         utils.append_flags('CXXFLAGS', php_flags)
+
+    elif is_benchmark('systemd'):
+        unresolved_flags = ['-Wl,--warn-unresolved-symbols']
+        utils.append_flags('CFLAGS', unresolved_flags)
+        utils.append_flags('CXXFLAGS', unresolved_flags)
 
 def add_post_compilation_lflags(ldflags_arr):
     """Add additional linking flags for certain benchmarks"""
@@ -106,9 +114,9 @@ def prepare_build_environment():
     utils.set_no_sanitizer_compilation_flags()
 
     # Update compiler flags for clang-3.8. Because some functions
-    # are only defined post-compilation during the LLVM passes, 
-    # we also tell the compiler to ignore unresolved symbols 
-    cflags = ['-fPIC', '-Wl,--warn-unresolved-symbols']
+    # are only defined post-compilation during the LLVM passes,
+    # we also tell the compiler to ignore unresolved symbols.
+    cflags = ['-fPIC']
     cppflags = cflags + ['-I/usr/local/include/c++/v1/', 
                          '-stdlib=libc++', '-std=c++11']
     utils.append_flags('CFLAGS', cflags)
@@ -125,7 +133,7 @@ def prepare_build_environment():
     os.environ['FUZZER_LIB'] = '/libAFL.a'
 
     # Fix FUZZER_LIB for various benchmarks
-    # fix_fuzzer_lib()
+    fix_fuzzer_lib()
 
 def get_fuzz_targets():
     """Get the fuzz target name"""

@@ -13,3 +13,9 @@
 # limitations under the License.
 
 FROM gcr.io/fuzzbench/base-runner
+
+RUN apt-get install -y zlib1g-dev \
+    libarchive-dev \
+    libglib2.0-dev \
+    libpsl-dev \
+    libbsd-dev
