@@ -75,6 +75,7 @@ def make_builds(benchmarks, fuzzer):
         print('Running command:', ' '.join(build_command))
         result = subprocess.run(build_command, check=False)
         if not result.returncode == 0:
+            print('Command failed.')
             return False
         # Delete docker images so disk doesn't fill up.
         delete_docker_images()
