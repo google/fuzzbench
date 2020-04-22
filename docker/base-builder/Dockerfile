@@ -18,14 +18,11 @@ FROM gcr.io/oss-fuzz-base/base-clang AS base-clang
 FROM gcr.io/fuzzbench/base-image
 
 RUN apt-get update -y && apt-get install -y \
-    autoconf-archive \
     automake \
     cmake \
     git \
     libarchive-dev \
-    libboost-dev \
     libcairo2-dev \
-    libdbus-1-dev \
     libfreetype6-dev \
     libglib2.0-dev \
     libtool \
