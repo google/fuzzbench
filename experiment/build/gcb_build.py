@@ -66,6 +66,7 @@ def _build_oss_fuzz_project_fuzzer(benchmark: str,
     oss_fuzz_builder_hash = benchmark_utils.get_oss_fuzz_builder_hash(benchmark)
     substitutions = {
         '_OSS_FUZZ_PROJECT': project,
+        '_BENCHMARK': benchmark,
         '_FUZZER': fuzzer,
         '_OSS_FUZZ_BUILDER_HASH': oss_fuzz_builder_hash,
     }
@@ -99,6 +100,7 @@ def _build_oss_fuzz_project_coverage(benchmark: str) -> Tuple[int, str]:
     substitutions = {
         '_GCS_COVERAGE_BINARIES_DIR': coverage_binaries_dir,
         '_OSS_FUZZ_PROJECT': project,
+        '_BENCHMARK': benchmark,
         '_OSS_FUZZ_BUILDER_HASH': oss_fuzz_builder_hash,
     }
     config_file = get_build_config_file('oss-fuzz-coverage.yaml')
