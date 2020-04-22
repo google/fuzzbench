@@ -21,9 +21,7 @@ RUN apt-get update -y && apt-get install -y \
     automake \
     cmake \
     git \
-    libarchive-dev \
     libcairo2-dev \
-    libfreetype6-dev \
     libglib2.0-dev \
     libtool \
     libunwind-dev \
