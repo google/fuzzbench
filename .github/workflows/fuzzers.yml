@@ -36,7 +36,9 @@ jobs:
           - entropic
           - fairfuzz
           - fastcgs
+          - fastcgs_huge
           - fastcgs_lm
+          - fastcgs_lm_huge
           - fastcgs_br
           - honggfuzz
           - lafintel
