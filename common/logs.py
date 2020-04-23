@@ -156,6 +156,8 @@ def log(logger, severity, message, *args, extras=None):
     then |extras| is also logged (in addition to default extras)."""
     message = str(message)
     if utils.is_local():
+        if extras:
+            message += ' Extras: ' + str(extras)
         logging.log(severity, message, *args)
         return
     if logger is None:
@@ -181,11 +183,10 @@ def error(message, *args, extras=None, logger=None):
     @retry.wrap(NUM_RETRIES, RETRY_DELAY,
                 'common.logs.error._report_error_with_retries')
     def _report_error_with_retries(message):
+        if utils.is_local():
+            return
         _error_reporting_client.report(message)
 
-    if utils.is_local():
-        logging.error(message, *args)
-        return
     if not any(sys.exc_info()):
         _report_error_with_retries(message % args)
         log(logger, logging.ERROR, message, *args, extras=extras)

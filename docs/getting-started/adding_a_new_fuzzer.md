@@ -163,6 +163,9 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
 Example: [afl](https://github.com/google/fuzzbench/blob/master/fuzzers/afl/fuzzer.py).
 
+Environment variables `FUZZER` and `BENCHMARK` are available to use during
+execution of `build()` and `fuzz()` functions.
+
 ### What is `FUZZER_LIB`?
 
 `FUZZER_LIB` is a library that gets linked against the benchmark which allows

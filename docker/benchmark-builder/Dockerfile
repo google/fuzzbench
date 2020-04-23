@@ -34,6 +34,9 @@ ARG benchmark
 # Set up source and output directories.
 ENV SRC /src
 ENV OUT /out
+
+ENV FUZZER $fuzzer
+ENV BENCHMARK $benchmark
 ENV FUZZ_TARGET $OUT/fuzz-target
 
 WORKDIR $SRC

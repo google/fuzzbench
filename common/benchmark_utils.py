@@ -63,6 +63,17 @@ def get_runner_image_url(benchmark, fuzzer, cloud_project):
                                                             benchmark=benchmark)
 
 
+def get_builder_image_url(benchmark, fuzzer, cloud_project):
+    """Get the URL of the docker builder image for fuzzing the benchmark with
+    fuzzer."""
+    base_tag = experiment_utils.get_base_docker_tag(cloud_project)
+    if is_oss_fuzz(benchmark):
+        return '{base_tag}/oss-fuzz/builders/{fuzzer}/{project}'.format(
+            base_tag=base_tag, fuzzer=fuzzer, project=get_project(benchmark))
+    return '{base_tag}/builders/{fuzzer}/{benchmark}'.format(
+        base_tag=base_tag, fuzzer=fuzzer, benchmark=benchmark)
+
+
 def get_oss_fuzz_builder_hash(benchmark):
     """Get the specified hash of the OSS-Fuzz builder for the OSS-Fuzz project
     used by |benchmark|."""
@@ -77,11 +88,22 @@ def validate(benchmark):
         logs.error('%s does not conform to %s pattern.', benchmark,
                    VALID_BENCHMARK_REGEX.pattern)
         return False
-    benchmark_dir = os.path.join(utils.ROOT_DIR, 'benchmarks', benchmark)
-    build_sh = os.path.join(benchmark_dir, 'build.sh')
-    oss_fuzz_config = os.path.join(benchmark_dir, 'oss-fuzz.yaml')
-    valid = os.path.exists(build_sh) or os.path.exists(oss_fuzz_config)
-    if valid:
+    if benchmark in get_all_benchmarks():
         return True
     logs.error('%s must have a build.sh or oss-fuzz.yaml.', benchmark)
     return False
+
+
+def get_all_benchmarks():
+    """Returns the list of all benchmarks."""
+    benchmarks_dir = os.path.join(utils.ROOT_DIR, 'benchmarks')
+    all_benchmarks = []
+    for benchmark in os.listdir(benchmarks_dir):
+        benchmark_path = os.path.join(benchmarks_dir, benchmark)
+        if os.path.isfile(os.path.join(benchmark_path, 'oss-fuzz.yaml')):
+            # Benchmark is an OSS-Fuzz benchmark.
+            all_benchmarks.append(benchmark)
+        elif os.path.isfile(os.path.join(benchmark_path, 'build.sh')):
+            # Benchmark is a standard benchmark.
+            all_benchmarks.append(benchmark)
+    return all_benchmarks

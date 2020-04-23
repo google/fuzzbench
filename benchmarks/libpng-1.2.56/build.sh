@@ -15,6 +15,15 @@
 
 . $(dirname $0)/../common.sh
 
+
+apt-get update && \
+  apt-get install -y \
+  make \
+  autoconf \
+  automake \
+  libtool \
+  zlib1g-dev
+
 [ ! -e libpng-1.2.56.tar.gz ] && wget https://downloads.sourceforge.net/project/libpng/libpng12/older-releases/1.2.56/libpng-1.2.56.tar.gz
 [ ! -e libpng-1.2.56 ] && tar xf libpng-1.2.56.tar.gz
 
@@ -28,3 +37,4 @@ build_lib
 
 $CXX $CXXFLAGS -std=c++11 $SCRIPT_DIR/target.cc BUILD/.libs/libpng12.a $FUZZER_LIB -I BUILD/ -I BUILD -lz -o $FUZZ_TARGET
 cp -r $SCRIPT_DIR/seeds $OUT/
+wget -qO $FUZZ_TARGET.dict https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/png.dict

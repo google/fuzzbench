@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Script for building fuzzer,benchmark pairs in CI."""
+"""Script for building and briefly running fuzzer,benchmark pairs in CI."""
 import sys
 import subprocess
 
@@ -20,7 +20,6 @@ import subprocess
 OSS_FUZZ_BENCHMARKS = [
     'bloaty_fuzz_target',
     'curl_curl_fuzzer_http',
-    'irssi_server-fuzz',
     'jsoncpp_jsoncpp_fuzzer',
     'libpcap_fuzz_both',
     'mbedtls_fuzz_dtlsclient',
@@ -42,22 +41,22 @@ STANDARD_BENCHMARKS = [
     're2-2014-12-09',
     'vorbis-2017-12-11',
     'woff2-2016-05-06',
-    'wpantund-2018-02-27',
 ]
 
 
 def get_make_targets(benchmarks, fuzzer):
-    """Return pull and build targets for |fuzzer| and each benchmark
+    """Return pull and test targets for |fuzzer| and each benchmark
     in |benchmarks| to pass to make."""
     return [('pull-%s-%s' % (fuzzer, benchmark),
-             'build-%s-%s' % (fuzzer, benchmark)) for benchmark in benchmarks]
+             'test-run-%s-%s' % (fuzzer, benchmark))
+            for benchmark in benchmarks]
 
 
 def delete_docker_images():
     """Delete docker images."""
     # TODO(metzman): Don't delete base-runner/base-builder so it
     # doesn't need to be pulled for every target.
-    result = subprocess.run(['docker', 'images', '-q'],
+    result = subprocess.run(['docker', 'images', '-a', '-q'],
                             stdout=subprocess.PIPE,
                             check=True)
     image_names = result.stdout.splitlines()
@@ -72,8 +71,8 @@ def make_builds(benchmarks, fuzzer):
         subprocess.run(['make', '-j', pull_target], check=False)
 
         # Then build.
-        print('Building', build_target)
-        build_command = ['make', '-j', build_target]
+        build_command = ['make', 'RUNNING_ON_CI=yes', '-j', build_target]
+        print('Running command:', ' '.join(build_command))
         result = subprocess.run(build_command, check=False)
         if not result.returncode == 0:
             return False

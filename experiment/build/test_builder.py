@@ -19,9 +19,9 @@ from unittest import mock
 
 import pytest
 
-from experiment import builder
+from experiment.build import builder
 
-SRC_ROOT = os.path.dirname(os.path.dirname(__file__))
+SRC_ROOT = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
 
 FUZZER_BLACKLIST = {'coverage'}
 
@@ -61,7 +61,7 @@ def get_benchmarks_or_fuzzers(benchmarks_or_fuzzers_directory, filename,
     ]
 
 
-@mock.patch('experiment.builder.build_measurer')
+@mock.patch('experiment.build.builder.build_measurer')
 @mock.patch('time.sleep')
 @pytest.mark.parametrize('build_measurer_return_value', [True, False])
 def test_build_all_measurers(_, mocked_build_measurer,
@@ -82,7 +82,7 @@ def builder_integration(experiment):
     """Fixture for builder.py integration tests that uses an experiment fixture
     and makes the number of build retries saner by default."""
     num_retries = int(os.getenv('TEST_NUM_BUILD_RETRIES', '1'))
-    with mock.patch('experiment.builder.NUM_BUILD_RETRIES', num_retries):
+    with mock.patch('experiment.build.builder.NUM_BUILD_RETRIES', num_retries):
         yield
 
 
@@ -148,6 +148,7 @@ def get_specified_benchmarks():
     return fuzzers
 
 
+# TODO(metzman): Fix failures caused by copying logs to GCS.
 class TestBuildChangedBenchmarksOrFuzzers:
     """Integration tests for integrations of changed fuzzers or benchmarks.
     Needs TEST_BUILD_CHANGED_BENCHMARKS or TEST_BUILD_CHANGED_FUZZERS to run."""
