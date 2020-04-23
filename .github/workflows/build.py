@@ -39,6 +39,7 @@ STANDARD_BENCHMARKS = [
     'libpng-1.2.56',
     'libxml2-v2.9.2',
     'openthread-2019-12-23',
+    'perl-5.21.7',
     'proj4-2017-08-14',
     're2-2014-12-09',
     'tcpdump-4.9.0',
