@@ -15,30 +15,28 @@
 
 . $(dirname $0)/../common.sh
 
-#
-# XXX There is no hash to check. Git repo for this only goes back to 1.9x.
-#
-#
-
-ZIPURL=https://www.ece.uvic.ca/~frodo/jasper/software/jasper-1.701.0.zip
-rm -rf SRC jasper-1.701.0 jasper-1.701.0.zip
-wget ${ZIPURL} || (printf "wget failed" && exit 1)
-unzip jasper-1.701.0.zip || (printf "unzip failed" && exit 1)
-mv jasper-1.701.0 SRC
-
 build_lib() {
   rm -rf BUILD
   cp -rf SRC BUILD
   (cd BUILD && ./configure --enable-static --disable-shared && make)
 }
 
+#
+# XXX There is no hash to check. Git repo for this only goes back to 1.9x.
+#
+ZIPURL=https://www.ece.uvic.ca/~frodo/jasper/software/jasper-1.701.0.zip
+rm -rf SRC jasper-1.701.0 jasper-1.701.0.zip
+wget ${ZIPURL} || (printf "wget failed" && exit 1)
+unzip jasper-1.701.0.zip || (printf "unzip failed" && exit 1)
+mv jasper-1.701.0 SRC
+
 build_lib
+
 
 #
 # To test with the main() in jasper_fuzz.cc, use -D_HAS_MAIN and disable any
-# fuzzer in sanitizer flag.
+# fuzzer in sanitizer flag / use of FUZZER_LIB.
 #
-
 $CXX $CXXFLAGS -std=c++11 -IBUILD/src/libjasper/include  \
   ${SCRIPT_DIR}/jasper_fuzz.cc   \
   BUILD/src/libjasper/.libs/libjasper.a $FUZZER_LIB -o $FUZZ_TARGET

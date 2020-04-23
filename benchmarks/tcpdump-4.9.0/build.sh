@@ -15,14 +15,6 @@
 
 . $(dirname $0)/../common.sh
 
-#
-# tcpdump really wants libpcap to share the same parent directory.
-# 
-mkdir SRC
-get_git_tag https://github.com/the-tcpdump-group/libpcap.git  libpcap-1.9.0 SRC/libpcap
-get_git_tag https://github.com/the-tcpdump-group/tcpdump.git  tcpdump-4.9.0 SRC/tcpdump
-
-
 build_lib() {
   rm -rf BUILD
   cp -rf SRC BUILD
@@ -30,8 +22,19 @@ build_lib() {
    cd ../tcpdump && ./configure && make)
 }
 
+#
+# tcpdump really wants libpcap to share the same parent directory.
+# 
+mkdir SRC
+get_git_tag https://github.com/the-tcpdump-group/libpcap.git  libpcap-1.9.0 SRC/libpcap
+get_git_tag https://github.com/the-tcpdump-group/tcpdump.git  tcpdump-4.9.0 SRC/tcpdump
+
 build_lib
 
+#
+# To test with the main() in tcpdump_fuzz.cc, use -D_HAS_MAIN and disable any
+# fuzzer in sanitizer flag / use of FUZZER_LIB.
+#
 $CXX $CXXFLAGS -std=c++11 -IBUILD/libpcap -IBUILD/tcpdump  \
   ${SCRIPT_DIR}/tcpdump_fuzz.cc BUILD/libpcap/libpcap.a  \
   BUILD/tcpdump/libnetdissect.a -lcrypto -lssl -ldbus-1 $FUZZER_LIB  \

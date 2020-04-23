@@ -14,12 +14,13 @@
 
 /*
  * This reduces much of what the tcpdump.c:main and related routines do to just
- * get parsing.
+ * get parsing of a file and disable DNS lookups. IOW, `tcpdump -n -r @@`
  *
  * The delete_file() and buf_to_file() routines were ripped directly from the
  * autofuzz project (see fuzz_utils.cc), with minor changes.
  *
- *
+ * Implemented by Andrew R. Reiter <areiter@veracode.com> (Veracode Applied
+ * Research Group).
  *
  */
 

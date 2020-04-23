@@ -18,8 +18,10 @@
  * The delete_file() and buf_to_file() routines were ripped directly from the
  * autofuzz project (see fuzz_utils.cc).
  *
+ * Implemented by Andrew R. Reiter <areiter@veracode.com> (Veracode Applied
+ * Research Group).
+ *
  */
-
 
 #include <stdio.h>
 #include <stdlib.h>
