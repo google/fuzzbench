@@ -20,8 +20,7 @@ RUN apt-get update -y && apt-get install -y \
     libglib2.0-0 \
     libxml2 \
     libarchive13 \
-    libgss3 \
-    libdbus-1-dev
+    libgss3
 
 ENV WORKDIR /out
 WORKDIR $WORKDIR
