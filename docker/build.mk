@@ -192,7 +192,7 @@ $(1)-fuzz-target  := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
 $(eval $(1)-oss-fuzz-builder-hash := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
                                       grep oss_fuzz_builder_hash | \
                                       cut -d ':' -f2 | tr -d ' '))
-.oss-fuzz-$(1)-builder:
+.$(1)-oss-fuzz-builder:
 	docker build \
     --tag $(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$($(1)-project-name)-builder \
     --file=docker/oss-fuzz-benchmark-builder/Dockerfile \
@@ -200,7 +200,7 @@ $(eval $(1)-oss-fuzz-builder-hash := $(shell cat benchmarks/$(1)/oss-fuzz.yaml |
     $(call cache_from,$(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$($(1)-project-name)-builder) \
     .
 
-.pull-oss-fuzz-$(1)-builder:
+.pull-$(1)-oss-fuzz-builder:
 	docker pull $(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$($(1)-project-name)-builder
 endef
 # Instantiate the above template with all OSS-Fuzz projects.
@@ -209,7 +209,7 @@ $(foreach oss_fuzz_benchmark,$(OSS_FUZZ_BENCHMARKS), \
 
 define fuzzer_oss_fuzz_benchmark_template
 
-.$(1)-$(2)-oss-fuzz-builder-intermediate: .oss-fuzz-$(2)-builder
+.$(1)-$(2)-oss-fuzz-builder-intermediate: .$(2)-oss-fuzz-builder
 	docker build \
     --tag $(BASE_TAG)/oss-fuzz/builders/$(1)/$($(2)-project-name)-intermediate \
     --file=fuzzers/$(1)/builder.Dockerfile \
@@ -217,7 +217,7 @@ define fuzzer_oss_fuzz_benchmark_template
     $(call cache_from,${BASE_TAG}/oss-fuzz/builders/$(1)/$($(2)-project-name)-intermediate) \
     fuzzers/$(1)
 
-.pull-$(1)-$(2)-oss-fuzz-builder-intermediate: .pull-oss-fuzz-$(2)-builder
+.pull-$(1)-$(2)-oss-fuzz-builder-intermediate: .pull-$(1)-oss-fuzz-builder
 	docker pull $(BASE_TAG)/oss-fuzz/builders/$(1)/$($(2)-project-name)-intermediate
 
 .$(1)-$(2)-oss-fuzz-builder: .$(1)-$(2)-oss-fuzz-builder-intermediate

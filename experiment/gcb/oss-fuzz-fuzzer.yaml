@@ -65,13 +65,11 @@ steps:
     '--tag',
     '${_REPO}/oss-fuzz/builders/${_FUZZER}/${_OSS_FUZZ_PROJECT}-intermediate',
 
-    '--file=fuzzers/${_FUZZER}/builder.Dockerfile',
+    '--file=docker/oss-fuzz-benchmark-builder/Dockerfile',
 
     '--cache-from',
     '${_REPO}/oss-fuzz/builders/${_FUZZER}/${_OSS_FUZZ_PROJECT}-intermediate',
 
-    # Use a hardcoded repo because the parent image is pinned by SHA. Users
-    # won't have it.
     '--build-arg',
     'parent_image=${_REPO}/oss-fuzz/builders/oss-fuzz-${_OSS_FUZZ_PROJECT}-builder',
 

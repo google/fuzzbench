@@ -30,7 +30,7 @@ FUZZER_BLACKLIST = {'coverage'}
 
 def get_regular_benchmarks():
     """Get all non-blacklisted, non-OSS-Fuzz benchmarks."""
-    return get_benchmarks_or_fuzzers('benchmarks', 'build.sh', blacklist=set())
+    return []#get_benchmarks_or_fuzzers('benchmarks', 'build.sh', blacklist=set())
 
 
 def get_oss_fuzz_benchmarks():
