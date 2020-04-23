@@ -78,12 +78,14 @@ def _add_builder_arguments_to_config(base: str, fuzzer: str) -> str:
     args = fuzzer_config['builder_arguments']
     new_config_path = os.path.join(CONFIG_DIR, 'builds', fuzzer + '.yaml')
     config = yaml_utils.read(base)
-    for step in base_config['steps']:
-        if 'id' in step and step['id'] in FUZZER_STEP_IDS:
+    for step in config['steps']:
+        if 'id' in step and step['id'] in BUILDER_STEP_IDS:
             # Append additional flags before the final argument.
             step['args'] = step['args'][:-1] + args + [step['args'][-1]]
 
+    filesystem.create_directory(os.path.dirname(new_config_path))
     yaml_utils.write(config, new_config_path)
+    return new_config_path
 
 
 def _build_oss_fuzz_project_fuzzer(benchmark: str,
@@ -98,7 +100,7 @@ def _build_oss_fuzz_project_fuzzer(benchmark: str,
         '_OSS_FUZZ_BUILDER_HASH': oss_fuzz_builder_hash,
     }
     config_file = _add_builder_arguments_to_config(
-        get_build_config_file('oss-fuzz-fuzzer.yaml'))
+        get_build_config_file('oss-fuzz-fuzzer.yaml'), fuzzer)
     config_name = 'oss-fuzz-{project}-fuzzer-{fuzzer}-hash-{hash}'.format(
         project=project, fuzzer=fuzzer, hash=oss_fuzz_builder_hash)
 
@@ -114,7 +116,7 @@ def _build_benchmark_fuzzer(benchmark: str, fuzzer: str) -> Tuple[int, str]:
         '_FUZZER': fuzzer,
     }
     config_file = _add_builder_arguments_to_config(
-        get_build_config_file('fuzzer.yaml'))
+        get_build_config_file('fuzzer.yaml'), fuzzer)
     config_name = 'benchmark-{benchmark}-fuzzer-{fuzzer}'.format(
         benchmark=benchmark, fuzzer=fuzzer)
     return _build(config_file, config_name, substitutions)
