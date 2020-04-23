@@ -22,7 +22,6 @@ echo 0 > /proc/sys/kernel/yama/ptrace_scope
 echo core >/proc/sys/kernel/core_pattern
 
 ## Start docker.
-
 {% if not local_experiment %}
 while ! docker pull {{docker_image_url}}
 do

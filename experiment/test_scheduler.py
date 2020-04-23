@@ -75,7 +75,6 @@ def test_create_trial_instance(benchmark, expected_image, expected_target,
     and creates a startup script for the instance, as we expect it to."""
     expected_startup_script = '''## Start docker.
 
-
 while ! docker pull {docker_image_url}
 do
   echo 'Error pulling image, retrying...'
@@ -116,7 +115,6 @@ def test_create_trial_instance_local_experiment(benchmark, expected_image,
     os.environ['LOCAL_EXPERIMENT'] = str(True)
     os.environ['HOST_GCLOUD_CONFIG'] = '~/.config/gcloud'
     expected_startup_script = '''## Start docker.
-
 
 
 docker run -v ~/.config/gcloud:/root/.config/gcloud \\
@@ -172,7 +170,9 @@ def _test_create_trial_instance(benchmark, expected_image, expected_target,
 
     with open(expected_startup_script_path) as file_handle:
         content = file_handle.read()
-        script_for_docker = content[content.find('## Start docker.'):]
+        check_from = '## Start docker.'
+        assert check_from in content
+        script_for_docker = content[content.find(check_from):]
         assert script_for_docker == expected_startup_script.format(
             benchmark=benchmark,
             oss_fuzz_target=expected_target,
