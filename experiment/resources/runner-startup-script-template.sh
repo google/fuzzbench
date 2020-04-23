@@ -26,7 +26,6 @@ docker run {% if local_experiment %}-v {{host_gcloud_config}}:/root/.config/gclo
 -e INSTANCE_NAME={{instance_name}} \
 -e FUZZER={{fuzzer}} \
 -e BENCHMARK={{benchmark}} \
--e FUZZER_VARIANT_NAME={{fuzzer_variant_name}} \
 -e EXPERIMENT={{experiment}} \
 -e TRIAL_ID={{trial_id}} \
 -e MAX_TOTAL_TIME={{max_total_time}} \

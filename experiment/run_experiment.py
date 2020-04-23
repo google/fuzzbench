@@ -127,7 +127,7 @@ def validate_fuzzer(fuzzer: str):
 
 def validate_fuzzer_config(fuzzer_config):
     """Validate |fuzzer_config|."""
-    allowed_fields = ['variant_name', 'env', 'fuzzer']
+    allowed_fields = ['name', 'fuzzer_environment', 'builder_arguments', 'fuzzer']
     if 'fuzzer' not in fuzzer_config:
         raise Exception('Fuzzer configuration must include the "fuzzer" field.')
 
@@ -135,18 +135,24 @@ def validate_fuzzer_config(fuzzer_config):
         if key not in allowed_fields:
             raise Exception('Invalid entry "%s" in fuzzer configuration.' % key)
 
-    if 'env' in fuzzer_config and not isinstance(fuzzer_config['env'], list):
+    if ('fuzzer_environment' in fuzzer_config and
+        not isinstance(fuzzer_config['fuzzer_environment'], list)):
         raise Exception('Fuzzer environment must be a list.')
 
-    variant_name = fuzzer_config.get('variant_name')
-    if variant_name:
-        if not re.match(FUZZER_NAME_REGEX, variant_name):
+    if ('builder_arguments' in fuzzer_config and
+        not isinstance(fuzzer_config['builder_arguments'], list)):
+        raise Exception('Builder arguments must be a list.')
+
+    name = fuzzer_config.get('name')
+    if name:
+        if not re.match(FUZZER_NAME_REGEX, name):
             raise Exception(
-                'The "variant_name" option may only contain lowercase letters, '
+                'The "name" option may only contain lowercase letters, '
                 'numbers, or underscores.')
-    fuzzer_name = fuzzer_config.get('fuzzer')
-    if fuzzer_name:
-        validate_fuzzer(fuzzer_name)
+
+    fuzzer = fuzzer_config.get('fuzzer')
+    if fuzzer:
+        validate_fuzzer(fuzzer)
 
 
 def validate_experiment_name(experiment_name: str):

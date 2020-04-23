@@ -107,14 +107,7 @@ def dispatcher_main():
     experiment_config_file_path = os.path.join(fuzzer_config_utils.get_dir(),
                                                'experiment.yaml')
     experiment = Experiment(experiment_config_file_path)
-
-    # When building, we only care about the underlying fuzzer rather than the
-    # display name that we use to identify a specific configuration.
-    unique_fuzzers = list({
-        fuzzer_config_utils.get_underlying_fuzzer_name(f)
-        for f in experiment.fuzzers
-    })
-    builder.build_all_fuzzer_benchmarks(unique_fuzzers, experiment.benchmarks)
+    builder.build_all_fuzzer_benchmarks(experiment.fuzzers, experiment.benchmarks)
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])
 
