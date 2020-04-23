@@ -199,15 +199,26 @@ $(foreach oss_fuzz_benchmark,$(OSS_FUZZ_BENCHMARKS), \
 
 define fuzzer_oss_fuzz_benchmark_template
 
-.$(1)-$(2)-oss-fuzz-builder-intermediate:
+.oss-fuzz-$(2)-builder:
+	docker build \
+    --tag $(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$($(2)-project-name)-builder \
+    --file=docker/oss-fuzz-benchmark-builder/Dockerfile \
+    --build-arg parent_image=gcr.io/fuzzbench/oss-fuzz/$($(2)-project-name)@sha256:$($(2)-oss-fuzz-builder-hash) \
+    $(call cache_from,$(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$($(2)-project-name)-builder) \
+    .
+
+.pull-oss-fuzz-$(2)-builder:
+	docker pull $(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$($(2)-project-name)-builder
+
+.$(1)-$(2)-oss-fuzz-builder-intermediate: .oss-fuzz-$(2)-builder
 	docker build \
     --tag $(BASE_TAG)/oss-fuzz/builders/$(1)/$($(2)-project-name)-intermediate \
     --file=fuzzers/$(1)/builder.Dockerfile \
-    --build-arg parent_image=gcr.io/fuzzbench/oss-fuzz/$($(2)-project-name)@sha256:$($(2)-oss-fuzz-builder-hash) \
+    --build-arg parent_image=$(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$($(2)-project-name)-builder \
     $(call cache_from,${BASE_TAG}/oss-fuzz/builders/$(1)/$($(2)-project-name)-intermediate) \
     fuzzers/$(1)
 
-.pull-$(1)-$(2)-oss-fuzz-builder-intermediate:
+.pull-$(1)-$(2)-oss-fuzz-builder-intermediate: .pull-oss-fuzz-$(2)-builder
 	docker pull $(BASE_TAG)/oss-fuzz/builders/$(1)/$($(2)-project-name)-intermediate
 
 .$(1)-$(2)-oss-fuzz-builder: .$(1)-$(2)-oss-fuzz-builder-intermediate

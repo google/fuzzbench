@@ -14,12 +14,46 @@
 
 steps:
 
+
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      docker pull ${_REPO}/oss-fuzz/builders/oss-fuzz-${_OSS_FUZZ_PROJECT}-builder || exit 0
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+
+    '--tag',
+    'gcr.io/oss-fuzz/builders/oss-fuzz-${_OSS_FUZZ_PROJECT}-builder',
+
+    '--tag',
+    '${_REPO}/oss-fuzz/builders/oss-fuzz-${_OSS_FUZZ_PROJECT}-builder',
+
+    '--file=fuzzers/${_FUZZER}/builder.Dockerfile',
+
+    '--cache-from',
+    '${_REPO}/oss-fuzz/builders/oss-fuzz-${_OSS_FUZZ_PROJECT}-builder',
+
+    # Use a hardcoded repo because the parent image is pinned by SHA. Users
+    # won't have it.
+    '--build-arg',
+    'parent_image=${_REPO}/oss-fuzz/${_OSS_FUZZ_PROJECT}@sha256:${_OSS_FUZZ_BUILDER_HASH}',
+
+    '.',
+  ]
+  id: 'build-oss-fuzz-benchmark-builder'
+
 - name: 'gcr.io/cloud-builders/docker'
   entrypoint: 'bash'
   args:
     - '-c'
     - |
       docker pull ${_REPO}/oss-fuzz/builders/${_FUZZER}/${_OSS_FUZZ_PROJECT}-intermediate || exit 0
+  wait_for: ['-']
+  id: 'pull-build-fuzzer-benchmark-builder-intermediate'
 
 - name: 'gcr.io/cloud-builders/docker'
   args: [
@@ -39,11 +73,12 @@ steps:
     # Use a hardcoded repo because the parent image is pinned by SHA. Users
     # won't have it.
     '--build-arg',
-    'parent_image=gcr.io/fuzzbench/oss-fuzz/${_OSS_FUZZ_PROJECT}@sha256:${_OSS_FUZZ_BUILDER_HASH}',
+    'parent_image=${_REPO}/oss-fuzz/builders/oss-fuzz-${_OSS_FUZZ_PROJECT}-builder',
 
     'fuzzers/${_FUZZER}',
   ]
   id: 'build-fuzzer-benchmark-builder-intermediate'
+  wait_for: ['pull-build-fuzzer-benchmark-builder-intermediate', 'build-oss-fuzz-benchmark-builder']
 
 - name: 'gcr.io/cloud-builders/docker'
   entrypoint: 'bash'
@@ -150,6 +185,7 @@ steps:
   wait_for: ['pull-fuzzer-benchmark-runner', 'build-fuzzer-benchmark-runner-intermediate']
 
 images:
+  - '${_REPO}/oss-fuzz/builders/oss-fuzz-${_OSS_FUZZ_PROJECT}-builder'
   - '${_REPO}/oss-fuzz/builders/${_FUZZER}/${_OSS_FUZZ_PROJECT}-intermediate'
   - '${_REPO}/oss-fuzz/builders/${_FUZZER}/${_OSS_FUZZ_PROJECT}'
   - '${_REPO}/oss-fuzz/runners/${_FUZZER}/${_OSS_FUZZ_PROJECT}-intermediate'

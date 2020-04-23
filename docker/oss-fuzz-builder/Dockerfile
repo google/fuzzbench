@@ -21,8 +21,6 @@ ARG benchmark
 ENV FUZZER $fuzzer
 ENV BENCHMARK $benchmark
 
-RUN apt-get update -y && apt-get install -y python3
-
 COPY fuzzers/$fuzzer/fuzzer.py $SRC/fuzzer.py
 
 # Copy the entire fuzzers directory tree to allow for module dependencies.
