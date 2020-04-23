@@ -184,31 +184,30 @@ $(foreach fuzzer,$(FUZZERS), \
 
 
 define oss_fuzz_benchmark_template
-$(1)-project-name := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
-                             grep project | cut -d ':' -f2 | tr -d ' ')
+# Use eval to make variables accessible within this template.
+$(eval $(1)-project-name := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
+                             grep project | cut -d ':' -f2 | tr -d ' '))
 $(1)-fuzz-target  := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
                              grep fuzz_target | cut -d ':' -f2 | tr -d ' ')
-$(1)-oss-fuzz-builder-hash := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
+$(eval $(1)-oss-fuzz-builder-hash := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
                                       grep oss_fuzz_builder_hash | \
-                                      cut -d ':' -f2 | tr -d ' ')
+                                      cut -d ':' -f2 | tr -d ' '))
+.oss-fuzz-$(1)-builder:
+	docker build \
+    --tag $(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$($(1)-project-name)-builder \
+    --file=docker/oss-fuzz-benchmark-builder/Dockerfile \
+    --build-arg parent_image=gcr.io/fuzzbench/oss-fuzz/$($(1)-project-name)@sha256:$($(1)-oss-fuzz-builder-hash) \
+    $(call cache_from,$(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$($(1)-project-name)-builder) \
+    .
+
+.pull-oss-fuzz-$(1)-builder:
+	docker pull $(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$($(1)-project-name)-builder
 endef
 # Instantiate the above template with all OSS-Fuzz projects.
 $(foreach oss_fuzz_benchmark,$(OSS_FUZZ_BENCHMARKS), \
   $(eval $(call oss_fuzz_benchmark_template,$(oss_fuzz_benchmark))))
 
-
 define fuzzer_oss_fuzz_benchmark_template
-
-.oss-fuzz-$(2)-builder:
-	docker build \
-    --tag $(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$($(2)-project-name)-builder \
-    --file=docker/oss-fuzz-benchmark-builder/Dockerfile \
-    --build-arg parent_image=gcr.io/fuzzbench/oss-fuzz/$($(2)-project-name)@sha256:$($(2)-oss-fuzz-builder-hash) \
-    $(call cache_from,$(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$($(2)-project-name)-builder) \
-    .
-
-.pull-oss-fuzz-$(2)-builder:
-	docker pull $(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$($(2)-project-name)-builder
 
 .$(1)-$(2)-oss-fuzz-builder-intermediate: .oss-fuzz-$(2)-builder
 	docker build \
