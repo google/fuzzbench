@@ -53,18 +53,19 @@ gcloud config set project $PROJECT_NAME
 * Create a PostgreSQL (we use PostgreSQL 11) instance using
 [Google Cloud SQL](https://console.cloud.google.com/sql/create-instance-postgres).
 This will take a few minutes.
-We recommend using "us-central1" as the region and zone "a" as the zone.
+We recommend using "us-central1" as the region and "us-central1-a" as the zone.
 Certain links provided in this page assume "us-central1".
 Note that the region you choose should be the region you use later for running
 experiments.
 
-* For the rest of this page, we will use `$PROJECT_REGION`,
+* For the rest of this page, we will use `$PROJECT_REGION`, `$PROJECT_ZONE`,
 `$POSTGRES_INSTANCE`, and `$POSTGRES_PASSWORD` to refer to the region of the
 PostgreSQL instance you created, its name, and its password. Set them in your
 environment:
 
 ```bash
 export PROJECT_REGION=<your-postgres-region>
+export PROJECT_ZONE=<your-postgres-zone>
 export POSTGRES_INSTANCE=<your-postgres-instance-name>
 export POSTGRES_PASSWORD=<your-postgres-password>
 ```

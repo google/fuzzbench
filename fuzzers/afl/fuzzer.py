@@ -73,7 +73,7 @@ def run_afl_fuzz(input_corpus,
     # Spawn the afl fuzzing process.
     # FIXME: Currently AFL will exit if it encounters a crashing input in seed
     # corpus (usually timeouts). Add a way to skip/delete such inputs and
-    # re-run AFL. This currently happens with a seed in wpantund benchmark.
+    # re-run AFL.
     print('[run_fuzzer] Running target with afl-fuzz')
     command = [
         './afl-fuzz',
@@ -102,7 +102,7 @@ def run_afl_fuzz(input_corpus,
     ]
     print('[run_fuzzer] Running command: ' + ' '.join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
-    subprocess.call(command, stdout=output_stream, stderr=output_stream)
+    subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
 
 
 def fuzz(input_corpus, output_corpus, target_binary):

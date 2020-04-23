@@ -31,7 +31,7 @@ from common import logs
 from common import yaml_utils
 from database import models
 from database import utils as db_utils
-from experiment import builder
+from experiment.build import builder
 from experiment import measurer
 from experiment import reporter
 from experiment import scheduler
@@ -98,7 +98,11 @@ def dispatcher_main():
     # Set this here because we get failures if we do it in measurer for some
     # reason.
     multiprocessing.set_start_method('spawn')
-    builder.gcb_build_base_images()
+    db_utils.initialize()
+    if os.getenv('LOCAL_EXPERIMENT'):
+        models.Base.metadata.create_all(db_utils.engine)
+
+    builder.build_base_images()
 
     experiment_config_file_path = os.path.join(fuzzer_config_utils.get_dir(),
                                                'experiment.yaml')
@@ -118,7 +122,7 @@ def dispatcher_main():
     scheduler_loop_thread = threading.Thread(target=scheduler.schedule_loop,
                                              args=(experiment.config,))
     scheduler_loop_thread.start()
-    measurer_loop_thread = threading.Thread(
+    measurer_loop_thread = multiprocessing.Process(
         target=measurer.measure_loop,
         args=(
             experiment.config['experiment'],

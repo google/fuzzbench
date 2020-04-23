@@ -17,12 +17,27 @@ jobs:
           - aflfast
           - aflplusplus
           - aflplusplus_mopt
-          - aflplusplus_fortify
+          - aflplusplus_cmplog
+          - aflplusplus_mopt_cmplog
+          - aflplusplus_ctx
+          - aflplusplus_ctx_mmopt
+          - aflplusplus_ctx_rare
+          - aflplusplus_instrim
+          - aflplusplus_instrim_mmopt
+          - aflplusplus_instrim_rare
+          - aflplusplus_ngram2
+          - aflplusplus_ngram2_mmopt
+          - aflplusplus_ngram2_rare
+          - aflplusplus_ngram4
+          - aflplusplus_ngram4_mmopt
+          - aflplusplus_ngram4_rare
           - aflsmart
           - eclipser
           - entropic
           - fairfuzz
           - fastcgs
+          - fastcgs_lm
+          - fastcgs_br
           - honggfuzz
           - lafintel
           - libfuzzer
@@ -38,10 +53,20 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
+    - name: Clear unnecessary files
+      run: |
+        sudo swapoff -a
+        sudo rm -f /swapfile
+        sudo apt clean
+        docker rmi $(docker images -a -q)
+        df -h
+
     - name: Setup Python environment
       uses: actions/setup-python@v1.1.1
       with:
         python-version: 3.7
+
     - name: Build Benchmarks
       run: |
-        python .github/workflows/build.py $BENCHMARK_TYPE $FUZZER
+        python .github/workflows/test_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER

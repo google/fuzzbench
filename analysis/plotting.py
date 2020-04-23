@@ -112,7 +112,8 @@ class Plotter:
 
         benchmark_snapshot_df = data_utils.get_benchmark_snapshot(benchmark_df)
         snapshot_time = benchmark_snapshot_df.time.unique()[0]
-        fuzzer_order = data_utils.rank_by_mean(benchmark_snapshot_df).index
+        fuzzer_order = data_utils.benchmark_rank_by_mean(
+            benchmark_snapshot_df).index
 
         axes = sns.lineplot(
             y='edges_covered',
@@ -163,7 +164,8 @@ class Plotter:
         assert len(benchmark_names) == 1, 'Not a single benchmark data!'
         assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
 
-        fuzzer_order = data_utils.rank_by_median(benchmark_snapshot_df).index
+        fuzzer_order = data_utils.benchmark_rank_by_median(
+            benchmark_snapshot_df).index
 
         # Another options is to use |boxplot| instead of |violinplot|. With
         # boxplot the median/min/max/etc is more visible than on the violin,
@@ -199,7 +201,7 @@ class Plotter:
         assert len(benchmark_names) == 1, 'Not a single benchmark data!'
         assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
 
-        fuzzers_in_order = data_utils.rank_by_median(
+        fuzzers_in_order = data_utils.benchmark_rank_by_median(
             benchmark_snapshot_df).index
         for fuzzer in fuzzers_in_order:
             measurements_for_fuzzer = benchmark_snapshot_df[
@@ -232,7 +234,8 @@ class Plotter:
         assert len(benchmark_names) == 1, 'Not a single benchmark data!'
         assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
 
-        fuzzer_order = data_utils.rank_by_median(benchmark_snapshot_df).index
+        fuzzer_order = data_utils.benchmark_rank_by_median(
+            benchmark_snapshot_df).index
 
         axes = sns.barplot(y='edges_covered',
                            x='fuzzer',
