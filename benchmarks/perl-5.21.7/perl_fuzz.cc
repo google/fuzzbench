@@ -203,8 +203,10 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     if (!PL_do_undump) {
 	my_perl = perl_alloc();
-	if (!my_perl)
+	if (!my_perl) {
+		delete_file(in);
 	    exit(1);
+	}
 	perl_construct(my_perl);
 	PL_perl_destruct_level = 0;
     }
@@ -259,6 +261,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 #endif
 #endif /* PERL_GLOBAL_STRUCT */
 
+	delete_file(in);
     exit(exitstatus);
 }
 
