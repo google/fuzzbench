@@ -15,7 +15,6 @@
 FROM gcr.io/fuzzbench/base-image
 
 # Install runtime dependencies for benchmarks.
-# - libdbus-1-dev needed for tcpdump-4.9.0
 RUN apt-get update -y && apt-get install -y \
     libglib2.0-0 \
     libxml2 \
