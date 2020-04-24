@@ -17,22 +17,12 @@ FROM gcr.io/oss-fuzz-base/base-clang AS base-clang
 
 FROM gcr.io/fuzzbench/base-image
 
-RUN apt-get update -y && apt-get install -y \
-    autoconf-archive \
+# Don't install recommended packages since x11 seems to get
+# recommended for some reason.
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
     automake \
-    cmake \
     git \
-    libarchive-dev \
-    libboost-dev \
-    libcairo2-dev \
-    libdbus-1-dev \
-    libfreetype6-dev \
-    libglib2.0-dev \
     libtool \
-    libunwind-dev \
-    libxml2-dev \
-    nasm \
-    ragel \
     subversion \
     wget
 
