@@ -104,6 +104,8 @@ def generate_report(experiment_names,
         # Save the raw data along with the report.
         experiment_df.to_csv(data_path)
 
+    data_utils.validate_data(experiment_df)
+
     if benchmarks is not None:
         experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks)
 

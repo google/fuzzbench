@@ -20,10 +20,25 @@
 from analysis import stat_tests
 
 
+def validate_data(experiment_df):
+    """Checks if the experiment data is valid."""
+    if experiment_df.empty:
+        raise ValueError('Empty experiment data.')
+
+    expected_columns = {
+        'experiment', 'benchmark', 'fuzzer', 'trial_id', 'time_started',
+        'time_ended', 'time', 'edges_covered'
+    }
+    missing_columns = expected_columns.difference(experiment_df.columns)
+    if missing_columns:
+        raise ValueError(
+            'Missing columns in experiment data: {}'.format(missing_columns))
+
+
 def drop_uninteresting_columns(experiment_df):
     """Returns table with only interesting columns."""
     return experiment_df[[
-        'benchmark', 'fuzzer', 'time', 'trial_id', 'edges_covered'
+        'benchmark', 'fuzzer', 'trial_id', 'time', 'edges_covered'
     ]]
 
 
