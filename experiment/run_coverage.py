@@ -37,7 +37,7 @@ def find_crashing_units(artifacts_dir: str) -> List[str]:
 
 RSS_LIMIT_MB = 2048
 UNIT_TIMEOUT = 5
-MAX_TOTAL_TIME = experiment_utils.SNAPSHOT_PERIOD
+MAX_TOTAL_TIME = experiment_utils.get_snapshot_seconds()
 
 
 def do_coverage_run(  # pylint: disable=too-many-locals

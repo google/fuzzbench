@@ -33,15 +33,6 @@ def test_is_oss_fuzz(benchmark, expected_result, oss_fuzz_benchmark):
     assert benchmark_utils.is_oss_fuzz(benchmark) == expected_result
 
 
-@pytest.mark.parametrize(
-    'benchmark,expected_name',
-    [(conftest.OSS_FUZZ_BENCHMARK_NAME, 'oss-fuzz-project'),
-     (OTHER_BENCHMARK, OTHER_BENCHMARK)])
-def test_get_docker_name(benchmark, expected_name, oss_fuzz_benchmark):
-    """Test that we can get the docker name of a benchmark."""
-    assert benchmark_utils.get_docker_name(benchmark) == expected_name
-
-
 def test_get_project_oss_fuzz_benchmark(oss_fuzz_benchmark):
     """Test that we can get the project of an OSS-Fuzz benchmark."""
     assert benchmark_utils.get_project(

@@ -87,7 +87,7 @@ def copy_corpus_directory(encoded_temp_corpus, output_corpus):
         # Wait for initial fuzzer initialization, and after every copy.
         time.sleep(120)
 
-        subprocess.call([
+        subprocess.check_call([
             'dotnet',
             '/Eclipser/build/Eclipser.dll',
             'decode',

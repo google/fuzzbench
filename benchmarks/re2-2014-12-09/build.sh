@@ -15,6 +15,13 @@
 
 . $(dirname $0)/../common.sh
 
+apt-get update && \
+  apt-get install -y \
+  make \
+  autoconf \
+  automake
+
+
 CXXFLAGS="${CXXFLAGS} -std=gnu++98"
 
 build_lib() {

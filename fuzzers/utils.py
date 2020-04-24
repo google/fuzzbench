@@ -45,7 +45,10 @@ def build_benchmark(env=None):
     else:
         build_script = os.path.join('benchmark', 'build.sh')
 
-    print('Building benchmark')
+    benchmark = os.getenv('BENCHMARK')
+    fuzzer = os.getenv('FUZZER')
+    print('Building benchmark {benchmark} with fuzzer {fuzzer}'.format(
+        benchmark=benchmark, fuzzer=fuzzer))
     subprocess.check_call(['/bin/bash', '-ex', build_script], env=env)
 
 
