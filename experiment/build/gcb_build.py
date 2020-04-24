@@ -154,7 +154,7 @@ def _build(config_file: str,
 
 def get_build_config_file(filename: str) -> str:
     """Return the path of the GCB build config file |filename|."""
-    return os.path.join(utils.ROOT_DIR, 'experiment', 'gcb', filename)
+    return os.path.join(utils.ROOT_DIR, 'docker', 'gcb', filename)
 
 
 def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
