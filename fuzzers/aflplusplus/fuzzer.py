@@ -47,6 +47,8 @@ def build(*args):
         os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-4'
     elif 'ngram5' in build_modes:
         os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-5'
+    elif 'ngram6' in build_modes:
+        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-6'
     elif 'ngram8' in build_modes:
         os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-8'
     elif 'ngram16' in build_modes:
@@ -69,9 +71,9 @@ def build(*args):
     if 'laf' in build_modes:
         os.environ['AFL_LLVM_LAF_SPLIT_SWITCHES'] = '1'
         os.environ['AFL_LLVM_LAF_SPLIT_COMPARES'] = '1'
-        if not 'autodict' in build_modes:
+        if 'autodict' not in build_modes:
             os.environ['AFL_LLVM_LAF_TRANSFORM_COMPARES'] = '1'
-            
+
     if 'autodict' in build_modes:
         os.environ['AFL_LLVM_LTO_AUTODICTIONARY'] = '1'
 
