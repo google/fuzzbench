@@ -64,6 +64,9 @@
 
         <div id="summary" class="section scrollspy">
             <h2 class="green-text text-darken-3">experiment summary</h2>
+            {% if experiment.rank_by_mean_and_average_rank.size < 2 %}
+            No top level ranking as there is data only for a single fuzzer.
+            {% else %}
             Aggregate critical difference diagram showing average ranks when
             ranking fuzzers on each benchmark according to their median reached
             coverages. Critical difference is based on Friedman/Nemenyi post-hoc
@@ -81,6 +84,7 @@
                          src="{{ experiment.critical_difference_plot }}">
                 </div>
             </div>
+            {% endif %}
 
             <ul class="collapsible">
                 <li>

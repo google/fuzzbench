@@ -16,6 +16,7 @@
 """Tests for data_utils.py"""
 import pandas as pd
 import pandas.testing as pd_test
+import pytest
 
 from analysis import data_utils
 
@@ -46,6 +47,19 @@ def create_experiment_data():
         create_trial_data(6, 'libxml', 'libfuzzer', 600),
         create_trial_data(7, 'libxml', 'libfuzzer', 800),
     ])
+
+
+def test_validate_data_empty():
+    experiment_df = pd.DataFrame()
+    with pytest.raises(ValueError, match="Empty"):
+        data_utils.validate_data(experiment_df)
+
+
+def test_validate_data_missing_columns():
+    experiment_df = create_experiment_data()
+    experiment_df.drop(columns=['trial_id', 'time'], inplace=True)
+    with pytest.raises(ValueError, match="Missing columns.*trial_id"):
+        data_utils.validate_data(experiment_df)
 
 
 def test_drop_uniteresting_columns():
