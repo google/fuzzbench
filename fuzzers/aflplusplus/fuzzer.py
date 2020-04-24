@@ -45,6 +45,8 @@ def build(*args):
         os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-3'
     elif 'ngram4' in build_modes:
         os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-4'
+    elif 'ngram5' in build_modes:
+        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-5'
     elif 'ngram8' in build_modes:
         os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-8'
     elif 'ngram16' in build_modes:
