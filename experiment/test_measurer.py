@@ -232,8 +232,8 @@ def test_run_cov_new_units(mocked_execute, fs, environ):
                                                   SNAPSHOT_LOGGER)
     snapshot_measurer.initialize_measurement_dirs()
     shared_units = ['shared1', 'shared2']
-    fs.create_file(
-        snapshot_measurer.measured_files_path, contents='\n'.join(shared_units))
+    fs.create_file(snapshot_measurer.measured_files_path,
+                   contents='\n'.join(shared_units))
     for unit in shared_units:
         fs.create_file(os.path.join(snapshot_measurer.corpus_dir, unit))
 
@@ -288,8 +288,11 @@ def create_measurer(experiment):
 class TestIntegrationMeasurement:
     """Integration tests for measurement."""
 
-    def test_measure_snapshot_coverage(self, create_measurer, db, experiment):
+    @mock.patch('experiment.measurer.SnapshotMeasurer.is_cycle_unchanged')
+    def test_measure_snapshot_coverage(  # pylint: disable=too-many-locals
+            self, mocked_is_cycle_unchanged, create_measurer, db, experiment):
         """Integration test for measure_snapshot_coverage."""
+        mocked_is_cycle_unchanged.return_value = False
         # Set up the coverage binary.
         benchmark = 'freetype2-2017'
         coverage_binary_src = get_test_data_path(

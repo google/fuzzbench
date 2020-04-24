@@ -454,16 +454,16 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         """Updates the measured-files.txt file for this trial with
         files measured in this snapshot."""
         current_files = set(os.listdir(self.corpus_dir))
-        already_measured = set(self.get_measured_files())
-        filesystem.write('\n'.join(current_files + already_measured),
-                         self.measured_files_path)
+        already_measured = self.get_measured_files()
+        filesystem.write(self.measured_files_path,
+                         '\n'.join(current_files.union(already_measured)))
 
     def get_measured_files(self):
-        """Returns a list of files that have been measured for this
+        """Returns a the set of files that have been measured for this
         snapshot's trials."""
         if not os.path.exists(self.measured_files_path):
-            return []
-        return filesystem.read(self.measured_files_path).splitlines()
+            return set()
+        return set(filesystem.read(self.measured_files_path).splitlines())
 
 
 def measure_trial_coverage(  # pylint: disable=invalid-name
