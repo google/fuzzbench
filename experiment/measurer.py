@@ -388,11 +388,35 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
     def is_cycle_unchanged(self, cycle: int) -> bool:
         """Returns True if |cycle| is unchanged according to the
         unchanged-cycles file. This file is written to by the trial's runner."""
-        retcode, unchanged_cycles = gsutil.cat(
-            self.unchanged_cycles_bucket_path,
-            must_exist=False,
-            write_to_stdout=False)
-        return retcode == 0 and str(cycle) in unchanged_cycles
+        def copy_unchanged_cycles_file():
+            result = gsutil.cp(exp_path.gcs(self.unchanged_cycles_path),
+                               self.unchanged_cycles_path)
+            return result.retcode == 0:
+
+        if not os.path.exists(self.unchanged_cycles_path):
+            if not copy_unchanged_cycles_file():
+                return False
+
+        def get_unchanged_cycles():
+            return [
+                int(cycle)
+                for cycle in filesystem.read(self.unchanged_cycles_path).splitlines()
+            ]
+
+        unchanged_cycles = get_unchanged_cycles()
+        if cycle in unchanged_cycles:
+            return True
+
+        if cycle < max(unchanged_cycles):
+            # If the last/max unchanged cycle is greater than |cycle| then we
+            # don't need to copy the file again.
+            return False
+
+        if not copy_unchanged_cycles_file():
+            return False
+
+        unchanged_cycles = get_unchanged_cycles()
+        return cycle in unchanged_cycles
 
     def extract_corpus(self, corpus_archive_path) -> bool:
         """Extract the corpus archive for this cycle if it exists."""
@@ -405,7 +429,6 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         unit_blacklist = already_measured_units.union(crash_blacklist)
 
         extract_corpus(corpus_archive_path, unit_blacklist, self.corpus_dir)
-
         return True
 
     def archive_crashes(self, cycle):
