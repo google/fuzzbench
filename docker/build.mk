@@ -194,14 +194,14 @@ $(eval $(1)-oss-fuzz-builder-hash := $(shell cat benchmarks/$(1)/oss-fuzz.yaml |
                                       cut -d ':' -f2 | tr -d ' '))
 .$(1)-oss-fuzz-builder:
 	docker build \
-    --tag $(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$($(1)-project-name)-builder \
+    --tag $(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$(1)-builder \
     --file=docker/oss-fuzz-benchmark-builder/Dockerfile \
     --build-arg parent_image=gcr.io/fuzzbench/oss-fuzz/$($(1)-project-name)@sha256:$($(1)-oss-fuzz-builder-hash) \
     $(call cache_from,$(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$($(1)-project-name)-builder) \
     .
 
 .pull-$(1)-oss-fuzz-builder:
-	docker pull $(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$($(1)-project-name)-builder
+	docker pull $(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$(1)-builder
 endef
 # Instantiate the above template with all OSS-Fuzz projects.
 $(foreach oss_fuzz_benchmark,$(OSS_FUZZ_BENCHMARKS), \
@@ -211,51 +211,51 @@ define fuzzer_oss_fuzz_benchmark_template
 
 .$(1)-$(2)-oss-fuzz-builder-intermediate: .$(2)-oss-fuzz-builder
 	docker build \
-    --tag $(BASE_TAG)/oss-fuzz/builders/$(1)/$($(2)-project-name)-intermediate \
+    --tag $(BASE_TAG)/oss-fuzz/builders/$(1)/$(2)-intermediate \
     --file=fuzzers/$(1)/builder.Dockerfile \
-    --build-arg parent_image=$(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$($(2)-project-name)-builder \
-    $(call cache_from,${BASE_TAG}/oss-fuzz/builders/$(1)/$($(2)-project-name)-intermediate) \
+    --build-arg parent_image=$(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$(1)-builder \
+    $(call cache_from,${BASE_TAG}/oss-fuzz/builders/$(1)/$(2)-intermediate) \
     fuzzers/$(1)
 
 .pull-$(1)-$(2)-oss-fuzz-builder-intermediate: .pull-$(1)-oss-fuzz-builder
-	docker pull $(BASE_TAG)/oss-fuzz/builders/$(1)/$($(2)-project-name)-intermediate
+	docker pull $(BASE_TAG)/oss-fuzz/builders/$(1)/$(2)-intermediate)
 
 .$(1)-$(2)-oss-fuzz-builder: .$(1)-$(2)-oss-fuzz-builder-intermediate
 	docker build \
-    --tag $(BASE_TAG)/oss-fuzz/builders/$(1)/$($(2)-project-name) \
+    --tag $(BASE_TAG)/oss-fuzz/builders/$(1)/$(2) \
     --file=docker/oss-fuzz-builder/Dockerfile \
-    --build-arg parent_image=$(BASE_TAG)/oss-fuzz/builders/$(1)/$($(2)-project-name)-intermediate \
+    --build-arg parent_image=$(BASE_TAG)/oss-fuzz/builders/$(1)/$(2)-intermediate \
     --build-arg fuzzer=$(1) \
     --build-arg benchmark=$(2) \
-    $(call cache_from,${BASE_TAG}/oss-fuzz/builders/$(1)/$($(2)-project-name)) \
+    $(call cache_from,${BASE_TAG}/oss-fuzz/builders/$(1)/$(2)) \
     .
 
 .pull-$(1)-$(2)-oss-fuzz-builder: .pull-$(1)-$(2)-oss-fuzz-builder-intermediate
-	docker pull $(BASE_TAG)/oss-fuzz/builders/$(1)/$($(2)-project-name)
+	docker pull $(BASE_TAG)/oss-fuzz/builders/$(1)/$(2)
 
 ifneq ($(1), coverage)
 
 .$(1)-$(2)-oss-fuzz-intermediate-runner: base-runner
 	docker build \
-    --tag $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name)-intermediate \
+    --tag $(BASE_TAG)/oss-fuzz/runners/$(1)/$(2)-intermediate \
     --file fuzzers/$(1)/runner.Dockerfile \
-    $(call cache_from,${BASE_TAG}/oss-fuzz/runners/$(1)/$($(2)-project-name)-intermediate) \
+    $(call cache_from,${BASE_TAG}/oss-fuzz/runners/$(1)/$(2)-intermediate) \
     fuzzers/$(1)
 
 .pull-$(1)-$(2)-oss-fuzz-intermediate-runner: pull-base-runner
-	docker pull $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name)-intermediate
+	docker pull $(BASE_TAG)/oss-fuzz/runners/$(1)/$(2)-intermediate
 
 .$(1)-$(2)-oss-fuzz-runner: .$(1)-$(2)-oss-fuzz-builder .$(1)-$(2)-oss-fuzz-intermediate-runner
 	docker build \
-    --tag $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name) \
+    --tag $(BASE_TAG)/oss-fuzz/runners/$(1)/$(2) \
     --build-arg fuzzer=$(1) \
-    --build-arg oss_fuzz_project=$($(2)-project-name) \
-    $(call cache_from,${BASE_TAG}/oss-fuzz/runners/$(1)/$($(2)-project-name)) \
+    --build-arg oss_fuzz_project=$(2) \
+    $(call cache_from,${BASE_TAG}/oss-fuzz/runners/$(1)/$(2)) \
     --file docker/oss-fuzz-runner/Dockerfile \
     .
 
 .pull-$(1)-$(2)-oss-fuzz-runner: .pull-$(1)-$(2)-oss-fuzz-builder .pull-$(1)-$(2)-oss-fuzz-intermediate-runner
-	docker pull $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name)
+	docker pull $(BASE_TAG)/oss-fuzz/runners/$(1)/$(2)
 
 build-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
 
@@ -271,7 +271,7 @@ run-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
     -e FUZZER=$(1) \
     -e BENCHMARK=$(2) \
     -e FUZZ_TARGET=$($(2)-fuzz-target) \
-    -it $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name)
+    -it $(BASE_TAG)/oss-fuzz/runners/$(1)/$(2)
 
 test-run-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
 	docker run \
@@ -284,7 +284,7 @@ test-run-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
     -e FUZZ_TARGET=$($(2)-fuzz-target) \
     -e MAX_TOTAL_TIME=20 \
     -e SNAPSHOT_PERIOD=10 \
-    $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name)
+    $(BASE_TAG)/oss-fuzz/runners/$(1)/$(2)
 
 debug-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
 	docker run \
@@ -297,7 +297,7 @@ debug-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
     -e BENCHMARK=$(2) \
     -e FUZZ_TARGET=$($(2)-fuzz-target) \
     --entrypoint "/bin/bash" \
-    -it $(BASE_TAG)/oss-fuzz/runners/$(1)/$($(2)-project-name)
+    -it $(BASE_TAG)/oss-fuzz/runners/$(1)/$(2)
 
 else
 

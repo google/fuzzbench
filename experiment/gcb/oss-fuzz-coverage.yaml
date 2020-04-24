@@ -19,22 +19,22 @@ steps:
   args:
     - '-c'
     - |
-      docker pull ${_REPO}/oss-fuzz/builders/oss-fuzz-${_OSS_FUZZ_PROJECT}-builder || exit 0
+      docker pull ${_REPO}/oss-fuzz/builders/oss-fuzz-${_BENCHMARK}-builder || exit 0
 
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
 
     '--tag',
-    'gcr.io/oss-fuzz/builders/oss-fuzz-${_OSS_FUZZ_PROJECT}-builder',
+    'gcr.io/oss-fuzz/builders/oss-fuzz-${_BENCHMARK}-builder',
 
     '--tag',
-    '${_REPO}/oss-fuzz/builders/oss-fuzz-${_OSS_FUZZ_PROJECT}-builder',
+    '${_REPO}/oss-fuzz/builders/oss-fuzz-${_BENCHMARK}-builder',
 
     '--file=docker/oss-fuzz-benchmark-builder/Dockerfile',
 
     '--cache-from',
-    '${_REPO}/oss-fuzz/builders/oss-fuzz-${_OSS_FUZZ_PROJECT}-builder',
+    '${_REPO}/oss-fuzz/builders/oss-fuzz-${_BENCHMARK}-builder',
 
     # Use a hardcoded repo because the parent image is pinned by SHA. Users
     # won't have it.
@@ -50,11 +50,10 @@ steps:
   args:
     - '-c'
     - |
-      docker pull ${_REPO}/oss-fuzz/builders/coverage/${_OSS_FUZZ_PROJECT}-intermediate || exit 0
+      docker pull ${_REPO}/oss-fuzz/builders/coverage/${_BENCHMARK}-intermediate || exit 0
   wait_for: ['-']
   id: 'pull-build-fuzzer-benchmark-builder-intermediate'
   
-
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
@@ -62,15 +61,15 @@ steps:
     # Use two tags so that the image builds properly and we can push it to the
     # correct location.
     '--tag',
-    'gcr.io/fuzzbench/oss-fuzz/builders/coverage/${_OSS_FUZZ_PROJECT}-intermediate',
+    'gcr.io/fuzzbench/oss-fuzz/builders/coverage/${_BENCHMARK}-intermediate',
 
     '--tag',
-    '${_REPO}/oss-fuzz/builders/coverage/${_OSS_FUZZ_PROJECT}-intermediate',
+    '${_REPO}/oss-fuzz/builders/coverage/${_BENCHMARK}-intermediate',
 
     '--file=fuzzers/coverage/builder.Dockerfile',
 
     '--cache-from',
-    '${_REPO}/oss-fuzz/builders/coverage/${_OSS_FUZZ_PROJECT}-intermediate',
+    '${_REPO}/oss-fuzz/builders/coverage/${_BENCHMARK}-intermediate',
 
     # Use a hardcoded repo because the parent image is pinned by SHA. Users
     # won't have it.
@@ -87,7 +86,7 @@ steps:
   args:
     - '-c'
     - |
-      docker pull ${_REPO}/oss-fuzz/builders/coverage/${_OSS_FUZZ_PROJECT} || exit 0
+      docker pull ${_REPO}/oss-fuzz/builders/coverage/${_BENCHMARK} || exit 0
   id: 'pull-coverage-benchmark-builder'
   wait_for: ['-']
 
@@ -96,18 +95,18 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/oss-fuzz/builders/coverage/${_OSS_FUZZ_PROJECT}',
+    'gcr.io/fuzzbench/oss-fuzz/builders/coverage/${_BENCHMARK}',
 
     '--tag',
-    '${_REPO}/oss-fuzz/builders/coverage/${_OSS_FUZZ_PROJECT}',
+    '${_REPO}/oss-fuzz/builders/coverage/${_BENCHMARK}',
 
     '--file=docker/oss-fuzz-builder/Dockerfile',
 
     '--cache-from',
-    '${_REPO}/oss-fuzz/builders/coverage/${_OSS_FUZZ_PROJECT}',
+    '${_REPO}/oss-fuzz/builders/coverage/${_BENCHMARK}',
 
     '--build-arg',
-    'parent_image=${_REPO}/oss-fuzz/builders/coverage/${_OSS_FUZZ_PROJECT}-intermediate',
+    'parent_image=${_REPO}/oss-fuzz/builders/coverage/${_BENCHMARK}-intermediate',
 
     '--build-arg',
     'fuzzer=coverage',
@@ -124,21 +123,22 @@ steps:
     'run',
     '-v',
     '/workspace/out:/host-out',
-    '${_REPO}/oss-fuzz/builders/coverage/${_OSS_FUZZ_PROJECT}',
+    '${_REPO}/oss-fuzz/builders/coverage/${_BENCHMARK}',
     '/bin/bash',
     '-c',
-    'cd /out; tar -czvf /host-out/coverage-build-${_OSS_FUZZ_PROJECT}.tar.gz *'
+    'cd /out; tar -czvf /host-out/coverage-build-${_BENCHMARK}.tar.gz *'
   ]
 
 - name: 'gcr.io/cloud-builders/gsutil'
   args: [
     '-m',
     'cp',
-    '/workspace/out/coverage-build-${_OSS_FUZZ_PROJECT}.tar.gz',
+    '/workspace/out/coverage-build-${_BENCHMARK}.tar.gz',
     '${_GCS_COVERAGE_BINARIES_DIR}/',
   ]
 
 images:
-  - '${_REPO}/oss-fuzz/builders/oss-fuzz-${_OSS_FUZZ_PROJECT}-builder'
-  - '${_REPO}/oss-fuzz/builders/coverage/${_OSS_FUZZ_PROJECT}-intermediate'
-  - '${_REPO}/oss-fuzz/builders/coverage/${_OSS_FUZZ_PROJECT}'
+  - '${_REPO}/oss-fuzz/builders/oss-fuzz-${_BENCHMARK}-builder'
+  - '${_REPO}/oss-fuzz/builders/coverage/${_BENCHMARK}-intermediate'
+  - '${_REPO}/oss-fuzz/builders/coverage/${_BENCHMARK}'
+
