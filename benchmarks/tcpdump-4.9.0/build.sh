@@ -16,10 +16,11 @@
 . $(dirname $0)/../common.sh
 
 build_lib() {
+  apt-get update -y && apt-get install -y --no-install-recommends bison flex
   rm -rf BUILD
   cp -rf SRC BUILD
-  # we build and install bc was having issues with autogen.sh of dbus
-  # makes building the rest easier too..
+  # We build and install bc was having issues with autogen.sh of dbus and
+  # makes building the rest easier, too.
   (cd BUILD/libexpat/expat && ./buildconf.sh && ./configure && make &&
    make install)
   (cd BUILD/libdbus && 
@@ -28,10 +29,7 @@ build_lib() {
   (cd BUILD/libpcap && ./configure && make &&
    cd ../tcpdump && ./configure && make)
 }
-
-#
 # tcpdump really wants libpcap to share the same parent directory.
-# 
 mkdir SRC
 git clone https://github.com/libexpat/libexpat.git SRC/libexpat
 get_git_tag https://gitlab.freedesktop.org/dbus/dbus.git  dbus-1.10 SRC/libdbus
@@ -40,18 +38,15 @@ get_git_tag https://github.com/the-tcpdump-group/tcpdump.git  tcpdump-4.9.0 SRC/
 
 build_lib
 
-# copy over shared lib deps to /out
+# Copy over shared lib deps to /out.
 cp BUILD/libexpat/expat/lib/.libs/libexpat.so.1.6.11 $OUT/
 ln -s $OUT/libexpat.so.1.6.11 $OUT/libexpat.so.1
 ln -s $OUT/libexpat.so.1.6.11 $OUT/libexpat.so
 cp BUILD/libdbus/dbus/.libs/libdbus-1.so.3.14.16 $OUT/
 ln -s $OUT/libdbus-1.so.3.14.16 $OUT/libdbus-1.so.3
 ln -s $OUT/libdbus-1.so.3.14.16 $OUT/libdbus-1.so
-
-#
 # To test with the main() in tcpdump_fuzz.cc, use -D_HAS_MAIN and disable any
 # fuzzer in sanitizer flag / use of FUZZER_LIB.
-#
 $CXX $CXXFLAGS -std=c++11 -Wl,-rpath,/out -IBUILD/libpcap -IBUILD/tcpdump  \
   ${SCRIPT_DIR}/tcpdump_fuzz.cc BUILD/libpcap/libpcap.a  \
   BUILD/tcpdump/libnetdissect.a  \

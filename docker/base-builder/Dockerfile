@@ -21,9 +21,6 @@ FROM gcr.io/fuzzbench/base-image
 # recommended for some reason.
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
     automake \
-    bison \
-    cmake \
-    flex \
     git \
     libtool \
     subversion \

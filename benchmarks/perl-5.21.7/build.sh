@@ -18,7 +18,6 @@
 build_lib() {
   rm -rf BUILD
   cp -rf SRC BUILD
-#
 # Leaving for historical.. there are other options we might wish to toggle.
 #  sh Configure
 #     -Dafl_cc=${AFL_CC}
@@ -29,17 +28,13 @@ build_lib() {
 #     -des
 #     -Aldflags="${LCFLAGS}"
 #     -Alddlflags="-shared"
-#
   (cd BUILD && ./Configure -des -Dusedevel && make)
 }
 
 get_git_tag https://github.com/Perl/perl5.git v5.21.7 SRC
 build_lib
-
-#
 # To test with the main() in perl_fuzz.cc, use -D_HAS_MAIN and disable any
 # fuzzer in sanitizer flag / use of FUZZER_LIB.
-#
 $CXX $CXXFLAGS                                \
   -IBUILD                                     \
   ${SCRIPT_DIR}/perl_fuzz.cc                  \
