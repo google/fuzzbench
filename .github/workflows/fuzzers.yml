@@ -19,6 +19,13 @@ jobs:
           - aflplusplus_mopt
           - aflplusplus_cmplog
           - aflplusplus_instrim
+          - aflplusplus_instrim_coe
+          - aflplusplus_instrim_mopt2
+          - aflplusplus_ngram3
+          - aflplusplus_ngram4_17
+          - aflplusplus_ngram4_18
+          - aflplusplus_ngram4_coe
+          - aflplusplus_ngram5
           - aflsmart
           - eclipser
           - entropic
