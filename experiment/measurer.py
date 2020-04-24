@@ -317,14 +317,6 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
                                        self.benchmark_fuzzer_trial_dir)
         self.corpus_dir = os.path.join(measurement_dir, 'corpus')
 
-        # Keep a directory containing all the corpus units we've already seen.
-        # This is an easy to implement way of storing this info such that
-        # the measurer can restart and continue where it left off.
-        # A better solution could involve using a file to store this info
-        # instead. Another problem with it is it assumes the measurer is running
-        # on one machine.
-        self.prev_corpus_dir = os.path.join(measurement_dir, 'prev-corpus')
-
         self.crashes_dir = os.path.join(measurement_dir, 'crashes')
         self.sancov_dir = os.path.join(measurement_dir, 'sancovs')
         self.report_dir = os.path.join(measurement_dir, 'reports')
@@ -334,6 +326,10 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         # Stores the pcs that have been covered.
         self.covered_pcs_filename = os.path.join(self.report_dir,
                                                  'covered-pcs.txt')
+
+        # Stores the files that have already been measured for a trial.
+        self.measured_files_filename = os.path.join(self.report_dir,
+                                                    'measured-files.txt')
 
         # Used by the runner to signal that there won't be a corpus archive for
         # a cycle because the corpus hasn't changed since the last cycle.
@@ -345,8 +341,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         coverage."""
         for directory in [self.corpus_dir, self.sancov_dir, self.crashes_dir]:
             filesystem.recreate_directory(directory)
-        for directory in [self.report_dir, self.prev_corpus_dir]:
-            pathlib.Path(directory).mkdir(exist_ok=True)
+        pathlib.Path(self.report_dir).mkdir(exist_ok=True)
 
     def run_cov_new_units(self):
         """Run the coverage binary on new units."""
@@ -405,7 +400,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             self.logger.warning('Corpus not found: %s.', corpus_archive_path)
             return False
 
-        already_measured_units = set(os.listdir(self.prev_corpus_dir))
+        already_measured_units = self.get_measured_files()
         crash_blacklist = self.UNIT_BLACKLIST[self.benchmark]
         unit_blacklist = already_measured_units.union(crash_blacklist)
 
@@ -430,6 +425,19 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             posixpath.join(self.trial_dir, 'crashes', crashes_archive_name))
         gsutil.cp(archive, gcs_path)
         os.remove(archive)
+
+    def updated_measured_files(self):
+        """Updates the measured-files.txt file for this trial with
+        files measured in this snapshot."""
+        current_files = set(os.listdir(snapshot_measurer.corpus_dir))
+        already_measured = set(self.get_measured_files())
+        filesystem.write('\n'.join(current_files + already_measured), self.measured_files_path)
+
+    def get_measured_files(self):
+        """Returns a list of files that have been measured for this snapshot's trials."""
+        if not os.path.exists(self.measured_files_path):
+            return []
+        return filesystem.read(self.measured_files_path).splitlines()
 
 
 def measure_trial_coverage(  # pylint: disable=invalid-name
@@ -509,9 +517,8 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
                                trial_id=trial_num,
                                edges_covered=len(all_pcs))
 
-    # Save the new corpus.
-    filesystem.replace_dir(snapshot_measurer.corpus_dir,
-                           snapshot_measurer.prev_corpus_dir)
+    # Record the new corpus files.
+    snapshot_measurer.update_measured_files()
 
     # Archive crashes directory.
     snapshot_measurer.archive_crashes(cycle)
