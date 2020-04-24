@@ -328,8 +328,8 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
                                                  'covered-pcs.txt')
 
         # Stores the files that have already been measured for a trial.
-        self.measured_files_filename = os.path.join(self.report_dir,
-                                                    'measured-files.txt')
+        self.measured_files_path = os.path.join(self.report_dir,
+                                                'measured-files.txt')
 
         # Used by the runner to signal that there won't be a corpus archive for
         # a cycle because the corpus hasn't changed since the last cycle.
@@ -450,16 +450,17 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         gsutil.cp(archive, gcs_path)
         os.remove(archive)
 
-    def updated_measured_files(self):
+    def update_measured_files(self):
         """Updates the measured-files.txt file for this trial with
         files measured in this snapshot."""
-        current_files = set(os.listdir(snapshot_measurer.corpus_dir))
+        current_files = set(os.listdir(self.corpus_dir))
         already_measured = set(self.get_measured_files())
         filesystem.write('\n'.join(current_files + already_measured),
                          self.measured_files_path)
 
     def get_measured_files(self):
-        """Returns a list of files that have been measured for this snapshot's trials."""
+        """Returns a list of files that have been measured for this
+        snapshot's trials."""
         if not os.path.exists(self.measured_files_path):
             return []
         return filesystem.read(self.measured_files_path).splitlines()
