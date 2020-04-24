@@ -29,13 +29,6 @@ def is_oss_fuzz(benchmark):
     return os.path.isfile(oss_fuzz.get_config_file(benchmark))
 
 
-def get_docker_name(benchmark):
-    """Returns the name used to represent the benchmark in docker images."""
-    if is_oss_fuzz(benchmark):
-        return get_project(benchmark)
-    return benchmark
-
-
 def get_project(benchmark):
     """Returns the OSS-Fuzz project of |benchmark| if it is based on an
     OSS-Fuzz project, otherwise raises ValueError."""

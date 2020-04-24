@@ -540,8 +540,7 @@ def set_up_coverage_binary(benchmark):
     benchmark_coverage_binary_dir = coverage_binaries_dir / benchmark
     if not os.path.exists(benchmark_coverage_binary_dir):
         os.mkdir(benchmark_coverage_binary_dir)
-    docker_name = benchmark_utils.get_docker_name(benchmark)
-    archive_name = 'coverage-build-%s.tar.gz' % docker_name
+    archive_name = 'coverage-build-%s.tar.gz' % benchmark
     cloud_bucket_archive_path = exp_path.gcs(coverage_binaries_dir /
                                              archive_name)
     gsutil.cp(cloud_bucket_archive_path,
