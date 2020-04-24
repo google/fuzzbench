@@ -43,8 +43,8 @@ COPY --from=base-clang /usr/local/lib/clang /usr/local/lib/clang
 COPY --from=base-clang /usr/local/lib/libc++*.a /usr/local/lib/
 COPY --from=base-clang /usr/local/include/ /usr/local/include
 
-ENV CC clang
-ENV CXX clang++
+ENV CC="clang"
+ENV CXX="clang++"
 
 ENV CFLAGS="-O3"
 ENV CXXFLAGS="-O3 -stdlib=libc++"
