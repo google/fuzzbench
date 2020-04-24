@@ -213,7 +213,7 @@ define fuzzer_oss_fuzz_benchmark_template
 	docker build \
     --tag $(BASE_TAG)/oss-fuzz/builders/$(1)/$(2)-intermediate \
     --file=fuzzers/$(1)/builder.Dockerfile \
-    --build-arg parent_image=$(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$(1)-builder \
+    --build-arg parent_image=$(BASE_TAG)/oss-fuzz/builders/oss-fuzz-$(2)-builder \
     $(call cache_from,${BASE_TAG}/oss-fuzz/builders/$(1)/$(2)-intermediate) \
     fuzzers/$(1)
 
