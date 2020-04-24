@@ -32,7 +32,7 @@ steps:
     '--tag',
     '${_REPO}/oss-fuzz/builders/oss-fuzz-${_OSS_FUZZ_PROJECT}-builder',
 
-    '--file=fuzzers/${_FUZZER}/builder.Dockerfile',
+    '--file=docker/oss-fuzz-benchmark-builder/Dockerfile',
 
     '--cache-from',
     '${_REPO}/oss-fuzz/builders/oss-fuzz-${_OSS_FUZZ_PROJECT}-builder',
@@ -65,7 +65,7 @@ steps:
     '--tag',
     '${_REPO}/oss-fuzz/builders/${_FUZZER}/${_OSS_FUZZ_PROJECT}-intermediate',
 
-    '--file=docker/oss-fuzz-benchmark-builder/Dockerfile',
+    '--file=fuzzers/${_FUZZER}/builder.Dockerfile',
 
     '--cache-from',
     '${_REPO}/oss-fuzz/builders/${_FUZZER}/${_OSS_FUZZ_PROJECT}-intermediate',

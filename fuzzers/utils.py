@@ -162,6 +162,10 @@ def set_default_optimization_flag(env=None):
 
 def initialize_flags(env=None):
     """Set initial flags before fuzzer.build() is called."""
+    for flag_var in ['CFLAGS', 'CXXFLAGS']:
+        if flag_var in os.environ:
+            del os.environ[flag_var]
+
     set_no_sanitizer_compilation_flags(env)
     set_default_optimization_flag(env)
 
