@@ -333,8 +333,8 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
         # Used by the runner to signal that there won't be a corpus archive for
         # a cycle because the corpus hasn't changed since the last cycle.
-        self.unchanged_cycles_bucket_path = exp_path.gcs(
-            posixpath.join(self.trial_dir, 'results', 'unchanged-cycles'))
+        self.unchanged_cycles_path = os.path.join(self.trial_dir, 'results',
+                                                  'unchanged-cycles')
 
     def initialize_measurement_dirs(self):
         """Initialize directories that will be needed for measuring
@@ -388,10 +388,11 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
     def is_cycle_unchanged(self, cycle: int) -> bool:
         """Returns True if |cycle| is unchanged according to the
         unchanged-cycles file. This file is written to by the trial's runner."""
+
         def copy_unchanged_cycles_file():
             result = gsutil.cp(exp_path.gcs(self.unchanged_cycles_path),
                                self.unchanged_cycles_path)
-            return result.retcode == 0:
+            return result.retcode == 0
 
         if not os.path.exists(self.unchanged_cycles_path):
             if not copy_unchanged_cycles_file():
@@ -399,8 +400,8 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
         def get_unchanged_cycles():
             return [
-                int(cycle)
-                for cycle in filesystem.read(self.unchanged_cycles_path).splitlines()
+                int(cycle) for cycle in filesystem.read(
+                    self.unchanged_cycles_path).splitlines()
             ]
 
         unchanged_cycles = get_unchanged_cycles()
@@ -454,7 +455,8 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         files measured in this snapshot."""
         current_files = set(os.listdir(snapshot_measurer.corpus_dir))
         already_measured = set(self.get_measured_files())
-        filesystem.write('\n'.join(current_files + already_measured), self.measured_files_path)
+        filesystem.write('\n'.join(current_files + already_measured),
+                         self.measured_files_path)
 
     def get_measured_files(self):
         """Returns a list of files that have been measured for this snapshot's trials."""
