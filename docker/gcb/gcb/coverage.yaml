@@ -1,0 +1,106 @@
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+steps:
+
+# Pull builders/coverage to fill cache.
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      docker pull ${_REPO}/builders/coverage || exit 0
+
+# TODO: Hoist building builders/coverage so that we don't build it everytime we
+# do a coverage build.
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+
+    # Use two tags so that the image builds properly and we can push it to the
+    # correct location.
+    '--tag',
+    'gcr.io/fuzzbench/builders/coverage',
+
+    '--tag',
+    '${_REPO}/builders/coverage',
+
+    '--cache-from',
+    '${_REPO}/builders/coverage',
+
+    '--file=fuzzers/coverage/builder.Dockerfile',
+
+    'fuzzers/coverage'
+  ]
+  id: 'build-coverage-builder'
+
+
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      docker pull ${_REPO}/builders/coverage/${_BENCHMARK} || exit 0
+  id: 'pull-coverage-benchmark'
+  wait_for: ['-']  # Start this immediately.
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+
+    '--tag',
+    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}',
+
+    '--tag',
+    '${_REPO}/builders/coverage/${_BENCHMARK}',
+
+    '--build-arg',
+    'fuzzer=coverage',
+
+    '--build-arg',
+    'benchmark=${_BENCHMARK}',
+
+    '--file=docker/benchmark-builder/Dockerfile',
+
+    '--cache-from',
+    '${_REPO}/builders/coverage/${_BENCHMARK}',
+
+    '.'
+  ]
+  wait_for: ['build-coverage-builder', 'pull-coverage-benchmark']
+
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'run',
+    '-v',
+    '/workspace/out:/host-out',
+    '${_REPO}/builders/coverage/${_BENCHMARK}',
+    '/bin/bash',
+    '-c',
+    'cd /out; tar -czvf /host-out/coverage-build-${_BENCHMARK}.tar.gz *'
+  ]
+
+- name: 'gcr.io/cloud-builders/gsutil'
+  args: [
+    '-m',
+    'cp',
+    '/workspace/out/coverage-build-${_BENCHMARK}.tar.gz',
+    '${_GCS_COVERAGE_BINARIES_DIR}/'
+  ]
+
+# Push images so we can take advantage of caching.
+images:
+  - '${_REPO}/builders/coverage'
+  - '${_REPO}/builders/coverage/${_BENCHMARK}'
