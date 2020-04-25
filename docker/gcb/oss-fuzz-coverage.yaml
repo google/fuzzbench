@@ -19,8 +19,41 @@ steps:
   args:
     - '-c'
     - |
-      docker pull ${_REPO}/oss-fuzz/builders/coverage/${_BENCHMARK}-intermediate || exit 0
+      docker pull ${_REPO}/oss-fuzz/builders/oss-fuzz-${_BENCHMARK}-builder || exit 0
 
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+
+    '--tag',
+    'gcr.io/oss-fuzz/builders/oss-fuzz-${_BENCHMARK}-builder',
+
+    '--tag',
+    '${_REPO}/oss-fuzz/builders/oss-fuzz-${_BENCHMARK}-builder',
+
+    '--file=docker/oss-fuzz-benchmark-builder/Dockerfile',
+
+    '--cache-from',
+    '${_REPO}/oss-fuzz/builders/oss-fuzz-${_BENCHMARK}-builder',
+
+    # Use a hardcoded repo because the parent image is pinned by SHA. Users
+    # won't have it.
+    '--build-arg',
+    'parent_image=gcr.io/fuzzbench/oss-fuzz/${_OSS_FUZZ_PROJECT}@sha256:${_OSS_FUZZ_BUILDER_HASH}',
+
+    '.',
+  ]
+  id: 'build-oss-fuzz-benchmark-builder'
+
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      docker pull ${_REPO}/oss-fuzz/builders/coverage/${_BENCHMARK}-intermediate || exit 0
+  wait_for: ['-']
+  id: 'pull-build-fuzzer-benchmark-builder-intermediate'
+  
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
@@ -41,11 +74,12 @@ steps:
     # Use a hardcoded repo because the parent image is pinned by SHA. Users
     # won't have it.
     '--build-arg',
-    'parent_image=gcr.io/fuzzbench/oss-fuzz/${_OSS_FUZZ_PROJECT}@sha256:${_OSS_FUZZ_BUILDER_HASH}',
+    'parent_image=${_REPO}/oss-fuzz/builders/oss-fuzz-${_OSS_FUZZ_PROJECT}-builder',
 
     'fuzzers/coverage',
   ]
   id: 'build-coverage-benchmark-builder-intermediate'
+  wait_for: ['pull-build-fuzzer-benchmark-builder-intermediate', 'build-oss-fuzz-benchmark-builder']
 
 - name: 'gcr.io/cloud-builders/docker'
   entrypoint: 'bash'
@@ -104,5 +138,7 @@ steps:
   ]
 
 images:
+  - '${_REPO}/oss-fuzz/builders/oss-fuzz-${_BENCHMARK}-builder'
   - '${_REPO}/oss-fuzz/builders/coverage/${_BENCHMARK}-intermediate'
   - '${_REPO}/oss-fuzz/builders/coverage/${_BENCHMARK}'
+
