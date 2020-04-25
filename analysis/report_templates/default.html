@@ -65,7 +65,9 @@
         <div id="summary" class="section scrollspy">
             <h2 class="green-text text-darken-3">experiment summary</h2>
             {% if experiment.rank_by_mean_and_average_rank.size < 2 %}
-            No top level ranking as there is data only for a single fuzzer.
+            No ranking as the available data is only for a single fuzzer.
+            {% elif experiment.benchmarks|length < 2 %}
+            No cross-benchmark ranking as the available data is only for a single benchmark.
             {% else %}
             Aggregate critical difference diagram showing average ranks when
             ranking fuzzers on each benchmark according to their median reached
