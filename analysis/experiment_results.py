@@ -50,9 +50,9 @@ class ExperimentResults:
                 self.git_hash = experiment_df.git_hash.iloc[0]
 
         # Earliest trial start time.
-        self.started = experiment_df.time_started.min()
+        self.started = experiment_df.time_started.dropna().min()
         # Latest trial end time.
-        self.ended = experiment_df.time_ended.max()
+        self.ended = experiment_df.time_ended.dropna().max()
 
         # Keep data frame without non-interesting columns.
         self._experiment_df = data_utils.drop_uninteresting_columns(
