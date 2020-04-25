@@ -27,7 +27,7 @@ def get_cmplog_build_directory(target_directory):
     return os.path.join(target_directory, 'cmplog')
 
 
-def build(*args): # pylint: disable=too-many-branches,too-many-statements
+def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration.
