@@ -219,7 +219,7 @@ define fuzzer_oss_fuzz_benchmark_template
     fuzzers/$(1)
 
 .pull-$(1)-$(2)-oss-fuzz-builder-intermediate: .pull-$(2)-oss-fuzz-builder
-	docker pull $(BASE_TAG)/oss-fuzz/builders/$(1)/$(2)-intermediate)
+	docker pull $(BASE_TAG)/oss-fuzz/builders/$(1)/$(2)-intermediate
 
 .$(1)-$(2)-oss-fuzz-builder: .$(1)-$(2)-oss-fuzz-builder-intermediate
 	docker build \
