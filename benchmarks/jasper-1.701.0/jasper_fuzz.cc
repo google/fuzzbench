@@ -216,12 +216,12 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	int i;
 
 	if (jas_init()) {
-		abort();
+		return 0;	
 	}
 
     if (!(cmdopts = (cmdopts_t *)malloc(sizeof(cmdopts_t)))) {
         fprintf(stderr, "error: insufficient memory\n");
-        exit(EXIT_FAILURE);
+       	return 0; 
     }
 
 #ifdef _HAS_MAIN
@@ -236,7 +236,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	if ((cmdopts->outfmt = jas_image_strtofmt("mif")) < 0) {
 		fprintf(stderr, "error: invalid output format %s\n", jas_optarg);
 		delete_file(cmdopts->infile);
-		exit(EXIT_FAILURE);
+	  return 0;	
 	} 
     cmdopts->outopts = 0;
     cmdopts->outoptsbuf[0] = '\0';
@@ -256,13 +256,13 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 			fprintf(stderr, "error: cannot open input image file %s\n",
 			  cmdopts->infile);
 			delete_file(cmdopts->infile);
-			exit(EXIT_FAILURE);
+			return 0;	
 		}
 	} else {
 		/* The input image is to be read from standard input. */
 		if (!(in = jas_stream_fdopen(0, "rb"))) {
 			fprintf(stderr, "error: cannot open standard input\n");
-			exit(EXIT_FAILURE);
+		  return 0;	
 		}
 	}
 
@@ -273,14 +273,14 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 			fprintf(stderr, "error: cannot open output image file %s\n",
 			  cmdopts->outfile);
 			delete_file(cmdopts->infile);
-			exit(EXIT_FAILURE);
+			return 0;	
 		}
 	} else {
 		/* The output image is to be written to standard output. */
 		if (!(out = jas_stream_fdopen(1, "w+b"))) {
 			fprintf(stderr, "error: cannot open standard output\n");
 			delete_file(cmdopts->infile);
-			exit(EXIT_FAILURE);
+			return 0;	
 		}
 	}
 
@@ -288,7 +288,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 		if ((cmdopts->infmt = jas_image_getfmt(in)) < 0) {
 			fprintf(stderr, "error: input image has unknown format\n");
 			delete_file(cmdopts->infile);
-			exit(EXIT_FAILURE);
+			return 0;	
 		}
 	}
 
@@ -297,7 +297,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	if (!(image = jas_image_decode(in, cmdopts->infmt, cmdopts->inopts))) {
 		fprintf(stderr, "error: cannot load image data\n");
 		delete_file(cmdopts->infile);
-		exit(EXIT_FAILURE);
+		return 0;	
 	}
 	endclk = clock();
 	dectime = endclk - startclk;
@@ -324,12 +324,12 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 		if (!(outprof = jas_cmprof_createfromclrspc(JAS_CLRSPC_SRGB))) {
 			jas_eprintf("cannot create sRGB profile\n");
 			delete_file(cmdopts->infile);
-			exit(EXIT_FAILURE);
+			return 0;	
 		}
 		if (!(newimage = jas_image_chclrspc(image, outprof, JAS_CMXFORM_INTENT_PER))) {
 			jas_eprintf("cannot convert to sRGB\n");
 			delete_file(cmdopts->infile);
-			exit(EXIT_FAILURE);
+			return 0;	
 		}
 		jas_image_destroy(image);
 		jas_cmprof_destroy(outprof);
@@ -341,7 +341,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	if (jas_image_encode(image, out, cmdopts->outfmt, cmdopts->outopts)) {
 		fprintf(stderr, "error: cannot encode image\n");
 		delete_file(cmdopts->infile);
-		exit(EXIT_FAILURE);
+		return 0;
 	}
 	jas_stream_flush(out);
 	endclk = clock();
@@ -361,7 +361,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	if (jas_stream_close(out)) {
 		fprintf(stderr, "error: cannot close output image file\n");
 		delete_file(cmdopts->infile);
-		exit(EXIT_FAILURE);
+		return 0;	
 	}
 
 	delete_file(cmdopts->infile);
@@ -370,7 +370,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	jas_image_clearfmts();
 
 	/* Success at last! :-) */
-	return EXIT_SUCCESS;
+	return 0; 
 }
 
 

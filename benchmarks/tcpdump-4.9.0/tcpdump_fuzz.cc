@@ -139,7 +139,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
 	if (nd_init(ebuf, sizeof ebuf) == -1) {
 		delete_file(in);
-		exit(1);
+		return 0;
 	}
 
 	memset(ndo, 0, sizeof(*ndo));
@@ -155,7 +155,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	pd = pcap_open_offline(in, ebuf);
 	if (pd == NULL) {
 		delete_file(in);
-		exit(2);
+		return 0;	
 	}
 
 	dlt = pcap_datalink(pd);
