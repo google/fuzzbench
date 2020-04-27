@@ -16,6 +16,9 @@
 import sys
 import subprocess
 
+from src_analysis import change_utils
+from src_analysis import diff_utils
+
 # Don't build php benchmark since it fills up disk in GH actions.
 OSS_FUZZ_BENCHMARKS = [
     'bloaty_fuzz_target',
@@ -65,6 +68,8 @@ def delete_docker_images():
 
 def make_builds(benchmarks, fuzzer):
     """Use make to build each target in |build_targets|."""
+    print('Building benchmarks: {} for fuzzer: {}'.format(
+        ', '.join(benchmarks), fuzzer))
     make_targets = get_make_targets(benchmarks, fuzzer)
     for pull_target, build_target in make_targets:
         # Pull target first.
@@ -90,6 +95,17 @@ def do_build(build_type, fuzzer):
     else:
         raise Exception('Invalid build_type: %s' % build_type)
 
+    changed_files = diff_utils.get_changed_files()
+    print(changed_files)
+    changed_fuzzers = change_utils.get_changed_fuzzers(changed_files)
+    print('fuzzers', changed_fuzzers)
+    if fuzzer in changed_fuzzers:
+        return make_builds(benchmarks, fuzzer)
+
+    changed_benchmarks = set(change_utils.get_changed_benchmarks(changed_files))
+    benchmarks = [
+        benchmark for benchmark in benchmarks if benchmark in changed_benchmarks
+    ]
     return make_builds(benchmarks, fuzzer)
 
 

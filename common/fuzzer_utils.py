@@ -16,7 +16,7 @@
 import importlib
 import os
 import re
-from typing import Optional
+from typing import Dict, Optional
 
 from common import logs
 from common import utils
@@ -24,6 +24,46 @@ from common import utils
 DEFAULT_FUZZ_TARGET_NAME = 'fuzz-target'
 FUZZ_TARGET_SEARCH_STRING = b'LLVMFuzzerTestOneInput'
 VALID_FUZZER_REGEX = re.compile(r'^[A-Za-z0-9_]+$')
+FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
+
+
+class FuzzerDirectory:
+    """Class representing a fuzzer directory in fuzzers/."""
+
+    def __init__(self, name):
+        self.name = name
+
+    @property
+    def directory(self):
+        """Returns the path to the directory in fuzzers/."""
+        return os.path.join(FUZZERS_DIR, self.name)
+
+    @property
+    def fuzzer_py(self):
+        """Returns the path to the fuzzer.py file in fuzzer directory."""
+        return os.path.join(self.directory, 'fuzzer.py')
+
+    @property
+    def runner_dockerfile(self):
+        """Returns the path to the runner.Dockerfile file in fuzzer
+        directory."""
+        return os.path.join(self.directory, 'runner.Dockerfile')
+
+    @property
+    def builder_dockerfile(self):
+        """Returns the path to the builder.Dockerfile file in fuzzer
+        directory."""
+        return os.path.join(self.directory, 'builder.Dockerfile')
+
+    @property
+    def variants_yaml(self):
+        """Returns the path to the variants.yaml file in fuzzer directory."""
+        return os.path.join(self.directory, 'variants.yaml')
+
+    def get_dockerfiles(self):
+        """Returns a list of paths to the runner and builder dockerfiles in the
+        fuzzer directory."""
+        return [self.runner_dockerfile, self.builder_dockerfile]
 
 
 def get_fuzz_target_binary(search_directory: str,
@@ -77,38 +117,52 @@ def validate(fuzzer):
         return False
 
 
+def is_fuzzer_module(fuzzer, exclude_coverage=True):
+    """Returns True if |fuzzer| is a fuzzer module."""
+    # !!! KILL exclude_coverage?
+    if fuzzer == 'coverage':
+        return not exclude_coverage
+    if not os.path.isfile(FuzzerDirectory(fuzzer).fuzzer_py):
+        return False
+    return True
+
+
+def get_fuzzer_from_config(fuzzer_config: Dict) -> str:
+    """Returns the fuzzer of |fuzzer_config| for a non-variant fuzzer or returns
+    the variant_name for a variant fuzzer."""
+    return fuzzer_config.get('variant_name', fuzzer_config['fuzzer'])
+
+
 def get_fuzzer_configs(fuzzers=None):
     """Returns the list of all fuzzers."""
     # Import it here to avoid yaml dependency in runner.
     # pylint: disable=import-outside-toplevel
     from common import yaml_utils
 
-    fuzzers_dir = os.path.join(utils.ROOT_DIR, 'fuzzers')
     fuzzer_configs = []
-    for fuzzer in os.listdir(fuzzers_dir):
-        if not os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')):
-            continue
-        if fuzzer == 'coverage':
+    for fuzzer in os.listdir(FUZZERS_DIR):
+        if not is_fuzzer_module(fuzzer):
             continue
 
         if not fuzzers or fuzzer in fuzzers:
             # Auto-generate the default configuration for each base fuzzer.
             fuzzer_configs.append({'fuzzer': fuzzer})
 
-        variant_config_path = os.path.join(fuzzers_dir, fuzzer, 'variants.yaml')
-        if not os.path.isfile(variant_config_path):
+        fuzzer_directory = FuzzerDirectory(fuzzer)
+        if not os.path.isfile(fuzzer_directory.variants_yaml):
             continue
 
-        variant_config = yaml_utils.read(variant_config_path)
+        variant_config = yaml_utils.read(fuzzer_directory.variants_yaml)
         assert 'variants' in variant_config, (
-            'Missing "variants" section of {}'.format(variant_config_path))
+            'Missing "variants" section of {}'.format(
+                fuzzer_directory.variants_yaml))
         for variant in variant_config['variants']:
             if not fuzzers or variant['name'] in fuzzers:
                 # Modify the config from the variants.yaml format to the
                 # format expected by a fuzzer config.
                 assert 'name' in variant, (
                     'Missing name attribute for fuzzer variant in {}'.format(
-                        variant_config_path))
+                        fuzzer_directory.variants_yaml))
                 variant['variant_name'] = variant['name']
                 del variant['name']
                 variant['fuzzer'] = fuzzer

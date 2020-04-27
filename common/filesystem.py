@@ -12,18 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Broadly useful fileystem-related code."""
-
-from pathlib import Path
+import glob
 import os
+from pathlib import Path
 import shutil
-
-
-def get_subdirs(directory):
-    """Returns a list of subdirectories in |directory|."""
-    return [
-        subpath for subpath in os.listdir(directory)
-        if os.path.isdir(os.path.join(directory, subpath))
-    ]
 
 
 def create_directory(directory):
@@ -110,3 +102,12 @@ def make_dir_copy(src_dir):
     dst_dir = src_dir + '-copy'
     replace_dir(src_dir, dst_dir, move=False)
     return dst_dir
+
+
+def list_files(directory):
+    """Returns a list of absolute paths to all files in |directory|
+    and its subdirectories."""
+    # !!! Test
+    dir_absolute_path = os.path.abspath(directory)
+    search_path = os.path.join(dir_absolute_path, '**', '*')
+    return list(glob.iglob(search_path, recursive=True))
