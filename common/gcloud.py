@@ -44,6 +44,7 @@ def ssh(instance: str, *args, **kwargs):
         ssh_command.append('--command=%s' % command)
     if zone:
         ssh_command.append('--zone=%s' % zone)
+    print(ssh_command)
     return new_process.execute(ssh_command, *args, **kwargs)
 
 
