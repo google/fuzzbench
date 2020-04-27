@@ -392,8 +392,8 @@ class GoogleCloudDispatcher(BaseDispatcher):
         # need to SSH into the dispatcher.
         self.process.join()  # Wait for dispatcher instance.
         # Check that we can SSH into the instance.
-        #gcloud.robust_begin_gcloud_ssh(self.instance_name,
-        #                               self.config['cloud_compute_zone'])
+        gcloud.robust_begin_gcloud_ssh(self.instance_name,
+                                       self.config['cloud_compute_zone'])
 
         base_docker_tag = experiment_utils.get_base_docker_tag(
             self.config['cloud_project'])
@@ -428,7 +428,6 @@ class GoogleCloudDispatcher(BaseDispatcher):
                 cloud_sql_instance_connection_name),
             base_docker_tag=base_docker_tag,
         )
-        print(command)
         return gcloud.ssh(self.instance_name,
                           command=command,
                           zone=self.config['cloud_compute_zone'])
