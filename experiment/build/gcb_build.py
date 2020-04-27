@@ -20,7 +20,6 @@ from typing import Dict, Tuple
 from common import benchmark_utils
 from common import experiment_path as exp_path
 from common import experiment_utils
-from common import filesystem
 from common import fuzzer_config_utils
 from common import logs
 from common import new_process
