@@ -130,8 +130,8 @@ def _build_oss_fuzz_project_coverage(benchmark: str) -> Tuple[int, str]:
         build_utils.get_coverage_binaries_dir())
     substitutions = {
         '_GCS_COVERAGE_BINARIES_DIR': coverage_binaries_dir,
-        '_OSS_FUZZ_PROJECT': project,
         '_BENCHMARK': benchmark,
+        '_OSS_FUZZ_PROJECT': project,
         '_OSS_FUZZ_BUILDER_HASH': oss_fuzz_builder_hash,
     }
     config_file = get_build_config_file('oss-fuzz-coverage.yaml')
@@ -185,7 +185,7 @@ def _build(config_file: str,
 
 def get_build_config_file(filename: str) -> str:
     """Return the path of the GCB build config file |filename|."""
-    return os.path.join(utils.ROOT_DIR, 'experiment', 'gcb', filename)
+    return os.path.join(utils.ROOT_DIR, 'docker', 'gcb', filename)
 
 
 def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:

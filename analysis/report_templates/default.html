@@ -64,23 +64,42 @@
 
         <div id="summary" class="section scrollspy">
             <h2 class="green-text text-darken-3">experiment summary</h2>
+            {% if experiment.rank_by_mean_and_average_rank.size < 2 %}
+            No ranking as the available data is only for a single fuzzer.
+
+            {% elif experiment.rank_by_mean_and_average_rank.size > 20 %}
+            Showing cross-benchmark ranking as a table, because the critical
+            difference plot currently only supports up to 20 fuzzers. The table
+            shows the average rank (lower better) of fuzzers after ranking them
+            on each benchmark according to the median reached coverages.
+            <div class="row">
+                <div class="col s7 offset-s3">
+                    {{ experiment.rank_by_mean_and_average_rank.to_frame().to_html() }}
+                </div>
+            </div>
+
+            {% elif experiment.benchmarks|length < 2 %}
+            No cross-benchmark ranking as the available data is only for a single benchmark.
+
+            {% else %}
             Aggregate critical difference diagram showing average ranks when
             ranking fuzzers on each benchmark according to their median reached
             coverages. Critical difference is based on Friedman/Nemenyi post-hoc
             test. See more in the <a href="https://google.github.io/fuzzbench/reference/report/">
             documentation</a>.<br>
-            Note: If a fuzzer does not support all benchmarks,
-            its ranking as shown in this diagram can be lower than it should be.
-            So please check the list of supported benchmarks for the fuzzer(s) of your interest.
-            The list could be specified in the fuzzer's README.md like
-            <a href="https://github.com/google/fuzzbench/blob/master/fuzzers/aflsmart/README.md">this</a>.
-
             <div class="row">
                 <div class="col s7 offset-s3">
                     <img class="responsive-img materialboxed"
                          src="{{ experiment.critical_difference_plot }}">
                 </div>
             </div>
+
+            {% endif %}
+            Note: If a fuzzer does not support all benchmarks,
+            its ranking as shown in this diagram can be lower than it should be.
+            So please check the list of supported benchmarks for the fuzzer(s) of your interest.
+            The list could be specified in the fuzzer's README.md like
+            <a href="https://github.com/google/fuzzbench/blob/master/fuzzers/aflsmart/README.md">this</a>.
 
             <ul class="collapsible">
                 <li>
