@@ -127,9 +127,7 @@ def validate_fuzzer(fuzzer: str):
 
 def validate_fuzzer_config(fuzzer_config):
     """Validate |fuzzer_config|."""
-    allowed_fields = [
-        'name', 'fuzzer_environment', 'build_arguments', 'fuzzer'
-    ]
+    allowed_fields = ['name', 'fuzzer_environment', 'build_arguments', 'fuzzer']
     if 'fuzzer' not in fuzzer_config:
         raise Exception('Fuzzer configuration must include the "fuzzer" field.')
 
