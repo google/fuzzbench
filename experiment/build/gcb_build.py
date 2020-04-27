@@ -92,14 +92,14 @@ def _add_build_arguments_to_config(base: str, fuzzer: str) -> str:
 def _build_oss_fuzz_project_fuzzer(benchmark: str,
                                    fuzzer: str) -> Tuple[int, str]:
     """Build a |benchmark|, |fuzzer| runner image on GCB."""
-    underlying_fuzzer = fuzzer_config_utils.get_by_variant_name(
-        fuzzer)['fuzzer']
+    base_fuzzer = fuzzer_config_utils.get_by_variant_name(fuzzer)['fuzzer']
     project = benchmark_utils.get_project(benchmark)
     oss_fuzz_builder_hash = benchmark_utils.get_oss_fuzz_builder_hash(benchmark)
     substitutions = {
         '_OSS_FUZZ_PROJECT': project,
         '_BENCHMARK': benchmark,
-        '_FUZZER': underlying_fuzzer,
+        '_FUZZER': fuzzer,
+        '_BASE_FUZZER': base_fuzzer,
         '_OSS_FUZZ_BUILDER_HASH': oss_fuzz_builder_hash,
     }
     config_file = _add_build_arguments_to_config(
@@ -112,13 +112,13 @@ def _build_oss_fuzz_project_fuzzer(benchmark: str,
 
 def _build_benchmark_fuzzer(benchmark: str, fuzzer: str) -> Tuple[int, str]:
     """Build a |benchmark|, |fuzzer| runner image on GCB."""
-    underlying_fuzzer = fuzzer_config_utils.get_by_variant_name(
-        fuzzer)['fuzzer']
+    base_fuzzer = fuzzer_config_utils.get_by_variant_name(fuzzer)['fuzzer']
     # See link for why substitutions must begin with an underscore:
     # https://cloud.google.com/cloud-build/docs/configuring-builds/substitute-variable-values#using_user-defined_substitutions
     substitutions = {
         '_BENCHMARK': benchmark,
-        '_FUZZER': underlying_fuzzer,
+        '_FUZZER': fuzzer,
+        '_BASE_FUZZER': base_fuzzer,
     }
     config_file = _add_build_arguments_to_config(
         get_build_config_file('fuzzer.yaml'), fuzzer)
