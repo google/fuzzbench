@@ -17,12 +17,8 @@ jobs:
           - aflfast
           - aflplusplus
           - aflplusplus_mopt
-          - aflplusplus_fast
-          - aflplusplus_coe
-          - aflplusplus_quad
-          - aflplusplus_lin
-          - aflplusplus_mmopt
-          - aflplusplus_rare
+          - aflplusplus_cmplog
+          - aflplusplus_instrim
           - aflsmart
           - eclipser
           - entropic
@@ -45,10 +41,20 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
+    - name: Clear unnecessary files
+      run: |
+        sudo swapoff -a
+        sudo rm -f /swapfile
+        sudo apt clean
+        docker rmi $(docker images -a -q)
+        df -h
+
     - name: Setup Python environment
       uses: actions/setup-python@v1.1.1
       with:
         python-version: 3.7
+
     - name: Build Benchmarks
       run: |
-        python .github/workflows/build.py $BENCHMARK_TYPE $FUZZER
+        python .github/workflows/test_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER

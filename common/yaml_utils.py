@@ -23,3 +23,9 @@ def read(yaml_filename):
 
     with open(yaml_filename) as file_handle:
         return yaml.load(file_handle, yaml.SafeLoader)
+
+
+def write(yaml_filename, data):
+    """Writes data to a new yaml file at |yaml_filename|."""
+    with open(yaml_filename, 'w') as file_handle:
+        return yaml.dump(data, file_handle)

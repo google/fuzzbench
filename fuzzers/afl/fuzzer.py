@@ -102,7 +102,7 @@ def run_afl_fuzz(input_corpus,
     ]
     print('[run_fuzzer] Running command: ' + ' '.join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
-    subprocess.call(command, stdout=output_stream, stderr=output_stream)
+    subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
