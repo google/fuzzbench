@@ -75,6 +75,7 @@ def _add_builder_arguments_to_config(base: str, fuzzer: str) -> str:
     if 'builder_arguments' not in fuzzer_config:
         return base
 
+    # TODO(mbarbella): Rather than rewrite yaml files, use the GCB API.
     args = fuzzer_config['builder_arguments']
     config = yaml_utils.read(base)
     for step in config['steps']:
