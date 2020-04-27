@@ -188,9 +188,9 @@ def get_git_hash():
 
 def get_full_fuzzer_name(fuzzer_config):
     """Get the full fuzzer name in the form <base fuzzer>_<variant name>."""
-    if 'variant_name' not in fuzzer_config:
+    if 'name' not in fuzzer_config:
         return fuzzer_config['fuzzer']
-    return fuzzer_config['fuzzer'] + '_' + fuzzer_config['variant_name']
+    return fuzzer_config['fuzzer'] + '_' + fuzzer_config['name']
 
 
 def set_up_fuzzer_config_files(fuzzer_configs):
