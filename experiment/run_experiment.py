@@ -128,7 +128,7 @@ def validate_fuzzer(fuzzer: str):
 def validate_fuzzer_config(fuzzer_config):
     """Validate |fuzzer_config|."""
     allowed_fields = [
-        'name', 'fuzzer_environment', 'builder_arguments', 'fuzzer'
+        'name', 'fuzzer_environment', 'build_arguments', 'fuzzer'
     ]
     if 'fuzzer' not in fuzzer_config:
         raise Exception('Fuzzer configuration must include the "fuzzer" field.')
@@ -141,8 +141,8 @@ def validate_fuzzer_config(fuzzer_config):
             not isinstance(fuzzer_config['fuzzer_environment'], list)):
         raise Exception('Fuzzer environment must be a list.')
 
-    if ('builder_arguments' in fuzzer_config and
-            not isinstance(fuzzer_config['builder_arguments'], list)):
+    if ('build_arguments' in fuzzer_config and
+            not isinstance(fuzzer_config['build_arguments'], list)):
         raise Exception('Builder arguments must be a list.')
 
     name = fuzzer_config.get('name')
