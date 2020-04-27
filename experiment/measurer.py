@@ -341,7 +341,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         coverage."""
         for directory in [self.corpus_dir, self.sancov_dir, self.crashes_dir]:
             filesystem.recreate_directory(directory)
-        pathlib.Path(self.report_dir).mkdir(exist_ok=True)
+        filesystem.create_directory(self.report_dir)
 
     def run_cov_new_units(self):
         """Run the coverage binary on new units."""
