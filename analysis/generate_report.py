@@ -58,6 +58,13 @@ def get_arg_parser():
         '--benchmarks',
         nargs='*',
         help='Names of the benchmarks to include in the report.')
+    parser.add_argument(
+        '-e',
+        '--end-time',
+        default=None,
+        type=int,
+        help=('The last time (in seconds) during an experiment to include in '
+              'the report.'))
     parser.add_argument('-f',
                         '--fuzzers',
                         nargs='*',
@@ -90,7 +97,8 @@ def generate_report(experiment_names,
                     report_type='default',
                     quick=False,
                     from_cached_data=False,
-                    in_progress=False):
+                    in_progress=False,
+                    end_time=None):
     """Generate report helper."""
     report_name = report_name or experiment_names[0]
 
@@ -115,6 +123,9 @@ def generate_report(experiment_names,
     if label_by_experiment:
         experiment_df = data_utils.label_fuzzers_by_experiment(experiment_df)
 
+    if end_time is not None:
+        experiment_df = data_utils.filter_max_time(experiment_df, end_time)
+
     fuzzer_names = experiment_df.fuzzer.unique()
     plotter = plotting.Plotter(fuzzer_names, quick)
     experiment_ctx = experiment_results.ExperimentResults(
@@ -135,9 +146,16 @@ def main():
     parser = get_arg_parser()
     args = parser.parse_args()
 
-    generate_report(args.experiments, args.report_dir, args.report_name,
-                    args.label_by_experiment, args.benchmarks, args.fuzzers,
-                    args.report_type, args.quick, args.from_cached_data)
+    generate_report(experiment_names=args.experiments,
+                    report_directory=args.report_dir,
+                    report_name=args.report_name,
+                    label_by_experiment=args.label_by_experiment,
+                    benchmarks=args.benchmarks,
+                    fuzzers=args.fuzzers,
+                    report_type=args.report_type,
+                    quick=args.quick,
+                    from_cached_data=args.from_cached_data,
+                    end_time=args.end_time)
 
 
 if __name__ == '__main__':

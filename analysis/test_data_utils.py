@@ -94,6 +94,14 @@ def test_label_fuzzers_by_experiment():
     assert labeled_df.fuzzer.unique().tolist() == expected_fuzzer_names
 
 
+def test_filter_max_time():
+    experiment_df = create_experiment_data()
+    max_time = 5
+    filtered_df = data_utils.filter_max_time(experiment_df, max_time)
+    expected_times = range(max_time + 1)
+    assert filtered_df.time.unique().tolist() == list(expected_times)
+
+
 def test_benchmark_snapshot():
     """Tests that the snapshot data contains only the latest timestamp for all
     trials, in case all trials have the same lengths."""

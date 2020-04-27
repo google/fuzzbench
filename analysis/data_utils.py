@@ -62,6 +62,12 @@ def label_fuzzers_by_experiment(experiment_df):
     return experiment_df
 
 
+def filter_max_time(experiment_df, max_time):
+    """Returns table with snapshots that have time less than or equal to
+    |max_time|."""
+    return experiment_df[experiment_df['time'] <= max_time]
+
+
 # Creating "snapshots" (see README.md for definition).
 
 _DEFAULT_BENCHMARK_SAMPLE_NUM_THRESHOLD = 0.8
