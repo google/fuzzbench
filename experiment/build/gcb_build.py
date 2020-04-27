@@ -14,6 +14,7 @@
 """Module for building things on Google Cloud Build for use in trials."""
 
 import os
+import tempfile
 from typing import Dict, Tuple
 
 from common import benchmark_utils
@@ -32,7 +33,6 @@ BUILDER_STEP_IDS = [
     'build-fuzzer-benchmark-builder',
     'build-fuzzer-benchmark-builder-intermediate',
 ]
-CONFIG_DIR = 'config'
 
 # Maximum time to wait for a GCB config to finish build.
 GCB_BUILD_TIMEOUT = 2 * 60 * 60  # 2 hours.
@@ -76,14 +76,13 @@ def _add_builder_arguments_to_config(base: str, fuzzer: str) -> str:
         return base
 
     args = fuzzer_config['builder_arguments']
-    new_config_path = os.path.join(CONFIG_DIR, 'builds', fuzzer + '.yaml')
     config = yaml_utils.read(base)
     for step in config['steps']:
         if 'id' in step and step['id'] in BUILDER_STEP_IDS:
             # Append additional flags before the final argument.
             step['args'] = step['args'][:-1] + args + [step['args'][-1]]
 
-    filesystem.create_directory(os.path.dirname(new_config_path))
+    new_config_path = tempfile.NamedTemporaryFile().name
     yaml_utils.write(config, new_config_path)
     return new_config_path
 
