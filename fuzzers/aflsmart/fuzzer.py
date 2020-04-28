@@ -49,6 +49,10 @@ def fuzz(input_corpus, output_corpus, target_binary):
         input_model = 'pcap.xml'
     if benchmark_name == 'libjpeg-turbo-07-2017':
         input_model = 'jpeg.xml'
+    if benchmark_name == 'freetype2-2017':
+        input_model = 'xtf.xml'
+    if benchmark_name == 'vorbis-2017-12-11':
+        input_model = 'ogg.xml'
 
     if input_model != '':
         afl_fuzzer.run_afl_fuzz(

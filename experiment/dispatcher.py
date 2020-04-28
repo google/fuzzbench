@@ -31,7 +31,7 @@ from common import logs
 from common import yaml_utils
 from database import models
 from database import utils as db_utils
-from experiment import builder
+from experiment.build import builder
 from experiment import measurer
 from experiment import reporter
 from experiment import scheduler
@@ -47,12 +47,16 @@ def create_work_subdirs(subdirs: List[str]):
         os.mkdir(os.path.join(experiment_utils.get_work_dir(), subdir))
 
 
-def _initialize_experiment_in_db(experiment: str, benchmarks: List[str],
-                                 fuzzers: List[str], num_trials: int):
+def _initialize_experiment_in_db(experiment: str, git_hash: str,
+                                 benchmarks: List[str], fuzzers: List[str],
+                                 num_trials: int):
     """Initializes |experiment| in the database by creating the experiment
     entity and entities for each trial in the experiment."""
-    db_utils.add_all(
-        [db_utils.get_or_create(models.Experiment, name=experiment)])
+    db_utils.add_all([
+        db_utils.get_or_create(models.Experiment,
+                               name=experiment,
+                               git_hash=git_hash)
+    ])
 
     trials_args = itertools.product(sorted(benchmarks), range(num_trials),
                                     sorted(fuzzers))
@@ -79,8 +83,10 @@ class Experiment:
             os.listdir(fuzzer_config_utils.get_fuzzer_configs_dir())
         ]
 
-        _initialize_experiment_in_db(self.config['experiment'], self.benchmarks,
+        _initialize_experiment_in_db(self.config['experiment'],
+                                     self.config['git_hash'], self.benchmarks,
                                      self.fuzzers, self.config['trials'])
+
         self.web_bucket = posixpath.join(self.config['cloud_web_bucket'],
                                          experiment_utils.get_experiment_name())
 
@@ -92,7 +98,11 @@ def dispatcher_main():
     # Set this here because we get failures if we do it in measurer for some
     # reason.
     multiprocessing.set_start_method('spawn')
-    builder.gcb_build_base_images()
+    db_utils.initialize()
+    if os.getenv('LOCAL_EXPERIMENT'):
+        models.Base.metadata.create_all(db_utils.engine)
+
+    builder.build_base_images()
 
     experiment_config_file_path = os.path.join(fuzzer_config_utils.get_dir(),
                                                'experiment.yaml')
@@ -112,7 +122,7 @@ def dispatcher_main():
     scheduler_loop_thread = threading.Thread(target=scheduler.schedule_loop,
                                              args=(experiment.config,))
     scheduler_loop_thread.start()
-    measurer_loop_thread = threading.Thread(
+    measurer_loop_thread = multiprocessing.Process(
         target=measurer.measure_loop,
         args=(
             experiment.config['experiment'],

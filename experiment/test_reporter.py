@@ -27,7 +27,7 @@ def test_output_report_bucket(fs, experiment):
     bucket."""
     web_bucket = 'gs://web-bucket/experiment'
     with test_utils.mock_popen_ctx_mgr() as mocked_popen:
-        with mock.patch('experiment.generate_report.generate_report'
+        with mock.patch('analysis.generate_report.generate_report'
                        ) as mocked_generate_report:
             reporter.output_report(web_bucket)
             reports_dir = os.path.join(os.environ['WORK'], 'reports')

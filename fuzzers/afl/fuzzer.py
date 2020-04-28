@@ -25,9 +25,13 @@ from fuzzers import utils
 def prepare_build_environment():
     """Set environment variables used to build targets for AFL-based
     fuzzers."""
+<<<<<<< HEAD
     utils.set_no_sanitizer_compilation_flags()
 
     cflags = ['-O3', '-fsanitize-coverage=trace-pc-guard']
+=======
+    cflags = ['-fsanitize-coverage=trace-pc-guard']
+>>>>>>> 878fb3272ba4854fcd2e2e8cb59b716e3ad63f5c
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
@@ -75,7 +79,7 @@ def run_afl_fuzz(input_corpus,
     # Spawn the afl fuzzing process.
     # FIXME: Currently AFL will exit if it encounters a crashing input in seed
     # corpus (usually timeouts). Add a way to skip/delete such inputs and
-    # re-run AFL. This currently happens with a seed in wpantund benchmark.
+    # re-run AFL.
     print('[run_fuzzer] Running target with afl-fuzz')
     command = [
         './afl-fuzz',
@@ -92,6 +96,9 @@ def run_afl_fuzz(input_corpus,
     ]
     if additional_flags:
         command.extend(additional_flags)
+    dictionary_path = utils.get_dictionary_path(target_binary)
+    if dictionary_path:
+        command.extend(['-x', dictionary_path])
     command += [
         '--',
         target_binary,
@@ -99,8 +106,9 @@ def run_afl_fuzz(input_corpus,
         # performs.
         '2147483647'
     ]
+    print('[run_fuzzer] Running command: ' + ' '.join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
-    subprocess.call(command, stdout=output_stream, stderr=output_stream)
+    subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
 
 
 def fuzz(input_corpus, output_corpus, target_binary):

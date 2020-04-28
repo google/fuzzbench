@@ -23,8 +23,7 @@ from fuzzers.libfuzzer import fuzzer as libfuzzer_fuzzer
 
 def build():
     """Build benchmark."""
-    utils.set_no_sanitizer_compilation_flags()
-    cflags = ['-O3', '-fsanitize=fuzzer-no-link']
+    cflags = ['-fsanitize=fuzzer-no-link']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
@@ -37,4 +36,7 @@ def build():
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    libfuzzer_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
+    libfuzzer_fuzzer.run_fuzzer(input_corpus,
+                                output_corpus,
+                                target_binary,
+                                extra_flags=['-entropic=1'])

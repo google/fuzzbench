@@ -8,5 +8,9 @@
 
 3. libpcap_fuzz_both
 
+4. freetype2-2017
+
+5. vorbis-2017-12-11
+
 Since the experiment summary diagram of the default FuzzBench report is automatically generated based on the results of all benchmarks, many of them have not been supported by AFLSmart, the ranking of AFLSmart in that diagram may not be correct.
 

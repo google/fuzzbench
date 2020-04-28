@@ -27,35 +27,55 @@ def get_cmplog_build_directory(target_directory):
     return os.path.join(target_directory, 'cmplog')
 
 
-def build():
+def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration.
-    build_modes = ['instrim', 'laf']
+    build_modes = list(args)
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
 
-    utils.set_no_sanitizer_compilation_flags()
-    cflags = ['-O3']
-    utils.append_flags('CFLAGS', cflags)
-    utils.append_flags('CXXFLAGS', cflags)
+    # Enable context sentitivity for LLVM mode
+    if 'ctx' in build_modes:
+        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'CTX'
+    # Enable N-gram coverage for LLVM mode
+    elif 'ngram2' in build_modes:
+        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-2'
+    elif 'ngram3' in build_modes:
+        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-3'
+    elif 'ngram4' in build_modes:
+        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-4'
+    elif 'ngram5' in build_modes:
+        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-5'
+    elif 'ngram6' in build_modes:
+        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-6'
+    elif 'ngram8' in build_modes:
+        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-8'
+    elif 'ngram16' in build_modes:
+        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-16'
+    elif 'instrim' in build_modes:
+        # I avoid to put also AFL_LLVM_INSTRIM_LOOPHEAD
+        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'CFG'
+        os.environ['AFL_LLVM_INSTRIM_SKIPSINGLEBLOCK'] = '1'
 
     if 'qemu' in build_modes:
         os.environ['CC'] = 'clang'
         os.environ['CXX'] = 'clang++'
+    elif 'lto' in build_modes:
+        os.environ['CC'] = '/afl/afl-clang-lto'
+        os.environ['CXX'] = '/afl/afl-clang-lto++'
     else:
         os.environ['CC'] = '/afl/afl-clang-fast'
         os.environ['CXX'] = '/afl/afl-clang-fast++'
 
-        if 'laf' in build_modes:
-            os.environ['AFL_LLVM_LAF_SPLIT_SWITCHES'] = '1'
+    if 'laf' in build_modes:
+        os.environ['AFL_LLVM_LAF_SPLIT_SWITCHES'] = '1'
+        os.environ['AFL_LLVM_LAF_SPLIT_COMPARES'] = '1'
+        if 'autodict' not in build_modes:
             os.environ['AFL_LLVM_LAF_TRANSFORM_COMPARES'] = '1'
-            os.environ['AFL_LLVM_LAF_SPLIT_COMPARES'] = '1'
 
-        if 'instrim' in build_modes:
-            # I avoid to put also AFL_LLVM_INSTRIM_LOOPHEAD
-            os.environ['AFL_LLVM_INSTRIM'] = '1'
-            os.environ['AFL_LLVM_INSTRIM_SKIPSINGLEBLOCK'] = '1'
+    if 'autodict' in build_modes:
+        os.environ['AFL_LLVM_LTO_AUTODICTIONARY'] = '1'
 
     os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
 
@@ -97,7 +117,7 @@ def build():
     shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
 
 
-def fuzz(input_corpus, output_corpus, target_binary):
+def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):
     """Run fuzzer."""
     # Calculate CmpLog binary path from the instrumented target binary.
     target_binary_directory = os.path.dirname(target_binary)
@@ -112,7 +132,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # os.environ['AFL_ALIGNED_ALLOC'] = '1' # align malloc to max_align_t
     # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
-    flags = []
+    flags = list(flags)
     if os.path.exists(cmplog_target_binary):
         flags += ['-c', cmplog_target_binary]
     if 'ADDITIONAL_ARGS' in os.environ:

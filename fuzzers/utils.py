@@ -13,11 +13,16 @@
 # limitations under the License.
 """Utility functions for running fuzzers."""
 
+import configparser
 import contextlib
 import os
 import shutil
 import subprocess
 import tempfile
+
+# Keep all fuzzers at same optimization level until fuzzer explicitly needs or
+# specifies it.
+DEFAULT_OPTIMIZATION_LEVEL = '-O3'
 
 OSS_FUZZ_LIB_FUZZING_ENGINE_PATH = '/usr/lib/libFuzzingEngine.a'
 
@@ -40,7 +45,10 @@ def build_benchmark(env=None):
     else:
         build_script = os.path.join('benchmark', 'build.sh')
 
-    print('Building benchmark')
+    benchmark = os.getenv('BENCHMARK')
+    fuzzer = os.getenv('FUZZER')
+    print('Building benchmark {benchmark} with fuzzer {fuzzer}'.format(
+        benchmark=benchmark, fuzzer=fuzzer))
     subprocess.check_call(['/bin/bash', '-ex', build_script], env=env)
 
 
@@ -108,3 +116,55 @@ def restore_directory(directory):
             os.getcwd()
         except FileNotFoundError:
             os.chdir(initial_cwd)
+
+
+def get_dictionary_path(target_binary):
+    """Return dictionary path for a target binary."""
+    if os.getenv('SKIP_DICT'):
+        return None
+
+    dictionary_path = target_binary + '.dict'
+    if os.path.exists(dictionary_path):
+        return dictionary_path
+
+    options_file_path = target_binary + '.options'
+    if not os.path.exists(options_file_path):
+        return None
+
+    config = configparser.ConfigParser()
+    with open(options_file_path, 'r') as file_handle:
+        try:
+            config.read_file(file_handle)
+        except configparser.Error:
+            raise Exception('Failed to parse fuzzer options file: ' +
+                            options_file_path)
+
+    for section in config.sections():
+        for key, value in config.items(section):
+            if key == 'dict':
+                dictionary_path = os.path.join(os.path.dirname(target_binary),
+                                               value)
+                if not os.path.exists(dictionary_path):
+                    raise ValueError('Bad dictionary path in options file: ' +
+                                     options_file_path)
+                return dictionary_path
+    return None
+
+
+def set_default_optimization_flag(env=None):
+    """Set default optimization flag if none is already set."""
+    if not env:
+        env = os.environ
+
+    for flag_var in ['CFLAGS', 'CXXFLAGS']:
+        append_flags(flag_var, [DEFAULT_OPTIMIZATION_LEVEL], env=env)
+
+
+def initialize_flags(env=None):
+    """Set initial flags before fuzzer.build() is called."""
+    set_no_sanitizer_compilation_flags(env)
+    set_default_optimization_flag(env)
+
+    for flag_var in ['CFLAGS', 'CXXFLAGS']:
+        print('{flag_var} = {flag_value}'.format(
+            flag_var=flag_var, flag_value=os.getenv(flag_var)))
