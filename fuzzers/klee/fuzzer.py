@@ -26,7 +26,7 @@ from fuzzers.afl import fuzzer as afl_fuzzer
 
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
-    
+
     # See https://klee.github.io/tutorials/testing-function/
     cflags = ['-O0', '-Xclang', '-disable-O0-optnone']
     utils.append_flags('CFLAGS', cflags)
@@ -42,6 +42,7 @@ def prepare_build_environment():
 
     os.environ['FUZZER_LIB'] = '/libAFL.a -L/ -lKleeMock'
 
+
 def build():
     """Build benchmark."""
     prepare_build_environment()
@@ -54,13 +55,16 @@ def build():
     if os.system(getbc_cmd) != 0:
         raise ValueError("get-bc failed")
 
+
 def rmdir(path):
     if os.path.isdir(path):
         shutil.rmtree(path)
 
+
 def emptydir(path):
     rmdir(path)
     os.mkdir(path)
+
 
 def run(command, hide_output=False):
     cmd = ' '.join(command)
@@ -68,8 +72,10 @@ def run(command, hide_output=False):
 
     output_stream = subprocess.DEVNULL if hide_output else None
     ret = subprocess.call(command, stdout=output_stream, stderr=output_stream)
-    if 0 != ret:
-        raise ValueError("command failed: {ret} - {cmd}".format(ret=ret, cmd=cmd))
+    if ret != 0:
+        raise ValueError("command failed: {ret} - {cmd}".format(ret=ret,
+                                                                cmd=cmd))
+
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
@@ -90,9 +96,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
     emptydir(info_dir)
     emptydir(input_klee)
     rmdir(output_klee)
-    
 
-    # We put the file data into the symbolic buffer, 
+    # We put the file data into the symbolic buffer,
     # and the model_version set to 1 for uc-libc
     symbolic_buffer = "KleeInputBuf"
     model_version = "model_version"
@@ -100,7 +105,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     ktest_tool = os.path.join(out_dir, "bin/ktest-tool")
     files = glob.glob(os.path.join(input_corpus, "*"))
     n_converted = 0
-    
+
     print('[run_fuzzer] Converting seed files...')
 
     for seedfile in files:
@@ -111,71 +116,60 @@ def fuzz(input_corpus, output_corpus, target_binary):
             continue
 
         if os.path.getsize(seedfile) > 4096:
-            continue 
-        
-        seed_in =  "{seed}.ktest".format(seed=seedfile)
+            continue
+
+        seed_in = "{seed}.ktest".format(seed=seedfile)
         seed_out = os.path.join(input_klee, os.path.basename(seed_in))
 
         # Create file for symblic buffer
-        input_file = "{seed}.ktest.{symbolic}".format(seed=seedfile, symbolic=symbolic_buffer)
+        input_file = "{seed}.ktest.{symbolic}".format(seed=seedfile,
+                                                      symbolic=symbolic_buffer)
         output_kfile = "{seed}.ktest".format(seed=seedfile)
         shutil.copyfile(seedfile, input_file)
         os.rename(seedfile, input_file)
-        
+
         # Create file for mode version
-        model_input_file = "{seed}.ktest.{symbolic}".format(seed=seedfile, symbolic=model_version)
+        model_input_file = "{seed}.ktest.{symbolic}".format(
+            seed=seedfile, symbolic=model_version)
         with open(model_input_file, 'wb') as mfile:
             mfile.write(model)
-        
+
         # Run conversion tool
         convert_cmd = [
-            ktest_tool, 
-            'create',
-            output_kfile,
-            '--args',
-            seed_out,
-            '--objects',
-            model_version,
-            symbolic_buffer
+            ktest_tool, 'create', output_kfile, '--args', seed_out, '--objects',
+            model_version, symbolic_buffer
         ]
 
         run(convert_cmd)
-        
+
         # Move the resulting file to klee corpus dir
         os.rename(seed_in, seed_out)
 
         n_converted += 1
 
-    print('[run_fuzzer] Converted {converted} seed files'.format(converted=n_converted))
-    
+    print('[run_fuzzer] Converted {converted} seed files'.format(
+        converted=n_converted))
+
     # Run KLEE
     # Option -only-output-states-covering-new make dumping ktest files faster
     # new coverage means a new edge. See lib/Core/StatsTracker.cpp:markBranchVisited()
-    
-    print('[run_fuzzer] Running target with klee')
 
+    print('[run_fuzzer] Running target with klee')
 
     klee_bin = os.path.join(out_dir, "bin/klee")
     target_binary_bc = "{}.bc".format(target_binary)
-    seconds = int(int(os.getenv('MAX_TOTAL_TIME', 246060))*4/5)
-    
-    seeds_option = [
-        '-zero-seed-extension',
-        '-seed-dir', input_klee
-    ] if n_converted>0 else []
+    seconds = int(int(os.getenv('MAX_TOTAL_TIME', 246060)) * 4 / 5)
+
+    seeds_option = ['-zero-seed-extension', '-seed-dir', input_klee
+                   ] if n_converted > 0 else []
 
     klee_cmd = [
-        klee_bin,
-        '--optimize',
-        '-max-solver-time', '30s',
-        '-log-timed-out-queries',
-        '--max-time', '{}s'.format(seconds),
-        '-libc', 'uclibc',
-        '-posix-runtime',
-        '-only-output-states-covering-new',
+        klee_bin, '--optimize', '-max-solver-time', '30s',
+        '-log-timed-out-queries', '--max-time', '{}s'.format(seconds), '-libc',
+        'uclibc', '-posix-runtime', '-only-output-states-covering-new',
         '-output-dir', output_klee
     ]
-    
+
     if seeds_option:
         klee_cmd.extend(seeds_option)
 
@@ -191,11 +185,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     files = glob.glob(os.path.join(output_klee, "*.ktest"))
     for kfile in files:
         convert_cmd = [
-            ktest_tool,
-            'extract',
-            kfile,
-            '--objects',
-            symbolic_buffer
+            ktest_tool, 'extract', kfile, '--objects', symbolic_buffer
         ]
 
         run(convert_cmd)
@@ -207,7 +197,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
         os.rename(file_in, file_out)
 
         # Check if this is a crash
-        crash_regex = os.path.join(output_klee, "{fn}.*.err".format(fn=ktest_fn))
+        crash_regex = os.path.join(output_klee,
+                                   "{fn}.*.err".format(fn=ktest_fn))
         crashes = glob.glob(crash_regex)
         if len(crashes) == 1:
             crash_out = os.path.join(crash_dir, os.path.basename(ktest_fn))
@@ -219,11 +210,13 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
         n_converted += 1
 
-    print('[run_fuzzer] Converted {converted} output files'.format(converted=n_converted))
+    print('[run_fuzzer] Converted {converted} output files'.format(
+        converted=n_converted))
     print('[run_fuzzer] Found {crashed} crash files'.format(crashed=n_crashes))
 
     # For sanity check, we write a file to ensure
     # KLEE was able to terminate and convert all files
     done_file = os.path.join(output_corpus, "DONE")
     with open(done_file, 'w') as df:
-        df.write("Converted: {converted}\nBugs: {bugs}".format(converted=n_converted, bugs=n_crashes))
+        df.write("Converted: {converted}\nBugs: {bugs}".format(
+            converted=n_converted, bugs=n_crashes))
