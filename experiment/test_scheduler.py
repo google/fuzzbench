@@ -65,9 +65,9 @@ def pending_trials(db, experiment_config):
 
 @pytest.mark.parametrize(
     'benchmark,expected_image,expected_target',
-    [('benchmark1', 'gcr.io/fuzzbench/runners/fuzzer-a/benchmark1',
+    [('benchmark1', 'gcr.io/fuzzbench/runners/variant/benchmark1',
       'fuzz-target'),
-     ('bloaty_fuzz_target', 'gcr.io/fuzzbench/oss-fuzz/runners/fuzzer-a/bloaty',
+     ('bloaty_fuzz_target', 'gcr.io/fuzzbench/oss-fuzz/runners/variant/bloaty',
       'fuzz_target')])
 def test_create_trial_instance(benchmark, expected_image, expected_target,
                                experiment_config):
@@ -83,9 +83,8 @@ done
 docker run \\
 --privileged --cpus=1 --rm \\
 -e INSTANCE_NAME=r-test-experiment-9 \\
--e FUZZER=fuzzer-a \\
+-e FUZZER=variant \\
 -e BENCHMARK={benchmark} \\
--e FUZZER_VARIANT_NAME=variant \\
 -e EXPERIMENT=test-experiment \\
 -e TRIAL_ID=9 \\
 -e MAX_TOTAL_TIME=86400 \\
@@ -102,9 +101,9 @@ docker run \\
 
 @pytest.mark.parametrize(
     'benchmark,expected_image,expected_target',
-    [('benchmark1', 'gcr.io/fuzzbench/runners/fuzzer-a/benchmark1',
+    [('benchmark1', 'gcr.io/fuzzbench/runners/variant/benchmark1',
       'fuzz-target'),
-     ('bloaty_fuzz_target', 'gcr.io/fuzzbench/oss-fuzz/runners/fuzzer-a/bloaty',
+     ('bloaty_fuzz_target', 'gcr.io/fuzzbench/oss-fuzz/runners/variant/bloaty',
       'fuzz_target')])
 def test_create_trial_instance_local_experiment(benchmark, expected_image,
                                                 expected_target,
@@ -120,9 +119,8 @@ def test_create_trial_instance_local_experiment(benchmark, expected_image,
 docker run -v ~/.config/gcloud:/root/.config/gcloud \\
 --privileged --cpus=1 --rm \\
 -e INSTANCE_NAME=r-test-experiment-9 \\
--e FUZZER=fuzzer-a \\
+-e FUZZER=variant \\
 -e BENCHMARK={benchmark} \\
--e FUZZER_VARIANT_NAME=variant \\
 -e EXPERIMENT=test-experiment \\
 -e TRIAL_ID=9 \\
 -e MAX_TOTAL_TIME=86400 \\

@@ -31,7 +31,7 @@ steps:
     '--tag',
     '${_REPO}/oss-fuzz/builders/${_FUZZER}/${_BENCHMARK}-intermediate',
 
-    '--file=fuzzers/${_FUZZER}/builder.Dockerfile',
+    '--file=fuzzers/${_UNDERLYING_FUZZER}/builder.Dockerfile',
 
     '--cache-from',
     '${_REPO}/oss-fuzz/builders/${_FUZZER}/${_BENCHMARK}-intermediate',
@@ -41,7 +41,7 @@ steps:
     '--build-arg',
     'parent_image=gcr.io/fuzzbench/oss-fuzz/${_OSS_FUZZ_PROJECT}@sha256:${_OSS_FUZZ_BUILDER_HASH}',
 
-    'fuzzers/${_FUZZER}',
+    'fuzzers/${_UNDERLYING_FUZZER}',
   ]
   id: 'build-fuzzer-benchmark-builder-intermediate'
 
@@ -73,7 +73,7 @@ steps:
     'parent_image=${_REPO}/oss-fuzz/builders/${_FUZZER}/${_BENCHMARK}-intermediate',
 
     '--build-arg',
-    'fuzzer=${_FUZZER}',
+    'fuzzer=${_UNDERLYING_FUZZER}',
 
     '--build-arg',
     'benchmark=${_BENCHMARK}',
@@ -103,12 +103,12 @@ steps:
     '${_REPO}/oss-fuzz/runners/${_FUZZER}/${_BENCHMARK}-intermediate',
 
     '--file',
-    'fuzzers/${_FUZZER}/runner.Dockerfile',
+    'fuzzers/${_UNDERLYING_FUZZER}/runner.Dockerfile',
 
     '--cache-from',
     '${_REPO}/oss-fuzz/runners/${_FUZZER}/${_BENCHMARK}-intermediate',
 
-    'fuzzers/${_FUZZER}',
+    'fuzzers/${_UNDERLYING_FUZZER}',
   ]
   id: 'build-fuzzer-benchmark-runner-intermediate'
   wait_for: ['pull-fuzzer-benchmark-runner-intermediate', 'build-fuzzer-benchmark-builder']
@@ -134,7 +134,7 @@ steps:
     '${_REPO}/oss-fuzz/runners/${_FUZZER}/${_BENCHMARK}',
 
     '--build-arg',
-    'fuzzer=${_FUZZER}',
+    'fuzzer=${_UNDERLYING_FUZZER}',
 
     '--cache-from',
     '${_REPO}/oss-fuzz/runners/${_FUZZER}/${_BENCHMARK}',
