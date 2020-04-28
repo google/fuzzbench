@@ -42,7 +42,6 @@ def ssh(instance: str, *args, **kwargs):
     ssh_command = ['gcloud', 'beta', 'compute', 'ssh', instance]
     if command:
         ssh_command.append('--command=%s' % command)
-        print(command)
     if zone:
         ssh_command.append('--zone=%s' % zone)
     return new_process.execute(ssh_command, *args, **kwargs)
