@@ -22,8 +22,29 @@ import subprocess
 from fuzzers import utils
 
 
+def is_benchmark(name):
+    """Check if the benchmark contains the string |name|"""
+    benchmark = os.getenv("BENCHMARK", None)
+    return benchmark is not None and name in benchmark
+
+
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
+    if is_benchmark("sqlite3"):
+        sqlite3_flags = [
+            '-DSQLITE_THREADSAFE=0', '-DSQLITE_OMIT_LOAD_EXTENSION',
+            '-DSQLITE_DEFAULT_MEMSTATUS=0', '-DSQLITE_MAX_EXPR_DEPTH=0',
+            '-DSQLITE_OMIT_DECLTYPE', '-DSQLITE_OMIT_DEPRECATED',
+            '-DSQLITE_DEFAULT_PAGE_SIZE=512', '-DSQLITE_DEFAULT_CACHE_SIZE=10',
+            '-DSQLITE_DISABLE_INTRINSIC', '-DSQLITE_DISABLE_LFS',
+            '-DYYSTACKDEPTH=20', '-DSQLITE_OMIT_LOOKASIDE', '-DSQLITE_OMIT_WAL',
+            '-DSQLITE_DEFAULT_LOOKASIDE=\'64,5\'',
+            '-DSQLITE_OMIT_PROGRESS_CALLBACK', '-DSQLITE_OMIT_SHARED_CACHE'
+        ]
+        utils.append_flags('CFLAGS', sqlite3_flags)
+        utils.append_flags('CXXFLAGS', sqlite3_flags)
+        #This convinces sqlite3 ./configure script to not reenable threads
+        os.environ['enable_threadsafe'] = 'no'
 
     # See https://klee.github.io/tutorials/testing-function/
     cflags = ['-O0', '-Xclang', '-disable-O0-optnone']
@@ -48,7 +69,10 @@ def build():
     utils.build_benchmark()
 
     out_dir = os.environ['OUT']
-    fuzz_target = os.path.join(out_dir, 'fuzz-target')
+    if is_benchmark("sqlite3"):
+        fuzz_target = os.path.join(out_dir, 'ossfuzz')
+    else:
+        fuzz_target = os.path.join(out_dir, 'fuzz-target')
     getbc_cmd = "get-bc {target}".format(target=fuzz_target)
     if os.system(getbc_cmd) != 0:
         raise ValueError("get-bc failed")
