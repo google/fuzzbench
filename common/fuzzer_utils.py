@@ -85,6 +85,7 @@ def get_fuzzer_configs(fuzzers=None):
 
     fuzzers_dir = os.path.join(utils.ROOT_DIR, 'fuzzers')
     fuzzer_configs = []
+    names = set()
     for fuzzer in os.listdir(fuzzers_dir):
         if not os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')):
             continue
@@ -109,5 +110,10 @@ def get_fuzzer_configs(fuzzers=None):
                         variant_config_path))
                 variant['fuzzer'] = fuzzer
                 fuzzer_configs.append(variant)
+
+            name = variant['name'] if 'name' in variant else variant['fuzzer']
+            assert name not in names, (
+                'Multiple fuzzers/variants have the same name: ' + name)
+            names.add(name)
 
     return fuzzer_configs

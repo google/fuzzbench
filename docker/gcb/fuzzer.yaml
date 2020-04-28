@@ -36,12 +36,12 @@ steps:
     '--tag',
     '${_REPO}/builders/${_FUZZER}',
 
-    '--file=fuzzers/${_BASE_FUZZER}/builder.Dockerfile',
+    '--file=fuzzers/${_UNDERLYING_FUZZER}/builder.Dockerfile',
 
     '--cache-from',
     '${_REPO}/builders/${_FUZZER}',
 
-    'fuzzers/${_BASE_FUZZER}'
+    'fuzzers/${_UNDERLYING_FUZZER}'
   ]
   id: 'build-fuzzer-builder'
   wait_for: ['pull-fuzzer-builder']  # Start this immediately.
@@ -67,7 +67,7 @@ steps:
     '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}',
 
     '--build-arg',
-    'fuzzer=${_BASE_FUZZER}',
+    'fuzzer=${_FUZZER}',
 
     '--build-arg',
     'benchmark=${_BENCHMARK}',
@@ -102,12 +102,12 @@ steps:
     '--tag',
     '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}-intermediate',
 
-    '--file=fuzzers/${_BASE_FUZZER}/runner.Dockerfile',
+    '--file=fuzzers/${_UNDERLYING_FUZZER}/runner.Dockerfile',
 
     '--cache-from',
     '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}-intermediate',
 
-    './fuzzers/${_BASE_FUZZER}',
+    './fuzzers/${_UNDERLYING_FUZZER}',
   ]
   id: 'build-fuzzer-benchmark-intermediate-runner'
   wait_for: ['pull-fuzzer-benchmark-intermediate-runner']
@@ -133,7 +133,7 @@ steps:
     '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}',
 
     '--build-arg',
-    'fuzzer=${_BASE_FUZZER}',
+    'fuzzer=${_FUZZER}',
 
     '--build-arg',
     'benchmark=${_BENCHMARK}',
