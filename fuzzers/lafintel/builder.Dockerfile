@@ -28,6 +28,12 @@ RUN wget https://lcamtuf.coredump.cx/afl/releases/afl-2.26b.tgz -O /afl-2.26b.tg
     tar xvzf /afl-2.26b.tgz -C / && \
     mv /afl-2.26b /afl && \
     cd /afl && \
+    git clone https://github.com/google/AFL.git /afl/recent_afl && \
+    cd /afl/recent_afl && \ 
+    git checkout 8da80951dd7eeeb3e3b5a3bcd36c485045f40274 && \
+    cd /afl/ && \
+    cp /afl/recent_afl/*.c /afl/ && \
+    cp /afl/recent_afl/*.h /afl/ && \
     AFL_NO_X86=1 make
 
 # Set the env variables for LLVM passes and test units.
@@ -36,9 +42,11 @@ ENV CXX=clang++-3.8
 ENV LLVM_CONFIG=llvm-config-3.8
 
 # Build the LLVM passes with the LAF-INTEL patches, using Clang 3.8.
+# We force linking by setting maybe_linking = 1, see https://github.com/google/AFL/commit/3ef34c16697715d64fecfaed46c0e31e86fa9f01#diff-49b21a9ca7039117ef774ba1adfa2962
 RUN cd /afl/llvm_mode && \
     wget https://gitlab.com/laf-intel/laf-llvm-pass/raw/master/src/afl.patch && \
     patch -p0 < afl.patch && \
+    sed -i 's/maybe_linking = 0/maybe_linking = 1/g' afl-clang-fast.c && \
     wget https://gitlab.com/laf-intel/laf-llvm-pass/raw/master/src/compare-transform-pass.so.cc && \
     wget https://gitlab.com/laf-intel/laf-llvm-pass/raw/master/src/split-compares-pass.so.cc && \
     wget https://gitlab.com/laf-intel/laf-llvm-pass/raw/master/src/split-switches-pass.so.cc && \

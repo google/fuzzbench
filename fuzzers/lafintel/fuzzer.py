@@ -23,13 +23,13 @@ from fuzzers.afl import fuzzer as afl_fuzzer
 
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
-    utils.set_no_sanitizer_compilation_flags()
-
     # In php benchmark, there is a call to __builtin_cpu_supports("ssse3")
     # (see https://github.com/php/php-src/blob/master/Zend/zend_cpuinfo.h).
     # It is not supported by clang-3.8, so we define the MACRO below
     # to replace any __builtin_cpu_supports() with 0, i.e., not supported
-    cflags = ['-O3', '-fPIC', '-D__builtin_cpu_supports\\(x\\)=0']
+    cflags = ['-fPIC']
+    if 'php' in os.environ['PWD']:
+        cflags += ['-D__builtin_cpu_supports\\(x\\)=0']
     cppflags = cflags + ['-I/usr/local/include/c++/v1/', '-std=c++11']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cppflags)

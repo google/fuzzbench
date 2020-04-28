@@ -15,6 +15,13 @@
 
 . $(dirname $0)/../common.sh
 
+apt-get update && \
+  apt-get install -y \
+  make \
+  automake \
+  libtool \
+  nasm
+
 build_lib() {
   rm -rf BUILD
   cp -rf SRC BUILD
