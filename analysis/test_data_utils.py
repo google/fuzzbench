@@ -74,15 +74,12 @@ def test_clobber_snapshots():
     """Tests that clobber snapshots clobbers stale snapshots from earlier
     experiments."""
     experiments = []
-    df = None
+    df = pd.DataFrame()
     for experiment_num in range(3):
         experiment = 'experiment-%d' % experiment_num
         experiments.append(experiment)
         experiment_df = create_experiment_data(experiment)
-        if df is None:
-            df = experiment_df
-        else:
-            df = pd.concat([df, experiment_df])
+        df = pd.concat([df, experiment_df])
     not_updated_benchmark = 'libpng'
     not_updated_fuzzer = 'afl'
     drop_condition = ((df.experiment != experiments[2]) |
