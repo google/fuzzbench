@@ -73,7 +73,7 @@ steps:
     'parent_image=${_REPO}/oss-fuzz/builders/${_FUZZER}/${_BENCHMARK}-intermediate',
 
     '--build-arg',
-    'fuzzer=${_FUZZER}',
+    'fuzzer=${_UNDERLYING_FUZZER}',
 
     '--build-arg',
     'benchmark=${_BENCHMARK}',
@@ -134,7 +134,7 @@ steps:
     '${_REPO}/oss-fuzz/runners/${_FUZZER}/${_BENCHMARK}',
 
     '--build-arg',
-    'fuzzer=${_FUZZER}',
+    'fuzzer=${_UNDERLYING_FUZZER}',
 
     '--cache-from',
     '${_REPO}/oss-fuzz/runners/${_FUZZER}/${_BENCHMARK}',
