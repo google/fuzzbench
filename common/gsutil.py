@@ -62,18 +62,6 @@ def rm(*rm_arguments, recursive=True, force=False, **kwargs):  # pylint: disable
     return gsutil_command(command, expect_zero=(not force), **kwargs)
 
 
-def cat(path, must_exist=True, **kwargs):
-    """Runs the cat gsutil subcommand on |path|. Throws a
-    subprocess.CalledProcessException if |must_exist| and the return code of the
-    command is nonzero."""
-    command = ['cat', path]
-    result = gsutil_command(command,
-                            parallel=False,
-                            expect_zero=must_exist,
-                            **kwargs)
-    return result.retcode, result.output.splitlines()
-
-
 def rsync(  # pylint: disable=too-many-arguments
         source,
         destination,
