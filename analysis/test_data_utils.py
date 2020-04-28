@@ -21,10 +21,11 @@ import pytest
 from analysis import data_utils
 
 
-def create_trial_data(trial_id, benchmark, fuzzer, reached_coverage):
+def create_trial_data(trial_id, benchmark, fuzzer, reached_coverage,
+                      experiment):
     """Utility function to create test trial data."""
     return pd.DataFrame([{
-        'experiment': 'test_experiment',
+        'experiment': experiment,
         'benchmark': benchmark,
         'fuzzer': fuzzer,
         'trial_id': trial_id,
@@ -35,17 +36,17 @@ def create_trial_data(trial_id, benchmark, fuzzer, reached_coverage):
     } for t in range(10)])
 
 
-def create_experiment_data():
+def create_experiment_data(experiment='test_experiment'):
     """Utility function to create test experiment data."""
     return pd.concat([
-        create_trial_data(0, 'libpng', 'afl', 100),
-        create_trial_data(1, 'libpng', 'afl', 200),
-        create_trial_data(2, 'libpng', 'libfuzzer', 200),
-        create_trial_data(3, 'libpng', 'libfuzzer', 300),
-        create_trial_data(4, 'libxml', 'afl', 1000),
-        create_trial_data(5, 'libxml', 'afl', 1200),
-        create_trial_data(6, 'libxml', 'libfuzzer', 600),
-        create_trial_data(7, 'libxml', 'libfuzzer', 800),
+        create_trial_data(0, 'libpng', 'afl', 100, experiment=experiment),
+        create_trial_data(1, 'libpng', 'afl', 200, experiment=experiment),
+        create_trial_data(2, 'libpng', 'libfuzzer', 200, experiment=experiment),
+        create_trial_data(3, 'libpng', 'libfuzzer', 300, experiment=experiment),
+        create_trial_data(4, 'libxml', 'afl', 1000, experiment=experiment),
+        create_trial_data(5, 'libxml', 'afl', 1200, experiment=experiment),
+        create_trial_data(6, 'libxml', 'libfuzzer', 600, experiment=experiment),
+        create_trial_data(7, 'libxml', 'libfuzzer', 800, experiment=experiment),
     ])
 
 
@@ -67,6 +68,45 @@ def test_drop_uniteresting_columns():
     cleaned_df = data_utils.drop_uninteresting_columns(experiment_df)
 
     assert 'time_started' not in cleaned_df.columns
+
+
+def test_clobber_snapshots():
+    """Tests that clobber snapshots clobbers stale snapshots from earlier
+    experiments."""
+    experiments = []
+    df = None
+    for experiment_num in range(3):
+        experiment = 'experiment-%d' % experiment_num
+        experiments.append(experiment)
+        experiment_df = create_experiment_data(experiment)
+        if df is None:
+            df = experiment_df
+        else:
+            df = pd.concat([df, experiment_df])
+    not_updated_benchmark = 'libpng'
+    not_updated_fuzzer = 'afl'
+    drop_condition = ((df.experiment != experiments[2]) |
+                      (df.benchmark != not_updated_benchmark) |
+                      (df.fuzzer != not_updated_fuzzer))
+    df = df[drop_condition]
+    df = data_utils.clobber_snapshots(df, experiments)
+    # All of the first experment should be clobbered
+    assert df[df.experiment == experiments[0]].empty
+    # From the second experiment, only not_updated_benchmark-not_updated_fuzzer
+    # shouldn't be clobbered.
+    second_experiment_updated = ((df.experiment == experiments[1]) &
+                                 ((df.benchmark != not_updated_benchmark) |
+                                  (df.fuzzer != not_updated_fuzzer)))
+    assert df[second_experiment_updated].empty
+    second_experiment_not_updated = ((df.experiment == experiments[1]) &
+                                     (df.benchmark == not_updated_benchmark) &
+                                     (df.fuzzer == not_updated_fuzzer))
+    assert not df[second_experiment_not_updated].empty
+    # Except for not_updated_benchmark-not_updated_fuzzer, everything should be
+    # from the third trial.
+    updated_df = (df[(df.benchmark != not_updated_benchmark) |
+                     (df.fuzzer != not_updated_fuzzer)])
+    assert (updated_df.experiment == experiments[2]).all()
 
 
 def test_filter_fuzzers():
