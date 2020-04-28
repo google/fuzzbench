@@ -31,7 +31,7 @@ steps:
     '--tag',
     '${_REPO}/oss-fuzz/builders/${_FUZZER}/${_BENCHMARK}-intermediate',
 
-    '--file=fuzzers/${_BASE_FUZZER}/builder.Dockerfile',
+    '--file=fuzzers/${_UNDERLYING_FUZZER}/builder.Dockerfile',
 
     '--cache-from',
     '${_REPO}/oss-fuzz/builders/${_FUZZER}/${_BENCHMARK}-intermediate',
