@@ -24,6 +24,8 @@ from fuzzers.afl import fuzzer as afl_fuzzer
 
 def is_benchmark(name):
     """ Check if the benchmark contains the string 'name' """
+    # TODO: benchmark = os.getenv("BENCHMARK", None)
+    # return benchmark is not None and name in benchmark
 
     # OSS-fuzz benchmarks do not have a consistent folder content
     # but typically have the name of the benchmark in the PWD
@@ -76,16 +78,17 @@ def fix_fuzzer_lib():
     """Fix FUZZER_LIB for certain benchmarks"""
     
     if '--warn-unresolved-symbols' not in os.environ['CFLAGS']:
-       os.environ['FUZZER_LIB'] += ' -L/ -lAflccMock -lpthread'
+        os.environ['FUZZER_LIB'] += ' -L/ -lAflccMock -lpthread'
+    # elif is_benchmark('php'):
+    #     # -lcrypt -lresolv -lcrypt -lrt -lm -l:libonig.a
+    #     os.environ['FUZZER_LIB'] += ' -lresolv'
     # if is_benchmark('systemd'):
     #     os.environ['FUZZER_LIB'] = '/libAFL.a'
     #     os.environ['LDFLAGS'] = '-L/ -lAflccMock'
     # if is_benchmark('irssi'):
     #     # workaround the meson call
     #     os.environ['FUZZER_LIB'] = '/libAFL.a -Dwith-fuzzer-lib=-L/ -Dwith-fuzzer-lib=-lAflccMock -Dwith-fuzzer-lib=-lpthread'
-    # elif is_benchmark('bloaty'):
-    #     #os.environ['FUZZER_LIB'] = '/libAFL.a -L/ -lAflccMock -lpthread'
-    #     assert(0 and "what to do")
+    
 
 def add_compilation_cflags():
     """Add custom flags for certain benchmarks"""
@@ -99,7 +102,7 @@ def add_compilation_cflags():
         utils.append_flags('CFLAGS', php_flags)
         utils.append_flags('CXXFLAGS', php_flags)
 
-    elif is_benchmark('systemd'):
+    elif is_benchmark('systemd') or is_benchmark('bloaty'):
         unresolved_flags = ['-Wl,--warn-unresolved-symbols']
         utils.append_flags('CFLAGS', unresolved_flags)
         utils.append_flags('CXXFLAGS', unresolved_flags)
@@ -108,6 +111,8 @@ def add_post_compilation_lflags(ldflags_arr):
     """Add additional linking flags for certain benchmarks"""
     if is_benchmark('libjpeg'):
         ldflags_arr += libjpeg_turbo_asm_object_files()
+    elif is_benchmark('php'):
+        ldflags_arr += ['-lresolv']
 
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
@@ -147,7 +152,7 @@ def get_fuzz_targets():
 
     # For oss-projects, use some heuristics as there is no convention.
     # We look for binaries in the OUT directory and take it as our targets.
-    # Note that we may return multiple binaries: this is necessary because 
+    # Note that we may return multiple binaries: this is necessary because
     # sometimes multiple binaries are generated and we don't know which will
     # be used for fuzzing (e.g., zlib benchmark)
     out_dir = os.getenv('OUT', None)
@@ -175,7 +180,7 @@ def post_build(fuzz_target):
     # Set the flags. ldflags is here temporarily until the benchmarks
     # are cleaned up and standalone
     cppflags_arr = ['-I/usr/local/include/c++/v1/', '-stdlib=libc++', '-std=c++11']
-    # Note: -ld for dlopen(), -lbsd for strlcpy()
+    # Note: -ld for dlopen(), -lbsd for strlcpy().
     ldflags_arr = ['-lpthread', '-lm', ' -lz', '-larchive', '-lglib-2.0', '-ldl', '-lbsd']
 
     # Add post compilation linking flags for certain benchmarks
