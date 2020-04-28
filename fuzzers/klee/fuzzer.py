@@ -21,8 +21,6 @@ import subprocess
 
 from fuzzers import utils
 
-from fuzzers.afl import fuzzer as afl_fuzzer
-
 
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
@@ -57,16 +55,19 @@ def build():
 
 
 def rmdir(path):
+    """"Remove a directory recursively"""
     if os.path.isdir(path):
         shutil.rmtree(path)
 
 
 def emptydir(path):
+    """Empty a directory"""
     rmdir(path)
     os.mkdir(path)
 
 
 def run(command, hide_output=False):
+    """Run a the command |command|"""
     cmd = ' '.join(command)
     print('[run_cmd] {}'.format(cmd))
 
@@ -217,6 +218,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # For sanity check, we write a file to ensure
     # KLEE was able to terminate and convert all files
     done_file = os.path.join(output_corpus, "DONE")
-    with open(done_file, 'w') as df:
-        df.write("Converted: {converted}\nBugs: {bugs}".format(
+    with open(done_file, 'w') as file:
+        file.write("Converted: {converted}\nBugs: {bugs}".format(
             converted=n_converted, bugs=n_crashes))
