@@ -57,7 +57,6 @@ BENCHMARK = 'benchmark-1'
 EXPERIMENT = 'experiment-name'
 TRIAL_NUM = 1
 FUZZER = 'fuzzer-name-a'
-FULL_FUZZER_NAME = FUZZER
 
 
 @pytest.yield_fixture
@@ -65,7 +64,6 @@ def trial_runner(fs, environ):
     """Fixture that creates a TrialRunner object."""
     os.environ.update({
         'BENCHMARK': BENCHMARK,
-        'FUZZER_VARIANT_NAME': FULL_FUZZER_NAME,
         'EXPERIMENT': EXPERIMENT,
         'TRIAL_ID': str(TRIAL_NUM),
         'FUZZER': FUZZER,
@@ -240,7 +238,6 @@ class TestIntegrationRunner:
         os.environ['OUTPUT_CORPUS_DIR'] = str(output_corpus_dir)
 
         fuzzer = 'libfuzzer'
-        fuzzer_variant = fuzzer + '_variant'
         fuzzer_parent_path = root_dir / 'fuzzers' / fuzzer
 
         benchmark = 'MultipleConstraintsOnSmallInputTest'
@@ -248,8 +245,7 @@ class TestIntegrationRunner:
         experiment = 'integration-test-experiment'
         gcs_directory = posixpath.join(test_experiment_bucket, experiment,
                                        'experiment-folders',
-                                       '%s-%s' % (benchmark, fuzzer_variant),
-                                       'trial-1')
+                                       '%s-%s' % (benchmark, fuzzer), 'trial-1')
         gsutil.rm(gcs_directory, force=True)
         # Add fuzzer directory to make it easy to run fuzzer.py in local
         # configuration.
@@ -258,7 +254,6 @@ class TestIntegrationRunner:
 
         # Set env variables that would set by the scheduler.
         os.environ['FUZZER'] = fuzzer
-        os.environ['FUZZER_VARIANT_NAME'] = fuzzer_variant
         os.environ['BENCHMARK'] = benchmark
         os.environ['CLOUD_EXPERIMENT_BUCKET'] = test_experiment_bucket
         os.environ['EXPERIMENT'] = experiment
