@@ -43,59 +43,37 @@ FuzzerBenchmark = collections.namedtuple('FuzzerBenchmark',
                                          ['fuzzer', 'benchmark', 'experiment'])
 
 
-def clobber_snapshots(experiment_df, experiments):
+def clobber_snapshots(df, experiments):
     """Clobber snapshots that are part of lower priority (generally earlier)
-    versions of the same trials in |experiment_df|. For example in experiment-1
+    versions of the same trials in |df|. For example in experiment-1
     we may test fuzzer-a on benchmark-1. In experiment-2 we may again test
     fuzzer-a on benchmark-1 because fuzzer-a was updated. This function will
     remove the snapshots from fuzzer-a,benchmark-1,experiment-1 from
-    |experiment_df| because we want the report to only contain the up-to-date
+    |df| because we want the report to only contain the up-to-date
     data. Experiment priority is determined by order of each experiment in
     |experiments| with the highest priority experiment coming last in that
     list."""
-    # Create a set of tuples that contain all the unique
-    # fuzzer-benchmark-experiment combinations in experiment_df. We'll use this
-    # to determine which snapshots to drop.
-    fuzzer_benchmarks_df = experiment_df[['fuzzer', 'benchmark', 'experiment']]
-    fuzzer_benchmarks = {
-        FuzzerBenchmark(*fuzzer_benchmark)
-        for fuzzer_benchmark in fuzzer_benchmarks_df.to_numpy()
-    }
-    experiment_rankings = {
-        experiment: experiments.index(experiment) for experiment in experiments
-    }
+    # We don't call |df| "experiment_df" because it is a misnomer and leads to
+    # confusion in this case where it contains data from multiple experiments
+    # and we actually build DataFrames containing data from individual
+    # experiments.
 
-    highest_rank = max(experiment_rankings.values())
+    # Include everything from the last experiment.
+    experiments = experiments.copy()  # Copy so we dont mutate experiments.
+    experiments.reverse()
+    highest_rank_experiment = experiments[0]
+    result = df[df.experiment == highest_rank_experiment]
 
-    # Get the set of those tuples that we should drop because they are
-    # lower priority/rank than others in experiment_df.
-    fuzzer_benchmarks_to_drop = set()
-    for fuzzer_benchmark in fuzzer_benchmarks:
-        experiment = fuzzer_benchmark.experiment
-        rank = experiment_rankings[experiment]
-        if rank == highest_rank:
-            # We're never going to drop trials in the highest ranked experiment.
-            continue
-
-        higher_rank_experiments = experiments[rank + 1:]
-        for higher_rank_experiment in higher_rank_experiments:
-            # See if there exist trials for fuzzer,benchmark in a higher rank
-            # experiment.
-            higher_rank_fuzzer_benchmark = FuzzerBenchmark(
-                fuzzer_benchmark.fuzzer, fuzzer_benchmark.benchmark,
-                higher_rank_experiment)
-            if higher_rank_fuzzer_benchmark in fuzzer_benchmarks:
-                fuzzer_benchmarks_to_drop.add(fuzzer_benchmark)
-                break
-
-    def should_drop_row(row):
-        """Should we drop |row| based on the fuzzer,benchmark,experiment that
-        we are supposed to drop."""
-        fuzzer_benchmark = FuzzerBenchmark(row['fuzzer'], row['benchmark'],
-                                           row['experiment'])
-        return fuzzer_benchmark not in fuzzer_benchmarks_to_drop
-
-    return experiment_df[experiment_df.apply(should_drop_row, axis=1)]
+    for experiment in experiments[1:]:
+        # Include data for not yet covered benchmark/fuzzer pairs.
+        covered_pairs = result[['benchmark', 'fuzzer']].drop_duplicates()
+        covered_pairs = covered_pairs.apply(tuple, axis=1)
+        experiment_data = df[df.experiment == experiment]
+        experiment_pairs = experiment_data[['benchmark', 'fuzzer']].apply(
+            tuple, axis=1)
+        to_include = experiment_data[~experiment_pairs.isin(covered_pairs)]
+        result = result.append(to_include)
+    return result
 
 
 def filter_fuzzers(experiment_df, included_fuzzers):
