@@ -69,8 +69,8 @@ def clobber_snapshots(df, experiments):
         covered_pairs = result[['benchmark', 'fuzzer']].drop_duplicates()
         covered_pairs = covered_pairs.apply(tuple, axis=1)
         experiment_data = df[df.experiment == experiment]
-        experiment_pairs = experiment_data[['benchmark', 'fuzzer']].apply(
-            tuple, axis=1)
+        experiment_pairs = experiment_data[['benchmark',
+                                            'fuzzer']].apply(tuple, axis=1)
         to_include = experiment_data[~experiment_pairs.isin(covered_pairs)]
         result = result.append(to_include)
     return result
