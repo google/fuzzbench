@@ -339,24 +339,24 @@ def main() -> int:
     os.chdir(_SRC_ROOT)
     changed_files = get_changed_files()
 
+    if not args.command:
+        success = do_checks(changed_files)
+        return bool_to_returncode(success)
+
     command_check_mapping = {
         'format': yapf,
         'lint': lint,
         'typecheck': pytype,
         'test_changed_integrations': test_changed_integrations
     }
-    for command, check in command_check_mapping.items():
-        if args.command != command:
-            continue
-        if args.command == 'format':
-            success = check(changed_files, False)
-        else:
-            success = check(changed_files)
-        if not success:
-            print('ERROR: %s failed, see errors above.' % check.__name__)
-        return bool_to_returncode(success)
 
-    success = do_checks(changed_files)
+    check = command_check_mapping[args.command]
+    if args.command == 'format':
+        success = check(changed_files, False)
+    else:
+        success = check(changed_files)
+    if not success:
+        print('ERROR: %s failed, see errors above.' % check.__name__)
     return bool_to_returncode(success)
 
 
