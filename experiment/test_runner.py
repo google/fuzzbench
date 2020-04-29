@@ -245,8 +245,7 @@ class TestIntegrationRunner:
         experiment = 'integration-test-experiment'
         gcs_directory = posixpath.join(test_experiment_bucket, experiment,
                                        'experiment-folders',
-                                       '%s-%s' % (benchmark, fuzzer),
-                                       'trial-1')
+                                       '%s-%s' % (benchmark, fuzzer), 'trial-1')
         gsutil.rm(gcs_directory, force=True)
         # Add fuzzer directory to make it easy to run fuzzer.py in local
         # configuration.
