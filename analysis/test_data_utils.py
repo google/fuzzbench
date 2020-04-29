@@ -70,8 +70,8 @@ def test_drop_uniteresting_columns():
     assert 'time_started' not in cleaned_df.columns
 
 
-def test_clobber_snapshots():
-    """Tests that clobber snapshots clobbers stale snapshots from earlier
+def test_experiments_data():
+    """Tests that clobber experiments data clobbers stale snapshots from earlier
     experiments."""
     experiments = []
     df = pd.DataFrame()
@@ -86,18 +86,20 @@ def test_clobber_snapshots():
                       (df.benchmark != not_updated_benchmark) |
                       (df.fuzzer != not_updated_fuzzer))
     df = df[drop_condition]
-    df = data_utils.clobber_snapshots(df, experiments)
+    df = data_utils.clobber_experiments_data(df, experiments)
     columns = ['experiment', 'benchmark', 'fuzzer']
-    expected_result = pd.DataFrame(
-        [
-            ['experiment-2', 'libpng', 'libfuzzer'],
-            ['experiment-2', 'libxml', 'afl'],
-            ['experiment-2', 'libxml', 'libfuzzer'],
-            ['experiment-1', 'libpng', 'afl'],
-        ], columns=columns)
+    expected_result = pd.DataFrame([
+        ['experiment-2', 'libpng', 'libfuzzer'],
+        ['experiment-2', 'libxml', 'afl'],
+        ['experiment-2', 'libxml', 'libfuzzer'],
+        ['experiment-1', 'libpng', 'afl'],
+    ],
+                                   columns=columns)
     print(type(expected_result), type(df[columns].drop_duplicates()))
     expected_result.sort_index(inplace=True)
-    assert (df[columns].drop_duplicates().values == expected_result.values).all()
+    assert (
+        df[columns].drop_duplicates().values == expected_result.values).all()
+
 
 def test_filter_fuzzers():
     experiment_df = create_experiment_data()

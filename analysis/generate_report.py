@@ -144,8 +144,8 @@ def generate_report(experiment_names,
         experiment_df = data_utils.filter_max_time(experiment_df, end_time)
 
     if merge_with_clobber:
-        experiment_df = data_utils.clobber_snapshots(experiment_df,
-                                                     experiment_names)
+        experiment_df = data_utils.clobber_experiments_data(experiment_df,
+                                                            experiment_names)
 
     fuzzer_names = experiment_df.fuzzer.unique()
     plotter = plotting.Plotter(fuzzer_names, quick)

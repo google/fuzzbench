@@ -37,7 +37,7 @@ def drop_uninteresting_columns(experiment_df):
     ]]
 
 
-def clobber_snapshots(df, experiments):
+def clobber_experiments_data(df, experiments):
     """Clobber experiment data that is part of lower priority (generally
     earlier) versions of the same trials in |df|. For example in experiment-1 we
     may test fuzzer-a on benchmark-1. In experiment-2 we may again test fuzzer-a
@@ -47,9 +47,7 @@ def clobber_snapshots(df, experiments):
     determined by order of each experiment in |experiments| with the highest
     priority experiment coming last in that list."""
     # We don't call |df| "experiment_df" because it is a misnomer and leads to
-    # confusion in this case where it contains data from multiple experiments
-    # and we actually build DataFrames containing data from individual
-    # experiments.
+    # confusion in this case where it contains data from multiple experiments.
 
     # Include everything from the last experiment.
     experiments = experiments.copy()  # Copy so we dont mutate experiments.
