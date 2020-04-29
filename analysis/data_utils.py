@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utility functions for data (frame) transformations."""
-import collections
-
 from analysis import stat_tests
 
 
@@ -39,20 +37,15 @@ def drop_uninteresting_columns(experiment_df):
     ]]
 
 
-FuzzerBenchmark = collections.namedtuple('FuzzerBenchmark',
-                                         ['fuzzer', 'benchmark', 'experiment'])
-
-
 def clobber_snapshots(df, experiments):
-    """Clobber snapshots that are part of lower priority (generally earlier)
-    versions of the same trials in |df|. For example in experiment-1
-    we may test fuzzer-a on benchmark-1. In experiment-2 we may again test
-    fuzzer-a on benchmark-1 because fuzzer-a was updated. This function will
-    remove the snapshots from fuzzer-a,benchmark-1,experiment-1 from
-    |df| because we want the report to only contain the up-to-date
-    data. Experiment priority is determined by order of each experiment in
-    |experiments| with the highest priority experiment coming last in that
-    list."""
+    """Clobber experiment data that is part of lower priority (generally
+    earlier) versions of the same trials in |df|. For example in experiment-1 we
+    may test fuzzer-a on benchmark-1. In experiment-2 we may again test fuzzer-a
+    on benchmark-1 because fuzzer-a was updated. This function will remove the
+    snapshots from fuzzer-a,benchmark-1,experiment-1 from |df| because we want
+    the report to only contain the up-to-date data. Experiment priority is
+    determined by order of each experiment in |experiments| with the highest
+    priority experiment coming last in that list."""
     # We don't call |df| "experiment_df" because it is a misnomer and leads to
     # confusion in this case where it contains data from multiple experiments
     # and we actually build DataFrames containing data from individual

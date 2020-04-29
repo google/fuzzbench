@@ -87,24 +87,17 @@ def test_clobber_snapshots():
                       (df.fuzzer != not_updated_fuzzer))
     df = df[drop_condition]
     df = data_utils.clobber_snapshots(df, experiments)
-    # All of the first experment should be clobbered
-    assert df[df.experiment == experiments[0]].empty
-    # From the second experiment, only not_updated_benchmark-not_updated_fuzzer
-    # shouldn't be clobbered.
-    second_experiment_updated = ((df.experiment == experiments[1]) &
-                                 ((df.benchmark != not_updated_benchmark) |
-                                  (df.fuzzer != not_updated_fuzzer)))
-    assert df[second_experiment_updated].empty
-    second_experiment_not_updated = ((df.experiment == experiments[1]) &
-                                     (df.benchmark == not_updated_benchmark) &
-                                     (df.fuzzer == not_updated_fuzzer))
-    assert not df[second_experiment_not_updated].empty
-    # Except for not_updated_benchmark-not_updated_fuzzer, everything should be
-    # from the third trial.
-    updated_df = (df[(df.benchmark != not_updated_benchmark) |
-                     (df.fuzzer != not_updated_fuzzer)])
-    assert (updated_df.experiment == experiments[2]).all()
-
+    columns = ['experiment', 'benchmark', 'fuzzer']
+    expected_result = pd.DataFrame(
+        [
+            ['experiment-2', 'libpng', 'libfuzzer'],
+            ['experiment-2', 'libxml', 'afl'],
+            ['experiment-2', 'libxml', 'libfuzzer'],
+            ['experiment-1', 'libpng', 'afl'],
+        ], columns=columns)
+    print(type(expected_result), type(df[columns].drop_duplicates()))
+    expected_result.sort_index(inplace=True)
+    assert (df[columns].drop_duplicates().values == expected_result.values).all()
 
 def test_filter_fuzzers():
     experiment_df = create_experiment_data()
