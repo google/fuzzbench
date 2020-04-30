@@ -59,7 +59,7 @@ def test_found_fuzzer_containing_string_without_fuzzer_name_arg(fs, environ):
 
 @pytest.mark.parametrize(('config', 'expected_result'), [
     ({
-        'variant_name': 'myvariant',
+        'name': 'myvariant',
         'fuzzer': 'myfuzzer'
     }, 'myvariant'),
     ({

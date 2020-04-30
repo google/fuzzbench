@@ -87,11 +87,11 @@ def get_fuzzer_dependencies(fuzzer: str) -> List[str]:
     build and run fuzz targets."""
     # Don't use modulefinder since it doesn't work without __init__.py files.
     initial_fuzzer = fuzzer
-    fuzzer = get_underlying_fuzzer(fuzzer)
+    fuzzer = get_base_fuzzer(fuzzer)
     fuzzer_directory = fuzzer_utils.FuzzerDirectory(fuzzer)
     dependencies = []
     if initial_fuzzer != fuzzer:
-        # If fuzzer's underlying fuzzer is different, fuzzer is a variant, which
+        # If fuzzer's base fuzzer is different, fuzzer is a variant, which
         # means changes to variants.yaml can affect it.
         dependencies.append(fuzzer_directory.variants_yaml)
     fuzzer_module = importlib.import_module(_get_fuzzer_module(fuzzer))
@@ -140,15 +140,15 @@ def _get_python_dependencies(module, depth: int = 0) -> List[str]:
     return deps
 
 
-def get_underlying_fuzzer(fuzzer_name: str) -> str:
-    """"Returns the underlying fuzzer of |fuzzer_name|. For normal fuzzers with
+def get_base_fuzzer(fuzzer_name: str) -> str:
+    """"Returns the base fuzzer of |fuzzer_name|. For normal fuzzers with
     their own subdirectory in fuzzers/, |fuzzer_name| is returned. For variants,
     it will be the fuzzer that |fuzzer_name| is a variant of."""
     configs = fuzzer_utils.get_fuzzer_configs()
     for config in configs:
         if fuzzer_utils.get_fuzzer_from_config(config) == fuzzer_name:
             return config['fuzzer']
-    raise Exception('Underlying fuzzer for %s not found.' % fuzzer_name)
+    raise Exception('Base fuzzer for %s not found.' % fuzzer_name)
 
 
 def get_files_dependent_fuzzers(dependency_files):

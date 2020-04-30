@@ -24,7 +24,7 @@ from src_analysis import fuzzer_dependencies
 
 VARIANT = 'myvariant'
 FUZZER = 'myfuzzer'
-VARIANT_CONFIG = {'variant_name': VARIANT, 'fuzzer': FUZZER}
+VARIANT_CONFIG = {'name': VARIANT, 'fuzzer': FUZZER}
 FUZZER_CONFIG = {'fuzzer': FUZZER}
 CONFIGS = [VARIANT_CONFIG, FUZZER_CONFIG]
 
@@ -100,15 +100,15 @@ def test_get_python_dependencies():
     assert sorted(deps) == expected_deps
 
 
-@pytest.mark.parametrize(('fuzzer_name', 'expected_underlying_name'),
+@pytest.mark.parametrize(('fuzzer_name', 'expected_base_name'),
                          [(FUZZER, FUZZER), (VARIANT, FUZZER)])
-def test_get_underlying_fuzzer(fuzzer_name, expected_underlying_name):
-    """Tests that get_underlying_fuzzer returns the underlying fuzzer for a
+def test_get_base_fuzzer(fuzzer_name, expected_base_name):
+    """Tests that get_base_fuzzer returns the base fuzzer for a
     fuzzer variant and a normal fuzzer."""
     with mock.patch('common.fuzzer_utils.get_fuzzer_configs',
                     return_value=CONFIGS):
-        assert fuzzer_dependencies.get_underlying_fuzzer(
-            fuzzer_name) == expected_underlying_name
+        assert fuzzer_dependencies.get_base_fuzzer(
+            fuzzer_name) == expected_base_name
 
 
 def test_get_files_dependent_fuzzers_afl_fuzzer_py():
@@ -148,7 +148,7 @@ def test_get_files_dependent_fuzzers_variant():
                         'fuzzer': 'afl'
                     }, {
                         'fuzzer': 'afl',
-                        'variant_name': VARIANT
+                        'name': VARIANT
                     }, {
                         'fuzzer': 'fairfuzz'
                     }]):
