@@ -15,7 +15,7 @@
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 
-# tmp
+
 def build():
     """Build benchmark."""
     afl_fuzzer.build()
