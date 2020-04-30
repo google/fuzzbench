@@ -52,6 +52,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - run: |  # Needed for presubmit to work.
+        git fetch origin master --depth 1
+        git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
 
     - name: Clear unnecessary files
       run: |
