@@ -63,10 +63,8 @@ def test_is_fuzzers_submodule():
     # We don't do this using parametrize because imports are impractical to do
     # with it.
     from fuzzers import utils as fuzzers_utils
-    from fuzzers import afl
     from fuzzers.afl import fuzzer as afl_fuzzer
-    for module, expected_result in [(fuzzers_utils, True), (afl, True),
-                                    (afl_fuzzer, True),
+    for module, expected_result in [(fuzzers_utils, True), (afl_fuzzer, True),
                                     (fuzzer_dependencies, False)]:
         assert fuzzer_dependencies.is_fuzzers_submodule(
             module) == expected_result
