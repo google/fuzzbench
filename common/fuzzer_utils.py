@@ -117,11 +117,8 @@ def validate(fuzzer):
         return False
 
 
-def is_fuzzer_module(fuzzer, exclude_coverage=True):
+def is_fuzzer_module(fuzzer):
     """Returns True if |fuzzer| is a fuzzer module."""
-    # !!! KILL exclude_coverage?
-    if fuzzer == 'coverage':
-        return not exclude_coverage
     if not os.path.isfile(FuzzerDirectory(fuzzer).fuzzer_py):
         return False
     return True

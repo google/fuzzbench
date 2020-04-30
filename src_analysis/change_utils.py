@@ -17,7 +17,6 @@ from typing import List
 
 from src_analysis import benchmark_dependencies
 from src_analysis import fuzzer_dependencies
-# !!! Kill module?
 
 
 def get_changed_fuzzers(changed_files: List[str] = None) -> List[str]:

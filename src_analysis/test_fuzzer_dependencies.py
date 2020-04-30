@@ -116,7 +116,6 @@ def test_get_files_dependent_fuzzers_afl_fuzzer_py():
     get_files_dependent_fuzzers when passed fuzzers/afl/fuzzer.py. Note that
     this test relies on afl/fuzzer.py being a dependency of
     fairfuzz/fuzzer.py."""
-    # !!! WHat about case where fuzzer A depends on B and B is deleted?
     afl_fuzzer_py_path = os.path.join(utils.ROOT_DIR, 'fuzzers', 'afl',
                                       'fuzzer.py')
     dependent_fuzzers = fuzzer_dependencies.get_files_dependent_fuzzers(

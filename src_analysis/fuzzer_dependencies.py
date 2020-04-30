@@ -17,6 +17,7 @@ dependent on given files."""
 import importlib
 import inspect
 import os
+import types
 from typing import List
 import sys
 
@@ -27,8 +28,6 @@ import fuzzers  # pytype: disable=import-error
 
 MAX_DEPTH = 5
 PY_DEPS_CACHE = {}
-# !!!
-MODULE_TYPE = type(utils)  # pylint: disable=invalid-name
 
 
 def _get_fuzzer_module(fuzzer: str) -> str:
@@ -58,26 +57,8 @@ def is_fuzzers_submodule(module) -> bool:
         module_path = inspect.getfile(module)
         return is_fuzzers_subpath(module_path)
     except TypeError:
-        # !!! IS this neede at all? What about for fuzzers module, does that
-        # !!! work?
-        # This exception happens if "fuzzers.afl" is imported (not
-        # fuzzers.afl.fuzzer) because in most cases the fuzzer directories
-        # don't have __init__.py files. Maybe this should be changed if dealing
-        # with it becomes too difficult.
-
-        # Check if module is a submodule of fuzzers.
-        attr_names = dir(fuzzers)
-        for attr_name in attr_names:
-            attr = getattr(fuzzers, attr_name, None)
-            if attr == module:
-                return True
-
-        # Don't rely on this technique as it uses private attributes,
-        # but use it as a sanity check, get the directory of the module.
-        paths = list(set(module.__path__._path))  # pylint: disable=protected-access
-        assert len(paths) == 1
-        assert not is_fuzzers_subpath(paths[0])
-
+        # This assumes that no __init__ files are used in fuzzers/ and therefore
+        # all modules are imported as such: `from fuzzers.afl import fuzzer`.
         return False
 
 
@@ -108,8 +89,6 @@ def _get_python_dependencies(module, depth: int = 0) -> List[str]:
     cyclic imports can easily be detected. Not that this may not work if a
     fuzzer.py imports modules dynamically or within individual functions. That
     is OK because we can prevent this during code review."""
-    # !!! Make note about imports in docs
-    # !!! Fakefs
     if depth > MAX_DEPTH:
         # Enforce a depth to catch cyclic imports.
         format_string = ('Depth: {} greater than max: {}. '
@@ -125,7 +104,7 @@ def _get_python_dependencies(module, depth: int = 0) -> List[str]:
     deps = set([module_path])
     for attr_name in attr_names:
         imported_module = getattr(module, attr_name)
-        if not isinstance(imported_module, MODULE_TYPE):
+        if not isinstance(imported_module, types.ModuleType):
             continue
 
         if is_fuzzers_submodule(imported_module):
