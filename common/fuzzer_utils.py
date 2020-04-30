@@ -134,14 +134,17 @@ def get_fuzzer_from_config(fuzzer_config: Dict) -> str:
 
 
 def get_fuzzer_configs(fuzzers=None):
-    """Returns the list of all fuzzers."""
+    """Returns the list of all fuzzer and variant configurations."""
     # Import it here to avoid yaml dependency in runner.
     # pylint: disable=import-outside-toplevel
     from common import yaml_utils
 
     fuzzer_configs = []
-    for fuzzer in os.listdir(FUZZERS_DIR):
-        if not is_fuzzer_module(fuzzer):
+    names = set()
+    for fuzzer in os.listdir(fuzzers_dir):
+        if not os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')):
+            continue
+        if fuzzer == 'coverage':
             continue
 
         if not fuzzers or fuzzer in fuzzers:
@@ -158,14 +161,15 @@ def get_fuzzer_configs(fuzzers=None):
                 fuzzer_directory.variants_yaml))
         for variant in variant_config['variants']:
             if not fuzzers or variant['name'] in fuzzers:
-                # Modify the config from the variants.yaml format to the
-                # format expected by a fuzzer config.
                 assert 'name' in variant, (
                     'Missing name attribute for fuzzer variant in {}'.format(
-                        fuzzer_directory.variants_yaml))
-                variant['variant_name'] = variant['name']
-                del variant['name']
+                        variant_config_path))
                 variant['fuzzer'] = fuzzer
                 fuzzer_configs.append(variant)
+
+            name = variant['name'] if 'name' in variant else variant['fuzzer']
+            assert name not in names, (
+                'Multiple fuzzers/variants have the same name: ' + name)
+            names.add(name)
 
     return fuzzer_configs

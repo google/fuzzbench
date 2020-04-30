@@ -38,7 +38,7 @@ RUN add-apt-repository --keyserver hkps://keyserver.ubuntu.com:443 ppa:ubuntu-to
 # Download and compile AFLSmart
 RUN git clone https://github.com/aflsmart/aflsmart /afl && \
     cd /afl && \
-    git checkout df095901ea379f033d4d82345023de004f28b9a7 && \
+    git checkout 5fb84f3b6a0ec24059958c498fc691de01bc5fcc && \
     AFL_NO_X86=1 make
 
 # Setup Peach.

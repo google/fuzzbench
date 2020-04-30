@@ -272,6 +272,7 @@ def do_checks(changed_files: List[Path]) -> bool:
 
     for check in [license_check, yapf, lint, pytype]:
         if not check(changed_files):
+            print('ERROR: %s failed, see errors above.' % check.__name__)
             success = False
 
     if not do_tests():
@@ -305,27 +306,24 @@ def main() -> int:
     os.chdir(_SRC_ROOT)
     changed_files = [Path(path) for path in diff_utils.get_changed_files()]
 
+    if not args.command:
+        success = do_checks(changed_files)
+        return bool_to_returncode(success)
+
+    command_check_mapping = {
+        'format': yapf,
+        'lint': lint,
+        'typecheck': pytype,
+        'test_changed_integrations': test_changed_integrations
+    }
+
+    check = command_check_mapping[args.command]
     if args.command == 'format':
-        success = yapf(changed_files, False)
-        return bool_to_returncode(success)
-
-    if args.command == 'lint':
-        success = lint(changed_files)
-        return bool_to_returncode(success)
-
-    if args.command == 'typecheck':
-        success = pytype(changed_files)
-        return bool_to_returncode(success)
-
-    if args.command == 'licensecheck':
-        success = license_check(changed_files)
-        return bool_to_returncode(success)
-
-    if args.command == 'test_changed_integrations':
-        success = test_changed_integrations(changed_files)
-        return bool_to_returncode(success)
-
-    success = do_checks(changed_files)
+        success = check(changed_files, False)
+    else:
+        success = check(changed_files)
+    if not success:
+        print('ERROR: %s failed, see errors above.' % check.__name__)
     return bool_to_returncode(success)
 
 

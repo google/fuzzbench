@@ -218,8 +218,8 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
     """Class for running a trial."""
 
     def __init__(self):
-        benchmark_fuzzer_directory = '%s-%s' % (environment.get(
-            'BENCHMARK'), environment.get('FUZZER_VARIANT_NAME'))
+        benchmark_fuzzer_directory = '%s-%s' % (environment.get('BENCHMARK'),
+                                                environment.get('FUZZER'))
         if not environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
             bucket = environment.get('CLOUD_EXPERIMENT_BUCKET')
             experiment_name = environment.get('EXPERIMENT')
