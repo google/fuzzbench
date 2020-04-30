@@ -130,7 +130,7 @@ def is_fuzzer_module(fuzzer, exclude_coverage=True):
 def get_fuzzer_from_config(fuzzer_config: Dict) -> str:
     """Returns the fuzzer of |fuzzer_config| for a non-variant fuzzer or returns
     the variant_name for a variant fuzzer."""
-    return fuzzer_config.get('variant_name', fuzzer_config['fuzzer'])
+    return fuzzer_config.get('name', fuzzer_config['fuzzer'])
 
 
 def get_fuzzer_configs(fuzzers=None):
