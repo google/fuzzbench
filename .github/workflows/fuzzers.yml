@@ -72,4 +72,4 @@ jobs:
 
     - name: Build Benchmarks
       run: |
-        PYTHONPATH=. python3 .github/workflows/test_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER $ALWAYS_BUILD_FUZZER
+        PATH=.venv/bin/ PYTHONPATH=. python3 .github/workflows/test_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER $ALWAYS_BUILD_FUZZER
