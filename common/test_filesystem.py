@@ -185,3 +185,14 @@ def test_make_dir_copy(fs):
     copy_dir = filesystem.make_dir_copy(SOURCE_DIR)
     _assert_has_source_dir_contents(copy_dir)
     assert os.path.exists(copied_new_file_path)
+
+
+def test_list_files(fs):
+    base_dir = 'base'
+    file1 = os.path.abspath(os.path.join(base_dir, 'file1'))
+    fs.create_file(file1)
+    file2 = os.path.abspath(os.path.join(base_dir, 'dir1', 'file2'))
+    fs.create_file(file2)
+    file3 = os.path.abspath(os.path.join(base_dir, 'dir1', 'dir2', 'file3'))
+    fs.create_file(file3)
+    assert sorted(filesystem.list_files(base_dir)) == sorted([file1, file2, file3])

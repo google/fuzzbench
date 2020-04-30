@@ -107,7 +107,7 @@ def make_dir_copy(src_dir):
 def list_files(directory):
     """Returns a list of absolute paths to all files in |directory|
     and its subdirectories."""
-    # !!! Test
     dir_absolute_path = os.path.abspath(directory)
     search_path = os.path.join(dir_absolute_path, '**', '*')
-    return list(glob.iglob(search_path, recursive=True))
+    return [path for path in glob.iglob(search_path, recursive=True)
+            if os.path.isfile(path)]
