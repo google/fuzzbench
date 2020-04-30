@@ -73,13 +73,13 @@ def test_drop_uniteresting_columns():
 def test_clobber_experiments_data():
     """Tests that clobber experiments data clobbers stale snapshots from earlier
     experiments."""
-    df = pd.concat(create_experiment_data('experiment-%d' % experiment_num)
-                    for experiment_num in range(3))
+    df = pd.concat(
+        create_experiment_data('experiment-%d' % experiment_num)
+        for experiment_num in range(3))
     df.reset_index(inplace=True)
 
     to_drop = df[(df.experiment == 'experiment-2') &
-                 (df.benchmark == 'libpng') &
-                 (df.fuzzer == 'afl')].index
+                 (df.benchmark == 'libpng') & (df.fuzzer == 'afl')].index
     df.drop(to_drop, inplace=True)
 
     experiments = list(df['experiment'].drop_duplicates().values)
@@ -91,7 +91,8 @@ def test_clobber_experiments_data():
         ['experiment-2', 'libxml', 'afl'],
         ['experiment-2', 'libxml', 'libfuzzer'],
         ['experiment-1', 'libpng', 'afl'],
-    ], columns=columns)
+    ],
+                                   columns=columns)
     expected_result.sort_index(inplace=True)
     assert (
         df[columns].drop_duplicates().values == expected_result.values).all()
