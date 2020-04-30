@@ -139,6 +139,7 @@ def get_fuzzer_configs(fuzzers=None):
     # pylint: disable=import-outside-toplevel
     from common import yaml_utils
 
+    fuzzers_dir = os.path.join(utils.ROOT_DIR, 'fuzzers')
     fuzzer_configs = []
     names = set()
     for fuzzer in os.listdir(fuzzers_dir):
@@ -151,14 +152,13 @@ def get_fuzzer_configs(fuzzers=None):
             # Auto-generate the default configuration for each base fuzzer.
             fuzzer_configs.append({'fuzzer': fuzzer})
 
-        fuzzer_directory = FuzzerDirectory(fuzzer)
-        if not os.path.isfile(fuzzer_directory.variants_yaml):
+        variant_config_path = os.path.join(fuzzers_dir, fuzzer, 'variants.yaml')
+        if not os.path.isfile(variant_config_path):
             continue
 
-        variant_config = yaml_utils.read(fuzzer_directory.variants_yaml)
+        variant_config = yaml_utils.read(variant_config_path)
         assert 'variants' in variant_config, (
-            'Missing "variants" section of {}'.format(
-                fuzzer_directory.variants_yaml))
+            'Missing "variants" section of {}'.format(variant_config_path))
         for variant in variant_config['variants']:
             if not fuzzers or variant['name'] in fuzzers:
                 assert 'name' in variant, (

@@ -89,7 +89,7 @@ def make_builds(benchmarks, fuzzer):
     return True
 
 
-def do_build(build_type, fuzzer):
+def do_build(build_type, fuzzer, always_build):
     """Build fuzzer,benchmark pairs for CI."""
     if build_type == 'oss-fuzz':
         benchmarks = OSS_FUZZ_BENCHMARKS
@@ -100,7 +100,7 @@ def do_build(build_type, fuzzer):
 
     changed_files = diff_utils.get_changed_files()
     changed_fuzzers = change_utils.get_changed_fuzzers(changed_files)
-    if fuzzer in changed_fuzzers:
+    if fuzzer in changed_fuzzers or always_build:
         return make_builds(benchmarks, fuzzer)
 
     changed_benchmarks = set(change_utils.get_changed_benchmarks(changed_files))
@@ -112,12 +112,15 @@ def do_build(build_type, fuzzer):
 
 def main():
     """Build OSS-Fuzz or standard benchmarks with a fuzzer."""
-    if len(sys.argv) != 3:
-        print('Usage: %s <build_type> <fuzzer>' % sys.argv[0])
+    if len(sys.argv) != 4:
+        print('Usage: %s <build_type> <fuzzer> <always_build_fuzzer>' %
+              sys.argv[0])
         return 1
     build_type = sys.argv[1]
     fuzzer = sys.argv[2]
-    result = do_build(build_type, fuzzer)
+    always_build_fuzzer = sys.argv[3]
+    always_build = always_build_fuzzer == fuzzer
+    result = do_build(build_type, fuzzer, always_build)
     return 0 if result else 1
 
 
