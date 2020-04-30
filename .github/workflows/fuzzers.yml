@@ -66,6 +66,10 @@ jobs:
       with:
         python-version: 3.7
 
+    - name: Install dependencies
+      run: |
+        make install-dependencies
+
     - name: Build Benchmarks
       run: |
         PYTHONPATH=. python .github/workflows/test_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER $ALWAYS_BUILD_FUZZER
