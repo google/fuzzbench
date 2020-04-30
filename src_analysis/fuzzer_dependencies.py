@@ -22,9 +22,6 @@ from typing import List
 import sys
 
 from common import fuzzer_utils
-from common import utils
-# Import this module so we can inspect its submodules.
-import fuzzers  # pytype: disable=import-error
 
 MAX_DEPTH = 5
 PY_DEPS_CACHE = {}

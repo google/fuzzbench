@@ -13,19 +13,19 @@
 # limitations under the License.
 """Integration code for MOpt fuzzer."""
 
-import fuzzers
+from fuzzers.afl import fuzzer as afl_fuzzer
 
 
 def build():
     """Build benchmark."""
-    fuzzers.afl.fuzzer.build()
+    afl_fuzzer.build()
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    fuzzers.afl.fuzzer.prepare_fuzz_environment(input_corpus)
+    afl_fuzzer.prepare_fuzz_environment(input_corpus)
 
-    fuzzers.afl.fuzzer.run_afl_fuzz(
+    afl_fuzzer.run_afl_fuzz(
         input_corpus,
         output_corpus,
         target_binary,
