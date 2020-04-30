@@ -165,16 +165,3 @@ def get_files_dependent_fuzzers(dependency_files):
                 break
 
     return dependent_fuzzers
-
-
-def get_fuzzer_dependent_fuzzers(fuzzer: str) -> List[str]:
-    """Returns the list of fuzzers dependent on |fuzzer|."""
-    # !!! KILL?? HANDLE VARIANTS?
-    fuzzer_dir = os.path.join(fuzzer_utils.FUZZERS_DIR, fuzzer)
-    fuzzer_files = set(filesystem.list_files(fuzzer_dir))
-    return get_files_dependent_fuzzers(fuzzer_files)
-
-
-if __name__ == '__main__':
-    print(get_fuzzer_dependent_fuzzers('afl'))
-    print(get_fuzzer_dependencies('afl'))

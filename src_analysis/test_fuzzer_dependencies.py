@@ -139,16 +139,6 @@ def test_get_files_dependent_fuzzers_afl_runner_dockerfile():
     assert 'afl' in dependent_fuzzers
 
 
-def test_get_fuzzer_dependent_fuzzers_afl():
-    """Tests that get_fuzzer_dependent fuzzers returns correct modules when
-    passed "afl". Note that this test relies on afl/fuzzer.py being a dependency
-    of fairfuzz/fuzzer.py."""
-    dependent_fuzzers = fuzzer_dependencies.get_fuzzer_dependent_fuzzers('afl')
-    assert 'fairfuzz' in dependent_fuzzers
-    # Ensure that the fuzzer itself is in the list of dependent_fuzzers.
-    assert 'afl' in dependent_fuzzers
-
-
 def test_get_files_dependent_fuzzers_variant():
     """Test that only variants are depndent on variants.yaml."""
     afl_variants_yaml_path = os.path.join(utils.ROOT_DIR, 'fuzzers', 'afl',
