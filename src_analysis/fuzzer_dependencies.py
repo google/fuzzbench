@@ -86,6 +86,7 @@ def get_fuzzer_dependencies(fuzzer: str) -> List[str]:
     """Return the list of files in fuzzbench that |fuzzer| depends on. This
     includes dockerfiles used to build |fuzzer|, and the Python files it uses to
     build and run fuzz targets."""
+    # Don't use modulefinder since it doesn't work without __init__.py files.
     initial_fuzzer = fuzzer
     fuzzer = get_underlying_fuzzer(fuzzer)
     fuzzer_directory = fuzzer_utils.FuzzerDirectory(fuzzer)
@@ -173,22 +174,6 @@ def get_fuzzer_dependent_fuzzers(fuzzer: str) -> List[str]:
     fuzzer_files = set(filesystem.list_files(fuzzer_dir))
     return get_files_dependent_fuzzers(fuzzer_files)
 
-
-# !!! At least  comment why module finder didn't work (no __init__.py)
-# def get_deps(fuzzer):
-#     modulefinder.AddPackagePath(
-#         'fuzzers.utils', os.path.join(FUZZERS_DIR, 'utils.py'))
-#     finder = modulefinder.ModuleFinder()
-
-#     fuzzer_path = os.path.join(FUZZERS_DIR, fuzzer, 'fuzzer.py')
-#     finder.run_script(fuzzer_path)
-#     for name, module in finder.modules.items():
-#         module_path = module.__file__
-#         if module_path is None:
-#             continue
-#         common_path = os.path.commonpath([FUZZERS_DIR, module_path])
-#         if common_path == FUZZERS_DIR:
-#             print(name, module_path)
 
 if __name__ == '__main__':
     print(get_fuzzer_dependent_fuzzers('afl'))
