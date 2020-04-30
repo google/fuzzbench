@@ -99,9 +99,7 @@ def do_build(build_type, fuzzer):
         raise Exception('Invalid build_type: %s' % build_type)
 
     changed_files = diff_utils.get_changed_files()
-    print(changed_files)
     changed_fuzzers = change_utils.get_changed_fuzzers(changed_files)
-    print('fuzzers', changed_fuzzers)
     if fuzzer in changed_fuzzers:
         return make_builds(benchmarks, fuzzer)
 
