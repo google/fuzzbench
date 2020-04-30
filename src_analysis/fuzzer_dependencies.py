@@ -20,7 +20,6 @@ import os
 from typing import List
 import sys
 
-from common import filesystem
 from common import fuzzer_utils
 from common import utils
 # Import this module so we can inspect its submodules.

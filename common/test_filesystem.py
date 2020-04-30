@@ -188,6 +188,8 @@ def test_make_dir_copy(fs):
 
 
 def test_list_files(fs):
+    """Tests that list files traverses subdirectories, only returns files, and
+    returns absolute paths."""
     base_dir = 'base'
     file1 = os.path.abspath(os.path.join(base_dir, 'file1'))
     fs.create_file(file1)
@@ -195,4 +197,5 @@ def test_list_files(fs):
     fs.create_file(file2)
     file3 = os.path.abspath(os.path.join(base_dir, 'dir1', 'dir2', 'file3'))
     fs.create_file(file3)
-    assert sorted(filesystem.list_files(base_dir)) == sorted([file1, file2, file3])
+    assert sorted(filesystem.list_files(base_dir)) == sorted(
+        [file1, file2, file3])

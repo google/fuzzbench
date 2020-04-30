@@ -109,5 +109,7 @@ def list_files(directory):
     and its subdirectories."""
     dir_absolute_path = os.path.abspath(directory)
     search_path = os.path.join(dir_absolute_path, '**', '*')
-    return [path for path in glob.iglob(search_path, recursive=True)
-            if os.path.isfile(path)]
+    return [
+        path for path in glob.iglob(search_path, recursive=True)
+        if os.path.isfile(path)
+    ]
