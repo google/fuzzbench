@@ -287,7 +287,7 @@ debug-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
     -e BENCHMARK=$(2) \
     -e FUZZ_TARGET=$($(2)-fuzz-target) \
     --entrypoint "/bin/bash" \
-    -it $(BASE_TAG)/unners/$(1)/$(2)
+    -it $(BASE_TAG)/runners/$(1)/$(2)
 
 else
 
