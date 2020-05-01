@@ -57,9 +57,6 @@ def get_builder_image_url(benchmark, fuzzer, cloud_project):
     """Get the URL of the docker builder image for fuzzing the benchmark with
     fuzzer."""
     base_tag = experiment_utils.get_base_docker_tag(cloud_project)
-    if is_oss_fuzz(benchmark):
-        return '{base_tag}/oss-fuzz/builders/{fuzzer}/{project}'.format(
-            base_tag=base_tag, fuzzer=fuzzer, project=get_project(benchmark))
     return '{base_tag}/builders/{fuzzer}/{benchmark}'.format(
         base_tag=base_tag, fuzzer=fuzzer, benchmark=benchmark)
 
