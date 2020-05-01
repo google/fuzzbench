@@ -163,6 +163,7 @@ def test_is_cycle_unchanged_doesnt_exist(experiment):
     with test_utils.mock_popen_ctx_mgr(returncode=1):
         assert not snapshot_measurer.is_cycle_unchanged(this_cycle)
 
+
 @mock.patch('common.gsutil.cp')
 @mock.patch('common.filesystem.read')
 def test_is_cycle_unchanged_first_copy(mocked_read, mocked_cp, experiment):
