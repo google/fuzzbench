@@ -154,9 +154,8 @@ def test_measure_all_trials_no_more(mocked_directories_have_same_files,
         queue.Queue())
 
 
-@mock.patch('common.gsutil.cp')
-@mock.patch('common.filesystem.read')
-def test_is_cycle_unchanged_first_copy(mocked_read, mocked_cp, experiment):
+@mock.patch('subprocess.Popen.__init__')
+def test_is_cycle_unchanged_doesnt_exist(mocked_init, experiment):
     """Test that is_cycle_unchanged can properly determine if a cycle is
     unchanged or not when it needs to copy the file for the first time."""
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
@@ -164,11 +163,10 @@ def test_is_cycle_unchanged_first_copy(mocked_read, mocked_cp, experiment):
     this_cycle = 100
     unchanged_cycles_file_contents = (
         '\n'.join([str(num) for num in range(10)] + [str(this_cycle)]))
-    mocked_read.return_value = unchanged_cycles_file_contents
-    mocked_cp.return_value = new_process.ProcessResult(0, '', False)
 
-    assert snapshot_measurer.is_cycle_unchanged(this_cycle)
-    assert not snapshot_measurer.is_cycle_unchanged(this_cycle + 1)
+    mocked_init.side_effect = subprocess.CalledProcessError('returned nonzero')
+
+    assert not snapshot_measurer.is_cycle_unchanged(this_cycle)
 
 
 def test_is_cycle_unchanged_update(fs, experiment):

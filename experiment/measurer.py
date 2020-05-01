@@ -391,7 +391,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
         def copy_unchanged_cycles_file():
             result = gsutil.cp(exp_path.gcs(self.unchanged_cycles_path),
-                               self.unchanged_cycles_path)
+                               self.unchanged_cycles_path, expect_zero=False)
             return result.retcode == 0
 
         if not os.path.exists(self.unchanged_cycles_path):
