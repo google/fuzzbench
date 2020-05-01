@@ -16,6 +16,7 @@
 import datetime
 import os
 import shutil
+import subprocess
 from unittest import mock
 import queue
 
@@ -154,19 +155,14 @@ def test_measure_all_trials_no_more(mocked_directories_have_same_files,
         queue.Queue())
 
 
-@mock.patch('subprocess.Popen.__init__')
-def test_is_cycle_unchanged_doesnt_exist(mocked_init, experiment):
+def test_is_cycle_unchanged_doesnt_exist(experiment):
     """Test that is_cycle_unchanged can properly determine if a cycle is
     unchanged or not when it needs to copy the file for the first time."""
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)
-    this_cycle = 100
-    unchanged_cycles_file_contents = (
-        '\n'.join([str(num) for num in range(10)] + [str(this_cycle)]))
-
-    mocked_init.side_effect = subprocess.CalledProcessError('returned nonzero')
-
-    assert not snapshot_measurer.is_cycle_unchanged(this_cycle)
+    this_cycle = 1
+    with test_utils.mock_popen_ctx_mgr(returncode=1):
+        assert not snapshot_measurer.is_cycle_unchanged(this_cycle)
 
 
 def test_is_cycle_unchanged_update(fs, experiment):
