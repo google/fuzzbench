@@ -208,7 +208,7 @@ define fuzzer_oss_fuzz_benchmark_template
     fuzzers/$(1)
 
 .pull-$(1)-$(2)-oss-fuzz-builder-intermediate:
-	docker pull $(BASE_TAG)/oss-fuzz/builders/$(1)/$(2)-intermediate
+	docker pull $(BASE_TAG)/builders/$(1)/$(2)-intermediate
 
 .$(1)-$(2)-oss-fuzz-builder: .$(1)-$(2)-oss-fuzz-builder-intermediate
 	docker build \
@@ -217,7 +217,7 @@ define fuzzer_oss_fuzz_benchmark_template
     --build-arg parent_image=$(BASE_TAG)/builders/$(1)/$(2)-intermediate \
     --build-arg fuzzer=$(1) \
     --build-arg benchmark=$(2) \
-    $(call cache_from,${BASE_TAG}/oss-fuzz/builders/$(1)/$(2)) \
+    $(call cache_from,${BASE_TAG}/builders/$(1)/$(2)) \
     .
 
 .pull-$(1)-$(2)-oss-fuzz-builder: .pull-$(1)-$(2)-oss-fuzz-builder-intermediate
@@ -261,7 +261,7 @@ run-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
     -e FUZZER=$(1) \
     -e BENCHMARK=$(2) \
     -e FUZZ_TARGET=$($(2)-fuzz-target) \
-    -it $(BASE_TAG)/oss-fuzz/runners/$(1)/$(2)
+    -it $(BASE_TAG)/oss-fuzz/$(1)/$(2)
 
 test-run-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
 	docker run \
@@ -274,7 +274,7 @@ test-run-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
     -e FUZZ_TARGET=$($(2)-fuzz-target) \
     -e MAX_TOTAL_TIME=20 \
     -e SNAPSHOT_PERIOD=10 \
-    $(BASE_TAG)/oss-fuzz/runners/$(1)/$(2)
+    $(BASE_TAG)/oss-fuzz/$(1)/$(2)
 
 debug-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
 	docker run \

@@ -35,11 +35,11 @@ ARG oss_fuzz_project
 
 # We take the already built builder image for the given fuzzer/benchmark pair
 # and refer to it as "builder", so we can copy the build artifacts from it.
-FROM gcr.io/fuzzbench/oss-fuzz/builders/$fuzzer/$oss_fuzz_project AS builder
+FROM gcr.io/fuzzbench/builders/$fuzzer/$oss_fuzz_project AS builder
 
 # We base the runner image from the intermediate runner image, defined by the
 # runner.Dockerfile of each fuzzer.
-FROM gcr.io/fuzzbench/oss-fuzz/runners/$fuzzer/$oss_fuzz_project-intermediate
+FROM gcr.io/fuzzbench/oss-fuzz/$fuzzer/$oss_fuzz_project-intermediate
 
 # Set up the directory for the build artifacts.
 ENV WORKDIR /out
