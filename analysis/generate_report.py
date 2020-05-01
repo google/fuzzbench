@@ -58,17 +58,40 @@ def get_arg_parser():
         '--benchmarks',
         nargs='*',
         help='Names of the benchmarks to include in the report.')
+    parser.add_argument(
+        '-e',
+        '--end-time',
+        default=None,
+        type=int,
+        help=('The last time (in seconds) during an experiment to include in '
+              'the report.'))
     parser.add_argument('-f',
                         '--fuzzers',
                         nargs='*',
                         help='Names of the fuzzers to include in the report.')
-    parser.add_argument(
+
+    # It doesn't make sense to clobber and label by experiment, since nothing
+    # can get clobbered like this.
+    mutually_exclusive_group = parser.add_mutually_exclusive_group()
+    mutually_exclusive_group.add_argument(
         '-l',
         '--label-by-experiment',
         action='store_true',
         default=False,
         help='If set, then the report will track progress made in experiments')
-
+    mutually_exclusive_group.add_argument(
+        '-m',
+        '--merge-with-clobber',
+        action='store_true',
+        default=False,
+        help=('When generating a report from multiple experiments, and trials '
+              'exist for fuzzer-benchmark pairs in multiple experiments, only '
+              'include trials for that pair from the last experiment. For '
+              'example, if experiment "A" has all fuzzers but experiment "B" '
+              'has used an updated version of afl++, this option allows you to '
+              'get a report of all trials in "A" except for afl++ and all the '
+              'trials from "B". "Later experiments" are those whose names come '
+              'later when passed to this script.'))
     parser.add_argument(
         '-c',
         '--from-cached-data',
@@ -90,7 +113,9 @@ def generate_report(experiment_names,
                     report_type='default',
                     quick=False,
                     from_cached_data=False,
-                    in_progress=False):
+                    in_progress=False,
+                    end_time=None,
+                    merge_with_clobber=False):
     """Generate report helper."""
     report_name = report_name or experiment_names[0]
 
@@ -115,6 +140,13 @@ def generate_report(experiment_names,
     if label_by_experiment:
         experiment_df = data_utils.label_fuzzers_by_experiment(experiment_df)
 
+    if end_time is not None:
+        experiment_df = data_utils.filter_max_time(experiment_df, end_time)
+
+    if merge_with_clobber:
+        experiment_df = data_utils.clobber_experiments_data(
+            experiment_df, experiment_names)
+
     fuzzer_names = experiment_df.fuzzer.unique()
     plotter = plotting.Plotter(fuzzer_names, quick)
     experiment_ctx = experiment_results.ExperimentResults(
@@ -135,9 +167,17 @@ def main():
     parser = get_arg_parser()
     args = parser.parse_args()
 
-    generate_report(args.experiments, args.report_dir, args.report_name,
-                    args.label_by_experiment, args.benchmarks, args.fuzzers,
-                    args.report_type, args.quick, args.from_cached_data)
+    generate_report(experiment_names=args.experiments,
+                    report_directory=args.report_dir,
+                    report_name=args.report_name,
+                    label_by_experiment=args.label_by_experiment,
+                    benchmarks=args.benchmarks,
+                    fuzzers=args.fuzzers,
+                    report_type=args.report_type,
+                    quick=args.quick,
+                    from_cached_data=args.from_cached_data,
+                    end_time=args.end_time,
+                    merge_with_clobber=args.merge_with_clobber)
 
 
 if __name__ == '__main__':

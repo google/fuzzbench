@@ -1,0 +1,5 @@
+if ($ARGV[0] =~ '/(?7777777777)/') {
+	print("wonk wonk");
+} else {
+   print("badonk");
+}
