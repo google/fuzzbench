@@ -57,7 +57,7 @@ def test_get_fuzz_target(benchmark, expected_fuzz_target, oss_fuzz_benchmark):
 @pytest.mark.parametrize(
     'benchmark,expected_url',
     [(conftest.OSS_FUZZ_BENCHMARK_NAME,
-      'gcr.io/fuzzbench/runners/fuzzer/' + conftest.OSS_FUZZ_BENCHMARK_NAME),
+      'gcr.io/fuzzbench/runners/fuzzer/oss-fuzz-benchmark'),
      (OTHER_BENCHMARK, 'gcr.io/fuzzbench/runners/fuzzer/benchmark')])
 def test_get_runner_image_url(benchmark, expected_url, oss_fuzz_benchmark):
     """Test that we can get the runner image url of a benchmark."""

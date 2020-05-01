@@ -39,7 +39,7 @@ steps:
     # Use a hardcoded repo because the parent image is pinned by SHA. Users
     # won't have it.
     '--build-arg',
-    'parent_image=gcr.io/fuzzbench/${_OSS_FUZZ_PROJECT}@sha256:${_OSS_FUZZ_BUILDER_HASH}',
+    'parent_image=gcr.io/fuzzbench/oss-fuzz/${_OSS_FUZZ_PROJECT}@sha256:${_OSS_FUZZ_BUILDER_HASH}',
 
     'fuzzers/${_UNDERLYING_FUZZER}',
   ]

@@ -203,7 +203,7 @@ define fuzzer_oss_fuzz_benchmark_template
 	docker build \
     --tag $(BASE_TAG)/builders/$(1)/$(2)-intermediate \
     --file=fuzzers/$(1)/builder.Dockerfile \
-    --build-arg parent_image=gcr.io/fuzzbench/$($(2)-project-name)@sha256:$($(2)-oss-fuzz-builder-hash) \
+    --build-arg parent_image=gcr.io/fuzzbench/oss-fuzz/$($(2)-project-name)@sha256:$($(2)-oss-fuzz-builder-hash) \
     $(call cache_from,${BASE_TAG}/builders/$(1)/$(2)-intermediate) \
     fuzzers/$(1)
 
@@ -287,7 +287,7 @@ debug-$(1)-$(2): .$(1)-$(2)-oss-fuzz-runner
     -e BENCHMARK=$(2) \
     -e FUZZ_TARGET=$($(2)-fuzz-target) \
     --entrypoint "/bin/bash" \
-    -it $(BASE_TAG)/runners/$(1)/$(2)
+    -it $(BASE_TAG)/unners/$(1)/$(2)
 
 else
 
