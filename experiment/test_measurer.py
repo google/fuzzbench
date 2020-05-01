@@ -16,7 +16,6 @@
 import datetime
 import os
 import shutil
-import subprocess
 from unittest import mock
 import queue
 
