@@ -39,7 +39,7 @@ FROM gcr.io/fuzzbench/builders/$fuzzer/$benchmark AS builder
 
 # We base the runner image from the intermediate runner image, defined by the
 # runner.Dockerfile of each fuzzer.
-FROM gcr.io/fuzzbench/oss-fuzz/$fuzzer/$benchmark-intermediate
+FROM gcr.io/fuzzbench/runners/$fuzzer/$benchmark-intermediate
 
 # Set up the directory for the build artifacts.
 ENV WORKDIR /out
