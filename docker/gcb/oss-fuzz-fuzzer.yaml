@@ -140,7 +140,7 @@ steps:
     '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}',
 
     '--build-arg',
-    'oss_fuzz_project=${_BENCHMARK}',
+    'benchmark=${_BENCHMARK}',
 
     '--file',
     'docker/oss-fuzz-runner/Dockerfile',

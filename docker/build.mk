@@ -192,7 +192,7 @@ $(1)-oss-fuzz-builder-hash := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
                                       grep oss_fuzz_builder_hash | \
                                       cut -d ':' -f2 | tr -d ' ')
 endef
-# Instantiate the above template with all OSS-Fuzz projects.
+# Instantiate the above template with all OSS-Fuzz benchmarks.
 $(foreach oss_fuzz_benchmark,$(OSS_FUZZ_BENCHMARKS), \
   $(eval $(call oss_fuzz_benchmark_template,$(oss_fuzz_benchmark))))
 
@@ -239,7 +239,7 @@ ifneq ($(1), coverage)
 	docker build \
     --tag $(BASE_TAG)/runners/$(1)/$(2) \
     --build-arg fuzzer=$(1) \
-    --build-arg oss_fuzz_project=$(2) \
+    --build-arg benchmark=$(2) \
     $(call cache_from,${BASE_TAG}/runners/$(1)/$(2)) \
     --file docker/oss-fuzz-runner/Dockerfile \
     .
@@ -299,7 +299,7 @@ endif
 endef
 
 # Instantiate the above template with the cross product of all fuzzers and
-# OSS-Fuzz projects.
+# OSS-Fuzz benchmarks.
 $(foreach fuzzer,$(FUZZERS), \
   $(foreach oss_fuzz_benchmark,$(OSS_FUZZ_BENCHMARKS), \
     $(eval $(call fuzzer_oss_fuzz_benchmark_template,$(fuzzer),$(oss_fuzz_benchmark)))))
