@@ -15,9 +15,6 @@
 
 ## Configure the host.
 
-# Enable 8 2MB huge pages.
-echo 8 > /proc/sys/vm/nr_hugepages
-
 # Make everything ptrace-able.
 echo 0 > /proc/sys/kernel/yama/ptrace_scope
 
