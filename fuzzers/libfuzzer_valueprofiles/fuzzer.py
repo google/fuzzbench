@@ -24,7 +24,7 @@ def build():
     # With LibFuzzer we use -fsanitize=fuzzer-no-link for build CFLAGS and then
     # /usr/lib/libFuzzer.a as the FUZZER_LIB for the main fuzzing binary. This
     # allows us to link against a version of LibFuzzer that we specify.
-    cflags = ['-fsanitize=fuzzer-no-link', '-use_value_profile=1' ]
+    cflags = ['-fsanitize=fuzzer-no-link']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
@@ -60,7 +60,7 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
         # Don't use LSAN's leak detection. Other fuzzers won't be using it and
         # using it will cause libFuzzer to find "crashes" no one cares about.
         '-detect_leaks=0',
-        
+
         # other things that could be tested as variants:
         # 'data_flow_trace=1', 'collect_data_flow=1', '-focus_function=auto'
         '-use_value_profile=1',
