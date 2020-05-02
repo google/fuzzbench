@@ -32,13 +32,16 @@ OSS_FUZZ_BENCHMARKS = [
 STANDARD_BENCHMARKS = [
     'freetype2-2017',
     'harfbuzz-1.3.2',
+    'jasper-1.701.0',
     'lcms-2017-03-21',
     'libjpeg-turbo-07-2017',
     'libpng-1.2.56',
     'libxml2-v2.9.2',
     'openthread-2019-12-23',
+    'perl-5.21.7',
     'proj4-2017-08-14',
     're2-2014-12-09',
+    'tcpdump-4.9.0',
     'vorbis-2017-12-11',
     'woff2-2016-05-06',
 ]

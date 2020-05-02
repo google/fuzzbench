@@ -154,29 +154,78 @@ def test_measure_all_trials_no_more(mocked_directories_have_same_files,
         queue.Queue())
 
 
-@mock.patch('common.gsutil.cat')
-def test_is_cycle_unchanged(mocked_cat, experiment):
+def test_is_cycle_unchanged_doesnt_exist(experiment):
     """Test that is_cycle_unchanged can properly determine if a cycle is
-    unchanged or not."""
+    unchanged or not when it needs to copy the file for the first time."""
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+    this_cycle = 1
+    with test_utils.mock_popen_ctx_mgr(returncode=1):
+        assert not snapshot_measurer.is_cycle_unchanged(this_cycle)
+
+
+@mock.patch('common.gsutil.cp')
+@mock.patch('common.filesystem.read')
+def test_is_cycle_unchanged_first_copy(mocked_read, mocked_cp, experiment):
+    """Test that is_cycle_unchanged can properly determine if a cycle is
+    unchanged or not when it needs to copy the file for the first time."""
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)
     this_cycle = 100
-    unchange_cycles_file_contents = ('\n'.join([str(num) for num in range(10)] +
-                                               [str(this_cycle)]))
-    mocked_cat.return_value = (0, unchange_cycles_file_contents)
+    unchanged_cycles_file_contents = (
+        '\n'.join([str(num) for num in range(10)] + [str(this_cycle)]))
+    mocked_read.return_value = unchanged_cycles_file_contents
+    mocked_cp.return_value = new_process.ProcessResult(0, '', False)
 
     assert snapshot_measurer.is_cycle_unchanged(this_cycle)
     assert not snapshot_measurer.is_cycle_unchanged(this_cycle + 1)
 
 
-@mock.patch('common.gsutil.cat')
-def test_is_cycle_unchanged_no_file(mocked_cat, fs, experiment):
+def test_is_cycle_unchanged_update(fs, experiment):
+    """Test that is_cycle_unchanged can properly determine that a
+    cycle has changed when it has the file but needs to update it."""
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+
+    this_cycle = 100
+    initial_unchanged_cycles_file_contents = (
+        '\n'.join([str(num) for num in range(10)] + [str(this_cycle)]))
+    fs.create_file(snapshot_measurer.unchanged_cycles_path,
+                   contents=initial_unchanged_cycles_file_contents)
+
+    next_cycle = this_cycle + 1
+    unchanged_cycles_file_contents = (initial_unchanged_cycles_file_contents +
+                                      '\n' + str(next_cycle))
+    assert snapshot_measurer.is_cycle_unchanged(this_cycle)
+    with mock.patch('common.gsutil.cp') as mocked_cp:
+        with mock.patch('common.filesystem.read') as mocked_read:
+            mocked_cp.return_value = new_process.ProcessResult(0, '', False)
+            mocked_read.return_value = unchanged_cycles_file_contents
+            assert snapshot_measurer.is_cycle_unchanged(next_cycle)
+
+
+@mock.patch('common.gsutil.cp')
+def test_is_cycle_unchanged_skip_cp(mocked_cp, fs, experiment):
+    """Check that is_cycle_unchanged doesn't call gsutil.cp unnecessarily."""
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+    this_cycle = 100
+    initial_unchanged_cycles_file_contents = (
+        '\n'.join([str(num) for num in range(10)] + [str(this_cycle + 1)]))
+    fs.create_file(snapshot_measurer.unchanged_cycles_path,
+                   contents=initial_unchanged_cycles_file_contents)
+    assert not snapshot_measurer.is_cycle_unchanged(this_cycle)
+    mocked_cp.assert_not_called()
+
+
+@mock.patch('common.gsutil.cp')
+def test_is_cycle_unchanged_no_file(mocked_cp, fs, experiment):
     """Test that is_cycle_unchanged returns False when there is no
     unchanged-cycles file."""
     # Make sure we log if there is no unchanged-cycles file.
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)
-    mocked_cat.return_value = (1, '0')
+    mocked_cp.return_value = new_process.ProcessResult(1, '', False)
     assert not snapshot_measurer.is_cycle_unchanged(0)
 
 
@@ -193,9 +242,11 @@ def test_run_cov_new_units(mocked_execute, fs, environ):
                                                   SNAPSHOT_LOGGER)
     snapshot_measurer.initialize_measurement_dirs()
     shared_units = ['shared1', 'shared2']
+    fs.create_file(snapshot_measurer.measured_files_path,
+                   contents='\n'.join(shared_units))
     for unit in shared_units:
-        fs.create_file(os.path.join(snapshot_measurer.prev_corpus_dir, unit))
         fs.create_file(os.path.join(snapshot_measurer.corpus_dir, unit))
+
     new_units = ['new1', 'new2']
     for unit in new_units:
         fs.create_file(os.path.join(snapshot_measurer.corpus_dir, unit))
@@ -247,8 +298,11 @@ def create_measurer(experiment):
 class TestIntegrationMeasurement:
     """Integration tests for measurement."""
 
-    def test_measure_snapshot_coverage(self, create_measurer, db, experiment):
+    @mock.patch('experiment.measurer.SnapshotMeasurer.is_cycle_unchanged')
+    def test_measure_snapshot_coverage(  # pylint: disable=too-many-locals
+            self, mocked_is_cycle_unchanged, create_measurer, db, experiment):
         """Integration test for measure_snapshot_coverage."""
+        mocked_is_cycle_unchanged.return_value = False
         # Set up the coverage binary.
         benchmark = 'freetype2-2017'
         coverage_binary_src = get_test_data_path(

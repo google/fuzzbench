@@ -26,6 +26,6 @@ def read(yaml_filename):
 
 
 def write(yaml_filename, data):
-    """Writes data to a new yaml file at |yaml_filename|."""
+    """Writes |data| to a new yaml file at |yaml_filename|."""
     with open(yaml_filename, 'w') as file_handle:
         return yaml.dump(data, file_handle)
