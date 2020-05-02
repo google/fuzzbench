@@ -39,6 +39,7 @@ jobs:
           - honggfuzz
           - lafintel
           - libfuzzer
+          - libfuzzer_valueprofiles
           - mopt
 
         benchmark_type:
