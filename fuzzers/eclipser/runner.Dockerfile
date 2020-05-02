@@ -38,4 +38,5 @@ RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsof
 RUN git clone https://github.com/SoftSec-KAIST/Eclipser /Eclipser && \
     cd /Eclipser && \
     git checkout b072f045324869c607d3cdfa8fae0cdfed944492 && \
-    make
+    make && \
+    rm -rf /Eclipser/Instrumentor
