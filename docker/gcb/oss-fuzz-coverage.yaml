@@ -31,7 +31,7 @@ steps:
     'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}-intermediate',
 
     '--tag',
-    '${_REPO}/oss-fuzz/coverage/${_BENCHMARK}-intermediate',
+    '${_REPO}/builders/coverage/${_BENCHMARK}-intermediate',
 
     '--file=fuzzers/coverage/builder.Dockerfile',
 
