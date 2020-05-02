@@ -16,6 +16,7 @@ jobs:
           - afl
           - aflfast
           - aflplusplus
+          - aflplusplus_lto_cmplog_mopt2
           - aflplusplus_mopt
           - aflplusplus_cmplog
           - aflplusplus_instrim

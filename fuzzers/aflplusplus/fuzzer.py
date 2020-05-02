@@ -35,6 +35,10 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
 
+    # Disable neverZero implementation
+    if 'nozero' in build_modes:
+        os.environ['AFL_LLVM_SKIP_NEVERZERO'] = '1'
+
     # Enable context sentitivity for LLVM mode
     if 'ctx' in build_modes:
         os.environ['AFL_LLVM_INSTRUMENTATION'] = 'CTX'
@@ -53,9 +57,10 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-8'
     elif 'ngram16' in build_modes:
         os.environ['AFL_LLVM_INSTRUMENTATION'] = 'NGRAM-16'
-    elif 'instrim' in build_modes:
+
+    if 'instrim' in build_modes:
         # I avoid to put also AFL_LLVM_INSTRIM_LOOPHEAD
-        os.environ['AFL_LLVM_INSTRUMENTATION'] = 'CFG'
+        os.environ['AFL_LLVM_INSTRIM'] = 'CFG'
         os.environ['AFL_LLVM_INSTRIM_SKIPSINGLEBLOCK'] = '1'
 
     if 'qemu' in build_modes:
