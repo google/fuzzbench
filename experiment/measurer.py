@@ -148,7 +148,7 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
                 # If "ready" that means pool has finished calling on each
                 # unmeasured_snapshot. Since it is finished and the queue is
                 # empty, we can stop checking the queue for more snapshots.
-                logger.info('ready')
+                logger.debug('ready')
                 break
 
             if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE * .75:
@@ -157,14 +157,14 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
                 save_snapshots()
                 continue
             else:
-                logger.info('not ready')
+                logger.debug('not ready')
         if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE and not result.ready():
             save_snapshots()
 
     # If we have any snapshots left save them now.
     save_snapshots()
 
-    logger.info('measured all trials')
+    logger.debug('Measured all trials.')
     return snapshots_measured
 
 
@@ -472,12 +472,12 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
 
 def measure_trial_coverage(  # pylint: disable=invalid-name
-        measure_req, max_cycle: int,
-        q: multiprocessing.Queue, i) -> models.Snapshot:
+        measure_req, max_cycle: int, q: multiprocessing.Queue,
+        i) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
-    logger.info('measuring %d', i)
+    logger.debug('Measuring %d.', i)
     min_cycle = measure_req.cycle
     # Add 1 to ensure we measure the last cycle.
     for cycle in range(min_cycle, max_cycle + 1):
@@ -496,7 +496,7 @@ def measure_trial_coverage(  # pylint: disable=invalid-name
                              'trial_id': str(measure_req.trial_id),
                              'cycle': str(cycle),
                          })
-    logger.info('done measuring %d', i)
+    logger.debug('Done measuring %d.', i)
 
 
 def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
