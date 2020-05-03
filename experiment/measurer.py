@@ -115,8 +115,8 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
         return False
 
     measure_trial_coverage_args = [
-        (unmeasured_snapshot, max_cycle, q)
-        for unmeasured_snapshot in unmeasured_snapshots
+        (unmeasured_snapshot, max_cycle, q, i)
+        for i, unmeasured_snapshot in enumerate(unmeasured_snapshots)
     ]
 
     result = pool.starmap_async(measure_trial_coverage,
@@ -148,6 +148,7 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
                 # If "ready" that means pool has finished calling on each
                 # unmeasured_snapshot. Since it is finished and the queue is
                 # empty, we can stop checking the queue for more snapshots.
+                logger.info('ready')
                 break
 
             if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE * .75:
@@ -155,13 +156,15 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
                 # that we will have to wait for the next snapshot.
                 save_snapshots()
                 continue
-
+            else:
+                logger.info('not ready')
         if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE and not result.ready():
             save_snapshots()
 
     # If we have any snapshots left save them now.
     save_snapshots()
 
+    logger.info('measured all trials')
     return snapshots_measured
 
 
@@ -392,6 +395,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         def copy_unchanged_cycles_file():
             result = gsutil.cp(exp_path.gcs(self.unchanged_cycles_path),
                                self.unchanged_cycles_path,
+                               parallel=False,
                                expect_zero=False)
             return result.retcode == 0
 
@@ -448,7 +452,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
                     arcname=os.path.basename(self.crashes_dir))
         gcs_path = exp_path.gcs(
             posixpath.join(self.trial_dir, 'crashes', crashes_archive_name))
-        gsutil.cp(archive, gcs_path)
+        gsutil.cp(archive, gcs_path, parallel=False)
         os.remove(archive)
 
     def update_measured_files(self):
@@ -469,10 +473,11 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
 def measure_trial_coverage(  # pylint: disable=invalid-name
         measure_req, max_cycle: int,
-        q: multiprocessing.Queue) -> models.Snapshot:
+        q: multiprocessing.Queue, i) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
+    logger.info('measuring %d', i)
     min_cycle = measure_req.cycle
     # Add 1 to ensure we measure the last cycle.
     for cycle in range(min_cycle, max_cycle + 1):
@@ -491,6 +496,7 @@ def measure_trial_coverage(  # pylint: disable=invalid-name
                              'trial_id': str(measure_req.trial_id),
                              'cycle': str(cycle),
                          })
+    logger.info('done measuring %d', i)
 
 
 def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
