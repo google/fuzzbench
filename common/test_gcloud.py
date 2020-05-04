@@ -89,8 +89,9 @@ def test_create_instance():
             '--boot-disk-type=pd-ssd',
         ]]
 
-def _get_expected_create_runner_command(instance_type):
-    return [
+
+def _get_expected_create_runner_command(is_preemptible):
+    command = [
         'gcloud',
         'compute',
         'instances',
@@ -101,13 +102,15 @@ def _get_expected_create_runner_command(instance_type):
         '--zone=zone-a',
         '--scopes=cloud-platform',
         '--no-address',
-        '--machine-type=%s' % instance_type,
+        '--machine-type=n1-standard-1',
         '--boot-disk-size=30GB',
-        ]
-@pytest.mark.parametrize(('preemptible_runners'),
-                         [
-                             None, False
-                         ]) # yapf: disable
+    ]
+    if is_preemptible:
+        command.append('--preemptible')
+    return command
+
+
+@pytest.mark.parametrize(('preemptible_runners'), [None, False])
 def test_create_instance_not_preemptible(preemptible_runners):
     """Tests create_instance doesn't specify preemptible when it isn't supposed
     to."""
@@ -118,8 +121,9 @@ def test_create_instance_not_preemptible(preemptible_runners):
         gcloud.create_instance(INSTANCE_NAME, gcloud.InstanceType.RUNNER,
                                config)
         assert mocked_popen.commands == [
-            _get_expected_create_runner_command('n1-standard-1')
+            _get_expected_create_runner_command(bool(preemptible_runners))
         ]
+
 
 def test_create_instance_preemptible():
     """Tests create_instance doesn't specify preemptible when it isn't supposed
@@ -130,7 +134,7 @@ def test_create_instance_preemptible():
         gcloud.create_instance(INSTANCE_NAME, gcloud.InstanceType.RUNNER,
                                config)
         assert mocked_popen.commands == [
-            _get_expected_create_runner_command('n1-standard-1-preemptible')
+            _get_expected_create_runner_command(True)
         ]
 
 
