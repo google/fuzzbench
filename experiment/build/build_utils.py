@@ -30,7 +30,6 @@ def store_build_logs(build_config, build_result):
         build_log_filename = build_config + '.txt'
         gsutil.cp(tmp.name,
                   exp_path.gcs(get_build_logs_dir() / build_log_filename),
-                  parallel=False,
                   write_to_stdout=False)
 
 
