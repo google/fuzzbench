@@ -264,11 +264,11 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
          '|^docs/')
     ]
     destination = os.path.join(base_destination, 'src')
-    gsutil.rsync(utils.ROOT_DIR, destination, options=options)
+    gsutil.rsync(utils.ROOT_DIR, destination, options=options, parallel=True)
 
     # Send config files.
     destination = os.path.join(base_destination, 'config')
-    gsutil.rsync(config_dir, destination)
+    gsutil.rsync(config_dir, destination, parallel=True)
 
 
 class BaseDispatcher:

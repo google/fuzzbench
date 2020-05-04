@@ -285,8 +285,10 @@ class TestIntegrationRunner:
 
         local_gcs_corpus_dir_copy = tmp_path / 'gcs_corpus_dir'
         os.mkdir(local_gcs_corpus_dir_copy)
-        gsutil.cp('-r', posixpath.join(gcs_corpus_directory, '*'),
-                  str(local_gcs_corpus_dir_copy))
+        gsutil.cp('-r',
+                  posixpath.join(gcs_corpus_directory, '*'),
+                  str(local_gcs_corpus_dir_copy),
+                  parallel=True)
         archive_size = os.path.getsize(local_gcs_corpus_dir_copy /
                                        'corpus-archive-0001.tar.gz')
 

@@ -62,11 +62,18 @@ def delete_docker_images():
     """Delete docker images."""
     # TODO(metzman): Don't delete base-runner/base-builder so it
     # doesn't need to be pulled for every target.
+
+    result = subprocess.run(['docker', 'ps', '-a', '-q'],
+                            stdout=subprocess.PIPE,
+                            check=True)
+    container_ids = result.stdout.splitlines()
+    subprocess.run(['docker', 'rm', '-f'] + container_ids, check=False)
+
     result = subprocess.run(['docker', 'images', '-a', '-q'],
                             stdout=subprocess.PIPE,
                             check=True)
-    image_names = result.stdout.splitlines()
-    subprocess.run(['docker', 'rmi', '-f'] + image_names, check=False)
+    image_ids = result.stdout.splitlines()
+    subprocess.run(['docker', 'rmi', '-f'] + image_ids, check=False)
 
 
 def make_builds(benchmarks, fuzzer):
