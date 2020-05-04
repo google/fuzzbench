@@ -28,7 +28,7 @@ RUN apt-get update -y && \
         bison \
         git \
         gdb
-RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
+RUN wget -q https://storage.googleapis.com/fuzzbench-files/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
     apt-get update -y && \
     apt-get install -y dotnet-sdk-2.1 dotnet-runtime-2.1 && \
