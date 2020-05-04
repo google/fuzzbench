@@ -115,8 +115,8 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
         return False
 
     measure_trial_coverage_args = [
-        (unmeasured_snapshot, max_cycle, q, i)
-        for i, unmeasured_snapshot in enumerate(unmeasured_snapshots)
+        (unmeasured_snapshot, max_cycle, q)
+        for unmeasured_snapshot in unmeasured_snapshots
     ]
 
     result = pool.starmap_async(measure_trial_coverage,
@@ -148,7 +148,8 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
                 # If "ready" that means pool has finished calling on each
                 # unmeasured_snapshot. Since it is finished and the queue is
                 # empty, we can stop checking the queue for more snapshots.
-                logger.debug('ready')
+                logger.debug(
+                    'Finished call to map with measure_trial_coverage.')
                 break
 
             if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE * .75:
@@ -156,15 +157,14 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
                 # that we will have to wait for the next snapshot.
                 save_snapshots()
                 continue
-            else:
-                logger.debug('not ready')
+
         if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE and not result.ready():
             save_snapshots()
 
     # If we have any snapshots left save them now.
     save_snapshots()
 
-    logger.debug('Measured all trials.')
+    logger.info('Done measuring all trials.')
     return snapshots_measured
 
 
@@ -472,12 +472,12 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
 
 def measure_trial_coverage(  # pylint: disable=invalid-name
-        measure_req, max_cycle: int, q: multiprocessing.Queue,
-        i) -> models.Snapshot:
+        measure_req, max_cycle: int,
+        q: multiprocessing.Queue) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
-    logger.debug('Measuring %d.', i)
+    logger.debug('Measuring trial: %d.', measure_req.trial_id)
     min_cycle = measure_req.cycle
     # Add 1 to ensure we measure the last cycle.
     for cycle in range(min_cycle, max_cycle + 1):
@@ -496,7 +496,7 @@ def measure_trial_coverage(  # pylint: disable=invalid-name
                              'trial_id': str(measure_req.trial_id),
                              'cycle': str(cycle),
                          })
-    logger.debug('Done measuring %d.', i)
+    logger.debug('Done measuring trial: %d.', measure_req.trial_id)
 
 
 def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
