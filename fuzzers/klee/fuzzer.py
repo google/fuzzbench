@@ -152,8 +152,10 @@ def fuzz(input_corpus, output_corpus, target_binary):
         converted=n_converted))
 
     # Run KLEE
-    # Option -only-output-states-covering-new make dumping ktest files faster
-    # new coverage means a new edge. See lib/Core/StatsTracker.cpp:markBranchVisited()
+    # Option -only-output-states-covering-new makes 
+    # dumping ktest files faster.
+    # New coverage means a new edge. 
+    # See lib/Core/StatsTracker.cpp:markBranchVisited()
 
     print('[run_fuzzer] Running target with klee')
 
