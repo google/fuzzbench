@@ -103,9 +103,9 @@ def create_instance(instance_name: str,
             '--machine-type=%s' % RUNNER_MACHINE_TYPE,
             '--boot-disk-size=%s' % RUNNER_BOOT_DISK_SIZE,
         ])
-        if config.get('preemptible_runners', False):
+        if config.get('preemptible_runners'):
             # TODO(metzman): Make runners signal to scheduler that they were
-            # preempted.
+            # preempted, and make scheduler+measurer tolerate preemption.
             command.append('--preemptible')
 
     if metadata:
