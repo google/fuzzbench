@@ -29,6 +29,7 @@ DISPATCHER_BOOT_DISK_TYPE = 'pd-ssd'
 
 # Constants for runner specs.
 RUNNER_MACHINE_TYPE = 'n1-standard-1'
+PREEMPTIBLE_RUNNER_MACHINE_TYPE = 'n1-standard-1-preemptible'
 RUNNER_BOOT_DISK_SIZE = '30GB'
 
 # Number of instances to process at once.
@@ -68,6 +69,14 @@ class InstanceType(enum.Enum):
     RUNNER = 1
 
 
+def get_runner_machine_type(config: dict) -> str:
+    """Returns the name  of the runner machine type we  should tell Google Cloud
+    to use for trials in this experiment."""
+    if not config.get('preemptible_runners', False):
+        return RUNNER_MACHINE_TYPE
+    return PREEMPTIBLE_RUNNER_MACHINE_TYPE
+
+
 def create_instance(instance_name: str,
                     instance_type: InstanceType,
                     config: dict,
@@ -100,7 +109,7 @@ def create_instance(instance_name: str,
     else:
         command.extend([
             '--no-address',
-            '--machine-type=%s' % RUNNER_MACHINE_TYPE,
+            '--machine-type=%s' % get_runner_machine_type(config),
             '--boot-disk-size=%s' % RUNNER_BOOT_DISK_SIZE,
         ])
     if metadata:
