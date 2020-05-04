@@ -12,20 +12,41 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Utilities for finding changed code, particularly fuzzers and benchmarks."""
+"""Utilities for finding changed components, particularly fuzzers and benchmarks."""
+import os
 from typing import List
+
+from common import utils
+from common import fuzzer_utils
 
 from src_analysis import benchmark_dependencies
 from src_analysis import fuzzer_dependencies
+
+# This will mean changes to OSS-Fuzz Dockerfiles cause standard benchmarks to be
+# built and vice versa. But until we map the relationship between dockerfiles in
+# python, ignore this for simplicity.
+CI_FILES = set(
+    [os.path.join(utils.ROOT_DIR, 'Makefile'),
+     os.path.join(utils.ROOT_DIR, 'test_fuzzer_benchmarks.py')] +
+    filesystem.list_files(os.path.join(utils.ROOT_DIR, 'docker')))
 
 
 def get_changed_fuzzers(changed_files: List[str] = None) -> List[str]:
     """Returns a list of fuzzers that have changed functionality based
     on the files that have changed in |changed_files|."""
-    # TODO(metzman): Handle case where docker/... or make changes.
     changed_fuzzers = fuzzer_dependencies.get_files_dependent_fuzzers(
         changed_files)
     return changed_fuzzers
+
+
+def get_changed_fuzzers_for_ci(changed_files: List[str] = None) -> List[str]:
+    """Returns a list of fuzzers that have changed functionality based
+    on the files that have changed in |changed_files|.
+    Unlike get_changed_fuzzers this function considers changes that affect
+    building or running fuzzers in CI."""
+    if set(changed_files).intersect(CI_FILES):
+        return fuzzer_utils.get_fuzzers()
+    return get_changed_fuzzers(changed_files)
 
 
 def get_changed_benchmarks(changed_files: List[str] = None) -> List[str]:

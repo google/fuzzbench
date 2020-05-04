@@ -130,6 +130,11 @@ def get_fuzzer_from_config(fuzzer_config: Dict) -> str:
     return fuzzer_config.get('name', fuzzer_config['fuzzer'])
 
 
+def get_fuzzers():
+    """Returns a list of names of all fuzzers."""
+    return [get_fuzzer_from_config(config) for config in get_fuzzer_configs()]
+
+
 def get_fuzzer_configs(fuzzers=None):
     """Returns the list of all fuzzer and variant configurations."""
     # Import it here to avoid yaml dependency in runner.

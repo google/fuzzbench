@@ -18,6 +18,7 @@ import os
 
 from fuzzers import utils
 
+
 # tmp
 def build():
     """Build benchmark."""
