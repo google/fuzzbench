@@ -26,7 +26,7 @@ def test_gsutil_command():
     arguments = ['hello']
     with test_utils.mock_popen_ctx_mgr() as mocked_popen:
         gsutil.gsutil_command(arguments)
-    assert mocked_popen.commands == [['gsutil', '-m'] + arguments]
+    assert mocked_popen.commands == [['gsutil'] + arguments]
 
 
 class TestGsutilRsync:

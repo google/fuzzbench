@@ -452,7 +452,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
                     arcname=os.path.basename(self.crashes_dir))
         gcs_path = exp_path.gcs(
             posixpath.join(self.trial_dir, 'crashes', crashes_archive_name))
-        gsutil.cp(archive, gcs_path, parallel=False)
+        gsutil.cp(archive, gcs_path)
         os.remove(archive)
 
     def update_measured_files(self):
@@ -534,7 +534,6 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     if gsutil.cp(corpus_archive_src,
                  corpus_archive_dst,
                  expect_zero=False,
-                 parallel=False,
                  write_to_stdout=False)[0] != 0:
         snapshot_logger.warning('Corpus not found for cycle: %d.', cycle)
         return None
@@ -588,7 +587,6 @@ def set_up_coverage_binary(benchmark):
                                              archive_name)
     gsutil.cp(cloud_bucket_archive_path,
               str(benchmark_coverage_binary_dir),
-              parallel=False,
               write_to_stdout=False)
     archive_path = benchmark_coverage_binary_dir / archive_name
     tar = tarfile.open(archive_path, 'r:gz')
