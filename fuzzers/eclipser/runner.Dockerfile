@@ -28,6 +28,10 @@ RUN apt-get update -y && \
         bison \
         git \
         gdb
+
+# Use a copy of
+# https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
+# to avoid network flakiness.
 RUN wget -q https://storage.googleapis.com/fuzzbench-files/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
     apt-get update -y && \

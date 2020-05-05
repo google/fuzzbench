@@ -33,7 +33,6 @@ jobs:
           - eclipser
           - entropic
           - fairfuzz
-          - fastcgs
           - fastcgs_lm
           - honggfuzz
           - lafintel

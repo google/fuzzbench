@@ -90,6 +90,54 @@ def test_create_instance():
         ]]
 
 
+def _get_expected_create_runner_command(is_preemptible):
+    command = [
+        'gcloud',
+        'compute',
+        'instances',
+        'create',
+        'instance-a',
+        '--image-family=cos-stable',
+        '--image-project=cos-cloud',
+        '--zone=zone-a',
+        '--scopes=cloud-platform',
+        '--no-address',
+        '--machine-type=n1-standard-1',
+        '--boot-disk-size=30GB',
+    ]
+    if is_preemptible:
+        command.append('--preemptible')
+    return command
+
+
+@pytest.mark.parametrize(('preemptible_runners'), [None, False])
+def test_create_instance_not_preemptible(preemptible_runners):
+    """Tests create_instance doesn't specify preemptible when it isn't supposed
+    to."""
+    config = CONFIG.copy()
+    if preemptible_runners is not None:
+        config['preemptible_runners'] = preemptible_runners
+    with test_utils.mock_popen_ctx_mgr(returncode=1) as mocked_popen:
+        gcloud.create_instance(INSTANCE_NAME, gcloud.InstanceType.RUNNER,
+                               config)
+        assert mocked_popen.commands == [
+            _get_expected_create_runner_command(bool(preemptible_runners))
+        ]
+
+
+def test_create_instance_preemptible():
+    """Tests create_instance doesn't specify preemptible when it isn't supposed
+    to."""
+    config = CONFIG.copy()
+    config['preemptible_runners'] = True
+    with test_utils.mock_popen_ctx_mgr(returncode=1) as mocked_popen:
+        gcloud.create_instance(INSTANCE_NAME, gcloud.InstanceType.RUNNER,
+                               config)
+        assert mocked_popen.commands == [
+            _get_expected_create_runner_command(True)
+        ]
+
+
 @mock.patch('common.new_process.execute')
 def test_create_instance_failed_create(mocked_execute):
     """Tests create_instance creates an instance if it doesn't already
