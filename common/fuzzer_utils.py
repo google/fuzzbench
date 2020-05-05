@@ -62,7 +62,8 @@ class FuzzerDirectory:
         """Returns the path to the variants.yaml file in fuzzer directory."""
         return os.path.join(self.directory, 'variants.yaml')
 
-    def get_dockerfiles(self):
+    @property
+    def dockerfiles(self):
         """Returns a list of paths to the runner and builder dockerfiles in the
         fuzzer directory."""
         return [self.runner_dockerfile, self.builder_dockerfile]
@@ -121,14 +122,12 @@ def validate(fuzzer):
 
 def is_fuzzer_module(fuzzer):
     """Returns True if |fuzzer| is a fuzzer module."""
-    if not os.path.isfile(FuzzerDirectory(fuzzer).fuzzer_py):
-        return False
-    return True
+    return os.path.isfile(FuzzerDirectory(fuzzer).fuzzer_py)
 
 
 def get_fuzzer_from_config(fuzzer_config: dict) -> str:
     """Returns the fuzzer of |fuzzer_config| for a non-variant fuzzer or returns
-    the variant_name for a variant fuzzer."""
+    the name for a fuzzer variant."""
     return fuzzer_config.get('name', fuzzer_config['fuzzer'])
 
 
@@ -153,7 +152,8 @@ def get_fuzzer_configs(fuzzers=None):
             continue
 
         if not fuzzers or fuzzer in fuzzers:
-            # Auto-generate the default configuration for each base fuzzer.
+            # Auto-generate the default configuration for each underlying
+            # fuzzer.
             fuzzer_configs.append({'fuzzer': fuzzer})
 
         variant_config_path = os.path.join(fuzzers_dir, fuzzer, 'variants.yaml')

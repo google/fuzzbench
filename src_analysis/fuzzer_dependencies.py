@@ -15,26 +15,54 @@
 dependent on given files.
 This module assumes that a fuzzer module's imports are done in a sane,
 normal way. It will not work on non-toplevel imports.
+The following style of imports are supported:
+1. from fuzzers.afl import fuzzer
+2. from fuzzers.afl import fuzzer as afl_fuzzer
+3. import fuzzers.afl.fuzzer
+
+The following are not supported because they will be considered builtin modules.
+1.
+import fuzzers.afl.fuzzer
+import fuzzers.afl  # This will be considered a builtin.
+
+2. import blah  # Relative-import (against style guide anyway).
+
+This case is not supported because the dependency will not be recognized:
+from fuzzers.afl.fuzzer import build
+
 """
 import importlib
 import inspect
 import os
 import types
-from typing import List
+from typing import Dict, List, Set
 import sys
 
 from common import fuzzer_utils
 
-MAX_DEPTH = 10
-PY_DEPS_CACHE = {}
+# The max depth of dependencies _get_python_dependencies will search.
+PY_DEPENDENCIES_MAX_DEPTH = 10
+
+# A cache of Python dependencies for modules. Keys are strings of module paths.
+# Values are sets of module paths.
+PY_DEPENDENCIES_CACHE: Dict[str, Set[str]] = {}
+
+# Cache these so we don't need to do it every time we call
+# get_underlying_fuzzer.
+FUZZER_CONFIGS = fuzzer_utils.get_fuzzer_configs()
+FUZZER_NAMES_TO_UNDERLYING = {
+    fuzzer_utils.get_fuzzer_from_config(config): config['fuzzer']
+    for config in FUZZER_CONFIGS
+}
 
 
-def _get_fuzzer_module(fuzzer: str) -> str:
-    """Returns the module fuzzer.py module of |fuzzer|."""
+def _get_fuzzer_module_name(fuzzer: str) -> str:
+    """Returns the name of the fuzzer.py module of |fuzzer|. Assumes |fuzzer| is
+    an underlying fuzzer."""
     return 'fuzzers.{}.fuzzer'.format(fuzzer)
 
 
-def is_builtin_module(module) -> bool:
+def is_builtin_module(module: types.ModuleType) -> bool:
     """Returns True if |module| is a python builtin module."""
     return module.__name__ in sys.builtin_module_names
 
@@ -47,99 +75,111 @@ def is_fuzzers_subpath(path: str) -> bool:
 
 def is_fuzzers_submodule(module) -> bool:
     """Returns True if |module| is a submodule of the fuzzers module."""
-    # Builtin modules such as "time" don't have files so attempts to get their
-    # files fail.
     if is_builtin_module(module):
+        # builtin modules such as "time" don't have files so attempts to get
+        # their files fail. Check for these and bail early.
         return False
 
-    try:
-        module_path = inspect.getfile(module)
-        return is_fuzzers_subpath(module_path)
-    except TypeError:
-        pass
-    # This assumes that no __init__ files are used in fuzzers/ and therefore
-    # all modules are imported as such: `from fuzzers.afl import fuzzer`.
-    return False
+    # If a module imports `fuzzers` we can't handle it, let the TypeError get
+    # thrown so we fail loudly.
+    module_path = inspect.getfile(module)
+    return is_fuzzers_subpath(module_path)
 
 
-def get_fuzzer_dependencies(fuzzer: str) -> List[str]:
-    """Return the list of files in fuzzbench that |fuzzer| depends on. This
-    includes dockerfiles used to build |fuzzer|, and the Python files it uses to
+def get_fuzzer_dependencies(fuzzer: str) -> Set[str]:
+    """Returns the list of files in fuzzbench that |fuzzer| depends on. This
+    includes dockerfiles used to build |fuzzer|, and the python files it uses to
     build and run fuzz targets."""
-    # Don't use modulefinder since it doesn't work without __init__.py files.
+    # TODO(metzman): Write a test for this that uses fakefs to enforce that
+    # every fuzzer can successfully run with only the dependencies this function
+    # finds.
     initial_fuzzer = fuzzer
-    fuzzer = get_base_fuzzer(fuzzer)
+    fuzzer = get_underlying_fuzzer(fuzzer)
     fuzzer_directory = fuzzer_utils.FuzzerDirectory(fuzzer)
-    dependencies = []
-    if initial_fuzzer != fuzzer:
+
+    if initial_fuzzer == fuzzer:
+        dependencies = set()
+    else:
         # If fuzzer's base fuzzer is different, fuzzer is a variant, which
         # means changes to variants.yaml can affect it.
-        dependencies.append(fuzzer_directory.variants_yaml)
-    fuzzer_module = importlib.import_module(_get_fuzzer_module(fuzzer))
-    dependencies.extend(_get_python_dependencies(fuzzer_module))
+        dependencies = {fuzzer_directory.variants_yaml}
+
+    # Don't use modulefinder for python dependencies since it doesn't work
+    # without __init__.py files.
+    fuzzer_module = importlib.import_module(_get_fuzzer_module_name(fuzzer))
+    dependencies = dependencies.union(_get_python_dependencies(fuzzer_module))
+
     # The fuzzer is also dependent on dockerfiles.
-    dependencies.extend(fuzzer_directory.get_dockerfiles())
+    dependencies = dependencies.union(fuzzer_directory.dockerfiles)
     return dependencies
 
 
-def _get_python_dependencies(module, depth: int = 0) -> List[str]:
+def _get_python_dependencies(module: types.ModuleType,
+                             depth: int = 0) -> Set[str]:
     """Returns the python files that |module| is dependent on if module is a
     submodule of fuzzers/. Does not return dependencies that are not submodules
-    of fuzzers/, such as std library modules. Has a limit of |MAX_DEPTH| so that
-    cyclic imports can easily be detected. Not that this may not work if a
-    fuzzer.py imports modules dynamically or within individual functions. That
-    is OK because we can prevent this during code review."""
-    if depth > MAX_DEPTH:
+    of fuzzers/, such as std library modules. Has a limit of
+    PY_DEPENDENCIES_MAX_DEPTH so that cyclic imports can easily be detected.
+    Note that this may not work if a fuzzer.py imports modules dynamically or
+    within individual functions. That is ok because we can prevent this during
+    code review."""
+    if depth > PY_DEPENDENCIES_MAX_DEPTH:
         # Enforce a depth to catch cyclic imports.
         format_string = ('Depth: {} greater than max: {}. '
                          'Probably a cyclic import in {}.')
-        raise Exception(format_string.format(depth, MAX_DEPTH, module))
+        raise Exception(
+            format_string.format(depth, PY_DEPENDENCIES_MAX_DEPTH, module))
 
     module_path = inspect.getfile(module)
-    # Just get the dependencies from the cache if we have them.
-    if module_path in PY_DEPS_CACHE:
-        return PY_DEPS_CACHE[module_path]
 
+    # Just get the dependencies from the cache if we have them.
+    # This would break on modules doing crazy things like writing Python files
+    # and then importing them, code review should prevent that from landing
+    # though.
+    if module_path in PY_DEPENDENCIES_CACHE:
+        return PY_DEPENDENCIES_CACHE[module_path]
+
+    # Modules depend on themselves.
+    dependencies = {module_path}
+
+    # This assumes that every module that |module| depends on is imported in
+    # top-level code.
     attr_names = dir(module)
-    deps = set([module_path])
     for attr_name in attr_names:
+        # Check if attr_name is a module, bail if not.
         imported_module = getattr(module, attr_name)
         if not isinstance(imported_module, types.ModuleType):
             continue
 
+        # Files in fuzzers/ can only import code from the Python standard
+        # library modules and modules in fuzzers/.
         if is_fuzzers_submodule(imported_module):
             imported_module_path = inspect.getfile(imported_module)
-            deps.add(imported_module_path)
-            # Also get the dependencies of the dependency.
-            deps = deps.union(
+            dependencies.add(imported_module_path)
+            # Now recur to get the dependencies of the dependency.
+            dependencies = dependencies.union(
                 _get_python_dependencies(imported_module, depth + 1))
 
-    deps = list(deps)
-    PY_DEPS_CACHE[module_path] = deps
-    return deps
+    PY_DEPENDENCIES_CACHE[module_path] = dependencies
+    return dependencies
 
 
-def get_base_fuzzer(fuzzer_name: str) -> str:
-    """"Returns the base fuzzer of |fuzzer_name|. For normal fuzzers with
+def get_underlying_fuzzer(fuzzer_name: str) -> str:
+    """"Returns the underlying fuzzer of |fuzzer_name|. For normal fuzzers with
     their own subdirectory in fuzzers/, |fuzzer_name| is returned. For variants,
     it will be the fuzzer that |fuzzer_name| is a variant of."""
-    configs = fuzzer_utils.get_fuzzer_configs()
-    for config in configs:
-        if fuzzer_utils.get_fuzzer_from_config(config) == fuzzer_name:
-            return config['fuzzer']
-    raise Exception('Base fuzzer for %s not found.' % fuzzer_name)
+    return FUZZER_NAMES_TO_UNDERLYING[fuzzer_name]
 
 
 def get_files_dependent_fuzzers(dependency_files: List[str]) -> List[str]:
-    """Returns a list of fuzzers dependent on |dependency_files|."""
+    """Returns a list of fuzzer names dependent on |dependency_files|."""
+    dependency_files = set(dependency_files)
     dependent_fuzzers = []
-    fuzzer_configs = fuzzer_utils.get_fuzzer_configs()
-    for fuzzer_config in fuzzer_configs:
+    for fuzzer_config in FUZZER_CONFIGS:
         fuzzer = fuzzer_utils.get_fuzzer_from_config(fuzzer_config)
         fuzzer_dependencies = get_fuzzer_dependencies(fuzzer)
-        for dependency in fuzzer_dependencies:
-            if dependency in dependency_files:
-                dependent_fuzzers.append(fuzzer)
-                break
+
+        if fuzzer_dependencies.intersection(dependency_files):
+            dependent_fuzzers.append(fuzzer)
 
     return dependent_fuzzers

@@ -19,24 +19,28 @@ from common import benchmark_utils
 
 
 def is_subpath_of_benchmark(path, benchmark):
-    """Return True if |path| is a subpath of |benchmark|."""
+    """Returns True if |path| is a subpath of |benchmark|."""
     benchmark_path = os.path.join(benchmark_utils.BENCHMARKS_DIR, benchmark)
-    common_path = os.path.commonpath([path, os.path.abspath(benchmark_path)])
+    common_path = os.path.commonpath([path, benchmark_path])
     return common_path == benchmark_path
 
 
 def get_files_dependent_benchmarks(dependency_files):
-    """Return the list of benchmarks that are dependent on any file in
-    dependency_files."""
+    """Returns the list of benchmarks that are dependent on any file in
+    |dependency_files|."""
     dependent_benchmarks = []
     benchmarks = benchmark_utils.get_all_benchmarks()
     for dependency_file in dependency_files:
         for benchmark in benchmarks:
+
             if not is_subpath_of_benchmark(dependency_file, benchmark):
+                # Benchmarks can only depend on files in their directory.
                 continue
+
             if not benchmark_utils.is_oss_fuzz(benchmark):
                 dependent_benchmarks.append(benchmark)
                 break
+
             # OSS-Fuzz benchmarks only have an oss-fuzz.yaml file as a
             # dependency.
             if os.path.basename(dependency_file) == 'oss-fuzz.yaml':

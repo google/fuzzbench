@@ -27,8 +27,8 @@ def test_not_found_with_fuzzer_name_arg(fs, environ):
 
 
 def test_not_found_without_fuzzer_name_arg(fs, environ):
-    """Test that None is returned when no fuzz target exists and None
-    fuzzer name argument is provided."""
+    """Test that None is returned when no fuzz target exists and None fuzzer
+    name argument is provided."""
     fs.create_file('/out/empty')
     assert fuzzer_utils.get_fuzz_target_binary('/out', None) is None
 
