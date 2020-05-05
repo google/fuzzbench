@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,8 +26,8 @@ STANDARD_BUILD_SH_PATH = os.path.join(benchmark_utils.BENCHMARKS_DIR,
 
 
 def test_is_subpath_of_benchmark():
-    """Tests that is_subpath_of_benchmark returns True for subpaths of
-    a benchmark and returns False for other paths."""
+    """Tests that is_subpath_of_benchmark returns True for subpaths of a
+    benchmark and returns False for other paths."""
     assert benchmark_dependencies.is_subpath_of_benchmark(
         OSS_FUZZ_YAML_PATH, OSS_FUZZ_BENCHMARK)
     assert not benchmark_dependencies.is_subpath_of_benchmark(
@@ -36,8 +35,8 @@ def test_is_subpath_of_benchmark():
 
 
 def test_get_files_dependent_benchmarks():
-    """Tests that get_files_dependent_benchmarks returns the
-    benchmarks that are dependent on the files passed to it."""
+    """Tests that get_files_dependent_benchmarks returns the benchmarks that are
+    dependent on the files passed to it."""
     fake_build_sh_path = os.path.join(benchmark_utils.BENCHMARKS_DIR, 'fake',
                                       'build.sh')
     changed_files = [

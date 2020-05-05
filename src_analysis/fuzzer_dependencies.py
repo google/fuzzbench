@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Module for finding dependencies of fuzzers, and fuzzers that are
-dependent on given files."""
+dependent on given files.
+This module assumes that a fuzzer module's imports are done in a sane,
+normal way. It will not work on non-toplevel imports.
+"""
 import importlib
 import inspect
 import os
@@ -23,7 +25,7 @@ import sys
 
 from common import fuzzer_utils
 
-MAX_DEPTH = 5
+MAX_DEPTH = 10
 PY_DEPS_CACHE = {}
 
 
@@ -33,7 +35,7 @@ def _get_fuzzer_module(fuzzer: str) -> str:
 
 
 def is_builtin_module(module) -> bool:
-    """Returns the module for |fuzzer|'s fuzzer.py."""
+    """Returns True if |module| is a python builtin module."""
     return module.__name__ in sys.builtin_module_names
 
 
@@ -54,9 +56,10 @@ def is_fuzzers_submodule(module) -> bool:
         module_path = inspect.getfile(module)
         return is_fuzzers_subpath(module_path)
     except TypeError:
-        # This assumes that no __init__ files are used in fuzzers/ and therefore
-        # all modules are imported as such: `from fuzzers.afl import fuzzer`.
-        return False
+        pass
+    # This assumes that no __init__ files are used in fuzzers/ and therefore
+    # all modules are imported as such: `from fuzzers.afl import fuzzer`.
+    return False
 
 
 def get_fuzzer_dependencies(fuzzer: str) -> List[str]:
@@ -127,7 +130,7 @@ def get_base_fuzzer(fuzzer_name: str) -> str:
     raise Exception('Base fuzzer for %s not found.' % fuzzer_name)
 
 
-def get_files_dependent_fuzzers(dependency_files):
+def get_files_dependent_fuzzers(dependency_files: List[str]) -> List[str]:
     """Returns a list of fuzzers dependent on |dependency_files|."""
     dependent_fuzzers = []
     fuzzer_configs = fuzzer_utils.get_fuzzer_configs()

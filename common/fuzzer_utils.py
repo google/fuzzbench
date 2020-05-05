@@ -16,7 +16,7 @@
 import importlib
 import os
 import re
-from typing import Dict, Optional
+from typing import Optional
 
 from common import logs
 from common import utils
@@ -31,6 +31,8 @@ class FuzzerDirectory:
     """Class representing a fuzzer directory in fuzzers/."""
 
     def __init__(self, name):
+        # TOOD(metzman): Use this class to represent fuzzers in general.
+        # For example, replace the dict format we use for variants with this.
         self.name = name
 
     @property
@@ -124,7 +126,7 @@ def is_fuzzer_module(fuzzer):
     return True
 
 
-def get_fuzzer_from_config(fuzzer_config: Dict) -> str:
+def get_fuzzer_from_config(fuzzer_config: dict) -> str:
     """Returns the fuzzer of |fuzzer_config| for a non-variant fuzzer or returns
     the variant_name for a variant fuzzer."""
     return fuzzer_config.get('name', fuzzer_config['fuzzer'])
