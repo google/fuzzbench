@@ -130,7 +130,7 @@ def get_fuzzer_from_config(fuzzer_config: Dict) -> str:
     return fuzzer_config.get('name', fuzzer_config['fuzzer'])
 
 
-def get_fuzzers():
+def get_fuzzer_names():
     """Returns a list of names of all fuzzers."""
     return [get_fuzzer_from_config(config) for config in get_fuzzer_configs()]
 
