@@ -36,11 +36,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         build_modes = os.environ['BUILD_MODES'].split(',')
 
     # Instrumentation coverage modes:
-    if 'instrim' in build_modes:
-        # I avoid to put also AFL_LLVM_INSTRIM_LOOPHEAD
-        os.environ['AFL_LLVM_INSTRIM'] = 'CFG'
-        os.environ['AFL_LLVM_INSTRIM_SKIPSINGLEBLOCK'] = '1'
-    elif 'lto' in build_modes:
+    if 'lto' in build_modes:
         os.environ['CC'] = '/afl/afl-clang-lto'
         os.environ['CXX'] = '/afl/afl-clang-lto++'
         os.environ['RANLIB'] = 'llvm-ranlib-11'
@@ -51,6 +47,10 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     else:
         os.environ['CC'] = '/afl/afl-clang-fast'
         os.environ['CXX'] = '/afl/afl-clang-fast++'
+        if 'instrim' in build_modes:
+            # I avoid to put also AFL_LLVM_INSTRIM_LOOPHEAD
+            os.environ['AFL_LLVM_INSTRIM'] = 'CFG'
+            os.environ['AFL_LLVM_INSTRIM_SKIPSINGLEBLOCK'] = '1'
 
     # Instrumentation coverage options:
     # Enable context sentitivity for LLVM mode
