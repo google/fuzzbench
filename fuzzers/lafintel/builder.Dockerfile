@@ -24,7 +24,10 @@ RUN apt-get update -y && \
 
 # Download AFL and compile using default compiler.
 # We need afl-2.26b
-RUN wget https://lcamtuf.coredump.cx/afl/releases/afl-2.26b.tgz -O /afl-2.26b.tgz && \
+# Use a copy of
+# https://lcamtuf.coredump.cx/afl/releases/afl-2.26b.tgz
+# to avoid network flakiness.
+RUN wget https://storage.googleapis.com/fuzzbench-files/afl-2.26b.tgz -O /afl-2.26b.tgz && \
     tar xvzf /afl-2.26b.tgz -C / && \
     mv /afl-2.26b /afl && \
     cd /afl && \
