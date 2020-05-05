@@ -217,6 +217,9 @@ def test_copy_resources_to_bucket():
                 ('^\\.git/|^\\.pytype/|^\\.venv/|^.*\\.pyc$|^__pycache__/|'
                  '.*~$|\\.pytest_cache/|.*/test_data/|'
                  '^third_party/oss-fuzz/out/|^docs/')
-            ])
+            ],
+            parallel=True)
         mocked_rsync.assert_any_call(
-            'config', 'gs://gsutil-bucket/experiment/input/config')
+            'config',
+            'gs://gsutil-bucket/experiment/input/config',
+            parallel=True)

@@ -67,8 +67,8 @@ def pending_trials(db, experiment_config):
     'benchmark,expected_image,expected_target',
     [('benchmark1', 'gcr.io/fuzzbench/runners/variant/benchmark1',
       'fuzz-target'),
-     ('bloaty_fuzz_target', 'gcr.io/fuzzbench/oss-fuzz/runners/variant/bloaty',
-      'fuzz_target')])
+     ('bloaty_fuzz_target',
+      'gcr.io/fuzzbench/runners/variant/bloaty_fuzz_target', 'fuzz_target')])
 def test_create_trial_instance(benchmark, expected_image, expected_target,
                                experiment_config):
     """Test that create_trial_instance invokes create_instance
@@ -103,8 +103,8 @@ docker run \\
     'benchmark,expected_image,expected_target',
     [('benchmark1', 'gcr.io/fuzzbench/runners/variant/benchmark1',
       'fuzz-target'),
-     ('bloaty_fuzz_target', 'gcr.io/fuzzbench/oss-fuzz/runners/variant/bloaty',
-      'fuzz_target')])
+     ('bloaty_fuzz_target',
+      'gcr.io/fuzzbench/runners/variant/bloaty_fuzz_target', 'fuzz_target')])
 def test_create_trial_instance_local_experiment(benchmark, expected_image,
                                                 expected_target,
                                                 experiment_config, environ):
