@@ -24,7 +24,7 @@ from fuzzers.afl import fuzzer as afl_fuzzer
 
 def is_benchmark(name):
     """ Check if the benchmark contains the string 'name' """
-    # TODO: benchmark = os.getenv("BENCHMARK", None)
+    # TODO: return name in os.environ['BENCHMARK]
     # return benchmark is not None and name in benchmark
 
     # OSS-fuzz benchmarks do not have a consistent folder content
@@ -102,6 +102,10 @@ def add_compilation_cflags():
         utils.append_flags('CFLAGS', php_flags)
         utils.append_flags('CXXFLAGS', php_flags)
 
+    # For some benchmarks, we also tell the compiler 
+    # to ignore unresolved symbols. Note that
+    # some functions are only defined post-compilation 
+    # during the LLVM passes,
     elif is_benchmark('systemd') or is_benchmark('bloaty'):
         unresolved_flags = ['-Wl,--warn-unresolved-symbols']
         utils.append_flags('CFLAGS', unresolved_flags)
@@ -118,9 +122,7 @@ def prepare_build_environment():
     """Set environment variables used to build benchmark."""
     utils.set_no_sanitizer_compilation_flags()
 
-    # Update compiler flags for clang-3.8. Because some functions
-    # are only defined post-compilation during the LLVM passes,
-    # we also tell the compiler to ignore unresolved symbols.
+    # Update compiler flags for clang-3.8.
     cflags = ['-fPIC']
     cppflags = cflags + ['-I/usr/local/include/c++/v1/', 
                          '-stdlib=libc++', '-std=c++11']
