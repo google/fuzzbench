@@ -24,6 +24,7 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
     git \
     libtool \
     subversion \
+    unzip \
     wget
 
 # Copy clang binaries and libs.

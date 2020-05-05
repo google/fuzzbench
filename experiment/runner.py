@@ -218,8 +218,8 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
     """Class for running a trial."""
 
     def __init__(self):
-        benchmark_fuzzer_directory = '%s-%s' % (environment.get(
-            'BENCHMARK'), environment.get('FUZZER_VARIANT_NAME'))
+        benchmark_fuzzer_directory = '%s-%s' % (environment.get('BENCHMARK'),
+                                                environment.get('FUZZER'))
         if not environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
             bucket = environment.get('CLOUD_EXPERIMENT_BUCKET')
             experiment_name = environment.get('EXPERIMENT')
@@ -229,7 +229,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
                                                benchmark_fuzzer_directory,
                                                trial)
             # Clean the directory before we use it.
-            gsutil.rm(self.gcs_sync_dir, force=True)
+            gsutil.rm(self.gcs_sync_dir, force=True, parallel=True)
         else:
             self.gcs_sync_dir = None
 
@@ -376,7 +376,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         gcs_path = posixpath.join(self.gcs_sync_dir, self.corpus_dir, basename)
 
         # Don't use parallel to avoid stability issues.
-        gsutil.cp(archive, gcs_path, parallel=False)
+        gsutil.cp(archive, gcs_path)
 
         # Delete corpus archive so disk doesn't fill up.
         os.remove(archive)
@@ -399,12 +399,8 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         # in size because the log file containing the fuzzer's output is in this
         # directory and can be written to by the fuzzer at any time.
         results_copy = filesystem.make_dir_copy(self.results_dir)
-
-        # Don't use parallel because it causes stability issues
-        # (crbug.com/1053309).
         gsutil.rsync(results_copy,
-                     posixpath.join(self.gcs_sync_dir, self.results_dir),
-                     parallel=False)
+                     posixpath.join(self.gcs_sync_dir, self.results_dir))
 
 
 def archive_directories(directories, archive_path):

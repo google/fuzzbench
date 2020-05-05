@@ -127,7 +127,7 @@ def validate_fuzzer(fuzzer: str):
 
 def validate_fuzzer_config(fuzzer_config):
     """Validate |fuzzer_config|."""
-    allowed_fields = ['variant_name', 'env', 'fuzzer']
+    allowed_fields = ['name', 'fuzzer_environment', 'build_arguments', 'fuzzer']
     if 'fuzzer' not in fuzzer_config:
         raise Exception('Fuzzer configuration must include the "fuzzer" field.')
 
@@ -135,18 +135,24 @@ def validate_fuzzer_config(fuzzer_config):
         if key not in allowed_fields:
             raise Exception('Invalid entry "%s" in fuzzer configuration.' % key)
 
-    if 'env' in fuzzer_config and not isinstance(fuzzer_config['env'], list):
+    if ('fuzzer_environment' in fuzzer_config and
+            not isinstance(fuzzer_config['fuzzer_environment'], list)):
         raise Exception('Fuzzer environment must be a list.')
 
-    variant_name = fuzzer_config.get('variant_name')
-    if variant_name:
-        if not re.match(FUZZER_NAME_REGEX, variant_name):
+    if ('build_arguments' in fuzzer_config and
+            not isinstance(fuzzer_config['build_arguments'], list)):
+        raise Exception('Builder arguments must be a list.')
+
+    name = fuzzer_config.get('name')
+    if name:
+        if not re.match(FUZZER_NAME_REGEX, name):
             raise Exception(
-                'The "variant_name" option may only contain lowercase letters, '
+                'The "name" option may only contain lowercase letters, '
                 'numbers, or underscores.')
-    fuzzer_name = fuzzer_config.get('fuzzer')
-    if fuzzer_name:
-        validate_fuzzer(fuzzer_name)
+
+    fuzzer = fuzzer_config.get('fuzzer')
+    if fuzzer:
+        validate_fuzzer(fuzzer)
 
 
 def validate_experiment_name(experiment_name: str):
@@ -182,9 +188,9 @@ def get_git_hash():
 
 def get_full_fuzzer_name(fuzzer_config):
     """Get the full fuzzer name in the form <base fuzzer>_<variant name>."""
-    if 'variant_name' not in fuzzer_config:
+    if 'name' not in fuzzer_config:
         return fuzzer_config['fuzzer']
-    return fuzzer_config['fuzzer'] + '_' + fuzzer_config['variant_name']
+    return fuzzer_config['fuzzer'] + '_' + fuzzer_config['name']
 
 
 def set_up_fuzzer_config_files(fuzzer_configs):
@@ -258,11 +264,11 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
          '|^docs/')
     ]
     destination = os.path.join(base_destination, 'src')
-    gsutil.rsync(utils.ROOT_DIR, destination, options=options)
+    gsutil.rsync(utils.ROOT_DIR, destination, options=options, parallel=True)
 
     # Send config files.
     destination = os.path.join(base_destination, 'config')
-    gsutil.rsync(config_dir, destination)
+    gsutil.rsync(config_dir, destination, parallel=True)
 
 
 class BaseDispatcher:

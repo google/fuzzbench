@@ -65,31 +65,15 @@ def pending_trials(db, experiment_config):
 
 @pytest.mark.parametrize(
     'benchmark,expected_image,expected_target',
-    [('benchmark1', 'gcr.io/fuzzbench/runners/fuzzer-a/benchmark1',
+    [('benchmark1', 'gcr.io/fuzzbench/runners/variant/benchmark1',
       'fuzz-target'),
-     ('bloaty_fuzz_target', 'gcr.io/fuzzbench/oss-fuzz/runners/fuzzer-a/bloaty',
-      'fuzz_target')])
+     ('bloaty_fuzz_target',
+      'gcr.io/fuzzbench/runners/variant/bloaty_fuzz_target', 'fuzz_target')])
 def test_create_trial_instance(benchmark, expected_image, expected_target,
                                experiment_config):
     """Test that create_trial_instance invokes create_instance
     and creates a startup script for the instance, as we expect it to."""
-    expected_format_string = '''#!/bin/bash
-# Copyright 2020 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-echo 0 > /proc/sys/kernel/yama/ptrace_scope
-echo core >/proc/sys/kernel/core_pattern
+    expected_startup_script = '''## Start docker.
 
 while ! docker pull {docker_image_url}
 do
@@ -99,9 +83,8 @@ done
 docker run \\
 --privileged --cpus=1 --rm \\
 -e INSTANCE_NAME=r-test-experiment-9 \\
--e FUZZER=fuzzer-a \\
+-e FUZZER=variant \\
 -e BENCHMARK={benchmark} \\
--e FUZZER_VARIANT_NAME=variant \\
 -e EXPERIMENT=test-experiment \\
 -e TRIAL_ID=9 \\
 -e MAX_TOTAL_TIME=86400 \\
@@ -113,15 +96,15 @@ docker run \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
     _test_create_trial_instance(benchmark, expected_image, expected_target,
-                                expected_format_string, experiment_config)
+                                expected_startup_script, experiment_config)
 
 
 @pytest.mark.parametrize(
     'benchmark,expected_image,expected_target',
-    [('benchmark1', 'gcr.io/fuzzbench/runners/fuzzer-a/benchmark1',
+    [('benchmark1', 'gcr.io/fuzzbench/runners/variant/benchmark1',
       'fuzz-target'),
-     ('bloaty_fuzz_target', 'gcr.io/fuzzbench/oss-fuzz/runners/fuzzer-a/bloaty',
-      'fuzz_target')])
+     ('bloaty_fuzz_target',
+      'gcr.io/fuzzbench/runners/variant/bloaty_fuzz_target', 'fuzz_target')])
 def test_create_trial_instance_local_experiment(benchmark, expected_image,
                                                 expected_target,
                                                 experiment_config, environ):
@@ -130,31 +113,14 @@ def test_create_trial_instance_local_experiment(benchmark, expected_image,
     local_experiment."""
     os.environ['LOCAL_EXPERIMENT'] = str(True)
     os.environ['HOST_GCLOUD_CONFIG'] = '~/.config/gcloud'
-    expected_format_string = '''#!/bin/bash
-# Copyright 2020 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-echo 0 > /proc/sys/kernel/yama/ptrace_scope
-echo core >/proc/sys/kernel/core_pattern
+    expected_startup_script = '''## Start docker.
 
 
 docker run -v ~/.config/gcloud:/root/.config/gcloud \\
 --privileged --cpus=1 --rm \\
 -e INSTANCE_NAME=r-test-experiment-9 \\
--e FUZZER=fuzzer-a \\
+-e FUZZER=variant \\
 -e BENCHMARK={benchmark} \\
--e FUZZER_VARIANT_NAME=variant \\
 -e EXPERIMENT=test-experiment \\
 -e TRIAL_ID=9 \\
 -e MAX_TOTAL_TIME=86400 \\
@@ -166,13 +132,13 @@ docker run -v ~/.config/gcloud:/root/.config/gcloud \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
     _test_create_trial_instance(benchmark, expected_image, expected_target,
-                                expected_format_string, experiment_config)
+                                expected_startup_script, experiment_config)
 
 
 @mock.patch('common.gcloud.create_instance')
 @mock.patch('common.fuzzer_config_utils.get_by_variant_name')
 def _test_create_trial_instance(benchmark, expected_image, expected_target,
-                                expected_format_string, experiment_config,
+                                expected_startup_script, experiment_config,
                                 mocked_get_by_variant_name,
                                 mocked_create_instance):
     """Test that create_trial_instance invokes create_instance
@@ -201,7 +167,11 @@ def _test_create_trial_instance(benchmark, expected_image, expected_target,
         startup_script=expected_startup_script_path)
 
     with open(expected_startup_script_path) as file_handle:
-        assert file_handle.read() == expected_format_string.format(
+        content = file_handle.read()
+        check_from = '## Start docker.'
+        assert check_from in content
+        script_for_docker = content[content.find(check_from):]
+        assert script_for_docker == expected_startup_script.format(
             benchmark=benchmark,
             oss_fuzz_target=expected_target,
             docker_image_url=expected_image)

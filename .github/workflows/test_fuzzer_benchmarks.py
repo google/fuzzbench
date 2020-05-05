@@ -32,13 +32,16 @@ OSS_FUZZ_BENCHMARKS = [
 STANDARD_BENCHMARKS = [
     'freetype2-2017',
     'harfbuzz-1.3.2',
+    'jasper-1.701.0',
     'lcms-2017-03-21',
     'libjpeg-turbo-07-2017',
     'libpng-1.2.56',
     'libxml2-v2.9.2',
     'openthread-2019-12-23',
+    'perl-5.21.7',
     'proj4-2017-08-14',
     're2-2014-12-09',
+    'tcpdump-4.9.0',
     'vorbis-2017-12-11',
     'woff2-2016-05-06',
 ]
@@ -56,11 +59,18 @@ def delete_docker_images():
     """Delete docker images."""
     # TODO(metzman): Don't delete base-runner/base-builder so it
     # doesn't need to be pulled for every target.
+
+    result = subprocess.run(['docker', 'ps', '-a', '-q'],
+                            stdout=subprocess.PIPE,
+                            check=True)
+    container_ids = result.stdout.splitlines()
+    subprocess.run(['docker', 'rm', '-f'] + container_ids, check=False)
+
     result = subprocess.run(['docker', 'images', '-a', '-q'],
                             stdout=subprocess.PIPE,
                             check=True)
-    image_names = result.stdout.splitlines()
-    subprocess.run(['docker', 'rmi', '-f'] + image_names, check=False)
+    image_ids = result.stdout.splitlines()
+    subprocess.run(['docker', 'rmi', '-f'] + image_ids, check=False)
 
 
 def make_builds(benchmarks, fuzzer):

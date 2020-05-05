@@ -45,8 +45,7 @@ def output_report(web_bucket, in_progress=False):
                      web_bucket,
                      gsutil_options=[
                          '-h', 'Cache-Control:public,max-age=0,no-transform'
-                     ],
-                     parallel=False)
+                     ])
         logger.debug('Done generating report.')
     except Exception:  # pylint: disable=broad-except
         logger.error('Error generating HTML report.')

@@ -16,14 +16,16 @@
 """Tests for data_utils.py"""
 import pandas as pd
 import pandas.testing as pd_test
+import pytest
 
 from analysis import data_utils
 
 
-def create_trial_data(trial_id, benchmark, fuzzer, reached_coverage):
+def create_trial_data(trial_id, benchmark, fuzzer, reached_coverage,
+                      experiment):
     """Utility function to create test trial data."""
     return pd.DataFrame([{
-        'experiment': 'test_experiment',
+        'experiment': experiment,
         'benchmark': benchmark,
         'fuzzer': fuzzer,
         'trial_id': trial_id,
@@ -34,18 +36,31 @@ def create_trial_data(trial_id, benchmark, fuzzer, reached_coverage):
     } for t in range(10)])
 
 
-def create_experiment_data():
+def create_experiment_data(experiment='test_experiment'):
     """Utility function to create test experiment data."""
     return pd.concat([
-        create_trial_data(0, 'libpng', 'afl', 100),
-        create_trial_data(1, 'libpng', 'afl', 200),
-        create_trial_data(2, 'libpng', 'libfuzzer', 200),
-        create_trial_data(3, 'libpng', 'libfuzzer', 300),
-        create_trial_data(4, 'libxml', 'afl', 1000),
-        create_trial_data(5, 'libxml', 'afl', 1200),
-        create_trial_data(6, 'libxml', 'libfuzzer', 600),
-        create_trial_data(7, 'libxml', 'libfuzzer', 800),
+        create_trial_data(0, 'libpng', 'afl', 100, experiment),
+        create_trial_data(1, 'libpng', 'afl', 200, experiment),
+        create_trial_data(2, 'libpng', 'libfuzzer', 200, experiment),
+        create_trial_data(3, 'libpng', 'libfuzzer', 300, experiment),
+        create_trial_data(4, 'libxml', 'afl', 1000, experiment),
+        create_trial_data(5, 'libxml', 'afl', 1200, experiment),
+        create_trial_data(6, 'libxml', 'libfuzzer', 600, experiment),
+        create_trial_data(7, 'libxml', 'libfuzzer', 800, experiment),
     ])
+
+
+def test_validate_data_empty():
+    experiment_df = pd.DataFrame()
+    with pytest.raises(ValueError, match="Empty"):
+        data_utils.validate_data(experiment_df)
+
+
+def test_validate_data_missing_columns():
+    experiment_df = create_experiment_data()
+    experiment_df.drop(columns=['trial_id', 'time'], inplace=True)
+    with pytest.raises(ValueError, match="Missing columns.*trial_id"):
+        data_utils.validate_data(experiment_df)
 
 
 def test_drop_uniteresting_columns():
@@ -53,6 +68,34 @@ def test_drop_uniteresting_columns():
     cleaned_df = data_utils.drop_uninteresting_columns(experiment_df)
 
     assert 'time_started' not in cleaned_df.columns
+
+
+def test_clobber_experiments_data():
+    """Tests that clobber experiments data clobbers stale snapshots from earlier
+    experiments."""
+    df = pd.concat(
+        create_experiment_data('experiment-%d' % experiment_num)
+        for experiment_num in range(3))
+    df.reset_index(inplace=True)
+
+    to_drop = df[(df.experiment == 'experiment-2') &
+                 (df.benchmark == 'libpng') & (df.fuzzer == 'afl')].index
+    df.drop(to_drop, inplace=True)
+
+    experiments = list(df['experiment'].drop_duplicates().values)
+    df = data_utils.clobber_experiments_data(df, experiments)
+
+    columns = ['experiment', 'benchmark', 'fuzzer']
+    expected_result = pd.DataFrame([
+        ['experiment-2', 'libpng', 'libfuzzer'],
+        ['experiment-2', 'libxml', 'afl'],
+        ['experiment-2', 'libxml', 'libfuzzer'],
+        ['experiment-1', 'libpng', 'afl'],
+    ],
+                                   columns=columns)
+    expected_result.sort_index(inplace=True)
+    assert (
+        df[columns].drop_duplicates().values == expected_result.values).all()
 
 
 def test_filter_fuzzers():
@@ -78,6 +121,14 @@ def test_label_fuzzers_by_experiment():
 
     expected_fuzzer_names = ['afl-test_experiment', 'libfuzzer-test_experiment']
     assert labeled_df.fuzzer.unique().tolist() == expected_fuzzer_names
+
+
+def test_filter_max_time():
+    experiment_df = create_experiment_data()
+    max_time = 5
+    filtered_df = data_utils.filter_max_time(experiment_df, max_time)
+    expected_times = range(max_time + 1)
+    assert filtered_df.time.unique().tolist() == list(expected_times)
 
 
 def test_benchmark_snapshot():

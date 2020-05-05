@@ -33,15 +33,6 @@ def test_is_oss_fuzz(benchmark, expected_result, oss_fuzz_benchmark):
     assert benchmark_utils.is_oss_fuzz(benchmark) == expected_result
 
 
-@pytest.mark.parametrize(
-    'benchmark,expected_name',
-    [(conftest.OSS_FUZZ_BENCHMARK_NAME, 'oss-fuzz-project'),
-     (OTHER_BENCHMARK, OTHER_BENCHMARK)])
-def test_get_docker_name(benchmark, expected_name, oss_fuzz_benchmark):
-    """Test that we can get the docker name of a benchmark."""
-    assert benchmark_utils.get_docker_name(benchmark) == expected_name
-
-
 def test_get_project_oss_fuzz_benchmark(oss_fuzz_benchmark):
     """Test that we can get the project of an OSS-Fuzz benchmark."""
     assert benchmark_utils.get_project(
@@ -66,7 +57,7 @@ def test_get_fuzz_target(benchmark, expected_fuzz_target, oss_fuzz_benchmark):
 @pytest.mark.parametrize(
     'benchmark,expected_url',
     [(conftest.OSS_FUZZ_BENCHMARK_NAME,
-      'gcr.io/fuzzbench/oss-fuzz/runners/fuzzer/oss-fuzz-project'),
+      'gcr.io/fuzzbench/runners/fuzzer/oss-fuzz-benchmark'),
      (OTHER_BENCHMARK, 'gcr.io/fuzzbench/runners/fuzzer/benchmark')])
 def test_get_runner_image_url(benchmark, expected_url, oss_fuzz_benchmark):
     """Test that we can get the runner image url of a benchmark."""

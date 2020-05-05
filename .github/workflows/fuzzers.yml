@@ -18,26 +18,22 @@ jobs:
           - aflplusplus
           - aflplusplus_mopt
           - aflplusplus_cmplog
-          - aflplusplus_mopt_cmplog
-          - aflplusplus_ctx
-          - aflplusplus_ctx_mmopt
-          - aflplusplus_ctx_rare
           - aflplusplus_instrim
-          - aflplusplus_instrim_mmopt
-          - aflplusplus_instrim_rare
-          - aflplusplus_ngram2
-          - aflplusplus_ngram2_mmopt
-          - aflplusplus_ngram2_rare
-          - aflplusplus_ngram4
-          - aflplusplus_ngram4_mmopt
-          - aflplusplus_ngram4_rare
+          - aflplusplus_instrim_coe
+          - aflplusplus_instrim_mopt2
+          - aflplusplus_ngram3
+          - aflplusplus_ngram4_17
+          - aflplusplus_ngram4_18
+          - aflplusplus_ngram4_coe
+          - aflplusplus_ngram5
+          - aflplusplus_ctx_17
+          - aflplusplus_ctx_18
+          - aflplusplus_ctx_coe
           - aflsmart
           - eclipser
           - entropic
           - fairfuzz
-          - fastcgs
           - fastcgs_lm
-          - fastcgs_br
           - honggfuzz
           - lafintel
           - libfuzzer

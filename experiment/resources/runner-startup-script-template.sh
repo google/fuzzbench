@@ -13,8 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+## Configure the host.
+
+# Make everything ptrace-able.
 echo 0 > /proc/sys/kernel/yama/ptrace_scope
+
+# Do not notify external programs about core dumps.
 echo core >/proc/sys/kernel/core_pattern
+
+## Start docker.
 {% if not local_experiment %}
 while ! docker pull {{docker_image_url}}
 do
@@ -26,7 +33,6 @@ docker run {% if local_experiment %}-v {{host_gcloud_config}}:/root/.config/gclo
 -e INSTANCE_NAME={{instance_name}} \
 -e FUZZER={{fuzzer}} \
 -e BENCHMARK={{benchmark}} \
--e FUZZER_VARIANT_NAME={{fuzzer_variant_name}} \
 -e EXPERIMENT={{experiment}} \
 -e TRIAL_ID={{trial_id}} \
 -e MAX_TOTAL_TIME={{max_total_time}} \
