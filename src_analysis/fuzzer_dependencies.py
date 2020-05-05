@@ -18,14 +18,11 @@ normal way. It will not work on non-toplevel imports.
 The following style of imports are supported:
 1. from fuzzers.afl import fuzzer
 2. from fuzzers.afl import fuzzer as afl_fuzzer
-3. import fuzzers.afl.fuzzer
 
 The following are not supported because they will be considered builtin modules.
-1.
-import fuzzers.afl.fuzzer
-import fuzzers.afl  # This will be considered a builtin.
-
-2. import blah  # Relative-import (against style guide anyway).
+1. import fuzzers.afl.fuzzer
+2. import fuzzers.afl
+3. import blah  # Relative-import (against style guide anyway).
 
 This case is not supported because the dependency will not be recognized:
 from fuzzers.afl.fuzzer import build

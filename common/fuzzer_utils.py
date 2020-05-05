@@ -120,11 +120,6 @@ def validate(fuzzer):
         return False
 
 
-def is_fuzzer_module(fuzzer):
-    """Returns True if |fuzzer| is a fuzzer module."""
-    return os.path.isfile(FuzzerDirectory(fuzzer).fuzzer_py)
-
-
 def get_fuzzer_from_config(fuzzer_config: dict) -> str:
     """Returns the fuzzer of |fuzzer_config| for a non-variant fuzzer or returns
     the name for a fuzzer variant."""
