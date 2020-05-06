@@ -132,9 +132,12 @@ def test_build_for_trials_build_success(_, dispatcher_experiment):
     trial_fuzzer_benchmarks = [
         (trial.fuzzer, trial.benchmark) for trial in trials
     ]
-    for fuzzer_benchmark in fuzzer_benchmarks:
-        assert trial_fuzzer_benchmarks.count(
-            fuzzer_benchmark) == dispatcher_experiment.num_trials
+    expected_trial_fuzzer_benchmarks = [
+        fuzzer_benchmark for fuzzer_benchmark in fuzzer_benchmarks
+        for _ in range(dispatcher_experiment.num_trials)
+    ]
+    assert (sorted(expected_trial_fuzzer_benchmarks) == sorted(
+        trial_fuzzer_benchmarks))
 
 
 @mock.patch('experiment.build.builder.build_base_images')
@@ -167,12 +170,17 @@ def test_build_for_trials_fuzzer_fail(_, dispatcher_experiment):
     failed on a benchmark."""
     successful_fuzzer = 'fuzzer-a'
     fail_fuzzer = 'fuzzer-b'
+    fuzzers = [successful_fuzzer, fail_fuzzer]
     successful_benchmark_for_fail_fuzzer = 'benchmark-1'
     fail_benchmark_for_fail_fuzzer = 'benchmark-2'
+    benchmarks = [
+        successful_benchmark_for_fail_fuzzer, fail_benchmark_for_fail_fuzzer
+    ]
     successful_builds = [(successful_fuzzer, fail_benchmark_for_fail_fuzzer),
                          (successful_fuzzer,
                           successful_benchmark_for_fail_fuzzer),
                          (fail_fuzzer, successful_benchmark_for_fail_fuzzer)]
+    num_trials = 10
 
     def mocked_build_all_fuzzer_benchmarks(fuzzers, benchmarks):
         # Sanity check this test so that we know we are actually testing
@@ -182,15 +190,18 @@ def test_build_for_trials_fuzzer_fail(_, dispatcher_experiment):
         return successful_builds
 
     with mock.patch('experiment.build.builder.build_all_measurers',
-                    return_value=dispatcher_experiment.benchmarks):
+                    return_value=benchmarks):
         with mock.patch('experiment.build.builder.build_all_fuzzer_benchmarks',
                         side_effect=mocked_build_all_fuzzer_benchmarks):
-            trials = dispatcher.build_for_trials(
-                dispatcher_experiment.fuzzers, dispatcher_experiment.benchmarks,
-                dispatcher_experiment.num_trials)
+            trials = dispatcher.build_for_trials(fuzzers, benchmarks,
+                                                 num_trials)
+
     trial_fuzzer_benchmarks = [
         (trial.fuzzer, trial.benchmark) for trial in trials
     ]
-    for fuzzer_benchmark in successful_builds:
-        assert trial_fuzzer_benchmarks.count(
-            fuzzer_benchmark) == dispatcher_experiment.num_trials
+    expected_trial_fuzzer_benchmarks = [
+        fuzzer_benchmark for fuzzer_benchmark in successful_builds
+        for _ in range(num_trials)
+    ]
+    assert (sorted(expected_trial_fuzzer_benchmarks) == sorted(
+        trial_fuzzer_benchmarks))
