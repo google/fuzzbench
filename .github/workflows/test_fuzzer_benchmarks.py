@@ -19,6 +19,8 @@ import subprocess
 from src_analysis import change_utils
 from src_analysis import diff_utils
 
+ALWAYS_BUILD_FUZZER = 'afl'
+
 # Don't build php benchmark since it fills up disk in GH actions.
 OSS_FUZZ_BENCHMARKS = {
     'bloaty_fuzz_target',
@@ -106,13 +108,17 @@ def do_build(build_type, fuzzer, always_build):
         raise Exception('Invalid build_type: %s' % build_type)
 
     if always_build:
+        # Always do a build if always_build is True.
         return make_builds(benchmarks, fuzzer)
 
     changed_files = diff_utils.get_changed_files()
     changed_fuzzers = change_utils.get_changed_fuzzers(changed_files)
     if fuzzer in changed_fuzzers:
+        # Otherwise if fuzzer is in changed_fuzzers then build it with all
+        # benchmarks, the change could have affected any benchmark.
         return make_builds(benchmarks, fuzzer)
 
+    # Otherwise, only build benchmarks that have changed.
     changed_benchmarks = set(change_utils.get_changed_benchmarks(changed_files))
     benchmarks = benchmarks.intersection(changed_benchmarks)
     return make_builds(benchmarks, fuzzer)
@@ -121,13 +127,11 @@ def do_build(build_type, fuzzer, always_build):
 def main():
     """Build OSS-Fuzz or standard benchmarks with a fuzzer."""
     if len(sys.argv) != 4:
-        print('Usage: %s <build_type> <fuzzer> <always_build_fuzzer>' %
-              sys.argv[0])
+        print('Usage: %s <build_type> <fuzzer>' % sys.argv[0])
         return 1
     build_type = sys.argv[1]
     fuzzer = sys.argv[2]
-    always_build_fuzzer = sys.argv[3]
-    always_build = always_build_fuzzer == fuzzer
+    always_build = ALWAYS_BUILD_FUZZER == fuzzer
     result = do_build(build_type, fuzzer, always_build)
     return 0 if result else 1
 

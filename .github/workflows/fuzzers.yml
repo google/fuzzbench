@@ -46,7 +46,6 @@ jobs:
     env:
       FUZZER: ${{ matrix.fuzzer }}
       BENCHMARK_TYPE: ${{ matrix.benchmark_type }}
-      ALWAYS_BUILD_FUZZER: afl
 
     steps:
     - uses: actions/checkout@v2
@@ -73,4 +72,4 @@ jobs:
 
     - name: Build Benchmarks
       run: |
-        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/test_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER $ALWAYS_BUILD_FUZZER
+        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/test_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER

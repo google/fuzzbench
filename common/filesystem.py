@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Broadly useful fileystem-related code."""
-import glob
 import os
 from pathlib import Path
 import shutil
@@ -22,6 +21,12 @@ def create_directory(directory):
     """Creates |directory|, including parent directories, if does not exist
     yet."""
     Path(directory).mkdir(parents=True, exist_ok=True)
+
+
+def is_subpath(path, possible_subpath):
+    """Returns True if |possible_subpath| is a subpath of |path|."""
+    common_path = os.path.commonpath([path, possible_subpath])
+    return common_path == path
 
 
 def recreate_directory(directory, create_parents=True):
@@ -107,9 +112,8 @@ def make_dir_copy(src_dir):
 def list_files(directory):
     """Returns a list of absolute paths to all files in |directory| and its
     subdirectories."""
-    dir_absolute_path = os.path.abspath(directory)
-    search_path = os.path.join(dir_absolute_path, '**', '*')
-    return [
-        path for path in glob.iglob(search_path, recursive=True)
-        if os.path.isfile(path)
-    ]
+    all_files = []
+    for (root, _, files) in os.walk(directory):
+        for filename in files:
+            all_files.append(os.path.abspath(os.path.join(root, filename)))
+    return all_files

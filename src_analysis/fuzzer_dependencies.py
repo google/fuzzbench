@@ -30,11 +30,11 @@ from fuzzers.afl.fuzzer import build
 """
 import importlib
 import inspect
-import os
 import types
 from typing import Dict, List, Set
 import sys
 
+from common import filesystem
 from common import fuzzer_utils
 
 # The max depth of dependencies _get_python_dependencies will search.
@@ -66,8 +66,7 @@ def is_builtin_module(module: types.ModuleType) -> bool:
 
 def is_fuzzers_subpath(path: str) -> bool:
     """Returns True if path is a subpath of the fuzzers/ directory."""
-    common_path = os.path.commonpath([path, fuzzer_utils.FUZZERS_DIR])
-    return common_path == fuzzer_utils.FUZZERS_DIR
+    return filesystem.is_subpath(fuzzer_utils.FUZZERS_DIR, path)
 
 
 def is_fuzzers_submodule(module) -> bool:
@@ -122,10 +121,12 @@ def _get_python_dependencies(module: types.ModuleType,
     code review."""
     if depth > PY_DEPENDENCIES_MAX_DEPTH:
         # Enforce a depth to catch cyclic imports.
-        format_string = ('Depth: {} greater than max: {}. '
-                         'Probably a cyclic import in {}.')
+        format_string = ('Depth: {depth} greater than max: {max_depth}. '
+                         'Probably a cyclic import in {module}.')
         raise Exception(
-            format_string.format(depth, PY_DEPENDENCIES_MAX_DEPTH, module))
+            format_string.format(depth=depth,
+                                 max_depth=PY_DEPENDENCIES_MAX_DEPTH,
+                                 module=module))
 
     module_path = inspect.getfile(module)
 

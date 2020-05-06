@@ -52,8 +52,8 @@ def get_changed_fuzzers_for_ci(changed_files: List[str] = None) -> List[str]:
     Unlike get_changed_fuzzers this function considers changes that affect
     building or running fuzzers in CI."""
     changed_files = get_absolute_paths(changed_files)
-    print(CI_FILES, changed_files)
-    if set(changed_files).intersection(CI_FILES):
+    if any(changed_file in CI_FILES for changed_file in changed_files):
+        # If any of changed files are in CI_FILES.
         return fuzzer_utils.get_fuzzer_names()
     return get_changed_fuzzers(changed_files)
 

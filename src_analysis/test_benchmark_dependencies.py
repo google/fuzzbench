@@ -47,3 +47,9 @@ def test_get_files_dependent_benchmarks():
 
     assert sorted(dependent_benchmarks) == sorted(
         [STANDARD_BENCHMARK, OSS_FUZZ_BENCHMARK])
+
+    dependent_benchmarks = (
+        benchmark_dependencies.get_files_dependent_benchmarks(
+            [fake_build_sh_path]))
+
+    assert dependent_benchmarks == []

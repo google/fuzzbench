@@ -37,14 +37,6 @@ def get_files_dependent_benchmarks(dependency_files):
                 # Benchmarks can only depend on files in their directory.
                 continue
 
-            if not benchmark_utils.is_oss_fuzz(benchmark):
-                dependent_benchmarks.append(benchmark)
-                break
-
-            # OSS-Fuzz benchmarks only have an oss-fuzz.yaml file as a
-            # dependency.
-            if os.path.basename(dependency_file) == 'oss-fuzz.yaml':
-                dependent_benchmarks.append(benchmark)
-                break
+            dependent_benchmarks.append(benchmark)
 
     return dependent_benchmarks
