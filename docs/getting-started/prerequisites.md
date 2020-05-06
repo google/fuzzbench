@@ -61,6 +61,7 @@ If you already have Python installed, you can verify its version by running
 Install the python dependencies by running the following command:
 
 ```bash
+sudo apt-get install python3-dev python3-venv
 make install-dependencies
 ```
 
