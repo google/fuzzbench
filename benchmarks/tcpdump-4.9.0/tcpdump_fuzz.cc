@@ -53,6 +53,7 @@ delete_file(const char *pathname)
 	if (ret == -1) {
 		warn("failed to delete \"%s\"", pathname);
 	}
+	free((void *)pathname);
 	return ret;
 #endif
 }
@@ -159,18 +160,15 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	}
 
 	dlt = pcap_datalink(pd);
-	dlt = pcap_datalink(pd);
-   	ndo->ndo_if_printer = get_if_printer(ndo, dlt);
+	ndo->ndo_if_printer = get_if_printer(ndo, dlt);
 	callback = print_packet;
 	pcap_userdata = (u_char *)ndo;
 	dlt_name = pcap_datalink_val_to_name(dlt);
 	if (dlt_name == NULL) {
 		fprintf(stderr, "reading from file %s, link-type %u\n", in, dlt);
 	} else {
-   		fprintf(stderr,
-			"reading from file %s, link-type %s (%s)\n",
-			in, dlt_name,
-			pcap_datalink_val_to_description(dlt));
+		fprintf(stderr,	"reading from file %s, link-type %s (%s)\n",in, dlt_name,
+		  pcap_datalink_val_to_description(dlt));
 	}
 	status = pcap_loop(pd, 0, callback, pcap_userdata);
 	pcap_close(pd);
