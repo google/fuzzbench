@@ -34,6 +34,8 @@ COPY --from=base-clang /usr/local/lib/clang /usr/local/lib/clang
 COPY --from=base-clang /usr/local/lib/libc++*.a /usr/local/lib/
 COPY --from=base-clang /usr/local/include/ /usr/local/include
 
+# These environment variables are set in the images for OSS-Fuzz benchmarks and
+# cannot be unset. Set them here as well for consistency.
 ENV CC="clang"
 ENV CXX="clang++"
 
