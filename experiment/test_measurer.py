@@ -298,6 +298,8 @@ def create_measurer(experiment):
 class TestIntegrationMeasurement:
     """Integration tests for measurement."""
 
+    @pytest.mark.skipif(not os.getenv('FUZZBENCH_TEST_INTEGRATION'),
+                        reason='Not running integration tests.')
     @mock.patch('experiment.measurer.SnapshotMeasurer.is_cycle_unchanged')
     def test_measure_snapshot_coverage(  # pylint: disable=too-many-locals
             self, mocked_is_cycle_unchanged, create_measurer, db, experiment):

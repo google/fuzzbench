@@ -25,10 +25,10 @@ DESTINATION_DIR = 'dst'
 # pylint: disable=invalid-name,unused-argument
 
 
-def test_recreate_directory_existing(tmp_path):
+def test_recreate_directory_existing(fs):
     """Tests that recreate_directory recreates a directory that already
     exists."""
-    new_directory = os.path.join(tmp_path, 'new-directory')
+    new_directory = 'new-directory'
     os.mkdir(new_directory)
     new_file = os.path.join(new_directory, 'file')
     with open(new_file, 'w') as file_handle:
@@ -39,10 +39,10 @@ def test_recreate_directory_existing(tmp_path):
     assert not os.path.exists(new_file)
 
 
-def test_recreate_directory_not_existing(tmp_path):
+def test_recreate_directory_not_existing(fs):
     """Tests that recreate_directory creates a directory that does not already
     exist."""
-    new_directory = os.path.join(tmp_path, 'new-directory')
+    new_directory = 'new-directory'
     filesystem.recreate_directory(new_directory)
     assert os.path.exists(new_directory)
 
