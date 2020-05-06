@@ -17,6 +17,8 @@ FROM $parent_image
 
 ARG fuzzer
 ARG benchmark
+ARG checkout_commit
+ARG checkout_commit_repo_path
 
 ENV FUZZER $fuzzer
 ENV BENCHMARK $benchmark
@@ -36,4 +38,11 @@ RUN touch $SRC/__init__.py
 ENV ASAN_OPTIONS="detect_leaks=0"
 
 ENV OSS_FUZZ 1
+
+ENV CHECKOUT_COMMIT $checkout_commit
+ENV CHECKOUT_COMMIT_REPO_PATH $checkout_commit_repo_path
+RUN mkdir /opt/fuzzbench/
+COPY docker/oss-fuzz-builder/checkout_commit.py /opt/fuzzbench/
+RUN python3 /opt/fuzzbench/checkout_commit.py
+
 RUN PYTHONPATH=$SRC python3 -u -c "from fuzzers import utils; utils.initialize_flags(); import fuzzer; fuzzer.build()"

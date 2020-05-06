@@ -191,6 +191,10 @@ $(1)-fuzz-target  := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
 $(1)-oss-fuzz-builder-hash := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
                                       grep oss_fuzz_builder_hash | \
                                       cut -d ':' -f2 | tr -d ' ')
+$(1)-commit  := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
+                        grep commit | cut -d ':' -f2 | tr -d ' ')
+$(1)-repo-path  := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
+                           grep repo_path| cut -d ':' -f2 | tr -d ' ')
 endef
 # Instantiate the above template with all OSS-Fuzz benchmarks.
 $(foreach oss_fuzz_benchmark,$(OSS_FUZZ_BENCHMARKS), \
@@ -217,6 +221,8 @@ define fuzzer_oss_fuzz_benchmark_template
     --build-arg parent_image=$(BASE_TAG)/builders/$(1)/$(2)-intermediate \
     --build-arg fuzzer=$(1) \
     --build-arg benchmark=$(2) \
+    --build-arg checkout_commit=$(1)-commit \
+    --build-arg checkout_commit_repo_path=$(1)-repo-path \
     $(call cache_from,${BASE_TAG}/builders/$(1)/$(2)) \
     .
 

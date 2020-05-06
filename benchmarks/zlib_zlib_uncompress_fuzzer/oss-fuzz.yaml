@@ -15,3 +15,5 @@
 project: zlib
 fuzz_target: zlib_uncompress_fuzzer
 oss_fuzz_builder_hash: 2ce72732e760c2ff25f13ea6e78a71412b25e72d18e0a923eb844e1993ff6bd9
+repo_path: /src/zlib
+commit: d71dc66fa8a153fb6e7c626847095d9697a6cf42
