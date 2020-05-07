@@ -280,28 +280,23 @@ def get_test_data_path(*subpaths):
     return os.path.join(TEST_DATA_PATH, *subpaths)
 
 
-@pytest.fixture
-def create_measurer(experiment):
-    """Fixture that provides a function for creating a SnapshotMeasurer."""
-    os.mkdir(build_utils.get_coverage_binaries_dir())
-
-    def _create_measurer(fuzzer, benchmark, trial_num):
-        return measurer.SnapshotMeasurer(fuzzer, benchmark, trial_num,
-                                         SNAPSHOT_LOGGER)
-
-    yield _create_measurer
-
-
 # pylint: disable=no-self-use
 
 
 class TestIntegrationMeasurement:
     """Integration tests for measurement."""
 
+    # TODO(metzman): Get this test working everywhere by using docker or a more
+    # portable binary.
+    @pytest.mark.skipif(not os.getenv('FUZZBENCH_TEST_INTEGRATION'),
+                        reason='Not running integration tests.')
     @mock.patch('experiment.measurer.SnapshotMeasurer.is_cycle_unchanged')
     def test_measure_snapshot_coverage(  # pylint: disable=too-many-locals
-            self, mocked_is_cycle_unchanged, create_measurer, db, experiment):
+            self, mocked_is_cycle_unchanged, db, experiment, tmp_path):
         """Integration test for measure_snapshot_coverage."""
+        # WORK is set by experiment to a directory that only makes sense in a
+        # fakefs.
+        os.environ['WORK'] = str(tmp_path)
         mocked_is_cycle_unchanged.return_value = False
         # Set up the coverage binary.
         benchmark = 'freetype2-2017'
@@ -324,8 +319,9 @@ class TestIntegrationMeasurement:
                              experiment=os.environ['EXPERIMENT'])
         db_utils.add_all([trial])
 
-        snapshot_measurer = create_measurer(trial.fuzzer, trial.benchmark,
-                                            trial.id)
+        snapshot_measurer = measurer.SnapshotMeasurer(trial.fuzzer,
+                                                      trial.benchmark, trial.id,
+                                                      SNAPSHOT_LOGGER)
 
         # Set up the snapshot archive.
         cycle = 1

@@ -298,10 +298,10 @@ class TestIntegrationRunner:
         mocked_error.assert_not_called()
 
 
-def test_clean_seed_corpus(tmp_path, fs):
+def test_clean_seed_corpus(fs):
     """Test that seed corpus files are moved to root directory and deletes files
     exceeding 1 MB limit."""
-    seed_corpus_dir = tmp_path / 'seeds'
+    seed_corpus_dir = '/seeds'
     fs.create_dir(seed_corpus_dir)
 
     fs.create_file(os.path.join(seed_corpus_dir, 'a', 'abc'), contents='abc')
