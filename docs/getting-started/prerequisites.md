@@ -35,7 +35,7 @@ Install Docker using the instructions
 Googlers can visit [go/installdocker](https://goto.google.com/installdocker).
 
 If you want to run `docker` without `sudo`, you can
-[create a docker group](https://docs.docker.com/engine/install/linux-postinstall/).
+[create a docker group](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user).
 
 **Note:** Docker images can consume significant disk space. Clean up unused
 docker images periodically.
