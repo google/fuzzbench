@@ -2,16 +2,20 @@ name: Build fuzzers
 on:
   pull_request:
     paths:
-      - 'docker/**'  # Base images changes.
+      - 'docker/**'  # Project image changes.
       - 'fuzzers/**' # Changes to fuzzers themselves.
       - 'benchmarks/**'  # Changes to benchmarks.
-      - 'src_analysis/**' # Changes that affect what gets built.
+      # Changes to analysis system which determines what gets built.
+      - 'src_analysis/**'
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      # TODO(metzman): Break out AFL from here and make this step conditional on
+      # src_analysis finding changed fuzzers. Better not to start up the jobs at
+      # all than to start and immediately quit.
       matrix:
         fuzzer:
           - afl
