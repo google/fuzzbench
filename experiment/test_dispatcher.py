@@ -50,15 +50,9 @@ def mock_split_successes_and_failures(inputs, results):
 @mock.patch('multiprocessing.pool.ThreadPool', test_utils.MockPool)
 @mock.patch('experiment.build.builder.split_successes_and_failures',
             mock_split_successes_and_failures)
-def dispatcher_experiment(fs, db, environ):
+def dispatcher_experiment(fs, db, experiment):
     """Creates a dispatcher.Experiment object."""
-    work = '/work'
-    os.environ['WORK'] = work
-    fs.create_dir(work)
-    os.environ['EXPERIMENT'] = 'test-experiment'
-    os.environ['CLOUD_EXPERIMENT_BUCKET'] = 'gs://experiment-data'
-    os.environ['CLOUD_WEB_BUCKET'] = 'gs://web-bucket'
-    os.environ['CLOUD_PROJECT'] = 'fuzzbench'
+    fs.create_dir(os.environ['WORK'])
     experiment_config_filepath = get_test_data_path('experiment-config.yaml')
     fs.add_real_file(experiment_config_filepath)
     for fuzzer in FUZZERS:
@@ -106,17 +100,17 @@ def test_initialize_experiment_in_db(dispatcher_experiment):
 
 
 @mock.patch('experiment.build.builder.build_base_images', side_effect=Exception)
-def test_build_for_trials_base_images_fail(dispatcher_experiment):
+def test_build_images_for_trials_base_images_fail(dispatcher_experiment):
     """Tests that build_for_trial raises an exception when base images can't be
     built. This is important because the experiment should not proceed."""
     with pytest.raises(Exception):
-        dispatcher.build_for_trials(dispatcher_experiment.fuzzers,
-                                    dispatcher_experiment.benchmarks,
-                                    dispatcher_experiment.num_trials)
+        dispatcher.build_images_for_trials(dispatcher_experiment.fuzzers,
+                                           dispatcher_experiment.benchmarks,
+                                           dispatcher_experiment.num_trials)
 
 
 @mock.patch('experiment.build.builder.build_base_images')
-def test_build_for_trials_build_success(_, dispatcher_experiment):
+def test_build_images_for_trials_build_success(_, dispatcher_experiment):
     """Tests that build_for_trial returns all trials we expect to run in an
     experiment when builds are successful."""
     fuzzer_benchmarks = list(
@@ -126,7 +120,7 @@ def test_build_for_trials_build_success(_, dispatcher_experiment):
                     return_value=dispatcher_experiment.benchmarks):
         with mock.patch('experiment.build.builder.build_all_fuzzer_benchmarks',
                         return_value=fuzzer_benchmarks):
-            trials = dispatcher.build_for_trials(
+            trials = dispatcher.build_images_for_trials(
                 dispatcher_experiment.fuzzers, dispatcher_experiment.benchmarks,
                 dispatcher_experiment.num_trials)
     trial_fuzzer_benchmarks = [
@@ -141,7 +135,7 @@ def test_build_for_trials_build_success(_, dispatcher_experiment):
 
 
 @mock.patch('experiment.build.builder.build_base_images')
-def test_build_for_trials_benchmark_fail(_, dispatcher_experiment):
+def test_build_images_for_trials_benchmark_fail(_, dispatcher_experiment):
     """Tests that build_for_trial doesn't return trials or try to build fuzzers
     for a benchmark whose coverage build failed."""
     successful_benchmark = 'benchmark-1'
@@ -157,7 +151,7 @@ def test_build_for_trials_benchmark_fail(_, dispatcher_experiment):
             # Sanity check this test so that we know we are actually testing
             # behavior when benchmarks fail.
             assert len(set(dispatcher_experiment.benchmarks)) > 1
-            trials = dispatcher.build_for_trials(
+            trials = dispatcher.build_images_for_trials(
                 dispatcher_experiment.fuzzers, dispatcher_experiment.benchmarks,
                 dispatcher_experiment.num_trials)
     for trial in trials:
@@ -165,7 +159,7 @@ def test_build_for_trials_benchmark_fail(_, dispatcher_experiment):
 
 
 @mock.patch('experiment.build.builder.build_base_images')
-def test_build_for_trials_fuzzer_fail(_, dispatcher_experiment):
+def test_build_images_for_trials_fuzzer_fail(_, dispatcher_experiment):
     """Tests that build_for_trial doesn't return trials a fuzzer whose build
     failed on a benchmark."""
     successful_fuzzer = 'fuzzer-a'
@@ -193,8 +187,8 @@ def test_build_for_trials_fuzzer_fail(_, dispatcher_experiment):
                     return_value=benchmarks):
         with mock.patch('experiment.build.builder.build_all_fuzzer_benchmarks',
                         side_effect=mocked_build_all_fuzzer_benchmarks):
-            trials = dispatcher.build_for_trials(fuzzers, benchmarks,
-                                                 num_trials)
+            trials = dispatcher.build_images_for_trials(fuzzers, benchmarks,
+                                                        num_trials)
 
     trial_fuzzer_benchmarks = [
         (trial.fuzzer, trial.benchmark) for trial in trials

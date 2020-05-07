@@ -81,8 +81,8 @@ class Experiment:
                                          experiment_utils.get_experiment_name())
 
 
-def build_for_trials(fuzzers: List[str], benchmarks: List[str],
-                     num_trials: int) -> List[models.Trial]:
+def build_images_for_trials(fuzzers: List[str], benchmarks: List[str],
+                            num_trials: int) -> List[models.Trial]:
     """Builds the images needed to run |experiment| and returns a list of trials
     that can be run for experiment. This is the number of trials specified in
     experiment times each pair of fuzzer+benchmark that builds successfully."""
@@ -119,8 +119,8 @@ def dispatcher_main():
     experiment_config_file_path = os.path.join(fuzzer_config_utils.get_dir(),
                                                'experiment.yaml')
     experiment = Experiment(experiment_config_file_path)
-    trials = build_for_trials(experiment.fuzzers, experiment.benchmarks,
-                              experiment.num_trials)
+    trials = build_images_for_trials(experiment.fuzzers, experiment.benchmarks,
+                                     experiment.num_trials)
     _initialize_experiment_in_db(experiment.experiment_name,
                                  experiment.git_hash, trials)
 
