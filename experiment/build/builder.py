@@ -97,8 +97,8 @@ def split_successes_and_failures(inputs: List,
 
 
 def retry_build_loop(build_func: Callable, inputs: List[Tuple]) -> List:
-    """Calls |build_func| concurrently on |inputs|. Repeat on failures up to
-    |NUM_BUILD_RETRIES| times. Returns the list of inputs that build_func was
+    """Calls |build_func| in parallel on |inputs|. Repeat on failures up to
+    |NUM_BUILD_RETRIES| times. Returns the list of inputs that |build_func| was
     called successfully on."""
     successes = []
     with mp_pool.ThreadPool(MAX_CONCURRENT_BUILDS) as pool:
@@ -124,8 +124,8 @@ def retry_build_loop(build_func: Callable, inputs: List[Tuple]) -> List:
 
 def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
     """Wrapper around buildlib.build_fuzzer_benchmark that logs and catches
-    exceptions. buildlib.build_fuzzer_benchmark will build an image for fuzzer
-    to fuzz benchmark."""
+    exceptions. buildlib.build_fuzzer_benchmark builds an image for |fuzzer|
+    to fuzz |benchmark|."""
     logger.info('Building benchmark: %s, fuzzer: %s.', benchmark, fuzzer)
     try:
         buildlib.build_fuzzer_benchmark(fuzzer, benchmark)
