@@ -252,14 +252,13 @@ def license_check(paths: List[Path]) -> bool:
 
     return success
 
-def get_all_files(): -> List[Path]:
+
+def get_all_files() -> List[Path]:
     """Returns a list of absolute paths of files in this repo."""
-    all_files_command = ['git', 'ls-files']
+    get_all_files_command = ['git', 'ls-files']
     output = subprocess.check_output(
-        uncommitted_diff_command).decode().splitlines()
-    all_files = set(
-        Path(path).absolute() for path in output if Path(path).is_file())
-    return all_files
+        get_all_files_command).decode().splitlines()
+    return [Path(path).absolute() for path in output if Path(path).is_file()]
 
 
 def do_tests() -> bool:
@@ -268,19 +267,19 @@ def do_tests() -> bool:
     return returncode == 0
 
 
-def do_checks(relevant_files: List[Path]) -> bool:
+def do_checks(changed_files: List[Path]) -> bool:
     """Return False if any presubmit check fails."""
     success = True
 
     fuzzer_and_benchmark_validator = FuzzerAndBenchmarkValidator()
     if not all([
             fuzzer_and_benchmark_validator.validate(path)
-            for path in relevant_files
+            for path in changed_files
     ]):
         success = False
 
     for check in [license_check, yapf, lint, pytype]:
-        if not check(relevant_files):
+        if not check(changed_files):
             print('ERROR: %s failed, see errors above.' % check.__name__)
             success = False
 
@@ -309,14 +308,24 @@ def main() -> int:
         'format', 'lint', 'typecheck', 'licensecheck',
         'test_changed_integrations'
     ]
-    parser.add_argument('command', choices=choices, nargs='?')
+    parser.add_argument(
+        'command',
+        choices=choices,
+        nargs='?',
+        help='The presubmit check to run. Defaults to all of them')
+    parser.add_argument('--all-files',
+                        action='store_true',
+                        help='Run presubmit check(s) on all files')
 
     args = parser.parse_args()
     os.chdir(_SRC_ROOT)
-    changed_files = [Path(path) for path in diff_utils.get_changed_files()]
+    if args.all_files:
+        relevant_files = get_all_files()
+    else:
+        relevant_files = [Path(path) for path in diff_utils.get_changed_files()]
 
     if not args.command:
-        success = do_checks(changed_files)
+        success = do_checks(relevant_files)
         return bool_to_returncode(success)
 
     command_check_mapping = {
@@ -328,9 +337,9 @@ def main() -> int:
 
     check = command_check_mapping[args.command]
     if args.command == 'format':
-        success = check(changed_files, False)
+        success = check(relevant_files, False)
     else:
-        success = check(changed_files)
+        success = check(relevant_files)
     if not success:
         print('ERROR: %s failed, see errors above.' % check.__name__)
     return bool_to_returncode(success)
