@@ -35,7 +35,7 @@ Install Docker using the instructions
 Googlers can visit [go/installdocker](https://goto.google.com/installdocker).
 
 If you want to run `docker` without `sudo`, you can
-[create a docker group](https://docs.docker.com/engine/installation/linux/ubuntulinux/#/create-a-docker-group).
+[create a docker group](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user).
 
 **Note:** Docker images can consume significant disk space. Clean up unused
 docker images periodically.
@@ -61,6 +61,7 @@ If you already have Python installed, you can verify its version by running
 Install the python dependencies by running the following command:
 
 ```bash
+sudo apt-get install python3-dev python3-venv
 make install-dependencies
 ```
 
