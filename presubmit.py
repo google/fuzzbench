@@ -252,6 +252,15 @@ def license_check(paths: List[Path]) -> bool:
 
     return success
 
+def get_all_files(): -> List[Path]:
+    """Returns a list of absolute paths of files in this repo."""
+    all_files_command = ['git', 'ls-files']
+    output = subprocess.check_output(
+        uncommitted_diff_command).decode().splitlines()
+    all_files = set(
+        Path(path).absolute() for path in output if Path(path).is_file())
+    return all_files
+
 
 def do_tests() -> bool:
     """Run all unittests."""
@@ -259,19 +268,19 @@ def do_tests() -> bool:
     return returncode == 0
 
 
-def do_checks(changed_files: List[Path]) -> bool:
+def do_checks(relevant_files: List[Path]) -> bool:
     """Return False if any presubmit check fails."""
     success = True
 
     fuzzer_and_benchmark_validator = FuzzerAndBenchmarkValidator()
     if not all([
             fuzzer_and_benchmark_validator.validate(path)
-            for path in changed_files
+            for path in relevant_files
     ]):
         success = False
 
     for check in [license_check, yapf, lint, pytype]:
-        if not check(changed_files):
+        if not check(relevant_files):
             print('ERROR: %s failed, see errors above.' % check.__name__)
             success = False
 
