@@ -18,7 +18,7 @@ import os
 
 from fuzzers import utils
 
-
+$ tmp
 def build():
     """Build benchmark."""
     # With LibFuzzer we use -fsanitize=fuzzer-no-link for build CFLAGS and then
