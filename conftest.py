@@ -75,7 +75,7 @@ def environ():
 @pytest.fixture
 def experiment(environ):  # pylint: disable=redefined-outer-name,unused-argument
     """Mock an experiment."""
-    os.environ['WORK'] = '/directory-not-on-host'
+    os.environ['WORK'] = '/work'
     os.environ['EXPERIMENT'] = 'test-experiment'
     os.environ['CLOUD_EXPERIMENT_BUCKET'] = 'gs://experiment-data'
     os.environ['CLOUD_WEB_BUCKET'] = 'gs://web-bucket'

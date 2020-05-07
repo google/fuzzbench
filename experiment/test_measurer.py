@@ -286,6 +286,8 @@ def get_test_data_path(*subpaths):
 class TestIntegrationMeasurement:
     """Integration tests for measurement."""
 
+    # TODO(metzman): Get this test working everywhere by using docker or a more
+    # portable binary.
     @pytest.mark.skipif(not os.getenv('FUZZBENCH_TEST_INTEGRATION'),
                         reason='Not running integration tests.')
     @mock.patch('experiment.measurer.SnapshotMeasurer.is_cycle_unchanged')
