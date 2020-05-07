@@ -126,7 +126,7 @@ def do_build(build_type, fuzzer, always_build):
 
 def main():
     """Build OSS-Fuzz or standard benchmarks with a fuzzer."""
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 3:
         print('Usage: %s <build_type> <fuzzer>' % sys.argv[0])
         return 1
     build_type = sys.argv[1]
