@@ -21,7 +21,6 @@ from fuzzers import utils
 
 def build():
     """Build benchmark."""
-    1/0
     # With LibFuzzer we use -fsanitize=fuzzer-no-link for build CFLAGS and then
     # /usr/lib/libFuzzer.a as the FUZZER_LIB for the main fuzzing binary. This
     # allows us to link against a version of LibFuzzer that we specify.
