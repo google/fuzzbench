@@ -5,6 +5,7 @@ on:
       - 'docker/**'  # Base images changes.
       - 'fuzzers/**' # Changes to fuzzers themselves.
       - 'benchmarks/**'  # Changes to benchmarks.
+      - 'src_analysis/**' # Changes that affect what gets built.
 
 jobs:
   build:
