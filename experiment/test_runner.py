@@ -95,7 +95,7 @@ def test_save_corpus_archive(_, trial_runner, fs):
     with test_utils.mock_popen_ctx_mgr() as mocked_popen:
         trial_runner.save_corpus_archive(archive_name)
         assert mocked_popen.commands == [[
-            'gsutil', 'cp', archive_name,
+            'gsutil', 'cp', '-P', archive_name,
             posixpath.join(
                 'gs://bucket/experiment-name/experiment-folders/'
                 'benchmark-1-fuzzer-name-a/trial-1/corpus', archive_name)
@@ -123,7 +123,7 @@ def test_do_sync_unchanged(mocked_is_corpus_dir_same, mocked_debug,
     with test_utils.mock_popen_ctx_mgr() as mocked_popen:
         trial_runner.do_sync()
         assert mocked_popen.commands == [[
-            'gsutil', 'rsync', '-d', '-r', 'results-copy',
+            'gsutil', 'rsync', '-P', '-d', '-r', 'results-copy',
             ('gs://bucket/experiment-name/experiment-folders/'
              'benchmark-1-fuzzer-name-a/trial-1/results')
         ]]
@@ -149,13 +149,13 @@ def test_do_sync_changed(mocked_execute, mocked_is_corpus_dir_same, fs,
     trial_runner.do_sync()
     assert mocked_execute.call_args_list == [
         mock.call([
-            'gsutil', 'cp', 'corpus-archives/corpus-archive-1337.tar.gz',
+            'gsutil', 'cp', '-P', 'corpus-archives/corpus-archive-1337.tar.gz',
             ('gs://bucket/experiment-name/experiment-folders/'
              'benchmark-1-fuzzer-name-a/trial-1/corpus/'
              'corpus-archive-1337.tar.gz')
         ]),
         mock.call([
-            'gsutil', 'rsync', '-d', '-r', 'results-copy',
+            'gsutil', 'rsync', '-P', '-d', '-r', 'results-copy',
             ('gs://bucket/experiment-name/experiment-folders/'
              'benchmark-1-fuzzer-name-a/trial-1/results')
         ])

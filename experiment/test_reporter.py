@@ -33,7 +33,8 @@ def test_output_report_bucket(fs, experiment):
             reports_dir = os.path.join(os.environ['WORK'], 'reports')
             assert mocked_popen.commands == [[
                 'gsutil', '-h', 'Cache-Control:public,max-age=0,no-transform',
-                'rsync', '-d', '-r', reports_dir, 'gs://web-bucket/experiment'
+                'rsync', '-P', '-d', '-r', reports_dir,
+                'gs://web-bucket/experiment'
             ]]
             mocked_generate_report.assert_called_with(
                 [os.environ['EXPERIMENT']], reports_dir, in_progress=False)

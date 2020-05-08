@@ -30,7 +30,7 @@ def gsutil_command(arguments, *args, parallel=False, **kwargs):
 def cp(*cp_arguments, **kwargs):  # pylint: disable=invalid-name
     """Executes gsutil's "cp" command with |cp_arguments| and returns the
     returncode and the output."""
-    command = ['cp']
+    command = ['cp', '-P']
     command.extend(cp_arguments)
     return gsutil_command(command, **kwargs)
 
@@ -72,6 +72,7 @@ def rsync(  # pylint: disable=too-many-arguments
     if provided."""
     command = [] if gsutil_options is None else gsutil_options
     command.append('rsync')
+    command.append('-P')
     if delete:
         command.append('-d')
     if recursive:
