@@ -47,12 +47,15 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     else:
         os.environ['CC'] = '/afl/afl-clang-fast'
         os.environ['CXX'] = '/afl/afl-clang-fast++'
-        if 'instrim' in build_modes:
-            # I avoid to put also AFL_LLVM_INSTRIM_LOOPHEAD
-            os.environ['AFL_LLVM_INSTRIM'] = 'CFG'
-            os.environ['AFL_LLVM_INSTRIM_SKIPSINGLEBLOCK'] = '1'
+
+    if 'instrim' in build_modes:
+        # We dont set AFL_LLVM_INSTRIM_LOOPHEAD for better coverage
+        os.environ['AFL_LLVM_INSTRIM'] = 'CFG'
 
     # Instrumentation coverage options:
+    # Skip over single block functions
+    if 'skipsingle' in build_modes:
+        os.environ['AFL_LLVM_SKIPSINGLEBLOCK'] = '1'
     # Enable context sentitivity for LLVM mode
     if 'ctx' in build_modes:
         os.environ['AFL_LLVM_CTX'] = '1'
