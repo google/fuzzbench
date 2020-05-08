@@ -260,7 +260,7 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
     options = [
         '-x',
         ('^\\.git/|^\\.pytype/|^\\.venv/|^.*\\.pyc$|^__pycache__/'
-         '|.*~$|\\.pytest_cache/|.*/test_data/|^third_party/oss-fuzz/out/'
+         '|.*~$|\\.pytest_cache/|.*/test_data/|^third_party/oss-fuzz/build/'
          '|^docs/')
     ]
     destination = os.path.join(base_destination, 'src')
