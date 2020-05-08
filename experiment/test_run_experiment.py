@@ -216,7 +216,7 @@ def test_copy_resources_to_bucket():
                 '-x',
                 ('^\\.git/|^\\.pytype/|^\\.venv/|^.*\\.pyc$|^__pycache__/|'
                  '.*~$|\\.pytest_cache/|.*/test_data/|'
-                 '^third_party/oss-fuzz/out/|^docs/')
+                 '^third_party/oss-fuzz/build/|^docs/')
             ],
             parallel=True)
         mocked_rsync.assert_any_call(
