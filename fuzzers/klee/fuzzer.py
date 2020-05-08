@@ -38,7 +38,7 @@ def prepare_build_environment():
     os.environ['CC'] = 'gclang'
     os.environ['CXX'] = 'gclang++'
 
-    os.environ['FUZZER_LIB'] = '/libAFL.a -L/ -lKleeMock'
+    os.environ['FUZZER_LIB'] = '/libAFL.a -L/ -lKleeMock -lpthread'
 
 
 def build():
@@ -66,13 +66,24 @@ def emptydir(path):
     os.mkdir(path)
 
 
-def run(command, hide_output=False):
-    """Run a the command |command|"""
+def run(command, hide_output=False, ulimit_cmd=None):
+    """Run the command |command|, optionally, run |ulimit_cmd| first."""
     cmd = ' '.join(command)
     print('[run_cmd] {}'.format(cmd))
 
     output_stream = subprocess.DEVNULL if hide_output else None
-    ret = subprocess.call(command, stdout=output_stream, stderr=output_stream)
+    if ulimit_cmd:
+        ulimit_command = [ulimit_cmd + ';']
+        ulimit_command.extend(command)
+        print('[ulimit_command] {}'.format(' '.join(ulimit_command)))
+        ret = subprocess.call(' '.join(ulimit_command),
+                              stdout=output_stream,
+                              stderr=output_stream,
+                              shell=True)
+    else:
+        ret = subprocess.call(command,
+                              stdout=output_stream,
+                              stderr=output_stream)
     if ret != 0:
         raise ValueError("command failed: {ret} - {cmd}".format(ret=ret,
                                                                 cmd=cmd))
@@ -152,9 +163,9 @@ def fuzz(input_corpus, output_corpus, target_binary):
         converted=n_converted))
 
     # Run KLEE
-    # Option -only-output-states-covering-new makes 
+    # Option -only-output-states-covering-new makes
     # dumping ktest files faster.
-    # New coverage means a new edge. 
+    # New coverage means a new edge.
     # See lib/Core/StatsTracker.cpp:markBranchVisited()
 
     print('[run_fuzzer] Running target with klee')
@@ -169,15 +180,15 @@ def fuzz(input_corpus, output_corpus, target_binary):
     klee_cmd = [
         klee_bin, '--optimize', '-max-solver-time', '30s',
         '-log-timed-out-queries', '--max-time', '{}s'.format(seconds), '-libc',
-        'uclibc', '-posix-runtime', '-only-output-states-covering-new',
-        '-output-dir', output_klee
+        'uclibc', '-libcxx', '-posix-runtime',
+        '-only-output-states-covering-new', '-output-dir', output_klee
     ]
 
     if seeds_option:
         klee_cmd.extend(seeds_option)
 
     klee_cmd += [target_binary_bc]
-    run(klee_cmd)
+    run(klee_cmd, ulimit_cmd="ulimit -s unlimited")
 
     # Convert the output .ktest to binary format
     print('[run_fuzzer] Converting output files...')
