@@ -20,7 +20,7 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 def build():
     """Build benchmark."""
-    aflplusplus_fuzzer.build("instrim")
+    aflplusplus_fuzzer.build("laf", "instrim", "nozero")
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
@@ -28,4 +28,4 @@ def fuzz(input_corpus, output_corpus, target_binary):
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
-                            flags=("-p", "coe"))
+                            flags=("-L", "-1"))
