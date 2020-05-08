@@ -31,14 +31,14 @@ def _get_test_data_dir(directory):
 
 
 def _make_crashes_dir(parent_path):
-    """Makes a crashes dir in |tmp_path| and returns it."""
+    """Makes a crashes dir in |parent_path| and returns it."""
     crashes_dir = os.path.join(str(parent_path), 'crashes')
     os.mkdir(crashes_dir)
     return crashes_dir
 
 
 def _make_sancov_dir(parent_path):
-    """Makes a sancov dir in |tmp_path| and returns it."""
+    """Makes a sancov dir in |parent_path| and returns it."""
     sancov_dir = os.path.join(str(parent_path), 'sancov')
     os.mkdir(sancov_dir)
     return sancov_dir

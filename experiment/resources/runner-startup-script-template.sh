@@ -15,9 +15,6 @@
 
 ## Configure the host.
 
-# Enable 8 2MB huge pages.
-echo 8 > /proc/sys/vm/nr_hugepages
-
 # Make everything ptrace-able.
 echo 0 > /proc/sys/kernel/yama/ptrace_scope
 
@@ -36,7 +33,6 @@ docker run {% if local_experiment %}-v {{host_gcloud_config}}:/root/.config/gclo
 -e INSTANCE_NAME={{instance_name}} \
 -e FUZZER={{fuzzer}} \
 -e BENCHMARK={{benchmark}} \
--e FUZZER_VARIANT_NAME={{fuzzer_variant_name}} \
 -e EXPERIMENT={{experiment}} \
 -e TRIAL_ID={{trial_id}} \
 -e MAX_TOTAL_TIME={{max_total_time}} \

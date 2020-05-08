@@ -11,21 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Yaml helpers."""
+"""Tests for change_utils.py."""
 import os
-import yaml
+
+from common import fuzzer_utils
+from common import utils
+from src_analysis import change_utils
 
 
-def read(yaml_filename):
-    """Reads and loads yaml file specified by |yaml_filename|."""
-    if not os.path.exists(yaml_filename):
-        raise Exception('Yaml file %s does not exist.' % yaml_filename)
-
-    with open(yaml_filename) as file_handle:
-        return yaml.load(file_handle, yaml.SafeLoader)
-
-
-def write(yaml_filename, data):
-    """Writes |data| to a new yaml file at |yaml_filename|."""
-    with open(yaml_filename, 'w') as file_handle:
-        return yaml.dump(data, file_handle)
+def test_get_changed_fuzzers_for_ci():
+    """Tests that get_changed_fuzzers_for_ci returns all fuzzers when a file
+    that affects all fuzzer build was changed."""
+    changed_fuzzers = change_utils.get_changed_fuzzers_for_ci(
+        [os.path.join(utils.ROOT_DIR, 'docker', 'build.mk')])
+    assert changed_fuzzers == fuzzer_utils.get_fuzzer_names()

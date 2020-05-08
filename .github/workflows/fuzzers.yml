@@ -5,6 +5,7 @@ on:
       - 'docker/**'  # Base images changes.
       - 'fuzzers/**' # Changes to fuzzers themselves.
       - 'benchmarks/**'  # Changes to benchmarks.
+      - 'src_analysis/**' # Changes that affect what gets built.
 
 jobs:
   build:
@@ -33,9 +34,7 @@ jobs:
           - eclipser
           - entropic
           - fairfuzz
-          - fastcgs
           - fastcgs_lm
-          - fastcgs_br
           - honggfuzz
           - lafintel
           - libfuzzer
@@ -51,6 +50,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - run: |  # Needed for git diff to work.
+        git fetch origin master --depth 1
+        git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
 
     - name: Clear unnecessary files
       run: |
@@ -65,6 +67,10 @@ jobs:
       with:
         python-version: 3.7
 
+    - name: Install dependencies
+      run: |
+        make install-dependencies
+
     - name: Build Benchmarks
       run: |
-        python .github/workflows/test_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER
+        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/test_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER
