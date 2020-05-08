@@ -38,13 +38,16 @@ RUN add-apt-repository --keyserver hkps://keyserver.ubuntu.com:443 ppa:ubuntu-to
 # Download and compile AFLSmart
 RUN git clone https://github.com/aflsmart/aflsmart /afl && \
     cd /afl && \
-    git checkout df095901ea379f033d4d82345023de004f28b9a7 && \
+    git checkout 5fb84f3b6a0ec24059958c498fc691de01bc5fcc && \
     AFL_NO_X86=1 make
 
 # Setup Peach.
 # Set CFLAGS="" so that we don't use the CFLAGS defined in OSS-Fuzz images.
+# Use a copy of
+# https://sourceforge.net/projects/peachfuzz/files/Peach/3.0/peach-3.0.202-source.zip
+# to avoid network flakiness.
 RUN cd /afl && \
-    wget https://sourceforge.net/projects/peachfuzz/files/Peach/3.0/peach-3.0.202-source.zip && \
+    wget https://storage.googleapis.com/fuzzbench-files/peach-3.0.202-source.zip && \
     unzip peach-3.0.202-source.zip && \
     patch -p1 < peach-3.0.202.patch && \
     cd peach-3.0.202-source && \

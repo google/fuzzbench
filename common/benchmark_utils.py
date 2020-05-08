@@ -22,6 +22,7 @@ from common import oss_fuzz
 from common import utils
 
 VALID_BENCHMARK_REGEX = re.compile(r'^[A-Za-z0-9\._\-]+$')
+BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 
 
 def is_oss_fuzz(benchmark):
@@ -48,9 +49,6 @@ def get_runner_image_url(benchmark, fuzzer, cloud_project):
     """Get the URL of the docker runner image for fuzzing the benchmark with
     fuzzer."""
     base_tag = experiment_utils.get_base_docker_tag(cloud_project)
-    if is_oss_fuzz(benchmark):
-        return '{base_tag}/oss-fuzz/runners/{fuzzer}/{project}'.format(
-            base_tag=base_tag, fuzzer=fuzzer, project=get_project(benchmark))
     return '{base_tag}/runners/{fuzzer}/{benchmark}'.format(base_tag=base_tag,
                                                             fuzzer=fuzzer,
                                                             benchmark=benchmark)
@@ -60,9 +58,6 @@ def get_builder_image_url(benchmark, fuzzer, cloud_project):
     """Get the URL of the docker builder image for fuzzing the benchmark with
     fuzzer."""
     base_tag = experiment_utils.get_base_docker_tag(cloud_project)
-    if is_oss_fuzz(benchmark):
-        return '{base_tag}/oss-fuzz/builders/{fuzzer}/{project}'.format(
-            base_tag=base_tag, fuzzer=fuzzer, project=get_project(benchmark))
     return '{base_tag}/builders/{fuzzer}/{benchmark}'.format(
         base_tag=base_tag, fuzzer=fuzzer, benchmark=benchmark)
 
@@ -89,10 +84,9 @@ def validate(benchmark):
 
 def get_all_benchmarks():
     """Returns the list of all benchmarks."""
-    benchmarks_dir = os.path.join(utils.ROOT_DIR, 'benchmarks')
     all_benchmarks = []
-    for benchmark in os.listdir(benchmarks_dir):
-        benchmark_path = os.path.join(benchmarks_dir, benchmark)
+    for benchmark in os.listdir(BENCHMARKS_DIR):
+        benchmark_path = os.path.join(BENCHMARKS_DIR, benchmark)
         if os.path.isfile(os.path.join(benchmark_path, 'oss-fuzz.yaml')):
             # Benchmark is an OSS-Fuzz benchmark.
             all_benchmarks.append(benchmark)

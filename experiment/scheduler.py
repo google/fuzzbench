@@ -235,9 +235,8 @@ def render_startup_script_template(instance_name: str, benchmark: str,
     """Render the startup script using the template and the parameters
     provided and return the result."""
     fuzzer_config = fuzzer_config_utils.get_by_variant_name(fuzzer)
-    underlying_fuzzer_name = fuzzer_config['fuzzer']
     docker_image_url = benchmark_utils.get_runner_image_url(
-        benchmark, underlying_fuzzer_name, experiment_config['cloud_project'])
+        benchmark, fuzzer, experiment_config['cloud_project'])
     fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
 
     # Convert additional environment variables from configuration to arguments
@@ -255,8 +254,7 @@ def render_startup_script_template(instance_name: str, benchmark: str,
         'instance_name': instance_name,
         'benchmark': benchmark,
         'experiment': experiment_config['experiment'],
-        'fuzzer': underlying_fuzzer_name,
-        'fuzzer_variant_name': fuzzer,
+        'fuzzer': fuzzer,
         'trial_id': trial_id,
         'max_total_time': experiment_config['max_total_time'],
         'cloud_project': experiment_config['cloud_project'],
