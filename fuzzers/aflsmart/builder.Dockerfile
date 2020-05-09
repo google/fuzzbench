@@ -43,6 +43,9 @@ RUN git clone https://github.com/aflsmart/aflsmart /afl && \
 
 # Setup Peach.
 # Set CFLAGS="" so that we don't use the CFLAGS defined in OSS-Fuzz images.
+# Use a copy of
+# https://sourceforge.net/projects/peachfuzz/files/Peach/3.0/peach-3.0.202-source.zip
+# to avoid network flakiness.
 RUN cd /afl && \
     wget https://storage.googleapis.com/fuzzbench-files/peach-3.0.202-source.zip && \
     unzip peach-3.0.202-source.zip && \

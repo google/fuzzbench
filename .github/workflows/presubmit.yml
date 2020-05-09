@@ -16,4 +16,4 @@ jobs:
         python-version: 3.7
     - name: Run presubmit checks
       run: |
-        make presubmit
+        FUZZBENCH_TEST_INTEGRATION=1 make presubmit

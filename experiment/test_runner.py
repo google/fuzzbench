@@ -285,8 +285,10 @@ class TestIntegrationRunner:
 
         local_gcs_corpus_dir_copy = tmp_path / 'gcs_corpus_dir'
         os.mkdir(local_gcs_corpus_dir_copy)
-        gsutil.cp('-r', posixpath.join(gcs_corpus_directory, '*'),
-                  str(local_gcs_corpus_dir_copy))
+        gsutil.cp('-r',
+                  posixpath.join(gcs_corpus_directory, '*'),
+                  str(local_gcs_corpus_dir_copy),
+                  parallel=True)
         archive_size = os.path.getsize(local_gcs_corpus_dir_copy /
                                        'corpus-archive-0001.tar.gz')
 
@@ -296,10 +298,10 @@ class TestIntegrationRunner:
         mocked_error.assert_not_called()
 
 
-def test_clean_seed_corpus(tmp_path, fs):
+def test_clean_seed_corpus(fs):
     """Test that seed corpus files are moved to root directory and deletes files
     exceeding 1 MB limit."""
-    seed_corpus_dir = tmp_path / 'seeds'
+    seed_corpus_dir = '/seeds'
     fs.create_dir(seed_corpus_dir)
 
     fs.create_file(os.path.join(seed_corpus_dir, 'a', 'abc'), contents='abc')

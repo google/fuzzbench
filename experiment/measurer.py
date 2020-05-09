@@ -148,6 +148,8 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
                 # If "ready" that means pool has finished calling on each
                 # unmeasured_snapshot. Since it is finished and the queue is
                 # empty, we can stop checking the queue for more snapshots.
+                logger.debug(
+                    'Finished call to map with measure_trial_coverage.')
                 break
 
             if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE * .75:
@@ -162,6 +164,7 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
     # If we have any snapshots left save them now.
     save_snapshots()
 
+    logger.info('Done measuring all trials.')
     return snapshots_measured
 
 
@@ -473,6 +476,7 @@ def measure_trial_coverage(  # pylint: disable=invalid-name
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
+    logger.debug('Measuring trial: %d.', measure_req.trial_id)
     min_cycle = measure_req.cycle
     # Add 1 to ensure we measure the last cycle.
     for cycle in range(min_cycle, max_cycle + 1):
@@ -491,6 +495,7 @@ def measure_trial_coverage(  # pylint: disable=invalid-name
                              'trial_id': str(measure_req.trial_id),
                              'cycle': str(cycle),
                          })
+    logger.debug('Done measuring trial: %d.', measure_req.trial_id)
 
 
 def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
@@ -528,7 +533,6 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     if gsutil.cp(corpus_archive_src,
                  corpus_archive_dst,
                  expect_zero=False,
-                 parallel=False,
                  write_to_stdout=False)[0] != 0:
         snapshot_logger.warning('Corpus not found for cycle: %d.', cycle)
         return None
@@ -582,7 +586,6 @@ def set_up_coverage_binary(benchmark):
                                              archive_name)
     gsutil.cp(cloud_bucket_archive_path,
               str(benchmark_coverage_binary_dir),
-              parallel=False,
               write_to_stdout=False)
     archive_path = benchmark_coverage_binary_dir / archive_name
     tar = tarfile.open(archive_path, 'r:gz')
