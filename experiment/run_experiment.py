@@ -281,7 +281,7 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
     gsutil.cp(source_archive, base_destination + '/', parallel=True)
     os.remove(source_archive)
 
-    # Send config data (includes sources).
+    # Send config files.
     destination = os.path.join(base_destination, 'config')
     gsutil.rsync(config_dir, destination, parallel=True)
 
