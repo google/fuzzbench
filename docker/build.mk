@@ -13,9 +13,8 @@
 # limitations under the License.
 
 FUZZERS    := $(notdir $(shell find fuzzers -mindepth 1 -maxdepth 1 -type d))
-BENCHMARKS := $(notdir $(shell find benchmarks -type f -name build.sh | xargs dirname))
+STANDARD_BENCHMARKS := $(notdir $(shell find benchmarks -type f -name build.sh | xargs dirname | xargs -i sh -c 'test ! -f {}/oss-fuzz.yaml && echo {}'))
 OSS_FUZZ_BENCHMARKS := $(notdir $(shell find benchmarks -type f -name oss-fuzz.yaml | xargs dirname))
-$(warning $(OSS_FUZZ_BENCHMARKS))
 
 BASE_TAG ?= gcr.io/fuzzbench
 
@@ -82,8 +81,8 @@ define fuzzer_template
 .pull-$(1)-builder: pull-base-builder
 	docker pull $(BASE_TAG)/builders/$(1)
 
-build-$(1)-all: $(addprefix build-$(1)-,$(BENCHMARKS)) $(addprefix build-$(1)-,$(OSS_FUZZ_BENCHMARKS))
-pull-$(1)-all: $(addprefix pull-$(1)-,$(BENCHMARKS)) $(addprefix pull-$(1)-,$(OSS_FUZZ_BENCHMARKS))
+build-$(1)-all: $(addprefix build-$(1)-,$(STANDARD_BENCHMARKS)) $(addprefix build-$(1)-,$(OSS_FUZZ_BENCHMARKS))
+pull-$(1)-all: $(addprefix pull-$(1)-,$(STANDARD_BENCHMARKS)) $(addprefix pull-$(1)-,$(OSS_FUZZ_BENCHMARKS))
 
 endef
 
@@ -180,11 +179,16 @@ endef
 # Instantiate the above template with the cross product of all fuzzers and
 # benchmark.
 $(foreach fuzzer,$(FUZZERS), \
-  $(foreach benchmark,$(BENCHMARKS), \
+  $(foreach benchmark,$(STANDARD_BENCHMARKS), \
     $(eval $(call fuzzer_benchmark_template,$(fuzzer),$(benchmark)))))
 
 
 define oss_fuzz_benchmark_template
+$(1)-commit := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
+                           grep commit: | cut -d ':' -f2 | tr -d ' ')
+$(1)-repo-path := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
+                           grep repo_path | cut -d ':' -f2 | tr -d ' ')
+
 .$(1)-project-builder:
 	docker build \
     --tag $(BASE_TAG)/builders/project/$(1) \
@@ -204,7 +208,7 @@ define fuzzer_oss_fuzz_benchmark_template
 	docker build \
     --tag $(BASE_TAG)/builders/$(1)/$(2)-intermediate \
     --file=fuzzers/$(1)/builder.Dockerfile \
-    --build-arg parent_image=$(BASE_TAG)/builders/project/$(1) \
+    --build-arg parent_image=$(BASE_TAG)/builders/project/$(2) \
     $(call cache_from,${BASE_TAG}/builders/$(1)/$(2)-intermediate) \
     fuzzers/$(1)
 
@@ -218,8 +222,8 @@ define fuzzer_oss_fuzz_benchmark_template
     --build-arg parent_image=$(BASE_TAG)/builders/$(1)/$(2)-intermediate \
     --build-arg fuzzer=$(1) \
     --build-arg benchmark=$(2) \
-    --build-arg checkout_commit=$(1)-commit \
-    --build-arg checkout_commit_repo_path=$(1)-repo-path \
+    --build-arg checkout_commit=$($(2)-commit) \
+    --build-arg checkout_commit_repo_path=$($(2)-repo-path) \
     $(call cache_from,${BASE_TAG}/builders/$(1)/$(2)) \
     .
 

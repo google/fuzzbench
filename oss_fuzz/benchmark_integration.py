@@ -97,6 +97,7 @@ def replace_base_builder(benchmark_dir, commit_date):
 
 
 def create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,
+                         repo_path,
                          benchmark_dir):
     """Create the oss-fuzz.yaml file in |benchmark_dir| based on the values from
     |project|, |fuzz_target|, |commit| and |commit_date|."""
@@ -106,6 +107,7 @@ def create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,
         'fuzz_target': fuzz_target,
         'commit': commit,
         'commit_date': commit_date,
+        'repo_path': repo_path,
     }
     yaml_utils.write(yaml_filename, config)
 
@@ -114,6 +116,7 @@ def integrate_benchmark(project,
                         fuzz_target,
                         commit,
                         commit_date,
+                        repo_path,
                         benchmark_name=None):
     """Copies files needed to integrate an OSS-Fuzz benchmark and creates the
     benchmark's oss-fuzz.yaml file."""
@@ -125,6 +128,7 @@ def integrate_benchmark(project,
     copy_oss_fuzz_files(project, commit_date, benchmark_dir)
     replace_base_builder(benchmark_dir, commit_date)
     create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,
+                         repo_path,
                          benchmark_dir)
 
 
@@ -140,6 +144,10 @@ def main():
                         '--fuzz-target',
                         help='Fuzz target benchmark.',
                         required=True)
+    parser.add_argument('-r',
+                        '--repo-path',
+                        help='Project repo path in OSS-Fuzz image.',
+                        required=True)
     parser.add_argument('-n',
                         '--benchmark-name',
                         help='Benchmark name.',
@@ -148,6 +156,7 @@ def main():
     parser.add_argument('-d', '--date', help='Date.')
     args = parser.parse_args()
     integrate_benchmark(args.project, args.fuzz_target, args.commit, args.date,
+                        args.repo_path,
                         args.benchmark_name)
     return 0
 
