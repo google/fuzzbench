@@ -42,10 +42,7 @@ _LICENSE_CHECK_EXTENSIONS = [
     '.py',
     '.sh',
 ]
-_LICENSE_CHECK_IGNORE_DIRECTORIES = [
-    'alembic',
-    'third_party',
-]
+_LICENSE_CHECK_IGNORE_DIRECTORIES = ['alembic', 'third_party', 'benchmarks']
 _LICENSE_CHECK_STRING = 'http://www.apache.org/licenses/LICENSE-2.0'
 _SRC_ROOT = Path(__file__).absolute().parent
 

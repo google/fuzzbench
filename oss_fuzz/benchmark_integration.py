@@ -22,7 +22,8 @@ import sys
 
 from common import utils
 
-# pylint: disable=import-error,wrong-import-position,ungrouped-imports
+# pytype: disable=import-error
+# pylint: disable=import-error,wrong-import-position,ungrouped-imports,too-many-arguments
 
 # TODO(metzman): Don't rely on OSS-Fuzz code. We don't want to depend on it
 # because it can easily break use. Especially becuase:
@@ -45,7 +46,6 @@ from common import yaml_utils
 
 def copy_dir_contents(src_dir, dst_dir):
     """Copy the contents of |src_dir| into |dst_dir|."""
-    # !!! Test new benchmark.
     return dir_util.copy_tree(src_dir, dst_dir)
 
 
@@ -96,8 +96,7 @@ def replace_base_builder(benchmark_dir, commit_date):
             os.path.join(benchmark_dir, 'Dockerfile'), base_builder_digest)
 
 
-def create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,
-                         repo_path,
+def create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date, repo_path,
                          benchmark_dir):
     """Create the oss-fuzz.yaml file in |benchmark_dir| based on the values from
     |project|, |fuzz_target|, |commit| and |commit_date|."""
@@ -127,8 +126,7 @@ def integrate_benchmark(project,
         tzinfo=datetime.timezone.utc)
     copy_oss_fuzz_files(project, commit_date, benchmark_dir)
     replace_base_builder(benchmark_dir, commit_date)
-    create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,
-                         repo_path,
+    create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date, repo_path,
                          benchmark_dir)
 
 
@@ -156,8 +154,7 @@ def main():
     parser.add_argument('-d', '--date', help='Date.')
     args = parser.parse_args()
     integrate_benchmark(args.project, args.fuzz_target, args.commit, args.date,
-                        args.repo_path,
-                        args.benchmark_name)
+                        args.repo_path, args.benchmark_name)
     return 0
 
 
