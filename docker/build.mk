@@ -15,6 +15,7 @@
 FUZZERS    := $(notdir $(shell find fuzzers -mindepth 1 -maxdepth 1 -type d))
 BENCHMARKS := $(notdir $(shell find benchmarks -type f -name build.sh | xargs dirname))
 OSS_FUZZ_BENCHMARKS := $(notdir $(shell find benchmarks -type f -name oss-fuzz.yaml | xargs dirname))
+$(warning $(OSS_FUZZ_BENCHMARKS))
 
 BASE_TAG ?= gcr.io/fuzzbench
 
@@ -184,17 +185,13 @@ $(foreach fuzzer,$(FUZZERS), \
 
 
 define oss_fuzz_benchmark_template
-$(1)-project-name := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
-                             grep project | cut -d ':' -f2 | tr -d ' ')
-$(1)-fuzz-target  := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
-                             grep fuzz_target | cut -d ':' -f2 | tr -d ' ')
-$(1)-oss-fuzz-builder-hash := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
-                                      grep oss_fuzz_builder_hash | \
-                                      cut -d ':' -f2 | tr -d ' ')
-$(1)-commit  := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
-                        grep commit | cut -d ':' -f2 | tr -d ' ')
-$(1)-repo-path  := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
-                           grep repo_path| cut -d ':' -f2 | tr -d ' ')
+.$(1)-project-builder:
+	docker build \
+    --tag $(BASE_TAG)/builders/project/$(1) \
+    --file benchmarks/$(1)/Dockerfile \
+    $(call cache_from,${BASE_TAG}/builders/project/$(1)) \
+    benchmarks/$(1)
+
 endef
 # Instantiate the above template with all OSS-Fuzz benchmarks.
 $(foreach oss_fuzz_benchmark,$(OSS_FUZZ_BENCHMARKS), \
@@ -203,11 +200,11 @@ $(foreach oss_fuzz_benchmark,$(OSS_FUZZ_BENCHMARKS), \
 
 define fuzzer_oss_fuzz_benchmark_template
 
-.$(1)-$(2)-oss-fuzz-builder-intermediate:
+.$(1)-$(2)-oss-fuzz-builder-intermediate: .$(2)-project-builder
 	docker build \
     --tag $(BASE_TAG)/builders/$(1)/$(2)-intermediate \
     --file=fuzzers/$(1)/builder.Dockerfile \
-    --build-arg parent_image=gcr.io/fuzzbench/oss-fuzz/$($(2)-project-name)@sha256:$($(2)-oss-fuzz-builder-hash) \
+    --build-arg parent_image=$(BASE_TAG)/builders/project/$(1) \
     $(call cache_from,${BASE_TAG}/builders/$(1)/$(2)-intermediate) \
     fuzzers/$(1)
 
