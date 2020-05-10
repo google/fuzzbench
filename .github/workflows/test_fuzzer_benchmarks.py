@@ -23,14 +23,14 @@ ALWAYS_BUILD_FUZZER = 'afl'
 
 # Don't build php benchmark since it fills up disk in GH actions.
 OSS_FUZZ_BENCHMARKS = {
-    'bloaty_fuzz_target',
-    'curl_curl_fuzzer_http',
-    'jsoncpp_jsoncpp_fuzzer',
-    'libpcap_fuzz_both',
-    'mbedtls_fuzz_dtlsclient',
-    'openssl_x509',
-    'sqlite3_ossfuzz',
-    'systemd_fuzz-link-parser',
+    'bloaty_fuzz_target', # 08f59b2ae229c75b01c50bfcb52e74984c8019fb /src/bloaty Mon Nov 18 08:52:25 2019 -0800
+    'curl_curl_fuzzer_http', # 82eb95b410cc84579b8f9d663f2a7e38f3bdb41fo /src/curl_fuzzer (BAD!) Mon Nov 18 15:34:56 2019 +0000
+    'jsoncpp_jsoncpp_fuzzer', # 3beb37ea14aec1bdce1a6d542dc464d00f4a6cec /src/jsoncpp Fri Feb 14 05:25:08 2020 +0800
+    'libpcap_fuzz_both', # d615abec7e0237299250c409dca23effb8dd36cc /src/libpcap Tue Feb 11 22:46:17 2020 -0800
+    'mbedtls_fuzz_dtlsclient', # 4c08dd4e716c0c6d70d78117d3155c2b832f694e /src/mbedtls Tue Feb 11 09:17:02 2020 +0100
+    'openssl_x509', # b0593c086dd303af31dc1e30233149978dd613c4 /src/openssl Fri Feb 7 09:09:50 2020 +0100
+    'sqlite3_ossfuzz', # None!
+    'systemd_fuzz-link-parser',  # 99fdffaa194cbfed659b0c1bfd0ace4bfcd2a245 /src/systemd Mon Feb 10 17:19:52 2020 +0100
     'zlib_zlib_uncompress_fuzzer',
 }
 
