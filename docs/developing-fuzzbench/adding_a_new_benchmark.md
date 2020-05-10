@@ -35,22 +35,47 @@ powerful but also more work.
 
 ## OSS-Fuzz benchmarks
 
-You can use any existing OSS-Fuzz project as a benchmark. You just need to
-create a single file `oss-fuzz.yaml` in the benchmark directory.
+You can use most existing OSS-Fuzz projects a benchmark. First find out which
+project you want to use as a benchmark, and which commit and fuzz target you
+want to use. Then find out the date and time (UTC) of that commit and the path
+to the project's repository in the OSS-Fuzz builder image (usually it is
+/src/$PROJECT_NAME).
 
-```yaml
-project: <project-name>
-fuzz_target: <fuzz-target-name>
-oss_fuzz_builder_hash: <sha>
+Once you have this information, run `oss_fuzz/benchmark_integration.py` to copy
+the necessary integration files, like so:
+
+```shell
+PYTHONPATH=. python3 benchmark_integration.py -p $PROJECT -f $FUZZ_TARGET \
+    -r $REPO_PATH -c $ COMMIT_HASH -d $COMMIT_DATE
 ```
-* `project` should be a [valid OSS-Fuzz project](https://github.com/google/oss-fuzz/tree/master/projects).
-* `fuzz_target` should be the name of a binary fuzz target from the project that we want to fuzz as the benchmark.
-* `oss_fuzz_builder_hash` is a SHA256 hash of a docker image from
-[gcr.io/fuzzbench/oss-fuzz](https://console.cloud.google.com/gcr/images/fuzzbench/GLOBAL/oss-fuzz?gcrImageListsize=30).
-Unless you are a project maintainer, you cannot build these images yourself.
-Therefore, let us know the benchmark you want incorporated and we will produce a
-build that can be used here.
-Example: [wireshark_fuzzshark_ip](https://github.com/google/fuzzbench/blob/master/benchmarks/wireshark_fuzzshark_ip/oss-fuzz.yaml).
+
+The script should create the benchmark directory in
+`benchmarks/$PROJECT_$FUZZ_TARGET` (unless you specify the name manually) with
+all the files needed to build the benchmark.
+
+Add the files in the directory to git (and then commit them):
+
+```shell
+git add benchmarks/$BENCHMARK/*
+```
+
+Test your integration:
+
+```shell
+export FUZZER_NAME=afl
+export BENCHMARK_NAME=zlib_zlib_uncompress_fuzzer
+
+make build-$FUZZER_NAME-$BENCHMARK_NAME
+make run-$FUZZER_NAME-$BENCHMARK_NAME
+```
+
+Add your benchmark to the list of OSS-Fuzz benchmarks in
+[test_fuzzer_benchmarks.py](https://github.com/google/fuzzbench/blob/master/.github/workflows/test_fuzzer_benchmarks.py)
+
+This ensures that CI tests your benchmark with all fuzzers.
+
+If everything works, submit the integration in a
+[GitHub pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
 
 ### Standard benchmarks: Create benchmark files
 
@@ -125,6 +150,10 @@ export BENCHMARK_NAME=libpng-1.2.56
 make build-$FUZZER_NAME-$BENCHMARK_NAME
 make run-$FUZZER_NAME-$BENCHMARK_NAME
 ```
+Finally, add your benchmark to the list of OSS-Fuzz benchmarks in
+[test_fuzzer_benchmarks.py](https://github.com/google/fuzzbench/blob/master/.github/workflows/test_fuzzer_benchmarks.py)
+
+This ensures that CI tests your benchmark with all fuzzers.
 
 If everything works, submit the integration in a
 [GitHub pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
