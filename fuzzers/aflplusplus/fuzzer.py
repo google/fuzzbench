@@ -15,6 +15,7 @@
 
 import os
 import shutil
+import glob
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers import utils
@@ -41,6 +42,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['CXX'] = '/afl/afl-clang-lto++'
         os.environ['RANLIB'] = 'llvm-ranlib-11'
         os.environ['AR'] = 'llvm-ar-11'
+        for copy_file in glob.glob("/afl/libc*"):
+            shutil.copy(copy_file, os.environ['OUT'])
     elif 'qemu' in build_modes:
         os.environ['CC'] = 'clang'
         os.environ['CXX'] = 'clang++'
@@ -151,6 +154,9 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):
         flags += ['-c', cmplog_target_binary]
     if 'ADDITIONAL_ARGS' in os.environ:
         flags += os.environ['ADDITIONAL_ARGS'].split(' ')
+
+    # needed for LTO mode to run c++ targets
+    os.environ['LD_LIBRARY_PATH'] = '/out'
 
     afl_fuzzer.run_afl_fuzz(input_corpus,
                             output_corpus,

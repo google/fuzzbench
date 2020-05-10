@@ -41,4 +41,5 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
 # Use afl_driver.cpp from LLVM as our fuzzing library.
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
     clang++ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp && \
-    ar ru /libAFLDriver.a *.o
+    ar ru /libAFLDriver.a *.o && \
+    cp -a `llvm-config-11 --libdir`/libc++* /afl/
