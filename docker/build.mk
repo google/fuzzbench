@@ -21,6 +21,7 @@ BASE_TAG ?= gcr.io/fuzzbench
 
 build-all: $(addsuffix -all, $(addprefix build-,$(FUZZERS)))
 pull-all: $(addsuffix -all, $(addprefix pull-,$(FUZZERS)))
+test-run-all: $(addsuffix -all, $(addprefix test-run-,$(FUZZERS)))
 
 # If we're running on a CI service, cache-from a remote image. Otherwise just
 # use the local cache.
