@@ -15,6 +15,7 @@
 import functools
 import os
 
+from common import benchmark_utils
 from common import utils
 from common import yaml_utils
 

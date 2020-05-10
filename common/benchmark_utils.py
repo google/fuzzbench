@@ -82,6 +82,11 @@ def validate(benchmark):
     return False
 
 
+def get_oss_fuzz_benchmarks():
+    """Returns the list of all OSS-Fuzz benchmarks."""
+    return [benchmark for benchmark in get_all_benchmarks()
+            if is_oss_fuzz(benchmark)]
+
 def get_all_benchmarks():
     """Returns the list of all benchmarks."""
     all_benchmarks = []
