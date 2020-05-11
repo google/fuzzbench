@@ -56,13 +56,16 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['AFL_LLVM_INSTRIM'] = 'CFG'
 
     # Instrumentation coverage options:
+    # Do not use a fixed map location (LTO only)
+    if 'dynamic' in build_modes:
+        os.environ['AFL_LLVM_MAP_DYNAMIC'] = '1'
     # Skip over single block functions
     if 'skipsingle' in build_modes:
         os.environ['AFL_LLVM_SKIPSINGLEBLOCK'] = '1'
-    # Enable context sentitivity for LLVM mode
+    # Enable context sentitivity for LLVM mode (non LTO only)
     if 'ctx' in build_modes:
         os.environ['AFL_LLVM_CTX'] = '1'
-    # Enable N-gram coverage for LLVM mode
+    # Enable N-gram coverage for LLVM mode (non LTO only)
     if 'ngram2' in build_modes:
         os.environ['AFL_LLVM_NGRAM_SIZE'] = '2'
     elif 'ngram3' in build_modes:
@@ -84,6 +87,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # Disable neverZero implementation
     if 'nozero' in build_modes:
         os.environ['AFL_LLVM_SKIP_NEVERZERO'] = '1'
+
+    # Only one of the following OR cmplog
     # enable laf-intel compare splitting
     if 'laf' in build_modes:
         os.environ['AFL_LLVM_LAF_SPLIT_SWITCHES'] = '1'

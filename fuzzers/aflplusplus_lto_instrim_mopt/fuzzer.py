@@ -13,6 +13,8 @@
 # limitations under the License.
 """Integration code for AFLplusplus fuzzer."""
 
+import os
+
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 # OUT environment variable is the location of build directory (default is /out).
@@ -20,7 +22,11 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 def build():
     """Build benchmark."""
-    aflplusplus_fuzzer.build("lto", "instrim", "nozero")
+    benchmark_name = os.environ['BENCHMARK']
+    if benchmark_name == 'curl_curl_fuzzer_http':
+        aflplusplus_fuzzer.build("lto", "instrim", "nozero", "dynamic")
+    else:
+        aflplusplus_fuzzer.build("lto", "instrim", "nozero")
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
