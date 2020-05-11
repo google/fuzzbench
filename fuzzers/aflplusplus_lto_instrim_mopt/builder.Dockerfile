@@ -18,7 +18,7 @@ FROM $parent_image
 # Install wget to download afl_driver.cpp. Install libstdc++ to use llvm_mode.
 #    sed -i 's/https:/http:/g' /etc/apt/sources.list /etc/apt/sources.list.d/* && \
 RUN apt-get update && \
-    apt-get install -y wget libstdc++-5-dev && \
+    apt-get install -y wget libstdc++-5-dev libexpat1-dev && \
     apt-get install -y apt-utils apt-transport-https ca-certificates && \
     echo deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial main >> /etc/apt/sources.list && \
     echo deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu xenial main >> /etc/apt/sources.list && \
