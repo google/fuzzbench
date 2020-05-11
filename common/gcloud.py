@@ -120,7 +120,8 @@ def create_instance(instance_name: str,
 
 
 def delete_instances(instance_names: List[str], zone: str, **kwargs) -> bool:
-    """Delete gcloud instance |instance_names|."""
+    """Delete gcloud instance |instance_names|. Returns true if the operation
+    succeeded or false otherwise."""
     error_occurred = False
     # Delete instances in batches, otherwise we run into rate limit errors.
     for idx in range(0, len(instance_names), INSTANCE_BATCH_SIZE):
