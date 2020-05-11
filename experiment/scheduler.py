@@ -115,6 +115,7 @@ def end_expired_trials(experiment_config: dict):
         # If we failed to delete some instances, then don't update the status
         # of expired trials in database as we don't know which instances were
         # successfully deleted. Wait for next iteration of end_expired_trials.
+        logger.error('Failed to delete instances after trial expiry.')
         return
 
     db_utils.bulk_save(trials_past_expiry)
