@@ -24,9 +24,11 @@ def build():
     """Build benchmark."""
     benchmark_name = os.environ['BENCHMARK']
     if benchmark_name == 'curl_curl_fuzzer_http':
-        aflplusplus_fuzzer.build("lto", "instrim", "nozero", "dynamic")
+        aflplusplus_fuzzer.build("lto", "nozero", "dynamic")
+    elif benchmark_name == 'jsoncpp_jsoncpp_fuzzer':
+        aflplusplus_fuzzer.build("lto", "nozero", "dynamic")
     else:
-        aflplusplus_fuzzer.build("lto", "instrim", "nozero")
+        aflplusplus_fuzzer.build("lto", "nozero")
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
