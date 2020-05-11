@@ -131,7 +131,7 @@ def delete_instances(instance_names: List[str], zone: str, **kwargs) -> bool:
         result = new_process.execute(command, expect_zero=False, **kwargs)
         error_occurred = error_occurred or result.retcode != 0
 
-    return error_occurred
+    return not error_occurred
 
 
 def list_instances() -> List[str]:
