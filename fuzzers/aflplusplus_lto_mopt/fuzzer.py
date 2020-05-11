@@ -23,9 +23,17 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 def build():
     """Build benchmark."""
     benchmark_name = os.environ['BENCHMARK']
-    if benchmark_name == 'curl_curl_fuzzer_http':
+    if benchmark_name == 'bloaty_fuzz_target':
+        aflplusplus_fuzzer.build("lto", "nozero", "dynamic")
+    elif benchmark_name == 'curl_curl_fuzzer_http':
+        aflplusplus_fuzzer.build("lto", "nozero", "dynamic")
+    elif benchmark_name == 'freetype2-2017':
         aflplusplus_fuzzer.build("lto", "nozero", "dynamic")
     elif benchmark_name == 'jsoncpp_jsoncpp_fuzzer':
+        aflplusplus_fuzzer.build("lto", "nozero", "dynamic")
+    elif benchmark_name == 'openssl_x509':
+        aflplusplus_fuzzer.build("lto", "nozero", "dynamic")
+    elif benchmark_name == 'php_php-fuzz-parser':
         aflplusplus_fuzzer.build("lto", "nozero", "dynamic")
     else:
         aflplusplus_fuzzer.build("lto", "nozero")

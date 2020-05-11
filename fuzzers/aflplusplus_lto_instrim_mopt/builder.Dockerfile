@@ -33,7 +33,7 @@ RUN apt-get update && \
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 41f6aa794022d9cd34642ac7b57a70c9094f0e8c && \
+    git checkout b920cd2f236c26e6dcc1231b5121b04d0bc3f650 && \
     sed -i 's/.*define MAP_SIZE_POW2.*/#define MAP_SIZE_POW2 20/g' include/config.h && \
     AFL_NO_X86=1 CFLAGS= CXXFLAGS= make PYTHON_INCLUDE=/ && \
     export LLVM_CONFIG=llvm-config-11 && \
