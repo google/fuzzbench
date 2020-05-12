@@ -42,10 +42,10 @@ steps:
     # Use two tags so that the image builds properly and we can push it to the
     # correct location.
     '--tag',
-    'gcr.io/fuzzbench/base-image',
+    'gcr.io/fuzzbench/base-image:${_EXPERIMENT}',
 
     '--tag',
-    '${_REPO}/base-image',
+    '${_REPO}/base-image:${_EXPERIMENT}',
 
     '--cache-from',
     '${_REPO}/base-image',
@@ -69,10 +69,10 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/base-builder',
+    'gcr.io/fuzzbench/base-builder:${_EXPERIMENT}',
 
     '--tag',
-    '${_REPO}/base-builder',
+    '${_REPO}/base-builder:${_EXPERIMENT}',
 
     '--cache-from',
     '${_REPO}/base-builder',
@@ -96,10 +96,10 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/base-builder',
+    'gcr.io/fuzzbench/base-builder:${_EXPERIMENT}',
 
     '--tag',
-    '${_REPO}/base-runner',
+    '${_REPO}/base-runner:${_EXPERIMENT}',
 
     '--cache-from',
     '${_REPO}/base-runner',
