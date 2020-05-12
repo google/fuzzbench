@@ -125,8 +125,6 @@ class Plotter:
             palette=self._fuzzer_colors,
             ax=axes)
 
-        sns.despine(offset=_DEFAULT_SPINE_OFFSET, trim=True)
-
         axes.set_title(_formatted_title(benchmark_snapshot_df))
 
         # Indicate the snapshot time with a big red vertical line.
@@ -147,6 +145,8 @@ class Plotter:
             snapshot_time / _DEFAULT_TICKS_COUNT)
         axes.set_xticks(ticks)
         axes.set_xticklabels([_formatted_hour_min(t) for t in ticks])
+
+        sns.despine(ax=axes, offset=_DEFAULT_SPINE_OFFSET, trim=True)
 
     def write_coverage_growth_plot(self, benchmark_df, image_path, wide=False):
         """Writes coverage growth plot."""
@@ -179,13 +179,13 @@ class Plotter:
                        palette=self._fuzzer_colors,
                        ax=axes)
 
-        sns.despine(offset=_DEFAULT_SPINE_OFFSET, trim=True)
-
         axes.set_title(_formatted_title(benchmark_snapshot_df))
         axes.set(ylabel='Reached edge coverage')
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
         plt.xticks(rotation=_DEFAULT_LABEL_ROTATION,
                    horizontalalignment='right')
+
+        sns.despine(ax=axes, offset=_DEFAULT_SPINE_OFFSET, trim=True)
 
     def write_violin_plot(self, benchmark_snapshot_df, image_path):
         """Writes violin plot."""
@@ -245,14 +245,14 @@ class Plotter:
                            palette=self._fuzzer_colors,
                            ax=axes)
 
-        sns.despine(offset=_DEFAULT_SPINE_OFFSET, trim=True)
-
         axes.set_title(_formatted_title(benchmark_snapshot_df))
         axes.set(ylabel='Reached edge coverage')
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
 
         plt.xticks(rotation=_DEFAULT_LABEL_ROTATION,
                    horizontalalignment='right')
+
+        sns.despine(ax=axes, offset=_DEFAULT_SPINE_OFFSET, trim=True)
 
     def write_ranking_plot(self, benchmark_snapshot_df, image_path):
         """Writes ranking plot."""
