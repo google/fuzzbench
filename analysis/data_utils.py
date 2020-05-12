@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utility functions for data (frame) transformations."""
+import collections
+
 from analysis import stat_tests
 from common import environment
 
@@ -92,6 +94,40 @@ def filter_max_time(experiment_df, max_time):
     """Returns table with snapshots that have time less than or equal to
     |max_time|."""
     return experiment_df[experiment_df['time'] <= max_time]
+
+
+def filter_fuzzer_benchmark_max_trials(experiment_df, max_trials):
+    """Returns the table without snapshots from trials of a fuzzer-benchmark
+    that is greater than |max_trials|."""
+
+    # For each fuzzer-benchmark store the set of trials we will include in the
+    # result.
+    trials = collections.defaultdict(set)
+
+    # Store the trials we won't include in the experiment.
+    drop_trials = set()
+
+    def filter_function(row):
+        trial_id = row['trial_id']
+        if trial_id in drop_trials:
+            # We can skip all the other steps if we need to drop this trial.
+            return False
+        fuzzer_benchmark = (row['fuzzer'], row['benchmark'])
+
+        # Get the trials for this fuzzer-benchmark that will be included in the
+        # experiment.
+        fuzzer_benchmark_trials = trials[fuzzer_benchmark]
+        if trial_id in fuzzer_benchmark_trials:
+            return True
+
+        if len(fuzzer_benchmark_trials) >= max_trials:
+            drop_trials.add(trial_id)
+            return False
+
+        fuzzer_benchmark_trials.add(trial_id)
+        return True
+
+    return experiment_df[experiment_df.apply(filter_function, axis=1)]
 
 
 # Creating "snapshots" (see README.md for definition).

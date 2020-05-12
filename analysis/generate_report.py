@@ -65,6 +65,15 @@ def get_arg_parser():
         type=int,
         help=('The last time (in seconds) during an experiment to include in '
               'the report.'))
+
+    parser.add_argument(
+        '-x',
+        '--max-num-trials',
+        default=None,
+        type=int,
+        help=('The maximum number of trials per fuzzer-benchmark to include in '
+              'the report. Useful if you want to join experiments that used '
+              'different numbers of trials.'))
     parser.add_argument('-f',
                         '--fuzzers',
                         nargs='*',
@@ -115,7 +124,8 @@ def generate_report(experiment_names,
                     from_cached_data=False,
                     in_progress=False,
                     end_time=None,
-                    merge_with_clobber=False):
+                    merge_with_clobber=False,
+                    max_num_trials=None):
     """Generate report helper."""
     report_name = report_name or experiment_names[0]
 
@@ -147,6 +157,10 @@ def generate_report(experiment_names,
         experiment_df = data_utils.clobber_experiments_data(
             experiment_df, experiment_names)
 
+    if max_num_trials is not None:
+        experiment_df = data_utils.filter_fuzzer_benchmark_max_trials(
+            experiment_df, max_num_trials)
+
     fuzzer_names = experiment_df.fuzzer.unique()
     plotter = plotting.Plotter(fuzzer_names, quick)
     experiment_ctx = experiment_results.ExperimentResults(
@@ -177,7 +191,8 @@ def main():
                     quick=args.quick,
                     from_cached_data=args.from_cached_data,
                     end_time=args.end_time,
-                    merge_with_clobber=args.merge_with_clobber)
+                    merge_with_clobber=args.merge_with_clobber,
+                    max_num_trials=args.max_num_trials)
 
 
 if __name__ == '__main__':
