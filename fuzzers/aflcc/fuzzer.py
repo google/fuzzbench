@@ -24,6 +24,7 @@ from fuzzers.afl import fuzzer as afl_fuzzer
 
 def is_benchmark(name):
     """ Check if the benchmark contains the string 'name' """
+    
     # TODO: return name in os.environ['BENCHMARK]
     # return benchmark is not None and name in benchmark
 
@@ -65,6 +66,8 @@ def libjpeg_turbo_asm_object_files():
     """
         Additional .o files compiled from .asm files
         and absent from the LLVM .bc file we extracted
+        TODO(laurentsimon): check if we can link against
+        *.a instead of providing a list of .o files
     """
     return ['./BUILD/simd/jidctred-sse2-64.o',
             './BUILD/simd/jidctint-sse2-64.o',
@@ -74,11 +77,15 @@ def libjpeg_turbo_asm_object_files():
             './BUILD/simd/jdsample-sse2-64.o',
             './BUILD/simd/jdcolor-sse2-64.o']
 
+
 def fix_fuzzer_lib():
     """Fix FUZZER_LIB for certain benchmarks"""
     
     if '--warn-unresolved-symbols' not in os.environ['CFLAGS']:
         os.environ['FUZZER_LIB'] += ' -L/ -lAflccMock -lpthread'
+
+    if is_benchmark('curl'):
+        shutil.copy('/libAflccMock.so', '/usr/lib/libAflccMock.so')
     # elif is_benchmark('php'):
     #     # -lcrypt -lresolv -lcrypt -lrt -lm -l:libonig.a
     #     os.environ['FUZZER_LIB'] += ' -lresolv'
@@ -110,6 +117,11 @@ def add_compilation_cflags():
         unresolved_flags = ['-Wl,--warn-unresolved-symbols']
         utils.append_flags('CFLAGS', unresolved_flags)
         utils.append_flags('CXXFLAGS', unresolved_flags)
+        
+    elif is_benchmark('curl'):
+        dl_flags = ['-ldl', '-lpsl']
+        utils.append_flags('CFLAGS', dl_flags)
+        utils.append_flags('CXXFLAGS', dl_flags)
 
 def add_post_compilation_lflags(ldflags_arr):
     """Add additional linking flags for certain benchmarks"""
@@ -117,6 +129,8 @@ def add_post_compilation_lflags(ldflags_arr):
         ldflags_arr += libjpeg_turbo_asm_object_files()
     elif is_benchmark('php'):
         ldflags_arr += ['-lresolv']
+    elif is_benchmark('curl'):
+        ldflags_arr += ['-ldl', '-lpsl', '/src/openssl/libcrypto.a', '/src/openssl/libssl.a']
 
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
@@ -144,13 +158,15 @@ def prepare_build_environment():
 
 def get_fuzz_targets():
     """Get the fuzz target name"""
-
     # For non oss-projects, FUZZ_TARGET contain the target binary
     fuzz_target = os.getenv('FUZZ_TARGET', None)
     if fuzz_target is not None:
         return [fuzz_target]
 
     print('FUZZ_TARGET is not defined')
+
+    # for curl, we return a single file
+    return ['/out/curl_fuzzer']
 
     # For oss-projects, use some heuristics as there is no convention.
     # We look for binaries in the OUT directory and take it as our targets.
