@@ -13,6 +13,8 @@
 # limitations under the License.
 """Integration code for AFLplusplus fuzzer."""
 
+import os
+
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 # OUT environment variable is the location of build directory (default is /out).
@@ -20,7 +22,21 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 def build():
     """Build benchmark."""
-    aflplusplus_fuzzer.build("cmplog", "ngram3", "nozero")
+    benchmark_name = os.environ['BENCHMARK']
+    if benchmark_name == 'bloaty_fuzz_target':
+        aflplusplus_fuzzer.build("lto", "nozero", "dynamic")
+    elif benchmark_name == 'curl_curl_fuzzer_http':
+        aflplusplus_fuzzer.build("lto", "nozero", "dynamic")
+    elif benchmark_name == 'freetype2-2017':
+        aflplusplus_fuzzer.build("lto", "nozero", "dynamic")
+    elif benchmark_name == 'jsoncpp_jsoncpp_fuzzer':
+        aflplusplus_fuzzer.build("lto", "nozero", "dynamic")
+    elif benchmark_name == 'openssl_x509':
+        aflplusplus_fuzzer.build("lto", "nozero", "dynamic")
+    elif benchmark_name == 'php_php-fuzz-parser':
+        aflplusplus_fuzzer.build("lto", "nozero", "dynamic")
+    else:
+        aflplusplus_fuzzer.build("lto", "nozero")
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
@@ -28,4 +44,4 @@ def fuzz(input_corpus, output_corpus, target_binary):
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
-                            flags=("-L", "-1"))
+                            flags=("-L", "0"))

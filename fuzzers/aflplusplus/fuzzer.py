@@ -15,6 +15,7 @@
 
 import os
 import shutil
+import glob
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers import utils
@@ -41,6 +42,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['CXX'] = '/afl/afl-clang-lto++'
         os.environ['RANLIB'] = 'llvm-ranlib-11'
         os.environ['AR'] = 'llvm-ar-11'
+        for copy_file in glob.glob("/afl/libc*"):
+            shutil.copy(copy_file, os.environ['OUT'])
     elif 'qemu' in build_modes:
         os.environ['CC'] = 'clang'
         os.environ['CXX'] = 'clang++'
@@ -53,13 +56,16 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['AFL_LLVM_INSTRIM'] = 'CFG'
 
     # Instrumentation coverage options:
+    # Do not use a fixed map location (LTO only)
+    if 'dynamic' in build_modes:
+        os.environ['AFL_LLVM_MAP_DYNAMIC'] = '1'
     # Skip over single block functions
     if 'skipsingle' in build_modes:
         os.environ['AFL_LLVM_SKIPSINGLEBLOCK'] = '1'
-    # Enable context sentitivity for LLVM mode
+    # Enable context sentitivity for LLVM mode (non LTO only)
     if 'ctx' in build_modes:
         os.environ['AFL_LLVM_CTX'] = '1'
-    # Enable N-gram coverage for LLVM mode
+    # Enable N-gram coverage for LLVM mode (non LTO only)
     if 'ngram2' in build_modes:
         os.environ['AFL_LLVM_NGRAM_SIZE'] = '2'
     elif 'ngram3' in build_modes:
@@ -81,6 +87,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # Disable neverZero implementation
     if 'nozero' in build_modes:
         os.environ['AFL_LLVM_SKIP_NEVERZERO'] = '1'
+
+    # Only one of the following OR cmplog
     # enable laf-intel compare splitting
     if 'laf' in build_modes:
         os.environ['AFL_LLVM_LAF_SPLIT_SWITCHES'] = '1'
@@ -151,6 +159,9 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):
         flags += ['-c', cmplog_target_binary]
     if 'ADDITIONAL_ARGS' in os.environ:
         flags += os.environ['ADDITIONAL_ARGS'].split(' ')
+
+    # needed for LTO mode to run c++ targets
+    os.environ['LD_LIBRARY_PATH'] = '/out'
 
     afl_fuzzer.run_afl_fuzz(input_corpus,
                             output_corpus,

@@ -25,8 +25,8 @@ RUN apt-get update && \
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && git checkout dev && \
     git checkout ef2ccc8117bb899616472e2d95525ae0ca1a2098 && \
-    AFL_NO_X86=1 make PYTHON_INCLUDE=/ && \
-    cd llvm_mode && CXXFLAGS= make
+    AFL_NO_X86=1 CFLAGS= CXXFLAGS= make PYTHON_INCLUDE=/ && \
+    cd llvm_mode && CXXFLAGS= CFLAGS= make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
