@@ -21,6 +21,7 @@ import os
 import re
 import subprocess
 import sys
+import tarfile
 from typing import Dict, List
 import yaml
 
@@ -40,8 +41,19 @@ BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
 OSS_FUZZ_PROJECTS_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz',
                                      'projects')
-FUZZER_NAME_REGEX = re.compile('^[a-z0-9_]+$')
-EXPERIMENT_CONFIG_REGEX = re.compile('^[a-z0-9-]{0,30}$')
+FUZZER_NAME_REGEX = re.compile(r'^[a-z0-9_]+$')
+EXPERIMENT_CONFIG_REGEX = re.compile(r'^[a-z0-9-]{0,30}$')
+FILTER_SOURCE_REGEX = re.compile(r'('
+                                 r'^\.git/|'
+                                 r'^\.pytype/|'
+                                 r'^\.venv/|'
+                                 r'^.*\.pyc$|'
+                                 r'^__pycache__/|'
+                                 r'.*~$|'
+                                 r'\.pytest_cache/|'
+                                 r'.*/test_data/|'
+                                 r'^third_party/oss-fuzz/build/|'
+                                 r'^docs/)')
 
 CONFIG_DIR = 'config'
 
@@ -250,21 +262,24 @@ def start_dispatcher(config: Dict, config_dir: str):
 def copy_resources_to_bucket(config_dir: str, config: Dict):
     """Copy resources the dispatcher will need for the experiment to the
     cloud_experiment_bucket."""
+
+    def filter_file(tar_info):
+        """Filter out unnecessary directories."""
+        if FILTER_SOURCE_REGEX.match(tar_info.name):
+            return None
+        return tar_info
+
     cloud_experiment_path = os.path.join(config['cloud_experiment_bucket'],
                                          config['experiment'])
     base_destination = os.path.join(cloud_experiment_path, 'input')
 
     # Send the local source repository to the cloud for use by dispatcher.
     # Local changes to any file will propagate.
-    # Filter out unnecessary directories.
-    options = [
-        '-x',
-        ('^\\.git/|^\\.pytype/|^\\.venv/|^.*\\.pyc$|^__pycache__/'
-         '|.*~$|\\.pytest_cache/|.*/test_data/|^third_party/oss-fuzz/out/'
-         '|^docs/')
-    ]
-    destination = os.path.join(base_destination, 'src')
-    gsutil.rsync(utils.ROOT_DIR, destination, options=options, parallel=True)
+    source_archive = 'src.tar.gz'
+    with tarfile.open(source_archive, 'w:gz') as tar:
+        tar.add(utils.ROOT_DIR, arcname='', recursive=True, filter=filter_file)
+    gsutil.cp(source_archive, base_destination + '/', parallel=True)
+    os.remove(source_archive)
 
     # Send config files.
     destination = os.path.join(base_destination, 'config')

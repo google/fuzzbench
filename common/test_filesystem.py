@@ -25,10 +25,10 @@ DESTINATION_DIR = 'dst'
 # pylint: disable=invalid-name,unused-argument
 
 
-def test_recreate_directory_existing(tmp_path):
+def test_recreate_directory_existing(fs):
     """Tests that recreate_directory recreates a directory that already
     exists."""
-    new_directory = os.path.join(tmp_path, 'new-directory')
+    new_directory = 'new-directory'
     os.mkdir(new_directory)
     new_file = os.path.join(new_directory, 'file')
     with open(new_file, 'w') as file_handle:
@@ -39,10 +39,10 @@ def test_recreate_directory_existing(tmp_path):
     assert not os.path.exists(new_file)
 
 
-def test_recreate_directory_not_existing(tmp_path):
+def test_recreate_directory_not_existing(fs):
     """Tests that recreate_directory creates a directory that does not already
     exist."""
-    new_directory = os.path.join(tmp_path, 'new-directory')
+    new_directory = 'new-directory'
     filesystem.recreate_directory(new_directory)
     assert os.path.exists(new_directory)
 
@@ -185,3 +185,17 @@ def test_make_dir_copy(fs):
     copy_dir = filesystem.make_dir_copy(SOURCE_DIR)
     _assert_has_source_dir_contents(copy_dir)
     assert os.path.exists(copied_new_file_path)
+
+
+def test_list_files(fs):
+    """Tests that list files traverses subdirectories, only returns files, and
+    returns absolute paths."""
+    base_dir = 'base'
+    file1 = os.path.abspath(os.path.join(base_dir, 'file1'))
+    fs.create_file(file1)
+    file2 = os.path.abspath(os.path.join(base_dir, 'dir1', 'file2'))
+    fs.create_file(file2)
+    file3 = os.path.abspath(os.path.join(base_dir, 'dir1', 'dir2', 'file3'))
+    fs.create_file(file3)
+    assert sorted(filesystem.list_files(base_dir)) == sorted(
+        [file1, file2, file3])

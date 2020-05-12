@@ -5,6 +5,7 @@ on:
       - 'docker/**'  # Base images changes.
       - 'fuzzers/**' # Changes to fuzzers themselves.
       - 'benchmarks/**'  # Changes to benchmarks.
+      - 'src_analysis/**' # Changes that affect what gets built.
 
 jobs:
   build:
@@ -16,19 +17,14 @@ jobs:
           - afl
           - aflfast
           - aflplusplus
-          - aflplusplus_mopt
-          - aflplusplus_cmplog
-          - aflplusplus_instrim
-          - aflplusplus_instrim_coe
+          - aflplusplus_ngram3_cmplog_mopt2
+          - aflplusplus_ngram3_cmplog_mopt2_17
+          - aflplusplus_instrim_mopt
           - aflplusplus_instrim_mopt2
-          - aflplusplus_ngram3
-          - aflplusplus_ngram4_17
-          - aflplusplus_ngram4_18
-          - aflplusplus_ngram4_coe
-          - aflplusplus_ngram5
-          - aflplusplus_ctx_17
-          - aflplusplus_ctx_18
-          - aflplusplus_ctx_coe
+          - aflplusplus_instrim_cmplog_mopt
+          - aflplusplus_instrim_cmplog_mopt2
+          - aflplusplus_instrim_laf_mopt2
+          - aflplusplus_instrim_laf_mopt2_17
           - aflsmart
           - eclipser
           - entropic
@@ -49,6 +45,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - run: |  # Needed for git diff to work.
+        git fetch origin master --depth 1
+        git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
 
     - name: Clear unnecessary files
       run: |
@@ -63,6 +62,10 @@ jobs:
       with:
         python-version: 3.7
 
+    - name: Install dependencies
+      run: |
+        make install-dependencies
+
     - name: Build Benchmarks
       run: |
-        python .github/workflows/test_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER
+        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/test_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER
