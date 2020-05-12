@@ -24,7 +24,7 @@ from fuzzers.afl import fuzzer as afl_fuzzer
 
 def is_benchmark(name):
     """ Check if the benchmark contains the string 'name' """
-    
+
     # TODO: return name in os.environ['BENCHMARK]
     # return benchmark is not None and name in benchmark
 
@@ -166,7 +166,7 @@ def get_fuzz_targets():
     print('FUZZ_TARGET is not defined')
 
     # for curl, we return a single file
-    return ['/out/curl_fuzzer']
+    return ['/out/curl_fuzzer_http']
 
     # For oss-projects, use some heuristics as there is no convention.
     # We look for binaries in the OUT directory and take it as our targets.
