@@ -20,6 +20,7 @@ import scikit_posthocs as sp
 import seaborn as sns
 
 from analysis import data_utils
+from common import experiment_utils
 
 _DEFAULT_SPINE_OFFSET = 10
 _DEFAULT_TICKS_COUNT = 12
@@ -36,11 +37,11 @@ def _formatted_hour_min(seconds):
     hours = int(seconds / 60 / 60)
     minutes = int(seconds / 60) % 60
     if hours:
-        time_string += '%dhr' % hours
+        time_string += '%dh' % hours
     if minutes:
         if hours:
             time_string += ':'
-        time_string += '%dmin' % minutes
+        time_string += '%dm' % minutes
     return time_string
 
 
@@ -69,7 +70,7 @@ class Plotter:
         '#17becf', '#9edae5'
     ]
 
-    def __init__(self, fuzzers, quick):
+    def __init__(self, fuzzers, quick=False, logscale=False):
         """Instantiates plotter with list of |fuzzers|. If |quick| is True,
         creates plots faster but, with less detail.
         """
@@ -79,6 +80,7 @@ class Plotter:
         }
 
         self._quick = quick
+        self._logscale = logscale
 
     # pylint: disable=no-self-use
     def _write_plot_to_image(self,
@@ -139,10 +141,19 @@ class Plotter:
         axes.set(ylabel='Edge coverage')
         axes.set(xlabel='Time (hour:minute)')
 
-        ticks = np.arange(
-            0,
-            snapshot_time + 1,  # Include tick at end time.
-            snapshot_time / _DEFAULT_TICKS_COUNT)
+        if self._logscale:
+            axes.set_xscale('log')
+            ticks = np.logspace(
+                # Start from the time of the first measurement.
+                np.log10(experiment_utils.DEFAULT_SNAPSHOT_SECONDS),
+                np.log10(snapshot_time + 1),  # Include tick at end time.
+                _DEFAULT_TICKS_COUNT)
+        else:
+            ticks = np.arange(
+                experiment_utils.DEFAULT_SNAPSHOT_SECONDS,
+                snapshot_time + 1,  # Include tick at end time.
+                snapshot_time / _DEFAULT_TICKS_COUNT)
+
         axes.set_xticks(ticks)
         axes.set_xticklabels([_formatted_hour_min(t) for t in ticks])
 
