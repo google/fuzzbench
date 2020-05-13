@@ -58,7 +58,7 @@ def datetime_now() -> datetime.datetime:
 # must return sqlalchemy.orm.Query. Importing it just for annotation might be
 # confusing to readers. There may also be weird situations where it is
 # acceptable to use a list or query (because of duck typing) but type hints
-# prevents us unless handled intelligently).
+# prevents us unless handled intelligently.
 def get_experiment_trials(experiment: str):
     """Returns a query of trials in |experiment|."""
     return db_utils.query(models.Trial).filter(
@@ -132,6 +132,9 @@ def schedule(experiment_config: dict, pool):
     experiment = experiment_config['experiment']
     start_trials(get_experiment_trials(experiment), experiment_config, pool)
 
+def nothing_to_schedule(expeirment):
+    return all_trials_ended(experiment)
+
 
 def schedule_loop(experiment_config: dict):
     """Continuously run the scheduler until there is nothing left to schedule.
@@ -147,7 +150,7 @@ def schedule_loop(experiment_config: dict):
             try:
                 schedule(experiment_config, pool)
 
-                if all_trials_ended(experiment):
+                if nothing_to_schedule(experiment):
                     # Nothing left to schedule, bail out.
                     break
             except Exception:  # pylint: disable=broad-except
@@ -171,9 +174,17 @@ def start_trials(trials, experiment_config: dict, pool):
         trial.id: trial
         for trial in trials.filter(models.Trial.time_started.is_(None))
     }
+
+    # Shuffle trials so that we don't create trials for the same fuzzer
+    # benchmark close to one another. This *may* make the preemption rate more
+    # evenly distributed across fuzzer benchmarks which will help if we don't
+    # end up completing the target number of trials. A more rigourous approach
+    # where we guarantee this may be useful.
+    shuffled_trials = random.shuffle(list(trial_id_mapping.values()))
+
     started_trial_proxies = pool.starmap(
         _start_trial, [(TrialProxy(trial), experiment_config)
-                       for trial in trial_id_mapping.values()])
+                       for trial in shuffled_trials])
 
     # Map proxies back to trials and mark trials as started when proxies were
     # marked as such.
@@ -192,7 +203,7 @@ def start_trials(trials, experiment_config: dict, pool):
 
 class TrialProxy:
     """A proxy object for a model.Trial. TrialProxy's allow these fields to be
-    set and gotten without making any database calls."""
+    set and retreived without making any database calls."""
 
     def __init__(self, trial):
         self.id = trial.id  # pylint: disable=invalid-name
