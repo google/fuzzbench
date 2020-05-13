@@ -25,6 +25,7 @@ RUN apt-get update && \
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && git checkout dev && \
     git checkout 72f4a9f678bea33826a40c1586a79b7ef7a6da15 && \
+    sed -i 's/.*define MAP_SIZE_POW2.*/#define MAP_SIZE_POW2 17/g' include/config.h && \
     AFL_NO_X86=1 CFLAGS= CXXFLAGS= make PYTHON_INCLUDE=/ && \
     cd llvm_mode && CFLAGS= CXXFLAGS= make
 
