@@ -36,6 +36,10 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
 
+    # If nothing was set this is the default:
+    if not build_modes:
+        build_modes = [ 'tracepc', 'nozero' ]
+
     # Instrumentation coverage modes:
     if 'lto' in build_modes:
         os.environ['CC'] = '/afl/afl-clang-lto'
@@ -54,6 +58,10 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'instrim' in build_modes:
         # We dont set AFL_LLVM_INSTRIM_LOOPHEAD for better coverage
         os.environ['AFL_LLVM_INSTRIM'] = 'CFG'
+    elif 'tracepc' in build_modes:
+        os.environ['AFL_LLVM_USE_TRACE_PC'] = '1'
+    elif 'classic' in build_modes:
+        os.environ['AFL_LLVM_INSTRUMENT'] = 'CLASSIC'
 
     # Instrumentation coverage options:
     # Do not use a fixed map location (LTO only)

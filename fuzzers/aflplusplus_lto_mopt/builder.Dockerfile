@@ -25,7 +25,11 @@ RUN apt-get update && \
     wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && \
     apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 1E9377A2BA9EF27F && \
     apt-get update && \
-    apt-get install -y clang-11 clang-11-doc clang-11-examples clangd-11 clang-format-11 clang-tidy-11 clang-tools-11 libc++1-11 libc++-11-dev libc++abi1-11 libc++abi-11-dev libclang1-11 libclang-11-dev libclang-common-11-dev libclang-cpp11 libclang-cpp11-dev libfuzzer-11-dev liblld-11 liblld-11-dev liblldb-11 liblldb-11-dev libllvm11 libomp-11-dev libomp-11-doc libomp5-11 lld-11 lldb-11 llvm-11 llvm-11-dev llvm-11-runtime llvm-11-tools && \
+    apt-get install -y clang-11 clangd-11 clang-tools-11 libc++1-11 libc++-11-dev \
+      libc++abi1-11 libc++abi-11-dev libclang1-11 libclang-11-dev libclang-common-11-dev \
+      libclang-cpp11 libclang-cpp11-dev libfuzzer-11-dev liblld-11 liblld-11-dev \
+      liblldb-11 liblldb-11-dev libllvm11 libomp-11-dev libomp5-11 lld-11 lldb-11 \
+      llvm-11 llvm-11-dev llvm-11-runtime llvm-11-tools && \
     apt-get install -y gcc-9 g++-9
 
 # Download and compile afl++ (v2.62d).
