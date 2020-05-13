@@ -1,4 +1,5 @@
 alembic==1.4.0
+google-api-python-client==1.8.2
 google-auth==1.14.0
 google-cloud-error-reporting==0.33.0
 google-cloud-logging==1.14.0
@@ -9,6 +10,7 @@ pandas==1.0.1
 psycopg2-binary==2.8.4
 pyfakefs==3.7.1
 pytest==5.3.5
+python-dateutil==2.8.1
 PyYAML==5.3
 scikit-posthocs==0.6.2
 scipy==1.4.1
