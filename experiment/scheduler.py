@@ -132,8 +132,11 @@ def schedule(experiment_config: dict, pool):
     experiment = experiment_config['experiment']
     start_trials(get_experiment_trials(experiment), experiment_config, pool)
 
-def nothing_to_schedule(expeirment):
-    return all_trials_ended(experiment)
+
+def nothing_to_schedule(experiment_config):
+    """Returns True if there is nothing left to schedule."""
+    # TODO(metzman): Deal with preemptibles vs non-preemptibles
+    return all_trials_ended(experiment_config['experiment'])
 
 
 def schedule_loop(experiment_config: dict):
@@ -150,7 +153,7 @@ def schedule_loop(experiment_config: dict):
             try:
                 schedule(experiment_config, pool)
 
-                if nothing_to_schedule(experiment):
+                if nothing_to_schedule(experiment_config):
                     # Nothing left to schedule, bail out.
                     break
             except Exception:  # pylint: disable=broad-except
