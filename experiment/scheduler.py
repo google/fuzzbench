@@ -22,6 +22,7 @@ import random
 import time
 
 import jinja2
+import sqlalchemy
 
 from common import benchmark_utils
 from common import experiment_utils
@@ -130,11 +131,18 @@ def end_expired_trials(experiment_config: dict):
 
     db_utils.bulk_save(trials_past_expiry)
 
-def get_last_trial_start_time(experiment: str):
+
+def get_last_trial_time_started(experiment: str):
+    """Returns the time_started of the last trial that was started in
+    |experiment|. This function cannot be called if there are any unstarted
+    (e.g. pending trials). It will raise an assertion failure if there are any
+    pending trials because it does not make sense to call this function before
+    that time."""
     assert get_pending_trials(experiment).first() is None
     last_trial = get_experiment_trials(experiment).order_by(
-        desc(models.Trial.time_started)).limit(1)
-    return last_trial
+        sqlalchemy.desc(models.Trial.time_started)).limit(1)
+    return last_trial.time_started
+
 
 class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
     """Manager for trial instances."""
@@ -150,24 +158,27 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         self.preempted_trials = {}
         experiment = experiment_config['experiment']
 
-        self._time_last_trial_started = None
+        self._last_trial_time_started = None
 
         # Filter operations happening before the experiment started.
-        self.last_preemptible_query = self._time_experiment_started
+        self.last_preemptible_query = (db_utils.query(models.Experiment).filter(
+            models.Experiment.name == experiment).one().time_created)
 
     def get_time_since_last_trial_start(self):
         """Get the time since the last trial in the experiment started."""
-        if self._time_last_trial_started is not None:
-            return datetime.datetime.utcnow() - self._time_experiment_started
+        if self._last_trial_time_started is not None:
+            return datetime.datetime.utcnow() - self._last_trial_time_started
 
-        pending_trials = trials.get_pending_trials(
+        pending_trials = get_pending_trials(
             self.experiment_config['experiment'])
 
         if pending_trials.first():
             # The last trial hasn't started.
             return 0
-        self._time_last_trial_started = get_last_trial_start_time(
+
+        self._last_trial_time_started = get_last_trial_time_started(
             self.experiment_config['experiment'])
+        return datetime.datetime.utcnow() - self._last_trial_time_started
 
     def can_start_preemptible(self, preemptible_starts=None):
         """Returns True if we can start a preemptible trial."""
@@ -291,7 +302,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             return True
 
         if (self.experiment_config.get('preemptible_runners') and
-            get_running_trials(experiment).first()):
+                get_running_trials(experiment).first()):
             # If there are any running trials, they will need to be scheduled.
             return True
 
