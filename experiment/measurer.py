@@ -81,6 +81,7 @@ def measure_loop(experiment: str, max_total_time: int):
             try:
                 # Get whether all trials have ended before we measure to prevent
                 # races.
+                # !!! USE TrialInstanceManager.more_to_schedule.
                 all_trials_ended = scheduler.all_trials_ended(experiment)
 
                 if not measure_all_trials(experiment, max_total_time, pool, q):

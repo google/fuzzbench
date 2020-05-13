@@ -18,7 +18,6 @@ def get_operations(project, zone):
                                    orderBy='creationTimestamp desc')
     while request is not None:
         response = request.execute()
-        print('yo')
         for operation in response['items']:
             yield operation
 
@@ -26,7 +25,7 @@ def get_operations(project, zone):
                                             previous_response=response)
 
 
-def get_preempted_operations(operations):
+def get_preemption_operations(operations):
     """Generator that yields GCE preemption operations in |operations|."""
     # This endpoint doesn't support filtering by time (despite implications
     # otherwise). Instead it supports ordering by time. It also supports
@@ -42,7 +41,6 @@ def filter_by_end_time(min_end_time, operations):
     """Generator that yields GCE preemption operations in |operations|."""
     # operations must be a generator that is ordered by time.
     for operation in operations:
-        print('i')
         # !!! What is an end time for something that hasn't completed?
         operation_end_time = dateutil.parser.isoparse(operation['endTime'])
         if operation_end_time < min_end_time:
