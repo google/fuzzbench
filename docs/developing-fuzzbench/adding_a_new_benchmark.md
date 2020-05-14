@@ -41,12 +41,13 @@ want to use. Then find out the date and time (UTC) of that commit and the path
 to the project's repository in the OSS-Fuzz builder image (usually it is
 /src/$PROJECT_NAME).
 
-Once you have this information, run `oss_fuzz/benchmark_integration.py` to copy
-the necessary integration files, like so:
+Once you have this information, run
+`benchmarks/oss_fuzz_benchmark_integration.py` to copy the necessary integration
+files, like so:
 
 ```shell
-PYTHONPATH=. python3 benchmark_integration.py -p $PROJECT -f $FUZZ_TARGET \
-    -r $REPO_PATH -c $ COMMIT_HASH -d $COMMIT_DATE
+PYTHONPATH=. python3 benchmarks/oss_fuzz_benchmark_integration.py -p $PROJECT
+    -f $FUZZ_TARGET -r $REPO_PATH -c $ COMMIT_HASH -d $COMMIT_DATE
 ```
 
 The script should create the benchmark directory in

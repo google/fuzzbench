@@ -13,7 +13,7 @@
 # limitations under the License.
 
 FUZZERS    := $(notdir $(shell find fuzzers -mindepth 1 -maxdepth 1 -type d))
-STANDARD_BENCHMARKS := $(notdir $(shell find benchmarks -type f -name build.sh | xargs dirname | xargs -i sh -c 'test ! -f {}/oss-fuzz.yaml && echo {}'))
+STANDARD_BENCHMARKS := $(notdir $(shell find benchmarks -type f -name build.sh | xargs dirname | xargs -i sh -c 'test ! -f {}/oss-fuzz.yaml'))
 OSS_FUZZ_BENCHMARKS := $(notdir $(shell find benchmarks -type f -name oss-fuzz.yaml | xargs dirname))
 
 BASE_TAG ?= gcr.io/fuzzbench

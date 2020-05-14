@@ -121,7 +121,8 @@ def integrate_benchmark(project,
     benchmark's oss-fuzz.yaml file."""
     benchmark_name = get_benchmark_name(project, fuzz_target, benchmark_name)
     benchmark_dir = os.path.join(utils.ROOT_DIR, 'benchmarks', benchmark_name)
-    # !!! REPLACE WITH RECOMMENDED LIBRARY
+    # !!! REPLACE WITH dateutil as fromisoformat isn't supposed to work on
+    # arbitrary iso format strings. Also, is this timezone replae correct?
     commit_date = datetime.datetime.fromisoformat(commit_date).replace(
         tzinfo=datetime.timezone.utc)
     copy_oss_fuzz_files(project, commit_date, benchmark_dir)
