@@ -56,6 +56,29 @@ def test_validate_data_empty():
         data_utils.validate_data(experiment_df)
 
 
+def test_drop_fuzzer_benchmark_trials_above_max():
+    """Tests that drop_fuzzer_benchmark_trials_above_max drops trials for a
+    fuzzer-benchmark if they are beyond the maximum number of trials per
+    fuzzer-benchmark that we specify."""
+    experiment_df = create_experiment_data()
+    new_experiment_df = data_utils.drop_fuzzer_benchmark_trials_above_max(
+        experiment_df, 1)
+    # Sanity check test.
+    assert len(new_experiment_df) < len(experiment_df)
+    columns = ['benchmark', 'fuzzer']
+    expected_result = pd.DataFrame([
+        ['libpng', 'afl'],
+        ['libpng', 'libfuzzer'],
+        ['libxml', 'afl'],
+        ['libxml', 'libfuzzer'],
+    ], columns=columns)
+    trials_per_fuzzer_benchmark = (
+        new_experiment_df[['benchmark', 'fuzzer', 'trial_id']].drop_duplicates()
+    )[columns]
+    assert (trials_per_fuzzer_benchmark.values ==
+            expected_result.values).all()
+
+
 def test_validate_data_missing_columns():
     experiment_df = create_experiment_data()
     experiment_df.drop(columns=['trial_id', 'time'], inplace=True)
@@ -63,7 +86,7 @@ def test_validate_data_missing_columns():
         data_utils.validate_data(experiment_df)
 
 
-def test_drop_uniteresting_columns():
+def test_drop_uninteresting_columns():
     experiment_df = create_experiment_data()
     cleaned_df = data_utils.drop_uninteresting_columns(experiment_df)
 

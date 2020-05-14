@@ -96,10 +96,9 @@ def filter_max_time(experiment_df, max_time):
     return experiment_df[experiment_df['time'] <= max_time]
 
 
-def filter_fuzzer_benchmark_max_trials(experiment_df, max_trials):
+def drop_fuzzer_benchmark_trials_above_max(experiment_df, max_trials):
     """Returns the table without snapshots from trials of a fuzzer-benchmark
     that is greater than |max_trials|."""
-
     # For each fuzzer-benchmark store the set of trials we will include in the
     # result.
     trials = collections.defaultdict(set)

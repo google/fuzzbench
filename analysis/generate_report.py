@@ -158,7 +158,7 @@ def generate_report(experiment_names,
             experiment_df, experiment_names)
 
     if max_num_trials is not None:
-        experiment_df = data_utils.filter_fuzzer_benchmark_max_trials(
+        experiment_df = data_utils.drop_fuzzer_benchmark_trials_above_max(
             experiment_df, max_num_trials)
 
     fuzzer_names = experiment_df.fuzzer.unique()
