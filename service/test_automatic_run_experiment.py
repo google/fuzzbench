@@ -40,7 +40,14 @@ def test_run_diff_experiment(mocked_get_experiment_name,
     automatic_run_experiment.run_diff_experiment()
     expected_config_file = os.path.join(utils.ROOT_DIR, 'service',
                                         'experiment-config.yaml')
-    expected_fuzzer_configs = [{'fuzzer': fuzzer} for fuzzer in fuzzers]
+
+    def sort_key(dictionary):
+        return dictionary['fuzzer']
+
+    expected_fuzzer_configs = list(
+        sorted([{
+            'fuzzer': fuzzer
+        } for fuzzer in fuzzers], key=sort_key))
     expected_benchmarks = [
         'bloaty_fuzz_target',
         'curl_curl_fuzzer_http',
@@ -63,10 +70,13 @@ def test_run_diff_experiment(mocked_get_experiment_name,
         'vorbis-2017-12-11',
         'woff2-2016-05-06',
     ]
-    mocked_start_experiment.assert_called_with(expected_experiment_name,
-                                               expected_config_file,
-                                               expected_benchmarks,
-                                               expected_fuzzer_configs)
-    print(mocked_stop_experiment)
+    start_experiment_call_args = mocked_start_experiment.call_args_list
+    expected_calls = [
+        mock.call(expected_experiment_name, expected_config_file,
+                  expected_benchmarks, expected_fuzzer_configs)
+    ]
+    assert len(start_experiment_call_args) == 1
+    start_experiment_call_args[0][0][3].sort(key=sort_key)
+    assert start_experiment_call_args == expected_calls
     mocked_stop_experiment.assert_called_with(expected_experiment_name,
                                               expected_config_file)
