@@ -23,7 +23,7 @@ from service import automatic_run_experiment
 
 
 @mock.patch('experiment.run_experiment.start_experiment')
-@mock.patch('experiment.run_experiment.stop_experiment')
+@mock.patch('experiment.stop_experiment.stop_experiment')
 @mock.patch(
     'src_analysis.change_utils.get_changed_fuzzers_since_last_experiment')
 @mock.patch('service.automatic_run_experiment.get_experiment_name')
@@ -67,5 +67,6 @@ def test_run_diff_experiment(mocked_get_experiment_name,
                                                expected_config_file,
                                                expected_benchmarks,
                                                expected_fuzzer_configs)
+    print(mocked_stop_experiment)
     mocked_stop_experiment.assert_called_with(expected_experiment_name,
                                               expected_config_file)

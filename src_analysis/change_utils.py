@@ -79,7 +79,7 @@ def get_changed_fuzzers_since_last_experiment():
             changed_files = diff_utils.get_changed_files(experiment.git_hash)
             break
         except diff_utils.DiffError:
-            logs.warning('Skipping %s, not in tree.' % experiment.git_hash)
+            logs.warning('Skipping %s, not in tree.', experiment.git_hash)
 
     return get_changed_fuzzers(changed_files)
 

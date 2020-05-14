@@ -72,7 +72,7 @@ def test_get_fuzzer_from_config(config, expected_result):
     assert fuzzer_utils.get_fuzzer_from_config(config) == expected_result
 
 
-def test_get_fuzzer_configs_empty_list(config):
+def test_get_fuzzer_configs_empty_list():
     """Test that get_fuzzer_configs returns no configs when given an empty list.
     The reason for this is subtle, but code can call this function when the
     caller means no fuzzers but end up with many fuzzers. Please check all

@@ -32,8 +32,7 @@ def execute_git_diff(diff_args, repo=utils.ROOT_DIR):
     try:
         if previous_working_directory != repo:
             os.chdir(repo)
-        return subprocess.check_output(
-            command).decode().splitlines()
+        return subprocess.check_output(command).decode().splitlines()
     finally:
         if previous_working_directory != repo:
             os.chdir(previous_working_directory)
@@ -41,7 +40,7 @@ def execute_git_diff(diff_args, repo=utils.ROOT_DIR):
 
 def get_changed_files(commit_name: str = 'origin...') -> List[str]:
     """Return a list of absolute paths of files changed in this git branch."""
-    uncommitted_diff_args= ['--name-only', 'HEAD']
+    uncommitted_diff_args = ['--name-only', 'HEAD']
     output = execute_git_diff(uncommitted_diff_args)
     uncommitted_changed_files = set(
         os.path.abspath(path) for path in output if os.path.isfile(path))

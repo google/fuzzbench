@@ -80,7 +80,9 @@ def test_get_changed_fuzzers_since_last_experiment_non_master_experiment(
     db_utils.add_all([out_of_tree_experiment])
 
     # Update the time of out_of_tree_experiment to come after db_experiment.
-    out_of_tree_experiment.time_created = db_experiment.time_created + datetime.timedelta(days=1)
+    out_of_tree_experiment.time_created = (db_experiment.time_created +
+                                           datetime.timedelta(days=1))
+
     db_utils.add_all([out_of_tree_experiment])
 
     def get_changed_files(commit_hash):
@@ -91,5 +93,8 @@ def test_get_changed_fuzzers_since_last_experiment_non_master_experiment(
     mocked_get_changed_files.side_effect = get_changed_files
 
     assert not change_utils.get_changed_fuzzers_since_last_experiment()
-    mocked_info.assert_called_with('Skipping %s, not in tree.' % out_of_tree_hash)
-    mocked_get_changed_files.assert_has_calls([mock.call(out_of_tree_hash), mock.call('hash')])
+    mocked_info.assert_called_with('Skipping %s, not in tree.',
+                                   out_of_tree_hash)
+    mocked_get_changed_files.assert_has_calls(
+        [mock.call(out_of_tree_hash),
+         mock.call('hash')])
