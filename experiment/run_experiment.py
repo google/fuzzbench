@@ -517,6 +517,8 @@ def main():
             fuzzers = args.fuzzers
         fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=fuzzers)
 
+    logs.info('Starting experiment with fuzzers: %s\n. Using benchmarks: %s' % (
+        ' '.join(fuzzers_configs), ' '.join(benchmarks)
     start_experiment(args.experiment_name, args.experiment_config,
                      args.benchmarks, fuzzer_configs)
     if not os.getenv('MANUAL_EXPERIMENT'):
