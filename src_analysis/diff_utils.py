@@ -24,19 +24,31 @@ class DiffError(Exception):
     """An error diffing commits."""
 
 
+def execute_git_diff(diff_args, repo=utils.ROOT_DIR):
+    """Add |diff_args| to the command 'git diff' and execute the command in
+    |repo|."""
+    command = ['git', 'diff'] + diff_args
+    previous_working_directory = os.getcwd()
+    try:
+        if previous_working_directory != repo:
+            os.chdir(repo)
+        return subprocess.check_output(
+            command).decode().splitlines()
+    finally:
+        if previous_working_directory != repo:
+            os.chdir(previous_working_directory)
+
+
 def get_changed_files(commit_name: str = 'origin...') -> List[str]:
     """Return a list of absolute paths of files changed in this git branch."""
-    uncommitted_diff_command = ['git', 'diff', '-C', utils.ROOT_DIR,
-                                '--name-only', 'HEAD']
-    output = subprocess.check_output(
-        uncommitted_diff_command).decode().splitlines()
+    uncommitted_diff_args= ['--name-only', 'HEAD']
+    output = execute_git_diff(uncommitted_diff_args)
     uncommitted_changed_files = set(
         os.path.abspath(path) for path in output if os.path.isfile(path))
 
-    committed_diff_command = ['git', 'diff', '-C', utils.ROOT_DIR, '--name-only', commit_name]
+    committed_diff_command = ['--name-only', commit_name]
     try:
-        output = subprocess.check_output(
-            committed_diff_command).decode().splitlines()
+        output = execute_git_diff(committed_diff_command)
         committed_changed_files = set(
             os.path.abspath(path) for path in output if os.path.isfile(path))
         return list(committed_changed_files.union(uncommitted_changed_files))
