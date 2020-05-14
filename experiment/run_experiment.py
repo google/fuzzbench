@@ -36,6 +36,7 @@ from common import new_process
 from common import utils
 from common import yaml_utils
 from experiment import stop_experiment
+from src_analysis import change_utils
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
@@ -481,27 +482,39 @@ def main():
                         '--experiment-name',
                         help='Experiment name.',
                         required=True)
-    parser.add_argument('-f',
-                        '--fuzzers',
-                        help='Fuzzers to use.',
-                        nargs='+',
-                        required=False,
-                        default=[])
-    parser.add_argument('-fc',
-                        '--fuzzer-configs',
-                        help='Fuzzer configurations to use.',
-                        nargs='+',
-                        required=False,
-                        default=[])
+    fuzzers_group = parser.add_mutually_exclusive_group()
+    fuzzers_group.add_argument('-f',
+                               '--fuzzers',
+                               help='Fuzzers to use.',
+                               nargs='+',
+                               required=False,
+                               default=[])
+    fuzzers_group.add_argument('-fc',
+                               '--fuzzer-configs',
+                               help='Fuzzer configurations to use.',
+                               nargs='+',
+                               required=False,
+                               default=[])
+    fuzzers_group.add_argument('-cd',
+                               '--changed-fuzzers',
+                               help=('Use fuzzers that have changed since the '
+                                     'last experiment'),
+                               actions='store_true',
+                               required=False)
+
     args = parser.parse_args()
 
-    if not args.fuzzer_configs:
-        fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=args.fuzzers)
-    else:
+    if args.fuzzer_configs:
         fuzzer_configs = [
             yaml_utils.read(fuzzer_config)
             for fuzzer_config in args.fuzzer_configs
         ]
+    else:
+        if args.changed_fuzzers:
+            fuzzers = change_utils.get_changed_fuzzers_for_ci()
+        else:
+            fuzzers = args.fuzzers
+        fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=fuzzers)
 
     start_experiment(args.experiment_name, args.experiment_config,
                      args.benchmarks, fuzzer_configs)
