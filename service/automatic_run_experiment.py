@@ -72,6 +72,7 @@ def run_diff_experiment():
     """Run a diff experiment. This is an experiment that runs only on
     fuzzers that have changed since the last experiment."""
     fuzzers = change_utils.get_changed_fuzzers_since_last_experiment()
+    logs.info('Running experiment with fuzzers: %s.', fuzzers)
     fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=fuzzers)
     return _run_experiment(fuzzer_configs)
 
