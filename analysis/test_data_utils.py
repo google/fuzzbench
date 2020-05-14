@@ -71,12 +71,12 @@ def test_drop_fuzzer_benchmark_trials_above_max():
         ['libpng', 'libfuzzer'],
         ['libxml', 'afl'],
         ['libxml', 'libfuzzer'],
-    ], columns=columns)
-    trials_per_fuzzer_benchmark = (
-        new_experiment_df[['benchmark', 'fuzzer', 'trial_id']].drop_duplicates()
-    )[columns]
-    assert (trials_per_fuzzer_benchmark.values ==
-            expected_result.values).all()
+    ],
+                                   columns=columns)
+    trials_per_fuzzer_benchmark = (new_experiment_df[[
+        'benchmark', 'fuzzer', 'trial_id'
+    ]].drop_duplicates())[columns]
+    assert (trials_per_fuzzer_benchmark.values == expected_result.values).all()
 
 
 def test_validate_data_missing_columns():
