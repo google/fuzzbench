@@ -39,7 +39,7 @@ def get_arg_parser():
     parser.add_argument(
         '-t',
         '--report-type',
-        choices=['default'],
+        choices=['default', 'normalized_score'],
         default='default',
         help='Type of the report (which template to use). Default: default.')
     parser.add_argument(
