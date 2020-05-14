@@ -488,7 +488,7 @@ def main():
                                help='Fuzzers to use.',
                                nargs='+',
                                required=False,
-                               default=[])
+                               default=None)
     fuzzers_group.add_argument('-fc',
                                '--fuzzer-configs',
                                help='Fuzzer configurations to use.',
@@ -499,12 +499,13 @@ def main():
                                '--changed-fuzzers',
                                help=('Use fuzzers that have changed since the '
                                      'last experiment'),
-                               actions='store_true',
+                               action='store_true',
                                required=False)
 
     args = parser.parse_args()
 
     if args.fuzzer_configs:
+        assert args.fuzzer_configs is None
         fuzzer_configs = [
             yaml_utils.read(fuzzer_config)
             for fuzzer_config in args.fuzzer_configs

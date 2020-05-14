@@ -94,6 +94,9 @@ def main():
     logs.initialize()
     parser = argparse.ArgumentParser(
         description='Run a full or diff experiment (if needed).')
+    # TODO(metzman): Add a way to exit immediately if there is alreay an
+    # experiment running. FuzzBench's scheduler isn't smart enough to deal with
+    # this properly.
     parser.add_argument('experiment_type', choices=['diff', 'full'])
     args = parser.parse_args()
     if args.experiment_type == 'full':

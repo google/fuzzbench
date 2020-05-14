@@ -70,3 +70,11 @@ def test_get_fuzzer_from_config(config, expected_result):
     """Test that get_fuzzer_from_config returns the variant for a
     variant and the fuzzer for a non-variant fuzzer."""
     assert fuzzer_utils.get_fuzzer_from_config(config) == expected_result
+
+
+def test_get_fuzzer_configs_empty_list(config):
+    """Test that get_fuzzer_configs returns no configs when given an empty list.
+    The reason for this is subtle, but code can call this function when the
+    caller means no fuzzers but end up with many fuzzers. Please check all
+    callers of get_fuzzer_configs before removing or altering this test.."""
+    assert fuzzer_utils.get_fuzzer_configs([]) == []
