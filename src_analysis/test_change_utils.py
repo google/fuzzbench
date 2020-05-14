@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for change_utils.py."""
+import datetime
 import os
 from unittest import mock
 
@@ -45,6 +46,7 @@ def db_experiment(db):
     experiment.name = 'experiment'
     experiment.git_hash = 'hash'
     db_utils.add_all([experiment])
+    return experiment
 
 
 @mock.patch('src_analysis.diff_utils.get_changed_files',
@@ -65,21 +67,29 @@ def test_get_changed_fuzzers_since_last_experiment_no_changes(_, db_experiment):
 
 
 @mock.patch('src_analysis.diff_utils.get_changed_files', return_value=[])
+@mock.patch('common.logs.warning')
 def test_get_changed_fuzzers_since_last_experiment_non_master_experiment(
-        mocked_get_changed_files, db_experiment):
+        mocked_info, mocked_get_changed_files, db_experiment):
     """Tests that get_changed_fuzzers_since_last_experiment returns the
     correct result when the first experiment's git hash is not in master"""
     # Set up a newer, out-of-tree experiment.
     out_of_tree_experiment = models.Experiment()
-    out_of_tree_experiment.name = 'experiment2'
-    out_of_tree_experiment.git_hash = 'hash2'
+    out_of_tree_experiment.name = 'out-of-tree-experiment'
+    out_of_tree_hash = 'out-of-tree-experiment-hash'
+    out_of_tree_experiment.git_hash = out_of_tree_hash
+    db_utils.add_all([out_of_tree_experiment])
+
+    # Update the time of out_of_tree_experiment to come after db_experiment.
+    out_of_tree_experiment.time_created = db_experiment.time_created + datetime.timedelta(days=1)
     db_utils.add_all([out_of_tree_experiment])
 
     def get_changed_files(commit_hash):
-        if commit_hash == 'hash2':
+        if commit_hash == 'out-of-tree-experiment-hash':
             raise diff_utils.DiffError(commit_hash)
         return AFL_FUZZER_PY
 
     mocked_get_changed_files.side_effect = get_changed_files
 
     assert not change_utils.get_changed_fuzzers_since_last_experiment()
+    mocked_info.assert_called_with('Skipping %s, not in tree.' % out_of_tree_hash)
+    mocked_get_changed_files.assert_has_calls([mock.call(out_of_tree_hash), mock.call('hash')])

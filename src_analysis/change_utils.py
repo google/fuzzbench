@@ -19,6 +19,7 @@ from typing import List
 from common import utils
 from common import filesystem
 from common import fuzzer_utils
+from common import logs
 from database import models
 from src_analysis import benchmark_dependencies
 from src_analysis import fuzzer_dependencies
@@ -78,7 +79,7 @@ def get_changed_fuzzers_since_last_experiment():
             changed_files = diff_utils.get_changed_files(experiment.git_hash)
             break
         except diff_utils.DiffError:
-            print('Skipping %s, not in tree.' % experiment.git_hash)
+            logs.warning('Skipping %s, not in tree.' % experiment.git_hash)
 
     return get_changed_fuzzers(changed_files)
 

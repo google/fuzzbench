@@ -25,8 +25,8 @@ class DiffError(Exception):
 
 
 def execute_git_diff(diff_args, repo=utils.ROOT_DIR):
-    """Add |diff_args| to the command 'git diff' and execute the command in
-    |repo|."""
+    """Adds |diff_args| to the command 'git diff' and executes the command in
+    |repo|. Returns a list of each line in the output."""
     command = ['git', 'diff'] + diff_args
     previous_working_directory = os.getcwd()
     try:
