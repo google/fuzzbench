@@ -17,6 +17,8 @@ import os
 import subprocess
 from typing import List
 
+from common import utils
+
 
 class DiffError(Exception):
     """An error diffing commits."""
@@ -24,7 +26,9 @@ class DiffError(Exception):
 
 def get_changed_files(commit_name: str = 'origin...') -> List[str]:
     """Return a list of absolute paths of files changed in this git branch."""
-    uncommitted_diff_command = ['git', 'diff', '--name-only', 'HEAD']
+    os.chdir(utils.ROOT_DIR)
+    uncommitted_diff_command = ['git', 'diff',
+                                '--name-only', 'HEAD']
     output = subprocess.check_output(
         uncommitted_diff_command).decode().splitlines()
     uncommitted_changed_files = set(

@@ -43,6 +43,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
 def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     """Run fuzzer."""
+
     if extra_flags is None:
         extra_flags = []
 

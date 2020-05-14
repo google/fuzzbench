@@ -495,7 +495,7 @@ def main():
                                nargs='+',
                                required=False,
                                default=[])
-    fuzzers_group.add_argument('-cd',
+    fuzzers_group.add_argument('-cf',
                                '--changed-fuzzers',
                                help=('Use fuzzers that have changed since the '
                                      'last experiment'),
@@ -505,7 +505,6 @@ def main():
     args = parser.parse_args()
 
     if args.fuzzer_configs:
-        assert args.fuzzer_configs is None
         fuzzer_configs = [
             yaml_utils.read(fuzzer_config)
             for fuzzer_config in args.fuzzer_configs
@@ -513,12 +512,16 @@ def main():
     else:
         if args.changed_fuzzers:
             fuzzers = change_utils.get_changed_fuzzers_since_last_experiment()
+            if not fuzzers:
+                logs.error('No fuzzers changed since last experiment. Exiting.')
+                return 1
         else:
             fuzzers = args.fuzzers
         fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=fuzzers)
 
-    logs.info('Starting experiment with fuzzers: %s\n. Using benchmarks: %s' % (
-        ' '.join(fuzzers_configs), ' '.join(benchmarks)
+    logs.info(('Starting experiment with fuzzers: %s.\n'
+              'Using benchmarks: %s') % (
+        fuzzer_configs, ' '.join(args.benchmarks)))
     start_experiment(args.experiment_name, args.experiment_config,
                      args.benchmarks, fuzzer_configs)
     if not os.getenv('MANUAL_EXPERIMENT'):
