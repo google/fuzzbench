@@ -1,3 +1,17 @@
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""A script for getting a file from each corpus-archive a fuzzer."""
 import argparse
 import multiprocessing
 import os
@@ -14,43 +28,45 @@ from common import gsutil
 
 def get_program_args():
     parser = argparse.ArgumentParser(
-        description='Get files from last corpus-archive of each AFL trial.')
-    parser.add_arguments('-g',
-                         '--gcs-dir',
-                         help='The gcs directory of the experiment.')
-    parser.add_arguments('-f',
-                         '--fuzzer',
-                         help='The name of the fuzzer.')
-    parser.add_arguments('-i',
-                         '--filename',
-                         help='The name of the file to get from the corpus '
-                         'archives.')
-    parser.add_arguments('-m',
-                         '--max-total-time',
-                         help='The max_total_time of the experiment.')
-    parser.add_arguments('-o',
-                         '--output-directory',
-                         help='The name of the directory to write the files to.'
-    )
+        description='Get files from last corpus-archive of each fuzzer trial.')
+    parser.add_argument('-g',
+                        '--gcs-dir',
+                        help='The gcs directory of the experiment.')
+    parser.add_argument('-f', '--fuzzer', help='The name of the fuzzer.')
+    parser.add_argument('-i',
+                        '--filename',
+                        help='The name of the file to get from the corpus '
+                        'archives.')
+    parser.add_argument('-m',
+                        '--max-total-time',
+                        help='The max_total_time of the experiment.')
+    parser.add_argument('-o',
+                        '--output-directory',
+                        help='The name of the directory to write the files to.')
     return parser.parse_args()
 
 
 def get_all_corpus_archives(experiment_gcs_dir, fuzzer):
-    search_path = posixpath.join(experiment_gcs_dir, 'experiment-folders', '*-' + fuzzer, '*', 'corpus')
+    search_path = posixpath.join(experiment_gcs_dir, 'experiment-folders',
+                                 '*-' + fuzzer, '*', 'corpus')
     retcode, results = gsutil.ls(search_path)
     assert retcode == 0
     return [result for result in results if result.endswith('.tar.gz')]
 
-def find_last_corpus_archives(all_corpus_archives, experiment_gcs_dir, fuzzer, max_total_time):
+
+def find_last_corpus_archives(all_corpus_archives, experiment_gcs_dir, fuzzer,
+                              max_total_time):
     # On the runnner we make 1 extra corpus archive. Don't use this.
     # get_snapshot_seconds might not return the same value as it during the
     # experiment. Assume this won't happen.
     snapshot_seconds = experiment_utils.get_snapshot_seconds()
     max_last_corpus_num = int(max_total_time / snapshot_seconds)
-    last_archive_regex = re.compile(posixpath.join(experiment_gcs_dir, 'experiment-folders', '.*-' + fuzzer, 'trial-(\d+)', 'corpus', 'corpus-archive-(\d+)\.tar.gz'))
+    last_archive_regex = re.compile(
+        posixpath.join(experiment_gcs_dir, 'experiment-folders',
+                       r'.*-' + fuzzer, r'trial-(\d+)', 'corpus',
+                       r'corpus-archive-(\d+)\.tar.gz'))
     last_archives = []
     trial = None
-    last_trial_corpus_num = None
     last_trial_corpus = None
 
     for archive in all_corpus_archives:
@@ -67,7 +83,6 @@ def find_last_corpus_archives(all_corpus_archives, experiment_gcs_dir, fuzzer, m
             trial = this_trial
 
         if this_trial_corpus_num <= max_last_corpus_num:
-            last_trial_corpus_num = this_trial_corpus_num
             last_trial_corpus = archive
 
     # Save the last archive from the last trial.
@@ -76,15 +91,19 @@ def find_last_corpus_archives(all_corpus_archives, experiment_gcs_dir, fuzzer, m
     return last_archives
 
 
-
-def get_last_corpus_archives_gcs_paths(experiment_gcs_dir, fuzzer, max_total_time):
+def get_last_corpus_archives_gcs_paths(experiment_gcs_dir, fuzzer,
+                                       max_total_time):
     all_corpus_archives = get_all_corpus_archives(experiment_gcs_dir, fuzzer)
-    return find_last_corpus_archives(all_corpus_archives, experiment_gcs_dir, fuzzer, max_total_time)
+    return find_last_corpus_archives(all_corpus_archives, experiment_gcs_dir,
+                                     fuzzer, max_total_time)
 
 
-def extract_file_from_archive_gcs_path(corpus_archive_gcs_path, needle_filename, experiment_gcs_dir, output_dir):
-    base_gcs_path = posixpath.join(experiment_gcs_dir, 'experiment-folders') + '/'
-    filename_for_gcs_path = corpus_archive_gcs_path[len(base_gcs_path):].replace('/', '-') + '-' + needle_filename
+def extract_file_from_archive_gcs_path(corpus_archive_gcs_path, needle_filename,
+                                       experiment_gcs_dir, output_dir):
+    base_gcs_path = posixpath.join(experiment_gcs_dir,
+                                   'experiment-folders') + '/'
+    filename_for_gcs_path = corpus_archive_gcs_path[len(
+        base_gcs_path):].replace('/', '-') + '-' + needle_filename
     output_path = os.path.join(output_dir, filename_for_gcs_path)
 
     # Copy archive to a temporary file.
@@ -99,14 +118,18 @@ def extract_file_from_archive_gcs_path(corpus_archive_gcs_path, needle_filename,
                 tar_archive.extract(member, output_path)
                 break
             else:
-                # If we reached this point, then we haven't found |needle_filename|.
-                print('Couldn\'t find %s in %s.' % (needle_filename, corpus_archive_gcs_path))
+                # If we reached this point, then we haven't found
+                # |needle_filename|.
+                print('Couldn\'t find %s in %s.' %
+                      (needle_filename, corpus_archive_gcs_path))
 
 
-def extract_files_from_archive_gcs_paths(corpus_archive_gcs_paths, filename, experiment_gcs_dir, output_dir):
+def extract_files_from_archive_gcs_paths(corpus_archive_gcs_paths, filename,
+                                         experiment_gcs_dir, output_dir):
     filesystem.create_directory(output_dir)
     pool = multiprocessing.Pool()
-    args = itertools.product(corpus_archive_gcs_paths, [filename], [experiment_gcs_dir], [output_dir])
+    args = itertools.product(corpus_archive_gcs_paths, [filename],
+                             [experiment_gcs_dir], [output_dir])
     pool.starmap(extract_file_from_archive_gcs_path, args)
 
 
@@ -114,10 +137,9 @@ def main():
     args = get_program_args()
     corpus_archive_gcs_paths = get_last_corpus_archives_gcs_paths(
         args.gcs_dir, args.fuzzer, args.max_total_time)
-    extract_files_from_archive_gcs_paths(corpus_archive_gcs_paths, args.filename, args.experiment_gcs_dir, args.output_dir)
-
-
-
+    extract_files_from_archive_gcs_paths(corpus_archive_gcs_paths,
+                                         args.filename, args.experiment_gcs_dir,
+                                         args.output_dir)
 
 
 if __name__ == '__main__':
