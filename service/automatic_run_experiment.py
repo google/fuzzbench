@@ -26,11 +26,40 @@ from common import logs
 from common import benchmark_utils
 from common import fuzzer_utils
 from common import utils
-
+from src_analysis import change_utils
 from experiment import run_experiment
+from experiment import stop_experiment
 
 EXPERIMENT_CONFIG_FILE = os.path.join(utils.ROOT_DIR, 'service',
                                       'experiment-config.yaml')
+
+# TODO(metzman): Stop hardcoding benchmarks and get away to mark a benchmark as
+# disabled.
+BENCHMARKS = [
+    # OSS-Fuzz benchmarks.
+    'bloaty_fuzz_target',
+    'curl_curl_fuzzer_http',
+    'jsoncpp_jsoncpp_fuzzer',
+    'libpcap_fuzz_both',
+    'mbedtls_fuzz_dtlsclient',
+    'openssl_x509',
+    'sqlite3_ossfuzz',
+    'systemd_fuzz-link-parser',
+    'zlib_zlib_uncompress_fuzzer',
+    'freetype2-2017',
+    'harfbuzz-1.3.2',
+
+    # Standard benchmarks.
+    'lcms-2017-03-21',
+    'libjpeg-turbo-07-2017',
+    'libpng-1.2.56',
+    'libxml2-v2.9.2',
+    'openthread-2019-12-23',
+    'proj4-2017-08-14',
+    're2-2014-12-09',
+    'vorbis-2017-12-11',
+    'woff2-2016-05-06',
+]
 
 
 def get_experiment_name():
@@ -41,19 +70,25 @@ def get_experiment_name():
 
 
 def run_diff_experiment():
-    """Run a diff expeirment. This is an experiment that runs only on
+    """Run a diff experiment. This is an experiment that runs only on
     fuzzers that have changed since the last experiment."""
-    # TODO(metzman): Implement this.
-    raise NotImplementedError('Diff experiments not implemented yet.')
+    fuzzers = change_utils.get_changed_fuzzers_since_last_experiment()
+    fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=fuzzers)
+    return _run_experiment.start_experiment(fuzzer_configs)
+
+
+def _run_experiment(fuzzer_configs):
+    experiment_name = get_experiment_name()
+    run_experiment.start_experiment(
+        experiment_name, EXPERIMENT_CONFIG_FILE,
+        BENCHMARKS, fuzzer_configs)
+    stop_experiment.stop_experiment(experiment_name, EXPERIMENT_CONFIG_FILE)
 
 
 def run_full_experiment():
     """Run a full experiment."""
-    experiment_name = get_experiment_name()
     fuzzer_configs = fuzzer_utils.get_fuzzer_configs()
-    benchmarks = benchmark_utils.get_all_benchmarks()
-    run_experiment.start_experiment(experiment_name, EXPERIMENT_CONFIG_FILE,
-                                    benchmarks, fuzzer_configs)
+    return _start_experiment(fuzzer_configs)
 
 
 def main():
@@ -63,10 +98,10 @@ def main():
         description='Run a full or diff experiment (if needed).')
     parser.add_argument('experiment_type', choices=['diff', 'full'])
     args = parser.parse_args()
-    if args.experiment_type == 'diff':
-        run_diff_experiment()
-    else:
+    if args.experiment_type == 'full':
         run_full_experiment()
+    else:
+        run_diff_experiment()
     return 0
 
 
