@@ -39,7 +39,7 @@ experiment](https://www.fuzzbench.com/reports/sample/index.html) like this:
 ```bash
 mkdir ~/my-report; cd ~/my-report
 wget https://www.fuzzbench.com/reports/sample/data.csv.gz
-PYTHONPATH=<fuzzbench_root> python3 experiment/generate_report.py \
+POSTGRES_PASSWORD=1 PYTHONPATH=<fuzzbench_root> python3 analysis/generate_report.py \
   [experiment_name] \
   --report-dir ~/my-report \
   --from-cached-data
@@ -52,5 +52,5 @@ You can also create a custom report using a template of your own (see
 `--report_type` option). See all command line options with:
 
 ```bash
-PYTHONPATH=<fuzzbench_root> python3 analysis/generate_report.py --help
+POSTGRES_PASSWORD=1 PYTHONPATH=<fuzzbench_root> python3 analysis/generate_report.py --help
 ```
