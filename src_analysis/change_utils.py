@@ -59,12 +59,14 @@ def get_changed_fuzzers_for_ci(changed_files: List[str] = None) -> List[str]:
     return get_changed_fuzzers(changed_files)
 
 
-def get_changed_fuzzers_since_last_expriment():
+def get_changed_fuzzers_since_last_experiment():
     """Returns a list of fuzzers that have changed since the last experiment
     stored in the database that has a commit that is in the current tree."""
     # Don't import db_utils on the toplevel so that change_utils can be used
     # without a databse connection.
     from database import utils as db_utils  # pylint: disable=import-outside-toplevel
+
+    # TODO(metzman): Get a way of skipping experiments that were stopped early.
 
     # Loop over experiments since some may have hashes that are not in the
     # current branch.

@@ -511,7 +511,7 @@ def main():
         ]
     else:
         if args.changed_fuzzers:
-            fuzzers = change_utils.get_changed_fuzzers_for_ci()
+            fuzzers = change_utils.get_changed_fuzzers_since_last_experiment()
         else:
             fuzzers = args.fuzzers
         fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=fuzzers)

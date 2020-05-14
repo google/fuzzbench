@@ -23,7 +23,6 @@ import sys
 import pytz
 
 from common import logs
-from common import benchmark_utils
 from common import fuzzer_utils
 from common import utils
 from src_analysis import change_utils
@@ -74,21 +73,20 @@ def run_diff_experiment():
     fuzzers that have changed since the last experiment."""
     fuzzers = change_utils.get_changed_fuzzers_since_last_experiment()
     fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=fuzzers)
-    return _run_experiment.start_experiment(fuzzer_configs)
+    return _run_experiment(fuzzer_configs)
 
 
 def _run_experiment(fuzzer_configs):
     experiment_name = get_experiment_name()
-    run_experiment.start_experiment(
-        experiment_name, EXPERIMENT_CONFIG_FILE,
-        BENCHMARKS, fuzzer_configs)
+    run_experiment.start_experiment(experiment_name, EXPERIMENT_CONFIG_FILE,
+                                    BENCHMARKS, fuzzer_configs)
     stop_experiment.stop_experiment(experiment_name, EXPERIMENT_CONFIG_FILE)
 
 
 def run_full_experiment():
     """Run a full experiment."""
     fuzzer_configs = fuzzer_utils.get_fuzzer_configs()
-    return _start_experiment(fuzzer_configs)
+    return _run_experiment(fuzzer_configs)
 
 
 def main():
