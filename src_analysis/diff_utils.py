@@ -26,15 +26,14 @@ class DiffError(Exception):
 
 def get_changed_files(commit_name: str = 'origin...') -> List[str]:
     """Return a list of absolute paths of files changed in this git branch."""
-    os.chdir(utils.ROOT_DIR)
-    uncommitted_diff_command = ['git', 'diff',
+    uncommitted_diff_command = ['git', 'diff', '-C', utils.ROOT_DIR,
                                 '--name-only', 'HEAD']
     output = subprocess.check_output(
         uncommitted_diff_command).decode().splitlines()
     uncommitted_changed_files = set(
         os.path.abspath(path) for path in output if os.path.isfile(path))
 
-    committed_diff_command = ['git', 'diff', '--name-only', commit_name]
+    committed_diff_command = ['git', 'diff', '-C', utils.ROOT_DIR, '--name-only', commit_name]
     try:
         output = subprocess.check_output(
             committed_diff_command).decode().splitlines()
