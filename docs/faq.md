@@ -78,14 +78,16 @@ good to them.
 ## I'd like to get my fuzzer evaluated on the free FuzzBench service, but I don't want the results to be public yet.
 
 Please reach out to us at fuzzbench@google.com. If we agree to benchmark your
-fuzzer, please send us a patch file for fuzzbench and please test your patch
-using `make build-$FUZZER-all`.
+fuzzer, please send us a patch file that applies cleanly with `git apply
+<patch_file>` to FuzzBench and please test your patch using `make
+build-$FUZZER-all`.
 
 ## I'm working on a new tool, but I'm not ready to make my code public yet. Can I use the FuzzBench service?
 
-Yes, please reach out to us at fuzzbench@google.com. If we agree to benchmark
-your tool, please send us a patch file for fuzzbench and please test your
-patch using `make build-$TOOL-all`.
+Please reach out to us at fuzzbench@google.com. If we agree to benchmark your
+fuzzer, please send us a patch file that applies cleanly with `git apply
+<patch_file>` to FuzzBench and please test your patch using `make
+build-$FUZZER-all`.
 
 ## How can you prevent researchers from optimizing their tools only for these benchmarks?
 
