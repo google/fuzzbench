@@ -29,6 +29,8 @@ def execute_git_diff(diff_args, repo=utils.ROOT_DIR):
     |repo|. Returns a list of each line in the output."""
     command = ['git', 'diff'] + diff_args
     previous_working_directory = os.getcwd()
+    # Change directories instead of using "git -C" because "HEAD" can't be used
+    # with "git -C".
     try:
         if previous_working_directory != repo:
             os.chdir(repo)

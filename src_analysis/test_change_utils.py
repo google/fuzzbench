@@ -71,30 +71,30 @@ def test_get_changed_fuzzers_since_last_experiment_no_changes(_, db_experiment):
 def test_get_changed_fuzzers_since_last_experiment_non_master_experiment(
         mocked_info, mocked_get_changed_files, db_experiment):
     """Tests that get_changed_fuzzers_since_last_experiment returns the
-    correct result when the first experiment's git hash is not in master"""
-    # Set up a newer, out-of-tree experiment.
-    out_of_tree_experiment = models.Experiment()
-    out_of_tree_experiment.name = 'out-of-tree-experiment'
-    out_of_tree_hash = 'out-of-tree-experiment-hash'
-    out_of_tree_experiment.git_hash = out_of_tree_hash
-    db_utils.add_all([out_of_tree_experiment])
+    correct result when the first experiment's git hash is not in branch"""
+    # Set up a newer, out-of-branch experiment.
+    out_of_branch_experiment = models.Experiment()
+    out_of_branch_experiment.name = 'out-of-branch-experiment'
+    out_of_branch_hash = 'out-of-branch-experiment-hash'
+    out_of_branch_experiment.git_hash = out_of_branch_hash
+    db_utils.add_all([out_of_branch_experiment])
 
-    # Update the time of out_of_tree_experiment to come after db_experiment.
-    out_of_tree_experiment.time_created = (db_experiment.time_created +
-                                           datetime.timedelta(days=1))
+    # Update the time of out_of_branch_experiment to come after db_experiment.
+    out_of_branch_experiment.time_created = (db_experiment.time_created +
+                                             datetime.timedelta(days=1))
 
-    db_utils.add_all([out_of_tree_experiment])
+    db_utils.add_all([out_of_branch_experiment])
 
     def get_changed_files(commit_hash):
-        if commit_hash == 'out-of-tree-experiment-hash':
+        if commit_hash == 'out-of-branch-experiment-hash':
             raise diff_utils.DiffError(commit_hash)
         return AFL_FUZZER_PY
 
     mocked_get_changed_files.side_effect = get_changed_files
 
     assert not change_utils.get_changed_fuzzers_since_last_experiment()
-    mocked_info.assert_called_with('Skipping %s, not in tree.',
-                                   out_of_tree_hash)
+    mocked_info.assert_called_with('Skipping %s, not in branch.',
+                                   out_of_branch_hash)
     mocked_get_changed_files.assert_has_calls(
-        [mock.call(out_of_tree_hash),
+        [mock.call(out_of_branch_hash),
          mock.call('hash')])
