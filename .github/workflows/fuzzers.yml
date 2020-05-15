@@ -2,10 +2,10 @@ name: Build fuzzers
 on:
   pull_request:
     paths:
-      - 'docker/**'  # Base images image changes.
+      - 'docker/**'  # Base image changes.
       - 'fuzzers/**' # Changes to fuzzers themselves.
       - 'benchmarks/**'  # Changes to benchmarks.
-      - 'src_analysis/**' # Changes that effect what gets built.
+      - 'src_analysis/**' # Changes that affect what gets built.
 
 jobs:
   build:

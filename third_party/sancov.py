@@ -12,7 +12,8 @@
 # either print them (as hex) or dump them into another file.
 
 # Local modifications:
-# - PrintFiles -> GetPCs function that yields PCs instead of printing them.
+# - PrintFiles Replace with GetPCs function that yields PCs instead of printing
+# them. GetPCs isn't available from the command line.
 # - ReadOneFile, Merge -> remove prints to stderr.
 
 import array

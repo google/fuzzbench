@@ -334,9 +334,13 @@ def main() -> int:
     parser.add_argument('-v', '--verbose', action='store_true', default=False)
 
     args = parser.parse_args()
-    if args.verbose:
-        logs.initialize(log_level=logging.DEBUG)
+
     os.chdir(_SRC_ROOT)
+
+    if not args.verbose:
+        logs.initialize()
+    else:
+        logs.initialize(log_level=logging.DEBUG)
 
     if not args.all_files:
         relevant_files = [Path(path) for path in diff_utils.get_changed_files()]
