@@ -270,13 +270,10 @@ def get_all_files() -> List[Path]:
     return [Path(path).absolute() for path in output if Path(path).is_file()]
 
 
-def get_all_checkable_files() -> List[Path]:
+def filter_ignored_files(paths: List[Path]) -> List[Path]:
     """Returns a list of absolute paths of files in this repo that can be
     checked statically."""
-    return [
-        path for path in get_all_files()
-        if not is_path_in_ignore_directory(path)
-    ]
+    return [path for path in paths if not is_path_in_ignore_directory(path)]
 
 
 def do_tests() -> bool:
@@ -290,8 +287,10 @@ def do_checks(file_paths: List[Path]) -> bool:
     success = True
 
     fuzzer_and_benchmark_validator = FuzzerAndBenchmarkValidator()
-    if not all(
-        [fuzzer_and_benchmark_validator.validate(path) for path in file_paths]):
+    path_valid_statuses = [
+        fuzzer_and_benchmark_validator.validate(path) for path in file_paths
+    ]
+    if not all(path_valid_statuses):
         success = False
 
     for check in [license_check, yapf, lint, pytype]:
@@ -342,7 +341,9 @@ def main() -> int:
     if not args.all_files:
         relevant_files = [Path(path) for path in diff_utils.get_changed_files()]
     else:
-        relevant_files = get_all_checkable_files()
+        relevant_files = get_all_files()
+
+    relevant_files = filter_ignored_files(relevant_files)
 
     logs.debug('Running presubmit check(s) on: %s',
                ' '.join(str(path) for path in relevant_files))
