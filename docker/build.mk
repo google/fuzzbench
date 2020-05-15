@@ -18,6 +18,7 @@ OSS_FUZZ_BENCHMARKS := $(notdir $(shell find benchmarks -type f -name oss-fuzz.y
 
 BASE_TAG ?= gcr.io/fuzzbench
 
+
 build-all: $(addsuffix -all, $(addprefix build-,$(FUZZERS)))
 pull-all: $(addsuffix -all, $(addprefix pull-,$(FUZZERS)))
 

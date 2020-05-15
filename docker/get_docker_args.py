@@ -31,6 +31,7 @@ def print_build_arguments(variants, variant_name):
 
 
 def main(argv):
+    """Script main function."""
     if 'VARIANT_NAME' not in os.environ:
         return
 
