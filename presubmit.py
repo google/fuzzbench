@@ -313,9 +313,11 @@ def main() -> int:
         choices=choices,
         nargs='?',
         help='The presubmit check to run. Defaults to all of them')
-    parser.add_argument('--all-files',
-                        action='store_true',
-                        help='Run presubmit check(s) on all files')
+    parser.add_argument(
+        '--all-files',
+        action='store_true',
+        help='Run presubmit check(s) on all files',
+        default=False)
     parser.add_argument('-v', '--verbose', action='store_true', default=False)
 
     args = parser.parse_args()
@@ -330,7 +332,7 @@ def main() -> int:
 
     changed_files = [Path(path) for path in diff_utils.get_changed_files()]
     logs.debug('Running presubmit check(s) on: %s',
-               ' '.join(str(path) for path in changed_files)))
+               ' '.join(str(path) for path in changed_files))
 
     if not args.command:
         success = do_checks(relevant_files)
