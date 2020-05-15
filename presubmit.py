@@ -330,7 +330,7 @@ def main() -> int:
 
     changed_files = [Path(path) for path in diff_utils.get_changed_files()]
     logs.debug('Running presubmit check(s) on: %s',
-               ' '.join(str(for path in changed_files)))
+               ' '.join(str(path) for path in changed_files)))
 
     if not args.command:
         success = do_checks(relevant_files)
