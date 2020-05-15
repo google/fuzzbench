@@ -18,7 +18,6 @@ OSS_FUZZ_BENCHMARKS := $(notdir $(shell find benchmarks -type f -name oss-fuzz.y
 
 BASE_TAG ?= gcr.io/fuzzbench
 
-
 build-all: $(addsuffix -all, $(addprefix build-,$(FUZZERS)))
 pull-all: $(addsuffix -all, $(addprefix pull-,$(FUZZERS)))
 
@@ -97,6 +96,7 @@ define fuzzer_benchmark_template
     --build-arg fuzzer=$(1) \
     --build-arg benchmark=$(2) \
     $(call cache_from,${BASE_TAG}/builders/$(1)/$(2)) \
+    $(shell python3 docker/get_docker_args.py $1) \
     --file docker/benchmark-builder/Dockerfile \
     .
 
