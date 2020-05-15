@@ -15,6 +15,7 @@
 """Presubmit script for fuzzbench."""
 
 import argparse
+import logging
 import os
 from pathlib import Path
 import subprocess
@@ -301,7 +302,6 @@ def bool_to_returncode(success: bool) -> int:
 
 def main() -> int:
     """Check that this branch conforms to the standards of fuzzbench."""
-    logs.initialize()
     parser = argparse.ArgumentParser(
         description='Presubmit script for fuzzbench.')
     choices = [
@@ -316,13 +316,21 @@ def main() -> int:
     parser.add_argument('--all-files',
                         action='store_true',
                         help='Run presubmit check(s) on all files')
+    parser.add_argument('-v', '--verbose', action='store_true', default=False)
 
     args = parser.parse_args()
+    if args.verbose:
+        logs.initialize(log_level=logging.DEBUG)
     os.chdir(_SRC_ROOT)
+
     if args.all_files:
         relevant_files = get_all_files()
     else:
         relevant_files = [Path(path) for path in diff_utils.get_changed_files()]
+
+    changed_files = [Path(path) for path in diff_utils.get_changed_files()]
+    logs.debug('Running presubmit check(s) on: %s',
+               ' '.join(str(for path in changed_files)))
 
     if not args.command:
         success = do_checks(relevant_files)
