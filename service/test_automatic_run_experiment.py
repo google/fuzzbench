@@ -16,7 +16,6 @@ import os
 from unittest import mock
 
 from common import utils
-
 from service import automatic_run_experiment
 
 # pylint: disable=invalid-name,unused-argument
@@ -37,7 +36,7 @@ def test_run_diff_experiment(mocked_get_experiment_name,
     mocked_get_experiment_name.return_value = expected_experiment_name
     fuzzers = ['afl', 'aflplusplus']
     mocked_get_changed_fuzzers_since_last_experiment.return_value = fuzzers
-    automatic_run_experiment.run_diff_experiment()
+    automatic_run_experiment.run_diff_experiment(False)
     expected_config_file = os.path.join(utils.ROOT_DIR, 'service',
                                         'experiment-config.yaml')
 

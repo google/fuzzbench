@@ -25,15 +25,15 @@ import pytz
 from common import logs
 from common import fuzzer_utils
 from common import utils
-from src_analysis import change_utils
 from experiment import run_experiment
 from experiment import stop_experiment
+from src_analysis import change_utils
 
 EXPERIMENT_CONFIG_FILE = os.path.join(utils.ROOT_DIR, 'service',
                                       'experiment-config.yaml')
 
-# TODO(metzman): Stop hardcoding benchmarks and get away to mark a benchmark as
-# disabled.
+# TODO(metzman): Stop hardcoding benchmarks and support marking benchmarks as
+# disabled using a config file in each benchmark.
 BENCHMARKS = [
     # OSS-Fuzz benchmarks.
     'bloaty_fuzz_target',
@@ -68,17 +68,23 @@ def get_experiment_name():
     return time_now.strftime('%Y-%m-%d')
 
 
-def run_diff_experiment():
+def run_diff_experiment(dry_run):
     """Run a diff experiment. This is an experiment that runs only on
     fuzzers that have changed since the last experiment."""
     fuzzers = change_utils.get_changed_fuzzers_since_last_experiment()
-    logs.info('Running experiment with fuzzers: %s.', fuzzers)
+    logs.info('Running experiment with fuzzers: %s.', ' '.join(fuzzers))
     fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=fuzzers)
-    return _run_experiment(fuzzer_configs)
+    return _run_experiment(fuzzer_configs, dry_run)
 
 
-def _run_experiment(fuzzer_configs):
+def _run_experiment(fuzzer_configs, dry_run=False):
+    """Run an experiment on |fuzzer_configs| and shut it down once it
+    terminates."""
     experiment_name = get_experiment_name()
+    logs.info('Starting experiment: %s.', experiment_name)
+    if dry_run:
+        logs.info('Dry run. Not actually running experiment.')
+        return None
     run_experiment.start_experiment(experiment_name, EXPERIMENT_CONFIG_FILE,
                                     BENCHMARKS, fuzzer_configs)
     stop_experiment.stop_experiment(experiment_name, EXPERIMENT_CONFIG_FILE)
@@ -95,15 +101,19 @@ def main():
     logs.initialize()
     parser = argparse.ArgumentParser(
         description='Run a full or diff experiment (if needed).')
-    # TODO(metzman): Add a way to exit immediately if there is alreay an
+    # TODO(metzman): Add a way to exit immediately if there is already an
     # experiment running. FuzzBench's scheduler isn't smart enough to deal with
     # this properly.
     parser.add_argument('experiment_type', choices=['diff', 'full'])
+    parser.add_argument('-d', '--dry-run',
+                        help='Dry run, don\'t actually run the experiment',
+                        default=False,
+                        action='store_true')
     args = parser.parse_args()
     if args.experiment_type == 'full':
         run_full_experiment()
     else:
-        run_diff_experiment()
+        run_diff_experiment(args.dry_run)
     return 0
 
 
