@@ -36,7 +36,7 @@ from common import new_process
 from common import utils
 from common import yaml_utils
 from experiment import stop_experiment
-from src_analysis import change_utils
+from src_analysis import experiment_changes
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
@@ -498,7 +498,10 @@ def main():
     fuzzers_group.add_argument('-cf',
                                '--changed-fuzzers',
                                help=('Use fuzzers that have changed since the '
-                                     'last experiment'),
+                                     'last experiment. The last experiment is '
+                                     'determined by the database your '
+                                     'experiment uses, not necessarily the '
+                                     'fuzzbench service'),
                                action='store_true',
                                required=False)
 
@@ -511,7 +514,7 @@ def main():
         ]
     else:
         if args.changed_fuzzers:
-            fuzzers = change_utils.get_changed_fuzzers_since_last_experiment()
+            fuzzers = experiment_changes.get_fuzzers_changed_since_last()
             if not fuzzers:
                 logs.error('No fuzzers changed since last experiment. Exiting.')
                 return 1

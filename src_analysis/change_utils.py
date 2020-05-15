@@ -19,11 +19,8 @@ from typing import List
 from common import utils
 from common import filesystem
 from common import fuzzer_utils
-from common import logs
-from database import models
 from src_analysis import benchmark_dependencies
 from src_analysis import fuzzer_dependencies
-from src_analysis import diff_utils
 
 # This will mean changes to OSS-Fuzz Dockerfiles cause standard benchmarks to be
 # built and vice versa. But until we map the relationship between dockerfiles in
@@ -57,38 +54,6 @@ def get_changed_fuzzers_for_ci(changed_files: List[str] = None) -> List[str]:
     if any(changed_file in CI_FILES for changed_file in changed_files):
         # If any of changed files are in CI_FILES.
         return fuzzer_utils.get_fuzzer_names()
-    return get_changed_fuzzers(changed_files)
-
-
-def get_changed_fuzzers_since_last_experiment():
-    """Returns a list of fuzzers that have changed since the last experiment
-    stored in the database that has a commit that is in the current branch."""
-    # Don't import db_utils on the toplevel so that change_utils can be used
-    # without a databse connection.
-    from database import utils as db_utils  # pylint: disable=import-outside-toplevel
-
-    # TODO(metzman): Get a way of skipping experiments that were stopped early.
-
-    # Loop over experiments since some may have hashes that are not in the
-    # current branch.
-    experiments = list(
-        db_utils.query(models.Experiment).order_by(
-            models.Experiment.time_created.desc()))
-    if not experiments:
-        raise Exception('No experiments. Cannot find changed fuzzers.')
-
-    changed_files = None
-    for experiment in experiments:
-        try:
-            changed_files = diff_utils.get_changed_files(experiment.git_hash)
-            break
-        except diff_utils.DiffError:
-            logs.warning('Skipping %s. Commit is not in branch.',
-                         experiment.git_hash)
-
-    if not changed_files:
-        raise Exception('No in-branch experiments. '
-                        'Cannot find changed fuzzers.')
     return get_changed_fuzzers(changed_files)
 
 

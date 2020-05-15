@@ -14,7 +14,8 @@
 # limitations under the License.
 """Determines if an experiment should be run and runs one if necessary.
 Note that this code uses a config file for experiments that is not generic.
-Thus, it only works on the official fuzzbench service."""
+Thus, it only works on the official fuzzbench service. This script can be
+run manually but is intended to be run by a cronjob."""
 import argparse
 import datetime
 import os
@@ -27,7 +28,7 @@ from common import fuzzer_utils
 from common import utils
 from experiment import run_experiment
 from experiment import stop_experiment
-from src_analysis import change_utils
+from src_analysis import experiment_changes
 
 EXPERIMENT_CONFIG_FILE = os.path.join(utils.ROOT_DIR, 'service',
                                       'experiment-config.yaml')
@@ -71,7 +72,7 @@ def get_experiment_name():
 def run_diff_experiment(dry_run):
     """Run a diff experiment. This is an experiment that runs only on
     fuzzers that have changed since the last experiment."""
-    fuzzers = change_utils.get_changed_fuzzers_since_last_experiment()
+    fuzzers = experiment_changes.get_fuzzers_changed_since_last()
     logs.info('Running experiment with fuzzers: %s.', ' '.join(fuzzers))
     fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=fuzzers)
     return _run_experiment(fuzzer_configs, dry_run)

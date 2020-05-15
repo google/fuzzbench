@@ -23,11 +23,10 @@ from service import automatic_run_experiment
 
 @mock.patch('experiment.run_experiment.start_experiment')
 @mock.patch('experiment.stop_experiment.stop_experiment')
-@mock.patch(
-    'src_analysis.change_utils.get_changed_fuzzers_since_last_experiment')
+@mock.patch('src_analysis.experiment_changes.get_fuzzers_changed_since_last')
 @mock.patch('service.automatic_run_experiment.get_experiment_name')
 def test_run_diff_experiment(mocked_get_experiment_name,
-                             mocked_get_changed_fuzzers_since_last_experiment,
+                             mocked_get_fuzzers_changed_since_last,
                              mocked_stop_experiment, mocked_start_experiment,
                              db):
     """Tests that run_diff_experiment starts and stops the experiment
@@ -35,7 +34,7 @@ def test_run_diff_experiment(mocked_get_experiment_name,
     expected_experiment_name = 'myexperiment'
     mocked_get_experiment_name.return_value = expected_experiment_name
     fuzzers = ['afl', 'aflplusplus']
-    mocked_get_changed_fuzzers_since_last_experiment.return_value = fuzzers
+    mocked_get_fuzzers_changed_since_last.return_value = fuzzers
     automatic_run_experiment.run_diff_experiment(False)
     expected_config_file = os.path.join(utils.ROOT_DIR, 'service',
                                         'experiment-config.yaml')
