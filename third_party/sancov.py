@@ -245,9 +245,7 @@ if __name__ == '__main__':
     if not file_list:
         Usage()
 
-    if sys.argv[1] == "print":
-        PrintFiles(file_list)
-    elif sys.argv[1] == "merge":
+    if sys.argv[1] == "merge":
         MergeAndPrint(file_list)
     elif sys.argv[1] == "unpack":
         Unpack(file_list)
