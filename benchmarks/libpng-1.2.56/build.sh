@@ -21,11 +21,18 @@ apt-get update && \
   make \
   autoconf \
   automake \
-  libtool \
-  zlib1g-dev
+  libtool
 
 [ ! -e libpng-1.2.56.tar.gz ] && wget https://downloads.sourceforge.net/project/libpng/libpng12/older-releases/1.2.56/libpng-1.2.56.tar.gz
 [ ! -e libpng-1.2.56 ] && tar xf libpng-1.2.56.tar.gz
+[ ! -e zlib-1.2.11.tar.gz ] && wget https://www.zlib.net/zlib-1.2.11.tar.gz
+[ ! -e zlib-1.2.11 ] && tar xf zlib-1.2.11.tar.gz
+
+build_zlib() {
+  rm -rf ZLIB_BUILD
+  cp -rf zlib-1.2.11 ZLIB_BUILD
+  (cd ZLIB_BUILD && ./configure &&  make install -j $JOBS)
+}
 
 build_lib() {
   rm -rf BUILD
@@ -33,8 +40,9 @@ build_lib() {
   (cd BUILD && ./configure &&  make -j $JOBS)
 }
 
+build_zlib
 build_lib
 
-$CXX $CXXFLAGS -std=c++11 $SCRIPT_DIR/target.cc BUILD/.libs/libpng12.a $FUZZER_LIB -I BUILD/ -I BUILD -lz -o $FUZZ_TARGET
+$CXX $CXXFLAGS -std=c++11 $SCRIPT_DIR/target.cc BUILD/.libs/libpng12.a $FUZZER_LIB -I BUILD/ -I BUILD -I ZLIB_BUILD $(pwd)/ZLIB_BUILD/libz.so -o $FUZZ_TARGET
 cp -r $SCRIPT_DIR/seeds $OUT/
 wget -qO $FUZZ_TARGET.dict https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/png.dict

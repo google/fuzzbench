@@ -41,6 +41,44 @@ def prepare_build_environment():
     os.environ['FUZZER_LIB'] = '/libAFL.a -L/ -lKleeMock -lpthread'
 
 
+def get_bcs_for_shared_libs(fuzz_target):
+    """Get shared libs paths for the fuzz_target"""
+    ldd_cmd = ["/usr/bin/ldd", "{target}".format(target=fuzz_target)]
+    output = ""
+    try:
+        output = subprocess.check_output(ldd_cmd, text=True)
+    except subprocess.CalledProcessError:
+        raise ValueError("ldd failed")
+
+    for line in output.split('\n'):
+        if '=>' not in line:
+            continue
+
+        out_dir = os.environ['OUT']
+        so_path = line.split('=>')[1].split(' ')[1]
+        so_name = so_path.split('/')[-1].split('.')[0]
+        getbc_cmd = "get-bc -o {out_dir}/{so_name}.bc {target}".format(
+            target=so_path, out_dir=out_dir, so_name=so_name)
+        # This will fail for most of the dependencies, which is fine. We want
+        # to grab the .bc files for dependencies built in any given
+        # benchmark's build.sh file.
+        success = os.system(getbc_cmd)
+        if success == 1:
+            print("Got a bc file for {target}".format(target=so_path))
+
+
+def get_bc_files():
+    """Returns list of .bc files in the OUT directory"""
+    out_dir = './'
+    files = os.listdir(out_dir)
+    bc_files = []
+    for filename in files:
+        if filename.split('.')[-1] == "bc" and 'fuzz-target' not in filename:
+            bc_files.append(filename)
+
+    return bc_files
+
+
 def build():
     """Build benchmark."""
     prepare_build_environment()
@@ -52,6 +90,7 @@ def build():
     getbc_cmd = "get-bc {target}".format(target=fuzz_target)
     if os.system(getbc_cmd) != 0:
         raise ValueError("get-bc failed")
+    get_bcs_for_shared_libs(fuzz_target)
 
 
 def rmdir(path):
@@ -177,12 +216,19 @@ def fuzz(input_corpus, output_corpus, target_binary):
     seeds_option = ['-zero-seed-extension', '-seed-dir', input_klee
                    ] if n_converted > 0 else []
 
+    llvm_link_libs = []
+    for filename in get_bc_files():
+        llvm_link_libs.append(
+            "-link-llvm-lib={filename}".format(filename=filename))
+
     klee_cmd = [
         klee_bin, '--optimize', '-max-solver-time', '30s',
         '-log-timed-out-queries', '--max-time', '{}s'.format(seconds), '-libc',
         'uclibc', '-libcxx', '-posix-runtime',
         '-only-output-states-covering-new', '-output-dir', output_klee
     ]
+
+    klee_cmd.extend(llvm_link_libs)
 
     if seeds_option:
         klee_cmd.extend(seeds_option)
