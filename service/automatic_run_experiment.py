@@ -84,7 +84,7 @@ def _run_experiment(fuzzer_configs, dry_run=False):
     logs.info('Starting experiment: %s.', experiment_name)
     if dry_run:
         logs.info('Dry run. Not actually running experiment.')
-        return None
+        return
     run_experiment.start_experiment(experiment_name, EXPERIMENT_CONFIG_FILE,
                                     BENCHMARKS, fuzzer_configs)
     stop_experiment.stop_experiment(experiment_name, EXPERIMENT_CONFIG_FILE)
@@ -105,7 +105,8 @@ def main():
     # experiment running. FuzzBench's scheduler isn't smart enough to deal with
     # this properly.
     parser.add_argument('experiment_type', choices=['diff', 'full'])
-    parser.add_argument('-d', '--dry-run',
+    parser.add_argument('-d',
+                        '--dry-run',
                         help='Dry run, don\'t actually run the experiment',
                         default=False,
                         action='store_true')
