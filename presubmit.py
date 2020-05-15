@@ -273,8 +273,10 @@ def get_all_files() -> List[Path]:
 def get_all_checkable_files() -> List[Path]:
     """Returns a list of absolute paths of files in this repo that can be
     checked statically."""
-    return [path for path in get_all_files()
-            if not is_path_in_ignore_directory(path)]
+    return [
+        path for path in get_all_files()
+        if not is_path_in_ignore_directory(path)
+    ]
 
 
 def do_tests() -> bool:
@@ -288,10 +290,8 @@ def do_checks(file_paths: List[Path]) -> bool:
     success = True
 
     fuzzer_and_benchmark_validator = FuzzerAndBenchmarkValidator()
-    if not all([
-            fuzzer_and_benchmark_validator.validate(path)
-            for path in file_paths
-    ]):
+    if not all(
+        [fuzzer_and_benchmark_validator.validate(path) for path in file_paths]):
         success = False
 
     for check in [license_check, yapf, lint, pytype]:
@@ -328,11 +328,10 @@ def main() -> int:
         choices=choices,
         nargs='?',
         help='The presubmit check to run. Defaults to all of them')
-    parser.add_argument(
-        '--all-files',
-        action='store_true',
-        help='Run presubmit check(s) on all files',
-        default=False)
+    parser.add_argument('--all-files',
+                        action='store_true',
+                        help='Run presubmit check(s) on all files',
+                        default=False)
     parser.add_argument('-v', '--verbose', action='store_true', default=False)
 
     args = parser.parse_args()
