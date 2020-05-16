@@ -39,7 +39,7 @@ experiment](https://www.fuzzbench.com/reports/sample/index.html) like this:
 ```bash
 mkdir ~/my-report; cd ~/my-report
 wget https://www.fuzzbench.com/reports/sample/data.csv.gz
-POSTGRES_PASSWORD=1 PYTHONPATH=<fuzzbench_root> python3 analysis/generate_report.py \
+PYTHONPATH=<fuzzbench_root> python3 experiment/generate_report.py \
   [experiment_name] \
   --report-dir ~/my-report \
   --from-cached-data
@@ -49,12 +49,8 @@ You can find the link to the raw data file at the bottom of each [previously
 published report](https://www.fuzzbench.com/reports/index.html).
 
 You can also create a custom report using a template of your own (see
-`--report_type` option). Note that currently this new report name has to be
-added manually to `analysis/generate_report.py` for the `choices` of the
-argument handler for `-t`.
-
-See all command line options with:
+`--report_type` option). See all command line options with:
 
 ```bash
-POSTGRES_PASSWORD=1 PYTHONPATH=<fuzzbench_root> python3 analysis/generate_report.py --help
+PYTHONPATH=<fuzzbench_root> python3 analysis/generate_report.py --help
 ```
