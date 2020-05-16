@@ -32,7 +32,7 @@ def initialize():
     database_url = os.getenv('SQL_DATABASE_URL')
     if not database_url:
         postgres_password = os.getenv('POSTGRES_PASSWORD')
-        assert postgres_password, ('POSTGRES_PASSWORD needs to be set.')
+        assert postgres_password, 'POSTGRES_PASSWORD needs to be set.'
         database_url = (
             'postgresql+psycopg2://postgres:{password}@127.0.0.1:5432'.format(
                 password=postgres_password))
