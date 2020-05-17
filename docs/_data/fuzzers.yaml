@@ -2,12 +2,12 @@
 #
 # Properties:
 #
-#  name: Name of the fuzzer
-#  desc: A one sentence description of the tool
-#  url: Main website/link, e.g.: https://lcamtuf.coredump.cx/afl
-#  repo: Source code repository, e.g., https://github.com/google/AFL
-#  dblp: dblp.org ID, e.g.: osdi/CadarDE08
-#  integrated: Integrated with FuzzBench? true or false
+#  name:  Name of the fuzzer
+#  desc:  A one sentence description of the tool
+#  url:   Main website/link, e.g.: https://lcamtuf.coredump.cx/afl
+#  repo:  Source code repository, e.g., https://github.com/google/AFL
+#  dblp:  DBLP.org ID, e.g.: osdi/CadarDE08
+#  dir:   Directory name under fuzzbench/fuzzers/
 #  issue: Link to GitHub issue on integration
 
 Fuzzers:
@@ -18,7 +18,7 @@ Fuzzers:
   url: https://www.jiliac.com/files/ankou-icse2020.pdf
   dbpl:
   repo: https://github.com/SoftSec-KAIST/Ankou
-  integrated: false
+  integrated: 
   issue: https://github.com/google/fuzzbench/issues/198
 
 - name: AFL++
@@ -27,7 +27,7 @@ Fuzzers:
   url: https://aflplus.plus
   dbpl:
   repo: https://github.com/AFLplusplus/AFLplusplus
-  integrated: true
+  dir: aflplusplus
   issue:
 
 - name: MOpt-AFL
@@ -36,16 +36,16 @@ Fuzzers:
   url: https://www.usenix.org/conference/usenixsecurity19/presentation/lyu
   dbpl: conf/uss/LyuJZLLSB19
   repo: https://github.com/puppet-meteor/MOpt-AFL
-  integrated: true
+  dir: mopt
   issue:
 
 - name: Eclipser
   desc: Grey-box Concolic Testing on Binary Code
   year: 2019
-  url: https://aflplus.plus
+  url: https://softsec.kaist.ac.kr/~jschoi/data/icse2019.pdf
   dbpl: conf/icse/0002JHC19
   repo: https://github.com/SoftSec-KAIST/Eclipser
-  integrated: true
+  dir: eclipser
   issue:
 
 - name: Angora
@@ -54,7 +54,7 @@ Fuzzers:
   url: https://web.cs.ucdavis.edu/~hchen/paper/chen2018angora.pdf
   dbpl: conf/sp/ChenC18
   repo: https://github.com/AngoraFuzzer/Angora
-  integrated: false
+  dir:
   issue:
 
 - name: Vuzzer
@@ -63,7 +63,7 @@ Fuzzers:
   url: https://www.cs.vu.nl/~giuffrida/papers/vuzzer-ndss-2017.pdf
   dbpl: conf/ndss/0001JKCGB17
   repo: https://github.com/vusec/vuzzer
-  integrated: false
+  dir:
   issue:
 
 - name: AFLFast
@@ -72,7 +72,7 @@ Fuzzers:
   url: https://mboehme.github.io/paper/TSE18.pdf
   dbpl: conf/ccs/BohmePR16
   repo: https://github.com/mboehme/aflfast
-  integrated: true
+  dir: aflfast
   issue:
 
 - name: Driller
@@ -81,25 +81,25 @@ Fuzzers:
   url: https://sites.cs.ucsb.edu/~vigna/publications/2016_NDSS_Driller.pdf
   dbpl: conf/ndss/StephensGSDWCSK16
   repo: https://github.com/shellphish/driller
-  integrated: false
+  dir:
   issue:
 
-- name: Honggfuzz
+- name: HonggFuzz
   desc: A security oriented, feedback-driven, evolutionary, easy-to-use fuzzer.
   year: 2015
   url: https://honggfuzz.dev/
   dbpl:
   repo: https://github.com/google/honggfuzz
-  integrated: true
+  dir: honggfuzz
   issue:
 
-- name: libFuzzer
+- name: LibFuzzer
   desc: LibFuzzer is in-process, coverage-guided, evolutionary fuzzing engine.
   year: 2014
   url: https://llvm.org/docs/LibFuzzer.html
   dbpl:
   repo: https://github.com/llvm/llvm-project/tree/master/compiler-rt/lib/fuzzer
-  integrated: true
+  dir: libfuzzer
   issue:
 
 - name: AFL
@@ -108,7 +108,7 @@ Fuzzers:
   url: https://lcamtuf.coredump.cx/afl
   dbpl:
   repo: https://github.com/google/AFL
-  integrated: true
+  dir: afl
   issue:
 
 - name: KLEE
@@ -117,5 +117,5 @@ Fuzzers:
   url: https://www.doc.ic.ac.uk/~cristic/papers/klee-osdi-08.pdf
   repo: https://github.com/klee/klee
   dbpl: conf/osdi/CadarDE08
-  integrated: false
+  dir:
   issue: https://github.com/google/fuzzbench/pull/195
