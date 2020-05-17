@@ -8,9 +8,7 @@ parent: Reference
 
 # Fuzzers
 
-## Already integrated
-
-<table>
+{% capture table_header %}
   <thead>
     <tr>
       <th style="text-align: center">Year</th>
@@ -20,9 +18,28 @@ parent: Reference
       <th style="text-align: center">Integration Status</th>
     </tr>
   </thead>
+{% endcapture %}
+
+## Already integrated
+
+<table>
+  {{ table_header }}
   <tbody>
     {% for fuzzer in site.data.fuzzers.Fuzzers %}
-    {% if fuzzer.dir %}
+    {% if fuzzer.dir and fuzzer.experimental != true %}
+    {% include_relative fuzzer_row.html %}
+    {% endif %}
+    {% endfor %}
+  </tbody>
+</table>
+
+## Experimental integrations
+
+<table>
+  {{ table_header }}
+  <tbody>
+    {% for fuzzer in site.data.fuzzers.Fuzzers %}
+    {% if fuzzer.dir and fuzzer.experimental == true %}
     {% include_relative fuzzer_row.html %}
     {% endif %}
     {% endfor %}
@@ -32,15 +49,7 @@ parent: Reference
 ## Would love to have
 
 <table>
-  <thead>
-    <tr>
-      <th style="text-align: center">Year</th>
-      <th style="text-align: center">Name</th>
-      <th style="text-align: center">Links</th>
-      <th style="text-align: center">Description</th>
-      <th style="text-align: center">Integration Status</th>
-    </tr>
-  </thead>
+  {{ table_header }}
   <tbody>
     {% for fuzzer in site.data.fuzzers.Fuzzers %}
     {% unless fuzzer.dir %}

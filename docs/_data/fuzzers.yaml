@@ -9,6 +9,7 @@
 #  dblp:  DBLP.org ID, e.g.: osdi/CadarDE08
 #  dir:   Directory name under fuzzbench/fuzzers/
 #  issue: Link to GitHub issue on integration
+#  experimental: true if experimental integration
 
 Fuzzers:
 
@@ -20,6 +21,7 @@ Fuzzers:
   repo:
   dir: entropic
   issue:
+  experimental: true
 
 - name: Fastcgs
   desc: AFL modifications.
@@ -29,6 +31,7 @@ Fuzzers:
   repo: https://github.com/alifahmed/aflmod
   dir: fastcgs_lm
   issue:
+  experimental: true
 
 - name: Ankou
   desc: Guiding Grey-box Fuzzing towards Combinatorial Difference.
