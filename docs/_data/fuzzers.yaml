@@ -13,7 +13,7 @@
 Fuzzers:
 
 - name: Ankou
-  desc: Guiding Grey-box Fuzzing towards Combinatorial Difference
+  desc: Guiding Grey-box Fuzzing towards Combinatorial Difference.
   year: 2020
   url: https://www.jiliac.com/files/ankou-icse2020.pdf
   dblp:
@@ -22,7 +22,7 @@ Fuzzers:
   issue: https://github.com/google/fuzzbench/issues/198
 
 - name: AFL++
-  desc: afl++ is afl with community patches
+  desc: afl++ is afl with community patches.
   year: 2019
   url: https://aflplus.plus
   dblp:
@@ -31,7 +31,7 @@ Fuzzers:
   issue:
 
 - name: MOpt-AFL
-  desc: AFL with Particle Swarm Optimization (PSO)
+  desc: AFL with Particle Swarm Optimization (PSO).
   year: 2019
   url: https://www.usenix.org/conference/usenixsecurity19/presentation/lyu
   dblp: conf/uss/LyuJZLLSB19
@@ -39,8 +39,17 @@ Fuzzers:
   dir: mopt
   issue:
 
+- name: AFLSmart
+  desc: AFLSmart is a smart input-structure aware greybox fuzzer.
+  year: 2019
+  url: https://thuanpv.github.io/publications/TSE19_aflsmart.pdf
+  dblp: journals/corr/abs-1811-09447
+  repo: https://github.com/aflsmart/aflsmart
+  dir: aflsmart
+  issue:
+
 - name: Eclipser
-  desc: Grey-box Concolic Testing on Binary Code
+  desc: Grey-box Concolic Testing on Binary Code.
   year: 2019
   url: https://softsec.kaist.ac.kr/~jschoi/data/icse2019.pdf
   dblp: conf/icse/0002JHC19
@@ -58,7 +67,7 @@ Fuzzers:
   issue:
 
 - name: Vuzzer
-  desc: Application-aware Evolutionary Fuzzing
+  desc: Application-aware Evolutionary Fuzzing.
   year: 2017
   url: https://www.cs.vu.nl/~giuffrida/papers/vuzzer-ndss-2017.pdf
   dblp: conf/ndss/0001JKCGB17
@@ -67,7 +76,7 @@ Fuzzers:
   issue:
 
 - name: AFLFast
-  desc: Coverage-based Greybox Fuzzing as Markov Chain
+  desc: Coverage-based Greybox Fuzzing as Markov Chain.
   year: 2016
   url: https://mboehme.github.io/paper/TSE18.pdf
   dblp: conf/ccs/BohmePR16
@@ -103,7 +112,7 @@ Fuzzers:
   issue:
 
 - name: AFL
-  desc: The mother of coverage guided fuzzers
+  desc: The mother of coverage guided fuzzers.
   year: 2014
   url: https://lcamtuf.coredump.cx/afl
   dblp:
@@ -112,7 +121,7 @@ Fuzzers:
   issue:
 
 - name: KLEE
-  desc: Symbolic execution engine
+  desc: KLEE is a symbolic virtual machine.
   year: 2008
   url: https://www.doc.ic.ac.uk/~cristic/papers/klee-osdi-08.pdf
   repo: https://github.com/klee/klee
