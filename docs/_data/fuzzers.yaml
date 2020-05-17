@@ -57,6 +57,15 @@ Fuzzers:
   dir: eclipser
   issue:
 
+- name: FairFuzz
+  desc: A targeted mutation strategy for increasing greybox fuzz testing coverage.
+  year: 2018
+  url: https://www.carolemieux.com/fairfuzz-ase18.pdf
+  dblp: conf/kbse/LemieuxS18
+  repo: https://github.com/carolemieux/afl-rb
+  dir: fairfuzz
+  issue:
+
 - name: Angora
   desc: Angora is a mutation-based fuzzer.
   year: 2018
