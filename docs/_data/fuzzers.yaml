@@ -12,13 +12,31 @@
 
 Fuzzers:
 
+- name: Entropic
+  desc: Boosts libFuzzer performance by changing how weights are assigned to seeds.
+  year: 2020
+  url: https://reviews.llvm.org/D73776
+  dblp:
+  repo:
+  dir: entropic
+  issue:
+
+- name: Fastcgs
+  desc: AFL modifications.
+  year: 2020
+  url:
+  dblp:
+  repo: https://github.com/alifahmed/aflmod
+  dir: fastcgs_lm
+  issue:
+
 - name: Ankou
   desc: Guiding Grey-box Fuzzing towards Combinatorial Difference.
   year: 2020
   url: https://www.jiliac.com/files/ankou-icse2020.pdf
   dblp:
   repo: https://github.com/SoftSec-KAIST/Ankou
-  integrated:
+  dir:
   issue: https://github.com/google/fuzzbench/issues/198
 
 - name: AFL++
@@ -120,8 +138,8 @@ Fuzzers:
   dir: honggfuzz
   issue:
 
-- name: LibFuzzer
-  desc: LibFuzzer is in-process, coverage-guided, evolutionary fuzzing engine.
+- name: libFuzzer
+  desc: libFuzzer is in-process, coverage-guided, evolutionary fuzzing engine.
   year: 2014
   url: https://llvm.org/docs/LibFuzzer.html
   dblp:
