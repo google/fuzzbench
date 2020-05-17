@@ -18,7 +18,7 @@ Fuzzers:
   url: https://www.jiliac.com/files/ankou-icse2020.pdf
   dblp:
   repo: https://github.com/SoftSec-KAIST/Ankou
-  integrated: 
+  integrated:
   issue: https://github.com/google/fuzzbench/issues/198
 
 - name: AFL++
@@ -82,6 +82,15 @@ Fuzzers:
   dblp: conf/ccs/BohmePR16
   repo: https://github.com/mboehme/aflfast
   dir: aflfast
+  issue:
+
+- name: laf-intel
+  desc: LLVM instrumentation passes that help fuzzers.
+  year: 2016
+  url: https://lafintel.wordpress.com
+  dblp:
+  repo: https://gitlab.com/laf-intel/laf-llvm-pass
+  dir: lafintel
   issue:
 
 - name: Driller
