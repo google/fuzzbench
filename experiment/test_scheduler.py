@@ -189,7 +189,7 @@ def test_start_trials_not_started(mocked_get_by_variant_name,
     mocked_create_instance.return_value = False
     mocked_get_by_variant_name.return_value = {'fuzzer': 'test_fuzzer'}
     with ThreadPool() as pool:
-        result = scheduler.start_trials(pending_trials, experiment_config, pool)
+        result = scheduler.start_trials(pending_trials, experiment_config, pool, preemptible=True)
     assert result == []
 
 
