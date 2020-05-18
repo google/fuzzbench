@@ -86,7 +86,8 @@ RUN cd /klee &&  \
     -DCMAKE_BUILD_TYPE=Release && \
     make -j`nproc` && make install
 
-RUN apt-get -y install \
+RUN apt-get update -y && \
+    apt-get -y install \
     software-properties-common && \
     add-apt-repository -y ppa:gophers/archive && \
     apt-get update -y && \
