@@ -86,6 +86,7 @@ def fix_fuzzer_lib():
 
     if is_benchmark('curl'):
         shutil.copy('/libAflccMock.so', '/usr/lib/libAflccMock.so')
+        
     # elif is_benchmark('php'):
     #     # -lcrypt -lresolv -lcrypt -lrt -lm -l:libonig.a
     #     os.environ['FUZZER_LIB'] += ' -lresolv'
@@ -110,14 +111,15 @@ def add_compilation_cflags():
         utils.append_flags('CXXFLAGS', php_flags)
 
     # For some benchmarks, we also tell the compiler 
-    # to ignore unresolved symbols. Note that
-    # some functions are only defined post-compilation 
-    # during the LLVM passes,
-    elif is_benchmark('systemd') or is_benchmark('bloaty'):
+    # to ignore unresolved symbols. This is useful when we cannot change
+    # the build process to add a shared library for linking (which contains mocked functions: libAflccMock.so).
+    # Note that some functions are only defined post-compilation 
+    # during the LLVM passes.
+    elif is_benchmark('systemd') or is_benchmark('bloaty') or is_benchmark('openssl'):
         unresolved_flags = ['-Wl,--warn-unresolved-symbols']
         utils.append_flags('CFLAGS', unresolved_flags)
         utils.append_flags('CXXFLAGS', unresolved_flags)
-        
+
     elif is_benchmark('curl'):
         dl_flags = ['-ldl', '-lpsl']
         utils.append_flags('CFLAGS', dl_flags)
@@ -131,6 +133,8 @@ def add_post_compilation_lflags(ldflags_arr):
         ldflags_arr += ['-lresolv']
     elif is_benchmark('curl'):
         ldflags_arr += ['-ldl', '-lpsl', '/src/openssl/libcrypto.a', '/src/openssl/libssl.a']
+    elif is_benchmark('openssl'):
+        ldflags_arr += ['/src/openssl/libcrypto.a', '/src/openssl/libssl.a']
 
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
@@ -165,22 +169,27 @@ def get_fuzz_targets():
 
     print('FUZZ_TARGET is not defined')
 
-    # for curl, we return a single file
-    return ['/out/curl_fuzzer_http']
+    # for these benchmarks, only return one file
+    targets = {'curl': 'curl_fuzzer_http', 
+               'openssl': 'x509'}
+    for target,fuzzname in targets.items():
+        if is_benchmark(target):
+            return [os.path.join(os.environ['OUT'], fuzzname)]
 
-    # For oss-projects, use some heuristics as there is no convention.
+    # For the reamining oss-projects, use some heuristics.
     # We look for binaries in the OUT directory and take it as our targets.
     # Note that we may return multiple binaries: this is necessary because
     # sometimes multiple binaries are generated and we don't know which will
     # be used for fuzzing (e.g., zlib benchmark)
+    # TODO(laurentsimon): hardcode targets for oss-fuzz projects in the 'targets' dictionary above
     out_dir = os.getenv('OUT', None)
     if out_dir is None:
         raise ValueError('OUT is not defined')
     files = os.listdir(out_dir)
     fuzz_targets = []
-    for file in files:
-        candidate_bin = os.path.join(out_dir, file)
-        if 'fuzz' in file and os.access(candidate_bin, os.X_OK):
+    for filename in files:
+        candidate_bin = os.path.join(out_dir, filename)
+        if 'fuzz' in filename and os.access(candidate_bin, os.X_OK):
             fuzz_targets += [candidate_bin]
 
     if len(fuzz_targets) == 0:
