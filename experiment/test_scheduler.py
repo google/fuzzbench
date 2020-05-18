@@ -202,9 +202,10 @@ def test_schedule(mocked_datetime_now, mocked_get_by_variant_name,
     needed."""
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
     mocked_get_by_variant_name.return_value = {'fuzzer': 'test_fuzzer'}
+    experiment = experiment_config['experiment']
     datetimes_first_experiments_started = [
         trial.time_started for trial in db_utils.query(models.Trial).filter(
-            models.Trial.experiment == experiment_config['experiment']).filter(
+            models.Trial.experiment == experiment).filter(
                 models.Trial.time_started.isnot(None))
     ]
 
@@ -213,8 +214,12 @@ def test_schedule(mocked_datetime_now, mocked_get_by_variant_name,
         datetime.timedelta(seconds=(experiment_config['max_total_time'] +
                                     scheduler.GRACE_TIME_SECONDS * 2)))
 
+    num_trials = db_utils.query(models.Trial).filter(
+        models.Trial.experiment == experiment).count()
+    trial_instance_manager = scheduler.TrialInstanceManager(
+        num_trials, experiment_config)
     with ThreadPool() as pool:
-        scheduler.schedule(experiment_config, pool)
+        scheduler.schedule(experiment_config, trial_instance_manager, pool)
     assert db_utils.query(models.Trial).filter(
         models.Trial.time_started.in_(
             datetimes_first_experiments_started)).all() == (db_utils.query(
