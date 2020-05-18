@@ -262,7 +262,7 @@ def test_run_cov_new_units(mocked_execute, fs, environ):
         'cwd': '/work/coverage-binaries/benchmark-a',
         'env': {
             'UBSAN_OPTIONS': ('coverage_dir='
-                              '/work/measurement-folders/benchmark-a/fuzzer-a'
+                              '/work/measurement-folders/benchmark-a-fuzzer-a'
                               '/trial-12/sancovs'),
             'WORK': '/work',
             'CLOUD_EXPERIMENT_BUCKET': 'gs://bucket',

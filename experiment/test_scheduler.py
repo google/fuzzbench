@@ -96,7 +96,7 @@ docker run \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
     _test_create_trial_instance(benchmark, expected_image, expected_target,
-                                expected_startup_script, experiment_config)
+                                expected_startup_script, experiment_config, True)
 
 
 @pytest.mark.parametrize(
@@ -132,13 +132,14 @@ docker run -v ~/.config/gcloud:/root/.config/gcloud \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
     _test_create_trial_instance(benchmark, expected_image, expected_target,
-                                expected_startup_script, experiment_config)
+                                expected_startup_script, experiment_config, False)
 
 
 @mock.patch('common.gcloud.create_instance')
 @mock.patch('common.fuzzer_config_utils.get_by_variant_name')
 def _test_create_trial_instance(benchmark, expected_image, expected_target,
                                 expected_startup_script, experiment_config,
+                                preemptible,
                                 mocked_get_by_variant_name,
                                 mocked_create_instance):
     """Test that create_trial_instance invokes create_instance
@@ -156,7 +157,7 @@ def _test_create_trial_instance(benchmark, expected_image, expected_target,
         },
     }
     scheduler.create_trial_instance(benchmark, fuzzer_param, trial,
-                                    experiment_config)
+                                    experiment_config, preemptible)
     instance_name = 'r-test-experiment-9'
     expected_startup_script_path = '/tmp/%s-start-docker.sh' % instance_name
 
@@ -164,7 +165,8 @@ def _test_create_trial_instance(benchmark, expected_image, expected_target,
         instance_name,
         gcloud.InstanceType.RUNNER,
         experiment_config,
-        startup_script=expected_startup_script_path)
+        startup_script=expected_startup_script_path,
+        preemptible=preemptible)
 
     with open(expected_startup_script_path) as file_handle:
         content = file_handle.read()

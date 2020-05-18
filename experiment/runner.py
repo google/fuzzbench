@@ -220,9 +220,9 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
     def __init__(self):
         if not environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
             benchmark = environment.get('BENCHMARK')
-            fuzzer = environment.get('fuzzer')
-            trial_id = environment.get('trial_id')
-            self.gcs_sync_dir = experiment_utils.get_trial_dir(
+            fuzzer = environment.get('FUZZER')
+            trial_id = environment.get('TRIAL_ID')
+            self.gcs_sync_dir = experiment_utils.get_trial_gcs_dir(
                 fuzzer, benchmark, trial_id)
             # Clean the directory before we use it. This behavior is dependended
             # on by the scheduler when using preemptibles.
