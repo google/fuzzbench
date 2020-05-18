@@ -21,10 +21,12 @@ import subprocess
 
 from fuzzers import utils
 
+
 def is_benchmark(name):
     """Check if the benchmark contains the string |name|"""
     benchmark = os.getenv("BENCHMARK", None)
     return benchmark is not None and name in benchmark
+
 
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
@@ -45,6 +47,16 @@ def prepare_build_environment():
     os.environ['FUZZER_LIB'] = '/libAFL.a -L/ -lKleeMock -lpthread'
 
 
+def get_size_for_benchmark():
+    """
+    Returns the size for the seed for each benchmark.
+    """
+    size = 4096
+    if "re2-2014-12-09" in os.environ["BENCHMARK"]:
+        size = 64
+    return size
+
+
 def get_bcs_for_shared_libs(fuzz_target):
     """Get shared libs paths for the fuzz_target"""
     ldd_cmd = ["/usr/bin/ldd", "{target}".format(target=fuzz_target)]
@@ -61,14 +73,16 @@ def get_bcs_for_shared_libs(fuzz_target):
         out_dir = os.environ['OUT']
         so_path = line.split('=>')[1].split(' ')[1]
         so_name = so_path.split('/')[-1].split('.')[0]
-        getbc_cmd = "extract-bc -o {out_dir}/{so_name}.bc {target}".format(
-            target=so_path, out_dir=out_dir, so_name=so_name)
-        # This will fail for most of the dependencies, which is fine. We want
-        # to grab the .bc files for dependencies built in any given
-        # benchmark's build.sh file.
-        success = os.system(getbc_cmd)
-        if success == 1:
-            print("Got a bc file for {target}".format(target=so_path))
+        if so_name:
+            getbc_cmd = "extract-bc -o {out_dir}/{so_name}.bc {target}".format(
+                target=so_path, out_dir=out_dir, so_name=so_name)
+            print(f"[extract-bc command] | {getbc_cmd}")
+            # This will fail for most of the dependencies, which is fine. We want
+            # to grab the .bc files for dependencies built in any given
+            # benchmark's build.sh file.
+            success = os.system(getbc_cmd)
+            if success == 1:
+                print("Got a bc file for {target}".format(target=so_path))
 
 
 def get_bc_files():
@@ -82,18 +96,20 @@ def get_bc_files():
 
     return bc_files
 
+
 def get_fuzz_target():
     """Get the fuzz target"""
     out_dir = os.environ['OUT']
     if is_benchmark("sqlite3"):
         return os.path.join(out_dir, 'ossfuzz')
-    
+
     # For non oss-projects, FUZZ_TARGET contain the target binary
     fuzz_target = os.getenv('FUZZ_TARGET', None)
     if fuzz_target is not None:
         return fuzz_target
-    
+
     raise ValueError("Cannot determine fuzz target")
+
 
 def build():
     """Build benchmark."""
@@ -226,7 +242,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     klee_bin = os.path.join(out_dir, "bin/klee")
     target_binary_bc = "{}.bc".format(target_binary)
-    seconds = int(int(os.getenv('MAX_TOTAL_TIME', 246060)) * 4 / 5)
+    seconds = int(int(os.getenv('MAX_TOTAL_TIME', str(246060))) * 4 / 5)
 
     seeds_option = ['-zero-seed-extension', '-seed-dir', input_klee
                    ] if n_converted > 0 else []
@@ -248,7 +264,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
     if seeds_option:
         klee_cmd.extend(seeds_option)
 
-    klee_cmd += [target_binary_bc]
+    size = get_size_for_benchmark()
+    klee_cmd += [target_binary_bc, str(size)]
     run(klee_cmd, ulimit_cmd="ulimit -s unlimited")
 
     # Convert the output .ktest to binary format
