@@ -317,7 +317,7 @@ def restart_preempted_trials(trial_instance_manager, pool):
     """Restarts preempted trials based on heuristics for saving money
     while still producing complete results quickly."""
     restart_as_preemptibles, restart_as_nonpreemptibles = (
-        trial_instance_manager.get_startable_trials())
+        trial_instance_manager.get_restartable_trials())
 
     # Delete preempted trials.
     experiment_config = trial_instance_manager.experiment_config
@@ -431,10 +431,7 @@ def start_trials(trials, experiment_config: dict, pool, preemptible: bool):
     """Start all |trials| that are possible to start. Marks the ones that were
     started as started."""
     logger.info('Starting trials.')
-    trial_id_mapping = {
-        trial.id: trial
-        for trial in trials
-    }
+    trial_id_mapping = {trial.id: trial for trial in trials}
 
     # Shuffle trials so that we don't create trials for the same fuzzer
     # benchmark close to one another. This *may* make the preemption rate more

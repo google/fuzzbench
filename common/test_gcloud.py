@@ -125,8 +125,10 @@ def test_create_instance_preemptible():
     """Tests create_instance doesn't specify preemptible when it isn't supposed
     to."""
     with test_utils.mock_popen_ctx_mgr(returncode=1) as mocked_popen:
-        gcloud.create_instance(INSTANCE_NAME, gcloud.InstanceType.RUNNER,
-                               CONFIG, preemptible=True)
+        gcloud.create_instance(INSTANCE_NAME,
+                               gcloud.InstanceType.RUNNER,
+                               CONFIG,
+                               preemptible=True)
         assert mocked_popen.commands == [
             _get_expected_create_runner_command(True)
         ]
