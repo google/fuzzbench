@@ -156,7 +156,7 @@ def _test_create_trial_instance(benchmark, expected_image, expected_target,
             'C2': 'custom2'
         },
     }
-    scheduler.create_trial_instance(benchmark, fuzzer_param, trial,
+    scheduler.create_trial_instance(fuzzer_param, benchmark, trial,
                                     experiment_config, preemptible)
     instance_name = 'r-test-experiment-9'
     expected_startup_script_path = '/tmp/%s-start-docker.sh' % instance_name
