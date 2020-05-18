@@ -317,7 +317,7 @@ def restart_preempted_trials(trial_instance_manager, pool):
     """Restarts preempted trials based on heuristics for saving money
     while still producing complete results quickly."""
     restart_as_preemptibles, restart_as_nonpreemptibles = (
-        trial_instance_manager.get_startable_trials())
+        trial_instance_manager.get_restartable_trials())
 
     # Delete preempted trials.
     experiment_config = trial_instance_manager.experiment_config
