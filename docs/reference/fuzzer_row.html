@@ -1,0 +1,62 @@
+<!--
+     Copyright 2020 Google LLC
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<tr>
+  <td style="text-align: center">
+    {{ fuzzer.year }}
+  </td>
+  <td style="text-align: center">
+    {% if fuzzer.url %}
+    <a href="{{ fuzzer.url }}">{{ fuzzer.name }}</a>
+    {% else %}
+    <a href="{{ fuzzer.repo }}">{{ fuzzer.name }}</a>
+    {% endif %}
+  </td>
+  <td>
+    <a href="https://www.google.com/search?q={{ fuzzer.name }}">
+      <i class="fa fa-google"></i>
+    </a>
+    {% if fuzzer.url %}
+    <a href="{{ fuzzer.url }}">
+      <i class="fa fa-globe"></i>
+    </a>
+    {% endif %}
+    {% if fuzzer.repo %}
+    <a href="{{ fuzzer.repo }}">
+      <i class='fa fa-code-branch'></i>
+    </a>
+    {% endif %}
+    {% if fuzzer.dblp %}
+    <a href="https://dblp.org/rec/{{ fuzzer.dblp }}">
+      <i class='fa fa-graduation-cap'></i>
+    </a>
+    {% endif %}
+  </td>
+  <td>
+    {{ fuzzer.desc }}
+  </td>
+  <td style="text-align: center">
+    {% if fuzzer.dir %}
+    <a href="https://github.com/google/fuzzbench/tree/master/fuzzers/{{ fuzzer.dir }}">
+      <i class="fa fa-check"></i>
+    </a>
+    {% endif %}
+    {% if fuzzer.issue %}
+    <a href="{{ fuzzer.issue }}">
+      <i class='fa fa-github'></i>
+    </a>
+    {% endif %}
+  </td>
+</tr>

@@ -126,5 +126,11 @@ make build-$FUZZER_NAME-$BENCHMARK_NAME
 make run-$FUZZER_NAME-$BENCHMARK_NAME
 ```
 
+## Testing the benchmark in CI
+
+Add your benchmark to the `STANDARD_BENCHMARKS` list in
+[test_fuzzer_benchmarks.py](https://github.com/google/fuzzbench/blob/master/.github/workflows/test_fuzzer_benchmarks.py)
+so that it will be tested in CI.
+
 If everything works, submit the integration in a
 [GitHub pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
