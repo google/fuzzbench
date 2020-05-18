@@ -208,18 +208,13 @@ def test_copy_resources_to_bucket():
         'experiment': 'experiment'
     }
     with mock.patch('common.gsutil.rsync') as mocked_rsync:
-        run_experiment.copy_resources_to_bucket(config_dir, config)
-        mocked_rsync.assert_any_call(
-            BENCHMARKS_DIR,
-            'gs://gsutil-bucket/experiment/input/src',
-            options=[
-                '-x',
-                ('^\\.git/|^\\.pytype/|^\\.venv/|^.*\\.pyc$|^__pycache__/|'
-                 '.*~$|\\.pytest_cache/|.*/test_data/|'
-                 '^third_party/oss-fuzz/out/|^docs/')
-            ],
-            parallel=True)
-        mocked_rsync.assert_any_call(
-            'config',
-            'gs://gsutil-bucket/experiment/input/config',
-            parallel=True)
+        with mock.patch('common.gsutil.cp') as mocked_cp:
+            run_experiment.copy_resources_to_bucket(config_dir, config)
+            mocked_cp.assert_called_once_with(
+                'src.tar.gz',
+                'gs://gsutil-bucket/experiment/input/',
+                parallel=True)
+            mocked_rsync.assert_called_once_with(
+                'config',
+                'gs://gsutil-bucket/experiment/input/config',
+                parallel=True)

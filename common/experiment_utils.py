@@ -18,13 +18,13 @@ import posixpath
 
 from common import environment
 
-_DEFAULT_SNAPSHOT_SECONDS = 15 * 60  # Seconds.
+DEFAULT_SNAPSHOT_SECONDS = 15 * 60  # Seconds.
 
 
 def get_snapshot_seconds():
     """Returns the amount of time in seconds between snapshots of a
     fuzzer's corpus during an experiment."""
-    return environment.get('SNAPSHOT_PERIOD', _DEFAULT_SNAPSHOT_SECONDS)
+    return environment.get('SNAPSHOT_PERIOD', DEFAULT_SNAPSHOT_SECONDS)
 
 
 def get_work_dir():

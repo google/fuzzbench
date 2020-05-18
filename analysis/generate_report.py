@@ -54,6 +54,11 @@ def get_arg_parser():
         default=False,
         help='If set, plots are created faster, but contain less details.')
     parser.add_argument(
+        '--log-scale',
+        action='store_true',
+        default=False,
+        help='If set, the time axis of the coverage growth plot is log scale.')
+    parser.add_argument(
         '-b',
         '--benchmarks',
         nargs='*',
@@ -112,6 +117,7 @@ def generate_report(experiment_names,
                     fuzzers=None,
                     report_type='default',
                     quick=False,
+                    log_scale=False,
                     from_cached_data=False,
                     in_progress=False,
                     end_time=None,
@@ -148,7 +154,7 @@ def generate_report(experiment_names,
             experiment_df, experiment_names)
 
     fuzzer_names = experiment_df.fuzzer.unique()
-    plotter = plotting.Plotter(fuzzer_names, quick)
+    plotter = plotting.Plotter(fuzzer_names, quick, log_scale)
     experiment_ctx = experiment_results.ExperimentResults(
         experiment_df, report_directory, plotter, experiment_name=report_name)
 
@@ -175,6 +181,7 @@ def main():
                     fuzzers=args.fuzzers,
                     report_type=args.report_type,
                     quick=args.quick,
+                    log_scale=args.log_scale,
                     from_cached_data=args.from_cached_data,
                     end_time=args.end_time,
                     merge_with_clobber=args.merge_with_clobber)

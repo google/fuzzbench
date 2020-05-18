@@ -24,6 +24,8 @@ from typing import List, Optional
 from common import benchmark_utils
 from common import logs
 from common import fuzzer_utils
+from src_analysis import change_utils
+from src_analysis import diff_utils
 
 _LICENSE_CHECK_FILENAMES = ['Dockerfile']
 _LICENSE_CHECK_EXTENSIONS = [
@@ -152,16 +154,9 @@ def test_changed_integrations(paths: List[Path]):
     """Runs tests that build changed fuzzers with all benchmarks and changed
     benchmarks with measurer and all fuzzers. Not enabled by default since it
     requires GCB."""
-    benchmarks = set()
-    fuzzers = set()
-    for path in paths:
-        benchmark = get_benchmark(path)
-        if benchmark:
-            benchmarks.add(benchmark)
-
-        fuzzer = get_fuzzer(path)
-        if fuzzer:
-            fuzzers.add(fuzzer)
+    benchmarks = change_utils.get_changed_benchmarks(
+        [str(path) for path in paths])
+    fuzzers = change_utils.get_changed_fuzzers([str(path) for path in paths])
 
     if not benchmarks and not fuzzers:
         return True
@@ -258,34 +253,6 @@ def license_check(paths: List[Path]) -> bool:
     return success
 
 
-def get_changed_files() -> List[Path]:
-    """Return a list of absolute paths of files changed in this git branch."""
-    uncommitted_diff_command = ['git', 'diff', '--name-only', 'HEAD']
-    output = subprocess.check_output(
-        uncommitted_diff_command).decode().splitlines()
-    uncommitted_changed_files = set(
-        Path(path).absolute() for path in output if Path(path).is_file())
-
-    committed_diff_command = ['git', 'diff', '--name-only', 'origin...']
-    try:
-        output = subprocess.check_output(
-            committed_diff_command).decode().splitlines()
-        committed_changed_files = set(
-            Path(path).absolute() for path in output if Path(path).is_file())
-        return list(committed_changed_files.union(uncommitted_changed_files))
-    except subprocess.CalledProcessError:
-        # This probably won't happen to anyone. It can happen if your copy
-        # of the repo wasn't cloned so give instructions on how to handle.
-        pass
-    raise Exception((
-        '"%s" failed.\n'
-        'Please run "git fetch origin master && '
-        'git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master" '
-        'and try again.\n'
-        'Please file an issue if this doesn\'t fix things.') %
-                    ' '.join(committed_diff_command))
-
-
 def do_tests() -> bool:
     """Run all unittests."""
     returncode = subprocess.run(BASE_PYTEST_COMMAND, check=False).returncode
@@ -337,7 +304,7 @@ def main() -> int:
 
     args = parser.parse_args()
     os.chdir(_SRC_ROOT)
-    changed_files = get_changed_files()
+    changed_files = [Path(path) for path in diff_utils.get_changed_files()]
 
     if not args.command:
         success = do_checks(changed_files)
