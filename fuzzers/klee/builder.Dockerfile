@@ -86,24 +86,13 @@ RUN cd /klee &&  \
     -DCMAKE_BUILD_TYPE=Release && \
     make -j`nproc` && make install
 
-RUN apt-get -y install \
-    software-properties-common && \
-    add-apt-repository -y ppa:gophers/archive && \
-    apt-get update -y && \
-    apt-get -y install golang-1.10-go
-
-ENV GOPATH=/
-ENV GOROOT=/usr/lib/go-1.10
-ENV PATH=$PATH:$GOROOT/bin
-RUN go get github.com/SRI-CSL/gllvm/cmd/...
-
 ENV LLVM_CC_NAME=clang-6.0
 ENV LLVM_CXX_NAME=clang++-6.0
 ENV LLVM_AR_NAME=llvm-ar-6.0
 ENV LLVM_LINK_NAME=llvm-link-6.0
 ENV LLVM_COMPILER=clang
-ENV CC=gclang
-ENV CXX=gclang++
+ENV CC=wllvm
+ENV CXX=wllvm++
 
 # Compile the harness klee_driver.cpp.
 COPY klee_driver.cpp /klee_driver.cpp

@@ -21,6 +21,10 @@ import subprocess
 
 from fuzzers import utils
 
+def is_benchmark(name):
+    """Check if the benchmark contains the string |name|"""
+    benchmark = os.getenv("BENCHMARK", None)
+    return benchmark is not None and name in benchmark
 
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
@@ -35,8 +39,8 @@ def prepare_build_environment():
     os.environ['LLVM_AR_NAME'] = 'llvm-ar-6.0'
     os.environ['LLVM_LINK_NAME'] = 'llvm-link-6.0'
     os.environ['LLVM_COMPILER'] = 'clang'
-    os.environ['CC'] = 'gclang'
-    os.environ['CXX'] = 'gclang++'
+    os.environ['CC'] = 'wllvm'
+    os.environ['CXX'] = 'wllvm++'
 
     os.environ['FUZZER_LIB'] = '/libAFL.a -L/ -lKleeMock -lpthread'
 
@@ -57,7 +61,7 @@ def get_bcs_for_shared_libs(fuzz_target):
         out_dir = os.environ['OUT']
         so_path = line.split('=>')[1].split(' ')[1]
         so_name = so_path.split('/')[-1].split('.')[0]
-        getbc_cmd = "get-bc -o {out_dir}/{so_name}.bc {target}".format(
+        getbc_cmd = "extract-bc -o {out_dir}/{so_name}.bc {target}".format(
             target=so_path, out_dir=out_dir, so_name=so_name)
         # This will fail for most of the dependencies, which is fine. We want
         # to grab the .bc files for dependencies built in any given
@@ -78,6 +82,18 @@ def get_bc_files():
 
     return bc_files
 
+def get_fuzz_target():
+    """Get the fuzz target"""
+    out_dir = os.environ['OUT']
+    if is_benchmark("sqlite3"):
+        return os.path.join(out_dir, 'ossfuzz')
+    
+    # For non oss-projects, FUZZ_TARGET contain the target binary
+    fuzz_target = os.getenv('FUZZ_TARGET', None)
+    if fuzz_target is not None:
+        return fuzz_target
+    
+    raise ValueError("Cannot determine fuzz target")
 
 def build():
     """Build benchmark."""
@@ -85,9 +101,8 @@ def build():
 
     utils.build_benchmark()
 
-    out_dir = os.environ['OUT']
-    fuzz_target = os.path.join(out_dir, 'fuzz-target')
-    getbc_cmd = "get-bc {target}".format(target=fuzz_target)
+    fuzz_target = get_fuzz_target()
+    getbc_cmd = "extract-bc {target}".format(target=fuzz_target)
     if os.system(getbc_cmd) != 0:
         raise ValueError("get-bc failed")
     get_bcs_for_shared_libs(fuzz_target)
