@@ -192,16 +192,16 @@ $(1)-fuzz-target  := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
 $(eval $(1)-oss-fuzz-builder-hash := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
                                       grep oss_fuzz_builder_hash | \
                                       cut -d ':' -f2 | tr -d ' '))
-.$(1)-fuzzbench-builder:
+.$(1)-oss-fuzz-benchmark-wrapper-builder:
 	docker build \
-    --tag $(BASE_TAG)/builders/$(1)-fuzzbench-builder \
-    --file=docker/oss-fuzz-fuzzbench-benchmark-builder/Dockerfile \
+    --tag $(BASE_TAG)/builders/$(1)-oss-fuzz-benchmark-wrapper-builder \
+    --file=docker/oss-fuzz-benchmark-wrapper-builder/Dockerfile \
     --build-arg parent_image=gcr.io/fuzzbench/oss-fuzz/$($(1)-project-name)@sha256:$($(1)-oss-fuzz-builder-hash) \
     $(call cache_from,$(BASE_TAG)/builders/fuzz$($(1)-project-name)-builder) \
     .
 
-.pull-$(1)-fuzzbench-builder:
-	docker pull $(BASE_TAG)/builders/$(1)-fuzzbench-builder
+.pull-$(1)-oss-fuzz-benchmark-wrapper-builder:
+	docker pull $(BASE_TAG)/builders/$(1)-oss-fuzz-benchmark-wrapper-builder
 endef
 
 # Instantiate the above template with all OSS-Fuzz benchmarks.
@@ -210,15 +210,15 @@ $(foreach oss_fuzz_benchmark,$(OSS_FUZZ_BENCHMARKS), \
 
 define fuzzer_oss_fuzz_benchmark_template
 
-.$(1)-$(2)-builder-intermediate: .$(2)-fuzzbench-builder
+.$(1)-$(2)-builder-intermediate: .$(2)-oss-fuzz-benchmark-wrapper-builder
 	docker build \
     --tag $(BASE_TAG)/builders/$(1)/$(2)-intermediate \
     --file=fuzzers/$(1)/builder.Dockerfile \
-    --build-arg parent_image=$(BASE_TAG)/builders/$(2)-fuzzbench-builder \
+    --build-arg parent_image=$(BASE_TAG)/builders/$(2)-oss-fuzz-benchmark-wrapper-builder \
     $(call cache_from,${BASE_TAG}/builders/$(1)/$(2)-intermediate) \
     fuzzers/$(1)
 
-.pull-$(1)-$(2)-builder-intermediate: .pull-$(2)-fuzzbench-builder
+.pull-$(1)-$(2)-builder-intermediate: .pull-$(2)-oss-fuzz-benchmark-wrapper-builder
 	docker pull $(BASE_TAG)/builders/$(1)/$(2)-intermediate
 
 .$(1)-$(2)-builder: .$(1)-$(2)-builder-intermediate

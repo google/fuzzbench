@@ -15,6 +15,10 @@
 ARG parent_image
 FROM $parent_image
 
+# OSS-Fuzz sets the environment variables CC/CXX/CFLAGS/CXXFLAGS. These cannot
+# be deleted from the environment because of the way docker works. Instead we
+# will set them to reasonable values for FuzzBench. These flags will probably
+# only be used for compiling fuzzers in their builder.Dockerfiles.
 ENV CC="clang"
 ENV CXX="clang++"
 
