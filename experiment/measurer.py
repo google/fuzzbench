@@ -41,7 +41,6 @@ from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
 from experiment import run_coverage
-from experiment import scheduler
 from third_party import sancov
 
 logger = logs.Logger('measurer')  # pylint: disable=invalid-name
@@ -66,7 +65,7 @@ def remote_dir_exists(directory: pathlib.Path) -> bool:
     return gsutil.ls(exp_path.gcs(directory), must_exist=False)[0] == 0
 
 
-def measure_loop(experiment: str, max_total_time: int):
+def measure_loop(experiment: str, max_total_time: int, is_scheduler_running):
     """Continuously measure trials for |experiment|."""
     db_utils.initialize()
     logs.initialize(default_extras={
@@ -81,19 +80,17 @@ def measure_loop(experiment: str, max_total_time: int):
             try:
                 # Get whether all trials have ended before we measure to prevent
                 # races.
-                # !!! USE TrialInstanceManager.more_to_schedule.
-                all_trials_ended = scheduler.all_trials_ended(experiment)
+                is_last_measure_iteration = not is_scheduler_running.value
 
                 if not measure_all_trials(experiment, max_total_time, pool, q):
                     # We didn't measure any trials.
-                    if all_trials_ended:
+                    if is_last_measure_iteration:
                         # There are no trials producing snapshots to measure.
                         # Given that we couldn't measure any snapshots, we won't
                         # be able to measure any the future, so break now.
                         break
             except Exception:  # pylint: disable=broad-except
                 logger.error('Error occurred during measuring.')
-
             time.sleep(FAIL_WAIT_SECONDS)
 
     logger.info('Finished measuring.')
@@ -469,6 +466,19 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             return set()
         return set(filesystem.read(self.measured_files_path).splitlines())
 
+    def reset_trial_state(self):
+        """Reset any measurement state that has been built up from measuring a
+        trial. This is useful if a trial is restarted."""
+        for file_path in [self.measured_files_path, self.unchanged_cycles_path]:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        # Don't reset the UNIT_BLACKLIST. That keeps track of crashes which we
+        # don't want to run again.
+
+        crashes_gcs_path = exp_path.gcs(
+            posixpath.join(self.trial_dir, 'crashes'))
+        gsutil.rm(crashes_gcs_path, force=True)
+
 
 def measure_trial_coverage(  # pylint: disable=invalid-name
         measure_req, max_cycle: int,
@@ -511,6 +521,8 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
                                   })
     snapshot_measurer = SnapshotMeasurer(fuzzer, benchmark, trial_num,
                                          snapshot_logger)
+    if cycle == 1:
+        snapshot_measurer.reset_trial_state()
 
     measuring_start_time = time.time()
     snapshot_logger.info('Measuring cycle: %d.', cycle)
@@ -616,8 +628,12 @@ def main():
 
     experiment_name = experiment_utils.get_experiment_name()
 
+    # Assume scheduler isn't running if running this script as standalone.
+    mp_manager = multiprocessing.Manager()
+    is_scheduler_running = mp_manager.Value('i', 0)
+
     try:
-        measure_loop(experiment_name, int(sys.argv[1]))
+        measure_loop(experiment_name, int(sys.argv[1]), is_scheduler_running)
     except Exception as error:
         logs.error('Error conducting experiment.')
         raise error

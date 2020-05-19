@@ -14,6 +14,7 @@
 """Tests for measurer.py."""
 
 import datetime
+import multiprocessing.managers
 import os
 import shutil
 from unittest import mock
@@ -72,6 +73,22 @@ def test_merge_new_pcs(new_pcs, fs, experiment):
         new_contents = file_handle.read()
     assert new_contents == (''.join(pc + '\n' for pc in new_pcs) +
                             initial_contents)
+
+
+@mock.patch('common.gsutil.rm')
+def test_reset_state(mocked_rm, fs, experiment):
+    """Test that reset_state deletes any measurer state for the trial."""
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+    fs.create_file(snapshot_measurer.measured_files_path)
+    fs.create_file(snapshot_measurer.unchanged_cycles_path)
+    snapshot_measurer.reset_trial_state()
+    assert not os.path.exists(snapshot_measurer.measured_files_path)
+    assert not os.path.exists(snapshot_measurer.unchanged_cycles_path)
+    mocked_rm.assert_called_once_with(
+        'gs://experiment-data/test-experiment/experiment-folders/'
+        'benchmark-a-fuzzer-a/trial-12/crashes',
+        force=True)
 
 
 @mock.patch('common.logs.error')
@@ -357,26 +374,51 @@ def test_extract_corpus(archive_name, tmp_path):
     assert expected_corpus_files.issubset(set(os.listdir(tmp_path)))
 
 
-@mock.patch('experiment.scheduler.all_trials_ended')
+@mock.patch('time.sleep', return_value=None)
 @mock.patch('experiment.measurer.set_up_coverage_binaries')
 @mock.patch('experiment.measurer.measure_all_trials')
 @mock.patch('multiprocessing.Manager')
 @mock.patch('multiprocessing.pool')
 def test_measure_loop_end(_, mocked_manager, mocked_measure_all_trials, __,
-                          mocked_all_trials_ended):
+                          ___):
     """Tests that measure_loop stops when there is nothing left to measure."""
+
+    def mock_measure_all_trials(*args, **kwargs):
+        # Do the assertions here so that there will be an assert fail on failure
+        # instead of an infinite loop.
+        return False
+
+    mocked_measure_all_trials.side_effect = mock_measure_all_trials
+    is_scheduler_running = multiprocessing.managers.Value('i', 0)
+    measurer.measure_loop('', 0, is_scheduler_running)
+    # If everything went well, we should get to this point without any exception
+    # failures.
+
+
+@mock.patch('time.sleep', return_value=None)
+@mock.patch('experiment.measurer.set_up_coverage_binaries')
+@mock.patch('experiment.measurer.measure_all_trials')
+@mock.patch('multiprocessing.Manager')
+@mock.patch('multiprocessing.pool')
+def test_measure_loop_loop_until_end(_, mocked_manager,
+                                     mocked_measure_all_trials, __, ___):
+    """Test that measure loop will stop measuring when the value of
+    is_scheduler_running becomes False."""
     call_count = 0
+    # Scheduler is running.
+    is_scheduler_running = multiprocessing.managers.Value('i', 1)
+
+    loop_iterations = 6
 
     def mock_measure_all_trials(*args, **kwargs):
         # Do the assertions here so that there will be an assert fail on failure
         # instead of an infinite loop.
         nonlocal call_count
-        assert call_count == 0
         call_count += 1
+        if call_count == loop_iterations - 1:
+            is_scheduler_running.value = False
         return False
 
     mocked_measure_all_trials.side_effect = mock_measure_all_trials
-    mocked_all_trials_ended.return_value = True
-    measurer.measure_loop('', 0)
-    # If everything went well, we should get to this point without any exception
-    # failures.
+    measurer.measure_loop('', 0, is_scheduler_running)
+    assert call_count == loop_iterations

@@ -126,22 +126,32 @@ def dispatcher_main():
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])
 
+    manager = multiprocessing.Manager()
+    is_scheduler_running = manager.Value('i', 1)
     # Start measurer and scheduler in threads.
     scheduler_loop_thread = threading.Thread(target=scheduler.schedule_loop,
-                                             args=(experiment.config,))
+                                             args=(experiment.config,
+                                                   is_scheduler_running))
     scheduler_loop_thread.start()
-    measurer_loop_thread = multiprocessing.Process(
+    measurer_loop_process = multiprocessing.Process(
         target=measurer.measure_loop,
         args=(
             experiment.config['experiment'],
             experiment.config['max_total_time'],
+            is_scheduler_running,
         ))
-    measurer_loop_thread.start()
+    measurer_loop_process.start()
 
     while True:
         time.sleep(LOOP_WAIT_SECONDS)
-        is_complete = (not scheduler_loop_thread.is_alive() and
-                       not measurer_loop_thread.is_alive())
+        if not scheduler_loop_thread.is_alive():
+            is_complete = not measurer_loop_process.is_alive()
+
+            # TODO(metzman): Get rid of this shared variable. Replace it with a
+            # model where the TrialInstanceManager's state can be obtained from
+            # the database.
+            if is_scheduler_running.value:
+                is_scheduler_running.value = 0
 
         # Generate periodic output reports.
         reporter.output_report(experiment.web_bucket,
