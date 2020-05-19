@@ -74,7 +74,11 @@ def test_run_diff_experiment(mocked_get_experiment_name,
                   expected_benchmarks, expected_fuzzer_configs)
     ]
     assert len(start_experiment_call_args) == 1
+
+    # Sort the list of fuzzer configs so that we can assert that the calls were
+    # what we expected.
     start_experiment_call_args[0][0][3].sort(key=sort_key)
     assert start_experiment_call_args == expected_calls
+
     mocked_stop_experiment.assert_called_with(expected_experiment_name,
                                               expected_config_file)

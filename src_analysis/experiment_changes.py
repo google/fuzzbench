@@ -24,10 +24,8 @@ from src_analysis import diff_utils
 def get_fuzzers_changed_since_last():
     """Returns a list of fuzzers that have changed since the last experiment
     stored in the database that has a commit that is in the current branch."""
-    # Don't import db_utils on the toplevel so that change_utils can be used
-    # without a databse connection.
-
-    # TODO(metzman): Get a way of skipping experiments that were stopped early.
+    # TODO(metzman): Figure out a way of skipping experiments that were stopped
+    # early.
 
     # Loop over experiments since some may have hashes that are not in the
     # current branch.
@@ -35,7 +33,7 @@ def get_fuzzers_changed_since_last():
         db_utils.query(models.Experiment).order_by(
             models.Experiment.time_created.desc()))
     if not experiments:
-        raise Exception('No experiments. Cannot find changed fuzzers.')
+        raise Exception('No experiments found. Cannot find changed fuzzers.')
 
     changed_files = None
     for experiment in experiments:

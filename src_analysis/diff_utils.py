@@ -28,16 +28,9 @@ def execute_git_diff(diff_args, repo=utils.ROOT_DIR):
     """Adds |diff_args| to the command 'git diff' and executes the command in
     |repo|. Returns a list of each line in the output."""
     command = ['git', 'diff'] + diff_args
-    previous_working_directory = os.getcwd()
-    # Change directories instead of using "git -C" because "HEAD" can't be used
-    # with "git -C".
-    try:
-        if previous_working_directory != repo:
-            os.chdir(repo)
-        return subprocess.check_output(command).decode().splitlines()
-    finally:
-        if previous_working_directory != repo:
-            os.chdir(previous_working_directory)
+    # Change directories using cwd instead of using "git -C" because "HEAD"
+    # can't be used with "git -C".
+    return subprocess.check_output(command, cwd=repo).decode().splitlines()
 
 
 def get_changed_files(commit_name: str = 'origin...') -> List[str]:
