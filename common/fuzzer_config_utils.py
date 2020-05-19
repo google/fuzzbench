@@ -52,6 +52,6 @@ def get_fuzzer_name(fuzzer_config_filename: str) -> str:
 
     # Multiple configurations of the same fuzzer are differentiated by their
     # assigned display names, but we default to the in the simple case.
-    if 'variant_name' in fuzzer_config:
-        return fuzzer_config['variant_name']
+    if 'name' in fuzzer_config:
+        return fuzzer_config['name']
     return fuzzer_config['fuzzer']

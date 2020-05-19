@@ -28,7 +28,7 @@ def prepare_build_environment():
     # It is not supported by clang-3.8, so we define the MACRO below
     # to replace any __builtin_cpu_supports() with 0, i.e., not supported
     cflags = ['-fPIC']
-    if 'php' in os.environ['PWD']:
+    if 'php' in os.environ['BENCHMARK']:
         cflags += ['-D__builtin_cpu_supports\\(x\\)=0']
     cppflags = cflags + ['-I/usr/local/include/c++/v1/', '-std=c++11']
     utils.append_flags('CFLAGS', cflags)

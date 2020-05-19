@@ -14,9 +14,11 @@
 """Google cloud related code."""
 
 import enum
+import subprocess
 import time
 from typing import List
 
+from common import experiment_utils
 from common import logs
 from common import new_process
 
@@ -74,6 +76,10 @@ def create_instance(instance_name: str,
                     **kwargs) -> bool:
     """Creates a GCE instance with name, |instance_name|, type, |instance_type|
     and with optionally provided |metadata| and |startup_script|."""
+
+    if experiment_utils.is_local_experiment():
+        return run_local_instance(startup_script)
+
     command = [
         'gcloud',
         'compute',
@@ -97,6 +103,11 @@ def create_instance(instance_name: str,
             '--machine-type=%s' % RUNNER_MACHINE_TYPE,
             '--boot-disk-size=%s' % RUNNER_BOOT_DISK_SIZE,
         ])
+        if config.get('preemptible_runners'):
+            # TODO(metzman): Make runners signal to scheduler that they were
+            # preempted, and make scheduler+measurer tolerate preemption.
+            command.append('--preemptible')
+
     if metadata:
         metadata_str = ','.join('{key}={value}'.format(key=key, value=value)
                                 for key, value in metadata.items())
@@ -109,7 +120,8 @@ def create_instance(instance_name: str,
 
 
 def delete_instances(instance_names: List[str], zone: str, **kwargs) -> bool:
-    """Delete gcloud instance |instance_names|."""
+    """Delete gcloud instance |instance_names|. Returns true if the operation
+    succeeded or false otherwise."""
     error_occurred = False
     # Delete instances in batches, otherwise we run into rate limit errors.
     for idx in range(0, len(instance_names), INSTANCE_BATCH_SIZE):
@@ -120,7 +132,7 @@ def delete_instances(instance_names: List[str], zone: str, **kwargs) -> bool:
         result = new_process.execute(command, expect_zero=False, **kwargs)
         error_occurred = error_occurred or result.retcode != 0
 
-    return error_occurred
+    return not error_occurred
 
 
 def list_instances() -> List[str]:
@@ -133,3 +145,11 @@ def set_default_project(cloud_project: str):
     """Set default project for future gcloud and gsutil commands."""
     return new_process.execute(
         ['gcloud', 'config', 'set', 'project', cloud_project])
+
+
+def run_local_instance(startup_script: str = None) -> bool:
+    """Does the equivalent of "create_instance" for local experiments, runs
+    |startup_script| in the background."""
+    command = ['/bin/bash', startup_script]
+    subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    return new_process.ProcessResult(0, '', False)

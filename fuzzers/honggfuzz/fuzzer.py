@@ -61,4 +61,4 @@ def fuzz(input_corpus, output_corpus, target_binary):
     command.extend(['--', target_binary])
 
     print('[run_fuzzer] Running command: ' + ' '.join(command))
-    subprocess.call(command)
+    subprocess.check_call(command)

@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Benchmarks
-nav_order: 4
+nav_order: 5
 permalink: /reference/benchmarks/
 parent: Reference
 ---
@@ -18,7 +18,6 @@ The table below was generated using benchmarks.py.
 | curl_curl_fuzzer_http       | curl_fuzzer_http       | False           | 31                    | 62523                    | 20.11                |
 | freetype2-2017              | fuzz-target            | False           | 2                     | 19056                    | 6.76                 |
 | harfbuzz-1.3.2              | fuzz-target            | False           | 58                    | 10021                    | 6.24                 |
-| irssi_server-fuzz           | server-fuzz            | True            | 895                   | 37455                    | 15.3                 |
 | jsoncpp_jsoncpp_fuzzer      | jsoncpp_fuzzer         | True            | 0                     | 5536                     | 5.96                 |
 | lcms-2017-03-21             | fuzz-target            | False           | 1                     | 6959                     | 6.11                 |
 | libjpeg-turbo-07-2017       | fuzz-target            | False           | 1                     | 9586                     | 6.4                  |
@@ -35,7 +34,6 @@ The table below was generated using benchmarks.py.
 | systemd_fuzz-link-parser    | fuzz-link-parser       | False           | 6                     | 53453                    | 5.91                 |
 | vorbis-2017-12-11           | fuzz-target            | False           | 1                     | 5022                     | 6.0                  |
 | woff2-2016-05-06            | fuzz-target            | False           | 62                    | 10923                    | 6.72                 |
-| wpantund-2018-02-27         | fuzz-target            | False           | 8                     | 28888                    | 7.35                 |
 | zlib_zlib_uncompress_fuzzer | zlib_uncompress_fuzzer | False           | 0                     | 875                      | 5.69                 |
 
 \*Number of program edges is the number of

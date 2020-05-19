@@ -17,31 +17,14 @@ FROM gcr.io/oss-fuzz-base/base-clang AS base-clang
 
 FROM gcr.io/fuzzbench/base-image
 
-RUN apt-get update -y && apt-get install -y \
-    autoconf-archive \
+# Don't install recommended packages since x11 seems to get
+# recommended for some reason.
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
     automake \
-    cmake \
     git \
-    golang \
-    libarchive-dev \
-    libbfd-dev \
-    libboost-dev \
-    libbz2-dev \
-    libcairo2-dev \
-    libdbus-1-dev \
-    libfreetype6-dev \
-    libgcrypt20-dev \
-    libglib2.0-dev \
-    libgss-dev \
-    liblzma-dev \
-    libssl-dev \
     libtool \
-    libunwind-dev \
-    libxml2-dev \
-    nasm \
-    openssl \
-    ragel \
     subversion \
+    unzip \
     wget
 
 # Copy clang binaries and libs.

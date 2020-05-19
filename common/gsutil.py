@@ -13,19 +13,14 @@
 # limitations under the License.
 """Helper functions for using the gsutil tool."""
 
-from common import environment
 from common import logs
 from common import new_process
 
 logger = logs.Logger('gsutil')
 
 
-def gsutil_command(arguments, *args, parallel=True, **kwargs):
+def gsutil_command(arguments, *args, parallel=False, **kwargs):
     """Executes a gsutil command with |arguments| and returns the result."""
-    if environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
-        logger.info('FUZZ_OUTSIDE_EXPERIMENT set, not running \'gsutil %s\'.',
-                    ' '.join(arguments))
-        return 0, ''
     command = ['gsutil']
     if parallel:
         command.append('-m')
@@ -46,10 +41,7 @@ def ls(*ls_arguments, must_exist=True, **kwargs):  # pylint: disable=invalid-nam
     |must_exist|."""
     command = ['ls'] + list(ls_arguments)
     # Don't use parallel as it probably doesn't help at all.
-    result = gsutil_command(command,
-                            parallel=False,
-                            expect_zero=must_exist,
-                            **kwargs)
+    result = gsutil_command(command, expect_zero=must_exist, **kwargs)
     retcode = result.retcode  # pytype: disable=attribute-error
     output = result.output.splitlines()  # pytype: disable=attribute-error
     return retcode, output

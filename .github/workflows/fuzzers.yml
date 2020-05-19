@@ -2,9 +2,10 @@ name: Build fuzzers
 on:
   pull_request:
     paths:
-      - 'docker/**'  # Base images changes.
+      - 'docker/**'  # Base image changes.
       - 'fuzzers/**' # Changes to fuzzers themselves.
       - 'benchmarks/**'  # Changes to benchmarks.
+      - 'src_analysis/**' # Changes that affect what gets built.
 
 jobs:
   build:
@@ -16,13 +17,17 @@ jobs:
           - afl
           - aflfast
           - aflplusplus
+          - aflplusplus_mopt2
           - aflplusplus_mopt
-          - aflplusplus_noalloc
+          - aflplusplus_cmplog
+          - aflplusplus_laf
+          - aflplusplus_laf_17
+          - aflplusplus_instrim
           - aflsmart
           - eclipser
           - entropic
           - fairfuzz
-          - fastcgs
+          - fastcgs_lm
           - honggfuzz
           - lafintel
           - libfuzzer
@@ -38,10 +43,27 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - run: |  # Needed for git diff to work.
+        git fetch origin master --depth 1
+        git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
+
+    - name: Clear unnecessary files
+      run: |
+        sudo swapoff -a
+        sudo rm -f /swapfile
+        sudo apt clean
+        docker rmi $(docker images -a -q)
+        df -h
+
     - name: Setup Python environment
       uses: actions/setup-python@v1.1.1
       with:
         python-version: 3.7
+
+    - name: Install dependencies
+      run: |
+        make install-dependencies
+
     - name: Build Benchmarks
       run: |
-        python .github/workflows/build.py $BENCHMARK_TYPE $FUZZER
+        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/test_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER

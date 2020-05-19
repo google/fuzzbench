@@ -16,8 +16,15 @@
 import os
 import posixpath
 
-# Time interval for collecting experiment data (e.g. corpus, crashes).
-SNAPSHOT_PERIOD = 15 * 60  # Seconds.
+from common import environment
+
+DEFAULT_SNAPSHOT_SECONDS = 15 * 60  # Seconds.
+
+
+def get_snapshot_seconds():
+    """Returns the amount of time in seconds between snapshots of a
+    fuzzer's corpus during an experiment."""
+    return environment.get('SNAPSHOT_PERIOD', DEFAULT_SNAPSHOT_SECONDS)
 
 
 def get_work_dir():
@@ -70,3 +77,8 @@ def get_base_docker_tag(cloud_project=None):
     if cloud_project is None:
         cloud_project = get_cloud_project()
     return posixpath.join('gcr.io', cloud_project)
+
+
+def is_local_experiment():
+    """Returns True if running a local experiment."""
+    return bool(environment.get('LOCAL_EXPERIMENT'))

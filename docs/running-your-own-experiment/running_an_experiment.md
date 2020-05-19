@@ -60,7 +60,7 @@ max_total_time: 86400
 cloud_project: $PROJECT_NAME
 
 # The Google Compute Engine zone to run the experiment in.
-cloud_compute_zone: $PROJECT_REGION
+cloud_compute_zone: $PROJECT_ZONE
 
 # The Google Cloud Storage bucket that will store most of the experiment data.
 cloud_experiment_bucket: gs://$DATA_BUCKET_NAME
@@ -72,7 +72,7 @@ cloud_web_bucket: gs://$REPORT_BUCKET_NAME
 cloud_sql_instance_connection_name: "$PROJECT_NAME:$PROJECT_REGION:$POSTGRES_INSTANCE=tcp:5432"
 ```
 
-**NOTE:** The values `$PROJECT_NAME`, `$PROJECT_REGION` `$DATA_BUCKET_NAME`,
+**NOTE:** The values `$PROJECT_NAME`, `$PROJECT_REGION`, `PROJECT_ZONE`, `$DATA_BUCKET_NAME`,
 `$REPORT_BUCKET_NAME` `$POSTGRES_INSTANCE` refer to the values of those
 environment variables that were set in the [guide on setting up a Google Cloud
 Project]({{ site.baseurl }}/running-your-own-experiment/setting-up-a-google-cloud-project/).

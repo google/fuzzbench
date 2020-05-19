@@ -12,19 +12,60 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utility functions for data (frame) transformations."""
-
-# score.rename('stat wins', inplace=True) in rank_by_stat_test_wins breaks
-# pylint and causes it to stack overflow. Don't lint this file because of it.
-# pylint: skip-file
-
 from analysis import stat_tests
+from common import environment
+
+
+def validate_data(experiment_df):
+    """Checks if the experiment data is valid."""
+    if experiment_df.empty:
+        raise ValueError('Empty experiment data.')
+
+    expected_columns = {
+        'experiment', 'benchmark', 'fuzzer', 'trial_id', 'time_started',
+        'time_ended', 'time', 'edges_covered'
+    }
+    missing_columns = expected_columns.difference(experiment_df.columns)
+    if missing_columns:
+        raise ValueError(
+            'Missing columns in experiment data: {}'.format(missing_columns))
 
 
 def drop_uninteresting_columns(experiment_df):
     """Returns table with only interesting columns."""
     return experiment_df[[
-        'benchmark', 'fuzzer', 'time', 'trial_id', 'edges_covered'
+        'benchmark', 'fuzzer', 'trial_id', 'time', 'edges_covered'
     ]]
+
+
+def clobber_experiments_data(df, experiments):
+    """Clobber experiment data that is part of lower priority (generally
+    earlier) versions of the same trials in |df|. For example in experiment-1 we
+    may test fuzzer-a on benchmark-1. In experiment-2 we may again test fuzzer-a
+    on benchmark-1 because fuzzer-a was updated. This function will remove the
+    snapshots from fuzzer-a,benchmark-1,experiment-1 from |df| because we want
+    the report to only contain the up-to-date data. Experiment priority is
+    determined by order of each experiment in |experiments| with the highest
+    priority experiment coming last in that list."""
+    # We don't call |df| "experiment_df" because it is a misnomer and leads to
+    # confusion in this case where it contains data from multiple experiments.
+
+    # Include everything from the last experiment.
+    experiments = experiments.copy()  # Copy so we dont mutate experiments.
+    experiments.reverse()
+    highest_rank_experiment = experiments[0]
+    result = df[df.experiment == highest_rank_experiment]
+
+    for experiment in experiments[1:]:
+        # Include data for not yet covered benchmark/fuzzer pairs.
+        covered_pairs = result[['benchmark', 'fuzzer']].drop_duplicates()
+        covered_pairs = covered_pairs.apply(tuple, axis=1)
+        experiment_data = df[df.experiment == experiment]
+        experiment_pairs = experiment_data[['benchmark',
+                                            'fuzzer']].apply(tuple, axis=1)
+        to_include = experiment_data[~experiment_pairs.isin(covered_pairs)]
+        result = result.append(to_include)
+    return result
 
 
 def filter_fuzzers(experiment_df, included_fuzzers):
@@ -47,6 +88,12 @@ def label_fuzzers_by_experiment(experiment_df):
     return experiment_df
 
 
+def filter_max_time(experiment_df, max_time):
+    """Returns table with snapshots that have time less than or equal to
+    |max_time|."""
+    return experiment_df[experiment_df['time'] <= max_time]
+
+
 # Creating "snapshots" (see README.md for definition).
 
 _DEFAULT_BENCHMARK_SAMPLE_NUM_THRESHOLD = 0.8
@@ -64,6 +111,9 @@ def get_benchmark_snapshot(benchmark_df,
     Returns data frame that only contains the measurements of the picked
     snapshot time.
     """
+    # Allow overriding threshold with environment variable as well.
+    threshold = environment.get('BENCHMARK_SAMPLE_NUM_THRESHOLD', threshold)
+
     num_trials = benchmark_df.trial_id.nunique()
     trials_running_at_time = benchmark_df.time.value_counts()
     criteria = trials_running_at_time > threshold * num_trials
@@ -83,6 +133,9 @@ def get_fuzzers_with_not_enough_samples(
     smaller than 80% of the largest sample size. Default threshold can be
     overridden.
     """
+    # Allow overriding threshold with environment variable as well.
+    threshold = environment.get('FUZZER_SAMPLE_NUM_THRESHOLD', threshold)
+
     samples_per_fuzzer = benchmark_snapshot_df.fuzzer.value_counts()
     max_samples = samples_per_fuzzer.max()
     few_sample_criteria = samples_per_fuzzer < threshold * max_samples
@@ -128,7 +181,7 @@ def experiment_summary(experiment_snapshots_df):
 # Per-benchmark fuzzer ranking options.
 
 
-def rank_by_mean(benchmark_snapshot_df):
+def benchmark_rank_by_mean(benchmark_snapshot_df):
     """Returns ranking of fuzzers based on mean coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
     means = benchmark_snapshot_df.groupby('fuzzer')['edges_covered'].mean()
@@ -136,7 +189,7 @@ def rank_by_mean(benchmark_snapshot_df):
     return means.sort_values(ascending=False)
 
 
-def rank_by_median(benchmark_snapshot_df):
+def benchmark_rank_by_median(benchmark_snapshot_df):
     """Returns ranking of fuzzers based on median coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
     medians = benchmark_snapshot_df.groupby('fuzzer')['edges_covered'].median()
@@ -144,7 +197,7 @@ def rank_by_median(benchmark_snapshot_df):
     return medians.sort_values(ascending=False)
 
 
-def rank_by_average_rank(benchmark_snapshot_df):
+def benchmark_rank_by_average_rank(benchmark_snapshot_df):
     """Ranks all coverage measurements in the snapshot across fuzzers.
 
     Returns the average rank by fuzzer.
@@ -158,7 +211,7 @@ def rank_by_average_rank(benchmark_snapshot_df):
     return avg_rank['avg rank']
 
 
-def rank_by_stat_test_wins(benchmark_snapshot_df):
+def benchmark_rank_by_stat_test_wins(benchmark_snapshot_df):
     """Carries out one-tailed statistical tests for each fuzzer pair.
 
     Returns ranking according to the number of statistical test wins.
@@ -198,12 +251,12 @@ def create_better_than_table(benchmark_snapshot_df):
 
 
 def experiment_pivot_table(experiment_snapshots_df,
-                           per_benchmark_ranking_function):
+                           benchmark_level_ranking_function):
     """Creates a pivot table according to a given per benchmark ranking, where
     the columns are the fuzzers, the rows are the benchmarks, and the values
     are the scores according to the per benchmark ranking."""
     benchmark_blocks = experiment_snapshots_df.groupby('benchmark')
-    groups_ranked = benchmark_blocks.apply(per_benchmark_ranking_function)
+    groups_ranked = benchmark_blocks.apply(benchmark_level_ranking_function)
     already_unstacked = groups_ranked.index.names == ['benchmark']
     pivot_df = groups_ranked if already_unstacked else groups_ranked.unstack()
     return pivot_df
@@ -221,8 +274,7 @@ def experiment_rank_by_average_rank(experiment_pivot_df):
                                             na_option='keep',
                                             ascending=False)
     average_ranks = pivot_ranked.mean().sort_values()
-    average_ranks.rename('avg rank', inplace=True)
-    return average_ranks
+    return average_ranks.rename('average rank')
 
 
 def experiment_rank_by_num_firsts(experiment_pivot_df):
@@ -235,4 +287,25 @@ def experiment_rank_by_num_firsts(experiment_pivot_df):
     # Count first places for each fuzzer.
     firsts = pivot_ranked[pivot_ranked == 1]
     num_firsts = firsts.sum().sort_values(ascending=False)
-    return num_firsts
+    return num_firsts.rename('number of wins')
+
+
+def experiment_rank_by_average_normalized_score(experiment_pivot_df):
+    """Creates experiment level ranking by taking the average of normalized per
+    benchmark scores from 0 to 100, where 100 is the highest reach coverage."""
+    # Normalize coverage values.
+    benchmark_maximum = experiment_pivot_df.max(axis='columns')
+    normalized_score = experiment_pivot_df.div(benchmark_maximum,
+                                               axis='index').mul(100)
+
+    average_score = normalized_score.mean().sort_values(ascending=False)
+    return average_score.rename('average normalized score')
+
+
+def experiment_level_ranking(experiment_snapshots_df,
+                             benchmark_level_ranking_function,
+                             experiment_level_ranking_function):
+    """Returns an aggregate ranking of fuzzers across all benchmarks."""
+    pivot_table = experiment_pivot_table(experiment_snapshots_df,
+                                         benchmark_level_ranking_function)
+    return experiment_level_ranking_function(pivot_table)

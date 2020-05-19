@@ -24,10 +24,19 @@ RUN apt-get update -y && \
 
 # Download AFL and compile using default compiler.
 # We need afl-2.26b
-RUN wget https://lcamtuf.coredump.cx/afl/releases/afl-2.26b.tgz -O /afl-2.26b.tgz && \
+# Use a copy of
+# https://lcamtuf.coredump.cx/afl/releases/afl-2.26b.tgz
+# to avoid network flakiness.
+RUN wget https://storage.googleapis.com/fuzzbench-files/afl-2.26b.tgz -O /afl-2.26b.tgz && \
     tar xvzf /afl-2.26b.tgz -C / && \
     mv /afl-2.26b /afl && \
     cd /afl && \
+    git clone https://github.com/google/AFL.git /afl/recent_afl && \
+    cd /afl/recent_afl && \ 
+    git checkout 8da80951dd7eeeb3e3b5a3bcd36c485045f40274 && \
+    cd /afl/ && \
+    cp /afl/recent_afl/*.c /afl/ && \
+    cp /afl/recent_afl/*.h /afl/ && \
     AFL_NO_X86=1 make
 
 # Set the env variables for LLVM passes and test units.

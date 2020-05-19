@@ -34,6 +34,9 @@ ARG benchmark
 # Set up source and output directories.
 ENV SRC /src
 ENV OUT /out
+
+ENV FUZZER $fuzzer
+ENV BENCHMARK $benchmark
 ENV FUZZ_TARGET $OUT/fuzz-target
 
 WORKDIR $SRC
@@ -47,9 +50,6 @@ COPY fuzzers/$fuzzer/fuzzer.py fuzzer.py
 
 # Copy the entire fuzzers directory tree to allow for module dependencies.
 COPY fuzzers fuzzers
-
-# Create empty __init__.py to allow python deps to work.
-RUN touch __init__.py
 
 # Create output directory for build artifacts.
 RUN mkdir -p $OUT
