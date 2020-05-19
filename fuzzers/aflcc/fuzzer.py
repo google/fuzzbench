@@ -141,7 +141,7 @@ def prepare_build_environment():
     utils.set_no_sanitizer_compilation_flags()
 
     # Update compiler flags for clang-3.8.
-    cflags = ['-fPIC']
+    cflags = ['-fPIC', '-std=c11']
     cppflags = cflags + ['-I/usr/local/include/c++/v1/', 
                          '-stdlib=libc++', '-std=c++11']
     utils.append_flags('CFLAGS', cflags)
