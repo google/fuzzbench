@@ -20,12 +20,9 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 def build():
     """Build benchmark."""
-    aflplusplus_fuzzer.build("tracepc", "nozero")
+    aflplusplus_fuzzer.build("instrim", "nozero")
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    aflplusplus_fuzzer.fuzz(input_corpus,
-                            output_corpus,
-                            target_binary,
-                            flags=("-L", "0"))
+    aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
