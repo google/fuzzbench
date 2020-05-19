@@ -327,3 +327,12 @@ def test_get_time_since_last_trial_start_no_pending(db, experiment_config):
     assert trial_instance_manager._last_trial_time_started is not None
     assert (trial_instance_manager.get_time_since_last_trial_start().days ==
             result.days)
+
+
+@pytest.mark.parametrize(
+    'benchmark,expected_image,expected_target',
+    [('benchmark1', 'gcr.io/fuzzbench/runners/variant/benchmark1',
+      'fuzz-target'),
+     ('bloaty_fuzz_target',
+      'gcr.io/fuzzbench/runners/variant/bloaty_fuzz_target', 'fuzz_target')])
+def test_record_restarted_trials(restart_as_preemptibles, restart_as_nonpreemptibles)
