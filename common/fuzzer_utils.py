@@ -24,6 +24,49 @@ from common import utils
 DEFAULT_FUZZ_TARGET_NAME = 'fuzz-target'
 FUZZ_TARGET_SEARCH_STRING = b'LLVMFuzzerTestOneInput'
 VALID_FUZZER_REGEX = re.compile(r'^[A-Za-z0-9_]+$')
+FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
+
+
+class FuzzerDirectory:
+    """Class representing a fuzzer directory in fuzzers/."""
+
+    def __init__(self, name):
+        # TOOD(metzman): Use this class to represent fuzzers in general.
+        # For example, replace the dict format we use for variants with this.
+        self.name = name
+
+    @property
+    def directory(self):
+        """Returns the path to the directory in fuzzers/."""
+        return os.path.join(FUZZERS_DIR, self.name)
+
+    @property
+    def fuzzer_py(self):
+        """Returns the path to the fuzzer.py file in fuzzer directory."""
+        return os.path.join(self.directory, 'fuzzer.py')
+
+    @property
+    def runner_dockerfile(self):
+        """Returns the path to the runner.Dockerfile file in fuzzer
+        directory."""
+        return os.path.join(self.directory, 'runner.Dockerfile')
+
+    @property
+    def builder_dockerfile(self):
+        """Returns the path to the builder.Dockerfile file in fuzzer
+        directory."""
+        return os.path.join(self.directory, 'builder.Dockerfile')
+
+    @property
+    def variants_yaml(self):
+        """Returns the path to the variants.yaml file in fuzzer directory."""
+        return os.path.join(self.directory, 'variants.yaml')
+
+    @property
+    def dockerfiles(self):
+        """Returns a list of paths to the runner and builder dockerfiles in the
+        fuzzer directory."""
+        return [self.runner_dockerfile, self.builder_dockerfile]
 
 
 def get_fuzz_target_binary(search_directory: str,
@@ -77,6 +120,17 @@ def validate(fuzzer):
         return False
 
 
+def get_fuzzer_from_config(fuzzer_config: dict) -> str:
+    """Returns the fuzzer of |fuzzer_config| for a non-variant fuzzer or returns
+    the name for a fuzzer variant."""
+    return fuzzer_config.get('name', fuzzer_config['fuzzer'])
+
+
+def get_fuzzer_names():
+    """Returns a list of names of all fuzzers."""
+    return [get_fuzzer_from_config(config) for config in get_fuzzer_configs()]
+
+
 def get_fuzzer_configs(fuzzers=None):
     """Returns the list of all fuzzer and variant configurations."""
     # Import it here to avoid yaml dependency in runner.
@@ -93,7 +147,8 @@ def get_fuzzer_configs(fuzzers=None):
             continue
 
         if not fuzzers or fuzzer in fuzzers:
-            # Auto-generate the default configuration for each base fuzzer.
+            # Auto-generate the default configuration for each underlying
+            # fuzzer.
             fuzzer_configs.append({'fuzzer': fuzzer})
 
         variant_config_path = os.path.join(fuzzers_dir, fuzzer, 'variants.yaml')

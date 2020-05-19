@@ -13,6 +13,7 @@
 # limitations under the License.
 """Utility functions for data (frame) transformations."""
 from analysis import stat_tests
+from common import environment
 
 
 def validate_data(experiment_df):
@@ -110,6 +111,9 @@ def get_benchmark_snapshot(benchmark_df,
     Returns data frame that only contains the measurements of the picked
     snapshot time.
     """
+    # Allow overriding threshold with environment variable as well.
+    threshold = environment.get('BENCHMARK_SAMPLE_NUM_THRESHOLD', threshold)
+
     num_trials = benchmark_df.trial_id.nunique()
     trials_running_at_time = benchmark_df.time.value_counts()
     criteria = trials_running_at_time > threshold * num_trials
@@ -129,6 +133,9 @@ def get_fuzzers_with_not_enough_samples(
     smaller than 80% of the largest sample size. Default threshold can be
     overridden.
     """
+    # Allow overriding threshold with environment variable as well.
+    threshold = environment.get('FUZZER_SAMPLE_NUM_THRESHOLD', threshold)
+
     samples_per_fuzzer = benchmark_snapshot_df.fuzzer.value_counts()
     max_samples = samples_per_fuzzer.max()
     few_sample_criteria = samples_per_fuzzer < threshold * max_samples

@@ -23,6 +23,8 @@ cloud_sql_proxy -instances="$CLOUD_SQL_INSTANCE_CONNECTION_NAME" &
 
 # Setup source code, virtualenv and dependencies.
 gsutil -m rsync -r "${CLOUD_EXPERIMENT_BUCKET}/${EXPERIMENT}/input" "${WORK}"
+mkdir ${WORK}/src
+tar -xvzf ${WORK}/src.tar.gz -C ${WORK}/src
 source "${WORK}/.venv/bin/activate"
 pip3 install -r "${WORK}/src/requirements.txt"
 

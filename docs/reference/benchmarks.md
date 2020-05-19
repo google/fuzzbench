@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Benchmarks
-nav_order: 4
+nav_order: 5
 permalink: /reference/benchmarks/
 parent: Reference
 ---

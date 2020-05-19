@@ -15,6 +15,7 @@
 """Presubmit script for fuzzbench."""
 
 import argparse
+import logging
 import os
 from pathlib import Path
 import subprocess
@@ -22,8 +23,11 @@ import sys
 from typing import List, Optional
 
 from common import benchmark_utils
-from common import logs
 from common import fuzzer_utils
+from common import filesystem
+from common import logs
+from src_analysis import change_utils
+from src_analysis import diff_utils
 
 _LICENSE_CHECK_FILENAMES = ['Dockerfile']
 _LICENSE_CHECK_EXTENSIONS = [
@@ -40,12 +44,13 @@ _LICENSE_CHECK_EXTENSIONS = [
     '.py',
     '.sh',
 ]
-_LICENSE_CHECK_IGNORE_DIRECTORIES = [
-    'alembic',
-    'third_party',
-]
 _LICENSE_CHECK_STRING = 'http://www.apache.org/licenses/LICENSE-2.0'
+
 _SRC_ROOT = Path(__file__).absolute().parent
+_IGNORE_DIRECTORIES = [
+    os.path.join(_SRC_ROOT, 'database', 'alembic'),
+    os.path.join(_SRC_ROOT, 'third_party'),
+]
 
 BASE_PYTEST_COMMAND = ['python3', '-m', 'pytest', '-vv']
 
@@ -124,12 +129,12 @@ class FuzzerAndBenchmarkValidator:
         print(benchmark, 'is not valid.')
         return False
 
-    def validate(self, changed_file: Path) -> bool:
-        """If |changed_file| is in an invalid fuzzer or benchmark then return
+    def validate(self, file_path: Path) -> bool:
+        """If |file_path| is in an invalid fuzzer or benchmark then return
         False. If the fuzzer or benchmark is not in |self.invalid_dirs|, then
         print an error message and it to |self.invalid_dirs|."""
-        return (self.validate_fuzzer(changed_file) and
-                self.validate_benchmark(changed_file))
+        return (self.validate_fuzzer(file_path) and
+                self.validate_benchmark(file_path))
 
 
 def is_python(path: Path) -> bool:
@@ -152,16 +157,9 @@ def test_changed_integrations(paths: List[Path]):
     """Runs tests that build changed fuzzers with all benchmarks and changed
     benchmarks with measurer and all fuzzers. Not enabled by default since it
     requires GCB."""
-    benchmarks = set()
-    fuzzers = set()
-    for path in paths:
-        benchmark = get_benchmark(path)
-        if benchmark:
-            benchmarks.add(benchmark)
-
-        fuzzer = get_fuzzer(path)
-        if fuzzer:
-            fuzzers.add(fuzzer)
+    benchmarks = change_utils.get_changed_benchmarks(
+        [str(path) for path in paths])
+    fuzzers = change_utils.get_changed_fuzzers([str(path) for path in paths])
 
     if not benchmarks and not fuzzers:
         return True
@@ -232,6 +230,14 @@ def yapf(paths: List[Path], validate: bool = True) -> bool:
     return returncode == 0
 
 
+def is_path_in_ignore_directory(path: Path) -> bool:
+    """Returns True if |path| is a subpath of an ignored directory."""
+    for ignore_directory in _IGNORE_DIRECTORIES:
+        if filesystem.is_subpath(ignore_directory, path):
+            return True
+    return False
+
+
 def license_check(paths: List[Path]) -> bool:
     """Validate license header."""
     if not paths:
@@ -245,9 +251,7 @@ def license_check(paths: List[Path]) -> bool:
                 extension not in _LICENSE_CHECK_EXTENSIONS):
             continue
 
-        path_directories = str(path).split(os.sep)
-        if any(d in _LICENSE_CHECK_IGNORE_DIRECTORIES
-               for d in path_directories):
+        if is_path_in_ignore_directory(path):
             continue
 
         with open(path) as file_handle:
@@ -258,32 +262,18 @@ def license_check(paths: List[Path]) -> bool:
     return success
 
 
-def get_changed_files() -> List[Path]:
-    """Return a list of absolute paths of files changed in this git branch."""
-    uncommitted_diff_command = ['git', 'diff', '--name-only', 'HEAD']
+def get_all_files() -> List[Path]:
+    """Returns a list of absolute paths of files in this repo."""
+    get_all_files_command = ['git', 'ls-files']
     output = subprocess.check_output(
-        uncommitted_diff_command).decode().splitlines()
-    uncommitted_changed_files = set(
-        Path(path).absolute() for path in output if Path(path).is_file())
+        get_all_files_command).decode().splitlines()
+    return [Path(path).absolute() for path in output if Path(path).is_file()]
 
-    committed_diff_command = ['git', 'diff', '--name-only', 'origin...']
-    try:
-        output = subprocess.check_output(
-            committed_diff_command).decode().splitlines()
-        committed_changed_files = set(
-            Path(path).absolute() for path in output if Path(path).is_file())
-        return list(committed_changed_files.union(uncommitted_changed_files))
-    except subprocess.CalledProcessError:
-        # This probably won't happen to anyone. It can happen if your copy
-        # of the repo wasn't cloned so give instructions on how to handle.
-        pass
-    raise Exception((
-        '"%s" failed.\n'
-        'Please run "git fetch origin master && '
-        'git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master" '
-        'and try again.\n'
-        'Please file an issue if this doesn\'t fix things.') %
-                    ' '.join(committed_diff_command))
+
+def filter_ignored_files(paths: List[Path]) -> List[Path]:
+    """Returns a list of absolute paths of files in this repo that can be
+    checked statically."""
+    return [path for path in paths if not is_path_in_ignore_directory(path)]
 
 
 def do_tests() -> bool:
@@ -292,19 +282,19 @@ def do_tests() -> bool:
     return returncode == 0
 
 
-def do_checks(changed_files: List[Path]) -> bool:
+def do_checks(file_paths: List[Path]) -> bool:
     """Return False if any presubmit check fails."""
     success = True
 
     fuzzer_and_benchmark_validator = FuzzerAndBenchmarkValidator()
-    if not all([
-            fuzzer_and_benchmark_validator.validate(path)
-            for path in changed_files
-    ]):
+    path_valid_statuses = [
+        fuzzer_and_benchmark_validator.validate(path) for path in file_paths
+    ]
+    if not all(path_valid_statuses):
         success = False
 
     for check in [license_check, yapf, lint, pytype]:
-        if not check(changed_files):
+        if not check(file_paths):
             print('ERROR: %s failed, see errors above.' % check.__name__)
             success = False
 
@@ -326,21 +316,44 @@ def bool_to_returncode(success: bool) -> int:
 
 def main() -> int:
     """Check that this branch conforms to the standards of fuzzbench."""
-    logs.initialize()
     parser = argparse.ArgumentParser(
         description='Presubmit script for fuzzbench.')
     choices = [
         'format', 'lint', 'typecheck', 'licensecheck',
         'test_changed_integrations'
     ]
-    parser.add_argument('command', choices=choices, nargs='?')
+    parser.add_argument(
+        'command',
+        choices=choices,
+        nargs='?',
+        help='The presubmit check to run. Defaults to all of them')
+    parser.add_argument('--all-files',
+                        action='store_true',
+                        help='Run presubmit check(s) on all files',
+                        default=False)
+    parser.add_argument('-v', '--verbose', action='store_true', default=False)
 
     args = parser.parse_args()
+
     os.chdir(_SRC_ROOT)
-    changed_files = get_changed_files()
+
+    if not args.verbose:
+        logs.initialize()
+    else:
+        logs.initialize(log_level=logging.DEBUG)
+
+    if not args.all_files:
+        relevant_files = [Path(path) for path in diff_utils.get_changed_files()]
+    else:
+        relevant_files = get_all_files()
+
+    relevant_files = filter_ignored_files(relevant_files)
+
+    logs.debug('Running presubmit check(s) on: %s',
+               ' '.join(str(path) for path in relevant_files))
 
     if not args.command:
-        success = do_checks(changed_files)
+        success = do_checks(relevant_files)
         return bool_to_returncode(success)
 
     command_check_mapping = {
@@ -352,9 +365,9 @@ def main() -> int:
 
     check = command_check_mapping[args.command]
     if args.command == 'format':
-        success = check(changed_files, False)
+        success = check(relevant_files, False)
     else:
-        success = check(changed_files)
+        success = check(relevant_files)
     if not success:
         print('ERROR: %s failed, see errors above.' % check.__name__)
     return bool_to_returncode(success)

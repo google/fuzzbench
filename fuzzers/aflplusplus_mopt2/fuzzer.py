@@ -20,12 +20,13 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 def build():
     """Build benchmark."""
-    aflplusplus_fuzzer.build("ctx")
+    aflplusplus_fuzzer.build("nozero")
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
+    run_options = ["-L", "-1"]
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
-                            flags=("-p", "coe"))
+                            flags=(run_options))

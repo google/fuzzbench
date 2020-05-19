@@ -16,7 +16,6 @@
 configuration, spawns a runner VM for each benchmark-fuzzer combo, and then
 records coverage data received from the runner VMs."""
 
-import itertools
 import multiprocessing
 import os
 import posixpath
@@ -48,8 +47,7 @@ def create_work_subdirs(subdirs: List[str]):
 
 
 def _initialize_experiment_in_db(experiment: str, git_hash: str,
-                                 benchmarks: List[str], fuzzers: List[str],
-                                 num_trials: int):
+                                 trials: List[models.Trial]):
     """Initializes |experiment| in the database by creating the experiment
     entity and entities for each trial in the experiment."""
     db_utils.add_all([
@@ -58,12 +56,6 @@ def _initialize_experiment_in_db(experiment: str, git_hash: str,
                                git_hash=git_hash)
     ])
 
-    trials_args = itertools.product(sorted(benchmarks), range(num_trials),
-                                    sorted(fuzzers))
-    trials = [
-        models.Trial(fuzzer=fuzzer, experiment=experiment, benchmark=benchmark)
-        for benchmark, _, fuzzer in trials_args
-    ]
     # TODO(metzman): Consider doing this without sqlalchemy. This can get
     # slow with SQLalchemy (it's much worse with add_all).
     db_utils.bulk_save(trials)
@@ -75,20 +67,42 @@ class Experiment:
     def __init__(self, experiment_config_filepath: str):
         self.config = yaml_utils.read(experiment_config_filepath)
 
-        benchmarks = self.config['benchmarks'].split(',')
-        self.benchmarks = builder.build_all_measurers(benchmarks)
+        self.benchmarks = self.config['benchmarks'].split(',')
 
         self.fuzzers = [
             fuzzer_config_utils.get_fuzzer_name(filename) for filename in
             os.listdir(fuzzer_config_utils.get_fuzzer_configs_dir())
         ]
-
-        _initialize_experiment_in_db(self.config['experiment'],
-                                     self.config['git_hash'], self.benchmarks,
-                                     self.fuzzers, self.config['trials'])
+        self.num_trials = self.config['trials']
+        self.experiment_name = self.config['experiment']
+        self.git_hash = self.config['git_hash']
 
         self.web_bucket = posixpath.join(self.config['cloud_web_bucket'],
                                          experiment_utils.get_experiment_name())
+
+
+def build_images_for_trials(fuzzers: List[str], benchmarks: List[str],
+                            num_trials: int) -> List[models.Trial]:
+    """Builds the images needed to run |experiment| and returns a list of trials
+    that can be run for experiment. This is the number of trials specified in
+    experiment times each pair of fuzzer+benchmark that builds successfully."""
+    # This call will raise an exception if the images can't be built which will
+    # halt the experiment.
+    builder.build_base_images()
+
+    # Only build fuzzers for benchmarks whose measurers built successfully.
+    benchmarks = builder.build_all_measurers(benchmarks)
+    build_successes = builder.build_all_fuzzer_benchmarks(fuzzers, benchmarks)
+    experiment_name = experiment_utils.get_experiment_name()
+    trials = []
+    for fuzzer, benchmark in build_successes:
+        fuzzer_benchmark_trials = [
+            models.Trial(fuzzer=fuzzer,
+                         experiment=experiment_name,
+                         benchmark=benchmark) for _ in range(num_trials)
+        ]
+        trials.extend(fuzzer_benchmark_trials)
+    return trials
 
 
 def dispatcher_main():
@@ -102,13 +116,13 @@ def dispatcher_main():
     if os.getenv('LOCAL_EXPERIMENT'):
         models.Base.metadata.create_all(db_utils.engine)
 
-    builder.build_base_images()
-
     experiment_config_file_path = os.path.join(fuzzer_config_utils.get_dir(),
                                                'experiment.yaml')
     experiment = Experiment(experiment_config_file_path)
-    builder.build_all_fuzzer_benchmarks(experiment.fuzzers,
-                                        experiment.benchmarks)
+    trials = build_images_for_trials(experiment.fuzzers, experiment.benchmarks,
+                                     experiment.num_trials)
+    _initialize_experiment_in_db(experiment.experiment_name,
+                                 experiment.git_hash, trials)
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])
 

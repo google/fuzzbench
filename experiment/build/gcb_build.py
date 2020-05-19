@@ -35,7 +35,7 @@ BUILDER_STEP_IDS = [
 CONFIG_DIR = 'config'
 
 # Maximum time to wait for a GCB config to finish build.
-GCB_BUILD_TIMEOUT = 2 * 60 * 60  # 2 hours.
+GCB_BUILD_TIMEOUT = 4 * 60 * 60  # 4 hours.
 
 # High cpu configuration for faster builds.
 GCB_MACHINE_TYPE = 'n1-highcpu-8'

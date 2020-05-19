@@ -11,5 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Integration code for AFLplusplus fuzzer."""
 
-FROM gcr.io/fuzzbench/base-runner
+from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
+
+# OUT environment variable is the location of build directory (default is /out).
+
+
+def build():
+    """Build benchmark."""
+    aflplusplus_fuzzer.build("laf")
+
+
+def fuzz(input_corpus, output_corpus, target_binary):
+    """Run fuzzer."""
+    aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, target_binary)

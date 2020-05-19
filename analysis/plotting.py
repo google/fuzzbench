@@ -20,8 +20,8 @@ import scikit_posthocs as sp
 import seaborn as sns
 
 from analysis import data_utils
+from common import experiment_utils
 
-_DEFAULT_SPINE_OFFSET = 10
 _DEFAULT_TICKS_COUNT = 12
 _DEFAULT_LABEL_ROTATION = 30
 
@@ -36,11 +36,11 @@ def _formatted_hour_min(seconds):
     hours = int(seconds / 60 / 60)
     minutes = int(seconds / 60) % 60
     if hours:
-        time_string += '%dhr' % hours
+        time_string += '%dh' % hours
     if minutes:
         if hours:
             time_string += ':'
-        time_string += '%dmin' % minutes
+        time_string += '%dm' % minutes
     return time_string
 
 
@@ -69,7 +69,7 @@ class Plotter:
         '#17becf', '#9edae5'
     ]
 
-    def __init__(self, fuzzers, quick):
+    def __init__(self, fuzzers, quick=False, logscale=False):
         """Instantiates plotter with list of |fuzzers|. If |quick| is True,
         creates plots faster but, with less detail.
         """
@@ -79,6 +79,7 @@ class Plotter:
         }
 
         self._quick = quick
+        self._logscale = logscale
 
     # pylint: disable=no-self-use
     def _write_plot_to_image(self,
@@ -125,8 +126,6 @@ class Plotter:
             palette=self._fuzzer_colors,
             ax=axes)
 
-        sns.despine(offset=_DEFAULT_SPINE_OFFSET, trim=True)
-
         axes.set_title(_formatted_title(benchmark_snapshot_df))
 
         # Indicate the snapshot time with a big red vertical line.
@@ -141,12 +140,23 @@ class Plotter:
         axes.set(ylabel='Edge coverage')
         axes.set(xlabel='Time (hour:minute)')
 
-        ticks = np.arange(
-            0,
-            snapshot_time + 1,  # Include tick at end time.
-            snapshot_time / _DEFAULT_TICKS_COUNT)
+        if self._logscale:
+            axes.set_xscale('log')
+            ticks = np.logspace(
+                # Start from the time of the first measurement.
+                np.log10(experiment_utils.DEFAULT_SNAPSHOT_SECONDS),
+                np.log10(snapshot_time + 1),  # Include tick at end time.
+                _DEFAULT_TICKS_COUNT)
+        else:
+            ticks = np.arange(
+                experiment_utils.DEFAULT_SNAPSHOT_SECONDS,
+                snapshot_time + 1,  # Include tick at end time.
+                snapshot_time / _DEFAULT_TICKS_COUNT)
+
         axes.set_xticks(ticks)
         axes.set_xticklabels([_formatted_hour_min(t) for t in ticks])
+
+        sns.despine(ax=axes, trim=True)
 
     def write_coverage_growth_plot(self, benchmark_df, image_path, wide=False):
         """Writes coverage growth plot."""
@@ -179,13 +189,14 @@ class Plotter:
                        palette=self._fuzzer_colors,
                        ax=axes)
 
-        sns.despine(offset=_DEFAULT_SPINE_OFFSET, trim=True)
-
         axes.set_title(_formatted_title(benchmark_snapshot_df))
         axes.set(ylabel='Reached edge coverage')
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
-        plt.xticks(rotation=_DEFAULT_LABEL_ROTATION,
-                   horizontalalignment='right')
+        axes.set_xticklabels(axes.get_xticklabels(),
+                             rotation=_DEFAULT_LABEL_ROTATION,
+                             horizontalalignment='right')
+
+        sns.despine(ax=axes, trim=True)
 
     def write_violin_plot(self, benchmark_snapshot_df, image_path):
         """Writes violin plot."""
@@ -217,8 +228,9 @@ class Plotter:
 
         axes.set(xlabel='Edge coverage')
         axes.set(ylabel='Density')
-        plt.xticks(rotation=_DEFAULT_LABEL_ROTATION,
-                   horizontalalignment='right')
+        axes.set_xticklabels(axes.get_xticklabels(),
+                             rotation=_DEFAULT_LABEL_ROTATION,
+                             horizontalalignment='right')
 
     def write_distribution_plot(self, benchmark_snapshot_df, image_path):
         """Writes distribution plot."""
@@ -245,14 +257,14 @@ class Plotter:
                            palette=self._fuzzer_colors,
                            ax=axes)
 
-        sns.despine(offset=_DEFAULT_SPINE_OFFSET, trim=True)
-
         axes.set_title(_formatted_title(benchmark_snapshot_df))
         axes.set(ylabel='Reached edge coverage')
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
+        axes.set_xticklabels(axes.get_xticklabels(),
+                             rotation=_DEFAULT_LABEL_ROTATION,
+                             horizontalalignment='right')
 
-        plt.xticks(rotation=_DEFAULT_LABEL_ROTATION,
-                   horizontalalignment='right')
+        sns.despine(ax=axes, trim=True)
 
     def write_ranking_plot(self, benchmark_snapshot_df, image_path):
         """Writes ranking plot."""
@@ -275,8 +287,9 @@ class Plotter:
         axes.set(ylabel='If green, then fuzzer in the row')
         xlabel = 'is statistically significantly better than fuzzer in column.'
         axes.set(xlabel=xlabel)
-        plt.xticks(rotation=_DEFAULT_LABEL_ROTATION,
-                   horizontalalignment='right')
+        axes.set_xticklabels(axes.get_xticklabels(),
+                             rotation=_DEFAULT_LABEL_ROTATION,
+                             horizontalalignment='right')
 
     def write_better_than_plot(self, better_than_table, image_path):
         """Writes better than plot."""

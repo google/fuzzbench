@@ -16,8 +16,13 @@
 import sys
 import subprocess
 
+from src_analysis import change_utils
+from src_analysis import diff_utils
+
+ALWAYS_BUILD_FUZZER = 'afl'
+
 # Don't build php benchmark since it fills up disk in GH actions.
-OSS_FUZZ_BENCHMARKS = [
+OSS_FUZZ_BENCHMARKS = {
     'bloaty_fuzz_target',
     'curl_curl_fuzzer_http',
     'jsoncpp_jsoncpp_fuzzer',
@@ -27,9 +32,9 @@ OSS_FUZZ_BENCHMARKS = [
     'sqlite3_ossfuzz',
     'systemd_fuzz-link-parser',
     'zlib_zlib_uncompress_fuzzer',
-]
+}
 
-STANDARD_BENCHMARKS = [
+STANDARD_BENCHMARKS = {
     'freetype2-2017',
     'harfbuzz-1.3.2',
     'jasper-1.701.0',
@@ -44,7 +49,7 @@ STANDARD_BENCHMARKS = [
     'tcpdump-4.9.0',
     'vorbis-2017-12-11',
     'woff2-2016-05-06',
-]
+}
 
 
 def get_make_targets(benchmarks, fuzzer):
@@ -75,6 +80,8 @@ def delete_docker_images():
 
 def make_builds(benchmarks, fuzzer):
     """Use make to build each target in |build_targets|."""
+    print('Building benchmarks: {} for fuzzer: {}'.format(
+        ', '.join(benchmarks), fuzzer))
     make_targets = get_make_targets(benchmarks, fuzzer)
     for pull_target, build_target in make_targets:
         # Pull target first.
@@ -91,7 +98,7 @@ def make_builds(benchmarks, fuzzer):
     return True
 
 
-def do_build(build_type, fuzzer):
+def do_build(build_type, fuzzer, always_build):
     """Build fuzzer,benchmark pairs for CI."""
     if build_type == 'oss-fuzz':
         benchmarks = OSS_FUZZ_BENCHMARKS
@@ -100,6 +107,20 @@ def do_build(build_type, fuzzer):
     else:
         raise Exception('Invalid build_type: %s' % build_type)
 
+    if always_build:
+        # Always do a build if always_build is True.
+        return make_builds(benchmarks, fuzzer)
+
+    changed_files = diff_utils.get_changed_files()
+    changed_fuzzers = change_utils.get_changed_fuzzers(changed_files)
+    if fuzzer in changed_fuzzers:
+        # Otherwise if fuzzer is in changed_fuzzers then build it with all
+        # benchmarks, the change could have affected any benchmark.
+        return make_builds(benchmarks, fuzzer)
+
+    # Otherwise, only build benchmarks that have changed.
+    changed_benchmarks = set(change_utils.get_changed_benchmarks(changed_files))
+    benchmarks = benchmarks.intersection(changed_benchmarks)
     return make_builds(benchmarks, fuzzer)
 
 
@@ -110,7 +131,8 @@ def main():
         return 1
     build_type = sys.argv[1]
     fuzzer = sys.argv[2]
-    result = do_build(build_type, fuzzer)
+    always_build = ALWAYS_BUILD_FUZZER == fuzzer
+    result = do_build(build_type, fuzzer, always_build)
     return 0 if result else 1
 
 
