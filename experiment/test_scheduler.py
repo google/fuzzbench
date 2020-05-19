@@ -15,6 +15,7 @@
 import datetime
 from multiprocessing.pool import ThreadPool
 import os
+import time
 from unittest import mock
 
 import pytest
@@ -231,3 +232,98 @@ def test_schedule(mocked_datetime_now, mocked_get_by_variant_name,
 
     assert pending_trials.filter(
         models.Trial.time_started.isnot(None)).all() == pending_trials.all()
+
+
+def test_get_last_trial_time_started(db, experiment_config):
+    """Tests that get_last_trial_time_started returns the time_started of the
+    last trial to be started."""
+    experiment = experiment_config['experiment']
+    db_utils.add_all([
+        models.Experiment(name=experiment),
+    ])
+    trial1 = models.Trial(experiment=experiment,
+                          benchmark=BENCHMARK,
+                          fuzzer=FUZZER)
+    trial2 = models.Trial(experiment=experiment,
+                          benchmark=BENCHMARK,
+                          fuzzer=FUZZER)
+    first_time = datetime.datetime.fromtimestamp(time.mktime(time.gmtime(0)))
+    trial1.time_started = first_time
+    last_time_started = first_time + datetime.timedelta(days=1)
+    trial2.time_started = last_time_started
+    trials = [trial1, trial2]
+    db_utils.add_all(trials)
+
+    assert scheduler.get_last_trial_time_started(
+        experiment) == last_time_started
+
+
+def test_get_last_trial_time_started_called_early(db, experiment_config):
+    """Tests that get_last_trial_time_started raises an exception if called
+    while there are still pending trials."""
+    experiment = experiment_config['experiment']
+    db_utils.add_all([
+        models.Experiment(name=experiment),
+    ])
+    trial1 = models.Trial(experiment=experiment,
+                          benchmark=BENCHMARK,
+                          fuzzer=FUZZER)
+    trial2 = models.Trial(experiment=experiment,
+                          benchmark=BENCHMARK,
+                          fuzzer=FUZZER)
+    first_time = datetime.datetime.fromtimestamp(time.mktime(time.gmtime(0)))
+    trial1.time_started = first_time
+    trials = [trial1, trial2]
+    db_utils.add_all(trials)
+    with pytest.raises(AssertionError):
+        scheduler.get_last_trial_time_started(
+            experiment)
+
+
+def test_get_time_since_last_trial_start_cached(db, experiment_config):
+    """Tests that get_time_since_last_trial_start uses the cached value we give
+    it."""
+    experiment = experiment_config['experiment']
+    db_utils.add_all([
+        models.Experiment(name=experiment),
+    ])
+    trial_instance_manager = scheduler.TrialInstanceManager(
+        1, experiment_config)
+    one_day_ago = datetime.timedelta(days=1)
+    yesterday = datetime.datetime.utcnow() - one_day_ago
+    trial_instance_manager._last_trial_time_started = yesterday
+    assert (trial_instance_manager.get_time_since_last_trial_start() >=
+            one_day_ago)
+
+
+def test_get_time_since_last_trial_start_pending_trials(
+    db, experiment_config, pending_trials):
+    """Tests that get_time_since_last_trial_start returns 0 when there are still
+    pending trials."""
+    trial_instance_manager = scheduler.TrialInstanceManager(
+        1, experiment_config)
+    assert trial_instance_manager.get_time_since_last_trial_start() == 0
+    assert trial_instance_manager._last_trial_time_started is None
+
+
+def test_get_time_since_last_trial_start_no_pending(db, experiment_config):
+    """Tests that get_time_since_last_trial_start returns the right result when
+    there are no pending trials."""
+    experiment = experiment_config['experiment']
+    db_utils.add_all([
+        models.Experiment(name=experiment),
+    ])
+    trial1 = models.Trial(experiment=experiment,
+                          benchmark=BENCHMARK,
+                          fuzzer=FUZZER)
+    trial1.time_started = datetime.datetime.fromtimestamp(
+        time.mktime(time.gmtime(0)))
+    db_utils.add_all([trial1])
+    trial_instance_manager = scheduler.TrialInstanceManager(
+        1, experiment_config)
+    # !!! mock utcnow
+    assert trial_instance_manager._last_trial_time_started is None
+    result = trial_instance_manager.get_time_since_last_trial_start()
+    assert trial_instance_manager._last_trial_time_started is not None
+    assert (trial_instance_manager.get_time_since_last_trial_start().days ==
+            result.days)

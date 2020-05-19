@@ -22,7 +22,6 @@ import random
 import time
 
 import jinja2
-import sqlalchemy
 
 from common import benchmark_utils
 from common import experiment_utils
@@ -122,6 +121,7 @@ def end_expired_trials(experiment_config: dict):
     instances_to_delete = [
         i for i in expired_instances if i in running_instances
     ]
+    # !!! What about preempted ones?
     if instances_to_delete and not gcloud.delete_instances(
             instances_to_delete, experiment_config['cloud_compute_zone']):
         # If we failed to delete some instances, then don't update the status
@@ -140,8 +140,12 @@ def get_last_trial_time_started(experiment: str):
     pending trials because it does not make sense to call this function before
     that time."""
     assert get_pending_trials(experiment).first() is None
-    last_trial = get_experiment_trials(experiment).order_by(
-        sqlalchemy.desc(models.Trial.time_started)).limit(1)
+    # Don't use get_experiment_trials because it already orders the results by
+    # id.
+    last_trial = db_utils.query(
+        models.Trial).filter(models.Trial.experiment == experiment).filter(
+            models.Trial.time_started.isnot(None)).order_by(
+                models.Trial.time_started.desc()).first()
     return last_trial.time_started
 
 
@@ -157,10 +161,9 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         self.preemptible_window = 3 * experiment_config['max_total_time']
         self.preemptible_starts = 0
         self.preempted_trials = {}
-        experiment = experiment_config['experiment']
-
         self._last_trial_time_started = None
 
+        experiment = experiment_config['experiment']
         # Filter operations happening before the experiment started.
         self.last_preemptible_query = (db_utils.query(models.Experiment).filter(
             models.Experiment.name == experiment).one().time_created)
@@ -168,6 +171,8 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
     def get_time_since_last_trial_start(self):
         """Get the time since the last trial in the experiment started."""
         if self._last_trial_time_started is not None:
+            # If we cached the last time started, use the cached value to
+            # compute the elapsed time.
             return datetime.datetime.utcnow() - self._last_trial_time_started
 
         pending_trials = get_pending_trials(
@@ -177,6 +182,8 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             # The last trial hasn't started.
             return 0
 
+        # Otherwise cache the time since the last trial started and return the
+        # amount of elapsed time.
         self._last_trial_time_started = get_last_trial_time_started(
             self.experiment_config['experiment'])
         return datetime.datetime.utcnow() - self._last_trial_time_started
