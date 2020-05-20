@@ -524,7 +524,6 @@ def main():
             fuzzers = args.fuzzers
         fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers)
 
-    1/0
     start_experiment(args.experiment_name, args.experiment_config,
                      args.benchmarks, fuzzer_configs)
     if not os.getenv('MANUAL_EXPERIMENT'):
