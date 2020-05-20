@@ -281,7 +281,8 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         for trial in self.preempted_trials.values():
             yield trial
         new_last_query = datetime.datetime.utcnow()
-        project = self.experiment_config['project']
+        print(self.experiment_config)
+        project = self.experiment_config['cloud_project']
         zone = self.experiment_config['zone']
         operations = gce.filter_by_end_time(self.last_preemptible_query,
                                             gce.get_operations(project, zone))
