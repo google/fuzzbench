@@ -64,8 +64,10 @@ def datetime_now() -> datetime.datetime:
 # prevents us unless handled intelligently.
 def get_experiment_trials(experiment: str):
     """Returns a query of trials in |experiment|."""
+    not_replaced_filter = models.Trial.replacement_trial.is_(None)
+    experiment_filter = models.Trial.experiment == experiment
     return db_utils.query(models.Trial).filter(
-        models.Trial.experiment == experiment).order_by(models.Trial.id)
+        experiment_filter, not_replaced_filter).order_by(models.Trial.id)
 
 
 def get_pending_trials(experiment: str):
@@ -450,10 +452,10 @@ def schedule_loop(experiment_config: dict):
     will use fork to create the Pool which breaks logging."""
     # Create the thread pool once and reuse it to avoid leaking threads and
     # other issues.
+    num_trials = len(get_experiment_trials(experiment_config['experiment']))
+    trial_instance_manager = TrialInstanceManager(num_trials,
+                                                  experiment_config)
     with multiprocessing.Pool() as pool:
-        num_trials = len(get_experiment_trials(experiment_config['experiment']))
-        trial_instance_manager = TrialInstanceManager(num_trials,
-                                                      experiment_config)
         while trial_instance_manager.more_to_schedule():
             try:
                 schedule(experiment_config, trial_instance_manager, pool)

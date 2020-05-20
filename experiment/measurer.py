@@ -65,7 +65,7 @@ def remote_dir_exists(directory: pathlib.Path) -> bool:
     return gsutil.ls(exp_path.gcs(directory), must_exist=False)[0] == 0
 
 
-def measure_loop(experiment: str, max_total_time: int, is_scheduler_running):
+def measure_loop(experiment: str, max_total_time: int):
     """Continuously measure trials for |experiment|."""
     db_utils.initialize()
     logs.initialize(default_extras={
@@ -80,11 +80,11 @@ def measure_loop(experiment: str, max_total_time: int, is_scheduler_running):
             try:
                 # Get whether all trials have ended before we measure to prevent
                 # races.
-                is_last_measure_iteration = not is_scheduler_running.value
+                all_trials_ended = scheduler.all_trials_ended(experiment)
 
                 if not measure_all_trials(experiment, max_total_time, pool, q):
                     # We didn't measure any trials.
-                    if is_last_measure_iteration:
+                    if all_trials_ended:
                         # There are no trials producing snapshots to measure.
                         # Given that we couldn't measure any snapshots, we won't
                         # be able to measure any the future, so break now.
@@ -176,7 +176,8 @@ def _query_ids_of_measured_trials(experiment: str):
     snapshots."""
     trials_and_snapshots_query = db_utils.query(models.Snapshot).options(
         orm.joinedload('trial'))
-    experiment_trials_filter = models.Snapshot.trial.has(experiment=experiment)
+    experiment_trials_filter = models.Snapshot.trial.has(
+        experiment=experiment, replacement_trial=None)
     experiment_trials_and_snapshots_query = trials_and_snapshots_query.filter(
         experiment_trials_filter)
     experiment_snapshot_trial_ids_query = (
@@ -191,9 +192,10 @@ def _query_unmeasured_trials(experiment: str):
     ids_of_trials_with_snapshots = _query_ids_of_measured_trials(experiment)
     no_snapshots_filter = ~models.Trial.id.in_(ids_of_trials_with_snapshots)
     started_trials_filter = ~models.Trial.time_started.is_(None)
+    nonreplaced_trials_filter = models.Trial.replacement_trial.is_(None)
     experiment_trials_filter = models.Trial.experiment == experiment
     return trial_query.filter(experiment_trials_filter, no_snapshots_filter,
-                              started_trials_filter)
+                              started_trials_filter, nonreplaced_trials_filter)
 
 
 def _get_unmeasured_first_snapshots(experiment: str
@@ -628,12 +630,8 @@ def main():
 
     experiment_name = experiment_utils.get_experiment_name()
 
-    # Assume scheduler isn't running if running this script as standalone.
-    mp_manager = multiprocessing.Manager()
-    is_scheduler_running = mp_manager.Value('i', 0)
-
     try:
-        measure_loop(experiment_name, int(sys.argv[1]), is_scheduler_running)
+        measure_loop(experiment_name, int(sys.argv[1]))
     except Exception as error:
         logs.error('Error conducting experiment.')
         raise error
