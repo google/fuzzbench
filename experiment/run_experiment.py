@@ -466,6 +466,7 @@ def main():
         'more benchmarks.')
 
     all_benchmarks = benchmark_utils.get_all_benchmarks()
+    all_fuzzers = fuzzer_utils.get_fuzzer_names()
 
     parser.add_argument('-b',
                         '--benchmarks',
@@ -488,7 +489,8 @@ def main():
                                help='Fuzzers to use.',
                                nargs='+',
                                required=False,
-                               default=None)
+                               default=None,
+                               choices=all_fuzzers)
     fuzzers_group.add_argument('-fc',
                                '--fuzzer-configs',
                                help='Fuzzer configurations to use.',
@@ -520,7 +522,7 @@ def main():
                 return 1
         else:
             fuzzers = args.fuzzers
-        fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=fuzzers)
+        fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers)
 
     start_experiment(args.experiment_name, args.experiment_config,
                      args.benchmarks, fuzzer_configs)
