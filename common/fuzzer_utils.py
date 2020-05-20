@@ -146,7 +146,7 @@ def get_fuzzer_configs(fuzzers=None):
         if fuzzer == 'coverage':
             continue
 
-        if not fuzzers or fuzzer in fuzzers:
+        if fuzzers is None or fuzzer in fuzzers:
             # Auto-generate the default configuration for each underlying
             # fuzzer.
             fuzzer_configs.append({'fuzzer': fuzzer})

@@ -36,6 +36,7 @@ from common import new_process
 from common import utils
 from common import yaml_utils
 from experiment import stop_experiment
+from src_analysis import experiment_changes
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
@@ -465,6 +466,7 @@ def main():
         'more benchmarks.')
 
     all_benchmarks = benchmark_utils.get_all_benchmarks()
+    all_fuzzers = fuzzer_utils.get_fuzzer_names()
 
     parser.add_argument('-b',
                         '--benchmarks',
@@ -481,27 +483,46 @@ def main():
                         '--experiment-name',
                         help='Experiment name.',
                         required=True)
-    parser.add_argument('-f',
-                        '--fuzzers',
-                        help='Fuzzers to use.',
-                        nargs='+',
-                        required=False,
-                        default=[])
-    parser.add_argument('-fc',
-                        '--fuzzer-configs',
-                        help='Fuzzer configurations to use.',
-                        nargs='+',
-                        required=False,
-                        default=[])
+    fuzzers_group = parser.add_mutually_exclusive_group()
+    fuzzers_group.add_argument('-f',
+                               '--fuzzers',
+                               help='Fuzzers to use.',
+                               nargs='+',
+                               required=False,
+                               default=None,
+                               choices=all_fuzzers)
+    fuzzers_group.add_argument('-fc',
+                               '--fuzzer-configs',
+                               help='Fuzzer configurations to use.',
+                               nargs='+',
+                               required=False,
+                               default=[])
+    fuzzers_group.add_argument('-cf',
+                               '--changed-fuzzers',
+                               help=('Use fuzzers that have changed since the '
+                                     'last experiment. The last experiment is '
+                                     'determined by the database your '
+                                     'experiment uses, not necessarily the '
+                                     'fuzzbench service'),
+                               action='store_true',
+                               required=False)
+
     args = parser.parse_args()
 
-    if not args.fuzzer_configs:
-        fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=args.fuzzers)
-    else:
+    if args.fuzzer_configs:
         fuzzer_configs = [
             yaml_utils.read(fuzzer_config)
             for fuzzer_config in args.fuzzer_configs
         ]
+    else:
+        if args.changed_fuzzers:
+            fuzzers = experiment_changes.get_fuzzers_changed_since_last()
+            if not fuzzers:
+                logs.error('No fuzzers changed since last experiment. Exiting.')
+                return 1
+        else:
+            fuzzers = args.fuzzers
+        fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers)
 
     start_experiment(args.experiment_name, args.experiment_config,
                      args.benchmarks, fuzzer_configs)
