@@ -13,6 +13,7 @@
 # limitations under the License.
 """Tests for scheduler.py"""
 import datetime
+import posixpath
 from multiprocessing.pool import ThreadPool
 import os
 import time
@@ -20,6 +21,7 @@ from unittest import mock
 
 import pytest
 
+from common import experiment_utils
 from common import gcloud
 from common import new_process
 from database import models
@@ -305,7 +307,7 @@ def preempt_exp_conf(experiment_config, db):
 DEFAULT_NUM_TRIALS = 100
 
 
-def get_trial_instance_manager(experiment_config):
+def get_trial_instance_manager(experiment_config: dict):
     """Returns an instance of TrialInstanceManager for |experiment_config|."""
     if not db_utils.query(models.Experiment).filter(
             models.Experiment.name == experiment_config['experiment']).first():
@@ -526,3 +528,95 @@ def test_more_to_schedule_running_trials_no_restart(
     trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
     mocked_get_restartable_trials.return_value = ([], [])
     assert not trial_instance_manager.more_to_schedule()
+
+
+def test_get_preempted_trials_nonpreemptible(experiment_config, db):
+    """Tests that TrialInstanceManager.get_preempted_trials returns no trials
+    for a nonpreemptible experiment."""
+    trial_instance_manager = get_trial_instance_manager(experiment_config)
+    assert trial_instance_manager.get_preempted_trials() == []
+
+
+@mock.patch('common.gce.get_operations', return_value=[])
+def test_get_preempted_trials_no_new_preempted(_, preempt_exp_conf):
+    """Tests that TrialInstanceManager.get_preempted_trials returns trials that
+    we already know were preempted but have not restarted yet."""
+    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
+    trial = models.Trial(experiment=preempt_exp_conf['experiment'],
+                         fuzzer=FUZZER, benchmark=BENCHMARK)
+    db_utils.add_all([trial])
+    instance_name = experiment_utils.get_trial_instance_name(
+        preempt_exp_conf['experiment'], trial.id)
+    trial_instance_manager.preempted_trials = {instance_name: trial}
+    assert trial_instance_manager.get_preempted_trials() == [trial]
+    # !!! assert time
+
+
+def _get_preemption_operation(trial_id, exp_conf):
+    zone_url = (
+        'https://www.googleapis.com/compute/v1/projects/{project}/zones/'
+        '{zone}').format(zone=exp_conf['cloud_compute_zone'],
+                         project=exp_conf['cloud_project'])
+    instance_name = experiment_utils.get_trial_instance_name(
+        exp_conf['experiment'], trial_id)
+    target_link = posixpath.join('instances', zone_url, instance_name)
+    name = 'systemevent-blah'
+    self_link = posixpath.join(zone_url, name)
+    return {
+      'id': '1',
+      'name': name,
+      'zone': zone_url,
+      'operationType': 'compute.instances.preempted',
+      'targetLink': target_link,
+      'targetId': '1',
+      'status': 'DONE',
+      'statusMessage': 'Instance was preempted.',
+      'user': 'system',
+      'progress': 100,
+      'insertTime': '2020-01-24T29:16:46.842-02:00',
+      'startTime': '2020-01-24T29:16:46.842-02:00',
+      'endTime': '2020-01-24T29:16:46.842-02:00',
+      'selfLink': self_link,
+      'kind': 'compute#operation'
+    }
+
+@mock.patch(
+    'common.gce.get_preemption_operations')
+def test_get_preempted_trials_new_preempted(
+    mocked_get_preemption_operations, preempt_exp_conf):
+    """Tests that TrialInstanceManager.get_preempted_trials returns trials that
+    we already know were preempted but have not restarted yet and new preempted
+    trials we don't know about until we query for them."""
+    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
+
+    # Create trials.
+    experiment = preempt_exp_conf['experiment']
+    time_started = datetime.datetime.utcnow() #  !!!
+    known_preempted = models.Trial(experiment=experiment,
+                                   fuzzer=FUZZER, benchmark=BENCHMARK,
+                                   time_started=time_started)
+    unknown_preempted = models.Trial(experiment=experiment,
+                                     fuzzer=FUZZER, benchmark=BENCHMARK,
+                                     time_started=time_started)
+    trials = [known_preempted, unknown_preempted]
+    db_utils.add_all(trials)
+    mocked_get_preemption_operations.return_value = [
+        _get_preemption_operation(trial.id, preempt_exp_conf)
+        for trial in trials]
+
+    trial_instance_manager.preempted_trials = {
+        known_preempted.id: known_preempted}
+    result = trial_instance_manager.get_preempted_trials()
+    assert sorted(result, key=lambda trial: trial.id) == sorted(
+        trials, key=lambda trial: trial.id)
+    # !!! assert time
+
+
+def test_get_instance_from_preemption_operation(preempt_exp_conf):
+    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
+    trial_id = 1
+    operation = _get_preemption_operation(trial_id, preempt_exp_conf)
+    expected_instance = 'r-{experiment}-{trial_id}'.format(
+        experiment=preempt_exp_conf['experiment'], trial_id=trial_id)
+    assert trial_instance_manager._get_instance_from_preemption_operation(
+        operation) == expected_instance

@@ -174,6 +174,13 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         self.preempted_trials = {}
         self._last_trial_time_started = None
 
+        # !!! REGEX
+        self.base_resource_url = (
+            'https://www.googleapis.com/compute/v1/projects/{project}/zones/'
+            '{zone}/instances/').format(
+                project=experiment_config['cloud_project'],
+                zone=experiment_config['cloud_compute_zone'])
+
         experiment = experiment_config['experiment']
         # Filter operations happening before the experiment started.
         self.last_preemptible_query = (db_utils.query(models.Experiment).filter(
@@ -260,58 +267,78 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         nonpreemptible_starts = self.nonpreemptible_starts
 
         trials = list(self.get_preempted_trials())
-        num_trials = len(trials)
+        num_preempted_trials = len(trials)
         for trial in trials:
             if self.can_start_preemptible(preemptible_starts):
                 preemptible_starts += 1
                 start_as_preemptible.append(trial)
                 continue
 
-            if self.can_start_nonpreemptible(num_trials, nonpreemptible_starts):
+            if self.can_start_nonpreemptible(num_preempted_trials,
+                                             nonpreemptible_starts):
                 nonpreemptible_starts += 1
                 start_as_nonpreemptible.append(trial)
 
         return preemptible_starts, nonpreemptible_starts
 
+    def _get_started_unfinished_instances(self):
+        """Returns a dictionary of instance names to trials for trials were
+        started but not finished according to the database."""
+        experiment = self.experiment_config['experiment']
+        running_trials = get_running_trials(experiment)
+        return {
+            experiment_utils.get_trial_instance_name(
+                experiment, trial.id): trial
+            for trial in running_trials
+        }
+
+    def _get_instance_from_preemption_operation(self, operation):
+        """Returns the instance name from a preemption |operation|."""
+        return operation['targetLink'][len(self.base_resource_url):]
+
     def get_preempted_trials(self):
         """Returns a list of preempted trials."""
         if not self.experiment_config.get('preemptible_runners'):
-            return
-        # TODO(metzman): Use time so that we aren't requerying the same trials
-        for trial in self.preempted_trials.values():
-            yield trial
-        new_last_query = datetime.datetime.utcnow()
-        print(self.experiment_config)
-        project = self.experiment_config['cloud_project']
-        zone = self.experiment_config['zone']
-        operations = gce.filter_by_end_time(self.last_preemptible_query,
-                                            gce.get_operations(project, zone))
-        preemption_operations = list(gce.get_preemption_operations(operations))
-        self.last_preemptible_query = new_last_query
-        base_str = 'https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/instances/'.format(
-            project=project, zone=zone)
-        experiment = self.experiment_config['experiment']
-        running_trials = get_running_trials(experiment)
-        running_instances = {
-            experiment_utils.get_trial_instance_name(experiment, trial.id):
-            trial for trial in running_trials
-        }
-        for operation in preemption_operations:
-            instance = operation['targetLink'][len(base_str):]
-            trial = running_instances.get(instance)
-            if trial is None:
-                continue
+            # No preempted trials in a nonpreemptible experiment.
+            assert not self.preempted_trials
+            return []
+
+        started_instances = self._get_started_unfinished_instances()
+        query_time = datetime.datetime.utcnow()
+        for instance in self._query_preempted_instances():
+            trial = started_instances.get(instance)
             if trial.id in self.preempted_trials:
+                # We already know this instance was preempted.
                 continue
             self.preempted_trials[trial.id] = trial
-            yield trial
+
+        # Update this now when we know that we have succeded processing the
+        # query. It's far worse if we update the query too early than if we
+        # don't update the query at this point (which will only result in
+        # redundant work.
+        self.last_preemptible_query = query_time
+
+        # Return all preempted instances, those we knew from before hand and
+        # those we discovered in the query.
+        return list(self.preempted_trials.values())
+
+    def _query_preempted_instances(self):
+        project = self.experiment_config['cloud_project']
+        zone = self.experiment_config['cloud_compute_zone']
+        operations = gce.filter_by_end_time(self.last_preemptible_query,
+                                            gce.get_operations(project, zone))
+        return [
+            self._get_instance_from_preemption_operation(operation)
+            for operation in gce.get_preemption_operations(operations)]
 
     def record_restarted_trials(self, restarted_as_preemptibles,
                                 restarted_as_nonpreemptibles):
         """Record that certain trials were restarted. Trials that are restarted
         on preemptibles should be passed in |restarted_as_preemptibles| while
         trials that are restarted as nonpreemptibles should be passed in
-        |restarted_as_nonpreemptibles|."""
+        |restarted_as_nonpreemptibles|. This method updates the counts of
+        restarted preemptible and nonpreemptible instances and deletes any
+        restarted trials from the list."""
         for trial in restarted_as_preemptibles:
             del self.preempted_trials[trial.id]
             self.preemptible_starts += 1
@@ -358,7 +385,7 @@ def restart_preempted_trials(trial_instance_manager, pool):
         trial.get_trial_instance_name(experiment_name, trial.id)
         for trial in restart_as_nonpreemptibles + restart_as_preemptibles
     ]
-    zone = experiment_config['zone']
+    zone = experiment_config['cloud_compute_zone']
     success = gcloud.delete_instances(trial_instance_names, zone)
     if not success:
         # !!! Return two? (error status being the second)
