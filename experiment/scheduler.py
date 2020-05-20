@@ -152,10 +152,21 @@ def get_last_trial_time_started(experiment: str):
 class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
     """Manager for trial instances."""
 
+    # Hard limit on the number of nonpreemptibles we will use. This bounds
+    # costs.
+    MAX_NONPREEMPTIBLES = 500
+    # The maximum fraction of total trials in the experiment that can be done
+    # using preemptibles. This helps bound the cost in unexpected situations.
+    NONPREEMPTIBLES_FRACTION = 1 / 20
+    MAX_FRACTION_FOR_NONPREEMPTIBLES = 1 / 4
+
     def __init__(self, num_trials, experiment_config):
         self.experiment_config = experiment_config
         self.num_trials = num_trials
-        self.max_nonpreemptibles = min(math.ceil(self.num_trials / 20), 500)
+        self.max_nonpreemptibles = min(
+            math.ceil(self.num_trials * self.NONPREEMPTIBLES_FRACTION),
+            self.MAX_NONPREEMPTIBLES)
+        logger.info('Max nonpreemptibles: %d.', self.max_nonpreemptibles)
         self.nonpreemptible_starts = 0
         self.max_preemptibles = self.num_trials * 2
         self.preemptible_window = 3 * experiment_config['max_total_time']
@@ -193,6 +204,9 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         if preemptible_starts is None:
             preemptible_starts = self.preemptible_starts
 
+        if not self.experiment_config.get('preemptible_runners'):
+            return False
+
         if preemptible_starts > self.max_preemptibles:
             # Don't create more than the maximum number of preemptibles or else
             # costs can be infinite in the (highly unlikely) worst case
@@ -213,19 +227,28 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
                                  num_trials_to_run,
                                  nonpreemptible_starts=None):
         """Returns True if we can start a nonpreemptible trial."""
-        if not self.experiment_config['preemptible_runners']:
-            return True
         if nonpreemptible_starts is None:
             nonpreemptible_starts = self.nonpreemptible_starts
+
+        if not self.experiment_config.get('preemptible_runners'):
+            return True
+
         if nonpreemptible_starts >= self.max_nonpreemptibles:
             # Don't exceed our maximum preemptibles.
             return False
 
-        if num_trials_to_run / 4 <= self.max_nonpreemptibles:
-            return True
-        # Don't supplement with nonpreemptibles if the experiment results are so
-        # messed up that doing won't make the result useable.
-        return False
+        if (num_trials_to_run * self.MAX_FRACTION_FOR_NONPREEMPTIBLES
+            > self.max_nonpreemptibles):
+            # When we have trials left that can't be run on preemptibles, don't
+            # naively allow nonpreemptible creation until we hit the limit.
+            # Instead if we can't create enough nonpreemptibles to replace at
+            # least 1/4 of the remaining trials, don't create nonpreemptibles at
+            # all, the experiment can't be salvaged cheaply.
+            return False
+
+        # Supplement with nonpreemptibles if the experiment results are not so
+        # messed up that doing so won't make the result useable.
+        return True
 
     def get_restartable_trials(self):
         """Returns a tuple containing the list of trials that can be started on
@@ -252,7 +275,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
 
     def get_preempted_trials(self):
         """Returns a list of preempted trials."""
-        if not self.experiment_config['preemptible_runners']:
+        if not self.experiment_config.get('preemptible_runners'):
             return
         # TODO(metzman): Use time so that we aren't requerying the same trials
         for trial in self.preempted_trials.values():
@@ -336,9 +359,10 @@ def restart_preempted_trials(trial_instance_manager, pool):
     zone = experiment_config['zone']
     success = gcloud.delete_instances(trial_instance_names, zone)
     if not success:
-        # !!! Return two? (error status being the new)
+        # !!! Return two? (error status being the second)
         return []  # !!! IF WE FAIL ONCE DELETING DO WE PERMANENTLY FAIL?
 
+    # !!! Delete old trial snapshots.
     # Restart nonpreemptibles.
     experiment_config = trial_instance_manager.experiment_config
     restarted_preemptibles = start_trials(restart_as_preemptibles,

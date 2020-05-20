@@ -280,6 +280,21 @@ def test_get_last_trial_time_started_called_early(db, experiment_config):
             experiment)
 
 
+@pytest.fixture
+def preempt_experiment_config(experiment_config):
+    experiment_config['preemptible_runners'] = True
+    return experiment_config
+
+
+DEFAULT_NUM_TRIALS = 100
+
+@pytest.fixture
+def trial_instance_manager(pending_trials, preempt_experiment_config):
+    return scheduler.TrialInstanceManager(
+        DEFAULT_NUM_TRIALS, preempt_experiment_config)
+
+
+
 def test_get_time_since_last_trial_start_cached(db, experiment_config):
     """Tests that get_time_since_last_trial_start uses the cached value we give
     it."""
@@ -297,11 +312,9 @@ def test_get_time_since_last_trial_start_cached(db, experiment_config):
 
 
 def test_get_time_since_last_trial_start_pending_trials(
-    db, experiment_config, pending_trials):
+    trial_instance_manager):
     """Tests that get_time_since_last_trial_start returns 0 when there are still
     pending trials."""
-    trial_instance_manager = scheduler.TrialInstanceManager(
-        1, experiment_config)
     assert trial_instance_manager.get_time_since_last_trial_start() == 0
     assert trial_instance_manager._last_trial_time_started is None
 
@@ -329,10 +342,111 @@ def test_get_time_since_last_trial_start_no_pending(db, experiment_config):
             result.days)
 
 
-@pytest.mark.parametrize(
-    'benchmark,expected_image,expected_target',
-    [('benchmark1', 'gcr.io/fuzzbench/runners/variant/benchmark1',
-      'fuzz-target'),
-     ('bloaty_fuzz_target',
-      'gcr.io/fuzzbench/runners/variant/bloaty_fuzz_target', 'fuzz_target')])
-def test_record_restarted_trials(restart_as_preemptibles, restart_as_nonpreemptibles)
+# @pytest.mark.parametrize(
+#     'preemptibles,nonpreemptibles',
+#     [([], []), ([1], [0, 2])])
+# def test_record_restarted_trials(preemptibles, nonpreemptibles, experiment_config, pending_trials):
+#     trial_instance_manager = scheduler.TrialInstanceManager(
+#         1, experiment_config)
+#     fake_trial_entity = None
+#     trial_instance_manager.preempted_trials = {trial_id: fake_trial_entity
+#                                                for trial_id in range(3)}
+#     trial_instance_manager.record_restarted_trials(
+#         preemptibles, nonpreemptibles)
+#     assert len(preemptibles) == trial_instance_manager.preemptible_starts
+#     assert len(nonpreemptibles) == trial_instance_manager.nonpreemptible_starts
+#     both_starts = set(preemptibles + nonpreemptibles)
+#     expected_preempted_trials = {trial_id: fake_trial_entity for trial_id in range(3) if trial_id not in both_starts}
+#     assert expected_preempted_trials == trial_instance_manager.preempted_trials
+
+def test_can_start_nonpreemptible_not_preemptible_runners(trial_instance_manager):
+    """Tests that test_can_start_nonpreemptible returns True when
+    'preemptible_runners' is not set to True in the experiment_config."""
+    trial_instance_manager.experiment_config['preemptible_runners'] = False
+    assert trial_instance_manager.can_start_nonpreemptible(100)
+
+
+def test_can_start_nonpreemptible_above_max(trial_instance_manager):
+    """Tests that test_can_start_nonpreemptible returns True when
+    'preemptible_runners' is not set to True in the experiment_config."""
+    trials_left_to_run = 1
+    assert not trial_instance_manager.can_start_nonpreemptible(
+        trials_left_to_run,
+        trial_instance_manager.max_nonpreemptibles)
+
+    trial_instance_manager.nonpreemptible_starts = trial_instance_manager.max_nonpreemptibles
+    assert not trial_instance_manager.can_start_nonpreemptible(trials_left_to_run)
+
+
+def test_can_start_nonpreemptible_too_many_left(trial_instance_manager):
+    """Tests that we don't start using nonpreemptibles when there is so much
+    left to run that using nonpreemptibles won't salvage the experiment."""
+    trials_left_to_run = (
+        trial_instance_manager.max_nonpreemptibles /
+        trial_instance_manager.MAX_FRACTION_FOR_NONPREEMPTIBLES) + 1
+    assert not trial_instance_manager.can_start_nonpreemptible(
+        trials_left_to_run)
+
+
+def test_can_start_nonpreemptible(trial_instance_manager):
+    """Tests that we can start a nonpreemptible under the right conditions."""
+    trials_left_to_run = (
+        trial_instance_manager.max_nonpreemptibles /
+        trial_instance_manager.MAX_FRACTION_FOR_NONPREEMPTIBLES)
+    nonpreemptible_starts = trial_instance_manager.max_nonpreemptibles - 1
+    assert trial_instance_manager.can_start_nonpreemptible(
+        trials_left_to_run, nonpreemptible_starts)
+
+
+def test_can_start_preemptible_not_preemptible_runners(trial_instance_manager):
+    """Tests that test_can_start_preemptible returns False when
+    'preemptible_runners' is not set to True in the experiment_config."""
+    trial_instance_manager.experiment_config['preemptible_runners'] = False
+    assert not trial_instance_manager.can_start_preemptible(100)
+
+
+def test_can_start_preemptible_over_max_num(trial_instance_manager):
+    """Tests that we bound the number of preemptible trials we start."""
+    preemptible_starts = trial_instance_manager.max_preemptibles + 1
+    assert not trial_instance_manager.can_start_preemptible(preemptible_starts)
+    trial_instance_manager.preemptible_starts = preemptible_starts
+    assert not trial_instance_manager.can_start_preemptible()
+
+
+@mock.patch('experiment.scheduler.TrialInstanceManager.get_time_since_last_trial_start')
+def test_can_start_preemptible_over_max_time(mocked_get_time_since_last_trial_start, trial_instance_manager):
+    """Tests that we bound the number of preemptible trials we start."""
+    preemptible_starts = trial_instance_manager.max_preemptibles - 1
+    one_day = datetime.timedelta(days=1).total_seconds()
+    mocked_get_time_since_last_trial_start.return_value = (
+        trial_instance_manager.preemptible_window + one_day)
+    assert not trial_instance_manager.can_start_preemptible(preemptible_starts)
+    assert mocked_get_time_since_last_trial_start.call_count == 1
+
+
+def test_can_start_preemptible(trial_instance_manager):
+    """Tests that we can start a preemptible instance when expected."""
+    preemptible_starts =  0
+    assert trial_instance_manager.can_start_preemptible(preemptible_starts)
+
+
+@mock.patch('experiment.scheduler.all_trials_ended', return_value=True)
+def test_more_to_schedule_all_trials_ended(_, trial_instance_manager):
+    """Tests TrialInstanceManager.more_to_schedule returns False when there is
+    more to schedule."""
+    assert not trial_instance_manager.more_to_schedule()
+
+
+@mock.patch('experiment.scheduler.all_trials_ended', return_value=False)
+def test_more_to_schedule_pending_trials(_, trial_instance_manager):
+    """Tests TrialInstanceManager.more_to_schedule returns True when there are
+    are trials that have never been started."""
+    assert trial_instance_manager.more_to_schedule()
+
+
+# @mock.patch('experiment.scheduler.all_trials_ended', return_value=False)
+# def test_more_to_schedule_pending_trials(_, trial_instance_manager):
+#     """Tests TrialInstanceManager.more_to_schedule returns True when there are
+#     all trials have been started but not all have ended in a nonpreemptible
+#     experiment."""
+#     assert trial_instance_manager.more_to_schedule()
