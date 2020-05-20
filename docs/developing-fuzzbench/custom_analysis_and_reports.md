@@ -39,7 +39,7 @@ experiment](https://www.fuzzbench.com/reports/sample/index.html) like this:
 ```bash
 mkdir ~/my-report; cd ~/my-report
 wget https://www.fuzzbench.com/reports/sample/data.csv.gz
-PYTHONPATH=<fuzzbench_root> python3 experiment/generate_report.py \
+PYTHONPATH=<fuzzbench_root> python3 analysis/generate_report.py \
   [experiment_name] \
   --report-dir ~/my-report \
   --from-cached-data
