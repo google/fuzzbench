@@ -237,8 +237,8 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             # Don't exceed our maximum preemptibles.
             return False
 
-        if (num_trials_to_run * self.MAX_FRACTION_FOR_NONPREEMPTIBLES
-            > self.max_nonpreemptibles):
+        if (num_trials_to_run * self.MAX_FRACTION_FOR_NONPREEMPTIBLES >
+                self.max_nonpreemptibles):
             # When we have trials left that can't be run on preemptibles, don't
             # naively allow nonpreemptible creation until we hit the limit.
             # Instead if we can't create enough nonpreemptibles to replace at
@@ -335,7 +335,8 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
 
         if (self.experiment_config.get('preemptible_runners') and
                 get_running_trials(experiment).first()):
-            # If there are any running trials, they will need to be scheduled.
+            # If there are any running trials, they will need to be
+            # scheduled/shutdown.
             return True
 
         restart_as_preemptibles, restart_as_nonpreemptibles = (
