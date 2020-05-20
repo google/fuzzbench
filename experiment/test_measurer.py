@@ -14,7 +14,6 @@
 """Tests for measurer.py."""
 
 import datetime
-import multiprocessing.managers
 import os
 import shutil
 from unittest import mock
@@ -376,38 +375,30 @@ def test_extract_corpus(archive_name, tmp_path):
 
 @mock.patch('time.sleep', return_value=None)
 @mock.patch('experiment.measurer.set_up_coverage_binaries')
-@mock.patch('experiment.measurer.measure_all_trials')
+@mock.patch('experiment.measurer.measure_all_trials', return_value=False)
 @mock.patch('multiprocessing.Manager')
 @mock.patch('multiprocessing.pool')
-def test_measure_loop_end(_, mocked_manager, mocked_measure_all_trials, __,
-                          ___):
+@mock.patch('experiment.scheduler.all_trials_ended', return_value=True)
+def test_measure_loop_end(_, __, ___, ____,
+                          _____, ______):
     """Tests that measure_loop stops when there is nothing left to measure."""
-
-    def mock_measure_all_trials(*args, **kwargs):
-        # Do the assertions here so that there will be an assert fail on failure
-        # instead of an infinite loop.
-        return False
-
-    mocked_measure_all_trials.side_effect = mock_measure_all_trials
-    is_scheduler_running = multiprocessing.managers.Value('i', 0)
-    measurer.measure_loop('', 0, is_scheduler_running)
+    measurer.measure_loop('', 0)
     # If everything went well, we should get to this point without any exception
     # failures.
 
 
 @mock.patch('time.sleep', return_value=None)
 @mock.patch('experiment.measurer.set_up_coverage_binaries')
-@mock.patch('experiment.measurer.measure_all_trials')
 @mock.patch('multiprocessing.Manager')
 @mock.patch('multiprocessing.pool')
-def test_measure_loop_loop_until_end(_, mocked_manager,
-                                     mocked_measure_all_trials, __, ___):
-    """Test that measure loop will stop measuring when the value of
-    is_scheduler_running becomes False."""
+@mock.patch('experiment.scheduler.all_trials_ended', return_value=True)
+@mock.patch('experiment.measurer.measure_all_trials')
+def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___, ____, _____):
+
+    """Test that measure loop will stop measuring when we all trials have
+    ended."""
     call_count = 0
     # Scheduler is running.
-    is_scheduler_running = multiprocessing.managers.Value('i', 1)
-
     loop_iterations = 6
 
     def mock_measure_all_trials(*args, **kwargs):
@@ -415,10 +406,11 @@ def test_measure_loop_loop_until_end(_, mocked_manager,
         # instead of an infinite loop.
         nonlocal call_count
         call_count += 1
-        if call_count == loop_iterations - 1:
-            is_scheduler_running.value = False
-        return False
+        if call_count >= loop_iterations:
+            return False
+        return True
 
     mocked_measure_all_trials.side_effect = mock_measure_all_trials
-    measurer.measure_loop('', 0, is_scheduler_running)
+    import pdb; pdb.set_trace()
+    measurer.measure_loop('', 0)
     assert call_count == loop_iterations

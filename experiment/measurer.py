@@ -41,6 +41,7 @@ from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
 from experiment import run_coverage
+from experiment import scheduler
 from third_party import sancov
 
 logger = logs.Logger('measurer')  # pylint: disable=invalid-name

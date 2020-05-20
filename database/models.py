@@ -39,7 +39,7 @@ class Trial(Base):
     time_started = Column(DateTime(), nullable=True)
     time_ended = Column(DateTime(), nullable=True)
     # The trial that replaces this one if it is preempted.
-    replacement_trial = Column(Integer, ForeignKey('trial.id') nullable=True)
+    replacement_trial = Column(Integer, ForeignKey('trial.id'), nullable=True)
 
     # Every trial has snapshots which is basically the saved state of that trial
     # at a given time. The snapshots field here and the trial field on Snapshot,
