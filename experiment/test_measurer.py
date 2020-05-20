@@ -411,6 +411,5 @@ def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___, ____
         return True
 
     mocked_measure_all_trials.side_effect = mock_measure_all_trials
-    import pdb; pdb.set_trace()
     measurer.measure_loop('', 0)
     assert call_count == loop_iterations
