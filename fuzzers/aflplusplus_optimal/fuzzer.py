@@ -49,7 +49,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'libxml2-v2.9.2':
         aflplusplus_fuzzer.build("lto", "nozero", "autodict")
     elif benchmark_name == 'openssl_x509':
-        aflplusplus_fuzzer.build("lto", "nozero", "dynamic", "laf")
+        aflplusplus_fuzzer.build("tracepc", "nozero", "laf")
     elif benchmark_name == 'openthread-2019-12-23':
         aflplusplus_fuzzer.build("lto", "nozero", "cmplog")
     elif benchmark_name == 'php_php-fuzz-parser':
@@ -61,7 +61,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'vorbis-2017-12-11':
         aflplusplus_fuzzer.build("lto", "nozero", "dynamic", "laf")
     elif benchmark_name == 'woff2-2016-05-06':
-        aflplusplus_fuzzer.build("tracepc", "laf")
+        aflplusplus_fuzzer.build("lto", "nozero", "dynamic", "laf")
     elif benchmark_name == 'zlib_zlib_uncompress_fuzzer':
         aflplusplus_fuzzer.build("lto", "nozero", "cmplog")
     else:
