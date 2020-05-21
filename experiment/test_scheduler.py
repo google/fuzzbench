@@ -397,7 +397,6 @@ def test_can_start_nonpreemptible_above_max(preempt_exp_conf):
         trial_instance_manager.max_nonpreemptibles, trials_left_to_run)
 
 
-
 def test_can_start_nonpreemptible_too_many_left(preempt_exp_conf):
     """Tests that we don't start using nonpreemptibles when there is so much
     left to run that using nonpreemptibles won't salvage the experiment."""
@@ -497,14 +496,12 @@ def test_more_to_schedule_running_trials_preemptible(_,
     assert mocked_get_running_trials.call_count == 1
 
 
-@mock.patch('experiment.scheduler.TrialInstanceManager.can_start_preemptible', return_value=True)
+@mock.patch('experiment.scheduler.TrialInstanceManager.can_start_preemptible',
+            return_value=True)
 @mock.patch('experiment.scheduler.any_pending_trials', return_value=True)
 @mock.patch('experiment.scheduler.any_running_trials', return_value=False)
 @mock.patch('experiment.scheduler.all_trials_ended', return_value=False)
-def test_more_to_schedule_restart_as_preemptibles(_,
-                                                  __,
-                                                  ___,
-                                                  ____,
+def test_more_to_schedule_restart_as_preemptibles(_, __, ___, ____,
                                                   preempt_exp_conf):
     """Tests TrialInstanceManager.more_to_schedule returns True when there are
     all trials trials to restart."""
@@ -512,13 +509,16 @@ def test_more_to_schedule_restart_as_preemptibles(_,
     assert trial_instance_manager.more_to_schedule()
 
 
-@mock.patch('experiment.scheduler.TrialInstanceManager.can_start_nonpreemptible', return_value=False)
-@mock.patch('experiment.scheduler.TrialInstanceManager.can_start_preemptible', return_value=False)
+@mock.patch(
+    'experiment.scheduler.TrialInstanceManager.can_start_nonpreemptible',
+    return_value=False)
+@mock.patch('experiment.scheduler.TrialInstanceManager.can_start_preemptible',
+            return_value=False)
 @mock.patch('experiment.scheduler.any_pending_trials', return_value=True)
 @mock.patch('experiment.scheduler.any_running_trials', return_value=False)
 @mock.patch('experiment.scheduler.all_trials_ended', return_value=False)
-def test_more_to_schedule_running_trials_no_more_starts(
-        _, __, ___, ____, _____, preempt_exp_conf):
+def test_more_to_schedule_running_trials_no_more_starts(_, __, ___, ____, _____,
+                                                        preempt_exp_conf):
     """Tests TrialInstanceManager.more_to_schedule returns False when there are
     no trials to restart."""
     trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)

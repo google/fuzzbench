@@ -519,10 +519,12 @@ class TrialProxy:
 
 def _initialize_logs(experiment):
     """Initialize logs. This must be called on process start."""
-    logs.initialize(default_extras={
-        'experiment': experiment,
-        'component': 'dispatcher'
-    })
+    logs.initialize(
+        default_extras={
+            'experiment': experiment,
+            'component': 'dispatcher',
+            'subcomponent': 'scheduler'
+        })
 
 
 # Restarting preemptibles gives us another 24h (upto). It resets the counter.
@@ -539,7 +541,7 @@ def _start_trial(trial: TrialProxy, experiment_config: dict):
     # that calls this function completely terminates.
     _initialize_logs(experiment_config['experiment'])
     logger.info('Start trial %d.', trial.id)
-    started = create_trial_instance(trial.benchmark, trial.fuzzer, trial.id,
+    started = create_trial_instance(trial.fuzzer, trial.benchmark, trial.id,
                                     experiment_config, trial.preemptible)
     if started:
         trial.time_started = datetime_now()
@@ -548,8 +550,8 @@ def _start_trial(trial: TrialProxy, experiment_config: dict):
     return None
 
 
-def render_startup_script_template(instance_name: str, benchmark: str,
-                                   fuzzer: str, trial_id: int,
+def render_startup_script_template(instance_name: str, fuzzer: str,
+                                   benchmark: str, trial_id: int,
                                    experiment_config: dict):
     """Render the startup script using the template and the parameters
     provided and return the result."""
@@ -596,8 +598,8 @@ def create_trial_instance(fuzzer: str, benchmark: str, trial_id: int,
     trial_id,fuzzer,benchmark."""
     instance_name = experiment_utils.get_trial_instance_name(
         experiment_config['experiment'], trial_id)
-    startup_script = render_startup_script_template(instance_name, benchmark,
-                                                    fuzzer, trial_id,
+    startup_script = render_startup_script_template(instance_name, fuzzer,
+                                                    benchmark, trial_id,
                                                     experiment_config)
     startup_script_path = '/tmp/%s-start-docker.sh' % instance_name
     with open(startup_script_path, 'w') as file_handle:
@@ -612,7 +614,10 @@ def create_trial_instance(fuzzer: str, benchmark: str, trial_id: int,
 
 def main():
     """Main function for running scheduler independently."""
-    logs.initialize(default_extras={'component': 'dispatcher'})
+    logs.initialize(default_extras={
+        'component': 'dispatcher',
+        'subcomponent': 'scheduler'
+    })
 
     if len(sys.argv) != 2:
         print('Usage: {} <experiment_config.yaml>'.format(sys.argv[0]))

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Module for using the Google Compute Engine (GCE) API."""
-import dateutil
+import dateutil.parser
 
 from googleapiclient import discovery
 from oauth2client.client import GoogleCredentials

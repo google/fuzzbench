@@ -70,6 +70,7 @@ def measure_loop(experiment_config: dict, num_trials: int):
     """Continuously measure trials for |experiment|."""
     logs.initialize(default_extras={
         'component': 'dispatcher',
+        'subcomponent': 'measurer',
     })
     max_total_time = experiment_config['max_total_time']
     experiment = experiment_config['experiment']
@@ -625,6 +626,7 @@ def initialize_logs():
     """Initialize logs. This must be called on process start."""
     logs.initialize(default_extras={
         'component': 'dispatcher',
+        'subcomponent': 'measurer',
     })
 
 
