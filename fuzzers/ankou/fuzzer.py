@@ -77,11 +77,9 @@ def run_ankou_fuzz(input_corpus,
     ]
     if additional_flags:
         command.extend(additional_flags)
-    dictionary_path = utils.get_dictionary_path(target_binary)
-    """
-    if dictionary_path:
-        command.extend(['-dict', dictionary_path])
-    """
+    #dictionary_path = utils.get_dictionary_path(target_binary)
+    #if dictionary_path:
+    #    command.extend(['-dict', dictionary_path])
 
     print('[run_fuzzer] Running command: ' + ' '.join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
