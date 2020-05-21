@@ -14,7 +14,7 @@
 """SQLAlchemy Database Models."""
 import sqlalchemy
 from sqlalchemy.ext import declarative
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, DateTime
 
 Base = declarative.declarative_base()  # pylint: disable=invalid-name
 
@@ -38,8 +38,8 @@ class Trial(Base):
     benchmark = Column(String, nullable=False)
     time_started = Column(DateTime(), nullable=True)
     time_ended = Column(DateTime(), nullable=True)
-    # The trial that replaces this one if it is preempted.
-    replacement_trial = Column(Integer, ForeignKey('trial.id'), nullable=True)
+    preemptible = Column(Boolean, default=False)
+    preempted = Column(Boolean, default=False)
 
     # Every trial has snapshots which is basically the saved state of that trial
     # at a given time. The snapshots field here and the trial field on Snapshot,

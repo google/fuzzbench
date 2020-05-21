@@ -66,12 +66,15 @@ def remote_dir_exists(directory: pathlib.Path) -> bool:
     return gsutil.ls(exp_path.gcs(directory), must_exist=False)[0] == 0
 
 
-def measure_loop(experiment: str, max_total_time: int):
+def measure_loop(experiment_config: dict, num_trials: int):
     """Continuously measure trials for |experiment|."""
-    db_utils.initialize()
     logs.initialize(default_extras={
         'component': 'dispatcher',
     })
+    max_total_time = experiment_config['max_total_time']
+    experiment = experiment_config['experiment']
+    trial_instance_manager = scheduler.TrialInstanceManager(
+        num_trials, experiment_config)
     with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
         set_up_coverage_binaries(pool, experiment)
         # Using Multiprocessing.Queue will fail with a complaint about
@@ -81,14 +84,15 @@ def measure_loop(experiment: str, max_total_time: int):
             try:
                 # Get whether all trials have ended before we measure to prevent
                 # races.
-                all_trials_ended = scheduler.all_trials_ended(experiment)
+                done_producing_snapshots = (
+                    not trial_instance_manager.more_to_schedule())
 
                 if not measure_all_trials(experiment, max_total_time, pool, q):
                     # We didn't measure any trials.
-                    if all_trials_ended:
+                    if done_producing_snapshots:
                         # There are no trials producing snapshots to measure.
                         # Given that we couldn't measure any snapshots, we won't
-                        # be able to measure any the future, so break now.
+                        # be able to measure any the future, so stop now.
                         break
             except Exception:  # pylint: disable=broad-except
                 logger.error('Error occurred during measuring.')
@@ -177,8 +181,8 @@ def _query_ids_of_measured_trials(experiment: str):
     snapshots."""
     trials_and_snapshots_query = db_utils.query(models.Snapshot).options(
         orm.joinedload('trial'))
-    experiment_trials_filter = models.Snapshot.trial.has(
-        experiment=experiment, replacement_trial=None)
+    experiment_trials_filter = models.Snapshot.trial.has(experiment=experiment,
+                                                         replacement_trial=None)
     experiment_trials_and_snapshots_query = trials_and_snapshots_query.filter(
         experiment_trials_filter)
     experiment_snapshot_trial_ids_query = (
@@ -632,7 +636,7 @@ def main():
     experiment_name = experiment_utils.get_experiment_name()
 
     try:
-        measure_loop(experiment_name, int(sys.argv[1]))
+        measure_loop(experiment_name, 0)  # !!!
     except Exception as error:
         logs.error('Error conducting experiment.')
         raise error

@@ -47,6 +47,13 @@ SNAPSHOT_LOGGER = measurer.logger
 
 # pylint: disable=unused-argument,invalid-name,redefined-outer-name,protected-access
 
+@pytest.fixture
+def db_experiment(experiment_config, db):
+    experiment = models.Experiment(name=experiment_config['experiment'])
+    db_utils.add_all([experiment])
+    # yield so that the experiment exists until the using function exits.
+    yield
+
 
 @pytest.mark.parametrize('new_pcs', [['0x1', '0x2'], []])
 def test_merge_new_pcs(new_pcs, fs, experiment):
@@ -379,10 +386,9 @@ def test_extract_corpus(archive_name, tmp_path):
 @mock.patch('multiprocessing.Manager')
 @mock.patch('multiprocessing.pool')
 @mock.patch('experiment.scheduler.all_trials_ended', return_value=True)
-def test_measure_loop_end(_, __, ___, ____,
-                          _____, ______):
+def test_measure_loop_end(_, __, ___, ____, _____, ______, experiment_config, db_experiment):
     """Tests that measure_loop stops when there is nothing left to measure."""
-    measurer.measure_loop('', 0)
+    measurer.measure_loop(experiment_config, 100)
     # If everything went well, we should get to this point without any exception
     # failures.
 
@@ -393,8 +399,8 @@ def test_measure_loop_end(_, __, ___, ____,
 @mock.patch('multiprocessing.pool')
 @mock.patch('experiment.scheduler.all_trials_ended', return_value=True)
 @mock.patch('experiment.measurer.measure_all_trials')
-def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___, ____, _____):
-
+def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___,
+                                     ____, _____, experiment_config, db_experiment):
     """Test that measure loop will stop measuring when we all trials have
     ended."""
     call_count = 0
@@ -411,5 +417,5 @@ def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___, ____
         return True
 
     mocked_measure_all_trials.side_effect = mock_measure_all_trials
-    measurer.measure_loop('', 0)
+    measurer.measure_loop(experiment_config, 100)
     assert call_count == loop_iterations
