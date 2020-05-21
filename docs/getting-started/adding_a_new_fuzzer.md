@@ -237,6 +237,12 @@ make build-$FUZZER_NAME-$BENCHMARK_NAME
 make run-$FUZZER_NAME-$BENCHMARK_NAME
 ```
 
+* Or use a quicker test run mode:
+
+```shell
+make test-run-$FUZZER_NAME-$BENCHMARK_NAME
+```
+
 * Building all benchmarks for a fuzzer:
 
 ```shell
@@ -273,6 +279,8 @@ make build-$FUZZER_NAME-all
 * Run `make format` to format your code.
 
 * Run `make presubmit` to lint your code and ensure all tests are passing.
+
+* Run `make clear-cache` to clear docker containers' caches. Next time you build a project, the container will be built from scratch.
 
 * Add your fuzzer to the list in `.github/workflows/ci.yml` to enable building
   it on continous integration.
