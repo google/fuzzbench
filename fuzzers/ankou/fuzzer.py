@@ -43,9 +43,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
         './Ankou', '-app', target_binary, '-i', input_corpus, '-o',
         output_corpus
     ]
-    dictionary_path = utils.get_dictionary_path(target_binary)
-    if dictionary_path:
-        command.extend(['-dict', dictionary_path])
+    # "-dict" option may not work for format mismatching.
 
     print('[run_fuzzer] Running command: ' + ' '.join(command))
     subprocess.check_call(command)
