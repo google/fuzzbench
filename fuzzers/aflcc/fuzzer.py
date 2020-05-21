@@ -125,11 +125,6 @@ def add_compilation_cflags():
         utils.append_flags('CFLAGS', dl_flags)
         utils.append_flags('CXXFLAGS', dl_flags)
 
-    elif is_benchmark('re2'):
-        re_flags = ['-std=c11']
-        utils.append_flags('CFLAGS', re_flags)
-        utils.append_flags('CXXFLAGS', re_flags)
-
 def add_post_compilation_lflags(ldflags_arr):
     """Add additional linking flags for certain benchmarks"""
     if is_benchmark('libjpeg'):

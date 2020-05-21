@@ -22,7 +22,7 @@ apt-get update && \
   automake
 
 
-CXXFLAGS="${CXXFLAGS} -std=gnu++98"
+CXXFLAGS="${CXXFLAGS}"
 
 build_lib() {
   rm -rf BUILD
