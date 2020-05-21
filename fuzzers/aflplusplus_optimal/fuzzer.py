@@ -33,7 +33,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     if benchmark_name == 'bloaty_fuzz_target':
         aflplusplus_fuzzer.build("lto", "laf", "nozero", "dynamic")
     elif benchmark_name == 'curl_curl_fuzzer_http':
-        aflplusplus_fuzzer.build("tracepc")
+        aflplusplus_fuzzer.build("tracepc", "nozero")
     elif benchmark_name == 'freetype2-2017':
         aflplusplus_fuzzer.build("lto", "cmplog", "nozero", "dynamic")
     elif benchmark_name == 'jsoncpp_jsoncpp_fuzzer':
@@ -45,7 +45,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'libpcap_fuzz_both':
         aflplusplus_fuzzer.build("lto", "nozero", "laf")
     elif benchmark_name == 'libpng-1.2.56':
-        aflplusplus_fuzzer.build("lto", "instrim", "nozero", "cmplog")
+        aflplusplus_fuzzer.build("lto", "nozero", "cmplog")
     elif benchmark_name == 'libxml2-v2.9.2':
         aflplusplus_fuzzer.build("lto", "nozero", "autodict")
     elif benchmark_name == 'openssl_x509':
@@ -57,13 +57,13 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'proj4-2017-08-14':
         aflplusplus_fuzzer.build("lto", "nozero", "cmplog")
     elif benchmark_name == 'systemd_fuzz-link-parser':
-        aflplusplus_fuzzer.build("lto", "nozero", "dynamic", "cmplog")
+        aflplusplus_fuzzer.build("tracepc", "nozero", "cmplog")
     elif benchmark_name == 'vorbis-2017-12-11':
         aflplusplus_fuzzer.build("lto", "nozero", "dynamic", "laf")
     elif benchmark_name == 'woff2-2016-05-06':
         aflplusplus_fuzzer.build("tracepc", "laf")
     elif benchmark_name == 'zlib_zlib_uncompress_fuzzer':
-        aflplusplus_fuzzer.build("tracepc", "nozero", "cmplog")
+        aflplusplus_fuzzer.build("lto", "nozero", "cmplog")
     else:
         aflplusplus_fuzzer.build("lto", "nozero")
 
