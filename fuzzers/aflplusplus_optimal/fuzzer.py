@@ -37,9 +37,9 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'freetype2-2017':
         aflplusplus_fuzzer.build("lto", "cmplog", "nozero", "dynamic")
     elif benchmark_name == 'jsoncpp_jsoncpp_fuzzer':
-        aflplusplus_fuzzer.build("lto", "cmplog", "nozero", "dynamic")
+        aflplusplus_fuzzer.build("lto", "dynamic", "nozero")
     elif benchmark_name == 'lcms-2017-03-21':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "nozero")
+        aflplusplus_fuzzer.build("tracepc", "nozero")
     elif benchmark_name == 'libjpeg-turbo-07-2017':
         aflplusplus_fuzzer.build("tracepc", "laf")
     elif benchmark_name == 'libpcap_fuzz_both':
@@ -51,7 +51,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'openssl_x509':
         aflplusplus_fuzzer.build("tracepc", "nozero", "laf")
     elif benchmark_name == 'openthread-2019-12-23':
-        aflplusplus_fuzzer.build("lto", "nozero", "cmplog")
+        aflplusplus_fuzzer.build("lto", "nozero")
     elif benchmark_name == 'php_php-fuzz-parser':
         aflplusplus_fuzzer.build("lto", "nozero", "dynamic")
     elif benchmark_name == 'proj4-2017-08-14':
