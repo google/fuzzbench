@@ -24,7 +24,6 @@ RUN tar -C /application -xzf go1.14.3.linux-amd64.tar.gz
 RUN /application/go/bin/go get github.com/SoftSec-KAIST/Ankou
 # Compile Ankou.
 RUN /application/go/bin/go build github.com/SoftSec-KAIST/Ankou
-# /Ankou exists now.
 
 # Download and compile AFL.
 # Set AFL_NO_X86 to skip flaky tests.

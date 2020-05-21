@@ -30,7 +30,6 @@ def build():
     utils.build_benchmark()
 
     print('[post_build] Copying Ankou to $OUT directory')
-    # Copy out the Ankou binary as a build artifact.
     shutil.copy('/Ankou', os.environ['OUT'])
 
 
