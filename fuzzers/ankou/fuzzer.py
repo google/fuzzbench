@@ -18,25 +18,13 @@ import subprocess
 import os
 
 from fuzzers import utils
+from fuzzers.afl import fuzzer as afl_fuzzer
 
 # OUT environment variable is the location of build directory (default is /out).
 
-
-def prepare_build_environment():
-    """Set environment variables used to build targets for AFL-based
-    fuzzers."""
-    cflags = ['-fsanitize-coverage=trace-pc-guard']
-    utils.append_flags('CFLAGS', cflags)
-    utils.append_flags('CXXFLAGS', cflags)
-
-    os.environ['CC'] = 'clang'
-    os.environ['CXX'] = 'clang++'
-    os.environ['FUZZER_LIB'] = '/libAFL.a'
-
-
 def build():
     """Build benchmark."""
-    prepare_build_environment()
+    afl_fuzzer.prepare_build_environment()
 
     utils.build_benchmark()
 
