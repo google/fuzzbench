@@ -21,9 +21,6 @@ apt-get update && \
   autoconf \
   automake
 
-
-CXXFLAGS="${CXXFLAGS}"
-
 build_lib() {
   rm -rf BUILD
   cp -rf SRC BUILD
