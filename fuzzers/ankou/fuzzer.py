@@ -69,12 +69,8 @@ def run_ankou_fuzz(input_corpus,
                  target_binary,
                  additional_flags=None,
                  hide_output=False):
-    """Run afl-fuzz."""
-    # Spawn the afl fuzzing process.
-    # FIXME: Currently AFL will exit if it encounters a crashing input in seed
-    # corpus (usually timeouts). Add a way to skip/delete such inputs and
-    # re-run AFL.
-    print('[run_fuzzer] Running target with afl-fuzz')
+    """Run Ankou."""
+    print('[run_fuzzer] Running target with Ankou')
     command = [
         './Ankou',
         '-app',
