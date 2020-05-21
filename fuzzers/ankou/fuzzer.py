@@ -22,6 +22,7 @@ from fuzzers.afl import fuzzer as afl_fuzzer
 
 # OUT environment variable is the location of build directory (default is /out).
 
+
 def build():
     """Build benchmark."""
     afl_fuzzer.prepare_build_environment()
