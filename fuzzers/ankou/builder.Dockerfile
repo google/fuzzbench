@@ -15,18 +15,18 @@
 ARG parent_image=gcr.io/fuzzbench/base-builder
 FROM $parent_image
 
-# Go
+# Install Go.
 RUN mkdir -p /application
 RUN wget https://dl.google.com/go/go1.14.3.linux-amd64.tar.gz
 RUN tar -C /application -xzf go1.14.3.linux-amd64.tar.gz
 
-# Clone Ankou and its dependencies
+# Clone Ankou and its dependencies.
 RUN /application/go/bin/go get github.com/SoftSec-KAIST/Ankou
-# Compile Ankou
+# Compile Ankou.
 RUN /application/go/bin/go build github.com/SoftSec-KAIST/Ankou
-# /Ankou exists now
+# /Ankou exists now.
 
-# Download and compile AFL
+# Download and compile AFL.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN wget http://lcamtuf.coredump.cx/afl/releases/afl-latest.tgz && \
     tar xf afl-latest.tgz && \
