@@ -65,19 +65,14 @@ def prepare_fuzz_environment(input_corpus):
 
 
 def run_ankou_fuzz(input_corpus,
-                 output_corpus,
-                 target_binary,
-                 additional_flags=None,
-                 hide_output=False):
+                   output_corpus,
+                   target_binary,
+                   additional_flags=None,
+                   hide_output=False):
     """Run Ankou."""
     print('[run_fuzzer] Running target with Ankou')
     command = [
-        './Ankou',
-        '-app',
-        target_binary,
-        '-i',
-        input_corpus,
-        '-o',
+        './Ankou', '-app', target_binary, '-i', input_corpus, '-o',
         output_corpus
     ]
     if additional_flags:
