@@ -110,7 +110,6 @@ def test_build_images_for_trials_base_images_fail(dispatcher_experiment):
                                            dispatcher_experiment.preemptible)
 
 
-
 @mock.patch('experiment.build.builder.build_base_images')
 def test_build_images_for_trials_build_success(_, dispatcher_experiment):
     """Tests that build_for_trial returns all trials we expect to run in an
@@ -124,7 +123,8 @@ def test_build_images_for_trials_build_success(_, dispatcher_experiment):
                         return_value=fuzzer_benchmarks):
             trials = dispatcher.build_images_for_trials(
                 dispatcher_experiment.fuzzers, dispatcher_experiment.benchmarks,
-                dispatcher_experiment.num_trials, dispatcher_experiment.preemptible)
+                dispatcher_experiment.num_trials,
+                dispatcher_experiment.preemptible)
     trial_fuzzer_benchmarks = [
         (trial.fuzzer, trial.benchmark) for trial in trials
     ]
@@ -155,7 +155,8 @@ def test_build_images_for_trials_benchmark_fail(_, dispatcher_experiment):
             assert len(set(dispatcher_experiment.benchmarks)) > 1
             trials = dispatcher.build_images_for_trials(
                 dispatcher_experiment.fuzzers, dispatcher_experiment.benchmarks,
-                dispatcher_experiment.num_trials, dispatcher_experiment.preemptible)
+                dispatcher_experiment.num_trials,
+                dispatcher_experiment.preemptible)
     for trial in trials:
         assert trial.benchmark == successful_benchmark
 

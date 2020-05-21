@@ -64,7 +64,7 @@ def _initialize_experiment_in_db(experiment: str, git_hash: str,
 class Experiment:
     """Class representing an experiment."""
 
-    def __init__(self, experiment_config_filepath: str):
+    def __init__(self, experiment_config_filepath: str):  # pylint: disable=too-many-instance-attributes
         self.config = yaml_utils.read(experiment_config_filepath)
 
         self.benchmarks = self.config['benchmarks'].split(',')

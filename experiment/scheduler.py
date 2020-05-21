@@ -158,9 +158,12 @@ def get_last_trial_time_started(experiment: str):
 
 
 def any_pending_trials(experiment):
+    """Returns True if there are any pending trials."""
     return bool(get_pending_trials(experiment).first())
 
+
 def any_running_trials(experiment):
+    """Returns True if there are any running trials."""
     return bool(get_running_trials(experiment).first())
 
 
