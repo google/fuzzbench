@@ -237,6 +237,12 @@ make build-$FUZZER_NAME-$BENCHMARK_NAME
 make run-$FUZZER_NAME-$BENCHMARK_NAME
 ```
 
+* Or use a quicker test run mode:
+
+```shell
+make test-run-$FUZZER_NAME-$BENCHMARK_NAME
+```
+
 * Building all benchmarks for a fuzzer:
 
 ```shell
