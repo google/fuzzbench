@@ -73,29 +73,29 @@ def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-man
     run_options = []
     benchmark_name = os.environ['BENCHMARK']
     if benchmark_name == 'bloaty_fuzz_target':
-        run_options = [ "-L", "0" ]
+        run_options = ["-L", "0"]
     elif benchmark_name == 'curl_curl_fuzzer_http':
-        run_options = [ "-L", "-0" ]
+        run_options = ["-L", "-0"]
     elif benchmark_name == 'jsoncpp_jsoncpp_fuzzer':
-        run_options = [ "-L", "0" ]
+        run_options = ["-L", "0"]
     elif benchmark_name == 'lcms-2017-03-21':
-        run_options = [ "-L", "-1" ]
+        run_options = ["-L", "-1"]
     elif benchmark_name == 'libjpeg-turbo-07-2017':
-        run_options = [ "-L", "0" ]
+        run_options = ["-L", "0"]
     elif benchmark_name == 'libpcap_fuzz_both':
-        run_options = [ "-L", "0" ]
+        run_options = ["-L", "0"]
     elif benchmark_name == 'libpng-1.2.56':
-        run_options = [ "-L", "-1" ]
+        run_options = ["-L", "-1"]
     elif benchmark_name == 'mbedtls_fuzz_dtlsclient':
-        run_options = [ "-L", "0" ]
+        run_options = ["-L", "0"]
     elif benchmark_name == 'openthread-2019-12-23':
-        run_options = [ "-L", "0" ]
+        run_options = ["-L", "0"]
     elif benchmark_name == 'proj4-2017-08-14':
-        run_options = [ "-L", "-1" ]
+        run_options = ["-L", "-1"]
     elif benchmark_name == 'sqlite3_ossfuzz':
-        run_options = [ "-L", "-1" ]
+        run_options = ["-L", "-1"]
     elif benchmark_name == 'woff2-2016-05-06':
-        run_options = [ "-L", "0" ]
+        run_options = ["-L", "0"]
 
     os.environ['AFL_MAP_SIZE'] = '1048576'
 
