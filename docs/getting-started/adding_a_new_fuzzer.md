@@ -280,6 +280,8 @@ make build-$FUZZER_NAME-all
 
 * Run `make presubmit` to lint your code and ensure all tests are passing.
 
+* Run `make clear-cache` to clear docker containers' caches. Next time you build a project, the container will be built from scratch.
+
 * Add your fuzzer to the list in `.github/workflows/ci.yml` to enable building
   it on continous integration.
 
