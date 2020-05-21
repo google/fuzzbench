@@ -444,7 +444,8 @@ def schedule_loop(experiment_config: dict):
     will use fork to create the Pool which breaks logging."""
     # Create the thread pool once and reuse it to avoid leaking threads and
     # other issues.
-    num_trials = len(get_experiment_trials(experiment_config['experiment']))
+    num_trials = len(
+        get_experiment_trials(experiment_config['experiment']).all())
     trial_instance_manager = TrialInstanceManager(num_trials, experiment_config)
     with multiprocessing.Pool() as pool:
         while trial_instance_manager.more_to_schedule():
