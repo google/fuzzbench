@@ -87,15 +87,11 @@ def run_ankou_fuzz(input_corpus,
     if additional_flags:
         command.extend(additional_flags)
     dictionary_path = utils.get_dictionary_path(target_binary)
+    """
     if dictionary_path:
-        command.extend(['-x', dictionary_path])
-    command += [
-        '--',
-        target_binary,
-        # Pass INT_MAX to afl the maximize the number of persistent loops it
-        # performs.
-        '2147483647'
-    ]
+        command.extend(['-dict', dictionary_path])
+    """
+
     print('[run_fuzzer] Running command: ' + ' '.join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
     subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
