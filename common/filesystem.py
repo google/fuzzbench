@@ -25,6 +25,8 @@ def create_directory(directory):
 
 def is_subpath(path, possible_subpath):
     """Returns True if |possible_subpath| is a subpath of |path|."""
+    path = str(path)
+    possible_subpath = str(possible_subpath)
     common_path = os.path.commonpath([path, possible_subpath])
     return common_path == path
 

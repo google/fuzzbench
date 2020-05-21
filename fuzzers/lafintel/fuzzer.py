@@ -20,6 +20,7 @@ from fuzzers import utils
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 
+
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
     # In php benchmark, there is a call to __builtin_cpu_supports("ssse3")
