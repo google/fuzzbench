@@ -19,7 +19,6 @@ from typing import List
 from common import utils
 from common import filesystem
 from common import fuzzer_utils
-
 from src_analysis import benchmark_dependencies
 from src_analysis import fuzzer_dependencies
 
@@ -28,7 +27,8 @@ from src_analysis import fuzzer_dependencies
 # python, ignore this for simplicity.
 CI_FILES = set([
     os.path.join(utils.ROOT_DIR, 'Makefile'),
-    os.path.join(utils.ROOT_DIR, 'test_fuzzer_benchmarks.py')
+    os.path.join(utils.ROOT_DIR, '.github', 'workflows',
+                 'build_and_test_run_fuzzer_benchmarks.py')
 ] + filesystem.list_files(os.path.join(utils.ROOT_DIR, 'docker')))
 
 
