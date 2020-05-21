@@ -20,7 +20,6 @@ from fuzzers import utils
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 
-
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
     # In php benchmark, there is a call to __builtin_cpu_supports("ssse3")
@@ -30,8 +29,6 @@ def prepare_build_environment():
     cflags = ['-fPIC']
     if 'php' in os.environ['BENCHMARK']:
         cflags += ['-D__builtin_cpu_supports\\(x\\)=0']
-    if 're2' in os.environ['BENCHMARK']:
-        cflags += ['-std=c11']
     cppflags = cflags + ['-I/usr/local/include/c++/v1/', '-std=c++11']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cppflags)
@@ -46,7 +43,7 @@ def prepare_build_environment():
     os.environ['CC'] = '/afl/afl-clang-fast'
     os.environ['CXX'] = '/afl/afl-clang-fast++'
     os.environ['FUZZER_LIB'] = '/libAFL.a'
-
+    
 
 def build():
     """Build benchmark."""
