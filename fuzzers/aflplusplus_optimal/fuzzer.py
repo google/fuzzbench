@@ -57,9 +57,9 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'proj4-2017-08-14':
         aflplusplus_fuzzer.build("lto", "nozero", "cmplog")
     elif benchmark_name == 'systemd_fuzz-link-parser':
-        aflplusplus_fuzzer.build("tracepc", "cmplog")
+        aflplusplus_fuzzer.build("lto", "nozero", "dynamic", "cmplog")
     elif benchmark_name == 'vorbis-2017-12-11':
-        aflplusplus_fuzzer.build("tracepc", "laf")
+        aflplusplus_fuzzer.build("lto", "nozero", "dynamic", "laf")
     elif benchmark_name == 'woff2-2016-05-06':
         aflplusplus_fuzzer.build("tracepc", "laf")
     elif benchmark_name == 'zlib_zlib_uncompress_fuzzer':
