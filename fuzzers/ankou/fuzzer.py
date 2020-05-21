@@ -40,9 +40,9 @@ def build():
 
     utils.build_benchmark()
 
-    print('[post_build] Copying afl-fuzz to $OUT directory')
-    # Copy out the afl-fuzz binary as a build artifact.
-    shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
+    print('[post_build] Copying Ankou to $OUT directory')
+    # Copy out the Ankou binary as a build artifact.
+    shutil.copy('/Ankou', os.environ['OUT'])
 
 
 def prepare_fuzz_environment(input_corpus):
@@ -64,7 +64,7 @@ def prepare_fuzz_environment(input_corpus):
             file_handle.write('hi')
 
 
-def run_afl_fuzz(input_corpus,
+def run_ankou_fuzz(input_corpus,
                  output_corpus,
                  target_binary,
                  additional_flags=None,
@@ -76,17 +76,13 @@ def run_afl_fuzz(input_corpus,
     # re-run AFL.
     print('[run_fuzzer] Running target with afl-fuzz')
     command = [
-        './afl-fuzz',
+        './Ankou',
+        '-app',
+        target_binary,
         '-i',
         input_corpus,
         '-o',
-        output_corpus,
-        # Use deterministic mode as it does best when we don't have
-        # seeds which is often the case.
-        '-d',
-        # Use no memory limit as ASAN doesn't play nicely with one.
-        '-m',
-        'none'
+        output_corpus
     ]
     if additional_flags:
         command.extend(additional_flags)
@@ -106,7 +102,7 @@ def run_afl_fuzz(input_corpus,
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
-    """Run afl-fuzz on target."""
+    """Run Ankou on target."""
     prepare_fuzz_environment(input_corpus)
 
-    run_afl_fuzz(input_corpus, output_corpus, target_binary)
+    run_ankou_fuzz(input_corpus, output_corpus, target_binary)
