@@ -19,10 +19,10 @@ import os
 from unittest import mock
 import glob
 
-from experiment import run_coverage
+from experiment.measurer import run_coverage
 
-TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data',
-                              'test_run_coverage')
+TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                              'test_data', 'test_run_coverage')
 
 
 def _get_test_data_dir(directory):
@@ -86,7 +86,7 @@ class TestIntegrationRunCoverage:
         _assert_sancov_files(sancov_dir)
 
     @mock.patch('common.logs.error')
-    @mock.patch('experiment.run_coverage.MAX_TOTAL_TIME', 0)
+    @mock.patch('experiment.measurer.run_coverage.MAX_TOTAL_TIME', 0)
     def test_integration_do_coverage_run_max_total_timeout(
             self, mocked_log_error, tmp_path):
         """Test that do_coverage_run respects max total time."""

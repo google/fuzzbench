@@ -31,7 +31,7 @@ from common import logs
 from common import utils
 from database import models
 from experiment.build import build_utils
-from experiment import run_coverage
+from experiment.measurer import run_coverage
 from third_party import sancov
 
 logger = logs.Logger('measure_worker')  # pylint: disable=invalid-name
