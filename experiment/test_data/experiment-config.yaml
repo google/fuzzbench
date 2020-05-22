@@ -22,3 +22,4 @@ cloud_web_bucket: gs://web-reports
 cloud_sql_instance_connection_name: "fuzzbench:us-central1:experiment-db=tcp:5432"
 benchmarks: "benchmark-1,benchmark-2"
 git_hash: "git-hash"
+redis_host: "127.0.0.1"

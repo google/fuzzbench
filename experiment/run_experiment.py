@@ -69,6 +69,7 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     bucket_params = {'cloud_experiment_bucket', 'cloud_web_bucket'}
     string_params = {
         'cloud_compute_zone', 'cloud_experiment_bucket', 'cloud_web_bucket'
+        'redis_host',
     }
     int_params = {'trials', 'max_total_time'}
     required_params = int_params.union(string_params)

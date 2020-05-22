@@ -10,3 +10,5 @@ cloud_experiment_bucket: gs://fuzzbench-data
 cloud_web_bucket: gs://www.fuzzbench.com/reports
 cloud_sql_instance_connection_name: "fuzzbench:us-central1:postgres-experiment-db=tcp:5432"
 preemptible_runners: true
+# TODO
+redis_host: "127.0.0.1"
