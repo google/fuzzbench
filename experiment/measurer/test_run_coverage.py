@@ -21,8 +21,8 @@ import glob
 
 from experiment.measurer import run_coverage
 
-TEST_DATA_PATH = os.path.join(os.path.dirname(__file__),
-                              'test_data', 'test_run_coverage')
+TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data',
+                              'test_run_coverage')
 
 
 def _get_test_data_dir(directory):
