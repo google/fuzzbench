@@ -65,13 +65,13 @@ def measure_loop(experiment: str, max_total_time: int, redis_host: str):
     # Using Multiprocessing.Queue will fail with a complaint about
     # inheriting queue.
     redis_connection = redis.Redis(host=redis_host)
-    q = rq.Queue(connection=redis_connection)
+    queue = rq.Queue(connection=redis_connection)
     while True:
         try:
             # Get whether all trials have ended before we measure to prevent
             # races.
             all_trials_ended = scheduler.all_trials_ended(experiment)
-            if not measure_all_trials(experiment, max_total_time, q):
+            if not measure_all_trials(experiment, max_total_time, queue):
                 # We didn't measure any trials.
                 if all_trials_ended:
                     # There are no trials producing snapshots to measure.
@@ -91,7 +91,7 @@ def get_job_timeout():
     return experiment_utils.get_snapshot_seconds() + 2 * 60
 
 
-def measure_all_trials(experiment: str, max_total_time: int, q) -> bool:  # pylint: disable=invalid-name
+def measure_all_trials(experiment: str, max_total_time: int, queue) -> bool:
     """Get coverage data (with coverage runs) for all active trials. Note that
     this should not be called unless multiprocessing.set_start_method('spawn')
     was called first. Otherwise it will use fork which breaks logging."""
@@ -109,9 +109,9 @@ def measure_all_trials(experiment: str, max_total_time: int, q) -> bool:  # pyli
 
     job_timeout = get_job_timeout()
     results = [
-        q.enqueue(measure_worker.measure_trial_coverage,
-                  unmeasured_snapshot,
-                  job_timeout=job_timeout)
+        queue.enqueue(measure_worker.measure_trial_coverage,
+                      unmeasured_snapshot,
+                      job_timeout=job_timeout)
         for unmeasured_snapshot in unmeasured_snapshots
     ]
 

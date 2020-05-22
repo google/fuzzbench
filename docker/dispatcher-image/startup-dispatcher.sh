@@ -34,12 +34,6 @@ iam_account=`gcloud config get-value account`
 gcloud iam service-accounts keys create ${credentials_file} \
     --iam-account=${iam_account}
 
-for i in {1..$(nproc)}
-do
-  PYTHONPATH=${WORK}/src GOOGLE_APPLICATION_CREDENTIALS=${credentials_file}
-
-done
-
 # Start up rq workers.
 for i in $(seq $(nproc))
 do
