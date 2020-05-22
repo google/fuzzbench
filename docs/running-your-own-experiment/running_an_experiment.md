@@ -71,7 +71,7 @@ cloud_web_bucket: gs://$REPORT_BUCKET_NAME
 # The connection to use to connect to the Google Cloud SQL instance.
 cloud_sql_instance_connection_name: "$PROJECT_NAME:$PROJECT_REGION:$POSTGRES_INSTANCE=tcp:5432"
 
-# The host containing our redis instance.
+# The host running our redis instance.
 redis_host: "$REDIS_HOST"
 ```
 
