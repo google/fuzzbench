@@ -10,6 +10,8 @@ psycopg2-binary==2.8.4
 pyfakefs==3.7.1
 pytest==5.3.5
 PyYAML==5.3
+redis==3.5.2
+rq==1.4.1
 scikit-posthocs==0.6.2
 scipy==1.4.1
 seaborn==0.10.0
