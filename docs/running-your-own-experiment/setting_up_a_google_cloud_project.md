@@ -116,7 +116,7 @@ Accept the prompt if prompted.
 Now get the IP address of the redis instance.
 
 ```bash
-gcloud redis instances list --project $PROJET_NAME --region=$PROJECT_REGION
+gcloud redis instances list --project $PROJECT_NAME --region=$PROJECT_REGION
 ```
 
 We will refer to this IP address as `$REDIS_HOST`.
