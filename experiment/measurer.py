@@ -63,7 +63,6 @@ POLL_RESULTS_WAIT_SECONDS = 5
 SNAPSHOTS_BATCH_SAVE_SIZE = 100
 
 
-
 def get_experiment_folders_dir():
     """Return experiment folders directory."""
     return exp_path.path('experiment-folders')
@@ -108,7 +107,9 @@ def measure_loop(experiment: str, max_total_time: int, redis_host: str):
 
 
 def get_job_timeout():
+    """Get the timeout for an rq job."""
     return experiment_utils.get_snapshot_seconds() + 2 * 60
+
 
 def measure_all_trials(experiment: str, max_total_time: int, q) -> bool:  # pylint: disable=invalid-name
     """Get coverage data (with coverage runs) for all active trials. Note that
@@ -128,8 +129,9 @@ def measure_all_trials(experiment: str, max_total_time: int, q) -> bool:  # pyli
 
     job_timeout = get_job_timeout()
     results = [
-        q.enqueue(measurer.measure_trial_coverage, unmeasured_snapshot,
-                  max_cycle, job_timeout=job_timeout)
+        q.enqueue(measurer.measure_trial_coverage,
+                  unmeasured_snapshot,
+                  job_timeout=job_timeout)
         for unmeasured_snapshot in unmeasured_snapshots
     ]
 
@@ -217,9 +219,8 @@ def _get_unmeasured_first_snapshots(experiment: str
     snapshot for their trial. The trials are trials in |experiment|."""
     trials_without_snapshots = _query_unmeasured_trials(experiment)
     return [
-        measurer.SnapshotMeasureRequest(
-            trial.fuzzer, trial.benchmark, trial.id, 1)
-        for trial in trials_without_snapshots
+        measurer.SnapshotMeasureRequest(trial.fuzzer, trial.benchmark, trial.id,
+                                        1) for trial in trials_without_snapshots
     ]
 
 
@@ -246,8 +247,8 @@ def _query_measured_latest_snapshots(experiment: str):
 
 def _get_unmeasured_next_snapshots(experiment: str, max_cycle: int
                                   ) -> List[measurer.SnapshotMeasureRequest]:
-    """Returns a list of the latest unmeasured measurer.SnapshotMeasureRequests of
-    trials in |experiment| that have been measured at least once in
+    """Returns a list of the latest unmeasured measurer.SnapshotMeasureRequests
+    of trials in |experiment| that have been measured at least once in
     |experiment|. |max_total_time| is used to determine if a trial has another
     snapshot left."""
     # Measure the latest snapshot of every trial that hasn't been measured
@@ -261,16 +262,14 @@ def _get_unmeasured_next_snapshots(experiment: str, max_cycle: int
         if next_cycle > max_cycle:
             continue
 
-        snapshot_with_cycle = measurer.SnapshotMeasureRequest(snapshot.fuzzer,
-                                                              snapshot.benchmark,
-                                                              snapshot.trial_id,
-                                                              next_cycle)
+        snapshot_with_cycle = measurer.SnapshotMeasureRequest(
+            snapshot.fuzzer, snapshot.benchmark, snapshot.trial_id, next_cycle)
         next_snapshots.append(snapshot_with_cycle)
     return next_snapshots
 
 
-def get_unmeasured_snapshots(experiment: str,
-                             max_cycle: int) -> List[measurer.SnapshotMeasureRequest]:
+def get_unmeasured_snapshots(experiment: str, max_cycle: int
+                            ) -> List[measurer.SnapshotMeasureRequest]:
     """Returns a list of SnapshotMeasureRequests that need to be measured
     (assuming they have been saved already)."""
     # Measure the first snapshot of every started trial without any measured
@@ -484,8 +483,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         return set(filesystem.read(self.measured_files_path).splitlines())
 
 
-def measure_trial_coverage(  # pylint: disable=invalid-name
-        measure_req, max_cycle: int) -> models.Snapshot:
+def measure_trial_coverage(measure_req) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
@@ -504,7 +502,7 @@ def measure_trial_coverage(  # pylint: disable=invalid-name
                          'trial_id': str(measure_req.trial_id),
                          'cycle': str(measure_req.cycle),
                      })
-        return
+        return None
     logger.debug('Done measuring trial: %d.', measure_req.trial_id)
     # TODO(metzman): Figure out if we want to allow measuring of more than one
     # snapshot per requests.
