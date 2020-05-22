@@ -470,6 +470,7 @@ def schedule_loop(experiment_config: dict):
     # Create the thread pool once and reuse it to avoid leaking threads and
     # other issues.
     logger.info('Starting scheduler')
+    gce.initialize()
     num_trials = len(
         get_experiment_trials(experiment_config['experiment']).all())
     trial_instance_manager = TrialInstanceManager(num_trials, experiment_config)

@@ -12,14 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Module for using the Google Compute Engine (GCE) API."""
+import threading
+
 import dateutil.parser
 
 from googleapiclient import discovery
 from oauth2client.client import GoogleCredentials
 
-CREDENTIALS = GoogleCredentials.get_application_default()
+credentials = threading.local()  # pylint: disable=invalid-name
+credentials.credentials = None
+credentials.service = None
 
-SERVICE = discovery.build('compute', 'v1', credentials=CREDENTIALS)
+def initialize(self):
+    credentials.credentials = GoogleCredentials.get_application_default()
+    credentials.service = discovery.build('compute', 'v1',
+                                          credentials=CREDENTIALS)
 
 
 def get_operations(project, zone):
