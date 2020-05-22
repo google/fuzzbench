@@ -100,6 +100,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'laf' in build_modes:
         os.environ['AFL_LLVM_LAF_SPLIT_SWITCHES'] = '1'
         os.environ['AFL_LLVM_LAF_SPLIT_COMPARES'] = '1'
+        os.environ['AFL_LLVM_LAF_SPLIT_FLOATS'] = '1'
         if 'autodict' not in build_modes:
             os.environ['AFL_LLVM_LAF_TRANSFORM_COMPARES'] = '1'
     # enable auto dictionary for LTO
