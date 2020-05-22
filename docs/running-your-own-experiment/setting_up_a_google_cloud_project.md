@@ -100,6 +100,27 @@ PYTHONPATH=. alembic upgrade head
 If this command fails, double check you set `POSTGRES_PASSWORD` correctly.
 At this point you can kill the `cloud_sql_proxy` process.
 
+## Set up Redis
+
+We will roughly follow this
+[guide](https://cloud.google.com/memorystore/docs/redis/creating-managing-instances).
+
+Create the redis instance:
+
+```bash
+gcloud redis instances create $REDIS_INSTANCE --size=2 --region=$PROJECT_REGION
+```
+
+Accept the prompt if prompted.
+
+Now get the IP address of the redis instance.
+
+```bash
+gcloud redis instances list --project $PROJET_NAME --region=$PROJECT_REGION
+```
+
+We will refer to this IP address as `$REDIS_HOST`.
+
 ## Google Cloud Storage buckets
 
 * Set up Google Cloud Storage Buckets by running the commands below:
