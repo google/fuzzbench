@@ -66,7 +66,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'woff2-2016-05-06':
         aflplusplus_fuzzer.build("tracepc", "nozero", "laf")
     elif benchmark_name == 'zlib_zlib_uncompress_fuzzer':
-        aflplusplus_fuzzer.build("tracepc", "nozero"")
+        aflplusplus_fuzzer.build("tracepc", "nozero")
     else:
         aflplusplus_fuzzer.build("lto", "nozero")
 
