@@ -23,9 +23,6 @@ from common import new_process
 from experiment.measurer import measure_manager
 from test_libs import utils as test_utils
 
-TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                              'test_data')
-
 MAX_TOTAL_TIME = 100
 
 # pylint: disable=unused-argument,invalid-name,redefined-outer-name,protected-access
