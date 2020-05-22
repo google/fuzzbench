@@ -33,7 +33,7 @@ RUN apt-get update && \
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout b920cd2f236c26e6dcc1231b5121b04d0bc3f650 && \
+    git checkout 74f01881e36e45005ed2080e351323367532ee01 && \
     AFL_NO_X86=1 CFLAGS= CXXFLAGS= make PYTHON_INCLUDE=/ && \
     export LLVM_CONFIG=llvm-config-11 && \
     cd llvm_mode && CFLAGS= CXXFLAGS= REAL_CC=gcc-9 REAL_CXX=g++-9 make && \

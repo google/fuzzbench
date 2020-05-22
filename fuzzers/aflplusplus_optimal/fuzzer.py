@@ -21,6 +21,8 @@
 # otherwise.
 
 import os
+import shutil
+import glob
 
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
@@ -30,48 +32,53 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     benchmark_name = os.environ['BENCHMARK']
+
     if benchmark_name == 'bloaty_fuzz_target':
         aflplusplus_fuzzer.build("lto", "laf", "nozero", "dynamic")
     elif benchmark_name == 'curl_curl_fuzzer_http':
         aflplusplus_fuzzer.build("tracepc", "nozero")
     elif benchmark_name == 'freetype2-2017':
-        aflplusplus_fuzzer.build("lto", "cmplog", "nozero", "dynamic")
+        aflplusplus_fuzzer.build("tracepc", "cmplog", "nozero")
     elif benchmark_name == 'jsoncpp_jsoncpp_fuzzer':
         aflplusplus_fuzzer.build("lto", "dynamic", "nozero")
     elif benchmark_name == 'lcms-2017-03-21':
-        aflplusplus_fuzzer.build("tracepc", "nozero")
+        aflplusplus_fuzzer.build("tracepc", "nozero", "cmplog")
     elif benchmark_name == 'libjpeg-turbo-07-2017':
-        aflplusplus_fuzzer.build("tracepc", "laf")
+        aflplusplus_fuzzer.build("tracepc", "nozero", "laf")
     elif benchmark_name == 'libpcap_fuzz_both':
         aflplusplus_fuzzer.build("lto", "nozero", "laf")
     elif benchmark_name == 'libpng-1.2.56':
-        aflplusplus_fuzzer.build("lto", "nozero", "cmplog")
+        aflplusplus_fuzzer.build("lto", "nozero", "laf")
     elif benchmark_name == 'libxml2-v2.9.2':
         aflplusplus_fuzzer.build("lto", "nozero", "autodict")
     elif benchmark_name == 'openssl_x509':
-        aflplusplus_fuzzer.build("tracepc", "nozero", "laf")
+        aflplusplus_fuzzer.build("lto", "nozero", "dynamic")
     elif benchmark_name == 'openthread-2019-12-23':
-        aflplusplus_fuzzer.build("lto", "nozero")
+        aflplusplus_fuzzer.build("tracepc", "nozero", "cmplog")
     elif benchmark_name == 'php_php-fuzz-parser':
         aflplusplus_fuzzer.build("lto", "nozero", "dynamic")
     elif benchmark_name == 'proj4-2017-08-14':
-        aflplusplus_fuzzer.build("lto", "nozero", "cmplog")
+        aflplusplus_fuzzer.build("tracepc", "nozero", "cmplog")
     elif benchmark_name == 'systemd_fuzz-link-parser':
         aflplusplus_fuzzer.build("tracepc", "nozero", "cmplog")
     elif benchmark_name == 'vorbis-2017-12-11':
-        aflplusplus_fuzzer.build("lto", "nozero", "dynamic", "laf")
+        aflplusplus_fuzzer.build("tracepc", "nozero", "laf")
     elif benchmark_name == 'woff2-2016-05-06':
-        aflplusplus_fuzzer.build("lto", "nozero", "dynamic", "laf")
+        aflplusplus_fuzzer.build("tracepc", "nozero", "laf")
     elif benchmark_name == 'zlib_zlib_uncompress_fuzzer':
-        aflplusplus_fuzzer.build("lto", "nozero", "cmplog")
+        aflplusplus_fuzzer.build("tracepc", "nozero"")
     else:
         aflplusplus_fuzzer.build("lto", "nozero")
+
+    for copy_file in glob.glob("/afl/libc*"):
+        shutil.copy(copy_file, os.environ['OUT'])
 
 
 def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-many-branches,too-many-statements
     """Run fuzzer."""
     run_options = []
     benchmark_name = os.environ['BENCHMARK']
+
     if benchmark_name == 'bloaty_fuzz_target':
         run_options = ["-L", "0"]
     elif benchmark_name == 'curl_curl_fuzzer_http':
@@ -97,7 +104,7 @@ def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-man
     elif benchmark_name == 'woff2-2016-05-06':
         run_options = ["-L", "0"]
 
-    os.environ['AFL_MAP_SIZE'] = '1048576'
+    os.environ['AFL_MAP_SIZE'] = '524288'
 
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
