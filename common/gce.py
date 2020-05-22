@@ -54,10 +54,12 @@ def filter_by_end_time(min_end_time, operations):
     """Generator that yields GCE preemption operations in |operations|."""
     # operations must be a generator that is ordered by time.
     for operation in operations:
-        # !!! What is an end time for something that hasn't completed?
-        operation_end_time = dateutil.parser.isoparse(operation['endTime'])
+        end_time = operation.get('endTime')
+        if not end_time:
+            yield operation
+            continue
+        operation_end_time = dateutil.parser.isoparse(end_time)
+
         if operation_end_time < min_end_time:
             break
-        if operation['progress'] < 100:
-            continue
         yield operation

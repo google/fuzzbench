@@ -22,6 +22,7 @@ import random
 import time
 
 import jinja2
+import pytz
 
 from common import benchmark_utils
 from common import experiment_utils
@@ -29,6 +30,7 @@ from common import fuzzer_config_utils
 from common import gcloud
 from common import gce
 from common import logs
+from common import retry
 from common import utils
 from common import yaml_utils
 from database import models
@@ -39,7 +41,7 @@ from database import utils as db_utils
 # minutes is an arbitrary amount of time.
 GRACE_TIME_SECONDS = 5 * 60
 
-FAIL_WAIT_SECONDS = 10 * 60
+FAIL_WAIT_SECONDS = 2 * 60  # !!!
 
 logger = logs.Logger('scheduler')  # pylint: disable=invalid-name
 
@@ -56,7 +58,7 @@ STARTED_TRIALS_FILTER = models.Trial.time_started.isnot(None)
 def datetime_now() -> datetime.datetime:
     """Return datetime.datetime.utcnow(). This function is needed for
     mocking."""
-    return datetime.datetime.now(datetime.timezone.utc)
+    return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=pytz.UTC)
 
 
 # TODO(metzman): Figure out what are the best practices for the functions which
@@ -100,6 +102,14 @@ def all_trials_ended(experiment: str) -> bool:
         models.Trial.time_ended.is_(None)).all()
 
 
+def delete_instances(instances, experiment_config):
+    # Delete instances for expired trials.
+    running_instances = gcloud.list_instances()
+    instances_to_delete = [i for i in instances if i in running_instances]
+    return gcloud.delete_instances(instances_to_delete,
+                                   experiment_config['cloud_compute_zone'])
+
+
 def end_expired_trials(experiment_config: dict):
     """Get all expired trials, end them and return them."""
     trials_past_expiry = get_expired_trials(experiment_config['experiment'],
@@ -116,14 +126,8 @@ def end_expired_trials(experiment_config: dict):
     if not expired_instances:
         return
 
-    # Delete instances for expired trials.
-    running_instances = gcloud.list_instances()
-    instances_to_delete = [
-        i for i in expired_instances if i in running_instances
-    ]
-    # !!! What about preempted ones?
-    if instances_to_delete and not gcloud.delete_instances(
-            instances_to_delete, experiment_config['cloud_compute_zone']):
+    if delete_instances(expired_instances, experiment_config):
+
         # If we failed to delete some instances, then don't update the status
         # of expired trials in database as we don't know which instances were
         # successfully deleted. Wait for next iteration of end_expired_trials.
@@ -188,7 +192,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         self.max_preemptibles = self.num_trials * 2
         self.preemptible_window = 3 * experiment_config['max_total_time']
         self.preempted_trials = {}
-        self._last_trial_time_started = None
+        self._first_time_handling_preempted = None
 
         # !!! REGEX
         self.base_resource_url = (
@@ -200,27 +204,17 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         experiment = experiment_config['experiment']
         # Filter operations happening before the experiment started.
         self.last_preemptible_query = (db_utils.query(models.Experiment).filter(
-            models.Experiment.name == experiment).one().time_created)
+            models.Experiment.name == experiment).one().time_created.replace(
+                tzinfo=pytz.UTC))
 
-    def get_time_since_last_trial_start(self):
+    def get_time_handling_preempted(self):
         """Get the time since the last trial in the experiment started."""
-        if self._last_trial_time_started is not None:
-            # If we cached the last time started, use the cached value to
-            # compute the elapsed time.
-            return datetime.datetime.utcnow() - self._last_trial_time_started
-
-        pending_trials = get_pending_trials(
-            self.experiment_config['experiment'])
-
-        if pending_trials.first():
-            # The last trial hasn't started.
+        if self._first_time_handling_preempted is None:
             return 0
-
-        # Otherwise cache the time since the last trial started and return the
-        # amount of elapsed time.
-        self._last_trial_time_started = get_last_trial_time_started(
-            self.experiment_config['experiment'])
-        return datetime.datetime.utcnow() - self._last_trial_time_started
+        # If we cached the last time started, use the cached value to
+        # compute the elapsed time.
+        return (datetime.datetime.utcnow() -
+                self._first_time_handling_preempted)
 
     def can_start_preemptible(self, preemptible_starts):
         """Returns True if we can start a preemptible trial."""
@@ -233,12 +227,12 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             # scenario.
             return False
 
-        if self.get_time_since_last_trial_start() > self.preemptible_window:
-            # Don't keep creating preemptibles forever. Stop creating them after
-            # a certain time period so that we can switch to nonpreemptibles or
-            # terminate the experiment and let the user deal with the issue if
-            # we can't run this experiment in a reasonable amount of time.
-            return False
+        # if self.get_time_handling_preempted() > self.preemptible_window:
+        #     # Don't keep creating preemptibles forever. Stop creating them after
+        #     # a certain time period so that we can switch to nonpreemptibles or
+        #     # terminate the experiment and let the user deal with the issue if
+        #     # we can't run this experiment in a reasonable amount of time.
+        #     return False
 
         # Otherwise, it's fine to create a preemptible instance.
         return True
@@ -339,13 +333,23 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             return []
 
         started_instances = self._get_started_unfinished_instances()
-        query_time = datetime.datetime.utcnow()
-        for instance in self._query_preempted_instances():
+        query_time = datetime_now()
+
+        preempted_instances = list(self._query_preempted_instances())
+        trials = []
+        for instance in preempted_instances:
             trial = started_instances.get(instance)
+            if trial is None:
+                # Preemption for this trial was probably handled already.
+                logs.warning(
+                    'instance: %s is preempted but is not running.',
+                    instance)
+                continue
             if trial.id in self.preempted_trials:
                 # We already know this instance was preempted.
                 continue
             self.preempted_trials[trial.id] = trial
+            trials.append(trial)
 
         # Update this now when we know that we have succeded processing the
         # query. It's far worse if we update the query too early than if we
@@ -355,29 +359,53 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
 
         # Return all preempted instances, those we knew from before hand and
         # those we discovered in the query.
-        return list(self.preempted_trials.values())
+        return trials
 
+    @retry.wrap(
+        3, 2,
+        'experiment.scheduler.TrialInstanceManager._query_preempted_instances')
     def _query_preempted_instances(self):
         project = self.experiment_config['cloud_project']
         zone = self.experiment_config['cloud_compute_zone']
         operations = gce.filter_by_end_time(self.last_preemptible_query,
                                             gce.get_operations(project, zone))
-        return [
-            self._get_instance_from_preemption_operation(operation)
-            for operation in gce.get_preemption_operations(operations)
-        ]
+        instances = []
+        for operation in gce.get_preemption_operations(operations):
+            if operation is None:
+                logs.error('Operation is None.')
+                continue
+            instances.append(
+                self._get_instance_from_preemption_operation(operation))
+        return instances
 
     def handle_preempted_trials(self):
         """Mark preempted trials as such in the db and add replacement trials to
         the db."""
+        logger.info('Handling preempted.')
         if not self.experiment_config.get('preemptible_runners'):
             # Nothing to do here if not a preemptible experiment.
             return []
+
+        if self._first_time_handling_preempted is None:
+            self._first_time_handling_preempted = datetime_now()
+
         preempted_trials = self.get_preempted_trials()
 
         preempted_trials, replacements = self._handle_preempted(
             preempted_trials)
+
+        experiment = self.experiment_config['experiment']
+        instances = [
+            experiment_utils.get_trial_instance_name(experiment, trial.id)
+            for trial in preempted_trials
+        ]
+        logs.info('Deleting preempted instances: %s', instances)
+        if instances and not delete_instances(instances,
+                                              self.experiment_config):
+            logs.error('Could not delete preempted instances: %s', instances)
+
         db_utils.add_all(preempted_trials + replacements)
+        logger.info('Done handling preempted.')
         return replacements
 
     def more_to_schedule(self):
@@ -420,8 +448,7 @@ def replace_trial(trial, preemptible):
     return replacement
 
 
-def schedule(experiment_config: dict,
-             trial_instance_manager: TrialInstanceManager, pool):
+def schedule(experiment_config: dict, pool):
     """Gets all pending trials for the current experiment and then schedules
     those that are possible."""
     logger.info('Finding trials to schedule.')
@@ -430,10 +457,8 @@ def schedule(experiment_config: dict,
     end_expired_trials(experiment_config)
 
     # Start pending trials.
-    experiment = experiment_config['experiment']
-    pending_trials = list(get_pending_trials(experiment))
+    pending_trials = list(get_pending_trials(experiment_config['experiment']))
     started_trials = start_trials(pending_trials, experiment_config, pool)
-    trial_instance_manager.handle_preempted_trials()
     return started_trials
 
 
@@ -444,13 +469,24 @@ def schedule_loop(experiment_config: dict):
     will use fork to create the Pool which breaks logging."""
     # Create the thread pool once and reuse it to avoid leaking threads and
     # other issues.
+    logger.info('Starting scheduler')
     num_trials = len(
         get_experiment_trials(experiment_config['experiment']).all())
     trial_instance_manager = TrialInstanceManager(num_trials, experiment_config)
+    experiment = experiment_config['experiment']
     with multiprocessing.Pool() as pool:
+        handle_preempted = False
         while trial_instance_manager.more_to_schedule():
             try:
-                schedule(experiment_config, trial_instance_manager, pool)
+
+                if not handle_preempted and not any_pending_trials(experiment):
+                    # Only start handling preempted instances once every initial
+                    # trial runs once.
+                    handle_preempted = True
+
+                schedule(experiment_config, pool)
+                if handle_preempted:
+                    trial_instance_manager.handle_preempted_trials()
             except Exception:  # pylint: disable=broad-except
                 logger.error('Error occurred during scheduling.')
 
@@ -615,7 +651,7 @@ def create_trial_instance(fuzzer: str, benchmark: str, trial_id: int,
 def main():
     """Main function for running scheduler independently."""
     logs.initialize(default_extras={
-        'component': 'dispatcher',
+        'component': 'local', #!!!
         'subcomponent': 'scheduler'
     })
 

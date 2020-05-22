@@ -138,6 +138,7 @@ def dispatcher_main():
         target=measurer.measure_loop, args=(experiment.config, len(trials)))
     measurer_loop_process.start()
 
+    is_complete = False
     while True:
         time.sleep(LOOP_WAIT_SECONDS)
         if not scheduler_loop_thread.is_alive():
