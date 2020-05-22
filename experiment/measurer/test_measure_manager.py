@@ -29,7 +29,7 @@ from experiment.measurer import measure_worker
 from test_libs import utils as test_utils
 
 TEST_DATA_PATH = os.path.join(
-    os.path.dirname(os.path.join(__file__, os.pardir)), 'test_data')
+    os.path.dirname(os.path.dirname(__file__)), 'test_data')
 
 # Arbitrary values to use in tests.
 FUZZER = 'fuzzer-a'
@@ -74,7 +74,7 @@ def test_merge_new_pcs(new_pcs, fs, experiment):
 
 
 @mock.patch('common.logs.error')
-@mock.patch('experiment.measurer.measurer_worker.initialize_logs')
+@mock.patch('experiment.measurer.measure_worker.initialize_logs')
 @mock.patch('multiprocessing.Queue')
 @mock.patch('experiment.measurer.measure_worker.measure_snapshot_coverage')
 def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
