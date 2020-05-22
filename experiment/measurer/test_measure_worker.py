@@ -39,7 +39,7 @@ BENCHMARKS = ['benchmark-1', 'benchmark-2']
 NUM_TRIALS = 4
 GIT_HASH = 'FAKE-GIT-HASH'
 
-# pylint: disable=unused-argument,invalid-name,redefined-outer-name
+# pylint: disable=unused-argument,invalid-name
 
 
 def get_test_data_path(*subpaths):

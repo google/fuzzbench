@@ -24,7 +24,7 @@ from test_libs import utils as test_utils
 
 MAX_TOTAL_TIME = 100
 
-# pylint: disable=unused-argument,invalid-name,redefined-outer-name,protected-access
+# pylint: disable=unused-argument
 
 
 @mock.patch('common.gsutil.ls')
