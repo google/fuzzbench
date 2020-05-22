@@ -14,8 +14,6 @@
 """Integration code for AFLplusplus fuzzer."""
 
 import os
-import shutil
-import glob
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers import utils
