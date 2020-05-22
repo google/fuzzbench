@@ -15,11 +15,13 @@
 import datetime
 from multiprocessing.pool import ThreadPool
 import os
+import posixpath
 import time
 from unittest import mock
 
 import pytest
 
+from common import experiment_utils
 from common import gcloud
 from common import new_process
 from database import models
@@ -305,3 +307,266 @@ def get_trial_instance_manager(experiment_config: dict):
         create_experiments(experiment_config)
 
     return scheduler.TrialInstanceManager(DEFAULT_NUM_TRIALS, experiment_config)
+
+
+def test_get_instance_from_preemption_operation(preempt_exp_conf):
+    """Tests that _get_instance_from_preemption_operation returns the correct
+    value."""
+    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
+    trial_id = 1
+    operation = _get_preemption_operation(trial_id, preempt_exp_conf)
+    expected_instance = 'r-{experiment}-{trial_id}'.format(
+        experiment=preempt_exp_conf['experiment'], trial_id=trial_id)
+    assert trial_instance_manager._get_instance_from_preemption_operation(
+        operation) == expected_instance
+
+
+# @pytest.mark.parametrize(
+#     'preemptibles,nonpreemptibles',
+#     [([], []), ([1], [0, 2])])
+# def test_record_restarted_trials(preemptibles, nonpreemptibles, experiment_config, pending_trials:
+#     trial_instance_manager = scheduler.TrialInstanceManager(
+#         1, experiment_config)
+#     fake_trial_entity = None
+#     trial_instance_manager.preempted_trials = {trial_id: fake_trial_entity
+#                                                for trial_id in range(3)}
+#     trial_instance_manager.record_restarted_trials(
+#         preemptibles, nonpreemptibles)
+#     assert len(preemptibles) == trial_instance_manager.preemptible_starts
+#     assert len(nonpreemptibles) == trial_instance_manager.nonpreemptible_starts
+#     both_starts = set(preemptibles + nonpreemptibles)
+#     expected_preempted_trials = {trial_id: fake_trial_entity for trial_id in range(3) if trial_idnot in both_starts}
+#     assert expected_preempted_trials == trial_instance_manager.preempted_trials
+
+
+def test_can_start_nonpreemptible_not_preemptible_runners(preempt_exp_conf):
+    """Tests that test_can_start_nonpreemptible returns True when
+    'preemptible_runners' is not set to True in the experiment_config."""
+    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
+    trial_instance_manager.experiment_config['preemptible_runners'] = False
+    assert trial_instance_manager.can_start_nonpreemptible(100000)
+
+
+def test_can_start_nonpreemptible_above_max(preempt_exp_conf):
+    """Tests that test_can_start_nonpreemptible returns True when we are above
+    the maximum allowed for nonpreemptibles (and 'preemptible_runners' is not
+    set to True in the experiment_config)."""
+    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
+    trials_left_to_run = 1
+    assert not trial_instance_manager.can_start_nonpreemptible(
+        trial_instance_manager.max_nonpreemptibles, trials_left_to_run)
+
+
+def test_can_start_nonpreemptible_too_many_left(preempt_exp_conf):
+    """Tests that we don't start using nonpreemptibles when there is so much
+    left to run that using nonpreemptibles won't salvage the experiment."""
+    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
+    trials_left_to_run = (
+        trial_instance_manager.max_nonpreemptibles /
+        trial_instance_manager.MAX_FRACTION_FOR_NONPREEMPTIBLES) + 1
+    assert not trial_instance_manager.can_start_nonpreemptible(
+        trial_instance_manager.max_nonpreemptibles - 1, trials_left_to_run)
+
+
+def test_can_start_nonpreemptible(preempt_exp_conf):
+    """Tests that we can start a nonpreemptible under the right conditions."""
+    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
+    trials_left_to_run = (
+        trial_instance_manager.max_nonpreemptibles /
+        trial_instance_manager.MAX_FRACTION_FOR_NONPREEMPTIBLES)
+    nonpreemptible_starts = trial_instance_manager.max_nonpreemptibles - 1
+    assert trial_instance_manager.can_start_nonpreemptible(
+        nonpreemptible_starts, trials_left_to_run)
+
+
+def test_can_start_preemptible_not_preemptible_runners(preempt_exp_conf):
+    """Tests that test_can_start_preemptible returns False when
+    'preemptible_runners' is not set to True in the experiment_config."""
+    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
+    trial_instance_manager.experiment_config['preemptible_runners'] = False
+    assert not trial_instance_manager.can_start_preemptible(100)
+
+
+def test_can_start_preemptible_over_max_num(preempt_exp_conf):
+    """Tests that we bound the number of preemptible trials we start."""
+    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
+    preemptible_starts = trial_instance_manager.max_preemptibles + 1
+    assert not trial_instance_manager.can_start_preemptible(preemptible_starts)
+
+
+@mock.patch(
+    'experiment.scheduler.TrialInstanceManager.get_time_since_last_trial_start')
+def test_can_start_preemptible_over_max_time(
+        mocked_get_time_since_last_trial_start, preempt_exp_conf):
+    """Tests that we bound the number of preemptible trials we start."""
+    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
+    preemptible_starts = trial_instance_manager.max_preemptibles - 1
+    one_day = datetime.timedelta(days=1).total_seconds()
+    mocked_get_time_since_last_trial_start.return_value = (
+        trial_instance_manager.preemptible_window + one_day)
+    assert not trial_instance_manager.can_start_preemptible(preemptible_starts)
+    assert mocked_get_time_since_last_trial_start.call_count == 1
+
+
+def test_can_start_preemptible(preempt_exp_conf, pending_trials):
+    """Tests that we can start a preemptible instance when expected."""
+    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
+    preemptible_starts = 0
+    assert trial_instance_manager.can_start_preemptible(preemptible_starts)
+
+
+@mock.patch('experiment.scheduler.all_trials_ended', return_value=True)
+def test_more_to_schedule_all_trials_ended(_, preempt_exp_conf, pending_trials):
+    """Tests TrialInstanceManager.more_to_schedule returns False when there is
+    more to schedule."""
+    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
+    assert not trial_instance_manager.more_to_schedule()
+
+
+@mock.patch('experiment.scheduler.all_trials_ended', return_value=False)
+def test_more_to_schedule_pending_trials(_, experiment_config, pending_trials):
+    """Tests TrialInstanceManager.more_to_schedule returns True when there are
+    are trials that have never been started in a nonpreemptible_experiment"""
+    trial_instance_manager = get_trial_instance_manager(experiment_config)
+    assert trial_instance_manager.more_to_schedule()
+
+
+@mock.patch('experiment.scheduler.get_running_trials', return_value=False)
+@mock.patch('experiment.scheduler.all_trials_ended', return_value=False)
+def test_more_to_schedule_running_trials_preemptible(_,
+                                                     mocked_get_running_trials,
+                                                     preempt_exp_conf):
+    """Tests TrialInstanceManager.more_to_schedule returns True when there are
+    all trials have been started but not all have ended in a nonpreemptible
+    experiment."""
+    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
+    trial = models.Trial(experiment=preempt_exp_conf['experiment'],
+                         benchmark=BENCHMARK,
+                         fuzzer=FUZZER,
+                         time_started=datetime.datetime.utcnow(),
+                         time_ended=None)
+    db_utils.add_all([trial])
+
+    def get_running_trials(_):
+        return db_utils.query(models.Trial).filter(models.Trial.id == trial.id)
+
+    mocked_get_running_trials.side_effect = get_running_trials
+
+    assert trial_instance_manager.more_to_schedule()
+    assert mocked_get_running_trials.call_count == 1
+
+
+@mock.patch('experiment.scheduler.TrialInstanceManager.can_start_preemptible',
+            return_value=True)
+@mock.patch('experiment.scheduler.any_pending_trials', return_value=True)
+@mock.patch('experiment.scheduler.any_running_trials', return_value=False)
+@mock.patch('experiment.scheduler.all_trials_ended', return_value=False)
+def test_more_to_schedule_restart_as_preemptibles(_, __, ___, ____,
+                                                  preempt_exp_conf):
+    """Tests TrialInstanceManager.more_to_schedule returns True when there are
+    all trials trials to restart."""
+    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
+    assert trial_instance_manager.more_to_schedule()
+
+
+@mock.patch(
+    'experiment.scheduler.TrialInstanceManager.can_start_nonpreemptible',
+    return_value=False)
+@mock.patch('experiment.scheduler.TrialInstanceManager.can_start_preemptible',
+            return_value=False)
+@mock.patch('experiment.scheduler.any_pending_trials', return_value=True)
+@mock.patch('experiment.scheduler.any_running_trials', return_value=False)
+@mock.patch('experiment.scheduler.all_trials_ended', return_value=False)
+def test_more_to_schedule_running_trials_no_more_starts(_, __, ___, ____, _____,
+                                                        preempt_exp_conf):
+    """Tests TrialInstanceManager.more_to_schedule returns False when there are
+    no trials to restart."""
+    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
+    assert not trial_instance_manager.more_to_schedule()
+
+
+def test_get_preempted_trials_nonpreemptible(experiment_config, db):
+    """Tests that TrialInstanceManager.get_preempted_trials returns no trials
+    for a nonpreemptible experiment."""
+    trial_instance_manager = get_trial_instance_manager(experiment_config)
+    assert trial_instance_manager.get_preempted_trials() == []
+
+
+@mock.patch('common.gce.get_operations', return_value=[])
+def test_get_preempted_trials_no_new_preempted(_, preempt_exp_conf):
+    """Tests that TrialInstanceManager.get_preempted_trials returns trials that
+    we already know were preempted but have not restarted yet."""
+    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
+    trial = models.Trial(experiment=preempt_exp_conf['experiment'],
+                         fuzzer=FUZZER,
+                         benchmark=BENCHMARK)
+    db_utils.add_all([trial])
+    instance_name = experiment_utils.get_trial_instance_name(
+        preempt_exp_conf['experiment'], trial.id)
+    trial_instance_manager.preempted_trials = {instance_name: trial}
+    assert trial_instance_manager.get_preempted_trials() == [trial]
+    # !!! assert time
+
+
+def _get_preemption_operation(trial_id, exp_conf):
+    zone_url = (
+        'https://www.googleapis.com/compute/v1/projects/{project}/zones/'
+        '{zone}').format(zone=exp_conf['cloud_compute_zone'],
+                         project=exp_conf['cloud_project'])
+    instance_name = experiment_utils.get_trial_instance_name(
+        exp_conf['experiment'], trial_id)
+    target_link = posixpath.join('instances', zone_url, instance_name)
+    name = 'systemevent-blah'
+    self_link = posixpath.join(zone_url, name)
+    return {
+        'id': '1',
+        'name': name,
+        'zone': zone_url,
+        'operationType': 'compute.instances.preempted',
+        'targetLink': target_link,
+        'targetId': '1',
+        'status': 'DONE',
+        'statusMessage': 'Instance was preempted.',
+        'user': 'system',
+        'progress': 100,
+        'insertTime': '2020-01-24T29:16:46.842-02:00',
+        'startTime': '2020-01-24T29:16:46.842-02:00',
+        'endTime': '2020-01-24T29:16:46.842-02:00',
+        'selfLink': self_link,
+        'kind': 'compute#operation'
+    }
+
+
+@mock.patch('common.gce.get_preemption_operations')
+def test_get_preempted_trials_new_preempted(mocked_get_preemption_operations,
+                                            preempt_exp_conf):
+    """Tests that TrialInstanceManager.get_preempted_trials returns trials that
+    we already know were preempted but have not restarted yet and new preempted
+    trials we don't know about until we query for them."""
+    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
+
+    # Create trials.
+    experiment = preempt_exp_conf['experiment']
+    time_started = datetime.datetime.utcnow()  #  !!!
+    known_preempted = models.Trial(experiment=experiment,
+                                   fuzzer=FUZZER,
+                                   benchmark=BENCHMARK,
+                                   time_started=time_started)
+    unknown_preempted = models.Trial(experiment=experiment,
+                                     fuzzer=FUZZER,
+                                     benchmark=BENCHMARK,
+                                     time_started=time_started)
+    trials = [known_preempted, unknown_preempted]
+    db_utils.add_all(trials)
+    mocked_get_preemption_operations.return_value = [
+        _get_preemption_operation(trial.id, preempt_exp_conf)
+        for trial in trials
+    ]
+
+    trial_instance_manager.preempted_trials = {
+        known_preempted.id: known_preempted
+    }
+    result = trial_instance_manager.get_preempted_trials()
+    assert sorted(result, key=lambda trial: trial.id) == sorted(
+        trials, key=lambda trial: trial.id)
+    # !!! assert time

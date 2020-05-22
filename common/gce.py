@@ -19,23 +19,22 @@ import dateutil.parser
 from googleapiclient import discovery
 from oauth2client.client import GoogleCredentials
 
-api = threading.local()  # pylint: disable=invalid-name
-api.credentials = None
-api.service = None
+thread_local = threading.local()  # pylint: disable=invalid-name
 
 
 def initialize():
     """Initialize the thread-local configuration with things we need to use the
     GCE API."""
-    nonlocal api  # pylint: disable=nonlocal-without-binding
-    api.credentials = GoogleCredentials.get_application_default()
-    api.service = discovery.build('compute', 'v1', credentials=api.credentials)
+    thread_local.credentials = GoogleCredentials.get_application_default()
+    thread_local.service = discovery.build('compute',
+                                           'v1',
+                                           credentials=thread_local.credentials)
 
 
 def get_operations(project, zone):
     """Generator that yields GCE operations for compute engine |project| and
     |zone| in descendending order by time."""
-    zone_operations = api.service.zoneOperations()  # pylint: disable=no-member
+    zone_operations = thread_local.service.zoneOperations()  # pylint: disable=no-member
     request = zone_operations.list(project=project,
                                    zone=zone,
                                    orderBy='creationTimestamp desc')
