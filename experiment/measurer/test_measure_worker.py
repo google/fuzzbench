@@ -26,7 +26,7 @@ from experiment.build import build_utils
 from experiment.measurer import measure_worker
 from test_libs import utils as test_utils
 
-TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+TEST_DATA_PATH = os.path.join(os.path.dirname(__file__),
                               'test_data')
 
 SNAPSHOT_LOGGER = measure_worker.logger
@@ -227,7 +227,7 @@ class TestIntegrationMeasurement:
     # portable binary.
     @pytest.mark.skipif(not os.getenv('FUZZBENCH_TEST_INTEGRATION'),
                         reason='Not running integration tests.')
-    @mock.patch('experiment.measure_worker.SnapshotMeasurer.is_cycle_unchanged')
+    @mock.patch('experiment.measurer.measure_worker.SnapshotMeasurer.is_cycle_unchanged')
     def test_measure_snapshot_coverage(  # pylint: disable=too-many-locals
             self, mocked_is_cycle_unchanged, db, experiment, tmp_path):
         """Integration test for measure_snapshot_coverage."""
