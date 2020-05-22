@@ -13,16 +13,39 @@
 # limitations under the License. for now
 """Module for measuring snapshots from trial runners."""
 import collections
+import glob
+import os
+import pathlib
+import posixpath
 import tarfile
 import time
 from typing import List, Set
 
+from common import benchmark_utils
+from common import experiment_utils
+from common import experiment_path as exp_path
+from common import filesystem
+from common import fuzzer_utils
+from common import gsutil
 from common import logs
+from common import utils
+from database import models
+from experiment.build import build_utils
+from experiment import run_coverage
+from third_party import sancov
 
 logger = logs.Logger('measure_worker')  # pylint: disable=invalid-name
 
 SnapshotMeasureRequest = collections.namedtuple(
     'SnapshotMeasureRequest', ['fuzzer', 'benchmark', 'trial_id', 'cycle'])
+
+
+def initialize_logs():
+    """Initialize logs. This must be called on process start."""
+    logs.initialize(default_extras={
+        'component': 'dispatcher',
+        'subcomponent': 'measurer',
+    })
 
 
 def extract_corpus(corpus_archive: str, sha_blacklist: Set[str],
@@ -312,3 +335,12 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     snapshot_logger.info('Measured cycle: %d in %d seconds.', cycle,
                          measuring_time)
     return snapshot
+
+
+def get_coverage_binary(benchmark: str) -> str:
+    """Get the coverage binary for benchmark."""
+    coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
+    fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
+    return fuzzer_utils.get_fuzz_target_binary(coverage_binaries_dir /
+                                               benchmark,
+                                               fuzz_target_name=fuzz_target)

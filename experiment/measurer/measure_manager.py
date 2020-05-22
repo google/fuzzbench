@@ -13,35 +13,28 @@
 # limitations under the License. for now
 """Module for managing measurement of snapshots from trial runners."""
 import collections
-import glob
 import multiprocessing
 import os
 import pathlib
-import posixpath
 import sys
 import tarfile
 import time
-from typing import List, Set
+from typing import List
 
 import redis
 import rq
 from sqlalchemy import func
 from sqlalchemy import orm
 
-from common import benchmark_utils
 from common import experiment_utils
 from common import experiment_path as exp_path
-from common import filesystem
-from common import fuzzer_utils
 from common import gsutil
 from common import logs
-from common import utils
 from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
-from experiment import run_coverage
+from experiment.measurer import measure_worker
 from experiment import scheduler
-from third_party import sancov
 
 logger = logs.Logger('measure_manager')  # pylint: disable=invalid-name
 
@@ -204,15 +197,15 @@ def _query_unmeasured_trials(experiment: str):
                               started_trials_filter)
 
 
-def _get_unmeasured_first_snapshots(experiment: str
-                                   ) -> List[measure_worker.SnapshotMeasureRequest]:
+def _get_unmeasured_first_snapshots(
+        experiment: str) -> List[measure_worker.SnapshotMeasureRequest]:
     """Returns a list of unmeasured SnapshotMeasureRequests that are the first
     snapshot for their trial. The trials are trials in |experiment|."""
     trials_without_snapshots = _query_unmeasured_trials(experiment)
     return [
-        measure_worker.SnapshotMeasureRequest(
-            trial.fuzzer, trial.benchmark, trial.id,
-            1) for trial in trials_without_snapshots
+        measure_worker.SnapshotMeasureRequest(trial.fuzzer, trial.benchmark,
+                                              trial.id, 1)
+        for trial in trials_without_snapshots
     ]
 
 
@@ -237,9 +230,10 @@ def _query_measured_latest_snapshots(experiment: str):
     return (SnapshotWithTime(*snapshot) for snapshot in snapshots_query)
 
 
-def _get_unmeasured_next_snapshots(experiment: str, max_cycle: int
-                                  ) -> List[measure_worker.SnapshotMeasureRequest]:
-    """Returns a list of the latest unmeasured measurer.SnapshotMeasureRequests
+def _get_unmeasured_next_snapshots(
+        experiment: str,
+        max_cycle: int) -> List[measure_worker.SnapshotMeasureRequest]:
+    """Returns a list of the latest unmeasured SnapshotMeasureRequests
     of trials in |experiment| that have been measured at least once in
     |experiment|. |max_total_time| is used to determine if a trial has another
     snapshot left."""
@@ -305,15 +299,6 @@ def set_up_coverage_binary(benchmark):
     tar = tarfile.open(archive_path, 'r:gz')
     tar.extractall(benchmark_coverage_binary_dir)
     os.remove(archive_path)
-
-
-def get_coverage_binary(benchmark: str) -> str:
-    """Get the coverage binary for benchmark."""
-    coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
-    fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
-    return fuzzer_utils.get_fuzz_target_binary(coverage_binaries_dir /
-                                               benchmark,
-                                               fuzz_target_name=fuzz_target)
 
 
 def initialize_logs():
