@@ -13,7 +13,6 @@
 # limitations under the License.
 """Tests for measurer.py."""
 
-import datetime
 import os
 import shutil
 from unittest import mock
@@ -26,9 +25,7 @@ from common import new_process
 from database import models
 from database import utils as db_utils
 from experiment.build import build_utils
-from experiment import dispatcher
 from experiment import measurer
-from experiment import scheduler
 from test_libs import utils as test_utils
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -128,40 +125,6 @@ def test_measure_all_trials_not_ready(mocked_rsync, mocked_ls, experiment):
                                        MAX_TOTAL_TIME, test_utils.MockPool(),
                                        queue.Queue())
     assert not mocked_rsync.called
-
-
-NEW_UNIT = 'new'
-OLD_UNIT = 'old'
-
-
-@pytest.mark.skip(
-    reason="Figure out how to test this with the async snapshot save loop.")
-@mock.patch('common.new_process.execute')
-@mock.patch('multiprocessing.Manager')
-@mock.patch('multiprocessing.pool')
-def test_measure_all_trials(_, __, mocked_execute, db, fs):
-    """Tests that measure_all_trials does what is intended under normal
-    conditions."""
-    mocked_execute.return_value = new_process.ProcessResult(0, '', False)
-
-    dispatcher._initialize_experiment_in_db(
-        experiment_utils.get_experiment_name(), GIT_HASH, BENCHMARKS, FUZZERS,
-        NUM_TRIALS)
-    trials = scheduler.get_pending_trials(
-        experiment_utils.get_experiment_name()).all()
-    for trial in trials:
-        trial.time_started = datetime.datetime.utcnow()
-    db_utils.add_all(trials)
-
-    fs.create_file(measurer.get_experiment_folders_dir() / NEW_UNIT)
-    mock_pool = test_utils.MockPool()
-
-    assert measurer.measure_all_trials(experiment_utils.get_experiment_name(),
-                                       MAX_TOTAL_TIME, mock_pool, queue.Queue())
-
-    actual_ids = [call[2] for call in mock_pool.func_calls]
-    # 4 (trials) * 2 (fuzzers) * 2 (benchmarks)
-    assert sorted(actual_ids) == list(range(1, 17))
 
 
 @mock.patch('multiprocessing.pool.ThreadPool', test_utils.MockPool)

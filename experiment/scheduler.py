@@ -103,7 +103,7 @@ def all_trials_ended(experiment: str) -> bool:
 
 
 def delete_instances(instances, experiment_config):
-    # Delete instances for expired trials.
+    """Deletes |instances|."""
     running_instances = gcloud.list_instances()
     instances_to_delete = [i for i in instances if i in running_instances]
     return gcloud.delete_instances(instances_to_delete,
@@ -192,7 +192,6 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         self.max_preemptibles = self.num_trials * 2
         self.preemptible_window = 3 * experiment_config['max_total_time']
         self.preempted_trials = {}
-        self._first_time_handling_preempted = None
 
         # !!! REGEX
         self.base_resource_url = (
@@ -207,15 +206,6 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             models.Experiment.name == experiment).one().time_created.replace(
                 tzinfo=pytz.UTC))
 
-    def get_time_handling_preempted(self):
-        """Get the time since the last trial in the experiment started."""
-        if self._first_time_handling_preempted is None:
-            return 0
-        # If we cached the last time started, use the cached value to
-        # compute the elapsed time.
-        return (datetime.datetime.utcnow() -
-                self._first_time_handling_preempted)
-
     def can_start_preemptible(self, preemptible_starts):
         """Returns True if we can start a preemptible trial."""
         if not self.experiment_config.get('preemptible_runners'):
@@ -227,12 +217,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             # scenario.
             return False
 
-        # if self.get_time_handling_preempted() > self.preemptible_window:
-        #     # Don't keep creating preemptibles forever. Stop creating them after
-        #     # a certain time period so that we can switch to nonpreemptibles or
-        #     # terminate the experiment and let the user deal with the issue if
-        #     # we can't run this experiment in a reasonable amount of time.
-        #     return False
+        # TODO(metzman): Enforce preemptible window here.
 
         # Otherwise, it's fine to create a preemptible instance.
         return True
@@ -341,9 +326,8 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             trial = started_instances.get(instance)
             if trial is None:
                 # Preemption for this trial was probably handled already.
-                logs.warning(
-                    'instance: %s is preempted but is not running.',
-                    instance)
+                logs.warning('instance: %s is preempted but is not running.',
+                             instance)
                 continue
             if trial.id in self.preempted_trials:
                 # We already know this instance was preempted.
@@ -385,9 +369,6 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         if not self.experiment_config.get('preemptible_runners'):
             # Nothing to do here if not a preemptible experiment.
             return []
-
-        if self._first_time_handling_preempted is None:
-            self._first_time_handling_preempted = datetime_now()
 
         preempted_trials = self.get_preempted_trials()
 
@@ -652,7 +633,7 @@ def create_trial_instance(fuzzer: str, benchmark: str, trial_id: int,
 def main():
     """Main function for running scheduler independently."""
     logs.initialize(default_extras={
-        'component': 'local', #!!!
+        'component': 'local',  #!!!
         'subcomponent': 'scheduler'
     })
 
