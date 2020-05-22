@@ -79,14 +79,10 @@ def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
                                 _, __):
     """Tests that measure_trial_coverage works as expected."""
     min_cycle = 1
-    max_cycle = 10
     measure_request = measurer.SnapshotMeasureRequest(FUZZER, BENCHMARK,
                                                       TRIAL_NUM, min_cycle)
     measurer.measure_trial_coverage(measure_request)
-    expected_calls = [
-        mock.call(FUZZER, BENCHMARK, TRIAL_NUM, cycle)
-        for cycle in range(min_cycle, max_cycle + 1)
-    ]
+    expected_calls = [mock.call(FUZZER, BENCHMARK, TRIAL_NUM, min_cycle)]
     assert mocked_measure_snapshot_coverage.call_args_list == expected_calls
 
 
