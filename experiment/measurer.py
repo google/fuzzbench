@@ -11,9 +11,8 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under the License.
+# limitations under the License. for now
 """Module for measuring snapshots from trial runners."""
-
 import collections
 import glob
 import multiprocessing
@@ -107,7 +106,7 @@ def measure_loop(experiment: str, max_total_time: int, redis_host: str):
 
 
 def get_job_timeout():
-    """Get the timeout for an rq job."""
+    """Returns the timeout for an rq job."""
     return experiment_utils.get_snapshot_seconds() + 2 * 60
 
 
@@ -154,14 +153,17 @@ def measure_all_trials(experiment: str, max_total_time: int, q) -> bool:  # pyli
 
     while True:
         all_finished = True
-        # Copy list because we will mutate the original.
+
+        # Copy results because we want to mutate it while iterating through it.
         results_copy = results.copy()
+
         for result in results_copy:
             if not result.is_finished:
                 # Note if we haven't finished all tasks so we can break out of
                 # the outer (infinite) loop.
                 all_finished = False
                 continue
+
             if result.return_value is None:
                 continue
 
@@ -170,6 +172,7 @@ def measure_all_trials(experiment: str, max_total_time: int, q) -> bool:  # pyli
 
         if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE:
             save_snapshots()
+
         if all_finished:
             break
 
@@ -214,7 +217,7 @@ def _query_unmeasured_trials(experiment: str):
 
 
 def _get_unmeasured_first_snapshots(experiment: str
-                                   ) -> List[measurer.SnapshotMeasureRequest]:
+                                   ) -> List[SnapshotMeasureRequest]:
     """Returns a list of unmeasured SnapshotMeasureRequests that are the first
     snapshot for their trial. The trials are trials in |experiment|."""
     trials_without_snapshots = _query_unmeasured_trials(experiment)
@@ -246,7 +249,7 @@ def _query_measured_latest_snapshots(experiment: str):
 
 
 def _get_unmeasured_next_snapshots(experiment: str, max_cycle: int
-                                  ) -> List[measurer.SnapshotMeasureRequest]:
+                                  ) -> List[SnapshotMeasureRequest]:
     """Returns a list of the latest unmeasured measurer.SnapshotMeasureRequests
     of trials in |experiment| that have been measured at least once in
     |experiment|. |max_total_time| is used to determine if a trial has another
@@ -269,7 +272,7 @@ def _get_unmeasured_next_snapshots(experiment: str, max_cycle: int
 
 
 def get_unmeasured_snapshots(experiment: str, max_cycle: int
-                            ) -> List[measurer.SnapshotMeasureRequest]:
+                            ) -> List[SnapshotMeasureRequest]:
     """Returns a list of SnapshotMeasureRequests that need to be measured
     (assuming they have been saved already)."""
     # Measure the first snapshot of every started trial without any measured
