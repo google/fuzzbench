@@ -326,7 +326,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             trial = started_instances.get(instance)
             if trial is None:
                 # Preemption for this trial was probably handled already.
-                logs.warning('instance: %s is preempted but is not running.',
+                logs.warning('Instance: %s is preempted but is not running.',
                              instance)
                 continue
             if trial.id in self.preempted_trials:
