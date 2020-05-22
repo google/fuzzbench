@@ -135,6 +135,7 @@ def dispatcher_main():
         args=(
             experiment.config['experiment'],
             experiment.config['max_total_time'],
+            experiment.config['redis_host'],
         ))
     measurer_loop_thread.start()
 

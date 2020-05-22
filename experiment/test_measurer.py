@@ -94,14 +94,13 @@ def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
 
 
 @mock.patch('common.gsutil.ls')
-@mock.patch('common.gsutil.rsync')
-def test_measure_all_trials_not_ready(mocked_rsync, mocked_ls, experiment):
+@mock.patch('common.gsutil.cp')
+def test_measure_all_trials_not_ready(mocked_cp, mocked_ls, experiment):
     """Test running measure_all_trials before it is ready works as intended."""
     mocked_ls.return_value = ([], 1)
     assert measurer.measure_all_trials(experiment_utils.get_experiment_name(),
-                                       MAX_TOTAL_TIME, test_utils.MockPool(),
-                                       queue.Queue())
-    assert not mocked_rsync.called
+                                       MAX_TOTAL_TIME, queue.Queue())
+    assert not mocked_cp.called
 
 
 NEW_UNIT = 'new'
@@ -128,10 +127,9 @@ def test_measure_all_trials(_, __, mocked_execute, db, fs):
     db_utils.add_all(trials)
 
     fs.create_file(measurer.get_experiment_folders_dir() / NEW_UNIT)
-    mock_pool = test_utils.MockPool()
 
     assert measurer.measure_all_trials(experiment_utils.get_experiment_name(),
-                                       MAX_TOTAL_TIME, mock_pool, queue.Queue())
+                                       MAX_TOTAL_TIME, queue.Queue())
 
     actual_ids = [call[2] for call in mock_pool.func_calls]
     # 4 (trials) * 2 (fuzzers) * 2 (benchmarks)
@@ -377,6 +375,6 @@ def test_measure_loop_end(_, mocked_manager, mocked_measure_all_trials, __,
 
     mocked_measure_all_trials.side_effect = mock_measure_all_trials
     mocked_all_trials_ended.return_value = True
-    measurer.measure_loop('', 0)
+    measurer.measure_loop('', 0, None)
     # If everything went well, we should get to this point without any exception
     # failures.

@@ -24,8 +24,9 @@ import sys
 import tarfile
 import time
 from typing import List, Set
-import queue
 
+import redis
+import rq
 from sqlalchemy import func
 from sqlalchemy import orm
 
@@ -66,39 +67,39 @@ def remote_dir_exists(directory: pathlib.Path) -> bool:
     return gsutil.ls(exp_path.gcs(directory), must_exist=False)[0] == 0
 
 
-def measure_loop(experiment: str, max_total_time: int):
+def measure_loop(experiment: str, max_total_time: int, redis_host: str):
     """Continuously measure trials for |experiment|."""
     db_utils.initialize()
     logs.initialize(default_extras={
         'component': 'dispatcher',
     })
-    with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
+    with multiprocessing.Pool() as pool:
         set_up_coverage_binaries(pool, experiment)
-        # Using Multiprocessing.Queue will fail with a complaint about
-        # inheriting queue.
-        q = manager.Queue()  # pytype: disable=attribute-error
-        while True:
-            try:
-                # Get whether all trials have ended before we measure to prevent
-                # races.
-                all_trials_ended = scheduler.all_trials_ended(experiment)
-
-                if not measure_all_trials(experiment, max_total_time, pool, q):
-                    # We didn't measure any trials.
-                    if all_trials_ended:
-                        # There are no trials producing snapshots to measure.
-                        # Given that we couldn't measure any snapshots, we won't
-                        # be able to measure any the future, so break now.
-                        break
-            except Exception:  # pylint: disable=broad-except
-                logger.error('Error occurred during measuring.')
+    # Using Multiprocessing.Queue will fail with a complaint about
+    # inheriting queue.
+    redis_connection = redis.Redis(host=redis_host)
+    q = rq.Queue(connection=redis_connection)
+    while True:
+        try:
+            # Get whether all trials have ended before we measure to prevent
+            # races.
+            all_trials_ended = scheduler.all_trials_ended(experiment)
+            if not measure_all_trials(experiment, max_total_time, q):
+                # We didn't measure any trials.
+                if all_trials_ended:
+                    # There are no trials producing snapshots to measure.
+                    # Given that we couldn't measure any snapshots, we won't
+                    # be able to measure any the future, so break now.
+                    break
+        except Exception:  # pylint: disable=broad-except
+            logger.error('Error occurred during measuring.')
 
             time.sleep(FAIL_WAIT_SECONDS)
 
     logger.info('Finished measuring.')
 
 
-def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  # pylint: disable=invalid-name
+def measure_all_trials(experiment: str, max_total_time: int, q) -> bool:  # pylint: disable=invalid-name
     """Get coverage data (with coverage runs) for all active trials. Note that
     this should not be called unless multiprocessing.set_start_method('spawn')
     was called first. Otherwise it will use fork which breaks logging."""
@@ -114,13 +115,10 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
     if not unmeasured_snapshots:
         return False
 
-    measure_trial_coverage_args = [
-        (unmeasured_snapshot, max_cycle, q)
+    results = [
+        q.enqueue(measure_trial_coverage, unmeasured_snapshot, max_cycle)
         for unmeasured_snapshot in unmeasured_snapshots
     ]
-
-    result = pool.starmap_async(measure_trial_coverage,
-                                measure_trial_coverage_args)
 
     # Poll the queue for snapshots and save them in batches until the pool is
     # done processing each unmeasured snapshot. Then save any remaining
@@ -140,26 +138,23 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
         snapshots_measured = True
 
     while True:
-        try:
-            snapshot = q.get(timeout=SNAPSHOT_QUEUE_GET_TIMEOUT)
-            snapshots.append(snapshot)
-        except queue.Empty:
-            if result.ready():
-                # If "ready" that means pool has finished calling on each
-                # unmeasured_snapshot. Since it is finished and the queue is
-                # empty, we can stop checking the queue for more snapshots.
-                logger.debug(
-                    'Finished call to map with measure_trial_coverage.')
-                break
-
-            if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE * .75:
-                # Save a smaller batch size if we can make an educated guess
-                # that we will have to wait for the next snapshot.
-                save_snapshots()
+        all_finished = True
+        for result in results:
+            if not result.is_finished:
+                # Note if we haven't finished all tasks so we can break out of
+                # the outer (infinite) loop.
+                all_finished = False
                 continue
 
-        if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE and not result.ready():
+            snapshots.append(result.return_value)
+
+        if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE:
             save_snapshots()
+        if all_finished:
+            break
+
+        # Sleep so we don't waste CPU cycles polling results constantly.
+        time.sleep(5)
 
     # If we have any snapshots left save them now.
     save_snapshots()
@@ -617,7 +612,7 @@ def main():
     experiment_name = experiment_utils.get_experiment_name()
 
     try:
-        measure_loop(experiment_name, int(sys.argv[1]))
+        measure_loop(experiment_name, int(sys.argv[1]), sys.argv[2])
     except Exception as error:
         logs.error('Error conducting experiment.')
         raise error
