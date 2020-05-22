@@ -14,6 +14,7 @@
 """Integration code for AFLplusplus fuzzer."""
 
 import os
+import shutil
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers import utils
@@ -140,6 +141,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
         print('Re-building benchmark for CmpLog fuzzing target')
         utils.build_benchmark(env=new_env)
+
+    shutil.copy('/afl/afl-fuzz', build_directory)
 
 
 def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):
