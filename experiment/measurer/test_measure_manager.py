@@ -13,7 +13,6 @@
 # limitations under the License.
 """Tests for measure_manager.py."""
 import os
-import shutil
 from unittest import mock
 import queue
 
@@ -21,25 +20,13 @@ import pytest
 
 from common import experiment_utils
 from common import new_process
-from database import models
-from database import utils as db_utils
-from experiment.build import build_utils
 from experiment.measurer import measure_manager
-from experiment.measurer import measure_worker
 from test_libs import utils as test_utils
 
-TEST_DATA_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), 'test_data')
+TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                              'test_data')
 
-# Arbitrary values to use in tests.
-FUZZER = 'fuzzer-a'
-BENCHMARK = 'benchmark-a'
-TRIAL_NUM = 12
-FUZZERS = ['fuzzer-a', 'fuzzer-b']
-BENCHMARKS = ['benchmark-1', 'benchmark-2']
-NUM_TRIALS = 4
 MAX_TOTAL_TIME = 100
-GIT_HASH = 'FAKE-GIT-HASH'
 
 # pylint: disable=unused-argument,invalid-name,redefined-outer-name,protected-access
 

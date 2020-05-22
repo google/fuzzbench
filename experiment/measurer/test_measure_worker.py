@@ -13,13 +13,35 @@
 # limitations under the License.
 """Tests for measure_worker.py."""
 import os
+import shutil
+from unittest import mock
 
+import pytest
+
+from common import experiment_utils
+from common import new_process
+from database import models
+from database import utils as db_utils
+from experiment.build import build_utils
 from experiment.measurer import measure_worker
+from test_libs import utils as test_utils
 
-TEST_DATA_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), 'test_data')
+TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                              'test_data')
 
 SNAPSHOT_LOGGER = measure_worker.logger
+
+# Arbitrary values to use in tests.
+FUZZER = 'fuzzer-a'
+BENCHMARK = 'benchmark-a'
+TRIAL_NUM = 12
+FUZZERS = ['fuzzer-a', 'fuzzer-b']
+BENCHMARKS = ['benchmark-1', 'benchmark-2']
+NUM_TRIALS = 4
+GIT_HASH = 'FAKE-GIT-HASH'
+
+# pylint: disable=unused-argument,invalid-name,redefined-outer-name
+
 
 def get_test_data_path(*subpaths):
     """Returns the path of |subpaths| relative to TEST_DATA_PATH."""
@@ -52,6 +74,7 @@ def test_merge_new_pcs(new_pcs, fs, experiment):
     assert new_contents == (''.join(pc + '\n' for pc in new_pcs) +
                             initial_contents)
 
+
 @mock.patch('common.logs.error')
 @mock.patch('experiment.measurer.measure_worker.initialize_logs')
 @mock.patch('multiprocessing.Queue')
@@ -76,6 +99,7 @@ def test_is_cycle_unchanged_doesnt_exist(experiment):
     this_cycle = 1
     with test_utils.mock_popen_ctx_mgr(returncode=1):
         assert not snapshot_measurer.is_cycle_unchanged(this_cycle)
+
 
 @mock.patch('common.gsutil.cp')
 @mock.patch('common.filesystem.read')
