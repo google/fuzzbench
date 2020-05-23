@@ -38,4 +38,3 @@ report/
 # TODO(metzman): Put main code in subdirectories of src/ so that we don't need
 # to enumerate useless directories.
 docs/
-service/
