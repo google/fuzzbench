@@ -229,7 +229,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
                 tzinfo=pytz.UTC))
 
     def _get_max_time_started(self):
-        """Gets the last time_started of the self.initial_trials. Returns None
+        """Gets the last time_started of the self._initial_trials. Returns None
         if any initial trials haven't been started yet. This is needed so that
         the preemptible is starts from the end of the last initial trial to be
         started."""
@@ -237,7 +237,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             return self._max_time_started
 
         max_time_started = None
-        for trial in self.initial_trials:
+        for trial in self._initial_trials:
             time_started = trial.time_started
             if time_started is None:
                 return None
@@ -529,34 +529,6 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         logger.info('Done handling preempted.')
         return replacements
 
-    def more_to_schedule(self):
-        """Returns True if there is nothping left to schedule."""
-        experiment = self.experiment_config['experiment']
-        if all_trials_ended(experiment):
-            return False
-
-        if any_running_trials(experiment):
-            # If there are any running trials, they will need to be
-            # scheduled/shutdown.
-            return True
-
-        if not any_pending_trials(experiment):
-            return False
-
-        if not self.experiment_config.get('preemptible_runners'):
-            # There are more trials to run. In non-preemptible experiments, this
-            # means we must continue scheduling.
-            return True
-
-        # In preemptible experiments, we only need to continue scheduling if we
-        # can start more trials.
-        preemptible_starts = self.get_preemptible_starts()
-        if self.can_start_preemptible(preemptible_starts):
-            return True
-
-        nonpreemptible_starts = self.get_nonpreemptible_starts()
-        return self.can_start_nonpreemptible(nonpreemptible_starts)
-
 
 def replace_trial(trial, preemptible):
     """Returns a new trial to replace |trial|. The trial is preemptible if
@@ -598,9 +570,8 @@ def schedule_loop(experiment_config: dict):
     experiment = experiment_config['experiment']
     with multiprocessing.Pool() as pool:
         handle_preempted = False
-        while trial_instance_manager.more_to_schedule():
+        while not all_trials_ended(experiment):
             try:
-
                 if not handle_preempted and not any_pending_trials(experiment):
                     # Only start handling preempted instances once every initial
                     # trial was started. This ensures that .

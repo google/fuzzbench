@@ -66,16 +66,12 @@ def remote_dir_exists(directory: pathlib.Path) -> bool:
     return gsutil.ls(exp_path.gcs(directory), must_exist=False)[0] == 0
 
 
-def measure_loop(experiment_config: dict, num_trials: int):
+def measure_loop(experiment: str, max_total_time: int):
     """Continuously measure trials for |experiment|."""
     logs.initialize(default_extras={
         'component': 'dispatcher',
         'subcomponent': 'measurer',
     })
-    max_total_time = experiment_config['max_total_time']
-    experiment = experiment_config['experiment']
-    trial_instance_manager = scheduler.TrialInstanceManager(
-        num_trials, experiment_config)
     with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
         set_up_coverage_binaries(pool, experiment)
         # Using Multiprocessing.Queue will fail with a complaint about
@@ -83,14 +79,11 @@ def measure_loop(experiment_config: dict, num_trials: int):
         q = manager.Queue()  # pytype: disable=attribute-error
         while True:
             try:
-                # Get whether all trials have ended before we measure to prevent
-                # races.
-                done_producing_snapshots = (
-                    not trial_instance_manager.more_to_schedule())
+                all_trials_ended = scheduler.all_trials_ended(experiment)
 
                 if not measure_all_trials(experiment, max_total_time, pool, q):
                     # We didn't measure any trials.
-                    if done_producing_snapshots:
+                    if all_trials_ended:
                         # There are no trials producing snapshots to measure.
                         # Given that we couldn't measure any snapshots, we won't
                         # be able to measure any the future, so stop now.
