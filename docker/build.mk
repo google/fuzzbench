@@ -197,7 +197,7 @@ $(eval $(1)-oss-fuzz-builder-hash := $(shell cat benchmarks/$(1)/oss-fuzz.yaml |
     --tag $(BASE_TAG)/builders/$(1)-oss-fuzz-benchmark-wrapper-builder \
     --file=docker/oss-fuzz-benchmark-wrapper-builder/Dockerfile \
     --build-arg parent_image=gcr.io/fuzzbench/oss-fuzz/$($(1)-project-name)@sha256:$($(1)-oss-fuzz-builder-hash) \
-    $(call cache_from,$(BASE_TAG)/builders/fuzz$($(1)-project-name)-builder) \
+    $(call cache_from,$(BASE_TAG)/builders/$(1)-oss-fuzz-benchmark-wrapper-builder \
     .
 
 .pull-$(1)-oss-fuzz-benchmark-wrapper-builder:
