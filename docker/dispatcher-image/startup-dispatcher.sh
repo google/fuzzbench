@@ -38,7 +38,7 @@ gcloud iam service-accounts keys create ${credentials_file} \
 for i in $(seq $(nproc))
 do
   PYTHONPATH=${WORK}/src GOOGLE_APPLICATION_CREDENTIALS=${credentials_file} \
-    rq worker &
+    rq worker --url redis://$REDIS_HOST:6379 &
 done
 
 # Start dispatcher.

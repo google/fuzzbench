@@ -320,7 +320,7 @@ class LocalDispatcher:
     def create_async(self):
         """Noop in local experiments."""
 
-    def start(self):
+    def start(self):  # pylint: disable=too-many-locals
         """Start the experiment on the dispatcher."""
         shared_volume_dir = os.path.abspath('shared-volume')
         if not os.path.exists(shared_volume_dir):
@@ -341,6 +341,8 @@ class LocalDispatcher:
             instance_name=self.instance_name)
         set_experiment_arg = 'EXPERIMENT={experiment}'.format(
             experiment=self.config['experiment'])
+        set_redis_host_arg = 'REDIS_HOST={redis_host}'.format(
+            redis_host=self.config['redis_host'])
         set_cloud_project_arg = 'CLOUD_PROJECT={cloud_project}'.format(
             cloud_project=self.config['cloud_project'])
         set_cloud_experiment_bucket_arg = (
@@ -369,6 +371,8 @@ class LocalDispatcher:
             set_instance_name_arg,
             '-e',
             set_experiment_arg,
+            '-e',
+            set_redis_host_arg,
             '-e',
             set_cloud_project_arg,
             '-e',
