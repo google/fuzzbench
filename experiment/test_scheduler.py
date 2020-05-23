@@ -490,9 +490,10 @@ def test_get_preempted_trials_stale_preempted(_, preempt_exp_conf):
     instance_name = experiment_utils.get_trial_instance_name(
         preempt_exp_conf['experiment'], trial.id)
     trial_instance_manager.preempted_trials = {instance_name: trial}
-    with mock.patch('experiment.scheduler.TrialInstanceManager.'
-                    '_get_started_unfinished_instances',
-                    return_value=[instance_name]):
+    with mock.patch(
+            'experiment.scheduler.TrialInstanceManager.'
+            '_get_started_unfinished_instances',
+            return_value=[instance_name]):
         assert trial_instance_manager.get_preempted_trials() == []
         # !!! assert time
 

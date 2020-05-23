@@ -191,6 +191,8 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
     # using preemptibles. This helps bound the cost in unexpected situations.
     NONPREEMPTIBLES_FRACTION = 1 / 20
     MAX_FRACTION_FOR_NONPREEMPTIBLES = 1 / 4
+    MAX_PREEMPTIBLES_MULTIPLIER = 2
+    PREEMPTIBLE_WINDOW_MULTIPLIER = 3
 
     def __init__(self, num_trials, experiment_config):
         self.experiment_config = experiment_config
@@ -199,9 +201,17 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             math.ceil(self.num_trials * self.NONPREEMPTIBLES_FRACTION),
             self.MAX_NONPREEMPTIBLES)
         logger.info('Max nonpreemptibles: %d.', self.max_nonpreemptibles)
-        self.max_preemptibles = self.num_trials * 2
+        self.max_preemptibles = (self.num_trials *
+                                 self.MAX_PREEMPTIBLES_MULTIPLIER)
         logger.info('Max nonpreemptibles: %d.', self.max_preemptibles)
-        self.preemptible_window = 3 * experiment_config['max_total_time']
+
+        # Attributes for preemptible window.
+        self.preemptible_window = (experiment_config['max_total_time'] *
+                                   self.PREEMPTIBLE_WINDOW_MULTIPLIER)
+        self._initial_trials = list(
+            get_experiment_trials(experiment_config['experiment']))
+        self._max_time_started = None
+
         self.preempted_trials = {}
         self.preemptible_starts_futile = False
 
@@ -218,6 +228,37 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             models.Experiment.name == experiment).one().time_created.replace(
                 tzinfo=pytz.UTC))
 
+    def _get_max_time_started(self):
+        """Gets the last time_started of the self.initial_trials. Returns None
+        if any initial trials haven't been started yet. This is needed so that
+        the preemptible is starts from the end of the last initial trial to be
+        started."""
+        if self._max_time_started is not None:
+            return self._max_time_started
+
+        max_time_started = None
+        for trial in self.initial_trials:
+            time_started = trial.time_started
+            if time_started is None:
+                return None
+            if max_time_started is None:
+                max_time_started = time_started
+                continue
+            max_time_started = max(time_started, max_time_started)
+
+        return max_time_started
+
+    def preemptible_window_passed(self):
+        """Returns True if the preemptible window has passed."""
+        max_time_started = self._get_max_time_started()
+        if max_time_started is None:
+            return False
+
+        preemptible_window_end_time = max_time_started + datetime.timedelta(
+            seconds=self.preemptible_window)
+
+        return datetime_now() > preemptible_window_end_time
+
     def can_start_preemptible(self, preemptible_starts):
         """Returns True if we can start a preemptible trial."""
         if not self.experiment_config.get('preemptible_runners'):
@@ -229,7 +270,19 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             # scenario.
             return False
 
-        # TODO(metzman): Enforce preemptible window here.
+        if self.preemptible_window_passed():
+            # Don't keep creating preemptible instances forever. Don't create
+            # them if the experiment has already taken a certain amount of time
+            # longer than the equivalent nonpreemptible experiment.
+            # *NOTE*: preemptible_window_passed is slightly broken. When
+            # the measurer uses this method it may produce slightly different
+            # results than the scheduler because the initial trials may be
+            # different. This is unlikely to happen in the real world. It is
+            # probably benign as well because the measurer may think the window
+            # end is slightly later than the scheduler. The effect of this will
+            # simply be that the measurer may measure for slightly longer than
+            # needed.
+            return False
 
         # Otherwise, it's fine to create a preemptible instance.
         return True
@@ -439,9 +492,9 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
 
         The impact of this algorithm is that:
 
-        1. Costs of a preemptible experiment, in the worst case scenario are 45%
-        of a nonpreemptible experiment. On average we find they will be around
-        30% the cost of a nonpreemptible experiment.
+        1. The cost of a preemptible experiment, in the worst case scenario is
+        45% of a nonpreemptible experiment. On average we find they will be
+        ~30% the cost of a nonpreemptible experiment.
 
         2. Time of an experiment will be 4X the length of a nonpreemptible
         experiment in the worst case scenario. This is fine however because most
@@ -550,7 +603,7 @@ def schedule_loop(experiment_config: dict):
 
                 if not handle_preempted and not any_pending_trials(experiment):
                     # Only start handling preempted instances once every initial
-                    # trial runs once.
+                    # trial was started. This ensures that .
                     handle_preempted = True
 
                 schedule(experiment_config, pool)
