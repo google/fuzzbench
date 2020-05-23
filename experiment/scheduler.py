@@ -458,7 +458,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
           (since preemptibles are 20% cost of non-preemptibles, <40% the cost of
           a non-preemptible experiment.
 
-          b. (TODO) We haven't spent longer than 3X the duration of time the
+          b. We haven't spent longer than 3X the duration of time the
           experiment would take if using nonpreemptibles. This bounds the
           duration of the experiment to 4X the length of the nonpreemptible
           experiment.

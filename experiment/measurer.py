@@ -631,7 +631,7 @@ def main():
     experiment_name = experiment_utils.get_experiment_name()
 
     try:
-        measure_loop(experiment_name, 0)  # !!!
+        measure_loop(experiment_name, 0)
     except Exception as error:
         logs.error('Error conducting experiment.')
         raise error
