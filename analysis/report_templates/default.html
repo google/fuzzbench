@@ -64,6 +64,9 @@
 
         <div id="summary" class="section scrollspy">
             <h2 class="green-text text-darken-3">experiment summary</h2>
+
+            {% block top_level_ranking %}
+
             {% if experiment.rank_by_mean_and_average_rank.size < 2 %}
             No ranking as the available data is only for a single fuzzer.
 
@@ -100,6 +103,8 @@
             So please check the list of supported benchmarks for the fuzzer(s) of your interest.
             The list could be specified in the fuzzer's README.md like
             <a href="https://github.com/google/fuzzbench/blob/master/fuzzers/aflsmart/README.md">this</a>.
+
+            {% endblock %}
 
             <ul class="collapsible">
                 <li>
