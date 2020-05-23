@@ -54,6 +54,9 @@ JINJA_ENV = jinja2.Environment(
 
 STARTED_TRIALS_FILTER = models.Trial.time_started.isnot(None)
 
+NUM_RETRIES = 3
+RETRY_WAIT_SECONDS = 3
+
 
 def datetime_now() -> datetime.datetime:
     """Return datetime.datetime.utcnow(). This function is needed for
@@ -172,7 +175,14 @@ def any_running_trials(experiment):
 
 
 class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
-    """Manager for trial instances."""
+    """Manager for trial instances.
+    Public methods of this are safe to call in preemptible and nonpreemptible
+    experiments alike though the main purpose of this class is to manage
+    preempted trials.
+    This class object should be created at the start of scheduling and the
+    handle_preempted_trials method should be called in the scheduling loop.
+    See the docstring for handle_preempted_trials for how it works.
+    """
 
     # Hard limit on the number of nonpreemptibles we will use. This bounds
     # costs.
@@ -190,8 +200,10 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             self.MAX_NONPREEMPTIBLES)
         logger.info('Max nonpreemptibles: %d.', self.max_nonpreemptibles)
         self.max_preemptibles = self.num_trials * 2
+        logger.info('Max nonpreemptibles: %d.', self.max_preemptibles)
         self.preemptible_window = 3 * experiment_config['max_total_time']
         self.preempted_trials = {}
+        self.preemptible_starts_futile = False
 
         # !!! REGEX
         self.base_resource_url = (
@@ -241,6 +253,9 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         if not self.experiment_config.get('preemptible_runners'):
             return True
 
+        if self.preemptible_starts_futile:
+            return False
+
         if nonpreemptible_starts >= self.max_nonpreemptibles:
             # Don't exceed our maximum preemptibles.
             return False
@@ -255,6 +270,9 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             # Instead if we can't create enough nonpreemptibles to replace at
             # least 1/4 of the remaining trials, don't create nonpreemptibles at
             # all, the experiment can't be salvaged cheaply.
+            # TODO(metzman): This policy can be bypassed if instances are
+            # preempted one at a time. Fix this.
+            self.preemptible_starts_futile = True
             return False
 
         # Supplement with nonpreemptibles if the experiment results are not so
@@ -346,7 +364,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         return trials
 
     @retry.wrap(
-        3, 2,
+        NUM_RETRIES, RETRY_WAIT_SECONDS,
         'experiment.scheduler.TrialInstanceManager._query_preempted_instances')
     def _query_preempted_instances(self):
         project = self.experiment_config['cloud_project']
@@ -363,8 +381,77 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         return instances
 
     def handle_preempted_trials(self):
-        """Mark preempted trials as such in the db and add replacement trials to
-        the db."""
+        """Handle preempted trials by marking them as preempted and creating
+        replacement trials when appropriate
+        This is the algorithm used by handle_preempted_trials:
+
+        1. Query the GCE API to find trials that were preempted since our last
+        query (or the start of the experiment on our first query.
+
+        2. For every preempted trial, ensure that it was not handled before and
+        if it wasn't then mark the trials as finished and preempted and create
+        replacement trials if appropriate.
+
+        This is the algorithm we use to determine whether a preempted trial
+        should be replaced and what it should be replaced with:
+
+        1. First we see if we can replace it with a preemptible instance. We
+        will replace it with a preemptible instance if:
+
+          a. We haven't created more than double the number of preemptible trial
+          instances than the number of trial this experiment would take if it
+          were using non-preemptibles ("target_trials") . This bounds the cost
+          of our preemptible usage to <2X cost of using preemptibles naively
+          (since preemptibles are 20% cost of non-preemptibles, <40% the cost of
+          a non-preemptible experiment.
+
+          b. (TODO) We haven't spent longer than 3X the duration of time the
+          experiment would take if using nonpreemptibles. This bounds the
+          duration of the experiment to 4X the length of the nonpreemptible
+          experiment.
+
+        2. If we can't create a preemptible replacement, we replace it with a
+        nonpreemptible if:
+
+          a. We haven't created more than target_trials/20 nonpreemptibles
+          already. This bounds the cost of the nonpreemptibles to 5% of the cost
+          of a 100% nonpreemptible experiment.
+
+          b. (TODO): Using preemptibles will actually help the results of this
+          experiment. If we can't create any preemptible instances but we need
+          to replace target_trials number of instances, replacing the tiny
+          fraction of them with preemptibles will give you a 5% complete
+          experiment. This is a hard issue to solve, because we restart
+          trials as they are preempted so we may not determine it is futile to
+          use nonpreemptibles until the last nonpreemptible below our limit is
+          reached.
+
+        3. TODO: There are other cases where we probably shouldn't replace
+        trials that we haven't implemented, but would like to such as:
+
+          a. If a trial is preempted very close to the end of its budgeted time.
+          In that case it's probably fine if the comparison on the benchmark
+          happens at 22:45 instead of 23:00.
+
+          b. If a trial is the only trial for the fuzzer-benchmark that was
+          preempted. In that case, not replacing the trial will save time and
+          not hurt results much.
+
+        The impact of this algorithm is that:
+
+        1. Costs of a preemptible experiment, in the worst case scenario are 45%
+        of a nonpreemptible experiment. On average we find they will be around
+        30% the cost of a nonpreemptible experiment.
+
+        2. Time of an experiment will be 4X the length of a nonpreemptible
+        experiment in the worst case scenario. This is fine however because most
+        of the experiment will finish earlier, only a few trials that won't
+        change results much will trickle in at the end.
+
+        3. Experiments are guaranteed to terminate but results won't necessarily
+        be complete if the preemption rate is pathologically high. This is
+        acceptable because a human should intervene in these edge cases.
+        """
         logger.info('Handling preempted.')
         if not self.experiment_config.get('preemptible_runners'):
             # Nothing to do here if not a preemptible experiment.
