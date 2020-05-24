@@ -38,7 +38,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'curl_curl_fuzzer_http':
         aflplusplus_fuzzer.build("tracepc", "nozero", "cmplog")
     elif benchmark_name == 'freetype2-2017':
-        aflplusplus_fuzzer.build("lto", "cmplog", "nozero")
+        aflplusplus_fuzzer.build("lto", "cmplog", "nozero", "dynamic")
     elif benchmark_name == 'jsoncpp_jsoncpp_fuzzer':
         aflplusplus_fuzzer.build("lto", "dynamic", "nozero", "cmplog")
     elif benchmark_name == 'lcms-2017-03-21':
