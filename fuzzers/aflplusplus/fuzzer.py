@@ -15,7 +15,6 @@
 
 import os
 import shutil
-import glob
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers import utils
@@ -36,6 +35,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
 
+    build_directory = os.environ['OUT']
+
     # If nothing was set this is the default:
     if not build_modes:
         build_modes = ['tracepc', 'nozero']
@@ -46,8 +47,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['CXX'] = '/afl/afl-clang-lto++'
         os.environ['RANLIB'] = 'llvm-ranlib-11'
         os.environ['AR'] = 'llvm-ar-11'
-        for copy_file in glob.glob("/afl/libc*"):
-            shutil.copy(copy_file, os.environ['OUT'])
     elif 'qemu' in build_modes:
         os.environ['CC'] = 'clang'
         os.environ['CXX'] = 'clang++'
@@ -101,6 +100,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'laf' in build_modes:
         os.environ['AFL_LLVM_LAF_SPLIT_SWITCHES'] = '1'
         os.environ['AFL_LLVM_LAF_SPLIT_COMPARES'] = '1'
+        os.environ['AFL_LLVM_LAF_SPLIT_FLOATS'] = '1'
         if 'autodict' not in build_modes:
             os.environ['AFL_LLVM_LAF_TRANSFORM_COMPARES'] = '1'
     # enable auto dictionary for LTO
@@ -132,7 +132,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
         # For CmpLog build, set the OUT and FUZZ_TARGET environment
         # variable to point to the new CmpLog build directory.
-        build_directory = os.environ['OUT']
         cmplog_build_directory = get_cmplog_build_directory(build_directory)
         os.mkdir(cmplog_build_directory)
         new_env['OUT'] = cmplog_build_directory
@@ -144,7 +143,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         print('Re-building benchmark for CmpLog fuzzing target')
         utils.build_benchmark(env=new_env)
 
-    shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
+    shutil.copy('/afl/afl-fuzz', build_directory)
 
 
 def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):

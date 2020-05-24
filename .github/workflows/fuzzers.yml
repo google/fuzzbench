@@ -17,6 +17,7 @@ jobs:
           - afl
           - aflfast
           - aflplusplus
+          - aflplusplus_optimal
           - aflsmart
           - eclipser
           - entropic
