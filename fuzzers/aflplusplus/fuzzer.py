@@ -36,6 +36,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         build_modes = os.environ['BUILD_MODES'].split(',')
 
     build_directory = os.environ['OUT']
+    os.environ['AFL_DONT_OPTIMIZE'] = '1'
 
     # If nothing was set this is the default:
     if not build_modes:
