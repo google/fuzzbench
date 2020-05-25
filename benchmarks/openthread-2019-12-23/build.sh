@@ -59,12 +59,6 @@ build_lib() {
       --enable-joiner                     \
       --enable-ncp                        \
       --disable-docs &&
-echo AFL
-echo ===
-env
-
-echo ===
-sleep 5
     make V=1 -j $JOBS
   )
 }
