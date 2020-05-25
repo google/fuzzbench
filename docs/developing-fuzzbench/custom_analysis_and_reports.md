@@ -54,3 +54,12 @@ You can also create a custom report using a template of your own (see
 ```bash
 PYTHONPATH=<fuzzbench_root> python3 analysis/generate_report.py --help
 ```
+
+## Notebooks
+
+Another way to do custom analysis is to use Jupyter / Colab notebooks. You can
+find some example notebooks
+[here](https://github.com/google/fuzzbench/tree/master/analysis/notebooks).
+
+_If you do some custom analysis that might be useful for others as well, please
+consider adding it to the analysis library!_
