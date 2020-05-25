@@ -51,6 +51,13 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     elif 'qemu' in build_modes:
         os.environ['CC'] = 'clang'
         os.environ['CXX'] = 'clang++'
+    elif 'tracepc' in build_modes:
+        os.environ['CC'] = 'clang'
+        os.environ['CXX'] = 'clang++'
+        cflags = ['-fsanitize-coverage=trace-pc-guard']
+        utils.append_flags('CFLAGS', cflags)
+        utils.append_flags('CXXFLAGS', cflags)
+        shutil.copy('/libAFLDriver2.a', '/libAFLDriver.a')
     else:
         os.environ['CC'] = '/afl/afl-clang-fast'
         os.environ['CXX'] = '/afl/afl-clang-fast++'
