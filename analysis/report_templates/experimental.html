@@ -18,7 +18,7 @@
 
 {% block top_level_ranking %}
 
-<h5>Rank by median on benchmarks, then by avereage normalized score</h5>
+<h5>Rank by median on benchmarks, then by average normalized score</h5>
 <div class="row">
     <div class="col s7 offset-s3">
         {{ experiment.rank_by_median_and_average_normalized_score.to_frame().to_html() }}
@@ -32,21 +32,14 @@
     </div>
 </div>
 
-<h5>Rank by mean on benchmarks, then by average rank</h5>
-<div class="row">
-    <div class="col s7 offset-s3">
-        {{ experiment.rank_by_mean_and_average_rank.to_frame().to_html() }}
-    </div>
-</div>
-
-<h5>Rank by pair-wise statistical test wins on benchmarks, then by average rank</h5>
+<h5>Rank by pairwise statistical test wins on benchmarks, then by average rank</h5>
 <div class="row">
     <div class="col s7 offset-s3">
         {{ experiment.rank_by_stat_test_wins_and_average_rank.to_frame().to_html() }}
     </div>
 </div>
 
-<h5>Rank by average rank on benchmarks, then by avereage rank</h5>
+<h5>Rank by average rank on benchmarks, then by average rank</h5>
 <div class="row">
     <div class="col s7 offset-s3">
         {{ experiment.rank_by_average_rank_and_average_rank.to_frame().to_html() }}
