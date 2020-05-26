@@ -24,9 +24,6 @@ ${VENV_ACTIVATE}: requirements.txt
 
 install-dependencies: ${VENV_ACTIVATE}
 
-freeze-dependencies:
-	source $(VENV_ACTIVATE) && python3 -m pip freeze > requirements.txt
-
 presubmit: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py
 

@@ -44,7 +44,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'lcms-2017-03-21':
         aflplusplus_fuzzer.build("lto", "nozero", "cmplog")
     elif benchmark_name == 'libjpeg-turbo-07-2017':
-        aflplusplus_fuzzer.build("tracepc", "nozero", "laf")
+        aflplusplus_fuzzer.build("lto", "nozero", "laf")
     elif benchmark_name == 'libpcap_fuzz_both':
         aflplusplus_fuzzer.build("lto", "nozero", "laf")
     elif benchmark_name == 'libpng-1.2.56':
