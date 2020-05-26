@@ -39,15 +39,15 @@ base-image:
 pull-base-image:
 	docker pull $(BASE_TAG)/base-image
 
-base-builder: base-image
+pull-base-clang:
+	docker pull gcr.io/oss-fuzz-base/base-clang
+
+base-builder: base-image pull-base-clang
 	docker build \
     --tag $(BASE_TAG)/base-builder \
     $(call cache_from_base,${BASE_TAG}/base-builder) \
     $(call cache_from_base,gcr.io/oss-fuzz-base/base-clang) \
     docker/base-builder
-
-pull-base-clang:
-	docker pull gcr.io/oss-fuzz-base/base-clang
 
 pull-base-builder: pull-base-image pull-base-clang
 	docker pull $(BASE_TAG)/base-builder
