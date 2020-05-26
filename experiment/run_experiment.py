@@ -68,7 +68,10 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     config = yaml_utils.read(config_filename)
     bucket_params = {'cloud_experiment_bucket', 'cloud_web_bucket'}
     string_params = {
-        'cloud_compute_zone', 'cloud_experiment_bucket', 'cloud_web_bucket'
+        'cloud_compute_zone',
+        'cloud_experiment_bucket',
+        'cloud_web_bucket',
+        'redis_host',
     }
     int_params = {'trials', 'max_total_time'}
     required_params = int_params.union(string_params)
@@ -317,7 +320,7 @@ class LocalDispatcher:
     def create_async(self):
         """Noop in local experiments."""
 
-    def start(self):
+    def start(self):  # pylint: disable=too-many-locals
         """Start the experiment on the dispatcher."""
         shared_volume_dir = os.path.abspath('shared-volume')
         if not os.path.exists(shared_volume_dir):
@@ -338,6 +341,8 @@ class LocalDispatcher:
             instance_name=self.instance_name)
         set_experiment_arg = 'EXPERIMENT={experiment}'.format(
             experiment=self.config['experiment'])
+        set_redis_host_arg = 'REDIS_HOST={redis_host}'.format(
+            redis_host=self.config['redis_host'])
         set_cloud_project_arg = 'CLOUD_PROJECT={cloud_project}'.format(
             cloud_project=self.config['cloud_project'])
         set_cloud_experiment_bucket_arg = (
@@ -366,6 +371,8 @@ class LocalDispatcher:
             set_instance_name_arg,
             '-e',
             set_experiment_arg,
+            '-e',
+            set_redis_host_arg,
             '-e',
             set_cloud_project_arg,
             '-e',
