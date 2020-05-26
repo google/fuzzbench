@@ -17,12 +17,8 @@ jobs:
           - afl
           - aflfast
           - aflplusplus
-          - aflplusplus_mopt2
-          - aflplusplus_mopt
-          - aflplusplus_cmplog
-          - aflplusplus_laf
-          - aflplusplus_laf_17
-          - aflplusplus_instrim
+          - aflplusplus_optimal
+          - aflplusplus_shmem
           - aflsmart
           - ankou
           - eclipser
@@ -67,4 +63,4 @@ jobs:
 
     - name: Build Benchmarks
       run: |
-        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/test_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER
+        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/build_and_test_run_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER
