@@ -43,8 +43,7 @@ def prepare_build_environment():
     os.environ['CC'] = '/afl/afl-clang-fast'
     os.environ['CXX'] = '/afl/afl-clang-fast++'
     os.environ['FUZZER_LIB'] = '/libAFL.a'
-
-
+    
 def build():
     """Build benchmark."""
     prepare_build_environment()
@@ -54,7 +53,6 @@ def build():
     print('[post_build] Copying afl-fuzz to $OUT directory')
     # Copy out the afl-fuzz binary as a build artifact.
     shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
-
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
