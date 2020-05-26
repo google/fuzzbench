@@ -17,7 +17,9 @@ FROM $parent_image
 
 # Install Go.
 RUN mkdir -p /application
-RUN wget https://dl.google.com/go/go1.14.3.linux-amd64.tar.gz
+RUN apt-get update && \
+    apt-get install wget -y && \
+    wget https://dl.google.com/go/go1.14.3.linux-amd64.tar.gz
 RUN tar -C /application -xzf go1.14.3.linux-amd64.tar.gz
 
 # Clone Ankou and its dependencies.
@@ -34,9 +36,7 @@ RUN wget http://lcamtuf.coredump.cx/afl/releases/afl-latest.tgz && \
     AFL_NO_X86=1 make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
-RUN apt-get update && \
-    apt-get install wget -y && \
-    wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
+RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
     clang -Wno-pointer-sign -c /afl/llvm_mode/afl-llvm-rt.o.c -I/afl && \
     clang++ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp && \
     ar r /libAFL.a *.o
