@@ -11,12 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for measurer.py."""
-
+"""Tests for measure_worker.py."""
 import os
 import shutil
 from unittest import mock
-import queue
 
 import pytest
 
@@ -25,10 +23,12 @@ from common import new_process
 from database import models
 from database import utils as db_utils
 from experiment.build import build_utils
-from experiment import measurer
+from experiment.measurer import measure_worker
 from test_libs import utils as test_utils
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
+
+SNAPSHOT_LOGGER = measure_worker.logger
 
 # Arbitrary values to use in tests.
 FUZZER = 'fuzzer-a'
@@ -37,12 +37,14 @@ TRIAL_NUM = 12
 FUZZERS = ['fuzzer-a', 'fuzzer-b']
 BENCHMARKS = ['benchmark-1', 'benchmark-2']
 NUM_TRIALS = 4
-MAX_TOTAL_TIME = 100
 GIT_HASH = 'FAKE-GIT-HASH'
 
-SNAPSHOT_LOGGER = measurer.logger
+# pylint: disable=unused-argument,invalid-name
 
-# pylint: disable=unused-argument,invalid-name,redefined-outer-name,protected-access
+
+def get_test_data_path(*subpaths):
+    """Returns the path of |subpaths| relative to TEST_DATA_PATH."""
+    return os.path.join(TEST_DATA_PATH, *subpaths)
 
 
 @pytest.fixture
@@ -59,8 +61,9 @@ def db_experiment(experiment_config, db):
 def test_merge_new_pcs(new_pcs, fs, experiment):
     """Tests that merge_new_pcs merges new PCs, and updates the covered-pcs
     file."""
-    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
-                                                  SNAPSHOT_LOGGER)
+    snapshot_measurer = measure_worker.SnapshotMeasurer(FUZZER, BENCHMARK,
+                                                        TRIAL_NUM,
+                                                        SNAPSHOT_LOGGER)
 
     covered_pcs_filename = get_test_data_path('covered-pcs.txt')
     fs.add_real_file(covered_pcs_filename, read_only=False)
@@ -82,56 +85,26 @@ def test_merge_new_pcs(new_pcs, fs, experiment):
 
 
 @mock.patch('common.logs.error')
-@mock.patch('experiment.measurer.initialize_logs')
+@mock.patch('experiment.measurer.measure_worker.initialize_logs')
 @mock.patch('multiprocessing.Queue')
-@mock.patch('experiment.measurer.measure_snapshot_coverage')
+@mock.patch('experiment.measurer.measure_worker.measure_snapshot_coverage')
 def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
                                 _, __):
     """Tests that measure_trial_coverage works as expected."""
     min_cycle = 1
-    max_cycle = 10
-    measure_request = measurer.SnapshotMeasureRequest(FUZZER, BENCHMARK,
-                                                      TRIAL_NUM, min_cycle)
-    measurer.measure_trial_coverage(measure_request, max_cycle, mocked_queue())
-    expected_calls = [
-        mock.call(FUZZER, BENCHMARK, TRIAL_NUM, cycle)
-        for cycle in range(min_cycle, max_cycle + 1)
-    ]
+    measure_request = measure_worker.SnapshotMeasureRequest(
+        FUZZER, BENCHMARK, TRIAL_NUM, min_cycle)
+    measure_worker.measure_trial_coverage(measure_request)
+    expected_calls = [mock.call(FUZZER, BENCHMARK, TRIAL_NUM, min_cycle)]
     assert mocked_measure_snapshot_coverage.call_args_list == expected_calls
-
-
-@mock.patch('common.gsutil.ls')
-@mock.patch('common.gsutil.rsync')
-def test_measure_all_trials_not_ready(mocked_rsync, mocked_ls, experiment):
-    """Test running measure_all_trials before it is ready works as intended."""
-    mocked_ls.return_value = ([], 1)
-    assert measurer.measure_all_trials(experiment_utils.get_experiment_name(),
-                                       MAX_TOTAL_TIME, test_utils.MockPool(),
-                                       queue.Queue())
-    assert not mocked_rsync.called
-
-
-@mock.patch('multiprocessing.pool.ThreadPool', test_utils.MockPool)
-@mock.patch('common.new_process.execute')
-@mock.patch('common.filesystem.directories_have_same_files')
-@pytest.mark.skip(reason="See crbug.com/1012329")
-def test_measure_all_trials_no_more(mocked_directories_have_same_files,
-                                    mocked_execute):
-    """Test measure_all_trials does what is intended when the experiment is
-    done."""
-    mocked_directories_have_same_files.return_value = True
-    mocked_execute.return_value = new_process.ProcessResult(0, '', False)
-    mock_pool = test_utils.MockPool()
-    assert not measurer.measure_all_trials(
-        experiment_utils.get_experiment_name(), MAX_TOTAL_TIME, mock_pool,
-        queue.Queue())
 
 
 def test_is_cycle_unchanged_doesnt_exist(experiment):
     """Test that is_cycle_unchanged can properly determine if a cycle is
     unchanged or not when it needs to copy the file for the first time."""
-    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
-                                                  SNAPSHOT_LOGGER)
+    snapshot_measurer = measure_worker.SnapshotMeasurer(FUZZER, BENCHMARK,
+                                                        TRIAL_NUM,
+                                                        SNAPSHOT_LOGGER)
     this_cycle = 1
     with test_utils.mock_popen_ctx_mgr(returncode=1):
         assert not snapshot_measurer.is_cycle_unchanged(this_cycle)
@@ -142,8 +115,9 @@ def test_is_cycle_unchanged_doesnt_exist(experiment):
 def test_is_cycle_unchanged_first_copy(mocked_read, mocked_cp, experiment):
     """Test that is_cycle_unchanged can properly determine if a cycle is
     unchanged or not when it needs to copy the file for the first time."""
-    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
-                                                  SNAPSHOT_LOGGER)
+    snapshot_measurer = measure_worker.SnapshotMeasurer(FUZZER, BENCHMARK,
+                                                        TRIAL_NUM,
+                                                        SNAPSHOT_LOGGER)
     this_cycle = 100
     unchanged_cycles_file_contents = (
         '\n'.join([str(num) for num in range(10)] + [str(this_cycle)]))
@@ -157,8 +131,9 @@ def test_is_cycle_unchanged_first_copy(mocked_read, mocked_cp, experiment):
 def test_is_cycle_unchanged_update(fs, experiment):
     """Test that is_cycle_unchanged can properly determine that a
     cycle has changed when it has the file but needs to update it."""
-    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
-                                                  SNAPSHOT_LOGGER)
+    snapshot_measurer = measure_worker.SnapshotMeasurer(FUZZER, BENCHMARK,
+                                                        TRIAL_NUM,
+                                                        SNAPSHOT_LOGGER)
 
     this_cycle = 100
     initial_unchanged_cycles_file_contents = (
@@ -180,8 +155,9 @@ def test_is_cycle_unchanged_update(fs, experiment):
 @mock.patch('common.gsutil.cp')
 def test_is_cycle_unchanged_skip_cp(mocked_cp, fs, experiment):
     """Check that is_cycle_unchanged doesn't call gsutil.cp unnecessarily."""
-    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
-                                                  SNAPSHOT_LOGGER)
+    snapshot_measurer = measure_worker.SnapshotMeasurer(FUZZER, BENCHMARK,
+                                                        TRIAL_NUM,
+                                                        SNAPSHOT_LOGGER)
     this_cycle = 100
     initial_unchanged_cycles_file_contents = (
         '\n'.join([str(num) for num in range(10)] + [str(this_cycle + 1)]))
@@ -196,8 +172,9 @@ def test_is_cycle_unchanged_no_file(mocked_cp, fs, experiment):
     """Test that is_cycle_unchanged returns False when there is no
     unchanged-cycles file."""
     # Make sure we log if there is no unchanged-cycles file.
-    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
-                                                  SNAPSHOT_LOGGER)
+    snapshot_measurer = measure_worker.SnapshotMeasurer(FUZZER, BENCHMARK,
+                                                        TRIAL_NUM,
+                                                        SNAPSHOT_LOGGER)
     mocked_cp.return_value = new_process.ProcessResult(1, '', False)
     assert not snapshot_measurer.is_cycle_unchanged(0)
 
@@ -211,8 +188,9 @@ def test_run_cov_new_units(mocked_execute, fs, environ):
         'EXPERIMENT': 'experiment',
     }
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
-    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
-                                                  SNAPSHOT_LOGGER)
+    snapshot_measurer = measure_worker.SnapshotMeasurer(FUZZER, BENCHMARK,
+                                                        TRIAL_NUM,
+                                                        SNAPSHOT_LOGGER)
     snapshot_measurer.initialize_measurement_dirs()
     shared_units = ['shared1', 'shared2']
     fs.create_file(snapshot_measurer.measured_files_path,
@@ -248,11 +226,6 @@ def test_run_cov_new_units(mocked_execute, fs, environ):
         assert args[arg] == value
 
 
-def get_test_data_path(*subpaths):
-    """Returns the path of |subpaths| relative to TEST_DATA_PATH."""
-    return os.path.join(TEST_DATA_PATH, *subpaths)
-
-
 # pylint: disable=no-self-use
 
 
@@ -263,7 +236,9 @@ class TestIntegrationMeasurement:
     # portable binary.
     @pytest.mark.skipif(not os.getenv('FUZZBENCH_TEST_INTEGRATION'),
                         reason='Not running integration tests.')
-    @mock.patch('experiment.measurer.SnapshotMeasurer.is_cycle_unchanged')
+    @mock.patch(
+        'experiment.measurer.measure_worker.SnapshotMeasurer.is_cycle_unchanged'
+    )
     def test_measure_snapshot_coverage(  # pylint: disable=too-many-locals
             self, mocked_is_cycle_unchanged, db, experiment, tmp_path):
         """Integration test for measure_snapshot_coverage."""
@@ -292,9 +267,8 @@ class TestIntegrationMeasurement:
                              experiment=os.environ['EXPERIMENT'])
         db_utils.add_all([trial])
 
-        snapshot_measurer = measurer.SnapshotMeasurer(trial.fuzzer,
-                                                      trial.benchmark, trial.id,
-                                                      SNAPSHOT_LOGGER)
+        snapshot_measurer = measure_worker.SnapshotMeasurer(
+            trial.fuzzer, trial.benchmark, trial.id, SNAPSHOT_LOGGER)
 
         # Set up the snapshot archive.
         cycle = 1
@@ -308,7 +282,7 @@ class TestIntegrationMeasurement:
             mocked_cp.return_value = new_process.ProcessResult(0, '', False)
             # TODO(metzman): Create a system for using actual buckets in
             # integration tests.
-            snapshot = measurer.measure_snapshot_coverage(
+            snapshot = measure_worker.measure_snapshot_coverage(
                 snapshot_measurer.fuzzer, snapshot_measurer.benchmark,
                 snapshot_measurer.trial_num, cycle)
         assert snapshot
@@ -321,55 +295,10 @@ class TestIntegrationMeasurement:
 def test_extract_corpus(archive_name, tmp_path):
     """"Tests that extract_corpus unpacks a corpus as we expect."""
     archive_path = get_test_data_path(archive_name)
-    measurer.extract_corpus(archive_path, set(), tmp_path)
+    measure_worker.extract_corpus(archive_path, set(), tmp_path)
     expected_corpus_files = {
         '5ea57dfc9631f35beecb5016c4f1366eb6faa810',
         '2f1507c3229c5a1f8b619a542a8e03ccdbb3c29c',
         'b6ccc20641188445fa30c8485a826a69ac4c6b60'
     }
     assert expected_corpus_files.issubset(set(os.listdir(tmp_path)))
-
-
-@mock.patch('time.sleep', return_value=None)
-@mock.patch('experiment.measurer.set_up_coverage_binaries')
-@mock.patch('experiment.measurer.measure_all_trials', return_value=False)
-@mock.patch('multiprocessing.Manager')
-@mock.patch('multiprocessing.pool')
-@mock.patch('experiment.scheduler.all_trials_ended', return_value=True)
-def test_measure_loop_end(_, __, ___, ____, _____, ______, experiment_config,
-                          db_experiment):
-    """Tests that measure_loop stops when there is nothing left to measure. In
-    this test, there is nothing left to measure on the first call."""
-    measurer.measure_loop(experiment_config, 100)
-    # If everything went well, we should get to this point without any
-    # exceptions.
-
-
-@mock.patch('time.sleep', return_value=None)
-@mock.patch('experiment.measurer.set_up_coverage_binaries')
-@mock.patch('multiprocessing.Manager')
-@mock.patch('multiprocessing.pool')
-@mock.patch('experiment.scheduler.all_trials_ended', return_value=True)
-@mock.patch('experiment.measurer.measure_all_trials')
-def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___,
-                                     ____, _____, experiment_config,
-                                     db_experiment):
-    """Test that measure loop will stop measuring when all trials have ended. In
-    this test, there is more to measure for a few iterations, then the mocked
-    functions will indicate that there is nothing left to measure."""
-    call_count = 0
-    # Scheduler is running.
-    loop_iterations = 6
-
-    def mock_measure_all_trials(*args, **kwargs):
-        # Do the assertions here so that there will be an assert fail on failure
-        # instead of an infinite loop.
-        nonlocal call_count
-        call_count += 1
-        if call_count >= loop_iterations:
-            return False
-        return True
-
-    mocked_measure_all_trials.side_effect = mock_measure_all_trials
-    measurer.measure_loop(experiment_config, 100)
-    assert call_count == loop_iterations

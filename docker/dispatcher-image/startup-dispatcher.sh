@@ -34,9 +34,16 @@ iam_account=`gcloud config get-value account`
 gcloud iam service-accounts keys create ${credentials_file} \
     --iam-account=${iam_account}
 
+# Start up rq workers.
+for i in $(seq $(nproc))
+do
+  PYTHONPATH=${WORK}/src GOOGLE_APPLICATION_CREDENTIALS=${credentials_file} \
+    rq worker --url redis://$REDIS_HOST:6379 &
+done
+
 # Start dispatcher.
 PYTHONPATH=${WORK}/src GOOGLE_APPLICATION_CREDENTIALS=${credentials_file} \
-    python3 "${WORK}/src/experiment/dispatcher.py"
+  python3 "${WORK}/src/experiment/dispatcher.py"
 
 # Revoke created credentials.
 key_id=$(cat "${credentials_file}" | jq -r ".private_key_id")

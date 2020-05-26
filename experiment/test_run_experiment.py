@@ -55,6 +55,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
             'cloud_compute_zone': 'us-central1-a',
             'trials': 10,
             'max_total_time': 1000,
+            'redis_host': '127.0.0.1'
         }
 
     @mock.patch('common.logs.error')
