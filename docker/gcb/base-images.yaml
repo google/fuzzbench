@@ -109,7 +109,38 @@ steps:
   # Wait for pull and building base-image to finish.
   wait_for: ['base-image', 'base-runner-pull']
 
+
+# Pull base-runner to fill cache.
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      docker pull ${_REPO}/measure-worker || exit 0
+  id: 'measure-worker-pull'
+  wait_for: ['-']  # Start this immediately.
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+
+    '--tag',
+    'gcr.io/fuzzbench/measure-worker',
+
+    '--tag',
+    '${_REPO}/measure-worker',
+
+    '--cache-from',
+    '${_REPO}/measure-worker',
+
+    '.'
+  ]
+  # Wait for pull and building base-image to finish.
+  wait_for: ['base-runner', 'measure-worker-pull']
+
+
 images:
   - '${_REPO}/base-image'
   - '${_REPO}/base-builder'
   - '${_REPO}/base-runner'
+  - '${_REPO}/measure-worker'
