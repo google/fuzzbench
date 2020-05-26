@@ -39,7 +39,7 @@ Fuzzers:
   url: https://www.jiliac.com/files/ankou-icse2020.pdf
   dblp:
   repo: https://github.com/SoftSec-KAIST/Ankou
-  dir:
+  dir: ankou
   issue: https://github.com/google/fuzzbench/issues/198
 
 - name: AFL++

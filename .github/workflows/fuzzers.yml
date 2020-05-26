@@ -24,6 +24,7 @@ jobs:
           - aflplusplus_laf_17
           - aflplusplus_instrim
           - aflsmart
+          - ankou
           - eclipser
           - entropic
           - fairfuzz
