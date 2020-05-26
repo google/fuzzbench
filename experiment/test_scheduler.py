@@ -30,6 +30,7 @@ from experiment import scheduler
 
 FUZZER = 'fuzzer'
 BENCHMARK = 'bench'
+ARBITRARY_DATETIME = datetime.datetime(2020, 1, 1)
 
 # pylint: disable=invalid-name,unused-argument,redefined-outer-name,too-many-arguments,no-value-for-parameter,protected-access
 
@@ -71,8 +72,8 @@ def pending_trials(db, experiment_config):
     other_experiment_name = get_other_experiment_name(experiment_config)
     other_trials = [
         create_trial(other_experiment_name),
-        create_trial(experiment_config['experiment'], datetime.datetime.now()),
-        create_trial(experiment_config['experiment'], datetime.datetime.now())
+        create_trial(experiment_config['experiment'], ARBITRARY_DATETIME),
+        create_trial(experiment_config['experiment'], ARBITRARY_DATETIME)
     ]
     db_utils.add_all(other_trials + our_pending_trials)
     our_trial_ids = [trial.id for trial in our_pending_trials]
@@ -321,24 +322,6 @@ def test_get_instance_from_preemption_operation(preempt_exp_conf):
         operation) == expected_instance
 
 
-# @pytest.mark.parametrize(
-#     'preemptibles,nonpreemptibles',
-#     [([], []), ([1], [0, 2])])
-# def test_record_restarted_trials(preemptibles, nonpreemptibles, experiment_config, pending_trials:
-#     trial_instance_manager = scheduler.TrialInstanceManager(
-#         1, experiment_config)
-#     fake_trial_entity = None
-#     trial_instance_manager.preempted_trials = {trial_id: fake_trial_entity
-#                                                for trial_id in range(3)}
-#     trial_instance_manager.record_restarted_trials(
-#         preemptibles, nonpreemptibles)
-#     assert len(preemptibles) == trial_instance_manager.preemptible_starts
-#     assert len(nonpreemptibles) == trial_instance_manager.nonpreemptible_starts
-#     both_starts = set(preemptibles + nonpreemptibles)
-#     expected_preempted_trials = {trial_id: fake_trial_entity for trial_id in range(3) if trial_idnot in both_starts}
-#     assert expected_preempted_trials == trial_instance_manager.preempted_trials
-
-
 def test_can_start_nonpreemptible_not_preemptible_runners(preempt_exp_conf):
     """Tests that test_can_start_nonpreemptible returns True when
     'preemptible_runners' is not set to True in the experiment_config."""
@@ -425,7 +408,6 @@ def test_get_preempted_trials_stale_preempted(_, preempt_exp_conf):
             '_get_started_unfinished_instances',
             return_value=[instance_name]):
         assert trial_instance_manager.get_preempted_trials() == []
-        # !!! assert time
 
 
 def _get_preemption_operation(trial_id, exp_conf):
@@ -462,12 +444,12 @@ def test_get_preempted_trials_new_preempted(mocked_get_preemption_operations,
                                             preempt_exp_conf):
     """Tests that TrialInstanceManager.get_preempted_trials returns trials that
     new preempted trials we don't know about until we query for them and not
-    trials that we already new were preempted."""
+    trials that we already knew were preempted."""
     trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
 
     # Create trials.
     experiment = preempt_exp_conf['experiment']
-    time_started = datetime.datetime.utcnow()  #  !!!
+    time_started = ARBITRARY_DATETIME
     known_preempted = models.Trial(experiment=experiment,
                                    fuzzer=FUZZER,
                                    benchmark=BENCHMARK,
@@ -489,4 +471,3 @@ def test_get_preempted_trials_new_preempted(mocked_get_preemption_operations,
     result = trial_instance_manager.get_preempted_trials()
     expected_result = [unknown_preempted]
     assert result == expected_result
-    # !!! assert time

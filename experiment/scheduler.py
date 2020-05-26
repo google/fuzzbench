@@ -41,7 +41,7 @@ from database import utils as db_utils
 # minutes is an arbitrary amount of time.
 GRACE_TIME_SECONDS = 5 * 60
 
-FAIL_WAIT_SECONDS = 2 * 60  # !!!
+FAIL_WAIT_SECONDS = 10 * 60
 
 logger = logs.Logger('scheduler')  # pylint: disable=invalid-name
 
@@ -215,7 +215,6 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         self.preempted_trials = {}
         self.preemptible_starts_futile = False
 
-        # !!! REGEX
         self.base_resource_url = (
             'https://www.googleapis.com/compute/v1/projects/{project}/zones/'
             '{zone}/instances/').format(
@@ -744,7 +743,7 @@ def create_trial_instance(fuzzer: str, benchmark: str, trial_id: int,
 def main():
     """Main function for running scheduler independently."""
     logs.initialize(default_extras={
-        'component': 'local',  #!!!
+        'component': 'dispatcher',
         'subcomponent': 'scheduler'
     })
 
