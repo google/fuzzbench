@@ -16,19 +16,31 @@ ARG parent_image=gcr.io/fuzzbench/base-builder
 FROM $parent_image
 
 # Install wget to download afl_driver.cpp. Install libstdc++ to use llvm_mode.
+#    sed -i 's/https:/http:/g' /etc/apt/sources.list /etc/apt/sources.list.d/* && \
 RUN apt-get update && \
-    apt-get install wget libstdc++-5-dev -y
+    apt-get install -y wget libstdc++-5-dev libexpat1-dev && \
+    apt-get install -y apt-utils apt-transport-https ca-certificates && \
+    echo deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial main >> /etc/apt/sources.list && \
+    echo deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu xenial main >> /etc/apt/sources.list && \
+    wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && \
+    apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 1E9377A2BA9EF27F && \
+    apt-get update && \
+    apt-get install -y clang-11 clang-11-doc clang-11-examples clangd-11 clang-format-11 clang-tidy-11 clang-tools-11 libc++1-11 libc++-11-dev libc++abi1-11 libc++abi-11-dev libclang1-11 libclang-11-dev libclang-common-11-dev libclang-cpp11 libclang-cpp11-dev libfuzzer-11-dev liblld-11 liblld-11-dev liblldb-11 liblldb-11-dev libllvm11 libomp-11-dev libomp-11-doc libomp5-11 lld-11 lldb-11 llvm-11 llvm-11-dev llvm-11-runtime llvm-11-tools && \
+    apt-get install -y gcc-9 g++-9
 
 # Download and compile afl++ (v2.62d).
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && git checkout dev && \
+    cd /afl && \
     git checkout fc574086ec8beff72a032f73884fb9f1f0d02f47 && \
     AFL_NO_X86=1 CFLAGS= CXXFLAGS= make PYTHON_INCLUDE=/ && \
-    cd llvm_mode && CFLAGS= CXXFLAGS= make
+    export LLVM_CONFIG=llvm-config-11 && \
+    cd llvm_mode && CFLAGS= CXXFLAGS= REAL_CC=gcc-9 REAL_CXX=g++-9 make && \
+    make install
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
     clang++ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp && \
-    ar ru /libAFLDriver.a *.o
+    ar ru /libAFLDriver.a *.o && \
+    cp -a `llvm-config-11 --libdir`/libc++* /afl/

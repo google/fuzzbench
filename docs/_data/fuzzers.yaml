@@ -13,6 +13,24 @@
 
 Fuzzers:
 
+- name: WEIZZ
+  desc: Automatic Grey-box Fuzzing for Structured Binary Formats.
+  year: 2020
+  url: https://arxiv.org/pdf/1911.00621.pdf
+  dblp: journals/corr/abs-1911-00621
+  repo:
+  dir:
+  issue:
+
+- name: Kirenenko
+  desc: Super Fast Source Code Taint Tracing base Symbolic Execution Engine.
+  year: 2020
+  url:
+  dblp:
+  repo: https://github.com/ChengyuSong/Kirenenko
+  dir:
+  issue:
+
 - name: Entropic
   desc: Boosts libFuzzer performance by changing how weights are assigned to seeds.
   year: 2020
@@ -41,6 +59,15 @@ Fuzzers:
   repo: https://github.com/SoftSec-KAIST/Ankou
   dir:
   issue: https://github.com/google/fuzzbench/issues/198
+
+- name: Manul
+  desc: Coverage-guided parallel fuzzer for open-source and blackbox binaries.
+  year: 2019
+  url:
+  dblp:
+  repo: https://github.com/mxmssh/manul
+  dir:
+  issue: https://github.com/google/fuzzbench/issues/128
 
 - name: AFL++
   desc: afl++ is afl with community patches.
