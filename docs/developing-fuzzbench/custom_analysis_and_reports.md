@@ -48,8 +48,14 @@ PYTHONPATH=<fuzzbench_root> python3 analysis/generate_report.py \
 You can find the link to the raw data file at the bottom of each [previously
 published report](https://www.fuzzbench.com/reports/index.html).
 
-You can also create a custom report using a template of your own (see
-`--report_type` option). See all command line options with:
+You can generate different types of reports (see available
+[templates](https://github.com/google/fuzzbench/tree/master/analysis/report_templates)).
+For example, to generate a more detailed report with more analysis results
+(i.e., multiple ranking methods and statistical tests), use the `--report_type
+experimental` flag. We also encourage you to add your own templates and report
+types to the library.
+
+Check out the rest of the command line options of the tool with:
 
 ```bash
 PYTHONPATH=<fuzzbench_root> python3 analysis/generate_report.py --help
