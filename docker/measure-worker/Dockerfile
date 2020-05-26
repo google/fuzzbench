@@ -15,20 +15,19 @@
 FROM gcr.io/fuzzbench/base-runner
 
 ENV WORK /work
-WORKDIR $WORK
-
-ENV VIRTUALENV_DIR $WORK/.venv
-
-RUN mkdir -p /work && virtualenv --python=$(which python3) $VIRTUALENV_DIR
-
 ENV SRC $WORK/src
+RUN mkdir -p $SRC
+
+ENV VIRTUALENV_DIR $SRC/.venv
+RUN virtualenv --python=$(which python3) $VIRTUALENV_DIR
 
 # Copy requirements.txt and install dependencies before copying all of the
 # source code so the cache hits more often.
 COPY requirements.txt $SRC/
+
 ENV PYTHONPATH=$SRC
 RUN /bin/bash -c "source $VIRTUALENV_DIR/bin/activate && \
-    pip3 install -r $SRC/requirements.txt"
+    pip install -r $SRC/requirements.txt"
 
 ADD . $SRC/
 
