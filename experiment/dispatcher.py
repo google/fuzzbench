@@ -153,6 +153,12 @@ def dispatcher_main():
             # Experiment is complete, bail out.
             break
 
+    logs.info('Dispatcher finished.')
+    scheduler_loop_thread.join()
+    measurer_loop_process.join()
+    while True:
+        pass
+
 
 def main():
     """Do the experiment and report results."""
