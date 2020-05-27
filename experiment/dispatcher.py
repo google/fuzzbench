@@ -156,8 +156,6 @@ def dispatcher_main():
     logs.info('Dispatcher finished.')
     scheduler_loop_thread.join()
     measurer_loop_process.join()
-    while True:
-        pass
 
 
 def main():
