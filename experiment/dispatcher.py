@@ -133,7 +133,7 @@ def dispatcher_main():
     # Start measurer and scheduler in threads.
     max_total_time = experiment.config['max_total_time']
     scheduler_loop_thread = threading.Thread(target=scheduler.schedule_loop,
-                                             args=(experiment, max_total_time))
+                                             args=(experiment.config))
     scheduler_loop_thread.start()
     measurer_loop_process = multiprocessing.Process(
         target=measurer.measure_loop, args=(experiment.config, len(trials)))
