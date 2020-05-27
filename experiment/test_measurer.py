@@ -81,22 +81,6 @@ def test_merge_new_pcs(new_pcs, fs, experiment):
                             initial_contents)
 
 
-@mock.patch('common.gsutil.rm')
-def test_reset_state(mocked_rm, fs, experiment):
-    """Test that reset_state deletes any measurer state for the trial."""
-    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
-                                                  SNAPSHOT_LOGGER)
-    fs.create_file(snapshot_measurer.measured_files_path)
-    fs.create_file(snapshot_measurer.unchanged_cycles_path)
-    snapshot_measurer.reset_trial_state()
-    assert not os.path.exists(snapshot_measurer.measured_files_path)
-    assert not os.path.exists(snapshot_measurer.unchanged_cycles_path)
-    mocked_rm.assert_called_once_with(
-        'gs://experiment-data/test-experiment/experiment-folders/'
-        'benchmark-a-fuzzer-a/trial-12/crashes',
-        force=True)
-
-
 @mock.patch('common.logs.error')
 @mock.patch('experiment.measurer.initialize_logs')
 @mock.patch('multiprocessing.Queue')

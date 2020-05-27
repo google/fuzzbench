@@ -79,6 +79,8 @@ def measure_loop(experiment: str, max_total_time: int):
         q = manager.Queue()  # pytype: disable=attribute-error
         while True:
             try:
+                # Get whether all trials have ended before we measure to prevent
+                # races.
                 all_trials_ended = scheduler.all_trials_ended(experiment)
 
                 if not measure_all_trials(experiment, max_total_time, pool, q):
@@ -90,6 +92,7 @@ def measure_loop(experiment: str, max_total_time: int):
                         break
             except Exception:  # pylint: disable=broad-except
                 logger.error('Error occurred during measuring.')
+
             time.sleep(FAIL_WAIT_SECONDS)
 
     logger.info('Finished measuring.')
@@ -176,7 +179,7 @@ def _query_ids_of_measured_trials(experiment: str):
     trials_and_snapshots_query = db_utils.query(models.Snapshot).options(
         orm.joinedload('trial'))
     experiment_trials_filter = models.Snapshot.trial.has(experiment=experiment,
-                                                         replacement_trial=None)
+                                                         preempted=False)
     experiment_trials_and_snapshots_query = trials_and_snapshots_query.filter(
         experiment_trials_filter)
     experiment_snapshot_trial_ids_query = (
@@ -191,10 +194,10 @@ def _query_unmeasured_trials(experiment: str):
     ids_of_trials_with_snapshots = _query_ids_of_measured_trials(experiment)
     no_snapshots_filter = ~models.Trial.id.in_(ids_of_trials_with_snapshots)
     started_trials_filter = ~models.Trial.time_started.is_(None)
-    nonreplaced_trials_filter = models.Trial.replacement_trial.is_(None)
+    nonpreempted_trials_filter = ~models.Trial.preempted
     experiment_trials_filter = models.Trial.experiment == experiment
     return trial_query.filter(experiment_trials_filter, no_snapshots_filter,
-                              started_trials_filter, nonreplaced_trials_filter)
+                              started_trials_filter, nonpreempted_trials_filter)
 
 
 def _get_unmeasured_first_snapshots(experiment: str
@@ -467,19 +470,6 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             return set()
         return set(filesystem.read(self.measured_files_path).splitlines())
 
-    def reset_trial_state(self):
-        """Reset any measurement state that has been built up from measuring a
-        trial. This is useful if a trial is restarted."""
-        for file_path in [self.measured_files_path, self.unchanged_cycles_path]:
-            if os.path.exists(file_path):
-                os.remove(file_path)
-        # Don't reset the UNIT_BLACKLIST. That keeps track of crashes which we
-        # don't want to run again.
-
-        crashes_gcs_path = exp_path.gcs(
-            posixpath.join(self.trial_dir, 'crashes'))
-        gsutil.rm(crashes_gcs_path, force=True)
-
 
 def measure_trial_coverage(  # pylint: disable=invalid-name
         measure_req, max_cycle: int,
@@ -522,8 +512,6 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
                                   })
     snapshot_measurer = SnapshotMeasurer(fuzzer, benchmark, trial_num,
                                          snapshot_logger)
-    if cycle == 1:
-        snapshot_measurer.reset_trial_state()
 
     measuring_start_time = time.time()
     snapshot_logger.info('Measuring cycle: %d.', cycle)
@@ -631,7 +619,7 @@ def main():
     experiment_name = experiment_utils.get_experiment_name()
 
     try:
-        measure_loop(experiment_name, 0)
+        measure_loop(experiment_name, int(sys.argv[0]))
     except Exception as error:
         logs.error('Error conducting experiment.')
         raise error

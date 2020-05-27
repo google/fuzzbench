@@ -73,7 +73,7 @@ def create_instance(instance_name: str,
                     config: dict,
                     startup_script: str = None,
                     preemptible: bool = False,
-                    **kwargs) -> bool:  # pylint: disable
+                    **kwargs) -> bool:
     """Creates a GCE instance with name, |instance_name|, type, |instance_type|
     and with optionally provided and |startup_script|."""
 
@@ -110,16 +110,6 @@ def create_instance(instance_name: str,
         command.extend(
             ['--metadata-from-file', 'startup-script=' + startup_script])
 
-    return new_process.execute(command, expect_zero=False, **kwargs)[0] == 0
-
-
-def start_instance(instance_name, config, **kwargs):
-    """Start the terminated instance named |instance_name| and return True if
-    this succeeded."""
-    zone = config['zone']
-    command = [
-        'gcloud', 'compute', 'instances', 'start', instance_name, '--zone', zone
-    ]
     return new_process.execute(command, expect_zero=False, **kwargs)[0] == 0
 
 

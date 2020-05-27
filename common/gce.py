@@ -53,6 +53,7 @@ def get_preemption_operations(operations):
     # otherwise). Instead it supports ordering by time. It also supports
     # filtering by operation but doesn't support it when combined with ordering.
     # So we must filter manually.
+    # See the link below for an example of this query in action.
     # https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations/list?apix_params=%7B%22project%22%3A%22fuzzbench%22%2C%22zone%22%3A%22us-central1-a%22%2C%22filter%22%3A%22(operationType%20%3D%20%5C%22compute.instances.preempted%5C%22)%22%2C%22orderBy%22%3A%22creationTimestamp%20desc%22%7D
     for operation in operations:
         if operation['operationType'] == 'compute.instances.preempted':
@@ -60,11 +61,12 @@ def get_preemption_operations(operations):
 
 
 def filter_by_end_time(min_end_time, operations):
-    """Generator that yields GCE preemption operations in |operations|."""
-    # operations must be a generator that is ordered by time.
+    """Generator that yields GCE preemption operations in |operations|.
+    |operations| must be an iterable that is ordered by time."""
     for operation in operations:
         end_time = operation.get('endTime')
         if not end_time:
+            # Try to handle cases where the operation hasn't finished.
             yield operation
             continue
         operation_end_time = dateutil.parser.isoparse(end_time)

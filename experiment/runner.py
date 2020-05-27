@@ -224,8 +224,6 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             trial_id = environment.get('TRIAL_ID')
             self.gcs_sync_dir = experiment_utils.get_trial_gcs_dir(
                 fuzzer, benchmark, trial_id)
-            # Clean the directory before we use it. This behavior is dependended
-            # on by the scheduler when using preemptibles.
             gsutil.rm(self.gcs_sync_dir, force=True, parallel=True)
         else:
             self.gcs_sync_dir = None
