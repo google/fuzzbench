@@ -72,6 +72,8 @@ def measure_loop(experiment: str, max_total_time: int):
         'component': 'dispatcher',
         'subcomponent': 'measurer',
     })
+    logs.info('Start measure_loop.')
+
     with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
         set_up_coverage_binaries(pool, experiment)
         # Using Multiprocessing.Queue will fail with a complaint about

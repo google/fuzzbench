@@ -561,7 +561,7 @@ def schedule_loop(experiment_config: dict):
     will use fork to create the Pool which breaks logging."""
     # Create the thread pool once and reuse it to avoid leaking threads and
     # other issues.
-    logger.info('Starting scheduler')
+    logger.info('Starting scheduler.')
     gce.initialize()
     num_trials = len(
         get_experiment_trials(experiment_config['experiment']).all())
