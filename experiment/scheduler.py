@@ -250,6 +250,7 @@ def render_startup_script_template(instance_name: str, benchmark: str,
         ])
 
     local_experiment = experiment_utils.is_local_experiment()
+    gsutil_disabled = experiment_utils.is_gsutil_disabled()
     template = JINJA_ENV.get_template('runner-startup-script-template.sh')
     kwargs = {
         'instance_name': instance_name,
@@ -261,12 +262,14 @@ def render_startup_script_template(instance_name: str, benchmark: str,
         'cloud_project': experiment_config['cloud_project'],
         'cloud_compute_zone': experiment_config['cloud_compute_zone'],
         'cloud_experiment_bucket': experiment_config['cloud_experiment_bucket'],
+        'local_experiment_bucket': experiment_config['local_experiment_bucket'],
         'fuzz_target': fuzz_target,
         'docker_image_url': docker_image_url,
         'additional_env': additional_env,
+        'gsutil_disabled': gsutil_disabled,
         'local_experiment': local_experiment
     }
-    if local_experiment:
+    if local_experiment and (gsutil_disabled is False):
         kwargs['host_gcloud_config'] = os.environ['HOST_GCLOUD_CONFIG']
 
     return template.render(**kwargs)
@@ -285,6 +288,8 @@ def create_trial_instance(benchmark: str, fuzzer: str, trial_id: int,
     with open(startup_script_path, 'w') as file_handle:
         file_handle.write(startup_script)
 
+    # No worry for this gcloud.
+    # Currently, it will judge whether we are in local mode.
     return gcloud.create_instance(instance_name,
                                   gcloud.InstanceType.RUNNER,
                                   experiment_config,
