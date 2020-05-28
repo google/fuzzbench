@@ -107,9 +107,8 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
 
         if param in local_params and not value.startswith('/'):
             valid = False
-            logs.error(
-                'Config parameter "%s" is "%s". It must start with /.',
-                param, value)
+            logs.error('Config parameter "%s" is "%s". It must start with /.',
+                       param, value)
 
     if not valid:
         raise ValidationError('Config: %s is invalid.' % config_filename)
@@ -313,7 +312,6 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
         gsutil.rsync(config_dir, destination, parallel=True)
 
 
-
 class BaseDispatcher:
     """Class representing the dispatcher."""
 
@@ -330,6 +328,7 @@ class BaseDispatcher:
     def start(self):
         """Start the experiment on the dispatcher."""
         raise NotImplementedError
+
 
 class LocalDispatcher:
     """Class representing the local dispatcher."""
@@ -363,7 +362,8 @@ class LocalDispatcher:
             experiment=self.config['experiment'])
         set_cloud_project_arg = 'CLOUD_PROJECT={cloud_project}'.format(
             cloud_project=self.config['cloud_project'])
-        shared_local_experiment_bucket = '{0}:{0}'.format(self.config['local_experiment_bucket'])
+        shared_local_experiment_bucket = '{0}:{0}'.format(
+            self.config['local_experiment_bucket'])
         set_local_experiment_bucket_arg = (
             'LOCAL_EXPERIMENT_BUCKET={local_experiment_bucket}'.format(
                 local_experiment_bucket=self.config['local_experiment_bucket']))

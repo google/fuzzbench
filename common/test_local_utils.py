@@ -36,8 +36,8 @@ class Testlocal_utilsRsync:
 
     def test_rsync(self):
         """Tests that rsync works as intended."""
-        with mock.patch(
-                'common.local_utils.local_utils_command') as mocked_local_utils_command:
+        with mock.patch('common.local_utils.local_utils_command'
+                       ) as mocked_local_utils_command:
             local_utils.rsync(self.SRC, self.DST)
         mocked_local_utils_command.assert_called_with(
             ['rsync', '-d', '-r', '/src', '/dst'])
@@ -46,8 +46,8 @@ class Testlocal_utilsRsync:
         """Tests that rsync works as intended when supplied a local_utils_options
         argument."""
         flag = '-flag'
-        with mock.patch(
-                'common.local_utils.local_utils_command') as mocked_local_utils_command:
+        with mock.patch('common.local_utils.local_utils_command'
+                       ) as mocked_local_utils_command:
             local_utils.rsync(self.SRC, self.DST, local_utils_options=[flag])
         assert flag == mocked_local_utils_command.call_args_list[0][0][0][0]
 
@@ -55,8 +55,8 @@ class Testlocal_utilsRsync:
         """Tests that rsync works as intended when supplied a local_utils_options
         argument."""
         flag = '-flag'
-        with mock.patch(
-                'common.local_utils.local_utils_command') as mocked_local_utils_command:
+        with mock.patch('common.local_utils.local_utils_command'
+                       ) as mocked_local_utils_command:
             local_utils.rsync(self.SRC, self.DST, options=[flag])
         assert flag in mocked_local_utils_command.call_args_list[0][0][0]
 
@@ -67,7 +67,7 @@ class Testlocal_utilsRsync:
         to use specific flags."""
         kwargs_for_rsync = {}
         kwargs_for_rsync[kwarg_for_rsync] = False
-        with mock.patch(
-                'common.local_utils.local_utils_command') as mocked_local_utils_command:
+        with mock.patch('common.local_utils.local_utils_command'
+                       ) as mocked_local_utils_command:
             local_utils.rsync(self.SRC, self.DST, **kwargs_for_rsync)
         assert flag not in mocked_local_utils_command.call_args_list[0][0][0]

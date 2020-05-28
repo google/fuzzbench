@@ -86,7 +86,7 @@ def copy_coverage_binaries(benchmark):
     coverage_build_archive_local_path = posixpath.join(
         exp_path.local(coverage_binaries_dir), coverage_build_archive)
     return local_utils.cp(coverage_build_archive_shared_dir_path,
-                     coverage_build_archive_local_path)
+                          coverage_build_archive_local_path)
 
 
 def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:

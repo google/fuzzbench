@@ -405,9 +405,10 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
         def copy_unchanged_cycles_file():
             if experiment_utils.is_gsutil_disabled():
-                result = local_utils.cp(
-                    exp_path.local(self.unchanged_cycles_path),
-                    self.unchanged_cycles_path, expect_zero=False)
+                result = local_utils.cp(exp_path.local(
+                    self.unchanged_cycles_path),
+                                        self.unchanged_cycles_path,
+                                        expect_zero=False)
             else:
                 result = gsutil.cp(exp_path.gcs(self.unchanged_cycles_path),
                                    self.unchanged_cycles_path,
@@ -554,9 +555,9 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     if experiment_utils.is_gsutil_disabled():
         corpus_archive_src = exp_path.local(corpus_archive_dst)
         if local_utils.cp(corpus_archive_src,
-                     corpus_archive_dst,
-                     expect_zero=False,
-                     write_to_stdout=False)[0] != 0:
+                          corpus_archive_dst,
+                          expect_zero=False,
+                          write_to_stdout=False)[0] != 0:
             snapshot_logger.warning('Corpus not found for cycle: %d.', cycle)
             return None
     else:
@@ -616,16 +617,16 @@ def set_up_coverage_binary(benchmark):
 
     if experiment_utils.is_gsutil_disabled():
         local_bucket_archive_path = exp_path.local(coverage_binaries_dir /
-                                                 archive_name)
+                                                   archive_name)
         local_utils.cp(local_bucket_archive_path,
-                  str(benchmark_coverage_binary_dir),
-                  write_to_stdout=False)
+                       str(benchmark_coverage_binary_dir),
+                       write_to_stdout=False)
     else:
         cloud_bucket_archive_path = exp_path.gcs(coverage_binaries_dir /
-                                             archive_name)
+                                                 archive_name)
         gsutil.cp(cloud_bucket_archive_path,
-              str(benchmark_coverage_binary_dir),
-              write_to_stdout=False)
+                  str(benchmark_coverage_binary_dir),
+                  write_to_stdout=False)
 
     archive_path = benchmark_coverage_binary_dir / archive_name
     tar = tarfile.open(archive_path, 'r:gz')

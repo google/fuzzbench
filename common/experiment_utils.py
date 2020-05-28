@@ -90,7 +90,7 @@ def is_local_experiment():
     """Returns True if running a local experiment."""
     return bool(environment.get('LOCAL_EXPERIMENT'))
 
+
 def is_gsutil_disabled():
     """Returns True if running a gsutil-supported local experiment."""
     return bool(environment.get('GSUTIL_DISABLED'))
-
