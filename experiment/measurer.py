@@ -35,6 +35,7 @@ from common import experiment_path as exp_path
 from common import filesystem
 from common import fuzzer_utils
 from common import gsutil
+from common import local_utils
 from common import logs
 from common import utils
 from database import utils as db_utils
@@ -64,6 +65,11 @@ def get_experiment_folders_dir():
 def remote_dir_exists(directory: pathlib.Path) -> bool:
     """Does |directory| exist in the CLOUD_EXPERIMENT_BUCKET."""
     return gsutil.ls(exp_path.gcs(directory), must_exist=False)[0] == 0
+
+
+def local_dir_exists(directory: pathlib.Path) -> bool:
+    """Does |directory| exist in the LOCAL_EXPERIMENT_BUCKET."""
+    return local_utils.ls(exp_path.path(directory), must_exist=False)[0] == 0
 
 
 def measure_loop(experiment: str, max_total_time: int):
@@ -105,8 +111,13 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
     logger.info('Measuring all trials.')
 
     experiment_folders_dir = get_experiment_folders_dir()
-    if not remote_dir_exists(experiment_folders_dir):
-        return True
+
+    if experiment_utils.is_gsutil_disabled():
+        if not local_dir_exists(experiment_folders_dir):
+            return True
+    else:
+        if not remote_dir_exists(experiment_folders_dir):
+            return True
 
     max_cycle = _time_to_cycle(max_total_time)
     unmeasured_snapshots = get_unmeasured_snapshots(experiment, max_cycle)
@@ -393,9 +404,14 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         unchanged-cycles file. This file is written to by the trial's runner."""
 
         def copy_unchanged_cycles_file():
-            result = gsutil.cp(exp_path.gcs(self.unchanged_cycles_path),
-                               self.unchanged_cycles_path,
-                               expect_zero=False)
+            if experiment_utils.is_gsutil_disabled():
+                result = local_utils.cp(
+                    exp_path.local(self.unchanged_cycles_path),
+                    self.unchanged_cycles_path, expect_zero=False)
+            else:
+                result = gsutil.cp(exp_path.gcs(self.unchanged_cycles_path),
+                                   self.unchanged_cycles_path,
+                                   expect_zero=False)
             return result.retcode == 0
 
         if not os.path.exists(self.unchanged_cycles_path):
@@ -449,9 +465,14 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         with tarfile.open(archive, 'w:gz') as tar:
             tar.add(self.crashes_dir,
                     arcname=os.path.basename(self.crashes_dir))
-        gcs_path = exp_path.gcs(
-            posixpath.join(self.trial_dir, 'crashes', crashes_archive_name))
-        gsutil.cp(archive, gcs_path)
+        if experiment_utils.is_gsutil_disabled():
+            local_path = exp_path.local(
+                posixpath.join(self.trial_dir, 'crashes', crashes_archive_name))
+            local_utils.cp(archive, local_path)
+        else:
+            gcs_path = exp_path.gcs(
+                posixpath.join(self.trial_dir, 'crashes', crashes_archive_name))
+            gsutil.cp(archive, gcs_path)
         os.remove(archive)
 
     def update_measured_files(self):
@@ -525,17 +546,27 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     corpus_archive_dst = os.path.join(
         snapshot_measurer.trial_dir, 'corpus',
         experiment_utils.get_corpus_archive_name(cycle))
-    corpus_archive_src = exp_path.gcs(corpus_archive_dst)
 
     corpus_archive_dir = os.path.dirname(corpus_archive_dst)
     if not os.path.exists(corpus_archive_dir):
         os.makedirs(corpus_archive_dir)
-    if gsutil.cp(corpus_archive_src,
-                 corpus_archive_dst,
-                 expect_zero=False,
-                 write_to_stdout=False)[0] != 0:
-        snapshot_logger.warning('Corpus not found for cycle: %d.', cycle)
-        return None
+
+    if experiment_utils.is_gsutil_disabled():
+        corpus_archive_src = exp_path.local(corpus_archive_dst)
+        if local_utils.cp(corpus_archive_src,
+                     corpus_archive_dst,
+                     expect_zero=False,
+                     write_to_stdout=False)[0] != 0:
+            snapshot_logger.warning('Corpus not found for cycle: %d.', cycle)
+            return None
+    else:
+        corpus_archive_src = exp_path.gcs(corpus_archive_dst)
+        if gsutil.cp(corpus_archive_src,
+                     corpus_archive_dst,
+                     expect_zero=False,
+                     write_to_stdout=False)[0] != 0:
+            snapshot_logger.warning('Corpus not found for cycle: %d.', cycle)
+            return None
 
     snapshot_measurer.initialize_measurement_dirs()
     snapshot_measurer.extract_corpus(corpus_archive_dst)
@@ -582,11 +613,20 @@ def set_up_coverage_binary(benchmark):
     if not os.path.exists(benchmark_coverage_binary_dir):
         os.mkdir(benchmark_coverage_binary_dir)
     archive_name = 'coverage-build-%s.tar.gz' % benchmark
-    cloud_bucket_archive_path = exp_path.gcs(coverage_binaries_dir /
+
+    if experiment_utils.is_gsutil_disabled():
+        local_bucket_archive_path = exp_path.local(coverage_binaries_dir /
+                                                 archive_name)
+        local_utils.cp(local_bucket_archive_path,
+                  str(benchmark_coverage_binary_dir),
+                  write_to_stdout=False)
+    else:
+        cloud_bucket_archive_path = exp_path.gcs(coverage_binaries_dir /
                                              archive_name)
-    gsutil.cp(cloud_bucket_archive_path,
+        gsutil.cp(cloud_bucket_archive_path,
               str(benchmark_coverage_binary_dir),
               write_to_stdout=False)
+
     archive_path = benchmark_coverage_binary_dir / archive_name
     tar = tarfile.open(archive_path, 'r:gz')
     tar.extractall(benchmark_coverage_binary_dir)
