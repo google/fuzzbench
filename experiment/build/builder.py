@@ -31,10 +31,12 @@ from common import logs
 
 from experiment.build import build_utils
 
-if not experiment_utils.is_local_experiment():
-    import experiment.build.gcb_build as buildlib
-else:
+if experiment_utils.is_gsutil_disabled():
     import experiment.build.local_build as buildlib
+elif experiment_utils.is_local_experiment():
+    import experiment.build.gsutil_build as buildlib
+else:
+    import experiment.build.gcb_build as buildlib
 
 # FIXME: Make this configurable for users with the default quota of 10.
 # Even though it says queueing happen, we end up exceeding limits on "get", so

@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Module for building things on local machine for use in trials."""
+"""Module for building things on Google Cloud Build for use in trials."""
 
 import os
 import posixpath
@@ -21,7 +21,7 @@ from typing import Tuple
 from common import benchmark_utils
 from common import environment
 from common import experiment_path as exp_path
-from common import local_utils
+from common import gsutil
 from common import logs
 from common import new_process
 from common import utils
@@ -82,11 +82,11 @@ def copy_coverage_binaries(benchmark):
         command
     ])
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
+    coverage_build_archive_gcs_path = posixpath.join(
+        exp_path.gcs(coverage_binaries_dir), coverage_build_archive)
 
-    coverage_build_archive_local_path = posixpath.join(
-        exp_path.local(coverage_binaries_dir), coverage_build_archive)
-    return local_utils.cp(coverage_build_archive_shared_dir_path,
-                     coverage_build_archive_local_path)
+    return gsutil.cp(coverage_build_archive_shared_dir_path,
+                     coverage_build_archive_gcs_path)
 
 
 def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
