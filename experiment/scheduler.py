@@ -633,6 +633,7 @@ def start_trials(trials, experiment_config: dict, pool):
     started_trial_proxies = pool.starmap(_start_trial, start_trial_args)
     started_trials = update_started_trials(started_trial_proxies,
                                            trial_id_mapping)
+    logger.info('Done starting trials.')
     return started_trials
 
 
