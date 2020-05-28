@@ -56,7 +56,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'openthread-2019-12-23':
         aflplusplus_fuzzer.build("lto", "nozero", "cmplog")
     elif benchmark_name == 'php_php-fuzz-parser':
-        aflplusplus_fuzzer.build("lto", "nozero", "dynamic")
+        aflplusplus_fuzzer.build("tracepc", "nozero")
     elif benchmark_name == 'proj4-2017-08-14':
         aflplusplus_fuzzer.build("lto", "nozero", "cmplog")
     elif benchmark_name == 'systemd_fuzz-link-parser':
