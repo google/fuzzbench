@@ -338,10 +338,11 @@ def test_extract_corpus(archive_name, tmp_path):
 @mock.patch('experiment.scheduler.all_trials_ended', return_value=True)
 def test_measure_loop_end(_, __, ___, ____, _____, ______, experiment_config,
                           db_experiment):
-    """Tests that measure_loop stops when there is nothing left to measure."""
+    """Tests that measure_loop stops when there is nothing left to measure. In
+    this test, there is nothing left to measure on the first call."""
     measurer.measure_loop(experiment_config, 100)
-    # If everything went well, we should get to this point without any exception
-    # failures.
+    # If everything went well, we should get to this point without any
+    # exceptions.
 
 
 @mock.patch('time.sleep', return_value=None)
@@ -353,8 +354,9 @@ def test_measure_loop_end(_, __, ___, ____, _____, ______, experiment_config,
 def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___,
                                      ____, _____, experiment_config,
                                      db_experiment):
-    """Test that measure loop will stop measuring when we all trials have
-    ended."""
+    """Test that measure loop will stop measuring when all trials have ended. In
+    this test, there is more to measure for a few iterations, then the mocked
+    functions will indicate that there is nothing left to measure."""
     call_count = 0
     # Scheduler is running.
     loop_iterations = 6

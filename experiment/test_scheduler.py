@@ -298,16 +298,14 @@ def preempt_exp_conf(experiment_config, db):
     return experiment_config
 
 
-DEFAULT_NUM_TRIALS = 100
-
-
 def get_trial_instance_manager(experiment_config: dict):
     """Returns an instance of TrialInstanceManager for |experiment_config|."""
     if not db_utils.query(models.Experiment).filter(
             models.Experiment.name == experiment_config['experiment']).first():
         create_experiments(experiment_config)
 
-    return scheduler.TrialInstanceManager(DEFAULT_NUM_TRIALS, experiment_config)
+    default_num_trials = 100
+    return scheduler.TrialInstanceManager(default_num_trials, experiment_config)
 
 
 def test_get_instance_from_preemption_operation(preempt_exp_conf):
@@ -327,7 +325,7 @@ def test_can_start_nonpreemptible_not_preemptible_runners(preempt_exp_conf):
     'preemptible_runners' is not set to True in the experiment_config."""
     trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
     trial_instance_manager.experiment_config['preemptible_runners'] = False
-    assert trial_instance_manager.can_start_nonpreemptible(100000)
+    assert trial_instance_manager.can_start_nonpreemptible(100000, 10)
 
 
 def test_can_start_nonpreemptible_above_max(preempt_exp_conf):
