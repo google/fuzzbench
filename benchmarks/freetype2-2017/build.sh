@@ -40,4 +40,6 @@ if [[ ! -d $OUT/seeds ]]; then
   rm -fr TRT
 fi
 
-$CXX $CXXFLAGS -std=c++11 -I BUILD/include -I BUILD/ BUILD/src/tools/ftfuzzer/ftfuzzer.cc BUILD/objs/.libs/libfreetype.a  $FUZZER_LIB -larchive -lz -o $FUZZ_TARGET
+unset AFL_QUIET
+export AFL_DEBUG=1
+$CXX $CXXFLAGS -std=c++11 -I BUILD/include -I BUILD/ BUILD/src/tools/ftfuzzer/ftfuzzer.cc BUILD/objs/.libs/libfreetype.a  $FUZZER_LIB -larchive -lz -o $FUZZ_TARGET > /out/out.log 2>&1
