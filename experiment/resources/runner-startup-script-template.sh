@@ -28,7 +28,7 @@ do
   echo 'Error pulling image, retrying...'
 done{% endif %}
 
-docker run {% if local_experiment %}-v {{host_gcloud_config}}:/root/.config/gcloud {% endif %}\
+docker run {% if local_experiment %} {% if not gsutil_disabled %}-v {{host_gcloud_config}}:/root/.config/gcloud {% endif %}{% endif %}\
 --privileged --cpus=1 --rm \
 -e INSTANCE_NAME={{instance_name}} \
 -e FUZZER={{fuzzer}} \
@@ -39,6 +39,7 @@ docker run {% if local_experiment %}-v {{host_gcloud_config}}:/root/.config/gclo
 -e CLOUD_PROJECT={{cloud_project}} \
 -e CLOUD_COMPUTE_ZONE={{cloud_compute_zone}} \
 -e CLOUD_EXPERIMENT_BUCKET={{cloud_experiment_bucket}} \
+-e LOCAL_EXPERIMENT_BUCKET={{local_experiment_bucket}} \
 -e FUZZ_TARGET={{fuzz_target}} \
 {{additional_env}} {% if not local_experiment %}--name=runner-container {% endif %}\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \
