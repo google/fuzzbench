@@ -93,6 +93,13 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
             'cloud_experiment_bucket', 'invalid',
             'Config parameter "%s" is "%s". It must start with gs://.')
 
+    def test_invalid_local(self):
+        """Tests that an error is logged when the config file has a config
+        parameter that should be a local folder but is not."""
+        self._test_invalid(
+            'local_experiment_bucket', 'invalid',
+            'Config parameter "%s" is "%s". It must start with /.')
+
     @mock.patch('common.logs.error')
     def test_multiple_invalid(self, mocked_error):
         """Test that multiple errors are logged when multiple parameters are

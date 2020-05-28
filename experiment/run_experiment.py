@@ -31,6 +31,7 @@ from common import filesystem
 from common import fuzzer_utils
 from common import gcloud
 from common import gsutil
+from common import local_utils
 from common import logs
 from common import new_process
 from common import utils
@@ -67,9 +68,12 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     # rerunning it is cheap.
     config = yaml_utils.read(config_filename)
     bucket_params = {'cloud_experiment_bucket', 'cloud_web_bucket'}
+    local_params = {'local_experiment_bucket', 'local_web_bucket'}
     string_params = {
         'cloud_compute_zone', 'cloud_experiment_bucket', 'cloud_web_bucket'
     }
+    if config.get('gsutil_disabled', False):
+        string_params = string_params.union(local_params)
     int_params = {'trials', 'max_total_time'}
     required_params = int_params.union(string_params)
 
@@ -99,6 +103,12 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
             valid = False
             logs.error(
                 'Config parameter "%s" is "%s". It must start with gs://.',
+                param, value)
+
+        if param in local_params and not value.startswith('/'):
+            valid = False
+            logs.error(
+                'Config parameter "%s" is "%s". It must start with /.',
                 param, value)
 
     if not valid:
@@ -239,10 +249,13 @@ def start_experiment(experiment_name: str, config_filename: str,
     set_up_fuzzer_config_files(fuzzer_configs)
 
     # Make sure we can connect to database.
-    local_experiment = config.get('local_experiment', False)
+    gsutil_disabled = config.get('gsutil_disabled', False)
+    local_experiment = config.get('local_experiment', gsutil_disabled)
     if not local_experiment:
         if 'POSTGRES_PASSWORD' not in os.environ:
             raise Exception('Must set POSTGRES_PASSWORD environment variable.')
+        if gsutil_disabled:
+            raise Exception('gsutil disabled implies this is local_experimemt.')
         gcloud.set_default_project(config['cloud_project'])
 
     start_dispatcher(config, CONFIG_DIR)
@@ -270,21 +283,35 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
             return None
         return tar_info
 
-    cloud_experiment_path = os.path.join(config['cloud_experiment_bucket'],
-                                         config['experiment'])
-    base_destination = os.path.join(cloud_experiment_path, 'input')
+    gsutil_disabled = config.get('gsutil_disabled', False)
+    if gsutil_disabled:
+        experiment_path = os.path.join(config['local_experiment_bucket'],
+                                       config['experiment'])
+    else:
+        experiment_path = os.path.join(config['cloud_experiment_bucket'],
+                                       config['experiment'])
+    base_destination = os.path.join(experiment_path, 'input')
 
-    # Send the local source repository to the cloud for use by dispatcher.
+    # Send the local source repository to the bucket for use by dispatcher.
     # Local changes to any file will propagate.
     source_archive = 'src.tar.gz'
     with tarfile.open(source_archive, 'w:gz') as tar:
         tar.add(utils.ROOT_DIR, arcname='', recursive=True, filter=filter_file)
-    gsutil.cp(source_archive, base_destination + '/', parallel=True)
+    if gsutil_disabled:
+        if not os.path.exists(base_destination):
+            os.makedirs(base_destination)
+        local_utils.cp(source_archive, base_destination + '/', parallel=True)
+    else:
+        gsutil.cp(source_archive, base_destination + '/', parallel=True)
     os.remove(source_archive)
 
     # Send config files.
     destination = os.path.join(base_destination, 'config')
-    gsutil.rsync(config_dir, destination, parallel=True)
+    if gsutil_disabled:
+        local_utils.rsync(config_dir + '/', destination, parallel=True)
+    else:
+        gsutil.rsync(config_dir, destination, parallel=True)
+
 
 
 class BaseDispatcher:
@@ -304,9 +331,95 @@ class BaseDispatcher:
         """Start the experiment on the dispatcher."""
         raise NotImplementedError
 
-
 class LocalDispatcher:
     """Class representing the local dispatcher."""
+
+    def __init__(self, config: Dict):
+        self.config = config
+        self.instance_name = experiment_utils.get_dispatcher_instance_name(
+            config['experiment'])
+        self.process = None
+
+    def create_async(self):
+        """Noop in local experiments."""
+
+    def start(self):
+        """Start the experiment on the dispatcher."""
+        shared_volume_dir = os.path.abspath('shared-volume')
+        if not os.path.exists(shared_volume_dir):
+            os.mkdir(shared_volume_dir)
+        shared_volume_volume_arg = '{0}:{0}'.format(shared_volume_dir)
+        shared_volume_env_arg = 'SHARED_VOLUME={}'.format(shared_volume_dir)
+        sql_database_arg = 'SQL_DATABASE_URL=sqlite:///{}'.format(
+            os.path.join(shared_volume_dir, 'local.db'))
+
+        home = os.environ['HOME']
+
+        base_docker_tag = experiment_utils.get_base_docker_tag(
+            self.config['cloud_project'])
+        set_instance_name_arg = 'INSTANCE_NAME={instance_name}'.format(
+            instance_name=self.instance_name)
+        set_experiment_arg = 'EXPERIMENT={experiment}'.format(
+            experiment=self.config['experiment'])
+        set_cloud_project_arg = 'CLOUD_PROJECT={cloud_project}'.format(
+            cloud_project=self.config['cloud_project'])
+        shared_local_experiment_bucket = '{0}:{0}'.format(self.config['local_experiment_bucket'])
+        set_local_experiment_bucket_arg = (
+            'LOCAL_EXPERIMENT_BUCKET={local_experiment_bucket}'.format(
+                local_experiment_bucket=self.config['local_experiment_bucket']))
+        if not os.path.exists(self.config['local_experiment_bucket']):
+            os.mkdir(self.config['local_experiment_bucket'])
+        docker_image_url = '{base_docker_tag}/dispatcher-image'.format(
+            base_docker_tag=base_docker_tag)
+        command = [
+            'docker',
+            'run',
+            '-ti',
+            '--rm',
+            '-v',
+            '/var/run/docker.sock:/var/run/docker.sock',
+            '-v',
+            shared_volume_volume_arg,
+            '-e',
+            shared_volume_env_arg,
+            '-e',
+            set_instance_name_arg,
+            '-e',
+            set_experiment_arg,
+            '-e',
+            set_cloud_project_arg,
+            '-e',
+            sql_database_arg,
+            '-v',
+            shared_local_experiment_bucket,
+            '-e',
+            set_local_experiment_bucket_arg,
+            '-e',
+            'LOCAL_EXPERIMENT=True',
+            '-e',
+            'GSUTIL_DISABLED=True',
+            '--cap-add=SYS_PTRACE',
+            '--cap-add=SYS_NICE',
+            '--name=dispatcher-container',
+            docker_image_url,
+            '/bin/bash',
+            '-c',
+            'apt-get update && apt-get install -y rsync && '
+            'rsync -r '
+            '"${LOCAL_EXPERIMENT_BUCKET}/${EXPERIMENT}/input/" ${WORK} && '
+            'mkdir ${WORK}/src && '
+            'tar -xvzf ${WORK}/src.tar.gz -C ${WORK}/src && '
+            'source "/work/.venv/bin/activate" && '
+            'pip3 install -r "/work/src/requirements.txt" && '
+            'PYTHONPATH=/work/src python3 '
+            '/work/src/experiment/dispatcher.py || '
+            '/bin/bash'  # Open shell if experiment fails.
+        ]
+        return new_process.execute(command, write_to_stdout=True)
+
+
+class GsutilLocalDispatcher:
+    """Class representing the gsutil enhanced local dispatcher."""
 
     def __init__(self, config: Dict):
         self.config = config
@@ -452,8 +565,10 @@ class GoogleCloudDispatcher(BaseDispatcher):
 def get_dispatcher(config: Dict) -> BaseDispatcher:
     """Return a dispatcher object created from the right class (i.e. dispatcher
     factory)."""
-    if config.get('local_experiment'):
+    if config.get('gsutil_disabled'):
         return LocalDispatcher(config)
+    elif config.get('local_experiment'):
+        return GsutilLocalDispatcher(config)
     return GoogleCloudDispatcher(config)
 
 
