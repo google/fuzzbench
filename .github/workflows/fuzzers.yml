@@ -17,13 +17,10 @@ jobs:
           - afl
           - aflfast
           - aflplusplus
-          - aflplusplus_mopt2
-          - aflplusplus_mopt
-          - aflplusplus_cmplog
-          - aflplusplus_laf
-          - aflplusplus_laf_17
-          - aflplusplus_instrim
+          - aflplusplus_optimal
+          - aflplusplus_shmem
           - aflsmart
+          - ankou
           - eclipser
           - entropic
           - fairfuzz
