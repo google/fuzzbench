@@ -69,7 +69,7 @@ def remote_dir_exists(directory: pathlib.Path) -> bool:
 
 def local_dir_exists(directory: pathlib.Path) -> bool:
     """Does |directory| exist in the LOCAL_EXPERIMENT_BUCKET."""
-    return local_utils.ls(exp_path.path(directory), must_exist=False)[0] == 0
+    return local_utils.ls(exp_path.local(directory), must_exist=False)[0] == 0
 
 
 def measure_loop(experiment: str, max_total_time: int):
