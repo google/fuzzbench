@@ -130,13 +130,16 @@ def dispatcher_main():
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])
 
-    # Start measurer and scheduler in threads.
-    max_total_time = experiment.config['max_total_time']
+    # Start measurer and scheduler in seperate threads/processes.
     scheduler_loop_thread = threading.Thread(target=scheduler.schedule_loop,
-                                             args=(experiment.config))
+                                             args=(experiment.config,))
     scheduler_loop_thread.start()
+
+    max_total_time = experiment.config['max_total_time']
     measurer_loop_process = multiprocessing.Process(
-        target=measurer.measure_loop, args=(experiment.config, len(trials)))
+        target=measurer.measure_loop,
+        args=(experiment.experiment_name, max_total_time))
+
     measurer_loop_process.start()
 
     is_complete = False

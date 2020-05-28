@@ -245,6 +245,10 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
                 continue
             max_time_started = max(time_started, max_time_started)
 
+        assert max_time_started is not None
+        max_time_started = max_time_started.replace(
+            tzinfo=datetime.timezone.utc)
+        self._max_time_started = max_time_started
         return max_time_started
 
     def preemptible_window_passed(self):
