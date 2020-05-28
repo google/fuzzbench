@@ -31,3 +31,13 @@ def gcs(path_obj: Path) -> str:
     experiment_bucket = experiment_utils.get_cloud_experiment_path()
     assert path_str.startswith(work_dir)
     return path_str.replace(work_dir, experiment_bucket)
+
+
+def local(path_obj: Path) -> str:
+    """Returns a string with WORK_DIR replaced with |bucket|. |path_obj| should
+    be created by path()."""
+    path_str = str(path_obj)
+    work_dir = experiment_utils.get_work_dir()
+    experiment_bucket = experiment_utils.get_local_experiment_path()
+    assert path_str.startswith(work_dir)
+    return path_str.replace(work_dir, experiment_bucket)

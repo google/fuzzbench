@@ -42,6 +42,13 @@ def get_cloud_project():
     return os.environ['CLOUD_PROJECT']
 
 
+def get_local_experiment_path():
+    """Returns local experiment path."""
+    local_experiment_bucket = os.environ['LOCAL_EXPERIMENT_BUCKET']
+    experiment_name = get_experiment_name()
+    return posixpath.join(local_experiment_bucket, experiment_name)
+
+
 def get_cloud_experiment_path():
     """Returns cloud experiment path."""
     cloud_experiment_bucket = os.environ['CLOUD_EXPERIMENT_BUCKET']
@@ -82,3 +89,8 @@ def get_base_docker_tag(cloud_project=None):
 def is_local_experiment():
     """Returns True if running a local experiment."""
     return bool(environment.get('LOCAL_EXPERIMENT'))
+
+def is_gsutil_disabled():
+    """Returns True if running a gsutil-supported local experiment."""
+    return bool(environment.get('GSUTIL_DISABLED'))
+
