@@ -37,7 +37,7 @@ def cp(*cp_arguments, **kwargs):  # pylint: disable=invalid-name
     for file_or_dir_path in cp_arguments:
         dirpath = os.path.dirname(os.path.abspath(file_or_dir_path))
         if not os.path.exists(dirpath):
-            os.mkdir(dirpath)
+            os.makedirs(dirpath)
 
     command = ['cp']
     command.extend(cp_arguments)
@@ -82,7 +82,7 @@ def rsync(  # pylint: disable=too-many-arguments
     command = [] if local_utils_options is None else local_utils_options
     command.append('rsync')
     if delete:
-        command.append('-d')
+        command.append('--delete')
     if recursive:
         command.append('-r')
     if options is not None:
