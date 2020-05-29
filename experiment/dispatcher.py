@@ -77,7 +77,11 @@ class Experiment:
         self.experiment_name = self.config['experiment']
         self.git_hash = self.config['git_hash']
 
-        self.web_bucket = posixpath.join(self.config['cloud_web_bucket'],
+        if experiment_utils.is_gsutil_disabled():
+            self.web_bucket = posixpath.join(self.config['local_web_bucket'],
+                                         experiment_utils.get_experiment_name())
+        else:
+            self.web_bucket = posixpath.join(self.config['cloud_web_bucket'],
                                          experiment_utils.get_experiment_name())
 
 

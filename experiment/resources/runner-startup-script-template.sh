@@ -29,6 +29,8 @@ do
 done{% endif %}
 
 docker run {% if local_experiment %} {% if not gsutil_disabled %}-v {{host_gcloud_config}}:/root/.config/gcloud {% endif %}{% endif %}\
+{% if gsutil_disabled %}-v {{local_experiment_bucket}}:{{local_experiment_bucket}} {% endif %} \
+{% if gsutil_disabled %}-v {{local_web_bucket}}:{{local_web_bucket}} {% endif %} \
 --privileged --cpus=1 --rm \
 -e INSTANCE_NAME={{instance_name}} \
 -e FUZZER={{fuzzer}} \
@@ -39,8 +41,12 @@ docker run {% if local_experiment %} {% if not gsutil_disabled %}-v {{host_gclou
 -e CLOUD_PROJECT={{cloud_project}} \
 -e CLOUD_COMPUTE_ZONE={{cloud_compute_zone}} \
 -e CLOUD_EXPERIMENT_BUCKET={{cloud_experiment_bucket}} \
+-e SHARED_VOLUME={{shared_volume}} \
+-e LOCAL_WEB_BUCKET={{local_web_bucket}} \
 -e LOCAL_EXPERIMENT_BUCKET={{local_experiment_bucket}} \
+-e LOCAL_EXPERIMENT={{local_experiment}} \
+-e GSUTIL_DISABLED={{gsutil_disabled}} \
 -e FUZZ_TARGET={{fuzz_target}} \
 {{additional_env}} {% if not local_experiment %}--name=runner-container {% endif %}\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \
-{{docker_image_url}} 2>&1 | tee /tmp/runner-log.txt
+{{docker_image_url}} 2>&1 | tee /tmp/runner-log-{{trial_id}}.txt

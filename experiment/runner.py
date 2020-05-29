@@ -31,6 +31,7 @@ from common import experiment_utils
 from common import filesystem
 from common import fuzzer_utils
 from common import gsutil
+from common import local_utils
 from common import logs
 from common import new_process
 from common import retry
@@ -221,17 +222,27 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         benchmark_fuzzer_directory = '%s-%s' % (environment.get('BENCHMARK'),
                                                 environment.get('FUZZER'))
         if not environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
-            bucket = environment.get('CLOUD_EXPERIMENT_BUCKET')
             experiment_name = environment.get('EXPERIMENT')
             trial = 'trial-%d' % environment.get('TRIAL_ID')
-            self.gcs_sync_dir = posixpath.join(bucket, experiment_name,
+            if experiment_utils.is_gsutil_disabled():
+                bucket = environment.get('LOCAL_EXPERIMENT_BUCKET')
+                self.local_sync_dir = posixpath.join(bucket, experiment_name,
                                                'experiment-folders',
                                                benchmark_fuzzer_directory,
                                                trial)
-            # Clean the directory before we use it.
-            gsutil.rm(self.gcs_sync_dir, force=True, parallel=True)
+                # Clean the directory before we use it.
+                local_utils.rm(self.local_sync_dir, force=True, parallel=True)
+            else:
+                bucket = environment.get('CLOUD_EXPERIMENT_BUCKET')
+                self.gcs_sync_dir = posixpath.join(bucket, experiment_name,
+                                               'experiment-folders',
+                                               benchmark_fuzzer_directory,
+                                               trial)
+                # Clean the directory before we use it.
+                gsutil.rm(self.gcs_sync_dir, force=True, parallel=True)
         else:
             self.gcs_sync_dir = None
+            self.local_sync_dir = None
 
         self.cycle = 1
         self.corpus_dir = 'corpus'
@@ -345,7 +356,10 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
                 logs.debug('Cycle: %d changed.', self.cycle)
                 self.archive_and_save_corpus()
 
-            self.save_results()
+            if experiment_utils.is_gsutil_disabled():
+                self.local_save_results()
+            else:
+                self.save_results()
             logs.debug('Finished sync.')
         except Exception:  # pylint: disable=broad-except
             logs.error('Failed to sync cycle: %d.', self.cycle)
@@ -367,6 +381,20 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         archive_directories(directories, archive)
         return archive
 
+    def local_save_corpus_archive(self, archive):
+        """Save corpus |archive| to local and delete when done."""
+        if not self.local_sync_dir:
+            return
+
+        basename = os.path.basename(archive)
+        local_path = posixpath.join(self.local_sync_dir, self.corpus_dir, basename)
+
+        # Don't use parallel to avoid stability issues.
+        local_utils.cp(archive, local_path)
+
+        # Delete corpus archive so disk doesn't fill up.
+        os.remove(archive)
+
     def save_corpus_archive(self, archive):
         """Save corpus |archive| to GCS and delete when done."""
         if not self.gcs_sync_dir:
@@ -386,7 +414,24 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
     def archive_and_save_corpus(self):
         """Archive and save the current corpus to GCS."""
         archive = self.archive_corpus()
-        self.save_corpus_archive(archive)
+        if experiment_utils.is_gsutil_disabled():
+            self.local_save_corpus_archive(archive)
+        else:
+            self.save_corpus_archive(archive)
+
+    @retry.wrap(NUM_RETRIES, RETRY_DELAY,
+                'experiment.runner.TrialRunner.local_save_results')
+    def local_save_results(self):
+        """Save the results directory to local."""
+        if not self.local_sync_dir:
+            return
+        # Copy results directory before rsyncing it so that we don't get an
+        # exception from uploading a file that changes in size. Files can change
+        # in size because the log file containing the fuzzer's output is in this
+        # directory and can be written to by the fuzzer at any time.
+        results_copy = filesystem.make_dir_copy(self.results_dir)
+        local_utils.rsync(results_copy + '/',
+                     posixpath.join(self.local_sync_dir, self.results_dir))
 
     @retry.wrap(NUM_RETRIES, RETRY_DELAY,
                 'experiment.runner.TrialRunner.save_results')

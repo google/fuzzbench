@@ -21,6 +21,7 @@ from unittest import mock
 import pytest
 
 from common import gsutil
+from common import local_utils
 from common import new_process
 from experiment import runner
 from test_libs import utils as test_utils
@@ -53,6 +54,7 @@ def test_run_fuzzer_log_file(mocked_communicate, fs):
 
 MAX_TOTAL_TIME = 100
 CLOUD_EXPERIMENT_BUCKET = 'gs://bucket'
+LOCAL_EXPERIMENT_BUCKET = '/bucket'
 BENCHMARK = 'benchmark-1'
 EXPERIMENT = 'experiment-name'
 TRIAL_NUM = 1
@@ -98,6 +100,23 @@ def test_save_corpus_archive(_, trial_runner, fs):
             'gsutil', 'cp', archive_name,
             posixpath.join(
                 'gs://bucket/experiment-name/experiment-folders/'
+                'benchmark-1-fuzzer-name-a/trial-1/corpus', archive_name)
+        ]]
+    assert not os.path.exists(archive_name)
+
+
+@mock.patch('common.logs.log')
+def test_local_save_corpus_archive(_, trial_runner, fs):
+    """Test that save_corpus_archive calls local_utils rsync on the corpus-archives
+    directory."""
+    archive_name = 'x.tar.gz'
+    fs.create_file(archive_name, contents='')
+    with test_utils.mock_popen_ctx_mgr() as mocked_popen:
+        trial_runner.save_corpus_archive(archive_name)
+        assert mocked_popen.commands == [[
+            'cp', archive_name,
+            posixpath.join(
+                '/bucket/experiment-name/experiment-folders/'
                 'benchmark-1-fuzzer-name-a/trial-1/corpus', archive_name)
         ]]
     assert not os.path.exists(archive_name)

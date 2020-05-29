@@ -263,10 +263,12 @@ def render_startup_script_template(instance_name: str, benchmark: str,
         'cloud_compute_zone': experiment_config['cloud_compute_zone'],
         'cloud_experiment_bucket': experiment_config['cloud_experiment_bucket'],
         'local_experiment_bucket': experiment_config['local_experiment_bucket'],
+        'local_web_bucket': experiment_config['local_web_bucket'],
         'fuzz_target': fuzz_target,
         'docker_image_url': docker_image_url,
         'additional_env': additional_env,
         'gsutil_disabled': gsutil_disabled,
+        'shared_volume': os.environ['SHARED_VOLUME'],
         'local_experiment': local_experiment
     }
     if local_experiment and (gsutil_disabled is False):

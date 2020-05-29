@@ -362,6 +362,11 @@ class LocalDispatcher:
             experiment=self.config['experiment'])
         set_cloud_project_arg = 'CLOUD_PROJECT={cloud_project}'.format(
             cloud_project=self.config['cloud_project'])
+        shared_local_web_bucket = '{0}:{0}'.format(
+            self.config['local_web_bucket'])
+        set_local_web_bucket_arg = (
+            'LOCAL_WEB_BUCKET={local_web_bucket}'.format(
+                local_web_bucket=self.config['local_web_bucket']))
         shared_local_experiment_bucket = '{0}:{0}'.format(
             self.config['local_experiment_bucket'])
         set_local_experiment_bucket_arg = (
@@ -390,6 +395,10 @@ class LocalDispatcher:
             set_cloud_project_arg,
             '-e',
             sql_database_arg,
+            '-v',
+            shared_local_web_bucket,
+            '-e',
+            set_local_web_bucket_arg,
             '-v',
             shared_local_experiment_bucket,
             '-e',

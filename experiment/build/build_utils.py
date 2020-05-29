@@ -16,7 +16,9 @@
 import tempfile
 
 from common import experiment_path as exp_path
+from common import experiment_utils
 from common import gsutil
+from common import local_utils
 
 
 def store_build_logs(build_config, build_result):
@@ -28,7 +30,12 @@ def store_build_logs(build_config, build_result):
         tmp.flush()
 
         build_log_filename = build_config + '.txt'
-        gsutil.cp(tmp.name,
+        if experiment_utils.is_gsutil_disabled():
+            local_utils.cp(tmp.name,
+                  exp_path.local(get_build_logs_dir() / build_log_filename),
+                  write_to_stdout=False)
+        else:
+            gsutil.cp(tmp.name,
                   exp_path.gcs(get_build_logs_dir() / build_log_filename),
                   write_to_stdout=False)
 
