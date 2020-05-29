@@ -226,18 +226,17 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             trial = 'trial-%d' % environment.get('TRIAL_ID')
             if experiment_utils.is_gsutil_disabled():
                 bucket = environment.get('LOCAL_EXPERIMENT_BUCKET')
-                self.local_sync_dir = posixpath.join(bucket, experiment_name,
-                                               'experiment-folders',
-                                               benchmark_fuzzer_directory,
-                                               trial)
+                self.local_sync_dir = posixpath.join(
+                    bucket, experiment_name, 'experiment-folders',
+                    benchmark_fuzzer_directory, trial)
                 # Clean the directory before we use it.
                 local_utils.rm(self.local_sync_dir, force=True, parallel=True)
             else:
                 bucket = environment.get('CLOUD_EXPERIMENT_BUCKET')
                 self.gcs_sync_dir = posixpath.join(bucket, experiment_name,
-                                               'experiment-folders',
-                                               benchmark_fuzzer_directory,
-                                               trial)
+                                                   'experiment-folders',
+                                                   benchmark_fuzzer_directory,
+                                                   trial)
                 # Clean the directory before we use it.
                 gsutil.rm(self.gcs_sync_dir, force=True, parallel=True)
         else:
@@ -387,7 +386,8 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             return
 
         basename = os.path.basename(archive)
-        local_path = posixpath.join(self.local_sync_dir, self.corpus_dir, basename)
+        local_path = posixpath.join(self.local_sync_dir, self.corpus_dir,
+                                    basename)
 
         # Don't use parallel to avoid stability issues.
         local_utils.cp(archive, local_path)
@@ -431,7 +431,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         # directory and can be written to by the fuzzer at any time.
         results_copy = filesystem.make_dir_copy(self.results_dir)
         local_utils.rsync(results_copy + '/',
-                     posixpath.join(self.local_sync_dir, self.results_dir))
+                          posixpath.join(self.local_sync_dir, self.results_dir))
 
     @retry.wrap(NUM_RETRIES, RETRY_DELAY,
                 'experiment.runner.TrialRunner.save_results')

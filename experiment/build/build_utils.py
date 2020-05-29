@@ -32,12 +32,13 @@ def store_build_logs(build_config, build_result):
         build_log_filename = build_config + '.txt'
         if experiment_utils.is_gsutil_disabled():
             local_utils.cp(tmp.name,
-                  exp_path.local(get_build_logs_dir() / build_log_filename),
-                  write_to_stdout=False)
+                           exp_path.local(get_build_logs_dir() /
+                                          build_log_filename),
+                           write_to_stdout=False)
         else:
             gsutil.cp(tmp.name,
-                  exp_path.gcs(get_build_logs_dir() / build_log_filename),
-                  write_to_stdout=False)
+                      exp_path.gcs(get_build_logs_dir() / build_log_filename),
+                      write_to_stdout=False)
 
 
 def get_coverage_binaries_dir():

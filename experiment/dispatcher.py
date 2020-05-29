@@ -78,11 +78,13 @@ class Experiment:
         self.git_hash = self.config['git_hash']
 
         if experiment_utils.is_gsutil_disabled():
-            self.web_bucket = posixpath.join(self.config['local_web_bucket'],
-                                         experiment_utils.get_experiment_name())
+            self.web_bucket = posixpath.join(
+                self.config['local_web_bucket'],
+                experiment_utils.get_experiment_name())
         else:
-            self.web_bucket = posixpath.join(self.config['cloud_web_bucket'],
-                                         experiment_utils.get_experiment_name())
+            self.web_bucket = posixpath.join(
+                self.config['cloud_web_bucket'],
+                experiment_utils.get_experiment_name())
 
 
 def build_images_for_trials(fuzzers: List[str], benchmarks: List[str],

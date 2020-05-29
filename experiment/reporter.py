@@ -46,10 +46,10 @@ def output_report(web_bucket, in_progress=False):
             local_utils.rsync(str(reports_dir) + '/', web_bucket)
         else:
             gsutil.rsync(str(reports_dir),
-                     web_bucket,
-                     gsutil_options=[
-                         '-h', 'Cache-Control:public,max-age=0,no-transform'
-                     ])
+                         web_bucket,
+                         gsutil_options=[
+                             '-h', 'Cache-Control:public,max-age=0,no-transform'
+                         ])
         logger.debug('Done generating report.')
     except Exception:  # pylint: disable=broad-except
         logger.error('Error generating HTML report.')
