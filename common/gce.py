@@ -25,10 +25,10 @@ thread_local = threading.local()  # pylint: disable=invalid-name
 def initialize():
     """Initialize the thread-local configuration with things we need to use the
     GCE API."""
-    thread_local.credentials = GoogleCredentials.get_application_default()
+    credentials = GoogleCredentials.get_application_default()
     thread_local.service = discovery.build('compute',
                                            'v1',
-                                           credentials=thread_local.credentials)
+                                           credentials=credentials)
 
 
 def get_operations(project, zone):
@@ -69,8 +69,22 @@ def filter_by_end_time(min_end_time, operations):
             # Try to handle cases where the operation hasn't finished.
             yield operation
             continue
-        operation_end_time = dateutil.parser.isoparse(end_time)
 
+        operation_end_time = dateutil.parser.isoparse(end_time)
         if operation_end_time < min_end_time:
             break
         yield operation
+
+
+def get_base_target_link(experiment_config):
+    """Returns the base of the target link for this experiment so that
+    get_instance_from_preempted_operation can return the instance."""
+    return ('https://www.googleapis.com/compute/v1/projects/{project}/zones/'
+            '{zone}/instances/').format(
+                project=experiment_config['cloud_project'],
+                zone=experiment_config['cloud_compute_zone'])
+
+
+def get_instance_from_preempted_operation(operation, base_target_link) -> str:
+    """Returns the instance name from a preempted |operation|."""
+    return operation['targetLink'][len(base_target_link):]

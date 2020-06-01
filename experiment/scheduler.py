@@ -190,7 +190,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
     MAX_NONPREEMPTIBLES = 500
 
     # The maximum fraction of total trials in the experiment that can be done
-    # using preemptibles. This helps bound the cost in unexpected situations.
+    # using nonpreemptibles. This helps bound the cost in unexpected situations.
     NONPREEMPTIBLES_FRACTION = 1 / 20
 
     MAX_FRACTION_FOR_NONPREEMPTIBLES = 1 / 4
@@ -217,7 +217,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         # specified preemptible_runners.
         self.max_preemptibles = (self.num_trials *
                                  self.MAX_PREEMPTIBLES_MULTIPLIER)
-        logger.info('Max nonpreemptibles: %d.', self.max_preemptibles)
+        logger.info('Max preemptibles: %d.', self.max_preemptibles)
 
         # Attributes for preemptible retry window. The preemptible retry window
         # is a time period that starts when the last initial trial is started.
@@ -232,11 +232,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         self.preempted_trials = {}
         self.preemptible_starts_futile = False
 
-        self.base_resource_url = (
-            'https://www.googleapis.com/compute/v1/projects/{project}/zones/'
-            '{zone}/instances/').format(
-                project=experiment_config['cloud_project'],
-                zone=experiment_config['cloud_compute_zone'])
+        self.base_target_link = gce.get_base_target_link(experiment_config)
 
         # Filter operations happening before the experiment started.
         self.last_preemptible_query = (db_utils.query(models.Experiment).filter(
@@ -381,7 +377,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
                 # See if we can replace with a preemptible.
                 preemptible_starts += 1
                 num_to_replace -= 1
-                replacements.append(replace_trial(trial, True))
+                replacements.append(replace_trial(trial, preemptible=True))
                 continue
 
             if self.can_start_nonpreemptible(nonpreemptible_starts,
@@ -390,7 +386,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
                 # replace it with a nonpreemptible.
                 nonpreemptible_starts += 1
                 num_to_replace -= 1
-                replacements.append(replace_trial(trial, False))
+                replacements.append(replace_trial(trial, preemptible=False))
                 continue
 
         return replacements
@@ -404,10 +400,6 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             experiment_utils.get_trial_instance_name(experiment, trial.id):
             trial for trial in running_trials
         }
-
-    def _get_instance_from_preemption_operation(self, operation: Dict) -> str:
-        """Returns the instance name from a preemption |operation|."""
-        return operation['targetLink'][len(self.base_resource_url):]
 
     def get_preempted_trials(self) -> List[models.Trial]:
         """Returns a list of trials that were preempted."""
@@ -457,8 +449,9 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             if operation is None:
                 logs.error('Operation is None.')
                 continue
-            instances.append(
-                self._get_instance_from_preemption_operation(operation))
+            instance = gce.get_instance_from_preempted_operation(
+                operation, self.base_target_link)
+            instances.append(instance)
         return instances
 
     def handle_preempted_trials(self):
