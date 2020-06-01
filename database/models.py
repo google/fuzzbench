@@ -38,8 +38,10 @@ class Trial(Base):
     benchmark = Column(String, nullable=False)
     time_started = Column(DateTime(), nullable=True)
     time_ended = Column(DateTime(), nullable=True)
-    preemptible = Column(Boolean, default=False)
-    preempted = Column(Boolean, default=False)
+
+    # Columns used for preemptible experiments.
+    preemptible = Column(Boolean, default=False, nullable=False)
+    preempted = Column(Boolean, default=False, nullable=False)
 
     # Every trial has snapshots which is basically the saved state of that trial
     # at a given time. The snapshots field here and the trial field on Snapshot,
