@@ -308,18 +308,6 @@ def get_trial_instance_manager(experiment_config: dict):
     return scheduler.TrialInstanceManager(default_num_trials, experiment_config)
 
 
-def test_get_instance_from_preemption_operation(preempt_exp_conf):
-    """Tests that _get_instance_from_preemption_operation returns the correct
-    value."""
-    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
-    trial_id = 1
-    operation = _get_preemption_operation(trial_id, preempt_exp_conf)
-    expected_instance = 'r-{experiment}-{trial_id}'.format(
-        experiment=preempt_exp_conf['experiment'], trial_id=trial_id)
-    assert trial_instance_manager._get_instance_from_preemption_operation(
-        operation) == expected_instance
-
-
 def test_can_start_nonpreemptible_not_preemptible_runners(preempt_exp_conf):
     """Tests that test_can_start_nonpreemptible returns True when
     'preemptible_runners' is not set to True in the experiment_config."""
