@@ -20,7 +20,6 @@ from common import gce
 def test_get_instance_from_preempted_operation():
     """Tests that _get_instance_from_preemption_operation returns the correct
     value."""
-    trial_id = 1
     expected_instance = 'r-my-experiment-100'
     base_target_link = 'www.myresourceurl/'
     target_link = posixpath.join(base_target_link, expected_instance)
