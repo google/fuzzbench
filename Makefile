@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-docker/generated.mk: docker/generate_makefile.py $(wildcard fuzzers/*/variants.yaml)
-	/usr/bin/env python3 $< > $@
+docker/generated.mk: docker/generate_makefile.py $(wildcard fuzzers/*/variants.yaml) install-dependencies
+	source ${VENV_ACTIVATE} && python3 $< > $@
 
-include docker/generated.mk
 include docker/build.mk
+include docker/generated.mk
 
 SHELL := /bin/bash
 VENV_ACTIVATE := .venv/bin/activate

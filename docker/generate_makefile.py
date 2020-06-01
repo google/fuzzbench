@@ -256,7 +256,7 @@ def generate_fuzzer(fuzzer, benchmarks, oss_fuzz_benchmarks, build_arguments):
     ])
     print('build-{fuzzer}-all: {all_targets}'.format(
         fuzzer=fuzzer, all_targets=all_build_targets))
-    print('pull{fuzzer}-all: {all_targets}'.format(
+    print('pull-{fuzzer}-all: {all_targets}'.format(
         fuzzer=fuzzer, all_targets=all_pull_targets))
 
 
@@ -317,10 +317,8 @@ def main():
         ['build-{0}-all'.format(name) for name in fuzzers_and_variants])
     all_pull_targets = ' '.join(
         ['pull-{0}-all'.format(name) for name in fuzzers_and_variants])
-    print('build-{fuzzer}-all: {all_targets}'.format(
-        fuzzer=fuzzer, all_targets=all_build_targets))
-    print('pull{fuzzer}-all: {all_targets}'.format(
-        fuzzer=fuzzer, all_targets=all_pull_targets))
+    print('build-all: {all_targets}'.format(all_targets=all_build_targets))
+    print('pull-all: {all_targets}'.format(all_targets=all_pull_targets))
 
 
 if __name__ == '__main__':
