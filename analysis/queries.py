@@ -31,6 +31,6 @@ def get_experiment_data(experiment_names):
         .join(Trial)\
         .join(Snapshot)\
         .filter(Experiment.name.in_(experiment_names))\
-        .filter(Trial.preempted.is_(False))
+        .filter(~Trial.preempted.is_(True))
 
     return pd.read_sql_query(snapshots_query.statement, db_utils.engine)
