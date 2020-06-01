@@ -222,7 +222,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             benchmark = environment.get('BENCHMARK')
             fuzzer = environment.get('FUZZER')
             trial_id = environment.get('TRIAL_ID')
-            self.gcs_sync_dir = experiment_utils.get_trial_gcs_dir(
+            self.gcs_sync_dir = experiment_utils.get_trial_bucket_dir(
                 fuzzer, benchmark, trial_id)
             gsutil.rm(self.gcs_sync_dir, force=True, parallel=True)
         else:

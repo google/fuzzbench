@@ -316,18 +316,18 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         self.benchmark = benchmark
         self.trial_num = trial_num
         self.logger = trial_logger
-        self.benchmark_fuzzer_trial_dir = experiment_utils.get_trial_dir(
+        benchmark_fuzzer_trial_dir = experiment_utils.get_trial_dir(
             fuzzer, benchmark, trial_num)
         work_dir = experiment_utils.get_work_dir()
         measurement_dir = os.path.join(work_dir, 'measurement-folders',
-                                       self.benchmark_fuzzer_trial_dir)
+                                       benchmark_fuzzer_trial_dir)
         self.corpus_dir = os.path.join(measurement_dir, 'corpus')
 
         self.crashes_dir = os.path.join(measurement_dir, 'crashes')
         self.sancov_dir = os.path.join(measurement_dir, 'sancovs')
         self.report_dir = os.path.join(measurement_dir, 'reports')
         self.trial_dir = os.path.join(work_dir, 'experiment-folders',
-                                      self.benchmark_fuzzer_trial_dir)
+                                      benchmark_fuzzer_trial_dir)
 
         # Stores the pcs that have been covered.
         self.covered_pcs_filename = os.path.join(self.report_dir,

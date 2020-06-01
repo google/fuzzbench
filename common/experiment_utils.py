@@ -92,9 +92,9 @@ def get_trial_dir(fuzzer, benchmark, trial_id):
     return posixpath.join(benchmark_fuzzer_directory, trial_subdir)
 
 
-def get_trial_gcs_dir(fuzzer, benchmark, trial_id):
-    """Returns the unique directory in experiment-folders on GCS for |fuzzer|,
-    |benchmark|, and |trial_id|."""
+def get_trial_bucket_dir(fuzzer, benchmark, trial_id):
+    """Returns the unique directory in experiment-folders int the bucket for
+    |fuzzer|, |benchmark|, and |trial_id|."""
     bucket = os.environ['CLOUD_EXPERIMENT_BUCKET']
     return posixpath.join(bucket, get_experiment_name(), 'experiment-folders',
                           get_trial_dir(fuzzer, benchmark, trial_id))

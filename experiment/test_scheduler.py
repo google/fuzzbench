@@ -437,8 +437,8 @@ def _get_preemption_operation(trial_id, exp_conf):
     }
 
 
-@mock.patch('common.gce.get_preemption_operations')
-def test_get_preempted_trials_new_preempted(mocked_get_preemption_operations,
+@mock.patch('common.gce.get_preempted_operations')
+def test_get_preempted_trials_new_preempted(mocked_get_preempted_operations,
                                             preempt_exp_conf):
     """Tests that TrialInstanceManager.get_preempted_trials returns trials that
     new preempted trials we don't know about until we query for them and not
@@ -458,7 +458,7 @@ def test_get_preempted_trials_new_preempted(mocked_get_preemption_operations,
                                      time_started=time_started)
     trials = [known_preempted, unknown_preempted]
     db_utils.add_all(trials)
-    mocked_get_preemption_operations.return_value = [
+    mocked_get_preempted_operations.return_value = [
         _get_preemption_operation(trial.id, preempt_exp_conf)
         for trial in trials
     ]

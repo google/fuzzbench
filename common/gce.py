@@ -47,8 +47,8 @@ def get_operations(project, zone):
                                             previous_response=response)
 
 
-def get_preemption_operations(operations):
-    """Generator that yields GCE preemption operations in |operations|."""
+def get_preempted_operations(operations):
+    """Generator that yields GCE preempted operations in |operations|."""
     # This endpoint doesn't support filtering by time (despite implications
     # otherwise). Instead it supports ordering by time. It also supports
     # filtering by operation but doesn't support it when combined with ordering.
@@ -61,8 +61,8 @@ def get_preemption_operations(operations):
 
 
 def filter_by_end_time(min_end_time, operations):
-    """Generator that yields GCE preemption operations in |operations|.
-    |operations| must be an iterable that is ordered by time."""
+    """Generator that yields GCE operations in |operations| that finished before
+    |min_end_time|. |operations| must be an iterable that is ordered by time."""
     for operation in operations:
         end_time = operation.get('endTime')
         if not end_time:

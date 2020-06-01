@@ -453,7 +453,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         operations = gce.filter_by_end_time(self.last_preemptible_query,
                                             gce.get_operations(project, zone))
         instances = []
-        for operation in gce.get_preemption_operations(operations):
+        for operation in gce.get_preempted_operations(operations):
             if operation is None:
                 logs.error('Operation is None.')
                 continue
