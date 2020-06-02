@@ -86,6 +86,13 @@ def fix_fuzzer_lib():
 
     if is_benchmark('curl'):
         shutil.copy('/libAflccMock.so', '/usr/lib/libAflccMock.so')
+
+    if is_benchmark('systemd'):
+        #shutil.copy('/libAflccMock.so', '/usr/lib/libAflccMock.so')
+        shutil.copy('/libAFL.a', '/usr/lib/libFuzzingEngine.a')
+        #ld_flags = ['-lAflccMock', '-lpthread']
+        ld_flags = ['-lpthread']
+        utils.append_flags('LDFLAGS', ld_flags)
         
     # elif is_benchmark('php'):
     #     # -lcrypt -lresolv -lcrypt -lrt -lm -l:libonig.a
@@ -115,7 +122,7 @@ def add_compilation_cflags():
     # the build process to add a shared library for linking (which contains mocked functions: libAflccMock.so).
     # Note that some functions are only defined post-compilation 
     # during the LLVM passes.
-    elif is_benchmark('systemd') or is_benchmark('bloaty') or is_benchmark('openssl'):
+    elif is_benchmark('bloaty') or is_benchmark('openssl') or is_benchmark('systemd'):
         unresolved_flags = ['-Wl,--warn-unresolved-symbols']
         utils.append_flags('CFLAGS', unresolved_flags)
         utils.append_flags('CXXFLAGS', unresolved_flags)
@@ -135,6 +142,17 @@ def add_post_compilation_lflags(ldflags_arr):
         ldflags_arr += ['-ldl', '-lpsl', '/src/openssl/libcrypto.a', '/src/openssl/libssl.a']
     elif is_benchmark('openssl'):
         ldflags_arr += ['/src/openssl/libcrypto.a', '/src/openssl/libssl.a']
+    elif is_benchmark('systemd'):
+        shutil.copy(os.path.join(os.environ['OUT'], 'src/shared/libsystemd-shared-245.so'), '/usr/lib/libsystemd-shared-245.so')
+        ldflags_arr += ['-lsystemd-shared-245']
+
+def prepare_fuzz_environment(input_corpus):
+    """Prepare run for some benchmarks"""
+    afl_fuzzer.prepare_fuzz_environment(input_corpus)
+
+    # OUT env variable does not exists, it seems
+    if os.path.isfile('/out/src/shared/libsystemd-shared-245.so'):
+        shutil.copy('/out/src/shared/libsystemd-shared-245.so', '/usr/lib/libsystemd-shared-245.so')
 
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
@@ -171,7 +189,9 @@ def get_fuzz_targets():
 
     # for these benchmarks, only return one file
     targets = {'curl': 'curl_fuzzer_http', 
-               'openssl': 'x509'}
+               'openssl': 'x509',
+               'systemd': 'fuzz-link-parser'}
+
     for target,fuzzname in targets.items():
         if is_benchmark(target):
             return [os.path.join(os.environ['OUT'], fuzzname)]
@@ -303,7 +323,7 @@ def run_fuzz(input_corpus,
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    afl_fuzzer.prepare_fuzz_environment(input_corpus)
+    prepare_fuzz_environment(input_corpus)
 
     # Note: dictionary automatically added by run_fuzz()
 
