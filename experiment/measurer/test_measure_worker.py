@@ -94,11 +94,12 @@ def test_merge_new_pcs(mocked_get_prev_covered_pcs, mocked_cp, new_pcs, fs,
     assert mocked_cp.call_count == 1
 
 
+@mock.patch('experiment.measurer.measure_worker.set_up_coverage_binary')
 @mock.patch('common.logs.error')
 @mock.patch('experiment.measurer.measure_worker.initialize_logs')
 @mock.patch('experiment.measurer.measure_worker.measure_snapshot_coverage')
 def test_measure_trial_coverage(mocked_measure_snapshot_coverage,
-                                _, __, experiment):
+                                _, __, ___):
     """Tests that measure_trial_coverage works as expected."""
     min_cycle = 1
     measure_request = measure_worker.SnapshotMeasureRequest(
