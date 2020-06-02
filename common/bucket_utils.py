@@ -30,30 +30,32 @@ def _using_gsutil():
 
 
 if _using_gsutil():
-    from common import gsutil as base_utils
+    from common import gsutil as bucket_utils_impl
 else:
+    # When gsutil is not used in the context,
+    # here it should use local_utils.
     # TODO(zhichengcai): local_utils
-    from common import gsutil as base_utils
+    from common import gsutil as bucket_utils_impl
 
 
 def command(arguments, *args, parallel=False, **kwargs):
     """ command """
-    return base_utils.command(arguments, *args, parallel, **kwargs)
+    return bucket_utils_impl.command(arguments, *args, parallel, **kwargs)
 
 
 def cp(*cp_arguments, **kwargs):  # pylint: disable=invalid-name
     """ cp """
-    return base_utils.cp(*cp_arguments, **kwargs)
+    return bucket_utils_impl.cp(*cp_arguments, **kwargs)
 
 
 def ls(*ls_arguments, must_exist=True, **kwargs):  # pylint: disable=invalid-name
     """ ls """
-    return base_utils.ls(*ls_arguments, must_exist, **kwargs)
+    return bucket_utils_impl.ls(*ls_arguments, must_exist, **kwargs)
 
 
 def rm(*rm_arguments, recursive=True, force=False, **kwargs):  # pylint: disable=invalid-name
     """ rm """
-    return base_utils.rm(*rm_arguments, recursive, force, **kwargs)
+    return bucket_utils_impl.rm(*rm_arguments, recursive, force, **kwargs)
 
 
 def rsync(  # pylint: disable=too-many-arguments
@@ -65,6 +67,6 @@ def rsync(  # pylint: disable=too-many-arguments
         options=None,
         **kwargs):
     """ rsync """
-    return base_utils.rsync(  # pylint: disable=too-many-arguments
+    return bucket_utils_impl.rsync(
         source, destination, delete, recursive, gsutil_options, options,
         **kwargs)
