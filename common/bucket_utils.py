@@ -67,6 +67,5 @@ def rsync(  # pylint: disable=too-many-arguments
         options=None,
         **kwargs):
     """ rsync """
-    return bucket_utils_impl.rsync(
-        source, destination, delete, recursive, gsutil_options, options,
-        **kwargs)
+    return bucket_utils_impl.rsync(source, destination, delete, recursive,
+                                   gsutil_options, options, **kwargs)
