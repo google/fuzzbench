@@ -11,18 +11,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for AFLplusplus fuzzer."""
+"""Integration code for ankou fuzzer."""
 
-from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
+import shutil
+import subprocess
+import os
+
+from fuzzers import utils
+from fuzzers.afl import fuzzer as afl_fuzzer
 
 # OUT environment variable is the location of build directory (default is /out).
 
 
 def build():
     """Build benchmark."""
-    aflplusplus_fuzzer.build("cmplog")
+    afl_fuzzer.prepare_build_environment()
+
+    utils.build_benchmark()
+
+    print('[post_build] Copying Ankou to $OUT directory')
+    shutil.copy('/Ankou', os.environ['OUT'])
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
-    """Run fuzzer."""
-    aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
+    """Run Ankou on target."""
+    afl_fuzzer.prepare_fuzz_environment(input_corpus)
+
+    print('[run_fuzzer] Running target with Ankou')
+    command = [
+        './Ankou', '-app', target_binary, '-i', input_corpus, '-o',
+        output_corpus
+    ]
+    # "-dict" option may not work for format mismatching.
+
+    print('[run_fuzzer] Running command: ' + ' '.join(command))
+    subprocess.check_call(command)
