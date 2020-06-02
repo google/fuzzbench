@@ -19,7 +19,7 @@ from common import experiment_utils
 logger = logs.Logger('bucket_utils')
 
 
-def __using_gsutil():
+def _using_gsutil():
     """ Test whether using gsutil format paths. """
     try:
         experiment_path_format = experiment_utils.get_cloud_experiment_path()
@@ -29,7 +29,7 @@ def __using_gsutil():
     return experiment_path_format.startswith('gs://')
 
 
-if __using_gsutil():
+if _using_gsutil():
     from common import gsutil as base_utils
 else:
     # TODO(zhichengcai): local_utils
