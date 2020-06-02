@@ -19,29 +19,29 @@ from common import new_process
 logger = logs.Logger('gsutil')
 
 
-def command(arguments, *args, parallel=False, **kwargs):
+def gsutil_command(arguments, *args, parallel=False, **kwargs):
     """Executes a gsutil command with |arguments| and returns the result."""
-    command_list = ['gsutil']
+    command = ['gsutil']
     if parallel:
-        command_list.append('-m')
-    return new_process.execute(command_list + arguments, *args, **kwargs)
+        command.append('-m')
+    return new_process.execute(command + arguments, *args, **kwargs)
 
 
 def cp(*cp_arguments, **kwargs):  # pylint: disable=invalid-name
     """Executes gsutil's "cp" command with |cp_arguments| and returns the
     returncode and the output."""
-    command_list = ['cp']
-    command_list.extend(cp_arguments)
-    return command(command_list, **kwargs)
+    command = ['cp']
+    command.extend(cp_arguments)
+    return gsutil_command(command, **kwargs)
 
 
 def ls(*ls_arguments, must_exist=True, **kwargs):  # pylint: disable=invalid-name
     """Executes gsutil's "ls" command with |ls_arguments| and returns the result
     and the returncode. Does not except on nonzero return code if not
     |must_exist|."""
-    command_list = ['ls'] + list(ls_arguments)
+    command = ['ls'] + list(ls_arguments)
     # Don't use parallel as it probably doesn't help at all.
-    result = command(command_list, expect_zero=must_exist, **kwargs)
+    result = gsutil_command(command, expect_zero=must_exist, **kwargs)
     retcode = result.retcode  # pytype: disable=attribute-error
     output = result.output.splitlines()  # pytype: disable=attribute-error
     return retcode, output
@@ -51,12 +51,12 @@ def rm(*rm_arguments, recursive=True, force=False, **kwargs):  # pylint: disable
     """Executes gsutil's rm command with |rm_arguments| and returns the result.
     Uses -r if |recursive|. If |force|, then uses -f and will not except if
     return code is nonzero."""
-    command_list = ['rm'] + list(rm_arguments)[:]
+    command = ['rm'] + list(rm_arguments)[:]
     if recursive:
-        command_list.insert(1, '-r')
+        command.insert(1, '-r')
     if force:
-        command_list.insert(1, '-f')
-    return command(command_list, expect_zero=(not force), **kwargs)
+        command.insert(1, '-f')
+    return gsutil_command(command, expect_zero=(not force), **kwargs)
 
 
 def rsync(  # pylint: disable=too-many-arguments
@@ -70,13 +70,13 @@ def rsync(  # pylint: disable=too-many-arguments
     """Does gsutil rsync from |source| to |destination| using sane defaults that
     can be overriden. Prepends any |gsutil_options| before the rsync subcommand
     if provided."""
-    command_list = [] if gsutil_options is None else gsutil_options
-    command_list.append('rsync')
+    command = [] if gsutil_options is None else gsutil_options
+    command.append('rsync')
     if delete:
-        command_list.append('-d')
+        command.append('-d')
     if recursive:
-        command_list.append('-r')
+        command.append('-r')
     if options is not None:
-        command_list.extend(options)
-    command_list.extend([source, destination])
-    return command(command_list, **kwargs)
+        command.extend(options)
+    command.extend([source, destination])
+    return gsutil_command(command, **kwargs)

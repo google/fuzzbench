@@ -38,23 +38,18 @@ else:
     from common import gsutil as bucket_utils_impl
 
 
-def command(arguments, *args, parallel=False, **kwargs):
-    """ command """
-    return bucket_utils_impl.command(arguments, *args, parallel, **kwargs)
-
-
 def cp(*cp_arguments, **kwargs):  # pylint: disable=invalid-name
-    """ cp """
+    """ Copy source to destination. """
     return bucket_utils_impl.cp(*cp_arguments, **kwargs)
 
 
 def ls(*ls_arguments, must_exist=True, **kwargs):  # pylint: disable=invalid-name
-    """ ls """
+    """ List files or folders. """
     return bucket_utils_impl.ls(*ls_arguments, must_exist, **kwargs)
 
 
 def rm(*rm_arguments, recursive=True, force=False, **kwargs):  # pylint: disable=invalid-name
-    """ rm """
+    """ Remove files or folders. """
     return bucket_utils_impl.rm(*rm_arguments, recursive, force, **kwargs)
 
 
@@ -66,6 +61,6 @@ def rsync(  # pylint: disable=too-many-arguments
         gsutil_options=None,
         options=None,
         **kwargs):
-    """ rsync """
+    """ Synchronize source and destination folders. """
     return bucket_utils_impl.rsync(source, destination, delete, recursive,
                                    gsutil_options, options, **kwargs)
