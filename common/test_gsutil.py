@@ -25,7 +25,7 @@ def test_gsutil_command():
     """Tests gsutil_command works as expected."""
     arguments = ['hello']
     with test_utils.mock_popen_ctx_mgr() as mocked_popen:
-        gsutil.gsutil_command(arguments)
+        gsutil.command(arguments)
     assert mocked_popen.commands == [['gsutil'] + arguments]
 
 
@@ -36,8 +36,7 @@ class TestGsutilRsync:
 
     def test_rsync(self):
         """Tests that rsync works as intended."""
-        with mock.patch(
-                'common.gsutil.gsutil_command') as mocked_gsutil_command:
+        with mock.patch('common.gsutil.command') as mocked_gsutil_command:
             gsutil.rsync(self.SRC, self.DST)
         mocked_gsutil_command.assert_called_with(
             ['rsync', '-d', '-r', '/src', 'gs://dst'])
@@ -46,8 +45,7 @@ class TestGsutilRsync:
         """Tests that rsync works as intended when supplied a gsutil_options
         argument."""
         flag = '-flag'
-        with mock.patch(
-                'common.gsutil.gsutil_command') as mocked_gsutil_command:
+        with mock.patch('common.gsutil.command') as mocked_gsutil_command:
             gsutil.rsync(self.SRC, self.DST, gsutil_options=[flag])
         assert flag == mocked_gsutil_command.call_args_list[0][0][0][0]
 
@@ -55,8 +53,7 @@ class TestGsutilRsync:
         """Tests that rsync works as intended when supplied a gsutil_options
         argument."""
         flag = '-flag'
-        with mock.patch(
-                'common.gsutil.gsutil_command') as mocked_gsutil_command:
+        with mock.patch('common.gsutil.command') as mocked_gsutil_command:
             gsutil.rsync(self.SRC, self.DST, options=[flag])
         assert flag in mocked_gsutil_command.call_args_list[0][0][0]
 
@@ -67,7 +64,6 @@ class TestGsutilRsync:
         to use specific flags."""
         kwargs_for_rsync = {}
         kwargs_for_rsync[kwarg_for_rsync] = False
-        with mock.patch(
-                'common.gsutil.gsutil_command') as mocked_gsutil_command:
+        with mock.patch('common.gsutil.command') as mocked_gsutil_command:
             gsutil.rsync(self.SRC, self.DST, **kwargs_for_rsync)
         assert flag not in mocked_gsutil_command.call_args_list[0][0][0]
