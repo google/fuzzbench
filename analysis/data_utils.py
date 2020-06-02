@@ -16,10 +16,14 @@ from analysis import stat_tests
 from common import environment
 
 
+class EmptyDataError(ValueError):
+    """An exception for when the data is empty."""
+
+
 def validate_data(experiment_df):
     """Checks if the experiment data is valid."""
     if experiment_df.empty:
-        raise ValueError('Empty experiment data.')
+        raise EmptyDataError('Empty experiment data.')
 
     expected_columns = {
         'experiment', 'benchmark', 'fuzzer', 'trial_id', 'time_started',

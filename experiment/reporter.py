@@ -21,6 +21,7 @@ from common import filesystem
 from common import gsutil
 from common import logs
 from analysis import generate_report
+from analysis import data_utils
 
 logger = logs.Logger('reporter')  # pylint: disable=invalid-name
 
@@ -47,5 +48,7 @@ def output_report(web_bucket, in_progress=False):
                          '-h', 'Cache-Control:public,max-age=0,no-transform'
                      ])
         logger.debug('Done generating report.')
+    except data_utils.EmptyDataError:
+        logs.warning('No snapshot data.')
     except Exception:  # pylint: disable=broad-except
         logger.error('Error generating HTML report.')

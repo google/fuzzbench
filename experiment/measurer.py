@@ -68,10 +68,12 @@ def remote_dir_exists(directory: pathlib.Path) -> bool:
 
 def measure_loop(experiment: str, max_total_time: int):
     """Continuously measure trials for |experiment|."""
-    db_utils.initialize()
     logs.initialize(default_extras={
         'component': 'dispatcher',
+        'subcomponent': 'measurer',
     })
+    logs.info('Start measure_loop.')
+
     with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
         set_up_coverage_binaries(pool, experiment)
         # Using Multiprocessing.Queue will fail with a complaint about
@@ -88,7 +90,7 @@ def measure_loop(experiment: str, max_total_time: int):
                     if all_trials_ended:
                         # There are no trials producing snapshots to measure.
                         # Given that we couldn't measure any snapshots, we won't
-                        # be able to measure any the future, so break now.
+                        # be able to measure any the future, so stop now.
                         break
             except Exception:  # pylint: disable=broad-except
                 logger.error('Error occurred during measuring.')
@@ -178,7 +180,8 @@ def _query_ids_of_measured_trials(experiment: str):
     snapshots."""
     trials_and_snapshots_query = db_utils.query(models.Snapshot).options(
         orm.joinedload('trial'))
-    experiment_trials_filter = models.Snapshot.trial.has(experiment=experiment)
+    experiment_trials_filter = models.Snapshot.trial.has(experiment=experiment,
+                                                         preempted=False)
     experiment_trials_and_snapshots_query = trials_and_snapshots_query.filter(
         experiment_trials_filter)
     experiment_snapshot_trial_ids_query = (
@@ -193,9 +196,10 @@ def _query_unmeasured_trials(experiment: str):
     ids_of_trials_with_snapshots = _query_ids_of_measured_trials(experiment)
     no_snapshots_filter = ~models.Trial.id.in_(ids_of_trials_with_snapshots)
     started_trials_filter = ~models.Trial.time_started.is_(None)
+    nonpreempted_trials_filter = ~models.Trial.preempted
     experiment_trials_filter = models.Trial.experiment == experiment
     return trial_query.filter(experiment_trials_filter, no_snapshots_filter,
-                              started_trials_filter)
+                              started_trials_filter, nonpreempted_trials_filter)
 
 
 def _get_unmeasured_first_snapshots(experiment: str
@@ -312,19 +316,18 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         self.benchmark = benchmark
         self.trial_num = trial_num
         self.logger = trial_logger
-        trial_name = 'trial-' + str(self.trial_num)
-        self.benchmark_fuzzer_trial_dir = os.path.join(self.benchmark,
-                                                       self.fuzzer, trial_name)
+        benchmark_fuzzer_trial_dir = experiment_utils.get_trial_dir(
+            fuzzer, benchmark, trial_num)
         work_dir = experiment_utils.get_work_dir()
         measurement_dir = os.path.join(work_dir, 'measurement-folders',
-                                       self.benchmark_fuzzer_trial_dir)
+                                       benchmark_fuzzer_trial_dir)
         self.corpus_dir = os.path.join(measurement_dir, 'corpus')
 
         self.crashes_dir = os.path.join(measurement_dir, 'crashes')
         self.sancov_dir = os.path.join(measurement_dir, 'sancovs')
         self.report_dir = os.path.join(measurement_dir, 'reports')
         self.trial_dir = os.path.join(work_dir, 'experiment-folders',
-                                      '%s-%s' % (benchmark, fuzzer), trial_name)
+                                      benchmark_fuzzer_trial_dir)
 
         # Stores the pcs that have been covered.
         self.covered_pcs_filename = os.path.join(self.report_dir,
@@ -606,6 +609,7 @@ def initialize_logs():
     """Initialize logs. This must be called on process start."""
     logs.initialize(default_extras={
         'component': 'dispatcher',
+        'subcomponent': 'measurer',
     })
 
 

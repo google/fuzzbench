@@ -13,6 +13,10 @@
 # limitations under the License.
 
 ARG parent_image
+
+# Using multi-stage build to copy latest Python 3.
+FROM gcr.io/fuzzbench/base-image AS base-image
+
 FROM $parent_image
 
 ARG fuzzer
@@ -21,7 +25,10 @@ ARG benchmark
 ENV FUZZER $fuzzer
 ENV BENCHMARK $benchmark
 
-RUN apt-get update -y && apt-get install -y python3
+# Copy latest python3 from base-image into local.
+COPY --from=base-image /usr/local/bin/python3* /usr/local/bin/
+COPY --from=base-image /usr/local/lib/python3.7 /usr/local/lib/python3.7
+COPY --from=base-image /usr/local/include/python3.7m /usr/local/include/python3.7m
 
 COPY fuzzers/$fuzzer/fuzzer.py $SRC/fuzzer.py
 
