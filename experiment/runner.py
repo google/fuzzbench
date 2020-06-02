@@ -218,17 +218,12 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
     """Class for running a trial."""
 
     def __init__(self):
-        benchmark_fuzzer_directory = '%s-%s' % (environment.get('BENCHMARK'),
-                                                environment.get('FUZZER'))
         if not environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
-            bucket = environment.get('CLOUD_EXPERIMENT_BUCKET')
-            experiment_name = environment.get('EXPERIMENT')
-            trial = 'trial-%d' % environment.get('TRIAL_ID')
-            self.gcs_sync_dir = posixpath.join(bucket, experiment_name,
-                                               'experiment-folders',
-                                               benchmark_fuzzer_directory,
-                                               trial)
-            # Clean the directory before we use it.
+            benchmark = environment.get('BENCHMARK')
+            fuzzer = environment.get('FUZZER')
+            trial_id = environment.get('TRIAL_ID')
+            self.gcs_sync_dir = experiment_utils.get_trial_bucket_dir(
+                fuzzer, benchmark, trial_id)
             gsutil.rm(self.gcs_sync_dir, force=True, parallel=True)
         else:
             self.gcs_sync_dir = None
