@@ -110,29 +110,25 @@ def _get_expected_create_runner_command(is_preemptible):
     return command
 
 
-@pytest.mark.parametrize(('preemptible_runners'), [None, False])
-def test_create_instance_not_preemptible(preemptible_runners):
+def test_create_instance_not_preemptible():
     """Tests create_instance doesn't specify preemptible when it isn't supposed
     to."""
-    config = CONFIG.copy()
-    if preemptible_runners is not None:
-        config['preemptible_runners'] = preemptible_runners
     with test_utils.mock_popen_ctx_mgr(returncode=1) as mocked_popen:
         gcloud.create_instance(INSTANCE_NAME, gcloud.InstanceType.RUNNER,
-                               config)
+                               CONFIG)
         assert mocked_popen.commands == [
-            _get_expected_create_runner_command(bool(preemptible_runners))
+            _get_expected_create_runner_command(False)
         ]
 
 
 def test_create_instance_preemptible():
     """Tests create_instance doesn't specify preemptible when it isn't supposed
     to."""
-    config = CONFIG.copy()
-    config['preemptible_runners'] = True
     with test_utils.mock_popen_ctx_mgr(returncode=1) as mocked_popen:
-        gcloud.create_instance(INSTANCE_NAME, gcloud.InstanceType.RUNNER,
-                               config)
+        gcloud.create_instance(INSTANCE_NAME,
+                               gcloud.InstanceType.RUNNER,
+                               CONFIG,
+                               preemptible=True)
         assert mocked_popen.commands == [
             _get_expected_create_runner_command(True)
         ]

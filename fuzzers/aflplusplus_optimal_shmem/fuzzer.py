@@ -50,7 +50,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'libpng-1.2.56':
         aflplusplus_fuzzer.build("lto", "nozero", "laf")
     elif benchmark_name == 'libxml2-v2.9.2':
-        aflplusplus_fuzzer.build("lto", "nozero", "autodict")
+        aflplusplus_fuzzer.build("lto", "nozero")
     elif benchmark_name == 'openssl_x509':
         aflplusplus_fuzzer.build("lto", "nozero", "dynamic", "laf")
     elif benchmark_name == 'openthread-2019-12-23':

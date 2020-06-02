@@ -19,6 +19,7 @@ jobs:
           - aflplusplus
           - aflplusplus_optimal
           - aflplusplus_shmem
+          - aflplusplus_optimal_shmem
           - aflsmart
           - ankou
           - eclipser

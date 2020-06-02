@@ -71,11 +71,11 @@ class InstanceType(enum.Enum):
 def create_instance(instance_name: str,
                     instance_type: InstanceType,
                     config: dict,
-                    metadata: dict = None,
                     startup_script: str = None,
+                    preemptible: bool = False,
                     **kwargs) -> bool:
     """Creates a GCE instance with name, |instance_name|, type, |instance_type|
-    and with optionally provided |metadata| and |startup_script|."""
+    and with optionally provided and |startup_script|."""
 
     if experiment_utils.is_local_experiment():
         return run_local_instance(startup_script)
@@ -103,15 +103,9 @@ def create_instance(instance_name: str,
             '--machine-type=%s' % RUNNER_MACHINE_TYPE,
             '--boot-disk-size=%s' % RUNNER_BOOT_DISK_SIZE,
         ])
-        if config.get('preemptible_runners'):
-            # TODO(metzman): Make runners signal to scheduler that they were
-            # preempted, and make scheduler+measurer tolerate preemption.
-            command.append('--preemptible')
 
-    if metadata:
-        metadata_str = ','.join('{key}={value}'.format(key=key, value=value)
-                                for key, value in metadata.items())
-        command.extend(['--metadata', metadata_str])
+    if preemptible:
+        command.append('--preemptible')
     if startup_script:
         command.extend(
             ['--metadata-from-file', 'startup-script=' + startup_script])
