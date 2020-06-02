@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for measure_worker.py."""
+import json
 import os
 import shutil
 from unittest import mock
@@ -57,32 +58,40 @@ def db_experiment(experiment_config, db):
     yield
 
 
-@pytest.mark.parametrize('new_pcs', [['0x1', '0x2'], []])
-def test_merge_new_pcs(new_pcs, fs, experiment):
+@pytest.mark.parametrize('new_pcs', [{'0x1', '0x2'}, set()])
+@mock.patch('common.gsutil.cp')
+@mock.patch(
+    'experiment.measurer.measure_worker.SnapshotMeasurer.get_prev_covered_pcs')
+def test_merge_new_pcs(mocked_get_prev_covered_pcs, mocked_cp, new_pcs, fs,
+                       experiment):
     """Tests that merge_new_pcs merges new PCs, and updates the covered-pcs
     file."""
+    prev_pcs = {"0x425221"}
+    mocked_get_prev_covered_pcs.return_value = prev_pcs
     snapshot_measurer = measure_worker.SnapshotMeasurer(FUZZER, BENCHMARK,
                                                         TRIAL_NUM,
                                                         SNAPSHOT_LOGGER)
+    fs.create_file(os.path.join(snapshot_measurer.sancov_dir, '1.sancov'))
 
-    covered_pcs_filename = get_test_data_path('covered-pcs.txt')
-    fs.add_real_file(covered_pcs_filename, read_only=False)
-    snapshot_measurer.sancov_dir = os.path.dirname(covered_pcs_filename)
-    snapshot_measurer.covered_pcs_filename = covered_pcs_filename
+    def mock_cp(*cat_arguments, **kwargs):
+        src_name, dst_name = cat_arguments
+        with open(src_name) as src_handle:
+            assert json.loads(src_handle.read()) == list(
+                sorted(new_pcs.union(prev_pcs)))
 
-    with open(covered_pcs_filename) as file_handle:
-        initial_contents = file_handle.read()
+        assert dst_name == (
+            'gs://experiment-data/test-experiment/measurement-folders/'
+            'benchmark-a/fuzzer-a/trial-12/state/covered-pcs-0002.json')
 
-    fs.create_file(os.path.join(snapshot_measurer.sancov_dir, '1.sancov'),
-                   contents='')
+    mocked_cp.side_effect = mock_cp
+
+    cycle = 2
+
     with mock.patch('third_party.sancov.GetPCs') as mocked_GetPCs:
         mocked_GetPCs.return_value = new_pcs
-        snapshot_measurer.merge_new_pcs()
-    with open(covered_pcs_filename) as file_handle:
-        new_contents = file_handle.read()
-    assert new_contents == (''.join(pc + '\n' for pc in new_pcs) +
-                            initial_contents)
+        snapshot_measurer.merge_new_pcs(cycle)
 
+    assert mocked_cp.call_count == 1
 
 @mock.patch('common.logs.error')
 @mock.patch('experiment.measurer.measure_worker.initialize_logs')
