@@ -81,7 +81,7 @@ def test_merge_new_pcs(mocked_get_prev_covered_pcs, mocked_cp, new_pcs, fs,
 
         assert dst_name == (
             'gs://experiment-data/test-experiment/measurement-folders/'
-            'benchmark-a/fuzzer-a/trial-12/state/covered-pcs-0002.json')
+            'benchmark-a-fuzzer-a/trial-12/state/covered-pcs-0002.json')
 
     mocked_cp.side_effect = mock_cp
 
