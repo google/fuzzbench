@@ -30,7 +30,7 @@ from common import experiment_utils
 from common import filesystem
 from common import fuzzer_utils
 from common import gcloud
-from common import gsutil
+from common import bucket_utils
 from common import logs
 from common import new_process
 from common import utils
@@ -279,12 +279,12 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
     source_archive = 'src.tar.gz'
     with tarfile.open(source_archive, 'w:gz') as tar:
         tar.add(utils.ROOT_DIR, arcname='', recursive=True, filter=filter_file)
-    gsutil.cp(source_archive, base_destination + '/', parallel=True)
+    bucket_utils.cp(source_archive, base_destination + '/', parallel=True)
     os.remove(source_archive)
 
     # Send config files.
     destination = os.path.join(base_destination, 'config')
-    gsutil.rsync(config_dir, destination, parallel=True)
+    bucket_utils.rsync(config_dir, destination, parallel=True)
 
 
 class BaseDispatcher:
