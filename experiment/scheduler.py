@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Code for starting and ending trials."""
+import collections
 import datetime
 import math
 import multiprocessing
@@ -32,6 +33,7 @@ from common import gce
 from common import logs
 from common import retry
 from common import utils
+from common import queue_utils
 from common import yaml_utils
 from database import models
 from database import utils as db_utils
@@ -563,7 +565,7 @@ def replace_trial(trial, preemptible):
     return replacement
 
 
-def schedule(experiment_config: dict, pool):
+def schedule(experiment_config: dict, pool, queue):
     """Gets all pending trials for the current experiment and then schedules
     those that are possible."""
     logger.info('Finding trials to schedule.')
@@ -574,7 +576,36 @@ def schedule(experiment_config: dict, pool):
     # Start pending trials.
     pending_trials = list(get_pending_trials(experiment_config['experiment']))
     started_trials = start_trials(pending_trials, experiment_config, pool)
+    schedule_measurers(queue)
     return started_trials
+
+
+def schedule_measurers(queue):
+    """Schedule measurer workers. This cannot be called before
+    initialize_measurers."""
+    jobs = queue.get_jobs()
+    counts = collections.defaultdict(int)
+    for job in jobs:
+        counts[job.get_status()] += 1
+    # !!!
+    num_instances = None
+
+    queued_count = counts['queued']
+    if queued_count > num_instances:
+        # !!! UP INSTANCES.
+        return
+
+    started_count = counts['started']
+    if started_count < num_instances:
+        # !!! DOWN instances.
+        pass
+
+
+def initialize_measurers(experiment_config: dict):
+    """Initialize everything that will be needed to schedule measurers."""
+    queue = queue_utils.initialize_queue(experiment_config['redis_host'])
+    # !!! INSTANCE GROUP.
+    return queue
 
 
 def schedule_loop(experiment_config: dict):
@@ -590,6 +621,8 @@ def schedule_loop(experiment_config: dict):
         get_experiment_trials(experiment_config['experiment']).all())
     trial_instance_manager = TrialInstanceManager(num_trials, experiment_config)
     experiment = experiment_config['experiment']
+
+    queue = initialize_measurers(experiment_config)
     with multiprocessing.Pool() as pool:
         handle_preempted = False
         while not all_trials_ended(experiment):
@@ -599,7 +632,7 @@ def schedule_loop(experiment_config: dict):
                     # trial was started. This ensures that .
                     handle_preempted = True
 
-                schedule(experiment_config, pool)
+                schedule(experiment_config, pool, queue)
                 if handle_preempted:
                     trial_instance_manager.handle_preempted_trials()
             except Exception:  # pylint: disable=broad-except

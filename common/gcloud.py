@@ -22,10 +22,9 @@ from common import experiment_utils
 from common import logs
 from common import new_process
 
-# Constants for dispatcher specs.
-DISPATCHER_MACHINE_TYPE = 'n1-standard-96'
-DISPATCHER_BOOT_DISK_SIZE = '4TB'
-DISPATCHER_BOOT_DISK_TYPE = 'pd-ssd'
+# TODO(metzman): Lower this when we figure out how else we can take advantage
+# of the 30 concurrent GCB builds.
+DISPATCHER_MACHINE_TYPE = 'n1-standard-32'
 
 # Constants for runner specs.
 RUNNER_MACHINE_TYPE = 'n1-standard-1'
@@ -92,11 +91,7 @@ def create_instance(instance_name: str,
         '--scopes=cloud-platform',
     ]
     if instance_type == InstanceType.DISPATCHER:
-        command.extend([
-            '--machine-type=%s' % DISPATCHER_MACHINE_TYPE,
-            '--boot-disk-size=%s' % DISPATCHER_BOOT_DISK_SIZE,
-            '--boot-disk-type=%s' % DISPATCHER_BOOT_DISK_TYPE,
-        ])
+        command.append('--machine-type=%s' % DISPATCHER_MACHINE_TYPE)
     else:
         command.extend([
             '--no-address',
