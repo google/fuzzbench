@@ -170,7 +170,6 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         self.UNIT_BLACKLIST[self.benchmark] = (
             self.UNIT_BLACKLIST[self.benchmark].union(set(crashing_units)))
 
-
     def merge_new_pcs(self, cycle: int) -> List[str]:
         """Merge new pcs into and return the list of all covered pcs."""
         prev_pcs = self.get_prev_covered_pcs(cycle)
@@ -186,13 +185,6 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         # Sort so that file doesn't change if PCs are unchanged.
         covered_pcs_state.set_current(all_pcs)
         return all_pcs
-
-    def get_current_pcs(self) -> Set[str]:
-        """Get the current pcs covered by a fuzzer."""
-        with open(self.covered_pcs_filename) as file_handle:
-            current_pcs = set(
-                pc.strip() for pc in file_handle.readlines() if pc.strip())
-        return current_pcs
 
     def is_cycle_unchanged(self, cycle: int) -> bool:
         """Returns True if |cycle| is unchanged according to the

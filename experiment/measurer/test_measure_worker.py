@@ -93,6 +93,7 @@ def test_merge_new_pcs(mocked_get_prev_covered_pcs, mocked_cp, new_pcs, fs,
 
     assert mocked_cp.call_count == 1
 
+
 @mock.patch('common.logs.error')
 @mock.patch('experiment.measurer.measure_worker.initialize_logs')
 @mock.patch('multiprocessing.Queue')
@@ -201,12 +202,6 @@ def test_run_cov_new_units(mocked_execute, fs, environ):
                                                         TRIAL_NUM,
                                                         SNAPSHOT_LOGGER)
     snapshot_measurer.initialize_measurement_dirs()
-    shared_units = ['shared1', 'shared2']
-    fs.create_file(snapshot_measurer.measured_files_path,
-                   contents='\n'.join(shared_units))
-    for unit in shared_units:
-        fs.create_file(os.path.join(snapshot_measurer.corpus_dir, unit))
-
     new_units = ['new1', 'new2']
     for unit in new_units:
         fs.create_file(os.path.join(snapshot_measurer.corpus_dir, unit))
