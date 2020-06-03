@@ -82,3 +82,19 @@ def get_base_docker_tag(cloud_project=None):
 def is_local_experiment():
     """Returns True if running a local experiment."""
     return bool(environment.get('LOCAL_EXPERIMENT'))
+
+
+def get_trial_dir(fuzzer, benchmark, trial_id):
+    """Returns the unique directory for |fuzzer|, |benchmark|, and
+    |trial_id|."""
+    benchmark_fuzzer_directory = '%s-%s' % (benchmark, fuzzer)
+    trial_subdir = 'trial-%d' % trial_id
+    return posixpath.join(benchmark_fuzzer_directory, trial_subdir)
+
+
+def get_trial_bucket_dir(fuzzer, benchmark, trial_id):
+    """Returns the unique directory in experiment-folders int the bucket for
+    |fuzzer|, |benchmark|, and |trial_id|."""
+    bucket = os.environ['CLOUD_EXPERIMENT_BUCKET']
+    return posixpath.join(bucket, get_experiment_name(), 'experiment-folders',
+                          get_trial_dir(fuzzer, benchmark, trial_id))
