@@ -25,20 +25,26 @@ def build():
     """Build benchmark."""
     aflplusplus_fuzzer.build('qemu')
 
+
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     # get LLVMFuzzerTestOneInput address
-    nm = subprocess.run(['sh', '-c',
-      'nm \'' + target_binary + '\' | grep \'T afl_qemu_driver_stdin_input\''
-    ], stdout=subprocess.PIPE)
-    target_func = "0x" + nm.stdout.split()[0].decode("utf-8")
+    nm_proc = subprocess.run([
+        'sh', '-c',
+        'nm \'' + target_binary + '\' | grep \'T afl_qemu_driver_stdin_input\''
+    ],
+                             stdout=subprocess.PIPE,
+                             check=True)
+    target_func = "0x" + nm_proc.stdout.split()[0].decode("utf-8")
     print('[run_fuzzer] afl_qemu_driver_stdin_input() address =', target_func)
     # fuzzer options
-    flags = ['-Q', '-L', '0'] # MOpt flags
-    os.environ['AFL_COMPCOV_LEVEL'] = '3' # float compcov
+    flags = ['-Q', '-L', '0']  # MOpt flags
+    os.environ['AFL_COMPCOV_LEVEL'] = '3'  # float compcov
     os.environ['AFL_QEMU_PERSISTENT_ADDR'] = target_func
     os.environ['AFL_ENTRYPOINT'] = target_func
     os.environ['AFL_QEMU_PERSISTENT_CNT'] = "100000"
     os.environ['AFL_QEMU_DRIVER_NO_HOOK'] = "1"
-    aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, target_binary,
+    aflplusplus_fuzzer.fuzz(input_corpus,
+                            output_corpus,
+                            target_binary,
                             flags=flags)
