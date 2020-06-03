@@ -16,7 +16,7 @@
 from common import logs
 from common import experiment_utils
 
-logger = logs.Logger('bucket_utils')
+logger = logs.Logger('filestore_utils')
 
 
 def _using_gsutil():
@@ -30,27 +30,27 @@ def _using_gsutil():
 
 
 if _using_gsutil():
-    from common import gsutil as bucket_utils_impl
+    from common import gsutil as filestore_utils_impl
 else:
     # When gsutil is not used in the context,
     # here it should use local_utils.
     # TODO(zhichengcai): local_utils
-    from common import gsutil as bucket_utils_impl
+    from common import gsutil as filestore_utils_impl
 
 
 def cp(*cp_arguments, **kwargs):  # pylint: disable=invalid-name
     """ Copy source to destination. """
-    return bucket_utils_impl.cp(*cp_arguments, **kwargs)
+    return filestore_utils_impl.cp(*cp_arguments, **kwargs)
 
 
 def ls(*ls_arguments, must_exist=True, **kwargs):  # pylint: disable=invalid-name
     """ List files or folders. """
-    return bucket_utils_impl.ls(*ls_arguments, must_exist, **kwargs)
+    return filestore_utils_impl.ls(*ls_arguments, must_exist, **kwargs)
 
 
 def rm(*rm_arguments, recursive=True, force=False, **kwargs):  # pylint: disable=invalid-name
     """ Remove files or folders. """
-    return bucket_utils_impl.rm(*rm_arguments, recursive, force, **kwargs)
+    return filestore_utils_impl.rm(*rm_arguments, recursive, force, **kwargs)
 
 
 def rsync(  # pylint: disable=too-many-arguments
@@ -62,5 +62,5 @@ def rsync(  # pylint: disable=too-many-arguments
         options=None,
         **kwargs):
     """ Synchronize source and destination folders. """
-    return bucket_utils_impl.rsync(source, destination, delete, recursive,
+    return filestore_utils_impl.rsync(source, destination, delete, recursive,
                                    gsutil_options, options, **kwargs)

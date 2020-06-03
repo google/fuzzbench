@@ -30,7 +30,7 @@ from common import environment
 from common import experiment_utils
 from common import filesystem
 from common import fuzzer_utils
-from common import bucket_utils
+from common import filestore_utils
 from common import logs
 from common import new_process
 from common import retry
@@ -224,7 +224,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             trial_id = environment.get('TRIAL_ID')
             self.gcs_sync_dir = experiment_utils.get_trial_bucket_dir(
                 fuzzer, benchmark, trial_id)
-            bucket_utils.rm(self.gcs_sync_dir, force=True, parallel=True)
+            filestore_utils.rm(self.gcs_sync_dir, force=True, parallel=True)
         else:
             self.gcs_sync_dir = None
 
@@ -371,7 +371,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         gcs_path = posixpath.join(self.gcs_sync_dir, self.corpus_dir, basename)
 
         # Don't use parallel to avoid stability issues.
-        bucket_utils.cp(archive, gcs_path)
+        filestore_utils.cp(archive, gcs_path)
 
         # Delete corpus archive so disk doesn't fill up.
         os.remove(archive)
@@ -394,7 +394,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         # in size because the log file containing the fuzzer's output is in this
         # directory and can be written to by the fuzzer at any time.
         results_copy = filesystem.make_dir_copy(self.results_dir)
-        bucket_utils.rsync(results_copy,
+        filestore_utils.rsync(results_copy,
                            posixpath.join(self.gcs_sync_dir, self.results_dir))
 
 

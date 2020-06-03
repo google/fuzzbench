@@ -16,7 +16,7 @@
 import tempfile
 
 from common import experiment_path as exp_path
-from common import bucket_utils
+from common import filestore_utils
 
 
 def store_build_logs(build_config, build_result):
@@ -28,7 +28,7 @@ def store_build_logs(build_config, build_result):
         tmp.flush()
 
         build_log_filename = build_config + '.txt'
-        bucket_utils.cp(tmp.name,
+        filestore_utils.cp(tmp.name,
                         exp_path.gcs(get_build_logs_dir() / build_log_filename),
                         write_to_stdout=False)
 
