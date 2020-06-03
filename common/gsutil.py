@@ -80,3 +80,10 @@ def rsync(  # pylint: disable=too-many-arguments
         command.extend(options)
     command.extend([source, destination])
     return gsutil_command(command, **kwargs)
+
+
+def cat(*cat_arguments, **kwargs):
+    """Does gsutil cat on |cat_arguments| and returns the result. Passes each
+    item in |kwargs| as a keyword argument to gsutil_command."""
+    command = ['cat'] + list(cat_arguments)[:]
+    return gsutil_command(command, **kwargs)
