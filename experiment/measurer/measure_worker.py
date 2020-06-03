@@ -98,7 +98,7 @@ class StateFile:
         state_file_path = os.path.join(self.state_dir, state_file_name)
         return exp_path.gcs(pathlib.Path(state_file_path))
 
-    def _get_previous_cycle_state(self) -> str:
+    def _get_previous_cycle_state(self) -> []:
         """Returns the state from the previous cycle. Returns [] if |self.cycle|
         is 1."""
         if self.cycle == 1:
