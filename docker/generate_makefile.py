@@ -305,7 +305,9 @@ def main():
         for variant in config['variants']:
             assert 'name' in variant
             variant_name = variant['name']
-            # Build arguments are optional for variants.
+            # Build arguments are optional for variants. When provided they
+            # are passed as arguments to relevant docker build commants.
+            # Example: ['--build-arg ARG=value']
             build_arguments = variant.get('build_arguments', [])
             build_arguments = ' '.join(build_arguments)
             generate_fuzzer(variant_name, benchmarks, oss_fuzz_benchmarks,
