@@ -86,7 +86,7 @@ def copy_coverage_binaries(benchmark):
         exp_path.gcs(coverage_binaries_dir), coverage_build_archive)
 
     return filestore_utils.cp(coverage_build_archive_shared_dir_path,
-                           coverage_build_archive_gcs_path)
+                              coverage_build_archive_gcs_path)
 
 
 def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:

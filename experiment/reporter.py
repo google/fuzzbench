@@ -43,11 +43,11 @@ def output_report(web_bucket, in_progress=False):
                                         str(reports_dir),
                                         in_progress=in_progress)
         filestore_utils.rsync(str(reports_dir),
-                           web_bucket,
-                           gsutil_options=[
-                               '-h',
-                               'Cache-Control:public,max-age=0,no-transform'
-                           ])
+                              web_bucket,
+                              gsutil_options=[
+                                  '-h',
+                                  'Cache-Control:public,max-age=0,no-transform'
+                              ])
         logger.debug('Done generating report.')
     except data_utils.EmptyDataError:
         logs.warning('No snapshot data.')

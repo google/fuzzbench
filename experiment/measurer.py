@@ -396,9 +396,10 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         unchanged-cycles file. This file is written to by the trial's runner."""
 
         def copy_unchanged_cycles_file():
-            result = filestore_utils.cp(exp_path.gcs(self.unchanged_cycles_path),
-                                     self.unchanged_cycles_path,
-                                     expect_zero=False)
+            result = filestore_utils.cp(exp_path.gcs(
+                self.unchanged_cycles_path),
+                                        self.unchanged_cycles_path,
+                                        expect_zero=False)
             return result.retcode == 0
 
         if not os.path.exists(self.unchanged_cycles_path):
@@ -534,9 +535,9 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     if not os.path.exists(corpus_archive_dir):
         os.makedirs(corpus_archive_dir)
     if filestore_utils.cp(corpus_archive_src,
-                       corpus_archive_dst,
-                       expect_zero=False,
-                       write_to_stdout=False)[0] != 0:
+                          corpus_archive_dst,
+                          expect_zero=False,
+                          write_to_stdout=False)[0] != 0:
         snapshot_logger.warning('Corpus not found for cycle: %d.', cycle)
         return None
 
@@ -588,8 +589,8 @@ def set_up_coverage_binary(benchmark):
     cloud_bucket_archive_path = exp_path.gcs(coverage_binaries_dir /
                                              archive_name)
     filestore_utils.cp(cloud_bucket_archive_path,
-                    str(benchmark_coverage_binary_dir),
-                    write_to_stdout=False)
+                       str(benchmark_coverage_binary_dir),
+                       write_to_stdout=False)
     archive_path = benchmark_coverage_binary_dir / archive_name
     tar = tarfile.open(archive_path, 'r:gz')
     tar.extractall(benchmark_coverage_binary_dir)

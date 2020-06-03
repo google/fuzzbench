@@ -63,4 +63,4 @@ def rsync(  # pylint: disable=too-many-arguments
         **kwargs):
     """ Synchronize source and destination folders. """
     return filestore_utils_impl.rsync(source, destination, delete, recursive,
-                                   gsutil_options, options, **kwargs)
+                                      gsutil_options, options, **kwargs)
