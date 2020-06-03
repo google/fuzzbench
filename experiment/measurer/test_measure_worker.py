@@ -66,7 +66,8 @@ def test_merge_new_pcs(mocked_get_prev_covered_pcs, mocked_cp, new_pcs, fs,
                        experiment):
     """Tests that merge_new_pcs merges new PCs, and updates the covered-pcs
     file."""
-    prev_pcs = {"0x425221"}
+    # Have some previously covered PCs to make the test more realistic.
+    prev_pcs = {'0x425221'}
     mocked_get_prev_covered_pcs.return_value = prev_pcs
     snapshot_measurer = measure_worker.SnapshotMeasurer(FUZZER, BENCHMARK,
                                                         TRIAL_NUM,
@@ -85,11 +86,9 @@ def test_merge_new_pcs(mocked_get_prev_covered_pcs, mocked_cp, new_pcs, fs,
 
     mocked_cp.side_effect = mock_cp
 
-    cycle = 2
-
     with mock.patch('third_party.sancov.GetPCs') as mocked_GetPCs:
         mocked_GetPCs.return_value = new_pcs
-        snapshot_measurer.merge_new_pcs(cycle)
+        snapshot_measurer.merge_new_pcs(2)
 
     assert mocked_cp.call_count == 1
 

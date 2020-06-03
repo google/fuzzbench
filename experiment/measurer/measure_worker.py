@@ -91,36 +91,40 @@ class StateFile:
         self.cycle = cycle
         self._prev_state = None
 
-    def _get_gcs_cycle_state_file_path(self, cycle: int) -> str:
+    def _get_bucket_cycle_state_file_path(self, cycle: int) -> str:
+        """Get the state file path in the bucket."""
         state_file_name = experiment_utils.get_cycle_file_name(
-            self.name, cycle, '.json')
+            self.name, cycle) + '.json'
         state_file_path = os.path.join(self.state_dir, state_file_name)
         return exp_path.gcs(pathlib.Path(state_file_path))
 
-    def _get_previous_cycle_state(self, first_cycle_default) -> str:
+    def _get_previous_cycle_state(self) -> str:
+        """Returns the state from the previous cycle. Returns [] if |self.cycle|
+        is 1."""
         if self.cycle == 1:
-            return first_cycle_default
+            return []
 
-        previous_state_file_gcs_path = self._get_gcs_cycle_state_file_path(
-            self.cycle - 1)
+        previous_state_file_bucket_path = (
+            self._get_bucket_cycle_state_file_path(self.cycle - 1))
+
         return json.loads(
-            gsutil.cat(previous_state_file_gcs_path, expect_zero=False))
+            gsutil.cat(previous_state_file_bucket_path, expect_zero=False))
 
-    def get_previous(self, first_cycle_default=None):
+    def get_previous(self):
         """Returns the previous state."""
         if self._prev_state is None:
-            self._prev_state = self._get_previous_cycle_state(
-                first_cycle_default=first_cycle_default)
+            self._prev_state = self._get_previous_cycle_state()
 
         return self._prev_state
 
     def set_current(self, state):
-        """Sets the state for this cycle on GCS."""
-        state_file_gcs_path = self._get_gcs_cycle_state_file_path(self.cycle)
+        """Sets the state for this cycle in the bucket."""
+        state_file_bucket_path = self._get_bucket_cycle_state_file_path(
+            self.cycle)
         with tempfile.NamedTemporaryFile(mode='w') as temp_file:
             temp_file.write(json.dumps(state))
             temp_file.flush()
-            gsutil.cp(temp_file.name, state_file_gcs_path)
+            gsutil.cp(temp_file.name, state_file_bucket_path)
 
 
 class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
@@ -181,7 +185,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
         self.logger.info('Sancov files: %s.', str(sancov_files))
         new_pcs = set(sancov.GetPCs(sancov_files))
-        all_pcs = list(sorted(prev_pcs.union(new_pcs)))
+        all_pcs = sorted(prev_pcs.union(new_pcs))
         # Sort so that file doesn't change if PCs are unchanged.
         covered_pcs_state.set_current(all_pcs)
         return all_pcs
@@ -201,6 +205,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
                 return False
 
         def get_unchanged_cycles():
+            """Returns the list of unchanged cycles."""
             return [
                 int(cycle) for cycle in filesystem.read(
                     self.unchanged_cycles_path).splitlines()
@@ -228,9 +233,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
     def get_prev_covered_pcs(self, cycle: int) -> Set[str]:
         """Returns the set of pcs covered in the previous cycle or an empty list
         if this is the first cycle."""
-        return set(
-            self.get_covered_pcs_state(cycle).get_previous(
-                first_cycle_default=[]))
+        return set(self.get_covered_pcs_state(cycle).get_previous())
 
     def get_measured_files_state(self, cycle) -> StateFile:
         """Returns the StateFile for measured-files of this cycle."""
@@ -240,7 +243,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         """Returns the set of files measured in the previous cycle or an empty
         list if this is the first cycle."""
         measured_files_state = self.get_measured_files_state(cycle)
-        return set(measured_files_state.get_previous(first_cycle_default=[]))
+        return set(measured_files_state.get_previous())
 
     def extract_corpus(self, corpus_archive_path, cycle) -> bool:
         """Extract the corpus archive for this cycle if it exists."""
@@ -268,9 +271,9 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         with tarfile.open(archive, 'w:gz') as tar:
             tar.add(self.crashes_dir,
                     arcname=os.path.basename(self.crashes_dir))
-        gcs_path = exp_path.gcs(
+        bucket_path = exp_path.gcs(
             posixpath.join(self.trial_dir, 'crashes', crashes_archive_name))
-        gsutil.cp(archive, gcs_path)
+        gsutil.cp(archive, bucket_path)
         os.remove(archive)
 
     def update_measured_files(self, cycle):
@@ -287,13 +290,13 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
     def update_state_for_unchanged_cycle(self, cycle):
         """Update the  covered-pcs and  measured-files state  files so  that the
-        states for |cycle| are the same as |cycle -1|."""
+        states for |cycle| are the same as |cycle - 1|."""
         state_files = [
             self.get_covered_pcs_state(cycle),
             StateFile('measured-files', self.state_dir, cycle)
         ]
         for state_file in state_files:
-            prev_state = state_file.get_previous(first_cycle_default=[])
+            prev_state = state_file.get_previous()
             state_file.set_current(prev_state)
 
 
