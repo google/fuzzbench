@@ -14,10 +14,12 @@
 """Module for measuring snapshots from trial runners."""
 import collections
 import glob
+import json
 import os
 import pathlib
 import posixpath
 import tarfile
+import tempfile
 import time
 from typing import List, Set
 
@@ -78,6 +80,53 @@ def extract_corpus(corpus_archive: str, sha_blacklist: Set[str],
         filesystem.write(file_path, member_contents, 'wb')
 
 
+class StateFile:
+    """A class representing the state of measuring a particular trial on
+    particular cycle. Objects of this class are backed by files stored in the
+    bucket."""
+
+    def __init__(self, name: str, state_dir: str, cycle: int):
+        self.name = name
+        self.state_dir = state_dir
+        self.cycle = cycle
+        self._prev_state = None
+
+    def _get_bucket_cycle_state_file_path(self, cycle: int) -> str:
+        """Get the state file path in the bucket."""
+        state_file_name = experiment_utils.get_cycle_file_name(
+            self.name, cycle) + '.json'
+        state_file_path = os.path.join(self.state_dir, state_file_name)
+        return exp_path.gcs(pathlib.Path(state_file_path))
+
+    def _get_previous_cycle_state(self) -> list:
+        """Returns the state from the previous cycle. Returns [] if |self.cycle|
+        is 1."""
+        if self.cycle == 1:
+            return []
+
+        previous_state_file_bucket_path = (
+            self._get_bucket_cycle_state_file_path(self.cycle - 1))
+
+        return json.loads(
+            gsutil.cat(previous_state_file_bucket_path, expect_zero=False))
+
+    def get_previous(self):
+        """Returns the previous state."""
+        if self._prev_state is None:
+            self._prev_state = self._get_previous_cycle_state()
+
+        return self._prev_state
+
+    def set_current(self, state):
+        """Sets the state for this cycle in the bucket."""
+        state_file_bucket_path = self._get_bucket_cycle_state_file_path(
+            self.cycle)
+        with tempfile.NamedTemporaryFile(mode='w') as temp_file:
+            temp_file.write(json.dumps(state))
+            temp_file.flush()
+            gsutil.cp(temp_file.name, state_file_bucket_path)
+
+
 class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
     """Class used for storing details needed to measure coverage of a particular
     trial."""
@@ -99,17 +148,9 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
         self.crashes_dir = os.path.join(measurement_dir, 'crashes')
         self.sancov_dir = os.path.join(measurement_dir, 'sancovs')
-        self.report_dir = os.path.join(measurement_dir, 'reports')
+        self.state_dir = os.path.join(measurement_dir, 'state')
         self.trial_dir = os.path.join(work_dir, 'experiment-folders',
                                       benchmark_fuzzer_trial_dir)
-
-        # Stores the pcs that have been covered.
-        self.covered_pcs_filename = os.path.join(self.report_dir,
-                                                 'covered-pcs.txt')
-
-        # Stores the files that have already been measured for a trial.
-        self.measured_files_path = os.path.join(self.report_dir,
-                                                'measured-files.txt')
 
         # Used by the runner to signal that there won't be a corpus archive for
         # a cycle because the corpus hasn't changed since the last cycle.
@@ -121,7 +162,6 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         coverage."""
         for directory in [self.corpus_dir, self.sancov_dir, self.crashes_dir]:
             filesystem.recreate_directory(directory)
-        filesystem.create_directory(self.report_dir)
 
     def run_cov_new_units(self):
         """Run the coverage binary on new units."""
@@ -134,36 +174,21 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         self.UNIT_BLACKLIST[self.benchmark] = (
             self.UNIT_BLACKLIST[self.benchmark].union(set(crashing_units)))
 
-    def merge_new_pcs(self) -> List[str]:
-        """Merge new pcs into |self.covered_pcs_filename| and return the list of
-        all covered pcs."""
+    def merge_new_pcs(self, cycle: int) -> List[str]:
+        """Merge new pcs into and return the list of all covered pcs."""
+        prev_pcs = self.get_prev_covered_pcs(cycle)
+        covered_pcs_state = self.get_covered_pcs_state(cycle)
+        sancov_files = glob.glob(os.path.join(self.sancov_dir, '*.sancov'))
+        if not sancov_files:
+            self.logger.error('No sancov files.')
+            return list(prev_pcs)
 
-        # Create the covered pcs file if it doesn't exist yet.
-        if not os.path.exists(self.covered_pcs_filename):
-            filesystem.write(self.covered_pcs_filename, '')
-
-        with open(self.covered_pcs_filename, 'r+') as file_handle:
-            current_pcs = set(
-                pc.strip() for pc in file_handle.readlines() if pc.strip())
-            sancov_files = glob.glob(os.path.join(self.sancov_dir, '*.sancov'))
-            if not sancov_files:
-                self.logger.error('No sancov files.')
-                return list(current_pcs)
-
-            self.logger.info('Sancov files: %s.', str(sancov_files))
-            new_pcs = set(sancov.GetPCs(sancov_files))
-            all_pcs = sorted(list(current_pcs.union(new_pcs)))
-            # Sort so that file doesn't change if PCs are unchanged.
-            file_handle.seek(0)
-            file_handle.write('\n'.join(all_pcs))
+        self.logger.info('Sancov files: %s.', str(sancov_files))
+        new_pcs = set(sancov.GetPCs(sancov_files))
+        all_pcs = sorted(prev_pcs.union(new_pcs))
+        # Sort so that file doesn't change if PCs are unchanged.
+        covered_pcs_state.set_current(all_pcs)
         return all_pcs
-
-    def get_current_pcs(self) -> Set[str]:
-        """Get the current pcs covered by a fuzzer."""
-        with open(self.covered_pcs_filename) as file_handle:
-            current_pcs = set(
-                pc.strip() for pc in file_handle.readlines() if pc.strip())
-        return current_pcs
 
     def is_cycle_unchanged(self, cycle: int) -> bool:
         """Returns True if |cycle| is unchanged according to the
@@ -181,6 +206,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
                 return False
 
         def get_unchanged_cycles():
+            """Returns the list of unchanged cycles."""
             return [
                 int(cycle) for cycle in filesystem.read(
                     self.unchanged_cycles_path).splitlines()
@@ -201,15 +227,34 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         unchanged_cycles = get_unchanged_cycles()
         return cycle in unchanged_cycles
 
-    def extract_corpus(self, corpus_archive_path) -> bool:
+    def get_covered_pcs_state(self, cycle: int) -> StateFile:
+        """Returns the StateFile for covered-pcs of this |cycle|."""
+        return StateFile('covered-pcs', self.state_dir, cycle)
+
+    def get_prev_covered_pcs(self, cycle: int) -> Set[str]:
+        """Returns the set of pcs covered in the previous cycle or an empty list
+        if this is the first cycle."""
+        return set(self.get_covered_pcs_state(cycle).get_previous())
+
+    def get_measured_files_state(self, cycle) -> StateFile:
+        """Returns the StateFile for measured-files of this cycle."""
+        return StateFile('measured-files', self.state_dir, cycle)
+
+    def get_prev_measured_files(self, cycle) -> Set[str]:
+        """Returns the set of files measured in the previous cycle or an empty
+        list if this is the first cycle."""
+        measured_files_state = self.get_measured_files_state(cycle)
+        return set(measured_files_state.get_previous())
+
+    def extract_corpus(self, corpus_archive_path, cycle) -> bool:
         """Extract the corpus archive for this cycle if it exists."""
         if not os.path.exists(corpus_archive_path):
             self.logger.warning('Corpus not found: %s.', corpus_archive_path)
             return False
 
-        already_measured_units = self.get_measured_files()
+        prev_measured_units = self.get_prev_measured_files(cycle)
         crash_blacklist = self.UNIT_BLACKLIST[self.benchmark]
-        unit_blacklist = already_measured_units.union(crash_blacklist)
+        unit_blacklist = prev_measured_units.union(crash_blacklist)
 
         extract_corpus(corpus_archive_path, unit_blacklist, self.corpus_dir)
         return True
@@ -227,31 +272,45 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         with tarfile.open(archive, 'w:gz') as tar:
             tar.add(self.crashes_dir,
                     arcname=os.path.basename(self.crashes_dir))
-        gcs_path = exp_path.gcs(
+        bucket_path = exp_path.gcs(
             posixpath.join(self.trial_dir, 'crashes', crashes_archive_name))
-        filestore_utils.cp(archive, gcs_path)
+        gsutil.cp(archive, bucket_path)
         os.remove(archive)
 
-    def update_measured_files(self):
+    def update_measured_files(self, cycle):
         """Updates the measured-files.txt file for this trial with
         files measured in this snapshot."""
         current_files = set(os.listdir(self.corpus_dir))
-        already_measured = self.get_measured_files()
-        filesystem.write(self.measured_files_path,
-                         '\n'.join(current_files.union(already_measured)))
+        previous_files = self.get_prev_measured_files(cycle)
+        all_files = current_files.union(previous_files)
 
-    def get_measured_files(self):
-        """Returns a the set of files that have been measured for this
-        snapshot's trials."""
-        if not os.path.exists(self.measured_files_path):
-            return set()
-        return set(filesystem.read(self.measured_files_path).splitlines())
+        measured_files_state = self.get_measured_files_state(cycle)
+        measured_files_state.set_current(list(all_files))
+
+        return all_files
+
+    def update_state_for_unchanged_cycle(self, cycle):
+        """Update the  covered-pcs and  measured-files state  files so  that the
+        states for |cycle| are the same as |cycle - 1|."""
+        state_files = [
+            self.get_covered_pcs_state(cycle),
+            StateFile('measured-files', self.state_dir, cycle)
+        ]
+        for state_file in state_files:
+            prev_state = state_file.get_previous()
+            state_file.set_current(prev_state)
+
+
+def remote_dir_exists(directory: pathlib.Path) -> bool:
+    """Does |directory| exist in the CLOUD_EXPERIMENT_BUCKET."""
+    return gsutil.ls(exp_path.gcs(directory), must_exist=False)[0] == 0
 
 
 def measure_trial_coverage(measure_req) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
+    set_up_coverage_binary(measure_req.benchmark)
     logger.debug('Measuring trial: %d.', measure_req.trial_id)
 
     try:
@@ -293,10 +352,11 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     this_time = cycle * experiment_utils.get_snapshot_seconds()
     if snapshot_measurer.is_cycle_unchanged(cycle):
         snapshot_logger.info('Cycle: %d is unchanged.', cycle)
-        current_pcs = snapshot_measurer.get_current_pcs()
+        snapshot_measurer.update_state_for_unchanged_cycle(cycle)
+        covered_pcs = snapshot_measurer.get_prev_covered_pcs(cycle)
         return models.Snapshot(time=this_time,
                                trial_id=trial_num,
-                               edges_covered=len(current_pcs))
+                               edges_covered=len(covered_pcs))
 
     corpus_archive_dst = os.path.join(
         snapshot_measurer.trial_dir, 'corpus',
@@ -311,22 +371,23 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
                           expect_zero=False,
                           write_to_stdout=False)[0] != 0:
         snapshot_logger.warning('Corpus not found for cycle: %d.', cycle)
+        # No extra state to save.
         return None
 
     snapshot_measurer.initialize_measurement_dirs()
-    snapshot_measurer.extract_corpus(corpus_archive_dst)
+    snapshot_measurer.extract_corpus(corpus_archive_dst, cycle)
     # Don't keep corpus archives around longer than they need to be.
     os.remove(corpus_archive_dst)
 
     # Get the coverage of the new corpus units.
     snapshot_measurer.run_cov_new_units()
-    all_pcs = snapshot_measurer.merge_new_pcs()
+    all_pcs = snapshot_measurer.merge_new_pcs(cycle)
     snapshot = models.Snapshot(time=this_time,
                                trial_id=trial_num,
                                edges_covered=len(all_pcs))
 
     # Record the new corpus files.
-    snapshot_measurer.update_measured_files()
+    snapshot_measurer.update_measured_files(cycle)
 
     # Archive crashes directory.
     snapshot_measurer.archive_crashes(cycle)
@@ -335,6 +396,28 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     snapshot_logger.info('Measured cycle: %d in %d seconds.', cycle,
                          measuring_time)
     return snapshot
+
+
+def set_up_coverage_binary(benchmark):
+    """Set up coverage binaries for |benchmark|."""
+    # TODO(metzman): Should we worry about disk space on workers?
+    initialize_logs()
+    coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
+    benchmark_coverage_binary_dir = coverage_binaries_dir / benchmark
+    if os.path.exists(benchmark_coverage_binary_dir):
+        return
+
+    os.mkdir(benchmark_coverage_binary_dir)
+    archive_name = 'coverage-build-%s.tar.gz' % benchmark
+    cloud_bucket_archive_path = exp_path.gcs(coverage_binaries_dir /
+                                             archive_name)
+    gsutil.cp(cloud_bucket_archive_path,
+              str(benchmark_coverage_binary_dir),
+              write_to_stdout=False)
+    archive_path = benchmark_coverage_binary_dir / archive_name
+    with tarfile.open(archive_path, 'r:gz') as tar:
+        tar.extractall(benchmark_coverage_binary_dir)
+    os.remove(archive_path)
 
 
 def get_coverage_binary(benchmark: str) -> str:

@@ -15,9 +15,7 @@
 import collections
 import multiprocessing
 import os
-import pathlib
 import sys
-import tarfile
 import time
 from typing import List
 
@@ -28,7 +26,6 @@ from sqlalchemy import orm
 
 from common import experiment_utils
 from common import experiment_path as exp_path
-from common import gsutil
 from common import logs
 from database import utils as db_utils
 from database import models
@@ -46,11 +43,6 @@ SNAPSHOTS_BATCH_SAVE_SIZE = 100
 def get_experiment_folders_dir():
     """Return experiment folders directory."""
     return exp_path.path('experiment-folders')
-
-
-def remote_dir_exists(directory: pathlib.Path) -> bool:
-    """Does |directory| exist in the CLOUD_EXPERIMENT_BUCKET."""
-    return gsutil.ls(exp_path.gcs(directory), must_exist=False)[0] == 0
 
 
 def measure_loop(experiment: str, max_total_time: int, redis_host: str):
@@ -98,7 +90,7 @@ def measure_all_trials(experiment: str, max_total_time: int, queue) -> bool:
     logger.info('Measuring all trials.')
 
     experiment_folders_dir = get_experiment_folders_dir()
-    if not remote_dir_exists(experiment_folders_dir):
+    if not measure_worker.remote_dir_exists(experiment_folders_dir):
         return True
 
     max_cycle = _time_to_cycle(max_total_time)
@@ -281,26 +273,7 @@ def set_up_coverage_binaries(pool, experiment):
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
     if not os.path.exists(coverage_binaries_dir):
         os.makedirs(coverage_binaries_dir)
-    pool.map(set_up_coverage_binary, benchmarks)
-
-
-def set_up_coverage_binary(benchmark):
-    """Set up coverage binaries for |benchmark|."""
-    initialize_logs()
-    coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
-    benchmark_coverage_binary_dir = coverage_binaries_dir / benchmark
-    if not os.path.exists(benchmark_coverage_binary_dir):
-        os.mkdir(benchmark_coverage_binary_dir)
-    archive_name = 'coverage-build-%s.tar.gz' % benchmark
-    cloud_bucket_archive_path = exp_path.gcs(coverage_binaries_dir /
-                                             archive_name)
-    gsutil.cp(cloud_bucket_archive_path,
-              str(benchmark_coverage_binary_dir),
-              write_to_stdout=False)
-    archive_path = benchmark_coverage_binary_dir / archive_name
-    tar = tarfile.open(archive_path, 'r:gz')
-    tar.extractall(benchmark_coverage_binary_dir)
-    os.remove(archive_path)
+    pool.map(measure_worker.set_up_coverage_binary, benchmarks)
 
 
 def initialize_logs():
