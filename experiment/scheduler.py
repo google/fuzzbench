@@ -579,7 +579,7 @@ def schedule(experiment_config: dict, pool, queue):
     schedule_measurers(queue)
     return started_trials
 
-
+# TODO(metzman): Move measurer scheduling code into seperate module.
 def schedule_measurers(queue):
     """Schedule measurer workers. This cannot be called before
     initialize_measurers."""
@@ -606,6 +606,10 @@ def initialize_measurers(experiment_config: dict):
     queue = queue_utils.initialize_queue(experiment_config['redis_host'])
     # !!! INSTANCE GROUP.
     return queue
+
+
+def teardown_measurers(experiment_config):
+    gcloud.delete_measure_worker_template(experiment_config['experiment'])
 
 
 def schedule_loop(experiment_config: dict):
