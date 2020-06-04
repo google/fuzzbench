@@ -591,11 +591,12 @@ def schedule_measurers(queue):
     num_instances = None
 
     queued_count = counts['queued']
+    started_count = counts['started']
     if queued_count > num_instances:
         # !!! UP INSTANCES.
         return
 
-    started_count = counts['started']
+
     if started_count < num_instances:
         # !!! DOWN instances.
         pass
