@@ -207,8 +207,8 @@ def test_copy_resources_to_bucket():
         'cloud_experiment_bucket': 'gs://gsutil-bucket',
         'experiment': 'experiment'
     }
-    with mock.patch('common.gsutil.rsync') as mocked_rsync:
-        with mock.patch('common.gsutil.cp') as mocked_cp:
+    with mock.patch('common.filestore_utils.rsync') as mocked_rsync:
+        with mock.patch('common.filestore_utils.cp') as mocked_cp:
             run_experiment.copy_resources_to_bucket(config_dir, config)
             mocked_cp.assert_called_once_with(
                 'src.tar.gz',
