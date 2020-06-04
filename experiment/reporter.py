@@ -18,7 +18,7 @@ reports."""
 from common import experiment_utils
 from common import experiment_path as exp_path
 from common import filesystem
-from common import gsutil
+from common import filestore_utils
 from common import logs
 from analysis import generate_report
 from analysis import data_utils
@@ -42,11 +42,12 @@ def output_report(web_bucket, in_progress=False):
         generate_report.generate_report([experiment_name],
                                         str(reports_dir),
                                         in_progress=in_progress)
-        gsutil.rsync(str(reports_dir),
-                     web_bucket,
-                     gsutil_options=[
-                         '-h', 'Cache-Control:public,max-age=0,no-transform'
-                     ])
+        filestore_utils.rsync(str(reports_dir),
+                              web_bucket,
+                              gsutil_options=[
+                                  '-h',
+                                  'Cache-Control:public,max-age=0,no-transform'
+                              ])
         logger.debug('Done generating report.')
     except data_utils.EmptyDataError:
         logs.warning('No snapshot data.')

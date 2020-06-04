@@ -46,7 +46,6 @@ STANDARD_BENCHMARKS = {
     'perl-5.21.7',
     'proj4-2017-08-14',
     're2-2014-12-09',
-    'tcpdump-4.9.0',
     'vorbis-2017-12-11',
     'woff2-2016-05-06',
 }
