@@ -85,6 +85,7 @@ def test_create_instance():
             '--zone=zone-a',
             '--scopes=cloud-platform',
             '--machine-type=n1-standard-32',
+            '--boot-disk-size=500GB',
         ]]
 
 

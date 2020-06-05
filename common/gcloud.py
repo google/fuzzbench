@@ -25,6 +25,7 @@ from common import new_process
 # TODO(metzman): Lower this when we figure out how else we can take advantage
 # of the 30 concurrent GCB builds.
 DISPATCHER_MACHINE_TYPE = 'n1-standard-32'
+DISPATCHER_BOOT_DISK_SIZE = '500GB'
 
 # Constants for runner specs.
 RUNNER_MACHINE_TYPE = 'n1-standard-1'
@@ -91,7 +92,10 @@ def create_instance(instance_name: str,
         '--scopes=cloud-platform',
     ]
     if instance_type == InstanceType.DISPATCHER:
-        command.append('--machine-type=%s' % DISPATCHER_MACHINE_TYPE)
+        command.extend([
+            '--machine-type=%s' % DISPATCHER_MACHINE_TYPE,
+            '--boot-disk-size=%s' % DISPATCHER_BOOT_DISK_SIZE
+        ])
     else:
         command.extend([
             '--no-address',
