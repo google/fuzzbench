@@ -90,10 +90,15 @@ def get_instance_from_preempted_operation(operation, base_target_link) -> str:
     return operation['targetLink'][len(base_target_link):]
 
 
+def get_instance_group_managers():
+    """Returns the instance group managers resource."""
+    return thread_local.service.instanceGroupManagers()
+
+
 def get_instance_group_size(instance_group: str, project: str,
                             zone: str) -> int:
     """Returns the number of instances running in |instance_group|."""
-    managers = thread_local.service.instanceGroupManagers()
+    managers = get_instance_group_managers()
     request = managers.get(instanceGroupManager=instance_group,
                            project=project,
                            zone=zone)
@@ -103,7 +108,7 @@ def get_instance_group_size(instance_group: str, project: str,
 def resize_instance_group(size, instance_group, project, zone):
     """Changes the number of instances running in |instance_group| to |size|."""
     assert size >= 1
-    managers = thread_local.service.instanceGroupManagers()
+    managers = get_instance_group_managers()
     request = managers.resize(instanceGroupManager=instance_group,
                               size=size,
                               project=project,
@@ -113,7 +118,7 @@ def resize_instance_group(size, instance_group, project, zone):
 
 def delete_instance_group(instance_group, project, zone):
     """Deletes |instance_group|."""
-    managers = thread_local.service.instanceGroupManagers()
+    managers = get_instance_group_managers()
     request = managers.delete(instanceGroupManager=instance_group,
                               zone=zone,
                               project=project)
@@ -124,8 +129,8 @@ def create_instance_group(name: str, instance_template_url: str,
                           experiment: str, project: str, zone: str):
     """Creates an instance group named |name| from the template specified by
     |instance_template_url|."""
-    managers = thread_local.service.instanceGroupManagers()
-    target_size = 1  # !!!
+    managers = get_instance_group_managers()
+    target_size = 1
     base_instance_name = 'w-' + experiment
 
     body = {

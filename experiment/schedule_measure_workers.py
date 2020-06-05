@@ -85,6 +85,7 @@ def schedule(experiment_config: dict, queue):
         return
 
     if num_instances_needed != num_instances:
-        # !!! TODO(metzman): Add limits.
+        # TODO(metzman): Add some limits so always have some measurers but not
+        # too many.
         gce.resize_instance_group(num_instances_needed, instance_group_name,
                                   project, zone)
