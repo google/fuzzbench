@@ -62,7 +62,7 @@ def get_experiment_folders_dir():
 
 
 def remote_dir_exists(directory: pathlib.Path) -> bool:
-    """Does |directory| exist in the CLOUD_EXPERIMENT_BUCKET."""
+    """Does |directory| exist in the EXPERIMENT_FILESTORE."""
     return filestore_utils.ls(exp_path.gcs(directory), must_exist=False)[0] == 0
 
 
@@ -441,7 +441,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         return True
 
     def archive_crashes(self, cycle):
-        """Archive this cycle's crashes into cloud bucket."""
+        """Archive this cycle's crashes into file storage."""
         if not os.listdir(self.crashes_dir):
             logs.info('No crashes found for cycle %d.', cycle)
             return
