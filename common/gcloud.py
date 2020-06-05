@@ -165,7 +165,8 @@ def create_measure_worker_template(experiment, project, docker_image, zone,
     ]
     for item in env.items():
         command.extend(['--container-arg', '-e %s=%s' % item])
-    return new_process.execute(command)
+    new_process.execute(command)
+    return template_name
 
 
 def delete_measure_worker_template(experiment: str):

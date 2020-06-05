@@ -33,10 +33,10 @@ from common import gce
 from common import logs
 from common import retry
 from common import utils
-from common import queue_utils
 from common import yaml_utils
 from database import models
 from database import utils as db_utils
+from experiment import schedule_measure_workers
 
 # Give the trial runner a little extra time to shut down and account for how
 # long it can take to actually start running once an instance is started. 5
@@ -576,41 +576,8 @@ def schedule(experiment_config: dict, pool, queue):
     # Start pending trials.
     pending_trials = list(get_pending_trials(experiment_config['experiment']))
     started_trials = start_trials(pending_trials, experiment_config, pool)
-    schedule_measurers(queue)
+    schedule_measure_workers.schedule(experiment_config, queue)
     return started_trials
-
-# TODO(metzman): Move measurer scheduling code into seperate module.
-def schedule_measurers(queue):
-    """Schedule measurer workers. This cannot be called before
-    initialize_measurers."""
-    jobs = queue.get_jobs()
-    counts = collections.defaultdict(int)
-    for job in jobs:
-        counts[job.get_status()] += 1
-    # !!!
-    num_instances = None
-
-    queued_count = counts['queued']
-    started_count = counts['started']
-    if queued_count > num_instances:
-        # !!! UP INSTANCES.
-        return
-
-
-    if started_count < num_instances:
-        # !!! DOWN instances.
-        pass
-
-
-def initialize_measurers(experiment_config: dict):
-    """Initialize everything that will be needed to schedule measurers."""
-    queue = queue_utils.initialize_queue(experiment_config['redis_host'])
-    # !!! INSTANCE GROUP.
-    return queue
-
-
-def teardown_measurers(experiment_config):
-    gcloud.delete_measure_worker_template(experiment_config['experiment'])
 
 
 def schedule_loop(experiment_config: dict):
@@ -627,7 +594,7 @@ def schedule_loop(experiment_config: dict):
     trial_instance_manager = TrialInstanceManager(num_trials, experiment_config)
     experiment = experiment_config['experiment']
 
-    queue = initialize_measurers(experiment_config)
+    queue = schedule_measure_workers.initialize(experiment_config)
     with multiprocessing.Pool() as pool:
         handle_preempted = False
         while not all_trials_ended(experiment):
@@ -650,6 +617,7 @@ def schedule_loop(experiment_config: dict):
             # In these cases, sleep before retrying again.
             time.sleep(FAIL_WAIT_SECONDS)
 
+    schedule_measure_workers.teardown(experiment_config)
     logger.info('Finished scheduling.')
 
 
