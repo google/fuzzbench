@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Google cloud related code."""
-
 import enum
+import posixpath
 import subprocess
 import time
 from typing import List
@@ -144,35 +144,29 @@ def run_local_instance(startup_script: str = None) -> bool:
     return new_process.ProcessResult(0, '', False)
 
 
-def get_measure_worker_instance_template_name(experiment: str):
-    """Returns an instance template name for measurer workers running in
-    |experiment|."""
-    return 'measure-worker-' + experiment
-
-
-def create_measure_worker_template(experiment, project, docker_image, zone,
-                                   env):
-    """Returns a ProcessResult from running the command to create a
-    measure_worker template."""
-    template_name = get_measure_worker_instance_template_name(experiment)
+def create_instance_template(template_name, project, docker_image, zone, env):
+    """Returns a ProcessResult from running the command to create an instance
+    template."""
     command = [
         'gcloud', 'compute', '--project', project, 'instance-templates',
         'create-with-container', template_name, '--no-address',
         '--image-family=cos-stable', '--image-project=cos-cloud',
-        '--region=%' % zone, '--scopes=cloud-platform',
+        '--region=%s' % zone, '--scopes=cloud-platform',
         '--machine-type=n1-standard-1', '--boot-disk-size=50GB',
         '--preemptible', '--container-image', docker_image
     ]
     for item in env.items():
         command.extend(['--container-arg', '-e %s=%s' % item])
     new_process.execute(command)
-    return template_name
+    return posixpath.join(
+        'https://www.googleapis.com/compute/v1/projects/{}/global/'
+        'instanceTemplates/', template_name).format(project)
 
 
-def delete_measure_worker_template(experiment: str):
+def delete_measure_worker_template(template_name: str):
     """Returns a ProcessResult from running the command to delete the
     measure_worker template for this |experiment|."""
-    template_name = get_measure_worker_instance_template_name(experiment)
-    command = ['gcloud', 'compute', 'instance-templates', 'delete',
-               template_name]
+    command = [
+        'gcloud', 'compute', 'instance-templates', 'delete', template_name
+    ]
     return new_process.execute(command)

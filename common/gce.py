@@ -13,7 +13,6 @@
 # limitations under the License.
 """Module for using the Google Compute Engine (GCE) API."""
 import threading
-from typing import Dict
 
 import dateutil.parser
 
@@ -91,43 +90,30 @@ def get_instance_from_preempted_operation(operation, base_target_link) -> str:
     return operation['targetLink'][len(base_target_link):]
 
 
-def create_instance_template(
-    name: str, docker_image: str, env: Dict[str, str], project: str):
-    templates = service.instanceTemplates()
-    properties = {'disks': [{'initializeParams': 'diskSizeGb': '50'}]}
-    return request.execute() # !!! return the url.
-
-
-
-def create_instance_group(name: str, instance_template_url: str, experiment: str, zone: str):
-    managers = service.instanceGroupManagers()
-    target_size = 1 # !!!
-    base_instance_name = 'w-' + experiment
-
-    body = {
-        'baseInstanceName': base_instance_name,
-        'targetSize': target_size,
-        'name': name
-        'instanceTemplate': instance_template_url
-    }
-    request = managers.insert(
-        targetSize=target_size,
-        baseInstanceName=base_instance_name,
-        instanceTemplate=instance_template_url,
-        project=project)
-    return request.execute()
-
-
-def get_instance_group_size(
-    instance_group: str, project: str, zone: str) -> int:
-    managers = service.instanceGroupManagers()
-    request = managers.get(
-        instanceGroupManager=instance_group, project=project, zone=zone)
+def get_instance_group_size(instance_group: str, project: str,
+                            zone: str) -> int:
+    """Returns the number of instances running in |instance_group|."""
+    managers = thread_local.service.instanceGroupManagers()
+    request = managers.get(instanceGroupManager=instance_group,
+                           project=project,
+                           zone=zone)
     return request.execute()['targetSize']
 
 
 def resize_instance_group(instance_group, size, project, zone):
-    managers = service.instanceGroupManagers()
-    request = managers.get(
-        instanceGroupManager=instance_group, project=project, zone=zone)
+    """Changes the number of instances running in |instance_group| to |size|."""
+    assert size >= 1
+    managers = thread_local.service.instanceGroupManagers()
+    request = managers.get(instanceGroupManager=instance_group,
+                           project=project,
+                           zone=zone)
+    return request.execute()
+
+
+def delete_instance_group(instance_group, project, zone):
+    """Deletes |instance_group|."""
+    managers = thread_local.service.instanceGroupManagers()
+    request = managers.delete(instanceGroupManager=instance_group,
+                              zone=zone,
+                              project=project)
     return request.execute()

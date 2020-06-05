@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Code for starting and ending trials."""
-import collections
 import datetime
 import math
 import multiprocessing
