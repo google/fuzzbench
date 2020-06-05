@@ -161,9 +161,8 @@ def create_instance_template(template_name, docker_image, env, project, zone):
     for item in env.items():
         command.extend(['--container-env', '%s=%s' % item])
     new_process.execute(command)
-    return posixpath.join(
-        'https://www.googleapis.com/compute/v1/projects/{}/global/'
-        'instanceTemplates/', template_name).format(project)
+    return posixpath.join('https://www.googleapis.com/compute/v1/projects/',
+                          project, 'global', 'instanceTemplates', template_name)
 
 
 def delete_instance_template(template_name: str):
