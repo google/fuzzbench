@@ -163,7 +163,7 @@ def create_instance_template(template_name, docker_image, env, project, zone):
         'instanceTemplates/', template_name).format(project)
 
 
-def delete_measure_worker_template(template_name: str):
+def delete_instance_template(template_name: str):
     """Returns a ProcessResult from running the command to delete the
     measure_worker template for this |experiment|."""
     command = [

@@ -61,7 +61,7 @@ def teardown(experiment_config: dict):
     project = experiment_config['cloud_project']
     zone = experiment_config['cloud_compute_zone']
     gce.delete_instance_group(instance_group_name, project, zone)
-    gcloud.delete_measure_worker_template(experiment_config['experiment'])
+    gcloud.delete_instance_template(experiment_config['experiment'])
 
 
 def schedule(experiment_config: dict, queue):
