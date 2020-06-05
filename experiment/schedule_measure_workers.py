@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Module for starting instances to run measure workers."""
+import collections
 import posixpath
 
 from common import gcloud
@@ -27,6 +28,7 @@ def get_instance_group_name(experiment: str):
     |experiment|."""
     return experiment + '-measure-worker'
 
+
 def get_measure_worker_instance_template_name(experiment: str):
     """Returns an instance template name for measurer workers running in
     |experiment|."""
@@ -35,25 +37,30 @@ def get_measure_worker_instance_template_name(experiment: str):
 
 def initialize(experiment_config: dict):
     """Initialize everything that will be needed to schedule measurers."""
-    redis_host = experiment_config['redis_host']
-    queue = queue_utils.initialize_queue(redis_host)
     experiment = experiment_config['experiment']
     instance_template_name = get_measure_worker_instance_template_name(
         experiment)
     project = experiment_config['cloud_project']
     docker_image = posixpath.join('gcr.io', project, 'measure-worker')
-    env = {'REDIS_HOST': redis_host} # !!!
+    redis_host = experiment_config['redis_host']
+    env = {'REDIS_HOST': redis_host}
+    zone = experiment_config['cloud_compute_zone']
     instance_template_url = gcloud.create_instance_template(
-        instance_template_name, project, env, docker_image)
+        instance_template_name, docker_image, env, project, zone)
     instance_group_name = get_instance_group_name(experiment)
-    create_instance_group(instance_group_name, instance_template_url, project)
+    gce.create_instance_group(instance_group_name, instance_template_url,
+                              experiment, project, zone)
+    queue = queue_utils.initialize_queue(redis_host)
     return queue
 
 
 def teardown(experiment_config: dict):
+    """Teardown all resources used for running measurer workers."""
     instance_group_name = get_instance_group_name(
         experiment_config['experiment'])
-    gce.delete_instance_group(instance_group_name)
+    project = experiment_config['cloud_project']
+    zone = experiment_config['cloud_compute_zone']
+    gce.delete_instance_group(instance_group_name, project, zone)
     gcloud.delete_measure_worker_template(experiment_config['experiment'])
 
 
@@ -66,19 +73,18 @@ def schedule(experiment_config: dict, queue):
         counts[job.get_status()] += 1
 
     num_instances_needed = counts['queued'] + counts['started']
-    instance_group_name = gce.get_instance_group_name(
+    instance_group_name = get_instance_group_name(
         experiment_config['experiment'])
     project = experiment_config['cloud_project']
-    zone = experiment_config['zone']
-    num_instances = gce.get_instance_group_size(
-        instance_group_name,
-        project,
-        zone)
+    zone = experiment_config['cloud_compute_zone']
+    num_instances = gce.get_instance_group_size(instance_group_name, project,
+                                                zone)
 
-    if num_instance_needed < num_instances and num_instances == 1:
+    if num_instances_needed < num_instances and num_instances == 1:
         # Can't go below 1 instance per group.
         return
 
-    if num_instance_needed != num_instances:
+    if num_instances_needed != num_instances:
         # !!! TODO(metzman): Add limits.
-        gce.resize_instance_group(instance_group, project, zone)
+        gce.resize_instance_group(num_instances_needed, instance_group_name,
+                                  project, zone)

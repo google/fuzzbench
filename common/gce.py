@@ -100,13 +100,14 @@ def get_instance_group_size(instance_group: str, project: str,
     return request.execute()['targetSize']
 
 
-def resize_instance_group(instance_group, size, project, zone):
+def resize_instance_group(size, instance_group, project, zone):
     """Changes the number of instances running in |instance_group| to |size|."""
     assert size >= 1
     managers = thread_local.service.instanceGroupManagers()
-    request = managers.get(instanceGroupManager=instance_group,
-                           project=project,
-                           zone=zone)
+    request = managers.resize(instanceGroupManager=instance_group,
+                              size=size,
+                              project=project,
+                              zone=zone)
     return request.execute()
 
 
@@ -116,4 +117,22 @@ def delete_instance_group(instance_group, project, zone):
     request = managers.delete(instanceGroupManager=instance_group,
                               zone=zone,
                               project=project)
+    return request.execute()
+
+
+def create_instance_group(name: str, instance_template_url: str,
+                          experiment: str, project: str, zone: str):
+    """Creates an instance group named |name| from the template specified by
+    |instance_template_url|."""
+    managers = thread_local.service.instanceGroupManagers()
+    target_size = 1  # !!!
+    base_instance_name = 'w-' + experiment
+
+    body = {
+        'baseInstanceName': base_instance_name,
+        'targetSize': target_size,
+        'name': name,
+        'instanceTemplate': instance_template_url
+    }
+    request = managers.insert(body=body, project=project, zone=zone)
     return request.execute()

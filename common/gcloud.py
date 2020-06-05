@@ -144,7 +144,7 @@ def run_local_instance(startup_script: str = None) -> bool:
     return new_process.ProcessResult(0, '', False)
 
 
-def create_instance_template(template_name, project, docker_image, zone, env):
+def create_instance_template(template_name, docker_image, env, project, zone):
     """Returns a ProcessResult from running the command to create an instance
     template."""
     command = [
@@ -156,7 +156,7 @@ def create_instance_template(template_name, project, docker_image, zone, env):
         '--preemptible', '--container-image', docker_image
     ]
     for item in env.items():
-        command.extend(['--container-arg', '-e %s=%s' % item])
+        command.extend(['--container-env', '%s=%s' % item])
     new_process.execute(command)
     return posixpath.join(
         'https://www.googleapis.com/compute/v1/projects/{}/global/'
