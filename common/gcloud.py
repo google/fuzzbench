@@ -147,6 +147,9 @@ def run_local_instance(startup_script: str = None) -> bool:
 def create_instance_template(template_name, docker_image, env, project, zone):
     """Returns a ProcessResult from running the command to create an instance
     template."""
+    # Creating an instance template cannot be done using the GCE API because
+    # there is no public API for handling some docker related functionality that
+    # we need.
     command = [
         'gcloud', 'compute', '--project', project, 'instance-templates',
         'create-with-container', template_name, '--no-address',
