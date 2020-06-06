@@ -20,7 +20,7 @@ from unittest import mock
 
 import pytest
 
-from common import gsutil
+from common import filestore_utils
 from common import new_process
 from experiment import runner
 from test_libs import utils as test_utils
@@ -71,7 +71,7 @@ def trial_runner(fs, environ):
         'MAX_TOTAL_TIME': str(MAX_TOTAL_TIME)
     })
 
-    with mock.patch('common.gsutil.rm'):
+    with mock.patch('common.filestore_utils.rm'):
         trial_runner = runner.TrialRunner()
     trial_runner.initialize_directories()
     yield trial_runner
@@ -246,7 +246,7 @@ class TestIntegrationRunner:
         gcs_directory = posixpath.join(test_experiment_bucket, experiment,
                                        'experiment-folders',
                                        '%s-%s' % (benchmark, fuzzer), 'trial-1')
-        gsutil.rm(gcs_directory, force=True)
+        filestore_utils.rm(gcs_directory, force=True)
         # Add fuzzer directory to make it easy to run fuzzer.py in local
         # configuration.
         os.environ['PYTHONPATH'] = ':'.join(
@@ -272,7 +272,7 @@ class TestIntegrationRunner:
                 runner.main()
 
         gcs_corpus_directory = posixpath.join(gcs_directory, 'corpus')
-        returncode, snapshots = gsutil.ls(gcs_corpus_directory)
+        returncode, snapshots = filestore_utils.ls(gcs_corpus_directory)
 
         # Ensure that test works.
         assert returncode == 0, 'gsutil ls %s failed.' % gcs_corpus_directory
@@ -285,10 +285,10 @@ class TestIntegrationRunner:
 
         local_gcs_corpus_dir_copy = tmp_path / 'gcs_corpus_dir'
         os.mkdir(local_gcs_corpus_dir_copy)
-        gsutil.cp('-r',
-                  posixpath.join(gcs_corpus_directory, '*'),
-                  str(local_gcs_corpus_dir_copy),
-                  parallel=True)
+        filestore_utils.cp('-r',
+                           posixpath.join(gcs_corpus_directory, '*'),
+                           str(local_gcs_corpus_dir_copy),
+                           parallel=True)
         archive_size = os.path.getsize(local_gcs_corpus_dir_copy /
                                        'corpus-archive-0001.tar.gz')
 

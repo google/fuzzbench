@@ -21,7 +21,7 @@ from typing import Tuple
 from common import benchmark_utils
 from common import environment
 from common import experiment_path as exp_path
-from common import gsutil
+from common import filestore_utils
 from common import logs
 from common import new_process
 from common import utils
@@ -85,8 +85,8 @@ def copy_coverage_binaries(benchmark):
     coverage_build_archive_gcs_path = posixpath.join(
         exp_path.gcs(coverage_binaries_dir), coverage_build_archive)
 
-    return gsutil.cp(coverage_build_archive_shared_dir_path,
-                     coverage_build_archive_gcs_path)
+    return filestore_utils.cp(coverage_build_archive_shared_dir_path,
+                              coverage_build_archive_gcs_path)
 
 
 def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:

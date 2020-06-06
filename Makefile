@@ -13,6 +13,7 @@
 # limitations under the License.
 
 include docker/build.mk
+include docker/generated.mk
 
 SHELL := /bin/bash
 VENV_ACTIVATE := .venv/bin/activate
@@ -22,6 +23,9 @@ ${VENV_ACTIVATE}: requirements.txt
 	source ${VENV_ACTIVATE} && python3 -m pip install --upgrade -r requirements.txt
 
 install-dependencies: ${VENV_ACTIVATE}
+
+docker/generated.mk: docker/generate_makefile.py $(wildcard fuzzers/*/variants.yaml) ${VENV_ACTIVATE}
+	source ${VENV_ACTIVATE} && python3 $< > $@
 
 presubmit: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py
