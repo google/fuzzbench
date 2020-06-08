@@ -38,7 +38,7 @@ else:
 
 
 # TODO(zhichengcai): Change all implementations of cp, ls, and rm to stop using
-# special handling of *args as it is error prone now that there are wrappers.
+# special handling of *args. This is error prone now that there are wrappers.
 def cp(*cp_arguments, **kwargs):  # pylint: disable=invalid-name
     """Copy source to destination."""
     return filestore_utils_impl.cp(*cp_arguments, **kwargs)

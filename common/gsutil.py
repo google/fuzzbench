@@ -19,10 +19,9 @@ from common import new_process
 logger = logs.Logger('gsutil')
 
 
-def gsutil_command(arguments, *args, **kwargs):
+def gsutil_command(arguments, *args, parallel=False, **kwargs):
     """Executes a gsutil command with |arguments| and returns the result."""
     command = ['gsutil']
-    parallel = kwargs.pop('parallel', False)
     if parallel:
         command.append('-m')
     return new_process.execute(command + arguments, *args, **kwargs)
