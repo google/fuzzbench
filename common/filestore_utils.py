@@ -13,10 +13,7 @@
 # limitations under the License.
 """Helper functions for interacting with the file storage."""
 
-from common import logs
 from common import experiment_utils
-
-logger = logs.Logger('filestore_utils')
 
 
 def _using_gsutil():
