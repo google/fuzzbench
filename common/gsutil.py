@@ -36,8 +36,8 @@ def cp(*cp_arguments, **kwargs):  # pylint: disable=invalid-name
 
 
 def ls(*ls_arguments, must_exist=True, **kwargs):  # pylint: disable=invalid-name
-    """Executes gsutil's "ls" command with |ls_arguments| and returns the result
-    and the returncode. Does not except on nonzero return code if not
+    """Executes gsutil's "ls" command with |ls_arguments| and returns the
+    returncode and the result. Does not except on nonzero return code if not
     |must_exist|."""
     command = ['ls'] + list(ls_arguments)
     # Don't use parallel as it probably doesn't help at all.
