@@ -20,6 +20,7 @@ from common import filestore_utils
 # TODO(zhichengcai): Figure out how we can test filestore_utils when using
 # the local_filestore implementation.
 
+
 @mock.patch('common.new_process.execute')
 def test_keyword_args(mocked_execute):
     """Tests that keyword args, and in particular 'parallel' are handled
@@ -27,5 +28,4 @@ def test_keyword_args(mocked_execute):
     filestore_path = 'gs://fake_dir'
     filestore_utils.rm(filestore_path, recursive=True, parallel=True)
     mocked_execute.assert_called_with(
-        ['gsutil', '-m', 'rm', '-r', 'gs://fake_dir'],
-        expect_zero=True)
+        ['gsutil', '-m', 'rm', '-r', 'gs://fake_dir'], expect_zero=True)
