@@ -33,18 +33,20 @@ def test_keyword_args():
 
     with mock.patch('common.new_process.execute') as mocked_execute:
         filestore_utils.ls(filestore_path, must_exist=False)
-        mocked_execute.assert_called_with(
-            ['gsutil', 'ls', filestore_path], expect_zero=False)
+        mocked_execute.assert_called_with(['gsutil', 'ls', filestore_path],
+                                          expect_zero=False)
 
     filestore_path2 = filestore_path + '2'
 
     with mock.patch('common.new_process.execute') as mocked_execute:
         filestore_utils.cp(filestore_path, filestore_path2, parallel=True)
         mocked_execute.assert_called_with(
-            ['gsutil', '-m', 'cp', filestore_path, filestore_path2 ])
+            ['gsutil', '-m', 'cp', filestore_path, filestore_path2])
 
     with mock.patch('common.new_process.execute') as mocked_execute:
-        filestore_utils.cp(filestore_path,  filestore_path2, write_to_stdout=False)
+        filestore_utils.cp(filestore_path,
+                           filestore_path2,
+                           write_to_stdout=False)
         mocked_execute.assert_called_with(
             ['gsutil', 'cp', filestore_path, filestore_path2],
             write_to_stdout=False)
