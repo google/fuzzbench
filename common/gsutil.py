@@ -19,34 +19,34 @@ from common import new_process
 logger = logs.Logger('gsutil')
 
 
-def gsutil_command(arguments, *args, parallel=False, **kwargs):
+def gsutil_command(arguments, *args, parallel=False):
     """Executes a gsutil command with |arguments| and returns the result."""
     command = ['gsutil']
     if parallel:
         command.append('-m')
-    return new_process.execute(command + arguments, *args, **kwargs)
+    return new_process.execute(command + arguments, *args,)
 
 
-def cp(*cp_arguments, **kwargs):  # pylint: disable=invalid-name
+def cp(*cp_arguments, parallel=False):  # pylint: disable=invalid-name
     """Executes gsutil's "cp" command with |cp_arguments| and returns the
     returncode and the output."""
     command = ['cp']
     command.extend(cp_arguments)
-    return gsutil_command(command, **kwargs)
+    return gsutil_command(command, parallel)
 
 
-def ls(*ls_arguments, must_exist=True, **kwargs):  # pylint: disable=invalid-name
+def ls(*ls_arguments, must_exist=True, parallel=False):  # pylint: disable=invalid-name
     """Executes gsutil's "ls" command with |ls_arguments| and returns the result
     and the returncode. Does not except on nonzero return code if not
     |must_exist|."""
     command = ['ls'] + list(ls_arguments)
-    result = gsutil_command(command, expect_zero=must_exist, **kwargs)
+    result = gsutil_command(command, expect_zero=must_exist, parallel=parallel)
     retcode = result.retcode  # pytype: disable=attribute-error
     output = result.output.splitlines()  # pytype: disable=attribute-error
     return retcode, output
 
 
-def rm(*rm_arguments, recursive=True, force=False, **kwargs):  # pylint: disable=invalid-name
+def rm(*rm_arguments, recursive=True, force=False, parallel=False):  # pylint: disable=invalid-name
     """Executes gsutil's rm command with |rm_arguments| and returns the result.
     Uses -r if |recursive|. If |force|, then uses -f and will not except if
     return code is nonzero."""
@@ -55,7 +55,7 @@ def rm(*rm_arguments, recursive=True, force=False, **kwargs):  # pylint: disable
         command.insert(1, '-r')
     if force:
         command.insert(1, '-f')
-    return gsutil_command(command, expect_zero=(not force), **kwargs)
+    return gsutil_command(command, expect_zero=(not force), parallel=parallel)
 
 
 def rsync(  # pylint: disable=too-many-arguments
@@ -65,7 +65,7 @@ def rsync(  # pylint: disable=too-many-arguments
         recursive=True,
         gsutil_options=None,
         options=None,
-        **kwargs):
+        parallel=False):
     """Does gsutil rsync from |source| to |destination| using sane defaults that
     can be overriden. Prepends any |gsutil_options| before the rsync subcommand
     if provided."""
@@ -78,4 +78,4 @@ def rsync(  # pylint: disable=too-many-arguments
     if options is not None:
         command.extend(options)
     command.extend([source, destination])
-    return gsutil_command(command, **kwargs)
+    return gsutil_command(command, parallel=parallel)
