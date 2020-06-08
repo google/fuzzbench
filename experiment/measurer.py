@@ -612,7 +612,10 @@ def set_up_coverage_binary(benchmark):
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
     benchmark_coverage_binary_dir = coverage_binaries_dir / benchmark
     if not os.path.exists(benchmark_coverage_binary_dir):
-        os.mkdir(benchmark_coverage_binary_dir)
+        try:
+            os.makedirs(benchmark_coverage_binary_dir)
+        except FileExistsError:
+            logger.info("Race conditions for creating folders: " + benchmark)
     archive_name = 'coverage-build-%s.tar.gz' % benchmark
 
     if experiment_utils.is_gsutil_disabled():
