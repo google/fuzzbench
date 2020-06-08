@@ -29,6 +29,16 @@ def test_gsutil_command():
     assert mocked_popen.commands == [['gsutil'] + arguments]
 
 
+@mock.patch('common.new_process.execute')
+def test_ls_not_must_exist(mocked_gsutil_command):
+    """Tests that ls makes a correct call to new_process.execute when
+    must_exist=False."""
+    gsutil.ls('gs://hello', must_exist=False)
+    mocked_gsutil_command.assert_called_with(
+        ['gsutil', 'ls', 'gs://hello'],
+        expect_zero=False)
+
+
 class TestGsutilRsync:
     """Tests for gsutil_command works as expected."""
     SRC = '/src'
