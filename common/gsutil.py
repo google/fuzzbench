@@ -19,28 +19,28 @@ from common import new_process
 logger = logs.Logger('gsutil')
 
 
-def gsutil_command(arguments, *args, parallel=False, **kwargs):
+def gsutil_command(arguments, parallel=False, **kwargs):
     """Executes a gsutil command with |arguments| and returns the result."""
     command = ['gsutil']
     if parallel:
         command.append('-m')
-    return new_process.execute(command + arguments, *args, **kwargs)
+    return new_process.execute(command + arguments, **kwargs)
 
 
-def cp(*cp_arguments, parallel=False):  # pylint: disable=invalid-name
+def cp(*cp_arguments, parallel=False, expect_zero=True):  # pylint: disable=invalid-name
     """Executes gsutil's "cp" command with |cp_arguments| and returns the
     returncode and the output."""
     command = ['cp']
     command.extend(cp_arguments)
-    return gsutil_command(command, parallel)
+    return gsutil_command(command, parallel=parallel, expect_zero=expect_zero)
 
 
-def ls(*ls_arguments, must_exist=True, parallel=False):  # pylint: disable=invalid-name
+def ls(*ls_arguments, expect_zero=True):  # pylint: disable=invalid-name
     """Executes gsutil's "ls" command with |ls_arguments| and returns the result
     and the returncode. Does not except on nonzero return code if not
     |must_exist|."""
     command = ['ls'] + list(ls_arguments)
-    result = gsutil_command(command, expect_zero=must_exist, parallel=parallel)
+    result = gsutil_command(command, expect_zero=expect_zero)
     retcode = result.retcode  # pytype: disable=attribute-error
     output = result.output.splitlines()  # pytype: disable=attribute-error
     return retcode, output

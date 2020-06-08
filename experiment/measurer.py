@@ -63,7 +63,7 @@ def get_experiment_folders_dir():
 
 def remote_dir_exists(directory: pathlib.Path) -> bool:
     """Does |directory| exist in the CLOUD_EXPERIMENT_BUCKET."""
-    return filestore_utils.ls(exp_path.gcs(directory), must_exist=False)[0] == 0
+    return filestore_utils.ls(exp_path.gcs(directory), expect_zero=False)[0] == 0
 
 
 def measure_loop(experiment: str, max_total_time: int):
