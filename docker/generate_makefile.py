@@ -31,6 +31,7 @@ FUZZER_TEMPLATE = """
     --tag {base_tag}/builders/{fuzzer} \\
     --file fuzzers/{fuzzer}/builder.Dockerfile \\
     $(call cache_from,{base_tag}/builders/{fuzzer}) \\
+    {build_arguments} \\
     fuzzers/{fuzzer}
 
 .pull-{fuzzer}-builder: pull-base-builder
@@ -228,7 +229,10 @@ endif
 def generate_fuzzer(fuzzer, benchmarks, oss_fuzz_benchmarks, build_arguments):
     """Output make rules for a single fuzzer."""
     # Generate build rules for the fuzzer itself.
-    print(FUZZER_TEMPLATE.format(fuzzer=fuzzer, base_tag=BASE_TAG))
+    print(
+        FUZZER_TEMPLATE.format(fuzzer=fuzzer,
+                               base_tag=BASE_TAG,
+                               build_arguments=BUILD_ARGUMENTS))
 
     # Generate rules for fuzzer/benchmark pairs.
     for benchmark in benchmarks:
