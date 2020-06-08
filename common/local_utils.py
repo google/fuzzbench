@@ -30,7 +30,7 @@ def local_utils_command(arguments, *args, **kwargs):
 def cp(*cp_arguments, **kwargs):  # pylint: disable=invalid-name
     """Executes local_utils's "cp" command with |cp_arguments| and returns the
     returncode and the output."""
-    # Creates intermediate folders for `cp` command.
+    # Create intermediate folders for `cp` command.
     for file_or_dir_path in cp_arguments:
         dirpath = os.path.dirname(os.path.abspath(file_or_dir_path))
         if not os.path.exists(dirpath):
