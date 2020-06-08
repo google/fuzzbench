@@ -52,4 +52,4 @@ def output_report(web_bucket, in_progress=False):
                          ])
         logger.debug('Done generating report.')
     except Exception:  # pylint: disable=broad-except
-        logger.error('Error generating HTML report.')
+        logger.error('Error generating HTML report. (ignore this until first snapshot data saved)')
