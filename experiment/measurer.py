@@ -441,7 +441,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         return True
 
     def archive_crashes(self, cycle):
-        """Archive this cycle's crashes into file storage."""
+        """Archive this cycle's crashes into filestore."""
         if not os.listdir(self.crashes_dir):
             logs.info('No crashes found for cycle %d.', cycle)
             return

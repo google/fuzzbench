@@ -22,8 +22,8 @@ logger = logs.Logger('filestore_utils')
 def _using_gsutil():
     """Returns True if using Google Cloud Storage for filestore."""
     try:
-        experiment_path_format = experiment_utils.get_experiment_filestore_path(
-        )
+        experiment_path_format = (
+            experiment_utils.get_experiment_filestore_path())
     except KeyError:
         return True
 
