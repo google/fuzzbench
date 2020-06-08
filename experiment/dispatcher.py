@@ -78,7 +78,7 @@ class Experiment:  # pylint: disable=too-many-instance-attributes
         self.git_hash = self.config['git_hash']
         self.preemptible = self.config.get('preemptible_runners')
 
-        self.web_bucket = posixpath.join(self.config['web_filestore'],
+        self.web_bucket = posixpath.join(self.config['reports_filestore'],
                                          experiment_utils.get_experiment_name())
 
 

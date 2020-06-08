@@ -109,7 +109,7 @@ docker run \\
 -e CLOUD_PROJECT=fuzzbench \\
 -e CLOUD_COMPUTE_ZONE=us-central1-a \\
 -e EXPERIMENT_FILESTORE=gs://experiment-data \\
--e WEB_FILESTORE=gs://web-reports \\
+-e REPORTS_FILESTORE=gs://web-reports \\
 -e FUZZ_TARGET={oss_fuzz_target} \\
 -e C1=custom -e C2=custom2 --name=runner-container \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
@@ -147,7 +147,7 @@ docker run -v ~/.config/gcloud:/root/.config/gcloud \\
 -e CLOUD_PROJECT=fuzzbench \\
 -e CLOUD_COMPUTE_ZONE=us-central1-a \\
 -e EXPERIMENT_FILESTORE=gs://experiment-data \\
--e WEB_FILESTORE=gs://web-reports \\
+-e REPORTS_FILESTORE=gs://web-reports \\
 -e FUZZ_TARGET={oss_fuzz_target} \\
 -e C1=custom -e C2=custom2 \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\

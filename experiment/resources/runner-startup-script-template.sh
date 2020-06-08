@@ -39,7 +39,7 @@ docker run {% if local_experiment %}-v {{host_gcloud_config}}:/root/.config/gclo
 -e CLOUD_PROJECT={{cloud_project}} \
 -e CLOUD_COMPUTE_ZONE={{cloud_compute_zone}} \
 -e EXPERIMENT_FILESTORE={{experiment_filestore}} \
--e WEB_FILESTORE={{web_filestore}} \
+-e REPORTS_FILESTORE={{reports_filestore}} \
 -e FUZZ_TARGET={{fuzz_target}} \
 {{additional_env}} {% if not local_experiment %}--name=runner-container {% endif %}\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \

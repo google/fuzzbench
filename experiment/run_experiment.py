@@ -63,7 +63,7 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     """Reads |config_filename|, validates it, finds as many errors as possible,
     and returns it."""
     config = yaml_utils.read(config_filename)
-    filestore_params = {'experiment_filestore', 'web_filestore'}
+    filestore_params = {'experiment_filestore', 'reports_filestore'}
     cloud_config = {'cloud_compute_zone'}
     string_params = cloud_config.union(filestore_params)
     int_params = {'trials', 'max_total_time'}

@@ -50,7 +50,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         self.config_filename = 'config'
         self.config = {
             'experiment_filestore': 'gs://bucket',
-            'web_filestore': 'gs://web-bucket',
+            'reports_filestore': 'gs://web-bucket',
             'experiment': 'experiment-name',
             'cloud_compute_zone': 'us-central1-a',
             'trials': 10,
@@ -106,7 +106,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         self.config['local_experiment'] = True
         self.config['experiment_filestore'] = '/user/test/folder'
         self._test_invalid(
-            'web_filestore', 'gs://wrong-here', 'Config parameter "%s" is "%s".'
+            'reports_filestore', 'gs://wrong-here', 'Config parameter "%s" is "%s".'
             'Local running only supports unix file system.')
 
     def test_invalid_cloud_bucket(self):
@@ -121,7 +121,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         """Test that multiple errors are logged when multiple parameters are
         invalid."""
         self.config['experiment_filestore'] = 1
-        self.config['web_filestore'] = None
+        self.config['reports_filestore'] = None
         with mock.patch('common.yaml_utils.read') as mocked_read_yaml:
             mocked_read_yaml.return_value = self.config
             with pytest.raises(run_experiment.ValidationError):
@@ -132,7 +132,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
             'experiment_filestore', str(self.config['experiment_filestore']))
         mocked_error.assert_any_call(
             'Config parameter "%s" is "%s". It must be a lowercase string.',
-            'web_filestore', str(self.config['web_filestore']))
+            'reports_filestore', str(self.config['reports_filestore']))
 
     @mock.patch('common.logs.error')
     def _test_invalid(self, param, value, expected_log_message, mocked_error):
