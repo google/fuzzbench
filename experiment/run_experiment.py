@@ -384,10 +384,10 @@ class LocalDispatcher:
             '"${EXPERIMENT_FILESTORE}/${EXPERIMENT}/input/" ${WORK} && '
             'mkdir ${WORK}/src && '
             'tar -xvzf ${WORK}/src.tar.gz -C ${WORK}/src && '
-            'source "work/.venv/bin/activate" && '
-            'pip3 install -r "/work/src/requirements.txt" && '
-            'PYTHONPATH=/work/src python3 '
-            '/work/src/experiment/dispatcher.py || '
+            'source "${WORK}/.venv/bin/activate" && '
+            'pip3 install -r "${WORK}/src/requirements.txt" && '
+            'PYTHONPATH=${WORK}/src python3 '
+            '${WORK}/src/experiment/dispatcher.py || '
             '/bin/bash'  # Open shell if experiment fails.
         ]
         return new_process.execute(command, write_to_stdout=True)
