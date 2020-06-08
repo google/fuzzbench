@@ -98,7 +98,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
                 mocked_error.assert_called_with('Config parameter "%s" ' \
                                                 'is "%s".It must start' \
                                                 'with gs:// when running' \
-                                                'not locally.',
+                                                'on google cloud.',
                                                 'cloud_experiment_bucket',
                                                 '/local')
 
@@ -134,7 +134,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         self._test_invalid(
             'experiment_filestore', 'invalid',
             'Config parameter "%s" is "%s".' \
-            'It must start with gs:// when running not locally.'
+            'It must start with gs:// when running on google cloud.'
         )
 
     @mock.patch('common.logs.error')

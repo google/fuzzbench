@@ -124,8 +124,8 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
                 valid = False
                 logs.error(
                     'Config parameter "%s" is "%s".'
-                    'It must start with gs:// when running not locally.', param,
-                    value)
+                    'It must start with gs:// when running on google cloud.',
+                    param, value)
                 continue
 
     if not valid:
