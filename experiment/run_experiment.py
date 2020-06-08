@@ -60,11 +60,8 @@ CONFIG_DIR = 'config'
 
 
 def read_and_validate_experiment_config(config_filename: str) -> Dict:
-    """Reads |config_filename|, validates it, and returns it."""
-    # TODO(metzman) Consider exceptioning early instead of logging error. It
-    # will be less useful for users but will simplify this code quite a bit. And
-    # it isn't like anything expensive happens before this validation is done so
-    # rerunning it is cheap.
+    """Reads |config_filename|, validates it, finds as many errors as possible,
+    and returns it."""
     config = yaml_utils.read(config_filename)
     cloud_bucket_params = {'cloud_experiment_bucket', 'cloud_web_bucket'}
     filestore_params = {'experiment_filestore', 'web_filestore'}
@@ -77,18 +74,20 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     if not config.get('local_experiment', False):
         required_params = required_params.union(cloud_config)
 
+    valid = True
     # Searches alternatives for file storages settings.
     if 'experiment_filestore' not in config:
-        assert 'cloud_experiment_bucket' in config, \
-               'Config: no experiment filestore or cloud bucket.'
+        if 'cloud_experiment_bucket' not in config:
+            valie = False
+            logs.error('Config: no experiment filestore or cloud bucket.')
         config['experiment_filestore'] = config['cloud_experiment_bucket']
 
     if 'web_filestore' not in config:
-        assert 'cloud_web_bucket' in config, \
-               'Config: no web filestore or cloud bucket.'
+        if 'cloud_web_bucket' not in config:
+            valid = False
+            logs.error('Config: no web filestore or cloud bucket.')
         config['web_filestore'] = config['cloud_web_bucket']
 
-    valid = True
     for param in required_params:
         if param not in config:
             valid = False
