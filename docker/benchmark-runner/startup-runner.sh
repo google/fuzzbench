@@ -20,5 +20,4 @@ source $VIRTUALENV_DIR/bin/activate
 # The runner runs at a higher priority than other processes to ensure that it's
 # able to finish infrastructure tasks regardless of the fuzzing workload.
 export RUNNER_NICENESS="-5"
-apt-get update && apt-get install -y rsync
 nice -n $RUNNER_NICENESS python3 $ROOT_DIR/experiment/runner.py

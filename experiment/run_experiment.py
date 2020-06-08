@@ -380,7 +380,6 @@ class LocalDispatcher:
             docker_image_url,
             '/bin/bash',
             '-c',
-            'apt-get update && apt-get install -y rsync && '
             'rsync -r '
             '"${EXPERIMENT_FILESTORE}/${EXPERIMENT}/input/" ${WORK} && '
             'mkdir ${WORK}/src && '
