@@ -63,7 +63,6 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     """Reads |config_filename|, validates it, finds as many errors as possible,
     and returns it."""
     config = yaml_utils.read(config_filename)
-    cloud_bucket_params = {'cloud_experiment_bucket', 'cloud_web_bucket'}
     filestore_params = {'experiment_filestore', 'web_filestore'}
     cloud_config = {'cloud_compute_zone'}
     string_params = cloud_config.union(cloud_bucket_params).union(
@@ -75,19 +74,6 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
         required_params = required_params.union(cloud_config)
 
     valid = True
-    # Searches alternatives for file storages settings.
-    if 'experiment_filestore' not in config:
-        if 'cloud_experiment_bucket' not in config:
-            valid = False
-            logs.error('Config: no experiment filestore or cloud bucket.')
-        config['experiment_filestore'] = config['cloud_experiment_bucket']
-
-    if 'web_filestore' not in config:
-        if 'cloud_web_bucket' not in config:
-            valid = False
-            logs.error('Config: no web filestore or cloud bucket.')
-        config['web_filestore'] = config['cloud_web_bucket']
-
     for param in required_params:
         if param not in config:
             valid = False

@@ -85,21 +85,6 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
             mocked_error.assert_called_with('Config does not contain "%s".',
                                             'cloud_compute_zone')
 
-    @mock.patch('common.logs.error')
-    def test_cloud_alternative_take_effect_but_wrong_format(self, mocked_error):
-        """Tests that an error is logged when no alternative settings."""
-        del self.config['experiment_filestore']
-        self.config['cloud_experiment_bucket'] = '/local'
-        with mock.patch('common.yaml_utils.read') as mocked_read_yaml:
-            mocked_read_yaml.return_value = self.config
-            with pytest.raises(run_experiment.ValidationError):
-                run_experiment.read_and_validate_experiment_config(
-                    'config_file')
-                mocked_error.assert_called_with(
-                    'Config parameter "%s" is "%s".It must start with gs:// '
-                    'when running on google cloud.', 'cloud_experiment_bucket',
-                    '/local')
-
     def test_invalid_upper(self):
         """Tests that an error is logged when the config file has a config
         parameter that should be a lower case string but has some upper case
