@@ -19,7 +19,8 @@ from common import experiment_utils
 def _using_gsutil():
     """Returns True if using Google Cloud Storage for filestore."""
     try:
-        experiment_filestore_path = experiment_utils.get_cloud_experiment_path()
+        experiment_filestore_path = (
+            experiment_utils.get_experiment_filestore_path())
     except KeyError:
         return True
 

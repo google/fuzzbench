@@ -106,7 +106,8 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         self.config['local_experiment'] = True
         self.config['experiment_filestore'] = '/user/test/folder'
         self._test_invalid(
-            'reports_filestore', 'gs://wrong-here', 'Config parameter "%s" is "%s".'
+            'reports_filestore', 'gs://wrong-here',
+            'Config parameter "%s" is "%s".'
             'Local running only supports unix file system.')
 
     def test_invalid_cloud_bucket(self):
