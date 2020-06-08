@@ -25,6 +25,7 @@ import tarfile
 import time
 from typing import List, Set
 import queue
+import zlib
 
 from sqlalchemy import func
 from sqlalchemy import orm
@@ -621,9 +622,11 @@ def set_up_coverage_binary(benchmark):
     if experiment_utils.is_gsutil_disabled():
         local_bucket_archive_path = exp_path.local(coverage_binaries_dir /
                                                    archive_name)
-        local_utils.cp(local_bucket_archive_path,
-                       str(benchmark_coverage_binary_dir),
-                       write_to_stdout=False)
+        try:
+            local_utils.cp(local_bucket_archive_path,
+                       str(benchmark_coverage_binary_dir))
+        except subprocess.CalledProcessError:
+            logger.warning(benchmark + ": broken in copy " + str(benchmark_coverage_binary_dir))
     else:
         cloud_bucket_archive_path = exp_path.gcs(coverage_binaries_dir /
                                                  archive_name)
@@ -638,6 +641,13 @@ def set_up_coverage_binary(benchmark):
         os.remove(archive_path)
     except tarfile.ReadError:
         logger.warning("Coverage binaries should already be set up for " + str(benchmark) + ".")
+    except EOFError:
+        logger.warning("Coverage binaries should already be set up for " + str(benchmark) + ".")
+    except FileNotFoundError:
+        logger.warning("Coverage binaries should already be set up for " + str(benchmark) + ".")
+    except zlib.error:
+        logger.warning("Coverage binaries should already be set up for " + str(benchmark) + ".")
+
 
 def get_coverage_binary(benchmark: str) -> str:
     """Get the coverage binary for benchmark."""
