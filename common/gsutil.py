@@ -19,12 +19,12 @@ from common import new_process
 logger = logs.Logger('gsutil')
 
 
-def gsutil_command(arguments, *args, parallel=False):
+def gsutil_command(arguments, *args, parallel=False, **kwargs):
     """Executes a gsutil command with |arguments| and returns the result."""
     command = ['gsutil']
     if parallel:
         command.append('-m')
-    return new_process.execute(command + arguments, *args,)
+    return new_process.execute(command + arguments, *args, **kwargs)
 
 
 def cp(*cp_arguments, parallel=False):  # pylint: disable=invalid-name
