@@ -375,6 +375,7 @@ def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___,
     measurer.measure_loop(experiment_config, 100)
     assert call_count == loop_iterations
 
+
 @mock.patch('common.new_process.execute')
 def test_remote_dir_exists(mocked_execute, environ):
     """Tests that remote_dir_exists calls gsutil properly."""

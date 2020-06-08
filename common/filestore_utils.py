@@ -13,17 +13,13 @@
 # limitations under the License.
 """Helper functions for interacting with the file storage."""
 
-from common import logs
 from common import experiment_utils
-
-logger = logs.Logger('filestore_utils')
 
 
 def _using_gsutil():
     """Returns True if using Google Cloud Storage for filestore."""
     try:
-        experiment_filestore_path = (
-            experiment_utils.get_experiment_filestore_path())
+        experiment_filestore_path = experiment_utils.get_cloud_experiment_path()
     except KeyError:
         return True
 
