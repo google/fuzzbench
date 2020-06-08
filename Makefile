@@ -19,7 +19,6 @@ SHELL := /bin/bash
 VENV_ACTIVATE := .venv/bin/activate
 
 ${VENV_ACTIVATE}: requirements.txt
-	rm -rf .venv
 	python3 -m venv .venv
 	source ${VENV_ACTIVATE} && python3 -m pip install --upgrade -r requirements.txt
 
