@@ -112,22 +112,21 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
 
         if param in filestore_params:
             # Checks file storage paths format respectively.
-            if not config.get('local_experiment', False):
-                if not value.startswith('gs://'):
-                    valid = False
-                    logs.error(
-                        'Config parameter "%s" is "%s".' \
-                        'It must start with gs:// when running not locally.',
-                        param, value)
-                    continue
-            else:
+            if config.get('local_experiment', False):
                 if not value.startswith('/'):
                     valid = False
                     logs.error(
-                        'Config parameter "%s" is "%s".' \
-                        'Local running only supports unix file system.',
-                        param, value)
+                        'Config parameter "%s" is "%s".'
+                        'Local running only supports unix file system.', param,
+                        value)
                     continue
+            if not value.startswith('gs://'):
+                valid = False
+                logs.error(
+                    'Config parameter "%s" is "%s".'
+                    'It must start with gs:// when running not locally.', param,
+                    value)
+                continue
 
     if not valid:
         raise ValidationError('Config: %s is invalid.' % config_filename)
