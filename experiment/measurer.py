@@ -396,8 +396,8 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         unchanged-cycles file. This file is written to by the trial's runner."""
 
         def copy_unchanged_cycles_file():
-            result = filestore_utils.cp(exp_path.gcs(
-                self.unchanged_cycles_path),
+            unchanged_cyles_gcs_path = exp_path.gcs(self.unchanged_cycles_path)
+            result = filestore_utils.cp(unchanged_cyles_gcs_path,
                                         self.unchanged_cycles_path,
                                         expect_zero=False)
             return result.retcode == 0

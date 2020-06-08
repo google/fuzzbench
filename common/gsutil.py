@@ -40,7 +40,6 @@ def ls(*ls_arguments, must_exist=True, **kwargs):  # pylint: disable=invalid-nam
     returncode and the result. Does not except on nonzero return code if not
     |must_exist|."""
     command = ['ls'] + list(ls_arguments)
-    # Don't use parallel as it probably doesn't help at all.
     result = gsutil_command(command, expect_zero=must_exist, **kwargs)
     retcode = result.retcode  # pytype: disable=attribute-error
     output = result.output.splitlines()  # pytype: disable=attribute-error
