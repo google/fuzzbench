@@ -615,7 +615,7 @@ def set_up_coverage_binary(benchmark):
         try:
             os.makedirs(benchmark_coverage_binary_dir)
         except FileExistsError:
-            logger.info("Race conditions for creating folders: " + benchmark)
+            logger.warning(benchmark + ": Race conditions for creating folders" + benchmark_coverage_binary_dir + ".")
     archive_name = 'coverage-build-%s.tar.gz' % benchmark
 
     if experiment_utils.is_gsutil_disabled():
@@ -632,10 +632,12 @@ def set_up_coverage_binary(benchmark):
                   write_to_stdout=False)
 
     archive_path = benchmark_coverage_binary_dir / archive_name
-    tar = tarfile.open(archive_path, 'r:gz')
-    tar.extractall(benchmark_coverage_binary_dir)
-    os.remove(archive_path)
-
+    try:
+        tar = tarfile.open(archive_path, 'r:gz')
+        tar.extractall(benchmark_coverage_binary_dir)
+        os.remove(archive_path)
+    except tarfile.ReadError:
+        logger.warning("Coverage binaries should already be set up for " + benchmark + ".")
 
 def get_coverage_binary(benchmark: str) -> str:
     """Get the coverage binary for benchmark."""
