@@ -105,18 +105,22 @@ def end_expired_trials(experiment_config: dict):
     if not expired_instances:
         return
 
-    # Delete instances for expired trials.
-    running_instances = gcloud.list_instances()
-    instances_to_delete = [
-        i for i in expired_instances if i in running_instances
-    ]
-    if instances_to_delete and not gcloud.delete_instances(
-            instances_to_delete, experiment_config['cloud_compute_zone']):
-        # If we failed to delete some instances, then don't update the status
-        # of expired trials in database as we don't know which instances were
-        # successfully deleted. Wait for next iteration of end_expired_trials.
-        logger.error('Failed to delete instances after trial expiry.')
-        return
+    if not experiment_utils.is_gsutil_disabled():
+        # Delete instances for expired trials.
+        running_instances = gcloud.list_instances()
+        instances_to_delete = [
+            i for i in expired_instances if i in running_instances
+        ]
+        if instances_to_delete and not gcloud.delete_instances(
+                instances_to_delete, experiment_config['cloud_compute_zone']):
+            # If we failed to delete some instances, then don't update the status
+            # of expired trials in database as we don't know which instances were
+            # successfully deleted. Wait for next iteration of end_expired_trials.
+            logger.error('Failed to delete instances after trial expiry.')
+            return
+    else:
+        # not sure for local behaviors
+        pass
 
     db_utils.bulk_save(trials_past_expiry)
 
