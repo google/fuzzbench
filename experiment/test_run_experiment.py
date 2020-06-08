@@ -95,12 +95,10 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
             with pytest.raises(run_experiment.ValidationError):
                 run_experiment.read_and_validate_experiment_config(
                     'config_file')
-                mocked_error.assert_called_with('Config parameter "%s" ' \
-                                                'is "%s".It must start' \
-                                                'with gs:// when running' \
-                                                'on google cloud.',
-                                                'cloud_experiment_bucket',
-                                                '/local')
+                mocked_error.assert_called_with(
+                    'Config parameter "%s" is "%s".It must start with gs:// '
+                    'when running on google cloud.', 'cloud_experiment_bucket',
+                    '/local')
 
     def test_invalid_upper(self):
         """Tests that an error is logged when the config file has a config
@@ -123,19 +121,15 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         self.config['local_experiment'] = True
         self.config['experiment_filestore'] = '/user/test/folder'
         self._test_invalid(
-            'web_filestore', 'gs://wrong-here',
-            'Config parameter "%s" is "%s".' \
-            'Local running only supports unix file system.'
-        )
+            'web_filestore', 'gs://wrong-here', 'Config parameter "%s" is "%s".'
+            'Local running only supports unix file system.')
 
     def test_invalid_cloud_bucket(self):
         """Tests that an error is logged when the config file has a config
         parameter that should be a GCS bucket but is not."""
         self._test_invalid(
-            'experiment_filestore', 'invalid',
-            'Config parameter "%s" is "%s".' \
-            'It must start with gs:// when running on google cloud.'
-        )
+            'experiment_filestore', 'invalid', 'Config parameter "%s" is "%s".'
+            'It must start with gs:// when running on google cloud.')
 
     @mock.patch('common.logs.error')
     def test_multiple_invalid(self, mocked_error):
