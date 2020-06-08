@@ -380,9 +380,12 @@ class LocalDispatcher:
             docker_image_url,
             '/bin/bash',
             '-c',
-            'gsutil -m rsync -r '
-            '"${CLOUD_EXPERIMENT_BUCKET}/${EXPERIMENT}/input" ${WORK} && '
-            'source "/work/.venv/bin/activate" && '
+            'apt-get update && apt-get install -y rsync && '
+            'rsync -r '
+            '"${EXPERIMENT_FILESTORE}/${EXPERIMENT}/input/" ${WORK} && '
+            'mkdir ${WORK}/src && '
+            'tar -xvzf ${WORK}/src.tar.gz -C ${WORK}/src && '
+            'source "work/.venv/bin/activate" && '
             'pip3 install -r "/work/src/requirements.txt" && '
             'PYTHONPATH=/work/src python3 '
             '/work/src/experiment/dispatcher.py || '
