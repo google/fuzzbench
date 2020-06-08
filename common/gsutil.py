@@ -19,9 +19,10 @@ from common import new_process
 logger = logs.Logger('gsutil')
 
 
-def gsutil_command(arguments, *args, parallel=False, **kwargs):
+def gsutil_command(arguments, *args, **kwargs):
     """Executes a gsutil command with |arguments| and returns the result."""
     command = ['gsutil']
+    parallel = kwargs.pop('parallel', False)
     if parallel:
         command.append('-m')
     return new_process.execute(command + arguments, *args, **kwargs)
@@ -40,7 +41,6 @@ def ls(*ls_arguments, must_exist=True, **kwargs):  # pylint: disable=invalid-nam
     and the returncode. Does not except on nonzero return code if not
     |must_exist|."""
     command = ['ls'] + list(ls_arguments)
-    # Don't use parallel as it probably doesn't help at all.
     result = gsutil_command(command, expect_zero=must_exist, **kwargs)
     retcode = result.retcode  # pytype: disable=attribute-error
     output = result.output.splitlines()  # pytype: disable=attribute-error
