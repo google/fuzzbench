@@ -17,7 +17,6 @@ import os
 
 from common import logs
 from common import new_process
-#from common import experiment_utils
 
 logger = logs.Logger('local_utils')
 
@@ -78,8 +77,7 @@ def rsync(  # pylint: disable=too-many-arguments
         options=None,
         **kwargs):
     """Does local_utils rsync from |source| to |destination| using sane defaults
-    that can be overriden. Prepends any |local_utils_options| before the rsync
-    subcommand if provided."""
+    that can be overriden."""
     command = []
     command.append('rsync')
     if delete:
