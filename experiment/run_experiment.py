@@ -78,7 +78,7 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     # Searches alternatives for file storages settings.
     if 'experiment_filestore' not in config:
         if 'cloud_experiment_bucket' not in config:
-            valie = False
+            valid = False
             logs.error('Config: no experiment filestore or cloud bucket.')
         config['experiment_filestore'] = config['cloud_experiment_bucket']
 
