@@ -13,13 +13,14 @@
 # limitations under the License.
 
 # The order of execution is as follows:
-# 1. Pull base-image, base-builder, base-runner.
+# 1. Pull base-image, base-builder, base-runner, measure-worker.
 # 2. After pulling base-image completes: Build base-image.
 # 3. After pulling base-builder and building base-image completes: Build base-builder.
 # 3. After pulling base-runner and building base-image completes: Build base-runner.
+# 3. After pulling measure-worker and building base-runner completes: Build measure-worker.
 # This is optimized to take advantage of concurrency and caching as much as
 # possible. When nothing changes, this does build takes two minutes to complete
-# instead of ten.'
+# instead of ten.
 # See https://cloud.google.com/cloud-build/docs/speeding-up-builds for a discussion
 # on using caching.
 # See https://cloud.google.com/cloud-build/docs/configuring-builds/configure-build-step-order
@@ -96,7 +97,7 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/base-builder',
+    'gcr.io/fuzzbench/base-runner',
 
     '--tag',
     '${_REPO}/base-runner',
@@ -108,6 +109,7 @@ steps:
   ]
   # Wait for pull and building base-image to finish.
   wait_for: ['base-image', 'base-runner-pull']
+  id: 'base-runner'
 
 
 # Pull base-runner to fill cache.
@@ -132,6 +134,9 @@ steps:
 
     '--cache-from',
     '${_REPO}/measure-worker',
+
+    '--file',
+    'docker/measure-worker/Dockerfile',
 
     '.'
   ]

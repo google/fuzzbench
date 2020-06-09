@@ -310,10 +310,10 @@ def measure_trial_coverage(measure_req) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
-    set_up_coverage_binary(measure_req.benchmark)
-    logger.debug('Measuring trial: %d.', measure_req.trial_id)
 
     try:
+        set_up_coverage_binary(measure_req.benchmark)
+        logger.debug('Measuring trial: %d.', measure_req.trial_id)
         snapshot = measure_snapshot_coverage(measure_req.fuzzer,
                                              measure_req.benchmark,
                                              measure_req.trial_id,

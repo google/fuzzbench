@@ -19,14 +19,13 @@ import sys
 import time
 from typing import List
 
-import redis
-import rq
 from sqlalchemy import func
 from sqlalchemy import orm
 
 from common import experiment_utils
 from common import experiment_path as exp_path
 from common import logs
+from common import queue_utils
 from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
@@ -56,8 +55,7 @@ def measure_loop(experiment: str, max_total_time: int, redis_host: str):
         set_up_coverage_binaries(pool, experiment)
     # Using Multiprocessing.Queue will fail with a complaint about
     # inheriting queue.
-    redis_connection = redis.Redis(host=redis_host)
-    queue = rq.Queue(connection=redis_connection)
+    queue = queue_utils.initialize_queue(redis_host)
     while True:
         try:
             # Get whether all trials have ended before we measure to prevent
