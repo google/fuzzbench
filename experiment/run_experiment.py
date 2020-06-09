@@ -285,9 +285,9 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
             return None
         return tar_info
 
-    experiment_path = os.path.join(config['experiment_filestore'],
+    experiment_filestore_path = os.path.join(config['experiment_filestore'],
                                    config['experiment'])
-    base_destination = os.path.join(experiment_path, 'input')
+    base_destination = os.path.join(experiment_filestore_path, 'input')
 
     # Send the local source repository to the cloud for use by dispatcher.
     # Local changes to any file will propagate.
