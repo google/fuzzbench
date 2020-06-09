@@ -374,3 +374,16 @@ def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___,
     mocked_measure_all_trials.side_effect = mock_measure_all_trials
     measurer.measure_loop(experiment_config, 100)
     assert call_count == loop_iterations
+
+
+@mock.patch('common.new_process.execute')
+def test_remote_dir_exists(mocked_execute, environ):
+    """Tests that remote_dir_exists calls gsutil properly."""
+    work_dir = '/work'
+    os.environ['WORK'] = work_dir
+    os.environ['CLOUD_EXPERIMENT_BUCKET'] = 'gs://cloud-bucket'
+    os.environ['EXPERIMENT'] = 'example-experiment'
+    measurer.remote_dir_exists(work_dir)
+    mocked_execute.assert_called_with(
+        ['gsutil', 'ls', 'gs://cloud-bucket/example-experiment'],
+        expect_zero=False)
