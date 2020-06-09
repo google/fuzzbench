@@ -75,8 +75,8 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
 
     valid = True
     if 'cloud_experiment_bucket' in config or 'cloud_web_bucket' in config:
-        logs.warning('"cloud_experiment_bucket" and "cloud_web_bucket" are now '
-                     '"experiment_filestore" and "reports_filestore".')
+        logs.error('"cloud_experiment_bucket" and "cloud_web_bucket" are now '
+                   '"experiment_filestore" and "reports_filestore".')
 
     for param in required_params:
         if param not in config:
