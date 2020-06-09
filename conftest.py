@@ -78,5 +78,5 @@ def experiment(environ):  # pylint: disable=redefined-outer-name,unused-argument
     os.environ['WORK'] = '/work'
     os.environ['EXPERIMENT'] = 'test-experiment'
     os.environ['EXPERIMENT_FILESTORE'] = 'gs://experiment-data'
-    os.environ['REPORTS_FILESTORE'] = 'gs://web-bucket'
+    os.environ['REPORT_FILESTORE'] = 'gs://web-bucket'
     os.environ['CLOUD_PROJECT'] = 'fuzzbench'

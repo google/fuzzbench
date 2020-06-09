@@ -18,7 +18,7 @@ max_total_time: 86400
 cloud_project: fuzzbench
 cloud_compute_zone: us-central1-a
 experiment_filestore: gs://experiment-data
-reports_filestore: gs://web-reports
+report_filestore: gs://web-reports
 cloud_sql_instance_connection_name: "fuzzbench:us-central1:experiment-db=tcp:5432"
 benchmarks: "benchmark-1,benchmark-2"
 git_hash: "git-hash"
