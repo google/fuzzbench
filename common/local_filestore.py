@@ -19,15 +19,15 @@ from common import new_process
 
 
 def local_filestore_command(arguments, *args, **kwargs):
-    """Executes a local_filestore command with |arguments| and returns the result.
-    """
+    """Executes a local_filestore command with |arguments| and returns the
+    result."""
     return new_process.execute(arguments, *args, **kwargs)
 
 
 def cp(*cp_arguments, **kwargs):  # pylint: disable=invalid-name
-    """Executes local_filestore's "cp" command with |cp_arguments| and returns the
-    returncode and the output."""
-    # Create intermediate folders for `cp` command.
+    """Executes local_filestore's "cp" command with |cp_arguments| and returns
+    the returncode and the output."""
+    # Create intermediate folders for `cp` command to behave like `gsutil.cp`.
     for file_or_dir_path in cp_arguments:
         dirpath = os.path.dirname(os.path.abspath(file_or_dir_path))
         if not os.path.exists(dirpath):
@@ -39,8 +39,8 @@ def cp(*cp_arguments, **kwargs):  # pylint: disable=invalid-name
 
 
 def ls(*ls_arguments, must_exist=True, **kwargs):  # pylint: disable=invalid-name
-    """Executes local_filestore's "ls" command with |ls_arguments| and returns the
-    returncode and the result. Does not except on nonzero return code if not
+    """Executes local_filestore's "ls" command with |ls_arguments| and returns
+    the returncode and the result. Does not except on nonzero return code if not
     |must_exist|."""
     command = ['ls'] + list(ls_arguments)
     result = local_filestore_command(command, expect_zero=must_exist, **kwargs)
@@ -72,8 +72,8 @@ def rsync(  # pylint: disable=too-many-arguments
         recursive=True,
         options=None,
         **kwargs):
-    """Does local_filestore rsync from |source| to |destination| using sane defaults
-    that can be overriden."""
+    """Does local_filestore rsync from |source| to |destination| using sane
+    defaults that can be overriden."""
     command = []
     command.append('rsync')
     if delete:
