@@ -64,7 +64,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         # All but cloud_compute_zone.
         del self.config['cloud_compute_zone']
         with mock.patch('common.yaml_utils.read') as mocked_read_yaml:
-            mocked_read_yaml.side_effect = lambda config_filename: self.config
+            mocked_read_yaml.return_value = self.config
             with pytest.raises(run_experiment.ValidationError):
                 run_experiment.read_and_validate_experiment_config(
                     'config_file')
@@ -100,7 +100,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         self.config['cloud_experiment_bucket'] = 1
         self.config['cloud_web_bucket'] = None
         with mock.patch('common.yaml_utils.read') as mocked_read_yaml:
-            mocked_read_yaml.side_effect = lambda config_filename: self.config
+            mocked_read_yaml.return_value = self.config
             with pytest.raises(run_experiment.ValidationError):
                 run_experiment.read_and_validate_experiment_config(
                     'config_file')
@@ -119,7 +119,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         # Don't parameterize this function, it would be too messsy.
         self.config[param] = value
         with mock.patch('common.yaml_utils.read') as mocked_read_yaml:
-            mocked_read_yaml.side_effect = lambda config_filename: self.config
+            mocked_read_yaml.return_value = self.config
             with pytest.raises(run_experiment.ValidationError):
                 run_experiment.read_and_validate_experiment_config(
                     'config_file')
@@ -130,7 +130,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         """Tests that read_and_validat_experiment_config works as intended when
         config is valid."""
         with mock.patch('common.yaml_utils.read') as mocked_read_yaml:
-            mocked_read_yaml.side_effect = lambda config_filename: self.config
+            mocked_read_yaml.return_value = self.config
             assert (self.config == run_experiment.
                     read_and_validate_experiment_config('config_file'))
 
@@ -207,8 +207,8 @@ def test_copy_resources_to_bucket():
         'cloud_experiment_bucket': 'gs://gsutil-bucket',
         'experiment': 'experiment'
     }
-    with mock.patch('common.gsutil.rsync') as mocked_rsync:
-        with mock.patch('common.gsutil.cp') as mocked_cp:
+    with mock.patch('common.filestore_utils.rsync') as mocked_rsync:
+        with mock.patch('common.filestore_utils.cp') as mocked_cp:
             run_experiment.copy_resources_to_bucket(config_dir, config)
             mocked_cp.assert_called_once_with(
                 'src.tar.gz',

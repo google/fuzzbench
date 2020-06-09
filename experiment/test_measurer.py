@@ -100,8 +100,8 @@ def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
     assert mocked_measure_snapshot_coverage.call_args_list == expected_calls
 
 
-@mock.patch('common.gsutil.ls')
-@mock.patch('common.gsutil.rsync')
+@mock.patch('common.filestore_utils.ls')
+@mock.patch('common.filestore_utils.rsync')
 def test_measure_all_trials_not_ready(mocked_rsync, mocked_ls, experiment):
     """Test running measure_all_trials before it is ready works as intended."""
     mocked_ls.return_value = ([], 1)
@@ -137,7 +137,7 @@ def test_is_cycle_unchanged_doesnt_exist(experiment):
         assert not snapshot_measurer.is_cycle_unchanged(this_cycle)
 
 
-@mock.patch('common.gsutil.cp')
+@mock.patch('common.filestore_utils.cp')
 @mock.patch('common.filesystem.read')
 def test_is_cycle_unchanged_first_copy(mocked_read, mocked_cp, experiment):
     """Test that is_cycle_unchanged can properly determine if a cycle is
@@ -170,16 +170,17 @@ def test_is_cycle_unchanged_update(fs, experiment):
     unchanged_cycles_file_contents = (initial_unchanged_cycles_file_contents +
                                       '\n' + str(next_cycle))
     assert snapshot_measurer.is_cycle_unchanged(this_cycle)
-    with mock.patch('common.gsutil.cp') as mocked_cp:
+    with mock.patch('common.filestore_utils.cp') as mocked_cp:
         with mock.patch('common.filesystem.read') as mocked_read:
             mocked_cp.return_value = new_process.ProcessResult(0, '', False)
             mocked_read.return_value = unchanged_cycles_file_contents
             assert snapshot_measurer.is_cycle_unchanged(next_cycle)
 
 
-@mock.patch('common.gsutil.cp')
+@mock.patch('common.filestore_utils.cp')
 def test_is_cycle_unchanged_skip_cp(mocked_cp, fs, experiment):
-    """Check that is_cycle_unchanged doesn't call gsutil.cp unnecessarily."""
+    """Check that is_cycle_unchanged doesn't call filestore_utils.cp
+    unnecessarily."""
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)
     this_cycle = 100
@@ -191,7 +192,7 @@ def test_is_cycle_unchanged_skip_cp(mocked_cp, fs, experiment):
     mocked_cp.assert_not_called()
 
 
-@mock.patch('common.gsutil.cp')
+@mock.patch('common.filestore_utils.cp')
 def test_is_cycle_unchanged_no_file(mocked_cp, fs, experiment):
     """Test that is_cycle_unchanged returns False when there is no
     unchanged-cycles file."""
@@ -304,7 +305,7 @@ class TestIntegrationMeasurement:
         os.makedirs(corpus_dir)
         shutil.copy(archive, corpus_dir)
 
-        with mock.patch('common.gsutil.cp') as mocked_cp:
+        with mock.patch('common.filestore_utils.cp') as mocked_cp:
             mocked_cp.return_value = new_process.ProcessResult(0, '', False)
             # TODO(metzman): Create a system for using actual buckets in
             # integration tests.
@@ -373,3 +374,16 @@ def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___,
     mocked_measure_all_trials.side_effect = mock_measure_all_trials
     measurer.measure_loop(experiment_config, 100)
     assert call_count == loop_iterations
+
+
+@mock.patch('common.new_process.execute')
+def test_remote_dir_exists(mocked_execute, environ):
+    """Tests that remote_dir_exists calls gsutil properly."""
+    work_dir = '/work'
+    os.environ['WORK'] = work_dir
+    os.environ['CLOUD_EXPERIMENT_BUCKET'] = 'gs://cloud-bucket'
+    os.environ['EXPERIMENT'] = 'example-experiment'
+    measurer.remote_dir_exists(work_dir)
+    mocked_execute.assert_called_with(
+        ['gsutil', 'ls', 'gs://cloud-bucket/example-experiment'],
+        expect_zero=False)
