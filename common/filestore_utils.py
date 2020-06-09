@@ -67,3 +67,8 @@ def rsync(  # pylint: disable=too-many-arguments
     """Synchronize source and destination folders."""
     return filestore_utils_impl.rsync(source, destination, delete, recursive,
                                       gsutil_options, options, **kwargs)
+
+
+def cat(file_path, must_exist=True):
+    command = ['cat', file_path]
+    return gsutil_command(command, must_exist=must_exist)
