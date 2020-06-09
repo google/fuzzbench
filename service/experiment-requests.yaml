@@ -1,3 +1,21 @@
+# Experiment requests have the following format:
+#
+# - experiment: 2020-06-08  # The name of the experiment
+#   fuzzers:  # The fuzzers to run in the experiment.
+#     - aflplusplus
+#     - libfuzzer
+#
+# The name of the experiment must begin with a date using this format:
+# YYYY-MM-DD (year-month-day). It's not important what timezone is used in
+# deciding the date or if this is a day or two off. The most important thing is
+# that is unique.
+# If there already is an experiment for a particular date in this file, you can
+# either: add a suffix (e.g. "-aflplusplus" or "-2") to the experiment name, or
+# use the next date.
+#
+# You can run "make presubmit" to do basic validation on this file.
+# Please add new experiment requests towards the top of this file.
+
 - experiment: 2020-06-08
   fuzzers:
     - aflplusplus

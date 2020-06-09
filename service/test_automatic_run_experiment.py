@@ -16,10 +16,15 @@ import os
 import datetime
 from unittest import mock
 
+import pytest
+
 from common import utils
 from service import automatic_run_experiment
 
 # pylint: disable=invalid-name,unused-argument
+
+# A valid experiment name.
+EXPERIMENT = '2020-01-01'
 
 
 @mock.patch('experiment.run_experiment.start_experiment')
@@ -86,3 +91,84 @@ def test_run_diff_experiment(mocked_read, mocked_stop_experiment,
 
     mocked_stop_experiment.assert_called_with(expected_experiment_name,
                                               expected_config_file)
+
+
+@pytest.mark.parametrize(
+    ('name', 'expected_result'), [('02000-1-1', False), ('2020-1-1', False),
+                                  ('2020-01-01', True),
+                                  ('2020-01-01-aflplusplus', True),
+                                  ('2020-01-01-1', True)])
+def test_validate_experiment_name(name, expected_result):
+    """Tests that validate experiment name returns True for valid names and
+    False for names that are not valid."""
+    assert (automatic_run_experiment.validate_experiment_name(name) ==
+            expected_result)
+
+
+# Call the parameter exp_request instead of request because pytest reserves it.
+@pytest.mark.parametrize(
+    ('exp_request', 'expected_result'),
+    [
+        ({
+            'experiment': EXPERIMENT,
+            'fuzzers': ['afl']
+        }, True),
+        (1, False),  # Not a dict.
+        ({
+            'experiment': EXPERIMENT,
+            'fuzzers': []
+        }, False),  # No fuzzers.
+        ({
+            'experiment': EXPERIMENT
+        }, False),  # No fuzzers.
+        ({
+            'fuzzers': ['afl']
+        }, False),  # No experiment.
+        # Invalid experiment.
+        ({
+            'experiment': 'invalid',
+            'fuzzers': ['afl']
+        }, False),
+        # Invalid fuzzers.
+        ({
+            'experiment': EXPERIMENT,
+            'fuzzers': ['1']
+        }, False),
+    ])
+def test_validate_experiment_requests(exp_request, expected_result):
+    """Tests that validate_experiment_requests returns True for valid fuzzres
+    and False for invalid ones."""
+    assert (automatic_run_experiment.validate_experiment_requests([exp_request])
+            is expected_result)
+
+
+def test_validate_experiment_requests_duplicate_experiments():
+    """Tests that validate_experiment_requests returns False if the experiment
+    names are duplicated."""
+    requests = [
+        {
+            'experiment': EXPERIMENT,
+            'fuzzers': ['afl']
+        },
+        {
+            'experiment': EXPERIMENT,
+            'fuzzers': ['libfuzzer']
+        },
+    ]
+    assert not automatic_run_experiment.validate_experiment_requests(requests)
+
+
+def test_validate_experiment_requests_one_valid_one_invalid():
+    """Tests that validate_experiment_requests returns False even if some
+    requests are valid."""
+    requests = [
+        {
+            'experiment': EXPERIMENT,
+            'fuzzers': ['afl']
+        },
+        {
+            'experiment': '2020-02-02',
+            'fuzzers': []
+        },
+    ]
+    assert not automatic_run_experiment.validate_experiment_requests(requests)
