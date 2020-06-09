@@ -108,7 +108,8 @@ class StateFile:
             self._get_bucket_cycle_state_file_path(self.cycle - 1))
 
         return json.loads(
-            gsutil.cat(previous_state_file_bucket_path, expect_zero=False))
+            filestore_utils.cat(previous_state_file_bucket_path,
+                                must_exist=False).output)
 
     def get_previous(self):
         """Returns the previous state."""
@@ -124,7 +125,7 @@ class StateFile:
         with tempfile.NamedTemporaryFile(mode='w') as temp_file:
             temp_file.write(json.dumps(state))
             temp_file.flush()
-            gsutil.cp(temp_file.name, state_file_bucket_path)
+            filestore_utils.cp(temp_file.name, state_file_bucket_path)
 
 
 class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
@@ -274,7 +275,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
                     arcname=os.path.basename(self.crashes_dir))
         bucket_path = exp_path.gcs(
             posixpath.join(self.trial_dir, 'crashes', crashes_archive_name))
-        gsutil.cp(archive, bucket_path)
+        filestore_utils.cp(archive, bucket_path)
         os.remove(archive)
 
     def update_measured_files(self, cycle):
@@ -303,7 +304,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
 def remote_dir_exists(directory: pathlib.Path) -> bool:
     """Does |directory| exist in the CLOUD_EXPERIMENT_BUCKET."""
-    return gsutil.ls(exp_path.gcs(directory), must_exist=False)[0] == 0
+    return filestore_utils.ls(exp_path.gcs(directory), must_exist=False)[0] == 0
 
 
 def measure_trial_coverage(measure_req) -> models.Snapshot:
@@ -411,9 +412,9 @@ def set_up_coverage_binary(benchmark):
     archive_name = 'coverage-build-%s.tar.gz' % benchmark
     cloud_bucket_archive_path = exp_path.gcs(coverage_binaries_dir /
                                              archive_name)
-    gsutil.cp(cloud_bucket_archive_path,
-              str(benchmark_coverage_binary_dir),
-              write_to_stdout=False)
+    filestore_utils.cp(cloud_bucket_archive_path,
+                       str(benchmark_coverage_binary_dir),
+                       write_to_stdout=False)
     archive_path = benchmark_coverage_binary_dir / archive_name
     with tarfile.open(archive_path, 'r:gz') as tar:
         tar.extractall(benchmark_coverage_binary_dir)

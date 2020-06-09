@@ -59,7 +59,7 @@ def db_experiment(experiment_config, db):
 
 
 @pytest.mark.parametrize('new_pcs', [{'0x1', '0x2'}, set()])
-@mock.patch('common.gsutil.cp')
+@mock.patch('common.filestore_utils.cp')
 @mock.patch(
     'experiment.measurer.measure_worker.SnapshotMeasurer.get_prev_covered_pcs')
 def test_merge_new_pcs(mocked_get_prev_covered_pcs, mocked_cp, new_pcs, fs,
@@ -162,7 +162,8 @@ def test_is_cycle_unchanged_update(fs, experiment):
 
 @mock.patch('common.filestore_utils.cp')
 def test_is_cycle_unchanged_skip_cp(mocked_cp, fs, experiment):
-    """Check that is_cycle_unchanged doesn't call gsutil.cp unnecessarily."""
+    """Check that is_cycle_unchanged doesn't call filestore_utils.cp
+    unnecessarily."""
     snapshot_measurer = measure_worker.SnapshotMeasurer(FUZZER, BENCHMARK,
                                                         TRIAL_NUM,
                                                         SNAPSHOT_LOGGER)

@@ -27,8 +27,8 @@ MAX_TOTAL_TIME = 100
 # pylint: disable=unused-argument
 
 
-@mock.patch('common.gsutil.ls')
-@mock.patch('common.gsutil.cp')
+@mock.patch('common.filestore_utils.ls')
+@mock.patch('common.filestore_utils.cp')
 def test_measure_all_trials_not_ready(mocked_cp, mocked_ls, experiment):
     """Test running measure_all_trials before it is ready works as intended."""
     mocked_ls.return_value = ([], 1)
