@@ -85,6 +85,8 @@ def rsync(  # pylint: disable=too-many-arguments
         command.append('-r')
     if options is not None:
         command.extend(options)
-    # TODO: Assume `source` is a folder, but it may be a file.
-    command.extend([source + '/', destination])
+    # Add '/' at the end of `source` to behave like `gsutil.rsync`.
+    if os.path.isdir(source) and source[-1] != '/':
+        source = source + '/'
+    command.extend([source, destination])
     return local_filestore_command(command, **kwargs)
