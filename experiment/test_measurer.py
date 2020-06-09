@@ -105,7 +105,7 @@ def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
 @mock.patch('common.filestore_utils.rsync')
 def test_measure_all_trials_not_ready(mocked_rsync, mocked_ls, experiment):
     """Test running measure_all_trials before it is ready works as intended."""
-    mocked_ls.return_value = []
+    mocked_ls.return_value = new_process.ProcessResult(1, '', False)
     assert measurer.measure_all_trials(experiment_utils.get_experiment_name(),
                                        MAX_TOTAL_TIME, test_utils.MockPool(),
                                        queue.Queue())

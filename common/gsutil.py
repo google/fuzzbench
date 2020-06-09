@@ -27,7 +27,7 @@ def gsutil_command(arguments, expect_zero=True, parallel=False):
     return new_process.execute(command + arguments, expect_zero=expect_zero)
 
 
-def cp(source, destination, recursive=False, parallel=False):  # pylint: disable=invalid-name
+def cp(source, destination, parallel, recursive=False):  # pylint: disable=invalid-name
     """Executes gsutil's "cp" command with |cp_arguments| and returns the
     returncode and the output."""
     command = ['cp']
@@ -43,10 +43,7 @@ def ls(path, must_exist=True):  # pylint: disable=invalid-name
     list."""
     command = ['ls', path]
     process_result = gsutil_command(command, expect_zero=must_exist)
-    if process_result.retcode != 0:  # pytype: disable=attribute-error
-        assert not must_exist
-        return []
-    return process_result.output.splitlines()  # pytype: disable=attribute-error
+    return process_result
 
 
 def rm(path, recursive=True, force=False, parallel=False):  # pylint: disable=invalid-name
