@@ -83,7 +83,6 @@ def run_requested_experiment(dry_run):
     requested_experiment = None
     for experiment_config in requested_experiments:
         experiment_name = _get_experiment_name(experiment_config)
-        print(str(experiment_name))
         experiment_request_is_new = db_utils.query(models.Experiment).filter(
             models.Experiment.name == experiment_name).first() is None
         if experiment_request_is_new:
@@ -94,11 +93,11 @@ def run_requested_experiment(dry_run):
         logs.info('Not running new experiment.')
         return None
 
-    experiment_name = _get_experiment_name(experiment_config)
+    experiment_name = _get_experiment_name(requested_experiment)
     fuzzers = requested_experiment['fuzzers']
 
-    logs.info('Running experiment: %s with fuzzers: %s.',
-              experiment_name, ' '.join(fuzzers))
+    logs.info('Running experiment: %s with fuzzers: %s.', experiment_name,
+              ' '.join(fuzzers))
     fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=fuzzers)
     return _run_experiment(experiment_name, fuzzer_configs, dry_run)
 
