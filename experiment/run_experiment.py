@@ -59,25 +59,6 @@ FILTER_SOURCE_REGEX = re.compile(r'('
 CONFIG_DIR = 'config'
 
 
-def valid_filestore_param(config: Dict, param: str, value: str) -> bool:
-    """Checks file storage paths format respectively."""
-    if config.get('local_experiment', False):
-        if not value.startswith('/'):
-            logs.error(
-                'Config parameter "%s" is "%s".'
-                'Local running only supports unix file system.', param, value)
-            return False
-        return True
-
-    if not value.startswith('gs://'):
-        logs.error(
-            'Config parameter "%s" is "%s".'
-            'It must start with gs:// when running on google cloud.', param,
-            value)
-        return False
-    return True
-
-
 def read_and_validate_experiment_config(config_filename: str) -> Dict:
     """Reads |config_filename|, validates it, finds as many errors as possible,
     and returns it."""
@@ -88,7 +69,8 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     int_params = {'trials', 'max_total_time'}
     required_params = int_params.union(filestore_params)
 
-    if not config.get('local_experiment', False):
+    local_experiment = config.get('local_experiment', False)
+    if not local_experiment:
         required_params = required_params.union(cloud_config)
 
     valid = True
@@ -119,7 +101,20 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
 
         if param not in filestore_params:
             continue
-        valid = valid_filestore_param(config, param, value)
+
+        if local_experiment and not value.startswith('/'):
+            valid = False
+            logs.error(
+                'Config parameter "%s" is "%s".'
+                'Local running only supports unix file system.', param, value)
+            continue
+
+        if not local_experiment and not value.startswith('gs://'):
+            valid = False
+            logs.error(
+                'Config parameter "%s" is "%s".'
+                'It must start with gs:// when running on google cloud.', param,
+                value)
 
     if not valid:
         raise ValidationError('Config: %s is invalid.' % config_filename)
