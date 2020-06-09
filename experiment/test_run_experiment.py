@@ -110,7 +110,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
             'Config parameter "%s" is "%s".'
             'Local running only supports unix file system.')
 
-    def test_invalid_cloud_bucket(self):
+    def test_invalid_cloud_filestore(self):
         """Tests that an error is logged when the config file has a config
         parameter that should be a GCS bucket but is not."""
         self._test_invalid(
