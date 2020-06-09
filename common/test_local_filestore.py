@@ -61,5 +61,5 @@ class TestLocalUtilsRsync:
         with mock.patch('common.local_filestore.local_filestore_command'
                        ) as mocked_local_filestore_command:
             local_filestore.rsync(self.SRC, self.DST, **kwargs_for_rsync)
-        assert flag not in mocked_local_filestore_command.call_args_list[0][0][
-            0]
+        test_call_args_list = mocked_local_filestore_command.call_args_list
+        assert flag not in test_call_args_list[0][0][0]
