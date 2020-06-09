@@ -26,24 +26,45 @@ from service import automatic_run_experiment
 # A valid experiment name.
 EXPERIMENT = '2020-01-01'
 
+EXPERIMENT_REQUESTS = [{
+    'experiment': datetime.date(2020, 6, 8),
+    'fuzzers': ['aflplusplus', 'libfuzzer']
+}, {
+    'experiment': datetime.date(2020, 6, 5),
+    'fuzzers': ['honggfuzz', 'afl']
+}]
+
+
+@mock.patch('experiment.run_experiment.start_experiment')
+@mock.patch('common.logs.warning')
+@mock.patch('common.yaml_utils.read')
+def test_run_requested_experiment_pause_service(mocked_read, mocked_warning,
+                                                mocked_start_experiment, db):
+    """Tests that run_requested_experiment doesn't run an experiment when a
+    pause is requested."""
+    experiment_requests_with_pause = EXPERIMENT_REQUESTS.copy()
+    experiment_requests_with_pause.append(
+        automatic_run_experiment.PAUSE_SERVICE_KEYWORD)
+    mocked_read.return_value = experiment_requests_with_pause
+
+    assert (automatic_run_experiment.run_requested_experiment(dry_run=False) is
+            None)
+    mocked_warning.assert_called_with(
+        'Pause service requested, not running experiment.')
+    assert mocked_start_experiment.call_count == 0
+
 
 @mock.patch('experiment.run_experiment.start_experiment')
 @mock.patch('experiment.stop_experiment.stop_experiment')
 @mock.patch('common.yaml_utils.read')
-def test_run_diff_experiment(mocked_read, mocked_stop_experiment,
-                             mocked_start_experiment, db):
-    """Tests that run_diff_experiment starts and stops the experiment
+def test_run_requested_experiment(mocked_read, mocked_stop_experiment,
+                                  mocked_start_experiment, db):
+    """Tests that run_requested_experiment starts and stops the experiment
     properly."""
-    mocked_read.return_value = [{
-        'experiment': datetime.date(2020, 6, 8),
-        'fuzzers': ['aflplusplus', 'libfuzzer']
-    }, {
-        'experiment': datetime.date(2020, 6, 5),
-        'fuzzers': ['honggfuzz', 'afl']
-    }]
+    mocked_read.return_value = EXPERIMENT_REQUESTS
     expected_experiment_name = '2020-06-05'
     expected_fuzzers = ['honggfuzz', 'afl']
-    automatic_run_experiment.run_requested_experiment(False)
+    automatic_run_experiment.run_requested_experiment(dry_run=False)
     expected_config_file = os.path.join(utils.ROOT_DIR, 'service',
                                         'experiment-config.yaml')
 

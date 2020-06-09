@@ -285,20 +285,20 @@ make build-$FUZZER_NAME-all
 
 * Add your fuzzer to the list in
   [.github/workflows/fuzzers.yml](https://github.com/google/fuzzbench/blob/master/.github/workflows/fuzzers.yml)
-  to enable building it in our CI. This will build and briefly run your fuzzers
-  on all benchmarks when you a open a pull request to submit them.
+  to enable building it in our CI. This will build and briefly run your fuzzer
+  on all benchmarks when you a open a pull request to submit it.
 
 ## Requesting an experiment
 
 The FuzzBench service automatically runs experiments that are requested by users
-once a day. When you want the FuzzBench service to run an experiment on specific
-fuzzers fuzzer, add an experiment to
+once a day. If you want the FuzzBench service to run an experiment on specific
+fuzzers (such as the one you are adding): add an experiment request to
 [service/experiment-requests.yaml](https://github.com/google/fuzzbench/blob/master/service/experiment-requests.yaml).
-That file explains what an experiment request looks like.
-FuzzBench will generate a report comparing your fuzzer to the latest run of
-other fuzzers, so you only need to include fuzzers that you've modified in a
-meaningful way (i.e. results are likely affected by your change).
-Running `make validate-experiment-request` do validate your request.
+That file explains how to do this.
+After the experiment, FuzzBench will generate a report comparing your fuzzer to
+the latest run of other fuzzers, so you only need to include fuzzers that you've
+modified in a meaningful way (i.e. results are likely affected by your change).
+Running `make presubmit` to validate your request.
 
 ## Submitting your fuzzer
 
