@@ -108,7 +108,8 @@ class StateFile:
             self._get_bucket_cycle_state_file_path(self.cycle - 1))
 
         return json.loads(
-            filestore.cat(previous_state_file_bucket_path, must_exist=False))
+            filestore_utils.cat(previous_state_file_bucket_path,
+                                must_exist=False))
 
     def get_previous(self):
         """Returns the previous state."""
@@ -303,7 +304,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
 def remote_dir_exists(directory: pathlib.Path) -> bool:
     """Does |directory| exist in the CLOUD_EXPERIMENT_BUCKET."""
-    return gsutil.ls(exp_path.gcs(directory), must_exist=False)[0] == 0
+    return filestore_utils.ls(exp_path.gcs(directory), must_exist=False)[0] == 0
 
 
 def measure_trial_coverage(measure_req) -> models.Snapshot:
