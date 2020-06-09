@@ -59,6 +59,25 @@ FILTER_SOURCE_REGEX = re.compile(r'('
 CONFIG_DIR = 'config'
 
 
+def valid_filestore_param(config: Dict, param: str, value: str) -> bool:
+    """Checks file storage paths format respectively."""
+    if config.get('local_experiment', False):
+        if not value.startswith('/'):
+            logs.error(
+                'Config parameter "%s" is "%s".'
+                'Local running only supports unix file system.', param, value)
+            return False
+        return True
+
+    if not value.startswith('gs://'):
+        logs.error(
+            'Config parameter "%s" is "%s".'
+            'It must start with gs:// when running on google cloud.', param,
+            value)
+        return False
+    return True
+
+
 def read_and_validate_experiment_config(config_filename: str) -> Dict:
     """Reads |config_filename|, validates it, finds as many errors as possible,
     and returns it."""
@@ -73,6 +92,10 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
         required_params = required_params.union(cloud_config)
 
     valid = True
+    if 'cloud_experiment_bucket' in config or 'cloud_web_bucket' in config:
+        logs.warning('"cloud_experiment_bucket" and "cloud_wen_bucket" are now '
+                     '"experiment_filestore" and "reports_filestore".')
+
     for param in required_params:
         if param not in config:
             valid = False
@@ -94,23 +117,9 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
                 param, str(value))
             continue
 
-        if param in filestore_params:
-            # Checks file storage paths format respectively.
-            if config.get('local_experiment', False):
-                if not value.startswith('/'):
-                    valid = False
-                    logs.error(
-                        'Config parameter "%s" is "%s".'
-                        'Local running only supports unix file system.', param,
-                        value)
-                continue
-            if not value.startswith('gs://'):
-                valid = False
-                logs.error(
-                    'Config parameter "%s" is "%s".'
-                    'It must start with gs:// when running on google cloud.',
-                    param, value)
-                continue
+        if param not in filestore_params:
+            continue
+        valid = valid_filestore_param(config, param, value)
 
     if not valid:
         raise ValidationError('Config: %s is invalid.' % config_filename)
