@@ -13,6 +13,7 @@
 # limitations under the License.
 """Tests for automatic_run_experiment.py"""
 import os
+import datetime
 from unittest import mock
 
 from common import utils
@@ -23,19 +24,21 @@ from service import automatic_run_experiment
 
 @mock.patch('experiment.run_experiment.start_experiment')
 @mock.patch('experiment.stop_experiment.stop_experiment')
-@mock.patch('src_analysis.experiment_changes.get_fuzzers_changed_since_last')
-@mock.patch('service.automatic_run_experiment.get_experiment_name')
-def test_run_diff_experiment(mocked_get_experiment_name,
-                             mocked_get_fuzzers_changed_since_last,
-                             mocked_stop_experiment, mocked_start_experiment,
-                             db):
+@mock.patch('common.yaml_utils.read')
+def test_run_diff_experiment(mocked_read, mocked_stop_experiment,
+                             mocked_start_experiment, db):
     """Tests that run_diff_experiment starts and stops the experiment
     properly."""
-    expected_experiment_name = 'myexperiment'
-    mocked_get_experiment_name.return_value = expected_experiment_name
-    fuzzers = ['afl', 'aflplusplus']
-    mocked_get_fuzzers_changed_since_last.return_value = fuzzers
-    automatic_run_experiment.run_diff_experiment(False)
+    mocked_read.return_value = [{
+        'experiment': datetime.date(2020, 6, 8),
+        'fuzzers': ['aflplusplus', 'libfuzzer']
+    }, {
+        'experiment': datetime.date(2020, 6, 5),
+        'fuzzers': ['honggfuzz', 'afl']
+    }]
+    expected_experiment_name = '2020-06-05'
+    expected_fuzzers = ['honggfuzz', 'afl']
+    automatic_run_experiment.run_requested_experiment(False)
     expected_config_file = os.path.join(utils.ROOT_DIR, 'service',
                                         'experiment-config.yaml')
 
@@ -45,7 +48,8 @@ def test_run_diff_experiment(mocked_get_experiment_name,
     expected_fuzzer_configs = list(
         sorted([{
             'fuzzer': fuzzer
-        } for fuzzer in fuzzers], key=sort_key))
+        } for fuzzer in expected_fuzzers],
+               key=sort_key))
     expected_benchmarks = [
         'bloaty_fuzz_target',
         'curl_curl_fuzzer_http',
@@ -68,11 +72,11 @@ def test_run_diff_experiment(mocked_get_experiment_name,
         'vorbis-2017-12-11',
         'woff2-2016-05-06',
     ]
-    start_experiment_call_args = mocked_start_experiment.call_args_list
     expected_calls = [
         mock.call(expected_experiment_name, expected_config_file,
                   expected_benchmarks, expected_fuzzer_configs)
     ]
+    start_experiment_call_args = mocked_start_experiment.call_args_list
     assert len(start_experiment_call_args) == 1
 
     # Sort the list of fuzzer configs so that we can assert that the calls were

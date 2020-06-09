@@ -17,11 +17,8 @@ runs one if necessary. Note that this code uses a config file for experiments
 that is not generic. Thus, it only works on the official fuzzbench service. This
 script can be run manually but is intended to be run by a cronjob."""
 import argparse
-import datetime
 import os
 import sys
-
-import pytz
 
 from common import logs
 from common import fuzzer_utils
@@ -31,7 +28,6 @@ from database import models
 from database import utils as db_utils
 from experiment import run_experiment
 from experiment import stop_experiment
-from src_analysis import experiment_changes
 
 EXPERIMENT_CONFIG_FILE = os.path.join(utils.ROOT_DIR, 'service',
                                       'experiment-config.yaml')
@@ -81,7 +77,7 @@ def run_requested_experiment(dry_run):
     experiment-requests.yaml."""
     requested_experiments = yaml_utils.read(REQUESTED_EXPERIMENTS_PATH)
     requested_experiment = None
-    for experiment_config in requested_experiments:
+    for experiment_config in reversed(requested_experiments):
         experiment_name = _get_experiment_name(experiment_config)
         experiment_request_is_new = db_utils.query(models.Experiment).filter(
             models.Experiment.name == experiment_name).first() is None
