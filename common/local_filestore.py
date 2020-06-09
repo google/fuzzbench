@@ -70,6 +70,7 @@ def rsync(  # pylint: disable=too-many-arguments
         destination,
         delete=True,
         recursive=True,
+        gsutil_options=None, # TODO: Need to remove from filestore_utils.
         options=None,
         **kwargs):
     """Does local_filestore rsync from |source| to |destination| using sane
