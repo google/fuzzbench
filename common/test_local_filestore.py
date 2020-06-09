@@ -34,10 +34,22 @@ class TestLocalUtilsRsync:
     SRC = '/src'
     DST = '/dst'
 
-    def test_rsync(self):
+    @mock.patch('os.path.isdir')
+    def test_rsync_file_to_dir(self, mock_isdir):
         """Tests that rsync works as intended."""
         with mock.patch('common.local_filestore.local_filestore_command'
                        ) as mocked_local_filestore_command:
+            mock_isdir.return_value = False
+            local_filestore.rsync(self.SRC, self.DST)
+        mocked_local_filestore_command.assert_called_with(
+            ['rsync', '--delete', '-r', '/src', '/dst'])
+
+    @mock.patch('os.path.isdir')
+    def test_rsync_dir_to_dir(self, mock_isdir):
+        """Tests that rsync works as intended."""
+        with mock.patch('common.local_filestore.local_filestore_command'
+                       ) as mocked_local_filestore_command:
+            mock_isdir.return_value = True
             local_filestore.rsync(self.SRC, self.DST)
         mocked_local_filestore_command.assert_called_with(
             ['rsync', '--delete', '-r', '/src/', '/dst'])
