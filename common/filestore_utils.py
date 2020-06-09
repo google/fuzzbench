@@ -38,7 +38,9 @@ else:
 # special handling of *args. This is error prone now that there are wrappers.
 def cp(*cp_arguments, parallel=False, expect_zero=True):  # pylint: disable=invalid-name
     """Copy source to destination."""
-    return filestore_utils_impl.cp(*cp_arguments, parallel=parallel, expect_zero=expect_zero)
+    return filestore_utils_impl.cp(*cp_arguments,
+                                   parallel=parallel,
+                                   expect_zero=expect_zero)
 
 
 def ls(*ls_arguments, expect_zero=True):  # pylint: disable=invalid-name
