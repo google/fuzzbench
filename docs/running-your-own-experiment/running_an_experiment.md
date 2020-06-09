@@ -65,7 +65,7 @@ cloud_compute_zone: $PROJECT_ZONE
 # The Google Cloud Storage bucket that will store most of the experiment data.
 experiment_filestore: gs://$DATA_BUCKET_NAME
 
-# The filestore where HTML reports and summary data will be stored.
+# The Google Cloud Storage bucket where HTML reports and summary data will be stored.
 reports_filestore: gs://$REPORT_BUCKET_NAME
 
 # The connection to use to connect to the Google Cloud SQL instance.

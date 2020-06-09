@@ -61,7 +61,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
     def test_missing_required(self, mocked_error):
         """Tests that an error is logged when the config file is missing a
         required config parameter."""
-        # All but trials
+        # All but trials.
         del self.config['trials']
         with mock.patch('common.yaml_utils.read') as mocked_read_yaml:
             mocked_read_yaml.return_value = self.config
@@ -75,7 +75,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
     def test_missing_required_cloud(self, mocked_error):
         """Tests that an error is logged when the config file is missing a
         required cloudconfig parameter."""
-        # All but cloud_compute_zone
+        # All but cloud_compute_zone.
         del self.config['cloud_compute_zone']
         with mock.patch('common.yaml_utils.read') as mocked_read_yaml:
             mocked_read_yaml.return_value = self.config
@@ -102,20 +102,20 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
 
     def test_invalid_local_filestore(self):
         """Tests that an error is logged when the config file has a config
-        parameter that should be a local bucket but is not."""
+        parameter that should be a local filestore but is not."""
         self.config['local_experiment'] = True
         self.config['experiment_filestore'] = '/user/test/folder'
         self._test_invalid(
-            'reports_filestore', 'gs://wrong-here',
-            'Config parameter "%s" is "%s".'
-            'Local running only supports unix file system.')
+            'reports_filestore', 'gs://wrong-here', 'Config parameter "%s" is '
+            '"%s". Local experiments only support using Posix file systems as '
+            'filestores.')
 
     def test_invalid_cloud_filestore(self):
         """Tests that an error is logged when the config file has a config
         parameter that should be a GCS bucket but is not."""
         self._test_invalid(
-            'experiment_filestore', 'invalid', 'Config parameter "%s" is "%s".'
-            'It must start with gs:// when running on google cloud.')
+            'experiment_filestore', 'invalid', 'Config parameter "%s" is "%s". '
+            'It must start with gs:// when running on Google Cloud.')
 
     @mock.patch('common.logs.error')
     def test_multiple_invalid(self, mocked_error):

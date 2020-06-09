@@ -105,15 +105,15 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
         if local_experiment and not value.startswith('/'):
             valid = False
             logs.error(
-                'Config parameter "%s" is "%s".'
-                'Local running only supports unix file system.', param, value)
+                'Config parameter "%s" is "%s". Local experiments only support '
+                'using Posix file systems as filestores.', param, value)
             continue
 
         if not local_experiment and not value.startswith('gs://'):
             valid = False
             logs.error(
-                'Config parameter "%s" is "%s".'
-                'It must start with gs:// when running on google cloud.', param,
+                'Config parameter "%s" is "%s". '
+                'It must start with gs:// when running on Google Cloud.', param,
                 value)
 
     if not valid:
@@ -286,7 +286,7 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
         return tar_info
 
     experiment_filestore_path = os.path.join(config['experiment_filestore'],
-                                   config['experiment'])
+                                             config['experiment'])
     base_destination = os.path.join(experiment_filestore_path, 'input')
 
     # Send the local source repository to the cloud for use by dispatcher.
