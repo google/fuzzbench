@@ -69,6 +69,6 @@ def rsync(  # pylint: disable=too-many-arguments
                                       gsutil_options, options, **kwargs)
 
 
-def cat(file_path, must_exist=True):
+def cat(file_path):
     """Reads the file at |file_path| and returns the result."""
-    return filestore_utils_impl.cat(file_path, must_exist=must_exist)
+    return filestore_utils_impl.cat(file_path)

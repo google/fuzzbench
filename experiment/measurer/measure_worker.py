@@ -107,9 +107,12 @@ class StateFile:
         previous_state_file_bucket_path = (
             self._get_bucket_cycle_state_file_path(self.cycle - 1))
 
-        return json.loads(
-            filestore_utils.cat(previous_state_file_bucket_path,
-                                must_exist=False).output)
+        try:
+            result = filestore_utils.cat(previous_state_file_bucket_path)
+        except subprocess.CalledProcessError:
+            return []
+
+        return json.loads(result.output)
 
     def get_previous(self):
         """Returns the previous state."""
