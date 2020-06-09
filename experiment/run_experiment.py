@@ -103,7 +103,7 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
                         'Config parameter "%s" is "%s".'
                         'Local running only supports unix file system.', param,
                         value)
-                    continue
+                continue
             if not value.startswith('gs://'):
                 valid = False
                 logs.error(
