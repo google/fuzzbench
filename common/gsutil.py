@@ -19,31 +19,34 @@ from common import new_process
 logger = logs.Logger('gsutil')
 
 
-def gsutil_command(arguments, parallel=False, **kwargs):
+def gsutil_command(arguments, parallel=False, expect_zero=True):
     """Executes a gsutil command with |arguments| and returns the result."""
     command = ['gsutil']
     if parallel:
         command.append('-m')
-    return new_process.execute(command + arguments, **kwargs)
+    return new_process.execute(command + arguments, expect_zero=expect_zero)
 
 
-def cp(*cp_arguments, parallel=False, expect_zero=True):  # pylint: disable=invalid-name
+def cp(source, destination, recursive=False, parallel=False):  # pylint: disable=invalid-name
     """Executes gsutil's "cp" command with |cp_arguments| and returns the
     returncode and the output."""
     command = ['cp']
-    command.extend(cp_arguments)
-    return gsutil_command(command, parallel=parallel, expect_zero=expect_zero)
+    if recursive:
+        command.append('-r')
+    command.extend([source, destination])
+
+    return gsutil_command(command, parallel=parallel)
 
 
-def ls(*ls_arguments, expect_zero=True):  # pylint: disable=invalid-name
-    """Executes gsutil's "ls" command with |ls_arguments| and returns the result
-    and the returncode. Does not except on nonzero return code if not
-    |must_exist|."""
-    command = ['ls'] + list(ls_arguments)
-    result = gsutil_command(command, expect_zero=expect_zero)
-    retcode = result.retcode  # pytype: disable=attribute-error
-    output = result.output.splitlines()  # pytype: disable=attribute-error
-    return retcode, output
+def ls(path, must_exist=True):  # pylint: disable=invalid-name
+    """Executes gsutil's "ls" command on |path| and returns the results as a
+    list."""
+    command = ['ls', path]
+    process_result = gsutil_command(command, expect_zero=must_exist)
+    if process_result.retcode != 0:  # pytype: disable=attribute-error
+        assert not must_exist
+        return []
+    return process_result.output.splitlines()  # pytype: disable=attribute-error
 
 
 def rm(*rm_arguments, recursive=True, force=False, parallel=False):  # pylint: disable=invalid-name
@@ -55,6 +58,9 @@ def rm(*rm_arguments, recursive=True, force=False, parallel=False):  # pylint: d
         command.insert(1, '-r')
     if force:
         command.insert(1, '-f')
+
+    # Set expect_zero=False because "gsutil rm -f" returns nonzero on failure
+    # unlike the local version of rm.
     return gsutil_command(command, expect_zero=(not force), parallel=parallel)
 
 

@@ -51,9 +51,11 @@ FILTER_SOURCE_REGEX = re.compile(r'('
                                  r'^.*\.pyc$|'
                                  r'^__pycache__/|'
                                  r'.*~$|'
+                                 r'\#*\#$|'
                                  r'\.pytest_cache/|'
                                  r'.*/test_data/|'
                                  r'^third_party/oss-fuzz/build/|'
+                                 r'^docker/generated.mk$|'
                                  r'^docs/)')
 
 CONFIG_DIR = 'config'

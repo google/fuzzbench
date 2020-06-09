@@ -36,16 +36,20 @@ else:
 
 # TODO(zhichengcai): Change all implementations of cp, ls, and rm to stop using
 # special handling of *args. This is error prone now that there are wrappers.
-def cp(*cp_arguments, parallel=False, expect_zero=True):  # pylint: disable=invalid-name
-    """Copy source to destination."""
-    return filestore_utils_impl.cp(*cp_arguments,
-                                   parallel=parallel,
-                                   expect_zero=expect_zero)
+def cp(source, destination, recursive=False, parallel=False):  # pylint: disable=invalid-name
+    """Copies |source| to |destination|."""
+    return filestore_utils_impl.cp(source,
+                                   destination,
+                                   recursive=recursive,
+                                   parallel=parallel)
 
 
-def ls(*ls_arguments, expect_zero=True):  # pylint: disable=invalid-name
-    """List files or folders."""
-    return filestore_utils_impl.ls(*ls_arguments, expect_zero=expect_zero)
+def ls(path, must_exist=True):  # pylint: disable=invalid-name
+    """Lists files or folders in |path|. Doesn't except on failure if must_exist
+    is False otherwise can raise subprocess.CalledProcessError.
+    Returns the output of ls split line-by-line (for example ls('directory/')
+    returns every file in the directory."""
+    return filestore_utils_impl.ls(path, must_exist=must_exist)
 
 
 def rm(*rm_arguments, recursive=True, force=False, parallel=False):  # pylint: disable=invalid-name
@@ -64,7 +68,7 @@ def rsync(  # pylint: disable=too-many-arguments
         gsutil_options=None,
         options=None,
         parallel=False):
-    """Synchronize source and destination folders."""
+    """Syncs |source| and |destination| folders."""
     return filestore_utils_impl.rsync(source,
                                       destination,
                                       delete,

@@ -16,6 +16,7 @@
 from unittest import mock
 
 from common import filestore_utils
+from common import new_process
 
 # TODO(zhichengcai): Figure out how we can test filestore_utils when using
 # the local_filestore implementation.
@@ -32,13 +33,15 @@ def test_keyword_args():
             ['gsutil', '-m', 'rm', '-r', filestore_path], expect_zero=True)
 
     with mock.patch('common.new_process.execute') as mocked_execute:
-        filestore_utils.ls(filestore_path, must_exist=False)
+        mocked_execute.return_value = new_process.ProcessResult(0, '', '')
+        filestore_utils.ls(filestore_path)
         mocked_execute.assert_called_with(['gsutil', 'ls', filestore_path],
-                                          expect_zero=False)
+                                          expect_zero=True)
 
     filestore_path2 = filestore_path + '2'
 
     with mock.patch('common.new_process.execute') as mocked_execute:
         filestore_utils.cp(filestore_path, filestore_path2, parallel=True)
         mocked_execute.assert_called_with(
-            ['gsutil', '-m', 'cp', filestore_path, filestore_path2])
+            ['gsutil', '-m', 'cp', filestore_path, filestore_path2],
+            expect_zero=True)

@@ -15,6 +15,7 @@
 
 import os
 import shutil
+import subprocess
 from unittest import mock
 import queue
 
@@ -104,7 +105,7 @@ def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
 @mock.patch('common.filestore_utils.rsync')
 def test_measure_all_trials_not_ready(mocked_rsync, mocked_ls, experiment):
     """Test running measure_all_trials before it is ready works as intended."""
-    mocked_ls.return_value = ([], 1)
+    mocked_ls.return_value = []
     assert measurer.measure_all_trials(experiment_utils.get_experiment_name(),
                                        MAX_TOTAL_TIME, test_utils.MockPool(),
                                        queue.Queue())
@@ -199,7 +200,7 @@ def test_is_cycle_unchanged_no_file(mocked_cp, fs, experiment):
     # Make sure we log if there is no unchanged-cycles file.
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)
-    mocked_cp.return_value = new_process.ProcessResult(1, '', False)
+    mocked_cp.side_effect = subprocess.CalledProcessError(1, ['fakecommand'])
     assert not snapshot_measurer.is_cycle_unchanged(0)
 
 
@@ -377,13 +378,13 @@ def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___,
 
 
 @mock.patch('common.new_process.execute')
-def test_remote_dir_exists(mocked_execute, environ):
+def test_path_exists_in_experiment_filestore(mocked_execute, environ):
     """Tests that remote_dir_exists calls gsutil properly."""
     work_dir = '/work'
     os.environ['WORK'] = work_dir
     os.environ['CLOUD_EXPERIMENT_BUCKET'] = 'gs://cloud-bucket'
     os.environ['EXPERIMENT'] = 'example-experiment'
-    measurer.remote_dir_exists(work_dir)
+    measurer.exists_in_experiment_filestore(work_dir)
     mocked_execute.assert_called_with(
         ['gsutil', 'ls', 'gs://cloud-bucket/example-experiment'],
         expect_zero=False)

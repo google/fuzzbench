@@ -21,6 +21,7 @@ import os
 import pathlib
 import posixpath
 import sys
+import subprocess
 import tarfile
 import time
 from typing import List, Set
@@ -61,10 +62,9 @@ def get_experiment_folders_dir():
     return exp_path.path('experiment-folders')
 
 
-def remote_dir_exists(directory: pathlib.Path) -> bool:
-    """Does |directory| exist in the CLOUD_EXPERIMENT_BUCKET."""
-    return filestore_utils.ls(exp_path.gcs(directory),
-                              expect_zero=False)[0] == 0
+def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
+    """Returns True if |path| exists in the experiment_filestore."""
+    return bool(filestore_utils.ls(exp_path.gcs(path), must_exist=False))
 
 
 def measure_loop(experiment: str, max_total_time: int):
@@ -108,7 +108,7 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
     logger.info('Measuring all trials.')
 
     experiment_folders_dir = get_experiment_folders_dir()
-    if not remote_dir_exists(experiment_folders_dir):
+    if not exists_in_experiment_filestore(experiment_folders_dir):
         return True
 
     max_cycle = _time_to_cycle(max_total_time)
@@ -398,10 +398,12 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
         def copy_unchanged_cycles_file():
             unchanged_cyles_gcs_path = exp_path.gcs(self.unchanged_cycles_path)
-            result = filestore_utils.cp(unchanged_cyles_gcs_path,
-                                        self.unchanged_cycles_path,
-                                        expect_zero=False)
-            return result.retcode == 0
+            try:
+                filestore_utils.cp(unchanged_cyles_gcs_path,
+                                   self.unchanged_cycles_path)
+                return True
+            except subprocess.CalledProcessError:
+                return False
 
         if not os.path.exists(self.unchanged_cycles_path):
             if not copy_unchanged_cycles_file():
@@ -535,10 +537,10 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     corpus_archive_dir = os.path.dirname(corpus_archive_dst)
     if not os.path.exists(corpus_archive_dir):
         os.makedirs(corpus_archive_dir)
-    if filestore_utils.cp(corpus_archive_src,
-                          corpus_archive_dst,
-                          expect_zero=False,
-                          write_to_stdout=False)[0] != 0:
+
+    try:
+        filestore_utils.cp(corpus_archive_src, corpus_archive_dst)
+    except subprocess.CalledProcessError:
         snapshot_logger.warning('Corpus not found for cycle: %d.', cycle)
         return None
 
@@ -590,8 +592,7 @@ def set_up_coverage_binary(benchmark):
     cloud_bucket_archive_path = exp_path.gcs(coverage_binaries_dir /
                                              archive_name)
     filestore_utils.cp(cloud_bucket_archive_path,
-                       str(benchmark_coverage_binary_dir),
-                       write_to_stdout=False)
+                       str(benchmark_coverage_binary_dir))
     archive_path = benchmark_coverage_binary_dir / archive_name
     tar = tarfile.open(archive_path, 'r:gz')
     tar.extractall(benchmark_coverage_binary_dir)
