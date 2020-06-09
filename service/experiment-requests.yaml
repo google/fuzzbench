@@ -1,4 +1,4 @@
-- experiment: test-experiment-requests
+- experiment: 2020-06-08
   fuzzers:
     - aflplusplus
     - libfuzzer

@@ -26,6 +26,9 @@ import pytz
 from common import logs
 from common import fuzzer_utils
 from common import utils
+from common import yaml_utils
+from database import models
+from database import utils as db_utils
 from experiment import run_experiment
 from experiment import stop_experiment
 from src_analysis import experiment_changes
@@ -65,16 +68,25 @@ BENCHMARKS = [
 ]
 
 
+def _get_experiment_name(experiment_config: dict) -> str:
+    """Returns the name of the experiment described by experiment_config as a
+    string."""
+    # Use str because the yaml parser will parse things like `2020-05-06` as
+    # a datetime if not included in quotes.
+    return str(experiment_config['experiment'])
+
+
 def run_requested_experiment(dry_run):
     """Run the oldest requested experiment that hasn't been run yet in
     experiment-requests.yaml."""
     requested_experiments = yaml_utils.read(REQUESTED_EXPERIMENTS_PATH)
     requested_experiment = None
     for experiment_config in requested_experiments:
-        experiment_name = experiment_config['experiment']
-        experiment_not_yet_run = db_utils.query(models.Experiment).filter(
+        experiment_name = _get_experiment_name(experiment_config)
+        print(str(experiment_name))
+        experiment_request_is_new = db_utils.query(models.Experiment).filter(
             models.Experiment.name == experiment_name).first() is None
-        if not experiment_not_yet_run:
+        if experiment_request_is_new:
             requested_experiment = experiment_config
             break
 
@@ -82,19 +94,18 @@ def run_requested_experiment(dry_run):
         logs.info('Not running new experiment.')
         return None
 
-    experiment_name = requested_experiment['experiment']
+    experiment_name = _get_experiment_name(experiment_config)
     fuzzers = requested_experiment['fuzzers']
 
     logs.info('Running experiment: %s with fuzzers: %s.',
               experiment_name, ' '.join(fuzzers))
     fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=fuzzers)
-    return _run_experiment(fuzzer_configs, dry_run)
+    return _run_experiment(experiment_name, fuzzer_configs, dry_run)
 
 
-def _run_experiment(fuzzer_configs, dry_run=False):
-    """Run an experiment on |fuzzer_configs| and shut it down once it
-    terminates."""
-    experiment_name = get_experiment_name()
+def _run_experiment(experiment_name, fuzzer_configs, dry_run=False):
+    """Run an experiment named |experiment_name| on |fuzzer_configs| and shut it
+    down once it terminates."""
     logs.info('Starting experiment: %s.', experiment_name)
     if dry_run:
         logs.info('Dry run. Not actually running experiment.')
