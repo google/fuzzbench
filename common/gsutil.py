@@ -49,11 +49,11 @@ def ls(path, must_exist=True):  # pylint: disable=invalid-name
     return process_result.output.splitlines()  # pytype: disable=attribute-error
 
 
-def rm(*rm_arguments, recursive=True, force=False, parallel=False):  # pylint: disable=invalid-name
+def rm(path, recursive=True, force=False, parallel=False):  # pylint: disable=invalid-name
     """Executes gsutil's rm command with |rm_arguments| and returns the result.
     Uses -r if |recursive|. If |force|, then uses -f and will not except if
     return code is nonzero."""
-    command = ['rm'] + list(rm_arguments)[:]
+    command = ['rm', path]
     if recursive:
         command.insert(1, '-r')
     if force:

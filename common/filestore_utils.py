@@ -52,9 +52,9 @@ def ls(path, must_exist=True):  # pylint: disable=invalid-name
     return filestore_utils_impl.ls(path, must_exist=must_exist)
 
 
-def rm(*rm_arguments, recursive=True, force=False, parallel=False):  # pylint: disable=invalid-name
-    """Remove files or folders."""
-    return filestore_utils_impl.rm(*rm_arguments,
+def rm(path, recursive=True, force=False, parallel=False):  # pylint: disable=invalid-name
+    """Remove |path|."""
+    return filestore_utils_impl.rm(path,
                                    recursive=recursive,
                                    force=force,
                                    parallel=parallel)
