@@ -126,12 +126,11 @@ def delete_instance_group(instance_group, project, zone):
 
 
 def create_instance_group(name: str, instance_template_url: str,
-                          experiment: str, project: str, zone: str):
+                          base_instance_name: str, project: str, zone: str):
     """Creates an instance group named |name| from the template specified by
     |instance_template_url|."""
     managers = get_instance_group_managers()
     target_size = 1
-    base_instance_name = 'w-' + experiment
 
     body = {
         'baseInstanceName': base_instance_name,

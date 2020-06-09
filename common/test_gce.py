@@ -70,10 +70,11 @@ def test_create_instance_group(mocked_get_instance_group_managers):
     """Tests that create_instance_group uses the GCE API correctly."""
     mock_managers = mock.Mock()
     mocked_get_instance_group_managers.return_value = mock_managers
-    gce.create_instance_group(INSTANCE_GROUP, INSTANCE_TEMPLATE_URL, EXPERIMENT,
-                              PROJECT, ZONE)
+    base_instance_name = 'm-' + EXPERIMENT
+    gce.create_instance_group(INSTANCE_GROUP, INSTANCE_TEMPLATE_URL,
+                              base_instance_name, PROJECT, ZONE)
     body = {
-        'baseInstanceName': 'w-' + EXPERIMENT,
+        'baseInstanceName': 'm-' + EXPERIMENT,
         'targetSize': 1,
         'name': INSTANCE_GROUP,
         'instanceTemplate': INSTANCE_TEMPLATE_URL,

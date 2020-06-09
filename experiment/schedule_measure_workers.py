@@ -47,9 +47,15 @@ def initialize(experiment_config: dict):
     zone = experiment_config['cloud_compute_zone']
     instance_template_url = gcloud.create_instance_template(
         instance_template_name, docker_image, env, project, zone)
+
     instance_group_name = get_instance_group_name(experiment)
+
+    # GCE will create instances for this group in the format
+    # "m-$experiment-$UNIQUE_ID". Use 'm' as short for "measurer".
+    base_instance_name = 'm-' + experiment
+
     gce.create_instance_group(instance_group_name, instance_template_url,
-                              experiment, project, zone)
+                              base_instance_name, project, zone)
     queue = queue_utils.initialize_queue(redis_host)
     return queue
 
@@ -80,7 +86,7 @@ def schedule(experiment_config: dict, queue):
     num_instances = gce.get_instance_group_size(instance_group_name, project,
                                                 zone)
 
-    if num_instances_needed < num_instances and num_instances == 1:
+    if not num_instances_needed:
         # Can't go below 1 instance per group.
         return
 
