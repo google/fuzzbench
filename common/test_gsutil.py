@@ -28,6 +28,7 @@ def test_gsutil_command():
         gsutil.gsutil_command(arguments)
     assert mocked_popen.commands == [['gsutil'] + arguments]
 
+
 @pytest.mark.parametrize(('must_exist'), [True, False])
 def test_ls_must_exist(must_exist):
     """Tests that ls makes a correct call to new_process.execute when
