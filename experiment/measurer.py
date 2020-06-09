@@ -586,8 +586,7 @@ def set_up_coverage_binary(benchmark):
     if not os.path.exists(benchmark_coverage_binary_dir):
         os.mkdir(benchmark_coverage_binary_dir)
     archive_name = 'coverage-build-%s.tar.gz' % benchmark
-    filestore_archive_path = exp_path.gcs(coverage_binaries_dir /
-                                             archive_name)
+    filestore_archive_path = exp_path.gcs(coverage_binaries_dir / archive_name)
     filestore_utils.cp(filestore_archive_path,
                        str(benchmark_coverage_binary_dir),
                        write_to_stdout=False)
