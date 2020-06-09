@@ -28,14 +28,14 @@ def test_gsutil_command():
         gsutil.gsutil_command(arguments)
     assert mocked_popen.commands == [['gsutil'] + arguments]
 
-
-@mock.patch('common.new_process.execute')
-def test_ls_not_must_exist(mocked_gsutil_command):
+@pytest.mark.parametrize(('must_exist'), [True, False])
+def test_ls_must_exist(must_exist):
     """Tests that ls makes a correct call to new_process.execute when
-    must_exist=False."""
-    gsutil.ls('gs://hello', must_exist=False)
-    mocked_gsutil_command.assert_called_with(['gsutil', 'ls', 'gs://hello'],
-                                             expect_zero=False)
+    must_exist is specified."""
+    with mock.patch('common.new_process.execute') as mocked_execute:
+        gsutil.ls('gs://hello', must_exist=must_exist)
+        mocked_execute.assert_called_with(['gsutil', 'ls', 'gs://hello'],
+                                          expect_zero=must_exist)
 
 
 class TestGsutilRsync:
