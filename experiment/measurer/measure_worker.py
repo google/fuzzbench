@@ -109,7 +109,7 @@ class StateFile:
 
         return json.loads(
             filestore_utils.cat(previous_state_file_bucket_path,
-                                must_exist=False))
+                                must_exist=False).output)
 
     def get_previous(self):
         """Returns the previous state."""
