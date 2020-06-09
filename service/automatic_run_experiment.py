@@ -12,10 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Determines if an experiment should be run and runs one if necessary.
-Note that this code uses a config file for experiments that is not generic.
-Thus, it only works on the official fuzzbench service. This script can be
-run manually but is intended to be run by a cronjob."""
+"""Reads experiment-requests.yaml and determines if an experiment should run and
+runs one if necessary. Note that this code uses a config file for experiments
+that is not generic. Thus, it only works on the official fuzzbench service. This
+script can be run manually but is intended to be run by a cronjob."""
 import argparse
 import datetime
 import os
@@ -32,6 +32,9 @@ from src_analysis import experiment_changes
 
 EXPERIMENT_CONFIG_FILE = os.path.join(utils.ROOT_DIR, 'service',
                                       'experiment-config.yaml')
+
+REQUESTED_EXPERIMENTS_PATH = os.path.join(utils.ROOT_DIR, 'service',
+                                          'experiment-requests.yaml')
 
 # TODO(metzman): Stop hardcoding benchmarks and support marking benchmarks as
 # disabled using a config file in each benchmark.
@@ -62,18 +65,28 @@ BENCHMARKS = [
 ]
 
 
-def get_experiment_name():
-    """Returns the name of the experiment to run."""
-    timezone = pytz.timezone('America/Los_Angeles')
-    time_now = datetime.datetime.now(timezone)
-    return time_now.strftime('%Y-%m-%d')
+def run_requested_experiment(dry_run):
+    """Run the oldest requested experiment that hasn't been run yet in
+    experiment-requests.yaml."""
+    requested_experiments = yaml_utils.read(REQUESTED_EXPERIMENTS_PATH)
+    requested_experiment = None
+    for experiment_config in requested_experiments:
+        experiment_name = experiment_config['experiment']
+        experiment_not_yet_run = db_utils.query(models.Experiment).filter(
+            models.Experiment.name == experiment_name).first() is None
+        if not experiment_not_yet_run:
+            requested_experiment = experiment_config
+            break
 
+    if requested_experiment is None:
+        logs.info('Not running new experiment.')
+        return None
 
-def run_diff_experiment(dry_run):
-    """Run a diff experiment. This is an experiment that runs only on
-    fuzzers that have changed since the last experiment."""
-    fuzzers = experiment_changes.get_fuzzers_changed_since_last()
-    logs.info('Running experiment with fuzzers: %s.', ' '.join(fuzzers))
+    experiment_name = requested_experiment['experiment']
+    fuzzers = requested_experiment['fuzzers']
+
+    logs.info('Running experiment: %s with fuzzers: %s.',
+              experiment_name, ' '.join(fuzzers))
     fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=fuzzers)
     return _run_experiment(fuzzer_configs, dry_run)
 
@@ -91,31 +104,20 @@ def _run_experiment(fuzzer_configs, dry_run=False):
     stop_experiment.stop_experiment(experiment_name, EXPERIMENT_CONFIG_FILE)
 
 
-def run_full_experiment():
-    """Run a full experiment."""
-    fuzzer_configs = fuzzer_utils.get_fuzzer_configs()
-    return _run_experiment(fuzzer_configs)
-
-
 def main():
     """Run an experiment."""
     logs.initialize()
-    parser = argparse.ArgumentParser(
-        description='Run a full or diff experiment (if needed).')
+    parser = argparse.ArgumentParser(description='Run a requested experiment.')
     # TODO(metzman): Add a way to exit immediately if there is already an
     # experiment running. FuzzBench's scheduler isn't smart enough to deal with
     # this properly.
-    parser.add_argument('experiment_type', choices=['diff', 'full'])
     parser.add_argument('-d',
                         '--dry-run',
                         help='Dry run, don\'t actually run the experiment',
                         default=False,
                         action='store_true')
     args = parser.parse_args()
-    if args.experiment_type == 'full':
-        run_full_experiment()
-    else:
-        run_diff_experiment(args.dry_run)
+    run_requested_experiment(args.dry_run)
     return 0
 
 
