@@ -1,0 +1,4 @@
+- experiment: test-experiment-requests
+  fuzzers:
+    - aflplusplus
+    - libfuzzer
