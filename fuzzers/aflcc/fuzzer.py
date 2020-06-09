@@ -190,7 +190,8 @@ def get_fuzz_targets():
     # for these benchmarks, only return one file
     targets = {'curl': 'curl_fuzzer_http', 
                'openssl': 'x509',
-               'systemd': 'fuzz-link-parser'}
+               'systemd': 'fuzz-link-parser',
+               'php': 'php-fuzz-parser'}
 
     for target,fuzzname in targets.items():
         if is_benchmark(target):
@@ -249,12 +250,12 @@ def post_build(fuzz_target):
     if os.system(bin1_cmd) != 0:
         raise ValueError("command '{command}' failed".format(command=bin1_cmd))
 
-    # ...the normalized build with optimized dictionary
-    print('[post_build] Generating normalized-none-opt')
+    # ...the normalized build with non-optimized dictionary
+    print('[post_build] Generating normalized-none-nopt')
     os.environ['AFL_COVERAGE_TYPE'] = 'ORIGINAL'
     os.environ['AFL_CONVERT_COMPARISON_TYPE'] = 'NONE'
-    os.environ['AFL_DICT_TYPE'] = 'OPTIMIZED'
-    bin2_cmd = "{compiler} {flags} {target}.bc -o {target}-normalized-none-opt {ldflags}".format(compiler='/afl/aflc-clang-fast++', flags=cppflags, target=fuzz_target, ldflags=ldflags)
+    os.environ['AFL_DICT_TYPE'] = 'NORMAL'
+    bin2_cmd = "{compiler} {flags} {target}.bc -o {target}-normalized-none-nopt {ldflags}".format(compiler='/afl/aflc-clang-fast++', flags=cppflags, target=fuzz_target, ldflags=ldflags)
     if os.system(bin2_cmd) != 0:
         raise ValueError("command '{command}' failed".format(command=bin2_cmd))
 
@@ -329,7 +330,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     # Use a dictionary for original afl as well
     print('[run_fuzzer] Running AFL for original binary')
-    src_file = "{target}-normalized-none-opt.dict".format(target=target_binary)
+    src_file = "{target}-normalized-none-nopt.dict".format(target=target_binary)
     dst_file = "{target}-original.dict".format(target=target_binary)
     shutil.copy(src_file, dst_file)
     # instead of generating a new dict, just hack this one 
@@ -344,8 +345,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
     print('[run_fuzzer] Running AFL for normalized and optimized dictionary')
     afl_fuzz_thread2 = threading.Thread(target=run_fuzz,
                                         args=(input_corpus, output_corpus,
-                                              "{target}-normalized-none-opt".format(target=target_binary), 
-                                              ['-S', 'slave-normalized-opt']))
+                                              "{target}-normalized-none-nopt".format(target=target_binary), 
+                                              ['-S', 'slave-normalized-nopt']))
     afl_fuzz_thread2.start()
 
     print('[run_fuzzer] Running AFL for FBSP and optimized dictionary')

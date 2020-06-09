@@ -47,7 +47,7 @@ ENV LLVM_CONFIG=llvm-config-3.8
 # Note: the commit number is for branch 'nodebug'
 RUN git clone https://github.com/Samsung/afl_cc.git /afl && \
     cd /afl && \
-    git checkout 33d9ef078f33dfc2b55656c7b34caec870a98767 && \
+    git checkout c9486dfdf35b7d5f58ce4f9dae141031d2f9f3f1 && \
     AFL_NO_X86=1 make && \
     cd /afl/llvm_mode && \
     CC=clang-3.8 CXX=clang++-3.8 CFLAGS= CXXFLAGS= make
