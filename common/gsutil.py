@@ -19,7 +19,7 @@ from common import new_process
 logger = logs.Logger('gsutil')
 
 
-def gsutil_command(arguments, parallel=False, expect_zero=True):
+def gsutil_command(arguments, expect_zero=True, parallel=False):
     """Executes a gsutil command with |arguments| and returns the result."""
     command = ['gsutil']
     if parallel:
