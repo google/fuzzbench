@@ -84,5 +84,6 @@ def rsync(  # pylint: disable=too-many-arguments
         command.append('-r')
     if options is not None:
         command.extend(options)
+    # TODO: Assume `source` is a folder, but it may be a file.
     command.extend([source + '/', destination])
     return local_filestore_command(command, **kwargs)
