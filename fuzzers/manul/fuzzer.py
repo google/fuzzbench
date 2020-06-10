@@ -43,4 +43,4 @@ def fuzz(input_corpus, output_corpus, target_binary):
         'python3', 'manul.py', '-i', input_corpus, '-o', output_corpus, '-c',
         '/out/manul/manul_lin.config', target_binary + ' @@'
     ])
-    subprocess.check_call(command, cwd=os.path.join(os.environ['OUT'], 'manul'))
+    subprocess.check_call(command, cwd=os.path.join('/out/manul/'))
