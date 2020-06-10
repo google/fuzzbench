@@ -16,8 +16,7 @@ ARG parent_image=gcr.io/fuzzbench/base-builder
 FROM $parent_image
 
 RUN cd / && git clone https://github.com/mxmssh/manul /manul && \
-    cd /manul && cat manul_lin.config | sed -e "s/mutator_weights=afl:10,radamsa:0/mutator_weights=afl:3,radamsa:7/" \
-    > tempfile && rm manul_lin.config && mv tempfile manul_lin.config
+    cd /manul && sed -i "s/mutator_weights=afl:10,radamsa:0/mutator_weights=afl:3,radamsa:7/" manul_lin.config
 
 RUN cd / && git clone https://github.com/google/AFL.git /afl && \
     cd /afl && \
