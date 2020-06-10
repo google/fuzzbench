@@ -208,7 +208,7 @@ def test_run_cov_new_units(mocked_execute, fs, environ):
     """Tests that run_cov_new_units does a coverage run as we expect."""
     os.environ = {
         'WORK': '/work',
-        'CLOUD_EXPERIMENT_BUCKET': 'gs://bucket',
+        'EXPERIMENT_FILESTORE': 'gs://bucket',
         'EXPERIMENT': 'experiment',
     }
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
@@ -239,7 +239,7 @@ def test_run_cov_new_units(mocked_execute, fs, environ):
                               '/work/measurement-folders/benchmark-a-fuzzer-a'
                               '/trial-12/sancovs'),
             'WORK': '/work',
-            'CLOUD_EXPERIMENT_BUCKET': 'gs://bucket',
+            'EXPERIMENT_FILESTORE': 'gs://bucket',
             'EXPERIMENT': 'experiment',
         },
         'expect_zero': False,
@@ -381,7 +381,7 @@ def test_remote_dir_exists(mocked_execute, environ):
     """Tests that remote_dir_exists calls gsutil properly."""
     work_dir = '/work'
     os.environ['WORK'] = work_dir
-    os.environ['CLOUD_EXPERIMENT_BUCKET'] = 'gs://cloud-bucket'
+    os.environ['EXPERIMENT_FILESTORE'] = 'gs://cloud-bucket'
     os.environ['EXPERIMENT'] = 'example-experiment'
     measurer.remote_dir_exists(work_dir)
     mocked_execute.assert_called_with(

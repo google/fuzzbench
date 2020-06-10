@@ -62,7 +62,7 @@ def get_experiment_folders_dir():
 
 
 def remote_dir_exists(directory: pathlib.Path) -> bool:
-    """Does |directory| exist in the CLOUD_EXPERIMENT_BUCKET."""
+    """Does |directory| exist in the EXPERIMENT_FILESTORE."""
     return filestore_utils.ls(exp_path.gcs(directory), must_exist=False)[0] == 0
 
 
@@ -396,8 +396,8 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         unchanged-cycles file. This file is written to by the trial's runner."""
 
         def copy_unchanged_cycles_file():
-            unchanged_cyles_gcs_path = exp_path.gcs(self.unchanged_cycles_path)
-            result = filestore_utils.cp(unchanged_cyles_gcs_path,
+            unchanged_cycles_gcs_path = exp_path.gcs(self.unchanged_cycles_path)
+            result = filestore_utils.cp(unchanged_cycles_gcs_path,
                                         self.unchanged_cycles_path,
                                         expect_zero=False)
             return result.retcode == 0
@@ -441,7 +441,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         return True
 
     def archive_crashes(self, cycle):
-        """Archive this cycle's crashes into cloud bucket."""
+        """Archive this cycle's crashes into filestore."""
         if not os.listdir(self.crashes_dir):
             logs.info('No crashes found for cycle %d.', cycle)
             return
@@ -586,9 +586,8 @@ def set_up_coverage_binary(benchmark):
     if not os.path.exists(benchmark_coverage_binary_dir):
         os.mkdir(benchmark_coverage_binary_dir)
     archive_name = 'coverage-build-%s.tar.gz' % benchmark
-    cloud_bucket_archive_path = exp_path.gcs(coverage_binaries_dir /
-                                             archive_name)
-    filestore_utils.cp(cloud_bucket_archive_path,
+    filestore_archive_path = exp_path.gcs(coverage_binaries_dir / archive_name)
+    filestore_utils.cp(filestore_archive_path,
                        str(benchmark_coverage_binary_dir),
                        write_to_stdout=False)
     archive_path = benchmark_coverage_binary_dir / archive_name
