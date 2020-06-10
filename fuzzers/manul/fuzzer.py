@@ -13,7 +13,6 @@
 # limitations under the License.
 
 """Manul Integration"""
-
 import os
 import subprocess
 import shutil
@@ -45,7 +44,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
       target_binary: Absolute path to the fuzz target binary.
     """
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
-    print("Done this @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     os.chdir('./manul')
     # Run your fuzzer on the benchmark.
     commands = ([
