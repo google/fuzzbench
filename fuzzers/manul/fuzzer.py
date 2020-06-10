@@ -23,7 +23,7 @@ def build():
     """Build benchmark and copy fuzzer to $OUT."""
     afl_fuzzer.prepare_build_environment()
     utils.build_benchmark()
-    # move manul base to /out
+    # Move manul base to /out.
     shutil.move('/manul', os.environ['OUT'])
 
 
@@ -42,6 +42,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # Run fuzzer on the benchmark.
     command = ([
         'python3', 'manul.py', '-i', input_corpus, '-o', output_corpus,
-        target_binary + ' @@'
+        '-c', '/out/manul/manul_lin.config', target_binary + ' @@'
     ])
-    subprocess.call(command)
+    subprocess.check_call(command)
