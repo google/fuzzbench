@@ -153,12 +153,14 @@ def test_do_sync_changed(mocked_execute, mocked_is_corpus_dir_same, fs,
             ('gs://bucket/experiment-name/experiment-folders/'
              'benchmark-1-fuzzer-name-a/trial-1/corpus/'
              'corpus-archive-1337.tar.gz')
-        ]),
+        ],
+                  expect_zero=True),
         mock.call([
             'gsutil', 'rsync', '-d', '-r', 'results-copy',
             ('gs://bucket/experiment-name/experiment-folders/'
              'benchmark-1-fuzzer-name-a/trial-1/results')
-        ])
+        ],
+                  expect_zero=True)
     ]
     unchanged_cycles_path = os.path.join(trial_runner.results_dir,
                                          'unchanged-cycles')
@@ -272,10 +274,7 @@ class TestIntegrationRunner:
                 runner.main()
 
         gcs_corpus_directory = posixpath.join(gcs_directory, 'corpus')
-        returncode, snapshots = filestore_utils.ls(gcs_corpus_directory)
-
-        # Ensure that test works.
-        assert returncode == 0, 'gsutil ls %s failed.' % gcs_corpus_directory
+        snapshots = filestore_utils.ls(gcs_corpus_directory)
 
         assert len(snapshots) >= 2
 
@@ -285,9 +284,9 @@ class TestIntegrationRunner:
 
         local_gcs_corpus_dir_copy = tmp_path / 'gcs_corpus_dir'
         os.mkdir(local_gcs_corpus_dir_copy)
-        filestore_utils.cp('-r',
-                           posixpath.join(gcs_corpus_directory, '*'),
+        filestore_utils.cp(posixpath.join(gcs_corpus_directory, '*'),
                            str(local_gcs_corpus_dir_copy),
+                           recursive=True,
                            parallel=True)
         archive_size = os.path.getsize(local_gcs_corpus_dir_copy /
                                        'corpus-archive-0001.tar.gz')
