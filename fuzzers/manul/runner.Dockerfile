@@ -13,4 +13,4 @@
 # limitations under the License.
 
 FROM gcr.io/fuzzbench/base-runner
-RUN pip3 install psutil
+RUN python3 -m pip install psutil
