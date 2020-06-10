@@ -51,29 +51,35 @@ FILTER_SOURCE_REGEX = re.compile(r'('
                                  r'^.*\.pyc$|'
                                  r'^__pycache__/|'
                                  r'.*~$|'
+                                 r'\#*\#$|'
                                  r'\.pytest_cache/|'
                                  r'.*/test_data/|'
                                  r'^third_party/oss-fuzz/build/|'
+                                 r'^docker/generated.mk$|'
                                  r'^docs/)')
 
 CONFIG_DIR = 'config'
 
 
 def read_and_validate_experiment_config(config_filename: str) -> Dict:
-    """Reads |config_filename|, validates it, and returns it."""
-    # TODO(metzman) Consider exceptioning early instead of logging error. It
-    # will be less useful for users but will simplify this code quite a bit. And
-    # it isn't like anything expensive happens before this validation is done so
-    # rerunning it is cheap.
+    """Reads |config_filename|, validates it, finds as many errors as possible,
+    and returns it."""
     config = yaml_utils.read(config_filename)
-    bucket_params = {'cloud_experiment_bucket', 'cloud_web_bucket'}
-    string_params = {
-        'cloud_compute_zone', 'cloud_experiment_bucket', 'cloud_web_bucket'
-    }
+    filestore_params = {'experiment_filestore', 'report_filestore'}
+    cloud_config = {'cloud_compute_zone'}
+    string_params = cloud_config.union(filestore_params)
     int_params = {'trials', 'max_total_time'}
-    required_params = int_params.union(string_params)
+    required_params = int_params.union(filestore_params)
+
+    local_experiment = config.get('local_experiment', False)
+    if not local_experiment:
+        required_params = required_params.union(cloud_config)
 
     valid = True
+    if 'cloud_experiment_bucket' in config or 'cloud_web_bucket' in config:
+        logs.error('"cloud_experiment_bucket" and "cloud_web_bucket" are now '
+                   '"experiment_filestore" and "report_filestore".')
+
     for param in required_params:
         if param not in config:
             valid = False
@@ -95,11 +101,22 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
                 param, str(value))
             continue
 
-        if param in bucket_params and not value.startswith('gs://'):
+        if param not in filestore_params:
+            continue
+
+        if local_experiment and not value.startswith('/'):
             valid = False
             logs.error(
-                'Config parameter "%s" is "%s". It must start with gs://.',
-                param, value)
+                'Config parameter "%s" is "%s". Local experiments only support '
+                'using Posix file systems as filestores.', param, value)
+            continue
+
+        if not local_experiment and not value.startswith('gs://'):
+            valid = False
+            logs.error(
+                'Config parameter "%s" is "%s". '
+                'It must start with gs:// when running on Google Cloud.', param,
+                value)
 
     if not valid:
         raise ValidationError('Config: %s is invalid.' % config_filename)
@@ -262,7 +279,7 @@ def start_dispatcher(config: Dict, config_dir: str):
 
 def copy_resources_to_bucket(config_dir: str, config: Dict):
     """Copy resources the dispatcher will need for the experiment to the
-    cloud_experiment_bucket."""
+    experiment_filestore."""
 
     def filter_file(tar_info):
         """Filter out unnecessary directories."""
@@ -270,9 +287,9 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
             return None
         return tar_info
 
-    cloud_experiment_path = os.path.join(config['cloud_experiment_bucket'],
-                                         config['experiment'])
-    base_destination = os.path.join(cloud_experiment_path, 'input')
+    experiment_filestore_path = os.path.join(config['experiment_filestore'],
+                                             config['experiment'])
+    base_destination = os.path.join(experiment_filestore_path, 'input')
 
     # Send the local source repository to the cloud for use by dispatcher.
     # Local changes to any file will propagate.
@@ -327,11 +344,6 @@ class LocalDispatcher:
         sql_database_arg = 'SQL_DATABASE_URL=sqlite:///{}'.format(
             os.path.join(shared_volume_dir, 'local.db'))
 
-        home = os.environ['HOME']
-        host_gcloud_config_arg = (
-            'HOST_GCLOUD_CONFIG={home}/{gcloud_config_dir}'.format(
-                home=home, gcloud_config_dir='.config/gcloud'))
-
         base_docker_tag = experiment_utils.get_base_docker_tag(
             self.config['cloud_project'])
         set_instance_name_arg = 'INSTANCE_NAME={instance_name}'.format(
@@ -340,28 +352,22 @@ class LocalDispatcher:
             experiment=self.config['experiment'])
         set_cloud_project_arg = 'CLOUD_PROJECT={cloud_project}'.format(
             cloud_project=self.config['cloud_project'])
-        set_cloud_experiment_bucket_arg = (
-            'CLOUD_EXPERIMENT_BUCKET={cloud_experiment_bucket}'.format(
-                cloud_experiment_bucket=self.config['cloud_experiment_bucket']))
+        set_experiment_filestore_arg = (
+            'EXPERIMENT_FILESTORE={experiment_filestore}'.format(
+                experiment_filestore=self.config['experiment_filestore']))
         docker_image_url = '{base_docker_tag}/dispatcher-image'.format(
             base_docker_tag=base_docker_tag)
-        volume_arg = '{home}/.config/gcloud:/root/.config/gcloud'.format(
-            home=home)
         command = [
             'docker',
             'run',
             '-ti',
             '--rm',
             '-v',
-            volume_arg,
-            '-v',
             '/var/run/docker.sock:/var/run/docker.sock',
             '-v',
             shared_volume_volume_arg,
             '-e',
             shared_volume_env_arg,
-            '-e',
-            host_gcloud_config_arg,
             '-e',
             set_instance_name_arg,
             '-e',
@@ -371,7 +377,7 @@ class LocalDispatcher:
             '-e',
             sql_database_arg,
             '-e',
-            set_cloud_experiment_bucket_arg,
+            set_experiment_filestore_arg,
             '-e',
             'LOCAL_EXPERIMENT=True',
             '--cap-add=SYS_PTRACE',
@@ -424,7 +430,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
             '-e INSTANCE_NAME="{instance_name}" '
             '-e EXPERIMENT="{experiment}" '
             '-e CLOUD_PROJECT="{cloud_project}" '
-            '-e CLOUD_EXPERIMENT_BUCKET="{cloud_experiment_bucket}" '
+            '-e EXPERIMENT_FILESTORE="{experiment_filestore}" '
             '-e POSTGRES_PASSWORD="{postgres_password}" '
             '-e CLOUD_SQL_INSTANCE_CONNECTION_NAME='
             '"{cloud_sql_instance_connection_name}" '
@@ -441,7 +447,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
             # the contents of a dictionary, and use it instead of hardcoding
             # the configs we use.
             cloud_project=self.config['cloud_project'],
-            cloud_experiment_bucket=self.config['cloud_experiment_bucket'],
+            experiment_filestore=self.config['experiment_filestore'],
             cloud_sql_instance_connection_name=(
                 cloud_sql_instance_connection_name),
             base_docker_tag=base_docker_tag,

@@ -13,43 +13,50 @@
 # limitations under the License.
 """Helper functions for interacting with the file storage."""
 
-from common import logs
 from common import experiment_utils
-
-logger = logs.Logger('filestore_utils')
 
 
 def _using_gsutil():
     """Returns True if using Google Cloud Storage for filestore."""
     try:
-        experiment_path_format = experiment_utils.get_cloud_experiment_path()
+        experiment_filestore_path = (
+            experiment_utils.get_experiment_filestore_path())
     except KeyError:
         return True
 
-    return experiment_path_format.startswith('gs://')
+    return experiment_filestore_path.startswith('gs://')
 
 
 if _using_gsutil():
     from common import gsutil as filestore_utils_impl
 else:
     # When gsutil is not used in the context, here it should use local_utils.
-    # TODO(zhichengcai): local_utils
+    # TODO(zhichengcai): Implement local_filestore.py and import it here.
     from common import gsutil as filestore_utils_impl
 
 
-def cp(*cp_arguments, **kwargs):  # pylint: disable=invalid-name
-    """Copy source to destination."""
-    return filestore_utils_impl.cp(*cp_arguments, **kwargs)
+# TODO(zhichengcai): Change all implementations of cp, ls, and rm to stop using
+# special handling of *args. This is error prone now that there are wrappers.
+def cp(source, destination, recursive=False, parallel=False):  # pylint: disable=invalid-name
+    """Copies |source| to |destination|."""
+    return filestore_utils_impl.cp(source,
+                                   destination,
+                                   recursive=recursive,
+                                   parallel=parallel)
 
 
-def ls(*ls_arguments, must_exist=True, **kwargs):  # pylint: disable=invalid-name
-    """List files or folders."""
-    return filestore_utils_impl.ls(*ls_arguments, must_exist, **kwargs)
+def ls(path, must_exist=True):  # pylint: disable=invalid-name
+    """Lists files or folders in |path|. If |must_exist|
+    is True then it can raise subprocess.CalledProcessError."""
+    return filestore_utils_impl.ls(path, must_exist=must_exist)
 
 
-def rm(*rm_arguments, recursive=True, force=False, **kwargs):  # pylint: disable=invalid-name
-    """Remove files or folders."""
-    return filestore_utils_impl.rm(*rm_arguments, recursive, force, **kwargs)
+def rm(path, recursive=True, force=False, parallel=False):  # pylint: disable=invalid-name
+    """Removes |path|."""
+    return filestore_utils_impl.rm(path,
+                                   recursive=recursive,
+                                   force=force,
+                                   parallel=parallel)
 
 
 def rsync(  # pylint: disable=too-many-arguments
@@ -59,7 +66,12 @@ def rsync(  # pylint: disable=too-many-arguments
         recursive=True,
         gsutil_options=None,
         options=None,
-        **kwargs):
-    """Synchronize source and destination folders."""
-    return filestore_utils_impl.rsync(source, destination, delete, recursive,
-                                      gsutil_options, options, **kwargs)
+        parallel=False):
+    """Syncs |source| and |destination| folders."""
+    return filestore_utils_impl.rsync(source,
+                                      destination,
+                                      delete,
+                                      recursive,
+                                      gsutil_options,
+                                      options,
+                                      parallel=parallel)
