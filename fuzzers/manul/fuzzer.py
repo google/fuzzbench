@@ -47,12 +47,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     os.chdir('./manul')
     # Run your fuzzer on the benchmark.
     commands = ([
-        'python3',
-        'manul.py',
-        '-i',
-        input_corpus,
-        '-o',
-        output_corpus,
+        'python3', 'manul.py', '-i', input_corpus, '-o', output_corpus,
         target_binary + ' @@'
     ])
     subprocess.call(commands)
