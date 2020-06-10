@@ -12,14 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 ARG parent_image=gcr.io/fuzzbench/base-builder
 FROM $parent_image
 
-RUN git clone https://github.com/mxmssh/manul
+RUN cd / && git clone https://github.com/mxmssh/manul /manul && \
+    cd /manul && cat manul_lin.config | sed -e "s/mutator_weights=afl:10,radamsa:0/mutator_weights=afl:3,radamsa:7/" \
+    > tempfile && rm manul_lin.config && mv tempfile manul_lin.config
 
-RUN cd / && git clone https://github.com/google/afl /afl && \
-	cd /afl && make
+RUN cd / && git clone https://github.com/google/AFL.git /afl && \
+    cd /afl && \
+    git checkout 8da80951dd7eeeb3e3b5a3bcd36c485045f40274 && \
+    AFL_NO_X86=1 make
 
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
     clang -Wno-pointer-sign -c /afl/llvm_mode/afl-llvm-rt.o.c -I/afl && \
