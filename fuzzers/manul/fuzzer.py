@@ -38,10 +38,9 @@ def fuzz(input_corpus, output_corpus, target_binary):
       target_binary: Absolute path to the fuzz target binary.
     """
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
-    os.chdir(os.path.join(os.environ['OUT'], 'manul'))
     # Run fuzzer on the benchmark.
     command = ([
         'python3', 'manul.py', '-i', input_corpus, '-o', output_corpus, '-c',
         '/out/manul/manul_lin.config', target_binary + ' @@'
     ])
-    subprocess.check_call(command)
+    subprocess.check_call(command, cwd=os.path.join(os.environ['OUT'], 'manul'))
