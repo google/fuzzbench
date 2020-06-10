@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Manul Integration"""
+
 import os
 import subprocess
 import shutil
@@ -53,8 +55,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
         input_corpus,
         '-o',
         output_corpus,
-        target_binary + ' @@' 
+        target_binary + ' @@'
     ])
     print(' '.join(commands))
     subprocess.call(commands)
-
