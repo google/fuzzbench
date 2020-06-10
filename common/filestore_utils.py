@@ -52,7 +52,7 @@ def ls(path, must_exist=True):  # pylint: disable=invalid-name
 
 
 def rm(path, recursive=True, force=False, parallel=False):  # pylint: disable=invalid-name
-    """Remove |path|."""
+    """Removes |path|."""
     return filestore_utils_impl.rm(path,
                                    recursive=recursive,
                                    force=force,
