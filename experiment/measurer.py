@@ -397,9 +397,10 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         unchanged-cycles file. This file is written to by the trial's runner."""
 
         def copy_unchanged_cycles_file():
-            unchanged_cyles_gcs_path = exp_path.gcs(self.unchanged_cycles_path)
+            unchanged_cycles_filestore_path = exp_path.gcs(
+                self.unchanged_cycles_path)
             try:
-                filestore_utils.cp(unchanged_cyles_gcs_path,
+                filestore_utils.cp(unchanged_cycles_filestore_path,
                                    self.unchanged_cycles_path)
                 return True
             except subprocess.CalledProcessError:
@@ -444,22 +445,22 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         return True
 
     def archive_crashes(self, cycle):
-        """Archive this cycle's crashes into cloud bucket."""
+        """Archive this cycle's crashes into filestore."""
         if not os.listdir(self.crashes_dir):
             logs.info('No crashes found for cycle %d.', cycle)
             return
 
         logs.info('Archiving crashes for cycle %d.', cycle)
         crashes_archive_name = experiment_utils.get_crashes_archive_name(cycle)
-        archive = os.path.join(os.path.dirname(self.crashes_dir),
-                               crashes_archive_name)
-        with tarfile.open(archive, 'w:gz') as tar:
+        archive_path = os.path.join(os.path.dirname(self.crashes_dir),
+                                    crashes_archive_name)
+        with tarfile.open(archive_path, 'w:gz') as tar:
             tar.add(self.crashes_dir,
                     arcname=os.path.basename(self.crashes_dir))
-        gcs_path = exp_path.gcs(
+        archive_filestore_path = exp_path.filestore(
             posixpath.join(self.trial_dir, 'crashes', crashes_archive_name))
-        filestore_utils.cp(archive, gcs_path)
-        os.remove(archive)
+        filestore_utils.cp(archive_path, archive_filestore_path)
+        os.remove(archive_path)
 
     def update_measured_files(self):
         """Updates the measured-files.txt file for this trial with
@@ -589,9 +590,8 @@ def set_up_coverage_binary(benchmark):
     if not os.path.exists(benchmark_coverage_binary_dir):
         os.mkdir(benchmark_coverage_binary_dir)
     archive_name = 'coverage-build-%s.tar.gz' % benchmark
-    cloud_bucket_archive_path = exp_path.gcs(coverage_binaries_dir /
-                                             archive_name)
-    filestore_utils.cp(cloud_bucket_archive_path,
+    archive_filestore_path = exp_path.gcs(coverage_binaries_dir / archive_name)
+    filestore_utils.cp(archive_filestore_path,
                        str(benchmark_coverage_binary_dir))
     archive_path = benchmark_coverage_binary_dir / archive_name
     tar = tarfile.open(archive_path, 'r:gz')
