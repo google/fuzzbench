@@ -20,16 +20,19 @@ logger = logs.Logger('gsutil')
 
 
 def gsutil_command(arguments, expect_zero=True, parallel=False):
-    """Executes a gsutil command with |arguments| and returns the result."""
+    """Executes a gsutil command with |arguments| and returns the result. If
+    |parallel| is True then "-m" is added to the gsutil command so that gsutil
+    can use multiple processes to complete the command. If |expect_zero| is True
+    and the command fails then this function will raise a
+    subprocess.CalledError."""
     command = ['gsutil']
     if parallel:
         command.append('-m')
     return new_process.execute(command + arguments, expect_zero=expect_zero)
 
 
-def cp(source, destination, parallel, recursive=False):  # pylint: disable=invalid-name
-    """Executes gsutil's "cp" command with |cp_arguments| and returns the
-    returncode and the output."""
+def cp(source, destination, recursive=False, parallel=False):  # pylint: disable=invalid-name
+    """Executes gsutil's "cp" command with |cp_arguments|."""
     command = ['cp']
     if recursive:
         command.append('-r')
@@ -39,8 +42,7 @@ def cp(source, destination, parallel, recursive=False):  # pylint: disable=inval
 
 
 def ls(path, must_exist=True):  # pylint: disable=invalid-name
-    """Executes gsutil's "ls" command on |path| and returns the results as a
-    list."""
+    """Executes gsutil's "ls" command on |path|."""
     command = ['ls', path]
     process_result = gsutil_command(command, expect_zero=must_exist)
     return process_result

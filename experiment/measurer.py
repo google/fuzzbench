@@ -457,7 +457,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         with tarfile.open(archive_path, 'w:gz') as tar:
             tar.add(self.crashes_dir,
                     arcname=os.path.basename(self.crashes_dir))
-        archive_filestore_path = exp_path.filestore(
+        archive_filestore_path = exp_path.gcs(
             posixpath.join(self.trial_dir, 'crashes', crashes_archive_name))
         filestore_utils.cp(archive_path, archive_filestore_path)
         os.remove(archive_path)
