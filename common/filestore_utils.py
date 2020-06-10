@@ -32,7 +32,7 @@ if _using_gsutil():
 else:
     # When gsutil is not used in the context, it should use local_filestore.
     # TODO(zhichengcai): Implement local_filestore.py and import it here.
-    from common import gsutil as filestore_utils_impl
+    from common import local_filestore as filestore_utils_impl
 
 
 # TODO(zhichengcai): Change all implementations of cp, ls, and rm to stop using
