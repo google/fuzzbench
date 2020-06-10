@@ -11,27 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Manul Integration"""
 import os
 import subprocess
 import shutil
-
 from fuzzers import utils
 from fuzzers.afl import fuzzer as afl_fuzzer
+
 
 def build():
     """Build benchmark and copy fuzzer to $OUT."""
     afl_fuzzer.prepare_build_environment()
-
-    # Helper function that actually builds benchmarks using the environment you
-    # have prepared.
     utils.build_benchmark()
-
-    # You should copy any fuzzer binaries that you need at runtime to the
-    # $OUT directory. E.g. for AFL:
-    # shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
+    # move manul base to /out
     shutil.move('/manul', os.environ['OUT'])
+
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer.
@@ -45,9 +39,9 @@ def fuzz(input_corpus, output_corpus, target_binary):
     """
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     os.chdir('./manul')
-    # Run your fuzzer on the benchmark.
-    commands = ([
+    # Run fuzzer on the benchmark.
+    command = ([
         'python3', 'manul.py', '-i', input_corpus, '-o', output_corpus,
         target_binary + ' @@'
     ])
-    subprocess.call(commands)
+    subprocess.call(command)
