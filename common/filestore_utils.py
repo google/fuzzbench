@@ -31,7 +31,6 @@ def _using_gsutil():
     return experiment_filestore_path.startswith('gs://')
 
 
-global filestore_utils_impl
 filestore_utils_impl = None
 
 
@@ -44,12 +43,11 @@ def get_filestore_utils_impl():
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             """Switches to desired filestore_utils_impl accordingly."""
+            global filestore_utils_impl
             if _using_gsutil():
-                global filestore_utils_impl
                 from common import gsutil as filestore_utils_impl
             else:
                 # Use local_filestore when not using gsutil.
-                global filestore_utils_impl
                 from common import local_filestore as filestore_utils_impl
             return func(*args, **kwargs)
 
