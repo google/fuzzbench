@@ -29,19 +29,15 @@ def is_benchmark(name):
     # return benchmark is not None and name in benchmark
 
     # OSS-fuzz benchmarks do not have a consistent folder content
-    # but typically have the name of the benchmark in the PWD
-    pwd_dir = os.getenv("PWD", None)
-    if pwd_dir is None:
-        raise ValueError('PWD not defined')
-
+    # but typically have the name of the benchmark as part of the 
+    # working directory.
+    pwd_dir = os.getcwd()
+    
     if name in pwd_dir:
         return True
 
-    # non-OSS-fuzz benchmarks
-    src_dir = os.getenv("SRC", None)
-    if src_dir is None:
-        raise ValueError('SRC not defined')
-
+    # Non-OSS-fuzz benchmarks.
+    src_dir = os.environ['SRC']
     buildfile = os.path.join(src_dir, "benchmark/build.sh")
     if not os.path.isfile(buildfile):
         return False
@@ -137,7 +133,7 @@ def prepare_fuzz_environment(input_corpus):
     """Prepare run for some benchmarks"""
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
 
-    # OUT env variable does not exists, it seems
+    # OUT env variable does not exists, it seems.
     if os.path.isfile('/out/src/shared/libsystemd-shared-245.so'):
         shutil.copy('/out/src/shared/libsystemd-shared-245.so', '/usr/lib/libsystemd-shared-245.so')
 
@@ -152,29 +148,28 @@ def prepare_build_environment():
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cppflags)
 
-    # Add flags for various benchmarks
+    # Add flags for various benchmarks.
     add_compilation_cflags()
 
-    # Setup aflcc compiler
+    # Setup aflcc compiler.
     os.environ['LLVM_CONFIG'] = 'llvm-config-3.8'
     os.environ['CC'] = '/afl/aflc-gclang'
     os.environ['CXX'] = '/afl/aflc-gclang++'
-    #  -L/ -lAflccMock -lpthread
     os.environ['FUZZER_LIB'] = '/libAFL.a'
 
-    # Fix FUZZER_LIB for various benchmarks
+    # Fix FUZZER_LIB for various benchmarks.
     fix_fuzzer_lib()
 
 def get_fuzz_targets():
     """Get the fuzz target name"""
-    # For non oss-projects, FUZZ_TARGET contain the target binary
+    # For non oss-projects, FUZZ_TARGET contain the target binary.
     fuzz_target = os.getenv('FUZZ_TARGET', None)
     if fuzz_target is not None:
         return [fuzz_target]
 
     print('FUZZ_TARGET is not defined')
 
-    # for these benchmarks, only return one file
+    # For these benchmarks, only return one file.
     targets = {'curl': 'curl_fuzzer_http', 
                'openssl': 'x509',
                'systemd': 'fuzz-link-parser',
@@ -188,11 +183,9 @@ def get_fuzz_targets():
     # We look for binaries in the OUT directory and take it as our targets.
     # Note that we may return multiple binaries: this is necessary because
     # sometimes multiple binaries are generated and we don't know which will
-    # be used for fuzzing (e.g., zlib benchmark)
-    # TODO(laurentsimon): hardcode targets for oss-fuzz projects in the 'targets' dictionary above
-    out_dir = os.getenv('OUT', None)
-    if out_dir is None:
-        raise ValueError('OUT is not defined')
+    # be used for fuzzing (e.g., zlib benchmark).
+    # TODO(laurentsimon): hardcode targets for oss-fuzz projects in the 'targets' dictionary above.
+    out_dir = os.environ['OUT']
     files = os.listdir(out_dir)
     fuzz_targets = []
     for filename in files:
@@ -213,22 +206,22 @@ def post_build(fuzz_target):
         raise ValueError("get-bc failed")
 
     # Set the flags. ldflags is here temporarily until the benchmarks
-    # are cleaned up and standalone
+    # are cleaned up and standalone.
     cppflags_arr = ['-I/usr/local/include/c++/v1/', '-stdlib=libc++', '-std=c++11']
     # Note: -ld for dlopen(), -lbsd for strlcpy().
     ldflags_arr = ['-lpthread', '-lm', ' -lz', '-larchive', '-lglib-2.0', '-ldl', '-lbsd']
 
-    # Add post compilation linking flags for certain benchmarks
+    # Add post compilation linking flags for certain benchmarks.
     add_post_compilation_lflags(ldflags_arr)
 
-    # Stringify the flags arrays
+    # Stringify the flags arrays.
     cppflags = ' '.join(cppflags_arr)
     ldflags = ' '.join(ldflags_arr)
 
-    # Create the different build types...
+    # Create the different build types.
     os.environ['AFL_BUILD_TYPE'] = 'FUZZING'
     
-    # ...the original afl binary
+    # The original afl binary.
     print('[post_build] Generating original afl build')
     os.environ['AFL_COVERAGE_TYPE'] = 'ORIGINAL'
     os.environ['AFL_CONVERT_COMPARISON_TYPE'] = 'NONE'
@@ -237,7 +230,7 @@ def post_build(fuzz_target):
     if os.system(bin1_cmd) != 0:
         raise ValueError("command '{command}' failed".format(command=bin1_cmd))
 
-    # ...the normalized build with non-optimized dictionary
+    # The normalized build with non-optimized dictionary.
     print('[post_build] Generating normalized-none-nopt')
     os.environ['AFL_COVERAGE_TYPE'] = 'ORIGINAL'
     os.environ['AFL_CONVERT_COMPARISON_TYPE'] = 'NONE'
@@ -246,7 +239,7 @@ def post_build(fuzz_target):
     if os.system(bin2_cmd) != 0:
         raise ValueError("command '{command}' failed".format(command=bin2_cmd))
 
-    # ...the no-collision split-condition optimized dictionary
+    # The no-collision split-condition optimized dictionary.
     print('[post_build] Generating no-collision-all-opt build')
     os.environ['AFL_COVERAGE_TYPE'] = 'NO_COLLISION'
     os.environ['AFL_CONVERT_COMPARISON_TYPE'] = 'ALL'
@@ -306,21 +299,21 @@ def run_fuzz(input_corpus,
     ]
     print('[run_fuzzer] Running command: ' + ' '.join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
-    subprocess.call(command, stdout=output_stream, stderr=output_stream)
+    subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     prepare_fuzz_environment(input_corpus)
 
-    # Note: dictionary automatically added by run_fuzz()
+    # Note: dictionary automatically added by run_fuzz().
 
-    # Use a dictionary for original afl as well
+    # Use a dictionary for original afl as well.
     print('[run_fuzzer] Running AFL for original binary')
     src_file = "{target}-normalized-none-nopt.dict".format(target=target_binary)
     dst_file = "{target}-original.dict".format(target=target_binary)
     shutil.copy(src_file, dst_file)
-    # instead of generating a new dict, just hack this one 
+    # Instead of generating a new dict, just hack this one 
     # to be non-optimized to prevent AFL from aborting.
     os.system("sed -i 's/OPTIMIZED/NORMAL/g' {dict}".format(dict=dst_file))
     afl_fuzz_thread1 = threading.Thread(target=run_fuzz,
