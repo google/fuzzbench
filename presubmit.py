@@ -236,7 +236,10 @@ def yapf(paths: List[Path], validate: bool = True) -> bool:
     command = ['yapf', validate_argument, '-p']
     command.extend(paths)
     returncode = subprocess.run(command, check=False).returncode
-    return returncode == 0
+    success = returncode == 0
+    if not success:
+        print('Code is not formatted correctly, please run \'make format\'')
+    return success
 
 
 def is_path_in_ignore_directory(path: Path) -> bool:
