@@ -72,7 +72,6 @@ def rsync(  # pylint: disable=too-many-arguments
         destination,
         delete=True,
         recursive=True,
-        # TODO: Need to remove from filestore_utils.
         gsutil_options=None,  # pylint: disable=unused-argument
         options=None,
         parallel=False):  # pylint: disable=unused-argument
