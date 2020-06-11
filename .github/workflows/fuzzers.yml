@@ -30,6 +30,7 @@ jobs:
           - honggfuzz
           - lafintel
           - libfuzzer
+          - manul
           - mopt
 
         benchmark_type:
