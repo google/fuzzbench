@@ -21,7 +21,7 @@ from common import local_filestore
 
 
 class TestLocalFileStoreRsync:
-    """Tests for local_filestore_command works as expected."""
+    """Tests for local_filestore.rsync works as expected."""
     SRC = '/src'
     DST = '/dst'
 
