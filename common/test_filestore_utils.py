@@ -15,6 +15,8 @@
 
 from unittest import mock
 
+import pytest
+
 from common import filestore_utils
 from common import new_process
 
@@ -22,26 +24,62 @@ from common import new_process
 # the local_filestore implementation.
 
 
-def test_keyword_args():
-    """Tests that keyword args, and in particular 'parallel' are handled
-    correctly."""
-    filestore_path = 'gs://fake_dir'
+class TestLocalFilestore:
+    """Tests for switching on local_filestore."""
+    FILESTORE = '/experiment_data'
+    DIR1 = '/dir1'
+    DIR2 = '/dir2'
 
-    with mock.patch('common.new_process.execute') as mocked_execute:
-        filestore_utils.rm(filestore_path, recursive=True, parallel=True)
-        mocked_execute.assert_called_with(
-            ['gsutil', '-m', 'rm', '-r', filestore_path], expect_zero=True)
+    def test_local_filestore_on(self, switch_on_local_filestore):  #pylint: disable=invalid-name
+        """Tests that local_filestore switches on correctly."""
+        with mock.patch('common.new_process.execute') as mocked_execute:
+            filestore_utils.cp(self.DIR1, self.DIR2, recursive=True)
+            mocked_execute.assert_called_with(
+                ['cp', '-r', self.DIR1, self.DIR2], expect_zero=True)
 
-    with mock.patch('common.new_process.execute') as mocked_execute:
-        mocked_execute.return_value = new_process.ProcessResult(0, '', '')
-        filestore_utils.ls(filestore_path)
-        mocked_execute.assert_called_with(['gsutil', 'ls', filestore_path],
-                                          expect_zero=True)
+    def test_local_filestore_parallel_off(self, switch_on_local_filestore):  #pylint: disable=invalid-name
+        """Tests that `parallel` is False for local execution."""
 
-    filestore_path2 = filestore_path + '2'
+        with mock.patch('common.local_filestore.local_filestore_command'
+                       ) as mocked_local_filestore_command:
+            filestore_utils.rsync(self.DIR1, self.DIR2, parallel=True)
+            test_args_list = mocked_local_filestore_command.call_args_list[0]
+            assert 'parallel' not in test_args_list
 
-    with mock.patch('common.new_process.execute') as mocked_execute:
-        filestore_utils.cp(filestore_path, filestore_path2, parallel=True)
-        mocked_execute.assert_called_with(
-            ['gsutil', '-m', 'cp', filestore_path, filestore_path2],
-            expect_zero=True)
+
+class TestGsutil():
+    """Tests for switching on gsutil."""
+    FILESTORE = 'gs://experiment-data'
+    LOCAL_DIR = '/dir'
+    GSUTIL_DIR = 'gs://fake_dir'
+
+    def test_gsutil_on(self, fs, switch_on_gsutil):  #pylint: disable=invalid-name
+        """Tests that gsutil switches on correctly."""
+
+        with mock.patch('common.new_process.execute') as mocked_execute:
+            fs.create_dir(self.LOCAL_DIR)
+            filestore_utils.cp(self.LOCAL_DIR, self.GSUTIL_DIR, recursive=True)
+            mocked_execute.assert_called_with(
+                ['gsutil', 'cp', '-r', self.LOCAL_DIR, self.GSUTIL_DIR],
+                expect_zero=True)
+
+    def test_keyword_args(self, switch_on_gsutil):
+        """Tests that keyword args, and in particular 'parallel' are handled
+        correctly."""
+
+        with mock.patch('common.new_process.execute') as mocked_execute:
+            filestore_utils.rm(self.FILESTORE, recursive=True, parallel=True)
+            mocked_execute.assert_called_with(
+                ['gsutil', '-m', 'rm', '-r', self.FILESTORE], expect_zero=True)
+
+        with mock.patch('common.new_process.execute') as mocked_execute:
+            mocked_execute.return_value = new_process.ProcessResult(0, '', '')
+            filestore_utils.ls(self.FILESTORE)
+            mocked_execute.assert_called_with(['gsutil', 'ls', self.FILESTORE],
+                                              expect_zero=True)
+
+        with mock.patch('common.new_process.execute') as mocked_execute:
+            filestore_utils.cp(self.GSUTIL_DIR, self.FILESTORE, parallel=True)
+            mocked_execute.assert_called_with(
+                ['gsutil', '-m', 'cp', self.GSUTIL_DIR, self.FILESTORE],
+                expect_zero=True)
