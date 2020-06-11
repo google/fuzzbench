@@ -14,7 +14,6 @@
 """Tests for filestore_utils.py."""
 
 from unittest import mock
-import pytest
 
 from common import filestore_utils
 from common import new_process
@@ -23,71 +22,26 @@ from common import new_process
 # the local_filestore implementation.
 
 
-class TestLocalFileStoreOn:
-    """Tests for switching on local_filestore."""
-    FILESTORE = '/fake_filestore'
-    DIR1 = '/dir1'
-    DIR2 = '/dir2'
+def test_keyword_args():
+    """Tests that keyword args, and in particular 'parallel' are handled
+    correctly."""
+    filestore_path = 'gs://fake_dir'
 
-    def _switch_on_local_filestore(self, fs, environ):  #pylint: disable=invalid-name
-        # Create local filestore usage environment.
-        fs.create_dir(self.FILESTORE)
-        fs.create_dir(self.DIR1)
-        fs.create_dir(self.DIR2)
-        environ['EXPERIMENT_FILESTORE'] = self.FILESTORE
+    with mock.patch('common.new_process.execute') as mocked_execute:
+        filestore_utils.rm(filestore_path, recursive=True, parallel=True)
+        mocked_execute.assert_called_with(
+            ['gsutil', '-m', 'rm', '-r', filestore_path], expect_zero=True)
 
-    @pytest.fixture
-    def test_local_filestore_on(self, fs, environ):  #pylint: disable=invalid-name
-        """Tests that local_filestore switches on correctly."""
-        self._switch_on_local_filestore(fs, environ)
+    with mock.patch('common.new_process.execute') as mocked_execute:
+        mocked_execute.return_value = new_process.ProcessResult(0, '', '')
+        filestore_utils.ls(filestore_path)
+        mocked_execute.assert_called_with(['gsutil', 'ls', filestore_path],
+                                          expect_zero=True)
 
-        with mock.patch('common.new_process.execute') as mocked_execute:
-            filestore_utils.cp(self.DIR1, self.DIR2, recursive=True)
-            mocked_execute.assert_called_with(
-                ['cp', '-r', self.DIR1, self.DIR2], expect_zero=True)
+    filestore_path2 = filestore_path + '2'
 
-
-class TestGsutilOn():
-    """Tests for switching on gsutil."""
-    FILESTORE = 'gs://fake_filestore'
-    LOCAL_DIR = '/dir'
-    GSUTIL_DIR = 'gs://fake_dir'
-
-    def _switch_on_gsutil(self, environ):  #pylint: disable=invalid-name
-        # Create gsutil usage environment.
-        environ['EXPERIMENT_FILESTORE'] = self.FILESTORE
-
-    @pytest.fixture
-    def test_gsutil_on(self, fs, environ):  #pylint: disable=invalid-name
-        """Tests that gsutil switches on correctly."""
-        self._switch_on_gsutil(environ)
-
-        with mock.patch('common.new_process.execute') as mocked_execute:
-            fs.create_dir(self.LOCAL_DIR)
-            filestore_utils.cp(self.LOCAL_DIR, self.GSUTIL_DIR, recursive=True)
-            mocked_execute.assert_called_with(
-                ['gsutil', 'cp', '-r', self.LOCAL_DIR, self.GSUTIL_DIR],
-                expect_zero=True)
-
-    @pytest.fixture
-    def test_keyword_args(self, environ):
-        """Tests that keyword args, and in particular 'parallel' are handled
-        correctly."""
-        self._switch_on_gsutil(environ)
-
-        with mock.patch('common.new_process.execute') as mocked_execute:
-            filestore_utils.rm(self.FILESTORE, recursive=True, parallel=True)
-            mocked_execute.assert_called_with(
-                ['gsutil', '-m', 'rm', '-r', self.FILESTORE], expect_zero=True)
-
-        with mock.patch('common.new_process.execute') as mocked_execute:
-            mocked_execute.return_value = new_process.ProcessResult(0, '', '')
-            filestore_utils.ls(self.FILESTORE)
-            mocked_execute.assert_called_with(['gsutil', 'ls', self.FILESTORE],
-                                              expect_zero=True)
-
-        with mock.patch('common.new_process.execute') as mocked_execute:
-            filestore_utils.cp(self.GSUTIL_DIR, self.FILESTORE, parallel=True)
-            mocked_execute.assert_called_with(
-                ['gsutil', '-m', 'cp', self.GSUTIL_DIR, self.FILESTORE],
-                expect_zero=True)
+    with mock.patch('common.new_process.execute') as mocked_execute:
+        filestore_utils.cp(filestore_path, filestore_path2, parallel=True)
+        mocked_execute.assert_called_with(
+            ['gsutil', '-m', 'cp', filestore_path, filestore_path2],
+            expect_zero=True)
