@@ -12,15 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/fuzzbench/base-image
-
-# Install runtime dependencies for benchmarks.
-RUN apt-get update -y && apt-get install -y \
-    libglib2.0-0 \
-    libxml2 \
-    libarchive13 \
-    libgss3
-
-ENV OUT /out
-ENV WORKDIR $OUT
-WORKDIR $WORKDIR
+FROM gcr.io/fuzzbench/base-runner
+RUN python3 -m pip install psutil

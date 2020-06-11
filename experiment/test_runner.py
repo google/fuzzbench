@@ -52,7 +52,7 @@ def test_run_fuzzer_log_file(mocked_communicate, fs):
 
 
 MAX_TOTAL_TIME = 100
-CLOUD_EXPERIMENT_BUCKET = 'gs://bucket'
+EXPERIMENT_FILESTORE = 'gs://bucket'
 BENCHMARK = 'benchmark-1'
 EXPERIMENT = 'experiment-name'
 TRIAL_NUM = 1
@@ -67,7 +67,7 @@ def trial_runner(fs, environ):
         'EXPERIMENT': EXPERIMENT,
         'TRIAL_ID': str(TRIAL_NUM),
         'FUZZER': FUZZER,
-        'CLOUD_EXPERIMENT_BUCKET': CLOUD_EXPERIMENT_BUCKET,
+        'EXPERIMENT_FILESTORE': EXPERIMENT_FILESTORE,
         'MAX_TOTAL_TIME': str(MAX_TOTAL_TIME)
     })
 
@@ -153,12 +153,14 @@ def test_do_sync_changed(mocked_execute, mocked_is_corpus_dir_same, fs,
             ('gs://bucket/experiment-name/experiment-folders/'
              'benchmark-1-fuzzer-name-a/trial-1/corpus/'
              'corpus-archive-1337.tar.gz')
-        ]),
+        ],
+                  expect_zero=True),
         mock.call([
             'gsutil', 'rsync', '-d', '-r', 'results-copy',
             ('gs://bucket/experiment-name/experiment-folders/'
              'benchmark-1-fuzzer-name-a/trial-1/results')
-        ])
+        ],
+                  expect_zero=True)
     ]
     unchanged_cycles_path = os.path.join(trial_runner.results_dir,
                                          'unchanged-cycles')
@@ -214,8 +216,8 @@ def test_is_corpus_dir_same_modified(trial_runner, fs):
 class TestIntegrationRunner:
     """Integration tests for the runner."""
 
-    @pytest.mark.skipif(not os.environ.get('TEST_CLOUD_EXPERIMENT_BUCKET'),
-                        reason='TEST_CLOUD_EXPERIMENT_BUCKET is not set, '
+    @pytest.mark.skipif(not os.environ.get('TEST_EXPERIMENT_FILESTORE'),
+                        reason='TEST_EXPERIMENT_FILESTORE is not set, '
                         'skipping integration test.')
     @mock.patch('common.logs.error')  # pylint: disable=no-self-use,too-many-locals
     def test_integration_runner(self, mocked_error, tmp_path, environ):
@@ -241,7 +243,7 @@ class TestIntegrationRunner:
         fuzzer_parent_path = root_dir / 'fuzzers' / fuzzer
 
         benchmark = 'MultipleConstraintsOnSmallInputTest'
-        test_experiment_bucket = os.environ['TEST_CLOUD_EXPERIMENT_BUCKET']
+        test_experiment_bucket = os.environ['TEST_EXPERIMENT_FILESTORE']
         experiment = 'integration-test-experiment'
         gcs_directory = posixpath.join(test_experiment_bucket, experiment,
                                        'experiment-folders',
@@ -255,7 +257,7 @@ class TestIntegrationRunner:
         # Set env variables that would set by the scheduler.
         os.environ['FUZZER'] = fuzzer
         os.environ['BENCHMARK'] = benchmark
-        os.environ['CLOUD_EXPERIMENT_BUCKET'] = test_experiment_bucket
+        os.environ['EXPERIMENT_FILESTORE'] = test_experiment_bucket
         os.environ['EXPERIMENT'] = experiment
 
         os.environ['TRIAL_ID'] = str(TRIAL_NUM)
@@ -272,10 +274,7 @@ class TestIntegrationRunner:
                 runner.main()
 
         gcs_corpus_directory = posixpath.join(gcs_directory, 'corpus')
-        returncode, snapshots = filestore_utils.ls(gcs_corpus_directory)
-
-        # Ensure that test works.
-        assert returncode == 0, 'gsutil ls %s failed.' % gcs_corpus_directory
+        snapshots = filestore_utils.ls(gcs_corpus_directory)
 
         assert len(snapshots) >= 2
 
@@ -285,9 +284,9 @@ class TestIntegrationRunner:
 
         local_gcs_corpus_dir_copy = tmp_path / 'gcs_corpus_dir'
         os.mkdir(local_gcs_corpus_dir_copy)
-        filestore_utils.cp('-r',
-                           posixpath.join(gcs_corpus_directory, '*'),
+        filestore_utils.cp(posixpath.join(gcs_corpus_directory, '*'),
                            str(local_gcs_corpus_dir_copy),
+                           recursive=True,
                            parallel=True)
         archive_size = os.path.getsize(local_gcs_corpus_dir_copy /
                                        'corpus-archive-0001.tar.gz')
