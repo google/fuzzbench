@@ -26,9 +26,7 @@ def cp(  # pylint: disable=invalid-name
         parallel=False):  # pylint: disable=unused-argument
     """Executes "cp" command from |source| to |destination|."""
     # Create intermediate folders for `cp` command to behave like `gsutil.cp`.
-    dest_dir = os.path.dirname(destination)
-    if not os.path.exists(dest_dir):
-        filesystem.create_directory(dest_dir)
+    filesystem.create_directory(os.path.dirname(destination))
 
     command = ['cp']
     if recursive:
