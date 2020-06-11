@@ -13,10 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Presubmit script for fuzzbench."""
+# pylint: disable=wrong-import-position
+import os
+
+os.environ['FORCE_LOCAL'] = '1'
+if 'FORCE_NOT_LOCAL' in os.environ:
+    del os.environ['FORCE_NOT_LOCAL']
 
 import argparse
 import logging
-import os
 from pathlib import Path
 import subprocess
 import sys
