@@ -13,8 +13,9 @@
 # limitations under the License.
 """Helper functions for interacting with the file storage."""
 
-import common
 from common import experiment_utils
+from common import gsutil
+from common import local_filestore
 
 
 def _using_gsutil():
@@ -31,9 +32,9 @@ def _using_gsutil():
 def get_impl():
     """Returns the implementation for filestore_utils."""
     if _using_gsutil():
-        return common.gsutil
+        return gsutil
     # Use local_filestore when not using gsutil.
-    return common.local_filestore
+    return local_filestore
 
 
 def cp(source, destination, recursive=False, parallel=False):  # pylint: disable=invalid-name
