@@ -48,8 +48,7 @@ def get_filestore_utils_impl():
                 global filestore_utils_impl
                 from common import gsutil as filestore_utils_impl
             else:
-                # When gsutil is not used in the context, it should use
-                # local_filestore.
+                # Use local_filestore when not using gsutil.
                 global filestore_utils_impl
                 from common import local_filestore as filestore_utils_impl
             return func(*args, **kwargs)
