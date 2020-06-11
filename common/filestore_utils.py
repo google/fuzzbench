@@ -13,9 +13,11 @@
 # limitations under the License.
 """Helper functions for interacting with the file storage."""
 
-from decorator import decorator
+import functools
 
 from common import experiment_utils
+
+#pylint: disable=invalid-name,global-at-module-level,redefined-outer-name,import-outside-toplevel
 
 
 def _using_gsutil():
@@ -29,21 +31,35 @@ def _using_gsutil():
     return experiment_filestore_path.startswith('gs://')
 
 
-@decorator
-def get_filestore_utils_impl(func, *args, **kwargs):
-    def func_to_return(*args, **kwargs):
-        if _using_gsutil():
-            from common import gsutil as filestore_utils_impl
-        else:
-            # When gsutil is not used in the context, it should use local_filestore.
-            from common import local_filestore as filestore_utils_impl
-        results = func(*args, **kwargs)
-        del filestore_utils_impl
-        return results
-    return func_to_return
+global filestore_utils_impl
+filestore_utils_impl = None
 
 
-@get_filestore_utils_impl
+def get_filestore_utils_impl():
+    """Imports filestore_utils_impl dynamically."""
+
+    def wrap(func):
+        """Helps decorate function |func|."""
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            """Switches to desired filestore_utils_impl accordingly."""
+            if _using_gsutil():
+                global filestore_utils_impl
+                from common import gsutil as filestore_utils_impl
+            else:
+                # When gsutil is not used in the context, it should use
+                # local_filestore.
+                global filestore_utils_impl
+                from common import local_filestore as filestore_utils_impl
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return wrap
+
+
+@get_filestore_utils_impl()
 def cp(source, destination, recursive=False, parallel=False):  # pylint: disable=invalid-name
     """Copies |source| to |destination|."""
     return filestore_utils_impl.cp(source,
@@ -52,14 +68,14 @@ def cp(source, destination, recursive=False, parallel=False):  # pylint: disable
                                    parallel=parallel)
 
 
-@get_filestore_utils_impl
+@get_filestore_utils_impl()
 def ls(path, must_exist=True):  # pylint: disable=invalid-name
     """Lists files or folders in |path|. If |must_exist|
     is True then it can raise subprocess.CalledProcessError."""
     return filestore_utils_impl.ls(path, must_exist=must_exist)
 
 
-@get_filestore_utils_impl
+@get_filestore_utils_impl()
 def rm(path, recursive=True, force=False, parallel=False):  # pylint: disable=invalid-name
     """Removes |path|."""
     return filestore_utils_impl.rm(path,
@@ -68,7 +84,7 @@ def rm(path, recursive=True, force=False, parallel=False):  # pylint: disable=in
                                    parallel=parallel)
 
 
-@get_filestore_utils_impl
+@get_filestore_utils_impl()
 def rsync(  # pylint: disable=too-many-arguments
         source,
         destination,

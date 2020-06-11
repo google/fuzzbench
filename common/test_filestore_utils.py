@@ -15,13 +15,13 @@
 
 from unittest import mock
 
-import pytest
-
 from common import filestore_utils
 from common import new_process
 
 # TODO(zhichengcai): Figure out how we can test filestore_utils when using
 # the local_filestore implementation.
+
+#pylint: disable=invalid-name,unused-argument
 
 
 class TestLocalFilestore:
@@ -30,21 +30,22 @@ class TestLocalFilestore:
     DIR1 = '/dir1'
     DIR2 = '/dir2'
 
-    def test_local_filestore_on(self, switch_on_local_filestore):  #pylint: disable=invalid-name
+    def test_local_filestore_on(self, switch_on_local_filestore):
         """Tests that local_filestore switches on correctly."""
         with mock.patch('common.new_process.execute') as mocked_execute:
             filestore_utils.cp(self.DIR1, self.DIR2, recursive=True)
             mocked_execute.assert_called_with(
                 ['cp', '-r', self.DIR1, self.DIR2], expect_zero=True)
 
-    def test_local_filestore_parallel_off(self, switch_on_local_filestore):  #pylint: disable=invalid-name
+    def test_local_filestore_parallel_off(self, fs, switch_on_local_filestore):
         """Tests that `parallel` is False for local execution."""
+        fs.create_dir(self.DIR1)
 
         with mock.patch('common.local_filestore.local_filestore_command'
                        ) as mocked_local_filestore_command:
             filestore_utils.rsync(self.DIR1, self.DIR2, parallel=True)
-            test_args_list = mocked_local_filestore_command.call_args_list[0]
-            assert 'parallel' not in test_args_list
+            test_args_list = mocked_local_filestore_command.call_args_list
+            assert 'parallel' not in test_args_list[0][1]
 
 
 class TestGsutil():
@@ -53,7 +54,7 @@ class TestGsutil():
     LOCAL_DIR = '/dir'
     GSUTIL_DIR = 'gs://fake_dir'
 
-    def test_gsutil_on(self, fs, switch_on_gsutil):  #pylint: disable=invalid-name
+    def test_gsutil_on(self, fs, switch_on_gsutil):
         """Tests that gsutil switches on correctly."""
 
         with mock.patch('common.new_process.execute') as mocked_execute:
@@ -83,3 +84,13 @@ class TestGsutil():
             mocked_execute.assert_called_with(
                 ['gsutil', '-m', 'cp', self.GSUTIL_DIR, self.FILESTORE],
                 expect_zero=True)
+
+    def test_gsutil_parallel_on(self, fs, switch_on_gsutil):
+        """Tests that `parallel` is passed to gsutil execution."""
+        with mock.patch(
+                'common.gsutil.gsutil_command') as mocked_gsutil_command:
+            filestore_utils.rsync(self.GSUTIL_DIR,
+                                  self.FILESTORE,
+                                  parallel=True)
+            test_args_list = mocked_gsutil_command.call_args_list
+            assert 'parallel' in test_args_list[0][1]

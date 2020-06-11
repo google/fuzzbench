@@ -86,9 +86,11 @@ def experiment(environ):  # pylint: disable=redefined-outer-name,unused-argument
 def switch_on_local_filestore(environ):  # pylint: disable=redefined-outer-name,unused-argument
     """Mock a local filestore usage experiment."""
     os.environ['EXPERIMENT_FILESTORE'] = '/experiment-data'
+    os.environ['EXPERIMENT'] = 'test-experiment'
 
 
 @pytest.fixture
 def switch_on_gsutil(environ):  # pylint: disable=redefined-outer-name,unused-argument
     """Mock a Google Cloud Storage bucket usage experiment."""
     os.environ['EXPERIMENT_FILESTORE'] = 'gs://experiment-data'
+    os.environ['EXPERIMENT'] = 'test-experiment'
