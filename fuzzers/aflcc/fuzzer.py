@@ -102,7 +102,8 @@ def add_compilation_cflags():
 
     # For some benchmarks, we also tell the compiler 
     # to ignore unresolved symbols. This is useful when we cannot change
-    # the build process to add a shared library for linking (which contains mocked functions: libAflccMock.so).
+    # the build process to add a shared library for linking 
+    # (which contains mocked functions: libAflccMock.so).
     # Note that some functions are only defined post-compilation 
     # during the LLVM passes.
     elif is_benchmark('bloaty') or is_benchmark('openssl') or is_benchmark('systemd'):
@@ -175,7 +176,7 @@ def get_fuzz_targets():
                'systemd': 'fuzz-link-parser',
                'php': 'php-fuzz-parser'}
 
-    for target,fuzzname in targets.items():
+    for target, fuzzname in targets.items():
         if is_benchmark(target):
             return [os.path.join(os.environ['OUT'], fuzzname)]
 
