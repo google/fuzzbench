@@ -78,6 +78,7 @@ def rsync(  # pylint: disable=too-many-arguments
         parallel=False):  # pylint: disable=unused-argument
     """Does local_filestore rsync from |source| to |destination| using sane
     defaults that can be overriden."""
+    assert(os.path.isdir(source))
     command = []
     command.append('rsync')
     if delete:
@@ -87,7 +88,7 @@ def rsync(  # pylint: disable=too-many-arguments
     if options is not None:
         command.extend(options)
     # Add '/' at the end of `source` to behave like `gsutil.rsync`.
-    if os.path.isdir(source) and source[-1] != '/':
+    if source[-1] != '/':
         source = source + '/'
     command.extend([source, destination])
     return local_filestore_command(command)

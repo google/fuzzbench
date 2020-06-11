@@ -34,18 +34,6 @@ class TestLocalFileStoreRsync:
     SRC = '/src'
     DST = '/dst'
 
-    @pytest.fixture
-    def test_rsync_file_to_dir(self, fs):  #pylint: disable=invalid-name
-        """Tests that rsync works as intended."""
-        fs.create_file(self.SRC)
-        fs.create_dir(self.DST)
-        with mock.patch('common.local_filestore.local_filestore_command'
-                       ) as mocked_local_filestore_command:
-            local_filestore.rsync(self.SRC, self.DST)
-        mocked_local_filestore_command.assert_called_with(
-            ['rsync', '--delete', '-r', '/src', '/dst'])
-
-    @pytest.fixture
     def test_rsync_dir_to_dir(self, fs):  #pylint: disable=invalid-name
         """Tests that rsync works as intended."""
         fs.create_dir(self.SRC)
@@ -56,9 +44,11 @@ class TestLocalFileStoreRsync:
         mocked_local_filestore_command.assert_called_with(
             ['rsync', '--delete', '-r', '/src/', '/dst'])
 
-    def test_options(self):
+    def test_options(self, fs):
         """Tests that rsync works as intended when supplied a options
         argument."""
+        fs.create_dir(self.SRC)
+        fs.create_dir(self.DST)
         flag = '-flag'
         with mock.patch('common.local_filestore.local_filestore_command'
                        ) as mocked_local_filestore_command:
@@ -67,9 +57,11 @@ class TestLocalFileStoreRsync:
 
     @pytest.mark.parametrize(('kwarg_for_rsync', 'flag'),
                              [('delete', '--delete'), ('recursive', '-r')])
-    def test_no_flag(self, kwarg_for_rsync, flag):
+    def test_no_flag(self, kwarg_for_rsync, flag, fs):
         """Tests that rsync works as intended when caller specifies not
         to use specific flags."""
+        fs.create_dir(self.SRC)
+        fs.create_dir(self.DST)
         kwargs_for_rsync = {}
         kwargs_for_rsync[kwarg_for_rsync] = False
         with mock.patch('common.local_filestore.local_filestore_command'
