@@ -17,8 +17,6 @@ import functools
 
 from common import experiment_utils
 
-#pylint: disable=invalid-name,global-at-module-level,redefined-outer-name,import-outside-toplevel
-
 
 def _using_gsutil():
     """Returns True if using Google Cloud Storage for filestore."""
@@ -31,7 +29,7 @@ def _using_gsutil():
     return experiment_filestore_path.startswith('gs://')
 
 
-filestore_utils_impl = None
+filestore_utils_impl = None  #pylint: disable=invalid-name
 
 
 def get_filestore_utils_impl():
@@ -43,12 +41,12 @@ def get_filestore_utils_impl():
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             """Switches to desired filestore_utils_impl accordingly."""
-            global filestore_utils_impl
+            global filestore_utils_impl  #pylint: disable=invalid-name
             if _using_gsutil():
-                from common import gsutil as filestore_utils_impl
+                from common import gsutil as filestore_utils_impl  #pylint: disable=import-outside-toplevel,redefined-outer-name
             else:
                 # Use local_filestore when not using gsutil.
-                from common import local_filestore as filestore_utils_impl
+                from common import local_filestore as filestore_utils_impl  #pylint: disable=import-outside-toplevel
             return func(*args, **kwargs)
 
         return wrapper

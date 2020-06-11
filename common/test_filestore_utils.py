@@ -34,18 +34,7 @@ class TestLocalFilestore:
         """Tests that local_filestore switches on correctly."""
         with mock.patch('common.new_process.execute') as mocked_execute:
             filestore_utils.cp(self.DIR1, self.DIR2, recursive=True)
-            mocked_execute.assert_called_with(
-                ['cp', '-r', self.DIR1, self.DIR2], expect_zero=True)
-
-    def test_local_filestore_parallel_off(self, fs, switch_on_local_filestore):
-        """Tests that `parallel` is False for local execution."""
-        fs.create_dir(self.DIR1)
-
-        with mock.patch('common.local_filestore.local_filestore_command'
-                       ) as mocked_local_filestore_command:
-            filestore_utils.rsync(self.DIR1, self.DIR2, parallel=True)
-            test_args_list = mocked_local_filestore_command.call_args_list
-            assert 'parallel' not in test_args_list[0][1]
+            assert 'gsutil' not in mocked_execute.call_args_list[0][0][0]
 
 
 class TestGsutil():
