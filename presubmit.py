@@ -17,8 +17,6 @@
 import os
 
 os.environ['FORCE_LOCAL'] = '1'
-if 'FORCE_NOT_LOCAL' in os.environ:
-    del os.environ['FORCE_NOT_LOCAL']
 
 import argparse
 import logging
