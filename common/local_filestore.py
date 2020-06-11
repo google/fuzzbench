@@ -16,6 +16,7 @@
 import os
 
 from common import new_process
+from common import filesystem
 
 
 def cp(  # pylint: disable=invalid-name
@@ -28,7 +29,7 @@ def cp(  # pylint: disable=invalid-name
     for file_or_dir_path in [source, destination]:
         dirpath = os.path.dirname(os.path.abspath(file_or_dir_path))
         if not os.path.exists(dirpath):
-            os.makedirs(dirpath)
+            filesystem.create_directory(dirpath)
 
     command = ['cp']
     if recursive:
