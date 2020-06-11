@@ -35,8 +35,6 @@ else:
     from common import local_filestore as filestore_utils_impl
 
 
-# TODO(zhichengcai): Change all implementations of cp, ls, and rm to stop using
-# special handling of *args. This is error prone now that there are wrappers.
 def cp(source, destination, recursive=False, parallel=False):  # pylint: disable=invalid-name
     """Copies |source| to |destination|."""
     return filestore_utils_impl.cp(source,
