@@ -42,11 +42,11 @@ def get_cloud_project():
     return os.environ['CLOUD_PROJECT']
 
 
-def get_cloud_experiment_path():
-    """Returns cloud experiment path."""
-    cloud_experiment_bucket = os.environ['CLOUD_EXPERIMENT_BUCKET']
+def get_experiment_filestore_path():
+    """Returns experiment filestore path."""
+    experiment_filestore = os.environ['EXPERIMENT_FILESTORE']
     experiment_name = get_experiment_name()
-    return posixpath.join(cloud_experiment_bucket, experiment_name)
+    return posixpath.join(experiment_filestore, experiment_name)
 
 
 def get_dispatcher_instance_name(experiment: str) -> str:
@@ -95,6 +95,6 @@ def get_trial_dir(fuzzer, benchmark, trial_id):
 def get_trial_bucket_dir(fuzzer, benchmark, trial_id):
     """Returns the unique directory in experiment-folders int the bucket for
     |fuzzer|, |benchmark|, and |trial_id|."""
-    bucket = os.environ['CLOUD_EXPERIMENT_BUCKET']
+    bucket = os.environ['EXPERIMENT_FILESTORE']
     return posixpath.join(bucket, get_experiment_name(), 'experiment-folders',
                           get_trial_dir(fuzzer, benchmark, trial_id))
