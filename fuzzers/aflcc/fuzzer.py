@@ -88,22 +88,9 @@ def fix_fuzzer_lib():
         shutil.copy('/libAflccMock.so', '/usr/lib/libAflccMock.so')
 
     if is_benchmark('systemd'):
-        #shutil.copy('/libAflccMock.so', '/usr/lib/libAflccMock.so')
         shutil.copy('/libAFL.a', '/usr/lib/libFuzzingEngine.a')
-        #ld_flags = ['-lAflccMock', '-lpthread']
         ld_flags = ['-lpthread']
         utils.append_flags('LDFLAGS', ld_flags)
-        
-    # elif is_benchmark('php'):
-    #     # -lcrypt -lresolv -lcrypt -lrt -lm -l:libonig.a
-    #     os.environ['FUZZER_LIB'] += ' -lresolv'
-    # if is_benchmark('systemd'):
-    #     os.environ['FUZZER_LIB'] = '/libAFL.a'
-    #     os.environ['LDFLAGS'] = '-L/ -lAflccMock'
-    # if is_benchmark('irssi'):
-    #     # workaround the meson call
-    #     os.environ['FUZZER_LIB'] = '/libAFL.a -Dwith-fuzzer-lib=-L/ -Dwith-fuzzer-lib=-lAflccMock -Dwith-fuzzer-lib=-lpthread'
-    
 
 def add_compilation_cflags():
     """Add custom flags for certain benchmarks"""
