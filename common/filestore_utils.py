@@ -44,8 +44,8 @@ def cp(source, destination, recursive=False, parallel=False):  # pylint: disable
 
 
 def ls(path, must_exist=True):  # pylint: disable=invalid-name
-    """Lists files or folders in |path|. If |must_exist|
-    is True then it can raise subprocess.CalledProcessError."""
+    """Lists files or folders in |path| as one filename per line.
+    If |must_exist| is True then it can raise subprocess.CalledProcessError."""
     return filestore_utils_impl.ls(path, must_exist=must_exist)
 
 

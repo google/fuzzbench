@@ -41,7 +41,8 @@ def cp(  # pylint: disable=invalid-name
 def ls(path, must_exist=True):  # pylint: disable=invalid-name
     """Executes "ls" command for |path|. If |must_exist| is True then it can
     raise subprocess.CalledProcessError."""
-    # Add '-1' (i.e., number one) to behave like `gsutil.ls`.
+    # Add '-1' (i.e., number one) to behave like `gsutil.ls` (i.e., one filename
+    # per line).
     command = ['ls', '-1', path]
     process_result = new_process.execute(command, expect_zero=must_exist)
     return process_result
