@@ -18,15 +18,6 @@ from unittest import mock
 import pytest
 
 from common import local_filestore
-from test_libs import utils as test_utils
-
-
-def test_local_filestore_command():
-    """Tests local_filestore_command works as expected."""
-    arguments = ['hello']
-    with test_utils.mock_popen_ctx_mgr() as mocked_popen:
-        local_filestore.local_filestore_command(arguments)
-    assert mocked_popen.commands == [arguments]
 
 
 class TestLocalFileStoreRsync:
@@ -38,11 +29,10 @@ class TestLocalFileStoreRsync:
         """Tests that rsync works as intended."""
         fs.create_dir(self.SRC)
         fs.create_dir(self.DST)
-        with mock.patch('common.local_filestore.local_filestore_command'
-                       ) as mocked_local_filestore_command:
+        with mock.patch('common.new_process.execute') as mocked_execute:
             local_filestore.rsync(self.SRC, self.DST)
-        mocked_local_filestore_command.assert_called_with(
-            ['rsync', '--delete', '-r', '/src/', '/dst'])
+        mocked_execute.assert_called_with(
+            ['rsync', '--delete', '-r', '/src/', '/dst'], expect_zero=True)
 
     def test_options(self, fs):  #pylint: disable=invalid-name
         """Tests that rsync works as intended when supplied a options
@@ -50,10 +40,9 @@ class TestLocalFileStoreRsync:
         fs.create_dir(self.SRC)
         fs.create_dir(self.DST)
         flag = '-flag'
-        with mock.patch('common.local_filestore.local_filestore_command'
-                       ) as mocked_local_filestore_command:
+        with mock.patch('common.new_process.execute') as mocked_execute:
             local_filestore.rsync(self.SRC, self.DST, options=[flag])
-        assert flag in mocked_local_filestore_command.call_args_list[0][0][0]
+        assert flag in mocked_execute.call_args_list[0][0][0]
 
     @pytest.mark.parametrize(('kwarg_for_rsync', 'flag'),
                              [('delete', '--delete'), ('recursive', '-r')])
@@ -64,8 +53,6 @@ class TestLocalFileStoreRsync:
         fs.create_dir(self.DST)
         kwargs_for_rsync = {}
         kwargs_for_rsync[kwarg_for_rsync] = False
-        with mock.patch('common.local_filestore.local_filestore_command'
-                       ) as mocked_local_filestore_command:
+        with mock.patch('common.new_process.execute') as mocked_execute:
             local_filestore.rsync(self.SRC, self.DST, **kwargs_for_rsync)
-        test_call_args_list = mocked_local_filestore_command.call_args_list
-        assert flag not in test_call_args_list[0][0][0]
+        assert flag not in mocked_execute.call_args_list[0][0][0]

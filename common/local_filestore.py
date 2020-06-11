@@ -18,11 +18,6 @@ import os
 from common import new_process
 
 
-def local_filestore_command(arguments, expect_zero=True):
-    """Executes a local command with |arguments| and returns the result."""
-    return new_process.execute(arguments, expect_zero=expect_zero)
-
-
 def cp(  # pylint: disable=invalid-name
         source,
         destination,
@@ -39,15 +34,15 @@ def cp(  # pylint: disable=invalid-name
     if recursive:
         command.append('-r')
     command.extend([source, destination])
-    return local_filestore_command(command)
+    return new_process.execute(command, expect_zero=True)
 
 
 def ls(path, must_exist=True):  # pylint: disable=invalid-name
     """Executes "ls" command for |path|. If |must_exist| is True then it can
     raise subprocess.CalledProcessError."""
-  # Add '-1' (i.e., number one) to behave like `gsutil.ls`.
+    # Add '-1' (i.e., number one) to behave like `gsutil.ls`.
     command = ['ls', '-1', path]
-    process_result = local_filestore_command(command, expect_zero=must_exist)
+    process_result = new_process.execute(command, expect_zero=must_exist)
     return process_result
 
 
@@ -64,7 +59,7 @@ def rm(  # pylint: disable=invalid-name
         command.insert(1, '-r')
     if force:
         command.insert(1, '-f')
-    return local_filestore_command(command)
+    return new_process.execute(command, expect_zero=True)
 
 
 def rsync(  # pylint: disable=too-many-arguments
@@ -90,4 +85,4 @@ def rsync(  # pylint: disable=too-many-arguments
     if source[-1] != '/':
         source = source + '/'
     command.extend([source, destination])
-    return local_filestore_command(command)
+    return new_process.execute(command, expect_zero=True)
