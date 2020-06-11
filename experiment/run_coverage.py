@@ -69,4 +69,4 @@ def do_coverage_run(  # pylint: disable=too-many-locals
                          'coverage_binary': coverage_binary,
                          'output': result.output[-new_process.LOG_LIMIT_FIELD:],
                      })
-    return (crashes_dir)
+    return find_crashing_units(crashes_dir)
