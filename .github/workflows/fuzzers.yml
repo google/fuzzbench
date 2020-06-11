@@ -15,6 +15,7 @@ jobs:
       matrix:
         fuzzer:
           - afl
+          - aflcc
           - aflfast
           - aflplusplus
           - aflplusplus_optimal
@@ -31,7 +32,6 @@ jobs:
           - lafintel
           - libfuzzer
           - mopt
-          - aflcc
 
         benchmark_type:
           - oss-fuzz
