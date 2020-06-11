@@ -94,3 +94,4 @@ class TestGsutil():
                                   parallel=True)
             test_args_list = mocked_gsutil_command.call_args_list
             assert 'parallel' in test_args_list[0][1]
+            assert test_args_list[0][1]['parallel'] == True
