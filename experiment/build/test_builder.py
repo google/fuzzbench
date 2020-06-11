@@ -24,7 +24,7 @@ from experiment.build import builder
 
 SRC_ROOT = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
 
-FUZZER_BLACKLIST = {'coverage'}
+FUZZER_BLACKLIST = {'coverage', 'coverage_source_based'}
 
 # pylint: disable=invalid-name,unused-argument,redefined-outer-name
 

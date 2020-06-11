@@ -25,6 +25,7 @@ DEFAULT_FUZZ_TARGET_NAME = 'fuzz-target'
 FUZZ_TARGET_SEARCH_STRING = b'LLVMFuzzerTestOneInput'
 VALID_FUZZER_REGEX = re.compile(r'^[A-Za-z0-9_]+$')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
+FUZZER_BLACKLIST = {'coverage', 'coverage_source_based'}
 
 
 class FuzzerDirectory:
@@ -143,7 +144,7 @@ def get_fuzzer_configs(fuzzers=None):
     for fuzzer in os.listdir(fuzzers_dir):
         if not os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')):
             continue
-        if fuzzer == 'coverage':
+        if fuzzer in FUZZER_BLACKLIST:
             continue
 
         if fuzzers is None or fuzzer in fuzzers:
