@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Helper functions for using the local_filestore tool."""
+"""Helper functions for using the local_filestore."""
 
 import os
 
@@ -28,7 +28,7 @@ def cp(  # pylint: disable=invalid-name
         destination,
         recursive=False,
         parallel=False):  # pylint: disable=unused-argument
-    """Executes "cp" command with |cp_arguments|."""
+    """Executes "cp" command from |source| to |destination|."""
     # Create intermediate folders for `cp` command to behave like `gsutil.cp`.
     for file_or_dir_path in [source, destination]:
         dirpath = os.path.dirname(os.path.abspath(file_or_dir_path))
@@ -56,7 +56,7 @@ def rm(  # pylint: disable=invalid-name
         recursive=True,
         force=False,
         parallel=False):  # pylint: disable=unused-argument
-    """Executes "rm" command with |rm_arguments| and returns the result. Uses -r
+    """Executes "rm" command for |path| and returns the result. Uses -r
     if |recursive|. If |force|, then uses -f and will not except if return code
     is nonzero."""
     command = ['rm', path]
@@ -79,9 +79,8 @@ def rsync(  # pylint: disable=too-many-arguments
     """Does local_filestore rsync from |source| to |destination| using sane
     defaults that can be overriden."""
     # Add check to behave like `gsutil.rsync`.
-    assert os.path.isdir(source), 'filestore.rsync: source should be a dir'
-    command = []
-    command.append('rsync')
+    assert os.path.isdir(source), 'filestore_utils.rsync: source should be dir.'
+    command = ['rsync']
     if delete:
         command.append('--delete')
     if recursive:

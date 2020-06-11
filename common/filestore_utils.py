@@ -30,7 +30,7 @@ def _using_gsutil():
 if _using_gsutil():
     from common import gsutil as filestore_utils_impl
 else:
-    # When gsutil is not used in the context, it should use local_filestore.
+    # Use local_filestore when not using gsutil.
     # TODO(zhichengcai): Implement local_filestore.py and import it here.
     from common import gsutil as filestore_utils_impl
 
