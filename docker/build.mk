@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 OSS_FUZZ_BENCHMARKS := $(notdir $(shell find benchmarks -type f -name oss-fuzz.yaml | xargs dirname))
+$(info ${OSS_FUZZ_BENCHMARKS})
 
 BASE_TAG ?= gcr.io/fuzzbench
 
@@ -61,6 +62,10 @@ dispatcher-image: base-image
     docker/dispatcher-image
 
 define oss_fuzz_benchmark_template
+$(1)-project-name := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
+                             grep project | cut -d ':' -f2 | tr -d ' ')
+$(1)-fuzz-target  := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
+                             grep fuzz_target | cut -d ':' -f2 | tr -d ' ')
 $(1)-commit := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
                            grep commit: | cut -d ':' -f2 | tr -d ' ')
 $(1)-repo-path := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
