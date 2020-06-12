@@ -63,7 +63,7 @@ SRC = '/src'
 DST = '/dst'
 
 
-def test_rsync_dir_to_dir(fs):  #pylint: disable=invalid-name
+def test_rsync_dir_to_dir(fs):  # pylint: disable=invalid-name
     """Tests that rsync works as intended."""
     fs.create_dir(SRC)
     fs.create_dir(DST)
@@ -73,7 +73,7 @@ def test_rsync_dir_to_dir(fs):  #pylint: disable=invalid-name
         ['rsync', '--delete', '-r', '/src/', '/dst'], expect_zero=True)
 
 
-def test_rsync_options(fs):  #pylint: disable=invalid-name
+def test_rsync_options(fs):  # pylint: disable=invalid-name
     """Tests that rsync works as intended when supplied a options
     argument."""
     fs.create_dir(SRC)
@@ -86,7 +86,7 @@ def test_rsync_options(fs):  #pylint: disable=invalid-name
 
 @pytest.mark.parametrize(('kwarg_for_rsync', 'flag'), [('delete', '--delete'),
                                                        ('recursive', '-r')])
-def test_rsync_no_flag(kwarg_for_rsync, flag, fs):  #pylint: disable=invalid-name
+def test_rsync_no_flag(kwarg_for_rsync, flag, fs):  # pylint: disable=invalid-name
     """Tests that rsync works as intended when caller specifies not
     to use specific flags."""
     fs.create_dir(SRC)
