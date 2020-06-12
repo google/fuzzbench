@@ -12,15 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/fuzzbench/base-image
+ARG parent_image=gcr.io/fuzzbench/base-builder
+FROM $parent_image
 
-# Install runtime dependencies for benchmarks.
-RUN apt-get update -y && apt-get install -y \
-    libglib2.0-0 \
-    libxml2 \
-    libarchive13 \
-    libgss3
-
-ENV OUT /out
-ENV WORKDIR $OUT
-WORKDIR $WORKDIR
+RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
+    cd /llvm-project/ && \
+    git checkout d8981ce5b9f8caa567613b2bf5aa3095e0156130 && \
+    cd compiler-rt/lib/fuzzer && \
+    (for f in *.cpp; do \
+      clang++ -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \
+    done && wait) && \
+    ar r /usr/lib/libFuzzer.a *.o

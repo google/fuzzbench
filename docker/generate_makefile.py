@@ -184,6 +184,7 @@ run-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
     --cap-add SYS_NICE \\
     --cap-add SYS_PTRACE \\
     -e FUZZ_OUTSIDE_EXPERIMENT=1 \\
+    -e FORCE_LOCAL=1 \\
     -e TRIAL_ID=1 \\
     -e FUZZER={fuzzer} \\
     -e BENCHMARK={benchmark} \\
@@ -195,6 +196,7 @@ test-run-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
     --cap-add SYS_NICE \\
     --cap-add SYS_PTRACE \\
     -e FUZZ_OUTSIDE_EXPERIMENT=1 \\
+    -e FORCE_LOCAL=1 \\
     -e TRIAL_ID=1 \\
     -e FUZZER={fuzzer} \\
     -e BENCHMARK={benchmark} \\
@@ -209,6 +211,7 @@ debug-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
     --cap-add SYS_NICE \\
     --cap-add SYS_PTRACE \\
     -e FUZZ_OUTSIDE_EXPERIMENT=1 \\
+    -e FORCE_LOCAL=1 \\
     -e TRIAL_ID=1 \\
     -e FUZZER={fuzzer} \\
     -e BENCHMARK={benchmark} \\

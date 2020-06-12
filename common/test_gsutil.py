@@ -29,6 +29,16 @@ def test_gsutil_command():
     assert mocked_popen.commands == [['gsutil'] + arguments]
 
 
+@pytest.mark.parametrize(('must_exist'), [True, False])
+def test_ls_must_exist(must_exist):
+    """Tests that ls makes a correct call to new_process.execute when
+    must_exist is specified."""
+    with mock.patch('common.new_process.execute') as mocked_execute:
+        gsutil.ls('gs://hello', must_exist=must_exist)
+        mocked_execute.assert_called_with(['gsutil', 'ls', 'gs://hello'],
+                                          expect_zero=must_exist)
+
+
 class TestGsutilRsync:
     """Tests for gsutil_command works as expected."""
     SRC = '/src'
@@ -40,7 +50,7 @@ class TestGsutilRsync:
                 'common.gsutil.gsutil_command') as mocked_gsutil_command:
             gsutil.rsync(self.SRC, self.DST)
         mocked_gsutil_command.assert_called_with(
-            ['rsync', '-d', '-r', '/src', 'gs://dst'])
+            ['rsync', '-d', '-r', '/src', 'gs://dst'], parallel=False)
 
     def test_gsutil_options(self):
         """Tests that rsync works as intended when supplied a gsutil_options
