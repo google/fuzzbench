@@ -14,10 +14,22 @@
 """Tests for local_filestore.py."""
 
 from unittest import mock
+from unittest import TestCase
 
 import pytest
 
 from common import local_filestore
+
+
+def test_local_filestore_rm(tmp_path):
+    """Tests local_filestore.rm works as expected."""
+    file_path = str(tmp_path) + '/file'
+    data = 'hello'
+    with open(file_path, 'w') as file_handle:
+        file_handle.write(data)
+    local_filestore.rm(file_path)
+    with TestCase.assertRaises(TestCase, expected_exception=FileNotFoundError):
+        open(file_path)
 
 
 def test_local_filestore_cp(tmp_path):
