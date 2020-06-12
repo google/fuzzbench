@@ -17,8 +17,10 @@ FROM $parent_image
 
 # Use a libFuzzer version that supports source-based coverage
 RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
-    cd /llvm-project && \
-    git checkout 2f6bb2a69215f9cae883da12f8f596d3f80f8d71 && \
-    cd /llvm-project/compiler-rt/lib/fuzzer && \
-    bash build.sh && \
-    cp libFuzzer.a /usr/lib
+    cd /llvm-project/ && \
+    git checkout d8981ce5b9f8caa567613b2bf5aa3095e0156130 && \
+    cd compiler-rt/lib/fuzzer && \
+    (for f in *.cpp; do \
+      clang++ -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \
+    done && wait) && \
+    ar r /usr/lib/libFuzzer.a *.o
