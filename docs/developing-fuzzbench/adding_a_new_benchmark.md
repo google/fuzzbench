@@ -156,5 +156,11 @@ Finally, add your benchmark to the list of OSS-Fuzz benchmarks in
 
 This ensures that CI tests your benchmark with all fuzzers.
 
+## Testing the benchmark in CI
+
+Add your benchmark to the `STANDARD_BENCHMARKS` list in
+[build_and_test_run_fuzzer_benchmarks.py](https://github.com/google/fuzzbench/blob/master/.github/workflows/build_and_test_run_fuzzer_benchmarks.py)
+so that it will be tested in CI.
+
 If everything works, submit the integration in a
 [GitHub pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).

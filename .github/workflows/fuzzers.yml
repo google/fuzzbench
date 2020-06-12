@@ -2,7 +2,7 @@ name: Build fuzzers
 on:
   pull_request:
     paths:
-      - 'docker/**'  # Base images changes.
+      - 'docker/**'  # Base image changes.
       - 'fuzzers/**' # Changes to fuzzers themselves.
       - 'benchmarks/**'  # Changes to benchmarks.
       - 'src_analysis/**' # Changes that affect what gets built.
@@ -15,17 +15,15 @@ jobs:
       matrix:
         fuzzer:
           - afl
+          - aflcc
           - aflfast
           - aflplusplus
-          - aflplusplus_mopt2_17
-          - aflplusplus_lto_mopt
-          - aflplusplus_lto_instrim_mopt
-          - aflplusplus_instrim_mopt
-          - aflplusplus_instrim_mopt2
-          - aflplusplus_instrim_cmplog_mopt
-          - aflplusplus_instrim_laf_mopt2
-          - aflplusplus_instrim_laf_mopt2_17
+          - aflplusplus_optimal
+          - aflplusplus_shmem
+          - aflplusplus_optimal_shmem
+          - aflplusplus_qemu
           - aflsmart
+          - ankou
           - eclipser
           - entropic
           - fairfuzz
@@ -33,6 +31,7 @@ jobs:
           - honggfuzz
           - lafintel
           - libfuzzer
+          - manul
           - mopt
 
         benchmark_type:
@@ -68,4 +67,4 @@ jobs:
 
     - name: Build Benchmarks
       run: |
-        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/test_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER
+        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/build_and_test_run_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER
