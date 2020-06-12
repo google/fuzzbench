@@ -13,6 +13,7 @@
 # limitations under the License.
 """Tests for local_filestore.py."""
 
+import os
 import subprocess
 from unittest import mock
 
@@ -22,31 +23,38 @@ from common import local_filestore
 
 
 def test_rm(tmp_path):
-    """Tests local_filestore.rm works as expected."""
-    file_path = str(tmp_path) + '/file'
+    """Tests rm works as expected."""
+    file_path = tmp_path / 'file'
     data = 'hello'
     with open(file_path, 'w') as file_handle:
         file_handle.write(data)
-    local_filestore.rm(file_path)
-    with pytest.raises(FileNotFoundError):
-        assert open(file_path)
+    local_filestore.rm(str(file_path))
+    assert not os.path.exists(file_path)
 
 
 def test_ls(tmp_path):
-    """Tests local_filestore.ls |must_exist| take effects."""
-    file_path = str(tmp_path) + '/non_exist_file'
+    """Tests ls will raise an exception while |must_exist| is
+    True if the file doesn't exist ."""
+    file_path = tmp_path / 'non_exist_file'
     with pytest.raises(subprocess.CalledProcessError):
-        assert local_filestore.ls(file_path)
+        local_filestore.ls(str(file_path))
+
+
+def test_ls_non_must_exist(tmp_path):
+    """Tests ls won't raise an exception while |must_exist| is
+    False if the file doesn't exist ."""
+    file_path = tmp_path / 'non_exist_file'
+    local_filestore.ls(str(file_path), must_exist=False)
 
 
 def test_cp(tmp_path):
-    """Tests local_filestore.cp works as expected."""
-    source = str(tmp_path) + '/source'
+    """Tests cp works as expected."""
+    source = tmp_path / 'source'
     data = 'hello'
     with open(source, 'w') as file_handle:
         file_handle.write(data)
-    destination = str(tmp_path) + '/destination'
-    local_filestore.cp(source, destination)
+    destination = tmp_path / 'destination'
+    local_filestore.cp(str(source), str(destination))
     with open(destination) as file_handle:
         assert file_handle.read() == data
 
