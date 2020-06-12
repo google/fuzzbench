@@ -256,7 +256,7 @@ def validate_experiment_requests(paths: List[Path]):
         experiment_requests = yaml_utils.read(
             automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
     except yaml.parser.ParserError:
-        print('Error validating %s.' %
+        print('Error parsing %s.' %
               automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
         return False
 

@@ -134,17 +134,21 @@ def test_validate_experiment_name(name, expected_result):
             'experiment': EXPERIMENT,
             'fuzzers': ['afl']
         }, True),
-        (1, False),  # Not a dict.
+        # Not a dict.
+        (1, False),
+        # No fuzzers.
         ({
             'experiment': EXPERIMENT,
             'fuzzers': []
-        }, False),  # No fuzzers.
+        }, False),
+        # No fuzzers.
         ({
             'experiment': EXPERIMENT
-        }, False),  # No fuzzers.
+        }, False),
+        # No experiment.
         ({
             'fuzzers': ['afl']
-        }, False),  # No experiment.
+        }, False),
         # Invalid experiment.
         ({
             'experiment': 'invalid',

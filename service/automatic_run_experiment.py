@@ -12,8 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Reads experiment-requests.yaml and determines if an experiment should run and
-runs one if necessary. Note that this code uses a config file for experiments
+"""Reads experiment-requests.yaml and determines if there is a new experiment
+and runs it if needed. Note that this code uses a config file for experiments
 that is not generic. Thus, it only works on the official fuzzbench service. This
 script can be run manually but is intended to be run by a cronjob."""
 import argparse
@@ -87,16 +87,9 @@ def validate_experiment_name(experiment_name):
     return EXPERIMENT_NAME_REGEX.match(experiment_name) is not None
 
 
-def validate_experiment_requests(experiment_requests):
-    """Returns True if all requests in |experiment_requests| are valid."""
-    # This function tries to find as many requests as possible.
-    if PAUSE_SERVICE_KEYWORD in experiment_requests:
-        # This is a special case where a string is used instead of an experiment
-        # to tell the service not to run experiments automatically. Remove it
-        # from the list because it fails validation.
-        experiment_requests = experiment_requests[:]  # Don't mutate input.
-        experiment_requests.remove(PAUSE_SERVICE_KEYWORD)
-
+def _validate_experiment_request(experiment_requests):
+    """Returns True if all requests in |experiment_request| are valid in
+    isolation. Does not account for PAUSE_SERVICE_KEYWORD or duplicates."""
     all_fuzzers = set(fuzzer_utils.get_fuzzer_names())
     valid = True
     # Validate format.
@@ -135,7 +128,20 @@ def validate_experiment_requests(experiment_requests):
                          experiment)
             valid = False
 
-    if not valid:
+    return valid
+
+
+def validate_experiment_requests(experiment_requests):
+    """Returns True if all requests in |experiment_requests| are valid."""
+    # This function tries to find as many requests as possible.
+    if PAUSE_SERVICE_KEYWORD in experiment_requests:
+        # This is a special case where a string is used instead of an experiment
+        # to tell the service not to run experiments automatically. Remove it
+        # from the list because it fails validation.
+        experiment_requests = experiment_requests[:]  # Don't mutate input.
+        experiment_requests.remove(PAUSE_SERVICE_KEYWORD)
+
+    if not _validate_individual_experiment_requests(experiment_requests):
         # Don't try the next validation step if the previous failed, we might
         # exception.
         return valid
@@ -145,6 +151,7 @@ def validate_experiment_requests(experiment_requests):
     counts = collections.Counter(
         [request['experiment'] for request in experiment_requests])
 
+    valid = True
     for experiment_name, count in counts.items():
         if count != 1:
             logger.error('Experiment: "%s" appears %d times.',
@@ -177,7 +184,7 @@ def run_requested_experiment(dry_run):
             break
 
     if requested_experiment is None:
-        logs.info('Not running new experiment.')
+        logs.info('No new experiment to run. Exiting.')
         return None
 
     experiment_name = _get_experiment_name(requested_experiment)
