@@ -13,10 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Presubmit script for fuzzbench."""
+# pylint: disable=wrong-import-position
+import os
+
+# Many users need this if they are using a Google Cloud instance for development
+# or if their system has a weird setup that makes FuzzBench think it is running
+# on Google Cloud. It's unlikely that setting this will mess anything up so set
+# it.
+# TODO(metzman): Make local the default setting and propagate 'NOT_LOCAL' to all
+# production environments so we don't need to worry about this any more.
+os.environ['FORCE_LOCAL'] = '1'
 
 import argparse
 import logging
-import os
 from pathlib import Path
 import subprocess
 import sys
@@ -227,7 +236,10 @@ def yapf(paths: List[Path], validate: bool = True) -> bool:
     command = ['yapf', validate_argument, '-p']
     command.extend(paths)
     returncode = subprocess.run(command, check=False).returncode
-    return returncode == 0
+    success = returncode == 0
+    if not success:
+        print('Code is not formatted correctly, please run \'make format\'')
+    return success
 
 
 def is_path_in_ignore_directory(path: Path) -> bool:
