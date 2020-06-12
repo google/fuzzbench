@@ -46,6 +46,7 @@ class TestIntegrationExecute:
         result = new_process.execute(self.COMMAND, timeout=.1)
         end_time = time.time()
         assert end_time - start_time < 5
+        # Give it a lot of slack to account for differences on people's macines.
         assert result.retcode != 0
 
     @mock.patch('common.logs.info')
