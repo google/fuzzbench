@@ -40,6 +40,7 @@ REQUESTED_EXPERIMENTS_PATH = os.path.join(utils.ROOT_DIR, 'service',
                                           'experiment-requests.yaml')
 
 # Don't run an experiment if we have a "request" just containing this keyword.
+# TODO(metzman): Look into replacing this mechanism for pausing the service.
 PAUSE_SERVICE_KEYWORD = 'PAUSE_SERVICE'
 
 EXPERIMENT_NAME_REGEX = re.compile(r'^\d{4}-\d{2}-\d{2}.*')
