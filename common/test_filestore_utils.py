@@ -21,7 +21,7 @@ from common import new_process
 # TODO(zhichengcai): Figure out how we can test filestore_utils when using
 # the local_filestore implementation.
 
-#pylint: disable=invalid-name,unused-argument
+# pylint: disable=invalid-name,unused-argument
 
 
 class TestLocalFilestore:
