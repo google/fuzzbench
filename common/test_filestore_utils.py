@@ -30,7 +30,7 @@ class TestLocalFilestore:
     DIR1 = '/dir1'
     DIR2 = '/dir2'
 
-    def test_local_filestore_on(self, switch_on_local_filestore):
+    def test_local_filestore_on(self, use_local_filestore):
         """Tests that local_filestore switches on correctly."""
         with mock.patch('common.new_process.execute') as mocked_execute:
             filestore_utils.cp(self.DIR1, self.DIR2, recursive=True)
@@ -43,7 +43,7 @@ class TestGsutil():
     LOCAL_DIR = '/dir'
     GSUTIL_DIR = 'gs://fake_dir'
 
-    def test_gsutil_on(self, fs, switch_on_gsutil):
+    def test_gsutil_on(self, fs, use_gsutil):
         """Tests that gsutil switches on correctly."""
 
         with mock.patch('common.new_process.execute') as mocked_execute:
@@ -53,7 +53,7 @@ class TestGsutil():
                 ['gsutil', 'cp', '-r', self.LOCAL_DIR, self.GSUTIL_DIR],
                 expect_zero=True)
 
-    def test_keyword_args(self, switch_on_gsutil):
+    def test_keyword_args(self, use_gsutil):
         """Tests that keyword args, and in particular 'parallel' are handled
         correctly."""
 
@@ -74,7 +74,7 @@ class TestGsutil():
                 ['gsutil', '-m', 'cp', self.GSUTIL_DIR, self.FILESTORE],
                 expect_zero=True)
 
-    def test_gsutil_parallel_on(self, fs, switch_on_gsutil):
+    def test_gsutil_parallel_on(self, fs, use_gsutil):
         """Tests that `parallel` is passed to gsutil execution."""
         with mock.patch(
                 'common.gsutil.gsutil_command') as mocked_gsutil_command:
