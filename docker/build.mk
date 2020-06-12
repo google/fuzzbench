@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 OSS_FUZZ_BENCHMARKS := $(notdir $(shell find benchmarks -type f -name oss-fuzz.yaml | xargs dirname))
-$(info ${OSS_FUZZ_BENCHMARKS})
 
 BASE_TAG ?= gcr.io/fuzzbench
 

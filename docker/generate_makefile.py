@@ -283,7 +283,6 @@ def main():
         else:
             benchmarks.append(benchmark)
 
-
     # Generate the build rules for fuzzer/benchmark pairs.
     fuzzers_and_variants = []
     for fuzzer in os.listdir(FUZZERS_DIR):
