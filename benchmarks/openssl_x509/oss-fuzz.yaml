@@ -1,17 +1,5 @@
-# Copyright 2020 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-project: openssl
+commit: b0593c086dd303af31dc1e30233149978dd613c4
+commit_date: 2020-02-07 09:09:50+00:00
 fuzz_target: x509
-oss_fuzz_builder_hash: d43c16de312acaa2c8bbc2a2236e9b70e3521b9a35c74ee038f8230719688ce8
+project: openssl
+repo_path: /src/openssl

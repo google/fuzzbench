@@ -1,17 +1,5 @@
-# Copyright 2020 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-project: systemd
+commit: 99fdffaa194cbfed659b0c1bfd0ace4bfcd2a245
+commit_date: 2020-02-10 17:19:52+00:00
 fuzz_target: fuzz-link-parser
-oss_fuzz_builder_hash: 6ec84f72d18b7789760cf970f10106d96fccc7f435a222c1f678c41869bf4f34
+project: systemd
+repo_path: /src/systemd

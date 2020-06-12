@@ -1,0 +1,20 @@
+homepage: "https://freedesktop.org/wiki/Software/systemd/"
+primary_contact: "lennart@poettering.net"
+sanitizers:
+  - address
+  - undefined
+  - memory
+auto_ccs:
+  - jonathan@titanous.com
+  - zbyszek@in.waw.pl
+  - dimitri.ledkov@canonical.com
+  - poettering@gmail.com
+  - watanabe.yu@gmail.com
+  - evvers@ya.ru
+  - evverx@gmail.com
+  - Tixxdz@gmail.com
+  - fsumsal@redhat.com
+  - johannbg@gmail.com
+  - ssahani@vmware.com
+  - chris@chrisdown.name
+  - the.anitazha@gmail.com
