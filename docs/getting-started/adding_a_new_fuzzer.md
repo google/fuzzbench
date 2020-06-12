@@ -256,7 +256,7 @@ make build-$FUZZER_NAME-all
 
     ```shell
     make debug-$FUZZER_NAME-$BENCHMARK_NAME
-
+    
     $ROOT_DIR/docker/benchmark-runner/startup-runner.sh
     ```
 
@@ -280,27 +280,10 @@ make build-$FUZZER_NAME-all
 
 * Run `make presubmit` to lint your code and ensure all tests are passing.
 
-* Run `make clear-cache` to clear docker containers' caches. Next time you build
-  a project, the container will be built from scratch.
+* Run `make clear-cache` to clear docker containers' caches. Next time you build a project, the container will be built from scratch.
 
-* Add your fuzzer to the list in
-  [.github/workflows/fuzzers.yml](https://github.com/google/fuzzbench/blob/master/.github/workflows/fuzzers.yml)
-  to enable building it in our CI. This will build and briefly run your fuzzer
-  on all benchmarks when you a open a pull request to submit it.
+* Add your fuzzer to the list in `.github/workflows/ci.yml` to enable building
+  it on continous integration.
 
-## Requesting an experiment
-
-The FuzzBench service automatically runs experiments that are requested by users
-once a day. If you want the FuzzBench service to run an experiment on specific
-fuzzers (such as the one you are adding): add an experiment request to
-[service/experiment-requests.yaml](https://github.com/google/fuzzbench/blob/master/service/experiment-requests.yaml).
-That file explains how to do this.
-After the experiment, FuzzBench will generate a report comparing your fuzzer to
-the latest run of other fuzzers, so you only need to include fuzzers that you've
-modified in a meaningful way (i.e. results are likely affected by your change).
-Running `make presubmit` to validate your request.
-
-## Submitting your fuzzer
-
-* Once your fuzzer is ready for an experiment, submit the integration in a
+* Submit the integration in a
 [GitHub pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
