@@ -11,29 +11,5 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for coverage builds."""
 
-import os
-
-from fuzzers import utils
-
-
-def build():
-    """Build benchmark."""
-    cflags = ['-fprofile-arcs', '-ftest-coverage', '--coverage']
-    utils.append_flags('CFLAGS', cflags)
-    utils.append_flags('CXXFLAGS', cflags)
-
-    ldflags = ['--coverage']
-    utils.append_flags('LDFLAGS', ldflags)
-
-    os.environ['CC'] = 'clang'
-    os.environ['CXX'] = 'clang++'
-    os.environ['FUZZER_LIB'] = '/libAFL.a'
-
-    utils.build_benchmark()
-
-
-def fuzz(input_corpus, output_corpus, target_binary):
-    """Do nothing."""
-
+FROM gcr.io/fuzzbench/base-runner
