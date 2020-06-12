@@ -54,7 +54,7 @@ def test_ls_one_file_per_line(tmp_path):
     file2 = dir_path / 'file2'
     open(file1, "w+").close()
     open(file2, "w+").close()
-    assert local_filestore.ls(str(dir_path))[1].count('\n') == 2
+    assert local_filestore.ls(str(dir_path)).output.count('\n') == 2
 
 
 def test_cp(tmp_path):
