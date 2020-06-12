@@ -13,10 +13,7 @@
 # limitations under the License.
 """Helper functions for using the gsutil tool."""
 
-from common import logs
 from common import new_process
-
-logger = logs.Logger('gsutil')
 
 
 def gsutil_command(arguments, expect_zero=True, parallel=False):
