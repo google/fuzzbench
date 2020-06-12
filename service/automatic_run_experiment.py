@@ -87,7 +87,7 @@ def validate_experiment_name(experiment_name):
     return EXPERIMENT_NAME_REGEX.match(experiment_name) is not None
 
 
-def _validate_experiment_request(experiment_requests):
+def _validate_individual_experiment_requests(experiment_requests):
     """Returns True if all requests in |experiment_request| are valid in
     isolation. Does not account for PAUSE_SERVICE_KEYWORD or duplicates."""
     all_fuzzers = set(fuzzer_utils.get_fuzzer_names())
@@ -144,7 +144,7 @@ def validate_experiment_requests(experiment_requests):
     if not _validate_individual_experiment_requests(experiment_requests):
         # Don't try the next validation step if the previous failed, we might
         # exception.
-        return valid
+        return False
 
     # Make sure experiment requests have a unique name, we can't run the same
     # experiment twice.
