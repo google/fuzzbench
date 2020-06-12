@@ -20,6 +20,18 @@ import pytest
 from common import local_filestore
 
 
+def test_local_filestore_cp(tmp_path):
+    """Tests local_filestore.cp works as expected."""
+    source = str(tmp_path) + '/source'
+    data = 'hello'
+    with open(source, 'w') as file_handle:
+        file_handle.write(data)
+    destination = str(tmp_path) + '/destination'
+    local_filestore.cp(source, destination)
+    with open(destination) as file_handle:
+        assert file_handle.read() == data
+
+
 class TestLocalFileStoreRsync:
     """Tests for local_filestore.rsync works as expected."""
     SRC = '/src'
