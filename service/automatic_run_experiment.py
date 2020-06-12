@@ -14,8 +14,8 @@
 # limitations under the License.
 """Reads experiment-requests.yaml and determines if there is a new experiment
 and runs it if needed. Note that this code uses a config file for experiments
-that is not generic. Thus, it only works on the official fuzzbench service. This
-script can be run manually but is intended to be run by a cronjob."""
+that is specific to the FuzzBench service. Therefore this code will break if
+others try to run it."""
 import argparse
 import collections
 import os
