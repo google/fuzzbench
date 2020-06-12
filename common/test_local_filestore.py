@@ -13,15 +13,15 @@
 # limitations under the License.
 """Tests for local_filestore.py."""
 
+import subprocess
 from unittest import mock
 
-import subprocess
 import pytest
 
 from common import local_filestore
 
 
-def test_local_filestore_rm(tmp_path):
+def test_rm(tmp_path):
     """Tests local_filestore.rm works as expected."""
     file_path = str(tmp_path) + '/file'
     data = 'hello'
@@ -32,14 +32,14 @@ def test_local_filestore_rm(tmp_path):
         assert open(file_path)
 
 
-def test_local_filestore_ls(tmp_path):
+def test_ls(tmp_path):
     """Tests local_filestore.ls |must_exist| take effects."""
     file_path = str(tmp_path) + '/non_exist_file'
     with pytest.raises(subprocess.CalledProcessError):
         assert local_filestore.ls(file_path)
 
 
-def test_local_filestore_cp(tmp_path):
+def test_cp(tmp_path):
     """Tests local_filestore.cp works as expected."""
     source = str(tmp_path) + '/source'
     data = 'hello'
