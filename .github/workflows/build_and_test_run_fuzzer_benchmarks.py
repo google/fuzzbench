@@ -64,8 +64,7 @@ def get_make_targets(benchmarks, fuzzer):
                  'test-run-%s-%s' % (fuzzer, benchmark))
                 for benchmark in benchmarks]
     return [('pull-%s-%s' % (fuzzer, benchmark),
-            'build-%s-%s' % (fuzzer, benchmark))
-            for benchmark in benchmarks]
+             'build-%s-%s' % (fuzzer, benchmark)) for benchmark in benchmarks]
 
 
 def delete_docker_images():
