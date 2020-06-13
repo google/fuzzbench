@@ -16,6 +16,17 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-06-12
+  fuzzers:
+    - aflcc
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_optimal_shmem
+    - aflplusplus_qemu
+    - aflplusplus_shmem
+    - libfuzzer_nocmp
+    - manul
+
 - experiment: 2020-06-08
   fuzzers:
     - aflplusplus
