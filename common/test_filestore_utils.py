@@ -96,10 +96,6 @@ def test_using_gsutil(use_gsutil):  # pylint: disable=unused-argument
         filestore_utils.rsync(GCS_DIR, GCS_DIR_2, recursive=True)
         assert 'gsutil' in mocked_execute.call_args_list[0][0][0]
 
-    with mock.patch('common.new_process.execute') as mocked_execute:
-        filestore_utils.cp(LOCAL_DIR, GCS_DIR, recursive=True)
-        assert 'gsutil' in mocked_execute.call_args_list[0][0][0]
-
 
 def test_keyword_args(use_gsutil):  # pylint: disable=unused-argument
     """Tests that keyword args, and in particular 'parallel' are handled
