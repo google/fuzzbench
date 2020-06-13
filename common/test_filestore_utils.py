@@ -23,7 +23,7 @@ from common import new_process
 
 
 def test_using_local_filestore(use_local_filestore):  # pylint: disable=unused-argument
-    """Tests that local_filestore switches on correctly."""
+    """Tests that local_filestore is used in local running settings."""
     with mock.patch('common.new_process.execute') as mocked_execute:
         filestore_utils.cp('/dir1', '/dir2', recursive=True)
         assert 'gsutil' not in mocked_execute.call_args_list[0][0][0]
@@ -35,7 +35,7 @@ GCS_DIR = 'gs://fake_dir'
 
 
 def test_using_gsutil(fs, use_gsutil):  # pylint: disable=invalid-name,unused-argument
-    """Tests that gsutil switches on correctly."""
+    """Tests that gsutil is used in Google Cloud running settings."""
 
     with mock.patch('common.new_process.execute') as mocked_execute:
         fs.create_dir(LOCAL_DIR)
