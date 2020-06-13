@@ -30,13 +30,11 @@ def _using_gsutil():
 if _using_gsutil():
     from common import gsutil as filestore_utils_impl
 else:
-    # When gsutil is not used in the context, here it should use local_utils.
+    # Use local_filestore when not using gsutil.
     # TODO(zhichengcai): Implement local_filestore.py and import it here.
     from common import gsutil as filestore_utils_impl
 
 
-# TODO(zhichengcai): Change all implementations of cp, ls, and rm to stop using
-# special handling of *args. This is error prone now that there are wrappers.
 def cp(source, destination, recursive=False, parallel=False):  # pylint: disable=invalid-name
     """Copies |source| to |destination|."""
     return filestore_utils_impl.cp(source,
@@ -46,8 +44,8 @@ def cp(source, destination, recursive=False, parallel=False):  # pylint: disable
 
 
 def ls(path, must_exist=True):  # pylint: disable=invalid-name
-    """Lists files or folders in |path|. If |must_exist|
-    is True then it can raise subprocess.CalledProcessError."""
+    """Lists files or folders in |path| as one filename per line.
+    If |must_exist| is True then it can raise subprocess.CalledProcessError."""
     return filestore_utils_impl.ls(path, must_exist=must_exist)
 
 
