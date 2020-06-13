@@ -24,7 +24,7 @@ from experiment.build import builder
 
 SRC_ROOT = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
 
-FUZZER_BLACKLIST = {'coverage', 'coverage_source_based'}
+COVERAGE_TOOLS = {'coverage', 'coverage_source_based'}
 
 # pylint: disable=invalid-name,unused-argument,redefined-outer-name
 
@@ -43,7 +43,7 @@ def get_oss_fuzz_benchmarks():
 
 def get_fuzzers():
     """Get all non-blacklisted fuzzers."""
-    return get_benchmarks_or_fuzzers('fuzzers', 'fuzzer.py', FUZZER_BLACKLIST)
+    return get_benchmarks_or_fuzzers('fuzzers', 'fuzzer.py', COVERAGE_TOOLS)
 
 
 def get_benchmarks_or_fuzzers(benchmarks_or_fuzzers_directory, filename,

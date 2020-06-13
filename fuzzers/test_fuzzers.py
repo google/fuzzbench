@@ -21,7 +21,7 @@ import pytest
 from common import utils
 
 # pylint: disable=invalid-name,unused-argument
-FUZZER_BLACKLIST = {'coverage', 'coverage_source_based'}
+COVERAGE_TOOLS = {'coverage', 'coverage_source_based'}
 
 
 def get_all_fuzzer_dirs():
@@ -30,7 +30,7 @@ def get_all_fuzzer_dirs():
     return [
         fuzzer for fuzzer in os.listdir(fuzzers_dir)
         if (os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')) and
-            fuzzer not in FUZZER_BLACKLIST)
+            fuzzer not in COVERAGE_TOOLS)
     ]
 
 
