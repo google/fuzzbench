@@ -580,6 +580,15 @@ def schedule(experiment_config: dict, pool, queue):
 
 
 def schedule_loop(experiment_config: dict):
+    """Wrapper around _schedule_loop that logs errors."""
+    _initialize_logs(experiment_config['experiment'])
+    try:
+        _schedule_loop(experiment_config)
+    except Exception:  # pylint: disable=broad-except
+        logger.error('Fatal error occurred during scheduling.')
+
+
+def _schedule_loop(experiment_config: dict):
     """Continuously run the scheduler until there is nothing left to schedule.
     Note that this should not be called unless
     multiprocessing.set_start_method('spawn') was called first. Otherwise it
@@ -592,8 +601,8 @@ def schedule_loop(experiment_config: dict):
         get_experiment_trials(experiment_config['experiment']).all())
     trial_instance_manager = TrialInstanceManager(num_trials, experiment_config)
     experiment = experiment_config['experiment']
-
     queue = schedule_measure_workers.initialize(experiment_config)
+
     with multiprocessing.Pool() as pool:
         handle_preempted = False
         while not all_trials_ended(experiment):
@@ -773,11 +782,6 @@ def create_trial_instance(fuzzer: str, benchmark: str, trial_id: int,
 
 def main():
     """Main function for running scheduler independently."""
-    logs.initialize(default_extras={
-        'component': 'dispatcher',
-        'subcomponent': 'scheduler'
-    })
-
     if len(sys.argv) != 2:
         print('Usage: {} <experiment_config.yaml>'.format(sys.argv[0]))
         return 1

@@ -26,17 +26,19 @@ logger = logs.Logger('scheduler')  # pylint: disable=invalid-name
 def get_instance_group_name(experiment: str):
     """Returns the name of the instance group of measure workers for
     |experiment|."""
-    return experiment + '-measure-worker'
+    # "worker-" needs to come first because name cannot start with number.
+    return 'worker-' + experiment
 
 
 def get_measure_worker_instance_template_name(experiment: str):
     """Returns an instance template name for measurer workers running in
     |experiment|."""
-    return experiment + '-measure-worker'
+    return 'worker-' + experiment
 
 
 def initialize(experiment_config: dict):
     """Initialize everything that will be needed to schedule measurers."""
+    logger.info('Initializing worker scheduling.')
     experiment = experiment_config['experiment']
     instance_template_name = get_measure_worker_instance_template_name(
         experiment)
@@ -79,6 +81,7 @@ def schedule(experiment_config: dict, queue):
         counts[job.get_status()] += 1
 
     num_instances_needed = counts['queued'] + counts['started']
+    logger.info('Scheduling %d workers.', num_instances_needed)
     instance_group_name = get_instance_group_name(
         experiment_config['experiment'])
     project = experiment_config['cloud_project']
