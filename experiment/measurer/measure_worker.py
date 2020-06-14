@@ -201,10 +201,12 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
         def copy_unchanged_cycles_file():
             unchanged_cyles_gcs_path = exp_path.gcs(self.unchanged_cycles_path)
-            result = filestore_utils.cp(unchanged_cyles_gcs_path,
-                                        self.unchanged_cycles_path,
-                                        expect_zero=False)
-            return result.retcode == 0
+            try:
+                filestore_utils.cp(unchanged_cyles_gcs_path,
+                                   self.unchanged_cycles_path)
+                return True
+            except subprocess.CalledProcessError:
+                return False
 
         if not os.path.exists(self.unchanged_cycles_path):
             if not copy_unchanged_cycles_file():
@@ -306,11 +308,6 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             state_file.set_current(prev_state)
 
 
-def remote_dir_exists(directory: pathlib.Path) -> bool:
-    """Does |directory| exist in the CLOUD_EXPERIMENT_BUCKET."""
-    return filestore_utils.ls(exp_path.gcs(directory), must_exist=False)[0] == 0
-
-
 def measure_trial_coverage(measure_req) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
@@ -371,11 +368,11 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     corpus_archive_dir = os.path.dirname(corpus_archive_dst)
     if not os.path.exists(corpus_archive_dir):
         os.makedirs(corpus_archive_dir)
-    if filestore_utils.cp(corpus_archive_src,
-                          corpus_archive_dst,
-                          expect_zero=False,
-                          write_to_stdout=False)[0] != 0:
-        snapshot_logger.warning('Corpus not found for cycle: %d.', cycle)
+
+    try:
+        filestore_utils.cp(corpus_archive_src, corpus_archive_dst)
+    except subprocess.CalledProcessError:
+        snapshot_logger.info('Could not copy corpus for cycle: %d.', cycle)
         # No extra state to save.
         return None
 
@@ -417,8 +414,7 @@ def set_up_coverage_binary(benchmark):
     cloud_bucket_archive_path = exp_path.gcs(coverage_binaries_dir /
                                              archive_name)
     filestore_utils.cp(cloud_bucket_archive_path,
-                       str(benchmark_coverage_binary_dir),
-                       write_to_stdout=False)
+                       str(benchmark_coverage_binary_dir))
     archive_path = benchmark_coverage_binary_dir / archive_name
     with tarfile.open(archive_path, 'r:gz') as tar:
         tar.extractall(benchmark_coverage_binary_dir)

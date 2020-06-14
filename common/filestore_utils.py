@@ -74,6 +74,7 @@ def rsync(  # pylint: disable=too-many-arguments
                                       options,
                                       parallel=parallel)
 
+
 def cat(file_path):
     """Reads the file at |file_path| and returns the result."""
     return filestore_utils_impl.cat(file_path)

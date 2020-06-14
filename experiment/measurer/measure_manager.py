@@ -15,6 +15,7 @@
 import collections
 import multiprocessing
 import os
+import pathlib
 import sys
 import time
 from typing import List
@@ -22,8 +23,9 @@ from typing import List
 from sqlalchemy import func
 from sqlalchemy import orm
 
-from common import experiment_utils
 from common import experiment_path as exp_path
+from common import experiment_utils
+from common import filestore_utils
 from common import logs
 from common import queue_utils
 from database import utils as db_utils
@@ -42,6 +44,11 @@ SNAPSHOTS_BATCH_SAVE_SIZE = 100
 def get_experiment_folders_dir():
     """Return experiment folders directory."""
     return exp_path.path('experiment-folders')
+
+
+def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
+    """Returns True if |path| exists in the experiment_filestore."""
+    return filestore_utils.ls(exp_path.gcs(path), must_exist=False).retcode == 0
 
 
 def measure_loop(experiment: str, max_total_time: int, redis_host: str):
@@ -88,7 +95,7 @@ def measure_all_trials(experiment: str, max_total_time: int, queue) -> bool:
     logger.info('Measuring all trials.')
 
     experiment_folders_dir = get_experiment_folders_dir()
-    if not measure_worker.remote_dir_exists(experiment_folders_dir):
+    if not exists_in_experiment_filestore(experiment_folders_dir):
         return True
 
     max_cycle = _time_to_cycle(max_total_time)

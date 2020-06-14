@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for measure_manager.py."""
+import os
 from unittest import mock
 import queue
 
@@ -24,14 +25,14 @@ from test_libs import utils as test_utils
 
 MAX_TOTAL_TIME = 100
 
-# pylint: disable=unused-argument
+# pylint: disable=unused-argument,invalid-name
 
 
 @mock.patch('common.filestore_utils.ls')
 @mock.patch('common.filestore_utils.cp')
-def test_measure_all_trials_not_ready(mocked_cp, mocked_ls, experiment):
-    """Test running measure_all_trials before it is ready works as intended."""
-    mocked_ls.return_value = ([], 1)
+def test_measure_all_trials_not_ready(mocked_cp, mocked_ls, experiment, db):
+    """Test running measure_all_trials before it can start measuring."""
+    mocked_ls.return_value = new_process.ProcessResult(1, '', False)
     assert measure_manager.measure_all_trials(
         experiment_utils.get_experiment_name(), MAX_TOTAL_TIME, queue.Queue())
     assert not mocked_cp.called
@@ -74,3 +75,16 @@ def test_measure_loop_end(_, mocked_manager, mocked_measure_all_trials, __,
     measure_manager.measure_loop('', 0, None)
     # If everything went well, we should get to this point without any exception
     # failures.
+
+
+@mock.patch('common.new_process.execute')
+def test_path_exists_in_experiment_filestore(mocked_execute, environ):
+    """Tests that path_exists_in_experiment_filestore calls gsutil properly."""
+    work_dir = '/work'
+    os.environ['WORK'] = work_dir
+    os.environ['EXPERIMENT_FILESTORE'] = 'gs://cloud-bucket'
+    os.environ['EXPERIMENT'] = 'example-experiment'
+    measure_manager.exists_in_experiment_filestore(work_dir)
+    mocked_execute.assert_called_with(
+        ['gsutil', 'ls', 'gs://cloud-bucket/example-experiment'],
+        expect_zero=False)

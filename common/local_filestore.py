@@ -41,8 +41,7 @@ def ls(path, must_exist=True):  # pylint: disable=invalid-name
     # Add '-1' (i.e., number one) to behave like `gsutil.ls` (i.e., one filename
     # per line).
     command = ['ls', '-1', path]
-    process_result = new_process.execute(command, expect_zero=must_exist)
-    return process_result
+    return new_process.execute(command, expect_zero=must_exist)
 
 
 def rm(  # pylint: disable=invalid-name
@@ -90,4 +89,4 @@ def rsync(  # pylint: disable=too-many-arguments
 def cat(file_path):
     """Does cat on |file_path| and returns the result."""
     command = ['cat', file_path]
-    return new_proces.execute(command)
+    return new_process.execute(command)
