@@ -13,19 +13,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Presubmit script for fuzzbench."""
+# pylint: disable=wrong-import-position
+import os
+
+# Many users need this if they are using a Google Cloud instance for development
+# or if their system has a weird setup that makes FuzzBench think it is running
+# on Google Cloud. It's unlikely that setting this will mess anything up so set
+# it.
+# TODO(metzman): Make local the default setting and propagate 'NOT_LOCAL' to all
+# production environments so we don't need to worry about this any more.
+os.environ['FORCE_LOCAL'] = '1'
 
 import argparse
 import logging
-import os
 from pathlib import Path
 import subprocess
 import sys
 from typing import List, Optional
 
+import yaml
+
 from common import benchmark_utils
 from common import fuzzer_utils
 from common import filesystem
 from common import logs
+from common import yaml_utils
+from service import automatic_run_experiment
 from src_analysis import change_utils
 from src_analysis import diff_utils
 
@@ -228,7 +241,34 @@ def yapf(paths: List[Path], validate: bool = True) -> bool:
     command = ['yapf', validate_argument, '-p']
     command.extend(paths)
     returncode = subprocess.run(command, check=False).returncode
-    return returncode == 0
+    success = returncode == 0
+    if not success:
+        print('Code is not formatted correctly, please run \'make format\'')
+    return success
+
+
+def validate_experiment_requests(paths: List[Path]):
+    """Returns False if service/experiment-requests.yaml it is in |paths| and is
+    not valid."""
+    if Path(automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH) not in paths:
+        return True
+
+    try:
+        experiment_requests = yaml_utils.read(
+            automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
+    except yaml.parser.ParserError:
+        print('Error parsing %s.' %
+              automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
+        return False
+
+    result = automatic_run_experiment.validate_experiment_requests(
+        experiment_requests)
+
+    if not result:
+        print('%s is not valid.' %
+              automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
+
+    return result
 
 
 def is_path_ignored(path: Path) -> bool:
@@ -301,7 +341,8 @@ def do_checks(file_paths: List[Path]) -> bool:
     if not all(path_valid_statuses):
         success = False
 
-    for check in [license_check, yapf, lint, pytype]:
+    checks = [license_check, yapf, lint, pytype, validate_experiment_requests]
+    for check in checks:
         if not check(file_paths):
             print('ERROR: %s failed, see errors above.' % check.__name__)
             success = False
@@ -326,13 +367,16 @@ def main() -> int:
     """Check that this branch conforms to the standards of fuzzbench."""
     parser = argparse.ArgumentParser(
         description='Presubmit script for fuzzbench.')
-    choices = [
-        'format', 'lint', 'typecheck', 'licensecheck',
-        'test_changed_integrations'
-    ]
+    command_check_mapping = {
+        'format': yapf,
+        'lint': lint,
+        'typecheck': pytype,
+        'validate_experiment_requests': validate_experiment_requests,
+        'test_changed_integrations': test_changed_integrations
+    }
     parser.add_argument(
         'command',
-        choices=choices,
+        choices=command_check_mapping.keys(),
         nargs='?',
         help='The presubmit check to run. Defaults to all of them')
     parser.add_argument('--all-files',
@@ -363,13 +407,6 @@ def main() -> int:
     if not args.command:
         success = do_checks(relevant_files)
         return bool_to_returncode(success)
-
-    command_check_mapping = {
-        'format': yapf,
-        'lint': lint,
-        'typecheck': pytype,
-        'test_changed_integrations': test_changed_integrations
-    }
 
     check = command_check_mapping[args.command]
     if args.command == 'format':

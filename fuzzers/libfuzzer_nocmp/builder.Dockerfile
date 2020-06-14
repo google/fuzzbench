@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-experiment: test-experiment
-trials: 4
-max_total_time: 86400
-cloud_project: fuzzbench
-cloud_compute_zone: us-central1-a
-experiment_filestore: gs://experiment-data
-report_filestore: gs://web-reports
-cloud_sql_instance_connection_name: "fuzzbench:us-central1:experiment-db=tcp:5432"
-benchmarks: "benchmark-1,benchmark-2"
-git_hash: "git-hash"
-redis_host: "127.0.0.1"
+ARG parent_image=gcr.io/fuzzbench/base-builder
+FROM $parent_image
+
+RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
+    cd /llvm-project/ && \
+    git checkout d8981ce5b9f8caa567613b2bf5aa3095e0156130 && \
+    cd compiler-rt/lib/fuzzer && \
+    (for f in *.cpp; do \
+      clang++ -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \
+    done && wait) && \
+    ar r /usr/lib/libFuzzer.a *.o
