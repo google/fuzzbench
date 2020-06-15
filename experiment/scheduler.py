@@ -100,8 +100,7 @@ def get_expired_trials(experiment: str, max_total_time: int):
 
 
 def all_trials_ended(experiment: str) -> bool:
-    """Return a bool if there are any trials in |experiment| that have not
-    started."""
+    """Returns True if all trials for |experiment| have ended."""
     return not get_experiment_trials(experiment).filter(
         models.Trial.time_ended.is_(None)).all()
 
