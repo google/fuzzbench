@@ -83,24 +83,13 @@ def get_job_timeout():
     return experiment_utils.get_snapshot_seconds() + 5
 
 
-def measure_all_trials(experiment_config: dict, queue) -> bool:
-    """Get coverage data (with coverage runs) for all active trials. Note that
-    this should not be called unless multiprocessing.set_start_method('spawn')
-    was called first. Otherwise it will use fork which breaks logging."""
-    logger.info('Measuring all trials.')
+def enqueue_measure_jobs(experiment_config: dict, queue):
+    """Get snapshots we need to measure from the db and add them to the queue so
+    that they can be measured."""
     experiment = experiment_config['experiment']
     max_total_time = experiment_config['max_total_time']
-
-    experiment_folders_dir = get_experiment_folders_dir()
-    if not exists_in_experiment_filestore(experiment_folders_dir):
-        return True
-
     max_cycle = _time_to_cycle(max_total_time)
     unmeasured_snapshots = get_unmeasured_snapshots(experiment, max_cycle)
-
-    if not unmeasured_snapshots:
-        return False
-
     logger.info('Enqueuing measure jobs.')
     job_timeout = get_job_timeout()
     jobs = [
@@ -112,6 +101,29 @@ def measure_all_trials(experiment_config: dict, queue) -> bool:
         for unmeasured_snapshot in unmeasured_snapshots
     ]
     logger.info('Done enqueuing jobs.')
+    return jobs
+
+
+def ready_to_measure():
+    """Returns True if we are ready to start measuring."""
+    experiment_folders_dir = get_experiment_folders_dir()
+    return exists_in_experiment_filestore(experiment_folders_dir)
+
+
+def measure_all_trials(experiment_config: dict, queue) -> bool:
+    """Get coverage data (with coverage runs) for all active trials. Note that
+    this should not be called unless multiprocessing.set_start_method('spawn')
+    was called first. Otherwise it will use fork which breaks logging."""
+    logger.info('Measuring all trials.')
+
+    if not ready_to_measure():
+        return True
+
+    jobs = enqueue_measure_jobs(experiment_config, queue)
+    if not jobs:
+        # If we didn't enqueue any jobs, then there is nothing to measure.
+        return False
+
     initial_jobs = {job.id: job for job in jobs}
     # TODO(metzman): Move this to scheduler. It's here for now because the
     # scheduler quits too early.
