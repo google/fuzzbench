@@ -718,7 +718,7 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
     additional_env = ''
     if 'env' in fuzzer_config:
         additional_env = ' '.join([
-            '-e {k}={v}'.format(k=k, v=shlex.quote(v))
+            '-e {k}={v}'.format(k=k, v=shlex.quote(str(v)))
             for k, v in fuzzer_config['env'].items()
         ])
 
