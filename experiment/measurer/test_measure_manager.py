@@ -18,10 +18,8 @@ import queue
 
 import pytest
 
-from common import experiment_utils
 from common import new_process
 from experiment.measurer import measure_manager
-from test_libs import utils as test_utils
 
 MAX_TOTAL_TIME = 100
 
@@ -30,34 +28,33 @@ MAX_TOTAL_TIME = 100
 
 @mock.patch('common.filestore_utils.ls')
 @mock.patch('common.filestore_utils.cp')
-def test_measure_all_trials_not_ready(mocked_cp, mocked_ls, experiment, db):
+def test_measure_all_trials_not_ready(mocked_cp, mocked_ls, experiment,
+                                      experiment_config, db):
     """Test running measure_all_trials before it can start measuring."""
     mocked_ls.return_value = new_process.ProcessResult(1, '', False)
-    assert measure_manager.measure_all_trials(
-        experiment_utils.get_experiment_name(), MAX_TOTAL_TIME, queue.Queue())
+    assert measure_manager.measure_all_trials(experiment_config, queue.Queue())
     assert not mocked_cp.called
 
 
-@mock.patch('multiprocessing.pool.ThreadPool', test_utils.MockPool)
 @mock.patch('common.new_process.execute')
 @mock.patch('common.filesystem.directories_have_same_files')
 @pytest.mark.skip(reason="See crbug.com/1012329")
 def test_measure_all_trials_no_more(mocked_directories_have_same_files,
-                                    mocked_execute):
+                                    mocked_execute, experiment_config):
     """Test measure_all_trials does what is intended when the experiment is
     done."""
     mocked_directories_have_same_files.return_value = True
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
-    assert not measure_manager.measure_all_trials(
-        experiment_utils.get_experiment_name(), MAX_TOTAL_TIME, queue.Queue())
+    assert not measure_manager.measure_all_trials(experiment_config,
+                                                  queue.Queue())
 
 
+@mock.patch('experiment.schedule_measure_workers.teardown')
+@mock.patch('experiment.schedule_measure_workers.initialize')
 @mock.patch('experiment.scheduler.all_trials_ended')
 @mock.patch('experiment.measurer.measure_manager.measure_all_trials')
-@mock.patch('multiprocessing.Manager')
-@mock.patch('multiprocessing.pool')
-def test_measure_loop_end(_, mocked_manager, mocked_measure_all_trials,
-                          mocked_all_trials_ended):
+def test_measure_loop_end(mocked_measure_all_trials,
+                          mocked_all_trials_ended, _, __, experiment_config):
     """Tests that measure_loop stops when there is nothing left to measure."""
     call_count = 0
 
@@ -71,7 +68,7 @@ def test_measure_loop_end(_, mocked_manager, mocked_measure_all_trials,
 
     mocked_measure_all_trials.side_effect = mock_measure_all_trials
     mocked_all_trials_ended.return_value = True
-    measure_manager.measure_loop('', 0, None)
+    measure_manager.measure_loop(experiment_config)
     # If everything went well, we should get to this point without any exception
     # failures.
 

@@ -26,11 +26,12 @@ from common import experiment_path as exp_path
 from common import experiment_utils
 from common import filestore_utils
 from common import logs
-from common import queue_utils
+from common import yaml_utils
 from database import utils as db_utils
 from database import models
 from experiment.measurer import measure_worker
 from experiment import scheduler
+from experiment import schedule_measure_workers
 
 logger = logs.Logger('measure_manager')  # pylint: disable=invalid-name
 
@@ -49,31 +50,30 @@ def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
     return filestore_utils.ls(exp_path.gcs(path), must_exist=False).retcode == 0
 
 
-def measure_loop(experiment: str, max_total_time: int, redis_host: str):
+def measure_loop(experiment_config: dict):
     """Continuously measure trials for |experiment|."""
     db_utils.initialize()
-    logs.initialize(default_extras={
-        'component': 'dispatcher',
-        'subcomponent': 'measurer',
-    })
-    queue = queue_utils.initialize_queue(redis_host)
+    experiment = experiment_config['experiment']
+    initialize_logs(experiment)
+    queue = schedule_measure_workers.initialize(experiment_config)
     while True:
         try:
             # Get whether all trials have ended before we measure to prevent
             # races.
             all_trials_ended = scheduler.all_trials_ended(experiment)
-            if not measure_all_trials(experiment, max_total_time, queue):
+            if not measure_all_trials(experiment_config, queue):
                 # We didn't measure any trials.
                 if all_trials_ended:
                     # There are no trials producing snapshots to measure.
                     # Given that we couldn't measure any snapshots, we won't
                     # be able to measure any the future, so stop now.
                     break
-        except Exception:  # pylint: disable=broad-except
+        except Exception as e:  # pylint: disable=broad-except
             logger.error('Error occurred during measuring.')
 
             time.sleep(FAIL_WAIT_SECONDS)
 
+    schedule_measure_workers.teardown(experiment_config)
     logger.info('Finished measuring.')
 
 
@@ -82,11 +82,13 @@ def get_job_timeout():
     return experiment_utils.get_snapshot_seconds() + 2 * 60
 
 
-def measure_all_trials(experiment: str, max_total_time: int, queue) -> bool:
+def measure_all_trials(experiment_config: dict, queue) -> bool:
     """Get coverage data (with coverage runs) for all active trials. Note that
     this should not be called unless multiprocessing.set_start_method('spawn')
     was called first. Otherwise it will use fork which breaks logging."""
     logger.info('Measuring all trials.')
+    experiment = experiment_config['experiment']
+    max_total_time = experiment_config['max_total_time']
 
     experiment_folders_dir = get_experiment_folders_dir()
     if not exists_in_experiment_filestore(experiment_folders_dir):
@@ -105,9 +107,12 @@ def measure_all_trials(experiment: str, max_total_time: int, queue) -> bool:
                       job_timeout=job_timeout)
         for unmeasured_snapshot in unmeasured_snapshots
     ]
+    # TODO(metzman): Move this to scheduler. It's here for now because the
+    # scheduler quits too early.
+    schedule_measure_workers.schedule(experiment_config, queue)
 
-    # Poll the queue for snapshots and save them in batches until the pool is
-    # done processing each unmeasured snapshot. Then save any remaining
+    # Poll the queue for snapshots and save them in batches until the workers
+    # are done processing each unmeasured snapshot. Then save any remaining
     # snapshots.
     snapshots = []
     snapshots_measured = False
@@ -155,6 +160,7 @@ def measure_all_trials(experiment: str, max_total_time: int, queue) -> bool:
     save_snapshots()
 
     logger.info('Done measuring all trials.')
+    schedule_measure_workers.schedule(experiment_config, queue)
     return snapshots_measured
 
 
@@ -278,8 +284,9 @@ def main():
 
     experiment_name = experiment_utils.get_experiment_name()
     initialize_logs(experiment_name)
+    experiment_config = yaml_utils.read(sys.argv[1])
     try:
-        measure_loop(experiment_name, int(sys.argv[1]), sys.argv[2])
+        measure_loop(experiment_config)
     except Exception as error:
         logs.error('Error conducting experiment.')
         raise error

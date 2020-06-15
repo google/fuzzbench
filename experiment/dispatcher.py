@@ -20,7 +20,6 @@ import multiprocessing
 import os
 import posixpath
 import sys
-import threading
 import time
 from typing import List
 
@@ -130,23 +129,20 @@ def dispatcher_main():
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])
 
-    # Start measurer and scheduler in seperate threads/processes.
-    scheduler_loop_thread = threading.Thread(target=scheduler.schedule_loop,
-                                             args=(experiment.config,))
-    scheduler_loop_thread.start()
+    # Start measurer and scheduler in seperate processes.
+    scheduler_loop_process = multiprocessing.Process(
+        target=scheduler.schedule_loop, args=(experiment.config,))
+    scheduler_loop_process.start()
 
-    max_total_time = experiment.config['max_total_time']
     measurer_loop_process = multiprocessing.Process(
-        target=measure_manager.measure_loop,
-        args=(experiment.experiment_name, max_total_time,
-              experiment.config['redis_host']))
+        target=measure_manager.measure_loop, args=(experiment.config,))
 
     measurer_loop_process.start()
 
     is_complete = False
     while True:
         time.sleep(LOOP_WAIT_SECONDS)
-        if not scheduler_loop_thread.is_alive():
+        if not scheduler_loop_process.is_alive():
             is_complete = not measurer_loop_process.is_alive()
 
         # Generate periodic output reports.
@@ -158,7 +154,7 @@ def dispatcher_main():
             break
 
     logs.info('Dispatcher finished.')
-    scheduler_loop_thread.join()
+    scheduler_loop_process.join()
     measurer_loop_process.join()
 
 

@@ -25,7 +25,7 @@ from common import logs
 from common import queue_utils
 from common import yaml_utils
 
-logger = logs.Logger('scheduler')  # pylint: disable=invalid-name
+logger = logs.Logger('schedule_measure_workers')  # pylint: disable=invalid-name
 
 MAX_INSTANCES_PER_GROUP = 1000
 

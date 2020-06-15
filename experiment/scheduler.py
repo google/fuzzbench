@@ -35,7 +35,6 @@ from common import utils
 from common import yaml_utils
 from database import models
 from database import utils as db_utils
-from experiment import schedule_measure_workers
 
 # Give the trial runner a little extra time to shut down and account for how
 # long it can take to actually start running once an instance is started. 5
@@ -564,7 +563,7 @@ def replace_trial(trial, preemptible):
     return replacement
 
 
-def schedule(experiment_config: dict, pool, queue):
+def schedule(experiment_config: dict, pool):
     """Gets all pending trials for the current experiment and then schedules
     those that are possible."""
     logger.info('Finding trials to schedule.')
@@ -575,7 +574,6 @@ def schedule(experiment_config: dict, pool, queue):
     # Start pending trials.
     pending_trials = list(get_pending_trials(experiment_config['experiment']))
     started_trials = start_trials(pending_trials, experiment_config, pool)
-    schedule_measure_workers.schedule(experiment_config, queue)
     return started_trials
 
 
@@ -601,7 +599,6 @@ def _schedule_loop(experiment_config: dict):
         get_experiment_trials(experiment_config['experiment']).all())
     trial_instance_manager = TrialInstanceManager(num_trials, experiment_config)
     experiment = experiment_config['experiment']
-    queue = schedule_measure_workers.initialize(experiment_config)
 
     with multiprocessing.Pool() as pool:
         handle_preempted = False
@@ -612,7 +609,7 @@ def _schedule_loop(experiment_config: dict):
                     # trial was started. This ensures that .
                     handle_preempted = True
 
-                schedule(experiment_config, pool, queue)
+                schedule(experiment_config, pool)
                 if handle_preempted:
                     trial_instance_manager.handle_preempted_trials()
             except Exception:  # pylint: disable=broad-except
@@ -625,7 +622,6 @@ def _schedule_loop(experiment_config: dict):
             # In these cases, sleep before retrying again.
             time.sleep(WAIT_SECONDS)
 
-    schedule_measure_workers.teardown(experiment_config)
     logger.info('Finished scheduling.')
 
 

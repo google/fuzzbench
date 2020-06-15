@@ -217,9 +217,7 @@ def test_start_trials_not_started(mocked_get_by_variant_name,
 @mock.patch('common.new_process.execute')
 @mock.patch('common.fuzzer_config_utils.get_by_variant_name')
 @mock.patch('experiment.scheduler.datetime_now')
-@mock.patch('experiment.schedule_measure_workers.initialize')
-@mock.patch('experiment.schedule_measure_workers.schedule')
-def test_schedule_trials(_, __, mocked_datetime_now, mocked_get_by_variant_name,
+def test_schedule_trials(mocked_datetime_now, mocked_get_by_variant_name,
                          mocked_execute, pending_trials, experiment_config):
     """Tests that schedule() ends expired trials and starts new ones as
     needed."""
@@ -237,9 +235,8 @@ def test_schedule_trials(_, __, mocked_datetime_now, mocked_get_by_variant_name,
         datetime.timedelta(seconds=(experiment_config['max_total_time'] +
                                     scheduler.GRACE_TIME_SECONDS * 2)))
 
-    queue = None
     with ThreadPool() as pool:
-        scheduler.schedule(experiment_config, pool, queue)
+        scheduler.schedule(experiment_config, pool)
     assert db_utils.query(models.Trial).filter(
         models.Trial.time_started.in_(
             datetimes_first_experiments_started)).all() == (db_utils.query(
