@@ -245,7 +245,7 @@ def generate_fuzzer(fuzzer,
                     fuzzer_variant=None):
     """Output make rules for a single fuzzer."""
     if fuzzer_variant:
-        fuzzer_variant_name = fuzzer + '_' + fuzzer_variant['name']
+        fuzzer_variant_name = fuzzer_variant['name']
         fuzzer_variant_env = ' '.join([
             '-e {k}={v}'.format(k=k, v=shlex.quote(str(v)))
             for k, v in fuzzer_variant['env'].items()
