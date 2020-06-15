@@ -101,7 +101,7 @@ test-run-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-runner
     -e MAX_TOTAL_TIME=20 \\
     -e SNAPSHOT_PERIOD=10 \\
     {fuzzer_variant_env} \\
-    -it {base_tag}/runners/{fuzzer}/{benchmark}
+    {base_tag}/runners/{fuzzer}/{benchmark}
 
 debug-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-runner
 	docker run \\
@@ -205,7 +205,7 @@ test-run-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runne
     -e MAX_TOTAL_TIME=20 \\
     -e SNAPSHOT_PERIOD=10 \\
     {fuzzer_variant_env} \\
-    -it {base_tag}/runners/{fuzzer}/{benchmark}
+    {base_tag}/runners/{fuzzer}/{benchmark}
 
 debug-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
 	docker run \\
