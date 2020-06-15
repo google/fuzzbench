@@ -14,7 +14,6 @@
 """Module for managing measurement of snapshots from trial runners."""
 import collections
 import multiprocessing
-import os
 import pathlib
 import sys
 import time
@@ -30,7 +29,6 @@ from common import logs
 from common import queue_utils
 from database import utils as db_utils
 from database import models
-from experiment.build import build_utils
 from experiment.measurer import measure_worker
 from experiment import scheduler
 
@@ -58,10 +56,6 @@ def measure_loop(experiment: str, max_total_time: int, redis_host: str):
         'component': 'dispatcher',
         'subcomponent': 'measurer',
     })
-    with multiprocessing.Pool() as pool:
-        set_up_coverage_binaries(pool, experiment)
-    # Using Multiprocessing.Queue will fail with a complaint about
-    # inheriting queue.
     queue = queue_utils.initialize_queue(redis_host)
     while True:
         try:
@@ -268,34 +262,22 @@ def get_unmeasured_snapshots(experiment: str, max_cycle: int
     return unmeasured_first_snapshots + unmeasured_latest_snapshots
 
 
-def set_up_coverage_binaries(pool, experiment):
-    """Set up coverage binaries for all benchmarks in |experiment|."""
-    benchmarks = [
-        trial.benchmark for trial in db_utils.query(models.Trial).distinct(
-            models.Trial.benchmark).filter(
-                models.Trial.experiment == experiment)
-    ]
-    coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
-    if not os.path.exists(coverage_binaries_dir):
-        os.makedirs(coverage_binaries_dir)
-    pool.map(measure_worker.set_up_coverage_binary, benchmarks)
-
-
-def initialize_logs():
+def initialize_logs(experiment_name):
     """Initialize logs. This must be called on process start."""
-    logs.initialize(default_extras={
-        'component': 'dispatcher',
-        'subcomponent': 'measurer',
-    })
+    logs.initialize(
+        default_extras={
+            'component': 'dispatcher',
+            'subcomponent': 'measurer',
+            'experiment': experiment_name,
+        })
 
 
 def main():
     """Measure the experiment."""
-    initialize_logs()
     multiprocessing.set_start_method('spawn')
 
     experiment_name = experiment_utils.get_experiment_name()
-
+    initialize_logs(experiment_name)
     try:
         measure_loop(experiment_name, int(sys.argv[1]), sys.argv[2])
     except Exception as error:

@@ -53,11 +53,10 @@ def test_measure_all_trials_no_more(mocked_directories_have_same_files,
 
 
 @mock.patch('experiment.scheduler.all_trials_ended')
-@mock.patch('experiment.measurer.measure_manager.set_up_coverage_binaries')
 @mock.patch('experiment.measurer.measure_manager.measure_all_trials')
 @mock.patch('multiprocessing.Manager')
 @mock.patch('multiprocessing.pool')
-def test_measure_loop_end(_, mocked_manager, mocked_measure_all_trials, __,
+def test_measure_loop_end(_, mocked_manager, mocked_measure_all_trials,
                           mocked_all_trials_ended):
     """Tests that measure_loop stops when there is nothing left to measure."""
     call_count = 0

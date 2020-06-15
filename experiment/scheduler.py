@@ -42,7 +42,7 @@ from experiment import schedule_measure_workers
 # minutes is an arbitrary amount of time.
 GRACE_TIME_SECONDS = 5 * 60
 
-FAIL_WAIT_SECONDS = 10 * 60
+WAIT_SECONDS = 5 * 60
 
 logger = logs.Logger('scheduler')  # pylint: disable=invalid-name
 
@@ -623,7 +623,7 @@ def _schedule_loop(experiment_config: dict):
             # - We have not been able to start trials and still have some
             #   remaining. This can happen when we run out of instance quota.
             # In these cases, sleep before retrying again.
-            time.sleep(FAIL_WAIT_SECONDS)
+            time.sleep(WAIT_SECONDS)
 
     schedule_measure_workers.teardown(experiment_config)
     logger.info('Finished scheduling.')
