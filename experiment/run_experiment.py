@@ -354,9 +354,14 @@ class LocalDispatcher:
             experiment=self.config['experiment'])
         set_cloud_project_arg = 'CLOUD_PROJECT={cloud_project}'.format(
             cloud_project=self.config['cloud_project'])
+        shared_experiment_filestore_arg = '{0}:{0}'.format(self.config['experiment_filestore'])
         set_experiment_filestore_arg = (
             'EXPERIMENT_FILESTORE={experiment_filestore}'.format(
                 experiment_filestore=self.config['experiment_filestore']))
+        shared_report_filestore_arg = '{0}:{0}'.format(self.config['report_filestore'])
+        set_report_filestore_arg = (
+            'REPORT_FILESTORE={report_filestore}'.format(
+                report_filestore=self.config['report_filestore']))
         docker_image_url = '{base_docker_tag}/dispatcher-image'.format(
             base_docker_tag=base_docker_tag)
         command = [
@@ -368,6 +373,10 @@ class LocalDispatcher:
             '/var/run/docker.sock:/var/run/docker.sock',
             '-v',
             shared_volume_volume_arg,
+            '-v',
+            shared_experiment_filestore_arg,
+            '-v',
+            shared_report_filestore_arg,
             '-e',
             shared_volume_env_arg,
             '-e',
@@ -380,6 +389,8 @@ class LocalDispatcher:
             sql_database_arg,
             '-e',
             set_experiment_filestore_arg,
+            '-e',
+            set_report_filestore_arg,
             '-e',
             'LOCAL_EXPERIMENT=True',
             '--cap-add=SYS_PTRACE',

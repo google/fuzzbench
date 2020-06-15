@@ -740,8 +740,6 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
         'additional_env': additional_env,
         'local_experiment': local_experiment
     }
-    if local_experiment:
-        kwargs['host_gcloud_config'] = os.environ['HOST_GCLOUD_CONFIG']
 
     return template.render(**kwargs)
 

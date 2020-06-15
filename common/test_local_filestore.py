@@ -47,6 +47,16 @@ def test_ls_non_must_exist(tmp_path):
     local_filestore.ls(str(file_path), must_exist=False)
 
 
+def test_ls_one_file_per_line(tmp_path):
+    """Tests ls will list files as one per line."""
+    dir_path = tmp_path
+    file1 = dir_path / 'file1'
+    file2 = dir_path / 'file2'
+    open(file1, "w+").close()
+    open(file2, "w+").close()
+    assert local_filestore.ls(str(dir_path)).output == 'file1\nfile2\n'
+
+
 def test_cp(tmp_path):
     """Tests cp works as expected."""
     source = tmp_path / 'source'
@@ -57,6 +67,19 @@ def test_cp(tmp_path):
     local_filestore.cp(str(source), str(destination))
     with open(destination) as file_handle:
         assert file_handle.read() == data
+
+
+def test_non_exist_dest(tmp_path):
+    """Tests cp and rsync will create intermediate folders for destination."""
+    source_dir = tmp_path / 'source'
+    source_dir.mkdir()
+    source_file = source_dir / 'file1'
+    open(source_file, "w+").close()
+
+    cp_dest_dir = tmp_path / 'cp_test' / 'intermediate' / 'cp_dest'
+    rsync_dest_dir = tmp_path / 'rsync_test' / 'intermediate' / 'rsync_dest'
+    local_filestore.cp(str(source_dir), str(cp_dest_dir), recursive=True)
+    local_filestore.rsync(str(source_dir), str(rsync_dest_dir))
 
 
 SRC = '/src'

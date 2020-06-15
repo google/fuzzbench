@@ -28,8 +28,7 @@ do
   echo 'Error pulling image, retrying...'
 done{% endif %}
 
-docker run {% if local_experiment %}-v {{host_gcloud_config}}:/root/.config/gcloud {% endif %}\
---privileged --cpus=1 --rm \
+docker run --privileged --cpus=1 --rm \
 -e INSTANCE_NAME={{instance_name}} \
 -e FUZZER={{fuzzer}} \
 -e BENCHMARK={{benchmark}} \
