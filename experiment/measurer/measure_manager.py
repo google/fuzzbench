@@ -21,6 +21,7 @@ from typing import List
 
 from sqlalchemy import func
 from sqlalchemy import orm
+import rq.job
 
 from common import experiment_path as exp_path
 from common import experiment_utils
@@ -79,7 +80,7 @@ def measure_loop(experiment_config: dict):
 
 def get_job_timeout():
     """Returns the timeout for an rq job."""
-    return experiment_utils.get_snapshot_seconds() + 2 * 60
+    return experiment_utils.get_snapshot_seconds() + 5
 
 
 def measure_all_trials(experiment_config: dict, queue) -> bool:
@@ -100,13 +101,18 @@ def measure_all_trials(experiment_config: dict, queue) -> bool:
     if not unmeasured_snapshots:
         return False
 
+    logger.info('Enqueuing measure jobs.')
     job_timeout = get_job_timeout()
-    results = [
+    jobs = [
         queue.enqueue(measure_worker.measure_trial_coverage,
                       unmeasured_snapshot,
-                      job_timeout=job_timeout)
+                      job_timeout=job_timeout,
+                      result_ttl=job_timeout,
+                      ttl=job_timeout)
         for unmeasured_snapshot in unmeasured_snapshots
     ]
+    logger.info('Done enqueuing jobs.')
+    initial_jobs = {job.id: job for job in jobs}
     # TODO(metzman): Move this to scheduler. It's here for now because the
     # scheduler quits too early.
     schedule_measure_workers.schedule(experiment_config, queue)
@@ -128,24 +134,48 @@ def measure_all_trials(experiment_config: dict, queue) -> bool:
         nonlocal snapshots_measured
         snapshots_measured = True
 
+    # TODO(metzman): Why does this seem to loop forever?
     while True:
         all_finished = True
 
-        # Copy results because we want to mutate it while iterating through it.
-        results_copy = results.copy()
+        try:
+            with open('/tmp/debug'):
+                pass
+            import pdb
+            pdb.set_trace()
+        except FileNotFoundError:
+            pass
 
-        for result in results_copy:
-            if not result.is_finished:
+        job_ids = initial_jobs.keys()
+        jobs = rq.job.Job.fetch_many(job_ids, queue.connection)
+
+        logger.info('len(results): %d', len(jobs))
+        for job in jobs:
+            if job is None:
+                logger.info('job is None, %s', all(j is None for j in jobs))
+                initial_jobs = {}
+                break
+            status = job.get_status(refresh=False)
+            if status is None:
+                logger.info('%s returned None', job.get_call_string())
+                del initial_jobs[job.id]
+                continue
+
+            if status == rq.job.JobStatus.FAILED:  # pylint: disable=no-member
+                del initial_jobs[job.id]
+                continue
+
+            if status != rq.job.JobStatus.FINISHED:  # pylint: disable=no-member
                 # Note if we haven't finished all tasks so we can break out of
                 # the outer (infinite) loop.
                 all_finished = False
                 continue
 
-            if result.return_value is None:
+            del initial_jobs[job.id]
+            if job.return_value is None:
                 continue
 
-            snapshots.append(result.return_value)
-            results.remove(result)
+            snapshots.append(job.return_value)
 
         if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE:
             save_snapshots()

@@ -34,18 +34,19 @@ def get_instance_group_name(experiment: str):
     """Returns the name of the instance group of measure workers for
     |experiment|."""
     # "worker-" needs to come first because name cannot start with number.
-    return 'worker-' + experiment
+    return 'worker20-' + experiment
 
 
 def get_measure_worker_instance_template_name(experiment: str):
     """Returns an instance template name for measurer workers running in
     |experiment|."""
-    return 'worker-' + experiment
+    return 'worker20-' + experiment
 
 
 def initialize(experiment_config: dict):
     """Initialize everything that will be needed to schedule measurers."""
     logger.info('Initializing worker scheduling.')
+    gce.initialize()
     experiment = experiment_config['experiment']
     instance_template_name = get_measure_worker_instance_template_name(
         experiment)
@@ -95,10 +96,12 @@ def teardown(experiment_config: dict):
 def schedule(experiment_config: dict, queue):
     """Schedule measurer workers. This cannot be called before
     initialize_measurers."""
-    jobs = queue.get_jobs()
+    logger.info('Scheduling measurer workers.')
+
+    jobs = queue_utils.get_all_jobs(queue)
     counts = collections.defaultdict(int)
     for job in jobs:
-        counts[job.get_status()] += 1
+        counts[job.get_status(refresh=False)] += 1
 
     num_instances_needed = counts['queued'] + counts['started']
     num_instances_needed = min(num_instances_needed, MAX_INSTANCES_PER_GROUP)
@@ -113,7 +116,8 @@ def schedule(experiment_config: dict, queue):
 
     if not num_instances_needed:
         # Can't go below 1 instance per group.
-        return
+        logs.info('num_instances_needed = 0, resizing to 1.')
+        num_instances_needed = 1
 
     if num_instances_needed != num_instances:
         # TODO(metzman): Add some limits so always have some measurers but not
