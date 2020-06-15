@@ -68,7 +68,7 @@ def measure_loop(experiment_config: dict):
                     # Given that we couldn't measure any snapshots, we won't
                     # be able to measure any the future, so stop now.
                     break
-        except Exception as e:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             logger.error('Error occurred during measuring.')
 
             time.sleep(FAIL_WAIT_SECONDS)

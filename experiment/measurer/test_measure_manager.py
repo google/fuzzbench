@@ -53,8 +53,8 @@ def test_measure_all_trials_no_more(mocked_directories_have_same_files,
 @mock.patch('experiment.schedule_measure_workers.initialize')
 @mock.patch('experiment.scheduler.all_trials_ended')
 @mock.patch('experiment.measurer.measure_manager.measure_all_trials')
-def test_measure_loop_end(mocked_measure_all_trials,
-                          mocked_all_trials_ended, _, __, experiment_config):
+def test_measure_loop_end(mocked_measure_all_trials, mocked_all_trials_ended, _,
+                          __, experiment_config):
     """Tests that measure_loop stops when there is nothing left to measure."""
     call_count = 0
 
