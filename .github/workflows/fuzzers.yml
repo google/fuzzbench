@@ -23,8 +23,6 @@ jobs:
           - aflplusplus_qemu
           - aflsmart
           - ankou
-          - coverage
-          - coverage_source_based
           - eclipser
           - entropic
           - fairfuzz

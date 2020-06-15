@@ -50,21 +50,13 @@ STANDARD_BENCHMARKS = {
     'woff2-2016-05-06',
 }
 
-COVERAGE_FUZZERS = {
-    'coverage',
-    'coverag_source_based',
-}
-
 
 def get_make_targets(benchmarks, fuzzer):
     """Return pull and test targets for |fuzzer| and each benchmark
     in |benchmarks| to pass to make."""
-    if fuzzer not in COVERAGE_FUZZERS:
-        return [('pull-%s-%s' % (fuzzer, benchmark),
-                 'test-run-%s-%s' % (fuzzer, benchmark))
-                for benchmark in benchmarks]
     return [('pull-%s-%s' % (fuzzer, benchmark),
-             'build-%s-%s' % (fuzzer, benchmark)) for benchmark in benchmarks]
+             'test-run-%s-%s' % (fuzzer, benchmark))
+            for benchmark in benchmarks]
 
 
 def delete_docker_images():
