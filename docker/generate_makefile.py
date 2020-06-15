@@ -45,7 +45,6 @@ FUZZER_BENCHMARK_TEMPLATE = """
     --build-arg benchmark={benchmark} \\
     $(call cache_from,{base_tag}/builders/{fuzzer}/{benchmark}) \\
     --file docker/benchmark-builder/Dockerfile \\
-    {build_arguments} \\
     .
 
 .pull-{fuzzer}-{benchmark}-builder: .pull-{fuzzer}-builder
@@ -144,7 +143,6 @@ OSS_FUZZER_BENCHMARK_TEMPLATE = """
     --build-arg fuzzer={fuzzer} \\
     --build-arg benchmark={benchmark} \\
     $(call cache_from,{base_tag}/builders/{fuzzer}/{benchmark}) \\
-    {build_arguments} \\
     .
 
 .pull-{fuzzer}-{benchmark}-oss-fuzz-builder: .pull-{fuzzer}-{benchmark}-oss-fuzz-builder-intermediate
@@ -228,7 +226,7 @@ endif
 """
 
 
-def generate_fuzzer(fuzzer, benchmarks, oss_fuzz_benchmarks, build_arguments):
+def generate_fuzzer(fuzzer, benchmarks, oss_fuzz_benchmarks):
     """Output make rules for a single fuzzer."""
     # Generate build rules for the fuzzer itself.
     print(FUZZER_TEMPLATE.format(fuzzer=fuzzer, base_tag=BASE_TAG))
@@ -238,15 +236,12 @@ def generate_fuzzer(fuzzer, benchmarks, oss_fuzz_benchmarks, build_arguments):
         print(
             FUZZER_BENCHMARK_TEMPLATE.format(fuzzer=fuzzer,
                                              benchmark=benchmark,
-                                             base_tag=BASE_TAG,
-                                             build_arguments=build_arguments))
+                                             base_tag=BASE_TAG))
     for benchmark in oss_fuzz_benchmarks:
         print(
-            OSS_FUZZER_BENCHMARK_TEMPLATE.format(
-                fuzzer=fuzzer,
-                benchmark=benchmark,
-                base_tag=BASE_TAG,
-                build_arguments=build_arguments))
+            OSS_FUZZER_BENCHMARK_TEMPLATE.format(fuzzer=fuzzer,
+                                                 benchmark=benchmark,
+                                                 base_tag=BASE_TAG))
 
     # Generate rules for building/pulling all target/benchmark pairs.
     all_benchmarks = benchmarks + oss_fuzz_benchmarks
@@ -290,10 +285,7 @@ def main():
             continue
 
         # The default fuzzer does not contain any special build arguments.
-        generate_fuzzer(fuzzer,
-                        benchmarks,
-                        oss_fuzz_benchmarks,
-                        build_arguments='')
+        generate_fuzzer(fuzzer, benchmarks, oss_fuzz_benchmarks)
         fuzzers_and_variants.append(fuzzer)
 
         # If there are variants, generate rules for them as well.
@@ -308,13 +300,7 @@ def main():
         for variant in config['variants']:
             assert 'name' in variant
             variant_name = variant['name']
-            # Build arguments are optional for variants. When provided they
-            # are passed as arguments to relevant docker build commants.
-            # Example: ['--build-arg ARG=value']
-            build_arguments = variant.get('build_arguments', [])
-            build_arguments = ' '.join(build_arguments)
-            generate_fuzzer(variant_name, benchmarks, oss_fuzz_benchmarks,
-                            build_arguments)
+            generate_fuzzer(variant_name, benchmarks, oss_fuzz_benchmarks)
             fuzzers_and_variants.append(variant_name)
 
     # Generate rules to build all known targets.
