@@ -15,9 +15,12 @@
 import redis
 import rq
 
+from common import experiment_utils
 
-def initialize_queue(redis_host, queue_name='default'):
+
+def initialize_queue(redis_host):
     """Returns a redis-backed rq queue."""
+    queue_name = experiment_utils.get_experiment_name()
     redis_connection = redis.Redis(host=redis_host)
     queue = rq.Queue(queue_name, connection=redis_connection)
     return queue

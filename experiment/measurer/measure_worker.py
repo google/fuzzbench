@@ -45,11 +45,12 @@ SnapshotMeasureRequest = collections.namedtuple(
 
 def initialize_logs():
     """Initialize logs. This must be called on process start."""
-    logs.initialize(default_extras={
-        'component': 'worker',
-        'subcomponent': 'measurer',
-        'experiment': experiment_utils.get_experiment_name()
-    })
+    logs.initialize(
+        default_extras={
+            'component': 'worker',
+            'subcomponent': 'measurer',
+            'experiment': experiment_utils.get_experiment_name()
+        })
 
 
 def extract_corpus(corpus_archive: str, sha_blacklist: Set[str],

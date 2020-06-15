@@ -29,18 +29,18 @@ logger = logs.Logger('scheduler')  # pylint: disable=invalid-name
 
 MAX_INSTANCES_PER_GROUP = 1000
 
-# !!!
+
 def get_instance_group_name(experiment: str):
     """Returns the name of the instance group of measure workers for
     |experiment|."""
     # "worker-" needs to come first because name cannot start with number.
-    return 'worker2-' + experiment
+    return 'worker-' + experiment
 
 
 def get_measure_worker_instance_template_name(experiment: str):
     """Returns an instance template name for measurer workers running in
     |experiment|."""
-    return 'worker2-' + experiment
+    return 'worker-' + experiment
 
 
 def initialize(experiment_config: dict):
