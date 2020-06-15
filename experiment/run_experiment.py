@@ -242,7 +242,7 @@ def set_up_fuzzer_config_files(fuzzer_configs):
 def start_experiment(experiment_name: str, config_filename: str,
                      benchmarks: List[str], fuzzer_configs: List[dict]):
     """Start a fuzzer benchmarking experiment."""
-    check_no_local_changes()
+    # check_no_local_changes()
 
     validate_experiment_name(experiment_name)
     validate_benchmarks(benchmarks)
@@ -287,8 +287,10 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
             return None
         return tar_info
 
-    experiment_filestore_path = os.path.join(config['experiment_filestore'],
-                                             config['experiment'])
+    os.environ['EXPERIMENT_FILESTORE'] = config['experiment_filestore']
+    os.environ['EXPERIMENT'] = config['experiment']
+    experiment_filestore_path = experiment_utils.get_experiment_filestore_path()
+
     base_destination = os.path.join(experiment_filestore_path, 'input')
 
     # Send the local source repository to the cloud for use by dispatcher.
