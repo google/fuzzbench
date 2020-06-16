@@ -55,6 +55,7 @@ BENCHMARKS = [
     'libpcap_fuzz_both',
     'mbedtls_fuzz_dtlsclient',
     'openssl_x509',
+    'php_php-fuzz-parser',
     'sqlite3_ossfuzz',
     'systemd_fuzz-link-parser',
     'zlib_zlib_uncompress_fuzzer',
@@ -80,6 +81,11 @@ def _get_experiment_name(experiment_config: dict) -> str:
     # Use str because the yaml parser will parse things like `2020-05-06` as
     # a datetime if not included in quotes.
     return str(experiment_config['experiment'])
+
+
+def _get_requested_experiments():
+    """Return requested experiments."""
+    return yaml_utils.read(REQUESTED_EXPERIMENTS_PATH)
 
 
 def validate_experiment_name(experiment_name):
@@ -164,7 +170,7 @@ def validate_experiment_requests(experiment_requests):
 def run_requested_experiment(dry_run):
     """Run the oldest requested experiment that hasn't been run yet in
     experiment-requests.yaml."""
-    requested_experiments = yaml_utils.read(REQUESTED_EXPERIMENTS_PATH)
+    requested_experiments = _get_requested_experiments()
 
     # TODO(metzman): Look into supporting benchmarks as an optional parameter so
     # that people can add fuzzers that don't support everything.

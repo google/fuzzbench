@@ -712,7 +712,7 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
     provided and return the result."""
     fuzzer_config = fuzzer_config_utils.get_by_variant_name(fuzzer)
     docker_image_url = benchmark_utils.get_runner_image_url(
-        benchmark, fuzzer, experiment_config['cloud_project'])
+        benchmark, fuzzer_config['fuzzer'], experiment_config['cloud_project'])
     fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
 
     # Convert additional environment variables from configuration to arguments
@@ -720,7 +720,7 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
     additional_env = ''
     if 'env' in fuzzer_config:
         additional_env = ' '.join([
-            '-e {k}={v}'.format(k=k, v=shlex.quote(v))
+            '-e {k}={v}'.format(k=k, v=shlex.quote(str(v)))
             for k, v in fuzzer_config['env'].items()
         ])
 
