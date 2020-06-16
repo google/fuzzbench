@@ -41,7 +41,7 @@ from database import utils as db_utils
 # minutes is an arbitrary amount of time.
 GRACE_TIME_SECONDS = 5 * 60
 
-WAIT_SECONDS = 5 * 60
+WAIT_SECONDS = 10 * 60
 
 logger = logs.Logger('scheduler')  # pylint: disable=invalid-name
 

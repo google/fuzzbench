@@ -175,12 +175,13 @@ def measure_all_trials(experiment_config: dict, queue) -> bool:  # pylint: disab
         logger.info('len(results): %d', len(jobs))
         for job in jobs:
             if job is None:
-                logger.info('job is None, %s', all(j is None for j in jobs))
+                logger.error('job is None. Others: %s',
+                             all(j is None for j in jobs))
                 initial_jobs = {}
                 break
             status = job.get_status(refresh=False)
             if status is None:
-                logger.info('%s returned None', job.get_call_string())
+                logger.error('%s returned None', job.get_call_string())
                 del initial_jobs[job.id]
                 continue
 
@@ -196,6 +197,9 @@ def measure_all_trials(experiment_config: dict, queue) -> bool:  # pylint: disab
 
             del initial_jobs[job.id]
             if job.return_value is None:
+                # The task completed successfully but was not able to measure
+                # the snapshot. This could have happened because the snapshot
+                # does not exist yet.
                 continue
 
             snapshot = job.return_value
