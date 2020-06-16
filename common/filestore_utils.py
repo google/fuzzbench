@@ -14,6 +14,8 @@
 """Helper functions for interacting with the file storage."""
 
 from common import experiment_utils
+from common import gsutil
+from common import local_filestore
 
 
 def _using_gsutil():
@@ -27,34 +29,34 @@ def _using_gsutil():
     return experiment_filestore_path.startswith('gs://')
 
 
-if _using_gsutil():
-    from common import gsutil as filestore_utils_impl
-else:
+def get_impl():
+    """Returns the implementation for filestore_utils."""
+    if _using_gsutil():
+        return gsutil
     # Use local_filestore when not using gsutil.
-    # TODO(zhichengcai): Implement local_filestore.py and import it here.
-    from common import gsutil as filestore_utils_impl
+    return local_filestore
 
 
 def cp(source, destination, recursive=False, parallel=False):  # pylint: disable=invalid-name
     """Copies |source| to |destination|."""
-    return filestore_utils_impl.cp(source,
-                                   destination,
-                                   recursive=recursive,
-                                   parallel=parallel)
+    return get_impl().cp(source,
+                         destination,
+                         recursive=recursive,
+                         parallel=parallel)
 
 
 def ls(path, must_exist=True):  # pylint: disable=invalid-name
     """Lists files or folders in |path| as one filename per line.
     If |must_exist| is True then it can raise subprocess.CalledProcessError."""
-    return filestore_utils_impl.ls(path, must_exist=must_exist)
+    return get_impl().ls(path, must_exist=must_exist)
 
 
 def rm(path, recursive=True, force=False, parallel=False):  # pylint: disable=invalid-name
     """Removes |path|."""
-    return filestore_utils_impl.rm(path,
-                                   recursive=recursive,
-                                   force=force,
-                                   parallel=parallel)
+    return get_impl().rm(path,
+                         recursive=recursive,
+                         force=force,
+                         parallel=parallel)
 
 
 def rsync(  # pylint: disable=too-many-arguments
@@ -66,10 +68,10 @@ def rsync(  # pylint: disable=too-many-arguments
         options=None,
         parallel=False):
     """Syncs |source| and |destination| folders."""
-    return filestore_utils_impl.rsync(source,
-                                      destination,
-                                      delete,
-                                      recursive,
-                                      gsutil_options,
-                                      options,
-                                      parallel=parallel)
+    return get_impl().rsync(source,
+                            destination,
+                            delete,
+                            recursive,
+                            gsutil_options,
+                            options,
+                            parallel=parallel)

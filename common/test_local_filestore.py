@@ -47,6 +47,18 @@ def test_ls_non_must_exist(tmp_path):
     local_filestore.ls(str(file_path), must_exist=False)
 
 
+def test_ls_one_file_per_line(tmp_path):
+    """Tests ls will list files as one per line."""
+    dir_path = tmp_path
+    file1 = dir_path / 'file1'
+    file2 = dir_path / 'file2'
+    with open(file1, 'w+'):
+        pass
+    with open(file2, 'w+'):
+        pass
+    assert local_filestore.ls(str(dir_path)).output == 'file1\nfile2\n'
+
+
 def test_cp(tmp_path):
     """Tests cp works as expected."""
     source = tmp_path / 'source'
