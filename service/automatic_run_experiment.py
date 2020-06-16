@@ -82,6 +82,11 @@ def _get_experiment_name(experiment_config: dict) -> str:
     return str(experiment_config['experiment'])
 
 
+def _get_requested_experiments():
+    """Return requested experiments."""
+    return yaml_utils.read(REQUESTED_EXPERIMENTS_PATH)
+
+
 def validate_experiment_name(experiment_name):
     """Returns True if |experiment_name| is valid."""
     return EXPERIMENT_NAME_REGEX.match(experiment_name) is not None
@@ -164,7 +169,7 @@ def validate_experiment_requests(experiment_requests):
 def run_requested_experiment(dry_run):
     """Run the oldest requested experiment that hasn't been run yet in
     experiment-requests.yaml."""
-    requested_experiments = yaml_utils.read(REQUESTED_EXPERIMENTS_PATH)
+    requested_experiments = _get_requested_experiments()
 
     # TODO(metzman): Look into supporting benchmarks as an optional parameter so
     # that people can add fuzzers that don't support everything.
