@@ -287,6 +287,7 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
             return None
         return tar_info
 
+    # Set environment variables to use corresponding filestore_utils.
     os.environ['EXPERIMENT_FILESTORE'] = config['experiment_filestore']
     os.environ['EXPERIMENT'] = config['experiment']
     experiment_filestore_path = experiment_utils.get_experiment_filestore_path()

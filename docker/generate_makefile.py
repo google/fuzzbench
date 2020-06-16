@@ -51,7 +51,7 @@ FUZZER_BENCHMARK_TEMPLATE = """
 .pull-{fuzzer}-{benchmark}-builder: .pull-{fuzzer}-builder
 	docker pull {base_tag}/builders/{fuzzer}/{benchmark}
 
-ifneq ({fuzzer}, coverage)
+ifeq (,$(filter {fuzzer},coverage coverage_source_based))
 
 .{fuzzer}-{benchmark}-intermediate-runner: base-runner
 	docker build \\
@@ -150,7 +150,7 @@ OSS_FUZZER_BENCHMARK_TEMPLATE = """
 .pull-{fuzzer}-{benchmark}-oss-fuzz-builder: .pull-{fuzzer}-{benchmark}-oss-fuzz-builder-intermediate
 	docker pull {base_tag}/builders/{fuzzer}/{benchmark}
 
-ifneq ({fuzzer}, coverage)
+ifeq (,$(filter {fuzzer},coverage coverage_source_based))
 
 .{fuzzer}-{benchmark}-oss-fuzz-intermediate-runner: base-runner
 	docker build \\
