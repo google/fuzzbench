@@ -59,15 +59,18 @@ def test_cp(tmp_path):
         assert file_handle.read() == data
 
 
-def test_non_exist_dest(tmp_path):
+def test_nonexistent_dest(tmp_path):
     """Tests cp and rsync will create intermediate folders for destination."""
     source_dir = tmp_path / 'source'
     source_dir.mkdir()
     source_file = source_dir / 'file1'
-    open(source_file, "w+").close()
+    with open(source_file, 'w'):
+        pass
 
     cp_dest_dir = tmp_path / 'cp_test' / 'intermediate' / 'cp_dest'
     rsync_dest_dir = tmp_path / 'rsync_test' / 'intermediate' / 'rsync_dest'
+
+    # Should run without exceptions.
     local_filestore.cp(str(source_dir), str(cp_dest_dir), recursive=True)
     local_filestore.rsync(str(source_dir), str(rsync_dest_dir))
 
