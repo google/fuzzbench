@@ -64,6 +64,9 @@
 
         <div id="summary" class="section scrollspy">
             <h2 class="green-text text-darken-3">experiment summary</h2>
+
+            {% block top_level_ranking %}
+
             {% if experiment.rank_by_mean_and_average_rank.size < 2 %}
             No ranking as the available data is only for a single fuzzer.
 
@@ -100,6 +103,8 @@
             So please check the list of supported benchmarks for the fuzzer(s) of your interest.
             The list could be specified in the fuzzer's README.md like
             <a href="https://github.com/google/fuzzbench/blob/master/fuzzers/aflsmart/README.md">this</a>.
+
+            {% endblock %}
 
             <ul class="collapsible">
                 <li>
@@ -196,6 +201,11 @@
         <div id="data" class="section scrollspy">
             <h2 class="green-text text-darken-3">experiment data</h2>
             You can download the raw data for this report <a href="data.csv.gz">here</a>.
+
+            <br><br>
+            Check out the <a href="https://google.github.io/fuzzbench/developing-fuzzbench/custom_analysis_and_reports">documentation</a> on how to create customized reports using this data.
+            Also see some example Colab notebooks for doing custom analysis on the data <a href="https://github.com/google/fuzzbench/tree/master/analysis/notebooks">here</a>.
+
             {% if experiment.git_hash %}
             <br><br>
             The experiment was conducted using this FuzzBench commit:

@@ -22,7 +22,8 @@
 #include <unistd.h>
 
 //TODO: include klee/klee.h when KLEE is installed
-extern "C" {
+extern "C"
+{
   // Functon defined by benchmarks as entry point
   int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size);
   // KLEE's internal functions
@@ -30,11 +31,17 @@ extern "C" {
 }
 
 // Input buffer.
-const size_t kKleeInputSize = 4096;
-uint8_t KleeInputBuf[kKleeInputSize];
+size_t kleeInputSize = 4096;
 
+int main(int argc, char **argv)
+{
+  kleeInputSize = atoi(argv[1]);
+  uint8_t *KleeInputBuf = (uint8_t *)malloc(kleeInputSize * sizeof(uint8_t));
+  printf("kleeInputSize: %zu\n", kleeInputSize);
 
-int main(int argc, char **argv) {
-  klee_make_symbolic(KleeInputBuf, kKleeInputSize, "KleeInputBuf");
-  return LLVMFuzzerTestOneInput(KleeInputBuf, kKleeInputSize);
+  klee_make_symbolic(KleeInputBuf, kleeInputSize, "KleeInputBuf");
+  int result = LLVMFuzzerTestOneInput(KleeInputBuf, kleeInputSize);
+
+  free(KleeInputBuf);
+  return result;
 }
