@@ -55,6 +55,7 @@ BENCHMARKS = [
     'libpcap_fuzz_both',
     'mbedtls_fuzz_dtlsclient',
     'openssl_x509',
+    'php_php-fuzz-parser',
     'sqlite3_ossfuzz',
     'systemd_fuzz-link-parser',
     'zlib_zlib_uncompress_fuzzer',
