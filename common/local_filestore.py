@@ -73,6 +73,11 @@ def rsync(  # pylint: disable=too-many-arguments
     defaults that can be overriden."""
     # Add check to behave like `gsutil.rsync`.
     assert os.path.isdir(source), 'filestore_utils.rsync: source should be dir.'
+
+    # Create intermediate folders for `rsync` command to behave like
+    # `gsutil.rsync`.
+    filesystem.create_directory(destination)
+
     command = ['rsync']
     if delete:
         command.append('--delete')
