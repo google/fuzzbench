@@ -80,7 +80,7 @@ def measure_loop(experiment_config: dict):
 
 def get_job_timeout():
     """Returns the timeout for an rq job."""
-    return experiment_utils.get_snapshot_seconds() + 5
+    return experiment_utils.get_snapshot_seconds() + 2 * 60
 
 
 def enqueue_measure_jobs_for_unmeasured(experiment_config: dict, queue):
@@ -167,7 +167,6 @@ def measure_all_trials(experiment_config: dict, queue) -> bool:  # pylint: disab
         nonlocal snapshots_measured
         snapshots_measured = True
 
-    # TODO(metzman): Why does this seem to loop forever?
     while True:
         all_finished = True
         job_ids = initial_jobs.keys()
