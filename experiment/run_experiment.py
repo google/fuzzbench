@@ -287,8 +287,11 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
             return None
         return tar_info
 
-    experiment_filestore_path = os.path.join(config['experiment_filestore'],
-                                             config['experiment'])
+    # Set environment variables to use corresponding filestore_utils.
+    os.environ['EXPERIMENT_FILESTORE'] = config['experiment_filestore']
+    os.environ['EXPERIMENT'] = config['experiment']
+    experiment_filestore_path = experiment_utils.get_experiment_filestore_path()
+
     base_destination = os.path.join(experiment_filestore_path, 'input')
 
     # Send the local source repository to the cloud for use by dispatcher.
