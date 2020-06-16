@@ -19,12 +19,10 @@ from typing import Dict, Tuple
 from common import benchmark_utils
 from common import experiment_path as exp_path
 from common import experiment_utils
-from common import filesystem
 from common import fuzzer_config_utils
 from common import logs
 from common import new_process
 from common import utils
-from common import yaml_utils
 from experiment.build import build_utils
 
 BUILDER_STEP_IDS = [
@@ -69,26 +67,6 @@ def _build_benchmark_coverage(benchmark: str) -> Tuple[int, str]:
     return _build(config_file, config_name, substitutions)
 
 
-def _add_build_arguments_to_config(base: str, fuzzer: str) -> str:
-    """If there are fuzzer-specific arguments, make a config file with them."""
-    fuzzer_config = fuzzer_config_utils.get_by_variant_name(fuzzer)
-    if 'build_arguments' not in fuzzer_config:
-        return base
-
-    # TODO(mbarbella): Rather than rewrite yaml files, use the GCB API.
-    args = fuzzer_config['build_arguments']
-    config = yaml_utils.read(base)
-    for step in config['steps']:
-        if 'id' in step and step['id'] in BUILDER_STEP_IDS:
-            # Append additional flags before the final argument.
-            step['args'] = step['args'][:-1] + args + [step['args'][-1]]
-
-    new_config_path = os.path.join(CONFIG_DIR, 'builds', fuzzer + '.yaml')
-    filesystem.create_directory(os.path.dirname(new_config_path))
-    yaml_utils.write(new_config_path, config)
-    return new_config_path
-
-
 def _build_oss_fuzz_project_fuzzer(benchmark: str,
                                    fuzzer: str) -> Tuple[int, str]:
     """Build a |benchmark|, |fuzzer| runner image on GCB."""
@@ -99,12 +77,10 @@ def _build_oss_fuzz_project_fuzzer(benchmark: str,
     substitutions = {
         '_OSS_FUZZ_PROJECT': project,
         '_BENCHMARK': benchmark,
-        '_FUZZER': fuzzer,
-        '_UNDERLYING_FUZZER': underlying_fuzzer,
+        '_FUZZER': underlying_fuzzer,
         '_OSS_FUZZ_BUILDER_HASH': oss_fuzz_builder_hash,
     }
-    config_file = _add_build_arguments_to_config(
-        get_build_config_file('oss-fuzz-fuzzer.yaml'), fuzzer)
+    config_file = get_build_config_file('oss-fuzz-fuzzer.yaml')
     config_name = 'oss-fuzz-{project}-fuzzer-{fuzzer}-hash-{hash}'.format(
         project=project, fuzzer=fuzzer, hash=oss_fuzz_builder_hash)
 
@@ -119,11 +95,9 @@ def _build_benchmark_fuzzer(benchmark: str, fuzzer: str) -> Tuple[int, str]:
     # https://cloud.google.com/cloud-build/docs/configuring-builds/substitute-variable-values#using_user-defined_substitutions
     substitutions = {
         '_BENCHMARK': benchmark,
-        '_FUZZER': fuzzer,
-        '_UNDERLYING_FUZZER': underlying_fuzzer,
+        '_FUZZER': underlying_fuzzer,
     }
-    config_file = _add_build_arguments_to_config(
-        get_build_config_file('fuzzer.yaml'), fuzzer)
+    config_file = get_build_config_file('fuzzer.yaml')
     config_name = 'benchmark-{benchmark}-fuzzer-{fuzzer}'.format(
         benchmark=benchmark, fuzzer=fuzzer)
     return _build(config_file, config_name, substitutions)

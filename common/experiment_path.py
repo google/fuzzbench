@@ -28,6 +28,6 @@ def gcs(path_obj: Path) -> str:
     be created by path()."""
     path_str = str(path_obj)
     work_dir = experiment_utils.get_work_dir()
-    experiment_bucket = experiment_utils.get_cloud_experiment_path()
+    experiment_bucket = experiment_utils.get_experiment_filestore_path()
     assert path_str.startswith(work_dir)
     return path_str.replace(work_dir, experiment_bucket)

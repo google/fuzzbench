@@ -61,7 +61,7 @@ def _initialize_experiment_in_db(experiment: str, git_hash: str,
     db_utils.bulk_save(trials)
 
 
-class Experiment:
+class Experiment:  # pylint: disable=too-many-instance-attributes
     """Class representing an experiment."""
 
     def __init__(self, experiment_config_filepath: str):
@@ -76,13 +76,15 @@ class Experiment:
         self.num_trials = self.config['trials']
         self.experiment_name = self.config['experiment']
         self.git_hash = self.config['git_hash']
+        self.preemptible = self.config.get('preemptible_runners')
 
-        self.web_bucket = posixpath.join(self.config['cloud_web_bucket'],
+        self.web_bucket = posixpath.join(self.config['report_filestore'],
                                          experiment_utils.get_experiment_name())
 
 
 def build_images_for_trials(fuzzers: List[str], benchmarks: List[str],
-                            num_trials: int) -> List[models.Trial]:
+                            num_trials: int,
+                            preemptible: bool) -> List[models.Trial]:
     """Builds the images needed to run |experiment| and returns a list of trials
     that can be run for experiment. This is the number of trials specified in
     experiment times each pair of fuzzer+benchmark that builds successfully."""
@@ -99,7 +101,8 @@ def build_images_for_trials(fuzzers: List[str], benchmarks: List[str],
         fuzzer_benchmark_trials = [
             models.Trial(fuzzer=fuzzer,
                          experiment=experiment_name,
-                         benchmark=benchmark) for _ in range(num_trials)
+                         benchmark=benchmark,
+                         preemptible=preemptible) for _ in range(num_trials)
         ]
         trials.extend(fuzzer_benchmark_trials)
     return trials
@@ -119,29 +122,31 @@ def dispatcher_main():
     experiment_config_file_path = os.path.join(fuzzer_config_utils.get_dir(),
                                                'experiment.yaml')
     experiment = Experiment(experiment_config_file_path)
+    preemptible = experiment.preemptible
     trials = build_images_for_trials(experiment.fuzzers, experiment.benchmarks,
-                                     experiment.num_trials)
+                                     experiment.num_trials, preemptible)
     _initialize_experiment_in_db(experiment.experiment_name,
                                  experiment.git_hash, trials)
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])
 
-    # Start measurer and scheduler in threads.
+    # Start measurer and scheduler in seperate threads/processes.
     scheduler_loop_thread = threading.Thread(target=scheduler.schedule_loop,
                                              args=(experiment.config,))
     scheduler_loop_thread.start()
-    measurer_loop_thread = multiprocessing.Process(
-        target=measurer.measure_loop,
-        args=(
-            experiment.config['experiment'],
-            experiment.config['max_total_time'],
-        ))
-    measurer_loop_thread.start()
 
+    max_total_time = experiment.config['max_total_time']
+    measurer_loop_process = multiprocessing.Process(
+        target=measurer.measure_loop,
+        args=(experiment.experiment_name, max_total_time))
+
+    measurer_loop_process.start()
+
+    is_complete = False
     while True:
         time.sleep(LOOP_WAIT_SECONDS)
-        is_complete = (not scheduler_loop_thread.is_alive() and
-                       not measurer_loop_thread.is_alive())
+        if not scheduler_loop_thread.is_alive():
+            is_complete = not measurer_loop_process.is_alive()
 
         # Generate periodic output reports.
         reporter.output_report(experiment.web_bucket,
@@ -150,6 +155,10 @@ def dispatcher_main():
         if is_complete:
             # Experiment is complete, bail out.
             break
+
+    logs.info('Dispatcher finished.')
+    scheduler_loop_thread.join()
+    measurer_loop_process.join()
 
 
 def main():

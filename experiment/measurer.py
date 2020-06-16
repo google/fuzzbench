@@ -21,6 +21,7 @@ import os
 import pathlib
 import posixpath
 import sys
+import subprocess
 import tarfile
 import time
 from typing import List, Set
@@ -34,7 +35,7 @@ from common import experiment_utils
 from common import experiment_path as exp_path
 from common import filesystem
 from common import fuzzer_utils
-from common import gsutil
+from common import filestore_utils
 from common import logs
 from common import utils
 from database import utils as db_utils
@@ -61,17 +62,19 @@ def get_experiment_folders_dir():
     return exp_path.path('experiment-folders')
 
 
-def remote_dir_exists(directory: pathlib.Path) -> bool:
-    """Does |directory| exist in the CLOUD_EXPERIMENT_BUCKET."""
-    return gsutil.ls(exp_path.gcs(directory), must_exist=False)[0] == 0
+def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
+    """Returns True if |path| exists in the experiment_filestore."""
+    return filestore_utils.ls(exp_path.gcs(path), must_exist=False).retcode == 0
 
 
 def measure_loop(experiment: str, max_total_time: int):
     """Continuously measure trials for |experiment|."""
-    db_utils.initialize()
     logs.initialize(default_extras={
         'component': 'dispatcher',
+        'subcomponent': 'measurer',
     })
+    logs.info('Start measure_loop.')
+
     with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
         set_up_coverage_binaries(pool, experiment)
         # Using Multiprocessing.Queue will fail with a complaint about
@@ -88,7 +91,7 @@ def measure_loop(experiment: str, max_total_time: int):
                     if all_trials_ended:
                         # There are no trials producing snapshots to measure.
                         # Given that we couldn't measure any snapshots, we won't
-                        # be able to measure any the future, so break now.
+                        # be able to measure any the future, so stop now.
                         break
             except Exception:  # pylint: disable=broad-except
                 logger.error('Error occurred during measuring.')
@@ -105,7 +108,7 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
     logger.info('Measuring all trials.')
 
     experiment_folders_dir = get_experiment_folders_dir()
-    if not remote_dir_exists(experiment_folders_dir):
+    if not exists_in_experiment_filestore(experiment_folders_dir):
         return True
 
     max_cycle = _time_to_cycle(max_total_time)
@@ -178,7 +181,8 @@ def _query_ids_of_measured_trials(experiment: str):
     snapshots."""
     trials_and_snapshots_query = db_utils.query(models.Snapshot).options(
         orm.joinedload('trial'))
-    experiment_trials_filter = models.Snapshot.trial.has(experiment=experiment)
+    experiment_trials_filter = models.Snapshot.trial.has(experiment=experiment,
+                                                         preempted=False)
     experiment_trials_and_snapshots_query = trials_and_snapshots_query.filter(
         experiment_trials_filter)
     experiment_snapshot_trial_ids_query = (
@@ -193,9 +197,10 @@ def _query_unmeasured_trials(experiment: str):
     ids_of_trials_with_snapshots = _query_ids_of_measured_trials(experiment)
     no_snapshots_filter = ~models.Trial.id.in_(ids_of_trials_with_snapshots)
     started_trials_filter = ~models.Trial.time_started.is_(None)
+    nonpreempted_trials_filter = ~models.Trial.preempted
     experiment_trials_filter = models.Trial.experiment == experiment
     return trial_query.filter(experiment_trials_filter, no_snapshots_filter,
-                              started_trials_filter)
+                              started_trials_filter, nonpreempted_trials_filter)
 
 
 def _get_unmeasured_first_snapshots(experiment: str
@@ -312,19 +317,18 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         self.benchmark = benchmark
         self.trial_num = trial_num
         self.logger = trial_logger
-        trial_name = 'trial-' + str(self.trial_num)
-        self.benchmark_fuzzer_trial_dir = os.path.join(self.benchmark,
-                                                       self.fuzzer, trial_name)
+        benchmark_fuzzer_trial_dir = experiment_utils.get_trial_dir(
+            fuzzer, benchmark, trial_num)
         work_dir = experiment_utils.get_work_dir()
         measurement_dir = os.path.join(work_dir, 'measurement-folders',
-                                       self.benchmark_fuzzer_trial_dir)
+                                       benchmark_fuzzer_trial_dir)
         self.corpus_dir = os.path.join(measurement_dir, 'corpus')
 
         self.crashes_dir = os.path.join(measurement_dir, 'crashes')
         self.sancov_dir = os.path.join(measurement_dir, 'sancovs')
         self.report_dir = os.path.join(measurement_dir, 'reports')
         self.trial_dir = os.path.join(work_dir, 'experiment-folders',
-                                      '%s-%s' % (benchmark, fuzzer), trial_name)
+                                      benchmark_fuzzer_trial_dir)
 
         # Stores the pcs that have been covered.
         self.covered_pcs_filename = os.path.join(self.report_dir,
@@ -393,10 +397,14 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         unchanged-cycles file. This file is written to by the trial's runner."""
 
         def copy_unchanged_cycles_file():
-            result = gsutil.cp(exp_path.gcs(self.unchanged_cycles_path),
-                               self.unchanged_cycles_path,
-                               expect_zero=False)
-            return result.retcode == 0
+            unchanged_cycles_filestore_path = exp_path.gcs(
+                self.unchanged_cycles_path)
+            try:
+                filestore_utils.cp(unchanged_cycles_filestore_path,
+                                   self.unchanged_cycles_path)
+                return True
+            except subprocess.CalledProcessError:
+                return False
 
         if not os.path.exists(self.unchanged_cycles_path):
             if not copy_unchanged_cycles_file():
@@ -437,22 +445,22 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         return True
 
     def archive_crashes(self, cycle):
-        """Archive this cycle's crashes into cloud bucket."""
+        """Archive this cycle's crashes into filestore."""
         if not os.listdir(self.crashes_dir):
             logs.info('No crashes found for cycle %d.', cycle)
             return
 
         logs.info('Archiving crashes for cycle %d.', cycle)
         crashes_archive_name = experiment_utils.get_crashes_archive_name(cycle)
-        archive = os.path.join(os.path.dirname(self.crashes_dir),
-                               crashes_archive_name)
-        with tarfile.open(archive, 'w:gz') as tar:
+        archive_path = os.path.join(os.path.dirname(self.crashes_dir),
+                                    crashes_archive_name)
+        with tarfile.open(archive_path, 'w:gz') as tar:
             tar.add(self.crashes_dir,
                     arcname=os.path.basename(self.crashes_dir))
-        gcs_path = exp_path.gcs(
+        archive_filestore_path = exp_path.gcs(
             posixpath.join(self.trial_dir, 'crashes', crashes_archive_name))
-        gsutil.cp(archive, gcs_path)
-        os.remove(archive)
+        filestore_utils.cp(archive_path, archive_filestore_path)
+        os.remove(archive_path)
 
     def update_measured_files(self):
         """Updates the measured-files.txt file for this trial with
@@ -530,10 +538,10 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     corpus_archive_dir = os.path.dirname(corpus_archive_dst)
     if not os.path.exists(corpus_archive_dir):
         os.makedirs(corpus_archive_dir)
-    if gsutil.cp(corpus_archive_src,
-                 corpus_archive_dst,
-                 expect_zero=False,
-                 write_to_stdout=False)[0] != 0:
+
+    try:
+        filestore_utils.cp(corpus_archive_src, corpus_archive_dst)
+    except subprocess.CalledProcessError:
         snapshot_logger.warning('Corpus not found for cycle: %d.', cycle)
         return None
 
@@ -582,11 +590,9 @@ def set_up_coverage_binary(benchmark):
     if not os.path.exists(benchmark_coverage_binary_dir):
         os.mkdir(benchmark_coverage_binary_dir)
     archive_name = 'coverage-build-%s.tar.gz' % benchmark
-    cloud_bucket_archive_path = exp_path.gcs(coverage_binaries_dir /
-                                             archive_name)
-    gsutil.cp(cloud_bucket_archive_path,
-              str(benchmark_coverage_binary_dir),
-              write_to_stdout=False)
+    archive_filestore_path = exp_path.gcs(coverage_binaries_dir / archive_name)
+    filestore_utils.cp(archive_filestore_path,
+                       str(benchmark_coverage_binary_dir))
     archive_path = benchmark_coverage_binary_dir / archive_name
     tar = tarfile.open(archive_path, 'r:gz')
     tar.extractall(benchmark_coverage_binary_dir)
@@ -606,6 +612,7 @@ def initialize_logs():
     """Initialize logs. This must be called on process start."""
     logs.initialize(default_extras={
         'component': 'dispatcher',
+        'subcomponent': 'measurer',
     })
 
 
