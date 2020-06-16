@@ -578,7 +578,10 @@ def set_up_coverage_binaries(pool, experiment):
     ]
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
     if not os.path.exists(coverage_binaries_dir):
-        os.makedirs(coverage_binaries_dir)
+        try:
+            os.makedirs(coverage_binaries_dir)
+        except Exception as err:
+            logger.warning(str(err))
     pool.map(set_up_coverage_binary, benchmarks)
 
 
@@ -588,15 +591,21 @@ def set_up_coverage_binary(benchmark):
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
     benchmark_coverage_binary_dir = coverage_binaries_dir / benchmark
     if not os.path.exists(benchmark_coverage_binary_dir):
-        os.mkdir(benchmark_coverage_binary_dir)
+        try:
+            os.mkdir(benchmark_coverage_binary_dir)
+        except Exception as err:
+            logger.warning(str(err))
     archive_name = 'coverage-build-%s.tar.gz' % benchmark
     archive_filestore_path = exp_path.gcs(coverage_binaries_dir / archive_name)
     filestore_utils.cp(archive_filestore_path,
                        str(benchmark_coverage_binary_dir))
     archive_path = benchmark_coverage_binary_dir / archive_name
-    tar = tarfile.open(archive_path, 'r:gz')
-    tar.extractall(benchmark_coverage_binary_dir)
-    os.remove(archive_path)
+    try:
+        tar = tarfile.open(archive_path, 'r:gz')
+        tar.extractall(benchmark_coverage_binary_dir)
+        os.remove(archive_path)
+    except Exception as err:
+        logger.warning(err)
 
 
 def get_coverage_binary(benchmark: str) -> str:

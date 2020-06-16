@@ -130,7 +130,7 @@ def end_expired_trials(experiment_config: dict):
     if not expired_instances:
         return
 
-    if not delete_instances(expired_instances, experiment_config):
+    if not experiment_utils.is_local_experiment() and not delete_instances(expired_instances, experiment_config):
         # If we failed to delete some instances, then don't update the status
         # of expired trials in database as we don't know which instances were
         # successfully deleted. Wait for next iteration of end_expired_trials.
@@ -585,10 +585,12 @@ def schedule_loop(experiment_config: dict):
     # Create the thread pool once and reuse it to avoid leaking threads and
     # other issues.
     logger.info('Starting scheduler.')
-    gce.initialize()
     num_trials = len(
         get_experiment_trials(experiment_config['experiment']).all())
-    trial_instance_manager = TrialInstanceManager(num_trials, experiment_config)
+    local_experiment = experiment_utils.is_local_experiment()
+    if not local_experiment:
+        gce.initialize()
+        trial_instance_manager = TrialInstanceManager(num_trials, experiment_config)
     experiment = experiment_config['experiment']
     with multiprocessing.Pool() as pool:
         handle_preempted = False
@@ -600,7 +602,7 @@ def schedule_loop(experiment_config: dict):
                     handle_preempted = True
 
                 schedule(experiment_config, pool)
-                if handle_preempted:
+                if not local_experiment and handle_preempted:
                     trial_instance_manager.handle_preempted_trials()
             except Exception:  # pylint: disable=broad-except
                 logger.error('Error occurred during scheduling.')
@@ -732,7 +734,6 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
         'trial_id': trial_id,
         'max_total_time': experiment_config['max_total_time'],
         'cloud_project': experiment_config['cloud_project'],
-        'cloud_compute_zone': experiment_config['cloud_compute_zone'],
         'experiment_filestore': experiment_config['experiment_filestore'],
         'report_filestore': experiment_config['report_filestore'],
         'fuzz_target': fuzz_target,
@@ -740,6 +741,9 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
         'additional_env': additional_env,
         'local_experiment': local_experiment
     }
+
+    if not local_experiment:
+        kwargs['cloud_compute_zone'] = experiment_config['cloud_compute_zone']
 
     return template.render(**kwargs)
 
