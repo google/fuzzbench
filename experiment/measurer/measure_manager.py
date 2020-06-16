@@ -150,9 +150,10 @@ def measure_all_trials(experiment_config: dict, queue) -> bool:  # pylint: disab
     # now because the scheduler quits too early.
     schedule_measure_workers.schedule(experiment_config, queue)
 
-    # Poll the queue for snapshots and save them in batches until the workers
-    # are done processing each unmeasured snapshot. Then save any remaining
-    # snapshots.
+    # Poll the queue for snapshots and save them in batches, for each snapshot
+    # that was measured, schedule another task to measure the next snapshot for
+    # that trial. Do this until there are no more tasks and then save any
+    # remaining snapshots.
     snapshots = []
     snapshots_measured = False
 
@@ -172,7 +173,6 @@ def measure_all_trials(experiment_config: dict, queue) -> bool:  # pylint: disab
         job_ids = initial_jobs.keys()
         jobs = rq.job.Job.fetch_many(job_ids, queue.connection)
 
-        logger.info('len(results): %d', len(jobs))
         for job in jobs:
             if job is None:
                 logger.error('job is None. Others: %s',
