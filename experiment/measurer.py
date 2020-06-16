@@ -52,7 +52,7 @@ SnapshotMeasureRequest = collections.namedtuple(
 
 NUM_RETRIES = 3
 RETRY_DELAY = 3
-FAIL_WAIT_SECONDS = 3
+FAIL_WAIT_SECONDS = 30
 SNAPSHOT_QUEUE_GET_TIMEOUT = 1
 SNAPSHOTS_BATCH_SAVE_SIZE = 100
 
@@ -592,7 +592,7 @@ def set_up_coverage_binary(benchmark):
     benchmark_coverage_binary_dir = coverage_binaries_dir / benchmark
     if not os.path.exists(benchmark_coverage_binary_dir):
         try:
-            os.mkdir(benchmark_coverage_binary_dir)
+            os.makedirs(benchmark_coverage_binary_dir)
         except Exception as err:
             logger.warning(str(err))
     archive_name = 'coverage-build-%s.tar.gz' % benchmark

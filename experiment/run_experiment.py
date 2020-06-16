@@ -237,7 +237,7 @@ def set_up_fuzzer_config_files(fuzzer_configs):
 def start_experiment(experiment_name: str, config_filename: str,
                      benchmarks: List[str], fuzzer_configs: List[dict]):
     """Start a fuzzer benchmarking experiment."""
-    # check_no_local_changes()
+    check_no_local_changes()
 
     validate_experiment_name(experiment_name)
     validate_benchmarks(benchmarks)

@@ -29,6 +29,8 @@ do
 done{% endif %}
 
 docker run --privileged --cpus=1 --rm \
+{% if local_experiment %}-v {{experiment_filestore}}:{{experiment_filestore}} {% endif %} \
+{% if local_experiment %}-v {{report_filestore}}:{{report_filestore}} {% endif %} \
 -e INSTANCE_NAME={{instance_name}} \
 -e FUZZER={{fuzzer}} \
 -e BENCHMARK={{benchmark}} \
@@ -43,4 +45,4 @@ docker run --privileged --cpus=1 --rm \
 -e LOCAL_EXPERIMENT={{local_experiment}}\
 {{additional_env}} {% if not local_experiment %}--name=runner-container {% endif %}\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \
-{{docker_image_url}} 2>&1 | tee /tmp/runner-log-{{trial_id}}.txt
+{{docker_image_url}} 2>&1 | tee /tmp/runner-log.txt
