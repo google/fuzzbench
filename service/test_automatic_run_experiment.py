@@ -37,15 +37,17 @@ EXPERIMENT_REQUESTS = [{
 
 @mock.patch('experiment.run_experiment.start_experiment')
 @mock.patch('common.logs.warning')
-@mock.patch('common.yaml_utils.read')
-def test_run_requested_experiment_pause_service(mocked_read, mocked_warning,
-                                                mocked_start_experiment, db):
+@mock.patch('service.automatic_run_experiment._get_requested_experiments')
+def test_run_requested_experiment_pause_service(
+        mocked_get_requested_experiments, mocked_warning,
+        mocked_start_experiment, db):
     """Tests that run_requested_experiment doesn't run an experiment when a
     pause is requested."""
     experiment_requests_with_pause = EXPERIMENT_REQUESTS.copy()
     experiment_requests_with_pause.append(
         automatic_run_experiment.PAUSE_SERVICE_KEYWORD)
-    mocked_read.return_value = experiment_requests_with_pause
+    mocked_get_requested_experiments.return_value = (
+        experiment_requests_with_pause)
 
     assert (automatic_run_experiment.run_requested_experiment(dry_run=False) is
             None)
@@ -56,12 +58,13 @@ def test_run_requested_experiment_pause_service(mocked_read, mocked_warning,
 
 @mock.patch('experiment.run_experiment.start_experiment')
 @mock.patch('experiment.stop_experiment.stop_experiment')
-@mock.patch('common.yaml_utils.read')
-def test_run_requested_experiment(mocked_read, mocked_stop_experiment,
+@mock.patch('service.automatic_run_experiment._get_requested_experiments')
+def test_run_requested_experiment(mocked_get_requested_experiments,
+                                  mocked_stop_experiment,
                                   mocked_start_experiment, db):
     """Tests that run_requested_experiment starts and stops the experiment
     properly."""
-    mocked_read.return_value = EXPERIMENT_REQUESTS
+    mocked_get_requested_experiments.return_value = EXPERIMENT_REQUESTS
     expected_experiment_name = '2020-06-05'
     expected_fuzzers = ['honggfuzz', 'afl']
     automatic_run_experiment.run_requested_experiment(dry_run=False)
