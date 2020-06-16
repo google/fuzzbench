@@ -130,7 +130,8 @@ def end_expired_trials(experiment_config: dict):
     if not expired_instances:
         return
 
-    if not experiment_utils.is_local_experiment() and not delete_instances(expired_instances, experiment_config):
+    if not experiment_utils.is_local_experiment() and not delete_instances(
+            expired_instances, experiment_config):
         # If we failed to delete some instances, then don't update the status
         # of expired trials in database as we don't know which instances were
         # successfully deleted. Wait for next iteration of end_expired_trials.
@@ -590,7 +591,8 @@ def schedule_loop(experiment_config: dict):
     local_experiment = experiment_utils.is_local_experiment()
     if not local_experiment:
         gce.initialize()
-        trial_instance_manager = TrialInstanceManager(num_trials, experiment_config)
+        trial_instance_manager = TrialInstanceManager(num_trials,
+                                                      experiment_config)
     experiment = experiment_config['experiment']
     with multiprocessing.Pool() as pool:
         handle_preempted = False

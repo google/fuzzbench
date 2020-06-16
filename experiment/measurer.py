@@ -580,7 +580,7 @@ def set_up_coverage_binaries(pool, experiment):
     if not os.path.exists(coverage_binaries_dir):
         try:
             os.makedirs(coverage_binaries_dir)
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-except
             logger.warning(str(err))
     pool.map(set_up_coverage_binary, benchmarks)
 
@@ -593,7 +593,7 @@ def set_up_coverage_binary(benchmark):
     if not os.path.exists(benchmark_coverage_binary_dir):
         try:
             os.makedirs(benchmark_coverage_binary_dir)
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-except
             logger.warning(str(err))
     archive_name = 'coverage-build-%s.tar.gz' % benchmark
     archive_filestore_path = exp_path.gcs(coverage_binaries_dir / archive_name)
@@ -604,7 +604,7 @@ def set_up_coverage_binary(benchmark):
         tar = tarfile.open(archive_path, 'r:gz')
         tar.extractall(benchmark_coverage_binary_dir)
         os.remove(archive_path)
-    except Exception as err:
+    except Exception as err:  # pylint: disable=broad-except
         logger.warning(err)
 
 

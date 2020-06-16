@@ -350,11 +350,13 @@ class LocalDispatcher:
             experiment=self.config['experiment'])
         set_cloud_project_arg = 'CLOUD_PROJECT={cloud_project}'.format(
             cloud_project=self.config['cloud_project'])
-        shared_experiment_filestore_arg = '{0}:{0}'.format(self.config['experiment_filestore'])
+        shared_experiment_filestore_arg = '{0}:{0}'.format(
+            self.config['experiment_filestore'])
         set_experiment_filestore_arg = (
             'EXPERIMENT_FILESTORE={experiment_filestore}'.format(
                 experiment_filestore=self.config['experiment_filestore']))
-        shared_report_filestore_arg = '{0}:{0}'.format(self.config['report_filestore'])
+        shared_report_filestore_arg = '{0}:{0}'.format(
+            self.config['report_filestore'])
         set_report_filestore_arg = (
             'REPORT_FILESTORE={report_filestore}'.format(
                 report_filestore=self.config['report_filestore']))
