@@ -577,8 +577,7 @@ def set_up_coverage_binaries(pool, experiment):
                 models.Trial.experiment == experiment)
     ])
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
-    if not os.path.exists(coverage_binaries_dir):
-        os.makedirs(coverage_binaries_dir)
+    filesystem.create_directory(coverage_binaries_dir):
     pool.map(set_up_coverage_binary, benchmarks)
 
 
@@ -587,8 +586,7 @@ def set_up_coverage_binary(benchmark):
     initialize_logs()
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
     benchmark_coverage_binary_dir = coverage_binaries_dir / benchmark
-    if not os.path.exists(benchmark_coverage_binary_dir):
-        os.makedirs(benchmark_coverage_binary_dir)
+    filesystem.create_directory(benchmark_coverage_binary_dir)
     archive_name = 'coverage-build-%s.tar.gz' % benchmark
     archive_filestore_path = exp_path.gcs(coverage_binaries_dir / archive_name)
     filestore_utils.cp(archive_filestore_path,
