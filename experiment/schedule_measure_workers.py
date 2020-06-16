@@ -27,6 +27,8 @@ from common import yaml_utils
 
 logger = logs.Logger('schedule_measure_workers')  # pylint: disable=invalid-name
 
+# This is the default quota on GCE.
+# TODO(metzman): Use the GCE API to determine this quota.
 MAX_INSTANCES_PER_GROUP = 1000
 
 
@@ -34,13 +36,13 @@ def get_instance_group_name(experiment: str):
     """Returns the name of the instance group of measure workers for
     |experiment|."""
     # "worker-" needs to come first because name cannot start with number.
-    return 'worker20-' + experiment
+    return 'worker-' + experiment
 
 
 def get_measure_worker_instance_template_name(experiment: str):
     """Returns an instance template name for measurer workers running in
     |experiment|."""
-    return 'worker20-' + experiment
+    return 'worker-' + experiment
 
 
 def initialize(experiment_config: dict):
@@ -77,9 +79,7 @@ def initialize(experiment_config: dict):
 
     gce.create_instance_group(instance_group_name, instance_template_url,
                               base_instance_name, project, zone)
-    # !!!
-    # queue = queue_utils.initialize_queue(redis_host)
-    queue = queue_utils.initialize_queue('127.0.0.1')
+    queue = queue_utils.initialize_queue(redis_host)
     return queue
 
 
@@ -98,6 +98,10 @@ def schedule(experiment_config: dict, queue):
     initialize_measurers."""
     logger.info('Scheduling measurer workers.')
 
+    # TODO(metzman): This method doesn't seem to correctly take into account
+    # jobs that are running (the API provided by rq doesn't work intuitively).
+    # That is OK for now since scheduling only happens while nothing is being
+    # measured but this should be fixed.
     jobs = queue_utils.get_all_jobs(queue)
     counts = collections.defaultdict(int)
     for job in jobs:
@@ -114,6 +118,8 @@ def schedule(experiment_config: dict, queue):
     num_instances = gce.get_instance_group_size(instance_group_name, project,
                                                 zone)
 
+    # TODO(metzman): Use autoscaling as it probably can deal with quotas more
+    # easily.
     if not num_instances_needed:
         # Can't go below 1 instance per group.
         logs.info('num_instances_needed = 0, resizing to 1.')

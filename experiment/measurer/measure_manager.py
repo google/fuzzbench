@@ -38,7 +38,7 @@ logger = logs.Logger('measure_manager')  # pylint: disable=invalid-name
 
 FAIL_WAIT_SECONDS = 30
 POLL_RESULTS_WAIT_SECONDS = 5
-SNAPSHOTS_BATCH_SAVE_SIZE = 100
+SNAPSHOTS_BATCH_SAVE_SIZE = 50
 
 
 def get_experiment_folders_dir():
@@ -83,14 +83,22 @@ def get_job_timeout():
     return experiment_utils.get_snapshot_seconds() + 5
 
 
-def enqueue_measure_jobs(experiment_config: dict, queue):
+def enqueue_measure_jobs_for_unmeasured(experiment_config: dict, queue):
     """Get snapshots we need to measure from the db and add them to the queue so
     that they can be measured."""
     experiment = experiment_config['experiment']
     max_total_time = experiment_config['max_total_time']
     max_cycle = _time_to_cycle(max_total_time)
-    unmeasured_snapshots = get_unmeasured_snapshots(experiment, max_cycle)
     logger.info('Enqueuing measure jobs.')
+    unmeasured_snapshots = get_unmeasured_snapshots(experiment, max_cycle)
+    jobs = enqueue_measure_jobs(unmeasured_snapshots, queue)
+    logger.info('Done enqueuing jobs.')
+    return jobs
+
+
+def enqueue_measure_jobs(unmeasured_snapshots, queue):
+    """Add jobs to measure each snapshot in |unmeasured_snapshots| to |queue|
+    and returns them."""
     job_timeout = get_job_timeout()
     jobs = [
         queue.enqueue(measure_worker.measure_trial_coverage,
@@ -100,8 +108,20 @@ def enqueue_measure_jobs(experiment_config: dict, queue):
                       ttl=job_timeout)
         for unmeasured_snapshot in unmeasured_snapshots
     ]
-    logger.info('Done enqueuing jobs.')
     return jobs
+
+
+def enqueue_next_measure_job(unmeasured_snapshot, experiment_config, queue):
+    """Adds a job to measure the next snapshot after |unmeasured_snapshot| to
+    |queue| and returns the job."""
+    if _time_to_cycle(
+            experiment_config['max_total_time']) == unmeasured_snapshot.cycle:
+        return None
+    next_unmeasured_snapshot = measure_worker.SnapshotMeasureRequest(
+        unmeasured_snapshot.fuzzer, unmeasured_snapshot.benchmark,
+        unmeasured_snapshot.trial_id, unmeasured_snapshot.cycle + 1)
+    job = enqueue_measure_jobs([next_unmeasured_snapshot], queue)[0]
+    return job
 
 
 def ready_to_measure():
@@ -110,7 +130,7 @@ def ready_to_measure():
     return exists_in_experiment_filestore(experiment_folders_dir)
 
 
-def measure_all_trials(experiment_config: dict, queue) -> bool:
+def measure_all_trials(experiment_config: dict, queue) -> bool:  # pylint: disable=too-many-branches,too-many-statements
     """Get coverage data (with coverage runs) for all active trials. Note that
     this should not be called unless multiprocessing.set_start_method('spawn')
     was called first. Otherwise it will use fork which breaks logging."""
@@ -119,14 +139,15 @@ def measure_all_trials(experiment_config: dict, queue) -> bool:
     if not ready_to_measure():
         return True
 
-    jobs = enqueue_measure_jobs(experiment_config, queue)
+    jobs = enqueue_measure_jobs_for_unmeasured(experiment_config, queue)
     if not jobs:
         # If we didn't enqueue any jobs, then there is nothing to measure.
         return False
 
     initial_jobs = {job.id: job for job in jobs}
-    # TODO(metzman): Move this to scheduler. It's here for now because the
-    # scheduler quits too early.
+
+    # TODO(metzman): Move this to scheduler or it's own process. It's here for
+    # now because the scheduler quits too early.
     schedule_measure_workers.schedule(experiment_config, queue)
 
     # Poll the queue for snapshots and save them in batches until the workers
@@ -149,15 +170,6 @@ def measure_all_trials(experiment_config: dict, queue) -> bool:
     # TODO(metzman): Why does this seem to loop forever?
     while True:
         all_finished = True
-
-        try:
-            with open('/tmp/debug'):
-                pass
-            import pdb
-            pdb.set_trace()
-        except FileNotFoundError:
-            pass
-
         job_ids = initial_jobs.keys()
         jobs = rq.job.Job.fetch_many(job_ids, queue.connection)
 
@@ -187,7 +199,13 @@ def measure_all_trials(experiment_config: dict, queue) -> bool:
             if job.return_value is None:
                 continue
 
-            snapshots.append(job.return_value)
+            snapshot = job.return_value
+            snapshots.append(snapshot)
+            next_job = enqueue_next_measure_job(job.args[0], experiment_config,
+                                                queue)
+            if next_job is None:
+                continue
+            initial_jobs[next_job.id] = next_job
 
         if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE:
             save_snapshots()
@@ -330,7 +348,7 @@ def main():
     try:
         measure_loop(experiment_config)
     except Exception as error:
-        logs.error('Error conducting experiment.')
+        logger.error('Error conducting experiment.')
         raise error
 
 
