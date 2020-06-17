@@ -1,0 +1,9 @@
+benchmarks: jsoncpp_jsoncpp_fuzzer
+cloud_project: fuzzbench
+experiment: single
+experiment_filestore: /~/work/fuzzbench/fuzzbench-data
+git_hash: 280def66f1cd73bd02155521fddf15ca20de8d0d
+local_experiment: true
+max_total_time: 400
+report_filestore: /~/work/fuzzbench/fuzzbench-reports
+trials: 4
