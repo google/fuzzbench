@@ -17,8 +17,11 @@ benchmark."""
 import argparse
 import datetime
 from distutils import dir_util
+from distutils import spawn
 import os
+import logging
 import sys
+import subprocess
 
 from common import utils
 
@@ -34,16 +37,86 @@ from common import utils
 # accdidentaly break our repo.
 OSS_FUZZ_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz')
 OSS_FUZZ_REPO_PATH = os.path.join(OSS_FUZZ_DIR, 'infra')
-
 sys.path.append(OSS_FUZZ_REPO_PATH)
-
-import bisector
-import build_specified_commit
-import repo_manager
 
 from common import benchmark_utils
 from common import logs
 from common import yaml_utils
+
+
+class BaseRepoManager:
+	"""Base repo manager."""
+
+	def __init__(self, repo_dir):
+	    self.repo_dir = repo_dir
+
+	def git(self, cmd, check_result=False):
+	    """Run a git command.
+
+	    Args:
+	      command: The git command as a list to be run.
+	      check_result: Should an exception be thrown on failed command.
+
+	    Returns:
+	      stdout, stderr, error code.
+	    """
+	    return execute(['git'] + cmd,
+	                         location=self.repo_dir,
+	                         check_result=check_result)
+
+
+class BaseBuilderRepo:
+	"""Repo of base-builder images."""
+
+	def __init__(self):
+		self.timestamps = []
+		self.digests = []
+
+	def add_digest(self, timestamp, digest):
+		"""Add a digest."""
+		self.timestamps.append(timestamp)
+		self.digests.append(digest)
+
+	def find_digest(self, timestamp):
+		"""Find the latest image before the given timestamp."""
+		index = bisect.bisect_right(self.timestamps, timestamp)
+		if index > 0:
+			return self.digests[index - 1]
+
+		raise ValueError('Failed to find suitable base-builder.')
+
+
+def execute(command, location=None, check_result=False):
+	""" Runs a shell command in the specified directory location.
+
+	Args:
+	command: The command as a list to be run.
+	location: The directory the command is run in.
+	check_result: Should an exception be thrown on failed command.
+
+	Returns:
+	stdout, stderr, error code.
+
+	Raises:
+	RuntimeError: running a command resulted in an error.
+	"""
+
+	if not location:
+		location = os.getcwd()
+	process = subprocess.Popen(command,
+	                         stdout=subprocess.PIPE,
+	                         stderr=subprocess.PIPE,
+	                         cwd=location)
+	out, err = process.communicate()
+	out = out.decode('utf-8', errors='ignore')
+	err = err.decode('utf-8', errors='ignore')
+	if err:
+		logging.debug('Stderr of command \'%s\' is %s.', ' '.join(command), err)
+	if check_result and process.returncode:
+		raise RuntimeError(
+		    'Executing command \'{0}\' failed with error: {1}.'.format(
+		        ' '.join(command), err))
+	return out, err, process.returncode
 
 
 def copy_dir_contents(src_dir, dst_dir):
@@ -55,10 +128,9 @@ def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
     """Checkout the right files from OSS-Fuzz to build the benchmark based on
     |project| and |commit_date|. Then copy them to |benchmark_dir|."""
     cwd = os.getcwd()
-    oss_fuzz_repo_manager = repo_manager.BaseRepoManager(OSS_FUZZ_DIR)
+    oss_fuzz_repo_manager = BaseRepoManager(OSS_FUZZ_DIR)
     projects_dir = os.path.join(OSS_FUZZ_DIR, 'projects', project)
     os.chdir(OSS_FUZZ_DIR)
-
     try:
         # Find an OSS-Fuzz commit that can be used to build the benchmark.
         oss_fuzz_commit, _, _ = oss_fuzz_repo_manager.git([
@@ -88,15 +160,59 @@ def get_benchmark_name(project, fuzz_target, benchmark_name=None):
     return project + '_' + fuzz_target
 
 
+def _load_base_builder_repo():
+	"""Get base-image digests."""
+	gcloud_path = spawn.find_executable('gcloud')
+	if not gcloud_path:
+		logging.warning('gcloud not found in PATH.')
+		return None
+
+	result, _, _ = execute([
+		gcloud_path,
+		'container',
+		'images',
+		'list-tags',
+		'gcr.io/oss-fuzz-base/base-builder',
+		'--format=json',
+		'--sort-by=timestamp',
+	],
+	                           check_result=True)
+	result = json.loads(result)
+
+	repo = BaseBuilderRepo()
+	for image in result:
+		timestamp = datetime.datetime.fromisoformat(
+	    	image['timestamp']['datetime']).astimezone(datetime.timezone.utc)
+	repo.add_digest(timestamp, image['digest'])
+
+	return repo
+
+
+def _replace_base_builder_digest(dockerfile_path, digest):
+  """Replace the base-builder digest in a Dockerfile."""
+  with open(dockerfile_path) as handle:
+    lines = handle.readlines()
+
+  new_lines = []
+  for line in lines:
+    if line.strip().startswith('FROM'):
+      line = 'FROM gcr.io/oss-fuzz-base/base-builder@' + digest + '\n'
+
+    new_lines.append(line)
+
+  with open(dockerfile_path, 'w') as handle:
+    handle.write(''.join(new_lines))
+
+
 def replace_base_builder(benchmark_dir, commit_date):
     """Replace the parent image of the Dockerfile in |benchmark_dir|,
     base-builder (latest), with a version of base-builder that is likely to
     build the project as it was on |commit_date| without issue."""
-    base_builder_repo = bisector._load_base_builder_repo()  # pylint: disable=protected-access
+    base_builder_repo = _load_base_builder_repo()  # pylint: disable=protected-access
     if base_builder_repo:
         base_builder_digest = base_builder_repo.find_digest(commit_date)
         logs.info('Using base-builder with digest %s.', base_builder_digest)
-        build_specified_commit._replace_base_builder_digest(  # pylint: disable=protected-access
+        _replace_base_builder_digest(  # pylint: disable=protected-access
             os.path.join(benchmark_dir, 'Dockerfile'), base_builder_digest)
 
 
