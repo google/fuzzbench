@@ -32,13 +32,13 @@ from common import utils
 # 2. The OSS-Fuzz code depends on absolute imports.
 # 3. The OSS-Fuzz code assumes it is run from the OSS-Fuzz directory and can
 # accdidentaly break our repo.
-OSS_FUZZ_REPO_PATH = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz',
-                                  'infra')
+OSS_FUZZ_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz')
+OSS_FUZZ_REPO_PATH = os.path.join(OSS_FUZZ_DIR, 'infra')
+
 sys.path.append(OSS_FUZZ_REPO_PATH)
 
 import bisector
 import build_specified_commit
-import helper
 import repo_manager
 
 from common import benchmark_utils
@@ -55,9 +55,10 @@ def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
     """Checkout the right files from OSS-Fuzz to build the benchmark based on
     |project| and |commit_date|. Then copy them to |benchmark_dir|."""
     cwd = os.getcwd()
-    oss_fuzz_repo_manager = repo_manager.BaseRepoManager(helper.OSS_FUZZ_DIR)
-    projects_dir = os.path.join(helper.OSS_FUZZ_DIR, 'projects', project)
-    os.chdir(helper.OSS_FUZZ_DIR)
+    oss_fuzz_repo_manager = repo_manager.BaseRepoManager(OSS_FUZZ_DIR)
+    projects_dir = os.path.join(OSS_FUZZ_DIR, 'projects', project)
+    os.chdir(OSS_FUZZ_DIR)
+
     try:
         # Find an OSS-Fuzz commit that can be used to build the benchmark.
         oss_fuzz_commit, _, _ = oss_fuzz_repo_manager.git([
