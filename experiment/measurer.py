@@ -600,14 +600,13 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
 
 def set_up_coverage_binaries(pool, experiment):
     """Set up coverage binaries for all benchmarks in |experiment|."""
-    benchmarks = [
+    benchmarks = {
         trial.benchmark for trial in db_utils.query(models.Trial).distinct(
             models.Trial.benchmark).filter(
                 models.Trial.experiment == experiment)
-    ]
+    }
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
-    if not os.path.exists(coverage_binaries_dir):
-        os.makedirs(coverage_binaries_dir)
+    filesystem.create_directory(coverage_binaries_dir)
     pool.map(set_up_coverage_binary, benchmarks)
 
 
@@ -616,8 +615,7 @@ def set_up_coverage_binary(benchmark):
     initialize_logs()
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
     benchmark_coverage_binary_dir = coverage_binaries_dir / benchmark
-    if not os.path.exists(benchmark_coverage_binary_dir):
-        os.mkdir(benchmark_coverage_binary_dir)
+    filesystem.create_directory(benchmark_coverage_binary_dir)
     archive_name = 'coverage-build-%s.tar.gz' % benchmark
     archive_filestore_path = exp_path.filestore(coverage_binaries_dir /
                                                 archive_name)
