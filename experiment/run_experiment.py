@@ -157,7 +157,7 @@ def validate_fuzzer(fuzzer: str):
 
 def validate_fuzzer_config(fuzzer_config):
     """Validate |fuzzer_config|."""
-    allowed_fields = ['name', 'fuzzer_environment', 'build_arguments', 'fuzzer']
+    allowed_fields = ['name', 'env', 'fuzzer']
     if 'fuzzer' not in fuzzer_config:
         raise Exception('Fuzzer configuration must include the "fuzzer" field.')
 
@@ -165,13 +165,8 @@ def validate_fuzzer_config(fuzzer_config):
         if key not in allowed_fields:
             raise Exception('Invalid entry "%s" in fuzzer configuration.' % key)
 
-    if ('fuzzer_environment' in fuzzer_config and
-            not isinstance(fuzzer_config['fuzzer_environment'], list)):
-        raise Exception('Fuzzer environment must be a list.')
-
-    if ('build_arguments' in fuzzer_config and
-            not isinstance(fuzzer_config['build_arguments'], list)):
-        raise Exception('Builder arguments must be a list.')
+    if ('env' in fuzzer_config and not isinstance(fuzzer_config['env'], dict)):
+        raise Exception('Fuzzer environment "env" must be a dict.')
 
     name = fuzzer_config.get('name')
     if name:
@@ -287,8 +282,11 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
             return None
         return tar_info
 
-    experiment_filestore_path = os.path.join(config['experiment_filestore'],
-                                             config['experiment'])
+    # Set environment variables to use corresponding filestore_utils.
+    os.environ['EXPERIMENT_FILESTORE'] = config['experiment_filestore']
+    os.environ['EXPERIMENT'] = config['experiment']
+    experiment_filestore_path = experiment_utils.get_experiment_filestore_path()
+
     base_destination = os.path.join(experiment_filestore_path, 'input')
 
     # Send the local source repository to the cloud for use by dispatcher.
