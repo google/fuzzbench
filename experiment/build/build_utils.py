@@ -29,7 +29,7 @@ def store_build_logs(build_config, build_result):
 
         build_log_filename = build_config + '.txt'
         filestore_utils.cp(
-            tmp.name, exp_path.gcs(get_build_logs_dir() / build_log_filename))
+            tmp.name, exp_path.filestore(get_build_logs_dir() / build_log_filename))
 
 
 def get_coverage_binaries_dir():
