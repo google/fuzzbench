@@ -19,6 +19,14 @@
 # are still testing this feature. You should request an experiment by contacting
 # us as you normally do.
 
+- experiment: 2020-06-17
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_optimal_shmem
+    - aflplusplus_qemu
+    - aflplusplus_shmem
+
 - experiment: 2020-06-12
   fuzzers:
     - aflcc
