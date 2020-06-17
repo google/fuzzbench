@@ -83,10 +83,10 @@ def pending_trials(db, experiment_config):
 
 @pytest.mark.parametrize(
     'benchmark,expected_image,expected_target',
-    [('benchmark1', 'gcr.io/fuzzbench/runners/variant/benchmark1',
+    [('benchmark1', 'gcr.io/fuzzbench/runners/fuzzer-a/benchmark1',
       'fuzz-target'),
      ('bloaty_fuzz_target',
-      'gcr.io/fuzzbench/runners/variant/bloaty_fuzz_target', 'fuzz_target')])
+      'gcr.io/fuzzbench/runners/fuzzer-a/bloaty_fuzz_target', 'fuzz_target')])
 def test_create_trial_instance(benchmark, expected_image, expected_target,
                                experiment_config):
     """Test that create_trial_instance invokes create_instance
@@ -106,11 +106,11 @@ docker run \\
 -e EXPERIMENT=test-experiment \\
 -e TRIAL_ID=9 \\
 -e MAX_TOTAL_TIME=86400 \\
--e CLOUD_PROJECT=fuzzbench \\
--e CLOUD_COMPUTE_ZONE=us-central1-a \\
+-e CLOUD_PROJECT=fuzzbench -e CLOUD_COMPUTE_ZONE=us-central1-a \\
 -e EXPERIMENT_FILESTORE=gs://experiment-data \\
 -e REPORT_FILESTORE=gs://web-reports \\
 -e FUZZ_TARGET={oss_fuzz_target} \\
+-e LOCAL_EXPERIMENT=False \\
 -e C1=custom -e C2=custom2 --name=runner-container \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
@@ -121,22 +121,22 @@ docker run \\
 
 @pytest.mark.parametrize(
     'benchmark,expected_image,expected_target',
-    [('benchmark1', 'gcr.io/fuzzbench/runners/variant/benchmark1',
+    [('benchmark1', 'gcr.io/fuzzbench/runners/fuzzer-a/benchmark1',
       'fuzz-target'),
      ('bloaty_fuzz_target',
-      'gcr.io/fuzzbench/runners/variant/bloaty_fuzz_target', 'fuzz_target')])
+      'gcr.io/fuzzbench/runners/fuzzer-a/bloaty_fuzz_target', 'fuzz_target')])
 def test_create_trial_instance_local_experiment(benchmark, expected_image,
                                                 expected_target,
-                                                experiment_config, environ):
+                                                local_experiment_config,
+                                                environ):
     """Test that create_trial_instance invokes create_instance and creates a
     startup script for the instance, as we expect it to when running a
     local_experiment."""
     os.environ['LOCAL_EXPERIMENT'] = str(True)
-    os.environ['HOST_GCLOUD_CONFIG'] = '~/.config/gcloud'
     expected_startup_script = '''## Start docker.
 
 
-docker run -v ~/.config/gcloud:/root/.config/gcloud \\
+docker run \\
 --privileged --cpus=1 --rm \\
 -e INSTANCE_NAME=r-test-experiment-9 \\
 -e FUZZER=variant \\
@@ -145,16 +145,16 @@ docker run -v ~/.config/gcloud:/root/.config/gcloud \\
 -e TRIAL_ID=9 \\
 -e MAX_TOTAL_TIME=86400 \\
 -e CLOUD_PROJECT=fuzzbench \\
--e CLOUD_COMPUTE_ZONE=us-central1-a \\
--e EXPERIMENT_FILESTORE=gs://experiment-data \\
--e REPORT_FILESTORE=gs://web-reports \\
+-e EXPERIMENT_FILESTORE=/tmp/experiment-data -v /tmp/experiment-data:/tmp/experiment-data \\
+-e REPORT_FILESTORE=/tmp/web-reports -v /tmp/web-reports:/tmp/web-reports \\
 -e FUZZ_TARGET={oss_fuzz_target} \\
+-e LOCAL_EXPERIMENT=True \\
 -e C1=custom -e C2=custom2 \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
     _test_create_trial_instance(benchmark, expected_image, expected_target,
-                                expected_startup_script, experiment_config,
-                                False)
+                                expected_startup_script,
+                                local_experiment_config, False)
 
 
 @mock.patch('common.gcloud.create_instance')

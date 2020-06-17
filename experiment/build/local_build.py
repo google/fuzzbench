@@ -83,7 +83,7 @@ def copy_coverage_binaries(benchmark):
     ])
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
     coverage_build_archive_gcs_path = posixpath.join(
-        exp_path.gcs(coverage_binaries_dir), coverage_build_archive)
+        exp_path.filestore(coverage_binaries_dir), coverage_build_archive)
 
     return filestore_utils.cp(coverage_build_archive_shared_dir_path,
                               coverage_build_archive_gcs_path)
