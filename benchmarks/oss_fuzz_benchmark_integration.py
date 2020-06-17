@@ -22,11 +22,12 @@ import sys
 
 from common import utils
 
+
 # pytype: disable=import-error
 # pylint: disable=import-error,wrong-import-position,ungrouped-imports,too-many-arguments
 
 # TODO(metzman): Don't rely on OSS-Fuzz code. We don't want to depend on it
-# because it can easily break use. Especially becuase:
+# because it can easily break use. Especially because:
 # 1. We use private methods
 # 2. The OSS-Fuzz code depends on absolute imports.
 # 3. The OSS-Fuzz code assumes it is run from the OSS-Fuzz directory and can
@@ -40,6 +41,7 @@ import build_specified_commit
 import helper
 import repo_manager
 
+from common import benchmark_utils
 from common import logs
 from common import yaml_utils
 
@@ -54,14 +56,15 @@ def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
     |project| and |commit_date|. Then copy them to |benchmark_dir|."""
     cwd = os.getcwd()
     oss_fuzz_repo_manager = repo_manager.BaseRepoManager(helper.OSS_FUZZ_DIR)
+    projects_dir = os.path.join(helper.OSS_FUZZ_DIR, 'projects', project)
+    os.chdir(helper.OSS_FUZZ_DIR)
     try:
-        projects_dir = os.path.join(helper.OSS_FUZZ_DIR, 'projects', project)
-        os.chdir(helper.OSS_FUZZ_DIR)
+        # Find an OSS-Fuzz commit that can be used to build the benchmark.
         oss_fuzz_commit, _, _ = oss_fuzz_repo_manager.git([
             'log', '--before=' + commit_date.isoformat(), '-n1', '--format=%H',
             projects_dir
-        ],
-                                                          check_result=True)
+        ], check_result=True)
+
         oss_fuzz_commit = oss_fuzz_commit.strip()
         if not oss_fuzz_commit:
             logs.warning('No suitable earlier OSS-Fuzz commit found.')
@@ -120,8 +123,8 @@ def integrate_benchmark(project,
     """Copies files needed to integrate an OSS-Fuzz benchmark and creates the
     benchmark's oss-fuzz.yaml file."""
     benchmark_name = get_benchmark_name(project, fuzz_target, benchmark_name)
-    benchmark_dir = os.path.join(utils.ROOT_DIR, 'benchmarks', benchmark_name)
-    # TODO(metmzna) Replace with dateutil since fromisoformat isn't supposed to
+    benchmark_dir = os.path.join(benchmark_utils.BENCHMARKS_DIR, benchmark_name)
+    # TODO(metzman): Replace with dateutil since fromisoformat isn't supposed to
     # work on arbitrary iso format strings. Also figure out if i this timezone
     # replace correct.
     commit_date = datetime.datetime.fromisoformat(commit_date).replace(
@@ -138,22 +141,23 @@ def main():
     parser = argparse.ArgumentParser(description='Integrate a new benchmark.')
     parser.add_argument('-p',
                         '--project',
-                        help='Project of benchmark.',
+                        help='Project for benchmark.',
                         required=True)
     parser.add_argument('-f',
                         '--fuzz-target',
-                        help='Fuzz target benchmark.',
+                        help='Fuzz target for benchmark.',
                         required=True)
     parser.add_argument('-r',
                         '--repo-path',
-                        help='Project repo path in OSS-Fuzz image.',
+                        help=('Absolute path of the project repo in the '
+                              'OSS-Fuzz image (e.g. /src/systemd).'),
                         required=True)
     parser.add_argument('-n',
                         '--benchmark-name',
                         help='Benchmark name.',
                         required=False)
-    parser.add_argument('-c', '--commit', help='Project commit.')
-    parser.add_argument('-d', '--date', help='Date.')
+    parser.add_argument('-c', '--commit', help='Project commit hash.')
+    parser.add_argument('-d', '--date', help='Date of the commit.')
     args = parser.parse_args()
     integrate_benchmark(args.project, args.fuzz_target, args.commit, args.date,
                         args.repo_path, args.benchmark_name)
