@@ -1,0 +1,7 @@
+info  code-server 3.1.1 28e91ba70cd70fa9adf3f2e3e3b87631b5667ecf
+info  HTTP server listening on http://127.0.0.1:8080
+info    - No authentication
+info    - Not serving HTTPS
+info  Automatic updates are disabled
+info  SSH server listening on localhost:36433
+info    - To disable use `--disable-ssh`
