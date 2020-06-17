@@ -218,6 +218,46 @@ enough to support different use cases than needing the exact same binaries and
 fuzzing invocation as AFL. Example:
 [aflplusplus](https://github.com/google/fuzzbench/blob/master/fuzzers/aflplusplus/fuzzer.py).
 
+## Run-time configurations (optional)
+
+If you want to benchmark different run-time configurations for your fuzzer, you
+can do so by adding a `variants.yaml` file. For example, here is a sample
+`variants.yaml` for `libFuzzer` fuzzer.
+
+```yaml
+variants:
+  - name: libfuzzer_value_profile
+    env:
+      ADDITIONAL_ARGS: -use_value_profile=1
+  - name: libfuzzer_entropic
+    env:
+      ADDITIONAL_ARGS: -entropic=1
+```
+This will benchmark two other run-time configurations `libfuzzer_value_profile`
+and `libfuzzer_entropic` in additional to the default `libFuzzer` fuzzer.
+Then you can use those environment variables in your fuzzer's `fuzzer.py` file.
+For example:
+
+```python
+def fuzz(input_corpus, output_corpus, target_binary):
+    """Run fuzzer. Wrapper that uses the defaults when calling
+    run_fuzzer."""
+...
+...
+    flags = []
+    if 'ADDITIONAL_ARGS' in os.environ:
+        flags += os.environ['ADDITIONAL_ARGS'].split(' ')
+
+    command = [target_binary, output_corpus, input_corpus] + flags
+    print('[run_fuzzer] Running command: ' + ' '.join(command))
+    subprocess.check_call(command)
+```
+
+*Note*: We currently do not support different build time configurations.
+For that, we recommend creating a different fuzzer directory, e.g.
+`libFuzzer_no_tracecmp` with the appropriate `builder.Dockerfile` and
+`fuzzer.py` `build()` function changes.
+
 ## Testing it out
 
 Once you've got a fuzzer integrated, you should test that it builds and runs
