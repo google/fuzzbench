@@ -2,7 +2,7 @@ benchmarks: jsoncpp_jsoncpp_fuzzer
 cloud_project: fuzzbench
 experiment: single
 experiment_filestore: /~/work/fuzzbench/fuzzbench-data
-git_hash: 280def66f1cd73bd02155521fddf15ca20de8d0d
+git_hash: 4b8a40c4692dbbe05ccc326016a8d6b6a9ab2543
 local_experiment: true
 max_total_time: 400
 report_filestore: /~/work/fuzzbench/fuzzbench-reports
