@@ -80,7 +80,8 @@ def measure_loop(experiment_config: dict):
 
 def get_job_timeout():
     """Returns the timeout for an rq job."""
-    return experiment_utils.get_snapshot_seconds() + 2 * 60
+    # Be generous with amount of time.
+    return experiment_utils.get_snapshot_seconds() * 1.5
 
 
 def enqueue_measure_jobs_for_unmeasured(experiment_config: dict, queue):
