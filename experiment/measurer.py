@@ -64,7 +64,8 @@ def get_experiment_folders_dir():
 
 def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
     """Returns True if |path| exists in the experiment_filestore."""
-    return filestore_utils.ls(exp_path.filestore(path), must_exist=False).retcode == 0
+    return filestore_utils.ls(exp_path.filestore(path),
+                              must_exist=False).retcode == 0
 
 
 def measure_loop(experiment: str, max_total_time: int):
@@ -590,7 +591,8 @@ def set_up_coverage_binary(benchmark):
     if not os.path.exists(benchmark_coverage_binary_dir):
         os.mkdir(benchmark_coverage_binary_dir)
     archive_name = 'coverage-build-%s.tar.gz' % benchmark
-    archive_filestore_path = exp_path.filestore(coverage_binaries_dir / archive_name)
+    archive_filestore_path = exp_path.filestore(coverage_binaries_dir /
+                                                archive_name)
     filestore_utils.cp(archive_filestore_path,
                        str(benchmark_coverage_binary_dir))
     archive_path = benchmark_coverage_binary_dir / archive_name
