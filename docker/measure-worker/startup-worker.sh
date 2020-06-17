@@ -14,4 +14,4 @@
 # limitations under the License.
 
 source $VIRTUALENV_DIR/bin/activate
-rq worker --url redis://$REDIS_HOST:6379
+rq worker $EXPERIMENT --url redis://$REDIS_HOST:6379

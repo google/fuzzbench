@@ -14,10 +14,20 @@
 """Code for setting up a work queue with rq."""
 import redis
 import rq
+import rq.job
+
+from common import experiment_utils
 
 
-def initialize_queue(redis_host, queue_name='default'):
+def initialize_queue(redis_host):
     """Returns a redis-backed rq queue."""
+    queue_name = experiment_utils.get_experiment_name()
     redis_connection = redis.Redis(host=redis_host)
     queue = rq.Queue(queue_name, connection=redis_connection)
     return queue
+
+
+def get_all_jobs(queue):
+    """Returns all the jobs in queue."""
+    job_ids = queue.get_job_ids()
+    return rq.job.Job.fetch_many(job_ids, queue.connection)

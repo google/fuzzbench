@@ -14,7 +14,6 @@
 """Module for managing measurement of snapshots from trial runners."""
 import collections
 import multiprocessing
-import os
 import pathlib
 import sys
 import time
@@ -22,23 +21,24 @@ from typing import List
 
 from sqlalchemy import func
 from sqlalchemy import orm
+import rq.job
 
 from common import experiment_path as exp_path
 from common import experiment_utils
 from common import filestore_utils
 from common import logs
-from common import queue_utils
+from common import yaml_utils
 from database import utils as db_utils
 from database import models
-from experiment.build import build_utils
 from experiment.measurer import measure_worker
 from experiment import scheduler
+from experiment import schedule_measure_workers
 
 logger = logs.Logger('measure_manager')  # pylint: disable=invalid-name
 
 FAIL_WAIT_SECONDS = 30
 POLL_RESULTS_WAIT_SECONDS = 5
-SNAPSHOTS_BATCH_SAVE_SIZE = 100
+SNAPSHOTS_BATCH_SAVE_SIZE = 50
 
 
 def get_experiment_folders_dir():
@@ -51,24 +51,18 @@ def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
     return filestore_utils.ls(exp_path.gcs(path), must_exist=False).retcode == 0
 
 
-def measure_loop(experiment: str, max_total_time: int, redis_host: str):
+def measure_loop(experiment_config: dict):
     """Continuously measure trials for |experiment|."""
     db_utils.initialize()
-    logs.initialize(default_extras={
-        'component': 'dispatcher',
-        'subcomponent': 'measurer',
-    })
-    with multiprocessing.Pool() as pool:
-        set_up_coverage_binaries(pool, experiment)
-    # Using Multiprocessing.Queue will fail with a complaint about
-    # inheriting queue.
-    queue = queue_utils.initialize_queue(redis_host)
+    experiment = experiment_config['experiment']
+    initialize_logs(experiment)
+    queue = schedule_measure_workers.initialize(experiment_config)
     while True:
         try:
             # Get whether all trials have ended before we measure to prevent
             # races.
             all_trials_ended = scheduler.all_trials_ended(experiment)
-            if not measure_all_trials(experiment, max_total_time, queue):
+            if not measure_all_trials(experiment_config, queue):
                 # We didn't measure any trials.
                 if all_trials_ended:
                     # There are no trials producing snapshots to measure.
@@ -80,6 +74,7 @@ def measure_loop(experiment: str, max_total_time: int, redis_host: str):
 
             time.sleep(FAIL_WAIT_SECONDS)
 
+    schedule_measure_workers.teardown(experiment_config)
     logger.info('Finished measuring.')
 
 
@@ -88,33 +83,77 @@ def get_job_timeout():
     return experiment_utils.get_snapshot_seconds() + 2 * 60
 
 
-def measure_all_trials(experiment: str, max_total_time: int, queue) -> bool:
+def enqueue_measure_jobs_for_unmeasured(experiment_config: dict, queue):
+    """Get snapshots we need to measure from the db and add them to the queue so
+    that they can be measured."""
+    experiment = experiment_config['experiment']
+    max_total_time = experiment_config['max_total_time']
+    max_cycle = _time_to_cycle(max_total_time)
+    logger.info('Enqueuing measure jobs.')
+    unmeasured_snapshots = get_unmeasured_snapshots(experiment, max_cycle)
+    jobs = enqueue_measure_jobs(unmeasured_snapshots, queue)
+    logger.info('Done enqueuing jobs.')
+    return jobs
+
+
+def enqueue_measure_jobs(unmeasured_snapshots, queue):
+    """Add jobs to measure each snapshot in |unmeasured_snapshots| to |queue|
+    and returns them."""
+    job_timeout = get_job_timeout()
+    jobs = [
+        queue.enqueue(measure_worker.measure_trial_coverage,
+                      unmeasured_snapshot,
+                      job_timeout=job_timeout,
+                      result_ttl=job_timeout,
+                      ttl=job_timeout)
+        for unmeasured_snapshot in unmeasured_snapshots
+    ]
+    return jobs
+
+
+def enqueue_next_measure_job(unmeasured_snapshot, experiment_config, queue):
+    """Adds a job to measure the next snapshot after |unmeasured_snapshot| to
+    |queue| and returns the job."""
+    if _time_to_cycle(
+            experiment_config['max_total_time']) == unmeasured_snapshot.cycle:
+        return None
+    next_unmeasured_snapshot = measure_worker.SnapshotMeasureRequest(
+        unmeasured_snapshot.fuzzer, unmeasured_snapshot.benchmark,
+        unmeasured_snapshot.trial_id, unmeasured_snapshot.cycle + 1)
+    job = enqueue_measure_jobs([next_unmeasured_snapshot], queue)[0]
+    return job
+
+
+def ready_to_measure():
+    """Returns True if we are ready to start measuring."""
+    experiment_folders_dir = get_experiment_folders_dir()
+    return exists_in_experiment_filestore(experiment_folders_dir)
+
+
+def measure_all_trials(experiment_config: dict, queue) -> bool:  # pylint: disable=too-many-branches,too-many-statements
     """Get coverage data (with coverage runs) for all active trials. Note that
     this should not be called unless multiprocessing.set_start_method('spawn')
     was called first. Otherwise it will use fork which breaks logging."""
     logger.info('Measuring all trials.')
 
-    experiment_folders_dir = get_experiment_folders_dir()
-    if not exists_in_experiment_filestore(experiment_folders_dir):
+    if not ready_to_measure():
         return True
 
-    max_cycle = _time_to_cycle(max_total_time)
-    unmeasured_snapshots = get_unmeasured_snapshots(experiment, max_cycle)
-
-    if not unmeasured_snapshots:
+    jobs = enqueue_measure_jobs_for_unmeasured(experiment_config, queue)
+    if not jobs:
+        # If we didn't enqueue any jobs, then there is nothing to measure.
         return False
 
-    job_timeout = get_job_timeout()
-    results = [
-        queue.enqueue(measure_worker.measure_trial_coverage,
-                      unmeasured_snapshot,
-                      job_timeout=job_timeout)
-        for unmeasured_snapshot in unmeasured_snapshots
-    ]
+    initial_jobs = {job.id: job for job in jobs}
 
-    # Poll the queue for snapshots and save them in batches until the pool is
-    # done processing each unmeasured snapshot. Then save any remaining
-    # snapshots.
+    # TODO(metzman): Move this to scheduler or it's own process. It's here for
+    # now because the scheduler quits too early.
+    schedule_measure_workers.schedule(experiment_config, queue)
+
+    # Poll the queue for snapshots and save them in batches, for each snapshot
+    # that was measured, schedule another task to measure the next snapshot for
+    # that trial. Do this until there are no more tasks and then save any
+    # remaining snapshots.
     snapshots = []
     snapshots_measured = False
 
@@ -131,22 +170,45 @@ def measure_all_trials(experiment: str, max_total_time: int, queue) -> bool:
 
     while True:
         all_finished = True
+        job_ids = initial_jobs.keys()
+        jobs = rq.job.Job.fetch_many(job_ids, queue.connection)
 
-        # Copy results because we want to mutate it while iterating through it.
-        results_copy = results.copy()
+        for job in jobs:
+            if job is None:
+                logger.error('job is None. Others: %s',
+                             all(j is None for j in jobs))
+                initial_jobs = {}
+                break
+            status = job.get_status(refresh=False)
+            if status is None:
+                logger.error('%s returned None', job.get_call_string())
+                del initial_jobs[job.id]
+                continue
 
-        for result in results_copy:
-            if not result.is_finished:
+            if status == rq.job.JobStatus.FAILED:  # pylint: disable=no-member
+                del initial_jobs[job.id]
+                continue
+
+            if status != rq.job.JobStatus.FINISHED:  # pylint: disable=no-member
                 # Note if we haven't finished all tasks so we can break out of
                 # the outer (infinite) loop.
                 all_finished = False
                 continue
 
-            if result.return_value is None:
+            del initial_jobs[job.id]
+            if job.return_value is None:
+                # The task completed successfully but was not able to measure
+                # the snapshot. This could have happened because the snapshot
+                # does not exist yet.
                 continue
 
-            snapshots.append(result.return_value)
-            results.remove(result)
+            snapshot = job.return_value
+            snapshots.append(snapshot)
+            next_job = enqueue_next_measure_job(job.args[0], experiment_config,
+                                                queue)
+            if next_job is None:
+                continue
+            initial_jobs[next_job.id] = next_job
 
         if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE:
             save_snapshots()
@@ -161,6 +223,7 @@ def measure_all_trials(experiment: str, max_total_time: int, queue) -> bool:
     save_snapshots()
 
     logger.info('Done measuring all trials.')
+    schedule_measure_workers.schedule(experiment_config, queue)
     return snapshots_measured
 
 
@@ -268,38 +331,27 @@ def get_unmeasured_snapshots(experiment: str, max_cycle: int
     return unmeasured_first_snapshots + unmeasured_latest_snapshots
 
 
-def set_up_coverage_binaries(pool, experiment):
-    """Set up coverage binaries for all benchmarks in |experiment|."""
-    benchmarks = [
-        trial.benchmark for trial in db_utils.query(models.Trial).distinct(
-            models.Trial.benchmark).filter(
-                models.Trial.experiment == experiment)
-    ]
-    coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
-    if not os.path.exists(coverage_binaries_dir):
-        os.makedirs(coverage_binaries_dir)
-    pool.map(measure_worker.set_up_coverage_binary, benchmarks)
-
-
-def initialize_logs():
+def initialize_logs(experiment_name):
     """Initialize logs. This must be called on process start."""
-    logs.initialize(default_extras={
-        'component': 'dispatcher',
-        'subcomponent': 'measurer',
-    })
+    logs.initialize(
+        default_extras={
+            'component': 'dispatcher',
+            'subcomponent': 'measurer',
+            'experiment': experiment_name,
+        })
 
 
 def main():
     """Measure the experiment."""
-    initialize_logs()
     multiprocessing.set_start_method('spawn')
 
     experiment_name = experiment_utils.get_experiment_name()
-
+    initialize_logs(experiment_name)
+    experiment_config = yaml_utils.read(sys.argv[1])
     try:
-        measure_loop(experiment_name, int(sys.argv[1]), sys.argv[2])
+        measure_loop(experiment_config)
     except Exception as error:
-        logs.error('Error conducting experiment.')
+        logger.error('Error conducting experiment.')
         raise error
 
 

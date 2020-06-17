@@ -25,11 +25,11 @@ import time
 from typing import List, Set
 
 from common import benchmark_utils
-from common import experiment_utils
 from common import experiment_path as exp_path
+from common import experiment_utils
 from common import filesystem
-from common import fuzzer_utils
 from common import filestore_utils
+from common import fuzzer_utils
 from common import logs
 from common import utils
 from database import models
@@ -45,10 +45,12 @@ SnapshotMeasureRequest = collections.namedtuple(
 
 def initialize_logs():
     """Initialize logs. This must be called on process start."""
-    logs.initialize(default_extras={
-        'component': 'dispatcher',
-        'subcomponent': 'measurer',
-    })
+    logs.initialize(
+        default_extras={
+            'component': 'worker',
+            'subcomponent': 'measurer',
+            'experiment': experiment_utils.get_experiment_name()
+        })
 
 
 def extract_corpus(corpus_archive: str, sha_blacklist: Set[str],
@@ -409,7 +411,7 @@ def set_up_coverage_binary(benchmark):
     if os.path.exists(benchmark_coverage_binary_dir):
         return
 
-    os.mkdir(benchmark_coverage_binary_dir)
+    filesystem.create_directory(benchmark_coverage_binary_dir)
     archive_name = 'coverage-build-%s.tar.gz' % benchmark
     cloud_bucket_archive_path = exp_path.gcs(coverage_binaries_dir /
                                              archive_name)

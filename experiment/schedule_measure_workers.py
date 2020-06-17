@@ -13,37 +13,60 @@
 # limitations under the License.
 """Module for starting instances to run measure workers."""
 import collections
+import os
 import posixpath
+import sys
+import time
 
-from common import gcloud
+from common import experiment_utils
 from common import gce
+from common import gcloud
 from common import logs
 from common import queue_utils
+from common import yaml_utils
 
-logger = logs.Logger('scheduler')  # pylint: disable=invalid-name
+logger = logs.Logger('schedule_measure_workers')  # pylint: disable=invalid-name
+
+# This is the default quota on GCE.
+# TODO(metzman): Use the GCE API to determine this quota.
+MAX_INSTANCES_PER_GROUP = 1000
 
 
 def get_instance_group_name(experiment: str):
     """Returns the name of the instance group of measure workers for
     |experiment|."""
-    return experiment + '-measure-worker'
+    # "worker-" needs to come first because name cannot start with number.
+    return 'worker-' + experiment
 
 
 def get_measure_worker_instance_template_name(experiment: str):
     """Returns an instance template name for measurer workers running in
     |experiment|."""
-    return experiment + '-measure-worker'
+    return 'worker-' + experiment
 
 
 def initialize(experiment_config: dict):
     """Initialize everything that will be needed to schedule measurers."""
+    logger.info('Initializing worker scheduling.')
+    gce.initialize()
     experiment = experiment_config['experiment']
     instance_template_name = get_measure_worker_instance_template_name(
         experiment)
     project = experiment_config['cloud_project']
     docker_image = posixpath.join('gcr.io', project, 'measure-worker')
+
     redis_host = experiment_config['redis_host']
-    env = {'REDIS_HOST': redis_host}
+    experiment_filestore = experiment_config['experiment_filestore']
+    local_experiment = experiment_utils.is_local_experiment()
+    cloud_compute_zone = experiment_config.get('cloud_compute_zone')
+    env = {
+        'REDIS_HOST': redis_host,
+        'EXPERIMENT_FILESTORE': experiment_filestore,
+        'EXPERIMENT': experiment,
+        'LOCAL_EXPERIMENT': local_experiment,
+        'CLOUD_COMPUTE_ZONE': cloud_compute_zone,
+    }
+
     zone = experiment_config['cloud_compute_zone']
     instance_template_url = gcloud.create_instance_template(
         instance_template_name, docker_image, env, project, zone)
@@ -73,12 +96,21 @@ def teardown(experiment_config: dict):
 def schedule(experiment_config: dict, queue):
     """Schedule measurer workers. This cannot be called before
     initialize_measurers."""
-    jobs = queue.get_jobs()
+    logger.info('Scheduling measurer workers.')
+
+    # TODO(metzman): This method doesn't seem to correctly take into account
+    # jobs that are running (the API provided by rq doesn't work intuitively).
+    # That is OK for now since scheduling only happens while nothing is being
+    # measured but this should be fixed.
+    jobs = queue_utils.get_all_jobs(queue)
     counts = collections.defaultdict(int)
     for job in jobs:
-        counts[job.get_status()] += 1
+        counts[job.get_status(refresh=False)] += 1
 
     num_instances_needed = counts['queued'] + counts['started']
+    num_instances_needed = min(num_instances_needed, MAX_INSTANCES_PER_GROUP)
+
+    logger.info('Scheduling %d workers.', num_instances_needed)
     instance_group_name = get_instance_group_name(
         experiment_config['experiment'])
     project = experiment_config['cloud_project']
@@ -86,12 +118,37 @@ def schedule(experiment_config: dict, queue):
     num_instances = gce.get_instance_group_size(instance_group_name, project,
                                                 zone)
 
+    # TODO(metzman): Use autoscaling as it probably can deal with quotas more
+    # easily.
     if not num_instances_needed:
         # Can't go below 1 instance per group.
-        return
+        logs.info('num_instances_needed = 0, resizing to 1.')
+        num_instances_needed = 1
 
     if num_instances_needed != num_instances:
         # TODO(metzman): Add some limits so always have some measurers but not
         # too many.
         gce.resize_instance_group(num_instances_needed, instance_group_name,
                                   project, zone)
+
+
+def main():
+    """Run schedule_measure_workers as a standalone script by calling schedule
+    in a loop. Useful for debugging."""
+    logs.initialize(
+        default_extras={
+            'experiment': os.environ['EXPERIMENT'],
+            'component': 'dispatcher',
+            'subcomponent': 'scheduler'
+        })
+    gce.initialize()
+    config_path = sys.argv[1]
+    config = yaml_utils.read(config_path)
+    queue = initialize(config)
+    while True:
+        schedule(config, queue)
+        time.sleep(30)
+
+
+if __name__ == '__main__':
+    main()
