@@ -21,6 +21,7 @@ from typing import Tuple
 from common import benchmark_utils
 from common import environment
 from common import experiment_path as exp_path
+from common import experiment_utils
 from common import filestore_utils
 from common import logs
 from common import new_process
@@ -43,8 +44,8 @@ def build_base_images() -> Tuple[int, str]:
 
 def get_shared_coverage_binaries_dir():
     """Returns the shared coverage binaries directory."""
-    shared_volume = os.environ['EXPERIMENT_FILESTORE']
-    return os.path.join(shared_volume, 'coverage-binaries')
+    experiment_filestore_path = experiment_utils.get_experiment_filestore_path()
+    return os.path.join(experiment_filestore_path, 'coverage-binaries')
 
 
 def make_shared_coverage_binaries_dir():
@@ -77,16 +78,10 @@ def copy_coverage_binaries(benchmark):
         shared_coverage_binaries_dir, coverage_build_archive)
     command = 'cd /out; tar -czvf {} *'.format(
         coverage_build_archive_shared_dir_path)
-    new_process.execute([
+    return new_process.execute([
         'docker', 'run', '-v', mount_arg, builder_image_url, '/bin/bash', '-c',
         command
     ])
-    coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
-    coverage_build_archive_gcs_path = posixpath.join(
-        exp_path.filestore(coverage_binaries_dir), coverage_build_archive)
-
-    return filestore_utils.cp(coverage_build_archive_shared_dir_path,
-                              coverage_build_archive_gcs_path)
 
 
 def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
