@@ -15,18 +15,14 @@
 """Module for building things on Google Cloud Build for use in trials."""
 
 import os
-import posixpath
 from typing import Tuple
 
 from common import benchmark_utils
 from common import environment
-from common import experiment_path as exp_path
 from common import experiment_utils
-from common import filestore_utils
 from common import logs
 from common import new_process
 from common import utils
-from experiment.build import build_utils
 
 logger = logs.Logger('builder')  # pylint: disable=invalid-name
 
