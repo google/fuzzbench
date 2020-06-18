@@ -16,14 +16,18 @@ will create oss-fuzz.yaml as well as copy the files from OSS-Fuzz to build the
 benchmark."""
 import argparse
 import datetime
-from distutils import dir_util
 from distutils import spawn
 import os
 import logging
 import sys
+import shutil
 import subprocess
 
 from common import utils
+from common import benchmark_utils
+from common import logs
+from common import new_process
+from common import yaml_utils
 
 
 # pytype: disable=import-error
@@ -37,11 +41,6 @@ from common import utils
 # accdidentaly break our repo.
 OSS_FUZZ_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz')
 OSS_FUZZ_REPO_PATH = os.path.join(OSS_FUZZ_DIR, 'infra')
-sys.path.append(OSS_FUZZ_REPO_PATH)
-
-from common import benchmark_utils
-from common import logs
-from common import yaml_utils
 
 
 class BaseRepoManager:
@@ -58,11 +57,10 @@ class BaseRepoManager:
 	      check_result: Should an exception be thrown on failed command.
 
 	    Returns:
-	      stdout, stderr, error code.
+	      stderr, stdout, error code.
 	    """
-	    return execute(['git'] + cmd,
-	                         location=self.repo_dir,
-	                         check_result=check_result)
+	    return new_process.execute(['git'] + cmd,
+	                         cwd=self.repo_dir)
 
 
 class BaseBuilderRepo:
@@ -86,44 +84,6 @@ class BaseBuilderRepo:
 		raise ValueError('Failed to find suitable base-builder.')
 
 
-def execute(command, location=None, check_result=False):
-	""" Runs a shell command in the specified directory location.
-
-	Args:
-	command: The command as a list to be run.
-	location: The directory the command is run in.
-	check_result: Should an exception be thrown on failed command.
-
-	Returns:
-	stdout, stderr, error code.
-
-	Raises:
-	RuntimeError: running a command resulted in an error.
-	"""
-
-	if not location:
-		location = os.getcwd()
-	process = subprocess.Popen(command,
-	                         stdout=subprocess.PIPE,
-	                         stderr=subprocess.PIPE,
-	                         cwd=location)
-	out, err = process.communicate()
-	out = out.decode('utf-8', errors='ignore')
-	err = err.decode('utf-8', errors='ignore')
-	if err:
-		logging.debug('Stderr of command \'%s\' is %s.', ' '.join(command), err)
-	if check_result and process.returncode:
-		raise RuntimeError(
-		    'Executing command \'{0}\' failed with error: {1}.'.format(
-		        ' '.join(command), err))
-	return out, err, process.returncode
-
-
-def copy_dir_contents(src_dir, dst_dir):
-    """Copy the contents of |src_dir| into |dst_dir|."""
-    return dir_util.copy_tree(src_dir, dst_dir)
-
-
 def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
     """Checkout the right files from OSS-Fuzz to build the benchmark based on
     |project| and |commit_date|. Then copy them to |benchmark_dir|."""
@@ -133,18 +93,17 @@ def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
     os.chdir(OSS_FUZZ_DIR)
     try:
         # Find an OSS-Fuzz commit that can be used to build the benchmark.
-        oss_fuzz_commit, _, _ = oss_fuzz_repo_manager.git([
+        _, oss_fuzz_commit, _ = oss_fuzz_repo_manager.git([
             'log', '--before=' + commit_date.isoformat(), '-n1', '--format=%H',
             projects_dir
         ], check_result=True)
-
         oss_fuzz_commit = oss_fuzz_commit.strip()
         if not oss_fuzz_commit:
             logs.warning('No suitable earlier OSS-Fuzz commit found.')
             return False
         oss_fuzz_repo_manager.git(['checkout', oss_fuzz_commit, projects_dir],
                                   check_result=True)
-        copy_dir_contents(projects_dir, benchmark_dir)
+        shutil.copytree(projects_dir, benchmark_dir, ignore=shutil.ignore_patterns("project.yaml"))
         return True
     finally:
         oss_fuzz_repo_manager.git(['reset', '--hard'])
@@ -167,7 +126,7 @@ def _load_base_builder_repo():
 		logging.warning('gcloud not found in PATH.')
 		return None
 
-	result, _, _ = execute([
+	_, result, _ = new_process.execute([
 		gcloud_path,
 		'container',
 		'images',
@@ -175,8 +134,7 @@ def _load_base_builder_repo():
 		'gcr.io/oss-fuzz-base/base-builder',
 		'--format=json',
 		'--sort-by=timestamp',
-	],
-	                           check_result=True)
+	])
 	result = json.loads(result)
 
 	repo = BaseBuilderRepo()
