@@ -40,7 +40,11 @@ from third_party import sancov
 logger = logs.Logger('measure_worker')  # pylint: disable=invalid-name
 
 SnapshotMeasureRequest = collections.namedtuple(
-    'SnapshotMeasureRequest', ['fuzzer', 'benchmark', 'trial_id', 'cycle'])
+    'SnapshotMeasureRequest', ['fuzzer', 'benchmark', 'trial_id', 'cycle',
+                               'is_done', 'max_cycle'])
+
+SnapshotMeasureResponse = collections.namedtuple(
+    'SnapshotMeasureResponse', ['snapshot', 'has_more'])
 
 
 def initialize_logs():
@@ -309,6 +313,12 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             prev_state = state_file.get_previous()
             state_file.set_current(prev_state)
 
+    def has_more(self, cycle, max_cycle):
+        if cycle == max_cycle:
+            return False
+
+
+
 
 def measure_trial_coverage(measure_req) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
@@ -318,10 +328,7 @@ def measure_trial_coverage(measure_req) -> models.Snapshot:
     try:
         set_up_coverage_binary(measure_req.benchmark)
         logger.debug('Measuring trial: %d.', measure_req.trial_id)
-        snapshot = measure_snapshot_coverage(measure_req.fuzzer,
-                                             measure_req.benchmark,
-                                             measure_req.trial_id,
-                                             measure_req.cycle)
+        measure_response = measure_snapshot_coverage(measure_req)
     except Exception:  # pylint: disable=broad-except
         logger.error('Error measuring cycle.',
                      extras={
@@ -334,11 +341,10 @@ def measure_trial_coverage(measure_req) -> models.Snapshot:
     logger.debug('Done measuring trial: %d.', measure_req.trial_id)
     # TODO(metzman): Figure out if we want to allow measuring of more than one
     # snapshot per requests.
-    return snapshot
+    return measure_response
 
 
-def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
-                              cycle: int) -> models.Snapshot:
+def measure_snapshot_coverage(measure_req) -> models.Snapshot:
     """Measure coverage of the snapshot for |cycle| for |trial_num| of |fuzzer|
     and |benchmark|."""
     snapshot_logger = logs.Logger('measurer',
