@@ -43,7 +43,7 @@ def build_base_images() -> Tuple[int, str]:
 
 def get_shared_coverage_binaries_dir():
     """Returns the shared coverage binaries directory."""
-    shared_volume = os.environ['SHARED_VOLUME']
+    shared_volume = os.environ['EXPERIMENT_FILESTORE']
     return os.path.join(shared_volume, 'coverage-binaries')
 
 
