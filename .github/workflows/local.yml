@@ -1,0 +1,34 @@
+name: Local End-to-End Test
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - run: |  # Needed for git diff to work.
+        git fetch origin master --depth 1
+        git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
+
+    - name: Clear unnecessary files
+      run: |
+        sudo swapoff -a
+        sudo rm -f /swapfile
+        sudo apt clean
+        docker rmi $(docker images -a -q)
+        df -h
+
+    - name: Setup Python environment
+      uses: actions/setup-python@v1.1.1
+      with:
+        python-version: 3.7
+
+    - name: Install dependencies
+      run: |
+        make install-dependencies
+        sudo apt-get install -y rsync
+
+    - name: Test local experiment
+      run: |
+        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/local_end_to_end_test.py

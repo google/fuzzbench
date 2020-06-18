@@ -1,0 +1,7 @@
+trials: 2
+max_total_time: 1500
+cloud_project: fuzzbench
+docker_registry: gcr.io/fuzzbench
+experiment_filestore: /tmp/experiment-data
+report_filestore: /tmp/report-data
+local_experiment: true
