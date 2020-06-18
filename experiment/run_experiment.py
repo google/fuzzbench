@@ -66,14 +66,17 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     and returns it."""
     config = yaml_utils.read(config_filename)
     filestore_params = {'experiment_filestore', 'report_filestore'}
-    cloud_config = {'cloud_compute_zone'}
-    string_params = cloud_config.union(filestore_params)
+    cloud_config = {'cloud_compute_zone', 'cloud_project'}
+    local_config = {'docker_registry'}
+    string_params = cloud_config.union(filestore_params).union(local_config)
     int_params = {'trials', 'max_total_time'}
     required_params = int_params.union(filestore_params)
 
     local_experiment = config.get('local_experiment', False)
     if not local_experiment:
         required_params = required_params.union(cloud_config)
+    else:
+        required_params = required_params.union(local_config)
 
     valid = True
     if 'cloud_experiment_bucket' in config or 'cloud_web_bucket' in config:
@@ -120,6 +123,12 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
 
     if not valid:
         raise ValidationError('Config: %s is invalid.' % config_filename)
+
+    config['local_experiment'] = local_experiment
+    if not local_experiment and 'docker_registry' not in config:
+        config['docker_registry'] = experiment_utils.get_base_docker_tag(
+            config['cloud_project'])
+
     return config
 
 
@@ -342,16 +351,14 @@ class LocalDispatcher:
         sql_database_arg = 'SQL_DATABASE_URL=sqlite:///{}'.format(
             os.path.join(shared_volume_dir, 'local.db'))
 
-        base_docker_tag = experiment_utils.get_base_docker_tag(
-            self.config['cloud_project'])
+        base_docker_tag = self.config['docker_registry']
         set_instance_name_arg = 'INSTANCE_NAME={instance_name}'.format(
             instance_name=self.instance_name)
         set_experiment_arg = 'EXPERIMENT={experiment}'.format(
             experiment=self.config['experiment'])
-        set_cloud_project_arg = 'CLOUD_PROJECT={cloud_project}'.format(
-            cloud_project=self.config['cloud_project'])
         shared_experiment_filestore_arg = '{0}:{0}'.format(
             self.config['experiment_filestore'])
+        set_docker_registry_arg = 'DOCKER_REGISTRY={}'.format(base_docker_tag)
         set_experiment_filestore_arg = (
             'EXPERIMENT_FILESTORE={experiment_filestore}'.format(
                 experiment_filestore=self.config['experiment_filestore']))
@@ -382,13 +389,13 @@ class LocalDispatcher:
             '-e',
             set_experiment_arg,
             '-e',
-            set_cloud_project_arg,
-            '-e',
             sql_database_arg,
             '-e',
             set_experiment_filestore_arg,
             '-e',
             set_report_filestore_arg,
+            '-e',
+            set_docker_registry_arg,
             '-e',
             'LOCAL_EXPERIMENT=True',
             '--cap-add=SYS_PTRACE',
@@ -430,8 +437,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
         gcloud.robust_begin_gcloud_ssh(self.instance_name,
                                        self.config['cloud_compute_zone'])
 
-        base_docker_tag = experiment_utils.get_base_docker_tag(
-            self.config['cloud_project'])
+        base_docker_tag = self.config['docker_registry']
         cloud_sql_instance_connection_name = (
             self.config['cloud_sql_instance_connection_name'])
 
@@ -441,6 +447,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
             '-e INSTANCE_NAME="{instance_name}" '
             '-e EXPERIMENT="{experiment}" '
             '-e CLOUD_PROJECT="{cloud_project}" '
+            '-e DOCKER_REGISTRY="{base_docker_tag}" '
             '-e EXPERIMENT_FILESTORE="{experiment_filestore}" '
             '-e POSTGRES_PASSWORD="{postgres_password}" '
             '-e CLOUD_SQL_INSTANCE_CONNECTION_NAME='

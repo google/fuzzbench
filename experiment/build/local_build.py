@@ -71,7 +71,7 @@ def copy_coverage_binaries(benchmark):
     shared_coverage_binaries_dir = get_shared_coverage_binaries_dir()
     mount_arg = '{0}:{0}'.format(shared_coverage_binaries_dir)
     builder_image_url = benchmark_utils.get_builder_image_url(
-        benchmark, 'coverage', environment.get('CLOUD_PROJECT'))
+        benchmark, 'coverage', environment.get('DOCKER_REGISTRY'))
     coverage_build_archive = 'coverage-build-{}.tar.gz'.format(benchmark)
     coverage_build_archive_shared_dir_path = os.path.join(
         shared_coverage_binaries_dir, coverage_build_archive)
