@@ -510,9 +510,9 @@ index d9e6b79..9a28e7b 100644
    while (auto Job = FuzzQ->Pop()) {
      // Printf("WorkerThread: job %p\n", Job);
 +    Job->Executing = true;
-+    int Sleep_ms = 300000;
++    int Sleep_ms = 5 * 60 * 1000;
 +    std::thread([=]() {
-+      std::this_thread::sleep_for(std::chrono::milliseconds(Sleep_ms));
++      std::this_thread::sleep_for(std::chrono::milliseconds(Sleep_ms / 5));
 +      while (Job->Executing) {
 +        Env->RunOneMergeJob(Job);
 +        std::this_thread::sleep_for(std::chrono::milliseconds(Sleep_ms));
