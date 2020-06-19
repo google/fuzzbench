@@ -46,8 +46,8 @@ def main():
         return 0
     src_dir = os.getenv('SRC')
     for dir_entry in os.listdir(src_dir):
-    	entry_to_check = os.path.join(src_dir, dir_entry)
-    	if os.path.isdir(entry_to_check):
+        entry_to_check = os.path.join(src_dir, dir_entry)
+        if os.path.isdir(entry_to_check):
             try:
                 checkout_success = checkout_repo_commit(commit, entry_to_check)
             except subprocess.CalledProcessError:
