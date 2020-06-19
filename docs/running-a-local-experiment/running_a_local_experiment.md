@@ -51,11 +51,11 @@ max_total_time: 86400
 # docker_registry: lab-server:5000
 
 # The local experiment folder that will store most of the experiment data.
-# Please use absolute path.
+# Please use an absolute path.
 experiment_filestore: /experiment-data
 
 # The local report folder where HTML reports and summary data will be stored.
-# Please use absolute path.
+# Please use an absolute path.
 report_filestore: /report-data
 ```
 
