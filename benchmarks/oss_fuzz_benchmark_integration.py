@@ -17,10 +17,10 @@ benchmark."""
 import argparse
 import datetime
 from distutils import spawn
+from distutils import dir_util
 import os
 import logging
 import sys
-import shutil
 import subprocess
 
 from common import utils
@@ -30,31 +30,21 @@ from common import new_process
 from common import yaml_utils
 
 
-# pytype: disable=import-error
-# pylint: disable=import-error,wrong-import-position,ungrouped-imports,too-many-arguments
-
-# TODO(metzman): Don't rely on OSS-Fuzz code. We don't want to depend on it
-# because it can easily break use. Especially because:
-# 1. We use private methods
-# 2. The OSS-Fuzz code depends on absolute imports.
-# 3. The OSS-Fuzz code assumes it is run from the OSS-Fuzz directory and can
-# accdidentaly break our repo.
 OSS_FUZZ_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz')
 OSS_FUZZ_REPO_PATH = os.path.join(OSS_FUZZ_DIR, 'infra')
 
 
-class BaseRepoManager:
+class GitRepoManager:
 	"""Base repo manager."""
 
 	def __init__(self, repo_dir):
 	    self.repo_dir = repo_dir
 
-	def git(self, cmd, check_result=False):
+	def git(self, cmd):
 	    """Run a git command.
 
 	    Args:
 	      command: The git command as a list to be run.
-	      check_result: Should an exception be thrown on failed command.
 
 	    Returns:
 	      stderr, stdout, error code.
@@ -63,7 +53,7 @@ class BaseRepoManager:
 	                         cwd=self.repo_dir)
 
 
-class BaseBuilderRepo:
+class BaseBuilderDockerRepo:
 	"""Repo of base-builder images."""
 
 	def __init__(self):
@@ -87,28 +77,24 @@ class BaseBuilderRepo:
 def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
     """Checkout the right files from OSS-Fuzz to build the benchmark based on
     |project| and |commit_date|. Then copy them to |benchmark_dir|."""
-    cwd = os.getcwd()
-    oss_fuzz_repo_manager = BaseRepoManager(OSS_FUZZ_DIR)
+    oss_fuzz_repo_manager = GitRepoManager(OSS_FUZZ_DIR)
     projects_dir = os.path.join(OSS_FUZZ_DIR, 'projects', project)
     os.chdir(OSS_FUZZ_DIR)
     try:
         # Find an OSS-Fuzz commit that can be used to build the benchmark.
         _, oss_fuzz_commit, _ = oss_fuzz_repo_manager.git([
             'log', '--before=' + commit_date.isoformat(), '-n1', '--format=%H',
-            projects_dir
-        ], check_result=True)
+            projects_dir])
         oss_fuzz_commit = oss_fuzz_commit.strip()
         if not oss_fuzz_commit:
             logs.warning('No suitable earlier OSS-Fuzz commit found.')
             return False
-        oss_fuzz_repo_manager.git(['checkout', oss_fuzz_commit, projects_dir],
-                                  check_result=True)
-        shutil.copytree(projects_dir, benchmark_dir, ignore=shutil.ignore_patterns("project.yaml"))
+        oss_fuzz_repo_manager.git(['checkout', oss_fuzz_commit, projects_dir])
+        dir_util.copy_tree(projects_dir, benchmark_dir)
+        os.remove(os.path.join(benchmark_dir, 'project.yaml'))
         return True
     finally:
         oss_fuzz_repo_manager.git(['reset', '--hard'])
-        # This must be done in this order or else we reset our fuzzbench repo.
-        os.chdir(cwd)
 
 
 def get_benchmark_name(project, fuzz_target, benchmark_name=None):
@@ -119,7 +105,7 @@ def get_benchmark_name(project, fuzz_target, benchmark_name=None):
     return project + '_' + fuzz_target
 
 
-def _load_base_builder_repo():
+def _load_base_builder_docker_repo():
 	"""Get base-image digests."""
 	gcloud_path = spawn.find_executable('gcloud')
 	if not gcloud_path:
@@ -137,7 +123,7 @@ def _load_base_builder_repo():
 	])
 	result = json.loads(result)
 
-	repo = BaseBuilderRepo()
+	repo = BaseBuilderDockerRepo()
 	for image in result:
 		timestamp = datetime.datetime.fromisoformat(
 	    	image['timestamp']['datetime']).astimezone(datetime.timezone.utc)
@@ -166,7 +152,7 @@ def replace_base_builder(benchmark_dir, commit_date):
     """Replace the parent image of the Dockerfile in |benchmark_dir|,
     base-builder (latest), with a version of base-builder that is likely to
     build the project as it was on |commit_date| without issue."""
-    base_builder_repo = _load_base_builder_repo()  # pylint: disable=protected-access
+    base_builder_repo = _load_base_builder_docker_repo()  # pylint: disable=protected-access
     if base_builder_repo:
         base_builder_digest = base_builder_repo.find_digest(commit_date)
         logs.info('Using base-builder with digest %s.', base_builder_digest)
@@ -174,7 +160,7 @@ def replace_base_builder(benchmark_dir, commit_date):
             os.path.join(benchmark_dir, 'Dockerfile'), base_builder_digest)
 
 
-def create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date, repo_path,
+def create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,
                          benchmark_dir):
     """Create the oss-fuzz.yaml file in |benchmark_dir| based on the values from
     |project|, |fuzz_target|, |commit| and |commit_date|."""
@@ -184,7 +170,6 @@ def create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date, repo_path,
         'fuzz_target': fuzz_target,
         'commit': commit,
         'commit_date': commit_date,
-        'repo_path': repo_path,
     }
     yaml_utils.write(yaml_filename, config)
 
@@ -193,7 +178,6 @@ def integrate_benchmark(project,
                         fuzz_target,
                         commit,
                         commit_date,
-                        repo_path,
                         benchmark_name=None):
     """Copies files needed to integrate an OSS-Fuzz benchmark and creates the
     benchmark's oss-fuzz.yaml file."""
@@ -206,7 +190,7 @@ def integrate_benchmark(project,
         tzinfo=datetime.timezone.utc)
     copy_oss_fuzz_files(project, commit_date, benchmark_dir)
     replace_base_builder(benchmark_dir, commit_date)
-    create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date, repo_path,
+    create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,
                          benchmark_dir)
 
 
@@ -222,11 +206,6 @@ def main():
                         '--fuzz-target',
                         help='Fuzz target for benchmark.',
                         required=True)
-    parser.add_argument('-r',
-                        '--repo-path',
-                        help=('Absolute path of the project repo in the '
-                              'OSS-Fuzz image (e.g. /src/systemd).'),
-                        required=True)
     parser.add_argument('-n',
                         '--benchmark-name',
                         help='Benchmark name.',
@@ -235,7 +214,7 @@ def main():
     parser.add_argument('-d', '--date', help='Date of the commit.')
     args = parser.parse_args()
     integrate_benchmark(args.project, args.fuzz_target, args.commit, args.date,
-                        args.repo_path, args.benchmark_name)
+                        args.benchmark_name)
     return 0
 
 
