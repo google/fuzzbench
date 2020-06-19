@@ -48,12 +48,12 @@ def main():
     for dir_entry in os.listdir(src_dir):
     	entry_to_check = os.path.join(src_dir, dir_entry)
     	if os.path.isdir(entry_to_check):
-		try:
-			checkout_success = checkout_repo_commit(commit, entry_to_check)
-		except subprocess.CalledProcessError:
-			continue
-		if not checkout_success.returncode:
-			return 0
+	    try:
+		checkout_success = checkout_repo_commit(commit, entry_to_check)
+            except subprocess.CalledProcessError:
+    		continue
+            if not checkout_success.returncode:
+		return 0
     print("Checkout unsuccessful.")
     return 0
 
