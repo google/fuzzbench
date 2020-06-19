@@ -38,7 +38,9 @@ def get_impl():
 
 
 def cp(source, destination, recursive=False, parallel=False, expect_zero=True):  # pylint: disable=invalid-name
-    """Copies |source| to |destination|."""
+    """Copies |source| to |destination|. If |expect_zero| is True then it can
+    raise subprocess.CalledProcessError. |parallel| is only effective for
+    gsutil."""
     return get_impl().cp(source,
                          destination,
                          recursive=recursive,
@@ -68,7 +70,8 @@ def rsync(  # pylint: disable=too-many-arguments
         gsutil_options=None,
         options=None,
         parallel=False):
-    """Syncs |source| and |destination| folders."""
+    """Syncs |source| and |destination| folders. |gsutil_options| and |parallel|
+    are only used in gsutil."""
     return get_impl().rsync(source,
                             destination,
                             delete,
