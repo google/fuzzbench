@@ -42,7 +42,7 @@ def cp(source, destination, recursive=False, parallel=False, expect_zero=True): 
     return get_impl().cp(source,
                          destination,
                          recursive=recursive,
-                         parallel=parallel
+                         parallel=parallel,
                          expect_zero=expect_zero)
 
 
