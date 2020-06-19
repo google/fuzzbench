@@ -23,7 +23,8 @@ def cp(  # pylint: disable=invalid-name
         source,
         destination,
         recursive=False,
-        parallel=False):  # pylint: disable=unused-argument
+        parallel=False,  # pylint: disable=unused-argument
+        expect_zero=True):
     """Executes "cp" command from |source| to |destination|."""
     # Create intermediate folders for `cp` command to behave like `gsutil.cp`.
     filesystem.create_directory(os.path.dirname(destination))
@@ -32,7 +33,7 @@ def cp(  # pylint: disable=invalid-name
     if recursive:
         command.append('-r')
     command.extend([source, destination])
-    return new_process.execute(command, expect_zero=True)
+    return new_process.execute(command, expect_zero=expect_zero)
 
 
 def ls(path, must_exist=True):  # pylint: disable=invalid-name

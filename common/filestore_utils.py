@@ -37,12 +37,13 @@ def get_impl():
     return local_filestore
 
 
-def cp(source, destination, recursive=False, parallel=False):  # pylint: disable=invalid-name
+def cp(source, destination, recursive=False, parallel=False, expect_zero=True):  # pylint: disable=invalid-name
     """Copies |source| to |destination|."""
     return get_impl().cp(source,
                          destination,
                          recursive=recursive,
-                         parallel=parallel)
+                         parallel=parallel
+                         expect_zero=expect_zero)
 
 
 def ls(path, must_exist=True):  # pylint: disable=invalid-name
