@@ -39,14 +39,21 @@ def checkout_repo_commit(commit, repo_dir):
 
 def main():
     """Check out an OSS-Fuzz project repo."""
-    # TODO(metzman): Infer repo_path to make integration of these benchamrks
-    # easier.
     repo_dir = os.getenv('CHECKOUT_COMMIT_REPO_PATH')
     commit = os.getenv('CHECKOUT_COMMIT')
     if not commit or not repo_dir:
         print('Not checking out commit.')
         return 0
-    checkout_repo_commit(commit, repo_dir)
+    src_dir = os.getenv('SRC')
+    for dir in os.listdir(src_dir):
+    	if os.path.isdir(os.path.join(src_dir, dir)):
+    		try:
+    			checkout_success = checkout_repo_commit(commit, dir)
+    		except:
+    			continue
+    		if not checkout_success.returncode:
+    			return 0
+    print("Checkout unsuccessful.")    
     return 0
 
 
