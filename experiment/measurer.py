@@ -537,8 +537,9 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     if not os.path.exists(corpus_archive_dir):
         os.makedirs(corpus_archive_dir)
 
-    if filestore_utils.cp(
-            corpus_archive_src, corpus_archive_dst, expect_zero=False)[0] != 0:
+    if filestore_utils.cp(corpus_archive_src,
+                          corpus_archive_dst,
+                          expect_zero=False).retcode:
         snapshot_logger.warning('Corpus not found for cycle: %d.', cycle)
         return None
 
