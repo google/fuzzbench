@@ -67,8 +67,6 @@ $(1)-fuzz-target  := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
                              grep fuzz_target | cut -d ':' -f2 | tr -d ' ')
 $(1)-commit := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
                            grep commit: | cut -d ':' -f2 | tr -d ' ')
-$(1)-repo-path := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
-                           grep repo_path | cut -d ':' -f2 | tr -d ' ')
 
 .$(1)-project-builder:
 	docker build \
