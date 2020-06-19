@@ -34,7 +34,7 @@ def checkout_repo_commit(commit, repo_dir):
     """Checkout |commit| in |repo_dir|."""
     fetch_unshallow(repo_dir)
     # TODO(metzman): Figure out if we need to run clean.
-    git(['checkout', '-f', commit], repo_dir)
+    return git(['checkout', '-f', commit], repo_dir)
 
 
 def main():
@@ -45,15 +45,16 @@ def main():
         print('Not checking out commit.')
         return 0
     src_dir = os.getenv('SRC')
-    for dir in os.listdir(src_dir):
-    	if os.path.isdir(os.path.join(src_dir, dir)):
-    		try:
-    			checkout_success = checkout_repo_commit(commit, dir)
-    		except:
-    			continue
-    		if not checkout_success.returncode:
-    			return 0
-    print("Checkout unsuccessful.")    
+    for dir_entry in os.listdir(src_dir):
+    	entry_to_check = os.path.join(src_dir, dir_entry)
+    	if os.path.isdir(entry_to_check):
+		try:
+			checkout_success = checkout_repo_commit(commit, entry_to_check)
+		except subprocess.CalledProcessError:
+			continue
+		if not checkout_success.returncode:
+			return 0
+    print("Checkout unsuccessful.")
     return 0
 
 
