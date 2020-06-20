@@ -144,7 +144,7 @@ OSS_FUZZER_BENCHMARK_TEMPLATE = """
     --build-arg fuzzer={fuzzer} \\
     --build-arg benchmark={benchmark} \\
     --build-arg checkout_commit=$({benchmark}-commit) \\
-    --build-arg checkout_commit_repo_path=$({benchmark}-repo-path)
+    --build-arg checkout_commit_repo_path=$({benchmark}-repo-path) \\
     $(call cache_from,{base_tag}/builders/{fuzzer}/{benchmark}) \\
     {build_arguments} \\
     .
