@@ -200,18 +200,18 @@ def main():
     parser = argparse.ArgumentParser(description='Integrate a new benchmark.')
     parser.add_argument('-p',
                         '--project',
-                        help='Project for benchmark.',
+                        help='Project for benchmark. Example: "zlib"',
                         required=True)
     parser.add_argument('-f',
                         '--fuzz-target',
-                        help='Fuzz target for benchmark.',
+                        help='Fuzz target for benchmark. Example: "zlib_uncompress_fuzzer"',
                         required=True)
     parser.add_argument('-n',
                         '--benchmark-name',
                         help='Benchmark name.',
                         required=False)
     parser.add_argument('-c', '--commit', help='Project commit hash.')
-    parser.add_argument('-d', '--date', help='Date of the commit.')
+    parser.add_argument('-d', '--date', help='Date of the commit. Example: 2019-10-19T09:07:25+01:00')
     args = parser.parse_args()
     integrate_benchmark(args.project, args.fuzz_target, args.commit, args.date,
                         args.benchmark_name)
