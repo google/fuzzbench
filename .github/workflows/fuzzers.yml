@@ -25,6 +25,7 @@ jobs:
           - aflsmart
           - ankou
           - eclipser
+          - ensemble_afl
           - entropic
           - fairfuzz
           - fastcgs_lm
