@@ -208,7 +208,7 @@ def main():
                         required=True)
     parser.add_argument('-n',
                         '--benchmark-name',
-                        help='Benchmark name.',
+                        help='Benchmark name. Defaults to <project>_<fuzz_target>',
                         required=False)
     parser.add_argument('-c', '--commit', help='Project commit hash.')
     parser.add_argument('-d', '--date', help='Date of the commit. Example: 2019-10-19T09:07:25+01:00')
