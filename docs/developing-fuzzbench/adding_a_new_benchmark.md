@@ -47,7 +47,7 @@ files, like so:
 
 ```shell
 PYTHONPATH=. python3 benchmarks/oss_fuzz_benchmark_integration.py -p $PROJECT
-    -f $FUZZ_TARGET -r $REPO_PATH -c $ COMMIT_HASH -d $COMMIT_DATE
+    -f $FUZZ_TARGET -c $ COMMIT_HASH -d $COMMIT_DATE
 ```
 
 The script should create the benchmark directory in
