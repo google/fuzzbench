@@ -1,0 +1,22 @@
+# The number of trials of a fuzzer-benchmark pair to do.
+trials: 5
+
+# The amount of time in seconds that each trial is run for.
+# 1 day = 24 * 60 * 60 = 86400
+max_total_time: 86400
+
+# The name of your Google Cloud project.
+cloud_project: mcts-280408
+
+# The Google Compute Engine zone to run the experiment in.
+cloud_compute_zone: us-central1-a
+
+# The Google Cloud Storage bucket that will store most of the experiment data.
+experiment_filestore: gs://zyr-bucket
+
+# The Google Cloud Storage bucket where HTML reports and summary data will be stored.
+report_filestore: gs://zyr-report-bucket
+
+# The connection to use to connect to the Google Cloud SQL instance.
+cloud_sql_instance_connection_name: "mcts-280408:us-central1:mcts280408=tcp:5432"
+
