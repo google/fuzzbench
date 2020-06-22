@@ -113,6 +113,7 @@ docker run \\
 -e LOCAL_EXPERIMENT=False \\
 -e C1=custom -e C2=custom2 --name=runner-container \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
+--name fuzzbench-r-test-experiment-9 \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
     _test_create_trial_instance(benchmark, expected_image, expected_target,
                                 expected_startup_script, experiment_config,
@@ -151,6 +152,7 @@ docker run \\
 -e LOCAL_EXPERIMENT=True \\
 -e C1=custom -e C2=custom2 \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
+--name fuzzbench-r-test-experiment-9 \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
     _test_create_trial_instance(benchmark, expected_image, expected_target,
                                 expected_startup_script,
