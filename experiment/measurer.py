@@ -571,10 +571,9 @@ def set_up_coverage_binaries(pool, experiment):
     """Set up coverage binaries for all benchmarks in |experiment|."""
     # Use set comprehension to select distinct benchmarks.
     benchmarks = [
-        benchmark
-        for (benchmark,
-            ) in db_utils.query(models.Trial.benchmark).distinct().filter(
-                models.Trial.experiment == experiment)
+        benchmark_tuple[0]
+        for benchmark_tuple in db_utils.query(models.Trial.benchmark).distinct(
+        ).filter(models.Trial.experiment == experiment)
     ]
 
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
