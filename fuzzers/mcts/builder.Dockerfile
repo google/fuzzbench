@@ -16,9 +16,7 @@ ARG parent_image=gcr.io/fuzzbench/base-builder
 FROM $parent_image
 
 # Set AFL_NO_X86 to skip flaky tests.
-RUN git clone https://zzyyrr:gsdxhh147...@github.com/zzyyrr/MCTS.git && \
-    cd MCTS && \
-    mv MCTS /afl && \
+RUN git clone https://zzyyrr:gsdxhh147...@github.com/zzyyrr/MCTS.git /afl && \
     cd /afl && \
     AFL_NO_X86=1 make
 
