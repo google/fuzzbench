@@ -41,7 +41,7 @@ def checkout_repo_commit(commit, repo_dir):
 def main():
     """Check out an OSS-Fuzz project repo."""
     commit = sys.argv[1]
-    if not commit or not repo_dir:
+    if not commit:
         print('Not checking out commit.')
         return 0
     src_dir = sys.argv[2]
