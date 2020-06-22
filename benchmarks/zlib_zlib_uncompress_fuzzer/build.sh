@@ -1,3 +1,4 @@
+#!/bin/bash -eu
 # Copyright 2016 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-################################################################################i
+################################################################################
 
-commit: d71dc66fa8a153fb6e7c626847095d9697a6cf42
-commit_date: 2020-05-06 00:00:00+00:00
-fuzz_target: zlib_uncompress_fuzzer
-project: zlib
-repo_path: /src/zlib
+./configure
+make -j$(nproc) clean
+make -j$(nproc) all
+
+# Do not make check as there are tests that fail when compiled with MSAN.
+# make -j$(nproc) check
+
+b=$(basename -s .cc $SRC/zlib_uncompress_fuzzer.cc)
+$CXX $CXXFLAGS -std=c++11 -I. $SRC/zlib_uncompress_fuzzer.cc -o $OUT/$b $LIB_FUZZING_ENGINE ./libz.a
+
+zip $OUT/seed_corpus.zip *.*

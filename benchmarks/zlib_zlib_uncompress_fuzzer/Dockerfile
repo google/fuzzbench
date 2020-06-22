@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-################################################################################i
+################################################################################
 
-commit: d71dc66fa8a153fb6e7c626847095d9697a6cf42
-commit_date: 2020-05-06 00:00:00+00:00
-fuzz_target: zlib_uncompress_fuzzer
-project: zlib
-repo_path: /src/zlib
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:84df55d087d82b65e3a594c01248d59f49d513d4d7362014b417e640317b11f4
+MAINTAINER inferno@chromium.org
+RUN apt-get update && apt-get install -y make autoconf automake libtool
+RUN git clone --depth 1 -b develop https://github.com/madler/zlib.git
+WORKDIR zlib
+COPY build.sh *_fuzzer.c* $SRC/
