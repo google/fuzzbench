@@ -13,6 +13,7 @@
 # limitations under the License.
 """Script for checking out a commit in an OSS-Fuzz project's repo."""
 import os
+import sys
 import subprocess
 
 
@@ -39,12 +40,11 @@ def checkout_repo_commit(commit, repo_dir):
 
 def main():
     """Check out an OSS-Fuzz project repo."""
-    repo_dir = os.getenv('CHECKOUT_COMMIT_REPO_PATH')
-    commit = os.getenv('CHECKOUT_COMMIT')
+    commit = sys.argv[1]
     if not commit or not repo_dir:
         print('Not checking out commit.')
         return 0
-    src_dir = os.getenv('SRC')
+    src_dir = sys.argv[2]
     for dir_entry in os.listdir(src_dir):
         entry_to_check = os.path.join(src_dir, dir_entry)
         if os.path.isdir(entry_to_check):

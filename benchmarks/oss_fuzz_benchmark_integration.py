@@ -22,6 +22,8 @@ import os
 import logging
 import sys
 import subprocess
+import json
+import bisect
 
 from common import utils
 from common import benchmark_utils
@@ -127,7 +129,7 @@ def _load_base_builder_docker_repo():
 	for image in result:
 		timestamp = datetime.datetime.fromisoformat(
 	    	image['timestamp']['datetime']).astimezone(datetime.timezone.utc)
-	repo.add_digest(timestamp, image['digest'])
+		repo.add_digest(timestamp, image['digest'])
 
 	return repo
 
