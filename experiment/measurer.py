@@ -570,10 +570,10 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
 def set_up_coverage_binaries(pool, experiment):
     """Set up coverage binaries for all benchmarks in |experiment|."""
     # Use set comprehension to select distinct benchmarks.
-    benchmarks = {
-        db_utils.query(models.Trial.benchmark).filter(
-        models.Trial.experiment == experiment)
-    }
+    benchmarks = [ benchmark for (benchmark,) in db_utils.query(
+        models.Trial.benchmark).distinct().filter(
+            models.Trial.experiment == experiment)]
+
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
     filesystem.create_directory(coverage_binaries_dir)
     pool.map(set_up_coverage_binary, benchmarks)
