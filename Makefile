@@ -50,3 +50,11 @@ clear-cache:
 	docker rm -vf $$(docker ps -a -q) 2>/dev/null ; \
 	docker rmi -f $$(docker images -a -q) 2>/dev/null ; \
 	docker volume rm $$(docker volume ls -q) 2>/dev/null ; true
+
+stop-trial-runner:
+	docker stop $$(docker ps -f "name=fuzzbench*" -q) 2>/dev/null ; \
+	docker rm -vf $$(docker ps -f "name=fuzzbench*" -q) 2>/dev/null ; true
+
+stop-trial-runner-experiment:
+	docker stop $$(docker ps -f "name=fuzzbench-$(experiment)*" -q) 2>/dev/null ; \
+	docker rm -vf $$(docker ps -f "name=fuzzbench-$(experiment)*" -q) 2>/dev/null ; true
