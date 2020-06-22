@@ -34,6 +34,7 @@ jobs:
           - libfuzzer_nocmp
           - manul
           - mopt
+          - mcts
 
         benchmark_type:
           - oss-fuzz
