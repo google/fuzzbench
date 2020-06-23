@@ -36,10 +36,12 @@ powerful but also more work.
 ## OSS-Fuzz benchmarks
 
 You can use most existing OSS-Fuzz projects a benchmark. First find out which
-project you want to use as a benchmark, and which commit and fuzz target you
-want to use. Then find out the date and time (UTC) of that commit and the path
-to the project's repository in the OSS-Fuzz builder image (usually it is
-/src/$PROJECT_NAME).
+project and the fuzz target you want to use as a benchmark. Then find out the commit 
+from the project repo which you want to use. Finally, find out the date and time 
+(UTC) of that commit in iso format. This can be done in the project repo as follows:
+```shell
+git --no-pager log -1 $COMMIT_HASH --format=%cd --date=iso-strict
+```
 
 Once you have this information, run
 `benchmarks/oss_fuzz_benchmark_integration.py` to copy the necessary integration
@@ -57,7 +59,9 @@ PYTHONPATH=. python3 benchmarks/oss_fuzz_benchmark_integration.py -p bloaty
 
 The script should create the benchmark directory in
 `benchmarks/$PROJECT_$FUZZ_TARGET` (unless you specify the name manually) with
-all the files needed to build the benchmark.
+all the files needed to build the benchmark. You must then remove unecessary files
+such as fuzz targets which are not used for the benchmark. Further, the `build.sh`
+file must be modified accordingly so as to only build the required fuzz target.
 
 Add the files in the directory to git (and then commit them):
 

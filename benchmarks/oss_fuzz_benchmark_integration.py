@@ -37,43 +37,41 @@ OSS_FUZZ_REPO_PATH = os.path.join(OSS_FUZZ_DIR, 'infra')
 
 
 class GitRepoManager:
-	"""Base repo manager."""
+    """Base repo manager."""
 
-	def __init__(self, repo_dir):
-	    self.repo_dir = repo_dir
+    def __init__(self, repo_dir):
+        self.repo_dir = repo_dir
 
-	def git(self, cmd):
-	    """Run a git command.
+    def git(self, cmd):
+        """Run a git command.
 
-	    Args:
-	      command: The git command as a list to be run.
+        Args:
+          command: The git command as a list to be run.
 
-	    Returns:
-	      stderr, stdout, error code.
-	    """
-	    return new_process.execute(['git'] + cmd,
-	                         cwd=self.repo_dir)
+        Returns:
+          stderr, stdout, error code.
+        """
+        return new_process.execute(['git', '-C', self.repo_dir] + cmd)
 
 
 class BaseBuilderDockerRepo:
-	"""Repo of base-builder images."""
+    """Repo of base-builder images."""
 
-	def __init__(self):
-		self.timestamps = []
-		self.digests = []
+    def __init__(self):
+	self.timestamps = []
+	self.digests = []
 
-	def add_digest(self, timestamp, digest):
-		"""Add a digest."""
-		self.timestamps.append(timestamp)
-		self.digests.append(digest)
+    def add_digest(self, timestamp, digest):
+	"""Add a digest."""
+	self.timestamps.append(timestamp)
+	self.digests.append(digest)
 
-	def find_digest(self, timestamp):
-		"""Find the latest image before the given timestamp."""
-		index = bisect.bisect_right(self.timestamps, timestamp)
-		if index > 0:
-			return self.digests[index - 1]
-
-		raise ValueError('Failed to find suitable base-builder.')
+    def find_digest(self, timestamp):
+	"""Find the latest image before the given timestamp."""
+	index = bisect.bisect_right(self.timestamps, timestamp)
+	if index > 0:
+		return self.digests[index - 1]
+	raise ValueError('Failed to find suitable base-builder.')
 
 
 def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
@@ -81,7 +79,6 @@ def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
     |project| and |commit_date|. Then copy them to |benchmark_dir|."""
     oss_fuzz_repo_manager = GitRepoManager(OSS_FUZZ_DIR)
     projects_dir = os.path.join(OSS_FUZZ_DIR, 'projects', project)
-    os.chdir(OSS_FUZZ_DIR)
     try:
         # Find an OSS-Fuzz commit that can be used to build the benchmark.
         _, oss_fuzz_commit, _ = oss_fuzz_repo_manager.git([
@@ -102,52 +99,50 @@ def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
 def get_benchmark_name(project, fuzz_target, benchmark_name=None):
     """Returns the name of the benchmark. Returns |benchmark_name| if is set.
     Otherwise returns a name based on |project| and |fuzz_target|."""
-    if benchmark_name is not None:
-        return benchmark_name
-    return project + '_' + fuzz_target
+    return benchmark_name if benchmark_name else project + '_' + fuzz_target
 
 
 def _load_base_builder_docker_repo():
-	"""Get base-image digests."""
-	gcloud_path = spawn.find_executable('gcloud')
-	if not gcloud_path:
-		logging.warning('gcloud not found in PATH.')
-		return None
+    """Get base-image digests."""
+    gcloud_path = spawn.find_executable('gcloud')
+    if not gcloud_path:
+	logging.warning('gcloud not found in PATH.')
+	return None
 
-	_, result, _ = new_process.execute([
-		gcloud_path,
-		'container',
-		'images',
-		'list-tags',
-		'gcr.io/oss-fuzz-base/base-builder',
-		'--format=json',
-		'--sort-by=timestamp',
-	])
-	result = json.loads(result)
+    _, result, _ = new_process.execute([
+	gcloud_path,
+	'container',
+	'images',
+	'list-tags',
+	'gcr.io/oss-fuzz-base/base-builder',
+	'--format=json',
+	'--sort-by=timestamp',
+    ])
+    result = json.loads(result)
 
-	repo = BaseBuilderDockerRepo()
-	for image in result:
-		timestamp = datetime.datetime.fromisoformat(
-	    	image['timestamp']['datetime']).astimezone(datetime.timezone.utc)
-		repo.add_digest(timestamp, image['digest'])
+    repo = BaseBuilderDockerRepo()
+    for image in result:
+	timestamp = datetime.datetime.fromisoformat(
+    	image['timestamp']['datetime']).astimezone(datetime.timezone.utc)
+	repo.add_digest(timestamp, image['digest'])
 
-	return repo
+    return repo
 
 
 def _replace_base_builder_digest(dockerfile_path, digest):
-  """Replace the base-builder digest in a Dockerfile."""
-  with open(dockerfile_path) as handle:
-    lines = handle.readlines()
+    """Replace the base-builder digest in a Dockerfile."""
+    with open(dockerfile_path) as handle:
+        lines = handle.readlines()
 
-  new_lines = []
-  for line in lines:
-    if line.strip().startswith('FROM'):
-      line = 'FROM gcr.io/oss-fuzz-base/base-builder@' + digest + '\n'
+    new_lines = []
+    for line in lines:
+        if line.strip().startswith('FROM'):
+            line = 'FROM gcr.io/oss-fuzz-base/base-builder@' + digest + '\n'
 
-    new_lines.append(line)
+        new_lines.append(line)
 
-  with open(dockerfile_path, 'w') as handle:
-    handle.write(''.join(new_lines))
+    with open(dockerfile_path, 'w') as handle:
+        handle.write(''.join(new_lines))
 
 
 def replace_base_builder(benchmark_dir, commit_date):
@@ -186,10 +181,9 @@ def integrate_benchmark(project,
     benchmark_name = get_benchmark_name(project, fuzz_target, benchmark_name)
     benchmark_dir = os.path.join(benchmark_utils.BENCHMARKS_DIR, benchmark_name)
     # TODO(metzman): Replace with dateutil since fromisoformat isn't supposed to
-    # work on arbitrary iso format strings. Also figure out if i this timezone
-    # replace correct.
-    commit_date = datetime.datetime.fromisoformat(commit_date).replace(
-        tzinfo=datetime.timezone.utc)
+    # work on arbitrary iso format strings.
+    commit_date = datetime.datetime.fromisoformat(commit_date).astimezone(
+        datetime.timezone.utc)
     copy_oss_fuzz_files(project, commit_date, benchmark_dir)
     replace_base_builder(benchmark_dir, commit_date)
     create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,

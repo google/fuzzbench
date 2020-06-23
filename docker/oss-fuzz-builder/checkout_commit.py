@@ -44,7 +44,11 @@ def main():
     if not commit:
         print('Not checking out commit.')
         return 0
+    # The SRC env var which is the /src directory in the oss-fuzz builder image
+    # is passed as the second argument.
     src_dir = sys.argv[2]
+    # Search for the correct project repo directory by checking out the commit
+    # in all directories under src_dir.
     for dir_entry in os.listdir(src_dir):
         entry_to_check = os.path.join(src_dir, dir_entry)
         if os.path.isdir(entry_to_check):
