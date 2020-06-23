@@ -18,10 +18,14 @@ import subprocess
 
 
 def git(git_args, repo_dir):
-    """Execute a git command with |git_args| for the repo located in
-    |repo_dir|."""
+    """
+    Execute a git command with |git_args| for the repo located in |repo_dir|.
+    Returns:
+      True if successful.
+      Raises subprocess.CalledError if unsuccessful.
+    """
     command = ['git', '-C', repo_dir] + git_args
-    return subprocess.run(command, check=True)
+    return subprocess.check_call(command, cwd=repo_dir) == 0
 
 
 def fetch_unshallow(repo_dir):
@@ -40,26 +44,27 @@ def checkout_repo_commit(commit, repo_dir):
 
 def main():
     """Check out an OSS-Fuzz project repo."""
+    if len(sys.argv) != 3:
+        print("Usage: %s <commit> <src_dir>" % sys.argv[0])
+        return 1
     commit = sys.argv[1]
+    src_dir = sys.argv[2]
     if not commit:
         print('Not checking out commit.')
         return 0
-    # The SRC env var which is the /src directory in the oss-fuzz builder image
-    # is passed as the second argument.
-    src_dir = sys.argv[2]
-    # Search for the correct project repo directory by checking out the commit
-    # in all directories under src_dir.
-    for dir_entry in os.listdir(src_dir):
-        entry_to_check = os.path.join(src_dir, dir_entry)
-        if os.path.isdir(entry_to_check):
+    # Infer the project repo directory in the oss-fuzz builder image by iteratively 
+    # checking out the commit hash (provided by integrator) in src_dir.
+    for _, directories, _ in os.walk(src_dir):
+        for directory in directories:
+            entry_to_check = os.path.join(src_dir, directory)
             try:
                 checkout_success = checkout_repo_commit(commit, entry_to_check)
             except subprocess.CalledProcessError:
                 continue
-            if not checkout_success.returncode:
+            if checkout_success:
                 return 0
     print("Checkout unsuccessful.")
-    return 0
+    return 1
 
 
 if __name__ == '__main__':

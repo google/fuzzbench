@@ -21,6 +21,8 @@ from src_analysis import diff_utils
 
 ALWAYS_BUILD_FUZZER = 'afl'
 
+# TODO: Get list of Benchmarks automatically.
+
 # Don't build php benchmark since it fills up disk in GH actions.
 OSS_FUZZ_BENCHMARKS = {
     'bloaty_fuzz_target',

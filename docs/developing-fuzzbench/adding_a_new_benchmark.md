@@ -35,10 +35,10 @@ powerful but also more work.
 
 ## OSS-Fuzz benchmarks
 
-You can use most existing OSS-Fuzz projects a benchmark. First find out which
-project and the fuzz target you want to use as a benchmark. Then find out the commit 
-from the project repo which you want to use. Finally, find out the date and time 
-(UTC) of that commit in iso format. This can be done in the project repo as follows:
+You can use most existing OSS-Fuzz projects a benchmark. First decide which project
+and the fuzz target you want to use as a benchmark. Next, find out a project commit 
+which you want to use to build the benchmark. Finally, find out the date and time 
+(UTC) of that commit in ISO format. This can be done in the project repo as follows:
 ```shell
 git --no-pager log -1 $COMMIT_HASH --format=%cd --date=iso-strict
 ```
@@ -59,35 +59,37 @@ PYTHONPATH=. python3 benchmarks/oss_fuzz_benchmark_integration.py -p bloaty
 
 The script should create the benchmark directory in
 `benchmarks/$PROJECT_$FUZZ_TARGET` (unless you specify the name manually) with
-all the files needed to build the benchmark. You must then remove unecessary files
+all the files needed to build the benchmark. You may need to remove unnecessary files
 such as fuzz targets which are not used for the benchmark. Further, the `build.sh`
-file must be modified accordingly so as to only build the required fuzz target.
+file may also need to be modified accordingly, so as to build only the required fuzz
+target.
 
-Add the files in the directory to git (and then commit them):
+Add the files in the benchmark directory to git (and then commit them):
 
 ```shell
-git add benchmarks/$BENCHMARK/*
+git add benchmarks/$BENCHMARK_NAME/*
 ```
 
-Test your integration:
+### Test your integration:
 
 ```shell
 export FUZZER_NAME=afl
 export BENCHMARK_NAME=zlib_zlib_uncompress_fuzzer
 
-make build-$FUZZER_NAME-$BENCHMARK_NAME
 make run-$FUZZER_NAME-$BENCHMARK_NAME
 ```
 
+This runs the fuzzer until interrupted (Ctrl + c).
+
 Add your benchmark to the list of OSS-Fuzz benchmarks in
-[test_fuzzer_benchmarks.py](https://github.com/google/fuzzbench/blob/master/.github/workflows/test_fuzzer_benchmarks.py)
+[test_fuzzer_benchmarks.py](https://github.com/google/fuzzbench/blob/master/.github/workflows/build_and_test_run_fuzzer_benchmarks.py)
 
 This ensures that CI tests your benchmark with all fuzzers.
 
 If everything works, submit the integration in a
 [GitHub pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
 
-### Standard benchmarks: Create benchmark files
+## Standard benchmarks: Create benchmark files
 
 ### fuzz_target.cc
 

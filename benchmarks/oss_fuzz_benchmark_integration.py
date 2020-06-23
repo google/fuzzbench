@@ -51,27 +51,27 @@ class GitRepoManager:
         Returns:
           stderr, stdout, error code.
         """
-        return new_process.execute(['git', '-C', self.repo_dir] + cmd)
+        return new_process.execute(['git'] + cmd, cwd=self.repo_dir)
 
 
 class BaseBuilderDockerRepo:
     """Repo of base-builder images."""
 
     def __init__(self):
-	self.timestamps = []
-	self.digests = []
+        self.timestamps = []
+        self.digests = []
 
     def add_digest(self, timestamp, digest):
-	"""Add a digest."""
-	self.timestamps.append(timestamp)
-	self.digests.append(digest)
+        """Add a digest."""
+        self.timestamps.append(timestamp)
+        self.digests.append(digest)
 
     def find_digest(self, timestamp):
-	"""Find the latest image before the given timestamp."""
-	index = bisect.bisect_right(self.timestamps, timestamp)
-	if index > 0:
-		return self.digests[index - 1]
-	raise ValueError('Failed to find suitable base-builder.')
+        """Find the latest image before the given timestamp."""
+        index = bisect.bisect_right(self.timestamps, timestamp)
+        if index > 0:
+            return self.digests[index - 1]
+        raise ValueError('Failed to find suitable base-builder.')
 
 
 def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
@@ -106,25 +106,25 @@ def _load_base_builder_docker_repo():
     """Get base-image digests."""
     gcloud_path = spawn.find_executable('gcloud')
     if not gcloud_path:
-	logging.warning('gcloud not found in PATH.')
-	return None
+        logging.warning('gcloud not found in PATH.')
+        return None
 
     _, result, _ = new_process.execute([
-	gcloud_path,
-	'container',
-	'images',
-	'list-tags',
-	'gcr.io/oss-fuzz-base/base-builder',
-	'--format=json',
-	'--sort-by=timestamp',
+        gcloud_path,
+        'container',
+        'images',
+        'list-tags',
+        'gcr.io/oss-fuzz-base/base-builder',
+        '--format=json',
+        '--sort-by=timestamp',
     ])
     result = json.loads(result)
 
     repo = BaseBuilderDockerRepo()
     for image in result:
-	timestamp = datetime.datetime.fromisoformat(
-    	image['timestamp']['datetime']).astimezone(datetime.timezone.utc)
-	repo.add_digest(timestamp, image['digest'])
+        timestamp = datetime.datetime.fromisoformat(
+        image['timestamp']['datetime']).astimezone(datetime.timezone.utc)
+        repo.add_digest(timestamp, image['digest'])
 
     return repo
 
