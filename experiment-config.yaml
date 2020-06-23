@@ -1,6 +1,6 @@
 trials: 4
 max_total_time: 400
 cloud_project: fuzzbench
-experiment_filestore: /~/work/fuzzbench/fuzzbench-data
-report_filestore: /~/work/fuzzbench/fuzzbench-reports
+experiment_filestore: /home/ruikangshi/work/fuzzbench/fuzzbench-data
+report_filestore: /home/ruikangshi/work/fuzzbench/fuzzbench-reports
 local_experiment: true

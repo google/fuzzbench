@@ -36,3 +36,6 @@ docs/vendor/
 
 # Auto-generated build files.
 docker/generated.mk
+
+# Config for loocal running.
+experiment-config.yaml

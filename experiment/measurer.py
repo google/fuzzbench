@@ -51,7 +51,7 @@ SnapshotMeasureRequest = collections.namedtuple(
 
 NUM_RETRIES = 3
 RETRY_DELAY = 3
-FAIL_WAIT_SECONDS = 30
+FAIL_WAIT_SECONDS = 3
 SNAPSHOT_QUEUE_GET_TIMEOUT = 1
 SNAPSHOTS_BATCH_SAVE_SIZE = 100
 
@@ -311,7 +311,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
     UNIT_BLACKLIST = collections.defaultdict(set)
 
-    def __init__(self, fuzzer: str, benchmark: str, trial_num: int, cycle: int,
+    def __init__(self, fuzzer: str, benchmark: str, trial_num: int,
                  trial_logger: logs.Logger):
         self.fuzzer = fuzzer
         self.benchmark = benchmark
@@ -326,14 +326,9 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
         self.crashes_dir = os.path.join(measurement_dir, 'crashes')
         self.profraw_dir = os.path.join(measurement_dir, 'profraws')
-        self.profdata_dir = os.path.join(measurement_dir, 'profdata')
         self.report_dir = os.path.join(measurement_dir, 'reports')
         self.trial_dir = os.path.join(work_dir, 'experiment-folders',
                                       benchmark_fuzzer_trial_dir)
-
-        # Stores the pcs that have been covered.
-        self.covered_pcs_filename = os.path.join(self.report_dir,
-                                                 'covered-pcs.txt')
 
         # Stores the files that have already been measured for a trial.
         self.measured_files_path = os.path.join(self.report_dir,
@@ -345,22 +340,18 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
                                                   'unchanged-cycles')
 
         # Store the profraw file for each cycle
-        self.profraw_file = os.path.join(self.profraw_dir,
-                                         str(cycle) + '.profraw')
+        self.profraw_file = os.path.join(self.profraw_dir, 'data.profraw')
 
         # Store the profdata file for the current trial
-        self.profdata_file = os.path.join(self.profdata_dir, 'data.profdata')
+        self.profdata_file = os.path.join(self.report_dir, 'data.profdata')
 
-        # Store the coverage information
-        self.summary_file = os.path.join(self.profdata_dir, 'summary.txt')
+        # Store the coverage information in json form
+        self.summary_file = os.path.join(self.report_dir, 'summary.txt')
 
     def initialize_measurement_dirs(self):
         """Initialize directories that will be needed for measuring
         coverage."""
-        for directory in [
-                self.corpus_dir, self.profraw_dir, self.crashes_dir,
-                self.profdata_dir
-        ]:
+        for directory in [self.corpus_dir, self.profraw_dir, self.crashes_dir]:
             filesystem.recreate_directory(directory)
         filesystem.create_directory(self.report_dir)
 
@@ -383,20 +374,17 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             summary_data = coverage_data["totals"]
             lines_coverage_data = summary_data["lines"]
             lines_covered = lines_coverage_data["covered"]
+            self.logger.info("current_coverage=%d",lines_covered)
             return lines_covered
 
     def generate_profdata(self):
         """Generate .profdata file from .profraw file"""
-        profraw_files = os.path.join(self.profraw_dir, '*.profraw')
-        command = [
-            'llvm-profdata',
-            'merge',
-            '-sparse',
-            profraw_files,
-            '-o',
-            self.profdata_file,
-        ]
-        result = new_process.execute(command)
+        files_to_merge = [self.profraw_file]
+        if os.path.isfile(self.profdata_file):
+            files_to_merge = [self.profraw_file, self.profdata_file]
+        command = ['llvm-profdata', 'merge', '-sparse',] + files_to_merge + ['-o', self.profdata_file]
+        env = os.environ.copy()
+        result = new_process.execute(command, env=env)
 
         if result.retcode != 0:
             self.logger.error('generate profdata failed.')
@@ -407,10 +395,11 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         command = [
             'llvm-cov', 'export', '-format=text', '-summary-only',
             coverage_binary,
-            '-instr-profile=%s' % self.profdata_file, '>', self.summary_file
+            '-instr-profile=%s' % self.profdata_file
         ]
-        result = new_process.execute(command)
-
+        output_file_path = self.summary_file
+        with open(output_file_path, 'w') as output_file:
+            result = new_process.execute(command, output_file=output_file)
         if result.retcode != 0:
             self.logger.error('generate summary file failed.')
 
@@ -537,7 +526,7 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
                                       'trial_id': str(trial_num),
                                       'cycle': str(cycle),
                                   })
-    snapshot_measurer = SnapshotMeasurer(fuzzer, benchmark, trial_num, cycle,
+    snapshot_measurer = SnapshotMeasurer(fuzzer, benchmark, trial_num,
                                          snapshot_logger)
 
     measuring_start_time = time.time()
@@ -576,7 +565,6 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     # Generate profdata and transform it into json form
     snapshot_measurer.generate_profdata()
     snapshot_measurer.generate_summary()
-
     # Get the coverage of the new corpus units.
     lines_covered = snapshot_measurer.get_current_coverage()
     snapshot = models.Snapshot(time=this_time,

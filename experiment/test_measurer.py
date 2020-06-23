@@ -59,7 +59,7 @@ def db_experiment(experiment_config, db):
 def test_get_current_coverage(fs, experiment):
     """Tests that get_current_coverage read the correct data from json file"""
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
-                                                  CYCLE, SNAPSHOT_LOGGER)
+                                                  SNAPSHOT_LOGGER)
     json_summary_file = get_test_data_path('json_summary.txt')
     fs.add_real_file(json_summary_file, read_only=False)
     snapshot_measurer.summary_file = json_summary_file
@@ -72,7 +72,7 @@ def test_generate_profdata(mocked_execute, experiment):
     """Tests that generate_profdata can run the correct command"""
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
-                                                  CYCLE, SNAPSHOT_LOGGER)
+                                                  SNAPSHOT_LOGGER)
     snapshot_measurer.profraw_dir = "/profraw"
     snapshot_measurer.profdata_file = "/profdata/default.profdata"
     snapshot_measurer.generate_profdata()
@@ -97,7 +97,7 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
     mocked_get_coverage_binary.return_value = coverage_binary_path
 
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
-                                                  CYCLE, SNAPSHOT_LOGGER)
+                                                  SNAPSHOT_LOGGER)
     snapshot_measurer.summary_file = "/profdata/summary.txt"
     snapshot_measurer.profdata_file = "/profdata/default.profdata"
     snapshot_measurer.generate_summary()
@@ -164,7 +164,7 @@ def test_is_cycle_unchanged_doesnt_exist(experiment):
     """Test that is_cycle_unchanged can properly determine if a cycle is
     unchanged or not when it needs to copy the file for the first time."""
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
-                                                  CYCLE, SNAPSHOT_LOGGER)
+                                                  SNAPSHOT_LOGGER)
     this_cycle = 1
     with test_utils.mock_popen_ctx_mgr(returncode=1):
         assert not snapshot_measurer.is_cycle_unchanged(this_cycle)
@@ -176,7 +176,7 @@ def test_is_cycle_unchanged_first_copy(mocked_read, mocked_cp, experiment):
     """Test that is_cycle_unchanged can properly determine if a cycle is
     unchanged or not when it needs to copy the file for the first time."""
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
-                                                  CYCLE, SNAPSHOT_LOGGER)
+                                                  SNAPSHOT_LOGGER)
     this_cycle = 100
     unchanged_cycles_file_contents = (
         '\n'.join([str(num) for num in range(10)] + [str(this_cycle)]))
@@ -191,7 +191,7 @@ def test_is_cycle_unchanged_update(fs, experiment):
     """Test that is_cycle_unchanged can properly determine that a
     cycle has changed when it has the file but needs to update it."""
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
-                                                  CYCLE, SNAPSHOT_LOGGER)
+                                                  SNAPSHOT_LOGGER)
 
     this_cycle = 100
     initial_unchanged_cycles_file_contents = (
@@ -215,7 +215,7 @@ def test_is_cycle_unchanged_skip_cp(mocked_cp, fs, experiment):
     """Check that is_cycle_unchanged doesn't call filestore_utils.cp
     unnecessarily."""
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
-                                                  CYCLE, SNAPSHOT_LOGGER)
+                                                  SNAPSHOT_LOGGER)
     this_cycle = 100
     initial_unchanged_cycles_file_contents = (
         '\n'.join([str(num) for num in range(10)] + [str(this_cycle + 1)]))
@@ -246,7 +246,7 @@ def test_run_cov_new_units(mocked_execute, fs, environ):
     }
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
-                                                  CYCLE, SNAPSHOT_LOGGER)
+                                                  SNAPSHOT_LOGGER)
     snapshot_measurer.initialize_measurement_dirs()
     shared_units = ['shared1', 'shared2']
     fs.create_file(snapshot_measurer.measured_files_path,
@@ -327,9 +327,8 @@ class TestIntegrationMeasurement:
                              experiment=os.environ['EXPERIMENT'])
         db_utils.add_all([trial])
 
-        snapshot_measurer = measurer.SnapshotMeasurer(trial.fuzzer,
-                                                      trial.benchmark, trial.id,
-                                                      CYCLE, SNAPSHOT_LOGGER)
+        snapshot_measurer = measurer.SnapshotMeasurer(trial.fuzzer, trial.benchmark,
+                                                      trial.id, SNAPSHOT_LOGGER)
 
         # Set up the snapshot archive.
         cycle = 1

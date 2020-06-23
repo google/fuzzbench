@@ -15,7 +15,9 @@
 FROM gcr.io/fuzzbench/base-image
 
 ENV WORK /work
+ENV SRC /src
 WORKDIR $WORK
+RUN mkdir -p $SRC && chmod a+rwx $SRC
 
 # Install runtime dependencies for benchmarks, easy json parsing.
 RUN apt-get update -y && apt-get install -y \
@@ -38,5 +40,10 @@ RUN DOCKER_VERSION=18.09.7 && \
 RUN curl https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 > \
     /usr/local/bin/cloud_sql_proxy
 RUN chmod +x /usr/local/bin/cloud_sql_proxy
+
+# Install llvm tools for coverage build.
+COPY checkout_build_install_llvm_tools.sh $WORK/
+RUN $WORK/checkout_build_install_llvm_tools.sh
+RUN rm $WORK/checkout_build_install_llvm_tools.sh
 
 COPY startup-dispatcher.sh $WORK/
