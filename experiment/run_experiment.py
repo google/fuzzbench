@@ -67,16 +67,19 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     config = yaml_utils.read(config_filename)
     filestore_params = {'experiment_filestore', 'report_filestore'}
     cloud_config = {'cloud_compute_zone', 'cloud_project'}
+
+    # TODO: we may make `docker_registry` required in both settings in future.
     local_config = {'docker_registry'}
+
     string_params = cloud_config.union(filestore_params).union(local_config)
     int_params = {'trials', 'max_total_time'}
     required_params = int_params.union(filestore_params)
 
     local_experiment = config.get('local_experiment', False)
-    if not local_experiment:
-        required_params = required_params.union(cloud_config)
-    else:
+    if local_experiment:
         required_params = required_params.union(local_config)
+    else:
+        required_params = required_params.union(cloud_config)
 
     valid = True
     if 'cloud_experiment_bucket' in config or 'cloud_web_bucket' in config:
