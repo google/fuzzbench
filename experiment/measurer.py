@@ -51,7 +51,7 @@ SnapshotMeasureRequest = collections.namedtuple(
 
 NUM_RETRIES = 3
 RETRY_DELAY = 3
-FAIL_WAIT_SECONDS = 3
+FAIL_WAIT_SECONDS = 30
 SNAPSHOT_QUEUE_GET_TIMEOUT = 1
 SNAPSHOTS_BATCH_SAVE_SIZE = 100
 
@@ -584,7 +584,6 @@ def set_up_coverage_binaries(pool, experiment):
 def set_up_coverage_binary(benchmark):
     """Set up coverage binaries for |benchmark|."""
     initialize_logs()
-    logger.info("Setting up coverage binaries for " + str(benchmark))
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
     benchmark_coverage_binary_dir = coverage_binaries_dir / benchmark
     filesystem.create_directory(benchmark_coverage_binary_dir)

@@ -43,7 +43,7 @@ MAX_CONCURRENT_BUILDS = 30
 
 # Build fail retries and wait interval.
 NUM_BUILD_RETRIES = 3
-BUILD_FAIL_WAIT = 5 * 6
+BUILD_FAIL_WAIT = 5 * 60
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 
