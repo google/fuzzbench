@@ -54,8 +54,7 @@ clear-cache:
 experiment=*
 
 stop-trials:
-	# docker rm -vf $$(docker ps -f "name=fuzzbench-r-$(experiment)-[0-9]+$$" -q) 2>/dev/null ; true
-	docker ps -f "name=fuzzbench-r-$(experiment)-[0-9]+$$"
+	docker rm -vf $$(docker ps -f "name=fuzzbench-r-$(experiment)-[0-9]+$$" -q) 2>/dev/null ; true
 
 stop-experiment: stop-trials
 	docker rm -vf $$(docker ps -f "name=fuzzbench-d-$(experiment)$$" -q) 2>/dev/null ; true
