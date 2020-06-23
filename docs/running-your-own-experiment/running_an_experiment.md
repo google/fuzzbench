@@ -56,6 +56,9 @@ trials: 5
 # 1 day = 24 * 60 * 60 = 86400
 max_total_time: 86400
 
+# The docker registry for your fuzzbench experiments.
+docker_registry: gcr.io/fuzzbench
+
 # The name of your Google Cloud project.
 cloud_project: $PROJECT_NAME
 
