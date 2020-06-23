@@ -716,10 +716,6 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
     provided and return the result."""
     fuzzer_config = fuzzer_config_utils.get_by_variant_name(fuzzer)
     local_experiment = experiment_utils.is_local_experiment()
-    if not local_experiment:
-        experiment_config['docker_registry'] = (
-            experiment_utils.get_base_docker_tag(
-                experiment_config['cloud_project']))
     docker_image_url = benchmark_utils.get_runner_image_url(
         benchmark, fuzzer_config['fuzzer'],
         experiment_config['docker_registry'])

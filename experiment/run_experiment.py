@@ -125,6 +125,8 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
         raise ValidationError('Config: %s is invalid.' % config_filename)
 
     config['local_experiment'] = local_experiment
+
+    # TODO: we may make `docker_registry` required in the future.
     if not local_experiment and 'docker_registry' not in config:
         config['docker_registry'] = experiment_utils.get_base_docker_tag(
             config['cloud_project'])
