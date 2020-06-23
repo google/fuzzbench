@@ -343,14 +343,14 @@ class LocalDispatcher:
         sql_database_arg = 'SQL_DATABASE_URL=sqlite:///{}'.format(
             os.path.join(experiment_filestore_path, 'local.db'))
 
-        base_docker_tag = self.config['docker_registry']
+        docker_registry = self.config['docker_registry']
         set_instance_name_arg = 'INSTANCE_NAME={instance_name}'.format(
             instance_name=self.instance_name)
         set_experiment_arg = 'EXPERIMENT={experiment}'.format(
             experiment=self.config['experiment'])
         shared_experiment_filestore_arg = '{0}:{0}'.format(
             self.config['experiment_filestore'])
-        set_docker_registry_arg = 'DOCKER_REGISTRY={}'.format(base_docker_tag)
+        set_docker_registry_arg = 'DOCKER_REGISTRY={}'.format(docker_registry)
         set_experiment_filestore_arg = (
             'EXPERIMENT_FILESTORE={experiment_filestore}'.format(
                 experiment_filestore=self.config['experiment_filestore']))
@@ -359,8 +359,8 @@ class LocalDispatcher:
         set_report_filestore_arg = (
             'REPORT_FILESTORE={report_filestore}'.format(
                 report_filestore=self.config['report_filestore']))
-        docker_image_url = '{base_docker_tag}/dispatcher-image'.format(
-            base_docker_tag=base_docker_tag)
+        docker_image_url = '{docker_registry}/dispatcher-image'.format(
+            docker_registry=docker_registry)
         command = [
             'docker',
             'run',
@@ -425,7 +425,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
         gcloud.robust_begin_gcloud_ssh(self.instance_name,
                                        self.config['cloud_compute_zone'])
 
-        base_docker_tag = self.config['docker_registry']
+        docker_registry = self.config['docker_registry']
         cloud_sql_instance_connection_name = (
             self.config['cloud_sql_instance_connection_name'])
 
@@ -435,7 +435,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
             '-e INSTANCE_NAME="{instance_name}" '
             '-e EXPERIMENT="{experiment}" '
             '-e CLOUD_PROJECT="{cloud_project}" '
-            '-e DOCKER_REGISTRY="{base_docker_tag}" '
+            '-e DOCKER_REGISTRY="{docker_registry}" '
             '-e EXPERIMENT_FILESTORE="{experiment_filestore}" '
             '-e POSTGRES_PASSWORD="{postgres_password}" '
             '-e CLOUD_SQL_INSTANCE_CONNECTION_NAME='
@@ -443,7 +443,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
             '--cap-add=SYS_PTRACE --cap-add=SYS_NICE '
             '-v /var/run/docker.sock:/var/run/docker.sock '
             '--name=dispatcher-container '
-            '{base_docker_tag}/dispatcher-image '
+            '{docker_registry}/dispatcher-image '
             '/work/startup-dispatcher.sh'
         ).format(
             instance_name=self.instance_name,
@@ -456,7 +456,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
             experiment_filestore=self.config['experiment_filestore'],
             cloud_sql_instance_connection_name=(
                 cloud_sql_instance_connection_name),
-            base_docker_tag=base_docker_tag,
+            docker_registry=docker_registry,
         )
         return gcloud.ssh(self.instance_name,
                           command=command,

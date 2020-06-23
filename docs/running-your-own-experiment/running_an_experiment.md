@@ -57,7 +57,8 @@ trials: 5
 max_total_time: 86400
 
 # The docker registry for your fuzzbench experiments.
-docker_registry: gcr.io/fuzzbench
+# In default, we use gcr.io/fuzzbench if using Google Cloud.
+docker_registry: gcr.io/$FUZZBENCH
 
 # The name of your Google Cloud project.
 cloud_project: $PROJECT_NAME
