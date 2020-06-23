@@ -52,8 +52,8 @@ def main():
     if not commit:
         print('Not checking out commit.')
         return 0
-    # Infer the project repo directory in the oss-fuzz builder image by iteratively 
-    # checking out the commit hash (provided by integrator) in src_dir.
+    # Infer the project repo directory in the oss-fuzz builder image by
+    # iteratively checking out the commit (provided by integrator) in src_dir.
     for _, directories, _ in os.walk(src_dir):
         for directory in directories:
             entry_to_check = os.path.join(src_dir, directory)
