@@ -29,8 +29,8 @@ def stop_experiment(experiment_name, experiment_config_filename):
     experiment_config = yaml_utils.read(experiment_config_filename)
 
     if experiment_config.get('local_experiment', False):
-        logger.info('Local experiment stopped.')
-        return 0
+        raise NotImplementedError(
+            'Local experiment stop logic is not implemented.')
 
     instances = gcloud.list_instances()
 

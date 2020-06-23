@@ -84,7 +84,7 @@ def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-man
     if benchmark_name == 'bloaty_fuzz_target':
         run_options = ["-L", "0"]
     elif benchmark_name == 'curl_curl_fuzzer_http':
-        run_options = ["-L", "-0"]
+        run_options = ["-L", "0"]
     elif benchmark_name == 'jsoncpp_jsoncpp_fuzzer':
         run_options = ["-L", "0"]
     elif benchmark_name == 'lcms-2017-03-21':

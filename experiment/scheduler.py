@@ -598,9 +598,13 @@ def schedule_loop(experiment_config: dict):
         handle_preempted = False
         while not all_trials_ended(experiment):
             try:
-                if not handle_preempted and not any_pending_trials(experiment):
-                    # Only start handling preempted instances once every initial
-                    # trial was started. This ensures that .
+                if (not local_experiment and not handle_preempted and
+                        not any_pending_trials(experiment)):
+                    # This ensures that:
+                    # 1. handle_preempted will not becomes True when running
+                    #    locally.
+                    # 2. Only start handling preempted instances once every
+                    #    initial trial was started.
                     handle_preempted = True
 
                 schedule(experiment_config, pool)
