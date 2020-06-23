@@ -67,18 +67,13 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     config = yaml_utils.read(config_filename)
     filestore_params = {'experiment_filestore', 'report_filestore'}
     cloud_config = {'cloud_compute_zone', 'cloud_project'}
-
-    # TODO: we may make `docker_registry` required in both settings in future.
-    local_config = {'docker_registry'}
-
-    string_params = cloud_config.union(filestore_params).union(local_config)
+    docker_config = {'docker_registry'}
+    string_params = cloud_config.union(filestore_params).union(docker_config)
     int_params = {'trials', 'max_total_time'}
-    required_params = int_params.union(filestore_params)
+    required_params = int_params.union(filestore_params).union(docker_config)
 
     local_experiment = config.get('local_experiment', False)
-    if local_experiment:
-        required_params = required_params.union(local_config)
-    else:
+    if not local_experiment:
         required_params = required_params.union(cloud_config)
 
     valid = True
@@ -128,12 +123,6 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
         raise ValidationError('Config: %s is invalid.' % config_filename)
 
     config['local_experiment'] = local_experiment
-
-    # TODO: we may make `docker_registry` required in the future.
-    if not local_experiment and 'docker_registry' not in config:
-        config['docker_registry'] = experiment_utils.get_base_docker_tag(
-            config['cloud_project'])
-
     return config
 
 
