@@ -15,7 +15,6 @@
 
 import os
 import shutil
-import subprocess
 from unittest import mock
 import queue
 
@@ -200,7 +199,7 @@ def test_is_cycle_unchanged_no_file(mocked_cp, fs, experiment):
     # Make sure we log if there is no unchanged-cycles file.
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)
-    mocked_cp.side_effect = subprocess.CalledProcessError(1, ['fakecommand'])
+    mocked_cp.return_value = new_process.ProcessResult(1, '', False)
     assert not snapshot_measurer.is_cycle_unchanged(0)
 
 

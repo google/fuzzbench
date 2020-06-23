@@ -345,13 +345,11 @@ class LocalDispatcher:
 
     def start(self):
         """Start the experiment on the dispatcher."""
-        shared_volume_dir = os.path.abspath('shared-volume')
-        if not os.path.exists(shared_volume_dir):
-            os.mkdir(shared_volume_dir)
-        shared_volume_volume_arg = '{0}:{0}'.format(shared_volume_dir)
-        shared_volume_env_arg = 'SHARED_VOLUME={}'.format(shared_volume_dir)
+        experiment_filestore_path = os.path.abspath(
+            self.config['experiment_filestore'])
+        filesystem.create_directory(experiment_filestore_path)
         sql_database_arg = 'SQL_DATABASE_URL=sqlite:///{}'.format(
-            os.path.join(shared_volume_dir, 'local.db'))
+            os.path.join(experiment_filestore_path, 'local.db'))
 
         base_docker_tag = self.config['docker_registry']
         set_instance_name_arg = 'INSTANCE_NAME={instance_name}'.format(
@@ -379,13 +377,9 @@ class LocalDispatcher:
             '-v',
             '/var/run/docker.sock:/var/run/docker.sock',
             '-v',
-            shared_volume_volume_arg,
-            '-v',
             shared_experiment_filestore_arg,
             '-v',
             shared_report_filestore_arg,
-            '-e',
-            shared_volume_env_arg,
             '-e',
             set_instance_name_arg,
             '-e',
