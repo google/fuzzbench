@@ -387,7 +387,7 @@ class LocalDispatcher:
             'LOCAL_EXPERIMENT=True',
             '--cap-add=SYS_PTRACE',
             '--cap-add=SYS_NICE',
-            '--name=fuzzbench-' + self.instance_name,
+            '--name=' + self.instance_name,
             docker_image_url,
             '/bin/bash',
             '-c',
@@ -441,7 +441,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
             '"{cloud_sql_instance_connection_name}" '
             '--cap-add=SYS_PTRACE --cap-add=SYS_NICE '
             '-v /var/run/docker.sock:/var/run/docker.sock '
-            '--name=fuzzbench-"{instance_name}" '
+            '--name="{instance_name}" '
             '{base_docker_tag}/dispatcher-image '
             '/work/startup-dispatcher.sh'
         ).format(
