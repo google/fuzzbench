@@ -41,7 +41,7 @@ docker run \
 -e REPORT_FILESTORE={{report_filestore}} {% if local_experiment %}-v {{report_filestore}}:{{report_filestore}} {% endif %}\
 -e FUZZ_TARGET={{fuzz_target}} \
 -e LOCAL_EXPERIMENT={{local_experiment}} \
-{{additional_env}} {% if not local_experiment %}--name=runner-container {% endif %}\
+{{additional_env}} \
 --cap-add SYS_NICE --cap-add SYS_PTRACE \
---name fuzzbench-{{instance_name}} \
+--name {{instance_name}} \
 {{docker_image_url}} 2>&1 | tee /tmp/runner-log.txt

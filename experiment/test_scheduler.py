@@ -111,7 +111,7 @@ docker run \\
 -e REPORT_FILESTORE=gs://web-reports \\
 -e FUZZ_TARGET={oss_fuzz_target} \\
 -e LOCAL_EXPERIMENT=False \\
--e C1=custom -e C2=custom2 --name=runner-container \\
+-e C1=custom -e C2=custom2 \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
 --name fuzzbench-r-test-experiment-9 \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''

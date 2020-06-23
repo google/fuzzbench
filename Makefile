@@ -54,7 +54,7 @@ clear-cache:
 EXPERIMENT := "*"
 
 stop-trials:
-	docker rm --volumes --force $$(docker ps --filter "name=fuzzbench-r-$(EXPERIMENT)-[0-9]+$$" -q)
+	docker rm --volumes --force $$(docker ps --filter "name=r-$(EXPERIMENT)-[0-9]+$$" -q)
 
 stop-experiment: stop-trials
-	docker rm --volumes --force $$(docker ps -f "name=fuzzbench-d-$(EXPERIMENT)$$" -q)
+	docker rm --volumes --force $$(docker ps -f "name=d-$(EXPERIMENT)$$" -q)
