@@ -39,9 +39,9 @@ from database import utils as db_utils
 # Give the trial runner a little extra time to shut down and account for how
 # long it can take to actually start running once an instance is started. 5
 # minutes is an arbitrary amount of time.
-GRACE_TIME_SECONDS = 5 * 60
+GRACE_TIME_SECONDS = 5 * 6
 
-FAIL_WAIT_SECONDS = 10 * 60
+FAIL_WAIT_SECONDS = 10 * 6
 
 logger = logs.Logger('scheduler')  # pylint: disable=invalid-name
 
@@ -717,7 +717,6 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
     """Render the startup script using the template and the parameters
     provided and return the result."""
     fuzzer_config = fuzzer_config_utils.get_by_variant_name(fuzzer)
-    local_experiment = experiment_utils.is_local_experiment()
     docker_image_url = benchmark_utils.get_runner_image_url(
         benchmark, fuzzer_config['fuzzer'],
         experiment_config['docker_registry'])
@@ -732,6 +731,7 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
             for k, v in fuzzer_config['env'].items()
         ])
 
+    local_experiment = experiment_utils.is_local_experiment()
     template = JINJA_ENV.get_template('runner-startup-script-template.sh')
     kwargs = {
         'instance_name': instance_name,
