@@ -1,4 +1,4 @@
-trials: 4
+trials: 1
 max_total_time: 400
 cloud_project: fuzzbench
 experiment_filestore: /home/ruikangshi/work/fuzzbench/fuzzbench-data

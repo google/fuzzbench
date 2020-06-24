@@ -372,17 +372,17 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             coverage_info = json.load(summary)
             coverage_data = coverage_info["data"][0]
             summary_data = coverage_data["totals"]
-            lines_coverage_data = summary_data["lines"]
-            lines_covered = lines_coverage_data["covered"]
-            self.logger.info("current_coverage=%d",lines_covered)
-            return lines_covered
+            region_coverage_data = summary_data["regions"]
+            region_covered = region_coverage_data["covered"]
+            return region_covered
 
     def generate_profdata(self):
         """Generate .profdata file from .profraw file"""
         files_to_merge = [self.profraw_file]
         if os.path.isfile(self.profdata_file):
             files_to_merge = [self.profraw_file, self.profdata_file]
-        command = ['llvm-profdata', 'merge', '-sparse',] + files_to_merge + ['-o', self.profdata_file]
+        command = ['llvm-profdata', 'merge', '-sparse'
+                  ] + files_to_merge + ['-o', self.profdata_file]
         env = os.environ.copy()
         result = new_process.execute(command, env=env)
 
@@ -566,20 +566,19 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     snapshot_measurer.generate_profdata()
     snapshot_measurer.generate_summary()
     # Get the coverage of the new corpus units.
-    lines_covered = snapshot_measurer.get_current_coverage()
+    region_covered = snapshot_measurer.get_current_coverage()
     snapshot = models.Snapshot(time=this_time,
                                trial_id=trial_num,
-                               edges_covered=lines_covered)
+                               edges_covered=region_covered)
 
     # Record the new corpus files.
     snapshot_measurer.update_measured_files()
 
     # Archive crashes directory.
     snapshot_measurer.archive_crashes(cycle)
-
-    measuring_time = round(time.time() - measuring_start_time, 2)
-    snapshot_logger.info('Measured cycle: %d in %d seconds.', cycle,
-                         measuring_time)
+    measuring_time = round(time.time() - measuring_start_time, 4)
+    snapshot_logger.info('Measured cycle: %d in %s seconds.', cycle,
+                         str(measuring_time))
     return snapshot
 
 
