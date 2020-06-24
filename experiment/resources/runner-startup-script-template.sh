@@ -36,7 +36,7 @@ docker run \
 -e EXPERIMENT={{experiment}} \
 -e TRIAL_ID={{trial_id}} \
 -e MAX_TOTAL_TIME={{max_total_time}} \
--e CLOUD_PROJECT={{cloud_project}} {% if not local_experiment %}-e CLOUD_COMPUTE_ZONE={{cloud_compute_zone}} {% endif %}\
+-e DOCKER_REGISTRY={{docker_registry}} {% if not local_experiment %}-e CLOUD_PROJECT={{cloud_project}} -e CLOUD_COMPUTE_ZONE={{cloud_compute_zone}} {% endif %}\
 -e EXPERIMENT_FILESTORE={{experiment_filestore}} {% if local_experiment %}-v {{experiment_filestore}}:{{experiment_filestore}} {% endif %}\
 -e REPORT_FILESTORE={{report_filestore}} {% if local_experiment %}-v {{report_filestore}}:{{report_filestore}} {% endif %}\
 -e FUZZ_TARGET={{fuzz_target}} \

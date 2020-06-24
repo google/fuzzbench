@@ -52,6 +52,8 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
             'experiment_filestore': 'gs://bucket',
             'report_filestore': 'gs://web-bucket',
             'experiment': 'experiment-name',
+            'docker_registry': 'gcr.io/fuzzbench',
+            'cloud_project': 'fuzzbench',
             'cloud_compute_zone': 'us-central1-a',
             'trials': 10,
             'max_total_time': 1000,
