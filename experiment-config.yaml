@@ -1,6 +1,0 @@
-trials: 1
-max_total_time: 400
-cloud_project: fuzzbench
-experiment_filestore: /home/ruikangshi/work/fuzzbench/fuzzbench-data
-report_filestore: /home/ruikangshi/work/fuzzbench/fuzzbench-reports
-local_experiment: true

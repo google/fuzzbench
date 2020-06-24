@@ -35,7 +35,7 @@ from experiment import measurer
 from experiment import reporter
 from experiment import scheduler
 
-LOOP_WAIT_SECONDS = 5 * 6
+LOOP_WAIT_SECONDS = 5 * 60
 
 # TODO(metzman): Convert more uses of os.path.join to exp_path.path.
 
