@@ -53,6 +53,7 @@ clear-cache:
 
 EXPERIMENT := .*
 
+# This target helps developers clean stale trials manually for local experiment.
 stop-trials:
 	- docker rm --volumes --force $$(docker ps -f "name=r-$(EXPERIMENT)-[0-9]+$$" -q)
 
