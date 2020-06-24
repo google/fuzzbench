@@ -350,7 +350,8 @@ class LocalDispatcher:
             experiment=self.config['experiment'])
         shared_experiment_filestore_arg = '{0}:{0}'.format(
             self.config['experiment_filestore'])
-        # TODO: (#484) Use config in function args or set as environment variables.
+        # TODO: (#484) Use config in function args or set as environment
+        # variables.
         set_docker_registry_arg = 'DOCKER_REGISTRY={}'.format(docker_registry)
         set_experiment_filestore_arg = (
             'EXPERIMENT_FILESTORE={experiment_filestore}'.format(
