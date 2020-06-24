@@ -51,10 +51,10 @@ clear-cache:
 	docker rmi -f $$(docker images -a -q) 2>/dev/null ; \
 	docker volume rm $$(docker volume ls -q) 2>/dev/null ; true
 
-EXPERIMENT := *
+EXPERIMENT := .*
 
 stop-trials:
-	docker rm --volumes --force $$(docker ps --filter "name=r-$(EXPERIMENT)-[0-9]+$$" -q) 2>/dev/null ; true
+	docker rm --volumes --force $$(docker ps -f "name=r-$(EXPERIMENT)-[0-9]+$$" -q)
 
 stop-experiment: stop-trials
-	docker rm --volumes --force $$(docker ps -f "name=d-$(EXPERIMENT)$$" -q) 2>/dev/null ; true
+	docker rm --volumes --force $$(docker ps -f "name=d-$(EXPERIMENT)$$" -q)
