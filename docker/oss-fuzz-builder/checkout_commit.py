@@ -24,7 +24,7 @@ def git(git_args, repo_dir):
       True if successful.
       Raises subprocess.CalledError if unsuccessful.
     """
-    command = ['git', '-C', repo_dir] + git_args
+    command = ['git'] + git_args
     return subprocess.check_call(command, cwd=repo_dir) == 0
 
 

@@ -49,7 +49,7 @@ class GitRepoManager:
           command: The git command as a list to be run.
 
         Returns:
-          stderr, stdout, error code.
+          new_process.ProcessResult
         """
         return new_process.execute(['git'] + cmd, cwd=self.repo_dir)
 
