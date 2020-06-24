@@ -47,6 +47,15 @@ docs-serve:
 
 clear-cache:
 	docker stop $$(docker ps -a -q) 2>/dev/null ; \
-	docker rm -vf $$(docker ps -a -q) 2>/dev/null ; \
+	docker rm --volumes --force $$(docker ps -a -q) 2>/dev/null ; \
 	docker rmi -f $$(docker images -a -q) 2>/dev/null ; \
 	docker volume rm $$(docker volume ls -q) 2>/dev/null ; true
+
+EXPERIMENT := .*
+
+# This target helps developers clean stale trials manually for local experiment.
+stop-trials:
+	- docker rm --volumes --force $$(docker ps -f "name=r-$(EXPERIMENT)-[0-9]+$$" -q)
+
+stop-experiment: stop-trials
+	- docker rm --volumes --force $$(docker ps -f "name=d-$(EXPERIMENT)$$" -q)

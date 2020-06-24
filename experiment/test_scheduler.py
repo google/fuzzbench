@@ -111,8 +111,9 @@ docker run \\
 -e REPORT_FILESTORE=gs://web-reports \\
 -e FUZZ_TARGET={oss_fuzz_target} \\
 -e LOCAL_EXPERIMENT=False \\
--e C1=custom -e C2=custom2 --name=runner-container \\
+-e C1=custom -e C2=custom2 \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
+--name r-test-experiment-9 \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
     _test_create_trial_instance(benchmark, expected_image, expected_target,
                                 expected_startup_script, experiment_config,
@@ -151,6 +152,7 @@ docker run \\
 -e LOCAL_EXPERIMENT=True \\
 -e C1=custom -e C2=custom2 \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
+--name r-test-experiment-9 \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
     _test_create_trial_instance(benchmark, expected_image, expected_target,
                                 expected_startup_script,

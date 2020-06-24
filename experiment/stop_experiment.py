@@ -19,6 +19,7 @@ import sys
 from common import experiment_utils
 from common import logs
 from common import gcloud
+from common import new_process
 from common import yaml_utils
 
 logger = logs.Logger('stop_experiment')  # pylint: disable=invalid-name
@@ -29,8 +30,12 @@ def stop_experiment(experiment_name, experiment_config_filename):
     experiment_config = yaml_utils.read(experiment_config_filename)
 
     if experiment_config.get('local_experiment', False):
-        raise NotImplementedError(
-            'Local experiment stop logic is not implemented.')
+        new_process.execute(
+            ['make', 'stop-experiment', "EXPERIMENT=" + str(experiment_name)],
+            expect_zero=False)
+        logger.info('Local experiment is stopped and all related docker '
+                    'containers are cleaned.')
+        return 0
 
     instances = gcloud.list_instances()
 

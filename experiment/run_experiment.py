@@ -387,7 +387,7 @@ class LocalDispatcher:
             'LOCAL_EXPERIMENT=True',
             '--cap-add=SYS_PTRACE',
             '--cap-add=SYS_NICE',
-            '--name=dispatcher-container',
+            '--name=' + self.instance_name,
             docker_image_url,
             '/bin/bash',
             '-c',
@@ -401,7 +401,9 @@ class LocalDispatcher:
             '${WORK}/src/experiment/dispatcher.py || '
             '/bin/bash'  # Open shell if experiment fails.
         ]
-        return new_process.execute(command, write_to_stdout=True)
+        return new_process.execute(command,
+                                   write_to_stdout=True,
+                                   expect_zero=False)
 
 
 class GoogleCloudDispatcher(BaseDispatcher):
@@ -441,7 +443,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
             '"{cloud_sql_instance_connection_name}" '
             '--cap-add=SYS_PTRACE --cap-add=SYS_NICE '
             '-v /var/run/docker.sock:/var/run/docker.sock '
-            '--name=dispatcher-container '
+            '--name="{instance_name}" '
             '{base_docker_tag}/dispatcher-image '
             '/work/startup-dispatcher.sh'
         ).format(
