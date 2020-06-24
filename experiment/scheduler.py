@@ -608,7 +608,7 @@ def schedule_loop(experiment_config: dict):
                     handle_preempted = True
 
                 schedule(experiment_config, pool)
-                if not local_experiment and handle_preempted:
+                if handle_preempted:
                     trial_instance_manager.handle_preempted_trials()
             except Exception:  # pylint: disable=broad-except
                 logger.error('Error occurred during scheduling.')
