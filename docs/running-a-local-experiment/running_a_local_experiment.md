@@ -46,9 +46,8 @@ trials: 5
 # 1 day = 24 * 60 * 60 = 86400
 max_total_time: 86400
 
-# TODO:
 # The location of your docker registry.
-# docker_registry: lab-server:5000
+docker_registry: lab-server:5000
 
 # The local experiment folder that will store most of the experiment data.
 # Please use an absolute path.
