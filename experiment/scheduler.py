@@ -718,7 +718,8 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
     provided and return the result."""
     fuzzer_config = fuzzer_config_utils.get_by_variant_name(fuzzer)
     docker_image_url = benchmark_utils.get_runner_image_url(
-        benchmark, fuzzer_config['fuzzer'], experiment_config['cloud_project'])
+        benchmark, fuzzer_config['fuzzer'],
+        experiment_config['docker_registry'])
     fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
 
     # Convert additional environment variables from configuration to arguments
@@ -739,17 +740,18 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
         'fuzzer': fuzzer,
         'trial_id': trial_id,
         'max_total_time': experiment_config['max_total_time'],
-        'cloud_project': experiment_config['cloud_project'],
         'experiment_filestore': experiment_config['experiment_filestore'],
         'report_filestore': experiment_config['report_filestore'],
         'fuzz_target': fuzz_target,
         'docker_image_url': docker_image_url,
         'additional_env': additional_env,
+        'docker_registry': experiment_config['docker_registry'],
         'local_experiment': local_experiment
     }
 
     if not local_experiment:
         kwargs['cloud_compute_zone'] = experiment_config['cloud_compute_zone']
+        kwargs['cloud_project'] = experiment_config['cloud_project']
 
     return template.render(**kwargs)
 

@@ -15,7 +15,6 @@
 import os
 import re
 
-from common import experiment_utils
 from common import fuzzer_utils
 from common import logs
 from common import oss_fuzz
@@ -45,21 +44,18 @@ def get_fuzz_target(benchmark):
     return fuzzer_utils.DEFAULT_FUZZ_TARGET_NAME
 
 
-def get_runner_image_url(benchmark, fuzzer, cloud_project):
+def get_runner_image_url(benchmark, fuzzer, docker_registry):
     """Get the URL of the docker runner image for fuzzing the benchmark with
     fuzzer."""
-    base_tag = experiment_utils.get_base_docker_tag(cloud_project)
-    return '{base_tag}/runners/{fuzzer}/{benchmark}'.format(base_tag=base_tag,
-                                                            fuzzer=fuzzer,
-                                                            benchmark=benchmark)
+    return '{docker_registry}/runners/{fuzzer}/{benchmark}'.format(
+        docker_registry=docker_registry, fuzzer=fuzzer, benchmark=benchmark)
 
 
-def get_builder_image_url(benchmark, fuzzer, cloud_project):
+def get_builder_image_url(benchmark, fuzzer, docker_registry):
     """Get the URL of the docker builder image for fuzzing the benchmark with
     fuzzer."""
-    base_tag = experiment_utils.get_base_docker_tag(cloud_project)
-    return '{base_tag}/builders/{fuzzer}/{benchmark}'.format(
-        base_tag=base_tag, fuzzer=fuzzer, benchmark=benchmark)
+    return '{docker_registry}/builders/{fuzzer}/{benchmark}'.format(
+        docker_registry=docker_registry, fuzzer=fuzzer, benchmark=benchmark)
 
 
 def get_oss_fuzz_builder_hash(benchmark):
