@@ -401,7 +401,9 @@ class LocalDispatcher:
             '${WORK}/src/experiment/dispatcher.py || '
             '/bin/bash'  # Open shell if experiment fails.
         ]
-        return new_process.execute(command, write_to_stdout=True)
+        return new_process.execute(command,
+                                   write_to_stdout=True,
+                                   expect_zero=False)
 
 
 class GoogleCloudDispatcher(BaseDispatcher):

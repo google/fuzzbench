@@ -30,8 +30,9 @@ def stop_experiment(experiment_name, experiment_config_filename):
     experiment_config = yaml_utils.read(experiment_config_filename)
 
     if experiment_config.get('local_experiment', False):
-        new_process.execute(['make', 'stop-experiment',
-                             "EXPERIMENT=experiment_config['experiment']"])
+        new_process.execute(
+            ['make', 'stop-experiment', "EXPERIMENT=" + str(experiment_name)],
+            expect_zero=False)
         logger.info('Local experiment is stopped and all related docker '
                     'containers are cleaned.')
         return 0
