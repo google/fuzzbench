@@ -21,6 +21,7 @@ import os
 import re
 import subprocess
 import sys
+import tarfile
 from typing import Dict, List
 import yaml
 
@@ -29,38 +30,56 @@ from common import experiment_utils
 from common import filesystem
 from common import fuzzer_utils
 from common import gcloud
-from common import gsutil
+from common import filestore_utils
 from common import logs
 from common import new_process
 from common import utils
 from common import yaml_utils
 from experiment import stop_experiment
+from src_analysis import experiment_changes
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
 OSS_FUZZ_PROJECTS_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz',
                                      'projects')
-FUZZER_NAME_REGEX = re.compile('^[a-z0-9_]+$')
-EXPERIMENT_CONFIG_REGEX = re.compile('^[a-z0-9-]{0,30}$')
+FUZZER_NAME_REGEX = re.compile(r'^[a-z0-9_]+$')
+EXPERIMENT_CONFIG_REGEX = re.compile(r'^[a-z0-9-]{0,30}$')
+FILTER_SOURCE_REGEX = re.compile(r'('
+                                 r'^\.git/|'
+                                 r'^\.pytype/|'
+                                 r'^\.venv/|'
+                                 r'^.*\.pyc$|'
+                                 r'^__pycache__/|'
+                                 r'.*~$|'
+                                 r'\#*\#$|'
+                                 r'\.pytest_cache/|'
+                                 r'.*/test_data/|'
+                                 r'^third_party/oss-fuzz/build/|'
+                                 r'^docker/generated.mk$|'
+                                 r'^docs/)')
 
 CONFIG_DIR = 'config'
 
 
 def read_and_validate_experiment_config(config_filename: str) -> Dict:
-    """Reads |config_filename|, validates it, and returns it."""
-    # TODO(metzman) Consider exceptioning early instead of logging error. It
-    # will be less useful for users but will simplify this code quite a bit. And
-    # it isn't like anything expensive happens before this validation is done so
-    # rerunning it is cheap.
+    """Reads |config_filename|, validates it, finds as many errors as possible,
+    and returns it."""
     config = yaml_utils.read(config_filename)
-    bucket_params = {'cloud_experiment_bucket', 'cloud_web_bucket'}
-    string_params = {
-        'cloud_compute_zone', 'cloud_experiment_bucket', 'cloud_web_bucket'
-    }
+    filestore_params = {'experiment_filestore', 'report_filestore'}
+    cloud_config = {'cloud_compute_zone'}
+    string_params = cloud_config.union(filestore_params)
     int_params = {'trials', 'max_total_time'}
-    required_params = int_params.union(string_params)
+    required_params = int_params.union(filestore_params)
+
+    local_experiment = config.get('local_experiment', False)
+    if not local_experiment:
+        required_params = required_params.union(cloud_config)
 
     valid = True
+    if 'cloud_experiment_bucket' in config or 'cloud_web_bucket' in config:
+        logs.error('"cloud_experiment_bucket" and "cloud_web_bucket" are now '
+                   '"experiment_filestore" and "report_filestore".')
+
     for param in required_params:
         if param not in config:
             valid = False
@@ -82,11 +101,22 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
                 param, str(value))
             continue
 
-        if param in bucket_params and not value.startswith('gs://'):
+        if param not in filestore_params:
+            continue
+
+        if local_experiment and not value.startswith('/'):
             valid = False
             logs.error(
-                'Config parameter "%s" is "%s". It must start with gs://.',
-                param, value)
+                'Config parameter "%s" is "%s". Local experiments only support '
+                'using Posix file systems as filestores.', param, value)
+            continue
+
+        if not local_experiment and not value.startswith('gs://'):
+            valid = False
+            logs.error(
+                'Config parameter "%s" is "%s". '
+                'It must start with gs:// when running on Google Cloud.', param,
+                value)
 
     if not valid:
         raise ValidationError('Config: %s is invalid.' % config_filename)
@@ -127,7 +157,7 @@ def validate_fuzzer(fuzzer: str):
 
 def validate_fuzzer_config(fuzzer_config):
     """Validate |fuzzer_config|."""
-    allowed_fields = ['variant_name', 'env', 'fuzzer']
+    allowed_fields = ['name', 'env', 'fuzzer']
     if 'fuzzer' not in fuzzer_config:
         raise Exception('Fuzzer configuration must include the "fuzzer" field.')
 
@@ -135,18 +165,19 @@ def validate_fuzzer_config(fuzzer_config):
         if key not in allowed_fields:
             raise Exception('Invalid entry "%s" in fuzzer configuration.' % key)
 
-    if 'env' in fuzzer_config and not isinstance(fuzzer_config['env'], list):
-        raise Exception('Fuzzer environment must be a list.')
+    if ('env' in fuzzer_config and not isinstance(fuzzer_config['env'], dict)):
+        raise Exception('Fuzzer environment "env" must be a dict.')
 
-    variant_name = fuzzer_config.get('variant_name')
-    if variant_name:
-        if not re.match(FUZZER_NAME_REGEX, variant_name):
+    name = fuzzer_config.get('name')
+    if name:
+        if not re.match(FUZZER_NAME_REGEX, name):
             raise Exception(
-                'The "variant_name" option may only contain lowercase letters, '
+                'The "name" option may only contain lowercase letters, '
                 'numbers, or underscores.')
-    fuzzer_name = fuzzer_config.get('fuzzer')
-    if fuzzer_name:
-        validate_fuzzer(fuzzer_name)
+
+    fuzzer = fuzzer_config.get('fuzzer')
+    if fuzzer:
+        validate_fuzzer(fuzzer)
 
 
 def validate_experiment_name(experiment_name: str):
@@ -182,9 +213,9 @@ def get_git_hash():
 
 def get_full_fuzzer_name(fuzzer_config):
     """Get the full fuzzer name in the form <base fuzzer>_<variant name>."""
-    if 'variant_name' not in fuzzer_config:
+    if 'name' not in fuzzer_config:
         return fuzzer_config['fuzzer']
-    return fuzzer_config['fuzzer'] + '_' + fuzzer_config['variant_name']
+    return fuzzer_config['fuzzer'] + '_' + fuzzer_config['name']
 
 
 def set_up_fuzzer_config_files(fuzzer_configs):
@@ -243,26 +274,32 @@ def start_dispatcher(config: Dict, config_dir: str):
 
 def copy_resources_to_bucket(config_dir: str, config: Dict):
     """Copy resources the dispatcher will need for the experiment to the
-    cloud_experiment_bucket."""
-    cloud_experiment_path = os.path.join(config['cloud_experiment_bucket'],
-                                         config['experiment'])
-    base_destination = os.path.join(cloud_experiment_path, 'input')
+    experiment_filestore."""
+
+    def filter_file(tar_info):
+        """Filter out unnecessary directories."""
+        if FILTER_SOURCE_REGEX.match(tar_info.name):
+            return None
+        return tar_info
+
+    # Set environment variables to use corresponding filestore_utils.
+    os.environ['EXPERIMENT_FILESTORE'] = config['experiment_filestore']
+    os.environ['EXPERIMENT'] = config['experiment']
+    experiment_filestore_path = experiment_utils.get_experiment_filestore_path()
+
+    base_destination = os.path.join(experiment_filestore_path, 'input')
 
     # Send the local source repository to the cloud for use by dispatcher.
     # Local changes to any file will propagate.
-    # Filter out unnecessary directories.
-    options = [
-        '-x',
-        ('^\\.git/|^\\.pytype/|^\\.venv/|^.*\\.pyc$|^__pycache__/'
-         '|.*~$|\\.pytest_cache/|.*/test_data/|^third_party/oss-fuzz/out/'
-         '|^docs/')
-    ]
-    destination = os.path.join(base_destination, 'src')
-    gsutil.rsync(utils.ROOT_DIR, destination, options=options)
+    source_archive = 'src.tar.gz'
+    with tarfile.open(source_archive, 'w:gz') as tar:
+        tar.add(utils.ROOT_DIR, arcname='', recursive=True, filter=filter_file)
+    filestore_utils.cp(source_archive, base_destination + '/', parallel=True)
+    os.remove(source_archive)
 
     # Send config files.
     destination = os.path.join(base_destination, 'config')
-    gsutil.rsync(config_dir, destination)
+    filestore_utils.rsync(config_dir, destination, parallel=True)
 
 
 class BaseDispatcher:
@@ -305,11 +342,6 @@ class LocalDispatcher:
         sql_database_arg = 'SQL_DATABASE_URL=sqlite:///{}'.format(
             os.path.join(shared_volume_dir, 'local.db'))
 
-        home = os.environ['HOME']
-        host_gcloud_config_arg = (
-            'HOST_GCLOUD_CONFIG={home}/{gcloud_config_dir}'.format(
-                home=home, gcloud_config_dir='.config/gcloud'))
-
         base_docker_tag = experiment_utils.get_base_docker_tag(
             self.config['cloud_project'])
         set_instance_name_arg = 'INSTANCE_NAME={instance_name}'.format(
@@ -318,28 +350,22 @@ class LocalDispatcher:
             experiment=self.config['experiment'])
         set_cloud_project_arg = 'CLOUD_PROJECT={cloud_project}'.format(
             cloud_project=self.config['cloud_project'])
-        set_cloud_experiment_bucket_arg = (
-            'CLOUD_EXPERIMENT_BUCKET={cloud_experiment_bucket}'.format(
-                cloud_experiment_bucket=self.config['cloud_experiment_bucket']))
+        set_experiment_filestore_arg = (
+            'EXPERIMENT_FILESTORE={experiment_filestore}'.format(
+                experiment_filestore=self.config['experiment_filestore']))
         docker_image_url = '{base_docker_tag}/dispatcher-image'.format(
             base_docker_tag=base_docker_tag)
-        volume_arg = '{home}/.config/gcloud:/root/.config/gcloud'.format(
-            home=home)
         command = [
             'docker',
             'run',
             '-ti',
             '--rm',
             '-v',
-            volume_arg,
-            '-v',
             '/var/run/docker.sock:/var/run/docker.sock',
             '-v',
             shared_volume_volume_arg,
             '-e',
             shared_volume_env_arg,
-            '-e',
-            host_gcloud_config_arg,
             '-e',
             set_instance_name_arg,
             '-e',
@@ -349,7 +375,7 @@ class LocalDispatcher:
             '-e',
             sql_database_arg,
             '-e',
-            set_cloud_experiment_bucket_arg,
+            set_experiment_filestore_arg,
             '-e',
             'LOCAL_EXPERIMENT=True',
             '--cap-add=SYS_PTRACE',
@@ -358,12 +384,14 @@ class LocalDispatcher:
             docker_image_url,
             '/bin/bash',
             '-c',
-            'gsutil -m rsync -r '
-            '"${CLOUD_EXPERIMENT_BUCKET}/${EXPERIMENT}/input" ${WORK} && '
-            'source "/work/.venv/bin/activate" && '
-            'pip3 install -r "/work/src/requirements.txt" && '
-            'PYTHONPATH=/work/src python3 '
-            '/work/src/experiment/dispatcher.py || '
+            'rsync -r '
+            '"${EXPERIMENT_FILESTORE}/${EXPERIMENT}/input/" ${WORK} && '
+            'mkdir ${WORK}/src && '
+            'tar -xvzf ${WORK}/src.tar.gz -C ${WORK}/src && '
+            'source "${WORK}/.venv/bin/activate" && '
+            'pip3 install -r "${WORK}/src/requirements.txt" && '
+            'PYTHONPATH=${WORK}/src python3 '
+            '${WORK}/src/experiment/dispatcher.py || '
             '/bin/bash'  # Open shell if experiment fails.
         ]
         return new_process.execute(command, write_to_stdout=True)
@@ -400,7 +428,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
             '-e INSTANCE_NAME="{instance_name}" '
             '-e EXPERIMENT="{experiment}" '
             '-e CLOUD_PROJECT="{cloud_project}" '
-            '-e CLOUD_EXPERIMENT_BUCKET="{cloud_experiment_bucket}" '
+            '-e EXPERIMENT_FILESTORE="{experiment_filestore}" '
             '-e POSTGRES_PASSWORD="{postgres_password}" '
             '-e CLOUD_SQL_INSTANCE_CONNECTION_NAME='
             '"{cloud_sql_instance_connection_name}" '
@@ -417,7 +445,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
             # the contents of a dictionary, and use it instead of hardcoding
             # the configs we use.
             cloud_project=self.config['cloud_project'],
-            cloud_experiment_bucket=self.config['cloud_experiment_bucket'],
+            experiment_filestore=self.config['experiment_filestore'],
             cloud_sql_instance_connection_name=(
                 cloud_sql_instance_connection_name),
             base_docker_tag=base_docker_tag,
@@ -444,6 +472,7 @@ def main():
         'more benchmarks.')
 
     all_benchmarks = benchmark_utils.get_all_benchmarks()
+    all_fuzzers = fuzzer_utils.get_fuzzer_names()
 
     parser.add_argument('-b',
                         '--benchmarks',
@@ -460,27 +489,46 @@ def main():
                         '--experiment-name',
                         help='Experiment name.',
                         required=True)
-    parser.add_argument('-f',
-                        '--fuzzers',
-                        help='Fuzzers to use.',
-                        nargs='+',
-                        required=False,
-                        default=[])
-    parser.add_argument('-fc',
-                        '--fuzzer-configs',
-                        help='Fuzzer configurations to use.',
-                        nargs='+',
-                        required=False,
-                        default=[])
+    fuzzers_group = parser.add_mutually_exclusive_group()
+    fuzzers_group.add_argument('-f',
+                               '--fuzzers',
+                               help='Fuzzers to use.',
+                               nargs='+',
+                               required=False,
+                               default=None,
+                               choices=all_fuzzers)
+    fuzzers_group.add_argument('-fc',
+                               '--fuzzer-configs',
+                               help='Fuzzer configurations to use.',
+                               nargs='+',
+                               required=False,
+                               default=[])
+    fuzzers_group.add_argument('-cf',
+                               '--changed-fuzzers',
+                               help=('Use fuzzers that have changed since the '
+                                     'last experiment. The last experiment is '
+                                     'determined by the database your '
+                                     'experiment uses, not necessarily the '
+                                     'fuzzbench service'),
+                               action='store_true',
+                               required=False)
+
     args = parser.parse_args()
 
-    if not args.fuzzer_configs:
-        fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=args.fuzzers)
-    else:
+    if args.fuzzer_configs:
         fuzzer_configs = [
             yaml_utils.read(fuzzer_config)
             for fuzzer_config in args.fuzzer_configs
         ]
+    else:
+        if args.changed_fuzzers:
+            fuzzers = experiment_changes.get_fuzzers_changed_since_last()
+            if not fuzzers:
+                logs.error('No fuzzers changed since last experiment. Exiting.')
+                return 1
+        else:
+            fuzzers = args.fuzzers
+        fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers)
 
     start_experiment(args.experiment_name, args.experiment_config,
                      args.benchmarks, fuzzer_configs)

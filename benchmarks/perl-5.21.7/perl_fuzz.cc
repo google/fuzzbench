@@ -46,6 +46,7 @@ delete_file(const char *pathname)
 	if (ret == -1) {
 		warn("failed to delete \"%s\"", pathname);
 	}
+	free((void *)pathname);
 	return ret;
 #endif
 }

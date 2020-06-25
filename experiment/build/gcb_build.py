@@ -19,13 +19,21 @@ from typing import Dict, Tuple
 from common import benchmark_utils
 from common import experiment_path as exp_path
 from common import experiment_utils
+from common import fuzzer_config_utils
 from common import logs
 from common import new_process
 from common import utils
 from experiment.build import build_utils
 
+BUILDER_STEP_IDS = [
+    'build-fuzzer-builder',
+    'build-fuzzer-benchmark-builder',
+    'build-fuzzer-benchmark-builder-intermediate',
+]
+CONFIG_DIR = 'config'
+
 # Maximum time to wait for a GCB config to finish build.
-GCB_BUILD_TIMEOUT = 2 * 60 * 60  # 2 hours.
+GCB_BUILD_TIMEOUT = 4 * 60 * 60  # 4 hours.
 
 # High cpu configuration for faster builds.
 GCB_MACHINE_TYPE = 'n1-highcpu-8'
@@ -62,12 +70,14 @@ def _build_benchmark_coverage(benchmark: str) -> Tuple[int, str]:
 def _build_oss_fuzz_project_fuzzer(benchmark: str,
                                    fuzzer: str) -> Tuple[int, str]:
     """Build a |benchmark|, |fuzzer| runner image on GCB."""
+    underlying_fuzzer = fuzzer_config_utils.get_by_variant_name(
+        fuzzer)['fuzzer']
     project = benchmark_utils.get_project(benchmark)
     oss_fuzz_builder_hash = benchmark_utils.get_oss_fuzz_builder_hash(benchmark)
     substitutions = {
         '_OSS_FUZZ_PROJECT': project,
         '_BENCHMARK': benchmark,
-        '_FUZZER': fuzzer,
+        '_FUZZER': underlying_fuzzer,
         '_OSS_FUZZ_BUILDER_HASH': oss_fuzz_builder_hash,
     }
     config_file = get_build_config_file('oss-fuzz-fuzzer.yaml')
@@ -79,11 +89,13 @@ def _build_oss_fuzz_project_fuzzer(benchmark: str,
 
 def _build_benchmark_fuzzer(benchmark: str, fuzzer: str) -> Tuple[int, str]:
     """Build a |benchmark|, |fuzzer| runner image on GCB."""
+    underlying_fuzzer = fuzzer_config_utils.get_by_variant_name(
+        fuzzer)['fuzzer']
     # See link for why substitutions must begin with an underscore:
     # https://cloud.google.com/cloud-build/docs/configuring-builds/substitute-variable-values#using_user-defined_substitutions
     substitutions = {
         '_BENCHMARK': benchmark,
-        '_FUZZER': fuzzer,
+        '_FUZZER': underlying_fuzzer,
     }
     config_file = get_build_config_file('fuzzer.yaml')
     config_name = 'benchmark-{benchmark}-fuzzer-{fuzzer}'.format(

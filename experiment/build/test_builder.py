@@ -19,11 +19,12 @@ from unittest import mock
 
 import pytest
 
+from common import utils
 from experiment.build import builder
 
 SRC_ROOT = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
 
-FUZZER_BLACKLIST = {'coverage'}
+COVERAGE_TOOLS = {'coverage', 'coverage_source_based'}
 
 # pylint: disable=invalid-name,unused-argument,redefined-outer-name
 
@@ -42,7 +43,7 @@ def get_oss_fuzz_benchmarks():
 
 def get_fuzzers():
     """Get all non-blacklisted fuzzers."""
-    return get_benchmarks_or_fuzzers('fuzzers', 'fuzzer.py', FUZZER_BLACKLIST)
+    return get_benchmarks_or_fuzzers('fuzzers', 'fuzzer.py', COVERAGE_TOOLS)
 
 
 def get_benchmarks_or_fuzzers(benchmarks_or_fuzzers_directory, filename,
@@ -65,9 +66,10 @@ def get_benchmarks_or_fuzzers(benchmarks_or_fuzzers_directory, filename,
 @mock.patch('time.sleep')
 @pytest.mark.parametrize('build_measurer_return_value', [True, False])
 def test_build_all_measurers(_, mocked_build_measurer,
-                             build_measurer_return_value, experiment):
+                             build_measurer_return_value, experiment, fs):
     """Tests that build_all_measurers works as intendend when build_measurer
     calls fail."""
+    fs.add_real_directory(utils.ROOT_DIR)
     mocked_build_measurer.return_value = build_measurer_return_value
     benchmarks = get_regular_benchmarks()
     result = builder.build_all_measurers(benchmarks)

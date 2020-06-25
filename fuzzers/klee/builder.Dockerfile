@@ -49,19 +49,36 @@ RUN git clone https://github.com/stp/stp.git /stp && \
     -DCMAKE_INSTALL_PREFIX=/user/local/ -DCMAKE_BUILD_TYPE=Release .. && \
     make -j`nproc` && make install
 
-# Install klee-uclibc. TODO: do we need libcxx?
 RUN git clone https://github.com/lmrs2/klee-uclibc.git /klee-uclibc && \
     cd /klee-uclibc && \
     CC=`which clang-6.0` CXX=`which clang++-6.0` \
     ./configure --make-llvm-lib --with-llvm-config=`which llvm-config-6.0` && \
     make -j`nproc` && make install
 
-# Install KLEE. Use my personal repo containing additional scripts we need for now.
+
+# Install KLEE. Use my personal repo containing additional scripts we need for
+# now.
 RUN git clone https://github.com/lmrs2/klee.git /klee && \
     cd /klee && \
-    git checkout debug && \
+    git checkout debug
+
+# The libcxx build script in the KLEE repo depends on wllvm:
+# We'll upgrade pip first to avoid a build error with the old version of pip.
+RUN pip install --upgrade pip
+RUN pip install wllvm
+
+# Before building KLEE, build libcxx.
+RUN cd /klee && \
+    LLVM_VERSION=6.0 SANITIZER_BUILD= ENABLE_OPTIMIZED=0 ENABLE_DEBUG=1 \
+    DISABLE_ASSERTIONS=1 REQUIRES_RTTI=1 \
+    BASE=/out \
+    ./scripts/build/build.sh libcxx
+
+RUN cd /klee &&  \
     mkdir build && cd build && \
     CXXFLAGS= cmake -DENABLE_SOLVER_STP=ON -DENABLE_POSIX_RUNTIME=ON \
+    -DENABLE_KLEE_LIBCXX=ON -DKLEE_LIBCXX_DIR=/out/libc++-install-60/ \
+    -DKLEE_LIBCXX_INCLUDE_DIR=/out/libc++-install-60/include/c++/v1/ \
     -DENABLE_KLEE_UCLIBC=ON -DKLEE_UCLIBC_PATH=/klee-uclibc/ \
     -DENABLE_SYSTEM_TESTS=OFF -DENABLE_UNIT_TESTS=OFF \
     -DLLVM_CONFIG_BINARY=`which llvm-config-6.0` -DLLVMCC=`which clang-6.0` \
@@ -69,31 +86,18 @@ RUN git clone https://github.com/lmrs2/klee.git /klee && \
     -DCMAKE_BUILD_TYPE=Release && \
     make -j`nproc` && make install
 
-# debugging
-#RUN apt-get -y install vim less apt-file
-
-# Install golang and gllvm
-ENV GOPATH=/
-ENV PATH=$PATH:$GOPATH/bin
-RUN apt-get -y install \
-    software-properties-common && \
-    add-apt-repository -y ppa:gophers/archive && \
-    apt-get update -y && \
-    apt-get -y install golang-1.10-go && \
-    go get github.com/SRI-CSL/gllvm/cmd/...
-
 ENV LLVM_CC_NAME=clang-6.0
 ENV LLVM_CXX_NAME=clang++-6.0
 ENV LLVM_AR_NAME=llvm-ar-6.0
 ENV LLVM_LINK_NAME=llvm-link-6.0
 ENV LLVM_COMPILER=clang
-ENV CC=gclang
-ENV CXX=gclang++
+ENV CC=wllvm
+ENV CXX=wllvm++
 
 # Compile the harness klee_driver.cpp.
 COPY klee_driver.cpp /klee_driver.cpp
 COPY klee_mock.c /klee_mock.c
-RUN $CXX -stdlib=libc++ -std=c++11 -O2 -c /klee_driver.cpp -o /klee_driver.o && \ 
+RUN $CXX -stdlib=libc++ -std=c++11 -O2 -c /klee_driver.cpp -o /klee_driver.o && \
     ar r /libAFL.a /klee_driver.o && \
     $LLVM_CC_NAME -O2 -c -fPIC /klee_mock.c -o /klee_mock.o && \
     $LLVM_CC_NAME -shared -o /libKleeMock.so /klee_mock.o
