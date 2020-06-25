@@ -42,7 +42,7 @@ lint: install-dependencies
 typecheck: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py typecheck
 
-install-docs-dependencies:
+install-docs-dependencies: docs/Gemfile.lock
 	cd docs && bundle install
 
 docs-serve: install-docs-dependencies
