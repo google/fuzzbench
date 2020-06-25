@@ -19,6 +19,7 @@ FROM ubuntu:xenial
 ENV PYTHON_VERSION 3.7.6
 RUN apt-get update -y && apt-get install -y \
     build-essential \
+    rsync \
     curl \
     zlib1g-dev \
     libncurses5-dev \

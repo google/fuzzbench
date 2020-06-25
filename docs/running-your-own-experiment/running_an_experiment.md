@@ -56,6 +56,10 @@ trials: 5
 # 1 day = 24 * 60 * 60 = 86400
 max_total_time: 86400
 
+# The docker registry for your fuzzbench experiments.
+# If you use Google Cloud, this can be gcr.io/$PROJECT_NAME.
+docker_registry: gcr.io/$PROJECT_NAME
+
 # The name of your Google Cloud project.
 cloud_project: $PROJECT_NAME
 
@@ -63,10 +67,10 @@ cloud_project: $PROJECT_NAME
 cloud_compute_zone: $PROJECT_ZONE
 
 # The Google Cloud Storage bucket that will store most of the experiment data.
-cloud_experiment_bucket: gs://$DATA_BUCKET_NAME
+experiment_filestore: gs://$DATA_BUCKET_NAME
 
-# The bucket where HTML reports and summary data will be stored.
-cloud_web_bucket: gs://$REPORT_BUCKET_NAME
+# The Google Cloud Storage bucket where HTML reports and summary data will be stored.
+report_filestore: gs://$REPORT_BUCKET_NAME
 
 # The connection to use to connect to the Google Cloud SQL instance.
 cloud_sql_instance_connection_name: "$PROJECT_NAME:$PROJECT_REGION:$POSTGRES_INSTANCE=tcp:5432"

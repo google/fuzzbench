@@ -13,16 +13,19 @@
 # limitations under the License.
 
 include docker/build.mk
+include docker/generated.mk
 
 SHELL := /bin/bash
 VENV_ACTIVATE := .venv/bin/activate
 
 ${VENV_ACTIVATE}: requirements.txt
-	rm -rf .venv
 	python3 -m venv .venv
 	source ${VENV_ACTIVATE} && python3 -m pip install -r requirements.txt
 
 install-dependencies: ${VENV_ACTIVATE}
+
+docker/generated.mk: docker/generate_makefile.py $(wildcard fuzzers/*/variants.yaml) ${VENV_ACTIVATE}
+	source ${VENV_ACTIVATE} && python3 $< > $@
 
 presubmit: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py
@@ -39,7 +42,10 @@ lint: install-dependencies
 typecheck: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py typecheck
 
-docs-serve:
+install-docs-dependencies: docs/Gemfile.lock
+	cd docs && bundle install
+
+docs-serve: install-docs-dependencies
 	cd docs && bundle exec jekyll serve --livereload
 
 clear-cache:

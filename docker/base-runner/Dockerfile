@@ -21,5 +21,6 @@ RUN apt-get update -y && apt-get install -y \
     libarchive13 \
     libgss3
 
-ENV WORKDIR /out
+ENV OUT /out
+ENV WORKDIR $OUT
 WORKDIR $WORKDIR

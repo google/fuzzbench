@@ -16,10 +16,14 @@ from analysis import stat_tests
 from common import environment
 
 
+class EmptyDataError(ValueError):
+    """An exception for when the data is empty."""
+
+
 def validate_data(experiment_df):
     """Checks if the experiment data is valid."""
     if experiment_df.empty:
-        raise ValueError('Empty experiment data.')
+        raise EmptyDataError('Empty experiment data.')
 
     expected_columns = {
         'experiment', 'benchmark', 'fuzzer', 'trial_id', 'time_started',
@@ -128,7 +132,7 @@ _DEFAULT_FUZZER_SAMPLE_NUM_THRESHOLD = 0.8
 
 def get_fuzzers_with_not_enough_samples(
         benchmark_snapshot_df, threshold=_DEFAULT_FUZZER_SAMPLE_NUM_THRESHOLD):
-    """Retruns fuzzers that didn't have enough trials running at snapshot time.
+    """Returns fuzzers that didn't have enough trials running at snapshot time.
     It takes a benchmark snapshot and finds the fuzzers that have a sample size
     smaller than 80% of the largest sample size. Default threshold can be
     overridden.

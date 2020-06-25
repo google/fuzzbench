@@ -15,15 +15,15 @@ jobs:
       matrix:
         fuzzer:
           - afl
+          - aflcc
           - aflfast
           - aflplusplus
-          - aflplusplus_mopt2
-          - aflplusplus_mopt
-          - aflplusplus_cmplog
-          - aflplusplus_laf
-          - aflplusplus_laf_17
-          - aflplusplus_instrim
+          - aflplusplus_optimal
+          - aflplusplus_shmem
+          - aflplusplus_optimal_shmem
+          - aflplusplus_qemu
           - aflsmart
+          - ankou
           - eclipser
           - entropic
           - fairfuzz
@@ -31,6 +31,8 @@ jobs:
           - honggfuzz
           - lafintel
           - libfuzzer
+          - libfuzzer_nocmp
+          - manul
           - mopt
 
         benchmark_type:

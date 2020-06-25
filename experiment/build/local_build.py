@@ -15,17 +15,14 @@
 """Module for building things on Google Cloud Build for use in trials."""
 
 import os
-import posixpath
 from typing import Tuple
 
 from common import benchmark_utils
 from common import environment
-from common import experiment_path as exp_path
-from common import gsutil
+from common import experiment_utils
 from common import logs
 from common import new_process
 from common import utils
-from experiment.build import build_utils
 
 logger = logs.Logger('builder')  # pylint: disable=invalid-name
 
@@ -43,8 +40,8 @@ def build_base_images() -> Tuple[int, str]:
 
 def get_shared_coverage_binaries_dir():
     """Returns the shared coverage binaries directory."""
-    shared_volume = os.environ['SHARED_VOLUME']
-    return os.path.join(shared_volume, 'coverage-binaries')
+    experiment_filestore_path = experiment_utils.get_experiment_filestore_path()
+    return os.path.join(experiment_filestore_path, 'coverage-binaries')
 
 
 def make_shared_coverage_binaries_dir():
@@ -71,22 +68,16 @@ def copy_coverage_binaries(benchmark):
     shared_coverage_binaries_dir = get_shared_coverage_binaries_dir()
     mount_arg = '{0}:{0}'.format(shared_coverage_binaries_dir)
     builder_image_url = benchmark_utils.get_builder_image_url(
-        benchmark, 'coverage', environment.get('CLOUD_PROJECT'))
+        benchmark, 'coverage', environment.get('DOCKER_REGISTRY'))
     coverage_build_archive = 'coverage-build-{}.tar.gz'.format(benchmark)
     coverage_build_archive_shared_dir_path = os.path.join(
         shared_coverage_binaries_dir, coverage_build_archive)
     command = 'cd /out; tar -czvf {} *'.format(
         coverage_build_archive_shared_dir_path)
-    new_process.execute([
+    return new_process.execute([
         'docker', 'run', '-v', mount_arg, builder_image_url, '/bin/bash', '-c',
         command
     ])
-    coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
-    coverage_build_archive_gcs_path = posixpath.join(
-        exp_path.gcs(coverage_binaries_dir), coverage_build_archive)
-
-    return gsutil.cp(coverage_build_archive_shared_dir_path,
-                     coverage_build_archive_gcs_path)
 
 
 def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:

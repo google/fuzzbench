@@ -64,29 +64,63 @@
 
         <div id="summary" class="section scrollspy">
             <h2 class="green-text text-darken-3">experiment summary</h2>
-            {% if experiment.rank_by_mean_and_average_rank.size < 2 %}
-            No ranking as the available data is only for a single fuzzer.
 
-            {% elif experiment.rank_by_mean_and_average_rank.size > 20 %}
-            Showing cross-benchmark ranking as a table, because the critical
-            difference plot currently only supports up to 20 fuzzers. The table
-            shows the average rank (lower better) of fuzzers after ranking them
-            on each benchmark according to the median reached coverages.
+            {% if experiment.rank_by_median_and_average_rank.size < 2 %}
+
+            No aggregate ranking as the data contains a single fuzzer.
+
+            {% elif experiment.benchmarks|length < 2 %}
+
+            No aggregate ranking as the data contains a single benchmark.
+
+            {% else %}
+
+            {% block top_level_ranking %}
+
+            We show two different aggreage (cross-benchmark) ranking of fuzzers.
+            The first is based on the average of per-benchmarks scores, where
+            the score represents the percentage of the highest reached median
+            coverage on a given benchmark (higher value is better).
+
+            The second ranking shows the average rank of fuzzers, after we rank
+            them on each benchmark according to their median reached covereges
+            (lower value is better).
+
             <div class="row">
-                <div class="col s7 offset-s3">
-                    {{ experiment.rank_by_mean_and_average_rank.to_frame().to_html() }}
+                <div class="col s5 offset-s1">
+                    <h5 class="center-align">By avg. score</h5>
+                    {{ experiment.rank_by_median_and_average_normalized_score.round(2).to_frame().to_html() }}
+                </div>
+                <div class="col s5">
+                    <h5 class="center-align">By avg. rank</h5>
+                    {{ experiment.rank_by_median_and_average_rank.round(2).to_frame().to_html() }}
                 </div>
             </div>
 
-            {% elif experiment.benchmarks|length < 2 %}
-            No cross-benchmark ranking as the available data is only for a single benchmark.
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Critical difference diagram
+                    </div>
+                    <div class="collapsible-body">
+
+
+            {% if experiment.rank_by_median_and_average_rank.size > 20 %}
+
+            Too many fuzzers to render the diagram. The critical difference plot
+            currently only supports up to 20 fuzzers.
 
             {% else %}
-            Aggregate critical difference diagram showing average ranks when
-            ranking fuzzers on each benchmark according to their median reached
-            coverages. Critical difference is based on Friedman/Nemenyi post-hoc
-            test. See more in the <a href="https://google.github.io/fuzzbench/reference/report/">
-            documentation</a>.<br>
+
+            The diagram visualizes the average rank of fuzzers (second ranking
+            above) while showing the significance of the differences as well.
+            What is considered a "critical difference" (CD) is based on the
+            Friedman/Nemenyi post-hoc test. See more in the <a
+            href="https://google.github.io/fuzzbench/reference/report/">
+            documentation</a>.
+
+            <br>
+
             <div class="row">
                 <div class="col s7 offset-s3">
                     <img class="responsive-img materialboxed"
@@ -94,12 +128,21 @@
                 </div>
             </div>
 
-            {% endif %}
-            Note: If a fuzzer does not support all benchmarks,
-            its ranking as shown in this diagram can be lower than it should be.
-            So please check the list of supported benchmarks for the fuzzer(s) of your interest.
+            Note: If a fuzzer does not support all benchmarks, its ranking as
+            shown in this diagram can be lower than it should be. So please
+            check the list of supported benchmarks for the fuzzer(s) of your interest.
             The list could be specified in the fuzzer's README.md like
             <a href="https://github.com/google/fuzzbench/blob/master/fuzzers/aflsmart/README.md">this</a>.
+
+            {% endif %} {# show critical difference diagram #}
+
+                    </div>
+                </li>
+            </ul>
+
+            {% endblock %} {# top_level_ranking #}
+
+            {% endif %} {# data is available for top level ranking #}
 
             <ul class="collapsible">
                 <li>
@@ -196,6 +239,11 @@
         <div id="data" class="section scrollspy">
             <h2 class="green-text text-darken-3">experiment data</h2>
             You can download the raw data for this report <a href="data.csv.gz">here</a>.
+
+            <br><br>
+            Check out the <a href="https://google.github.io/fuzzbench/developing-fuzzbench/custom_analysis_and_reports">documentation</a> on how to create customized reports using this data.
+            Also see some example Colab notebooks for doing custom analysis on the data <a href="https://github.com/google/fuzzbench/tree/master/analysis/notebooks">here</a>.
+
             {% if experiment.git_hash %}
             <br><br>
             The experiment was conducted using this FuzzBench commit:
