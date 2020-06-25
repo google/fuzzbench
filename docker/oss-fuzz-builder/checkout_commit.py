@@ -39,6 +39,7 @@ def checkout_repo_commit(commit, repo_dir):
     """Checkout |commit| in |repo_dir|."""
     fetch_unshallow(repo_dir)
     # TODO(metzman): Figure out if we need to run clean.
+    # TODO(tanq16): Checkout the commit by moifying Dockerfile.
     return git(['checkout', '-f', commit], repo_dir)
 
 
