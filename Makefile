@@ -42,7 +42,10 @@ lint: install-dependencies
 typecheck: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py typecheck
 
-docs-serve:
+install-docs-dependencies:
+	cd docs && bundle install
+
+docs-serve: install-docs-dependencies
 	cd docs && bundle exec jekyll serve --livereload
 
 clear-cache:
