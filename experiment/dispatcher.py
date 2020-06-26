@@ -34,6 +34,7 @@ from experiment.build import builder
 from experiment import measurer
 from experiment import reporter
 from experiment import scheduler
+from experiment import stop_experiment
 
 LOOP_WAIT_SECONDS = 5 * 60
 
