@@ -22,7 +22,10 @@ import re
 import subprocess
 import sys
 import tarfile
+import tmpfile
 from typing import Dict, List
+
+import jinja2
 import yaml
 
 from common import benchmark_utils
@@ -59,6 +62,11 @@ FILTER_SOURCE_REGEX = re.compile(r'('
                                  r'^docs/)')
 
 CONFIG_DIR = 'config'
+
+JINJA_ENV = jinja2.Environment(
+    undefined=jinja2.StrictUndefined,
+    loader=jinja2.FileSystemLoader(RESOURCES_DIR),
+)
 
 
 def read_and_validate_experiment_config(config_filename: str) -> Dict:
@@ -267,11 +275,8 @@ def start_dispatcher(config: Dict, config_dir: str):
     """Start the dispatcher instance and run the dispatcher code on it."""
     dispatcher = get_dispatcher(config)
     # Is dispatcher code being run manually (useful for debugging)?
-    manual_experiment = os.getenv('MANUAL_EXPERIMENT')
-    if not manual_experiment:
-        dispatcher.create_async()
     copy_resources_to_bucket(config_dir, config)
-    if not manual_experiment:
+    if not os.getenv('MANUAL_EXPERIMENT'):
         dispatcher.start()
 
 
@@ -312,11 +317,6 @@ class BaseDispatcher:
         self.config = config
         self.instance_name = experiment_utils.get_dispatcher_instance_name(
             config['experiment'])
-        self.process = None
-
-    def create_async(self):
-        """Creates the dispatcher asynchronously."""
-        raise NotImplementedError
 
     def start(self):
         """Start the experiment on the dispatcher."""
@@ -331,9 +331,6 @@ class LocalDispatcher:
         self.instance_name = experiment_utils.get_dispatcher_instance_name(
             config['experiment'])
         self.process = None
-
-    def create_async(self):
-        """Noop in local experiments."""
 
     def start(self):
         """Start the experiment on the dispatcher."""
@@ -410,44 +407,23 @@ class LocalDispatcher:
 class GoogleCloudDispatcher(BaseDispatcher):
     """Class representing the dispatcher instance on Google Cloud."""
 
-    def create_async(self):
-        """Creates the instance asynchronously."""
-        self.process = multiprocessing.Process(
-            target=gcloud.create_instance,
-            args=(self.instance_name, gcloud.InstanceType.DISPATCHER,
-                  self.config))
-        self.process.start()
-
     def start(self):
         """Start the experiment on the dispatcher."""
-        # TODO(metzman): Replace this workflow with a startup script so we don't
-        # need to SSH into the dispatcher.
-        self.process.join()  # Wait for dispatcher instance.
-        # Check that we can SSH into the instance.
-        gcloud.robust_begin_gcloud_ssh(self.instance_name,
-                                       self.config['cloud_compute_zone'])
+        with tempfile.mkstemp(
+            dir=os.getcwd()) as (startup_script_handle, startup_script_path):
+            startup_script = self.write_startup_script(startup_script_handle)
+            gcloud.create_instance(
+                self.instance_name,
+                gcloud.InstanceType.DISPATCHER,
+                self.config, startup_script=startup_script)
 
-        docker_registry = self.config['docker_registry']
+    def _render_startup_script(self):
+        template = JINJA_ENV.get_template(
+            'dispatcher-startup-script-template.sh')
         cloud_sql_instance_connection_name = (
             self.config['cloud_sql_instance_connection_name'])
 
-        command = (
-            'echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope && '
-            'docker run --rm '
-            '-e INSTANCE_NAME="{instance_name}" '
-            '-e EXPERIMENT="{experiment}" '
-            '-e CLOUD_PROJECT="{cloud_project}" '
-            '-e DOCKER_REGISTRY="{docker_registry}" '
-            '-e EXPERIMENT_FILESTORE="{experiment_filestore}" '
-            '-e POSTGRES_PASSWORD="{postgres_password}" '
-            '-e CLOUD_SQL_INSTANCE_CONNECTION_NAME='
-            '"{cloud_sql_instance_connection_name}" '
-            '--cap-add=SYS_PTRACE --cap-add=SYS_NICE '
-            '-v /var/run/docker.sock:/var/run/docker.sock '
-            '--name=dispatcher-container '
-            '{docker_registry}/dispatcher-image '
-            '/work/startup-dispatcher.sh'
-        ).format(
+        kwargs = {
             instance_name=self.instance_name,
             postgres_password=os.environ['POSTGRES_PASSWORD'],
             experiment=self.config['experiment'],
@@ -458,11 +434,15 @@ class GoogleCloudDispatcher(BaseDispatcher):
             experiment_filestore=self.config['experiment_filestore'],
             cloud_sql_instance_connection_name=(
                 cloud_sql_instance_connection_name),
-            docker_registry=docker_registry,
-        )
-        return gcloud.ssh(self.instance_name,
-                          command=command,
-                          zone=self.config['cloud_compute_zone'])
+            docker_registry=self.config['docker_registry'],
+        }
+        return template.render(**kwargs)
+
+    def write_startup_script(self, startup_script_handle):
+        """Get the startup script to start the experiment on the dispatcher."""
+        startup_script = self.render_startup_script()
+        file_handle.write(startup_script)
+        file_handle.flush()
 
 
 def get_dispatcher(config: Dict) -> BaseDispatcher:
