@@ -37,7 +37,6 @@ from common import logs
 from common import new_process
 from common import utils
 from common import yaml_utils
-from experiment import stop_experiment
 from src_analysis import experiment_changes
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
@@ -522,9 +521,6 @@ def main():
 
     start_experiment(args.experiment_name, args.experiment_config,
                      args.benchmarks, fuzzer_configs)
-    if not os.getenv('MANUAL_EXPERIMENT'):
-        stop_experiment.stop_experiment(args.experiment_name,
-                                        args.experiment_config)
     return 0
 
 
