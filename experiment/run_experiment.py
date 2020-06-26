@@ -16,13 +16,12 @@
 it needs to begin an experiment."""
 
 import argparse
-import multiprocessing
 import os
 import re
 import subprocess
 import sys
 import tarfile
-import tmpfile
+import tempfile
 from typing import Dict, List
 
 import jinja2
@@ -62,6 +61,8 @@ FILTER_SOURCE_REGEX = re.compile(r'('
                                  r'^docs/)')
 
 CONFIG_DIR = 'config'
+
+RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
 
 JINJA_ENV = jinja2.Environment(
     undefined=jinja2.StrictUndefined,
@@ -409,13 +410,12 @@ class GoogleCloudDispatcher(BaseDispatcher):
 
     def start(self):
         """Start the experiment on the dispatcher."""
-        with tempfile.mkstemp(
-            dir=os.getcwd()) as (startup_script_handle, startup_script_path):
-            startup_script = self.write_startup_script(startup_script_handle)
-            gcloud.create_instance(
-                self.instance_name,
-                gcloud.InstanceType.DISPATCHER,
-                self.config, startup_script=startup_script)
+        with tempfile.NamedTemporaryFile(dir=os.getcwd()) as startup_script:
+            self.write_startup_script(startup_script)
+            gcloud.create_instance(self.instance_name,
+                                   gcloud.InstanceType.DISPATCHER,
+                                   self.config,
+                                   startup_script=startup_script.name)
 
     def _render_startup_script(self):
         template = JINJA_ENV.get_template(
@@ -424,25 +424,25 @@ class GoogleCloudDispatcher(BaseDispatcher):
             self.config['cloud_sql_instance_connection_name'])
 
         kwargs = {
-            instance_name=self.instance_name,
-            postgres_password=os.environ['POSTGRES_PASSWORD'],
-            experiment=self.config['experiment'],
+            'instance_name': self.instance_name,
+            'postgres_password': os.environ['POSTGRES_PASSWORD'],
+            'experiment': self.config['experiment'],
             # TODO(metzman): Create a function that sets env vars based on
             # the contents of a dictionary, and use it instead of hardcoding
             # the configs we use.
-            cloud_project=self.config['cloud_project'],
-            experiment_filestore=self.config['experiment_filestore'],
-            cloud_sql_instance_connection_name=(
-                cloud_sql_instance_connection_name),
-            docker_registry=self.config['docker_registry'],
+            'cloud_project': self.config['cloud_project'],
+            'experiment_filestore': self.config['experiment_filestore'],
+            'cloud_sql_instance_connection_name':
+                (cloud_sql_instance_connection_name),
+            'docker_registry': self.config['docker_registry'],
         }
         return template.render(**kwargs)
 
-    def write_startup_script(self, startup_script_handle):
+    def write_startup_script(self, startup_script_file):
         """Get the startup script to start the experiment on the dispatcher."""
-        startup_script = self.render_startup_script()
-        file_handle.write(startup_script)
-        file_handle.flush()
+        startup_script = self._render_startup_script()
+        startup_script_file.write(startup_script)
+        startup_script_file.flush()
 
 
 def get_dispatcher(config: Dict) -> BaseDispatcher:
