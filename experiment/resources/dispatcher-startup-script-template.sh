@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,14 +12,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
 
-experiment: test-experiment
-trials: 4
-max_total_time: 86400
-docker_registry: gcr.io/fuzzbench
-experiment_filestore: /tmp/experiment-data
-report_filestore: /tmp/web-reports
-local_experiment: true
-benchmarks: "benchmark-1,benchmark-2"
-git_hash: "git-hash"
+echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
+docker run --rm \
+  -e INSTANCE_NAME={{instance_name}} -e EXPERIMENT={{experiment}} \
+  -e CLOUD_PROJECT={{cloud_project}} \
+  -e EXPERIMENT_FILESTORE={{experiment_filestore}} \
+  -e POSTGRES_PASSWORD={{postgres_password}} \
+  -e CLOUD_SQL_INSTANCE_CONNECTION_NAME={{cloud_sql_instance_connection_name}} \
+  --cap-add=SYS_PTRACE --cap-add=SYS_NICE \
+  -v /var/run/docker.sock:/var/run/docker.sock --name=dispatcher-container \
+  {{docker_registry}}/dispatcher-image /work/startup-dispatcher.sh
+
+

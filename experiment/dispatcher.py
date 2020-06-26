@@ -159,6 +159,7 @@ def dispatcher_main():
     logs.info('Dispatcher finished.')
     scheduler_loop_thread.join()
     measurer_loop_process.join()
+    return experiment.config
 
 
 def main():
@@ -168,10 +169,14 @@ def main():
     })
 
     try:
-        dispatcher_main()
+        experiment_config = dispatcher_main()
     except Exception as error:
         logs.error('Error conducting experiment.')
         raise error
+    stop_experiment.stop_experiment(experiment_config['experiment'],
+                                    experiment_config)
+
+    return 0
 
 
 if __name__ == '__main__':

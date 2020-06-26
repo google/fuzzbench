@@ -16,13 +16,15 @@
 it needs to begin an experiment."""
 
 import argparse
-import multiprocessing
 import os
 import re
 import subprocess
 import sys
 import tarfile
+import tempfile
 from typing import Dict, List
+
+import jinja2
 import yaml
 
 from common import benchmark_utils
@@ -35,7 +37,6 @@ from common import logs
 from common import new_process
 from common import utils
 from common import yaml_utils
-from experiment import stop_experiment
 from src_analysis import experiment_changes
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
@@ -60,16 +61,24 @@ FILTER_SOURCE_REGEX = re.compile(r'('
 
 CONFIG_DIR = 'config'
 
+RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
+
+JINJA_ENV = jinja2.Environment(
+    undefined=jinja2.StrictUndefined,
+    loader=jinja2.FileSystemLoader(RESOURCES_DIR),
+)
+
 
 def read_and_validate_experiment_config(config_filename: str) -> Dict:
     """Reads |config_filename|, validates it, finds as many errors as possible,
     and returns it."""
     config = yaml_utils.read(config_filename)
     filestore_params = {'experiment_filestore', 'report_filestore'}
-    cloud_config = {'cloud_compute_zone'}
-    string_params = cloud_config.union(filestore_params)
+    cloud_config = {'cloud_compute_zone', 'cloud_project'}
+    docker_config = {'docker_registry'}
+    string_params = cloud_config.union(filestore_params).union(docker_config)
     int_params = {'trials', 'max_total_time'}
-    required_params = int_params.union(filestore_params)
+    required_params = int_params.union(filestore_params).union(docker_config)
 
     local_experiment = config.get('local_experiment', False)
     if not local_experiment:
@@ -120,6 +129,8 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
 
     if not valid:
         raise ValidationError('Config: %s is invalid.' % config_filename)
+
+    config['local_experiment'] = local_experiment
     return config
 
 
@@ -264,11 +275,8 @@ def start_dispatcher(config: Dict, config_dir: str):
     """Start the dispatcher instance and run the dispatcher code on it."""
     dispatcher = get_dispatcher(config)
     # Is dispatcher code being run manually (useful for debugging)?
-    manual_experiment = os.getenv('MANUAL_EXPERIMENT')
-    if not manual_experiment:
-        dispatcher.create_async()
     copy_resources_to_bucket(config_dir, config)
-    if not manual_experiment:
+    if not os.getenv('MANUAL_EXPERIMENT'):
         dispatcher.start()
 
 
@@ -309,11 +317,6 @@ class BaseDispatcher:
         self.config = config
         self.instance_name = experiment_utils.get_dispatcher_instance_name(
             config['experiment'])
-        self.process = None
-
-    def create_async(self):
-        """Creates the dispatcher asynchronously."""
-        raise NotImplementedError
 
     def start(self):
         """Start the experiment on the dispatcher."""
@@ -329,9 +332,6 @@ class LocalDispatcher:
             config['experiment'])
         self.process = None
 
-    def create_async(self):
-        """Noop in local experiments."""
-
     def start(self):
         """Start the experiment on the dispatcher."""
         experiment_filestore_path = os.path.abspath(
@@ -340,16 +340,16 @@ class LocalDispatcher:
         sql_database_arg = 'SQL_DATABASE_URL=sqlite:///{}'.format(
             os.path.join(experiment_filestore_path, 'local.db'))
 
-        base_docker_tag = experiment_utils.get_base_docker_tag(
-            self.config['cloud_project'])
+        docker_registry = self.config['docker_registry']
         set_instance_name_arg = 'INSTANCE_NAME={instance_name}'.format(
             instance_name=self.instance_name)
         set_experiment_arg = 'EXPERIMENT={experiment}'.format(
             experiment=self.config['experiment'])
-        set_cloud_project_arg = 'CLOUD_PROJECT={cloud_project}'.format(
-            cloud_project=self.config['cloud_project'])
         shared_experiment_filestore_arg = '{0}:{0}'.format(
             self.config['experiment_filestore'])
+        # TODO: (#484) Use config in function args or set as environment
+        # variables.
+        set_docker_registry_arg = 'DOCKER_REGISTRY={}'.format(docker_registry)
         set_experiment_filestore_arg = (
             'EXPERIMENT_FILESTORE={experiment_filestore}'.format(
                 experiment_filestore=self.config['experiment_filestore']))
@@ -358,8 +358,8 @@ class LocalDispatcher:
         set_report_filestore_arg = (
             'REPORT_FILESTORE={report_filestore}'.format(
                 report_filestore=self.config['report_filestore']))
-        docker_image_url = '{base_docker_tag}/dispatcher-image'.format(
-            base_docker_tag=base_docker_tag)
+        docker_image_url = '{docker_registry}/dispatcher-image'.format(
+            docker_registry=docker_registry)
         command = [
             'docker',
             'run',
@@ -376,13 +376,13 @@ class LocalDispatcher:
             '-e',
             set_experiment_arg,
             '-e',
-            set_cloud_project_arg,
-            '-e',
             sql_database_arg,
             '-e',
             set_experiment_filestore_arg,
             '-e',
             set_report_filestore_arg,
+            '-e',
+            set_docker_registry_arg,
             '-e',
             'LOCAL_EXPERIMENT=True',
             '--cap-add=SYS_PTRACE',
@@ -407,59 +407,41 @@ class LocalDispatcher:
 class GoogleCloudDispatcher(BaseDispatcher):
     """Class representing the dispatcher instance on Google Cloud."""
 
-    def create_async(self):
-        """Creates the instance asynchronously."""
-        self.process = multiprocessing.Process(
-            target=gcloud.create_instance,
-            args=(self.instance_name, gcloud.InstanceType.DISPATCHER,
-                  self.config))
-        self.process.start()
-
     def start(self):
         """Start the experiment on the dispatcher."""
-        # TODO(metzman): Replace this workflow with a startup script so we don't
-        # need to SSH into the dispatcher.
-        self.process.join()  # Wait for dispatcher instance.
-        # Check that we can SSH into the instance.
-        gcloud.robust_begin_gcloud_ssh(self.instance_name,
-                                       self.config['cloud_compute_zone'])
+        with tempfile.NamedTemporaryFile(dir=os.getcwd(), mode='w') as startup_script:
+            self.write_startup_script(startup_script)
+            gcloud.create_instance(self.instance_name,
+                                   gcloud.InstanceType.DISPATCHER,
+                                   self.config,
+                                   startup_script=startup_script.name)
 
-        base_docker_tag = experiment_utils.get_base_docker_tag(
-            self.config['cloud_project'])
+    def _render_startup_script(self):
+        template = JINJA_ENV.get_template(
+            'dispatcher-startup-script-template.sh')
         cloud_sql_instance_connection_name = (
             self.config['cloud_sql_instance_connection_name'])
 
-        command = (
-            'echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope && '
-            'docker run --rm '
-            '-e INSTANCE_NAME="{instance_name}" '
-            '-e EXPERIMENT="{experiment}" '
-            '-e CLOUD_PROJECT="{cloud_project}" '
-            '-e EXPERIMENT_FILESTORE="{experiment_filestore}" '
-            '-e POSTGRES_PASSWORD="{postgres_password}" '
-            '-e CLOUD_SQL_INSTANCE_CONNECTION_NAME='
-            '"{cloud_sql_instance_connection_name}" '
-            '--cap-add=SYS_PTRACE --cap-add=SYS_NICE '
-            '-v /var/run/docker.sock:/var/run/docker.sock '
-            '--name=dispatcher-container '
-            '{base_docker_tag}/dispatcher-image '
-            '/work/startup-dispatcher.sh'
-        ).format(
-            instance_name=self.instance_name,
-            postgres_password=os.environ['POSTGRES_PASSWORD'],
-            experiment=self.config['experiment'],
+        kwargs = {
+            'instance_name': self.instance_name,
+            'postgres_password': os.environ['POSTGRES_PASSWORD'],
+            'experiment': self.config['experiment'],
             # TODO(metzman): Create a function that sets env vars based on
             # the contents of a dictionary, and use it instead of hardcoding
             # the configs we use.
-            cloud_project=self.config['cloud_project'],
-            experiment_filestore=self.config['experiment_filestore'],
-            cloud_sql_instance_connection_name=(
-                cloud_sql_instance_connection_name),
-            base_docker_tag=base_docker_tag,
-        )
-        return gcloud.ssh(self.instance_name,
-                          command=command,
-                          zone=self.config['cloud_compute_zone'])
+            'cloud_project': self.config['cloud_project'],
+            'experiment_filestore': self.config['experiment_filestore'],
+            'cloud_sql_instance_connection_name':
+                (cloud_sql_instance_connection_name),
+            'docker_registry': self.config['docker_registry'],
+        }
+        return template.render(**kwargs)
+
+    def write_startup_script(self, startup_script_file):
+        """Get the startup script to start the experiment on the dispatcher."""
+        startup_script = self._render_startup_script()
+        startup_script_file.write(startup_script)
+        startup_script_file.flush()
 
 
 def get_dispatcher(config: Dict) -> BaseDispatcher:
@@ -539,9 +521,6 @@ def main():
 
     start_experiment(args.experiment_name, args.experiment_config,
                      args.benchmarks, fuzzer_configs)
-    if not os.getenv('MANUAL_EXPERIMENT'):
-        stop_experiment.stop_experiment(args.experiment_name,
-                                        args.experiment_config)
     return 0
 
 

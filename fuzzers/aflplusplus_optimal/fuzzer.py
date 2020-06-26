@@ -106,8 +106,6 @@ def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-man
     elif benchmark_name == 'woff2-2016-05-06':
         run_options = ["-L", "0"]
 
-    os.environ['AFL_MAP_SIZE'] = '524288'
-
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
