@@ -15,11 +15,9 @@
 
 import enum
 import subprocess
-import time
 from typing import List
 
 from common import experiment_utils
-from common import logs
 from common import new_process
 
 # Constants for dispatcher specs.
