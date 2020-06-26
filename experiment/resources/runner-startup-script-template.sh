@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-## Configure the host.
+# Configure the host.
 
 # Make everything ptrace-able.
 echo 0 > /proc/sys/kernel/yama/ptrace_scope
@@ -21,7 +21,7 @@ echo 0 > /proc/sys/kernel/yama/ptrace_scope
 # Do not notify external programs about core dumps.
 echo core >/proc/sys/kernel/core_pattern
 
-## Start docker.
+# Start docker.
 {% if not local_experiment %}
 while ! docker pull {{docker_image_url}}
 do
