@@ -410,7 +410,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
 
     def start(self):
         """Start the experiment on the dispatcher."""
-        with tempfile.NamedTemporaryFile(dir=os.getcwd()) as startup_script:
+        with tempfile.NamedTemporaryFile(dir=os.getcwd(), mode='w') as startup_script:
             self.write_startup_script(startup_script)
             gcloud.create_instance(self.instance_name,
                                    gcloud.InstanceType.DISPATCHER,
