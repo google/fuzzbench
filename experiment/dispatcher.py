@@ -34,6 +34,7 @@ from experiment.build import builder
 from experiment import measurer
 from experiment import reporter
 from experiment import scheduler
+from experiment import stop_experiment
 
 LOOP_WAIT_SECONDS = 5 * 60
 
@@ -116,7 +117,7 @@ def dispatcher_main():
     # reason.
     multiprocessing.set_start_method('spawn')
     db_utils.initialize()
-    if os.getenv('LOCAL_EXPERIMENT'):
+    if experiment_utils.is_local_experiment():
         models.Base.metadata.create_all(db_utils.engine)
 
     experiment_config_file_path = os.path.join(fuzzer_config_utils.get_dir(),
@@ -159,7 +160,6 @@ def dispatcher_main():
     logs.info('Dispatcher finished.')
     scheduler_loop_thread.join()
     measurer_loop_process.join()
-    return experiment.config
 
 
 def main():
@@ -169,14 +169,19 @@ def main():
     })
 
     try:
-        experiment_config = dispatcher_main()
+        dispatcher_main()
     except Exception as error:
         logs.error('Error conducting experiment.')
         raise error
-    stop_experiment.stop_experiment(experiment_config['experiment'],
-                                    experiment_config)
+    experiment_config_file_path = os.path.join(fuzzer_config_utils.get_dir(),
+                                               'experiment.yaml')
 
-    return 0
+    experiment_utils.is_local_experiment()
+    if stop_experiment.stop_experiment(experiment_config['experiment'],
+                                       experiment_config):
+        return 0
+    else:
+        return 1
 
 
 if __name__ == '__main__':
