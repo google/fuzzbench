@@ -17,16 +17,21 @@ FROM $parent_image
 
 # Install wget to download afl_driver.cpp. Install libstdc++ to use llvm_mode.
 RUN apt-get update && \
-    apt-get install wget libstdc++-5-dev -y
+    apt-get install wget libstdc++-5-dev libtool-bin automake -y && \
+    apt-get install flex bison libglib2.0-dev libpixman-1-dev -y
 
 # Download and compile afl++ (v2.62d).
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
-RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && git checkout dev && \
-    git checkout 4103687f766405339b59d595b7ab7e5cd6f8ca33 && \
-    unset CFLAGS && unset CXXFLAGS && \
-    AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
-    make -C llvm_mode && \
-    make -C examples/aflpp_driver && \
-    cp examples/aflpp_driver/libAFLDriver.a /
+RUN git clone https://github.com/google/AFL.git /afl && \
+    cd /afl && \
+    git checkout 8da80951dd7eeeb3e3b5a3bcd36c485045f40274 && \
+    AFL_NO_X86=1 make && \
+    cd qemu_mode && ./build_qemu_support.sh
+    
+RUN apt-get update && \
+    apt-get install wget -y && \
+    wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
+    clang -Wno-pointer-sign -c /afl/llvm_mode/afl-llvm-rt.o.c -I/afl && \
+    clang++ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp && \
+    ar r /libAFL.a *.o
