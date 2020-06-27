@@ -35,7 +35,9 @@ def build():
     print('[post_build] Copying honggfuzz to $OUT directory')
     # Copy over honggfuzz's main fuzzing binary.
     shutil.copy('/honggfuzz/honggfuzz', os.environ['OUT'])
-    shutil.copy('/honggfuzz/qemu_mode/honggfuzz-qemu/x86_64-linux-user/qemu-x86_64', os.environ['OUT'])
+    shutil.copy(
+        '/honggfuzz/qemu_mode/honggfuzz-qemu/x86_64-linux-user/qemu-x86_64',
+        os.environ['OUT'])
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
