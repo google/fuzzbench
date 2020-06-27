@@ -260,6 +260,7 @@ def validate_experiment_requests(paths: List[Path]):
               automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
         return False
 
+    # Only validate the latest request.
     result = automatic_run_experiment.validate_experiment_requests(
         [experiment_requests[0]])
 
