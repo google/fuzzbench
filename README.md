@@ -54,3 +54,12 @@ how to use FuzzBench.
 Join our [mailing list](https://groups.google.com/forum/#!forum/fuzzbench-users)
 for discussions and announcements, or send us a private email at
 [fuzzbench@google.com](mailto:fuzzbench@google.com).
+
+
+
+
+PYTHONPATH=. python3 experiment/run_experiment.py \
+--experiment-config experiment-config.yaml \
+--benchmarks freetype2-2017 bloaty_fuzz_target \
+--experiment-name zyr-test \
+--fuzzers afl mcts mopt aflfast fairfuzz
