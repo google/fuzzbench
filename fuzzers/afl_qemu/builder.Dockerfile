@@ -23,13 +23,14 @@ RUN apt-get update && \
 # Download and compile afl++ (v2.62d).
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
-RUN git clone https://github.com/google/AFL.git /afl && \
+RUN cd / && git clone https://github.com/google/AFL.git /afl && \
     cd /afl && \
     git checkout 8da80951dd7eeeb3e3b5a3bcd36c485045f40274 && \
     AFL_NO_X86=1 make && \
+    unset CFLAGS && unset CXXFLAGS && \
     cd qemu_mode && ./build_qemu_support.sh
     
-RUN git clone https://github.com/vanhauser-thc/qemu_driver && \
+RUN cd / && git clone https://github.com/vanhauser-thc/qemu_driver && \
     cd /qemu_driver && \
     git checkout 499134f3aa34ce9c3d7f87f33b1722eec6026362 && \
     make && \

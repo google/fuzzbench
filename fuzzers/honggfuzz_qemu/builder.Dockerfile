@@ -30,14 +30,16 @@ RUN apt-get update -y && \
 # dependent code that may not work on the machines we actually fuzz on.
 # Create an empty object file which will become the FUZZER_LIB lib (since
 # honggfuzz doesn't need this when hfuzz-clang(++) is used).
-RUN git clone https://github.com/google/honggfuzz.git /honggfuzz && \
+RUN cd / && git clone https://github.com/google/honggfuzz.git /honggfuzz && \
     cd /honggfuzz && \
     git checkout 8e76143f884cefd3054e352eccc09d550788dba0 && \
     CFLAGS="-O3 -funroll-loops" make && \
+    unset CFLAGS && unset CXXFLAGS && \
     cd qemu_mode && export LIBS=-ldl && TARGETS=x86_64-linux-user make && \
+    sed -i 's/-Werror //g' honggfuzz-qemu/config-host.mak && \
     cd honggfuzz-qemu && make
 
-RUN git clone https://github.com/vanhauser-thc/qemu_driver && \
+RUN cd / && git clone https://github.com/vanhauser-thc/qemu_driver && \
     cd /qemu_driver && \
     git checkout 499134f3aa34ce9c3d7f87f33b1722eec6026362 && \
     make && \
