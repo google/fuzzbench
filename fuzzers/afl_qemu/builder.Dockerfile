@@ -29,9 +29,8 @@ RUN git clone https://github.com/google/AFL.git /afl && \
     AFL_NO_X86=1 make && \
     cd qemu_mode && ./build_qemu_support.sh
     
-RUN apt-get update && \
-    apt-get install wget -y && \
-    wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
-    clang -Wno-pointer-sign -c /afl/llvm_mode/afl-llvm-rt.o.c -I/afl && \
-    clang++ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp && \
-    ar r /libAFL.a *.o
+RUN git clone https://github.com/vanhauser-thc/qemu_driver && \
+    cd /qemu_driver && \
+    git checkout 499134f3aa34ce9c3d7f87f33b1722eec6026362 && \
+    make && \
+    cp -fv libQEMU.a /libAFLDriver.a

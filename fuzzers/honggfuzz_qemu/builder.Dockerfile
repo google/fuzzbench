@@ -21,6 +21,8 @@ RUN apt-get update -y && \
     libbfd-dev \
     libunwind-dev \
     libblocksruntime-dev \
+    libstdc++-5-dev libtool-bin automake \
+    flex bison libglib2.0-dev libpixman-1-dev \
     liblzma-dev
 
 # Download honggfuz version 2.1 + 8e76143f884cefd3054e352eccc09d550788dba0
@@ -32,7 +34,11 @@ RUN git clone https://github.com/google/honggfuzz.git /honggfuzz && \
     cd /honggfuzz && \
     git checkout 8e76143f884cefd3054e352eccc09d550788dba0 && \
     CFLAGS="-O3 -funroll-loops" make && \
-    touch empty_lib.c && \
-    cc -c -o empty_lib.o empty_lib.c && \
-    cd qemu_mode && make && \
+    cd qemu_mode && export LIBS=-ldl && TARGETS=x86_64-linux-user make && \
     cd honggfuzz-qemu && make
+
+RUN git clone https://github.com/vanhauser-thc/qemu_driver && \
+    cd /qemu_driver && \
+    git checkout 499134f3aa34ce9c3d7f87f33b1722eec6026362 && \
+    make && \
+    cp -fv libQEMU.a /

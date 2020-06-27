@@ -27,15 +27,15 @@ def build():
     # honggfuzz doesn't need additional libraries when code is compiled
     # with hfuzz-clang(++)
     os.environ['CC'] = 'clang'
-    os.environ['CXX'] = 'hfuzz-clang++'
-    os.environ['FUZZER_LIB'] = '/honggfuzz/empty_lib.o'
+    os.environ['CXX'] = 'clang++'
+    os.environ['FUZZER_LIB'] = '/libQEMU.a'
 
     utils.build_benchmark()
 
     print('[post_build] Copying honggfuzz to $OUT directory')
     # Copy over honggfuzz's main fuzzing binary.
     shutil.copy('/honggfuzz/honggfuzz', os.environ['OUT'])
-    shutil.copy('/honggfuzz/qemu_mode/honggfuzz-qemu/x86_64-linux-user/qemu-x86_64', os.environ.['OUT'])
+    shutil.copy('/honggfuzz/qemu_mode/honggfuzz-qemu/x86_64-linux-user/qemu-x86_64', os.environ['OUT'])
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
