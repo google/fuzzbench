@@ -262,7 +262,7 @@ def validate_experiment_requests(paths: List[Path]):
 
     # Only validate the latest request.
     result = automatic_run_experiment.validate_experiment_requests(
-        [experiment_requests[0]])
+        experiment_requests[:1])
 
     if not result:
         print('%s is not valid.' %
