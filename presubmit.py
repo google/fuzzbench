@@ -261,7 +261,7 @@ def validate_experiment_requests(paths: List[Path]):
         return False
 
     result = automatic_run_experiment.validate_experiment_requests(
-        experiment_requests)
+        [experiment_requests[0]])
 
     if not result:
         print('%s is not valid.' %
