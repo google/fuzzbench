@@ -52,10 +52,9 @@ clear-cache:
 	docker volume rm $$(docker volume ls -q) 2>/dev/null ; true
 
 EXPERIMENT := .*
+EXPERIMENT_CONFIG_FILE := config/experiment.yaml
 
-# This target helps developers clean stale trials manually for local experiment.
-stop-trials:
-	- docker rm --volumes --force $$(docker ps -f "name=r-$(EXPERIMENT)-[0-9]+$$" -q)
-
-stop-experiment: stop-trials
-	- docker rm --volumes --force $$(docker ps -f "name=d-$(EXPERIMENT)$$" -q)
+# This target helps developers clean stale docker containers manually for local
+# experiment.
+stop-experiment:
+	PYTHONPATH=. python3 experiment/stop_experiment.py $(EXPERIMENT) $(EXPERIMENT_CONFIG_FILE)
