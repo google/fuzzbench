@@ -57,4 +57,4 @@ EXPERIMENT_CONFIG_FILE := config/experiment.yaml
 # This target helps developers clean stale docker containers manually for local
 # experiment.
 stop-experiment:
-	PYTHONPATH=. python3 experiment/stop_experiment.py $(EXPERIMENT) $(EXPERIMENT_CONFIG_FILE)
+	source ${VENV_ACTIVATE} && PYTHONPATH=. python3 experiment/stop_experiment.py $(EXPERIMENT) $(EXPERIMENT_CONFIG_FILE)

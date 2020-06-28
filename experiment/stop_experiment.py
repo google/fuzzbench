@@ -14,12 +14,12 @@
 # limitations under the License.
 """Stops a running experiment."""
 
+import subprocess
 import sys
 
 from common import experiment_utils
 from common import logs
 from common import gcloud
-from common import new_process
 from common import yaml_utils
 
 logger = logs.Logger('stop_experiment')  # pylint: disable=invalid-name
@@ -30,16 +30,14 @@ def stop_experiment(experiment_name, experiment_config_filename):
     experiment_config = yaml_utils.read(experiment_config_filename)
 
     if experiment_config.get('local_experiment', False):
-        new_process.execute(
-            ['docker', 'rm', '--volumes', '--force',
-             '$(docker ps -f "name=r-' + str(experiment_name) + '-[0-9]+$" -q)'
-            ], expect_zero=False, write_to_stdout=True)
-        new_process.execute(
-            ['docker', 'rm', '--volumes', '--force',
-             '$(docker ps -f "name=d-' + str(experiment_name) + '$" -q)'
-            ], expect_zero=False)
-        logger.info('Local experiment is stopped and all related docker '
-                    'containers are cleaned.')
+        subprocess.Popen([
+            '/bin/bash', '-c', 'docker rm --volumes --force '
+            '$(docker ps -f "name=r-' + str(experiment_name) + '-[0-9]+$" -q)'
+        ])
+        subprocess.Popen([
+            '/bin/bash', '-c', 'docker rm --volumes --force '
+            '$(docker ps -f "name=d-' + str(experiment_name) + '$" -q)'
+        ])
         return 0
 
     instances = gcloud.list_instances()
