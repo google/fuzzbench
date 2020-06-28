@@ -124,5 +124,4 @@ def execute(  # pylint: disable=too-many-locals,too-many-branches
         raise subprocess.CalledProcessError(retcode, command)
 
     logs.debug(log_message, extras=log_extras)
-
     return ProcessResult(retcode, output, wrapped_process.timed_out)
