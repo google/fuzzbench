@@ -47,7 +47,7 @@ docs-serve:
 
 clear-cache:
 	docker stop $$(docker ps -a -q) 2>/dev/null ; \
-	docker rm --volumes --force $$(docker ps -a -q) 2>/dev/null ; \
+	docker rm -vf $$(docker ps -a -q) 2>/dev/null ; \
 	docker rmi -f $$(docker images -a -q) 2>/dev/null ; \
 	docker volume rm $$(docker volume ls -q) 2>/dev/null ; true
 
