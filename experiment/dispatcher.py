@@ -175,13 +175,12 @@ def main():
         raise error
     experiment_config_file_path = os.path.join(fuzzer_config_utils.get_dir(),
                                                'experiment.yaml')
-
+    experiment_config = yaml_utils.read(experiment_config_file_path)
     experiment_utils.is_local_experiment()
     if stop_experiment.stop_experiment(experiment_config['experiment'],
-                                       experiment_config):
+                                       experiment_config_file_path):
         return 0
-    else:
-        return 1
+    return 1
 
 
 if __name__ == '__main__':
