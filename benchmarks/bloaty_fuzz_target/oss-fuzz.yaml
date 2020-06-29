@@ -1,17 +1,4 @@
-# Copyright 2020 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-project: bloaty
+commit: 08f59b2ae229c75b01c50bfcb52e74984c8019fb
+commit_date: 2019-11-18 16:52:25+00:00
 fuzz_target: fuzz_target
-oss_fuzz_builder_hash: 9dcbb741050312af58acb50e3a590aa446b1e57bb35125507bd5c637c07a1aea
+project: bloaty
