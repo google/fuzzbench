@@ -13,5 +13,3 @@
 # limitations under the License.
 
 FROM gcr.io/fuzzbench/base-runner
-
-ARG LD_LIBRARY_PATH=/out
