@@ -177,11 +177,11 @@ def main():
                                                'experiment.yaml')
 
     experiment_utils.is_local_experiment()
-    if stop_experiment.stop_experiment(experiment_config['experiment'],
-                                       experiment_config):
+    if stop_experiment.stop_experiment(experiment_utils.get_experiment_name(),
+                                       experiment_config_file_path):
         return 0
-    else:
-        return 1
+
+    return 1
 
 
 if __name__ == '__main__':
