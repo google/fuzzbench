@@ -356,7 +356,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # to be non-optimized to prevent AFL from aborting.
     os.system('sed -i \'s/OPTIMIZED/NORMAL/g\' {dict}'.format(dict=dst_file))
     afl_fuzz_thread1 = threading.Thread(
-        target=run_fuzz,
+        target=run_fuzzer,
         args=(input_corpus, output_corpus,
               '{target}-original'.format(target=target_binary),
               ['-S', 'slave-original']))
@@ -364,7 +364,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     print('[run_fuzzer] Running AFL for normalized and optimized dictionary')
     afl_fuzz_thread2 = threading.Thread(
-        target=run_fuzz,
+        target=run_fuzzer,
         args=(input_corpus, output_corpus,
               '{target}-normalized-none-nopt'.format(target=target_binary),
               ['-S', 'slave-normalized-nopt']))
