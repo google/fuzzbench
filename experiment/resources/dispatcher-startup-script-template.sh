@@ -23,5 +23,3 @@ docker run --rm \
   --cap-add=SYS_PTRACE --cap-add=SYS_NICE \
   -v /var/run/docker.sock:/var/run/docker.sock --name=dispatcher-container \
   {{docker_registry}}/dispatcher-image /work/startup-dispatcher.sh
-
-
