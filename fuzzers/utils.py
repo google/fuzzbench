@@ -108,7 +108,7 @@ def restore_directory(directory):
     initial_cwd = os.getcwd()
     with tempfile.TemporaryDirectory() as temp_dir:
         backup = os.path.join(temp_dir, os.path.basename(directory))
-        shutil.copytree(directory, backup)
+        shutil.copytree(directory, backup, symlinks=True)
         yield
         shutil.rmtree(directory)
         shutil.move(backup, directory)
