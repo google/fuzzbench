@@ -63,11 +63,6 @@ CONFIG_DIR = 'config'
 
 RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
 
-JINJA_ENV = jinja2.Environment(
-    undefined=jinja2.StrictUndefined,
-    loader=jinja2.FileSystemLoader(RESOURCES_DIR),
-)
-
 
 def read_and_validate_experiment_config(config_filename: str) -> Dict:
     """Reads |config_filename|, validates it, finds as many errors as possible,
@@ -418,7 +413,13 @@ class GoogleCloudDispatcher(BaseDispatcher):
                                    startup_script=startup_script.name)
 
     def _render_startup_script(self):
-        template = JINJA_ENV.get_template(
+        """Renders the startup script template and returns the result as a
+        string."""
+        jinja_env = jinja2.Environment(
+            undefined=jinja2.StrictUndefined,
+            loader=jinja2.FileSystemLoader(RESOURCES_DIR),
+        )
+        template = jinja_env.get_template(
             'dispatcher-startup-script-template.sh')
         cloud_sql_instance_connection_name = (
             self.config['cloud_sql_instance_connection_name'])
@@ -427,9 +428,6 @@ class GoogleCloudDispatcher(BaseDispatcher):
             'instance_name': self.instance_name,
             'postgres_password': os.environ['POSTGRES_PASSWORD'],
             'experiment': self.config['experiment'],
-            # TODO(metzman): Create a function that sets env vars based on
-            # the contents of a dictionary, and use it instead of hardcoding
-            # the configs we use.
             'cloud_project': self.config['cloud_project'],
             'experiment_filestore': self.config['experiment_filestore'],
             'cloud_sql_instance_connection_name':

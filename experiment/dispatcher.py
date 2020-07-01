@@ -176,7 +176,9 @@ def main():
     experiment_config_file_path = os.path.join(fuzzer_config_utils.get_dir(),
                                                'experiment.yaml')
 
-    experiment_utils.is_local_experiment()
+    if experiment_utils.is_local_experiment():
+        return 0
+
     if stop_experiment.stop_experiment(experiment_utils.get_experiment_name(),
                                        experiment_config_file_path):
         return 0
