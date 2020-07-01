@@ -21,10 +21,8 @@ jobs:
           - aflplusplus_optimal
           - aflplusplus_shmem
           - aflplusplus_optimal_shmem
-          - aflplusplus_qemu
           - aflsmart
           - ankou
-          - eclipser
           - entropic
           - fairfuzz
           - fastcgs_lm
@@ -34,6 +32,11 @@ jobs:
           - libfuzzer_nocmp
           - manul
           - mopt
+          # Greybox fuzzers
+          - eclipser
+          - afl_qemu
+          - aflplusplus_qemu
+          - honggfuzz_qemu
 
         benchmark_type:
           - oss-fuzz

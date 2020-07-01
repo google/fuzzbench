@@ -14,4 +14,5 @@
 
 FROM gcr.io/fuzzbench/base-runner
 
-ARG LD_LIBRARY_PATH=/out
+# honggfuzz requires libfd and libunwid
+RUN apt-get update -y && apt-get install -y libbfd-dev libunwind-dev
