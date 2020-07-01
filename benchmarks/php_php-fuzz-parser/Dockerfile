@@ -1,4 +1,4 @@
-# Copyright 2016 Google Inc.
+# Copyright 2019 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,9 +14,14 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:02b6f53c6220b84cfb671dfc65bb8f1e224e8a5c56940e358f0fbcbd74b44734
-MAINTAINER kurt@roeckx.be
-RUN apt-get update && apt-get install -y make
-RUN git clone --depth 1 https://github.com/openssl/openssl.git
-WORKDIR openssl
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:59fdabfe72127e145d8a387b68e883121bddd7cf391d600edb97ecbdacbc9ff8
+MAINTAINER stas@php.net
+RUN apt-get update && \
+    apt-get install -y autoconf automake libtool bison re2c pkg-config
+
+# php-src will be checked out to the commit hash specified in oss-fuzz.yaml.
+RUN git clone --depth 1 --branch master https://github.com/php/php-src.git php-src
+RUN git clone https://github.com/kkos/oniguruma.git php-src/oniguruma
+RUN git -C php-src/oniguruma/ checkout -f 14f5efb82321e26502caa2df3c58aa1c2d36c801
+WORKDIR php-src
 COPY build.sh $SRC/

@@ -60,9 +60,10 @@ PYTHONPATH=. python3 benchmarks/oss_fuzz_benchmark_integration.py -p bloaty
 The script should create the benchmark directory in
 `benchmarks/$PROJECT_$FUZZ_TARGET` (unless you specify the name manually) with
 all the files needed to build the benchmark. You may need to remove unnecessary files
-such as fuzz targets which are not used for the benchmark. Further, the `build.sh`
-file may also need to be modified accordingly, so as to build only the required fuzz
-target.
+such as fuzz targets which are not used for the benchmark. The `*.options` files must
+be removed along with the commands that copy them to `$SRC` or `$OUT`. Further,
+the `build.sh` file may also need to be modified accordingly, so as to build only
+the required fuzz target.
 
 Add the files in the benchmark directory to git (and then commit them):
 
