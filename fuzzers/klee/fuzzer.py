@@ -70,9 +70,11 @@ def get_size_for_benchmark():
     """
     Returns the size for the seed for each benchmark.
     """
-    size = 4096
+    size = 256
     if 're2-2014-12-09' in os.environ['BENCHMARK']:
         size = 64
+    if 'libpng' in os.environ['BENCHMARK']:
+        size = 128
     return size
 
 
@@ -205,7 +207,7 @@ def covert_seed_inputs(ktest_tool, input_klee, input_corpus):
         if not os.path.isfile(seedfile):
             continue
 
-        if os.path.getsize(seedfile) > 4096:
+        if os.path.getsize(seedfile) > get_size_for_benchmark():
             continue
 
         seed_in = '{seed}.ktest'.format(seed=seedfile)
