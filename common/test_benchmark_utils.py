@@ -19,7 +19,7 @@ from common import conftest
 
 # pylint: disable=invalid-name,unused-argument
 
-CLOUD_PROJECT = 'fuzzbench'
+DOCKER_REGISTRY = 'gcr.io/fuzzbench'
 
 OTHER_BENCHMARK = 'benchmark'
 
@@ -62,7 +62,7 @@ def test_get_fuzz_target(benchmark, expected_fuzz_target, oss_fuzz_benchmark):
 def test_get_runner_image_url(benchmark, expected_url, oss_fuzz_benchmark):
     """Test that we can get the runner image url of a benchmark."""
     assert benchmark_utils.get_runner_image_url(benchmark, 'fuzzer',
-                                                CLOUD_PROJECT) == expected_url
+                                                DOCKER_REGISTRY) == expected_url
 
 
 def test_get_builder_hash_oss_fuzz_benchmark(oss_fuzz_benchmark):

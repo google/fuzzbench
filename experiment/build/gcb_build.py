@@ -56,7 +56,7 @@ def build_coverage(benchmark):
 
 def _build_benchmark_coverage(benchmark: str) -> Tuple[int, str]:
     """Build a coverage build of |benchmark| on GCB."""
-    coverage_binaries_dir = exp_path.gcs(
+    coverage_binaries_dir = exp_path.filestore(
         build_utils.get_coverage_binaries_dir())
     substitutions = {
         '_GCS_COVERAGE_BINARIES_DIR': coverage_binaries_dir,
@@ -107,7 +107,7 @@ def _build_oss_fuzz_project_coverage(benchmark: str) -> Tuple[int, str]:
     """Build a coverage build of OSS-Fuzz-based benchmark |benchmark| on GCB."""
     project = benchmark_utils.get_project(benchmark)
     oss_fuzz_builder_hash = benchmark_utils.get_oss_fuzz_builder_hash(benchmark)
-    coverage_binaries_dir = exp_path.gcs(
+    coverage_binaries_dir = exp_path.filestore(
         build_utils.get_coverage_binaries_dir())
     substitutions = {
         '_GCS_COVERAGE_BINARIES_DIR': coverage_binaries_dir,
