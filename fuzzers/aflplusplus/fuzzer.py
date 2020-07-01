@@ -174,6 +174,7 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):
 
     # needed for LTO mode to run c++ targets
     os.environ['LD_LIBRARY_PATH'] = '/out'
+    os.environ['AFL_MAP_SIZE'] = '524288'
 
     afl_fuzzer.run_afl_fuzz(input_corpus,
                             output_corpus,
