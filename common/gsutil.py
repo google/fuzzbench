@@ -82,7 +82,7 @@ def rsync(  # pylint: disable=too-many-arguments
     return gsutil_command(command, parallel=parallel)
 
 
-def cat(file_path):
+def cat(file_path, must_exist=True):
     """Does gsutil cat on |file_path| and returns the result."""
     command = ['cat', file_path]
-    return gsutil_command(command)
+    return gsutil_command(command, expect_zero=must_exist)
