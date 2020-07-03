@@ -293,3 +293,17 @@ def test_extract_corpus(archive_name, tmp_path):
         'b6ccc20641188445fa30c8485a826a69ac4c6b60'
     }
     assert expected_corpus_files.issubset(set(os.listdir(tmp_path)))
+
+
+
+def test_measure_snapshot_coverage_later():
+    """Tests that the next cycle's snapshot is measured if the current one
+    cannot be measured. This behavior is necessary for dealing with trials
+    that freeze and miss cycles but resume later."""
+    pass
+
+
+def test_measure_snapshot_coverage_no_more():
+    """Tests that measure_snapshot_coverage signals that there is nothing more
+    to measure for this cycle."""
+    pass

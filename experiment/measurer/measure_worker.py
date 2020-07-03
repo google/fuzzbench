@@ -138,6 +138,32 @@ class StateFile:
             filestore_utils.cp(temp_file.name, state_file_bucket_path)
 
 
+class TrialMeasurementPaths:
+    def __init__(fuzzer, benchmark, trial_num):
+        benchmark_fuzzer_trial_dir = experiment_utils.get_trial_dir(
+            fuzzer, benchmark, trial_num)
+        work_dir = experiment_utils.get_work_dir()
+        measurement_dir = os.path.join(work_dir, 'measurement-folders',
+                                       benchmark_fuzzer_trial_dir)
+        self.corpus = os.path.join(measurement_dir, 'corpus')
+
+        self.crashes = os.path.join(measurement_dir, 'crashes')
+        self.sancov = os.path.join(measurement_dir, 'sancovs')
+        self.state = os.path.join(measurement_dir, 'state')
+        self.trial = os.path.join(work_dir, 'experiment-folders',
+                                  benchmark_fuzzer_trial_dir)
+
+        # Used by the runner to signal that there won't be a corpus archive for
+        # a cycle because the corpus hasn't changed since the last cycle.
+        self.unchanged_cycles = os.path.join(self.trial_dir, 'results',
+                                             'unchanged-cycles')
+
+    def initialize_dirs(self):
+        """Initialize directories that will be needed for measuring
+        coverage."""
+        for directory in [self.corpus, self.sancov, self.crashes]:
+            filesystem.recreate_directory(directory)
+
 class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
     """Class used for storing details needed to measure coverage of a particular
     trial."""
@@ -150,37 +176,21 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         self.benchmark = benchmark
         self.trial_num = trial_num
         self.logger = trial_logger
-        benchmark_fuzzer_trial_dir = experiment_utils.get_trial_dir(
-            fuzzer, benchmark, trial_num)
-        work_dir = experiment_utils.get_work_dir()
-        measurement_dir = os.path.join(work_dir, 'measurement-folders',
-                                       benchmark_fuzzer_trial_dir)
-        self.corpus_dir = os.path.join(measurement_dir, 'corpus')
-
-        self.crashes_dir = os.path.join(measurement_dir, 'crashes')
-        self.sancov_dir = os.path.join(measurement_dir, 'sancovs')
-        self.state_dir = os.path.join(measurement_dir, 'state')
-        self.trial_dir = os.path.join(work_dir, 'experiment-folders',
-                                      benchmark_fuzzer_trial_dir)
-
-        # Used by the runner to signal that there won't be a corpus archive for
-        # a cycle because the corpus hasn't changed since the last cycle.
-        self.unchanged_cycles_path = os.path.join(self.trial_dir, 'results',
-                                                  'unchanged-cycles')
+        self.paths = TrialMeasurementPaths(fuzzer, benchmark, trial_num)
 
     def initialize_measurement_dirs(self):
         """Initialize directories that will be needed for measuring
         coverage."""
-        for directory in [self.corpus_dir, self.sancov_dir, self.crashes_dir]:
-            filesystem.recreate_directory(directory)
+        self.paths.initialize_dirs()
+
 
     def run_cov_new_units(self):
         """Run the coverage binary on new units."""
         coverage_binary = get_coverage_binary(self.benchmark)
         crashing_units = run_coverage.do_coverage_run(coverage_binary,
-                                                      self.corpus_dir,
-                                                      self.sancov_dir,
-                                                      self.crashes_dir)
+                                                      self.paths.corpus,
+                                                      self.paths.sancov,
+                                                      self.paths.crashes)
 
         self.UNIT_BLACKLIST[self.benchmark] = (
             self.UNIT_BLACKLIST[self.benchmark].union(set(crashing_units)))
@@ -189,7 +199,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         """Merge new pcs into and return the list of all covered pcs."""
         prev_pcs = self.get_prev_covered_pcs(cycle)
         covered_pcs_state = self.get_covered_pcs_state(cycle)
-        sancov_files = glob.glob(os.path.join(self.sancov_dir, '*.sancov'))
+        sancov_files = glob.glob(os.path.join(self.paths.sancov, '*.sancov'))
         if not sancov_files:
             self.logger.error('No sancov files.')
             return list(prev_pcs)
@@ -227,6 +237,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
         unchanged_cycles = get_unchanged_cycles()
         if cycle in unchanged_cycles:
+            self.logger.info('Cycle: %d is unchanged.', measure_req.cycle)
             return True
 
         if cycle < max(unchanged_cycles):
@@ -242,7 +253,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
     def get_covered_pcs_state(self, cycle: int) -> StateFile:
         """Returns the StateFile for covered-pcs of this |cycle|."""
-        return StateFile('covered-pcs', self.state_dir, cycle)
+        return StateFile('covered-pcs', self.paths.state, cycle)
 
     def get_prev_covered_pcs(self, cycle: int) -> Set[str]:
         """Returns the set of pcs covered in the previous cycle or an empty list
@@ -251,7 +262,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
     def get_measured_files_state(self, cycle) -> StateFile:
         """Returns the StateFile for measured-files of this cycle."""
-        return StateFile('measured-files', self.state_dir, cycle)
+        return StateFile('measured-files', self.paths.state, cycle)
 
     def get_prev_measured_files(self, cycle) -> Set[str]:
         """Returns the set of files measured in the previous cycle or an empty
@@ -269,31 +280,31 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         crash_blacklist = self.UNIT_BLACKLIST[self.benchmark]
         unit_blacklist = prev_measured_units.union(crash_blacklist)
 
-        extract_corpus(corpus_archive_path, unit_blacklist, self.corpus_dir)
+        extract_corpus(corpus_archive_path, unit_blacklist, self.paths.corpus)
         return True
 
     def archive_crashes(self, cycle):
         """Archive this cycle's crashes into cloud bucket."""
-        if not os.listdir(self.crashes_dir):
+        if not os.listdir(self.paths.crashes):
             logs.info('No crashes found for cycle %d.', cycle)
             return
 
         logs.info('Archiving crashes for cycle %d.', cycle)
         crashes_archive_name = experiment_utils.get_crashes_archive_name(cycle)
-        archive = os.path.join(os.path.dirname(self.crashes_dir),
+        archive = os.path.join(os.path.dirname(self.paths.crashes),
                                crashes_archive_name)
         with tarfile.open(archive, 'w:gz') as tar:
-            tar.add(self.crashes_dir,
-                    arcname=os.path.basename(self.crashes_dir))
+            tar.add(self.paths.crashes,
+                    arcname=os.path.basename(self.paths.crashes))
         bucket_path = exp_path.gcs(
-            posixpath.join(self.trial_dir, 'crashes', crashes_archive_name))
+            posixpath.join(self.paths.trial, 'crashes', crashes_archive_name))
         filestore_utils.cp(archive, bucket_path)
         os.remove(archive)
 
     def update_measured_files(self, cycle):
         """Updates the measured-files.txt file for this trial with
         files measured in this snapshot."""
-        current_files = set(os.listdir(self.corpus_dir))
+        current_files = set(os.listdir(self.paths.corpus))
         previous_files = self.get_prev_measured_files(cycle)
         all_files = current_files.union(previous_files)
 
@@ -307,17 +318,11 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         states for |cycle| are the same as |cycle - 1|."""
         state_files = [
             self.get_covered_pcs_state(cycle),
-            StateFile('measured-files', self.state_dir, cycle)
+            StateFile('measured-files', self.paths.state, cycle)
         ]
         for state_file in state_files:
             prev_state = state_file.get_previous()
             state_file.set_current(prev_state)
-
-    def has_more(self, cycle, max_cycle):
-        if cycle == max_cycle:
-            return False
-
-
 
 
 def measure_trial_coverage(measure_req) -> models.Snapshot:
@@ -344,32 +349,9 @@ def measure_trial_coverage(measure_req) -> models.Snapshot:
     return measure_response
 
 
-def measure_snapshot_coverage(measure_req) -> models.Snapshot:
-    """Measure coverage of the snapshot for |cycle| for |trial_num| of |fuzzer|
-    and |benchmark|."""
-    snapshot_logger = logs.Logger('measurer',
-                                  default_extras={
-                                      'fuzzer': fuzzer,
-                                      'benchmark': benchmark,
-                                      'trial_id': str(trial_num),
-                                      'cycle': str(cycle),
-                                  })
-    snapshot_measurer = SnapshotMeasurer(fuzzer, benchmark, trial_num,
-                                         snapshot_logger)
-
-    measuring_start_time = time.time()
-    snapshot_logger.info('Measuring cycle: %d.', cycle)
-    this_time = cycle * experiment_utils.get_snapshot_seconds()
-    if snapshot_measurer.is_cycle_unchanged(cycle):
-        snapshot_logger.info('Cycle: %d is unchanged.', cycle)
-        snapshot_measurer.update_state_for_unchanged_cycle(cycle)
-        covered_pcs = snapshot_measurer.get_prev_covered_pcs(cycle)
-        return models.Snapshot(time=this_time,
-                               trial_id=trial_num,
-                               edges_covered=len(covered_pcs))
-
+def copy_cycle_corpus_archive(self, cycle):
     corpus_archive_dst = os.path.join(
-        snapshot_measurer.trial_dir, 'corpus',
+        self.paths.trial, 'corpus',
         experiment_utils.get_corpus_archive_name(cycle))
     corpus_archive_src = exp_path.gcs(corpus_archive_dst)
 
@@ -380,32 +362,105 @@ def measure_snapshot_coverage(measure_req) -> models.Snapshot:
     try:
         filestore_utils.cp(corpus_archive_src, corpus_archive_dst)
     except subprocess.CalledProcessError:
-        snapshot_logger.info('Could not copy corpus for cycle: %d.', cycle)
         # No extra state to save.
         return None
 
-    snapshot_measurer.initialize_measurement_dirs()
-    snapshot_measurer.extract_corpus(corpus_archive_dst, cycle)
-    # Don't keep corpus archives around longer than they need to be.
-    os.remove(corpus_archive_dst)
+    return corpus_archive_dst
 
-    # Get the coverage of the new corpus units.
-    snapshot_measurer.run_cov_new_units()
-    all_pcs = snapshot_measurer.merge_new_pcs(cycle)
-    snapshot = models.Snapshot(time=this_time,
+
+def _initiailize_snapshot_logger(measure_req):
+    snapshot_logger = logs.Logger('measurer',
+                                  default_extras={
+                                      'fuzzer': measure_req.fuzzer,
+                                      'benchmark': meaure_req.benchmark,
+                                      'trial_id': str(measure_req.trial_num),
+                                      'cycle': str(measure_req.cycle),
+                                  })
+    return snapshot_logger
+
+
+def measure_unchanged_cycle(measure_req, snapshot_measurer):
+    snapshot_measurer.update_state_for_unchanged_cycle(measure_req.cycle)
+    covered_pcs = snapshot_measurer.get_prev_covered_pcs(measure_req.cycle)
+    return create_measure_response(measure_req, len(covered_pcs))
+
+
+def measure_snapshot_coverage(measure_req) -> models.Snapshot:
+    """Measure coverage of the snapshot for |cycle| for |trial_num| of |fuzzer|
+    and |benchmark|."""
+    snapshot_logger = _initialize_snapshot_logger(measure_req)
+    snapshot_logger.info('Measuring cycle: %d.', measure_req.cycle)
+    snapshot_measurer = SnapshotMeasurer(measure_req.fuzzer, measure_req.benchmark, meaure_req.trial_num,
+                                         snapshot_logger)
+
+    response = _measure_snapshot_coverage(snapshot_measurer, measure_req)
+    measuring_time = round(time.time() - measuring_start_time, 2)
+    snapshot_logger.info(
+        'Measured cycle: %d in %d seconds.', measure_req.cycle,
+        measuring_time)
+    return response
+
+
+def _measure_snapshot_coverage(snapshot_measurer, measure_req) -> SnapshotMeasureResponse:
+    if snapshot_measurer.is_cycle_unchanged(measure_req.cycle):
+        return measure_unchanged_cycle(measure_req, snapshot_measurer)
+
+    corpus_archive_path = copy_cycle_corpus_archive(measure_req.cycle)
+    if corpus_archive_path:
+        # Get the coverage of the new corpus units.
+        return measure_cycle_units(
+            snapshot_measurer, measure_req, corpus_archive_path)
+
+    snapshot_measurer.logger.info('Could not copy corpus for cycle: %d.',
+                                  measure_req.cycle)
+
+    return measure_later_snapshot_if_possible(snapshot_measurer, measure_req)
+
+
+def measure_later_snapshot_if_possible(snapshot_measurer, measure_req):
+    next_measure_req = find_later_snapshot_to_measure(measure_req)
+    if not next_measure_req:
+        return create_unable_to_measure_response()
+
+    return measure_later_snapshot_coverage(measure_req, next_measure_req)
+
+
+def find_later_snapshot_to_measure(measure_req):
+    # Check unchanged.
+    # Check corpus-archive.
+    pass
+
+
+def create_unable_to_measure_response():
+    return create_measure_response(
+        measure_req=None, num_edges=0, has_more=False)
+
+
+def create_measure_response(measure_req, num_edges, has_more=True):
+    if not has_more:
+        return SnapshotMeasureResponse(None, False)
+
+    cycle_time = measure_req.cycle * experiment_utils.get_snapshot_seconds()
+    snapshot = models.Snapshot(time=cycle_time,
                                trial_id=trial_num,
-                               edges_covered=len(all_pcs))
+                               edges_covered=len(cycle_pcs))
+    return SnapshotMeasureResponse(snapshot, True)
 
+def measure_cycle_units(snapshot_measurer, measure_req, corpus_archive_path):
+    # Prepare to get coverage of new units.
+    snapshot_measurer.initialize_measurement_dirs()
+    snapshot_measurer.extract_corpus(corpus_archive_path, measure_req.cycle)
+    # Don't keep corpus archives around longer than they need to be.
+    os.remove(corpus_archive_path)
+
+    snapshot_measurer.run_cov_new_units()
+    cycle_pcs = snapshot_measurer.merge_new_pcs(measure_req.cycle)
     # Record the new corpus files.
-    snapshot_measurer.update_measured_files(cycle)
+    snapshot_measurer.update_measured_files(measure_req.cycle)
 
     # Archive crashes directory.
-    snapshot_measurer.archive_crashes(cycle)
-
-    measuring_time = round(time.time() - measuring_start_time, 2)
-    snapshot_logger.info('Measured cycle: %d in %d seconds.', cycle,
-                         measuring_time)
-    return snapshot
+    snapshot_measurer.archive_crashes(measure_req.cycle)
+    return create_measure_response(measure_req, len(cycle_pcs))
 
 
 def set_up_coverage_binary(benchmark):
