@@ -35,12 +35,13 @@ else:
     from common import gsutil as filestore_utils_impl
 
 
-def cp(source, destination, recursive=False, parallel=False):  # pylint: disable=invalid-name
+def cp(source, destination, recursive=False, parallel=False, must_exist=True):  # pylint: disable=invalid-name
     """Copies |source| to |destination|."""
     return filestore_utils_impl.cp(source,
                                    destination,
                                    recursive=recursive,
-                                   parallel=parallel)
+                                   parallel=parallel,
+                                   must_exist=must_exist)
 
 
 def ls(path, must_exist=True):  # pylint: disable=invalid-name
@@ -77,4 +78,4 @@ def rsync(  # pylint: disable=too-many-arguments
 
 def cat(file_path, must_exist=True):
     """Reads the file at |file_path| and returns the result."""
-    return filestore_utils_impl.cat(file_path, must_exist=True)
+    return filestore_utils_impl.cat(file_path, must_exist=must_exist)
