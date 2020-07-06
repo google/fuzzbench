@@ -153,10 +153,9 @@ def get_unchanged_cycles(fuzzer: str, benchmark: str,
     """Returns a list of unchanged cycles for |fuzzer|, |benchmark|, and
     |trial_id| or an empty list if there is no unchanged-cycles file for
     |trial_id|."""
-    trial_dir = experiment_utils.get_trial_dir(fuzzer, benchmark, trial_id)
+    trial_dir = get_trial_work_dir(fuzzer, benchmark, trial_id)
     unchanged_cycles_filestore_path = exp_path.gcs(
-        posixpath.join(trial_dir, 'results',
-                       'unchanged-cycles')
+        posixpath.join(trial_dir, 'results', 'unchanged-cycles'))
     with tempfile.TemporaryDirectory() as temp_dir:
         unchanged_cycles_path = os.path.join(temp_dir, 'unchanged-cycles')
         cp_result = filestore_utils.cp(unchanged_cycles_filestore_path,
@@ -169,6 +168,15 @@ def get_unchanged_cycles(fuzzer: str, benchmark: str,
             int(cycle)
             for cycle in filesystem.read(unchanged_cycles_path).splitlines()
         ]
+
+
+def get_trial_work_dir(fuzzer: str, benchmark: str, trial_id: int):
+    work_dir = experiment_utils.get_work_dir()
+    benchmark_fuzzer_trial_dir = experiment_utils.get_trial_dir(
+        fuzzer, benchmark, trial_id)
+    trial_dir = os.path.join(work_dir, 'experiment-folders',
+                             benchmark_fuzzer_trial_dir)
+    return trial_dir
 
 
 class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
@@ -191,8 +199,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         self.crashes_dir = os.path.join(measurement_dir, 'crashes')
         self.sancov_dir = os.path.join(measurement_dir, 'sancovs')
         self.state_dir = os.path.join(measurement_dir, 'state')
-        self.trial_dir = os.path.join(work_dir, 'experiment-folders',
-                                      benchmark_fuzzer_trial_dir)
+        self.trial_dir = get_trial_work_dir(fuzzer, benchmark, trial_id)
 
     def initialize_measurement_dirs(self):
         """Initialize directories that will be needed for measuring
