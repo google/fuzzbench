@@ -57,6 +57,7 @@ def measure_loop(experiment_config: dict):
     experiment = experiment_config['experiment']
     initialize_logs(experiment)
     queue = schedule_measure_workers.initialize(experiment_config)
+    manager = MeasureManager(experiment_config, queue)
     while True:
         try:
             # Get whether all trials have ended before we measure to prevent
@@ -84,46 +85,153 @@ def get_job_timeout():
     return experiment_utils.get_snapshot_seconds() * 1.5
 
 
-def enqueue_measure_jobs_for_unmeasured(experiment_config: dict, queue):
-    """Get snapshots we need to measure from the db and add them to the queue so
-    that they can be measured."""
-    experiment = experiment_config['experiment']
-    max_total_time = experiment_config['max_total_time']
-    max_cycle = _time_to_cycle(max_total_time)
-    logger.info('Enqueuing measure jobs.')
-    unmeasured_snapshots = get_unmeasured_snapshots(experiment, max_cycle)
-    jobs = enqueue_measure_jobs(unmeasured_snapshots, queue)
-    logger.info('Done enqueuing jobs.')
-    return jobs
+class MeasureManager:
+    def __init__(self, experiment_config: dict, redis_queue):
+        self.config = experiment_config
+        self.queue = redis_queue
+        self.special_handling_dict = {}
+        self.job_timeout = get_job_timeout()
+
+    def enqueue_measure_jobs_for_unmeasured(self):
+        """Get snapshots we need to measure from the db and add them to the
+        queue so that they can be measured."""
+        experiment = self.config['experiment']
+        max_total_time = self.config['max_total_time']
+        max_cycle = _time_to_cycle(max_total_time)
+        logger.info('Enqueuing measure jobs.')
+        unmeasured_snapshots = get_unmeasured_snapshots(experiment, max_cycle)
+        jobs = self.enqueue_measure_jobs(unmeasured_snapshots)
+        logger.info('Done enqueuing jobs.')
+        return jobs
+
+    def enqueue_measure_jobs(self, measure_reqs):
+        """Add jobs to measure each snapshot in |unmeasured_snapshots| to
+        |queue| and returns them."""
+        jobs = []
+        for mesure_req in measure_reqs:
+            job = enqeue_measure_job(measure_req)
+            if job is None:
+                continue
+
+            jobs.append(job)
+        return jobs
+
+    def enqueue_measure_job(self, measure_req):
+        measure_req = self.replace_request_if_needed(measure_req)
+        if measure_req is None:
+            return None
+        return self.queue.enqueue(measure_worker.measure_trial_coverage,
+                                  measure_req,
+                                  job_timeout=self.job_timeout,
+                                  result_ttl=self.job_timeout,
+                                  ttl=self.job_timeout)
+
+    def replace_request_if_needed(
+        self, measure_req: measure_worker.SnapshotMeasureRequest) -> measure_worker.SnapshotMeasureRequest:
+        """Returns a SnapshotMeasureRequest. When the request doesn't need
+        special handling (i.e. most cases), returns |measure_req|. Otherwise
+        returns None if the trial shouldn't be measured anymore or returns a
+        measure request for a later cycle if needed."""
+        if measure_req.trial_id not in self.special_handling_dict:
+            return measure_req
+        cycle_to_measure_instead = (
+            self.special_handling_dict[measure_req.trial_id])
+
+        if cycle_to_measure_instead is None:
+            # This means the trial shouldn't be measured anymore.
+            return None
+
+        return get_request_for_later_cycle(measure_req, cycle_to_measure)
+
+    def enqueue_next_measure_job(self, unmeasured_snapshot: measure_worker.SnapshotMeasureRequest):
+        """Adds a job to measure the next snapshot after |unmeasured_snapshot|
+        to the queue and returns the job."""
+        max_total_time = self.config['max_total_time']
+        if _time_to_cycle(max_total_time) == unmeasured_snapshot.cycle:
+            return None
+        next_unmeasured_snapshot = measure_worker.SnapshotMeasureRequest(
+            unmeasured_snapshot.fuzzer, unmeasured_snapshot.benchmark,
+            unmeasured_snapshot.trial_id, unmeasured_snapshot.cycle + 1)
+        return self.enqueue_measure_job(next_unmeasured_snapshot)
+
+    def run_scheduler(self):
+        """Runs the worker scheduler on the queue to scale up or down the worker
+        instance group."""
+        # TODO(metzman): Move this to scheduler or it's own process. It's here
+        # for now because the scheduler quits too early.
+        schedule_measure_workers.schedule(self.config, self.queue)
+
+    def get_jobs(self, job_ids):
+        """Fetches the jobs corresponding that have the ids specified by
+        |job_ids| from the queue and returns them."""
+        return rq.job.Job.fetch_many(job_ids, self.queue.connection)
+
+    def handle_finished_job(self, job):
+        """Enqueues another job to measure the trial after |job| completes if
+        needed and does book keeping to ensure the right jobs are scheduled."""
+        measure_resp = job.return_value
+        measure_req = job.args[0]
+
+        if measure_resp.snapshot is None:
+            # Do special handling for jobs that finished but were not successful.
+            next_job = self.handle_unsuccessful_finished_job(job)
+            return measure_resp.snapshot, next_job
+        elif measure_req.trial_id in self.special_handling_dict:
+            # Otherwise the job was successful, but if it was specially handled
+            # last time, remove it from the special_handling_dict since it won't
+            # need special handling again.
+            del self.special_handling_dict[measure_req.trial_id]
+
+        # Schedule a job to measure the next cycle since this cycle one was
+        # measured successfully.
+        next_job = self.enqueue_next_measure_job(measure_req)
+        return measure_resp.snapshot, next_job
+
+    def handle_unsuccessful_finished_job(self, job):
+        measure_resp = job.return_value
+        assert measure_resp.snapshot is None
+        measure_req = job.args[0]
+
+        # !!!! WHAT IF IT SIMPLY FAILS AFTER A SKIP
+        # Once we specially handle a request, we shouldn't have to do special
+        # handling on the next cycle. That is because special handling
+        # assert measure_req.trial_id not in self.special_handling_dict
+
+        if measure_resp.next_cycle is not None:
+            # Measurement was unsuccessful but when queueing another job for
+            # this trial, we should try measuring a later cycle.
+            self.special_handling_dict[measure_req.trial_id] = measure_resp.next_cycle
+            return self.enqueue_next_measure_job(measure_req)
+
+        if self.trial_ended(measure_req.trial_id):
+            # Measurement was unsuccessful and will never be successful again
+            # for this trial, don't measure this trial again.
+            self.special_handling_dict[measure_req.trial_id] = None
+            return None
+
+        # Measurement was unsuccessful but this trial's cycle should just be
+        # measured again.
+        # TODO(metzman): Schedule this later so we don't waste time trying to
+        # measure it again immediately.
+        return self.enqueue_measure_job(measure_req)
+
+    def trial_ended(self, trial_id: int) -> bool:
+        """Is the trial with the id |trial_id| finished?"""
+        # TODO(metzman): Optimize this to not do so many queries.
+        trial = db_utils.query(
+            models.Trial).filter(models.Trial.id == trial_id).one().time_ended
+        return trial.time_ended is not None
 
 
-def enqueue_measure_jobs(unmeasured_snapshots, queue):
-    """Add jobs to measure each snapshot in |unmeasured_snapshots| to |queue|
-    and returns them."""
-    job_timeout = get_job_timeout()
-    jobs = [
-        queue.enqueue(measure_worker.measure_trial_coverage,
-                      unmeasured_snapshot,
-                      job_timeout=job_timeout,
-                      result_ttl=job_timeout,
-                      ttl=job_timeout)
-        for unmeasured_snapshot in unmeasured_snapshots
-    ]
-    return jobs
-
-
-def enqueue_next_measure_job(unmeasured_snapshot, experiment_config, queue):
-    """Adds a job to measure the next snapshot after |unmeasured_snapshot| to
-    |queue| and returns the job."""
-    if _time_to_cycle(
-            experiment_config['max_total_time']) == unmeasured_snapshot.cycle:
-        return None
-    next_unmeasured_snapshot = measure_worker.SnapshotMeasureRequest(
-        unmeasured_snapshot.fuzzer, unmeasured_snapshot.benchmark,
-        unmeasured_snapshot.trial_id, unmeasured_snapshot.cycle + 1)
-    job = enqueue_measure_jobs([next_unmeasured_snapshot], queue)[0]
-    return job
-
+def get_request_for_later_cycle(initial_measure_req: measure_worker.SnapshotMeasureRequest, cycle: int) -> measure_worker.SnapshotMeasureRequest:
+    """Returns a measure_worker.SnapshotMeasureRequest that contains all of the
+    same attributes as |initial_measure_req| except the cycle is |cycle|. Cycle
+    should greater than or equal to |measure_req.cycle|."""
+    assert cycle_to_measure >= measure_req.cycle
+    return measure_worker.SnapshotMeasureRequest(initial_measure_req.fuzzer,
+                                  initial_measure_req.benchmark,
+                                  initial_measure_req.trial_id,
+                                  cycle)
 
 def ready_to_measure():
     """Returns True if we are ready to start measuring."""
@@ -131,7 +239,7 @@ def ready_to_measure():
     return exists_in_experiment_filestore(experiment_folders_dir)
 
 
-def measure_all_trials(experiment_config: dict, queue) -> bool:  # pylint: disable=too-many-branches,too-many-statements
+def measure_all_trials(manager: MeasureManager) -> bool:  # pylint: disable=too-many-branches,too-many-statements
     """Get coverage data (with coverage runs) for all active trials. Note that
     this should not be called unless multiprocessing.set_start_method('spawn')
     was called first. Otherwise it will use fork which breaks logging."""
@@ -140,16 +248,14 @@ def measure_all_trials(experiment_config: dict, queue) -> bool:  # pylint: disab
     if not ready_to_measure():
         return True
 
-    jobs = enqueue_measure_jobs_for_unmeasured(experiment_config, queue)
+    jobs = manager.enqueue_measure_jobs_for_unmeasured()
     if not jobs:
         # If we didn't enqueue any jobs, then there is nothing to measure.
         return False
 
     initial_jobs = {job.id: job for job in jobs}
 
-    # TODO(metzman): Move this to scheduler or it's own process. It's here for
-    # now because the scheduler quits too early.
-    schedule_measure_workers.schedule(experiment_config, queue)
+    manager.run_scheduler()
 
     # Poll the queue for snapshots and save them in batches, for each snapshot
     # that was measured, schedule another task to measure the next snapshot for
@@ -172,11 +278,11 @@ def measure_all_trials(experiment_config: dict, queue) -> bool:  # pylint: disab
     while True:
         all_finished = True
         job_ids = initial_jobs.keys()
-        jobs = rq.job.Job.fetch_many(job_ids, queue.connection)
+        jobs = manager.get_jobs(job_ids)
 
         for job in jobs:
             if job is None:
-                logger.error('job is None. Others: %s',
+                logger.error('Job is None. Others: %s',
                              all(j is None for j in jobs))
                 initial_jobs = {}
                 break
@@ -197,19 +303,15 @@ def measure_all_trials(experiment_config: dict, queue) -> bool:  # pylint: disab
                 continue
 
             del initial_jobs[job.id]
-            if job.return_value is None:
-                # The task completed successfully but was not able to measure
-                # the snapshot. This could have happened because the snapshot
-                # does not exist yet.
-                continue
+            snapshot, next_job = manager.handle_measure_response(job)
 
-            snapshot = job.return_value
-            snapshots.append(snapshot)
-            next_job = enqueue_next_measure_job(job.args[0], experiment_config,
-                                                queue)
-            if next_job is None:
-                continue
-            initial_jobs[next_job.id] = next_job
+            if next_job is not None:
+                initial_jobs[next_job.id] = next_job
+
+            if snapshot is not None:
+                 snapshots.append(snapshot)
+            # !!!
+            # next_job = manager.enqueue_next_measure_job(job.args[0])
 
         if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE:
             save_snapshots()
@@ -224,7 +326,7 @@ def measure_all_trials(experiment_config: dict, queue) -> bool:  # pylint: disab
     save_snapshots()
 
     logger.info('Done measuring all trials.')
-    schedule_measure_workers.schedule(experiment_config, queue)
+    manager.run_scheduler()
     return snapshots_measured
 
 
