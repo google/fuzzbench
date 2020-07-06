@@ -162,7 +162,6 @@ def get_unchanged_cycles(fuzzer: str, benchmark: str,
                                        unchanged_cycles_path,
                                        must_exist=False)
         if cp_result.retcode != 0:
-            logger.info('Unable to copy unchanged-cycles.')
             return []
 
         return [
@@ -230,7 +229,6 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         prev_pcs = self.get_prev_covered_pcs(cycle)
         sancov_files = glob.glob(os.path.join(self.sancov_dir, '*.sancov'))
         if sancov_files:
-            logger.info('Sancov files: %s.', str(sancov_files))
             new_pcs = set(sancov.GetPCs(sancov_files))
         else:
             if expect_sancovs:
@@ -281,10 +279,8 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
     def archive_crashes(self, cycle):
         """Archive this cycle's crashes into cloud bucket."""
         if not os.listdir(self.crashes_dir):
-            logs.debug('No crashes found for cycle %d.', cycle)
             return
 
-        logs.info('Archiving crashes for cycle %d.', cycle)
         crashes_archive_name = experiment_utils.get_crashes_archive_name(cycle)
         archive = os.path.join(os.path.dirname(self.crashes_dir),
                                crashes_archive_name)
@@ -353,11 +349,13 @@ def measure_snapshot_coverage(measure_req: SnapshotMeasureRequest
     # If the double negative is confusing, think of this condition "if cycle is
     # not static" where a cycle is "static" if it is the same as the previous.
     cycle_changed = not snapshot_measurer.is_cycle_unchanged(measure_req.cycle)
+
     if cycle_changed:
         # Try to measure the new units if the cycle changed from last time.
         if not snapshot_measurer.get_cycle_corpus(measure_req.cycle):
+
             # If we can't get the corpus, then we can't measure this cycle now.
-            logs.info('Cannot measure cycle now.')
+            logger.info('Cannot measure cycle now.')
             return None
         snapshot_measurer.run_cov_new_units()
 
@@ -386,7 +384,6 @@ def measure_trial_coverage(measure_req: SnapshotMeasureRequest
         measure_resp = measure_snapshot_coverage(measure_req)
         if measure_resp:
             return measure_resp
-        return prepare_measure_skip(measure_req)
     except Exception:  # pylint: disable=broad-except
         logger.error('Error measuring cycle.',
                      extras={
@@ -395,8 +392,7 @@ def measure_trial_coverage(measure_req: SnapshotMeasureRequest
                          'trial_id': str(measure_req.trial_id),
                          'cycle': str(measure_req.cycle),
                      })
-        return None
-    return prepare_measure_skip(measure_req)
+    return handle_failed_measure(measure_req)
 
 
 def get_trial_corpus_filestore_path(measure_req: SnapshotMeasureRequest) -> str:
@@ -418,11 +414,11 @@ def get_cycles_with_corpus_archives(measure_req: SnapshotMeasureRequest
     matches = [
         CORPUS_ARCHIVE_CYCLE_REGEX.match(archive) for archive in archives
     ]
-    return [int(matches.groups(1)[0]) for match in matches if match is not None]
+    return [int(match.groups(1)[0]) for match in matches if match is not None]
 
 
-def prepare_measure_skip(measure_req: SnapshotMeasureRequest
-                        ) -> SnapshotMeasureResponse:
+def handle_failed_measure(measure_req: SnapshotMeasureRequest
+                         ) -> SnapshotMeasureResponse:
     """This function deals with the case when a request to measure a given cycle
     (|measure_req.cycle|), cannot be completed (because it is not reported as
     unchanged and there isn't a corpus archive for this cycle). In most cases,

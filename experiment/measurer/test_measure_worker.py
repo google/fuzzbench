@@ -292,4 +292,5 @@ def test_measure_trial_coverage_no_more(mocked_prepare_measure_skip, _, __, ___,
     another cycle to measure if there is none and the requested cycle can't be
     measured."""
     os.environ['WORK'] = str(tmp_path)
-    result = measure_worker.measure_trial_coverage(SNAPSHOT_MEASURE_REQUEST)
+    measure_worker.measure_trial_coverage(SNAPSHOT_MEASURE_REQUEST)
+    # !!!

@@ -17,7 +17,7 @@ import multiprocessing
 import pathlib
 import sys
 import time
-from typing import Dict, List
+from typing import Dict, List, Set
 
 import rq.job
 from sqlalchemy import func
@@ -101,17 +101,17 @@ class MeasureJobManager:
         # None if the trial shouldn't be measured at all.
         self.special_handling_dict: Dict[int, int] = {}
 
-    def enqueue_measure_jobs_for_unmeasured(self):
+    def enqueue_measure_jobs_for_unmeasured(self) -> Set[int]:
         """Get snapshots we need to measure from the db and enqueue jobs to
         measure them. Returns these jobs"""
         experiment = self.config['experiment']
         max_total_time = self.config['max_total_time']
         max_cycle = _time_to_cycle(max_total_time)
-        logger.info('Enqueuing measure jobs.')
         unmeasured_snapshots = get_unmeasured_snapshots(experiment, max_cycle)
+        logger.info('Enqueuing measure: %d jobs.', len(unmeasured_snapshots))
         jobs = self.enqueue_measure_jobs(unmeasured_snapshots)
         logger.info('Done enqueuing jobs.')
-        return jobs
+        return {job.id for job in jobs}
 
     def enqueue_measure_jobs(
             self, measure_reqs: List[measure_worker.SnapshotMeasureRequest]):
@@ -262,7 +262,7 @@ def trial_ended(trial_id: int) -> bool:
     """Is the trial with the id |trial_id| finished?"""
     # TODO(metzman): Optimize this to not do so many queries.
     trial = db_utils.query(
-        models.Trial).filter(models.Trial.id == trial_id).one().time_ended
+        models.Trial).filter(models.Trial.id == trial_id).one()
     return trial.time_ended is not None
 
 
@@ -294,12 +294,10 @@ def measure_all_trials(manager: MeasureJobManager) -> bool:
     if not ready_to_measure():
         return True
 
-    jobs = manager.enqueue_measure_jobs_for_unmeasured()
-    if not jobs:
+    job_ids = manager.enqueue_measure_jobs_for_unmeasured()
+    if not job_ids:
         # If we didn't enqueue any jobs, then there is nothing to measure.
         return False
-
-    jobs = {job.id: job for job in jobs}
 
     manager.run_scheduler()
 
@@ -322,35 +320,32 @@ def measure_all_trials(manager: MeasureJobManager) -> bool:
         snapshots_measured = True
 
     while True:
-        # !!! IS this needed? Or can jobs deal with it?
-        all_finished = True
-        for job in manager.get_jobs(list(jobs.keys())):
+        for job_id, job in list(zip(job_ids, manager.get_jobs(job_ids))):
             if job is None:
-                logger.error('Job is None. Others: %s',
-                             all(j is None for j in jobs))
-                jobs = {}
-                break
+                logger.error('Job is None')
+                job_ids.remove(job_id)
+                continue
+
             status = job.get_status(refresh=False)
             if status is None:
                 logger.error('%s returned None', job.get_call_string())
-                del jobs[job.id]
+                job_ids.remove(job_id)
                 continue
 
             if status == rq.job.JobStatus.FAILED:  # pylint: disable=no-member
-                del jobs[job.id]
+                job_ids.remove(job_id)
                 continue
 
             if status != rq.job.JobStatus.FINISHED:  # pylint: disable=no-member
                 # Note if we haven't finished all tasks so we can break out of
                 # the outer (infinite) loop.
-                all_finished = False
                 continue
 
-            del jobs[job.id]
+            job_ids.remove(job_id)
             snapshot, next_job = manager.handle_finished_job(job)
 
             if next_job is not None:
-                jobs[next_job.id] = next_job
+                job_ids.add(next_job.id)
 
             if snapshot is not None:
                 snapshots.append(snapshot)
@@ -358,7 +353,11 @@ def measure_all_trials(manager: MeasureJobManager) -> bool:
         if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE:
             save_snapshots()
 
-        if all_finished:
+        if not job_ids:
+            save_snapshots()
+            job_ids = manager.enqueue_measure_jobs_for_unmeasured()
+
+        if not job_ids:
             break
 
         # Sleep so we don't waste CPU cycles polling results constantly.
