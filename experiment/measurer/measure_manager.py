@@ -88,9 +88,9 @@ def get_job_timeout():
 class MeasureJobManager:
     """Class that creates measure jobs."""
 
-    def __init__(self, experiment_config: dict, redis_queue):
+    def __init__(self, experiment_config: dict, rq_queue):
         self.config = experiment_config
-        self.queue = redis_queue
+        self.queue = rq_queue
         self.job_timeout = get_job_timeout()
 
         # Dictionary containing a mapping of trial ids to values for trials
@@ -153,7 +153,16 @@ class MeasureJobManager:
 
         if cycle_to_measure_instead is None:
             # This means the trial shouldn't be measured anymore.
+            logger.info(
+                'Not queuing request for trial: %d, cycle: %d. '
+                'Trial has nothing more to measure', measure_req.trial_id,
+                measure_req.cycle)
             return None
+
+        logger.info(
+            'Queuing request to measure cycle: %d instead of %d '
+            'for trial: %d.', measure_req.cycle, cycle_to_measure_instead,
+            measure_req.trial_id)
 
         return get_request_for_later_cycle(measure_req,
                                            cycle_to_measure_instead)
@@ -162,9 +171,12 @@ class MeasureJobManager:
             self, unmeasured_snapshot: measure_worker.SnapshotMeasureRequest):
         """Adds a job to measure the next snapshot after |unmeasured_snapshot|
         to the queue and returns the job."""
+        # Don't schedule another job when the cycle we just measured was the
+        # last one in the trial.
         max_total_time = self.config['max_total_time']
         if _time_to_cycle(max_total_time) == unmeasured_snapshot.cycle:
             return None
+
         next_unmeasured_snapshot = measure_worker.SnapshotMeasureRequest(
             unmeasured_snapshot.fuzzer, unmeasured_snapshot.benchmark,
             unmeasured_snapshot.trial_id, unmeasured_snapshot.cycle + 1)
@@ -335,7 +347,7 @@ def measure_all_trials(manager: MeasureJobManager) -> bool:
                 continue
 
             del jobs[job.id]
-            snapshot, next_job = manager.handle_measure_response(job)
+            snapshot, next_job = manager.handle_finished_job(job)
 
             if next_job is not None:
                 jobs[next_job.id] = next_job
