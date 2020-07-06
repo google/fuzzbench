@@ -20,17 +20,24 @@
 # But this means that the good stuff is hidden away in this benchmark
 # otherwise.
 
+import os
+import shutil
+import glob
+
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
 def build():
     """Build benchmark."""
-    aflplusplus_fuzzer.build("tracepc", "nozero")
+
+    aflplusplus_fuzzer.build('classic', 'ctx', 'nozero')
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
-    """Run fuzzer."""
+    '''Run fuzzer.'''
+    run_options = []
+
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
-                            flags=([]))
+                            flags=(run_options))
