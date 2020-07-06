@@ -22,7 +22,7 @@ import re
 import tarfile
 import tempfile
 import time
-from typing import List, Set
+from typing import Optional, List, Set
 
 from common import benchmark_utils
 from common import experiment_path as exp_path
@@ -162,7 +162,7 @@ def get_unchanged_cycles(fuzzer: str, benchmark: str,
                                        unchanged_cycles_path,
                                        must_exist=False)
         if cp_result.retcode != 0:
-            logger.info('Unable to copy temporary unchanged-cycles.')
+            logger.info('Unable to copy unchanged-cycles.')
             return []
 
         return [
@@ -339,7 +339,7 @@ def create_measure_response(measure_req, cycle_pcs):
 
 
 def measure_snapshot_coverage(measure_req: SnapshotMeasureRequest
-                             ) -> SnapshotMeasureResponse:
+                             ) -> Optional[SnapshotMeasureResponse]:
     """Try to do the measurement asked for by |measure_req| and return a
     response indictating the result of the measurement."""
     # Set up things for logging.
