@@ -34,7 +34,6 @@ def cp(  # pylint: disable=invalid-name
         command.append('-r')
     command.extend([source, destination])
     return new_process.execute(command,
-                               parallel=parallel,
                                expect_zero=must_exist)
 
 
