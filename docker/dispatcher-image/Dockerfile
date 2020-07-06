@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+FROM gcr.io/oss-fuzz-base/base-clang AS base-clang
+
 FROM gcr.io/fuzzbench/base-image
 
 ENV WORK /work
-ENV SRC /src
 WORKDIR $WORK
-RUN mkdir -p $SRC && chmod a+rwx $SRC
 
 # Install runtime dependencies for benchmarks, easy json parsing.
 RUN apt-get update -y && apt-get install -y \
@@ -41,9 +41,8 @@ RUN curl https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 > \
     /usr/local/bin/cloud_sql_proxy
 RUN chmod +x /usr/local/bin/cloud_sql_proxy
 
-# Install llvm tools for coverage build.
-COPY checkout_build_install_llvm_tools.sh $WORK/
-RUN $WORK/checkout_build_install_llvm_tools.sh
-RUN rm $WORK/checkout_build_install_llvm_tools.sh
+# Copy llvm-tool binaries
+COPY --from=base-clang /usr/local/bin/llvm-cov /usr/local/bin/
+COPY --from=base-clang /usr/local/bin/llvm-profdata /usr/local/bin/
 
 COPY startup-dispatcher.sh $WORK/
