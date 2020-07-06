@@ -19,9 +19,9 @@ import sys
 import time
 from typing import Dict, List
 
+import rq.job
 from sqlalchemy import func
 from sqlalchemy import orm
-import rq.job
 
 from common import experiment_path as exp_path
 from common import experiment_utils
@@ -273,7 +273,7 @@ def ready_to_measure():
     return exists_in_experiment_filestore(experiment_folders_dir)
 
 
-def measure_all_trials(manager: MeasureJobManager) -> bool:  # pylint: disable=too-many-branches,too-many-statements
+def measure_all_trials(manager: MeasureJobManager) -> bool:
     """Get coverage data (with coverage runs) for all active trials. Note that
     this should not be called unless multiprocessing.set_start_method('spawn')
     was called first. Otherwise it will use fork which breaks logging."""
@@ -310,8 +310,9 @@ def measure_all_trials(manager: MeasureJobManager) -> bool:  # pylint: disable=t
         snapshots_measured = True
 
     while True:
+        # !!! IS this needed? Or can jobs deal with it?
         all_finished = True
-        for job in manager.get_jobs(jobs.keys()):
+        for job in manager.get_jobs(list(jobs.keys())):
             if job is None:
                 logger.error('Job is None. Others: %s',
                              all(j is None for j in jobs))
