@@ -286,9 +286,8 @@ def test_measure_trial_coverage_later(mocked_prepare_measure_skip,
             return_value=[])
 @mock.patch(
     'experiment.measurer.measure_worker.update_states_for_skipped_cycles')
-def test_measure_trial_coverage_no_more(mocked_prepare_measure_skip,
-                                        _, __, ___, ____,
-                                        experiment, tmp_path):
+def test_measure_trial_coverage_no_more(mocked_prepare_measure_skip, _, __, ___,
+                                        ____, experiment, tmp_path):
     """Tests that the response doesn't include a snapshot and doesn't include
     another cycle to measure if there is none and the requested cycle can't be
     measured."""

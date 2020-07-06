@@ -27,13 +27,15 @@ MAX_TOTAL_TIME = 100
 
 
 @mock.patch('common.filestore_utils.ls')
-@mock.patch('common.filestore_utils.cp')
-def test_measure_all_trials_not_ready(mocked_cp, mocked_ls, experiment,
-                                      experiment_config, db):
+@mock.patch(
+    'experiment.measurer.measure_manager.MeasureJobManager.run_scheduler')
+def test_measure_all_trials_not_ready(mocked_run_scheduler, mocked_ls,
+                                      experiment, experiment_config, db):
     """Test running measure_all_trials before it can start measuring."""
     mocked_ls.return_value = new_process.ProcessResult(1, '', False)
-    assert measure_manager.measure_all_trials(experiment_config, queue.Queue())
-    assert not mocked_cp.called
+    manager = measure_manager.MeasureJobManager(experiment_config, queue)
+    assert measure_manager.measure_all_trials(manager)
+    assert not mocked_run_scheduler.called
 
 
 @mock.patch('common.new_process.execute')
@@ -45,8 +47,8 @@ def test_measure_all_trials_no_more(mocked_directories_have_same_files,
     done."""
     mocked_directories_have_same_files.return_value = True
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
-    assert not measure_manager.measure_all_trials(experiment_config,
-                                                  queue.Queue())
+    manager = measure_manager.MeasureJobManager(experiment_config, queue)
+    assert not measure_manager.measure_all_trials(manager)
 
 
 @mock.patch('experiment.schedule_measure_workers.teardown')
