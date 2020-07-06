@@ -19,12 +19,12 @@ from common import new_process
 from common import filesystem
 
 
-def cp(  # pylint: disable=invalid-name
+def cp(  # pylint: disable=invalid-name,unused-argument
         source,
         destination,
         recursive=False,
         parallel=False,
-        must_exist=True):  # pylint: disable=unused-argument
+        must_exist=True):
     """Executes "cp" command from |source| to |destination|."""
     # Create intermediate folders for `cp` command to behave like `gsutil.cp`.
     filesystem.create_directory(os.path.dirname(destination))
@@ -33,8 +33,7 @@ def cp(  # pylint: disable=invalid-name
     if recursive:
         command.append('-r')
     command.extend([source, destination])
-    return new_process.execute(command,
-                               expect_zero=must_exist)
+    return new_process.execute(command, expect_zero=must_exist)
 
 
 def ls(path, must_exist=True):  # pylint: disable=invalid-name
@@ -62,12 +61,12 @@ def rm(  # pylint: disable=invalid-name
     return new_process.execute(command, expect_zero=True)
 
 
-def rsync(  # pylint: disable=too-many-arguments
+def rsync(  # pylint: disable=too-many-arguments,unused-argument
         source,
         destination,
         delete=True,
         recursive=True,
-        gsutil_options=None,  # pylint: disable=unused-argument
+        gsutil_options=None,
         options=None,
         parallel=False):  # pylint: disable=unused-argument
     """Does local_filestore rsync from |source| to |destination| using sane
