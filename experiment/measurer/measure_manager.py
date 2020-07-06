@@ -320,6 +320,7 @@ def measure_all_trials(manager: MeasureJobManager) -> bool:
         snapshots_measured = True
 
     while True:
+        logs.info('Polling jobs.')
         for job_id, job in list(zip(job_ids, manager.get_jobs(job_ids))):
             if job is None:
                 logger.error('Job is None')
