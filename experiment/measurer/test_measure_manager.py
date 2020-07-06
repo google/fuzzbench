@@ -13,15 +13,22 @@
 # limitations under the License.
 """Tests for measure_manager.py."""
 import os
+import datetime
 from unittest import mock
 import queue
 
 import pytest
 
 from common import new_process
+from database import models
+from database import utils as db_utils
 from experiment.measurer import measure_manager
 
 MAX_TOTAL_TIME = 100
+ARBITRARY_DATETIME = datetime.datetime(2020, 1, 1)
+EXPERIMENT_NAME = 'experiment'
+FUZZER = 'fuzzer'
+BENCHMARK = 'benchmark'
 
 # pylint: disable=unused-argument,invalid-name
 
@@ -86,3 +93,19 @@ def test_path_exists_in_experiment_filestore(mocked_execute, environ):
     mocked_execute.assert_called_with(
         ['gsutil', 'ls', 'gs://cloud-bucket/example-experiment'],
         expect_zero=False)
+
+def test_trial_ended(db):
+    db_utils.add_all([models.Experiment(name=EXPERIMENT_NAME)])
+    ended_trial = models.Trial(experiment=EXPERIMENT_NAME,
+                             benchmark=BENCHMARK,
+                             fuzzer=FUZZER,
+                             time_started=ARBITRARY_DATETIME,
+                             time_ended=ARBITRARY_DATETIME)
+
+    not_ended_trial = models.Trial(experiment=EXPERIMENT_NAME,
+                                   benchmark=BENCHMARK,
+                                   fuzzer=FUZZER,
+                                   time_started=ARBITRARY_DATETIME)
+    db_utils.add_all([ended_trial, not_ended_trial])
+    assert measure_manager.trial_ended(ended_trial.id)
+    assert not measure_manager.trial_ended(not_ended_trial.id)
