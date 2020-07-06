@@ -36,13 +36,13 @@ def get_instance_group_name(experiment: str):
     """Returns the name of the instance group of measure workers for
     |experiment|."""
     # "worker-" needs to come first because name cannot start with number.
-    return 'worker14-' + experiment
+    return 'worker15-' + experiment
 
 
 def get_measure_worker_instance_template_name(experiment: str):
     """Returns an instance template name for measurer workers running in
     |experiment|."""
-    return 'worker14-' + experiment
+    return 'worker15-' + experiment
 
 
 def initialize(experiment_config: dict):

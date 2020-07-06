@@ -154,8 +154,9 @@ def get_unchanged_cycles(fuzzer: str, benchmark: str,
     |trial_id| or an empty list if there is no unchanged-cycles file for
     |trial_id|."""
     trial_dir = experiment_utils.get_trial_dir(fuzzer, benchmark, trial_id)
-    unchanged_cycles_filestore_path = posixpath.join(trial_dir, 'results',
-                                                     'unchanged-cycles')
+    unchanged_cycles_filestore_path = exp_path.gcs(
+        posixpath.join(trial_dir, 'results',
+                       'unchanged-cycles')
     with tempfile.TemporaryDirectory() as temp_dir:
         unchanged_cycles_path = os.path.join(temp_dir, 'unchanged-cycles')
         cp_result = filestore_utils.cp(unchanged_cycles_filestore_path,
