@@ -275,7 +275,7 @@ def get_request_for_later_cycle(
     assert cycle >= initial_measure_req.cycle
     return measure_worker.SnapshotMeasureRequest(initial_measure_req.fuzzer,
                                                  initial_measure_req.benchmark,
-                                                 initial_measure_req.trial_id,
+                                                 initial_measure_req.trial_hid,
                                                  cycle)
 
 

@@ -36,13 +36,13 @@ def get_instance_group_name(experiment: str):
     """Returns the name of the instance group of measure workers for
     |experiment|."""
     # "worker-" needs to come first because name cannot start with number.
-    return 'worker18-' + experiment
+    return 'worker-' + experiment
 
 
 def get_measure_worker_instance_template_name(experiment: str):
     """Returns an instance template name for measurer workers running in
     |experiment|."""
-    return 'worker18-' + experiment
+    return 'worker-' + experiment
 
 
 def initialize(experiment_config: dict):
@@ -77,10 +77,9 @@ def initialize(experiment_config: dict):
     # "m-$experiment-$UNIQUE_ID". Use 'm' as short for "measurer".
     base_instance_name = 'm-' + experiment
 
-    # !!!
-    # gce.create_instance_group(instance_group_name, instance_template_url,
-    #                           base_instance_name, project, zone)
-    queue = queue_utils.initialize_queue('127.0.0.1')
+    gce.create_instance_group(instance_group_name, instance_template_url,
+                              base_instance_name, project, zone)
+    queue = queue_utils.initialize_queue(redis_host)
     return queue
 
 

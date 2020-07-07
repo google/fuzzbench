@@ -247,9 +247,9 @@ def test_extract_corpus(archive_name, tmp_path):
     }
     assert expected_corpus_files.issubset(set(os.listdir(tmp_path)))
 
-@mock.patch(
-    'common.filestore_utils.cp',
-    return_value=new_process.ProcessResult(1, '', False))
+
+@mock.patch('common.filestore_utils.cp',
+            return_value=new_process.ProcessResult(1, '', False))
 def test_get_unchanged_cycles_doesnt_exist(mocked_cp, experiment):
     assert not measure_worker.get_unchanged_cycles(FUZZER, BENCHMARK, TRIAL_ID)
     unchanged_cycles_filestore_path = mocked_cp.call_args_list[0][0][0]
@@ -258,7 +258,6 @@ def test_get_unchanged_cycles_doesnt_exist(mocked_cp, experiment):
         'benchmark-a-fuzzer-a/trial-12/results/unchanged-cycles')
     assert (unchanged_cycles_filestore_path ==
             expected_unchanged_cycles_filestore_path)
-
 
 
 @mock.patch(

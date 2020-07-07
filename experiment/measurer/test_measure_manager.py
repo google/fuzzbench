@@ -94,13 +94,14 @@ def test_path_exists_in_experiment_filestore(mocked_execute, environ):
         ['gsutil', 'ls', 'gs://cloud-bucket/example-experiment'],
         expect_zero=False)
 
+
 def test_trial_ended(db):
     db_utils.add_all([models.Experiment(name=EXPERIMENT_NAME)])
     ended_trial = models.Trial(experiment=EXPERIMENT_NAME,
-                             benchmark=BENCHMARK,
-                             fuzzer=FUZZER,
-                             time_started=ARBITRARY_DATETIME,
-                             time_ended=ARBITRARY_DATETIME)
+                               benchmark=BENCHMARK,
+                               fuzzer=FUZZER,
+                               time_started=ARBITRARY_DATETIME,
+                               time_ended=ARBITRARY_DATETIME)
 
     not_ended_trial = models.Trial(experiment=EXPERIMENT_NAME,
                                    benchmark=BENCHMARK,
