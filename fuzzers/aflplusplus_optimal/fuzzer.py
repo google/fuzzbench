@@ -26,8 +26,6 @@ import glob
 
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
-# OUT environment variable is the location of build directory (default is /out).
-
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
@@ -84,7 +82,7 @@ def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-man
     if benchmark_name == 'bloaty_fuzz_target':
         run_options = ["-L", "0"]
     elif benchmark_name == 'curl_curl_fuzzer_http':
-        run_options = ["-L", "-0"]
+        run_options = ["-L", "0"]
     elif benchmark_name == 'jsoncpp_jsoncpp_fuzzer':
         run_options = ["-L", "0"]
     elif benchmark_name == 'lcms-2017-03-21':
@@ -105,8 +103,6 @@ def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-man
         run_options = ["-L", "-1"]
     elif benchmark_name == 'woff2-2016-05-06':
         run_options = ["-L", "0"]
-
-    os.environ['AFL_MAP_SIZE'] = '524288'
 
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,

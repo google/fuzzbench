@@ -18,8 +18,6 @@ import subprocess
 
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
-# OUT environment variable is the location of build directory (default is /out).
-
 
 def build():
     """Build benchmark."""
@@ -28,7 +26,7 @@ def build():
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    # get LLVMFuzzerTestOneInput address
+    # Get LLVMFuzzerTestOneInput address.
     nm_proc = subprocess.run([
         'sh', '-c',
         'nm \'' + target_binary + '\' | grep \'T afl_qemu_driver_stdin_input\''
@@ -36,8 +34,9 @@ def fuzz(input_corpus, output_corpus, target_binary):
                              stdout=subprocess.PIPE,
                              check=True)
     target_func = "0x" + nm_proc.stdout.split()[0].decode("utf-8")
-    print('[run_fuzzer] afl_qemu_driver_stdin_input() address =', target_func)
-    # fuzzer options
+    print('[fuzz] afl_qemu_driver_stdin_input() address =', target_func)
+
+    # Set fuzzer options.
     flags = ['-Q', '-L', '0']  # MOpt flags
     os.environ['AFL_COMPCOV_LEVEL'] = '3'  # float compcov
     os.environ['AFL_QEMU_PERSISTENT_ADDR'] = target_func

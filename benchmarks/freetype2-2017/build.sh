@@ -20,15 +20,26 @@ apt-get update &&  \
   make \
   autoconf \
   libtool \
-  libarchive-dev
+  pkg-config
+
+[ ! -e libarchive-3.4.3.tar.xz ] && wget https://github.com/libarchive/libarchive/releases/download/v3.4.3/libarchive-3.4.3.tar.xz
+[ ! -e libarchive-3.4.3 ] && tar xf libarchive-3.4.3.tar.xz
 
 build_lib() {
   rm -rf BUILD
   cp -rf SRC BUILD
-  (cd BUILD && ./autogen.sh && ./configure --with-harfbuzz=no --with-bzip2=no --with-png=no && make clean && make all -j $JOBS)
+  (cd BUILD && ./autogen.sh && ./configure --without-harfbuzz --without-bzip2 --without-zlib && make clean && make all -j $JOBS)
+}
+
+build_archive() {
+  rm -rf ARCHIVE_BUILD
+  cp -rf libarchive-3.4.3 ARCHIVE_BUILD
+  (cd ARCHIVE_BUILD && ./configure --disable-shared && make clean && make -j $JOBS && make install)
 }
 
 get_git_revision git://git.sv.nongnu.org/freetype/freetype2.git cd02d359a6d0455e9d16b87bf9665961c4699538 SRC
+
+build_archive
 build_lib
 
 if [[ ! -d $OUT/seeds ]]; then

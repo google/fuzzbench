@@ -132,7 +132,7 @@ _DEFAULT_FUZZER_SAMPLE_NUM_THRESHOLD = 0.8
 
 def get_fuzzers_with_not_enough_samples(
         benchmark_snapshot_df, threshold=_DEFAULT_FUZZER_SAMPLE_NUM_THRESHOLD):
-    """Retruns fuzzers that didn't have enough trials running at snapshot time.
+    """Returns fuzzers that didn't have enough trials running at snapshot time.
     It takes a benchmark snapshot and finds the fuzzers that have a sample size
     smaller than 80% of the largest sample size. Default threshold can be
     overridden.

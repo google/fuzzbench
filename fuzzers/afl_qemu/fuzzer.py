@@ -11,26 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for AFLplusplus fuzzer."""
+"""Integration code for AFL qemu fuzzer."""
 
-# This optimized afl++ variant should always be run together with
-# "aflplusplus" to show the difference - a default configured afl++ vs.
-# a hand-crafted optimized one. afl++ is configured not to enable the good
-# stuff by default to be as close to vanilla afl as possible.
-# But this means that the good stuff is hidden away in this benchmark
-# otherwise.
-
+# As aflplusplus has the build for qemu already in there we include this.
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
 def build():
     """Build benchmark."""
-    aflplusplus_fuzzer.build("tracepc", "nozero")
+    aflplusplus_fuzzer.build('qemu')
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
+    # Necessary fuzzer options.
+    flags = ['-Q']
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
-                            flags=([]))
+                            flags=flags)

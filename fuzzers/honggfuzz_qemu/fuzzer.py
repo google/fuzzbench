@@ -24,15 +24,18 @@ def build():
     """Build benchmark."""
     # honggfuzz doesn't need additional libraries when code is compiled
     # with hfuzz-clang(++)
-    os.environ['CC'] = '/honggfuzz/hfuzz_cc/hfuzz-clang'
-    os.environ['CXX'] = '/honggfuzz/hfuzz_cc/hfuzz-clang++'
-    os.environ['FUZZER_LIB'] = '/honggfuzz/empty_lib.o'
+    os.environ['CC'] = 'clang'
+    os.environ['CXX'] = 'clang++'
+    os.environ['FUZZER_LIB'] = '/libQEMU.a'
 
     utils.build_benchmark()
 
     print('[post_build] Copying honggfuzz to $OUT directory')
     # Copy over honggfuzz's main fuzzing binary.
     shutil.copy('/honggfuzz/honggfuzz', os.environ['OUT'])
+    shutil.copy(
+        '/honggfuzz/qemu_mode/honggfuzz-qemu/x86_64-linux-user/qemu-x86_64',
+        os.environ['OUT'])
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
@@ -44,7 +47,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
     print('[fuzz] Running target with honggfuzz')
     command = [
         './honggfuzz',
-        '--persistent',
         '--rlimit_rss',
         '2048',
         '--sanitizers_del_report=true',
@@ -56,7 +58,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     dictionary_path = utils.get_dictionary_path(target_binary)
     if dictionary_path:
         command.extend(['--dict', dictionary_path])
-    command.extend(['--', target_binary])
+    command.extend(['--', './qemu-x86_64', target_binary])
 
     print('[fuzz] Running command: ' + ' '.join(command))
     subprocess.check_call(command)
