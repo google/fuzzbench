@@ -19,7 +19,7 @@ MAINTAINER dvyukov@google.com
 
 # Curl will be checked out to the commit hash specified in oss-fuzz.yaml.
 RUN git clone --depth 1 https://github.com/curl/curl.git /src/curl
-RUN git clone --depth 1 https://github.com/curl/curl-fuzzer.git /src/curl_fuzzer
+RUN git clone https://github.com/curl/curl-fuzzer.git /src/curl_fuzzer
 RUN git -C /src/curl_fuzzer checkout -f 82eb95b410cc84579b8f9d663f2a7e38f3bdb41f
 
 # Use curl-fuzzer's scripts to get latest dependencies.
