@@ -176,17 +176,6 @@ def test_is_cycle_unchanged_skip_cp(mocked_cp, fs, experiment):
     mocked_cp.assert_not_called()
 
 
-@mock.patch('common.filestore_utils.cp')
-def test_is_cycle_unchanged_no_file(mocked_cp, fs, experiment):
-    """Test that is_cycle_unchanged returns False when there is no
-    unchanged-cycles file."""
-    # Make sure we log if there is no unchanged-cycles file.
-    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
-                                                  SNAPSHOT_LOGGER)
-    mocked_cp.return_value = new_process.ProcessResult(1, '', False)
-    assert not snapshot_measurer.is_cycle_unchanged(0)
-
-
 @mock.patch('common.new_process.execute')
 def test_run_cov_new_units(mocked_execute, fs, environ):
     """Tests that run_cov_new_units does a coverage run as we expect."""

@@ -99,7 +99,7 @@ class StateFile:
         state_file_name = experiment_utils.get_cycle_file_name(
             self.name, cycle) + '.json'
         state_file_path = os.path.join(self.state_dir, state_file_name)
-        return exp_path.gcs(pathlib.Path(state_file_path))
+        return exp_path.filestore(pathlib.Path(state_file_path))
 
     def _get_previous_cycle_state(self) -> list:
         """Returns the state from the previous cycle. Returns [] if |self.cycle|
@@ -202,7 +202,8 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         unchanged-cycles file. This file is written to by the trial's runner."""
 
         def copy_unchanged_cycles_file():
-            unchanged_cyles_gcs_path = exp_path.gcs(self.unchanged_cycles_path)
+            unchanged_cyles_gcs_path = exp_path.filestore(
+                self.unchanged_cycles_path)
             try:
                 filestore_utils.cp(unchanged_cyles_gcs_path,
                                    self.unchanged_cycles_path)
@@ -281,7 +282,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         with tarfile.open(archive, 'w:gz') as tar:
             tar.add(self.crashes_dir,
                     arcname=os.path.basename(self.crashes_dir))
-        bucket_path = exp_path.gcs(
+        bucket_path = exp_path.filestore(
             posixpath.join(self.trial_dir, 'crashes', crashes_archive_name))
         filestore_utils.cp(archive, bucket_path)
         os.remove(archive)
@@ -365,7 +366,7 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     corpus_archive_dst = os.path.join(
         snapshot_measurer.trial_dir, 'corpus',
         experiment_utils.get_corpus_archive_name(cycle))
-    corpus_archive_src = exp_path.gcs(corpus_archive_dst)
+    corpus_archive_src = exp_path.filestore(corpus_archive_dst)
 
     corpus_archive_dir = os.path.dirname(corpus_archive_dst)
     if not os.path.exists(corpus_archive_dir):
@@ -413,8 +414,8 @@ def set_up_coverage_binary(benchmark):
 
     filesystem.create_directory(benchmark_coverage_binary_dir)
     archive_name = 'coverage-build-%s.tar.gz' % benchmark
-    cloud_bucket_archive_path = exp_path.gcs(coverage_binaries_dir /
-                                             archive_name)
+    cloud_bucket_archive_path = exp_path.filestore(coverage_binaries_dir /
+                                                   archive_name)
     filestore_utils.cp(cloud_bucket_archive_path,
                        str(benchmark_coverage_binary_dir))
     archive_path = benchmark_coverage_binary_dir / archive_name
