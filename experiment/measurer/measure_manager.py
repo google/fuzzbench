@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License. for now
 """Module for managing measurement of snapshots from trial runners."""
-import multiprocessing
 import pathlib
 import sys
 import time
@@ -287,9 +286,7 @@ def ready_to_measure():
 
 
 def measure_all_trials(manager: MeasureJobManager) -> bool:  # pylint: disable=too-many-branches
-    """Get coverage data (with coverage runs) for all active trials. Note that
-    this should not be called unless multiprocessing.set_start_method('spawn')
-    was called first. Otherwise it will use fork which breaks logging."""
+    """Get coverage data (with coverage runs) for all active trials."""
     logger.info('Measuring all trials.')
 
     if not ready_to_measure():
@@ -482,8 +479,6 @@ def initialize_logs(experiment_name):
 
 def main():
     """Measure the experiment."""
-    multiprocessing.set_start_method('spawn')
-
     experiment_name = experiment_utils.get_experiment_name()
     initialize_logs(experiment_name)
     experiment_config = yaml_utils.read(sys.argv[1])
