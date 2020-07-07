@@ -20,8 +20,6 @@ import os
 from fuzzers import utils
 from fuzzers.afl import fuzzer as afl_fuzzer
 
-# OUT environment variable is the location of build directory (default is /out).
-
 
 def build():
     """Build benchmark."""
@@ -37,12 +35,12 @@ def fuzz(input_corpus, output_corpus, target_binary):
     """Run Ankou on target."""
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
 
-    print('[run_fuzzer] Running target with Ankou')
+    print('[fuzz] Running target with Ankou')
     command = [
         './Ankou', '-app', target_binary, '-i', input_corpus, '-o',
         output_corpus
     ]
     # "-dict" option may not work for format mismatching.
 
-    print('[run_fuzzer] Running command: ' + ' '.join(command))
+    print('[fuzz] Running command: ' + ' '.join(command))
     subprocess.check_call(command)

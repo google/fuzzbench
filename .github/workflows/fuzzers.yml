@@ -32,7 +32,7 @@ jobs:
           - libfuzzer_nocmp
           - manul
           - mopt
-          # Greybox fuzzers
+          # Binary-only (greybox) fuzzers.
           - eclipser
           - afl_qemu
           - aflplusplus_qemu
