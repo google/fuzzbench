@@ -35,13 +35,13 @@ else:
     from common import gsutil as filestore_utils_impl
 
 
-def cp(source, destination, recursive=False, parallel=False, must_exist=True):  # pylint: disable=invalid-name
+def cp(source, destination, recursive=False, must_exist=True, parallel=False):  # pylint: disable=invalid-name
     """Copies |source| to |destination|."""
     return filestore_utils_impl.cp(source,
                                    destination,
                                    recursive=recursive,
-                                   parallel=parallel,
-                                   must_exist=must_exist)
+                                   must_exist=must_exist,
+                                   parallel=parallel)
 
 
 def ls(path, must_exist=True):  # pylint: disable=invalid-name

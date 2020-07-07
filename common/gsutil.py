@@ -28,7 +28,7 @@ def gsutil_command(arguments, expect_zero=True, parallel=False):
     return new_process.execute(command + arguments, expect_zero=expect_zero)
 
 
-def cp(source, destination, recursive=False, parallel=False, must_exist=True):  # pylint: disable=invalid-name
+def cp(source, destination, recursive=False, must_exist=True, parallel=False):  # pylint: disable=invalid-name
     """Executes gsutil's "cp" command with |cp_arguments|."""
     command = ['cp']
     if recursive:

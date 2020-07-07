@@ -36,7 +36,7 @@ _default_extras = {}
 LOG_LENGTH_LIMIT = 250 * 1000
 
 NUM_RETRIES = 5
-RETRY_DELAY = 2
+RETRY_DELAY = 1
 
 
 def _initialize_cloud_clients():

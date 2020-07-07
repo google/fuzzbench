@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License. for now
 """Module for managing measurement of snapshots from trial runners."""
-import collections
 import multiprocessing
 import pathlib
 import sys
@@ -81,7 +80,9 @@ def measure_loop(experiment_config: dict):
 
 def get_job_timeout():
     """Returns the timeout for an rq job."""
-    # Be generous with amount of time.
+    # Be generous with amount of time. We've observed a few trials taking longer
+    # to measure than the length of the cycle. Being generous is unlikely to
+    # slow things down as this doesn't happen in the vast majority of cases.
     return experiment_utils.get_snapshot_seconds() * 1.5
 
 
@@ -107,7 +108,7 @@ class MeasureJobManager:
         experiment = self.config['experiment']
         max_total_time = self.config['max_total_time']
         max_cycle = _time_to_cycle(max_total_time)
-        unmeasured_snapshots = get_unmeasured_snapshots(experiment, max_cycle)
+        unmeasured_snapshots = get_measure_reqs(experiment, max_cycle)
         logger.info('Enqueuing measure: %d jobs.', len(unmeasured_snapshots))
         jobs = self.enqueue_measure_jobs(unmeasured_snapshots)
         logger.info('Done enqueuing jobs.')
@@ -115,8 +116,8 @@ class MeasureJobManager:
 
     def enqueue_measure_jobs(
             self, measure_reqs: List[measure_worker.SnapshotMeasureRequest]):
-        """Adds jobs to perform each measurement request in measure_reqs to the
-        queue, and returns them."""
+        """Adds jobs to perform each measurement request in |measure_reqs| to
+        the queue, and returns them."""
         jobs = []
         for measure_req in measure_reqs:
             job = self.enqueue_measure_job(measure_req)
@@ -404,8 +405,8 @@ def _query_unmeasured_trials(experiment: str):
                               started_trials_filter, nonpreempted_trials_filter)
 
 
-def _get_unmeasured_first_snapshots(
-        experiment: str) -> List[measure_worker.SnapshotMeasureRequest]:
+def _get_first_measure_reqs(experiment: str
+                           ) -> List[measure_worker.SnapshotMeasureRequest]:
     """Returns a list of unmeasured SnapshotMeasureRequests that are the first
     snapshot for their trial. The trials are trials in |experiment|."""
     trials_without_snapshots = _query_unmeasured_trials(experiment)
@@ -414,10 +415,6 @@ def _get_unmeasured_first_snapshots(
                                               trial.id, 1)
         for trial in trials_without_snapshots
     ]
-
-
-SnapshotWithTime = collections.namedtuple(
-    'SnapshotWithTime', ['fuzzer', 'benchmark', 'trial_id', 'time'])
 
 
 def _query_measured_latest_snapshots(experiment: str):
@@ -432,22 +429,20 @@ def _query_measured_latest_snapshots(experiment: str):
     experiment_filter = models.Snapshot.trial.has(experiment=experiment)
     group_by_columns = (models.Snapshot.trial_id, models.Trial.benchmark,
                         models.Trial.fuzzer)
-    snapshots_query = db_utils.query(*columns).join(
+    return db_utils.query(*columns).join(
         models.Trial).filter(experiment_filter).group_by(*group_by_columns)
-    return (SnapshotWithTime(*snapshot) for snapshot in snapshots_query)
 
 
-def _get_unmeasured_next_snapshots(
-        experiment: str,
-        max_cycle: int) -> List[measure_worker.SnapshotMeasureRequest]:
-    """Returns a list of the latest unmeasured SnapshotMeasureRequests
-    of trials in |experiment| that have been measured at least once in
+def _get_latest_measure_reqs(experiment: str, max_cycle: int
+                            ) -> List[measure_worker.SnapshotMeasureRequest]:
+    """Returns a list of the latest SnapshotMeasureRequests for unmeasured
+    snapshots of trials in |experiment| that have been measured at least once in
     |experiment|. |max_total_time| is used to determine if a trial has another
     snapshot left."""
     # Measure the latest snapshot of every trial that hasn't been measured
     # yet.
     latest_snapshot_query = _query_measured_latest_snapshots(experiment)
-    next_snapshots = []
+    latest_reqs = []
     for snapshot in latest_snapshot_query:
         snapshot_time = snapshot.time
         cycle = _time_to_cycle(snapshot_time)
@@ -455,25 +450,24 @@ def _get_unmeasured_next_snapshots(
         if next_cycle > max_cycle:
             continue
 
-        snapshot_with_cycle = measure_worker.SnapshotMeasureRequest(
-            snapshot.fuzzer, snapshot.benchmark, snapshot.trial_id, next_cycle)
-        next_snapshots.append(snapshot_with_cycle)
-    return next_snapshots
+        req = measure_worker.SnapshotMeasureRequest(snapshot.fuzzer,
+                                                    snapshot.benchmark,
+                                                    snapshot.trial_id,
+                                                    next_cycle)
+        latest_reqs.append(req)
+    return latest_reqs
 
 
-def get_unmeasured_snapshots(experiment: str, max_cycle: int
-                            ) -> List[measure_worker.SnapshotMeasureRequest]:
+def get_measure_reqs(experiment: str, max_cycle: int
+                    ) -> List[measure_worker.SnapshotMeasureRequest]:
     """Returns a list of SnapshotMeasureRequests that need to be measured
     (assuming they have been saved already)."""
     # Measure the first snapshot of every started trial without any measured
     # snapshots.
-    unmeasured_first_snapshots = _get_unmeasured_first_snapshots(experiment)
+    first_measure_reqs = _get_first_measure_reqs(experiment)
+    latest_measure_reqs = _get_latest_measure_reqs(experiment, max_cycle)
 
-    unmeasured_latest_snapshots = _get_unmeasured_next_snapshots(
-        experiment, max_cycle)
-
-    # Measure the latest unmeasured snapshot of every other trial.
-    return unmeasured_first_snapshots + unmeasured_latest_snapshots
+    return first_measure_reqs + latest_measure_reqs
 
 
 def initialize_logs(experiment_name):
