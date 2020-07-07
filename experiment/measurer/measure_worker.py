@@ -439,7 +439,7 @@ def handle_failed_measure(measure_req: SnapshotMeasureRequest
     finished). When that is the case this function returns a reponse that
     indicates M should be measured next (and that measuring N should not be
     retried) and does any necessary setup for state files so that M can be
-    measured (using update_state_for_skipped_cycles)."""
+    measured (using update_states_for_skipped_cycles)."""
     # Get all cycles that are possible to measure. This means cycles that are
     # reported as unchanged or those that have a corpus archive.
     all_cycles = get_unchanged_cycles(measure_req.fuzzer, measure_req.benchmark,
