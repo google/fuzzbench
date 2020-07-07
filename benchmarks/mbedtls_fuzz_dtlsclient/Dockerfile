@@ -15,8 +15,6 @@
 ################################################################################
 
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:fee307a212b2f77f208b209e2335e4a5e640f55dbe6dbe76a3e50475f9160eca
-#TODO change
-MAINTAINER support-mbedtls@arm.com
 RUN apt-get update && apt-get install -y make cmake
 RUN git clone --recursive --depth 1 https://github.com/ARMmbed/mbedtls.git mbedtls
 RUN git clone --depth 1 https://github.com/google/boringssl.git boringssl
