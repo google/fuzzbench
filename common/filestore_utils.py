@@ -45,7 +45,6 @@ def cp(source, destination, recursive=False, expect_zero=True, parallel=False): 
                          destination,
                          recursive=recursive,
                          parallel=parallel,
-                         must_exist=must_exist,
                          expect_zero=expect_zero)
 
 
@@ -82,6 +81,6 @@ def rsync(  # pylint: disable=too-many-arguments
                             parallel=parallel)
 
 
-def cat(file_path, must_exist=True):
+def cat(file_path, expect_zero=True):
     """Reads the file at |file_path| and returns the result."""
-    return get_impl().cat(file_path)
+    return get_impl().cat(file_path, expect_zero=expect_zero)

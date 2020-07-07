@@ -46,7 +46,8 @@ def get_experiment_folders_dir():
 
 def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
     """Returns True if |path| exists in the experiment_filestore."""
-    return filestore_utils.ls(exp_path.gcs(path), must_exist=False).retcode == 0
+    return filestore_utils.ls(exp_path.filestore(path),
+                              must_exist=False).retcode == 0
 
 
 def measure_loop(experiment_config: dict):

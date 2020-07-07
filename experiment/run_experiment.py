@@ -69,11 +69,11 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     cloud_params = {'cloud_compute_zone', 'cloud_project'}
     redis_params = {'redis_host'}
     docker_params = {'docker_registry'}
-    string_params = cloud_params.union(
-        filestore_params, redis_params, docker_params)
+    string_params = cloud_params.union(filestore_params, redis_params,
+                                       docker_params)
     int_params = {'trials', 'max_total_time'}
-    required_params = int_params.union(
-        filestore_params, docker_params, redis_params)
+    required_params = int_params.union(filestore_params, docker_params,
+                                       redis_params)
 
     local_experiment = config.get('local_experiment', False)
     if not local_experiment:

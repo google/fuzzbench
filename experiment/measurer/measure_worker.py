@@ -113,7 +113,7 @@ class StateFile:
         state_file_name = experiment_utils.get_cycle_file_name(
             self.name, cycle) + '.json'
         state_file_path = os.path.join(self.state_dir, state_file_name)
-        return exp_path.gcs(pathlib.Path(state_file_path))
+        return exp_path.filestore(pathlib.Path(state_file_path))
 
     def _get_previous_cycle_state(self) -> list:
         """Returns the state from the previous cycle. Returns [] if |self.cycle|
@@ -125,7 +125,7 @@ class StateFile:
             self._get_bucket_cycle_state_file_path(self.cycle - 1))
 
         result = filestore_utils.cat(previous_state_file_bucket_path,
-                                     must_exist=False)
+                                     expect_zero=False)
         if result.retcode != 0:
             return []
 
@@ -154,7 +154,7 @@ def get_unchanged_cycles(fuzzer: str, benchmark: str,
     |trial_id| or an empty list if there is no unchanged-cycles file for
     |trial_id|."""
     trial_dir = get_trial_work_dir(fuzzer, benchmark, trial_id)
-    unchanged_cycles_filestore_path = exp_path.gcs(
+    unchanged_cycles_filestore_path = exp_path.filestore(
         posixpath.join(trial_dir, 'results', 'unchanged-cycles'))
     with tempfile.TemporaryDirectory() as temp_dir:
         unchanged_cycles_path = os.path.join(temp_dir, 'unchanged-cycles')
@@ -296,7 +296,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         with tarfile.open(archive, 'w:gz') as tar:
             tar.add(self.crashes_dir,
                     arcname=os.path.basename(self.crashes_dir))
-        bucket_path = exp_path.gcs(
+        bucket_path = exp_path.filestore(
             posixpath.join(self.trial_dir, 'crashes', crashes_archive_name))
         filestore_utils.cp(archive, bucket_path)
         os.remove(archive)
@@ -306,7 +306,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         corpus_archive_dst = os.path.join(
             self.trial_dir, 'corpus',
             experiment_utils.get_corpus_archive_name(cycle))
-        corpus_archive_src = exp_path.gcs(corpus_archive_dst)
+        corpus_archive_src = exp_path.filestore(corpus_archive_dst)
 
         corpus_archive_dir = os.path.dirname(corpus_archive_dst)
         if not os.path.exists(corpus_archive_dir):
@@ -314,7 +314,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
         cp_result = filestore_utils.cp(corpus_archive_src,
                                        corpus_archive_dst,
-                                       must_exist=False)
+                                       expect_zero=False)
         if cp_result.retcode != 0:
             logger.debug('Could not copy archive for cycle.')
             return False
@@ -508,8 +508,8 @@ def set_up_coverage_binary(benchmark: str):
 
     filesystem.create_directory(benchmark_coverage_binary_dir)
     archive_name = 'coverage-build-%s.tar.gz' % benchmark
-    cloud_bucket_archive_path = exp_path.gcs(coverage_binaries_dir /
-                                             archive_name)
+    cloud_bucket_archive_path = exp_path.filestore(coverage_binaries_dir /
+                                                   archive_name)
     filestore_utils.cp(cloud_bucket_archive_path,
                        str(benchmark_coverage_binary_dir))
     archive_path = benchmark_coverage_binary_dir / archive_name
