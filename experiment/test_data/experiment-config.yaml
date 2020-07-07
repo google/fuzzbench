@@ -16,6 +16,7 @@ experiment: test-experiment
 trials: 4
 max_total_time: 86400
 cloud_project: fuzzbench
+docker_registry: gcr.io/fuzzbench
 cloud_compute_zone: us-central1-a
 experiment_filestore: gs://experiment-data
 report_filestore: gs://web-reports

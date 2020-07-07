@@ -160,7 +160,7 @@ def get_unchanged_cycles(fuzzer: str, benchmark: str,
         unchanged_cycles_path = os.path.join(temp_dir, 'unchanged-cycles')
         cp_result = filestore_utils.cp(unchanged_cycles_filestore_path,
                                        unchanged_cycles_path,
-                                       must_exist=False)
+                                       expect_zero=False)
         if cp_result.retcode != 0:
             return []
 
