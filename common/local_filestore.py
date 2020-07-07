@@ -92,7 +92,7 @@ def rsync(  # pylint: disable=too-many-arguments,unused-argument
     return new_process.execute(command, expect_zero=True)
 
 
-def cat(file_path, must_exist=True):
+def cat(file_path, expect_zero=True):
     """Does cat on |file_path| and returns the result."""
     command = ['cat', file_path]
-    return new_process.execute(command, expect_zero=must_exist)
+    return new_process.execute(command, expect_zero=expect_zero)
