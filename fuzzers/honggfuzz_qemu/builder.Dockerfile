@@ -15,7 +15,7 @@
 ARG parent_image=gcr.io/fuzzbench/base-builder
 FROM $parent_image
 
-# honggfuzz requires libfd and libunwid.
+# Honggfuzz requires libbfd and libunwid.
 RUN apt-get update -y && \
     apt-get install -y \
     libbfd-dev \

@@ -20,8 +20,6 @@ import shutil
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers import utils
 
-# OUT environment variable is the location of build directory (default is /out).
-
 
 def get_cmplog_build_directory(target_directory):
     """Return path to CmpLog target directory."""
