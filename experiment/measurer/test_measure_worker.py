@@ -251,6 +251,8 @@ def test_extract_corpus(archive_name, tmp_path):
 @mock.patch('common.filestore_utils.cp',
             return_value=new_process.ProcessResult(1, '', False))
 def test_get_unchanged_cycles_doesnt_exist(mocked_cp, experiment):
+    """Tests that get_unchanged_cycles behaves as expected when the
+    unchanged-cycles file does not exist."""
     assert not measure_worker.get_unchanged_cycles(FUZZER, BENCHMARK, TRIAL_ID)
     unchanged_cycles_filestore_path = mocked_cp.call_args_list[0][0][0]
     expected_unchanged_cycles_filestore_path = (
@@ -304,5 +306,6 @@ def test_measure_trial_coverage_no_more(mocked_prepare_measure_skip, _, __, ___,
     another cycle to measure if there is none and the requested cycle can't be
     measured."""
     os.environ['WORK'] = str(tmp_path)
-    measure_worker.measure_trial_coverage(SNAPSHOT_MEASURE_REQUEST)
-    # !!!
+    expected_result = measure_worker.SnapshotMeasureResponse(None, None)
+    result = measure_worker.measure_trial_coverage(SNAPSHOT_MEASURE_REQUEST)
+    assert result == expected_result

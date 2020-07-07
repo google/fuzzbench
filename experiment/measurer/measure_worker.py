@@ -171,6 +171,7 @@ def get_unchanged_cycles(fuzzer: str, benchmark: str,
 
 
 def get_trial_work_dir(fuzzer: str, benchmark: str, trial_id: int):
+    """Get the path to the trial directory in WORK."""
     work_dir = experiment_utils.get_work_dir()
     benchmark_fuzzer_trial_dir = experiment_utils.get_trial_dir(
         fuzzer, benchmark, trial_id)

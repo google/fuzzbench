@@ -285,7 +285,7 @@ def ready_to_measure():
     return exists_in_experiment_filestore(experiment_folders_dir)
 
 
-def measure_all_trials(manager: MeasureJobManager) -> bool:
+def measure_all_trials(manager: MeasureJobManager) -> bool:  # pylint: disable=too-many-branches
     """Get coverage data (with coverage runs) for all active trials. Note that
     this should not be called unless multiprocessing.set_start_method('spawn')
     was called first. Otherwise it will use fork which breaks logging."""

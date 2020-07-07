@@ -96,6 +96,9 @@ def test_path_exists_in_experiment_filestore(mocked_execute, environ):
 
 
 def test_trial_ended(db):
+    """Tests that trial_ended returns the correct value for a trial that has
+    ended and that it returns the correct value for a trial that has not
+    ended."""
     db_utils.add_all([models.Experiment(name=EXPERIMENT_NAME)])
     ended_trial = models.Trial(experiment=EXPERIMENT_NAME,
                                benchmark=BENCHMARK,
