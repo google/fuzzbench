@@ -66,11 +66,14 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     and returns it."""
     config = yaml_utils.read(config_filename)
     filestore_params = {'experiment_filestore', 'report_filestore'}
-    cloud_params = {'cloud_compute_zone'}
+    cloud_params = {'cloud_compute_zone', 'cloud_project'}
     redis_params = {'redis_host'}
-    string_params = cloud_params.union(filestore_params, redis_params)
+    docker_params = {'docker_registry'}
+    string_params = cloud_params.union(
+        filestore_params, redis_params, docker_params)
     int_params = {'trials', 'max_total_time'}
-    required_params = int_params.union(filestore_params, redis_params)
+    required_params = int_params.union(
+        filestore_params, docker_params, redis_params)
 
     local_experiment = config.get('local_experiment', False)
     if not local_experiment:
@@ -121,6 +124,8 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
 
     if not valid:
         raise ValidationError('Config: %s is invalid.' % config_filename)
+
+    config['local_experiment'] = local_experiment
     return config
 
 
@@ -158,7 +163,7 @@ def validate_fuzzer(fuzzer: str):
 
 def validate_fuzzer_config(fuzzer_config):
     """Validate |fuzzer_config|."""
-    allowed_fields = ['name', 'fuzzer_environment', 'build_arguments', 'fuzzer']
+    allowed_fields = ['name', 'env', 'fuzzer']
     if 'fuzzer' not in fuzzer_config:
         raise Exception('Fuzzer configuration must include the "fuzzer" field.')
 
@@ -166,13 +171,8 @@ def validate_fuzzer_config(fuzzer_config):
         if key not in allowed_fields:
             raise Exception('Invalid entry "%s" in fuzzer configuration.' % key)
 
-    if ('fuzzer_environment' in fuzzer_config and
-            not isinstance(fuzzer_config['fuzzer_environment'], list)):
-        raise Exception('Fuzzer environment must be a list.')
-
-    if ('build_arguments' in fuzzer_config and
-            not isinstance(fuzzer_config['build_arguments'], list)):
-        raise Exception('Builder arguments must be a list.')
+    if ('env' in fuzzer_config and not isinstance(fuzzer_config['env'], dict)):
+        raise Exception('Fuzzer environment "env" must be a dict.')
 
     name = fuzzer_config.get('name')
     if name:
@@ -288,8 +288,11 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
             return None
         return tar_info
 
-    experiment_filestore_path = os.path.join(config['experiment_filestore'],
-                                             config['experiment'])
+    # Set environment variables to use corresponding filestore_utils.
+    os.environ['EXPERIMENT_FILESTORE'] = config['experiment_filestore']
+    os.environ['EXPERIMENT'] = config['experiment']
+    experiment_filestore_path = experiment_utils.get_experiment_filestore_path()
+
     base_destination = os.path.join(experiment_filestore_path, 'input')
 
     # Send the local source repository to the cloud for use by dispatcher.
@@ -337,29 +340,34 @@ class LocalDispatcher:
 
     def start(self):  # pylint: disable=too-many-locals
         """Start the experiment on the dispatcher."""
-        shared_volume_dir = os.path.abspath('shared-volume')
-        if not os.path.exists(shared_volume_dir):
-            os.mkdir(shared_volume_dir)
-        shared_volume_volume_arg = '{0}:{0}'.format(shared_volume_dir)
-        shared_volume_env_arg = 'SHARED_VOLUME={}'.format(shared_volume_dir)
+        experiment_filestore_path = os.path.abspath(
+            self.config['experiment_filestore'])
+        filesystem.create_directory(experiment_filestore_path)
         sql_database_arg = 'SQL_DATABASE_URL=sqlite:///{}'.format(
-            os.path.join(shared_volume_dir, 'local.db'))
+            os.path.join(experiment_filestore_path, 'local.db'))
 
-        base_docker_tag = experiment_utils.get_base_docker_tag(
-            self.config['cloud_project'])
+        docker_registry = self.config['docker_registry']
         set_instance_name_arg = 'INSTANCE_NAME={instance_name}'.format(
             instance_name=self.instance_name)
         set_experiment_arg = 'EXPERIMENT={experiment}'.format(
             experiment=self.config['experiment'])
         set_redis_host_arg = 'REDIS_HOST={redis_host}'.format(
             redis_host=self.config['redis_host'])
-        set_cloud_project_arg = 'CLOUD_PROJECT={cloud_project}'.format(
-            cloud_project=self.config['cloud_project'])
+        shared_experiment_filestore_arg = '{0}:{0}'.format(
+            self.config['experiment_filestore'])
+        # TODO: (#484) Use config in function args or set as environment
+        # variables.
+        set_docker_registry_arg = 'DOCKER_REGISTRY={}'.format(docker_registry)
         set_experiment_filestore_arg = (
             'EXPERIMENT_FILESTORE={experiment_filestore}'.format(
                 experiment_filestore=self.config['experiment_filestore']))
-        docker_image_url = '{base_docker_tag}/dispatcher-image'.format(
-            base_docker_tag=base_docker_tag)
+        shared_report_filestore_arg = '{0}:{0}'.format(
+            self.config['report_filestore'])
+        set_report_filestore_arg = (
+            'REPORT_FILESTORE={report_filestore}'.format(
+                report_filestore=self.config['report_filestore']))
+        docker_image_url = '{docker_registry}/dispatcher-image'.format(
+            docker_registry=docker_registry)
         command = [
             'docker',
             'run',
@@ -368,9 +376,9 @@ class LocalDispatcher:
             '-v',
             '/var/run/docker.sock:/var/run/docker.sock',
             '-v',
-            shared_volume_volume_arg,
-            '-e',
-            shared_volume_env_arg,
+            shared_experiment_filestore_arg,
+            '-v',
+            shared_report_filestore_arg,
             '-e',
             set_instance_name_arg,
             '-e',
@@ -378,11 +386,13 @@ class LocalDispatcher:
             '-e',
             set_redis_host_arg,
             '-e',
-            set_cloud_project_arg,
-            '-e',
             sql_database_arg,
             '-e',
             set_experiment_filestore_arg,
+            '-e',
+            set_report_filestore_arg,
+            '-e',
+            set_docker_registry_arg,
             '-e',
             'LOCAL_EXPERIMENT=True',
             '--cap-add=SYS_PTRACE',
@@ -424,8 +434,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
         gcloud.robust_begin_gcloud_ssh(self.instance_name,
                                        self.config['cloud_compute_zone'])
 
-        base_docker_tag = experiment_utils.get_base_docker_tag(
-            self.config['cloud_project'])
+        docker_registry = self.config['docker_registry']
         cloud_sql_instance_connection_name = (
             self.config['cloud_sql_instance_connection_name'])
 
@@ -435,6 +444,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
             '-e INSTANCE_NAME="{instance_name}" '
             '-e EXPERIMENT="{experiment}" '
             '-e CLOUD_PROJECT="{cloud_project}" '
+            '-e DOCKER_REGISTRY="{docker_registry}" '
             '-e EXPERIMENT_FILESTORE="{experiment_filestore}" '
             '-e POSTGRES_PASSWORD="{postgres_password}" '
             '-e CLOUD_SQL_INSTANCE_CONNECTION_NAME='
@@ -442,7 +452,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
             '--cap-add=SYS_PTRACE --cap-add=SYS_NICE '
             '-v /var/run/docker.sock:/var/run/docker.sock '
             '--name=dispatcher-container '
-            '{base_docker_tag}/dispatcher-image '
+            '{docker_registry}/dispatcher-image '
             '/work/startup-dispatcher.sh'
         ).format(
             instance_name=self.instance_name,
@@ -455,7 +465,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
             experiment_filestore=self.config['experiment_filestore'],
             cloud_sql_instance_connection_name=(
                 cloud_sql_instance_connection_name),
-            base_docker_tag=base_docker_tag,
+            docker_registry=docker_registry,
         )
         return gcloud.ssh(self.instance_name,
                           command=command,

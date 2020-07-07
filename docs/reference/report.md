@@ -72,4 +72,4 @@ in the plot indicate that the reached coverage distribution of a given fuzzer
 pair is statistically significantly different from each other (α=0.05).
 
 See how to create your own reports under [Custom analysis and
-reports]({{site.baseurl}}/developing-fuzzbench/custom_analysis_and_reports/).
+reports]({{site.baseurl}}/developing-fuzzbench/custom_analysis_and_reports).

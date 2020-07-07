@@ -27,3 +27,14 @@ def experiment_config():
 
     with open(config_filepath) as file_handle:
         return yaml.load(file_handle, yaml.SafeLoader)
+
+
+@pytest.fixture
+def local_experiment_config():
+    """Fixture that returns the loaded yaml configuration
+    test_data/local_experiment-config.yaml."""
+    config_filepath = os.path.join(os.path.dirname(__file__), 'test_data',
+                                   'local-experiment-config.yaml')
+
+    with open(config_filepath) as file_handle:
+        return yaml.load(file_handle, yaml.SafeLoader)
