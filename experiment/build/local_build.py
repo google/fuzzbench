@@ -49,7 +49,7 @@ def make_shared_coverage_binaries_dir():
     shared_coverage_binaries_dir = get_shared_coverage_binaries_dir()
     if os.path.exists(shared_coverage_binaries_dir):
         return
-    os.mkdir(shared_coverage_binaries_dir)
+    os.makedirs(shared_coverage_binaries_dir)
 
 
 def build_coverage(benchmark):
