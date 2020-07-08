@@ -158,7 +158,7 @@ docker run \\
 
 
 @mock.patch('common.gcloud.create_instance')
-@mock.patch('common.fuzzer_config_utils.get_by_variant_name')
+@mock.patch('common.fuzzer_utils.get_by_variant_name')
 def _test_create_trial_instance(  # pylint: disable=too-many-locals
         benchmark, expected_image, expected_target, expected_startup_script,
         experiment_config, preemptible, mocked_get_by_variant_name,
@@ -201,7 +201,7 @@ def _test_create_trial_instance(  # pylint: disable=too-many-locals
 
 
 @mock.patch('common.gcloud.create_instance')
-@mock.patch('common.fuzzer_config_utils.get_by_variant_name')
+@mock.patch('common.fuzzer_utils.get_by_variant_name')
 def test_start_trials_not_started(mocked_get_by_variant_name,
                                   mocked_create_instance, pending_trials,
                                   experiment_config):
@@ -215,7 +215,7 @@ def test_start_trials_not_started(mocked_get_by_variant_name,
 
 
 @mock.patch('common.new_process.execute')
-@mock.patch('common.fuzzer_config_utils.get_by_variant_name')
+@mock.patch('common.fuzzer_utils.get_by_variant_name')
 @mock.patch('experiment.scheduler.datetime_now')
 def test_schedule(mocked_datetime_now, mocked_get_by_variant_name,
                   mocked_execute, pending_trials, experiment_config):
