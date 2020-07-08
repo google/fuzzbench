@@ -1,4 +1,4 @@
-# Copyright 2016 Google Inc.
+# Copyright 2019 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,8 +14,13 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:84df55d087d82b65e3a594c01248d59f49d513d4d7362014b417e640317b11f4
-RUN apt-get update && apt-get install -y make autoconf automake libtool
-RUN git clone --depth 1 -b develop https://github.com/madler/zlib.git
-WORKDIR zlib
-COPY build.sh zlib_uncompress_fuzzer.cc $SRC/
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:59fdabfe72127e145d8a387b68e883121bddd7cf391d600edb97ecbdacbc9ff8
+RUN apt-get update && \
+    apt-get install -y autoconf automake libtool bison re2c pkg-config
+
+# php-src will be checked out to the commit hash specified in oss-fuzz.yaml.
+RUN git clone --depth 1 --branch master https://github.com/php/php-src.git php-src
+RUN git clone https://github.com/kkos/oniguruma.git php-src/oniguruma
+RUN git -C php-src/oniguruma/ checkout -f 14f5efb82321e26502caa2df3c58aa1c2d36c801
+WORKDIR php-src
+COPY build.sh $SRC/

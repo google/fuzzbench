@@ -1,4 +1,4 @@
-# Copyright 2016 Google Inc.
+# Copyright 2019 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,8 +14,16 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:84df55d087d82b65e3a594c01248d59f49d513d4d7362014b417e640317b11f4
-RUN apt-get update && apt-get install -y make autoconf automake libtool
-RUN git clone --depth 1 -b develop https://github.com/madler/zlib.git
-WORKDIR zlib
-COPY build.sh zlib_uncompress_fuzzer.cc $SRC/
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:8e56964113db5e06130b8bc5b94becb5d90a88e90c9b593f2ea24f33b0a467d0
+RUN apt-get update && apt-get install -y build-essential make curl wget
+
+# Install latest cmake.
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.14.5/cmake-3.14.5-Linux-x86_64.sh && \
+    chmod +x cmake-3.14.5-Linux-x86_64.sh && \
+    ./cmake-3.14.5-Linux-x86_64.sh --skip-license --prefix="/usr/local"
+
+RUN git clone --depth 1 https://github.com/open-source-parsers/jsoncpp
+WORKDIR jsoncpp
+
+COPY build.sh $SRC/
+

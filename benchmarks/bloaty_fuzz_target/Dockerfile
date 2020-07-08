@@ -1,4 +1,4 @@
-# Copyright 2020 Google LLC
+# Copyright 2017 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,8 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+################################################################################
 
-commit: e0363a47de4972c7d23d87b8f75a683cf0c4271b
-commit_date: 2019-11-18 15:40:08+00:00
-fuzz_target: curl_fuzzer_http
-project: curl
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:dc0a0e4327c53b000c63837c5ea8d5e8f18fb0fb2a38abd4249dedca39ed0a1f
+RUN apt-get update && apt-get install -y cmake ninja-build g++
+RUN git clone --depth 1 https://github.com/google/bloaty.git bloaty
+WORKDIR bloaty
+COPY build.sh $SRC/

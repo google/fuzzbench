@@ -14,8 +14,15 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:84df55d087d82b65e3a594c01248d59f49d513d4d7362014b417e640317b11f4
-RUN apt-get update && apt-get install -y make autoconf automake libtool
-RUN git clone --depth 1 -b develop https://github.com/madler/zlib.git
-WORKDIR zlib
-COPY build.sh zlib_uncompress_fuzzer.cc $SRC/
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:dc0a0e4327c53b000c63837c5ea8d5e8f18fb0fb2a38abd4249dedca39ed0a1f
+
+# Curl will be checked out to the commit hash specified in oss-fuzz.yaml.
+RUN git clone --depth 1 https://github.com/curl/curl.git /src/curl
+RUN git clone https://github.com/curl/curl-fuzzer.git /src/curl_fuzzer
+RUN git -C /src/curl_fuzzer checkout -f 82eb95b410cc84579b8f9d663f2a7e38f3bdb41f
+
+# Use curl-fuzzer's scripts to get latest dependencies.
+RUN $SRC/curl_fuzzer/scripts/ossfuzzdeps.sh
+
+WORKDIR $SRC/curl_fuzzer
+COPY build.sh $SRC/

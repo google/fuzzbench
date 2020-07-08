@@ -14,8 +14,15 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:84df55d087d82b65e3a594c01248d59f49d513d4d7362014b417e640317b11f4
-RUN apt-get update && apt-get install -y make autoconf automake libtool
-RUN git clone --depth 1 -b develop https://github.com/madler/zlib.git
-WORKDIR zlib
-COPY build.sh zlib_uncompress_fuzzer.cc $SRC/
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:32d87afee8e52e1550905b43d5e8583b33f37c2600446b6b9efeb14bfc25c71f
+RUN apt-get update && apt-get install -y make autoconf automake libtool curl tcl zlib1g-dev
+
+RUN mkdir $SRC/sqlite3 && \
+    cd $SRC/sqlite3 && \
+    curl 'https://sqlite.org/src/tarball/sqlite.tar.gz?r=c78cbf2e86850cc6' -o sqlite3.tar.gz && \
+        tar xzf sqlite3.tar.gz --strip-components 1
+
+RUN find $SRC/sqlite3 -name "*.test" | xargs zip $SRC/ossfuzz_seed_corpus.zip
+
+WORKDIR sqlite3
+COPY build.sh *.dict $SRC/
