@@ -28,6 +28,7 @@ from database import utils as db_utils
 from database import models
 from experiment.build import local_build
 from experiment.build import builder
+from experiment.run_experiment import get_git_hash
 from queue_experiment.config import Config
 from queue_experiment.task_module import build_task, run_task, measure_task
 
@@ -66,6 +67,9 @@ def main():
     if not from_dict(data_class=Config, data=config_data).validate_all():
         logs.error('Please validate your configuration accordingly.')
         return
+
+    experiment_name = 'singletest'
+    num_trials = config_data['trials']
 
 
     # Initialize Redis server and task queues.
@@ -112,9 +116,22 @@ def main():
             break
         time.sleep(5)
 
+    # Save trails data into database.
     trials = []
     for fuzzer, benchmark in jobs[2].result:
-        print(fuzzer, benchmark)
+        fuzzer_benchmark_trials = [
+            models.Trial(fuzzer=fuzzer,
+                         experiment=experiment_name,
+                         benchmark=benchmark,
+                         preemptible=False) for _ in range(num_trials)
+        ]
+        trials.extend(fuzzer_benchmark_trials)
+    db_utils.add_all([
+        db_utils.get_or_create(
+            models.Experiment,
+            name=experiment_name,
+            git_hash=get_git_hash())])
+    db_utils.bulk_save(trials)
     exit()
 
     # Start watchers.
