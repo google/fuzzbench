@@ -330,8 +330,7 @@ class LocalDispatcher:
     def start(self):
         """Start the experiment on the dispatcher."""
         container_name = 'dispatcher-container'
-        logs.info(
-            'Started dispatcher with container name: %s', container_name)
+        logs.info('Started dispatcher with container name: %s', container_name)
         experiment_filestore_path = os.path.abspath(
             self.config['experiment_filestore'])
         filesystem.create_directory(experiment_filestore_path)
@@ -407,8 +406,8 @@ class GoogleCloudDispatcher(BaseDispatcher):
 
     def start(self):
         """Start the experiment on the dispatcher."""
-        logs.info(
-            'Started dispatcher with instance name: %s', self.instance_name)
+        logs.info('Started dispatcher with instance name: %s',
+                  self.instance_name)
         with tempfile.NamedTemporaryFile(dir=os.getcwd(),
                                          mode='w') as startup_script:
             self.write_startup_script(startup_script)
