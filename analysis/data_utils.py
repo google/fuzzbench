@@ -100,17 +100,16 @@ def filter_max_time(experiment_df, max_time):
 
 # Creating "snapshots" (see README.md for definition).
 
-_DEFAULT_BENCHMARK_SAMPLE_NUM_THRESHOLD = 0.8
+_DEFAULT_BENCHMARK_SAMPLE_NUM_THRESHOLD = 1.0
 
 
 def get_benchmark_snapshot(benchmark_df,
                            threshold=_DEFAULT_BENCHMARK_SAMPLE_NUM_THRESHOLD):
-    """Finds the latest time where 80% of the trials were still running. In most
-    cases, this is the end of the experiment. In this case, we won't consider
-    the <20% of the trials that ended early for our analysis. If more than 20%
-    of the trials ended early, it's better to pick an earlier snapshot time.
-    The 80% can be overridden using the |threshold| argument. E.g., to find the
-    latest time where each trials were running, set |threshold| to 1.0.
+    """Finds the latest time where all trials were still running
+    (or |threshold| * trials were still running). In most cases, this is the end
+    of the experiment. However, if some trials (or more than (1 - |threshold|) *
+    trials) ended earlier, we will use an earlier "snapshot" time for comparing
+    results.
 
     Returns data frame that only contains the measurements of the picked
     snapshot time.
@@ -120,7 +119,7 @@ def get_benchmark_snapshot(benchmark_df,
 
     num_trials = benchmark_df.trial_id.nunique()
     trials_running_at_time = benchmark_df.time.value_counts()
-    criteria = trials_running_at_time > threshold * num_trials
+    criteria = trials_running_at_time >= threshold * num_trials
     ok_times = trials_running_at_time[criteria]
     latest_ok_time = ok_times.index.max()
     benchmark_snapshot_df = benchmark_df[benchmark_df.time == latest_ok_time]

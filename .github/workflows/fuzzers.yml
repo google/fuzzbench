@@ -19,8 +19,6 @@ jobs:
           - aflfast
           - aflplusplus
           - aflplusplus_optimal
-          - aflplusplus_shmem
-          - aflplusplus_optimal_shmem
           - aflsmart
           - ankou
           - entropic
@@ -29,14 +27,19 @@ jobs:
           - honggfuzz
           - lafintel
           - libfuzzer
-          - libfuzzer_nocmp
           - manul
           - mopt
-          # Greybox fuzzers
+          # Binary-only (greybox) fuzzers.
           - eclipser
           - afl_qemu
           - aflplusplus_qemu
           - honggfuzz_qemu
+          # Temporary variants.
+          - aflplusplus_lto_dict
+          - aflplusplus_lto
+          - aflplusplus_ltoinstrim
+          - aflplusplus_ctx
+          - aflplusplus_ngram2
 
         benchmark_type:
           - oss-fuzz
