@@ -11,14 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions andsss
 # limitations under the License.
-
-# pylint: disable=invalid-name,unused-argument
 """Tests for queries.py"""
 import datetime
 
 from analysis import queries
 from database import models
 from database import utils as db_utils
+
+# pylint: disable=invalid-name,unused-argument
 
 
 def test_add_nonprivate_experiments_for_merge_with_clobber(db):
