@@ -18,7 +18,6 @@ records coverage data received from the runner VMs."""
 
 import multiprocessing
 import os
-import posixpath
 import sys
 import threading
 import time
@@ -47,14 +46,15 @@ def create_work_subdirs(subdirs: List[str]):
         os.mkdir(os.path.join(experiment_utils.get_work_dir(), subdir))
 
 
-def _initialize_experiment_in_db(experiment: str, git_hash: str,
+def _initialize_experiment_in_db(experiment_config: dict,
                                  trials: List[models.Trial]):
     """Initializes |experiment| in the database by creating the experiment
     entity and entities for each trial in the experiment."""
     db_utils.add_all([
         db_utils.get_or_create(models.Experiment,
-                               name=experiment,
-                               git_hash=git_hash)
+                               name=experiment_config['experiment'],
+                               git_hash=experiment_config['git_hash'],
+                               private=experiment_config.get('private', False))
     ])
 
     # TODO(metzman): Consider doing this without sqlalchemy. This can get
@@ -78,9 +78,6 @@ class Experiment:  # pylint: disable=too-many-instance-attributes
         self.experiment_name = self.config['experiment']
         self.git_hash = self.config['git_hash']
         self.preemptible = self.config.get('preemptible_runners')
-
-        self.web_bucket = posixpath.join(self.config['report_filestore'],
-                                         experiment_utils.get_experiment_name())
 
 
 def build_images_for_trials(fuzzers: List[str], benchmarks: List[str],
@@ -126,8 +123,7 @@ def dispatcher_main():
     preemptible = experiment.preemptible
     trials = build_images_for_trials(experiment.fuzzers, experiment.benchmarks,
                                      experiment.num_trials, preemptible)
-    _initialize_experiment_in_db(experiment.experiment_name,
-                                 experiment.git_hash, trials)
+    _initialize_experiment_in_db(experiment.config, trials)
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])
 
@@ -150,8 +146,7 @@ def dispatcher_main():
             is_complete = not measurer_loop_process.is_alive()
 
         # Generate periodic output reports.
-        reporter.output_report(experiment.web_bucket,
-                               in_progress=not is_complete)
+        reporter.output_report(experiment.config, in_progress=not is_complete)
 
         if is_complete:
             # Experiment is complete, bail out.

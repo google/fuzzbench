@@ -67,8 +67,6 @@ def test_experiment(dispatcher_experiment):
     """Tests creating an Experiment object."""
     assert dispatcher_experiment.benchmarks == ['benchmark-1', 'benchmark-2']
     assert dispatcher_experiment.fuzzers == FUZZERS
-    assert (
-        dispatcher_experiment.web_bucket == 'gs://web-reports/test-experiment')
 
 
 def test_initialize_experiment_in_db(dispatcher_experiment):
@@ -84,7 +82,7 @@ def test_initialize_experiment_in_db(dispatcher_experiment):
         for benchmark, _, fuzzer in trials_args
     ]
     dispatcher._initialize_experiment_in_db(
-        dispatcher_experiment.experiment_name, dispatcher_experiment.git_hash,
+        dispatcher_experiment.config,
         trials)
     db_experiments = db_utils.query(models.Experiment).all()
     assert len(db_experiments) == 1
