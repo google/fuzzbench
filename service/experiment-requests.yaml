@@ -19,7 +19,7 @@
 # are still testing this feature. You should request an experiment by contacting
 # us as you normally do.
 
-- experiment: 2020-06-30
+- experiment: 2020-07-09
   fuzzers:
     - aflplusplus_lto_dict
     - aflplusplus_lto
@@ -29,6 +29,13 @@
     - aflplusplus_optimal
     - aflplusplus_qemu
     - aflplusplus
+
+- experiment: 2020-06-30
+  fuzzers:
+    - aflplusplus_qemu
+    - afl_qemu
+    - honggfuzz_qemu
+    - aflplusplus_optimal_shmem
 
 - experiment: 2020-06-26
   fuzzers:
