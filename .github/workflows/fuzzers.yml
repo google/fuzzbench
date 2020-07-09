@@ -27,7 +27,6 @@ jobs:
           - honggfuzz
           - lafintel
           - libfuzzer
-          - libfuzzer_nocmp
           - manul
           - mopt
           # Binary-only (greybox) fuzzers.
