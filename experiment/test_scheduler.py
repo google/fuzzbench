@@ -91,7 +91,7 @@ def test_create_trial_instance(benchmark, expected_image, expected_target,
                                experiment_config):
     """Test that create_trial_instance invokes create_instance
     and creates a startup script for the instance, as we expect it to."""
-    expected_startup_script = '''## Start docker.
+    expected_startup_script = '''# Start docker.
 
 while ! docker pull {docker_image_url}
 do
@@ -133,7 +133,7 @@ def test_create_trial_instance_local_experiment(benchmark, expected_image,
     startup script for the instance, as we expect it to when running a
     local_experiment."""
     os.environ['LOCAL_EXPERIMENT'] = str(True)
-    expected_startup_script = '''## Start docker.
+    expected_startup_script = '''# Start docker.
 
 
 docker run \\
@@ -191,7 +191,7 @@ def _test_create_trial_instance(  # pylint: disable=too-many-locals
 
     with open(expected_startup_script_path) as file_handle:
         content = file_handle.read()
-        check_from = '## Start docker.'
+        check_from = '# Start docker.'
         assert check_from in content
         script_for_docker = content[content.find(check_from):]
         assert script_for_docker == expected_startup_script.format(
