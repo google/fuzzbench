@@ -100,18 +100,17 @@ def filter_max_time(experiment_df, max_time):
 
 # Creating "snapshots" (see README.md for definition).
 
-_DEFAULT_BENCHMARK_SAMPLE_NUM_THRESHOLD = 1.0
+_MIN_FRACTION_OF_ALIVE_TRIALS_AT_SNAPSHOT = 0.5
 
 
 def get_benchmark_snapshot(benchmark_df,
-                           threshold=_DEFAULT_BENCHMARK_SAMPLE_NUM_THRESHOLD):
-    """Finds the latest time where all trials were still running
-    (or |threshold| * trials were still running). In most cases, this is the end
-    of the experiment. However, if some trials (or more than (1 - |threshold|) *
-    trials) ended earlier, we will use an earlier "snapshot" time for comparing
-    results.
+                           threshold=_MIN_FRACTION_OF_ALIVE_TRIALS_AT_SNAPSHOT):
+    """Finds the latest time where |threshold| fraction of the trials were still
+    running. In most cases, this is the end of the experiment. However, if less
+    than |threshold| fraction of the trials reached the end of the experiment,
+    then we will use an earlier "snapshot" time for comparing results.
 
-    Returns data frame that only contains the measurements of the picked
+    Returns a data frame that only contains the measurements of the picked
     snapshot time.
     """
     # Allow overriding threshold with environment variable as well.
