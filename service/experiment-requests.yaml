@@ -21,10 +21,14 @@
 
 - experiment: 2020-06-30
   fuzzers:
+    - aflplusplus_lto_dict
+    - aflplusplus_lto
+    - aflplusplus_ltoinstrim
+    - aflplusplus_ctx
+    - aflplusplus_ngram2
+    - aflplusplus_optimal
     - aflplusplus_qemu
-    - afl_qemu
-    - honggfuzz_qemu
-    - aflplusplus_optimal_shmem
+    - aflplusplus
 
 - experiment: 2020-06-26
   fuzzers:
