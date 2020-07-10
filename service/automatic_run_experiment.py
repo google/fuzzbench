@@ -215,7 +215,6 @@ def _run_experiment(experiment_name, fuzzer_configs, dry_run=False):
         return
     run_experiment.start_experiment(experiment_name, EXPERIMENT_CONFIG_FILE,
                                     BENCHMARKS, fuzzer_configs)
-    stop_experiment.stop_experiment(experiment_name, EXPERIMENT_CONFIG_FILE)
 
 
 def main():
