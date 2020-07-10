@@ -41,10 +41,9 @@ def add_nonprivate_experiments_for_merge_with_clobber(experiment_names):
     nonprivate experiments in the order in which they were run. This is useful
     if you want to combine reports from |experiment_names| and all nonprivate
     experiments."""
-    nonprivate_experiments = db_utils.query(
-        Experiment.name).filter(~Experiment.private).filter(
-            ~Experiment.name.in_(experiment_names)).order_by(
-                Experiment.time_created)
+    nonprivate_experiments = db_utils.query(Experiment.name).filter(
+        ~Experiment.private, ~Experiment.name.in_(experiment_names)).order_by(
+            Experiment.time_created)
     nonprivate_experiment_names = [
         result[0] for result in nonprivate_experiments
     ]

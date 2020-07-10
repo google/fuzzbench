@@ -102,8 +102,9 @@ def get_arg_parser():
         '--merge-with-clobber-nonprivate',
         action='store_true',
         default=False,
-        help=('Does merge-with-clobber but includes all experiments that are '
-              'not private.'))
+        help=('Does --merge-with-clobber but includes all experiments that are '
+              'not private. See help for --merge-with-clobber for more '
+              'details.'))
     parser.add_argument(
         '-c',
         '--from-cached-data',
