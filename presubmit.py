@@ -215,7 +215,7 @@ def pytype(paths: List[Path]) -> bool:
     assert sys.version_info.major == 3
     if sys.version_info.minor > 7:
         logs.error(
-            'Python version is: "%s". You should be using 3.7.'
+            'Python version is: "%s". You should be using 3.7. '
             'Not running pytype.', sys.version)
         return False
 
