@@ -19,6 +19,7 @@ from dacite import from_dict
 import os
 from redis import Redis
 from rq import Queue
+from rq.job import Job
 import sys
 import time
 
@@ -26,11 +27,13 @@ from common import logs
 from common import filesystem
 from database import utils as db_utils
 from database import models
+from experiment import reporter, scheduler
 from experiment.build import local_build
 from experiment.build import builder
+from experiment.dispatcher import create_work_subdirs
 from experiment.run_experiment import get_git_hash
+from queue_experiment import queue_watcher, filestore_watcher
 from queue_experiment.config import Config
-from queue_experiment.task_module import build_task, run_task, measure_task
 
 
 def main():
@@ -62,14 +65,17 @@ def main():
         'benchmarks': ['jsoncpp_jsoncpp_fuzzer'],
         'fuzzers': ['libfuzzer'],
         'trials': 2,
-        'max_total_time': 3600
+        'max_total_time': 3600,
+        'experiment': 'singletest'
     }
-    if not from_dict(data_class=Config, data=config_data).validate_all():
+    config_obj = from_dict(data_class=Config, data=config_data)
+    if not config_obj.validate_all():
         logs.error('Please validate your configuration accordingly.')
         return
 
-    experiment_name = 'singletest'
+    experiment_name = config_data['experiment']
     num_trials = config_data['trials']
+    local_experiment = config_data['local_experiment']
 
 
     # Initialize Redis server and task queues.
@@ -132,16 +138,63 @@ def main():
             name=experiment_name,
             git_hash=get_git_hash())])
     db_utils.bulk_save(trials)
-    exit()
+    create_work_subdirs(['experiment-folders', 'measurement-folders'])
 
-    # Start watchers.
+
+    # Start watchers and generate reports.
+    queue_watcher_instance = queue_watcher.QueueWatcher(
+        config_obj,
+        build_n_run_queue,
+        measure_queue
+    )
+    filestore_watcher_instance = filestore_watcher.FilestoreWatcher(
+        config_obj,
+        measure_queue
+    )
+
+    # Schedule all trails run tasks into build_n_run_queue.
+    pending_trials = scheduler.get_pending_trials(experiment_name)
+    start_trial_args = [
+        (scheduler.TrialProxy(trial), config_data) for trial in pending_trials
+    ]
+    for (trial, experiment_config) in start_trial_args:
+        instance_name = experiment_utils.get_trial_instance_name(
+            experiment_config['experiment'], trial.id)
+        startup_script = scheduler.render_startup_script_template(
+            instance_name,
+            trial.fuzzer,
+            trial.benchmark,
+            trial.id,
+            experiment_config)
+        startup_script_path = '/tmp/%s-start-docker-%d.sh' % (instance_name, int(time.time()))
+        with open(startup_script_path, 'w') as file_handle:
+            file_handle.write(startup_script)
+        job_id = Job.create(gcloud.run_local_instance,
+                            startup_script=startup_script_path,
+                            depends_on=job[2], # TODO: change to the build task prepared for this trial only.
+                            id=str(trial.id),
+                            timeout=config_data['max_total_time']
+                            )
+        queue_watcher.add_task(job_id)
+        build_n_run_queue.enqueue_job(job_id)
+
+    is_complete = False
     while(1):
-        # Check the queue status.
+        # Check the queue status and update the database.
+        queue_watcher_instance.check()
 
-        # Check the filestore.
-        measure_queue.enqueue(measure_task, fuzzer='test_fuzzer', benchmark='test_benchmark')
+        # Check the filestore and assign measurement tasks.
+        filestore_watcher.check()
+
+        if queue_watcher.finished() and filestore_watcher.no_measure_tasks():
+            is_complete = True
 
         # Generate report.
+        reporter.output_report(config_data['report_filestore'],
+                               in_progress=not is_complete)
+        if is_complete:
+            break
+        time.sleep(10)
 
     return 0
 

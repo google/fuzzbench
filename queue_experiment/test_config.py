@@ -15,7 +15,8 @@ CONFIG_DATA = {
         'benchmarks': ['zlib_zlib_uncompress_fuzzer', 'jsoncpp_jsoncpp_fuzzer'],
         'fuzzers': ['afl', 'libfuzzer'],
         'trials': 2,
-        'max_total_time': 3600
+        'max_total_time': 3600,
+        'experiment': 'testname'
     }
 
 CONFIG_OBJ = Config(
@@ -27,7 +28,8 @@ CONFIG_OBJ = Config(
         benchmarks=['zlib_zlib_uncompress_fuzzer', 'jsoncpp_jsoncpp_fuzzer'],
         fuzzers=['afl', 'libfuzzer'],
         trials=2,
-        max_total_time=3600
+        max_total_time=3600,
+        experiment='testname'
     )
 
 

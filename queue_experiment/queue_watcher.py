@@ -11,27 +11,42 @@ The other one is the report_generator.py, where it will read the database for
 updates.
 """
 
+from database import utils as db_utils
+from database import models
+from experiment import scheduler
+
 class QueueWatcher:
     """The main module."""
-    def __init__(self, config):
+    def __init__(self, config, build_n_run_queue, measure_queue):
         """Initializes the module."""
-        # Connect to the Redis server and get related queue information.
+        self.config = config
+        self.build_n_run_queue = build_n_run_queue
+        self.measure_queue = measure_queue
+        self.experiment = config['experiment']
 
         # Connect to the database.
 
         # Initialize the pool for watching/monitoring tasks.
+        self.task_pool = dict()
 
     def add_task(self, job_id):
         """Adds one job into pool for monitoring."""
+        self.task_pool.append(job_id)
 
     def delete_task(self, job_id):
         """Removes one job from monitoring pool."""
 
     def query_task(self, job_id):
         """Queries the status of one job in watcher's view."""
+        print(job_id.status)
+        # TODO: If it starts, set the start time.
+        #       If it is done, set the end time and delete the task.
 
-    def start(self):
-        """Starts monitoring."""
+    def check(self):
+        """Updates database based on the job pool finished status."""
+        for job_id in self.task_pool:
+          if query_task(job_id)
 
-    def stop(self):
-        """Stops monitoring."""
+    def finished(self):
+        """Checks database to see whether all trials finish."""
+        return scheduler.all_trials_ended(self.experiment)

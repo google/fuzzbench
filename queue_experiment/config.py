@@ -27,6 +27,7 @@ class Config():
     fuzzers: List[str]
     trials: int
     max_total_time: int
+    experiment: str
 
 
     def validate_all(self):
