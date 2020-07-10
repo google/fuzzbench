@@ -213,7 +213,7 @@ def pytype(paths: List[Path]) -> bool:
     # Pytype isn't supported on Python3.8+. See
     # https://github.com/google/pytype/issues/440.
     assert sys.version_info.major == 3
-    if sys.version_info.minor == 7:
+    if sys.version_info.minor > 7:
         logs.error(
             'Python version is: "%s". You should be using 3.7.'
             'Not running pytype.', sys.version)
