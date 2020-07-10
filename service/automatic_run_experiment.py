@@ -29,7 +29,6 @@ from common import yaml_utils
 from database import models
 from database import utils as db_utils
 from experiment import run_experiment
-from experiment import stop_experiment
 
 logger = logs.Logger('automatic_run_experiment')  # pylint: disable=invalid-name
 
