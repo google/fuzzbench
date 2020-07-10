@@ -210,6 +210,13 @@ def lint(paths: List[Path]) -> bool:
 def pytype(paths: List[Path]) -> bool:
     """Run pytype on |path| if it is a python file. Return False if it fails
     type checking."""
+    # Check that we are on Python3.7.
+    if not sys.version.startswith('3.7'):
+        logs.error(
+            'Python version is: "%s". You should be using 3.7.'
+            'Not running pytype.', sys.version)
+        return False
+
     paths = [path for path in paths if is_python(path)]
     if not paths:
         return True
