@@ -63,8 +63,8 @@ def get_benchmarks_or_fuzzers(benchmarks_or_fuzzers_directory, filename,
     ]
 
 
-@pytest.mark.skipif(not sys.version.startswith('3.7.7'),
-                    reason='Test can hang on versions greater than 3.7.7')
+@pytest.mark.skipif(sys.version_info.minor > 7,
+                    reason='Test can hang on versions greater than 3.7')
 @mock.patch('experiment.build.builder.build_measurer')
 @mock.patch('time.sleep')
 @pytest.mark.parametrize('build_measurer_return_value', [True, False])
