@@ -45,7 +45,7 @@ class QueueWatcher:
     def check(self):
         """Updates database based on the job pool finished status."""
         for job_id in self.task_pool:
-          if query_task(job_id)
+            query_task(job_id)
 
     def finished(self):
         """Checks database to see whether all trials finish."""

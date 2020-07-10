@@ -1,5 +1,5 @@
 alembic==1.4.0
-dacite=1.5.1
+dacite==1.5.1
 google-api-python-client==1.8.2
 google-auth==1.14.0
 google-cloud-error-reporting==0.33.0
@@ -15,8 +15,8 @@ pytest==5.3.5
 python-dateutil==2.8.1
 pytz==2019.3
 PyYAML==5.3
-redis=3.5.3
-rq=1.4.3
+redis==3.5.3
+rq==1.4.3
 scikit-posthocs==0.6.2
 scipy==1.4.1
 seaborn==0.10.0
