@@ -90,8 +90,9 @@ def builder_integration(experiment):
 
 
 # pylint: disable=no-self-use
-@pytest.mark.skipif(not os.getenv('TEST_INTEGRATION_ALL'),
-                    reason='Tests take too long and can interfere with real '
+@pytest.mark.skipif(
+    not os.getenv('TEST_INTEGRATION_ALL'),
+    reason='Tests take too long and can interfere with real '
     'experiments. Find some way of opting-in and isolating the tests.')
 class TestIntegrationBuild:
     """Integration tests for building."""
