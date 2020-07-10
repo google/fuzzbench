@@ -210,7 +210,7 @@ def lint(paths: List[Path]) -> bool:
 def pytype(paths: List[Path]) -> bool:
     """Run pytype on |path| if it is a python file. Return False if it fails
     type checking."""
-    # Pytype isn't supported on Python3.8+
+    # Pytype isn't supported on Python3.8+. See
     # https://github.com/google/pytype/issues/440.
     assert sys.version_info.major == 3
     if sys.version_info.minor == 7:
