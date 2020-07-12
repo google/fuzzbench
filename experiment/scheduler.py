@@ -26,7 +26,7 @@ import jinja2
 
 from common import benchmark_utils
 from common import experiment_utils
-from common import fuzzer_config_utils
+from common import fuzzer_utils
 from common import gcloud
 from common import gce
 from common import logs
@@ -716,7 +716,7 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
                                    experiment_config: dict):
     """Render the startup script using the template and the parameters
     provided and return the result."""
-    fuzzer_config = fuzzer_config_utils.get_by_variant_name(fuzzer)
+    fuzzer_config = fuzzer_utils.get_by_variant_name(fuzzer)
     docker_image_url = benchmark_utils.get_runner_image_url(
         benchmark, fuzzer_config['fuzzer'],
         experiment_config['docker_registry'])

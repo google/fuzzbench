@@ -62,6 +62,7 @@ def get_benchmarks_or_fuzzers(benchmarks_or_fuzzers_directory, filename,
     ]
 
 
+# This test seems to hang on Python3.8+
 @mock.patch('experiment.build.builder.build_measurer')
 @mock.patch('time.sleep')
 @pytest.mark.parametrize('build_measurer_return_value', [True, False])
@@ -89,9 +90,10 @@ def builder_integration(experiment):
 
 
 # pylint: disable=no-self-use
-@pytest.mark.skipif(not os.getenv('TEST_INTEGRATION_ALL'),
-                    reason='''Tests take too long and can interfere with real
-    experiments. Find some way of opting-in and isolating the tests.''')
+@pytest.mark.skipif(
+    not os.getenv('TEST_INTEGRATION_ALL'),
+    reason='Tests take too long and can interfere with real '
+    'experiments. Find some way of opting-in and isolating the tests.')
 class TestIntegrationBuild:
     """Integration tests for building."""
 

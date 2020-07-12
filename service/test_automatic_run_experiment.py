@@ -57,10 +57,8 @@ def test_run_requested_experiment_pause_service(
 
 
 @mock.patch('experiment.run_experiment.start_experiment')
-@mock.patch('experiment.stop_experiment.stop_experiment')
 @mock.patch('service.automatic_run_experiment._get_requested_experiments')
 def test_run_requested_experiment(mocked_get_requested_experiments,
-                                  mocked_stop_experiment,
                                   mocked_start_experiment, db):
     """Tests that run_requested_experiment starts and stops the experiment
     properly."""
@@ -113,9 +111,6 @@ def test_run_requested_experiment(mocked_get_requested_experiments,
     # what we expected.
     start_experiment_call_args[0][0][3].sort(key=sort_key)
     assert start_experiment_call_args == expected_calls
-
-    mocked_stop_experiment.assert_called_with(expected_experiment_name,
-                                              expected_config_file)
 
 
 @pytest.mark.parametrize(

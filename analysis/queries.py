@@ -34,3 +34,18 @@ def get_experiment_data(experiment_names):
         .filter(Trial.preempted.is_(False))
 
     return pd.read_sql_query(snapshots_query.statement, db_utils.engine)
+
+
+def add_nonprivate_experiments_for_merge_with_clobber(experiment_names):
+    """Returns a new list containing experiment names preeceeded by a list of
+    nonprivate experiments in the order in which they were run. This is useful
+    if you want to combine reports from |experiment_names| and all nonprivate
+    experiments."""
+    nonprivate_experiments = db_utils.query(Experiment.name).filter(
+        ~Experiment.private, ~Experiment.name.in_(experiment_names)).order_by(
+            Experiment.time_created)
+    nonprivate_experiment_names = [
+        result[0] for result in nonprivate_experiments
+    ]
+
+    return nonprivate_experiment_names + experiment_names

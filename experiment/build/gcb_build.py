@@ -19,7 +19,7 @@ from typing import Dict, Tuple
 from common import benchmark_utils
 from common import experiment_path as exp_path
 from common import experiment_utils
-from common import fuzzer_config_utils
+from common import fuzzer_utils
 from common import logs
 from common import new_process
 from common import utils
@@ -70,8 +70,7 @@ def _build_benchmark_coverage(benchmark: str) -> Tuple[int, str]:
 def _build_oss_fuzz_project_fuzzer(benchmark: str,
                                    fuzzer: str) -> Tuple[int, str]:
     """Build a |benchmark|, |fuzzer| runner image on GCB."""
-    underlying_fuzzer = fuzzer_config_utils.get_by_variant_name(
-        fuzzer)['fuzzer']
+    underlying_fuzzer = fuzzer_utils.get_by_variant_name(fuzzer)['fuzzer']
     project = benchmark_utils.get_project(benchmark)
     oss_fuzz_builder_hash = benchmark_utils.get_oss_fuzz_builder_hash(benchmark)
     substitutions = {
@@ -89,8 +88,7 @@ def _build_oss_fuzz_project_fuzzer(benchmark: str,
 
 def _build_benchmark_fuzzer(benchmark: str, fuzzer: str) -> Tuple[int, str]:
     """Build a |benchmark|, |fuzzer| runner image on GCB."""
-    underlying_fuzzer = fuzzer_config_utils.get_by_variant_name(
-        fuzzer)['fuzzer']
+    underlying_fuzzer = fuzzer_utils.get_by_variant_name(fuzzer)['fuzzer']
     # See link for why substitutions must begin with an underscore:
     # https://cloud.google.com/cloud-build/docs/configuring-builds/substitute-variable-values#using_user-defined_substitutions
     substitutions = {
