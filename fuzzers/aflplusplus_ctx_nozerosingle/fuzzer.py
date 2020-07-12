@@ -20,34 +20,13 @@
 # But this means that the good stuff is hidden away in this benchmark
 # otherwise.
 
-import os
-import shutil
-import glob
-
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
-def build():  # pylint: disable=too-many-branches,too-many-statements
+def build():
     """Build benchmark."""
-    benchmark_name = os.environ['BENCHMARK']
 
-    if benchmark_name == 'bloaty_fuzz_target':
-        aflplusplus_fuzzer.build('lto', 'dynamic', 'nozero')
-    elif benchmark_name == 'curl_curl_fuzzer_http':
-        aflplusplus_fuzzer.build('lto', 'dynamic', 'nozero')
-    elif benchmark_name == 'freetype2-2017':
-        aflplusplus_fuzzer.build('lto', 'dynamic', 'nozero')
-    elif benchmark_name == 'jsoncpp_jsoncpp_fuzzer':
-        aflplusplus_fuzzer.build('lto', 'dynamic', 'nozero')
-    elif benchmark_name == 'openssl_x509':
-        aflplusplus_fuzzer.build('lto', 'dynamic', 'nozero')
-    elif benchmark_name == 'php_php-fuzz-parser':
-        aflplusplus_fuzzer.build('lto', 'dynamic', 'nozero')
-    else:
-        aflplusplus_fuzzer.build('lto', 'nozero')
-
-    for copy_file in glob.glob("/afl/libc*"):
-        shutil.copy(copy_file, os.environ['OUT'])
+    aflplusplus_fuzzer.build('classic', 'ctx', 'nozero', 'skipsingle')
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
