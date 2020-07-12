@@ -26,7 +26,7 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 def build():
     """Build benchmark."""
 
-    aflplusplus_fuzzer.build('classic', 'ctx', 'nozero', 'skipsingle')
+    aflplusplus_fuzzer.build('classic', 'ctx', 'laf', 'nozero', 'skipsingle')
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
