@@ -20,6 +20,7 @@
 # us as you normally do.
 
 - experiment: 2020-07-13
+  fuzzers:
   - aflplusplus_ctx_default
   - aflplusplus_ctx_nosingle
   - aflplusplus_ctx_nozero
