@@ -180,7 +180,7 @@ debug-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
 """
 
 OSS_FUZZER_BENCHMARK_TEMPLATE = """
-.{fuzzer}-{benchmark}-oss-fuzz-builder-intermediate:
+.{fuzzer}-{benchmark}-oss-fuzz-builder-intermediate: .{benchmark}-project-builder
 	docker build \\
     --tag {base_tag}/builders/{fuzzer}/{benchmark}-intermediate \\
     --file=fuzzers/{fuzzer}/builder.Dockerfile \\
