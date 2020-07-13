@@ -11,3 +11,5 @@ experiment_filestore: gs://fuzzbench-data
 report_filestore: gs://www.fuzzbench.com/reports
 cloud_sql_instance_connection_name: "fuzzbench:us-central1:postgres-experiment-db=tcp:5432"
 preemptible_runners: true
+merge_with_nonprivate: true
+private: false
