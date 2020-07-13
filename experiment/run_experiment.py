@@ -16,13 +16,15 @@
 it needs to begin an experiment."""
 
 import argparse
-import multiprocessing
 import os
 import re
 import subprocess
 import sys
 import tarfile
+import tempfile
 from typing import Dict, List
+
+import jinja2
 import yaml
 
 from common import benchmark_utils
@@ -35,7 +37,6 @@ from common import logs
 from common import new_process
 from common import utils
 from common import yaml_utils
-from experiment import stop_experiment
 from src_analysis import experiment_changes
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
@@ -60,16 +61,20 @@ FILTER_SOURCE_REGEX = re.compile(r'('
 
 CONFIG_DIR = 'config'
 
+RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
+
 
 def read_and_validate_experiment_config(config_filename: str) -> Dict:
     """Reads |config_filename|, validates it, finds as many errors as possible,
     and returns it."""
     config = yaml_utils.read(config_filename)
     filestore_params = {'experiment_filestore', 'report_filestore'}
-    cloud_config = {'cloud_compute_zone'}
-    string_params = cloud_config.union(filestore_params)
+    cloud_config = {'cloud_compute_zone', 'cloud_project'}
+    docker_config = {'docker_registry'}
+    string_params = cloud_config.union(filestore_params).union(docker_config)
     int_params = {'trials', 'max_total_time'}
-    required_params = int_params.union(filestore_params)
+    required_params = int_params.union(filestore_params).union(docker_config)
+    bool_params = {'private', 'merge_with_nonprivate'}
 
     local_experiment = config.get('local_experiment', False)
     if not local_experiment:
@@ -101,6 +106,12 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
                 param, str(value))
             continue
 
+        if param in bool_params and not isinstance(value, bool):
+            valid = False
+            logs.error('Config parameter "%s" is "%s". It must be a bool.',
+                       param, str(value))
+            continue
+
         if param not in filestore_params:
             continue
 
@@ -120,6 +131,8 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
 
     if not valid:
         raise ValidationError('Config: %s is invalid.' % config_filename)
+
+    config['local_experiment'] = local_experiment
     return config
 
 
@@ -157,7 +170,7 @@ def validate_fuzzer(fuzzer: str):
 
 def validate_fuzzer_config(fuzzer_config):
     """Validate |fuzzer_config|."""
-    allowed_fields = ['name', 'fuzzer_environment', 'build_arguments', 'fuzzer']
+    allowed_fields = ['name', 'env', 'fuzzer']
     if 'fuzzer' not in fuzzer_config:
         raise Exception('Fuzzer configuration must include the "fuzzer" field.')
 
@@ -165,13 +178,8 @@ def validate_fuzzer_config(fuzzer_config):
         if key not in allowed_fields:
             raise Exception('Invalid entry "%s" in fuzzer configuration.' % key)
 
-    if ('fuzzer_environment' in fuzzer_config and
-            not isinstance(fuzzer_config['fuzzer_environment'], list)):
-        raise Exception('Fuzzer environment must be a list.')
-
-    if ('build_arguments' in fuzzer_config and
-            not isinstance(fuzzer_config['build_arguments'], list)):
-        raise Exception('Builder arguments must be a list.')
+    if ('env' in fuzzer_config and not isinstance(fuzzer_config['env'], dict)):
+        raise Exception('Fuzzer environment "env" must be a dict.')
 
     name = fuzzer_config.get('name')
     if name:
@@ -269,11 +277,8 @@ def start_dispatcher(config: Dict, config_dir: str):
     """Start the dispatcher instance and run the dispatcher code on it."""
     dispatcher = get_dispatcher(config)
     # Is dispatcher code being run manually (useful for debugging)?
-    manual_experiment = os.getenv('MANUAL_EXPERIMENT')
-    if not manual_experiment:
-        dispatcher.create_async()
     copy_resources_to_bucket(config_dir, config)
-    if not manual_experiment:
+    if not os.getenv('MANUAL_EXPERIMENT'):
         dispatcher.start()
 
 
@@ -287,8 +292,11 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
             return None
         return tar_info
 
-    experiment_filestore_path = os.path.join(config['experiment_filestore'],
-                                             config['experiment'])
+    # Set environment variables to use corresponding filestore_utils.
+    os.environ['EXPERIMENT_FILESTORE'] = config['experiment_filestore']
+    os.environ['EXPERIMENT'] = config['experiment']
+    experiment_filestore_path = experiment_utils.get_experiment_filestore_path()
+
     base_destination = os.path.join(experiment_filestore_path, 'input')
 
     # Send the local source repository to the cloud for use by dispatcher.
@@ -311,11 +319,6 @@ class BaseDispatcher:
         self.config = config
         self.instance_name = experiment_utils.get_dispatcher_instance_name(
             config['experiment'])
-        self.process = None
-
-    def create_async(self):
-        """Creates the dispatcher asynchronously."""
-        raise NotImplementedError
 
     def start(self):
         """Start the experiment on the dispatcher."""
@@ -331,32 +334,36 @@ class LocalDispatcher:
             config['experiment'])
         self.process = None
 
-    def create_async(self):
-        """Noop in local experiments."""
-
     def start(self):
         """Start the experiment on the dispatcher."""
-        shared_volume_dir = os.path.abspath('shared-volume')
-        if not os.path.exists(shared_volume_dir):
-            os.mkdir(shared_volume_dir)
-        shared_volume_volume_arg = '{0}:{0}'.format(shared_volume_dir)
-        shared_volume_env_arg = 'SHARED_VOLUME={}'.format(shared_volume_dir)
+        container_name = 'dispatcher-container'
+        logs.info('Started dispatcher with container name: %s', container_name)
+        experiment_filestore_path = os.path.abspath(
+            self.config['experiment_filestore'])
+        filesystem.create_directory(experiment_filestore_path)
         sql_database_arg = 'SQL_DATABASE_URL=sqlite:///{}'.format(
-            os.path.join(shared_volume_dir, 'local.db'))
+            os.path.join(experiment_filestore_path, 'local.db'))
 
-        base_docker_tag = experiment_utils.get_base_docker_tag(
-            self.config['cloud_project'])
+        docker_registry = self.config['docker_registry']
         set_instance_name_arg = 'INSTANCE_NAME={instance_name}'.format(
             instance_name=self.instance_name)
         set_experiment_arg = 'EXPERIMENT={experiment}'.format(
             experiment=self.config['experiment'])
-        set_cloud_project_arg = 'CLOUD_PROJECT={cloud_project}'.format(
-            cloud_project=self.config['cloud_project'])
+        shared_experiment_filestore_arg = '{0}:{0}'.format(
+            self.config['experiment_filestore'])
+        # TODO: (#484) Use config in function args or set as environment
+        # variables.
+        set_docker_registry_arg = 'DOCKER_REGISTRY={}'.format(docker_registry)
         set_experiment_filestore_arg = (
             'EXPERIMENT_FILESTORE={experiment_filestore}'.format(
                 experiment_filestore=self.config['experiment_filestore']))
-        docker_image_url = '{base_docker_tag}/dispatcher-image'.format(
-            base_docker_tag=base_docker_tag)
+        shared_report_filestore_arg = '{0}:{0}'.format(
+            self.config['report_filestore'])
+        set_report_filestore_arg = (
+            'REPORT_FILESTORE={report_filestore}'.format(
+                report_filestore=self.config['report_filestore']))
+        docker_image_url = '{docker_registry}/dispatcher-image'.format(
+            docker_registry=docker_registry)
         command = [
             'docker',
             'run',
@@ -365,24 +372,26 @@ class LocalDispatcher:
             '-v',
             '/var/run/docker.sock:/var/run/docker.sock',
             '-v',
-            shared_volume_volume_arg,
-            '-e',
-            shared_volume_env_arg,
+            shared_experiment_filestore_arg,
+            '-v',
+            shared_report_filestore_arg,
             '-e',
             set_instance_name_arg,
             '-e',
             set_experiment_arg,
             '-e',
-            set_cloud_project_arg,
-            '-e',
             sql_database_arg,
             '-e',
             set_experiment_filestore_arg,
             '-e',
+            set_report_filestore_arg,
+            '-e',
+            set_docker_registry_arg,
+            '-e',
             'LOCAL_EXPERIMENT=True',
             '--cap-add=SYS_PTRACE',
             '--cap-add=SYS_NICE',
-            '--name=dispatcher-container',
+            '--name=%s' % container_name,
             docker_image_url,
             '/bin/bash',
             '-c',
@@ -402,59 +411,47 @@ class LocalDispatcher:
 class GoogleCloudDispatcher(BaseDispatcher):
     """Class representing the dispatcher instance on Google Cloud."""
 
-    def create_async(self):
-        """Creates the instance asynchronously."""
-        self.process = multiprocessing.Process(
-            target=gcloud.create_instance,
-            args=(self.instance_name, gcloud.InstanceType.DISPATCHER,
-                  self.config))
-        self.process.start()
-
     def start(self):
         """Start the experiment on the dispatcher."""
-        # TODO(metzman): Replace this workflow with a startup script so we don't
-        # need to SSH into the dispatcher.
-        self.process.join()  # Wait for dispatcher instance.
-        # Check that we can SSH into the instance.
-        gcloud.robust_begin_gcloud_ssh(self.instance_name,
-                                       self.config['cloud_compute_zone'])
+        logs.info('Started dispatcher with instance name: %s',
+                  self.instance_name)
+        with tempfile.NamedTemporaryFile(dir=os.getcwd(),
+                                         mode='w') as startup_script:
+            self.write_startup_script(startup_script)
+            gcloud.create_instance(self.instance_name,
+                                   gcloud.InstanceType.DISPATCHER,
+                                   self.config,
+                                   startup_script=startup_script.name)
 
-        base_docker_tag = experiment_utils.get_base_docker_tag(
-            self.config['cloud_project'])
+    def _render_startup_script(self):
+        """Renders the startup script template and returns the result as a
+        string."""
+        jinja_env = jinja2.Environment(
+            undefined=jinja2.StrictUndefined,
+            loader=jinja2.FileSystemLoader(RESOURCES_DIR),
+        )
+        template = jinja_env.get_template(
+            'dispatcher-startup-script-template.sh')
         cloud_sql_instance_connection_name = (
             self.config['cloud_sql_instance_connection_name'])
 
-        command = (
-            'echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope && '
-            'docker run --rm '
-            '-e INSTANCE_NAME="{instance_name}" '
-            '-e EXPERIMENT="{experiment}" '
-            '-e CLOUD_PROJECT="{cloud_project}" '
-            '-e EXPERIMENT_FILESTORE="{experiment_filestore}" '
-            '-e POSTGRES_PASSWORD="{postgres_password}" '
-            '-e CLOUD_SQL_INSTANCE_CONNECTION_NAME='
-            '"{cloud_sql_instance_connection_name}" '
-            '--cap-add=SYS_PTRACE --cap-add=SYS_NICE '
-            '-v /var/run/docker.sock:/var/run/docker.sock '
-            '--name=dispatcher-container '
-            '{base_docker_tag}/dispatcher-image '
-            '/work/startup-dispatcher.sh'
-        ).format(
-            instance_name=self.instance_name,
-            postgres_password=os.environ['POSTGRES_PASSWORD'],
-            experiment=self.config['experiment'],
-            # TODO(metzman): Create a function that sets env vars based on
-            # the contents of a dictionary, and use it instead of hardcoding
-            # the configs we use.
-            cloud_project=self.config['cloud_project'],
-            experiment_filestore=self.config['experiment_filestore'],
-            cloud_sql_instance_connection_name=(
-                cloud_sql_instance_connection_name),
-            base_docker_tag=base_docker_tag,
-        )
-        return gcloud.ssh(self.instance_name,
-                          command=command,
-                          zone=self.config['cloud_compute_zone'])
+        kwargs = {
+            'instance_name': self.instance_name,
+            'postgres_password': os.environ['POSTGRES_PASSWORD'],
+            'experiment': self.config['experiment'],
+            'cloud_project': self.config['cloud_project'],
+            'experiment_filestore': self.config['experiment_filestore'],
+            'cloud_sql_instance_connection_name':
+                (cloud_sql_instance_connection_name),
+            'docker_registry': self.config['docker_registry'],
+        }
+        return template.render(**kwargs)
+
+    def write_startup_script(self, startup_script_file):
+        """Get the startup script to start the experiment on the dispatcher."""
+        startup_script = self._render_startup_script()
+        startup_script_file.write(startup_script)
+        startup_script_file.flush()
 
 
 def get_dispatcher(config: Dict) -> BaseDispatcher:
@@ -499,12 +496,6 @@ def main():
                                required=False,
                                default=None,
                                choices=all_fuzzers)
-    fuzzers_group.add_argument('-fc',
-                               '--fuzzer-configs',
-                               help='Fuzzer configurations to use.',
-                               nargs='+',
-                               required=False,
-                               default=[])
     fuzzers_group.add_argument('-cf',
                                '--changed-fuzzers',
                                help=('Use fuzzers that have changed since the '
@@ -517,26 +508,17 @@ def main():
 
     args = parser.parse_args()
 
-    if args.fuzzer_configs:
-        fuzzer_configs = [
-            yaml_utils.read(fuzzer_config)
-            for fuzzer_config in args.fuzzer_configs
-        ]
+    if args.changed_fuzzers:
+        fuzzers = experiment_changes.get_fuzzers_changed_since_last()
+        if not fuzzers:
+            logs.error('No fuzzers changed since last experiment. Exiting.')
+            return 1
     else:
-        if args.changed_fuzzers:
-            fuzzers = experiment_changes.get_fuzzers_changed_since_last()
-            if not fuzzers:
-                logs.error('No fuzzers changed since last experiment. Exiting.')
-                return 1
-        else:
-            fuzzers = args.fuzzers
-        fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers)
+        fuzzers = args.fuzzers
+    fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers)
 
     start_experiment(args.experiment_name, args.experiment_config,
                      args.benchmarks, fuzzer_configs)
-    if not os.getenv('MANUAL_EXPERIMENT'):
-        stop_experiment.stop_experiment(args.experiment_name,
-                                        args.experiment_config)
     return 0
 
 

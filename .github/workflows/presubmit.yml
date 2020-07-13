@@ -10,10 +10,16 @@ jobs:
     - run: |  # Needed for presubmit to work.
         git fetch origin master --depth 1
         git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
+
     - name: Setup Python environment
       uses: actions/setup-python@v1.1.1
       with:
         python-version: 3.7
+
+    - name: Install dependencies
+      run: |
+        make install-dependencies
+
     - name: Run presubmit checks
       run: |
         FUZZBENCH_TEST_INTEGRATION=1 make presubmit

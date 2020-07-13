@@ -23,11 +23,11 @@ def path(*path_segments) -> Path:
     return Path(experiment_utils.get_work_dir(), *path_segments)
 
 
-def gcs(path_obj: Path) -> str:
-    """Returns a string with WORK_DIR replaced with |bucket|. |path_obj| should
-    be created by path()."""
+def filestore(path_obj: Path) -> str:
+    """Returns a string with WORK_DIR replaced with |experiment_filestore_path|.
+    |path_obj| should be created by path()."""
     path_str = str(path_obj)
     work_dir = experiment_utils.get_work_dir()
-    experiment_bucket = experiment_utils.get_experiment_filestore_path()
+    experiment_filestore_path = experiment_utils.get_experiment_filestore_path()
     assert path_str.startswith(work_dir)
-    return path_str.replace(work_dir, experiment_bucket)
+    return path_str.replace(work_dir, experiment_filestore_path)

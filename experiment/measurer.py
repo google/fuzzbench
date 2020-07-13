@@ -21,7 +21,6 @@ import os
 import pathlib
 import posixpath
 import sys
-import subprocess
 import tarfile
 import time
 from typing import List, Set
@@ -64,7 +63,8 @@ def get_experiment_folders_dir():
 
 def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
     """Returns True if |path| exists in the experiment_filestore."""
-    return filestore_utils.ls(exp_path.gcs(path), must_exist=False).retcode == 0
+    return filestore_utils.ls(exp_path.filestore(path),
+                              must_exist=False).retcode == 0
 
 
 def measure_loop(experiment: str, max_total_time: int):
@@ -397,14 +397,12 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         unchanged-cycles file. This file is written to by the trial's runner."""
 
         def copy_unchanged_cycles_file():
-            unchanged_cycles_filestore_path = exp_path.gcs(
+            unchanged_cycles_filestore_path = exp_path.filestore(
                 self.unchanged_cycles_path)
-            try:
-                filestore_utils.cp(unchanged_cycles_filestore_path,
-                                   self.unchanged_cycles_path)
-                return True
-            except subprocess.CalledProcessError:
-                return False
+            result = filestore_utils.cp(unchanged_cycles_filestore_path,
+                                        self.unchanged_cycles_path,
+                                        expect_zero=False)
+            return result.retcode == 0
 
         if not os.path.exists(self.unchanged_cycles_path):
             if not copy_unchanged_cycles_file():
@@ -457,7 +455,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         with tarfile.open(archive_path, 'w:gz') as tar:
             tar.add(self.crashes_dir,
                     arcname=os.path.basename(self.crashes_dir))
-        archive_filestore_path = exp_path.gcs(
+        archive_filestore_path = exp_path.filestore(
             posixpath.join(self.trial_dir, 'crashes', crashes_archive_name))
         filestore_utils.cp(archive_path, archive_filestore_path)
         os.remove(archive_path)
@@ -533,15 +531,15 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     corpus_archive_dst = os.path.join(
         snapshot_measurer.trial_dir, 'corpus',
         experiment_utils.get_corpus_archive_name(cycle))
-    corpus_archive_src = exp_path.gcs(corpus_archive_dst)
+    corpus_archive_src = exp_path.filestore(corpus_archive_dst)
 
     corpus_archive_dir = os.path.dirname(corpus_archive_dst)
     if not os.path.exists(corpus_archive_dir):
         os.makedirs(corpus_archive_dir)
 
-    try:
-        filestore_utils.cp(corpus_archive_src, corpus_archive_dst)
-    except subprocess.CalledProcessError:
+    if filestore_utils.cp(corpus_archive_src,
+                          corpus_archive_dst,
+                          expect_zero=False).retcode:
         snapshot_logger.warning('Corpus not found for cycle: %d.', cycle)
         return None
 
@@ -571,14 +569,15 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
 
 def set_up_coverage_binaries(pool, experiment):
     """Set up coverage binaries for all benchmarks in |experiment|."""
+    # Use set comprehension to select distinct benchmarks.
     benchmarks = [
-        trial.benchmark for trial in db_utils.query(models.Trial).distinct(
-            models.Trial.benchmark).filter(
-                models.Trial.experiment == experiment)
+        benchmark_tuple[0]
+        for benchmark_tuple in db_utils.query(models.Trial.benchmark).distinct(
+        ).filter(models.Trial.experiment == experiment)
     ]
+
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
-    if not os.path.exists(coverage_binaries_dir):
-        os.makedirs(coverage_binaries_dir)
+    filesystem.create_directory(coverage_binaries_dir)
     pool.map(set_up_coverage_binary, benchmarks)
 
 
@@ -587,10 +586,10 @@ def set_up_coverage_binary(benchmark):
     initialize_logs()
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
     benchmark_coverage_binary_dir = coverage_binaries_dir / benchmark
-    if not os.path.exists(benchmark_coverage_binary_dir):
-        os.mkdir(benchmark_coverage_binary_dir)
+    filesystem.create_directory(benchmark_coverage_binary_dir)
     archive_name = 'coverage-build-%s.tar.gz' % benchmark
-    archive_filestore_path = exp_path.gcs(coverage_binaries_dir / archive_name)
+    archive_filestore_path = exp_path.filestore(coverage_binaries_dir /
+                                                archive_name)
     filestore_utils.cp(archive_filestore_path,
                        str(benchmark_coverage_binary_dir))
     archive_path = benchmark_coverage_binary_dir / archive_name

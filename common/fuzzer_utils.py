@@ -25,6 +25,7 @@ DEFAULT_FUZZ_TARGET_NAME = 'fuzz-target'
 FUZZ_TARGET_SEARCH_STRING = b'LLVMFuzzerTestOneInput'
 VALID_FUZZER_REGEX = re.compile(r'^[A-Za-z0-9_]+$')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
+COVERAGE_TOOLS = {'coverage', 'coverage_source_based'}
 
 
 class FuzzerDirectory:
@@ -143,7 +144,7 @@ def get_fuzzer_configs(fuzzers=None):
     for fuzzer in os.listdir(fuzzers_dir):
         if not os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')):
             continue
-        if fuzzer == 'coverage':
+        if fuzzer in COVERAGE_TOOLS:
             continue
 
         if fuzzers is None or fuzzer in fuzzers:
@@ -159,7 +160,7 @@ def get_fuzzer_configs(fuzzers=None):
         assert 'variants' in variant_config, (
             'Missing "variants" section of {}'.format(variant_config_path))
         for variant in variant_config['variants']:
-            if not fuzzers or variant['name'] in fuzzers:
+            if fuzzers is None or variant['name'] in fuzzers:
                 assert 'name' in variant, (
                     'Missing name attribute for fuzzer variant in {}'.format(
                         variant_config_path))
@@ -172,3 +173,12 @@ def get_fuzzer_configs(fuzzers=None):
             names.add(name)
 
     return fuzzer_configs
+
+
+def get_by_variant_name(fuzzer_variant_name):
+    """Get a fuzzer config based on a fuzzer's display name."""
+    fuzzer_configs = get_fuzzer_configs(fuzzers=[fuzzer_variant_name])
+    if not fuzzer_configs:
+        return None
+
+    return fuzzer_configs[0]

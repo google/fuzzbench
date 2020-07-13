@@ -24,8 +24,7 @@ RUN apt-get update && \
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && git checkout dev && \
-    git checkout 372206e159f4f3d150543411872319fb8fae0b66 && \
+    cd /afl && git checkout b126a5d5a8d90dcc10ccb890b379c3dfdc5cf8d4 && \
     unset CFLAGS && unset CXXFLAGS && \
     AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
     cd qemu_mode && ./build_qemu_support.sh && cd .. && \

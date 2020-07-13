@@ -52,6 +52,8 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
             'experiment_filestore': 'gs://bucket',
             'report_filestore': 'gs://web-bucket',
             'experiment': 'experiment-name',
+            'docker_registry': 'gcr.io/fuzzbench',
+            'cloud_project': 'fuzzbench',
             'cloud_compute_zone': 'us-central1-a',
             'trials': 10,
             'max_total_time': 1000,
@@ -161,7 +163,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
 def test_validate_fuzzer_config():
     """Tests that validate_fuzzer_config says that a valid fuzzer config name is
     valid and that an invalid one is not."""
-    config = {'fuzzer': 'afl', 'name': 'name', 'fuzzer_environment': []}
+    config = {'fuzzer': 'afl', 'name': 'name', 'env': {'a': 'b'}}
     run_experiment.validate_fuzzer_config(config)
 
     with pytest.raises(Exception) as exception:
@@ -182,9 +184,9 @@ def test_validate_fuzzer_config():
     del config['invalid_key']
 
     with pytest.raises(Exception) as exception:
-        config['fuzzer_environment'] = {'a': 'b'}
+        config['env'] = []
         run_experiment.validate_fuzzer_config(config)
-    assert 'must be a list' in str(exception.value)
+    assert 'must be a dict' in str(exception.value)
 
 
 def test_variant_configs_valid():
@@ -224,7 +226,7 @@ def test_validate_experiment_name_invalid(experiment_name):
 
 
 # This test takes up to a minute to complete.
-@pytest.mark.long
+@pytest.mark.slow
 def test_copy_resources_to_bucket(tmp_path):
     """Tests that copy_resources_to_bucket copies the correct resources."""
     # Do this so that Ctrl-C doesn't pollute the repo.
