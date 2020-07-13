@@ -74,6 +74,7 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     string_params = cloud_config.union(filestore_params).union(docker_config)
     int_params = {'trials', 'max_total_time'}
     required_params = int_params.union(filestore_params).union(docker_config)
+    bool_params = {'private', 'merge_with_nonprivate'}
 
     local_experiment = config.get('local_experiment', False)
     if not local_experiment:
@@ -103,6 +104,12 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
             logs.error(
                 'Config parameter "%s" is "%s". It must be a lowercase string.',
                 param, str(value))
+            continue
+
+        if param in bool_params and not isinstance(value, bool):
+            valid = False
+            logs.error('Config parameter "%s" is "%s". It must be a bool.',
+                       param, str(value))
             continue
 
         if param not in filestore_params:
