@@ -33,7 +33,14 @@ build_lib() {
   )
 }
 
-get_git_tag https://gitlab.gnome.org/GNOME/libxml2.git v2.9.2 SRC
+git clone https://gitlab.gnome.org/GNOME/libxml2.git SRC
+cd SRC
+
+# Git is converting CRLF to LF automatically and causing issues when checking
+# out the branch. So use -f to ignore the complaint about lost changes that we
+# don't even want.
+git checkout -f v2.9.2
+
 build_lib
 
 $CXX $CXXFLAGS -std=c++11 $SCRIPT_DIR/target.cc -I BUILD/include BUILD/.libs/libxml2.a $FUZZER_LIB -o $FUZZ_TARGET
