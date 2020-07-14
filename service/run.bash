@@ -32,6 +32,6 @@ source .venv/bin/activate
 export PYTHONPATH=$repo_path
 cd $expriment_working_dir
 
-python3 service/automatic_run_experiment.py
+python3 $repo_path/service/automatic_run_experiment.py
 rm -rf $repo_path
 
