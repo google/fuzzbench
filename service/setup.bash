@@ -46,5 +46,6 @@ cd /tmp/ && \
 export cloud_sql_proxy_path=/tmp/cloud_sql_proxy
 wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O \
   $cloud_sql_proxy_path
- chmod +x $cloud_sql_proxy_path
+chmod +x $cloud_sql_proxy_path
+# This is a hardcoded value that only works for the official fuzzbench service.
 $cloud_sql_proxy_path -instances=fuzzbench:us-central1:postgres-experiment-db=tcp:5432 &
