@@ -127,6 +127,9 @@ def get_fuzz_target():
     out_dir = os.environ['OUT']
     if is_benchmark('sqlite3'):
         return os.path.join(out_dir, 'ossfuzz')
+    
+    if is_benchmark('zlib'):
+        return os.path.join(out_dir, 'zlib_uncompress_fuzzer')
 
     # For non oss-projects, FUZZ_TARGET contain the target binary
     fuzz_target = os.getenv('FUZZ_TARGET', None)
