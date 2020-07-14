@@ -35,6 +35,13 @@ COPY fuzzers/$fuzzer/fuzzer.py $SRC/fuzzer.py
 # Copy the entire fuzzers directory tree to allow for module dependencies.
 COPY fuzzers $SRC/fuzzers
 
+RUN apt-get update -y && apt-get install -y python3
+
+COPY fuzzers/$fuzzer/fuzzer.py $SRC/fuzzer.py
+
+# Copy the entire fuzzers directory tree to allow for module dependencies.
+COPY fuzzers $SRC/fuzzers
+
 # Create empty __init__.py to allow python deps to work.
 RUN touch $SRC/__init__.py
 
