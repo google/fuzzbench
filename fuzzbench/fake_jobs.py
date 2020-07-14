@@ -13,12 +13,14 @@
 # limitations under the License.
 """Fake jobs."""
 
+import subprocess
 import time
 
 
 def build_image(name):
     """Build a Docker image."""
     print('Building', name)
+    subprocess.run(['docker', '--version'], check=True)
     time.sleep(3)
     return True
 
