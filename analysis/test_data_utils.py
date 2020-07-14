@@ -14,6 +14,7 @@
 
 # pylint: disable=missing-function-docstring
 """Tests for data_utils.py"""
+
 import pandas as pd
 import pandas.testing as pd_test
 import pytest
@@ -21,8 +22,8 @@ import pytest
 from analysis import data_utils
 
 
-def create_trial_data(trial_id, benchmark, fuzzer, reached_coverage,
-                      experiment):
+def create_trial_data(  # pylint: disable=too-many-arguments
+        trial_id, benchmark, fuzzer, cycles, reached_coverage, experiment):
     """Utility function to create test trial data."""
     return pd.DataFrame([{
         'experiment': experiment,
@@ -30,23 +31,25 @@ def create_trial_data(trial_id, benchmark, fuzzer, reached_coverage,
         'fuzzer': fuzzer,
         'trial_id': trial_id,
         'time_started': 0,
-        'time_ended': 24,
+        'time_ended': None,
         'time': t,
         'edges_covered': reached_coverage,
-    } for t in range(10)])
+    } for t in range(cycles)])
 
 
-def create_experiment_data(experiment='test_experiment'):
+def create_experiment_data(experiment='test_experiment', incomplete=False):
     """Utility function to create test experiment data."""
     return pd.concat([
-        create_trial_data(0, 'libpng', 'afl', 100, experiment),
-        create_trial_data(1, 'libpng', 'afl', 200, experiment),
-        create_trial_data(2, 'libpng', 'libfuzzer', 200, experiment),
-        create_trial_data(3, 'libpng', 'libfuzzer', 300, experiment),
-        create_trial_data(4, 'libxml', 'afl', 1000, experiment),
-        create_trial_data(5, 'libxml', 'afl', 1200, experiment),
-        create_trial_data(6, 'libxml', 'libfuzzer', 600, experiment),
-        create_trial_data(7, 'libxml', 'libfuzzer', 800, experiment),
+        create_trial_data(0, 'libpng', 'afl', 10, 100, experiment),
+        create_trial_data(1, 'libpng', 'afl', 10, 200, experiment),
+        create_trial_data(2, 'libpng', 'libfuzzer', 10, 200, experiment),
+        create_trial_data(3, 'libpng', 'libfuzzer', 10, 300, experiment),
+        create_trial_data(4, 'libxml', 'afl', 6 if incomplete else 10, 1000,
+                          experiment),
+        create_trial_data(5, 'libxml', 'afl', 10, 1200, experiment),
+        create_trial_data(6, 'libxml', 'libfuzzer', 8 if incomplete else 10,
+                          600, experiment),
+        create_trial_data(7, 'libxml', 'libfuzzer', 10, 800, experiment),
     ])
 
 
@@ -131,21 +134,56 @@ def test_filter_max_time():
     assert filtered_df.time.unique().tolist() == list(expected_times)
 
 
-def test_benchmark_snapshot():
+@pytest.mark.parametrize("threshold", [0.3, 0.8, 1.0])
+def test_benchmark_snapshot_complete(threshold):
     """Tests that the snapshot data contains only the latest timestamp for all
-    trials, in case all trials have the same lengths."""
+    trials, in case all trials have the same lengths. This should happen
+    independently of the used |threshold|.
+    """
     experiment_df = create_experiment_data()
     benchmark_df = experiment_df[experiment_df.benchmark == 'libxml']
-    snapshot_df = data_utils.get_benchmark_snapshot(benchmark_df)
+    snapshot_df = data_utils.get_benchmark_snapshot(benchmark_df, threshold)
     timestamps_per_trial = snapshot_df[['trial_id', 'time']]
     timestamps_per_trial.reset_index(drop=True, inplace=True)
 
     # The latest timestamp is 9 in the example data.
+    libxml_trial_ids = range(4, 8)
     expected_timestamps_per_trial = pd.DataFrame([{
         'trial_id': trial,
         'time': 9
-    } for trial in range(4, 8)])
+    } for trial in libxml_trial_ids])
     assert timestamps_per_trial.equals(expected_timestamps_per_trial)
+
+
+@pytest.mark.parametrize(
+    "threshold, expected_snapshot_time, expected_trials_left", [
+        (1.0, 5, 4),
+        (0.8, 5, 4),
+        (0.7, 7, 3),
+        (0.6, 7, 3),
+        (0.5, 9, 2),
+    ])
+def test_benchmark_snapshot_incomplete(threshold, expected_snapshot_time,
+                                       expected_trials_left):
+    """Tests that the snapshot data created from an incomplete benchmark
+    data (with some early terminating trials) contains the right trial
+    snapshots with the right timestamp according to the given
+    |threshold|. The function under test snapshots the benchmark data
+    at the latest time where |threshold| fraction of the trials are
+    still running. This means that with lower |threshold| the snapshot
+    will be made later in time, but also more trials will be thrown
+    out.
+    """
+    experiment_df = create_experiment_data(incomplete=True)
+    benchmark_df = experiment_df[experiment_df.benchmark == 'libxml']
+    snapshot_df = data_utils.get_benchmark_snapshot(benchmark_df, threshold)
+    timestamps_per_trial = snapshot_df[['trial_id', 'time']]
+    timestamps_per_trial.reset_index(drop=True, inplace=True)
+
+    trials_left = len(timestamps_per_trial.index)
+    assert trials_left == expected_trials_left
+    # All trial snapshots should have the same expected timestamp.
+    assert (timestamps_per_trial['time'] == expected_snapshot_time).all()
 
 
 def test_fuzzers_with_not_enough_samples():

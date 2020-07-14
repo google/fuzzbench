@@ -303,11 +303,11 @@ def build():
         post_build(fuzz_target)
 
 
-def run_fuzz(input_corpus,
-             output_corpus,
-             target_binary,
-             additional_flags=None,
-             hide_output=False):
+def run_fuzzer(input_corpus,
+               output_corpus,
+               target_binary,
+               additional_flags=None,
+               hide_output=False):
     """Run afl-fuzz."""
     # Spawn the afl fuzzing process.
     # FIXME: Currently AFL will exit if it encounters a crashing input in seed
@@ -345,10 +345,10 @@ def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     prepare_fuzz_environment(input_corpus)
 
-    # Note: dictionary automatically added by run_fuzz().
+    # Note: dictionary automatically added by run_fuzzer().
 
     # Use a dictionary for original afl as well.
-    print('[run_fuzzer] Running AFL for original binary')
+    print('[fuzz] Running AFL for original binary')
     src_file = '{target}-normalized-none-nopt.dict'.format(target=target_binary)
     dst_file = '{target}-original.dict'.format(target=target_binary)
     shutil.copy(src_file, dst_file)
@@ -356,7 +356,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # to be non-optimized to prevent AFL from aborting.
     os.system('sed -i \'s/OPTIMIZED/NORMAL/g\' {dict}'.format(dict=dst_file))
     afl_fuzz_thread1 = threading.Thread(
-        target=run_fuzz,
+        target=run_fuzzer,
         args=(input_corpus, output_corpus,
               '{target}-original'.format(target=target_binary),
               ['-S', 'slave-original']))
@@ -364,15 +364,15 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     print('[run_fuzzer] Running AFL for normalized and optimized dictionary')
     afl_fuzz_thread2 = threading.Thread(
-        target=run_fuzz,
+        target=run_fuzzer,
         args=(input_corpus, output_corpus,
               '{target}-normalized-none-nopt'.format(target=target_binary),
               ['-S', 'slave-normalized-nopt']))
     afl_fuzz_thread2.start()
 
     print('[run_fuzzer] Running AFL for FBSP and optimized dictionary')
-    run_fuzz(input_corpus,
-             output_corpus,
-             '{target}-no-collision-all-opt'.format(target=target_binary),
-             ['-S', 'slave-no-collision-all-opt'],
-             hide_output=False)
+    run_fuzzer(input_corpus,
+               output_corpus,
+               '{target}-no-collision-all-opt'.format(target=target_binary),
+               ['-S', 'slave-no-collision-all-opt'],
+               hide_output=False)

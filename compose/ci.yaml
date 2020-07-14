@@ -1,0 +1,9 @@
+version: "3"
+
+services:
+
+  ci-tests:
+    image: fuzzbench
+    links:
+      - queue-server
+    command: python3 -m pytest -vv -k test_e2e_run

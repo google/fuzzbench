@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Use this script to clone a new copy of fuzzbench and run a diff experiment.
+# Use this script to clone a new copy of fuzzbench and run a requested
+# experiment.
 
 # Use a seperate working directory to run the experiment so we don't pollute
 # the source code with the config directory created by run_experiment.py
@@ -22,14 +23,15 @@ expriment_working_dir=/tmp/fuzzbench-automatic-experiment-working-dir
 repo_path=/tmp/fuzzbench-automatic-experiment-repo
 rm -rf $repo_path $expriment_working_dir
 
+mkdir $expriment_working_dir
+
 git clone https://github.com/google/fuzzbench.git $repo_path
 cd $repo_path
 
 make install-dependencies
 source .venv/bin/activate
 export PYTHONPATH=$repo_path
+
 cd $expriment_working_dir
-
-python3 service/automatic_run_experiment.py diff
+python3 $repo_path/service/automatic_run_experiment.py
 rm -rf $repo_path
-

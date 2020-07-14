@@ -19,8 +19,6 @@ import subprocess
 
 from fuzzers import utils
 
-# OUT environment variable is the location of build directory (default is /out).
-
 
 def build():
     """Build benchmark."""
@@ -43,7 +41,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     if not os.path.exists(output_corpus):
         os.makedirs(output_corpus)
 
-    print('[run_fuzzer] Running target with honggfuzz')
+    print('[fuzz] Running target with honggfuzz')
     command = [
         './honggfuzz',
         '--persistent',
@@ -60,5 +58,5 @@ def fuzz(input_corpus, output_corpus, target_binary):
         command.extend(['--dict', dictionary_path])
     command.extend(['--', target_binary])
 
-    print('[run_fuzzer] Running command: ' + ' '.join(command))
+    print('[fuzz] Running command: ' + ' '.join(command))
     subprocess.check_call(command)

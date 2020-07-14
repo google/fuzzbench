@@ -13,7 +13,7 @@
 # limitations under the License.
 """Integration code for AFL qemu fuzzer."""
 
-# as aflplusplus has the build for qemu already in there we include this
+# As aflplusplus has the build for qemu already in there we include this.
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
@@ -24,7 +24,7 @@ def build():
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    # necessary fuzzer options
+    # Necessary fuzzer options.
     flags = ['-Q']
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,

@@ -13,26 +13,8 @@
 # limitations under the License.
 """Configuration helper functions."""
 
-import os
-
 from common import experiment_path as exp_path
 from common import yaml_utils
-
-
-def get_by_variant_name(fuzzer_variant_name):
-    """Get a fuzzer config based on a fuzzer's display name."""
-    config_directory = get_fuzzer_configs_dir()
-    for config_filename in os.listdir(config_directory):
-        config_absolute_filename = config_directory / config_filename
-        if fuzzer_variant_name == get_fuzzer_name(config_absolute_filename):
-            return yaml_utils.read(config_absolute_filename)
-
-    return None
-
-
-def get_underlying_fuzzer_name(fuzzer_name):
-    """Get the underlying fuzzer name from the configuration's display name."""
-    return get_by_variant_name(fuzzer_name)['fuzzer']
 
 
 def get_dir():
