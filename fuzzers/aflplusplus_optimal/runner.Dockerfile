@@ -14,4 +14,8 @@
 
 FROM gcr.io/fuzzbench/base-runner
 
+<<<<<<< HEAD
 ENV LD_LIBRARY_PATH /out
+=======
+ARG LD_LIBRARY_PATH=/out
+>>>>>>> 3441ff015eae04e773a6e9b8b28dc1782cf6e087
