@@ -19,10 +19,12 @@ FuzzBench.
 * **analysis/** - code for analyzing fuzzer performance using statistical tests.
 * **benchmarks/** - benchmarks integrated in the FuzzBench platform (e.g. OpenSSL).
 * **common/** - common helper modules (e.g. logging, new process handling, etc).
+* **compose/** - Docker Compose files (not used in production yet).
 * **database/** - database handling code.
 * **docker/** - Dockerfiles for infra images (does not include fuzzer images).
 * **docs/** - this documentation.
 * **experiment/** - code for running FuzzBench experiments.
+* **fuzzbench/** - code for new architecture (not used in production yet).
 * **fuzzers/** - fuzzers integrated in the FuzzBench platform (e.g. AFL).
 * **service/** - code for the FuzzBench service run by Google.
 * **test_libs/** - test helper modules.
