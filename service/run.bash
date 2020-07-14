@@ -22,6 +22,8 @@ expriment_working_dir=/tmp/fuzzbench-automatic-experiment-working-dir
 repo_path=/tmp/fuzzbench-automatic-experiment-repo
 rm -rf $repo_path $expriment_working_dir
 
+mkdir $expriment_working_dir
+
 git clone https://github.com/google/fuzzbench.git $repo_path
 cd $repo_path
 
@@ -30,6 +32,6 @@ source .venv/bin/activate
 export PYTHONPATH=$repo_path
 cd $expriment_working_dir
 
-python3 service/automatic_run_experiment.py diff
+python3 service/automatic_run_experiment.py
 rm -rf $repo_path
 
