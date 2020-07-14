@@ -30,8 +30,13 @@ cd $repo_path
 make install-dependencies
 source .venv/bin/activate
 export PYTHONPATH=$repo_path
+
+export $cloud_sql_proxy_path=/tmp/cloud_sql_proxy
+wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O $cloud_sql_proxy_path
+./cloud_sql_proxy_path
+trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
+
 cd $expriment_working_dir
 
-python3 $repo_path/service/automatic_run_experiment.py
+python3 $repo_path/service/automatic_run_experiment.py -d
 rm -rf $repo_path
-
