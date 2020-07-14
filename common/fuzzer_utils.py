@@ -173,3 +173,12 @@ def get_fuzzer_configs(fuzzers=None):
             names.add(name)
 
     return fuzzer_configs
+
+
+def get_by_variant_name(fuzzer_variant_name):
+    """Get a fuzzer config based on a fuzzer's display name."""
+    fuzzer_configs = get_fuzzer_configs(fuzzers=[fuzzer_variant_name])
+    if not fuzzer_configs:
+        return None
+
+    return fuzzer_configs[0]

@@ -25,12 +25,15 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 def build():
     """Build benchmark."""
-    aflplusplus_fuzzer.build("tracepc", "nozero")
+
+    aflplusplus_fuzzer.build('classic', 'ctx', 'laf', 'skipsingle')
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
+    run_options = []
+
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
-                            flags=([]))
+                            flags=(run_options))

@@ -226,7 +226,7 @@ def test_validate_experiment_name_invalid(experiment_name):
 
 
 # This test takes up to a minute to complete.
-@pytest.mark.long
+@pytest.mark.slow
 def test_copy_resources_to_bucket(tmp_path):
     """Tests that copy_resources_to_bucket copies the correct resources."""
     # Do this so that Ctrl-C doesn't pollute the repo.

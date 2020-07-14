@@ -19,6 +19,27 @@
 # are still testing this feature. You should request an experiment by contacting
 # us as you normally do.
 
+- experiment: 2020-07-13
+  fuzzers:
+    - aflplusplus_ctx_default
+    - aflplusplus_ctx_nosingle
+    - aflplusplus_ctx_nozero
+    - aflplusplus_ctx_nozerosingle
+    - aflplusplus_ngram4
+    - aflplusplus_ngram6
+    - aflplusplus_ngram8
+
+- experiment: 2020-07-09
+  fuzzers:
+    - aflplusplus_lto_dict
+    - aflplusplus_lto
+    - aflplusplus_ltoinstrim
+    - aflplusplus_ctx
+    - aflplusplus_ngram2
+    - aflplusplus_optimal
+    - aflplusplus_qemu
+    - aflplusplus
+
 - experiment: 2020-06-30
   fuzzers:
     - aflplusplus_qemu

@@ -26,6 +26,7 @@ class Experiment(Base):
     name = Column(String, nullable=False, primary_key=True)
     time_created = Column(DateTime(), server_default=sqlalchemy.func.now())
     git_hash = Column(String, nullable=True)
+    private = Column(Boolean, nullable=False, default=False)
 
 
 class Trial(Base):
