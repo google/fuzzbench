@@ -29,7 +29,6 @@ from common import yaml_utils
 from database import models
 from database import utils as db_utils
 from experiment import run_experiment
-from experiment import stop_experiment
 
 logger = logs.Logger('automatic_run_experiment')  # pylint: disable=invalid-name
 
@@ -215,7 +214,6 @@ def _run_experiment(experiment_name, fuzzer_configs, dry_run=False):
         return
     run_experiment.start_experiment(experiment_name, EXPERIMENT_CONFIG_FILE,
                                     BENCHMARKS, fuzzer_configs)
-    stop_experiment.stop_experiment(experiment_name, EXPERIMENT_CONFIG_FILE)
 
 
 def main():

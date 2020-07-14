@@ -15,11 +15,9 @@
 
 import enum
 import subprocess
-import time
 from typing import List
 
 from common import experiment_utils
-from common import logs
 from common import new_process
 
 # Constants for dispatcher specs.
@@ -33,33 +31,6 @@ RUNNER_BOOT_DISK_SIZE = '30GB'
 
 # Number of instances to process at once.
 INSTANCE_BATCH_SIZE = 100
-
-
-def ssh(instance: str, *args, **kwargs):
-    """SSH into |instance|."""
-    zone = kwargs.pop('zone', None)
-    command = kwargs.pop('command', None)
-    ssh_command = ['gcloud', 'beta', 'compute', 'ssh', instance]
-    if command:
-        ssh_command.append('--command=%s' % command)
-    if zone:
-        ssh_command.append('--zone=%s' % zone)
-    return new_process.execute(ssh_command, *args, **kwargs)
-
-
-def robust_begin_gcloud_ssh(instance_name: str, zone: str):
-    """Try to SSH into an instance, |instance_name| in |zone| that might not be
-    ready."""
-    for _ in range(10):
-        result = ssh(instance_name,
-                     zone=zone,
-                     command='echo ping',
-                     expect_zero=False)
-        if result.retcode == 0:
-            return
-        logs.info('GCP instance isn\'t ready yet. Rerunning SSH momentarily.')
-        time.sleep(5)
-    raise Exception('Couldn\'t SSH to instance.')
 
 
 class InstanceType(enum.Enum):

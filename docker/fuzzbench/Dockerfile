@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG parent_image=gcr.io/fuzzbench/base-builder
-FROM $parent_image
+FROM python:3.7
 
-RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
-    cd /llvm-project/ && \
-    git checkout d8981ce5b9f8caa567613b2bf5aa3095e0156130 && \
-    cd compiler-rt/lib/fuzzer && \
-    (for f in *.cpp; do \
-      clang++ -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \
-    done && wait) && \
-    ar r /usr/lib/libFuzzer.a *.o
+WORKDIR /fuzzbench
+
+ADD requirements.txt /fuzzbench/requirements.txt
+RUN pip3 install -r requirements.txt
+
+ADD fuzzbench/*.py /fuzzbench/
+
+CMD python3 -u run_experiment.py
