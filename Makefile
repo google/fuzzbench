@@ -23,6 +23,15 @@ run-experiment:
 
 # Development.
 
+run-end-to-end-test: export COMPOSE_PROJECT_NAME := e2e-test
+run-end-to-end-test: export COMPOSE_FILE := compose/fuzzbench.yaml:compose/ci.yaml
+run-end-to-end-test:
+	docker-compose build
+	docker-compose up --detach queue-server
+	docker-compose up --scale worker=3 run-experiment worker
+	docker-compose run ci-tests; STATUS=$$?; \
+	docker-compose down; exit $$STATUS
+
 include docker/build.mk
 include docker/generated.mk
 
