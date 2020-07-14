@@ -12,6 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Running experiments locally.
+
+run-experiment: export COMPOSE_PROJECT_NAME := fuzzbench
+run-experiment: export COMPOSE_FILE := compose/fuzzbench.yaml
+run-experiment:
+	docker-compose up --build --scale worker=2 --detach
+	docker-compose logs --follow run-experiment
+	docker-compose down
+
+# Development.
+
 include docker/build.mk
 include docker/generated.mk
 
