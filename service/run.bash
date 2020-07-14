@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Use this script to clone a new copy of fuzzbench and run a diff experiment.
+# Use this script to clone a new copy of fuzzbench and run a requested
+# experiment.
 
 # Use a seperate working directory to run the experiment so we don't pollute
 # the source code with the config directory created by run_experiment.py
@@ -31,12 +32,6 @@ make install-dependencies
 source .venv/bin/activate
 export PYTHONPATH=$repo_path
 
-export $cloud_sql_proxy_path=/tmp/cloud_sql_proxy
-wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O $cloud_sql_proxy_path
-./cloud_sql_proxy_path
-trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
-
 cd $expriment_working_dir
-
 python3 $repo_path/service/automatic_run_experiment.py -d
 rm -rf $repo_path
