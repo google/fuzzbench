@@ -336,11 +336,8 @@ class LocalDispatcher:
 
     def start(self):
         """Start the experiment on the dispatcher."""
-<<<<<<< HEAD
         container_name = 'dispatcher-container'
         logs.info('Started dispatcher with container name: %s', container_name)
-=======
->>>>>>> 3441ff015eae04e773a6e9b8b28dc1782cf6e087
         experiment_filestore_path = os.path.abspath(
             self.config['experiment_filestore'])
         filesystem.create_directory(experiment_filestore_path)
@@ -416,7 +413,6 @@ class GoogleCloudDispatcher(BaseDispatcher):
 
     def start(self):
         """Start the experiment on the dispatcher."""
-<<<<<<< HEAD
         logs.info('Started dispatcher with instance name: %s',
                   self.instance_name)
         with tempfile.NamedTemporaryFile(dir=os.getcwd(),
@@ -456,51 +452,6 @@ class GoogleCloudDispatcher(BaseDispatcher):
         startup_script = self._render_startup_script()
         startup_script_file.write(startup_script)
         startup_script_file.flush()
-=======
-        # TODO(metzman): Replace this workflow with a startup script so we don't
-        # need to SSH into the dispatcher.
-        self.process.join()  # Wait for dispatcher instance.
-        # Check that we can SSH into the instance.
-        gcloud.robust_begin_gcloud_ssh(self.instance_name,
-                                       self.config['cloud_compute_zone'])
-
-        docker_registry = self.config['docker_registry']
-        cloud_sql_instance_connection_name = (
-            self.config['cloud_sql_instance_connection_name'])
-
-        command = (
-            'echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope && '
-            'docker run --rm '
-            '-e INSTANCE_NAME="{instance_name}" '
-            '-e EXPERIMENT="{experiment}" '
-            '-e CLOUD_PROJECT="{cloud_project}" '
-            '-e DOCKER_REGISTRY="{docker_registry}" '
-            '-e EXPERIMENT_FILESTORE="{experiment_filestore}" '
-            '-e POSTGRES_PASSWORD="{postgres_password}" '
-            '-e CLOUD_SQL_INSTANCE_CONNECTION_NAME='
-            '"{cloud_sql_instance_connection_name}" '
-            '--cap-add=SYS_PTRACE --cap-add=SYS_NICE '
-            '-v /var/run/docker.sock:/var/run/docker.sock '
-            '--name=dispatcher-container '
-            '{docker_registry}/dispatcher-image '
-            '/work/startup-dispatcher.sh'
-        ).format(
-            instance_name=self.instance_name,
-            postgres_password=os.environ['POSTGRES_PASSWORD'],
-            experiment=self.config['experiment'],
-            # TODO(metzman): Create a function that sets env vars based on
-            # the contents of a dictionary, and use it instead of hardcoding
-            # the configs we use.
-            cloud_project=self.config['cloud_project'],
-            experiment_filestore=self.config['experiment_filestore'],
-            cloud_sql_instance_connection_name=(
-                cloud_sql_instance_connection_name),
-            docker_registry=docker_registry,
-        )
-        return gcloud.ssh(self.instance_name,
-                          command=command,
-                          zone=self.config['cloud_compute_zone'])
->>>>>>> 3441ff015eae04e773a6e9b8b28dc1782cf6e087
 
 
 def get_dispatcher(config: Dict) -> BaseDispatcher:

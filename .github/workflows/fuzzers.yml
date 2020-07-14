@@ -35,7 +35,6 @@ jobs:
           - afl_qemu
           - aflplusplus_qemu
           - honggfuzz_qemu
-<<<<<<< HEAD
           # Temporary variants.
           - aflplusplus_ctx_default
           - aflplusplus_ctx_nosingle
@@ -44,8 +43,6 @@ jobs:
           - aflplusplus_ngram4
           - aflplusplus_ngram6
           - aflplusplus_ngram8
-=======
->>>>>>> 3441ff015eae04e773a6e9b8b28dc1782cf6e087
 
         benchmark_type:
           - oss-fuzz
