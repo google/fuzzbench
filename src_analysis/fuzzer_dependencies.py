@@ -44,14 +44,6 @@ PY_DEPENDENCIES_MAX_DEPTH = 10
 # Values are sets of module paths.
 PY_DEPENDENCIES_CACHE: Dict[str, Set[str]] = {}
 
-# Cache these so we don't need to do it every time we call
-# get_underlying_fuzzer.
-FUZZER_CONFIGS = fuzzer_utils.get_fuzzer_configs()
-FUZZER_NAMES_TO_UNDERLYING = {
-    fuzzer_utils.get_fuzzer_from_config(config): config['fuzzer']
-    for config in FUZZER_CONFIGS
-}
-
 
 def _get_fuzzer_module_name(fuzzer: str) -> str:
     """Returns the name of the fuzzer.py module of |fuzzer|. Assumes |fuzzer| is
@@ -89,16 +81,9 @@ def get_fuzzer_dependencies(fuzzer: str) -> Set[str]:
     # TODO(metzman): Write a test for this that uses fakefs to enforce that
     # every fuzzer can successfully run with only the dependencies this function
     # finds.
-    initial_fuzzer = fuzzer
-    fuzzer = get_underlying_fuzzer(fuzzer)
     fuzzer_directory = fuzzer_utils.FuzzerDirectory(fuzzer)
 
-    if initial_fuzzer == fuzzer:
-        dependencies = set()
-    else:
-        # If fuzzer's base fuzzer is different, fuzzer is a variant, which
-        # means changes to variants.yaml can affect it.
-        dependencies = {fuzzer_directory.variants_yaml}
+    dependencies = set()
 
     # Don't use modulefinder for python dependencies since it doesn't work
     # without __init__.py files.
@@ -162,18 +147,11 @@ def _get_python_dependencies(module: types.ModuleType,
     return dependencies
 
 
-def get_underlying_fuzzer(fuzzer_name: str) -> str:
-    """"Returns the underlying fuzzer of |fuzzer_name|. For normal fuzzers with
-    their own subdirectory in fuzzers/, |fuzzer_name| is returned. For variants,
-    it will be the fuzzer that |fuzzer_name| is a variant of."""
-    return FUZZER_NAMES_TO_UNDERLYING[fuzzer_name]
-
-
 def get_files_dependent_fuzzers(dependency_files: List[str]) -> List[str]:
     """Returns a list of fuzzer names dependent on |dependency_files|."""
     dependency_files = set(dependency_files)
     dependent_fuzzers = []
-    for fuzzer_config in FUZZER_CONFIGS:
+    for fuzzer_config in fuzzer_utils.get_fuzzer_configs():
         fuzzer = fuzzer_utils.get_fuzzer_from_config(fuzzer_config)
         fuzzer_dependencies = get_fuzzer_dependencies(fuzzer)
 

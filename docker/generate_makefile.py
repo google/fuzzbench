@@ -14,8 +14,6 @@
 """Simple generator for local Makefile rules."""
 
 import os
-import shlex
-import yaml
 
 BASE_TAG = 'gcr.io/fuzzbench'
 BENCHMARKS_DIR = os.path.join(os.path.dirname(__file__), os.pardir,
@@ -39,11 +37,11 @@ FUZZER_TEMPLATE = """
 """
 
 FUZZER_BENCHMARK_RUN_TARGETS_TEMPLATE = """
-build-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-runner
+build-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner
 
-pull-{fuzzer_variant_name}-{benchmark}: .pull-{fuzzer}-{benchmark}-runner
+pull-{fuzzer}-{benchmark}: .pull-{fuzzer}-{benchmark}-runner
 
-run-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-runner
+run-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner
 	docker run \\
     --cpus=1 \\
     --cap-add SYS_NICE \\
@@ -52,10 +50,9 @@ run-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-runner
     -e TRIAL_ID=1 \\
     -e FUZZER={fuzzer} \\
     -e BENCHMARK={benchmark} \\
-    {fuzzer_variant_env} \\
     -it {base_tag}/runners/{fuzzer}/{benchmark}
 
-test-run-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-runner
+test-run-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner
 	docker run \\
     --cap-add SYS_NICE \\
     --cap-add SYS_PTRACE \\
@@ -65,10 +62,9 @@ test-run-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-runner
     -e BENCHMARK={benchmark} \\
     -e MAX_TOTAL_TIME=20 \\
     -e SNAPSHOT_PERIOD=10 \\
-    {fuzzer_variant_env} \\
     {base_tag}/runners/{fuzzer}/{benchmark}
 
-debug-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-runner
+debug-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner
 	docker run \\
     --cpus=1 \\
     --cap-add SYS_NICE \\
@@ -77,7 +73,6 @@ debug-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-runner
     -e TRIAL_ID=1 \\
     -e FUZZER={fuzzer} \\
     -e BENCHMARK={benchmark} \\
-    {fuzzer_variant_env} \\
     --entrypoint "/bin/bash" \\
     -it {base_tag}/runners/{fuzzer}/{benchmark}
 """
@@ -130,11 +125,11 @@ endif
 """
 
 OSS_FUZZER_BENCHMARK_RUN_TARGETS_TEMPLATE = """
-build-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
+build-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
 
-pull-{fuzzer_variant_name}-{benchmark}: .pull-{fuzzer}-{benchmark}-oss-fuzz-runner
+pull-{fuzzer}-{benchmark}: .pull-{fuzzer}-{benchmark}-oss-fuzz-runner
 
-run-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
+run-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
 	docker run \\
     --cpus=1 \\
     --cap-add SYS_NICE \\
@@ -145,10 +140,9 @@ run-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
     -e FUZZER={fuzzer} \\
     -e BENCHMARK={benchmark} \\
     -e FUZZ_TARGET=$({benchmark}-fuzz-target) \\
-    {fuzzer_variant_env} \\
     -it {base_tag}/runners/{fuzzer}/{benchmark}
 
-test-run-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
+test-run-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
 	docker run \\
     --cap-add SYS_NICE \\
     --cap-add SYS_PTRACE \\
@@ -160,10 +154,9 @@ test-run-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runne
     -e FUZZ_TARGET=$({benchmark}-fuzz-target) \\
     -e MAX_TOTAL_TIME=20 \\
     -e SNAPSHOT_PERIOD=10 \\
-    {fuzzer_variant_env} \\
     {base_tag}/runners/{fuzzer}/{benchmark}
 
-debug-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
+debug-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
 	docker run \\
     --cpus=1 \\
     --cap-add SYS_NICE \\
@@ -174,7 +167,6 @@ debug-{fuzzer_variant_name}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
     -e FUZZER={fuzzer} \\
     -e BENCHMARK={benchmark} \\
     -e FUZZ_TARGET=$({benchmark}-fuzz-target) \\
-    {fuzzer_variant_env} \\
     --entrypoint "/bin/bash" \\
     -it {base_tag}/runners/{fuzzer}/{benchmark}
 """
@@ -239,74 +231,36 @@ endif
 """
 
 
-def generate_fuzzer(fuzzer,
-                    benchmarks,
-                    oss_fuzz_benchmarks,
-                    fuzzer_variant=None):
+def generate_fuzzer(fuzzer, benchmarks, oss_fuzz_benchmarks):
     """Output make rules for a single fuzzer."""
-    if fuzzer_variant:
-        fuzzer_variant_name = fuzzer_variant['name']
-        fuzzer_variant_env = ' '.join([
-            '-e {k}={v}'.format(k=k, v=shlex.quote(str(v)))
-            for k, v in fuzzer_variant['env'].items()
-        ])
+    # Generate build rules for the fuzzer itself.
+    print(FUZZER_TEMPLATE.format(fuzzer=fuzzer, base_tag=BASE_TAG))
 
-        # Generate run targets for the fuzzer variant-benchmark pairs.
-        for benchmark in benchmarks:
-            print(
-                FUZZER_BENCHMARK_RUN_TARGETS_TEMPLATE.format(
-                    fuzzer=fuzzer,
-                    fuzzer_variant_name=fuzzer_variant_name,
-                    fuzzer_variant_env=fuzzer_variant_env,
-                    benchmark=benchmark,
-                    base_tag=BASE_TAG))
-        for benchmark in oss_fuzz_benchmarks:
-            print(
-                OSS_FUZZER_BENCHMARK_RUN_TARGETS_TEMPLATE.format(
-                    fuzzer=fuzzer,
-                    fuzzer_variant_name=fuzzer_variant_name,
-                    fuzzer_variant_env=fuzzer_variant_env,
-                    benchmark=benchmark,
-                    base_tag=BASE_TAG))
-
-    else:
-        fuzzer_variant_name = fuzzer
-
-        # Generate build rules for the fuzzer itself.
-        print(FUZZER_TEMPLATE.format(fuzzer=fuzzer, base_tag=BASE_TAG))
-
-        # Generate rules for fuzzer-benchmark pairs.
-        for benchmark in benchmarks:
-            print(
-                FUZZER_BENCHMARK_TEMPLATE.format(
-                    fuzzer=fuzzer,
-                    fuzzer_variant_name=fuzzer_variant_name,
-                    fuzzer_variant_env='',
-                    benchmark=benchmark,
-                    base_tag=BASE_TAG))
-        for benchmark in oss_fuzz_benchmarks:
-            print(
-                OSS_FUZZER_BENCHMARK_TEMPLATE.format(
-                    fuzzer=fuzzer,
-                    fuzzer_variant_name=fuzzer_variant_name,
-                    fuzzer_variant_env='',
-                    benchmark=benchmark,
-                    base_tag=BASE_TAG))
+    # Generate rules for fuzzer-benchmark pairs.
+    for benchmark in benchmarks:
+        print(
+            FUZZER_BENCHMARK_TEMPLATE.format(fuzzer=fuzzer,
+                                             benchmark=benchmark,
+                                             base_tag=BASE_TAG))
+    for benchmark in oss_fuzz_benchmarks:
+        print(
+            OSS_FUZZER_BENCHMARK_TEMPLATE.format(fuzzer=fuzzer,
+                                                 benchmark=benchmark,
+                                                 base_tag=BASE_TAG))
 
     # Generate rules for building/pulling all target/benchmark pairs.
     all_benchmarks = benchmarks + oss_fuzz_benchmarks
     all_build_targets = ' '.join([
-        'build-{0}-{1}'.format(fuzzer_variant_name, benchmark)
+        'build-{0}-{1}'.format(fuzzer, benchmark)
         for benchmark in all_benchmarks
     ])
     all_pull_targets = ' '.join([
-        'pull-{0}-{1}'.format(fuzzer_variant_name, benchmark)
-        for benchmark in all_benchmarks
+        'pull-{0}-{1}'.format(fuzzer, benchmark) for benchmark in all_benchmarks
     ])
     print('build-{fuzzer}-all: {all_targets}'.format(
-        fuzzer=fuzzer_variant_name, all_targets=all_build_targets))
+        fuzzer=fuzzer, all_targets=all_build_targets))
     print('pull-{fuzzer}-all: {all_targets}'.format(
-        fuzzer=fuzzer_variant_name, all_targets=all_pull_targets))
+        fuzzer=fuzzer, all_targets=all_pull_targets))
 
 
 def main():
@@ -328,40 +282,21 @@ def main():
             oss_fuzz_benchmarks.append(benchmark)
 
     # Generate the build rules for fuzzer/benchmark pairs.
-    fuzzers_and_variants = []
+    fuzzers = []
     for fuzzer in os.listdir(FUZZERS_DIR):
         # Skip non-directory files. These do not represent fuzzers.
         fuzzer_dir = os.path.join(FUZZERS_DIR, fuzzer)
         if not os.path.isdir(fuzzer_dir):
             continue
 
-        # The default fuzzer does not contain any special build arguments.
         generate_fuzzer(fuzzer, benchmarks, oss_fuzz_benchmarks)
-        fuzzers_and_variants.append(fuzzer)
-
-        # If there are variants, generate rules for them as well.
-        variants_path = os.path.join(fuzzer_dir, 'variants.yaml')
-        if not os.path.exists(variants_path):
-            continue
-
-        with open(variants_path) as file_handle:
-            config = yaml.load(file_handle, yaml.SafeLoader)
-            assert 'variants' in config
-
-        for fuzzer_variant in config['variants']:
-            assert 'name' in fuzzer_variant
-            fuzzer_variant_name = fuzzer_variant['name']
-            generate_fuzzer(fuzzer,
-                            benchmarks,
-                            oss_fuzz_benchmarks,
-                            fuzzer_variant=fuzzer_variant)
-            fuzzers_and_variants.append(fuzzer_variant_name)
+        fuzzers.append(fuzzer)
 
     # Generate rules to build all known targets.
     all_build_targets = ' '.join(
-        ['build-{0}-all'.format(name) for name in fuzzers_and_variants])
+        ['build-{0}-all'.format(name) for name in fuzzers])
     all_pull_targets = ' '.join(
-        ['pull-{0}-all'.format(name) for name in fuzzers_and_variants])
+        ['pull-{0}-all'.format(name) for name in fuzzers])
     print('build-all: {all_targets}'.format(all_targets=all_build_targets))
     print('pull-all: {all_targets}'.format(all_targets=all_pull_targets))
 
