@@ -168,31 +168,6 @@ def validate_fuzzer(fuzzer: str):
         raise Exception('Fuzzer "%s" does not exist.' % fuzzer)
 
 
-def validate_fuzzer_config(fuzzer_config):
-    """Validate |fuzzer_config|."""
-    allowed_fields = ['name', 'env', 'fuzzer']
-    if 'fuzzer' not in fuzzer_config:
-        raise Exception('Fuzzer configuration must include the "fuzzer" field.')
-
-    for key in fuzzer_config:
-        if key not in allowed_fields:
-            raise Exception('Invalid entry "%s" in fuzzer configuration.' % key)
-
-    if ('env' in fuzzer_config and not isinstance(fuzzer_config['env'], dict)):
-        raise Exception('Fuzzer environment "env" must be a dict.')
-
-    name = fuzzer_config.get('name')
-    if name:
-        if not re.match(FUZZER_NAME_REGEX, name):
-            raise Exception(
-                'The "name" option may only contain lowercase letters, '
-                'numbers, or underscores.')
-
-    fuzzer = fuzzer_config.get('fuzzer')
-    if fuzzer:
-        validate_fuzzer(fuzzer)
-
-
 def validate_experiment_name(experiment_name: str):
     """Validate |experiment_name| so that it can be used in creating
     instances."""
@@ -240,8 +215,6 @@ def set_up_fuzzer_config_files(fuzzer_configs):
     fuzzer_config_dir = os.path.join(CONFIG_DIR, 'fuzzer-configs')
     filesystem.recreate_directory(fuzzer_config_dir)
     for fuzzer_config in fuzzer_configs:
-        # Validate the fuzzer yaml attributes e.g. fuzzer, env, etc.
-        validate_fuzzer_config(fuzzer_config)
         config_file_name = os.path.join(fuzzer_config_dir,
                                         get_full_fuzzer_name(fuzzer_config))
         yaml_utils.write(config_file_name, fuzzer_config)

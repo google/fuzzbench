@@ -13,8 +13,6 @@
 # limitations under the License.
 """Tests for fuzzer_dependencies.py."""
 import os
-from unittest import mock
-
 import pytest
 
 from common import utils
@@ -23,11 +21,9 @@ from src_analysis import fuzzer_dependencies
 
 # pylint: disable=protected-access,import-outside-toplevel
 
-VARIANT = 'myvariant'
 FUZZER = 'myfuzzer'
-VARIANT_CONFIG = {'name': VARIANT, 'fuzzer': FUZZER}
 FUZZER_CONFIG = {'fuzzer': FUZZER}
-CONFIGS = [VARIANT_CONFIG, FUZZER_CONFIG]
+CONFIGS = [FUZZER_CONFIG]
 FUZZER_NAMES_TO_UNDERLYING = {
     fuzzer_utils.get_fuzzer_from_config(config): config['fuzzer']
     for config in CONFIGS
@@ -103,18 +99,6 @@ def test_get_python_dependencies():
     assert sorted(deps) == expected_deps
 
 
-@pytest.mark.parametrize(('fuzzer_name', 'expected_underlying_name'),
-                         [(FUZZER, FUZZER), (VARIANT, FUZZER)])
-def test_get_underlying_fuzzer(fuzzer_name, expected_underlying_name):
-    """Tests that get_underlying_fuzzer returns the underlying fuzzer for a
-    fuzzer variant and a normal fuzzer."""
-    with mock.patch(
-            'src_analysis.fuzzer_dependencies.FUZZER_NAMES_TO_UNDERLYING',
-            FUZZER_NAMES_TO_UNDERLYING):
-        assert fuzzer_dependencies.get_underlying_fuzzer(
-            fuzzer_name) == expected_underlying_name
-
-
 def test_get_files_dependent_fuzzers_afl_fuzzer_py():
     """Tests that the right fuzzer modules are returned by
     get_files_dependent_fuzzers when passed fuzzers/afl/fuzzer.py. Note that
@@ -140,22 +124,3 @@ def test_get_files_dependent_fuzzers_afl_runner_dockerfile():
     assert 'fairfuzz' not in dependent_fuzzers
     # Ensure that the fuzzer itself is in the list of dependent_fuzzers.
     assert 'afl' in dependent_fuzzers
-
-
-@mock.patch('src_analysis.fuzzer_dependencies.FUZZER_NAMES_TO_UNDERLYING', {
-    VARIANT: 'afl',
-    'afl': 'afl'
-})
-@mock.patch('src_analysis.fuzzer_dependencies.FUZZER_CONFIGS', [{
-    'name': VARIANT,
-    'fuzzer': 'afl'
-}, {
-    'fuzzer': 'afl'
-}])
-def test_get_files_dependent_fuzzers_variant():
-    """Test that only variants are depndent on variants.yaml."""
-    afl_variants_yaml_path = os.path.join(utils.ROOT_DIR, 'fuzzers', 'afl',
-                                          'variants.yaml')
-    dependent_fuzzers = fuzzer_dependencies.get_files_dependent_fuzzers(
-        [afl_variants_yaml_path])
-    assert dependent_fuzzers == [VARIANT]

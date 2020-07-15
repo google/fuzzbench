@@ -101,7 +101,7 @@ done
 docker run \\
 --privileged --cpus=1 --rm \\
 -e INSTANCE_NAME=r-test-experiment-9 \\
--e FUZZER=variant \\
+-e FUZZER=fuzzer-a \\
 -e BENCHMARK={benchmark} \\
 -e EXPERIMENT=test-experiment \\
 -e TRIAL_ID=9 \\
@@ -111,7 +111,7 @@ docker run \\
 -e REPORT_FILESTORE=gs://web-reports \\
 -e FUZZ_TARGET={oss_fuzz_target} \\
 -e LOCAL_EXPERIMENT=False \\
--e C1=custom -e C2=custom2 --name=runner-container \\
+--name=runner-container \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
     _test_create_trial_instance(benchmark, expected_image, expected_target,
@@ -139,7 +139,7 @@ def test_create_trial_instance_local_experiment(benchmark, expected_image,
 docker run \\
 --privileged --cpus=1 --rm \\
 -e INSTANCE_NAME=r-test-experiment-9 \\
--e FUZZER=variant \\
+-e FUZZER=fuzzer-a \\
 -e BENCHMARK={benchmark} \\
 -e EXPERIMENT=test-experiment \\
 -e TRIAL_ID=9 \\
@@ -149,7 +149,7 @@ docker run \\
 -e REPORT_FILESTORE=/tmp/web-reports -v /tmp/web-reports:/tmp/web-reports \\
 -e FUZZ_TARGET={oss_fuzz_target} \\
 -e LOCAL_EXPERIMENT=True \\
--e C1=custom -e C2=custom2 \\
+\\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
     _test_create_trial_instance(benchmark, expected_image, expected_target,
@@ -158,25 +158,15 @@ docker run \\
 
 
 @mock.patch('common.gcloud.create_instance')
-@mock.patch('common.fuzzer_utils.get_by_variant_name')
 def _test_create_trial_instance(  # pylint: disable=too-many-locals
         benchmark, expected_image, expected_target, expected_startup_script,
-        experiment_config, preemptible, mocked_get_by_variant_name,
-        mocked_create_instance):
+        experiment_config, preemptible, mocked_create_instance):
     """Test that create_trial_instance invokes create_instance
     and creates a startup script for the instance, as we expect it to."""
     instance_name = 'instance1'
-    fuzzer_param = 'variant'
+    fuzzer_param = 'fuzzer-a'
     trial = 9
     mocked_create_instance.side_effect = lambda *args, **kwargs: None
-    mocked_get_by_variant_name.return_value = {
-        'fuzzer': 'fuzzer-a',
-        'variant_name': 'variant',
-        'env': {
-            'C1': 'custom',
-            'C2': 'custom2'
-        },
-    }
     scheduler.create_trial_instance(fuzzer_param, benchmark, trial,
                                     experiment_config, preemptible)
     instance_name = 'r-test-experiment-9'
@@ -194,6 +184,11 @@ def _test_create_trial_instance(  # pylint: disable=too-many-locals
         check_from = '# Start docker.'
         assert check_from in content
         script_for_docker = content[content.find(check_from):]
+        print(script_for_docker)
+        print(
+            expected_startup_script.format(benchmark=benchmark,
+                                           oss_fuzz_target=expected_target,
+                                           docker_image_url=expected_image))
         assert script_for_docker == expected_startup_script.format(
             benchmark=benchmark,
             oss_fuzz_target=expected_target,
@@ -201,28 +196,23 @@ def _test_create_trial_instance(  # pylint: disable=too-many-locals
 
 
 @mock.patch('common.gcloud.create_instance')
-@mock.patch('common.fuzzer_utils.get_by_variant_name')
-def test_start_trials_not_started(mocked_get_by_variant_name,
-                                  mocked_create_instance, pending_trials,
+def test_start_trials_not_started(mocked_create_instance, pending_trials,
                                   experiment_config):
     """Test that start_trials returns an empty list nothing when all trials fail
     to be created/started."""
     mocked_create_instance.return_value = False
-    mocked_get_by_variant_name.return_value = {'fuzzer': 'test_fuzzer'}
     with ThreadPool() as pool:
         result = scheduler.start_trials(pending_trials, experiment_config, pool)
     assert result == []
 
 
 @mock.patch('common.new_process.execute')
-@mock.patch('common.fuzzer_utils.get_by_variant_name')
 @mock.patch('experiment.scheduler.datetime_now')
-def test_schedule(mocked_datetime_now, mocked_get_by_variant_name,
-                  mocked_execute, pending_trials, experiment_config):
+def test_schedule(mocked_datetime_now, mocked_execute, pending_trials,
+                  experiment_config):
     """Tests that schedule() ends expired trials and starts new ones as
     needed."""
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
-    mocked_get_by_variant_name.return_value = {'fuzzer': 'test_fuzzer'}
     experiment = experiment_config['experiment']
     datetimes_first_experiments_started = [
         trial.time_started for trial in db_utils.query(models.Trial).filter(
