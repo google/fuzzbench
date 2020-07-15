@@ -22,9 +22,16 @@ RUN wget https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_
 
 WORKDIR /fuzzbench
 
-ADD requirements.txt /fuzzbench/requirements.txt
+COPY requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 
-ADD fuzzbench/*.py /fuzzbench/
+COPY alembic.ini alembic.ini
+COPY analysis analysis
+COPY benchmarks benchmarks
+COPY common common
+COPY database database
+COPY docker docker
+COPY fuzzbench fuzzbench
+COPY fuzzers fuzzers
 
-CMD python3 -u run_experiment.py
+CMD PYTHONPATH=. python3 -u fuzzbench/run_experiment.py

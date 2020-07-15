@@ -6,4 +6,4 @@ services:
     image: fuzzbench
     links:
       - queue-server
-    command: python3 -m pytest -vv -k test_e2e_run
+    command: python3 -m pytest -vv fuzzbench/test_e2e_run.py
