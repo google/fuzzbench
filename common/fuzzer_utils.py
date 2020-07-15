@@ -116,30 +116,15 @@ def validate(fuzzer):
         return False
 
 
-def get_fuzzer_from_config(fuzzer_config: dict) -> Optional[str]:
-    """Returns the fuzzer of |fuzzer_config| for a non-variant fuzzer or returns
-    the name for a fuzzer variant."""
-    return fuzzer_config.get('fuzzer')
-
-
 def get_fuzzer_names():
     """Returns a list of names of all fuzzers."""
-    return [get_fuzzer_from_config(config) for config in get_fuzzer_configs()]
-
-
-def get_fuzzer_configs(fuzzers=None):
-    """Returns the list of all fuzzer and variant configurations."""
     fuzzers_dir = os.path.join(utils.ROOT_DIR, 'fuzzers')
-    fuzzer_configs = []
+    fuzzers = []
     for fuzzer in os.listdir(fuzzers_dir):
         if not os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')):
             continue
         if fuzzer in COVERAGE_TOOLS:
             continue
+        fuzzers.append(fuzzer)
 
-        if fuzzers is None or fuzzer in fuzzers:
-            # Auto-generate the default configuration for each underlying
-            # fuzzer.
-            fuzzer_configs.append({'fuzzer': fuzzer})
-
-    return fuzzer_configs
+    return fuzzers
