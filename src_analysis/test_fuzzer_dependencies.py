@@ -16,7 +16,6 @@ import os
 import pytest
 
 from common import utils
-from common import fuzzer_utils
 from src_analysis import fuzzer_dependencies
 
 # pylint: disable=protected-access,import-outside-toplevel
@@ -24,10 +23,6 @@ from src_analysis import fuzzer_dependencies
 FUZZER = 'myfuzzer'
 FUZZER_CONFIG = {'fuzzer': FUZZER}
 CONFIGS = [FUZZER_CONFIG]
-FUZZER_NAMES_TO_UNDERLYING = {
-    fuzzer_utils.get_fuzzer_from_config(config): config['fuzzer']
-    for config in CONFIGS
-}
 
 
 def test_get_fuzzer_module_name():

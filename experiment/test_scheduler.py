@@ -184,11 +184,6 @@ def _test_create_trial_instance(  # pylint: disable=too-many-locals
         check_from = '# Start docker.'
         assert check_from in content
         script_for_docker = content[content.find(check_from):]
-        print(script_for_docker)
-        print(
-            expected_startup_script.format(benchmark=benchmark,
-                                           oss_fuzz_target=expected_target,
-                                           docker_image_url=expected_image))
         assert script_for_docker == expected_startup_script.format(
             benchmark=benchmark,
             oss_fuzz_target=expected_target,
