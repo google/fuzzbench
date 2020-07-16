@@ -369,7 +369,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
     def get_current_coverage(self) -> int:
         """Get the current number of lines covered"""
         with open(self.summary_file) as summary:
-            coverage_info = json.load(summary)
+            coverage_info = json.load(summary.readlines()[-1])
             coverage_data = coverage_info["data"][0]
             summary_data = coverage_data["totals"]
             region_coverage_data = summary_data["regions"]
