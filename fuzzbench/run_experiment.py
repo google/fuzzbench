@@ -52,7 +52,6 @@ def run_experiment():
 def main():
     """Set up Redis connection and start the experiment."""
     redis_connection = redis.Redis(host="queue-server")
-
     with rq.Connection(redis_connection):
         return run_experiment()
 
