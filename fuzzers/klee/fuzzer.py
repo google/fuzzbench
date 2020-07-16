@@ -211,12 +211,12 @@ def covert_seed_inputs(ktest_tool, input_klee, input_corpus):
             continue
 
         # Truncate the seed to the max size for the benchmark
-        fsize = os.path.getsize(seedfile)
-        bsize = get_size_for_benchmark()
-        if fsize > bsize:
-            print('[run_fuzzer] Truncating {path} ({fsize}) to {bsize}'.format(
-        path=seedfile, fsize=fsize, bsize=bsize))
-            os.truncate(seedfile, bsize)
+        file_size = os.path.getsize(seedfile)
+        benchmark_size = get_size_for_benchmark()
+        if file_size > benchmark_size:
+            print('[run_fuzzer] Truncating {path} ({file_size}) to {benchmark_size}'.format(
+        path=seedfile, file_size=file_size, benchmark_size=benchmark_size))
+            os.truncate(seedfile, benchmark_size)
 
         seed_in = '{seed}.ktest'.format(seed=seedfile)
         seed_out = os.path.join(input_klee, os.path.basename(seed_in))
