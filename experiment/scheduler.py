@@ -16,7 +16,6 @@ import datetime
 import math
 import multiprocessing
 import os
-import shlex
 import sys
 import random
 import time
@@ -26,7 +25,6 @@ import jinja2
 
 from common import benchmark_utils
 from common import experiment_utils
-from common import fuzzer_utils
 from common import gcloud
 from common import gce
 from common import logs
@@ -716,20 +714,9 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
                                    experiment_config: dict):
     """Render the startup script using the template and the parameters
     provided and return the result."""
-    fuzzer_config = fuzzer_utils.get_by_variant_name(fuzzer)
     docker_image_url = benchmark_utils.get_runner_image_url(
-        benchmark, fuzzer_config['fuzzer'],
-        experiment_config['docker_registry'])
+        benchmark, fuzzer, experiment_config['docker_registry'])
     fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
-
-    # Convert additional environment variables from configuration to arguments
-    # that will be passed to docker.
-    additional_env = ''
-    if 'env' in fuzzer_config:
-        additional_env = ' '.join([
-            '-e {k}={v}'.format(k=k, v=shlex.quote(str(v)))
-            for k, v in fuzzer_config['env'].items()
-        ])
 
     local_experiment = experiment_utils.is_local_experiment()
     template = JINJA_ENV.get_template('runner-startup-script-template.sh')
@@ -744,7 +731,6 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
         'report_filestore': experiment_config['report_filestore'],
         'fuzz_target': fuzz_target,
         'docker_image_url': docker_image_url,
-        'additional_env': additional_env,
         'docker_registry': experiment_config['docker_registry'],
         'local_experiment': local_experiment
     }
