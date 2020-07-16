@@ -199,29 +199,8 @@ def get_git_hash():
     return output.strip().decode('utf-8')
 
 
-def get_full_fuzzer_name(fuzzer_config):
-    """Get the full fuzzer name in the form <base fuzzer>_<variant name>."""
-    if 'name' not in fuzzer_config:
-        return fuzzer_config['fuzzer']
-    return fuzzer_config['fuzzer'] + '_' + fuzzer_config['name']
-
-
-def set_up_fuzzer_config_files(fuzzer_configs):
-    """Write configurations specified by |fuzzer_configs| to yaml files that
-    will be used to store configurations."""
-    if not fuzzer_configs:
-        raise Exception('Need to provide either a list of fuzzers or '
-                        'a list of fuzzer configs.')
-    fuzzer_config_dir = os.path.join(CONFIG_DIR, 'fuzzer-configs')
-    filesystem.recreate_directory(fuzzer_config_dir)
-    for fuzzer_config in fuzzer_configs:
-        config_file_name = os.path.join(fuzzer_config_dir,
-                                        get_full_fuzzer_name(fuzzer_config))
-        yaml_utils.write(config_file_name, fuzzer_config)
-
-
 def start_experiment(experiment_name: str, config_filename: str,
-                     benchmarks: List[str], fuzzer_configs: List[dict]):
+                     benchmarks: List[str], fuzzers: List[str]):
     """Start a fuzzer benchmarking experiment."""
     check_no_local_changes()
 
@@ -229,12 +208,12 @@ def start_experiment(experiment_name: str, config_filename: str,
     validate_benchmarks(benchmarks)
 
     config = read_and_validate_experiment_config(config_filename)
+    config['fuzzers'] = ','.join(fuzzers)
     config['benchmarks'] = ','.join(benchmarks)
     config['experiment'] = experiment_name
     config['git_hash'] = get_git_hash()
 
     set_up_experiment_config_file(config)
-    set_up_fuzzer_config_files(fuzzer_configs)
 
     # Make sure we can connect to database.
     local_experiment = config.get('local_experiment', False)
@@ -487,11 +466,10 @@ def main():
             logs.error('No fuzzers changed since last experiment. Exiting.')
             return 1
     else:
-        fuzzers = args.fuzzers
-    fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers)
+        fuzzers = args.fuzzers or all_fuzzers
 
     start_experiment(args.experiment_name, args.experiment_config,
-                     args.benchmarks, fuzzer_configs)
+                     args.benchmarks, fuzzers)
     return 0
 
 

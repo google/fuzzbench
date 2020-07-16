@@ -151,8 +151,7 @@ def get_files_dependent_fuzzers(dependency_files: List[str]) -> List[str]:
     """Returns a list of fuzzer names dependent on |dependency_files|."""
     dependency_files = set(dependency_files)
     dependent_fuzzers = []
-    for fuzzer_config in fuzzer_utils.get_fuzzer_configs():
-        fuzzer = fuzzer_utils.get_fuzzer_from_config(fuzzer_config)
+    for fuzzer in fuzzer_utils.get_fuzzer_names():
         fuzzer_dependencies = get_fuzzer_dependencies(fuzzer)
 
         if fuzzer_dependencies.intersection(dependency_files):
