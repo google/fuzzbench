@@ -57,10 +57,8 @@ def test_run_requested_experiment_pause_service(
 
 
 @mock.patch('experiment.run_experiment.start_experiment')
-@mock.patch('experiment.stop_experiment.stop_experiment')
 @mock.patch('service.automatic_run_experiment._get_requested_experiments')
 def test_run_requested_experiment(mocked_get_requested_experiments,
-                                  mocked_stop_experiment,
                                   mocked_start_experiment, db):
     """Tests that run_requested_experiment starts and stops the experiment
     properly."""
@@ -71,14 +69,6 @@ def test_run_requested_experiment(mocked_get_requested_experiments,
     expected_config_file = os.path.join(utils.ROOT_DIR, 'service',
                                         'experiment-config.yaml')
 
-    def sort_key(dictionary):
-        return dictionary['fuzzer']
-
-    expected_fuzzer_configs = list(
-        sorted([{
-            'fuzzer': fuzzer
-        } for fuzzer in expected_fuzzers],
-               key=sort_key))
     expected_benchmarks = [
         'bloaty_fuzz_target',
         'curl_curl_fuzzer_http',
@@ -104,18 +94,11 @@ def test_run_requested_experiment(mocked_get_requested_experiments,
     ]
     expected_calls = [
         mock.call(expected_experiment_name, expected_config_file,
-                  expected_benchmarks, expected_fuzzer_configs)
+                  expected_benchmarks, expected_fuzzers)
     ]
     start_experiment_call_args = mocked_start_experiment.call_args_list
     assert len(start_experiment_call_args) == 1
-
-    # Sort the list of fuzzer configs so that we can assert that the calls were
-    # what we expected.
-    start_experiment_call_args[0][0][3].sort(key=sort_key)
     assert start_experiment_call_args == expected_calls
-
-    mocked_stop_experiment.assert_called_with(expected_experiment_name,
-                                              expected_config_file)
 
 
 @pytest.mark.parametrize(

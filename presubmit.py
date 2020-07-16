@@ -210,6 +210,15 @@ def lint(paths: List[Path]) -> bool:
 def pytype(paths: List[Path]) -> bool:
     """Run pytype on |path| if it is a python file. Return False if it fails
     type checking."""
+    # Pytype isn't supported on Python3.8+. See
+    # https://github.com/google/pytype/issues/440.
+    assert sys.version_info.major == 3, "Need Python3."
+    if sys.version_info.minor > 7:
+        logs.error(
+            'Python version is: "%s". You should be using 3.7. '
+            'Not running pytype.', sys.version)
+        return True
+
     paths = [path for path in paths if is_python(path)]
     if not paths:
         return True
@@ -260,8 +269,9 @@ def validate_experiment_requests(paths: List[Path]):
               automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
         return False
 
+    # Only validate the latest request.
     result = automatic_run_experiment.validate_experiment_requests(
-        experiment_requests)
+        experiment_requests[:1])
 
     if not result:
         print('%s is not valid.' %

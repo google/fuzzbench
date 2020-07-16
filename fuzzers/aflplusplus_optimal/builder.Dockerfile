@@ -37,14 +37,11 @@ RUN apt-get update && \
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 8d5eb9487d891a7e5c8e68a5b71e0721ef83427a && \
+    git checkout b126a5d5a8d90dcc10ccb890b379c3dfdc5cf8d4 && \
     unset CFLAGS && unset CXXFLAGS && \
     AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
     cd llvm_mode && LLVM_CONFIG=llvm-config-11 REAL_CC=gcc-9 REAL_CXX=g++-9 make && \
-    make install
-
-# Use afl_driver.cpp from LLVM as our fuzzing library.
-RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
-    clang++ -O3 -funroll-loops -stdlib=libc++ -std=c++11 -c /afl/afl_driver.cpp && \
-    ar ru /libAFLDriver.a afl_driver.o && \
+    cd .. && make install && \
+    make -C examples/aflpp_driver && \
+    cp examples/aflpp_driver/libAFLDriver.a / && \
     cp -va `llvm-config-11 --libdir`/libc++* /afl/

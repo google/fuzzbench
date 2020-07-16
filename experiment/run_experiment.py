@@ -63,11 +63,6 @@ CONFIG_DIR = 'config'
 
 RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
 
-JINJA_ENV = jinja2.Environment(
-    undefined=jinja2.StrictUndefined,
-    loader=jinja2.FileSystemLoader(RESOURCES_DIR),
-)
-
 
 def read_and_validate_experiment_config(config_filename: str) -> Dict:
     """Reads |config_filename|, validates it, finds as many errors as possible,
@@ -79,6 +74,7 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     string_params = cloud_config.union(filestore_params).union(docker_config)
     int_params = {'trials', 'max_total_time'}
     required_params = int_params.union(filestore_params).union(docker_config)
+    bool_params = {'private', 'merge_with_nonprivate'}
 
     local_experiment = config.get('local_experiment', False)
     if not local_experiment:
@@ -108,6 +104,12 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
             logs.error(
                 'Config parameter "%s" is "%s". It must be a lowercase string.',
                 param, str(value))
+            continue
+
+        if param in bool_params and not isinstance(value, bool):
+            valid = False
+            logs.error('Config parameter "%s" is "%s". It must be a bool.',
+                       param, str(value))
             continue
 
         if param not in filestore_params:
@@ -166,31 +168,6 @@ def validate_fuzzer(fuzzer: str):
         raise Exception('Fuzzer "%s" does not exist.' % fuzzer)
 
 
-def validate_fuzzer_config(fuzzer_config):
-    """Validate |fuzzer_config|."""
-    allowed_fields = ['name', 'env', 'fuzzer']
-    if 'fuzzer' not in fuzzer_config:
-        raise Exception('Fuzzer configuration must include the "fuzzer" field.')
-
-    for key in fuzzer_config:
-        if key not in allowed_fields:
-            raise Exception('Invalid entry "%s" in fuzzer configuration.' % key)
-
-    if ('env' in fuzzer_config and not isinstance(fuzzer_config['env'], dict)):
-        raise Exception('Fuzzer environment "env" must be a dict.')
-
-    name = fuzzer_config.get('name')
-    if name:
-        if not re.match(FUZZER_NAME_REGEX, name):
-            raise Exception(
-                'The "name" option may only contain lowercase letters, '
-                'numbers, or underscores.')
-
-    fuzzer = fuzzer_config.get('fuzzer')
-    if fuzzer:
-        validate_fuzzer(fuzzer)
-
-
 def validate_experiment_name(experiment_name: str):
     """Validate |experiment_name| so that it can be used in creating
     instances."""
@@ -222,31 +199,8 @@ def get_git_hash():
     return output.strip().decode('utf-8')
 
 
-def get_full_fuzzer_name(fuzzer_config):
-    """Get the full fuzzer name in the form <base fuzzer>_<variant name>."""
-    if 'name' not in fuzzer_config:
-        return fuzzer_config['fuzzer']
-    return fuzzer_config['fuzzer'] + '_' + fuzzer_config['name']
-
-
-def set_up_fuzzer_config_files(fuzzer_configs):
-    """Write configurations specified by |fuzzer_configs| to yaml files that
-    will be used to store configurations."""
-    if not fuzzer_configs:
-        raise Exception('Need to provide either a list of fuzzers or '
-                        'a list of fuzzer configs.')
-    fuzzer_config_dir = os.path.join(CONFIG_DIR, 'fuzzer-configs')
-    filesystem.recreate_directory(fuzzer_config_dir)
-    for fuzzer_config in fuzzer_configs:
-        # Validate the fuzzer yaml attributes e.g. fuzzer, env, etc.
-        validate_fuzzer_config(fuzzer_config)
-        config_file_name = os.path.join(fuzzer_config_dir,
-                                        get_full_fuzzer_name(fuzzer_config))
-        yaml_utils.write(config_file_name, fuzzer_config)
-
-
 def start_experiment(experiment_name: str, config_filename: str,
-                     benchmarks: List[str], fuzzer_configs: List[dict]):
+                     benchmarks: List[str], fuzzers: List[str]):
     """Start a fuzzer benchmarking experiment."""
     check_no_local_changes()
 
@@ -254,12 +208,12 @@ def start_experiment(experiment_name: str, config_filename: str,
     validate_benchmarks(benchmarks)
 
     config = read_and_validate_experiment_config(config_filename)
+    config['fuzzers'] = ','.join(fuzzers)
     config['benchmarks'] = ','.join(benchmarks)
     config['experiment'] = experiment_name
     config['git_hash'] = get_git_hash()
 
     set_up_experiment_config_file(config)
-    set_up_fuzzer_config_files(fuzzer_configs)
 
     # Make sure we can connect to database.
     local_experiment = config.get('local_experiment', False)
@@ -334,6 +288,8 @@ class LocalDispatcher:
 
     def start(self):
         """Start the experiment on the dispatcher."""
+        container_name = 'dispatcher-container'
+        logs.info('Started dispatcher with container name: %s', container_name)
         experiment_filestore_path = os.path.abspath(
             self.config['experiment_filestore'])
         filesystem.create_directory(experiment_filestore_path)
@@ -387,7 +343,7 @@ class LocalDispatcher:
             'LOCAL_EXPERIMENT=True',
             '--cap-add=SYS_PTRACE',
             '--cap-add=SYS_NICE',
-            '--name=dispatcher-container',
+            '--name=%s' % container_name,
             docker_image_url,
             '/bin/bash',
             '-c',
@@ -409,6 +365,8 @@ class GoogleCloudDispatcher(BaseDispatcher):
 
     def start(self):
         """Start the experiment on the dispatcher."""
+        logs.info('Started dispatcher with instance name: %s',
+                  self.instance_name)
         with tempfile.NamedTemporaryFile(dir=os.getcwd(),
                                          mode='w') as startup_script:
             self.write_startup_script(startup_script)
@@ -418,7 +376,13 @@ class GoogleCloudDispatcher(BaseDispatcher):
                                    startup_script=startup_script.name)
 
     def _render_startup_script(self):
-        template = JINJA_ENV.get_template(
+        """Renders the startup script template and returns the result as a
+        string."""
+        jinja_env = jinja2.Environment(
+            undefined=jinja2.StrictUndefined,
+            loader=jinja2.FileSystemLoader(RESOURCES_DIR),
+        )
+        template = jinja_env.get_template(
             'dispatcher-startup-script-template.sh')
         cloud_sql_instance_connection_name = (
             self.config['cloud_sql_instance_connection_name'])
@@ -427,9 +391,6 @@ class GoogleCloudDispatcher(BaseDispatcher):
             'instance_name': self.instance_name,
             'postgres_password': os.environ['POSTGRES_PASSWORD'],
             'experiment': self.config['experiment'],
-            # TODO(metzman): Create a function that sets env vars based on
-            # the contents of a dictionary, and use it instead of hardcoding
-            # the configs we use.
             'cloud_project': self.config['cloud_project'],
             'experiment_filestore': self.config['experiment_filestore'],
             'cloud_sql_instance_connection_name':
@@ -487,12 +448,6 @@ def main():
                                required=False,
                                default=None,
                                choices=all_fuzzers)
-    fuzzers_group.add_argument('-fc',
-                               '--fuzzer-configs',
-                               help='Fuzzer configurations to use.',
-                               nargs='+',
-                               required=False,
-                               default=[])
     fuzzers_group.add_argument('-cf',
                                '--changed-fuzzers',
                                help=('Use fuzzers that have changed since the '
@@ -505,23 +460,16 @@ def main():
 
     args = parser.parse_args()
 
-    if args.fuzzer_configs:
-        fuzzer_configs = [
-            yaml_utils.read(fuzzer_config)
-            for fuzzer_config in args.fuzzer_configs
-        ]
+    if args.changed_fuzzers:
+        fuzzers = experiment_changes.get_fuzzers_changed_since_last()
+        if not fuzzers:
+            logs.error('No fuzzers changed since last experiment. Exiting.')
+            return 1
     else:
-        if args.changed_fuzzers:
-            fuzzers = experiment_changes.get_fuzzers_changed_since_last()
-            if not fuzzers:
-                logs.error('No fuzzers changed since last experiment. Exiting.')
-                return 1
-        else:
-            fuzzers = args.fuzzers
-        fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers)
+        fuzzers = args.fuzzers or all_fuzzers
 
     start_experiment(args.experiment_name, args.experiment_config,
-                     args.benchmarks, fuzzer_configs)
+                     args.benchmarks, fuzzers)
     return 0
 
 

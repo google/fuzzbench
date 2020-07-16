@@ -26,51 +26,49 @@ import glob
 
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
-# OUT environment variable is the location of build directory (default is /out).
-
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     benchmark_name = os.environ['BENCHMARK']
 
     if benchmark_name == 'bloaty_fuzz_target':
-        aflplusplus_fuzzer.build("lto", "laf", "dynamic")
+        aflplusplus_fuzzer.build("lto", "laf", "autodict", "dynamic")
     elif benchmark_name == 'curl_curl_fuzzer_http':
         aflplusplus_fuzzer.build("tracepc", "cmplog")
     elif benchmark_name == 'freetype2-2017':
-        aflplusplus_fuzzer.build("lto", "cmplog", "dynamic")
+        aflplusplus_fuzzer.build("lto", "autodict", "dynamic")
     elif benchmark_name == 'harfbuzz-1.3.2':
         aflplusplus_fuzzer.build("tracepc")
     elif benchmark_name == 'jsoncpp_jsoncpp_fuzzer':
-        aflplusplus_fuzzer.build("lto", "dynamic", "cmplog")
+        aflplusplus_fuzzer.build("tracepc")
     elif benchmark_name == 'lcms-2017-03-21':
-        aflplusplus_fuzzer.build("lto", "cmplog")
+        aflplusplus_fuzzer.build("classic", "ctx", "cmplog")
     elif benchmark_name == 'libjpeg-turbo-07-2017':
-        aflplusplus_fuzzer.build("lto", "laf")
+        aflplusplus_fuzzer.build("tracepc", "laf")
     elif benchmark_name == 'libpcap_fuzz_both':
         aflplusplus_fuzzer.build("lto", "laf")
     elif benchmark_name == 'libpng-1.2.56':
-        aflplusplus_fuzzer.build("lto")
-    elif benchmark_name == 'libxml2-v2.9.2':
-        aflplusplus_fuzzer.build("lto", "autodict")
-    elif benchmark_name == 'openssl_x509':
-        aflplusplus_fuzzer.build("lto", "dynamic")
-    elif benchmark_name == 'openthread-2019-12-23':
-        aflplusplus_fuzzer.build("lto", "cmplog")
-    elif benchmark_name == 'php_php-fuzz-parser':
+        aflplusplus_fuzzer.build("classic", "ctx")
+    elif benchmark_name == 'mbedtls_fuzz_dtlsclient':
         aflplusplus_fuzzer.build("tracepc")
+    elif benchmark_name == 'openssl_x509':
+        aflplusplus_fuzzer.build("lto", "autodict", "dynamic")
+    elif benchmark_name == 'openthread-2019-12-23':
+        aflplusplus_fuzzer.build("classic", "ctx")
+    elif benchmark_name == 'php_php-fuzz-parser':
+        aflplusplus_fuzzer.build("classic", "ctx")
     elif benchmark_name == 'proj4-2017-08-14':
-        aflplusplus_fuzzer.build("lto", "cmplog")
+        aflplusplus_fuzzer.build("lto", "cmplog", "autodict")
     elif benchmark_name == 'systemd_fuzz-link-parser':
         aflplusplus_fuzzer.build("tracepc", "cmplog")
     elif benchmark_name == 'vorbis-2017-12-11':
         aflplusplus_fuzzer.build("tracepc", "laf")
     elif benchmark_name == 'woff2-2016-05-06':
-        aflplusplus_fuzzer.build("tracepc", "laf")
+        aflplusplus_fuzzer.build("classic", "ctx", "laf")
     elif benchmark_name == 'zlib_zlib_uncompress_fuzzer':
-        aflplusplus_fuzzer.build("tracepc", "cmplog")
+        aflplusplus_fuzzer.build("classic", "ctx", "cmplog")
     else:
-        aflplusplus_fuzzer.build("lto")
+        aflplusplus_fuzzer.build("lto", "autodict")
 
     for copy_file in glob.glob("/afl/libc*"):
         shutil.copy(copy_file, os.environ['OUT'])
