@@ -18,14 +18,20 @@ import time
 import redis
 import rq
 
+from fuzzbench import build_jobs
 from fuzzbench import fake_jobs
 
 
-def run_experiment():
+def run_experiment(config):
     """Main experiment logic."""
     print('Initializing the job queue.')
     queue = rq.Queue()
     jobs = []
+
+    build_jobs = build_jobs.create_build_jobs(config)
+    for job in build_jobs:
+        queue.enqueue_job(job)
+
     for i in range(6):
         jobs.append(queue.enqueue(fake_jobs.build_image, 'something-%d' % i))
 
@@ -42,8 +48,15 @@ def run_experiment():
 def main():
     """Set up Redis connection and start the experiment."""
     redis_connection = redis.Redis(host="queue-server")
+
+    # TODO: add logic for parsing configurations.
+    config = {
+        'benchmarks': ['zlib_zlib_uncompress_fuzzer', 'jsoncpp_jsoncpp_fuzzer'],
+        'fuzzers': ['afl', 'libfuzzer']
+    }
+
     with rq.Connection(redis_connection):
-        return run_experiment()
+        return run_experiment(config)
 
 
 if __name__ == '__main__':
