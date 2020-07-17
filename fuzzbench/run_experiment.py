@@ -13,13 +13,12 @@
 # limitations under the License.
 """Runs a FuzzBench experiment."""
 
-import os
 import time
 
 import redis
 import rq
 
-from common import config_utils, yaml_utils
+from common import config_utils, environment, yaml_utils
 from fuzzbench import fake_jobs
 
 
@@ -46,9 +45,8 @@ def run_experiment(config):
 def main():
     """Set up Redis connection and start the experiment."""
     redis_connection = redis.Redis(host="queue-server")
-    config = yaml_utils.read('config.yaml')
-    if os.environ.get('E2E_INTEGRATION_TEST', None):
-        config = yaml_utils.read('fuzzbench/end-to-end-test-config.yaml')
+    config_path = environment.get('EXPERIMENT_CONFIG', 'config.yaml')
+    config = yaml_utils.read(config_path)
 
     config = config_utils.validate_and_expand(config)
 

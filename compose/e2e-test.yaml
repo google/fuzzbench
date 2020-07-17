@@ -10,25 +10,6 @@ services:
       E2E_INTEGRATION_TEST: 1
     command: python3 -m pytest -vv fuzzbench/test_e2e_run.py
 
-  test-run-experiment:
-    image: fuzzbench
-    build:
-      context: ../
-      dockerfile: docker/fuzzbench/Dockerfile
-    links:
-      - queue-server
+  run-experiment:
     environment:
-      E2E_INTEGRATION_TEST: 1
-
-  test-worker:
-    image: fuzzbench
-    environment:
-      RQ_REDIS_URL: redis://queue-server
-    command: rq worker --burst
-    volumes:
-      # Allow access to the host's docker daemon.
-      - /var/run/docker.sock:/var/run/docker.sock
-    links:
-      - queue-server
-    depends_on:
-      - test-run-experiment
+      EXPERIMENT_CONFIG: fuzzbench/end-to-end-test-config.yaml
