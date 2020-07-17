@@ -1,0 +1,13 @@
+benchmarks:
+    - freetype2-2017
+    - bloaty_fuzz_target
+docker_registry: gcr.io/fuzzbench
+end_to_end_test: true
+experiment_filestore: /tmp/experiment_filestore
+fuzzers:
+    - afl
+    - libfuzzer
+local_experiment: true
+max_total_time: 600
+report_filestore: /tmp/report_filestore
+trials: 2
