@@ -28,7 +28,7 @@ run-end-to-end-test: export COMPOSE_FILE := compose/fuzzbench.yaml:compose/e2e-t
 run-end-to-end-test:
 	docker-compose build
 	docker-compose up --detach queue-server
-	docker-compose up --scale worker=3 run-experiment worker
+	docker-compose up --scale test-worker=3 test-run-experiment test-worker
 	docker-compose run run-tests; STATUS=$$?; \
 	docker-compose down; exit $$STATUS
 

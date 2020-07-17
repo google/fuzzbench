@@ -19,6 +19,10 @@ import os
 
 import pytest
 
+import redis
+import rq
+from rq.job import Job
+
 
 # pylint: disable=no-self-use
 @pytest.mark.skipif('E2E_INTEGRATION_TEST' not in os.environ,
@@ -41,3 +45,12 @@ class TestEndToEndRunResults:
     def test_experiment_report_is_generated(self):
         """Fake test to be implemented later."""
         assert True
+
+    def test_default_config_is_used(self):
+        """Tests whether the default config is used for end to end test."""
+        try:
+            fake_job = Job.fetch('e2e-test',
+                                 connection=redis.Redis(host='queue-server'))
+        except rq.exceptions.NoSuchJobError:
+            assert False
+        assert fake_job is not None

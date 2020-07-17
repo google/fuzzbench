@@ -33,5 +33,6 @@ COPY database database
 COPY docker docker
 COPY fuzzbench fuzzbench
 COPY fuzzers fuzzers
+COPY config.yaml config.yaml
 
 CMD PYTHONPATH=. python3 -u fuzzbench/run_experiment.py

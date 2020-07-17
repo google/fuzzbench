@@ -13,21 +13,25 @@
 # limitations under the License.
 """Runs a FuzzBench experiment."""
 
+import os
 import time
 
 import redis
 import rq
 
+from common import config_utils, yaml_utils
 from fuzzbench import fake_jobs
 
 
-def run_experiment():
+def run_experiment(config):
     """Main experiment logic."""
     print('Initializing the job queue.')
     queue = rq.Queue()
     jobs = []
     for i in range(6):
         jobs.append(queue.enqueue(fake_jobs.build_image, 'something-%d' % i))
+    if config.get('end_to_end_test', False):
+        jobs.append(queue.enqueue(fake_jobs.fake_job, job_id='e2e-test'))
 
     while True:
         print('Current status of jobs:')
@@ -42,8 +46,14 @@ def run_experiment():
 def main():
     """Set up Redis connection and start the experiment."""
     redis_connection = redis.Redis(host="queue-server")
+    config = yaml_utils.read('config.yaml')
+    if os.environ.get('E2E_INTEGRATION_TEST', None):
+        config = yaml_utils.read('fuzzbench/end-to-end-test-config.yaml')
+
+    config = config_utils.validate_and_expand(config)
+
     with rq.Connection(redis_connection):
-        return run_experiment()
+        return run_experiment(config)
 
 
 if __name__ == '__main__':
