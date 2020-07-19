@@ -42,21 +42,22 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'jsoncpp_jsoncpp_fuzzer':
         aflplusplus_fuzzer.build("tracepc")
     elif benchmark_name == 'lcms-2017-03-21':
-        aflplusplus_fuzzer.build("classic", "ctx", "cmplog")
+        aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
+                                 "cmplog")
     elif benchmark_name == 'libjpeg-turbo-07-2017':
         aflplusplus_fuzzer.build("tracepc", "laf")
     elif benchmark_name == 'libpcap_fuzz_both':
         aflplusplus_fuzzer.build("lto", "laf")
     elif benchmark_name == 'libpng-1.2.56':
-        aflplusplus_fuzzer.build("classic", "ctx")
+        aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle")
     elif benchmark_name == 'mbedtls_fuzz_dtlsclient':
         aflplusplus_fuzzer.build("tracepc")
     elif benchmark_name == 'openssl_x509':
         aflplusplus_fuzzer.build("lto", "autodict", "dynamic")
     elif benchmark_name == 'openthread-2019-12-23':
-        aflplusplus_fuzzer.build("classic", "ctx")
+        aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle")
     elif benchmark_name == 'php_php-fuzz-parser':
-        aflplusplus_fuzzer.build("classic", "ctx")
+        aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle")
     elif benchmark_name == 'proj4-2017-08-14':
         aflplusplus_fuzzer.build("lto", "cmplog", "autodict")
     elif benchmark_name == 'systemd_fuzz-link-parser':
@@ -64,9 +65,11 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'vorbis-2017-12-11':
         aflplusplus_fuzzer.build("tracepc", "laf")
     elif benchmark_name == 'woff2-2016-05-06':
-        aflplusplus_fuzzer.build("classic", "ctx", "laf")
+        aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
+                                 "laf")
     elif benchmark_name == 'zlib_zlib_uncompress_fuzzer':
-        aflplusplus_fuzzer.build("classic", "ctx", "cmplog")
+        aflplusplus_fuzzer.build("classic", "ngram6", "nozero", "skipsingle",
+                                 "cmplog")
     else:
         aflplusplus_fuzzer.build("lto", "autodict")
 
