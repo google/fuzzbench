@@ -68,8 +68,8 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
         aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
                                  "laf")
     elif benchmark_name == 'zlib_zlib_uncompress_fuzzer':
-        aflplusplus_fuzzer.build("classic", "ngram6", "nozero",
-                                 "skipsingle", "cmplog")
+        aflplusplus_fuzzer.build("classic", "ngram6", "nozero", "skipsingle",
+                                 "cmplog")
     else:
         aflplusplus_fuzzer.build("lto", "autodict")
 
