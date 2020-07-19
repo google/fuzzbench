@@ -201,11 +201,10 @@ def run_requested_experiment(dry_run):
 
     logs.info('Running experiment: %s with fuzzers: %s.', experiment_name,
               ' '.join(fuzzers))
-    fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=fuzzers)
-    return _run_experiment(experiment_name, fuzzer_configs, dry_run)
+    return _run_experiment(experiment_name, fuzzers, dry_run)
 
 
-def _run_experiment(experiment_name, fuzzer_configs, dry_run=False):
+def _run_experiment(experiment_name, fuzzers, dry_run=False):
     """Run an experiment named |experiment_name| on |fuzzer_configs| and shut it
     down once it terminates."""
     logs.info('Starting experiment: %s.', experiment_name)
@@ -213,7 +212,7 @@ def _run_experiment(experiment_name, fuzzer_configs, dry_run=False):
         logs.info('Dry run. Not actually running experiment.')
         return
     run_experiment.start_experiment(experiment_name, EXPERIMENT_CONFIG_FILE,
-                                    BENCHMARKS, fuzzer_configs)
+                                    BENCHMARKS, fuzzers)
 
 
 def main():
