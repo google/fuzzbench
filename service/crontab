@@ -14,7 +14,7 @@
 
 # Example crontab file that can be used to run the service. Note that the path
 # needs to be set because cron jobs will typically use different paths than
-# users (it breaks without this). Though the SQL databse can only be used by
+# users (it breaks without this). Though the SQL database can only be used by
 # Google accounts that have permission, we don't include the password here.
 
 # m h  dom mon dow   command

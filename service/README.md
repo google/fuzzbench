@@ -14,7 +14,7 @@ a user wants a new experiment they add the experiment to
 `service` instance will execute the script `run.bash`. `run.bash` will clone
 FuzzBench and then execute `automatic_run_experiment.py` which starts newly
 requested experiments. Since Jonathan Metzman setup this cron job on `service`
-the cron job runs under his user account on `service`.
+the cron job runs under his user (`metzman`) account on `service`.
 
 ## Setting up an instance to run an experiment
 

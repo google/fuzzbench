@@ -16,7 +16,8 @@
 # Use this script to clone a new copy of fuzzbench and run a requested
 # experiment.
 
-# Append stdout and stderr to /tmp/fuzzbench-service.logs
+# Append stdout and stderr to /tmp/fuzzbench-service.logs. Redirecting the
+# stdout/stderr of this script in the cron command didn't work for some reason.
 exec &>> /tmp/fuzzbench-service.logs
 
 # Use a seperate working directory to run the experiment so we don't pollute
