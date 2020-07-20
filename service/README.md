@@ -13,9 +13,7 @@ a user wants a new experiment they add the experiment to
 `experiment-requests.yaml`. Twice a day at 6 AM PT (13:00 UTC) and 6:00 PM PT
 (01:00 UTC) a cron job on the `service` instance will execute the script
 `run.bash`. `run.bash` will clone FuzzBench and then execute
-`automatic_run_experiment.py` which starts newly requested experiments. Since
-Jonathan Metzman setup this cron job on `service` the cron job runs under his
-user (`metzman`) account on `service`.
+`automatic_run_experiment.py` which starts newly requested experiments.
 
 ## Setting up an instance to run an experiment
 
