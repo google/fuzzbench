@@ -60,7 +60,7 @@ def create_instance(instance_name: str,
         '--image-family=cos-stable',
         '--image-project=cos-cloud',
         '--zone=%s' % config['cloud_compute_zone'],
-        '--scopes=cloud-platform',
+        'b--scopes=cloud-platform',
     ]
     if instance_type == InstanceType.DISPATCHER:
         command.extend([
