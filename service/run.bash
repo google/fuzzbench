@@ -23,7 +23,6 @@ exec &>> /tmp/fuzzbench-service.logs
 # the source code with the config directory created by run_experiment.py
 expriment_working_dir=/tmp/fuzzbench-automatic-experiment-working-dir
 
-touch /tmp/cronran
 repo_path=/tmp/fuzzbench-automatic-experiment-repo
 rm -rf $repo_path $expriment_working_dir
 
