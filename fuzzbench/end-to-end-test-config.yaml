@@ -1,6 +1,0 @@
-benchmarks:
-    - freetype2-2017
-    - bloaty_fuzz_target
-fuzzers:
-    - afl
-    - libfuzzer
