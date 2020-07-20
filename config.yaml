@@ -1,11 +1,6 @@
-trials: 2
-max_total_time: 3600
 benchmarks:
     - freetype2-2017
     - bloaty_fuzz_target
 fuzzers:
     - afl
     - libfuzzer
-docker_registry: gcr.io/fuzzbench
-experiment_filestore: <your-experiment-filestore>
-report_filestore: <your-report-filestore>

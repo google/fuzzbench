@@ -29,8 +29,6 @@ def run_experiment(config):
     jobs = []
     for i in range(6):
         jobs.append(queue.enqueue(fake_jobs.build_image, 'something-%d' % i))
-    if config.get('end_to_end_test', False):
-        jobs.append(queue.enqueue(fake_jobs.fake_job, job_id='e2e-test'))
 
     while True:
         print('Current status of jobs:')
