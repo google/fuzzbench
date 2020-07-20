@@ -288,7 +288,8 @@ make build-$FUZZER_NAME-all
 ## Requesting an experiment
 
 The FuzzBench service automatically runs experiments that are requested by users
-once a day. If you want the FuzzBench service to run an experiment on specific
+once a day at 12:00 PT (19:00 UTC) . If you want the FuzzBench service to run an
+experiment on specific
 fuzzers (such as the one you are adding): add an experiment request to
 [service/experiment-requests.yaml](https://github.com/google/fuzzbench/blob/master/service/experiment-requests.yaml).
 `service/experiment-requests.yaml` explains how to do this. After the
