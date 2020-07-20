@@ -31,10 +31,10 @@ steps:
     # Use two tags so that the image builds properly and we can push it to the
     # correct location.
     '--tag',
-    'gcr.io/fuzzbench/builders/coverage',
+    'gcr.io/fuzzbench/builders/coverage:${_EXPERIMENT}:${_EXPERIMENT}',
 
     '--tag',
-    '${_REPO}/builders/coverage',
+    '${_REPO}/builders/coverage:${_EXPERIMENT}:${_EXPERIMENT}',
 
     '--cache-from',
     '${_REPO}/builders/coverage',
@@ -60,10 +60,10 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}',
+    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}',
 
     '--tag',
-    '${_REPO}/builders/coverage/${_BENCHMARK}',
+    '${_REPO}/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}',
 
     '--build-arg',
     'fuzzer=coverage',
@@ -86,7 +86,7 @@ steps:
     'run',
     '-v',
     '/workspace/out:/host-out',
-    '${_REPO}/builders/coverage/${_BENCHMARK}',
+    '${_REPO}/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}',
     '/bin/bash',
     '-c',
     'cd /out; tar -czvf /host-out/coverage-build-${_BENCHMARK}.tar.gz *'
@@ -102,5 +102,5 @@ steps:
 
 # Push images so we can take advantage of caching.
 images:
-  - '${_REPO}/builders/coverage'
-  - '${_REPO}/builders/coverage/${_BENCHMARK}'
+  - '${_REPO}/builders/coverage:${_EXPERIMENT}'
+  - '${_REPO}/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}'
