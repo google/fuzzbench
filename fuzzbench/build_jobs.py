@@ -11,31 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Fake jobs."""
+"""Creates build jobs."""
 
+import os
 import subprocess
 import time
-import typing
 
-from fuzzbench import build_jobs
-
-def build_image(name: str):
-    """Build a Docker image."""
-    print('Building', name)
-    if name.startswith('base'):
-        if name in ['base-image', 'base-builder', 'base-runner']:
-            build_jobs.build_base_images(name)
-    else:
-        subprocess.run(['docker', '--version'], check=True)
-        time.sleep(3)
-    return True
+from rq.job import Job
 
 
-def run_trial():
-    """Run a trial."""
-    return True
+BASE_TAG = 'gcr.io/fuzzbench'
 
 
-def measure_corpus_snapshot():
-    """Measure a corpus snapshot."""
-    return True
+def build_base_images(name):
+    """Builds a Docker image."""
+    image_tag = os.path.join(BASE_TAG, name)
+    return subprocess.run(['docker', 'build',
+                    '--tag', image_tag,
+                    os.path.join('docker', name)
+                    ])
