@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,8 +28,13 @@ def run_experiment(config):
     print('Initializing the job queue.')
     queue = rq.Queue()
     jobs = []
-    for i in range(6):
-        jobs.append(queue.enqueue(fake_jobs.build_image, 'something-%d' % i))
+    jobs.append(queue.enqueue(fake_jobs.build_image, 'base-images'))
+    for benchmark in config.get('benchmarks'):
+        jobs.append(queue.enqueue(fake_jobs.build_image, benchmark))
+    for fuzzer in config.get('fuzzers'):
+        for benchmark in config.get('benchmarks'):
+            jobs.append(queue.enqueue(fake_jobs.build_image,
+                                      fuzzer + benchmark))
 
     while True:
         print('Current status of jobs:')

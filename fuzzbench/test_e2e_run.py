@@ -19,10 +19,6 @@ import os
 
 import pytest
 
-import redis
-import rq
-from rq.job import Job
-
 
 # pylint: disable=no-self-use
 @pytest.mark.skipif('E2E_INTEGRATION_TEST' not in os.environ,
