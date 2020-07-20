@@ -18,4 +18,4 @@
 # Google accounts that have permission, we don't include the password here.
 
 # m h  dom mon dow   command
-00  19  *   *   *    export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/opt/puppetlabs/bin; export POSTGRES_PASSWORD=""; /home/metzman/fuzzbench/service/run.bash
+00  1,13  *   *   *    export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/opt/puppetlabs/bin; export POSTGRES_PASSWORD=""; /home/metzman/fuzzbench/service/run.bash
