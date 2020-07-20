@@ -1,7 +1,7 @@
 # The FuzzBench Service
 
 *** note
-**Note:** This document and most of the `service/` directory is only intendended
+**Note:** This document and most of the `service/` directory is only intended
 for use by FuzzBench maintainers. It will contain hardcoded values and
 references to things that don't make sense for other users.
 ***

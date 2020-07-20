@@ -280,23 +280,28 @@ make build-$FUZZER_NAME-all
 
 * Run `make presubmit` to lint your code and ensure all tests are passing.
 
-* Run `make clear-cache` to clear docker containers' caches. Next time you build a project, the container will be built from scratch.
+* Run `make clear-cache` to clear docker containers' caches. Next time you build
+  a project, the container will be built from scratch.
 
 * Add your fuzzer to the list in `.github/workflows/ci.yml` to enable building
-  it on continous integration.
+  it on continuous integration.
 
 ## Requesting an experiment
 
 The FuzzBench service automatically runs experiments that are requested by users
 once a day at 12:00 PT (19:00 UTC) . If you want the FuzzBench service to run an
-experiment on specific
-fuzzers (such as the one you are adding): add an experiment request to
+experiment on specific fuzzers (such as the one you are adding): add an
+experiment request to
 [service/experiment-requests.yaml](https://github.com/google/fuzzbench/blob/master/service/experiment-requests.yaml).
-`service/experiment-requests.yaml` explains how to do this. After the
+`service/experiment-requests.yaml` explains how to do this. At the end of the
 experiment, FuzzBench will generate a report comparing your fuzzer to the latest
 versions other fuzzers, so you only need to include fuzzers that you've modified
 in a meaningful way (i.e. fuzzers whose results are likely affected by your
-change).
+change). This report, and a real-time report of your experiment can be viewed
+at `https://www.fuzzbench.com/reports/$YOUR_EXPERIMENT_NAME`. Note that
+real-time reports may not appear until a few hours after the experiment starts
+since every fuzzer-benchmark pair in the experiment must build in order for
+fuzzing to start.
 
 * Submit the integration in a
 [GitHub pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
