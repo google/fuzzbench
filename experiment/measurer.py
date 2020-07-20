@@ -61,11 +61,156 @@ def get_experiment_folders_dir():
     return exp_path.path('experiment-folders')
 
 
+def get_summary_file_path(fuzzer: str, benchmark: str, trial_num: int):
+    """Return summary file path"""
+    benchmark_fuzzer_trial_dir = experiment_utils.get_trial_dir(
+                fuzzer, benchmark, trial_num)
+    work_dir = experiment_utils.get_work_dir()
+    measurement_dir = os.path.join(work_dir, 'measurement-folders',
+                                   benchmark_fuzzer_trial_dir)
+    summary_file_path = os.path.join(measurement_dir, 'reports', 'summary.txt')
+    return summary_file_path
+
+
+def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):
+    """Return the key in coverage dict for a pair of fuzzer-benchmark"""
+    return fuzzer+'-'+benchmark
+
+
+def get_all_fuzzer_names(experiment: str):
+    """Return all fuzzer names for the experiment"""
+    fuzzers = [
+        fuzzer_tuple[0]
+        for fuzzer_tuple in db_utils.query(models.Trial.fuzzer).distinct(
+        ).filter(models.Trial.experiment == experiment)
+    ]
+    return fuzzers
+
+
+def get_all_benchmark_names(experiment: str):
+    """Return all benchmark names for the experiment"""
+    benchmarks = [
+        benchmark_tuple[0]
+        for benchmark_tuple in db_utils.query(models.Trial.benchmark).distinct(
+        ).filter(models.Trial.experiment == experiment)
+    ]
+    return benchmarks
+
+
 def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
     """Returns True if |path| exists in the experiment_filestore."""
     return filestore_utils.ls(exp_path.filestore(path),
                               must_exist=False).retcode == 0
 
+
+def store_diff_data(experiment: str, threshold):
+    """Store the differential data in cloud bucket"""
+    logger.info('Start storing differential data')
+    with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
+        q = manager.Queue()  # pytype: disable=attribute-error
+        try:
+            covered_regions = get_all_covered_region(experiment, pool, q)
+        except Exception:  # pylint: disable=broad-except
+            logger.error('Error occurred during differential measuring.')
+
+
+def measure_difference(experiment: str, threshold):
+    """Do the differential coverage measuring in the end"""
+    logger.info('Measuring differential coverage')
+    
+    
+
+    logger.info('Finished differential measuring.')
+
+
+def measure_rare_regions(experiment: str, threshold, pool, q):
+    """Get the regions that are covered only by less than |threshold|
+    percentage of fuzzers"""
+    
+    benchmarks = get_all_benchmark_names(experiment)
+    fuzzers = get_all_fuzzer_names(experiment)
+
+    regions_count = collections.defaultdict(list)
+    for comb in covered_regions:
+        regions = covered_regions[comb]
+        for region in regions:
+            regions_count[region].append(comb)
+    
+    rare_regions = []
+    for region in regions_count:
+        if len(regions_count[region]) <= len(fuzzers)*threshold:
+            rare_regions.append()
+
+
+def get_all_covered_region(experiment: str, pool, q) -> dict:
+    """Get regions covered for each pair for fuzzer and benchmark"""
+    logger.info('Measuring all fuzzer-benchmark pairs.')
+
+    benchmarks = get_all_benchmark_names(experiment)
+    fuzzers = get_all_fuzzer_names(experiment)
+
+    get_covered_region_args = [
+        (experiment, fuzzer, benchmark, q)
+        for fuzzer in fuzzers
+        for benchmark in benchmarks
+    ]
+
+    result = pool.starmap_async(get_covered_region,
+                                get_covered_region_args)
+
+    # Poll the queue for covered region data and save them in a dict until the
+    # pool is done processing each combination of fuzzers and benchmarks.
+    all_covered_regions = {}
+
+    while True:
+        try:
+            covered_regions = q.get(timeout=COV_DIFF_QUEUE_GET_TIMEOUT)
+            all_covered_regions.update(covered_regions)
+        except queue.Empty:
+            if result.ready():
+                # If "ready" that means pool has finished. Since it is
+                # finished and the queue is empty, we can stop checking
+                # the queue for more covered regions.
+                logger.debug(
+                    'Finished call to map with get_all_covered_region.')
+                break
+
+    logger.info('Done measuring all differential data.')
+    return all_covered_regions
+
+
+def get_covered_region(experiment: str, fuzzer: str, benchmark: str, q: multiprocessing.Queue):
+    """Get the covered region for a specific pair of fuzzer-benchmark"""
+    initialize_logs()
+    logger.debug('Measuring covered region: fuzzer: %s, benchmark: %s.', fuzzer, benchmark)
+    key = get_fuzzer_benchmark_key(fuzzer, benchmark)
+    covered_regions = {key:set()}
+    try:
+        experiment_trials_filter = models.Snapshot.trial.has(experiment=experiment,
+                                                             fuzzer = fuzzer,
+                                                             benchmark = benchmark,
+                                                             preempted=False)
+        trial_nums = [trial_id_tuple[0] for trial_id_tuple in db_utils.query(models.Trial.id)
+                      .distinct().filter(experiment_trials_filter)
+                    ]
+        for trial_num in trial_nums:
+            summary_file = get_summary_file_path(fuzzer, benchmark, trial_num)
+            with open(summary_file) as summary:
+                coverage_info = json.load(summary) #fix bug
+                functions_data = coverage_info["data"][1]
+                for function_data in functions_data:
+                    for region in function_data["regions"]:
+                        if region[4] != 0 and region[-1] == 0:
+                            covered_regions[key].add(tuple(region[:4]))
+        q.put(covered_regions)
+    except Exception:  # pylint: disable=broad-except
+            logger.error('Error measuring covered regions.',
+                         extras={
+                             'fuzzer1': fuzzer,
+                             'benchmark': benchmark,
+                         })
+    logger.debug('Done measuring covered region: fuzzer: %s, benchmark: %s.',
+                 fuzzer, benchmark)
 
 def measure_loop(experiment: str, max_total_time: int):
     """Continuously measure trials for |experiment|."""
