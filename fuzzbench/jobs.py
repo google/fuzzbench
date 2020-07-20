@@ -23,6 +23,7 @@ BASE_TAG = 'gcr.io/fuzzbench'
 def build_base_images(name: str):
     """Builds a Docker image."""
     image_tag = os.path.join(BASE_TAG, name)
+    subprocess.run(['docker', 'pull', image_tag], check=True)
     return subprocess.run(
         ['docker', 'build', '--tag', image_tag,
          os.path.join('docker', name)],
