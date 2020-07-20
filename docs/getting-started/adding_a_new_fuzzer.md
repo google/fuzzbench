@@ -256,7 +256,7 @@ make build-$FUZZER_NAME-all
 
     ```shell
     make debug-$FUZZER_NAME-$BENCHMARK_NAME
-    
+
     $ROOT_DIR/docker/benchmark-runner/startup-runner.sh
     ```
 
@@ -284,6 +284,18 @@ make build-$FUZZER_NAME-all
 
 * Add your fuzzer to the list in `.github/workflows/ci.yml` to enable building
   it on continous integration.
+
+## Requesting an experiment
+
+The FuzzBench service automatically runs experiments that are requested by users
+once a day. If you want the FuzzBench service to run an experiment on specific
+fuzzers (such as the one you are adding): add an experiment request to
+[service/experiment-requests.yaml](https://github.com/google/fuzzbench/blob/master/service/experiment-requests.yaml).
+`service/experiment-requests.yaml` explains how to do this. After the
+experiment, FuzzBench will generate a report comparing your fuzzer to the latest
+versions other fuzzers, so you only need to include fuzzers that you've modified
+in a meaningful way (i.e. fuzzers whose results are likely affected by your
+change).
 
 * Submit the integration in a
 [GitHub pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
