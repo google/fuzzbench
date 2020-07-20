@@ -32,10 +32,10 @@ class TestEndToEndRunResults:
         """Tests that jobs dependency preserves during working."""
         jobs = {
             name: Job.fetch(name, connection=redis.Redis(host='queue-server'))
-            for name in ['base-image', 'base-runner', 'base-builder']
+            for name in ['base-image', 'base-builder', 'base-runner']
         }
-        assert jobs['base-image'].ended_at <= jobs['base-runner'].started_at
         assert jobs['base-image'].ended_at <= jobs['base-builder'].started_at
+        assert jobs['base-builder'].ended_at <= jobs['base-runner'].started_at
 
     def test_all_jobs_finished_sucessfully(self):
         """Fake test to be implemented later."""

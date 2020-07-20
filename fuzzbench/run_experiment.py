@@ -30,14 +30,14 @@ def run_experiment():
         queue.enqueue(fake_jobs.build_image, 'base-image', job_id='base-image'))
     jobs.append(
         queue.enqueue(fake_jobs.build_image,
-                      'base-runner',
-                      job_id='base-runner',
-                      depends_on='base-image'))
-    jobs.append(
-        queue.enqueue(fake_jobs.build_image,
                       'base-builder',
                       job_id='base-builder',
                       depends_on='base-image'))
+    jobs.append(
+        queue.enqueue(fake_jobs.build_image,
+                      'base-runner',
+                      job_id='base-runner',
+                      depends_on='base-builder'))
 
     while True:
         print('Current status of jobs:')
