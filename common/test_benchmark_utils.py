@@ -61,8 +61,8 @@ def test_get_fuzz_target(benchmark, expected_fuzz_target, oss_fuzz_benchmark):
      (OTHER_BENCHMARK, 'gcr.io/fuzzbench/runners/fuzzer/benchmark:experiment')])
 def test_get_runner_image_url(benchmark, expected_url, oss_fuzz_benchmark):
     """Test that we can get the runner image url of a benchmark."""
-    assert benchmark_utils.get_runner_image_url('experiment',
-                                                benchmark, 'fuzzer',
+    assert benchmark_utils.get_runner_image_url('experiment', benchmark,
+                                                'fuzzer',
                                                 DOCKER_REGISTRY) == expected_url
 
 
