@@ -33,8 +33,3 @@ def run_trial():
 def measure_corpus_snapshot():
     """Measure a corpus snapshot."""
     return True
-
-
-def fake_job():
-    """A signal fake job function."""
-    return True
