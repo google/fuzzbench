@@ -22,12 +22,12 @@ exec &>> /tmp/fuzzbench-service.logs
 
 # Use a seperate working directory to run the experiment so we don't pollute
 # the source code with the config directory created by run_experiment.py
-expriment_working_dir=/tmp/fuzzbench-automatic-experiment-working-dir
+experiment_working_dir=/tmp/fuzzbench-automatic-experiment-working-dir
 
 repo_path=/tmp/fuzzbench-automatic-experiment-repo
-rm -rf $repo_path $expriment_working_dir
+rm -rf $repo_path $experiment_working_dir
 
-mkdir $expriment_working_dir
+mkdir $experiment_working_dir
 
 git clone https://github.com/google/fuzzbench.git $repo_path
 cd $repo_path
@@ -36,6 +36,6 @@ make install-dependencies
 source .venv/bin/activate
 export PYTHONPATH=$repo_path
 
-cd $expriment_working_dir
+cd $experiment_working_dir
 python3 $repo_path/service/automatic_run_experiment.py
 rm -rf $repo_path
