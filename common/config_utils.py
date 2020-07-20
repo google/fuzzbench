@@ -16,6 +16,6 @@
 
 
 def validate_and_expand(config):
-    """Validates |config| and returns the enlarged one."""
+    """Validates |config| and returns the expanded configuration."""
     # TODO: move the logic from experiment/run_experiment.py to here.
     return config
