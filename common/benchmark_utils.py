@@ -44,11 +44,12 @@ def get_fuzz_target(benchmark):
     return fuzzer_utils.DEFAULT_FUZZ_TARGET_NAME
 
 
-def get_runner_image_url(benchmark, fuzzer, docker_registry):
+def get_runner_image_url(experiment, benchmark, fuzzer, docker_registry):
     """Get the URL of the docker runner image for fuzzing the benchmark with
     fuzzer."""
-    return '{docker_registry}/runners/{fuzzer}/{benchmark}'.format(
-        docker_registry=docker_registry, fuzzer=fuzzer, benchmark=benchmark)
+    return '{docker_registry}/runners/{fuzzer}/{benchmark}:{experiment}'.format(
+        docker_registry=docker_registry, fuzzer=fuzzer, benchmark=benchmark,
+        experiment=experiment)
 
 
 def get_builder_image_url(benchmark, fuzzer, docker_registry):

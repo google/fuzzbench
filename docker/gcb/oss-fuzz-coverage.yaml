@@ -28,10 +28,10 @@ steps:
     # Use two tags so that the image builds properly and we can push it to the
     # correct location.
     '--tag',
-    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}-intermediate',
+    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
 
     '--tag',
-    '${_REPO}/builders/coverage/${_BENCHMARK}-intermediate',
+    '${_REPO}/builders/coverage/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
 
     '--file=fuzzers/coverage/builder.Dockerfile',
 
@@ -61,10 +61,10 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}',
+    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}',
 
     '--tag',
-    '${_REPO}/builders/coverage/${_BENCHMARK}',
+    '${_REPO}/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}',
 
     '--file=docker/oss-fuzz-builder/Dockerfile',
 
@@ -104,5 +104,5 @@ steps:
   ]
 
 images:
-  - '${_REPO}/builders/coverage/${_BENCHMARK}-intermediate'
-  - '${_REPO}/builders/coverage/${_BENCHMARK}'
+  - '${_REPO}/builders/coverage/${_BENCHMARK}-intermediate:${_EXPERIMENT}'
+  - '${_REPO}/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}'

@@ -143,6 +143,9 @@ def _build(config_file: str,
     assert '_REPO' not in substitutions
     substitutions['_REPO'] = experiment_utils.get_base_docker_tag()
 
+    assert '_EXPERIMENT' not in substitutions
+    substitutions['_EXPERIMENT'] = experiment_utils.get_experiment_name()
+
     substitutions = [
         '%s=%s' % (key, value) for key, value in substitutions.items()
     ]
