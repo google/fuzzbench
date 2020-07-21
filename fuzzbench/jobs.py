@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Jobs."""
+"""Defines all required jobs for one experiment."""
 
 import os
 import subprocess
@@ -20,7 +20,7 @@ BASE_TAG = 'gcr.io/fuzzbench'
 
 
 def build_image(name: str):
-    """Builds a Docker image."""
+    """Builds a Docker image and returns whether it succeeds."""
     image_tag = os.path.join(BASE_TAG, name)
     subprocess.run(['docker', 'pull', image_tag], check=True)
     subprocess.run(

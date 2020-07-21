@@ -18,7 +18,6 @@ test."""
 import os
 
 import pytest
-import redis
 from rq.job import Job
 
 
@@ -28,19 +27,19 @@ from rq.job import Job
 class TestEndToEndRunResults:
     """Checks the result of a test experiment run."""
 
-    def test_jobs_dependency(self):
+    def test_jobs_dependency(self, redis_connection):
         """Tests that jobs dependency preserves during working."""
         jobs = {
-            name: Job.fetch(name, connection=redis.Redis(host='queue-server'))
+            name: Job.fetch(name, connection=redis_connection)
             for name in ['base-image', 'base-builder', 'base-runner']
         }
         assert jobs['base-image'].ended_at <= jobs['base-builder'].started_at
         assert jobs['base-builder'].ended_at <= jobs['base-runner'].started_at
 
-    def test_all_jobs_finished_successfully(self):
+    def test_all_jobs_finished_successfully(self, redis_connection):
         """Tests all jobs finished successully."""
         jobs = Job.fetch_many(['base-image', 'base-builder', 'base-runner'],
-                              connection=redis.Redis(host='queue-server'))
+                              connection=redis_connection)
         for job in jobs:
             assert job.get_status() == 'finished'
 
