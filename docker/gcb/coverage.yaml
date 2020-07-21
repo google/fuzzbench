@@ -31,10 +31,10 @@ steps:
     # Use two tags so that the image builds properly and we can push it to the
     # correct location.
     '--tag',
-    'gcr.io/fuzzbench/builders/coverage:${_EXPERIMENT}:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/builders/coverage:${_EXPERIMENT}',
 
     '--tag',
-    '${_REPO}/builders/coverage:${_EXPERIMENT}:${_EXPERIMENT}',
+    '${_REPO}/builders/coverage:${_EXPERIMENT}',
 
     '--cache-from',
     '${_REPO}/builders/coverage',
