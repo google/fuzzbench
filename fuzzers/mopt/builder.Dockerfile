@@ -18,7 +18,7 @@ FROM $parent_image
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/puppet-meteor/MOpt-AFL.git && \
     cd MOpt-AFL && \
-    git checkout debd495b564b33e602afd7237227555850eeba93 && \
+    git checkout 45b9f38d2d8b699fd571cfde1bf974974339a21e && \
     mv MOpt-AFL\ V1.0 /afl && \
     cd /afl && \
     AFL_NO_X86=1 make
