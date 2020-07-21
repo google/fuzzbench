@@ -18,10 +18,11 @@ test."""
 import os
 
 import pytest
+import redis
 from rq.job import Job
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def redis_connection():
     """Returns the default redis server connection."""
     return redis.Redis(host='queue-server')
@@ -30,10 +31,11 @@ def redis_connection():
 # pylint: disable=no-self-use
 @pytest.mark.skipif('E2E_INTEGRATION_TEST' not in os.environ,
                     reason='Not running end-to-end test.')
+@pytest.mark.usefixtures('redis_connection')
 class TestEndToEndRunResults:
     """Checks the result of a test experiment run."""
 
-    def test_jobs_dependency(self, redis_connection):
+    def test_jobs_dependency(self, redis_connection):  # pylint: disable=redefined-outer-name
         """Tests that jobs dependency preserves during working."""
         jobs = {
             name: Job.fetch(name, connection=redis_connection)
@@ -42,7 +44,7 @@ class TestEndToEndRunResults:
         assert jobs['base-image'].ended_at <= jobs['base-builder'].started_at
         assert jobs['base-builder'].ended_at <= jobs['base-runner'].started_at
 
-    def test_all_jobs_finished_successfully(self, redis_connection):
+    def test_all_jobs_finished_successfully(self, redis_connection):  # pylint: disable=redefined-outer-name
         """Tests all jobs finished successully."""
         jobs = Job.fetch_many(['base-image', 'base-builder', 'base-runner'],
                               connection=redis_connection)
