@@ -15,7 +15,6 @@
 
 import os
 import subprocess
-import time
 
 BASE_TAG = 'gcr.io/fuzzbench'
 
