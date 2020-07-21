@@ -99,13 +99,12 @@ def get_all_benchmark_names(experiment: str):
 
 def get_trial_nums(experiment: str, fuzzer: str, benchmark: str):
     """Get numbers of all finished trials for a pair of fuzzer and benchmark"""
-    experiment_trials_filter = models.Snapshot.trial.has(experiment=experiment,
-                                                         fuzzer=fuzzer,
-                                                         benchmark=benchmark,
-                                                         preempted=False)
     trial_nums = [
         trial_id_tuple[0] for trial_id_tuple in db_utils.query(
-            models.Trial.id).distinct().filter(experiment_trials_filter)
+            models.Trial.id).distinct().filter(models.Trial.experiment == experiment,
+                                               models.Trial.fuzzer == fuzzer,
+                                               models.Trial.benchmark == benchmark,
+                                               models.Trial.preempted == False)
     ]
     return trial_nums
 
@@ -179,6 +178,7 @@ def get_covered_region(experiment: str, fuzzer: str, benchmark: str,
     try:
         trial_nums = get_trial_nums(experiment, fuzzer, benchmark)
         for trial_num in trial_nums:
+            logger.info('Measuring covered region: trial_id = %d.', trial_num)
             summary_file = get_summary_file_path(fuzzer, benchmark, trial_num)
             with open(summary_file) as summary:
                 coverage_info = json.loads(summary.readlines()[-1])  #fix bug
