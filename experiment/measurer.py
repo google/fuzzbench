@@ -178,14 +178,11 @@ def get_covered_region(experiment: str, fuzzer: str, benchmark: str,
     covered_regions = {key: set()}
     try:
         trial_nums = get_trial_nums(experiment, fuzzer, benchmark)
-        print('start', trial_nums)
         for trial_num in trial_nums:
-            print('in')
             summary_file = get_summary_file_path(fuzzer, benchmark, trial_num)
             with open(summary_file) as summary:
                 coverage_info = json.loads(summary.readlines()[-1])  #fix bug
                 functions_data = coverage_info["data"][0]['functions']
-                print(functions_data)
                 for function_data in functions_data:
                     for region in function_data["regions"]:
                         if region[4] != 0 and region[-1] == 0:
