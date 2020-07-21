@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """A pytest conftest.py file that defines fixtures."""
-import redis
-
 import pytest
+import redis
 
 
 @pytest.fixture
