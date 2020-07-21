@@ -22,7 +22,7 @@ import redis
 from rq.job import Job
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='class')
 def redis_connection():
     """Returns the default redis server connection."""
     return redis.Redis(host='queue-server')
