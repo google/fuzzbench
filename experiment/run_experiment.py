@@ -168,31 +168,6 @@ def validate_fuzzer(fuzzer: str):
         raise Exception('Fuzzer "%s" does not exist.' % fuzzer)
 
 
-def validate_fuzzer_config(fuzzer_config):
-    """Validate |fuzzer_config|."""
-    allowed_fields = ['name', 'env', 'fuzzer']
-    if 'fuzzer' not in fuzzer_config:
-        raise Exception('Fuzzer configuration must include the "fuzzer" field.')
-
-    for key in fuzzer_config:
-        if key not in allowed_fields:
-            raise Exception('Invalid entry "%s" in fuzzer configuration.' % key)
-
-    if ('env' in fuzzer_config and not isinstance(fuzzer_config['env'], dict)):
-        raise Exception('Fuzzer environment "env" must be a dict.')
-
-    name = fuzzer_config.get('name')
-    if name:
-        if not re.match(FUZZER_NAME_REGEX, name):
-            raise Exception(
-                'The "name" option may only contain lowercase letters, '
-                'numbers, or underscores.')
-
-    fuzzer = fuzzer_config.get('fuzzer')
-    if fuzzer:
-        validate_fuzzer(fuzzer)
-
-
 def validate_experiment_name(experiment_name: str):
     """Validate |experiment_name| so that it can be used in creating
     instances."""
@@ -224,31 +199,8 @@ def get_git_hash():
     return output.strip().decode('utf-8')
 
 
-def get_full_fuzzer_name(fuzzer_config):
-    """Get the full fuzzer name in the form <base fuzzer>_<variant name>."""
-    if 'name' not in fuzzer_config:
-        return fuzzer_config['fuzzer']
-    return fuzzer_config['fuzzer'] + '_' + fuzzer_config['name']
-
-
-def set_up_fuzzer_config_files(fuzzer_configs):
-    """Write configurations specified by |fuzzer_configs| to yaml files that
-    will be used to store configurations."""
-    if not fuzzer_configs:
-        raise Exception('Need to provide either a list of fuzzers or '
-                        'a list of fuzzer configs.')
-    fuzzer_config_dir = os.path.join(CONFIG_DIR, 'fuzzer-configs')
-    filesystem.recreate_directory(fuzzer_config_dir)
-    for fuzzer_config in fuzzer_configs:
-        # Validate the fuzzer yaml attributes e.g. fuzzer, env, etc.
-        validate_fuzzer_config(fuzzer_config)
-        config_file_name = os.path.join(fuzzer_config_dir,
-                                        get_full_fuzzer_name(fuzzer_config))
-        yaml_utils.write(config_file_name, fuzzer_config)
-
-
 def start_experiment(experiment_name: str, config_filename: str,
-                     benchmarks: List[str], fuzzer_configs: List[dict]):
+                     benchmarks: List[str], fuzzers: List[str]):
     """Start a fuzzer benchmarking experiment."""
     check_no_local_changes()
 
@@ -256,12 +208,12 @@ def start_experiment(experiment_name: str, config_filename: str,
     validate_benchmarks(benchmarks)
 
     config = read_and_validate_experiment_config(config_filename)
+    config['fuzzers'] = ','.join(fuzzers)
     config['benchmarks'] = ','.join(benchmarks)
     config['experiment'] = experiment_name
     config['git_hash'] = get_git_hash()
 
     set_up_experiment_config_file(config)
-    set_up_fuzzer_config_files(fuzzer_configs)
 
     # Make sure we can connect to database.
     local_experiment = config.get('local_experiment', False)
@@ -514,11 +466,10 @@ def main():
             logs.error('No fuzzers changed since last experiment. Exiting.')
             return 1
     else:
-        fuzzers = args.fuzzers
-    fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers)
+        fuzzers = args.fuzzers or all_fuzzers
 
     start_experiment(args.experiment_name, args.experiment_config,
-                     args.benchmarks, fuzzer_configs)
+                     args.benchmarks, fuzzers)
     return 0
 
 
