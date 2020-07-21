@@ -37,9 +37,12 @@ class TestEndToEndRunResults:
         assert jobs['base-image'].ended_at <= jobs['base-builder'].started_at
         assert jobs['base-builder'].ended_at <= jobs['base-runner'].started_at
 
-    def test_all_jobs_finished_sucessfully(self):
-        """Fake test to be implemented later."""
-        assert True
+    def test_all_jobs_finished_successfully(self):
+        """Tests all jobs finished successully."""
+        jobs = Job.fetch_many(['base-image', 'base-builder', 'base-runner'],
+                              connection=redis.Redis(host='queue-server'))
+        for job in jobs:
+            assert job.get_status() == 'finished'
 
     def test_measurement_jobs_were_started_before_trial_jobs_finished(self):
         """Fake test to be implemented later."""
