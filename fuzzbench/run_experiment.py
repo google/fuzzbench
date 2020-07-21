@@ -36,7 +36,7 @@ def run_experiment():
         if all([job.result is not None for job in jobs]):
             break
         time.sleep(3)
-    print('All done now!')
+    print('All done!')
 
 
 def main():
