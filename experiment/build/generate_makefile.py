@@ -18,7 +18,7 @@ import argparse
 from experiment.build import docker_images
 
 
-# TODO: Add unit test for this.
+# TODO(Tanq16): Add unit test for this.
 def print_makefile(buildable_images, docker_registry):
     """Prints the generated makefile to stdout."""
     print('export DOCKER_BUILDKIT := 1')
@@ -43,14 +43,15 @@ def print_makefile(buildable_images, docker_registry):
 
 def main():
     """Generates Makefile with docker image build rules."""
-    parser = argparse.ArgumentParser(description='GCB spec generator.')
+    parser = argparse.ArgumentParser(
+        description='Makefile build rule generator.')
     parser.add_argument('-r',
                         '--docker-registry',
                         default='gcr.io/fuzzbench/',
                         help='Docker registry to use as cache.')
     args = parser.parse_args()
 
-    # TODO: Create fuzzer/benchmark list dynamically.
+    # TODO(Tanq16): Create fuzzer/benchmark list dynamically.
     fuzzers = ['afl', 'libfuzzer']
     benchmarks = ['libxml', 'libpng']
     buildable_images = docker_images.get_images_to_build(fuzzers, benchmarks)

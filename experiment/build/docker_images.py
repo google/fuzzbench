@@ -16,7 +16,7 @@
 from common import yaml_utils
 
 
-def _subst(template, fuzzer, benchmark):
+def _substitute(template, fuzzer, benchmark):
     """Replaces {fuzzer} or {benchmark} with |fuzzer| or |benchmark| in
     |template| string."""
     return template.format(fuzzer=fuzzer, benchmark=benchmark)
@@ -25,13 +25,15 @@ def _subst(template, fuzzer, benchmark):
 def _instantiate_image_obj(name_template, obj_template, fuzzer, benchmark):
     """Instantiates an image object from a template for a |fuzzer| - |benchmark|
     pair."""
-    name = _subst(name_template, fuzzer, benchmark)
+    name = _substitute(name_template, fuzzer, benchmark)
     obj = obj_template.copy()
     for key in obj:
         if key in ('build_arg', 'depends_on'):
-            obj[key] = [_subst(item, fuzzer, benchmark) for item in obj[key]]
+            obj[key] = [
+                _substitute(item, fuzzer, benchmark) for item in obj[key]
+            ]
         else:
-            obj[key] = _subst(obj[key], fuzzer, benchmark)
+            obj[key] = _substitute(obj[key], fuzzer, benchmark)
     return name, obj
 
 

@@ -20,7 +20,7 @@ import yaml
 from experiment.build import docker_images
 
 
-# TODO: Add unit test for this.
+# TODO(Tanq16): Add unit test for this.
 def create_cloud_build_spec(buildable_images, docker_registry):
     """Returns Cloud Build specificatiion."""
 
@@ -61,7 +61,7 @@ def main():
                         help='Docker registry to use.')
     args = parser.parse_args()
 
-    # TODO: Create fuzzer/benchmark list dynamically.
+    # TODO(Tanq16): Create fuzzer/benchmark list dynamically.
     fuzzers = ['afl', 'libfuzzer']
     benchmarks = ['libxml', 'libpng']
     buildable_images = docker_images.get_images_to_build(fuzzers, benchmarks)
