@@ -20,7 +20,7 @@ import time
 BASE_TAG = 'gcr.io/fuzzbench'
 
 
-def build_base_images(name: str):
+def build_image(name: str):
     """Builds a Docker image."""
     image_tag = os.path.join(BASE_TAG, name)
     subprocess.run(['docker', 'pull', image_tag], check=True)
@@ -28,18 +28,6 @@ def build_base_images(name: str):
         ['docker', 'build', '--tag', image_tag,
          os.path.join('docker', name)],
         check=True)
-
-
-def build_image(name: str):
-    """Builds a Docker image."""
-    print('Building', name)
-    if name.startswith('base'):
-        if name in ['base-image', 'base-builder', 'base-runner']:
-            build_base_images(name)
-    else:
-        subprocess.run(['docker', '--version'], check=True)
-        time.sleep(3)
-    return True
 
 
 def run_trial():
