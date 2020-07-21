@@ -52,9 +52,9 @@ SnapshotMeasureRequest = collections.namedtuple(
 NUM_RETRIES = 3
 RETRY_DELAY = 3
 FAIL_WAIT_SECONDS = 30
+COV_DIFF_QUEUE_GET_TIMEOUT = 1
 SNAPSHOT_QUEUE_GET_TIMEOUT = 1
 SNAPSHOTS_BATCH_SAVE_SIZE = 100
-RARE_THRESHOLD = 0.2
 
 
 def get_experiment_folders_dir():
@@ -98,6 +98,7 @@ def get_all_benchmark_names(experiment: str):
 
 
 def get_trial_nums(experiment: str, fuzzer: str, benchmark: str):
+    """Get numbers of all finished trials for a pair of fuzzer and benchmark"""
     experiment_trials_filter = models.Snapshot.trial.has(experiment=experiment,
                                                          fuzzer=fuzzer,
                                                          benchmark=benchmark,
@@ -115,7 +116,7 @@ def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
                               must_exist=False).retcode == 0
 
 
-def store_diff_data(experiment: str, threshold):
+def store_diff_data(experiment: str):
     """Store the differential data in cloud bucket"""
     logger.info('Start storing differential data')
     with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
@@ -124,41 +125,13 @@ def store_diff_data(experiment: str, threshold):
             covered_regions = get_all_covered_region(experiment, pool, q)
             json_src_dir = get_experiment_folders_dir()
             json_src = os.path.join(json_src_dir, 'result.json')
-            with open(json_src, 'w') as fp:
-                json.dump(covered_regions, fp)
+            with open(json_src, 'w') as src_file:
+                json.dump(covered_regions, src_file)
             json_dst = exp_path.filestore(json_src)
             filestore_utils.cp(json_src, json_dst, expect_zero=False)
         except Exception:  # pylint: disable=broad-except
             logger.error('Error occurred during differential measuring.')
     logger.info('Finished storing differential data')
-
-
-def measure_difference(experiment: str, threshold):
-    """Do the differential coverage measuring in the end"""
-    logger.info('Measuring differential coverage')
-    
-    
-
-    logger.info('Finished differential measuring.')
-
-
-def measure_rare_regions(experiment: str, threshold, pool, q):
-    """Get the regions that are covered only by less than |threshold|
-    percentage of fuzzers"""
-    
-    benchmarks = get_all_benchmark_names(experiment)
-    fuzzers = get_all_fuzzer_names(experiment)
-
-    regions_count = collections.defaultdict(list)
-    for comb in covered_regions:
-        regions = covered_regions[comb]
-        for region in regions:
-            regions_count[region].append(comb)
-    
-    rare_regions = []
-    for region in regions_count:
-        if len(regions_count[region]) <= len(fuzzers)*threshold:
-            rare_regions.append()
 
 
 def get_all_covered_region(experiment: str, pool, q) -> dict:
@@ -221,8 +194,8 @@ def get_covered_region(experiment: str, fuzzer: str, benchmark: str,
     except Exception:  # pylint: disable=broad-except
         logger.error('Error measuring covered regions.',
                      extras={
-                        'fuzzer1': fuzzer,
-                        'benchmark': benchmark,
+                         'fuzzer1': fuzzer,
+                         'benchmark': benchmark,
                      })
     logger.debug('Done measuring covered region: fuzzer: %s, benchmark: %s.',
                  fuzzer, benchmark)
@@ -233,7 +206,7 @@ def measure_main(experiment: str, max_total_time: int):
     initialize_logs()
     logger.info('Start measuring.')
     measure_loop(experiment, max_total_time)
-    store_diff_data(experiment, RARE_THRESHOLD)
+    store_diff_data(experiment)
     logger.info('Finished measuring.')
 
 
