@@ -64,7 +64,7 @@ def test_get_current_coverage(fs, experiment):
     fs.add_real_file(json_summary_file, read_only=False)
     snapshot_measurer.summary_file = json_summary_file
     covered_regions = snapshot_measurer.get_current_coverage()
-    assert covered_regions == 7
+    assert covered_regions == 8
 
 
 @mock.patch('common.new_process.execute')
@@ -125,7 +125,7 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
     snapshot_measurer.generate_summary()
 
     expected = [
-        'llvm-cov', 'export', '-format=text', '-summary-only',
+        'llvm-cov', 'export', '-format=text',
         '/work/coverage-binaries/benchmark-a/fuzz-target',
         '-instr-profile=/reports/data.profdata'
     ]
@@ -443,3 +443,21 @@ def test_path_exists_in_experiment_filestore(mocked_execute, environ):
     mocked_execute.assert_called_with(
         ['gsutil', 'ls', 'gs://cloud-bucket/example-experiment'],
         expect_zero=False)
+
+
+@mock.patch('experiment.measurer.get_trial_nums')
+@mock.patch('experiment.measurer.get_summary_file_path')
+def test_get_covered_region(mocked_get_summary_file_path, mocked_get_trial_nums,
+                            fs, experiment):
+    """Test that get_covered_region parse the json file correctly"""
+    json_summary_file = get_test_data_path('json_summary.txt')
+    fs.add_real_file(json_summary_file, read_only=False)
+    mocked_get_summary_file_path.return_value = json_summary_file
+    mocked_get_trial_nums.return_value = [1]
+    q = queue.Queue()
+    measurer.get_covered_region(experiment_utils.get_experiment_name(), FUZZER,
+                                BENCHMARK, q)
+    covered_regions = q.get()
+    print(covered_regions)
+    fuzzer_benchmark_key = measurer.get_fuzzer_benchmark_key(FUZZER, BENCHMARK)
+    assert len(covered_regions[fuzzer_benchmark_key]) == 8

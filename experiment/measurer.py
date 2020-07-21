@@ -54,6 +54,7 @@ RETRY_DELAY = 3
 FAIL_WAIT_SECONDS = 30
 SNAPSHOT_QUEUE_GET_TIMEOUT = 1
 SNAPSHOTS_BATCH_SAVE_SIZE = 100
+RARE_THRESHOLD = 0.2
 
 
 def get_experiment_folders_dir():
@@ -64,7 +65,7 @@ def get_experiment_folders_dir():
 def get_summary_file_path(fuzzer: str, benchmark: str, trial_num: int):
     """Return summary file path"""
     benchmark_fuzzer_trial_dir = experiment_utils.get_trial_dir(
-                fuzzer, benchmark, trial_num)
+        fuzzer, benchmark, trial_num)
     work_dir = experiment_utils.get_work_dir()
     measurement_dir = os.path.join(work_dir, 'measurement-folders',
                                    benchmark_fuzzer_trial_dir)
@@ -74,15 +75,14 @@ def get_summary_file_path(fuzzer: str, benchmark: str, trial_num: int):
 
 def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):
     """Return the key in coverage dict for a pair of fuzzer-benchmark"""
-    return fuzzer+'-'+benchmark
+    return fuzzer + '-' + benchmark
 
 
 def get_all_fuzzer_names(experiment: str):
     """Return all fuzzer names for the experiment"""
     fuzzers = [
-        fuzzer_tuple[0]
-        for fuzzer_tuple in db_utils.query(models.Trial.fuzzer).distinct(
-        ).filter(models.Trial.experiment == experiment)
+        fuzzer_tuple[0] for fuzzer_tuple in db_utils.query(models.Trial.fuzzer).
+        distinct().filter(models.Trial.experiment == experiment)
     ]
     return fuzzers
 
@@ -95,6 +95,18 @@ def get_all_benchmark_names(experiment: str):
         ).filter(models.Trial.experiment == experiment)
     ]
     return benchmarks
+
+
+def get_trial_nums(experiment: str, fuzzer: str, benchmark: str):
+    experiment_trials_filter = models.Snapshot.trial.has(experiment=experiment,
+                                                         fuzzer=fuzzer,
+                                                         benchmark=benchmark,
+                                                         preempted=False)
+    trial_nums = [
+        trial_id_tuple[0] for trial_id_tuple in db_utils.query(
+            models.Trial.id).distinct().filter(experiment_trials_filter)
+    ]
+    return trial_nums
 
 
 def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
@@ -110,8 +122,15 @@ def store_diff_data(experiment: str, threshold):
         q = manager.Queue()  # pytype: disable=attribute-error
         try:
             covered_regions = get_all_covered_region(experiment, pool, q)
+            json_src_dir = get_experiment_folders_dir()
+            json_src = os.path.join(json_src_dir, 'result.json')
+            with open(json_src, 'w') as fp:
+                json.dump(covered_regions, fp)
+            json_dst = exp_path.filestore(json_src)
+            filestore_utils.cp(json_src, json_dst, expect_zero=False)
         except Exception:  # pylint: disable=broad-except
             logger.error('Error occurred during differential measuring.')
+    logger.info('Finished storing differential data')
 
 
 def measure_difference(experiment: str, threshold):
@@ -149,14 +168,11 @@ def get_all_covered_region(experiment: str, pool, q) -> dict:
     benchmarks = get_all_benchmark_names(experiment)
     fuzzers = get_all_fuzzer_names(experiment)
 
-    get_covered_region_args = [
-        (experiment, fuzzer, benchmark, q)
-        for fuzzer in fuzzers
-        for benchmark in benchmarks
-    ]
+    get_covered_region_args = [(experiment, fuzzer, benchmark, q)
+                               for fuzzer in fuzzers
+                               for benchmark in benchmarks]
 
-    result = pool.starmap_async(get_covered_region,
-                                get_covered_region_args)
+    result = pool.starmap_async(get_covered_region, get_covered_region_args)
 
     # Poll the queue for covered region data and save them in a dict until the
     # pool is done processing each combination of fuzzers and benchmarks.
@@ -179,46 +195,51 @@ def get_all_covered_region(experiment: str, pool, q) -> dict:
     return all_covered_regions
 
 
-def get_covered_region(experiment: str, fuzzer: str, benchmark: str, q: multiprocessing.Queue):
+def get_covered_region(experiment: str, fuzzer: str, benchmark: str,
+                       q: multiprocessing.Queue):
     """Get the covered region for a specific pair of fuzzer-benchmark"""
     initialize_logs()
-    logger.debug('Measuring covered region: fuzzer: %s, benchmark: %s.', fuzzer, benchmark)
+    logger.debug('Measuring covered region: fuzzer: %s, benchmark: %s.', fuzzer,
+                 benchmark)
     key = get_fuzzer_benchmark_key(fuzzer, benchmark)
-    covered_regions = {key:set()}
+    covered_regions = {key: set()}
     try:
-        experiment_trials_filter = models.Snapshot.trial.has(experiment=experiment,
-                                                             fuzzer = fuzzer,
-                                                             benchmark = benchmark,
-                                                             preempted=False)
-        trial_nums = [trial_id_tuple[0] for trial_id_tuple in db_utils.query(models.Trial.id)
-                      .distinct().filter(experiment_trials_filter)
-                    ]
+        trial_nums = get_trial_nums(experiment, fuzzer, benchmark)
+        print('start', trial_nums)
         for trial_num in trial_nums:
+            print('in')
             summary_file = get_summary_file_path(fuzzer, benchmark, trial_num)
             with open(summary_file) as summary:
-                coverage_info = json.load(summary) #fix bug
-                functions_data = coverage_info["data"][1]
+                coverage_info = json.loads(summary.readlines()[-1])  #fix bug
+                functions_data = coverage_info["data"][0]['functions']
+                print(functions_data)
                 for function_data in functions_data:
                     for region in function_data["regions"]:
                         if region[4] != 0 and region[-1] == 0:
                             covered_regions[key].add(tuple(region[:4]))
         q.put(covered_regions)
     except Exception:  # pylint: disable=broad-except
-            logger.error('Error measuring covered regions.',
-                         extras={
-                             'fuzzer1': fuzzer,
-                             'benchmark': benchmark,
-                         })
+        logger.error('Error measuring covered regions.',
+                     extras={
+                        'fuzzer1': fuzzer,
+                        'benchmark': benchmark,
+                     })
     logger.debug('Done measuring covered region: fuzzer: %s, benchmark: %s.',
                  fuzzer, benchmark)
 
+
+def measure_main(experiment: str, max_total_time: int):
+    """Do the continuously measuring and the final measuring"""
+    initialize_logs()
+    logger.info('Start measuring.')
+    measure_loop(experiment, max_total_time)
+    store_diff_data(experiment, RARE_THRESHOLD)
+    logger.info('Finished measuring.')
+
+
 def measure_loop(experiment: str, max_total_time: int):
     """Continuously measure trials for |experiment|."""
-    logs.initialize(default_extras={
-        'component': 'dispatcher',
-        'subcomponent': 'measurer',
-    })
-    logs.info('Start measure_loop.')
+    logger.info('Start measure_loop.')
 
     with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
         set_up_coverage_binaries(pool, experiment)
@@ -243,7 +264,7 @@ def measure_loop(experiment: str, max_total_time: int):
 
             time.sleep(FAIL_WAIT_SECONDS)
 
-    logger.info('Finished measuring.')
+    logger.info('Finished measure_loop.')
 
 
 def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  # pylint: disable=invalid-name
@@ -538,8 +559,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         """Transform the .profdata file into json form"""
         coverage_binary = get_coverage_binary(self.benchmark)
         command = [
-            'llvm-cov', 'export', '-format=text', '-summary-only',
-            coverage_binary,
+            'llvm-cov', 'export', '-format=text', coverage_binary,
             '-instr-profile=%s' % self.profdata_file
         ]
         output_file_path = self.summary_file
