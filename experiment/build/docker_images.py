@@ -13,44 +13,42 @@
 # limitations under the License.
 """Provides the set of buildable images and their dependencies."""
 
-import yaml
+from common import yaml_utils
 
 
-def subst(template, fuzzer, benchmark):
+def _subst(template, fuzzer, benchmark):
     """Replaces {fuzzer} or {benchmark} with |fuzzer| or |benchmark| in
     |template| string."""
     return template.format(fuzzer=fuzzer, benchmark=benchmark)
 
 
-def instantiate_image_obj(name_template, obj_template, fuzzer, benchmark):
+def _instantiate_image_obj(name_template, obj_template, fuzzer, benchmark):
     """Instantiates an image object from a template for a |fuzzer| - |benchmark|
     pair."""
-    name = subst(name_template, fuzzer, benchmark)
+    name = _subst(name_template, fuzzer, benchmark)
     obj = obj_template.copy()
     for key in obj:
         if key in ('build_arg', 'depends_on'):
-            obj[key] = [subst(item, fuzzer, benchmark) for item in obj[key]]
+            obj[key] = [_subst(item, fuzzer, benchmark) for item in obj[key]]
         else:
-            obj[key] = subst(obj[key], fuzzer, benchmark)
+            obj[key] = _subst(obj[key], fuzzer, benchmark)
     return name, obj
 
 
-def get_image_type_templates():
+def _get_image_type_templates():
     """Loads the image types config that contains "templates" describing how to
     build them and their dependencies."""
-    with open('docker/image_types.yaml') as config_file:
-        templates = yaml.load(config_file, yaml.SafeLoader)
-        return templates
+    return yaml_utils.read('docker/image_types.yaml')
 
 
 def get_images_to_build(fuzzers, benchmarks):
     """Returns the set of buildable images."""
     images = {}
-    templates = get_image_type_templates()
+    templates = _get_image_type_templates()
     for fuzzer in fuzzers:
         for benchmark in benchmarks:
             for name_templ, obj_templ in templates.items():
-                name, obj = instantiate_image_obj(name_templ, obj_templ, fuzzer,
-                                                  benchmark)
+                name, obj = _instantiate_image_obj(name_templ, obj_templ,
+                                                   fuzzer, benchmark)
                 images[name] = obj
     return images

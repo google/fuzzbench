@@ -13,13 +13,15 @@
 # limitations under the License.
 """Generates Cloud Build specification"""
 
+import argparse
 import json
 import yaml
 
 from experiment.build import docker_images
 
 
-def create_cloud_build_spec(buildable_images):
+# TODO: Add unit test for this.
+def create_cloud_build_spec(buildable_images, docker_registry):
     """Returns Cloud Build specificatiion."""
 
     cloud_build_spec = {}
@@ -32,7 +34,7 @@ def create_cloud_build_spec(buildable_images):
         step['name'] = 'gcr.io/cloud-builders/docker'
         step['args'] = []
         step['args'] += ['--tag', image['tag']]
-        step['args'] += ['--cache-from', 'gcr.io/fuzzbench/' + image['tag']]
+        step['args'] += ['--cache-from', docker_registry + image['tag']]
         step['args'] += ['--build-arg', 'BUILDKIT_INLINE_CACHE=1']
         if 'build_arg' in image:
             for build_arg in image['build_arg']:
@@ -51,11 +53,20 @@ def create_cloud_build_spec(buildable_images):
 
 
 def main():
-    """Main."""
+    """Generates Cloud Build specification."""
+    parser = argparse.ArgumentParser(description='GCB spec generator.')
+    parser.add_argument('-r',
+                        '--docker-registry',
+                        default='gcr.io/fuzzbench/',
+                        help='Docker registry to use.')
+    args = parser.parse_args()
+
+    # TODO: Create fuzzer/benchmark list dynamically.
     fuzzers = ['afl', 'libfuzzer']
     benchmarks = ['libxml', 'libpng']
     buildable_images = docker_images.get_images_to_build(fuzzers, benchmarks)
-    cloud_build_spec = create_cloud_build_spec(buildable_images)
+    cloud_build_spec = create_cloud_build_spec(buildable_images,
+                                               args.docker_registry)
     # Build spec can be yaml or json, use whichever:
     # https://cloud.google.com/cloud-build/docs/configuring-builds/create-basic-configuration
     print(yaml.dump(cloud_build_spec))
