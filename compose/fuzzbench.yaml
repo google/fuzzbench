@@ -15,6 +15,9 @@ services:
     environment:
       RQ_REDIS_URL: redis://queue-server
     command: rq worker --burst
+    volumes:
+      # Allow access to the host's docker daemon.
+      - /var/run/docker.sock:/var/run/docker.sock
     links:
       - queue-server
     depends_on:

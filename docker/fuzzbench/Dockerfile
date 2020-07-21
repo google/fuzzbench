@@ -14,11 +14,24 @@
 
 FROM python:3.7
 
+# Install the docker CLI.
+ENV DOCKER_VERSION=19.03.12
+RUN wget https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz \
+ && tar xzvf docker-${DOCKER_VERSION}.tgz --strip 1 -C /usr/local/bin docker/docker \
+ && rm -rf docker-${DOCKER_VERSION}.tgz
+
 WORKDIR /fuzzbench
 
-ADD requirements.txt /fuzzbench/requirements.txt
+COPY requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 
-ADD fuzzbench/*.py /fuzzbench/
+COPY alembic.ini alembic.ini
+COPY analysis analysis
+COPY benchmarks benchmarks
+COPY common common
+COPY database database
+COPY docker docker
+COPY fuzzbench fuzzbench
+COPY fuzzers fuzzers
 
-CMD python3 -u run_experiment.py
+CMD PYTHONPATH=. python3 -u fuzzbench/run_experiment.py

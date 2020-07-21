@@ -15,22 +15,29 @@
 standalone unit test module, but used as part of our end-to-end integration
 test."""
 
+import os
 
-def test_all_jobs_finished_sucessfully():
-    """Fake test to be implemented later."""
-    assert True
-
-
-def test_measurement_jobs_were_started_before_trial_jobs_finished():
-    """Fake test to be implemented later."""
-    assert True
+import pytest
 
 
-def test_db_contains_experiment_results():
-    """Fake test to be implemented later."""
-    assert True
+# pylint: disable=no-self-use
+@pytest.mark.skipif('E2E_INTEGRATION_TEST' not in os.environ,
+                    reason='Not running end-to-end test.')
+class TestEndToEndRunResults:
+    """Checks the result of a test experiment run."""
 
+    def test_all_jobs_finished_sucessfully(self):
+        """Fake test to be implemented later."""
+        assert True
 
-def test_experiment_report_is_generated():
-    """Fake test to be implemented later."""
-    assert True
+    def test_measurement_jobs_were_started_before_trial_jobs_finished(self):
+        """Fake test to be implemented later."""
+        assert True
+
+    def test_db_contains_experiment_results(self):
+        """Fake test to be implemented later."""
+        assert True
+
+    def test_experiment_report_is_generated(self):
+        """Fake test to be implemented later."""
+        assert True
