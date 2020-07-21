@@ -42,7 +42,7 @@ def run_experiment():
                       'base-runner',
                       job_timeout=600,
                       job_id='base-runner',
-                      depends_on='base-builder'))
+                      depends_on='base-image'))
 
     while True:
         print('Current status of jobs:')

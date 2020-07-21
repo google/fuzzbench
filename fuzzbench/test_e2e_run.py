@@ -42,7 +42,7 @@ class TestEndToEndRunResults:
             for name in ['base-image', 'base-builder', 'base-runner']
         }
         assert jobs['base-image'].ended_at <= jobs['base-builder'].started_at
-        assert jobs['base-builder'].ended_at <= jobs['base-runner'].started_at
+        assert jobs['base-image'].ended_at <= jobs['base-runner'].started_at
 
     def test_all_jobs_finished_successfully(self, redis_connection):  # pylint: disable=redefined-outer-name
         """Tests all jobs finished successully."""
