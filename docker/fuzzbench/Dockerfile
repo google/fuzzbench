@@ -31,7 +31,7 @@ COPY benchmarks benchmarks
 COPY common common
 COPY database database
 COPY docker docker
-COPY fuzzbench fuzzbench
+COPY new_name new_name
 COPY fuzzers fuzzers
 
-CMD PYTHONPATH=. python3 -u fuzzbench/run_experiment.py
+CMD PYTHONPATH=. python3 -u new_name/run_experiment.py

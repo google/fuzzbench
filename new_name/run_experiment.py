@@ -18,7 +18,7 @@ import time
 import redis
 import rq
 
-from fuzzbench import fake_jobs
+from new_name import fake_jobs
 
 
 def run_experiment():
