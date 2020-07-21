@@ -21,6 +21,12 @@ import pytest
 from rq.job import Job
 
 
+@pytest.fixture
+def redis_connection():
+    """Returns the default redis server connection."""
+    return redis.Redis(host='queue-server')
+
+
 # pylint: disable=no-self-use
 @pytest.mark.skipif('E2E_INTEGRATION_TEST' not in os.environ,
                     reason='Not running end-to-end test.')
