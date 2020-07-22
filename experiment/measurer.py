@@ -123,7 +123,7 @@ def store_diff_data(experiment: str):
         try:
             covered_regions = get_all_covered_region(experiment, pool, q)
             json_src_dir = get_experiment_folders_dir()
-            json_src = os.path.join(json_src_dir, 'result.json')
+            json_src = os.path.join(json_src_dir, 'covered_regions.json')
             with open(json_src, 'w') as src_file:
                 json.dump(covered_regions, src_file)
             json_dst = exp_path.filestore(json_src)
