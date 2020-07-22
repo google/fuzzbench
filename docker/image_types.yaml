@@ -1,0 +1,113 @@
+# Defines the different types of docker images that FuzzBench uses and their
+# dependency graph.
+
+'base-image':
+  # base: "True"
+  tag: 'base-image'
+  context: 'docker/base-image'
+
+'base-builder':
+  # base: "True"
+  tag: 'base-builder'
+  context: 'docker/base-builder'
+  depends_on:
+    - 'base-image'
+
+'base-runner':
+  # base: "True"
+  tag: 'base-runner'
+  context: 'docker/base-runner'
+  depends_on:
+    - 'base-image'
+
+'dispatcher-image':
+  # base: "True"
+  tag: 'dispatcher-image'
+  context: 'docker/dispatcher-image'
+  depends_on:
+    - 'base-image'
+
+# 'coverage-builder':
+#   tag: 'builders/coverage'
+#   context: 'fuzzers/coverage'
+#   dockerfile: 'fuzzers/coverage/builder.Dockerfile'
+#   depends_on:
+#     - 'base-builder'
+
+# 'coverage-{benchmark}-builder':
+#   tag: 'builders/coverage/{benchmark}'
+#   context: '.'
+#   dockerfile: 'docker/benchmark-builder/Dockerfile'
+#   depends_on:
+#     - 'coverage-builder'
+
+'{fuzzer}-builder':
+  tag: 'builders/{fuzzer}'
+  context: 'fuzzers/{fuzzer}'
+  dockerfile: 'fuzzers/{fuzzer}/builder.Dockerfile'
+  depends_on:
+    - 'base-builder'
+
+'{fuzzer}-{benchmark}-builder':
+  tag: 'builders/{fuzzer}/{benchmark}'
+  context: '.'
+  dockerfile: 'docker/benchmark-builder/Dockerfile'
+  build_arg:
+    - 'fuzzer={fuzzer}'
+    - 'benchmark={benchmark}'
+  depends_on:
+    - '{fuzzer}-builder'
+
+'{fuzzer}-{benchmark}-intermediate-runner':
+  tag: 'runners/{fuzzer}/{benchmark}-intermediate'
+  context: 'fuzzers/{fuzzer}'
+  dockerfile: 'fuzzers/{fuzzer}/runner.Dockerfile'
+  depends_on:
+    - 'base-runner'
+
+'{fuzzer}-{benchmark}-runner':
+  tag: 'runners/{fuzzer}/{benchmark}'
+  context: '.'
+  dockerfile: 'docker/benchmark-runner/Dockerfile'
+  build_arg:
+    - 'fuzzer={fuzzer}'
+    - 'benchmark={benchmark}'
+  depends_on:
+    - '{fuzzer}-{benchmark}-builder'
+    - '{fuzzer}-{benchmark}-intermediate-runner'
+
+'{fuzzer}-{benchmark}-oss-fuzz-builder-intermediate':
+  tag: 'builders/{fuzzer}/{benchmark}-intermediate'
+  context: 'fuzzers/{fuzzer}'
+  dockerfile: 'fuzzers/{fuzzer}/builder.Dockerfile'
+  depends_on:
+    - '{benchmark}-project-builder'
+  build_arg:
+    - 'parent_image=gcr.io/fuzzbench/builders/oss-fuzz/{benchmark}'
+
+'{fuzzer}-{benchmark}-oss-fuzz-builder':
+  tag: 'builders/{fuzzer}/{benchmark}'
+  context: 'fuzzers/{fuzzer}'
+  dockerfile: 'fuzzers/{fuzzer}/builder.Dockerfile'
+  build_arg:
+    - 'parent_image=gcr.io/fuzzbench/builders/{fuzzer}/{benchmark}-intermediate' # Change here : fuzzbench-test
+    - 'fuzzer={fuzzer}'
+    - 'benchmark={benchmark}'
+    - 'checkout_commit=$({benchmark}-commit)'
+  depends_on:
+    - '{fuzzer}-{benchmark}-oss-fuzz-builder-intermediate'
+
+'{fuzzer}-{benchmark}-oss-fuzz-intermediate-runner':
+  tag: 'runners/{fuzzer}/{benchmark}-intermediate'
+  context: 'fuzzers/{fuzzer}'
+  dockerfile: 'fuzzers/{fuzzer}/runner.Dockerfile'
+  depends_on:
+    - 'base-runner'
+
+'{fuzzer}-{benchmark}-oss-fuzz-runner':
+  tag: 'runners/{fuzzer}/{benchmark}'
+  context: '.'
+  dockerfile: 'docker/oss-fuzz-runner/Dockerfile'
+  build_arg:
+    - 'fuzzer={fuzzer}'
+    - 'benchmark={benchmark}'
