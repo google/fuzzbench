@@ -91,7 +91,6 @@ def print_makefile_run_template(fuzzers, benchmarks, oss_fuzz_benchmarks):
                     base_tag=BASE_TAG
             ))
             print()
-    # print("endif\n")
     
 
 def print_oss_fuzz_benchmark_definition(oss_fuzz_benchmarks):
@@ -108,7 +107,7 @@ def print_oss_fuzz_benchmark_definition(oss_fuzz_benchmarks):
         print('\t--file benchmarks/{benchmark}/Dockerfile \\'.format(benchmark=benchmark))
         print('\t--cache-from {base_tag}/builders/oss-fuzz/{benchmark} \\'.format(benchmark=benchmark, base_tag=BASE_TAG))
         print('\t--build-arg BUILDKIT_INLINE_CACHE=1 \\')
-        print('\tbenchmarks/{benchmark}'.format(benchmark=benchmark)) # Remove this
+        print('\tbenchmarks/{benchmark}'.format(benchmark=benchmark)) # Remove this before uncommenting next 2 lines.
         # print('\tbenchmarks/{benchmark} && \\'.format(benchmark=benchmark))
         #print('\tdocker push {base_tag}/builders/oss-fuzz/{benchmark} \\'.format(benchmark=benchmark, base_tag=BASE_TAG))
         print()
@@ -160,14 +159,6 @@ def print_makefile(name, image):
 
 def main():
     """Generates Makefile with docker image build rules."""
-    # parser = argparse.ArgumentParser(
-    #     description='Makefile build rule generator.')
-    # parser.add_argument('-r',
-    #                     '--docker-registry',
-    #                     default='gcr.io/fuzzbench',
-    #                     help='Docker registry to use as cache.')
-    # args = parser.parse_args()
-    # BASE_TAG = args.docker_registry
 
     fuzzers, benchmarks, oss_fuzz_benchmarks = get_fuzzers_and_benchmarks()
 

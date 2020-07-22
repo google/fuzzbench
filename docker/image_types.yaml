@@ -2,26 +2,22 @@
 # dependency graph.
 
 'base-image':
-  # base: "True"
   tag: 'base-image'
   context: 'docker/base-image'
 
 'base-builder':
-  # base: "True"
   tag: 'base-builder'
   context: 'docker/base-builder'
   depends_on:
     - 'base-image'
 
 'base-runner':
-  # base: "True"
   tag: 'base-runner'
   context: 'docker/base-runner'
   depends_on:
     - 'base-image'
 
 'dispatcher-image':
-  # base: "True"
   tag: 'dispatcher-image'
   context: 'docker/dispatcher-image'
   depends_on:
