@@ -75,7 +75,7 @@ def initialize(experiment_config: dict):
     instance_group_name = get_instance_group_name(experiment)
 
     # GCE will create instances for this group in the format
-    # "m-$experiment-$UNIQUE_ID". Use 'm' as short for "measurer".
+    # "m-$experiment-$UNIQUE_ID". Use 'm' is short for "measurer".
     base_instance_name = 'm-' + experiment
 
     gce.create_instance_group(instance_group_name, instance_template_url,
