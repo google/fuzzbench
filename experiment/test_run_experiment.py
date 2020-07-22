@@ -193,6 +193,7 @@ def test_validate_experiment_name_invalid(experiment_name):
 def test_copy_resources_to_bucket(tmp_path):
     """Tests that copy_resources_to_bucket copies the correct resources."""
     # Do this so that Ctrl-C doesn't pollute the repo.
+    cwd = os.getcwd()
     os.chdir(tmp_path)
 
     config_dir = 'config'
@@ -200,14 +201,17 @@ def test_copy_resources_to_bucket(tmp_path):
         'experiment_filestore': 'gs://gsutil-bucket',
         'experiment': 'experiment'
     }
-    with mock.patch('common.filestore_utils.rsync') as mocked_rsync:
-        with mock.patch('common.filestore_utils.cp') as mocked_cp:
-            run_experiment.copy_resources_to_bucket(config_dir, config)
-            mocked_cp.assert_called_once_with(
-                'src.tar.gz',
-                'gs://gsutil-bucket/experiment/input/',
-                parallel=True)
-            mocked_rsync.assert_called_once_with(
-                'config',
-                'gs://gsutil-bucket/experiment/input/config',
-                parallel=True)
+    try:
+        with mock.patch('common.filestore_utils.rsync') as mocked_rsync:
+            with mock.patch('common.filestore_utils.cp') as mocked_cp:
+                run_experiment.copy_resources_to_bucket(config_dir, config)
+                mocked_cp.assert_called_once_with(
+                    'src.tar.gz',
+                    'gs://gsutil-bucket/experiment/input/',
+                    parallel=True)
+                mocked_rsync.assert_called_once_with(
+                    'config',
+                    'gs://gsutil-bucket/experiment/input/config',
+                    parallel=True)
+    finally:
+        os.chdir(cwd)
