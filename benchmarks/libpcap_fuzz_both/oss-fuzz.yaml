@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project: libpcap
+commit: d615abec7e0237299250c409dca23effb8dd36cc
+commit_date: 2020-02-12 06:46:17+00:00
 fuzz_target: fuzz_both
-oss_fuzz_builder_hash: 2fa7e5392846e391573c5e620593d86b67ccd7348bc3092f884a3d47d5e1f7e0
+project: libpcap
