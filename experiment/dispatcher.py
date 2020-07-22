@@ -23,8 +23,8 @@ import threading
 import time
 from typing import List
 
+from common import experiment_path as exp_path
 from common import experiment_utils
-from common import fuzzer_config_utils
 from common import logs
 from common import yaml_utils
 from database import models
@@ -38,6 +38,11 @@ from experiment import stop_experiment
 LOOP_WAIT_SECONDS = 5 * 60
 
 # TODO(metzman): Convert more uses of os.path.join to exp_path.path.
+
+
+def _get_config_dir():
+    """Return config directory."""
+    return exp_path.path(experiment_utils.CONFIG_DIR)
 
 
 def create_work_subdirs(subdirs: List[str]):
@@ -54,7 +59,7 @@ def _initialize_experiment_in_db(experiment_config: dict,
         db_utils.get_or_create(models.Experiment,
                                name=experiment_config['experiment'],
                                git_hash=experiment_config['git_hash'],
-                               private=experiment_config.get('private', False))
+                               private=experiment_config.get('private', True))
     ])
 
     # TODO(metzman): Consider doing this without sqlalchemy. This can get
@@ -69,11 +74,7 @@ class Experiment:  # pylint: disable=too-many-instance-attributes
         self.config = yaml_utils.read(experiment_config_filepath)
 
         self.benchmarks = self.config['benchmarks'].split(',')
-
-        self.fuzzers = [
-            fuzzer_config_utils.get_fuzzer_name(filename) for filename in
-            os.listdir(fuzzer_config_utils.get_fuzzer_configs_dir())
-        ]
+        self.fuzzers = self.config['fuzzers'].split(',')
         self.num_trials = self.config['trials']
         self.experiment_name = self.config['experiment']
         self.git_hash = self.config['git_hash']
@@ -117,7 +118,7 @@ def dispatcher_main():
     if experiment_utils.is_local_experiment():
         models.Base.metadata.create_all(db_utils.engine)
 
-    experiment_config_file_path = os.path.join(fuzzer_config_utils.get_dir(),
+    experiment_config_file_path = os.path.join(_get_config_dir(),
                                                'experiment.yaml')
     experiment = Experiment(experiment_config_file_path)
     preemptible = experiment.preemptible
@@ -168,7 +169,7 @@ def main():
     except Exception as error:
         logs.error('Error conducting experiment.')
         raise error
-    experiment_config_file_path = os.path.join(fuzzer_config_utils.get_dir(),
+    experiment_config_file_path = os.path.join(_get_config_dir(),
                                                'experiment.yaml')
 
     if experiment_utils.is_local_experiment():

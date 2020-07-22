@@ -12,15 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-experiment: test-experiment
-trials: 4
-max_total_time: 86400
-cloud_project: fuzzbench
-docker_registry: gcr.io/fuzzbench
-cloud_compute_zone: us-central1-a
-experiment_filestore: gs://experiment-data
-report_filestore: gs://web-reports
-cloud_sql_instance_connection_name: "fuzzbench:us-central1:experiment-db=tcp:5432"
-benchmarks: "benchmark-1,benchmark-2"
-fuzzers: "fuzzer-a,fuzzer-b"
-git_hash: "git-hash"
+# Example crontab file that can be used to run the service. Note that the path
+# needs to be set because cron jobs will typically use different paths than
+# users (it breaks without this). Though the SQL database can only be used by
+# Google accounts that have permission, we don't include the password here.
+
+# m h  dom mon dow   command
+00  1,13  *   *   *    export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/opt/puppetlabs/bin; export POSTGRES_PASSWORD=""; $HOME/fuzzbench/service/run.bash
