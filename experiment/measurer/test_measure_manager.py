@@ -13,27 +13,36 @@
 # limitations under the License.
 """Tests for measure_manager.py."""
 import os
+import datetime
 from unittest import mock
 import queue
 
 import pytest
 
 from common import new_process
+from database import models
+from database import utils as db_utils
 from experiment.measurer import measure_manager
 
 MAX_TOTAL_TIME = 100
+ARBITRARY_DATETIME = datetime.datetime(2020, 1, 1)
+EXPERIMENT_NAME = 'experiment'
+FUZZER = 'fuzzer'
+BENCHMARK = 'benchmark'
 
 # pylint: disable=unused-argument,invalid-name
 
 
 @mock.patch('common.filestore_utils.ls')
-@mock.patch('common.filestore_utils.cp')
-def test_measure_all_trials_not_ready(mocked_cp, mocked_ls, experiment,
-                                      experiment_config, db):
+@mock.patch(
+    'experiment.measurer.measure_manager.MeasureJobManager.run_scheduler')
+def test_measure_all_trials_not_ready(mocked_run_scheduler, mocked_ls,
+                                      experiment, experiment_config, db):
     """Test running measure_all_trials before it can start measuring."""
     mocked_ls.return_value = new_process.ProcessResult(1, '', False)
-    assert measure_manager.measure_all_trials(experiment_config, queue.Queue())
-    assert not mocked_cp.called
+    manager = measure_manager.MeasureJobManager(experiment_config, queue)
+    assert measure_manager.measure_all_trials(manager)
+    assert not mocked_run_scheduler.called
 
 
 @mock.patch('common.new_process.execute')
@@ -45,8 +54,8 @@ def test_measure_all_trials_no_more(mocked_directories_have_same_files,
     done."""
     mocked_directories_have_same_files.return_value = True
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
-    assert not measure_manager.measure_all_trials(experiment_config,
-                                                  queue.Queue())
+    manager = measure_manager.MeasureJobManager(experiment_config, queue)
+    assert not measure_manager.measure_all_trials(manager)
 
 
 @mock.patch('experiment.schedule_measure_workers.teardown')
@@ -84,3 +93,23 @@ def test_path_exists_in_experiment_filestore(mocked_execute, environ):
     mocked_execute.assert_called_with(
         ['gsutil', 'ls', 'gs://cloud-bucket/example-experiment'],
         expect_zero=False)
+
+
+def test_trial_ended(db):
+    """Tests that trial_ended returns the correct value for a trial that has
+    ended and that it returns the correct value for a trial that has not
+    ended."""
+    db_utils.add_all([models.Experiment(name=EXPERIMENT_NAME)])
+    ended_trial = models.Trial(experiment=EXPERIMENT_NAME,
+                               benchmark=BENCHMARK,
+                               fuzzer=FUZZER,
+                               time_started=ARBITRARY_DATETIME,
+                               time_ended=ARBITRARY_DATETIME)
+
+    not_ended_trial = models.Trial(experiment=EXPERIMENT_NAME,
+                                   benchmark=BENCHMARK,
+                                   fuzzer=FUZZER,
+                                   time_started=ARBITRARY_DATETIME)
+    db_utils.add_all([ended_trial, not_ended_trial])
+    assert measure_manager.trial_ended(ended_trial.id)
+    assert not measure_manager.trial_ended(not_ended_trial.id)
