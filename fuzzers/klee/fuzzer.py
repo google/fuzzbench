@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Integration code for AFL fuzzer."""
+# pylint: disable=too-many-arguments
 
 import shutil
 import os
@@ -127,7 +128,7 @@ def get_fuzz_target():
     out_dir = os.environ['OUT']
     if is_benchmark('sqlite3'):
         return os.path.join(out_dir, 'ossfuzz')
-    
+
     if is_benchmark('zlib'):
         return os.path.join(out_dir, 'zlib_uncompress_fuzzer')
 
@@ -164,7 +165,7 @@ def emptydir(path):
     rmdir(path)
     os.mkdir(path)
 
-
+# pylint: disable=too-many-locals
 def run(command, hide_output=False, ulimit_cmd=None):
     """Run the command |command|, optionally, run |ulimit_cmd| first."""
     cmd = ' '.join(command)
@@ -210,8 +211,17 @@ def covert_seed_inputs(ktest_tool, input_klee, input_corpus):
         if not os.path.isfile(seedfile):
             continue
 
-        if os.path.getsize(seedfile) > get_size_for_benchmark():
-            continue
+        # Truncate the seed to the max size for the benchmark
+        file_size = os.path.getsize(seedfile)
+        benchmark_size = get_size_for_benchmark()
+        if file_size > benchmark_size:
+            print(
+                '[run_fuzzer] Truncating {path} ({file_size}) to \
+                    {benchmark_size}'
+                .format(path=seedfile,
+                        file_size=file_size,
+                        benchmark_size=benchmark_size))
+            os.truncate(seedfile, benchmark_size)
 
         seed_in = '{seed}.ktest'.format(seed=seedfile)
         seed_out = os.path.join(input_klee, os.path.basename(seed_in))
@@ -247,7 +257,8 @@ def covert_seed_inputs(ktest_tool, input_klee, input_corpus):
 
     return n_converted
 
-
+# pylint: disable=wrong-import-position
+# pylint: disable=too-many-locals
 def convert_individual_ktest(ktest_tool, kfile, queue_dir, output_klee,
                              crash_dir, info_dir):
     """
