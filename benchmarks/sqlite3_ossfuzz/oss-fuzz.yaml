@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project: sqlite3
+commit:
+commit_date: 2020-06-24 15:40:08+00:00
 fuzz_target: ossfuzz
-oss_fuzz_builder_hash: 884fa73c8be6d727999fa0d8dd8c6f36122ffd5d3fcb3961a9de4ba83c2787b9
+project: sqlite3

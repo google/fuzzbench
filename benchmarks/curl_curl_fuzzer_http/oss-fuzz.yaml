@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project: curl
+commit: e0363a47de4972c7d23d87b8f75a683cf0c4271b
+commit_date: 2019-11-18 15:40:08+00:00
 fuzz_target: curl_fuzzer_http
-oss_fuzz_builder_hash: fc0c75e2d3457542b9f498c50990d688eebc8dbd3cc77581ef00e72454485b9d
+project: curl

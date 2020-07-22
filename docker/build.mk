@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 OSS_FUZZ_BENCHMARKS := $(notdir $(shell find benchmarks -type f -name oss-fuzz.yaml | xargs dirname))
 
 BASE_TAG ?= gcr.io/fuzzbench
@@ -66,9 +65,16 @@ $(1)-project-name := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
                              grep project | cut -d ':' -f2 | tr -d ' ')
 $(1)-fuzz-target  := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
                              grep fuzz_target | cut -d ':' -f2 | tr -d ' ')
-$(1)-oss-fuzz-builder-hash := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
-                                      grep oss_fuzz_builder_hash | \
-                                      cut -d ':' -f2 | tr -d ' ')
+$(1)-commit := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
+                           grep commit: | cut -d ':' -f2 | tr -d ' ')
+
+.$(1)-project-builder:
+	docker build \
+    --tag $(BASE_TAG)/builders/oss-fuzz/$(1) \
+    --file benchmarks/$(1)/Dockerfile \
+    $(call cache_from,${BASE_TAG}/builders/oss-fuzz/$(1)) \
+    benchmarks/$(1)
+
 endef
 # Instantiate the above template with all OSS-Fuzz benchmarks.
 $(foreach oss_fuzz_benchmark,$(OSS_FUZZ_BENCHMARKS), \
