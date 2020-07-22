@@ -87,7 +87,7 @@
 
 '{fuzzer}-{benchmark}-oss-fuzz-builder':
   tag: 'builders/{fuzzer}/{benchmark}'
-  context: 'fuzzers/{fuzzer}'
+  context: '.'
   dockerfile: 'docker/oss-fuzz-builder/Dockerfile'
   build_arg:
     - 'parent_image=gcr.io/fuzzbench/builders/{fuzzer}/{benchmark}-intermediate' # Change here : fuzzbench-test
