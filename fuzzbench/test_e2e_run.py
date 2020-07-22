@@ -18,17 +18,38 @@ test."""
 import os
 
 import pytest
+import redis
+from rq.job import Job
+
+
+@pytest.fixture(scope='class')
+def redis_connection():
+    """Returns the default redis server connection."""
+    return redis.Redis(host='queue-server')
 
 
 # pylint: disable=no-self-use
 @pytest.mark.skipif('E2E_INTEGRATION_TEST' not in os.environ,
                     reason='Not running end-to-end test.')
+@pytest.mark.usefixtures('redis_connection')
 class TestEndToEndRunResults:
     """Checks the result of a test experiment run."""
 
-    def test_all_jobs_finished_sucessfully(self):
-        """Fake test to be implemented later."""
-        assert True
+    def test_jobs_dependency(self, redis_connection):  # pylint: disable=redefined-outer-name
+        """Tests that jobs dependency preserves during working."""
+        jobs = {
+            name: Job.fetch(name, connection=redis_connection)
+            for name in ['base-image', 'base-builder', 'base-runner']
+        }
+        assert jobs['base-image'].ended_at <= jobs['base-builder'].started_at
+        assert jobs['base-image'].ended_at <= jobs['base-runner'].started_at
+
+    def test_all_jobs_finished_successfully(self, redis_connection):  # pylint: disable=redefined-outer-name
+        """Tests all jobs finished successully."""
+        jobs = Job.fetch_many(['base-image', 'base-builder', 'base-runner'],
+                              connection=redis_connection)
+        for job in jobs:
+            assert job.get_status() == 'finished'
 
     def test_measurement_jobs_were_started_before_trial_jobs_finished(self):
         """Fake test to be implemented later."""
