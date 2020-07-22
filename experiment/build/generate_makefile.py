@@ -146,13 +146,13 @@ def print_makefile(name, image):
     print()
     print('\tdocker build \\')
     print('\t--tag ' + image['tag'] + ' \\')
-    print('\t--cache-from ' + BASE_TAG + '/' + image['tag'] + ' \\')
     print('\t--build-arg BUILDKIT_INLINE_CACHE=1 \\')
     if 'build_arg' in image:
         for arg in image['build_arg']:
             print('\t--build-arg ' + arg + ' \\')
     if 'dockerfile' in image:
         print('\t--file ' + image['dockerfile'] + ' \\')
+    print('\t--cache-from ' + BASE_TAG + '/' + image['tag'] + ' \\')
     print('\t' + image['context']) # + ' && \\')
     #print('\tdocker push ' + BASE_TAG + '/' + image['tag'])
     print()
