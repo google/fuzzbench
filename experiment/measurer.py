@@ -100,11 +100,11 @@ def get_all_benchmark_names(experiment: str):
 def get_trial_nums(experiment: str, fuzzer: str, benchmark: str):
     """Get numbers of all finished trials for a pair of fuzzer and benchmark"""
     trial_nums = [
-        trial_id_tuple[0] for trial_id_tuple in db_utils.query(
-            models.Trial.id).distinct().filter(models.Trial.experiment == experiment,
-                                               models.Trial.fuzzer == fuzzer,
-                                               models.Trial.benchmark == benchmark,
-                                               models.Trial.preempted == False)
+        trial_id_tuple[0]
+        for trial_id_tuple in db_utils.query(models.Trial.id).distinct().filter(
+            models.Trial.experiment == experiment, models.Trial.fuzzer ==
+            fuzzer, models.Trial.benchmark == benchmark,
+            ~models.Trial.preempted)
     ]
     return trial_nums
 
@@ -119,8 +119,8 @@ def eliminate_set(dictionary):
     """Transform the set structure to list so we can use json.dumps"""
     for key in dictionary:
         dictionary[key] = list(dictionary[key])
-    
-    
+
+
 def store_diff_data(experiment: str):
     """Store the differential data in cloud bucket"""
     logger.info('Start storing differential data')
@@ -168,7 +168,7 @@ def get_all_covered_region(experiment: str, pool, q) -> dict:
                 logger.debug(
                     'Finished call to map with get_all_covered_region.')
                 break
-    
+
     eliminate_set(all_covered_regions)
     logger.info('Done measuring all differential data.')
     return all_covered_regions
