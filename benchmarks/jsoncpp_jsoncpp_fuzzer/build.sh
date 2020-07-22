@@ -1,4 +1,5 @@
-# Copyright 2020 Google LLC
+#!/bin/bash -eu
+# Copyright 2018 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,8 +12,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+################################################################################
 
-commit: e0363a47de4972c7d23d87b8f75a683cf0c4271b
-commit_date: 2019-11-18 15:40:08+00:00
-fuzz_target: curl_fuzzer_http
-project: curl
+mkdir -p build
+cd build
+cmake -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+      -DBUILD_SHARED_LIBS=OFF -G "Unix Makefiles" ..
+make
+
+# Compile fuzzer.
+$CXX $CXXFLAGS -I../include $LIB_FUZZING_ENGINE \
+    ../src/test_lib_json/fuzz.cpp -o $OUT/jsoncpp_fuzzer \
+    src/lib_json/libjsoncpp.a
+
+# Add dictionary.
+cp $SRC/jsoncpp/src/test_lib_json/fuzz.dict $OUT/jsoncpp_fuzzer.dict

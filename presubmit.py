@@ -63,6 +63,7 @@ _SRC_ROOT = Path(__file__).absolute().parent
 _IGNORE_DIRECTORIES = [
     os.path.join(_SRC_ROOT, 'database', 'alembic'),
     os.path.join(_SRC_ROOT, 'third_party'),
+    os.path.join(_SRC_ROOT, 'benchmarks'),
 ]
 
 BASE_PYTEST_COMMAND = ['python3', '-m', 'pytest', '-vv']
