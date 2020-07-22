@@ -17,9 +17,9 @@ FROM $parent_image
 
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/puppet-meteor/MOpt-AFL /afl && \
-    cd /afl && cd MOpt && \
+    cd /afl && \
     git checkout 45b9f38d2d8b699fd571cfde1bf974974339a21e && \
-    AFL_NO_X86=1 make && \
+    cd MOpt && AFL_NO_X86=1 make && \
     cp afl-fuzz ..
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
