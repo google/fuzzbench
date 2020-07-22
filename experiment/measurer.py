@@ -115,6 +115,12 @@ def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
                               must_exist=False).retcode == 0
 
 
+def eliminate_set(dictionary):
+    """Transform the set structure to list so we can use json.dumps"""
+    for key in dictionary:
+        dictionary[key] = list(dictionary[key])
+    
+    
 def store_diff_data(experiment: str):
     """Store the differential data in cloud bucket"""
     logger.info('Start storing differential data')
@@ -162,7 +168,8 @@ def get_all_covered_region(experiment: str, pool, q) -> dict:
                 logger.debug(
                     'Finished call to map with get_all_covered_region.')
                 break
-
+    
+    eliminate_set(all_covered_regions)
     logger.info('Done measuring all differential data.')
     return all_covered_regions
 
