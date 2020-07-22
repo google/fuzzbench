@@ -194,16 +194,27 @@ def test_changed_integrations(paths: List[Path]):
     return retcode == 0
 
 
-def lint(paths: List[Path]) -> bool:
-    """Run python's linter on |paths| if it is a python file. Return False if it
-    fails linting."""
-    paths = [path for path in paths if is_python(path)]
-    paths = filter_migrations(paths)
-    if not paths:
-        return True
+def lint(_: List[Path]) -> bool:
+    """Run python's linter on all python code. Return False if it fails
+    linting."""
+
+    to_check = [
+        'analysis',
+        'common',
+        'database',
+        'docker',
+        'experiment',
+        'fuzzbench',
+        'fuzzers',
+        'service',
+        'src_analysis',
+        'test_libs',
+        '.github/workflows/build_and_test_run_fuzzer_benchmarks.py',
+        'presubmit.py',
+    ]
 
     command = ['python3', '-m', 'pylint', '-j', '0']
-    command.extend(paths)
+    command.extend(to_check)
     returncode = subprocess.run(command, check=False).returncode
     return returncode == 0
 
