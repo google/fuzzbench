@@ -127,10 +127,10 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/measure-worker',
+    'gcr.io/fuzzbench/measure-worker:${_EXPERIMENT}',
 
     '--tag',
-    '${_REPO}/measure-worker',
+    '${_REPO}/measure-worker:${_EXPERIMENT}',
 
     '--cache-from',
     '${_REPO}/measure-worker',
@@ -148,4 +148,4 @@ images:
   - '${_REPO}/base-image:${_EXPERIMENT}'
   - '${_REPO}/base-builder:${_EXPERIMENT}'
   - '${_REPO}/base-runner:${_EXPERIMENT}'
-  - '${_REPO}/measure-worker${_EXPERIMENT}'
+  - '${_REPO}/measure-worker:${_EXPERIMENT}'
