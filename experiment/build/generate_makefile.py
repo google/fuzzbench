@@ -145,7 +145,7 @@ def print_makefile(name, image):
             print(' ' + dep, end='')
     print()
     print('\tdocker build \\')
-    print('\t--tag ' + image['tag'] + ' \\')
+    print('\t--tag ' + BASE_TAG + '/' + image['tag'] + ' \\')
     print('\t--cache-from ' + BASE_TAG + '/' + image['tag'] + ' \\')
     print('\t--build-arg BUILDKIT_INLINE_CACHE=1 \\')
     if 'build_arg' in image:
