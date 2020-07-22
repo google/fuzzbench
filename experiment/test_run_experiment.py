@@ -19,7 +19,6 @@ import unittest
 
 import pytest
 
-from common import fuzzer_utils
 from experiment import run_experiment
 
 BENCHMARKS_DIR = os.path.abspath(
@@ -161,42 +160,6 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
                     read_and_validate_experiment_config('config_file'))
 
 
-def test_validate_fuzzer_config():
-    """Tests that validate_fuzzer_config says that a valid fuzzer config name is
-    valid and that an invalid one is not."""
-    config = {'fuzzer': 'afl', 'name': 'name', 'env': {'a': 'b'}}
-    run_experiment.validate_fuzzer_config(config)
-
-    with pytest.raises(Exception) as exception:
-        config['fuzzer'] = 'afl:'
-        run_experiment.validate_fuzzer_config(config)
-    assert 'may only contain' in str(exception.value)
-
-    with pytest.raises(Exception) as exception:
-        config['fuzzer'] = 'not_exist'
-        run_experiment.validate_fuzzer_config(config)
-    assert 'does not exist' in str(exception.value)
-    config['fuzzer'] = 'afl'
-
-    with pytest.raises(Exception) as exception:
-        config['invalid_key'] = 'invalid'
-        run_experiment.validate_fuzzer_config(config)
-    assert 'Invalid entry' in str(exception.value)
-    del config['invalid_key']
-
-    with pytest.raises(Exception) as exception:
-        config['env'] = []
-        run_experiment.validate_fuzzer_config(config)
-    assert 'must be a dict' in str(exception.value)
-
-
-def test_variant_configs_valid():
-    """Ensure that all variant configs (variants.yaml files) are valid."""
-    fuzzer_configs = fuzzer_utils.get_fuzzer_configs()
-    for config in fuzzer_configs:
-        run_experiment.validate_fuzzer_config(config)
-
-
 def test_validate_fuzzer():
     """Tests that validate_fuzzer says that a valid fuzzer name is valid and
     that an invalid one is not."""
@@ -219,18 +182,19 @@ def test_validate_experiment_name_valid():
 
 @pytest.mark.parametrize(('experiment_name',), [('a' * 100,), ('abc_',)])
 def test_validate_experiment_name_invalid(experiment_name):
-    """Tests that validate_fuzzer_config raises an exception when passed passed
-    |experiment_name|, an invalid experiment name."""
+    """Tests that validate_experiment_name raises an exception when passed an
+    an invalid experiment name."""
     with pytest.raises(Exception) as exception:
         run_experiment.validate_experiment_name(experiment_name)
     assert 'is invalid. Must match' in str(exception.value)
 
 
 # This test takes up to a minute to complete.
-@pytest.mark.long
+@pytest.mark.slow
 def test_copy_resources_to_bucket(tmp_path):
     """Tests that copy_resources_to_bucket copies the correct resources."""
     # Do this so that Ctrl-C doesn't pollute the repo.
+    cwd = os.getcwd()
     os.chdir(tmp_path)
 
     config_dir = 'config'
@@ -238,14 +202,17 @@ def test_copy_resources_to_bucket(tmp_path):
         'experiment_filestore': 'gs://gsutil-bucket',
         'experiment': 'experiment'
     }
-    with mock.patch('common.filestore_utils.rsync') as mocked_rsync:
-        with mock.patch('common.filestore_utils.cp') as mocked_cp:
-            run_experiment.copy_resources_to_bucket(config_dir, config)
-            mocked_cp.assert_called_once_with(
-                'src.tar.gz',
-                'gs://gsutil-bucket/experiment/input/',
-                parallel=True)
-            mocked_rsync.assert_called_once_with(
-                'config',
-                'gs://gsutil-bucket/experiment/input/config',
-                parallel=True)
+    try:
+        with mock.patch('common.filestore_utils.rsync') as mocked_rsync:
+            with mock.patch('common.filestore_utils.cp') as mocked_cp:
+                run_experiment.copy_resources_to_bucket(config_dir, config)
+                mocked_cp.assert_called_once_with(
+                    'src.tar.gz',
+                    'gs://gsutil-bucket/experiment/input/',
+                    parallel=True)
+                mocked_rsync.assert_called_once_with(
+                    'config',
+                    'gs://gsutil-bucket/experiment/input/config',
+                    parallel=True)
+    finally:
+        os.chdir(cwd)

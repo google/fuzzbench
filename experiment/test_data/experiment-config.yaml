@@ -22,5 +22,6 @@ experiment_filestore: gs://experiment-data
 report_filestore: gs://web-reports
 cloud_sql_instance_connection_name: "fuzzbench:us-central1:experiment-db=tcp:5432"
 benchmarks: "benchmark-1,benchmark-2"
+fuzzers: "fuzzer-a,fuzzer-b"
 git_hash: "git-hash"
 redis_host: "127.0.0.1"

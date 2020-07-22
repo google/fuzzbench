@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-## Configure the host.
+# Configure the host.
 
 # Make everything ptrace-able.
 echo 0 > /proc/sys/kernel/yama/ptrace_scope
@@ -21,7 +21,7 @@ echo 0 > /proc/sys/kernel/yama/ptrace_scope
 # Do not notify external programs about core dumps.
 echo core >/proc/sys/kernel/core_pattern
 
-## Start docker.
+# Start docker.
 {% if not local_experiment %}
 while ! docker pull {{docker_image_url}}
 do
@@ -41,6 +41,6 @@ docker run \
 -e REPORT_FILESTORE={{report_filestore}} {% if local_experiment %}-v {{report_filestore}}:{{report_filestore}} {% endif %}\
 -e FUZZ_TARGET={{fuzz_target}} \
 -e LOCAL_EXPERIMENT={{local_experiment}} \
-{{additional_env}} {% if not local_experiment %}--name=runner-container {% endif %}\
+{% if not local_experiment %}--name=runner-container {% endif %}\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \
 {{docker_image_url}} 2>&1 | tee /tmp/runner-log.txt

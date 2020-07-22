@@ -14,6 +14,7 @@
 # limitations under the License.
 """A module containing the interface used by an experiment for generating
 reports."""
+import posixpath
 
 from common import experiment_utils
 from common import experiment_path as exp_path
@@ -31,19 +32,30 @@ def get_reports_dir():
     return exp_path.path('reports')
 
 
-def output_report(web_bucket, in_progress=False):
+def output_report(experiment_config: dict, in_progress=False):
     """Generate the HTML report and write it to |web_bucket|."""
     experiment_name = experiment_utils.get_experiment_name()
+    web_filestore_path = posixpath.join(experiment_config['report_filestore'],
+                                        experiment_name)
+
     reports_dir = get_reports_dir()
+
+    # Don't merge with nonprivate experiments until the very end as doing it
+    # while the experiment is in progress will produce unusable realtime
+    # results.
+    merge_with_nonprivate = (not in_progress and experiment_config.get(
+        'merge_with_nonprivate', False))
 
     try:
         logger.debug('Generating report.')
         filesystem.recreate_directory(reports_dir)
-        generate_report.generate_report([experiment_name],
-                                        str(reports_dir),
-                                        in_progress=in_progress)
+        generate_report.generate_report(
+            [experiment_name],
+            str(reports_dir),
+            in_progress=in_progress,
+            merge_with_clobber_nonprivate=merge_with_nonprivate)
         filestore_utils.rsync(str(reports_dir),
-                              web_bucket,
+                              web_filestore_path,
                               gsutil_options=[
                                   '-h',
                                   'Cache-Control:public,max-age=0,no-transform'

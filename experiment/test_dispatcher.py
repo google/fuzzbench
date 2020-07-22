@@ -17,9 +17,7 @@ import os
 from unittest import mock
 
 import pytest
-import yaml
 
-from common import fuzzer_config_utils
 from database import models
 from database import utils as db_utils
 from experiment import dispatcher
@@ -34,9 +32,6 @@ SANCOV_DIR = '/sancov'
 def get_test_data_path(*subpaths):
     """Returns the path of |subpaths| relative to TEST_DATA_PATH."""
     return os.path.join(TEST_DATA_PATH, *subpaths)
-
-
-FUZZERS = ['fuzzer-a', 'fuzzer-b']
 
 
 def mock_split_successes_and_failures(inputs, results):
@@ -55,10 +50,6 @@ def dispatcher_experiment(fs, db, experiment):
     fs.create_dir(os.environ['WORK'])
     experiment_config_filepath = get_test_data_path('experiment-config.yaml')
     fs.add_real_file(experiment_config_filepath)
-    for fuzzer in FUZZERS:
-        fs.create_file(os.path.join(
-            fuzzer_config_utils.get_fuzzer_configs_dir(), fuzzer),
-                       contents=yaml.dump({'fuzzer': fuzzer}))
     return dispatcher.Experiment(experiment_config_filepath)
 
 
@@ -66,9 +57,7 @@ def dispatcher_experiment(fs, db, experiment):
 def test_experiment(dispatcher_experiment):
     """Tests creating an Experiment object."""
     assert dispatcher_experiment.benchmarks == ['benchmark-1', 'benchmark-2']
-    assert dispatcher_experiment.fuzzers == FUZZERS
-    assert (
-        dispatcher_experiment.web_bucket == 'gs://web-reports/test-experiment')
+    assert dispatcher_experiment.fuzzers == ['fuzzer-a', 'fuzzer-b']
 
 
 def test_initialize_experiment_in_db(dispatcher_experiment):
@@ -83,9 +72,8 @@ def test_initialize_experiment_in_db(dispatcher_experiment):
                      benchmark=benchmark)
         for benchmark, _, fuzzer in trials_args
     ]
-    dispatcher._initialize_experiment_in_db(
-        dispatcher_experiment.experiment_name, dispatcher_experiment.git_hash,
-        trials)
+    dispatcher._initialize_experiment_in_db(dispatcher_experiment.config,
+                                            trials)
     db_experiments = db_utils.query(models.Experiment).all()
     assert len(db_experiments) == 1
     db_experiment = db_experiments[0]

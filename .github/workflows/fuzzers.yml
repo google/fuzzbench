@@ -27,7 +27,6 @@ jobs:
           - honggfuzz
           - lafintel
           - libfuzzer
-          - libfuzzer_nocmp
           - manul
           - mopt
           # Binary-only (greybox) fuzzers.
@@ -35,12 +34,6 @@ jobs:
           - afl_qemu
           - aflplusplus_qemu
           - honggfuzz_qemu
-          # Temporary variants.
-          - aflplusplus_lto_dict
-          - aflplusplus_lto
-          - aflplusplus_ltoinstrim
-          - aflplusplus_ctx
-          - aflplusplus_ngram2
 
         benchmark_type:
           - oss-fuzz

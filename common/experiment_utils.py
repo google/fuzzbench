@@ -19,6 +19,7 @@ import posixpath
 from common import environment
 
 DEFAULT_SNAPSHOT_SECONDS = 15 * 60  # Seconds.
+CONFIG_DIR = 'config'
 
 
 def get_snapshot_seconds():

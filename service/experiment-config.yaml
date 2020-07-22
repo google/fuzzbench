@@ -11,5 +11,12 @@ experiment_filestore: gs://fuzzbench-data
 report_filestore: gs://www.fuzzbench.com/reports
 cloud_sql_instance_connection_name: "fuzzbench:us-central1:postgres-experiment-db=tcp:5432"
 preemptible_runners: true
-# TODO(metzman): Fill out the IP of the redis instance for our GCP project.
-redis_host: "127.0.0.1"
+redis_host: "10.146.212.171"
+
+# This experiment should generate a report that is combined with other public
+# "production" experiments.
+merge_with_nonprivate: true
+
+# This experiment should be merged with other reports in later experiments.
+private: false
+

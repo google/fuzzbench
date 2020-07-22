@@ -59,11 +59,6 @@ class FuzzerDirectory:
         return os.path.join(self.directory, 'builder.Dockerfile')
 
     @property
-    def variants_yaml(self):
-        """Returns the path to the variants.yaml file in fuzzer directory."""
-        return os.path.join(self.directory, 'variants.yaml')
-
-    @property
     def dockerfiles(self):
         """Returns a list of paths to the runner and builder dockerfiles in the
         fuzzer directory."""
@@ -121,55 +116,15 @@ def validate(fuzzer):
         return False
 
 
-def get_fuzzer_from_config(fuzzer_config: dict) -> str:
-    """Returns the fuzzer of |fuzzer_config| for a non-variant fuzzer or returns
-    the name for a fuzzer variant."""
-    return fuzzer_config.get('name', fuzzer_config['fuzzer'])
-
-
 def get_fuzzer_names():
     """Returns a list of names of all fuzzers."""
-    return [get_fuzzer_from_config(config) for config in get_fuzzer_configs()]
-
-
-def get_fuzzer_configs(fuzzers=None):
-    """Returns the list of all fuzzer and variant configurations."""
-    # Import it here to avoid yaml dependency in runner.
-    # pylint: disable=import-outside-toplevel
-    from common import yaml_utils
-
     fuzzers_dir = os.path.join(utils.ROOT_DIR, 'fuzzers')
-    fuzzer_configs = []
-    names = set()
+    fuzzers = []
     for fuzzer in os.listdir(fuzzers_dir):
         if not os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')):
             continue
         if fuzzer in COVERAGE_TOOLS:
             continue
+        fuzzers.append(fuzzer)
 
-        if fuzzers is None or fuzzer in fuzzers:
-            # Auto-generate the default configuration for each underlying
-            # fuzzer.
-            fuzzer_configs.append({'fuzzer': fuzzer})
-
-        variant_config_path = os.path.join(fuzzers_dir, fuzzer, 'variants.yaml')
-        if not os.path.isfile(variant_config_path):
-            continue
-
-        variant_config = yaml_utils.read(variant_config_path)
-        assert 'variants' in variant_config, (
-            'Missing "variants" section of {}'.format(variant_config_path))
-        for variant in variant_config['variants']:
-            if fuzzers is None or variant['name'] in fuzzers:
-                assert 'name' in variant, (
-                    'Missing name attribute for fuzzer variant in {}'.format(
-                        variant_config_path))
-                variant['fuzzer'] = fuzzer
-                fuzzer_configs.append(variant)
-
-            name = variant['name'] if 'name' in variant else variant['fuzzer']
-            assert name not in names, (
-                'Multiple fuzzers/variants have the same name: ' + name)
-            names.add(name)
-
-    return fuzzer_configs
+    return fuzzers

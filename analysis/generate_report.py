@@ -97,6 +97,14 @@ def get_arg_parser():
               'get a report of all trials in "A" except for afl++ and all the '
               'trials from "B". "Later experiments" are those whose names come '
               'later when passed to this script.'))
+    mutually_exclusive_group.add_argument(
+        '-p',
+        '--merge-with-clobber-nonprivate',
+        action='store_true',
+        default=False,
+        help=('Does --merge-with-clobber but includes all experiments that are '
+              'not private. See help for --merge-with-clobber for more '
+              'details.'))
     parser.add_argument(
         '-c',
         '--from-cached-data',
@@ -121,8 +129,14 @@ def generate_report(experiment_names,
                     from_cached_data=False,
                     in_progress=False,
                     end_time=None,
-                    merge_with_clobber=False):
+                    merge_with_clobber=False,
+                    merge_with_clobber_nonprivate=False):
     """Generate report helper."""
+    if merge_with_clobber_nonprivate:
+        experiment_names = (
+            queries.add_nonprivate_experiments_for_merge_with_clobber(
+                experiment_names))
+
     report_name = report_name or experiment_names[0]
 
     filesystem.create_directory(report_directory)
