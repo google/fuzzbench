@@ -159,7 +159,6 @@ def print_makefile(name, image):
 
 def main():
     """Generates Makefile with docker image build rules."""
-
     fuzzers, benchmarks, oss_fuzz_benchmarks = get_fuzzers_and_benchmarks()
 
     buildable_images = docker_images.get_images_to_build(fuzzers, benchmarks)

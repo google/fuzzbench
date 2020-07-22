@@ -32,7 +32,6 @@ run-end-to-end-test:
 	docker-compose run run-tests; STATUS=$$?; \
 	docker-compose down; exit $$STATUS
 
-#include docker/build.mk
 include docker/generated.mk
 
 SHELL := /bin/bash
