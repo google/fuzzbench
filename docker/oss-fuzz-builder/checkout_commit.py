@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Script for checking out a commit in an OSS-Fuzz project's repo."""
+# TODO(tanq16): Remove dependancy on this script to checkout commit.
+# (Integrator can manually edit Dockerfile to checkout).
 import os
 import sys
 import subprocess
@@ -39,7 +41,6 @@ def checkout_repo_commit(commit, repo_dir):
     """Checkout |commit| in |repo_dir|."""
     fetch_unshallow(repo_dir)
     # TODO(metzman): Figure out if we need to run clean.
-    # TODO(tanq16): Checkout the commit by moifying Dockerfile.
     return git(['checkout', '-f', commit], repo_dir)
 
 
