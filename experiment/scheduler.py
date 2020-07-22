@@ -714,8 +714,9 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
                                    experiment_config: dict):
     """Render the startup script using the template and the parameters
     provided and return the result."""
+    experiment = experiment_config['experiment']
     docker_image_url = benchmark_utils.get_runner_image_url(
-        benchmark, fuzzer, experiment_config['docker_registry'])
+        experiment, benchmark, fuzzer, experiment_config['docker_registry'])
     fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
 
     local_experiment = experiment_utils.is_local_experiment()
@@ -723,7 +724,7 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
     kwargs = {
         'instance_name': instance_name,
         'benchmark': benchmark,
-        'experiment': experiment_config['experiment'],
+        'experiment': experiment,
         'fuzzer': fuzzer,
         'trial_id': trial_id,
         'max_total_time': experiment_config['max_total_time'],

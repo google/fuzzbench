@@ -31,10 +31,10 @@ steps:
     # Use two tags so that the image builds properly and we can push it to the
     # correct location.
     '--tag',
-    'gcr.io/fuzzbench/builders/${_FUZZER}',
+    'gcr.io/fuzzbench/builders/${_FUZZER}:${_EXPERIMENT}',
 
     '--tag',
-    '${_REPO}/builders/${_FUZZER}',
+    '${_REPO}/builders/${_FUZZER}:${_EXPERIMENT}',
 
     '--file=fuzzers/${_FUZZER}/builder.Dockerfile',
 
@@ -61,10 +61,10 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/builders/${_FUZZER}/${_BENCHMARK}',
+    'gcr.io/fuzzbench/builders/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}',
 
     '--tag',
-    '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}',
+    '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}',
 
     '--build-arg',
     'fuzzer=${_FUZZER}',
@@ -97,10 +97,10 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/runners/${_FUZZER}/${_BENCHMARK}-intermediate',
+    'gcr.io/fuzzbench/runners/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
 
     '--tag',
-    '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}-intermediate',
+    '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
 
     '--file=fuzzers/${_FUZZER}/runner.Dockerfile',
 
@@ -127,10 +127,10 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/runners/${_FUZZER}/${_BENCHMARK}',
+    'gcr.io/fuzzbench/runners/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}',
 
     '--tag',
-    '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}',
+    '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}',
 
     '--build-arg',
     'fuzzer=${_FUZZER}',
@@ -148,7 +148,7 @@ steps:
   wait_for: ['build-fuzzer-benchmark-builder', 'build-fuzzer-benchmark-intermediate-runner', 'pull-fuzzer-benchmark-runner']
 
 images:
-  - '${_REPO}/builders/${_FUZZER}'
-  - '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}'
-  - '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}-intermediate'
-  - '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}'
+  - '${_REPO}/builders/${_FUZZER}:${_EXPERIMENT}'
+  - '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}'
+  - '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}'
+  - '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}'

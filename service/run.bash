@@ -16,6 +16,10 @@
 # Use this script to clone a new copy of fuzzbench and run a requested
 # experiment.
 
+# Append stdout and stderr to /tmp/fuzzbench-service.logs. Redirecting the
+# stdout/stderr of this script in the cron command didn't work for some reason.
+exec &>> /tmp/fuzzbench-service.logs
+
 # Use a seperate working directory to run the experiment so we don't pollute
 # the source code with the config directory created by run_experiment.py
 experiment_working_dir=/tmp/fuzzbench-automatic-experiment-working-dir
@@ -31,7 +35,7 @@ cd $repo_path
 make install-dependencies
 source .venv/bin/activate
 export PYTHONPATH=$repo_path
-cd $experiment_working_dir
 
+cd $experiment_working_dir
 python3 $repo_path/service/automatic_run_experiment.py
 rm -rf $repo_path

@@ -59,7 +59,7 @@ def _initialize_experiment_in_db(experiment_config: dict,
         db_utils.get_or_create(models.Experiment,
                                name=experiment_config['experiment'],
                                git_hash=experiment_config['git_hash'],
-                               private=experiment_config.get('private', False))
+                               private=experiment_config.get('private', True))
     ])
 
     # TODO(metzman): Consider doing this without sqlalchemy. This can get
