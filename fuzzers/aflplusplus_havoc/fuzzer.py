@@ -13,9 +13,6 @@
 # limitations under the License.
 """Integration code for AFLplusplus fuzzer."""
 
-import os
-import subprocess
-
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
@@ -26,6 +23,7 @@ def build():
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
+    flags = []
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
