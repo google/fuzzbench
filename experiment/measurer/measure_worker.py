@@ -45,7 +45,7 @@ SnapshotMeasureRequest = collections.namedtuple(
 SnapshotMeasureResponse = collections.namedtuple('SnapshotMeasureResponse',
                                                  ['snapshot', 'next_cycle'])
 
-_MEASURED_FILES_STATE_NAME = 'measured-files'
+MEASURED_FILES_STATE_NAME = 'measured-files'
 COVERED_PCS_STATE_NAME = 'covered-pcs'
 
 CORPUS_ARCHIVE_CYCLE_REGEX = re.compile(r'.*\/corpus-archive-(\d{4})\.tar\.gz$')
@@ -268,7 +268,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
     def get_measured_files_state(self, cycle) -> StateFile:
         """Returns the StateFile for measured-files of this cycle."""
-        return StateFile(_MEASURED_FILES_STATE_NAME, self.state_dir, cycle)
+        return StateFile(MEASURED_FILES_STATE_NAME, self.state_dir, cycle)
 
     def get_prev_measured_files(self, cycle) -> Set[str]:
         """Returns the set of files measured in the previous cycle or an empty
@@ -489,7 +489,7 @@ def update_states_for_skipped_cycles(measure_req: SnapshotMeasureRequest,
 
     with tempfile.TemporaryDirectory() as temp_dir:
         # Get the last states saved.
-        for state_name in [_MEASURED_FILES_STATE_NAME, COVERED_PCS_STATE_NAME]:
+        for state_name in [MEASURED_FILES_STATE_NAME, COVERED_PCS_STATE_NAME]:
             state_dict[state_name] = StateFile(
                 state_name, temp_dir, measure_req.cycle).get_previous()
 
