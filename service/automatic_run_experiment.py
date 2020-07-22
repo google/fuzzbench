@@ -12,26 +12,37 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Determines if an experiment should be run and runs one if necessary.
-Note that this code uses a config file for experiments that is not generic.
-Thus, it only works on the official fuzzbench service. This script can be
-run manually but is intended to be run by a cronjob."""
+"""Reads experiment-requests.yaml and determines if there is a new experiment
+and runs it if needed. Note that this code uses a config file for experiments
+that is specific to the FuzzBench service. Therefore this code will break if
+others try to run it."""
 import argparse
-import datetime
+import collections
 import os
+import re
 import sys
-
-import pytz
 
 from common import logs
 from common import fuzzer_utils
 from common import utils
+from common import yaml_utils
+from database import models
+from database import utils as db_utils
 from experiment import run_experiment
-from experiment import stop_experiment
-from src_analysis import experiment_changes
+
+logger = logs.Logger('automatic_run_experiment')  # pylint: disable=invalid-name
 
 EXPERIMENT_CONFIG_FILE = os.path.join(utils.ROOT_DIR, 'service',
                                       'experiment-config.yaml')
+
+REQUESTED_EXPERIMENTS_PATH = os.path.join(utils.ROOT_DIR, 'service',
+                                          'experiment-requests.yaml')
+
+# Don't run an experiment if we have a "request" just containing this keyword.
+# TODO(metzman): Look into replacing this mechanism for pausing the service.
+PAUSE_SERVICE_KEYWORD = 'PAUSE_SERVICE'
+
+EXPERIMENT_NAME_REGEX = re.compile(r'^\d{4}-\d{2}-\d{2}.*')
 
 # TODO(metzman): Stop hardcoding benchmarks and support marking benchmarks as
 # disabled using a config file in each benchmark.
@@ -43,6 +54,7 @@ BENCHMARKS = [
     'libpcap_fuzz_both',
     'mbedtls_fuzz_dtlsclient',
     'openssl_x509',
+    'php_php-fuzz-parser',
     'sqlite3_ossfuzz',
     'systemd_fuzz-link-parser',
     'zlib_zlib_uncompress_fuzzer',
@@ -62,60 +74,161 @@ BENCHMARKS = [
 ]
 
 
-def get_experiment_name():
-    """Returns the name of the experiment to run."""
-    timezone = pytz.timezone('America/Los_Angeles')
-    time_now = datetime.datetime.now(timezone)
-    return time_now.strftime('%Y-%m-%d')
+def _get_experiment_name(experiment_config: dict) -> str:
+    """Returns the name of the experiment described by experiment_config as a
+    string."""
+    # Use str because the yaml parser will parse things like `2020-05-06` as
+    # a datetime if not included in quotes.
+    return str(experiment_config['experiment'])
 
 
-def run_diff_experiment(dry_run):
-    """Run a diff experiment. This is an experiment that runs only on
-    fuzzers that have changed since the last experiment."""
-    fuzzers = experiment_changes.get_fuzzers_changed_since_last()
-    logs.info('Running experiment with fuzzers: %s.', ' '.join(fuzzers))
-    fuzzer_configs = fuzzer_utils.get_fuzzer_configs(fuzzers=fuzzers)
-    return _run_experiment(fuzzer_configs, dry_run)
+def _get_requested_experiments():
+    """Return requested experiments."""
+    return yaml_utils.read(REQUESTED_EXPERIMENTS_PATH)
 
 
-def _run_experiment(fuzzer_configs, dry_run=False):
-    """Run an experiment on |fuzzer_configs| and shut it down once it
-    terminates."""
-    experiment_name = get_experiment_name()
+def validate_experiment_name(experiment_name):
+    """Returns True if |experiment_name| is valid."""
+    return EXPERIMENT_NAME_REGEX.match(experiment_name) is not None
+
+
+def _validate_individual_experiment_requests(experiment_requests):
+    """Returns True if all requests in |experiment_request| are valid in
+    isolation. Does not account for PAUSE_SERVICE_KEYWORD or duplicates."""
+    all_fuzzers = set(fuzzer_utils.get_fuzzer_names())
+    valid = True
+    # Validate format.
+    for request in experiment_requests:
+        if not isinstance(request, dict):
+            logger.error('Request: %s is not a dict.', request)
+            experiment_requests.remove(request)
+            valid = False
+            continue
+
+        if 'experiment' not in request:
+            logger.error('Request: %s does not have field "experiment".',
+                         request)
+            valid = False
+            continue
+
+        experiment = _get_experiment_name(request)
+        if not validate_experiment_name(experiment):
+            valid = False
+            logger.error('Experiment name: %s is not valid.', experiment)
+            # Request isn't so malformed that we can finding other issues.
+            # if present. Don't continue.
+
+        experiment = request['experiment']
+        if not request.get('fuzzers'):
+            logger.error('Request: %s does not specify any fuzzers.', request)
+            valid = False
+            continue
+
+        experiment_fuzzers = request['fuzzers']
+        for fuzzer in experiment_fuzzers:
+            if fuzzer in all_fuzzers:
+                continue
+            # Fuzzer isn't valid.
+            logger.error('Fuzzer: %s in experiment %s is not valid.', fuzzer,
+                         experiment)
+            valid = False
+
+    return valid
+
+
+def validate_experiment_requests(experiment_requests):
+    """Returns True if all requests in |experiment_requests| are valid."""
+    # This function tries to find as many requests as possible.
+    if PAUSE_SERVICE_KEYWORD in experiment_requests:
+        # This is a special case where a string is used instead of an experiment
+        # to tell the service not to run experiments automatically. Remove it
+        # from the list because it fails validation.
+        experiment_requests = experiment_requests[:]  # Don't mutate input.
+        experiment_requests.remove(PAUSE_SERVICE_KEYWORD)
+
+    if not _validate_individual_experiment_requests(experiment_requests):
+        # Don't try the next validation step if the previous failed, we might
+        # exception.
+        return False
+
+    # Make sure experiment requests have a unique name, we can't run the same
+    # experiment twice.
+    counts = collections.Counter(
+        [request['experiment'] for request in experiment_requests])
+
+    valid = True
+    for experiment_name, count in counts.items():
+        if count != 1:
+            logger.error('Experiment: "%s" appears %d times.',
+                         str(experiment_name), count)
+            valid = False
+
+    return valid
+
+
+def run_requested_experiment(dry_run):
+    """Run the oldest requested experiment that hasn't been run yet in
+    experiment-requests.yaml."""
+    requested_experiments = _get_requested_experiments()
+
+    # TODO(metzman): Look into supporting benchmarks as an optional parameter so
+    # that people can add fuzzers that don't support everything.
+
+    if PAUSE_SERVICE_KEYWORD in requested_experiments:
+        # Check if automated experiment service is paused.
+        logs.warning('Pause service requested, not running experiment.')
+        return None
+
+    requested_experiment = None
+    for experiment_config in reversed(requested_experiments):
+        experiment_name = _get_experiment_name(experiment_config)
+        is_new_experiment = db_utils.query(models.Experiment).filter(
+            models.Experiment.name == experiment_name).first() is None
+        if is_new_experiment:
+            requested_experiment = experiment_config
+            break
+
+    if requested_experiment is None:
+        logs.info('No new experiment to run. Exiting.')
+        return None
+
+    experiment_name = _get_experiment_name(requested_experiment)
+    if not validate_experiment_requests([requested_experiment]):
+        logs.error('Requested experiment: %s in %s is not valid.',
+                   requested_experiment, REQUESTED_EXPERIMENTS_PATH)
+        return None
+    fuzzers = requested_experiment['fuzzers']
+
+    logs.info('Running experiment: %s with fuzzers: %s.', experiment_name,
+              ' '.join(fuzzers))
+    return _run_experiment(experiment_name, fuzzers, dry_run)
+
+
+def _run_experiment(experiment_name, fuzzers, dry_run=False):
+    """Run an experiment named |experiment_name| on |fuzzer_configs| and shut it
+    down once it terminates."""
     logs.info('Starting experiment: %s.', experiment_name)
     if dry_run:
         logs.info('Dry run. Not actually running experiment.')
         return
     run_experiment.start_experiment(experiment_name, EXPERIMENT_CONFIG_FILE,
-                                    BENCHMARKS, fuzzer_configs)
-    stop_experiment.stop_experiment(experiment_name, EXPERIMENT_CONFIG_FILE)
-
-
-def run_full_experiment():
-    """Run a full experiment."""
-    fuzzer_configs = fuzzer_utils.get_fuzzer_configs()
-    return _run_experiment(fuzzer_configs)
+                                    BENCHMARKS, fuzzers)
 
 
 def main():
     """Run an experiment."""
     logs.initialize()
-    parser = argparse.ArgumentParser(
-        description='Run a full or diff experiment (if needed).')
+    parser = argparse.ArgumentParser(description='Run a requested experiment.')
     # TODO(metzman): Add a way to exit immediately if there is already an
     # experiment running. FuzzBench's scheduler isn't smart enough to deal with
     # this properly.
-    parser.add_argument('experiment_type', choices=['diff', 'full'])
     parser.add_argument('-d',
                         '--dry-run',
                         help='Dry run, don\'t actually run the experiment',
                         default=False,
                         action='store_true')
     args = parser.parse_args()
-    if args.experiment_type == 'full':
-        run_full_experiment()
-    else:
-        run_diff_experiment(args.dry_run)
+    run_requested_experiment(args.dry_run)
     return 0
 
 

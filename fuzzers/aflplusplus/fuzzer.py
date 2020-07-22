@@ -20,8 +20,6 @@ import shutil
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers import utils
 
-# OUT environment variable is the location of build directory (default is /out).
-
 
 def get_cmplog_build_directory(target_directory):
     """Return path to CmpLog target directory."""
@@ -174,6 +172,7 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):
 
     # needed for LTO mode to run c++ targets
     os.environ['LD_LIBRARY_PATH'] = '/out'
+    os.environ['AFL_MAP_SIZE'] = '524288'
 
     afl_fuzzer.run_afl_fuzz(input_corpus,
                             output_corpus,

@@ -13,10 +13,7 @@
 # limitations under the License.
 """Helper functions for using the gsutil tool."""
 
-from common import logs
 from common import new_process
-
-logger = logs.Logger('gsutil')
 
 
 def gsutil_command(arguments, expect_zero=True, parallel=False):
@@ -31,25 +28,28 @@ def gsutil_command(arguments, expect_zero=True, parallel=False):
     return new_process.execute(command + arguments, expect_zero=expect_zero)
 
 
-def cp(source, destination, recursive=False, parallel=False):  # pylint: disable=invalid-name
-    """Executes gsutil's "cp" command with |cp_arguments|."""
+def cp(source, destination, recursive=False, parallel=False, expect_zero=True):  # pylint: disable=invalid-name
+    """Executes gsutil's "cp" command to copy |source| to |destination|. Uses -r
+    if |recursive|. If |expect_zero| is True and the command fails then this
+    function will raise a subprocess.CalledError."""
     command = ['cp']
     if recursive:
         command.append('-r')
     command.extend([source, destination])
 
-    return gsutil_command(command, parallel=parallel)
+    return gsutil_command(command, parallel=parallel, expect_zero=expect_zero)
 
 
 def ls(path, must_exist=True):  # pylint: disable=invalid-name
-    """Executes gsutil's "ls" command on |path|."""
+    """Executes gsutil's "ls" command on |path|. If |must_exist| is True and the
+    command fails then this function will raise a subprocess.CalledError."""
     command = ['ls', path]
     process_result = gsutil_command(command, expect_zero=must_exist)
     return process_result
 
 
 def rm(path, recursive=True, force=False, parallel=False):  # pylint: disable=invalid-name
-    """Executes gsutil's rm command with |rm_arguments| and returns the result.
+    """Executes gsutil's rm command on |path| and returns the result.
     Uses -r if |recursive|. If |force|, then uses -f and will not except if
     return code is nonzero."""
     command = ['rm', path]

@@ -65,4 +65,3 @@ def get_images_to_build(fuzzers, benchmarks, oss_fuzz=False, skip_base=False):
                                                   benchmark)
                 images[name] = obj
     return images
-

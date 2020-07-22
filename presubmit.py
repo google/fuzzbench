@@ -31,10 +31,14 @@ import subprocess
 import sys
 from typing import List, Optional
 
+import yaml
+
 from common import benchmark_utils
 from common import fuzzer_utils
 from common import filesystem
 from common import logs
+from common import yaml_utils
+from service import automatic_run_experiment
 from src_analysis import change_utils
 from src_analysis import diff_utils
 
@@ -207,6 +211,15 @@ def lint(paths: List[Path]) -> bool:
 def pytype(paths: List[Path]) -> bool:
     """Run pytype on |path| if it is a python file. Return False if it fails
     type checking."""
+    # Pytype isn't supported on Python3.8+. See
+    # https://github.com/google/pytype/issues/440.
+    assert sys.version_info.major == 3, "Need Python3."
+    if sys.version_info.minor > 7:
+        logs.error(
+            'Python version is: "%s". You should be using 3.7. '
+            'Not running pytype.', sys.version)
+        return True
+
     paths = [path for path in paths if is_python(path)]
     if not paths:
         return True
@@ -241,6 +254,31 @@ def yapf(paths: List[Path], validate: bool = True) -> bool:
     if not success:
         print('Code is not formatted correctly, please run \'make format\'')
     return success
+
+
+def validate_experiment_requests(paths: List[Path]):
+    """Returns False if service/experiment-requests.yaml it is in |paths| and is
+    not valid."""
+    if Path(automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH) not in paths:
+        return True
+
+    try:
+        experiment_requests = yaml_utils.read(
+            automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
+    except yaml.parser.ParserError:
+        print('Error parsing %s.' %
+              automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
+        return False
+
+    # Only validate the latest request.
+    result = automatic_run_experiment.validate_experiment_requests(
+        experiment_requests[:1])
+
+    if not result:
+        print('%s is not valid.' %
+              automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
+
+    return result
 
 
 def is_path_in_ignore_directory(path: Path) -> bool:
@@ -306,7 +344,8 @@ def do_checks(file_paths: List[Path]) -> bool:
     if not all(path_valid_statuses):
         success = False
 
-    for check in [license_check, yapf, lint, pytype]:
+    checks = [license_check, yapf, lint, pytype, validate_experiment_requests]
+    for check in checks:
         if not check(file_paths):
             print('ERROR: %s failed, see errors above.' % check.__name__)
             success = False
@@ -331,13 +370,16 @@ def main() -> int:
     """Check that this branch conforms to the standards of fuzzbench."""
     parser = argparse.ArgumentParser(
         description='Presubmit script for fuzzbench.')
-    choices = [
-        'format', 'lint', 'typecheck', 'licensecheck',
-        'test_changed_integrations'
-    ]
+    command_check_mapping = {
+        'format': yapf,
+        'lint': lint,
+        'typecheck': pytype,
+        'validate_experiment_requests': validate_experiment_requests,
+        'test_changed_integrations': test_changed_integrations
+    }
     parser.add_argument(
         'command',
-        choices=choices,
+        choices=command_check_mapping.keys(),
         nargs='?',
         help='The presubmit check to run. Defaults to all of them')
     parser.add_argument('--all-files',
@@ -368,13 +410,6 @@ def main() -> int:
     if not args.command:
         success = do_checks(relevant_files)
         return bool_to_returncode(success)
-
-    command_check_mapping = {
-        'format': yapf,
-        'lint': lint,
-        'typecheck': pytype,
-        'test_changed_integrations': test_changed_integrations
-    }
 
     check = command_check_mapping[args.command]
     if args.command == 'format':

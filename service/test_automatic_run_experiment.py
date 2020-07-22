@@ -13,39 +13,62 @@
 # limitations under the License.
 """Tests for automatic_run_experiment.py"""
 import os
+import datetime
 from unittest import mock
+
+import pytest
 
 from common import utils
 from service import automatic_run_experiment
 
 # pylint: disable=invalid-name,unused-argument
 
+# A valid experiment name.
+EXPERIMENT = '2020-01-01'
+
+EXPERIMENT_REQUESTS = [{
+    'experiment': datetime.date(2020, 6, 8),
+    'fuzzers': ['aflplusplus', 'libfuzzer']
+}, {
+    'experiment': datetime.date(2020, 6, 5),
+    'fuzzers': ['honggfuzz', 'afl']
+}]
+
 
 @mock.patch('experiment.run_experiment.start_experiment')
-@mock.patch('experiment.stop_experiment.stop_experiment')
-@mock.patch('src_analysis.experiment_changes.get_fuzzers_changed_since_last')
-@mock.patch('service.automatic_run_experiment.get_experiment_name')
-def test_run_diff_experiment(mocked_get_experiment_name,
-                             mocked_get_fuzzers_changed_since_last,
-                             mocked_stop_experiment, mocked_start_experiment,
-                             db):
-    """Tests that run_diff_experiment starts and stops the experiment
+@mock.patch('common.logs.warning')
+@mock.patch('service.automatic_run_experiment._get_requested_experiments')
+def test_run_requested_experiment_pause_service(
+        mocked_get_requested_experiments, mocked_warning,
+        mocked_start_experiment, db):
+    """Tests that run_requested_experiment doesn't run an experiment when a
+    pause is requested."""
+    experiment_requests_with_pause = EXPERIMENT_REQUESTS.copy()
+    experiment_requests_with_pause.append(
+        automatic_run_experiment.PAUSE_SERVICE_KEYWORD)
+    mocked_get_requested_experiments.return_value = (
+        experiment_requests_with_pause)
+
+    assert (automatic_run_experiment.run_requested_experiment(dry_run=False) is
+            None)
+    mocked_warning.assert_called_with(
+        'Pause service requested, not running experiment.')
+    assert mocked_start_experiment.call_count == 0
+
+
+@mock.patch('experiment.run_experiment.start_experiment')
+@mock.patch('service.automatic_run_experiment._get_requested_experiments')
+def test_run_requested_experiment(mocked_get_requested_experiments,
+                                  mocked_start_experiment, db):
+    """Tests that run_requested_experiment starts and stops the experiment
     properly."""
-    expected_experiment_name = 'myexperiment'
-    mocked_get_experiment_name.return_value = expected_experiment_name
-    fuzzers = ['afl', 'aflplusplus']
-    mocked_get_fuzzers_changed_since_last.return_value = fuzzers
-    automatic_run_experiment.run_diff_experiment(False)
+    mocked_get_requested_experiments.return_value = EXPERIMENT_REQUESTS
+    expected_experiment_name = '2020-06-05'
+    expected_fuzzers = ['honggfuzz', 'afl']
+    automatic_run_experiment.run_requested_experiment(dry_run=False)
     expected_config_file = os.path.join(utils.ROOT_DIR, 'service',
                                         'experiment-config.yaml')
 
-    def sort_key(dictionary):
-        return dictionary['fuzzer']
-
-    expected_fuzzer_configs = list(
-        sorted([{
-            'fuzzer': fuzzer
-        } for fuzzer in fuzzers], key=sort_key))
     expected_benchmarks = [
         'bloaty_fuzz_target',
         'curl_curl_fuzzer_http',
@@ -53,6 +76,7 @@ def test_run_diff_experiment(mocked_get_experiment_name,
         'libpcap_fuzz_both',
         'mbedtls_fuzz_dtlsclient',
         'openssl_x509',
+        'php_php-fuzz-parser',
         'sqlite3_ossfuzz',
         'systemd_fuzz-link-parser',
         'zlib_zlib_uncompress_fuzzer',
@@ -68,17 +92,95 @@ def test_run_diff_experiment(mocked_get_experiment_name,
         'vorbis-2017-12-11',
         'woff2-2016-05-06',
     ]
-    start_experiment_call_args = mocked_start_experiment.call_args_list
     expected_calls = [
         mock.call(expected_experiment_name, expected_config_file,
-                  expected_benchmarks, expected_fuzzer_configs)
+                  expected_benchmarks, expected_fuzzers)
     ]
+    start_experiment_call_args = mocked_start_experiment.call_args_list
     assert len(start_experiment_call_args) == 1
-
-    # Sort the list of fuzzer configs so that we can assert that the calls were
-    # what we expected.
-    start_experiment_call_args[0][0][3].sort(key=sort_key)
     assert start_experiment_call_args == expected_calls
 
-    mocked_stop_experiment.assert_called_with(expected_experiment_name,
-                                              expected_config_file)
+
+@pytest.mark.parametrize(
+    ('name', 'expected_result'), [('02000-1-1', False), ('2020-1-1', False),
+                                  ('2020-01-01', True),
+                                  ('2020-01-01-aflplusplus', True),
+                                  ('2020-01-01-1', True)])
+def test_validate_experiment_name(name, expected_result):
+    """Tests that validate experiment name returns True for valid names and
+    False for names that are not valid."""
+    assert (automatic_run_experiment.validate_experiment_name(name) ==
+            expected_result)
+
+
+# Call the parameter exp_request instead of request because pytest reserves it.
+@pytest.mark.parametrize(
+    ('exp_request', 'expected_result'),
+    [
+        ({
+            'experiment': EXPERIMENT,
+            'fuzzers': ['afl']
+        }, True),
+        # Not a dict.
+        (1, False),
+        # No fuzzers.
+        ({
+            'experiment': EXPERIMENT,
+            'fuzzers': []
+        }, False),
+        # No fuzzers.
+        ({
+            'experiment': EXPERIMENT
+        }, False),
+        # No experiment.
+        ({
+            'fuzzers': ['afl']
+        }, False),
+        # Invalid experiment.
+        ({
+            'experiment': 'invalid',
+            'fuzzers': ['afl']
+        }, False),
+        # Invalid fuzzers.
+        ({
+            'experiment': EXPERIMENT,
+            'fuzzers': ['1']
+        }, False),
+    ])
+def test_validate_experiment_requests(exp_request, expected_result):
+    """Tests that validate_experiment_requests returns True for valid fuzzres
+    and False for invalid ones."""
+    assert (automatic_run_experiment.validate_experiment_requests([exp_request])
+            is expected_result)
+
+
+def test_validate_experiment_requests_duplicate_experiments():
+    """Tests that validate_experiment_requests returns False if the experiment
+    names are duplicated."""
+    requests = [
+        {
+            'experiment': EXPERIMENT,
+            'fuzzers': ['afl']
+        },
+        {
+            'experiment': EXPERIMENT,
+            'fuzzers': ['libfuzzer']
+        },
+    ]
+    assert not automatic_run_experiment.validate_experiment_requests(requests)
+
+
+def test_validate_experiment_requests_one_valid_one_invalid():
+    """Tests that validate_experiment_requests returns False even if some
+    requests are valid."""
+    requests = [
+        {
+            'experiment': EXPERIMENT,
+            'fuzzers': ['afl']
+        },
+        {
+            'experiment': '2020-02-02',
+            'fuzzers': []
+        },
+    ]
+    assert not automatic_run_experiment.validate_experiment_requests(requests)

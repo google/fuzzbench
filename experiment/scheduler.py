@@ -16,7 +16,6 @@ import datetime
 import math
 import multiprocessing
 import os
-import shlex
 import sys
 import random
 import time
@@ -26,7 +25,6 @@ import jinja2
 
 from common import benchmark_utils
 from common import experiment_utils
-from common import fuzzer_config_utils
 from common import gcloud
 from common import gce
 from common import logs
@@ -130,7 +128,8 @@ def end_expired_trials(experiment_config: dict):
     if not expired_instances:
         return
 
-    if not delete_instances(expired_instances, experiment_config):
+    if not experiment_utils.is_local_experiment() and not delete_instances(
+            expired_instances, experiment_config):
         # If we failed to delete some instances, then don't update the status
         # of expired trials in database as we don't know which instances were
         # successfully deleted. Wait for next iteration of end_expired_trials.
@@ -585,18 +584,25 @@ def schedule_loop(experiment_config: dict):
     # Create the thread pool once and reuse it to avoid leaking threads and
     # other issues.
     logger.info('Starting scheduler.')
-    gce.initialize()
     num_trials = len(
         get_experiment_trials(experiment_config['experiment']).all())
-    trial_instance_manager = TrialInstanceManager(num_trials, experiment_config)
+    local_experiment = experiment_utils.is_local_experiment()
+    if not local_experiment:
+        gce.initialize()
+        trial_instance_manager = TrialInstanceManager(num_trials,
+                                                      experiment_config)
     experiment = experiment_config['experiment']
     with multiprocessing.Pool() as pool:
         handle_preempted = False
         while not all_trials_ended(experiment):
             try:
-                if not handle_preempted and not any_pending_trials(experiment):
-                    # Only start handling preempted instances once every initial
-                    # trial was started. This ensures that .
+                if (not local_experiment and not handle_preempted and
+                        not any_pending_trials(experiment)):
+                    # This ensures that:
+                    # 1. handle_preempted will not becomes True when running
+                    #    locally.
+                    # 2. Only start handling preempted instances once every
+                    #    initial trial was started.
                     handle_preempted = True
 
                 schedule(experiment_config, pool)
@@ -708,40 +714,31 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
                                    experiment_config: dict):
     """Render the startup script using the template and the parameters
     provided and return the result."""
-    fuzzer_config = fuzzer_config_utils.get_by_variant_name(fuzzer)
+    experiment = experiment_config['experiment']
     docker_image_url = benchmark_utils.get_runner_image_url(
-        benchmark, fuzzer, experiment_config['cloud_project'])
+        experiment, benchmark, fuzzer, experiment_config['docker_registry'])
     fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
-
-    # Convert additional environment variables from configuration to arguments
-    # that will be passed to docker.
-    additional_env = ''
-    if 'env' in fuzzer_config:
-        additional_env = ' '.join([
-            '-e {k}={v}'.format(k=k, v=shlex.quote(v))
-            for k, v in fuzzer_config['env'].items()
-        ])
 
     local_experiment = experiment_utils.is_local_experiment()
     template = JINJA_ENV.get_template('runner-startup-script-template.sh')
     kwargs = {
         'instance_name': instance_name,
         'benchmark': benchmark,
-        'experiment': experiment_config['experiment'],
+        'experiment': experiment,
         'fuzzer': fuzzer,
         'trial_id': trial_id,
         'max_total_time': experiment_config['max_total_time'],
-        'cloud_project': experiment_config['cloud_project'],
-        'cloud_compute_zone': experiment_config['cloud_compute_zone'],
         'experiment_filestore': experiment_config['experiment_filestore'],
         'report_filestore': experiment_config['report_filestore'],
         'fuzz_target': fuzz_target,
         'docker_image_url': docker_image_url,
-        'additional_env': additional_env,
+        'docker_registry': experiment_config['docker_registry'],
         'local_experiment': local_experiment
     }
-    if local_experiment:
-        kwargs['host_gcloud_config'] = os.environ['HOST_GCLOUD_CONFIG']
+
+    if not local_experiment:
+        kwargs['cloud_compute_zone'] = experiment_config['cloud_compute_zone']
+        kwargs['cloud_project'] = experiment_config['cloud_project']
 
     return template.render(**kwargs)
 

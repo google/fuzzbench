@@ -26,9 +26,14 @@ logger = logs.Logger('stop_experiment')  # pylint: disable=invalid-name
 
 def stop_experiment(experiment_name, experiment_config_filename):
     """Stop the experiment specified by |experiment_config_filename|."""
+    experiment_config = yaml_utils.read(experiment_config_filename)
+
+    if experiment_config.get('local_experiment', False):
+        raise NotImplementedError(
+            'Local experiment stop logic is not implemented.')
+
     instances = gcloud.list_instances()
 
-    experiment_config = yaml_utils.read(experiment_config_filename)
     cloud_compute_zone = experiment_config['cloud_compute_zone']
     trial_prefix = 'r-' + experiment_name
     experiment_instances = [
@@ -43,14 +48,14 @@ def stop_experiment(experiment_name, experiment_config_filename):
 
     if not experiment_instances:
         logger.warning('No experiment instances found, no work to do.')
-        return 0
+        return True
 
     if not gcloud.delete_instances(experiment_instances, cloud_compute_zone):
         logger.error('Failed to stop experiment instances.')
-        return 1
+        return False
 
     logger.info('Successfully stopped experiment.')
-    return 0
+    return True
 
 
 def main():
@@ -59,7 +64,7 @@ def main():
         print("Usage {0} <experiment-name> <experiment-config.yaml>")
         return 1
     logs.initialize()
-    return stop_experiment(sys.argv[1], sys.argv[2])
+    return 0 if stop_experiment(sys.argv[1], sys.argv[2]) else 1
 
 
 if __name__ == '__main__':

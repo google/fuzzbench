@@ -26,12 +26,12 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/builders/${_FUZZER}/${_BENCHMARK}-intermediate',
+    'gcr.io/fuzzbench/builders/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
 
     '--tag',
-    '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}-intermediate',
+    '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
 
-    '--file=fuzzers/${_UNDERLYING_FUZZER}/builder.Dockerfile',
+    '--file=fuzzers/${_FUZZER}/builder.Dockerfile',
 
     '--cache-from',
     '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}-intermediate',
@@ -41,7 +41,7 @@ steps:
     '--build-arg',
     'parent_image=gcr.io/fuzzbench/oss-fuzz/${_OSS_FUZZ_PROJECT}@sha256:${_OSS_FUZZ_BUILDER_HASH}',
 
-    'fuzzers/${_UNDERLYING_FUZZER}',
+    'fuzzers/${_FUZZER}',
   ]
   id: 'build-fuzzer-benchmark-builder-intermediate'
 
@@ -59,10 +59,10 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/builders/${_FUZZER}/${_BENCHMARK}',
+    'gcr.io/fuzzbench/builders/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}',
 
     '--tag',
-    '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}',
+    '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}',
 
     '--file=docker/oss-fuzz-builder/Dockerfile',
 
@@ -73,7 +73,7 @@ steps:
     'parent_image=${_REPO}/builders/${_FUZZER}/${_BENCHMARK}-intermediate',
 
     '--build-arg',
-    'fuzzer=${_UNDERLYING_FUZZER}',
+    'fuzzer=${_FUZZER}',
 
     '--build-arg',
     'benchmark=${_BENCHMARK}',
@@ -97,18 +97,18 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/runners/${_FUZZER}/${_BENCHMARK}-intermediate',
+    'gcr.io/fuzzbench/runners/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
 
     '--tag',
-    '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}-intermediate',
+    '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
 
     '--file',
-    'fuzzers/${_UNDERLYING_FUZZER}/runner.Dockerfile',
+    'fuzzers/${_FUZZER}/runner.Dockerfile',
 
     '--cache-from',
     '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}-intermediate',
 
-    'fuzzers/${_UNDERLYING_FUZZER}',
+    'fuzzers/${_FUZZER}',
   ]
   id: 'build-fuzzer-benchmark-runner-intermediate'
   wait_for: ['pull-fuzzer-benchmark-runner-intermediate', 'build-fuzzer-benchmark-builder']
@@ -128,13 +128,13 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/runners/${_FUZZER}/${_BENCHMARK}',
+    'gcr.io/fuzzbench/runners/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}',
 
     '--tag',
-    '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}',
+    '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}',
 
     '--build-arg',
-    'fuzzer=${_UNDERLYING_FUZZER}',
+    'fuzzer=${_FUZZER}',
 
     '--cache-from',
     '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}',
@@ -150,7 +150,7 @@ steps:
   wait_for: ['pull-fuzzer-benchmark-runner', 'build-fuzzer-benchmark-runner-intermediate']
 
 images:
-  - '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}-intermediate'
-  - '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}'
-  - '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}-intermediate'
-  - '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}'
+  - '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}'
+  - '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}'
+  - '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}'
+  - '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}'

@@ -1,0 +1,92 @@
+# Experiment requests have the following format:
+#
+# - experiment: 2020-06-08  # The name of the experiment
+#   fuzzers:  # The fuzzers to run in the experiment.
+#     - aflplusplus
+#     - libfuzzer
+#
+# The name of the experiment must begin with a date using this format:
+# YYYY-MM-DD (year-month-day). It's not important what timezone is used in
+# deciding the date or if this is a day or two off. The most important thing is
+# that is unique.
+# If there already is an experiment for a particular date in this file, you can
+# either: add a suffix (e.g. "-aflplusplus" or "-2") to the experiment name, or
+# use the next date.
+#
+# You can run "make presubmit" to do basic validation on this file.
+# Please add new experiment requests towards the top of this file.
+# NOTE: Users of the FuzzBench service should not be editing this file yet, we
+# are still testing this feature. You should request an experiment by contacting
+# us as you normally do.
+
+- experiment: 2020-07-20
+  fuzzers:
+    - libfuzzer
+
+- experiment: 2020-07-13
+  fuzzers:
+    - aflplusplus_ctx_default
+    - aflplusplus_ctx_nosingle
+    - aflplusplus_ctx_nozero
+    - aflplusplus_ctx_nozerosingle
+    - aflplusplus_ngram4
+    - aflplusplus_ngram6
+    - aflplusplus_ngram8
+
+- experiment: 2020-07-09
+  fuzzers:
+    - aflplusplus_lto_dict
+    - aflplusplus_lto
+    - aflplusplus_ltoinstrim
+    - aflplusplus_ctx
+    - aflplusplus_ngram2
+    - aflplusplus_optimal
+    - aflplusplus_qemu
+    - aflplusplus
+
+- experiment: 2020-06-30
+  fuzzers:
+    - aflplusplus_qemu
+    - afl_qemu
+    - honggfuzz_qemu
+    - aflplusplus_optimal_shmem
+
+- experiment: 2020-06-26
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_optimal_shmem
+    - aflplusplus_shmem
+    - entropic
+
+- experiment: 2020-06-18
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_optimal_shmem
+    - aflplusplus_qemu
+    - aflplusplus_shmem
+
+- experiment: 2020-06-17
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_optimal_shmem
+    - aflplusplus_qemu
+    - aflplusplus_shmem
+
+- experiment: 2020-06-12
+  fuzzers:
+    - aflcc
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_optimal_shmem
+    - aflplusplus_qemu
+    - aflplusplus_shmem
+    - libfuzzer_nocmp
+    - manul
+
+- experiment: 2020-06-08
+  fuzzers:
+    - aflplusplus
+    - libfuzzer
