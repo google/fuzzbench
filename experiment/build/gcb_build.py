@@ -69,14 +69,13 @@ def _build_benchmark_coverage(benchmark: str) -> Tuple[int, str]:
 def _build_oss_fuzz_project_fuzzer(benchmark: str,
                                    fuzzer: str) -> Tuple[int, str]:
     """Build a |benchmark|, |fuzzer| runner image on GCB."""
-    project = benchmark_utils.get_project(benchmark)
     substitutions = {
         '_BENCHMARK': benchmark,
         '_FUZZER': fuzzer,
     }
     config_file = get_build_config_file('oss-fuzz-fuzzer.yaml')
-    config_name = 'oss-fuzz-{project}-fuzzer-{fuzzer}'.format(
-        project=project, fuzzer=fuzzer)
+    config_name = 'oss-fuzz-{benchmark}-fuzzer-{fuzzer}'.format(
+        benchmark=benchmark, fuzzer=fuzzer)
 
     return _build(config_file, config_name, substitutions)
 
