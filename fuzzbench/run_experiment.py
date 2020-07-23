@@ -71,7 +71,9 @@ def run_experiment(config):
                     depended_job.get_status() == 'finished'
                     for depended_job in depended_jobs
             ]):
-                if Job.fetch(name, connection=redis_connection) is None:
+                try:
+                    job_obj = Job.fetch(name, connection=redis_connection)
+                except:
                     jobs_list.append(
                         queue.enqueue(jobs.build_image,
                                       tag=obj['tag'],

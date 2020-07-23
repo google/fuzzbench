@@ -1,6 +1,6 @@
 benchmarks:
     - freetype2-2017
-    - bloaty_fuzz_target
+    - libpng-1.2.56
 fuzzers:
     - afl
     - libfuzzer
