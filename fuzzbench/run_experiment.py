@@ -54,6 +54,7 @@ def run_experiment(config):
                           tag=obj['tag'],
                           context=obj['context'],
                           dockerfile=obj.get('dockerfile', None),
+                          buildargs=obj.get('build_arg', None),
                           job_timeout=600,
                           job_id=name,
                           depends_on=obj['depends_on'][0]))
@@ -70,13 +71,15 @@ def run_experiment(config):
                     depended_job.get_status() == 'finished'
                     for depended_job in depended_jobs
             ]):
-                jobs_list.append(
-                    queue.enqueue(jobs.build_image,
-                                  tag=obj['tag'],
-                                  context=obj['context'],
-                                  dockerfile=obj.get('dockerfile', None),
-                                  job_timeout=600,
-                                  job_id=name))
+                if Job.fetch(name, connection=redis_connection) is None:
+                    jobs_list.append(
+                        queue.enqueue(jobs.build_image,
+                                      tag=obj['tag'],
+                                      context=obj['context'],
+                                      dockerfile=obj.get('dockerfile', None),
+                                      buildargs=obj.get('build_arg', None),
+                                      job_timeout=600,
+                                      job_id=name))
 
         if all([job.result is not None for job in jobs_list]):
             break
