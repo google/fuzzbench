@@ -19,14 +19,14 @@ import subprocess
 BASE_TAG = 'gcr.io/fuzzbench'
 
 
-def build_image(name: str):
+def build_image(tag: str, context: str, dockerfile=None):
     """Builds a Docker image and returns whether it succeeds."""
-    image_tag = os.path.join(BASE_TAG, name)
+    image_tag = os.path.join(BASE_TAG, tag)
     subprocess.run(['docker', 'pull', image_tag], check=True)
-    subprocess.run(
-        ['docker', 'build', '--tag', image_tag,
-         os.path.join('docker', name)],
-        check=True)
+    command = ['docker', 'build', '--tag', image_tag, context]
+    if dockerfile:
+        command.append(['-f', dockerfile])
+    subprocess.run(command, check=True)
     return True
 
 

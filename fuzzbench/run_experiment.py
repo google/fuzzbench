@@ -17,9 +17,13 @@ import time
 
 import redis
 import rq
+from rq.job import Job
 
 from common import config_utils, environment, yaml_utils
+from experiment.build import docker_images
 from fuzzbench import jobs
+
+redis_connection = redis.Redis(host="queue-server") # pylint: disable=invalid-name
 
 
 def run_experiment(config):
@@ -27,29 +31,53 @@ def run_experiment(config):
     print('Initializing the job queue.')
     queue = rq.Queue()
 
+    images_to_build = docker_images.get_images_to_build(config['fuzzers'],
+                                                        config['benchmarks'])
     jobs_list = []
-    jobs_list.append(
-        queue.enqueue(jobs.build_image,
-                      'base-image',
-                      job_timeout=600,
-                      job_id='base-image'))
-    jobs_list.append(
-        queue.enqueue(jobs.build_image,
-                      'base-builder',
-                      job_timeout=600,
-                      job_id='base-builder',
-                      depends_on='base-image'))
-    jobs_list.append(
-        queue.enqueue(jobs.build_image,
-                      'base-runner',
-                      job_timeout=600,
-                      job_id='base-runner',
-                      depends_on='base-image'))
+    unqueued_build_images = []
+    for name, obj in images_to_build.items():
+        if name in ['base-image']:
+            jobs_list.append(
+                queue.enqueue(jobs.build_image,
+                              tag=obj['tag'],
+                              context=obj['context'],
+                              job_timeout=600,
+                              job_id=name))
+            continue
+
+        if len(obj['depends_on']) > 1:
+            unqueued_build_images.append((name, obj))
+            continue
+
+        jobs_list.append(
+            queue.enqueue(jobs.build_image,
+                          tag=obj['tag'],
+                          context=obj['context'],
+                          dockerfile=obj.get('dockerfile', None),
+                          job_timeout=600,
+                          job_id=name,
+                          depends_on=obj['depends_on'][0]))
 
     while True:
         print('Current status of jobs:')
         for job in jobs_list:
             print('  %s%s : %s' % (job.func_name, job.args, job.get_status()))
+
+        for name, obj in unqueued_build_images:
+            depended_jobs = Job.fetch_many(obj['depends_on'],
+                                           connection=redis_connection)
+            if all([
+                    depended_job.get_status() == 'finished'
+                    for depended_job in depended_jobs
+            ]):
+                jobs_list.append(
+                    queue.enqueue(jobs.build_image,
+                                  tag=obj['tag'],
+                                  context=obj['context'],
+                                  dockerfile=obj.get('dockerfile', None),
+                                  job_timeout=600,
+                                  job_id=name))
+
         if all([job.result is not None for job in jobs_list]):
             break
         time.sleep(3)
@@ -58,7 +86,6 @@ def run_experiment(config):
 
 def main():
     """Set up Redis connection and start the experiment."""
-    redis_connection = redis.Redis(host="queue-server")
     config_path = environment.get('EXPERIMENT_CONFIG', 'config.yaml')
     config = yaml_utils.read(config_path)
 
