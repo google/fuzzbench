@@ -26,7 +26,7 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/builders/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/builders/${_FUZZER}/${_BENCHMARK}-intermediate',
 
     '--tag',
     '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
@@ -59,7 +59,7 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/builders/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/builders/${_FUZZER}/${_BENCHMARK}',
 
     '--tag',
     '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}',
@@ -97,7 +97,7 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/runners/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/runners/${_FUZZER}/${_BENCHMARK}-intermediate',
 
     '--tag',
     '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
@@ -128,7 +128,7 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/runners/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/runners/${_FUZZER}/${_BENCHMARK}',
 
     '--tag',
     '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}',

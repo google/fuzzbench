@@ -28,7 +28,7 @@ steps:
     # Use two tags so that the image builds properly and we can push it to the
     # correct location.
     '--tag',
-    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}-intermediate',
 
     '--tag',
     '${_REPO}/builders/coverage/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
@@ -61,7 +61,7 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}',
 
     '--tag',
     '${_REPO}/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}',
