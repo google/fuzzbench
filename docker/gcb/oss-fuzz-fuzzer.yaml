@@ -14,12 +14,43 @@
 
 steps:
 
+
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      docker pull ${_REPO}/builders/oss-fuzz-project/${_BENCHMARK} || exit 0
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+
+    # Use two tags so that the image builds properly and we can push it to the
+    # correct location.
+    '--tag',
+    'gcr.io/fuzzbench/builders/oss-fuzz-project/${_BENCHMARK}',
+
+    '--tag',
+    '${_REPO}/builders/oss-fuzz-project/${_BENCHMARK}:${_EXPERIMENT}',
+
+    '--file=benchmarks/${_BENCHMARK}/Dockerfile',
+
+    '--cache-from',
+    '${_REPO}/builders/oss-fuzz-project/${_BENCHMARK}:${_EXPERIMENT}',
+
+    'benchmarks/${_BENCHMARK}',
+  ]
+  id: 'build-project-builder'
+
 - name: 'gcr.io/cloud-builders/docker'
   entrypoint: 'bash'
   args:
     - '-c'
     - |
       docker pull ${_REPO}/builders/${_FUZZER}/${_BENCHMARK}-intermediate || exit 0
+  id: 'pull-fuzzer-benchmark-builder-intermediate'
+  wait_for: ['-']
 
 - name: 'gcr.io/cloud-builders/docker'
   args: [
@@ -39,11 +70,12 @@ steps:
     # Use a hardcoded repo because the parent image is pinned by SHA. Users
     # won't have it.
     '--build-arg',
-    'parent_image=gcr.io/fuzzbench/oss-fuzz/${_OSS_FUZZ_PROJECT}@sha256:${_OSS_FUZZ_BUILDER_HASH}',
+    'parent_image=gcr.io/fuzzbench/builders/oss-fuzz-project/${_BENCHMARK}',
 
     'fuzzers/${_FUZZER}',
   ]
   id: 'build-fuzzer-benchmark-builder-intermediate'
+  wait_for: ['pull-fuzzer-benchmark-builder-intermediate', 'build-project-builder']
 
 - name: 'gcr.io/cloud-builders/docker'
   entrypoint: 'bash'
@@ -150,6 +182,7 @@ steps:
   wait_for: ['pull-fuzzer-benchmark-runner', 'build-fuzzer-benchmark-runner-intermediate']
 
 images:
+  - '${_REPO}/builders/oss-fuzz-project/${_BENCHMARK}:${_EXPERIMENT}'
   - '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}'
   - '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}'
   - '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}'
