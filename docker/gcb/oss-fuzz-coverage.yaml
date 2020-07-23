@@ -68,8 +68,6 @@ steps:
     '--cache-from',
     '${_REPO}/builders/coverage/${_BENCHMARK}-intermediate',
 
-    # Use a hardcoded repo because the parent image is pinned by SHA. Users
-    # won't have it.
     '--build-arg',
     'parent_image=gcr.io/fuzzbench/builders/oss-fuzz-project/${_BENCHMARK}',
 
