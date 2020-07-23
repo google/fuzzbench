@@ -25,7 +25,7 @@ def build_image(tag: str, context: str, dockerfile=None):
     subprocess.run(['docker', 'pull', image_tag], check=True)
     command = ['docker', 'build', '--tag', image_tag, context]
     if dockerfile:
-        command.append(['-f', dockerfile])
+        command.extend(['-f', dockerfile])
     subprocess.run(command, check=True)
     return True
 
