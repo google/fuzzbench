@@ -15,7 +15,6 @@
 
 import os
 import shutil
-import glob
 
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
