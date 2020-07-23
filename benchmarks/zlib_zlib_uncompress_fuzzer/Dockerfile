@@ -1,4 +1,4 @@
-# Copyright 2020 Google LLC
+# Copyright 2016 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,8 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+################################################################################
 
-commit: e0363a47de4972c7d23d87b8f75a683cf0c4271b
-commit_date: 2019-11-18 15:40:08+00:00
-fuzz_target: curl_fuzzer_http
-project: curl
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:84df55d087d82b65e3a594c01248d59f49d513d4d7362014b417e640317b11f4
+RUN apt-get update && apt-get install -y make autoconf automake libtool
+RUN git clone --depth 1 -b develop https://github.com/madler/zlib.git
+WORKDIR zlib
+COPY build.sh zlib_uncompress_fuzzer.cc $SRC/

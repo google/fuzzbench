@@ -19,6 +19,10 @@
 # are still testing this feature. You should request an experiment by contacting
 # us as you normally do.
 
+- experiment: 2020-07-22
+  fuzzers:
+    - libfuzzer
+
 - experiment: 2020-07-20
   fuzzers:
     - libfuzzer

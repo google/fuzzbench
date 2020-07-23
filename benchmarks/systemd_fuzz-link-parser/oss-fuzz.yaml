@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project: systemd
+commit: 99fdffaa194cbfed659b0c1bfd0ace4bfcd2a245
+commit_date: 2020-02-10 16:19:52+00:00
 fuzz_target: fuzz-link-parser
-oss_fuzz_builder_hash: 6ec84f72d18b7789760cf970f10106d96fccc7f435a222c1f678c41869bf4f34
+project: systemd
