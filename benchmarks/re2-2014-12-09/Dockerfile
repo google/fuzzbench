@@ -1,4 +1,3 @@
-#!/bin/bash -ex
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,24 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+################################################################################
 
-. $(dirname $0)/../common.sh
-
-apt-get update && \
-  apt-get install -y \
-  make \
-  automake \
-  libtool \
-  nasm
-
-build_lib() {
-  rm -rf BUILD
-  cp -rf SRC BUILD
-  (cd BUILD && autoreconf -fiv && ./configure && make -j $JOBS)
-}
-
-get_git_revision https://github.com/libjpeg-turbo/libjpeg-turbo.git b0971e47d76fdb81270e93bbf11ff5558073350d SRC
-build_lib
-
-$CXX $CXXFLAGS -std=c++11 $SCRIPT_DIR/libjpeg_turbo_fuzzer.cc -I BUILD BUILD/.libs/libturbojpeg.a $FUZZER_LIB -o $OUT/fuzz-target
-cp -r /opt/seeds $OUT/
+FROM gcr.io/oss-fuzz-base/base-builder
+COPY build.sh target.cc $SRC/
