@@ -592,8 +592,8 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     # Archive crashes directory.
     snapshot_measurer.archive_crashes(cycle)
     measuring_time = round(time.time() - measuring_start_time, 2)
-    snapshot_logger.info('Measured cycle: %d in %s seconds.', cycle,
-                         str(measuring_time))
+    snapshot_logger.info('Measured cycle: %d in %f seconds.', cycle,
+                         measuring_time)
     return snapshot
 
 
