@@ -26,7 +26,8 @@ OTHER_BENCHMARK = 'benchmark'
 
 def test_get_fuzz_target(oss_fuzz_benchmark):
     """Test that we can get the docker name of a benchmark."""
-    assert benchmark_utils.get_fuzz_target(conftest.OSS_FUZZ_BENCHMARK_NAME) == conftest.OSS_FUZZ_BENCHMARK_CONFIG['fuzz_target']
+    assert (benchmark_utils.get_fuzz_target(conftest.OSS_FUZZ_BENCHMARK_NAME) ==
+            conftest.OSS_FUZZ_BENCHMARK_CONFIG['fuzz_target'])
 
 
 @pytest.mark.parametrize(

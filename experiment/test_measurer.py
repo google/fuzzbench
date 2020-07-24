@@ -204,7 +204,9 @@ def test_is_cycle_unchanged_no_file(mocked_cp, fs, experiment):
 
 
 @mock.patch('common.new_process.execute')
-def test_run_cov_new_units(mocked_execute, fs, environ):
+@mock.patch('common.benchmark_utils.get_fuzz_target',
+            return_value='fuzz-target')
+def test_run_cov_new_units(_, mocked_execute, fs, environ):
     """Tests that run_cov_new_units does a coverage run as we expect."""
     os.environ = {
         'WORK': '/work',

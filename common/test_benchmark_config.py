@@ -20,7 +20,7 @@ from common import utils
 
 # pylint: disable=invalid-name,unused-argument
 
-# TODO(metzman): Figure out how to mock lru_cache here and in test_benchmark_config.py.
+# TODO(metzman): Figure out how to mock lru_cache here.
 
 
 def test_get_config_file():
