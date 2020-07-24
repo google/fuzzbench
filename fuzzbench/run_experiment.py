@@ -62,7 +62,7 @@ def run_experiment(config):
     while True:
         print('Current status of jobs:')
         for job in jobs_list:
-            print('  %s%s : %s' % (job.func_name, job.args, job.get_status()))
+            print('  %s : %s\t(%s)' % (job.func_name, job.get_status(), job.id))
 
         for name, obj in unqueued_build_images:
             depended_jobs = Job.fetch_many(obj['depends_on'],
