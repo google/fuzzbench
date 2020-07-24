@@ -371,7 +371,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         """Get the current number of lines covered."""
         if not os.path.exists(self.cov_summary_file):
             self.logger.warning('No coverage summary json file found.')
-            return None
+            return 0
         try:
             with open(self.cov_summary_file) as summary:
                 # Using the last line to skip the warning in bloaty
@@ -383,7 +383,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
                 return regions_covered
         except Exception:  # pylint: disable=broad-except
             self.logger.error('Coverage summary json file defective.')
-            return None
+            return 0
 
     def generate_profdata(self, cycle: int):
         """Generate .profdata file from .profraw file."""
@@ -581,8 +581,6 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
 
     # Get the coverage of the new corpus units.
     regions_covered = snapshot_measurer.get_current_coverage()
-    if not regions_covered:
-        regions_covered = 0
     snapshot = models.Snapshot(time=this_time,
                                trial_id=trial_num,
                                edges_covered=regions_covered)
