@@ -28,6 +28,9 @@
   tag: 'builders/coverage/{benchmark}'
   context: '.'
   dockerfile: 'docker/benchmark-builder/Dockerfile'
+  build_arg:
+    - 'fuzzer=coverage'
+    - 'benchmark={benchmark}'
   depends_on:
     - 'coverage-builder'
 

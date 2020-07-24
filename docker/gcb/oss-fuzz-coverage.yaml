@@ -19,7 +19,7 @@ steps:
   args:
     - '-c'
     - |
-      docker pull ${_REPO}/builders/coverage/${_BENCHMARK}-intermediate || exit 0
+      docker pull ${_REPO}/builders/oss-fuzz-project/${_BENCHMARK} || exit 0
 
 - name: 'gcr.io/cloud-builders/docker'
   args: [
@@ -28,7 +28,37 @@ steps:
     # Use two tags so that the image builds properly and we can push it to the
     # correct location.
     '--tag',
-    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/builders/oss-fuzz-project/${_BENCHMARK}',
+
+    '--tag',
+    '${_REPO}/builders/oss-fuzz-project/${_BENCHMARK}:${_EXPERIMENT}',
+
+    '--file=benchmarks/${_BENCHMARK}/Dockerfile',
+
+    '--cache-from',
+    '${_REPO}/builders/oss-fuzz-project/${_BENCHMARK}:${_EXPERIMENT}',
+
+    'benchmarks/${_BENCHMARK}',
+  ]
+  id: 'build-project-builder'
+
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      docker pull ${_REPO}/builders/coverage/${_BENCHMARK}-intermediate || exit 0
+  id: 'pull-coverage-benchmark-builder-intermediate'
+  wait_for: ['-']
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+
+    # Use two tags so that the image builds properly and we can push it to the
+    # correct location.
+    '--tag',
+    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}-intermediate',
 
     '--tag',
     '${_REPO}/builders/coverage/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
@@ -38,14 +68,13 @@ steps:
     '--cache-from',
     '${_REPO}/builders/coverage/${_BENCHMARK}-intermediate',
 
-    # Use a hardcoded repo because the parent image is pinned by SHA. Users
-    # won't have it.
     '--build-arg',
-    'parent_image=gcr.io/fuzzbench/oss-fuzz/${_OSS_FUZZ_PROJECT}@sha256:${_OSS_FUZZ_BUILDER_HASH}',
+    'parent_image=gcr.io/fuzzbench/builders/oss-fuzz-project/${_BENCHMARK}',
 
     'fuzzers/coverage',
   ]
   id: 'build-coverage-benchmark-builder-intermediate'
+  wait_for: ['build-project-builder', 'pull-coverage-benchmark-builder-intermediate']
 
 - name: 'gcr.io/cloud-builders/docker'
   entrypoint: 'bash'
@@ -61,7 +90,7 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}',
 
     '--tag',
     '${_REPO}/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}',
@@ -104,5 +133,6 @@ steps:
   ]
 
 images:
+  - '${_REPO}/builders/oss-fuzz-project/${_BENCHMARK}:${_EXPERIMENT}'
   - '${_REPO}/builders/coverage/${_BENCHMARK}-intermediate:${_EXPERIMENT}'
   - '${_REPO}/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}'

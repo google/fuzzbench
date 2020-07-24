@@ -1,4 +1,5 @@
-# Copyright 2020 Google LLC
+#!/bin/bash -eu
+# Copyright 2017 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,8 +12,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+################################################################################
 
-commit: e0363a47de4972c7d23d87b8f75a683cf0c4271b
-commit_date: 2019-11-18 15:40:08+00:00
-fuzz_target: curl_fuzzer_http
-project: curl
+cd $WORK
+cmake -G Ninja -DBUILD_TESTING=false $SRC/bloaty
+ninja -j$(nproc)
+cp fuzz_target $OUT
+zip -j $OUT/fuzz_target_seed_corpus.zip $SRC/bloaty/tests/testdata/fuzz_corpus/*

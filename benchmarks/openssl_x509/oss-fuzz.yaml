@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project: openssl
+commit: b0593c086dd303af31dc1e30233149978dd613c4
+commit_date: 2020-02-10 09:22:32+00:00
 fuzz_target: x509
-oss_fuzz_builder_hash: d43c16de312acaa2c8bbc2a2236e9b70e3521b9a35c74ee038f8230719688ce8
+project: openssl

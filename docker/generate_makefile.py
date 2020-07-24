@@ -172,11 +172,11 @@ debug-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
 """
 
 OSS_FUZZER_BENCHMARK_TEMPLATE = """
-.{fuzzer}-{benchmark}-oss-fuzz-builder-intermediate:
+.{fuzzer}-{benchmark}-oss-fuzz-builder-intermediate: .{benchmark}-project-builder
 	docker build \\
     --tag {base_tag}/builders/{fuzzer}/{benchmark}-intermediate \\
     --file=fuzzers/{fuzzer}/builder.Dockerfile \\
-    --build-arg parent_image=gcr.io/fuzzbench/oss-fuzz/$({benchmark}-project-name)@sha256:$({benchmark}-oss-fuzz-builder-hash) \\
+    --build-arg parent_image=gcr.io/fuzzbench/builders/oss-fuzz-project/{benchmark} \\
     $(call cache_from,{base_tag}/builders/{fuzzer}/{benchmark}-intermediate) \\
     fuzzers/{fuzzer}
 
@@ -190,6 +190,7 @@ OSS_FUZZER_BENCHMARK_TEMPLATE = """
     --build-arg parent_image={base_tag}/builders/{fuzzer}/{benchmark}-intermediate \\
     --build-arg fuzzer={fuzzer} \\
     --build-arg benchmark={benchmark} \\
+    --build-arg checkout_commit=$({benchmark}-commit) \\
     $(call cache_from,{base_tag}/builders/{fuzzer}/{benchmark}) \\
     .
 
@@ -276,10 +277,10 @@ def main():
         benchmark_path = os.path.join(BENCHMARKS_DIR, benchmark)
         if not os.path.isdir(benchmark_path):
             continue
-        if os.path.exists(os.path.join(benchmark_path, 'build.sh')):
-            benchmarks.append(benchmark)
         if os.path.exists(os.path.join(benchmark_path, 'oss-fuzz.yaml')):
             oss_fuzz_benchmarks.append(benchmark)
+        else:
+            benchmarks.append(benchmark)
 
     # Generate the build rules for fuzzer/benchmark pairs.
     fuzzers = []
