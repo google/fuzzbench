@@ -14,7 +14,7 @@
 """Module for building things on Google Cloud Build for use in trials."""
 
 import os
-from typing import Dict, Tuple
+from typing import Dict
 
 from common import experiment_path as exp_path
 from common import experiment_utils
@@ -39,9 +39,9 @@ GCB_MACHINE_TYPE = 'n1-highcpu-8'
 logger = logs.Logger('builder')  # pylint: disable=invalid-name
 
 
-def build_base_images() -> Tuple[int, str]:
+def build_base_images():
     """Build base images on GCB."""
-    return _build(get_build_config_file('base-images.yaml'), 'base-images')
+    _build(get_build_config_file('base-images.yaml'), 'base-images')
 
 
 def build_coverage(benchmark):
@@ -54,40 +54,14 @@ def build_coverage(benchmark):
     }
     config_file = get_build_config_file('coverage.yaml')
     config_name = '{benchmark}-coverage'.format(benchmark=benchmark)
-    return _build(config_file, config_name, substitutions)
-
-
-def _build_benchmark_coverage(benchmark: str) -> Tuple[int, str]:
-    """Build a coverage build of |benchmark| on GCB."""
-    coverage_binaries_dir = exp_path.filestore(
-        build_utils.get_coverage_binaries_dir())
-    substitutions = {
-        '_GCS_COVERAGE_BINARIES_DIR': coverage_binaries_dir,
-        '_BENCHMARK': benchmark,
-    }
-    config_file = get_build_config_file('coverage.yaml')
-    config_name = 'benchmark-{benchmark}-coverage'.format(benchmark=benchmark)
-    return _build(config_file, config_name, substitutions)
-
-
-def _build_benchmark_fuzzer(benchmark: str, fuzzer: str) -> Tuple[int, str]:
-    """Build a |benchmark|, |fuzzer| runner image on GCB."""
-    # See link for why substitutions must begin with an underscore:
-    # https://cloud.google.com/cloud-build/docs/configuring-builds/substitute-variable-values#using_user-defined_substitutions
-    substitutions = {
-        '_BENCHMARK': benchmark,
-        '_FUZZER': fuzzer,
-    }
-    config_file = get_build_config_file('fuzzer.yaml')
-    config_name = 'benchmark-{benchmark}-fuzzer-{fuzzer}'.format(
-        benchmark=benchmark, fuzzer=fuzzer)
-    return _build(config_file, config_name, substitutions)
+    _build(config_file, config_name, substitutions)
 
 
 def _build(config_file: str,
            config_name: str,
            substitutions: Dict[str, str] = None,
-           timeout_seconds: int = GCB_BUILD_TIMEOUT) -> Tuple[int, str]:
+           timeout_seconds: int = GCB_BUILD_TIMEOUT
+          ) -> new_process.ProcessResult:
     """Build each of |args| on gcb."""
     config_arg = '--config=%s' % config_file
     machine_type_arg = '--machine-type=%s' % GCB_MACHINE_TYPE
@@ -145,4 +119,4 @@ def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
     config_name = '{benchmark}-fuzzer-{fuzzer}'.format(benchmark=benchmark,
                                                        fuzzer=fuzzer)
 
-    return _build(config_file, config_name, substitutions)
+    _build(config_file, config_name, substitutions)
