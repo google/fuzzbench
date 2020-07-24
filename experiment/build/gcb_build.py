@@ -142,7 +142,7 @@ def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
         '_FUZZER': fuzzer,
     }
     config_file = get_build_config_file('fuzzer.yaml')
-    config_name = '{benchmark}-fuzzer-{fuzzer}'.format(
-        benchmark=benchmark, fuzzer=fuzzer)
+    config_name = '{benchmark}-fuzzer-{fuzzer}'.format(benchmark=benchmark,
+                                                       fuzzer=fuzzer)
 
     return _build(config_file, config_name, substitutions)

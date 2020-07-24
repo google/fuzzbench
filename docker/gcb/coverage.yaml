@@ -95,7 +95,7 @@ steps:
     '--tag',
     '${_REPO}/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}',
 
-    '--file=docker/oss-fuzz-builder/Dockerfile',
+    '--file=docker/benchmark-builder/Dockerfile',
 
     '--cache-from',
     '${_REPO}/builders/coverage/${_BENCHMARK}',

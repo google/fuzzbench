@@ -98,7 +98,7 @@ OSS_FUZZER_BENCHMARK_TEMPLATE = """
 .{fuzzer}-{benchmark}-builder: .{fuzzer}-{benchmark}-builder-intermediate
 	docker build \\
     --tag {base_tag}/builders/{fuzzer}/{benchmark} \\
-    --file=docker/oss-fuzz-builder/Dockerfile \\
+    --file=docker/benchmark-builder/Dockerfile \\
     --build-arg parent_image={base_tag}/builders/{fuzzer}/{benchmark}-intermediate \\
     --build-arg fuzzer={fuzzer} \\
     --build-arg benchmark={benchmark} \\
