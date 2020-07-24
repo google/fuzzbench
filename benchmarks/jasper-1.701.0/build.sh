@@ -33,6 +33,6 @@ build_lib
 # To test with the main() in jasper_fuzz.cc, use -D_HAS_MAIN and disable any
 # fuzzer in sanitizer flag / use of FUZZER_LIB.
 $CXX $CXXFLAGS -std=c++11 -IBUILD/src/libjasper/include  \
-  ${SCRIPT_DIR}/jasper_fuzz.cc   \
+  $SRC/jasper_fuzz.cc   \
   BUILD/src/libjasper/.libs/libjasper.a $FUZZER_LIB -o $OUT/fuzz-target
 cp -r /opt/seeds $OUT/

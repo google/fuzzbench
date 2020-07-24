@@ -39,4 +39,4 @@ for f in BROTLI/dec/*.c BROTLI/enc/*.cc; do
 done
 wait
 
-$CXX $CXXFLAGS *.o $FUZZER_LIB $SCRIPT_DIR/target.cc -I SRC/src -o $OUT/fuzz-target
+$CXX $CXXFLAGS *.o $FUZZER_LIB $SRC/target.cc -I SRC/src -o $OUT/fuzz-target
