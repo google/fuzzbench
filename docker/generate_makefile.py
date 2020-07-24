@@ -157,13 +157,10 @@ def generate_fuzzer(fuzzer, benchmarks):
                                                  base_tag=BASE_TAG))
 
     # Generate rules for building/pulling all target/benchmark pairs.
-    all_build_targets = ' '.join([
-        'build-{0}-{1}'.format(fuzzer, benchmark)
-        for benchmark in benchmarks
-    ])
-    all_pull_targets = ' '.join([
-        'pull-{0}-{1}'.format(fuzzer, benchmark) for benchmark in benchmarks
-    ])
+    all_build_targets = ' '.join(
+        ['build-{0}-{1}'.format(fuzzer, benchmark) for benchmark in benchmarks])
+    all_pull_targets = ' '.join(
+        ['pull-{0}-{1}'.format(fuzzer, benchmark) for benchmark in benchmarks])
     print('build-{fuzzer}-all: {all_targets}'.format(
         fuzzer=fuzzer, all_targets=all_build_targets))
     print('pull-{fuzzer}-all: {all_targets}'.format(
@@ -183,7 +180,7 @@ def main():
         if not os.path.isdir(benchmark_path):
             continue
         if os.path.exists(os.path.join(benchmark_path, 'benchmark.yaml')):
-            benchmark.append(benchmark)
+            benchmarks.append(benchmark)
 
     # Generate the build rules for fuzzer/benchmark pairs.
     fuzzers = []

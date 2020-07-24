@@ -34,5 +34,5 @@ build_lib
 # fuzzer in sanitizer flag / use of FUZZER_LIB.
 $CXX $CXXFLAGS -std=c++11 -IBUILD/src/libjasper/include  \
   ${SCRIPT_DIR}/jasper_fuzz.cc   \
-  BUILD/src/libjasper/.libs/libjasper.a $FUZZER_LIB -o $FUZZ_TARGET
+  BUILD/src/libjasper/.libs/libjasper.a $FUZZER_LIB -o fuzz-target
 cp -r $SCRIPT_DIR/seeds $OUT/

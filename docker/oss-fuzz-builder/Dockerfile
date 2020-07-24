@@ -33,7 +33,7 @@ COPY --from=base-image /usr/local/include/python3.7m /usr/local/include/python3.
 
 # This is for "standard" benchmarks.
 # TODO(metzman): Get rid of common.sh and this step.
-COPY benchmarks/common.sh ./
+COPY benchmarks/common.sh /
 
 COPY fuzzers/$fuzzer/fuzzer.py $SRC/fuzzer.py
 

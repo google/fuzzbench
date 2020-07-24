@@ -21,8 +21,8 @@ build_lib() {
 # Leaving for historical.. there are other options we might wish to toggle.
 #  sh Configure
 #     -Dafl_cc=${AFL_CC}
-#     -Dcc=${LCC} 
-#     -Accflags="${LCFLAGS}"  
+#     -Dcc=${LCC}
+#     -Accflags="${LCFLAGS}"
 #     -de
 #     -Dusedevel
 #     -des
@@ -40,5 +40,5 @@ $CXX $CXXFLAGS                                \
   ${SCRIPT_DIR}/perl_fuzz.cc                  \
   BUILD/libperl.a                             \
   -lnsl -ldl -lm -lcrypt -lutil -lc -lpthread \
-  $FUZZER_LIB  -o $FUZZ_TARGET 
+  $FUZZER_LIB  -o fuzz-target
 cp -r $SCRIPT_DIR/seeds $OUT/

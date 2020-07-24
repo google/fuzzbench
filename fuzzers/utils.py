@@ -40,10 +40,7 @@ def build_benchmark(env=None):
         # so we can build projects that are using -lFuzzingEngine.
         shutil.copy(fuzzer_lib, OSS_FUZZ_LIB_FUZZING_ENGINE_PATH)
 
-    if os.getenv('OSS_FUZZ'):
-        build_script = os.path.join(os.environ['SRC'], 'build.sh')
-    else:
-        build_script = os.path.join('benchmark', 'build.sh')
+    build_script = os.path.join(os.environ['SRC'], 'build.sh')
 
     benchmark = os.getenv('BENCHMARK')
     fuzzer = os.getenv('FUZZER')

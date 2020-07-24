@@ -60,7 +60,7 @@ dispatcher-image: base-image
     $(call cache_from,${BASE_TAG}/dispatcher-image) \
     docker/dispatcher-image
 
-define oss_fuzz_benchmark_template
+define benchmark_template
 $(1)-fuzz-target  := $(shell cat benchmarks/$(1)/benchmark.yaml | \
                              grep fuzz_target | cut -d ':' -f2 | tr -d ' ')
 $(1)-commit := $(shell cat benchmarks/$(1)/benchmark.yaml | \
@@ -75,5 +75,5 @@ $(1)-commit := $(shell cat benchmarks/$(1)/benchmark.yaml | \
 
 endef
 # Instantiate the above template with all OSS-Fuzz benchmarks.
-$(foreach oss_fuzz_benchmark,$(OSS_FUZZ_BENCHMARKS), \
-  $(eval $(call oss_fuzz_benchmark_template,$(oss_fuzz_benchmark))))
+$(foreach benchmark,$(BENCHMARKS), \
+  $(eval $(call benchmark_template,$(benchmark))))

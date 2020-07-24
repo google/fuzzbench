@@ -13,9 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Don't allow to call this scripts from its directory.
-[ -e $(basename $0) ] && echo "DO NOT CALL THIS SCRIPT DIRECTLY" && exit 1
-
 SCRIPT_DIR=$(dirname $0)
 JOBS=${JOBS:-$(nproc)}
 

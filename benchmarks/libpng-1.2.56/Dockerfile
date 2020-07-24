@@ -1,4 +1,3 @@
-#!/bin/bash -ex
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,23 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+################################################################################
 
-. $(dirname $0)/../common.sh
-
-apt-get update && \
-  apt-get install -y \
-  make \
-  autoconf \
-  automake
-
-build_lib() {
-  rm -rf BUILD
-  cp -rf SRC BUILD
-  (cd BUILD && make clean && make -j $JOBS)
-}
-
-get_git_revision https://github.com/google/re2.git 499ef7eff7455ce9c9fae86111d4a77b6ac335de SRC
-build_lib
-
-$CXX $CXXFLAGS ${SCRIPT_DIR}/target.cc  -I BUILD/ BUILD/obj/libre2.a -lpthread $FUZZER_LIB -o fuzz-target
-wget -qO fuzz-target.dict https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/regexp.dict
+FROM gcr.io/oss-fuzz-base/base-builder
+ADD seeds /opt/seeds
+COPY * $SRC/

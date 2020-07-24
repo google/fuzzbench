@@ -41,4 +41,4 @@ if [[ ! -d $OUT/seeds ]]; then
   cp BUILD/test/shaping/fonts/sha1sum/* $OUT/seeds/
 fi
 
-$CXX $CXXFLAGS -std=c++11 -I BUILD/src/ BUILD/test/fuzzing/hb-fuzzer.cc BUILD/src/.libs/libharfbuzz-fuzzing.a $FUZZER_LIB -lglib-2.0 -o $FUZZ_TARGET
+$CXX $CXXFLAGS -std=c++11 -I BUILD/src/ BUILD/test/fuzzing/hb-fuzzer.cc BUILD/src/.libs/libharfbuzz-fuzzing.a $FUZZER_LIB -lglib-2.0 -o fuzz-target

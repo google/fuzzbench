@@ -64,6 +64,6 @@ build_ogg
 build_vorbis
 
 $CXX $CXXFLAGS -std=c++11 SRC/oss-fuzz/projects/vorbis/decode_fuzzer.cc \
-  -o $FUZZ_TARGET -L"$INSTALL_DIR/lib" -I"$INSTALL_DIR/include" \
+  -o fuzz-target -L"$INSTALL_DIR/lib" -I"$INSTALL_DIR/include" \
   $FUZZER_LIB -lvorbisfile  -lvorbis -logg
 cp -r $SCRIPT_DIR/seeds $OUT/

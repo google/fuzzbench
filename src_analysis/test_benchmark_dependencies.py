@@ -21,8 +21,8 @@ OSS_FUZZ_BENCHMARK = 'curl_curl_fuzzer_http'
 STANDARD_BENCHMARK = 'libpng-1.2.56'
 BENCHMARK_YAML_PATH = os.path.join(benchmark_utils.BENCHMARKS_DIR,
                                    OSS_FUZZ_BENCHMARK, 'benchmark.yaml')
-BUILD_SH_PATH = os.path.join(benchmark_utils.BENCHMARKS_DIR,
-                             STANDARD_BENCHMARK, 'build.sh')
+STANDARD_BUILD_SH_PATH = os.path.join(benchmark_utils.BENCHMARKS_DIR,
+                                      STANDARD_BENCHMARK, 'build.sh')
 
 
 def test_is_subpath_of_benchmark():
