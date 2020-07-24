@@ -24,4 +24,3 @@ RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
       clang++ -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \
     done && wait) && \
     ar r /usr/lib/libFuzzer.a *.o
-    

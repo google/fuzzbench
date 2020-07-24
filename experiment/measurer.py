@@ -368,7 +368,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             self.UNIT_BLACKLIST[self.benchmark].union(set(crashing_units)))
 
     def get_current_coverage(self) -> int:
-        """Get the current number of lines covered"""
+        """Get the current number of lines covered."""
         if not os.path.exists(self.cov_summary_file):
             self.logger.warning('No coverage summary json file found.')
             return None
@@ -401,7 +401,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
                 'Coverage profdata generation failed for cycle: %d.', cycle)
 
     def generate_summary(self, cycle: int):
-        """Transform the .profdata file into json form"""
+        """Transform the .profdata file into json form."""
         coverage_binary = get_coverage_binary(self.benchmark)
         command = [
             'llvm-cov', 'export', '-format=text', '-summary-only',
@@ -574,7 +574,7 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     # Run coverage on the new corpus units.
     snapshot_measurer.run_cov_new_units()
 
-    # Generate profdata and transform it into json form
+    # Generate profdata and transform it into json form.
     snapshot_measurer.generate_profdata(cycle)
     snapshot_measurer.generate_summary(cycle)
 

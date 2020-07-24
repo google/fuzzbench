@@ -67,6 +67,28 @@ def test_get_current_coverage(fs, experiment):
     assert covered_regions == 7
 
 
+def test_get_current_coverage_error(fs, experiment):
+    """Tests that get_current_coverage returns None from a 
+    defective json file."""
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+    json_cov_summary_file = get_test_data_path('cov_summary_defective.json')
+    fs.add_real_file(json_cov_summary_file, read_only=False)
+    snapshot_measurer.cov_summary_file = json_cov_summary_file
+    covered_regions = snapshot_measurer.get_current_coverage()
+    assert not covered_regions
+
+
+def test_get_current_coverage_no_file(fs, experiment):
+    """Tests that get_current_coverage returns None with no json file."""
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+    json_cov_summary_file = get_test_data_path('cov_summary_not_exist.json')
+    snapshot_measurer.cov_summary_file = json_cov_summary_file
+    covered_regions = snapshot_measurer.get_current_coverage()
+    assert not covered_regions
+
+
 @mock.patch('common.new_process.execute')
 def test_generate_profdata_create(mocked_execute, experiment):
     """Tests that generate_profdata can run the correct command."""
