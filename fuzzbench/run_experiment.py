@@ -23,7 +23,7 @@ from common import config_utils, environment, yaml_utils
 from experiment.build import docker_images
 from fuzzbench import jobs
 
-redis_connection = redis.Redis(host="queue-server") # pylint: disable=invalid-name
+redis_connection = redis.Redis(host="queue-server")  # pylint: disable=invalid-name
 
 
 def run_experiment(config):
@@ -72,8 +72,8 @@ def run_experiment(config):
                     for depended_job in depended_jobs
             ]):
                 try:
-                    job_obj = Job.fetch(name, connection=redis_connection)
-                except:
+                    Job.fetch(name, connection=redis_connection)
+                except:  #pylint: disable=bare-except
                     jobs_list.append(
                         queue.enqueue(jobs.build_image,
                                       tag=obj['tag'],
