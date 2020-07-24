@@ -84,18 +84,18 @@ debug-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner
 """
 
 OSS_FUZZER_BENCHMARK_TEMPLATE = """
-.{fuzzer}-{benchmark}-oss-fuzz-builder-intermediate: .{benchmark}-project-builder
+.{fuzzer}-{benchmark}-builder-intermediate: .{benchmark}-project-builder
 	docker build \\
     --tag {base_tag}/builders/{fuzzer}/{benchmark}-intermediate \\
     --file=fuzzers/{fuzzer}/builder.Dockerfile \\
-    --build-arg parent_image=gcr.io/fuzzbench/builders/oss-fuzz-project/{benchmark} \\
+    --build-arg parent_image=gcr.io/fuzzbench/builders/benchmark/{benchmark} \\
     $(call cache_from,{base_tag}/builders/{fuzzer}/{benchmark}-intermediate) \\
     fuzzers/{fuzzer}
 
-.pull-{fuzzer}-{benchmark}-oss-fuzz-builder-intermediate:
+.pull-{fuzzer}-{benchmark}-builder-intermediate:
 	docker pull {base_tag}/builders/{fuzzer}/{benchmark}-intermediate
 
-.{fuzzer}-{benchmark}-oss-fuzz-builder: .{fuzzer}-{benchmark}-oss-fuzz-builder-intermediate
+.{fuzzer}-{benchmark}-builder: .{fuzzer}-{benchmark}-builder-intermediate
 	docker build \\
     --tag {base_tag}/builders/{fuzzer}/{benchmark} \\
     --file=docker/oss-fuzz-builder/Dockerfile \\
@@ -106,22 +106,22 @@ OSS_FUZZER_BENCHMARK_TEMPLATE = """
     $(call cache_from,{base_tag}/builders/{fuzzer}/{benchmark}) \\
     .
 
-.pull-{fuzzer}-{benchmark}-oss-fuzz-builder: .pull-{fuzzer}-{benchmark}-oss-fuzz-builder-intermediate
+.pull-{fuzzer}-{benchmark}-builder: .pull-{fuzzer}-{benchmark}-builder-intermediate
 	docker pull {base_tag}/builders/{fuzzer}/{benchmark}
 
 ifeq (,$(filter {fuzzer},coverage coverage_source_based))
 
-.{fuzzer}-{benchmark}-oss-fuzz-intermediate-runner: base-runner
+.{fuzzer}-{benchmark}-intermediate-runner: base-runner
 	docker build \\
     --tag {base_tag}/runners/{fuzzer}/{benchmark}-intermediate \\
     --file fuzzers/{fuzzer}/runner.Dockerfile \\
     $(call cache_from,{base_tag}/runners/{fuzzer}/{benchmark}-intermediate) \\
     fuzzers/{fuzzer}
 
-.pull-{fuzzer}-{benchmark}-oss-fuzz-intermediate-runner: pull-base-runner
+.pull-{fuzzer}-{benchmark}-intermediate-runner: pull-base-runner
 	docker pull {base_tag}/runners/{fuzzer}/{benchmark}-intermediate
 
-.{fuzzer}-{benchmark}-runner: .{fuzzer}-{benchmark}-oss-fuzz-builder .{fuzzer}-{benchmark}-oss-fuzz-intermediate-runner
+.{fuzzer}-{benchmark}-runner: .{fuzzer}-{benchmark}-builder .{fuzzer}-{benchmark}-intermediate-runner
 	docker build \\
     --tag {base_tag}/runners/{fuzzer}/{benchmark} \\
     --build-arg fuzzer={fuzzer} \\
@@ -130,15 +130,15 @@ ifeq (,$(filter {fuzzer},coverage coverage_source_based))
     --file docker/benchmark-runner/Dockerfile \\
     .
 
-.pull-{fuzzer}-{benchmark}-runner: .pull-{fuzzer}-{benchmark}-oss-fuzz-builder .pull-{fuzzer}-{benchmark}-oss-fuzz-intermediate-runner
+.pull-{fuzzer}-{benchmark}-runner: .pull-{fuzzer}-{benchmark}-builder .pull-{fuzzer}-{benchmark}-intermediate-runner
 	docker pull {base_tag}/runners/{fuzzer}/{benchmark}
 
 """ + OSS_FUZZER_BENCHMARK_RUN_TARGETS_TEMPLATE + """
 
 else
 
-build-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-builder
-pull-{fuzzer}-{benchmark}: .pull-{fuzzer}-{benchmark}-oss-fuzz-builder
+build-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-builder
+pull-{fuzzer}-{benchmark}: .pull-{fuzzer}-{benchmark}-builder
 
 endif
 """
@@ -172,8 +172,7 @@ def main():
     # Output boilerplate used by other templates and generated rules.
     print(BOILERPLATE)
 
-    # Compute the list of benchmarks. OSS-Fuzz benchmarks are built
-    # differently from standard benchmarks.
+    # Compute the list of benchmarks.
     benchmarks = []
     for benchmark in os.listdir(BENCHMARKS_DIR):
         benchmark_path = os.path.join(BENCHMARKS_DIR, benchmark)

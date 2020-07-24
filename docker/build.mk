@@ -68,7 +68,7 @@ $(1)-commit := $(shell cat benchmarks/$(1)/benchmark.yaml | \
 
 .$(1)-project-builder:
 	docker build \
-    --tag $(BASE_TAG)/builders/oss-fuzz-project/$(1) \
+    --tag $(BASE_TAG)/builders/benchmark/$(1) \
     --file benchmarks/$(1)/Dockerfile \
     $(call cache_from,${BASE_TAG}/builders/oss-fuzz-project/$(1)) \
     benchmarks/$(1)
