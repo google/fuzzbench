@@ -11,3 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Self-defined worker module."""
+
+import sys
+
+import redis
+import rq
+from rq import Queue, Worker
+
+
+def main():
+    """Sets up Redis connection and starts the worker."""
+    redis_connection = redis.Redis(host="queue-server")
+    with rq.Connection(redis_connection):
+        queue = Queue('build_n_run_queue')
+        worker = Worker([queue], connection = redis_connection)
+        worker.work()
+
+
+if __name__ == '__main__':
+    main()

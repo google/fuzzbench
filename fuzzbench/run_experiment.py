@@ -24,7 +24,7 @@ from fuzzbench import jobs
 def run_experiment():
     """Main experiment logic."""
     print('Initializing the job queue.')
-    queue = rq.Queue()
+    queue = rq.Queue('build_n_run_queue')
     jobs_list = []
     jobs_list.append(
         queue.enqueue(jobs.build_image,
