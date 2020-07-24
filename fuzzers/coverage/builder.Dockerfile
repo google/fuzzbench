@@ -15,7 +15,7 @@
 ARG parent_image=gcr.io/fuzzbench/base-builder
 FROM $parent_image
 
-# Use a libFuzzer version that supports source-based coverage
+# Use a libFuzzer version that supports clang source-based coverage.
 RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
     cd /llvm-project/ && \
     git checkout d8981ce5b9f8caa567613b2bf5aa3095e0156130 && \
@@ -24,3 +24,4 @@ RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
       clang++ -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \
     done && wait) && \
     ar r /usr/lib/libFuzzer.a *.o
+    

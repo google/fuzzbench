@@ -325,7 +325,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         self.corpus_dir = os.path.join(measurement_dir, 'corpus')
 
         self.crashes_dir = os.path.join(measurement_dir, 'crashes')
-        self.profraw_dir = os.path.join(measurement_dir, 'profraws')
+        self.coverage_dir = os.path.join(measurement_dir, 'coverage')
         self.report_dir = os.path.join(measurement_dir, 'reports')
         self.trial_dir = os.path.join(work_dir, 'experiment-folders',
                                       benchmark_fuzzer_trial_dir)
@@ -339,19 +339,20 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         self.unchanged_cycles_path = os.path.join(self.trial_dir, 'results',
                                                   'unchanged-cycles')
 
-        # Store the profraw file for each cycle
-        self.profraw_file = os.path.join(self.profraw_dir, 'data.profraw')
+        # Store the profraw file containing coverage data for each cycle.
+        self.profraw_file = os.path.join(self.coverage_dir, 'data.profraw')
 
-        # Store the profdata file for the current trial
+        # Store the profdata file for the current trial.
         self.profdata_file = os.path.join(self.report_dir, 'data.profdata')
 
-        # Store the coverage information in json form
-        self.summary_file = os.path.join(self.report_dir, 'summary.txt')
+        # Store the coverage information in json form.
+        self.cov_summary_file = os.path.join(self.report_dir,
+                                             'cov_summary.json')
 
     def initialize_measurement_dirs(self):
         """Initialize directories that will be needed for measuring
         coverage."""
-        for directory in [self.corpus_dir, self.profraw_dir, self.crashes_dir]:
+        for directory in [self.corpus_dir, self.coverage_dir, self.crashes_dir]:
             filesystem.recreate_directory(directory)
         filesystem.create_directory(self.report_dir)
 
@@ -368,28 +369,38 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
     def get_current_coverage(self) -> int:
         """Get the current number of lines covered"""
-        with open(self.summary_file) as summary:
-            coverage_info = json.loads(summary.readlines()[-1])
-            coverage_data = coverage_info["data"][0]
-            summary_data = coverage_data["totals"]
-            region_coverage_data = summary_data["regions"]
-            region_covered = region_coverage_data["covered"]
-            return region_covered
+        if not os.path.exists(self.cov_summary_file):
+            self.logger.warning('No coverage summary json file found.')
+            return None
+        try:
+            with open(self.cov_summary_file) as summary:
+                coverage_info = json.loads(summary.readlines()[-1])
+                coverage_data = coverage_info["data"][0]
+                summary_data = coverage_data["totals"]
+                regions_coverage_data = summary_data["regions"]
+                regions_covered = regions_coverage_data["covered"]
+                return regions_covered
+        except Exception:  # pylint: disable=broad-except
+            self.logger.error('Coverage summary json file defective.')
+            return None
 
-    def generate_profdata(self):
-        """Generate .profdata file from .profraw file"""
-        files_to_merge = [self.profraw_file]
+    def generate_profdata(self, cycle: int):
+        """Generate .profdata file from .profraw file."""
         if os.path.isfile(self.profdata_file):
+            # If coverage profdata exists, then merge it with
+            # existing available data.
             files_to_merge = [self.profraw_file, self.profdata_file]
+        else:
+            files_to_merge = [self.profraw_file]
         command = ['llvm-profdata', 'merge', '-sparse'
                   ] + files_to_merge + ['-o', self.profdata_file]
-        env = os.environ.copy()
-        result = new_process.execute(command, env=env)
+        result = new_process.execute(command)
 
         if result.retcode != 0:
-            self.logger.error('generate profdata failed.')
+            self.logger.error(
+                'Coverage profdata generation failed for cycle: %d.', cycle)
 
-    def generate_summary(self):
+    def generate_summary(self, cycle: int):
         """Transform the .profdata file into json form"""
         coverage_binary = get_coverage_binary(self.benchmark)
         command = [
@@ -397,11 +408,12 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             coverage_binary,
             '-instr-profile=%s' % self.profdata_file
         ]
-        output_file_path = self.summary_file
-        with open(output_file_path, 'w') as output_file:
+        with open(self.cov_summary_file, 'w') as output_file:
             result = new_process.execute(command, output_file=output_file)
         if result.retcode != 0:
-            self.logger.error('generate summary file failed.')
+            self.logger.error(
+                'Coverage summary json file generation failed for \
+                    cycle: %d.', cycle)
 
     def is_cycle_unchanged(self, cycle: int) -> bool:
         """Returns True if |cycle| is unchanged according to the
@@ -534,10 +546,10 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     this_time = cycle * experiment_utils.get_snapshot_seconds()
     if snapshot_measurer.is_cycle_unchanged(cycle):
         snapshot_logger.info('Cycle: %d is unchanged.', cycle)
-        current_covered_lines = snapshot_measurer.get_current_coverage()
+        regions_covered = snapshot_measurer.get_current_coverage()
         return models.Snapshot(time=this_time,
                                trial_id=trial_num,
-                               edges_covered=current_covered_lines)
+                               edges_covered=regions_covered)
 
     corpus_archive_dst = os.path.join(
         snapshot_measurer.trial_dir, 'corpus',
@@ -563,20 +575,23 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     snapshot_measurer.run_cov_new_units()
 
     # Generate profdata and transform it into json form
-    snapshot_measurer.generate_profdata()
-    snapshot_measurer.generate_summary()
+    snapshot_measurer.generate_profdata(cycle)
+    snapshot_measurer.generate_summary(cycle)
+
     # Get the coverage of the new corpus units.
-    region_covered = snapshot_measurer.get_current_coverage()
+    regions_covered = snapshot_measurer.get_current_coverage()
+    if not regions_covered:
+        regions_covered = 0
     snapshot = models.Snapshot(time=this_time,
                                trial_id=trial_num,
-                               edges_covered=region_covered)
+                               edges_covered=regions_covered)
 
     # Record the new corpus files.
     snapshot_measurer.update_measured_files()
 
     # Archive crashes directory.
     snapshot_measurer.archive_crashes(cycle)
-    measuring_time = round(time.time() - measuring_start_time, 4)
+    measuring_time = round(time.time() - measuring_start_time, 2)
     snapshot_logger.info('Measured cycle: %d in %s seconds.', cycle,
                          str(measuring_time))
     return snapshot

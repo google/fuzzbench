@@ -57,25 +57,25 @@ def db_experiment(experiment_config, db):
 
 
 def test_get_current_coverage(fs, experiment):
-    """Tests that get_current_coverage read the correct data from json file"""
+    """Tests that get_current_coverage reads the correct data from json file."""
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)
-    json_summary_file = get_test_data_path('json_summary.txt')
-    fs.add_real_file(json_summary_file, read_only=False)
-    snapshot_measurer.summary_file = json_summary_file
+    json_cov_summary_file = get_test_data_path('cov_summary.json')
+    fs.add_real_file(json_cov_summary_file, read_only=False)
+    snapshot_measurer.cov_summary_file = json_cov_summary_file
     covered_regions = snapshot_measurer.get_current_coverage()
     assert covered_regions == 7
 
 
 @mock.patch('common.new_process.execute')
 def test_generate_profdata_create(mocked_execute, experiment):
-    """Tests that generate_profdata can run the correct command"""
+    """Tests that generate_profdata can run the correct command."""
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)
     snapshot_measurer.profdata_file = '/work/reports/data.profdata'
     snapshot_measurer.profraw_file = '/work/reports/data.profraw'
-    snapshot_measurer.generate_profdata()
+    snapshot_measurer.generate_profdata(CYCLE)
 
     expected = [
         'llvm-profdata', 'merge', '-sparse', '/work/reports/data.profraw', '-o',
@@ -89,14 +89,14 @@ def test_generate_profdata_create(mocked_execute, experiment):
 
 @mock.patch('common.new_process.execute')
 def test_generate_profdata_merge(mocked_execute, experiment, fs):
-    """Tests that generate_profdata can run correctly with existing profraw"""
+    """Tests that generate_profdata can run correctly with existing profraw."""
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)
     snapshot_measurer.profdata_file = '/work/reports/data.profdata'
     snapshot_measurer.profraw_file = '/work/reports/data.profraw'
     fs.create_file('/work/reports/data.profdata')
-    snapshot_measurer.generate_profdata()
+    snapshot_measurer.generate_profdata(CYCLE)
 
     expected = [
         'llvm-profdata', 'merge', '-sparse', '/work/reports/data.profraw',
@@ -112,17 +112,17 @@ def test_generate_profdata_merge(mocked_execute, experiment, fs):
 @mock.patch('experiment.measurer.get_coverage_binary')
 def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
                           experiment, fs):
-    """Tests that generate_summary can run the correct command"""
+    """Tests that generate_summary can run the correct command."""
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
     coverage_binary_path = '/work/coverage-binaries/benchmark-a/fuzz-target'
     mocked_get_coverage_binary.return_value = coverage_binary_path
 
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)
-    snapshot_measurer.summary_file = "/reports/summary.txt"
+    snapshot_measurer.cov_summary_file = "/reports/cov_summary.txt"
     snapshot_measurer.profdata_file = "/reports/data.profdata"
     fs.create_dir('/reports')
-    snapshot_measurer.generate_summary()
+    snapshot_measurer.generate_summary(CYCLE)
 
     expected = [
         'llvm-cov', 'export', '-format=text', '-summary-only',
@@ -133,7 +133,7 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
     assert (len(mocked_execute.call_args_list)) == 1
     args = mocked_execute.call_args_list[0]
     assert args[0][0] == expected
-    assert args[1]['output_file'].name == "/reports/summary.txt"
+    assert args[1]['output_file'].name == "/reports/cov_summary.txt"
 
 
 @mock.patch('common.logs.error')
@@ -281,7 +281,7 @@ def test_run_cov_new_units(mocked_execute, fs, environ):
         fs.create_file(os.path.join(snapshot_measurer.corpus_dir, unit))
     fuzz_target_path = '/work/coverage-binaries/benchmark-a/fuzz-target'
     fs.create_file(fuzz_target_path)
-    profraw_file_path = os.path.join(snapshot_measurer.profraw_dir,
+    profraw_file_path = os.path.join(snapshot_measurer.coverage_dir,
                                      'data.profraw')
     fs.create_file(profraw_file_path)
 
