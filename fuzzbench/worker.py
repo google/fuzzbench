@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Self-defined worker module."""
-
-import sys
-
 import redis
 import rq
 from rq import Queue, Worker
@@ -25,7 +22,7 @@ def main():
     redis_connection = redis.Redis(host="queue-server")
     with rq.Connection(redis_connection):
         queue = Queue('build_n_run_queue')
-        worker = Worker([queue], connection = redis_connection)
+        worker = Worker([queue], connection=redis_connection)
         worker.work()
 
 
