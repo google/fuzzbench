@@ -16,7 +16,6 @@
 import os
 from typing import Dict, Tuple
 
-from common import benchmark_utils
 from common import experiment_path as exp_path
 from common import experiment_utils
 from common import logs
@@ -47,10 +46,7 @@ def build_base_images() -> Tuple[int, str]:
 
 def build_coverage(benchmark):
     """Build coverage image for benchmark on GCB."""
-    if benchmark_utils.is_oss_fuzz(benchmark):
-        _build_oss_fuzz_project_coverage(benchmark)
-    else:
-        _build_benchmark_coverage(benchmark)
+    _build_oss_fuzz_project_coverage(benchmark)
 
 
 def _build_benchmark_coverage(benchmark: str) -> Tuple[int, str]:
@@ -160,7 +156,4 @@ def get_build_config_file(filename: str) -> str:
 
 def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
     """Builds |benchmark| for |fuzzer|."""
-    if benchmark_utils.is_oss_fuzz(benchmark):
-        _build_oss_fuzz_project_fuzzer(benchmark, fuzzer)
-    else:
-        _build_benchmark_fuzzer(benchmark, fuzzer)
+    _build_oss_fuzz_project_fuzzer(benchmark, fuzzer)
