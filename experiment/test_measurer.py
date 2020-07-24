@@ -68,7 +68,7 @@ def test_get_current_coverage(fs, experiment):
 
 
 def test_get_current_coverage_error(fs, experiment):
-    """Tests that get_current_coverage returns None from a 
+    """Tests that get_current_coverage returns None from a
     defective json file."""
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)

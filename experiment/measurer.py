@@ -374,6 +374,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             return None
         try:
             with open(self.cov_summary_file) as summary:
+                # Using the last line to skip the warning in bloaty
                 coverage_info = json.loads(summary.readlines()[-1])
                 coverage_data = coverage_info["data"][0]
                 summary_data = coverage_data["totals"]
