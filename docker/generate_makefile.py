@@ -176,7 +176,7 @@ OSS_FUZZER_BENCHMARK_TEMPLATE = """
 	docker build \\
     --tag {base_tag}/builders/{fuzzer}/{benchmark}-intermediate \\
     --file=fuzzers/{fuzzer}/builder.Dockerfile \\
-    --build-arg parent_image=gcr.io/fuzzbench/builders/oss-fuzz/{benchmark} \\
+    --build-arg parent_image=gcr.io/fuzzbench/builders/oss-fuzz-project/{benchmark} \\
     $(call cache_from,{base_tag}/builders/{fuzzer}/{benchmark}-intermediate) \\
     fuzzers/{fuzzer}
 
