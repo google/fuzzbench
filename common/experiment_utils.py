@@ -60,14 +60,21 @@ def get_trial_instance_name(experiment: str, trial_id: int) -> str:
     return 'r-%s-%d' % (experiment, trial_id)
 
 
+def get_cycle_file_name(basename: str, cycle: int) -> str:
+    """Returns a filename for a file that is relevant to a particular snapshot
+    cycle."""
+    filename = basename + '-' + ('%04d' % cycle)
+    return filename
+
+
 def get_corpus_archive_name(cycle: int) -> str:
     """Returns a corpus archive name given a cycle."""
-    return 'corpus-archive-%04d.tar.gz' % cycle
+    return get_cycle_file_name('corpus-archive', cycle) + '.tar.gz'
 
 
 def get_crashes_archive_name(cycle: int) -> str:
     """Return as crashes archive name given a cycle."""
-    return 'crashes-%04d.tar.gz' % cycle
+    return get_cycle_file_name('crashes', cycle) + '.tar.gz'
 
 
 def get_base_docker_tag(cloud_project=None):

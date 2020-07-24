@@ -60,6 +60,15 @@ dispatcher-image: base-image
     $(call cache_from,${BASE_TAG}/dispatcher-image) \
     docker/dispatcher-image
 
+measure-worker: base-runner
+	docker build \
+    --tag $(BASE_TAG)/measure-worker \
+    $(call cache_from_base,${BASE_TAG}/measure-worker) \
+    --file docker/measure-worker/Dockerfile \
+    .
+
+pull-measure-worker: pull-measure-worker
+	docker pull $(BASE_TAG)/measure-worker
 define oss_fuzz_benchmark_template
 $(1)-project-name := $(shell cat benchmarks/$(1)/oss-fuzz.yaml | \
                              grep project | cut -d ':' -f2 | tr -d ' ')

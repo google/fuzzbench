@@ -69,16 +69,18 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     and returns it."""
     config = yaml_utils.read(config_filename)
     filestore_params = {'experiment_filestore', 'report_filestore'}
-    cloud_config = {'cloud_compute_zone', 'cloud_project'}
-    docker_config = {'docker_registry'}
-    string_params = cloud_config.union(filestore_params).union(docker_config)
+    cloud_params = {'cloud_compute_zone', 'cloud_project'}
+    redis_params = {'redis_host'}
+    docker_params = {'docker_registry'}
+    string_params = cloud_params.union(filestore_params, redis_params,
+                                       docker_params)
     int_params = {'trials', 'max_total_time'}
-    required_params = int_params.union(filestore_params).union(docker_config)
+    required_params = int_params.union(filestore_params, docker_params,
+                                       redis_params)
     bool_params = {'private', 'merge_with_nonprivate'}
-
     local_experiment = config.get('local_experiment', False)
     if not local_experiment:
-        required_params = required_params.union(cloud_config)
+        required_params = required_params.union(cloud_params)
 
     valid = True
     if 'cloud_experiment_bucket' in config or 'cloud_web_bucket' in config:
@@ -301,6 +303,8 @@ class LocalDispatcher:
             instance_name=self.instance_name)
         set_experiment_arg = 'EXPERIMENT={experiment}'.format(
             experiment=self.config['experiment'])
+        set_redis_host_arg = 'REDIS_HOST={redis_host}'.format(
+            redis_host=self.config['redis_host'])
         shared_experiment_filestore_arg = '{0}:{0}'.format(
             self.config['experiment_filestore'])
         # TODO: (#484) Use config in function args or set as environment
@@ -331,6 +335,8 @@ class LocalDispatcher:
             set_instance_name_arg,
             '-e',
             set_experiment_arg,
+            '-e',
+            set_redis_host_arg,
             '-e',
             sql_database_arg,
             '-e',

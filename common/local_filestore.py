@@ -19,12 +19,12 @@ from common import new_process
 from common import filesystem
 
 
-def cp(  # pylint: disable=invalid-name
+def cp(  # pylint: disable=invalid-name,unused-argument
         source,
         destination,
         recursive=False,
-        parallel=False,  # pylint: disable=unused-argument
-        expect_zero=True):
+        expect_zero=True,
+        parallel=False):
     """Executes "cp" command from |source| to |destination|."""
     # Create intermediate folders for `cp` command to behave like `gsutil.cp`.
     filesystem.create_directory(os.path.dirname(destination))
@@ -42,8 +42,7 @@ def ls(path, must_exist=True):  # pylint: disable=invalid-name
     # Add '-1' (i.e., number one) to behave like `gsutil.ls` (i.e., one filename
     # per line).
     command = ['ls', '-1', path]
-    process_result = new_process.execute(command, expect_zero=must_exist)
-    return process_result
+    return new_process.execute(command, expect_zero=must_exist)
 
 
 def rm(  # pylint: disable=invalid-name
@@ -62,12 +61,12 @@ def rm(  # pylint: disable=invalid-name
     return new_process.execute(command, expect_zero=True)
 
 
-def rsync(  # pylint: disable=too-many-arguments
+def rsync(  # pylint: disable=too-many-arguments,unused-argument
         source,
         destination,
         delete=True,
         recursive=True,
-        gsutil_options=None,  # pylint: disable=unused-argument
+        gsutil_options=None,
         options=None,
         parallel=False):  # pylint: disable=unused-argument
     """Does local_filestore rsync from |source| to |destination| using sane
@@ -91,3 +90,9 @@ def rsync(  # pylint: disable=too-many-arguments
         source = source + '/'
     command.extend([source, destination])
     return new_process.execute(command, expect_zero=True)
+
+
+def cat(file_path, expect_zero=True):
+    """Does cat on |file_path| and returns the result."""
+    command = ['cat', file_path]
+    return new_process.execute(command, expect_zero=expect_zero)

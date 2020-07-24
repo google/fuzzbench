@@ -12,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Google cloud related code."""
-
 import enum
+import posixpath
 import subprocess
 from typing import List
 
 from common import experiment_utils
 from common import new_process
 
-# Constants for dispatcher specs.
-DISPATCHER_MACHINE_TYPE = 'n1-standard-96'
-DISPATCHER_BOOT_DISK_SIZE = '4TB'
-DISPATCHER_BOOT_DISK_TYPE = 'pd-ssd'
+# TODO(metzman): Lower this when we figure out how else we can take advantage
+# of the 30 concurrent GCB builds.
+DISPATCHER_MACHINE_TYPE = 'n1-standard-32'
+DISPATCHER_BOOT_DISK_SIZE = '500GB'
 
 # Constants for runner specs.
 RUNNER_MACHINE_TYPE = 'n1-standard-1'
@@ -65,8 +65,7 @@ def create_instance(instance_name: str,
     if instance_type == InstanceType.DISPATCHER:
         command.extend([
             '--machine-type=%s' % DISPATCHER_MACHINE_TYPE,
-            '--boot-disk-size=%s' % DISPATCHER_BOOT_DISK_SIZE,
-            '--boot-disk-type=%s' % DISPATCHER_BOOT_DISK_TYPE,
+            '--boot-disk-size=%s' % DISPATCHER_BOOT_DISK_SIZE
         ])
     else:
         command.extend([
@@ -118,3 +117,33 @@ def run_local_instance(startup_script: str = None) -> bool:
     command = ['/bin/bash', startup_script]
     subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     return new_process.ProcessResult(0, '', False)
+
+
+def create_instance_template(template_name, docker_image, env, project, zone):
+    """Returns a ProcessResult from running the command to create an instance
+    template."""
+    # Creating an instance template cannot be done using the GCE API because
+    # there is no public API for handling some docker related functionality that
+    # we need.
+    command = [
+        'gcloud', 'compute', '--project', project, 'instance-templates',
+        'create-with-container', template_name, '--no-address',
+        '--image-family=cos-stable', '--image-project=cos-cloud',
+        '--region=%s' % zone, '--scopes=cloud-platform',
+        '--machine-type=n1-standard-1', '--boot-disk-size=50GB',
+        '--preemptible', '--container-image', docker_image
+    ]
+    for item in env.items():
+        command.extend(['--container-env', '%s=%s' % item])
+    new_process.execute(command)
+    return posixpath.join('https://www.googleapis.com/compute/v1/projects/',
+                          project, 'global', 'instanceTemplates', template_name)
+
+
+def delete_instance_template(template_name: str):
+    """Returns a ProcessResult from running the command to delete the
+    measure_worker template for this |experiment|."""
+    command = [
+        'gcloud', 'compute', 'instance-templates', 'delete', template_name
+    ]
+    return new_process.execute(command)

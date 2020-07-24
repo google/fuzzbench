@@ -36,7 +36,7 @@ gcloud iam service-accounts keys create ${credentials_file} \
 
 # Start dispatcher.
 PYTHONPATH=${WORK}/src GOOGLE_APPLICATION_CREDENTIALS=${credentials_file} \
-    python3 "${WORK}/src/experiment/dispatcher.py"
+  python3 "${WORK}/src/experiment/dispatcher.py"
 
 # Revoke created credentials.
 key_id=$(cat "${credentials_file}" | jq -r ".private_key_id")

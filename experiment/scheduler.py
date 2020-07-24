@@ -39,7 +39,7 @@ from database import utils as db_utils
 # minutes is an arbitrary amount of time.
 GRACE_TIME_SECONDS = 5 * 60
 
-FAIL_WAIT_SECONDS = 10 * 60
+WAIT_SECONDS = 10 * 60
 
 logger = logs.Logger('scheduler')  # pylint: disable=invalid-name
 
@@ -98,8 +98,7 @@ def get_expired_trials(experiment: str, max_total_time: int):
 
 
 def all_trials_ended(experiment: str) -> bool:
-    """Return a bool if there are any trials in |experiment| that have not
-    started."""
+    """Returns True if all trials for |experiment| have ended."""
     return not get_experiment_trials(experiment).filter(
         models.Trial.time_ended.is_(None)).all()
 
@@ -577,6 +576,15 @@ def schedule(experiment_config: dict, pool):
 
 
 def schedule_loop(experiment_config: dict):
+    """Wrapper around _schedule_loop that logs errors."""
+    _initialize_logs(experiment_config['experiment'])
+    try:
+        _schedule_loop(experiment_config)
+    except Exception:  # pylint: disable=broad-except
+        logger.error('Fatal error occurred during scheduling.')
+
+
+def _schedule_loop(experiment_config: dict):
     """Continuously run the scheduler until there is nothing left to schedule.
     Note that this should not be called unless
     multiprocessing.set_start_method('spawn') was called first. Otherwise it
@@ -592,6 +600,7 @@ def schedule_loop(experiment_config: dict):
         trial_instance_manager = TrialInstanceManager(num_trials,
                                                       experiment_config)
     experiment = experiment_config['experiment']
+
     with multiprocessing.Pool() as pool:
         handle_preempted = False
         while not all_trials_ended(experiment):
@@ -616,7 +625,7 @@ def schedule_loop(experiment_config: dict):
             # - We have not been able to start trials and still have some
             #   remaining. This can happen when we run out of instance quota.
             # In these cases, sleep before retrying again.
-            time.sleep(FAIL_WAIT_SECONDS)
+            time.sleep(WAIT_SECONDS)
 
     logger.info('Finished scheduling.')
 
@@ -765,11 +774,6 @@ def create_trial_instance(fuzzer: str, benchmark: str, trial_id: int,
 
 def main():
     """Main function for running scheduler independently."""
-    logs.initialize(default_extras={
-        'component': 'dispatcher',
-        'subcomponent': 'scheduler'
-    })
-
     if len(sys.argv) != 2:
         print('Usage: {} <experiment_config.yaml>'.format(sys.argv[0]))
         return 1

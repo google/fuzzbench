@@ -74,10 +74,13 @@ report_filestore: gs://$REPORT_BUCKET_NAME
 
 # The connection to use to connect to the Google Cloud SQL instance.
 cloud_sql_instance_connection_name: "$PROJECT_NAME:$PROJECT_REGION:$POSTGRES_INSTANCE=tcp:5432"
+
+# The host running our redis instance.
+redis_host: "$REDIS_HOST"
 ```
 
 **NOTE:** The values `$PROJECT_NAME`, `$PROJECT_REGION`, `PROJECT_ZONE`, `$DATA_BUCKET_NAME`,
-`$REPORT_BUCKET_NAME` `$POSTGRES_INSTANCE` refer to the values of those
+`$REPORT_BUCKET_NAME` `$POSTGRES_INSTANCE` `$REDIS_HOST` refer to the values of those
 environment variables that were set in the [guide on setting up a Google Cloud
 Project]({{ site.baseurl }}/running-your-own-experiment/setting-up-a-google-cloud-project/).
 For example if `$PROJECT_NAME` is `my-fuzzbench-project`, use

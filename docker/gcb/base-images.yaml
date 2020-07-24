@@ -13,13 +13,14 @@
 # limitations under the License.
 
 # The order of execution is as follows:
-# 1. Pull base-image, base-builder, base-runner.
+# 1. Pull base-image, base-builder, base-runner, measure-worker.
 # 2. After pulling base-image completes: Build base-image.
 # 3. After pulling base-builder and building base-image completes: Build base-builder.
 # 3. After pulling base-runner and building base-image completes: Build base-runner.
+# 3. After pulling measure-worker and building base-runner completes: Build measure-worker.
 # This is optimized to take advantage of concurrency and caching as much as
 # possible. When nothing changes, this does build takes two minutes to complete
-# instead of ten.'
+# instead of ten.
 # See https://cloud.google.com/cloud-build/docs/speeding-up-builds for a discussion
 # on using caching.
 # See https://cloud.google.com/cloud-build/docs/configuring-builds/configure-build-step-order
@@ -96,7 +97,7 @@ steps:
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/base-builder',
+    'gcr.io/fuzzbench/base-runner',
 
     '--tag',
     '${_REPO}/base-runner:${_EXPERIMENT}',
@@ -108,8 +109,43 @@ steps:
   ]
   # Wait for pull and building base-image to finish.
   wait_for: ['base-image', 'base-runner-pull']
+  id: 'base-runner'
+
+
+# Pull base-runner to fill cache.
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      docker pull ${_REPO}/measure-worker || exit 0
+  id: 'measure-worker-pull'
+  wait_for: ['-']  # Start this immediately.
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+
+    '--tag',
+    'gcr.io/fuzzbench/measure-worker:${_EXPERIMENT}',
+
+    '--tag',
+    '${_REPO}/measure-worker:${_EXPERIMENT}',
+
+    '--cache-from',
+    '${_REPO}/measure-worker',
+
+    '--file',
+    'docker/measure-worker/Dockerfile',
+
+    '.'
+  ]
+  # Wait for pull and building base-image to finish.
+  wait_for: ['base-runner', 'measure-worker-pull']
+
 
 images:
   - '${_REPO}/base-image:${_EXPERIMENT}'
   - '${_REPO}/base-builder:${_EXPERIMENT}'
   - '${_REPO}/base-runner:${_EXPERIMENT}'
+  - '${_REPO}/measure-worker:${_EXPERIMENT}'

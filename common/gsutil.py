@@ -28,7 +28,7 @@ def gsutil_command(arguments, expect_zero=True, parallel=False):
     return new_process.execute(command + arguments, expect_zero=expect_zero)
 
 
-def cp(source, destination, recursive=False, parallel=False, expect_zero=True):  # pylint: disable=invalid-name
+def cp(source, destination, recursive=False, expect_zero=True, parallel=False):  # pylint: disable=invalid-name
     """Executes gsutil's "cp" command to copy |source| to |destination|. Uses -r
     if |recursive|. If |expect_zero| is True and the command fails then this
     function will raise a subprocess.CalledError."""
@@ -36,7 +36,6 @@ def cp(source, destination, recursive=False, parallel=False, expect_zero=True): 
     if recursive:
         command.append('-r')
     command.extend([source, destination])
-
     return gsutil_command(command, parallel=parallel, expect_zero=expect_zero)
 
 
@@ -44,8 +43,7 @@ def ls(path, must_exist=True):  # pylint: disable=invalid-name
     """Executes gsutil's "ls" command on |path|. If |must_exist| is True and the
     command fails then this function will raise a subprocess.CalledError."""
     command = ['ls', path]
-    process_result = gsutil_command(command, expect_zero=must_exist)
-    return process_result
+    return gsutil_command(command, expect_zero=must_exist)
 
 
 def rm(path, recursive=True, force=False, parallel=False):  # pylint: disable=invalid-name
@@ -84,3 +82,9 @@ def rsync(  # pylint: disable=too-many-arguments
         command.extend(options)
     command.extend([source, destination])
     return gsutil_command(command, parallel=parallel)
+
+
+def cat(file_path, expect_zero=True):
+    """Does gsutil cat on |file_path| and returns the result."""
+    command = ['cat', file_path]
+    return gsutil_command(command, expect_zero=expect_zero)
