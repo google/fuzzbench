@@ -31,6 +31,10 @@ COPY --from=base-image /usr/local/bin/python3* /usr/local/bin/
 COPY --from=base-image /usr/local/lib/python3.7 /usr/local/lib/python3.7
 COPY --from=base-image /usr/local/include/python3.7m /usr/local/include/python3.7m
 
+# This is for "standard" benchmarks.
+# TODO(metzman): Get rid of common.sh and this step.
+COPY benchmarks/common.sh ./
+
 COPY fuzzers/$fuzzer/fuzzer.py $SRC/fuzzer.py
 
 # Copy the entire fuzzers directory tree to allow for module dependencies.

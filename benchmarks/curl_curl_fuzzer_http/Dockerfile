@@ -16,7 +16,7 @@
 
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:dc0a0e4327c53b000c63837c5ea8d5e8f18fb0fb2a38abd4249dedca39ed0a1f
 
-# Curl will be checked out to the commit hash specified in oss-fuzz.yaml.
+# Curl will be checked out to the commit hash specified in benchmark.yaml.
 RUN git clone --depth 1 https://github.com/curl/curl.git /src/curl
 RUN git clone https://github.com/curl/curl-fuzzer.git /src/curl_fuzzer
 RUN git -C /src/curl_fuzzer checkout -f 82eb95b410cc84579b8f9d663f2a7e38f3bdb41f

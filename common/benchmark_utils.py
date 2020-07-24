@@ -69,7 +69,7 @@ def validate(benchmark):
         return False
     if benchmark in get_all_benchmarks():
         return True
-    logs.error('%s must have a build.sh or oss-fuzz.yaml.', benchmark)
+    logs.error('%s must have a benchmark.yaml.', benchmark)
     return False
 
 
@@ -78,10 +78,6 @@ def get_all_benchmarks():
     all_benchmarks = []
     for benchmark in os.listdir(BENCHMARKS_DIR):
         benchmark_path = os.path.join(BENCHMARKS_DIR, benchmark)
-        if os.path.isfile(os.path.join(benchmark_path, 'oss-fuzz.yaml')):
-            # Benchmark is an OSS-Fuzz benchmark.
-            all_benchmarks.append(benchmark)
-        elif os.path.isfile(os.path.join(benchmark_path, 'build.sh')):
-            # Benchmark is a standard benchmark.
+        if os.path.isfile(os.path.join(benchmark_path, 'benchmark.yaml')):
             all_benchmarks.append(benchmark)
     return all_benchmarks

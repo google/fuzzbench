@@ -28,7 +28,7 @@ def test_get_config_file():
     assert oss_fuzz.get_config_file(
         conftest.OSS_FUZZ_BENCHMARK_NAME) == os.path.join(
             utils.ROOT_DIR, 'benchmarks', conftest.OSS_FUZZ_BENCHMARK_NAME,
-            'oss-fuzz.yaml')
+            'benchmark.yaml')
 
 
 def test_get_config(oss_fuzz_benchmark):
