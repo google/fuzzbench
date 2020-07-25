@@ -14,15 +14,14 @@
 """Self-defined worker module."""
 import redis
 import rq
-from rq import Queue, Worker
 
 
 def main():
     """Sets up Redis connection and starts the worker."""
     redis_connection = redis.Redis(host="queue-server")
     with rq.Connection(redis_connection):
-        queue = Queue('build_n_run_queue')
-        worker = Worker([queue], connection=redis_connection)
+        queue = rq.Queue('build_n_run_queue')
+        worker = rq.Worker([queue], connection=redis_connection)
         worker.work()
 
 
