@@ -12,8 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Self-defined worker module."""
+import time
+
 import redis
 import rq
+
+MAX_TIME_LIMIT = 3600
+REASSIGN_GAP_TIME = 5
 
 
 def main():
@@ -22,7 +27,9 @@ def main():
     with rq.Connection(redis_connection):
         queue = rq.Queue('build_n_run_queue')
         worker = rq.Worker([queue], connection=redis_connection)
-        worker.work()
+        while len(queue) > 0:
+            worker.work(burst=True)
+            time.sleep(REASSIGN_GAP_TIME)
 
 
 if __name__ == '__main__':
