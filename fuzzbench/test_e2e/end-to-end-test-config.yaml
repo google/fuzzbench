@@ -4,3 +4,4 @@ benchmarks:
 fuzzers:
     - afl
     - libfuzzer
+max_total_time: 3600

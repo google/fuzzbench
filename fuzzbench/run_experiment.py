@@ -29,7 +29,7 @@ redis_connection = redis.Redis(host="queue-server")  # pylint: disable=invalid-n
 def run_experiment(config):
     """Main experiment logic."""
     print('Initializing the job queue.')
-    queue = rq.Queue()
+    queue = rq.Queue('build_n_run_queue')
 
     images_to_build = docker_images.get_images_to_build(config['fuzzers'],
                                                         config['benchmarks'])
@@ -42,6 +42,7 @@ def run_experiment(config):
                               tag=obj['tag'],
                               context=obj['context'],
                               job_timeout=600,
+                              result_ttl=config['max_total_time'],
                               job_id=name))
             continue
 
@@ -56,11 +57,17 @@ def run_experiment(config):
                           dockerfile=obj.get('dockerfile', None),
                           buildargs=obj.get('build_arg', None),
                           job_timeout=600,
+                          result_ttl=config['max_total_time'],
                           job_id=name,
                           depends_on=obj['depends_on'][0]))
 
     while True:
         print('Current status of jobs:')
+        print('\tstarted:\t%d' % queue.started_job_registry.count)
+        print('\tdeferred:\t%d' % queue.deferred_job_registry.count)
+        print('\tfinished:\t%d' % queue.finished_job_registry.count)
+        print('\tscheduled:\t%d' % queue.scheduled_job_registry.count)
+        print('\tfailed:\t%d' % queue.failed_job_registry.count)
         for job in jobs_list:
             print('  %s : %s\t(%s)' % (job.func_name, job.get_status(), job.id))
 
@@ -81,6 +88,7 @@ def run_experiment(config):
                                       dockerfile=obj.get('dockerfile', None),
                                       buildargs=obj.get('build_arg', None),
                                       job_timeout=600,
+                                      result_ttl=config['max_total_time'],
                                       job_id=name))
 
         if all([job.result is not None for job in jobs_list]):
