@@ -109,6 +109,8 @@ def generate_benchmark_images(buildable_images, coverage=False):
     for name in buildable_images:
         if any(_ in name for _ in ('base', 'oss-fuzz')):
             continue
+        if coverage and 'runner' in name:
+            continue
         benchmark_images_template[name] = buildable_images[name]
     return create_cloud_build_spec(benchmark_images_template, coverage=coverage)
 
@@ -118,6 +120,8 @@ def generate_oss_fuzz_benchmark_images(buildable_images, coverage=False):
     for name in buildable_images:
         if 'oss-fuzz' in name:
             oss_fuzz_benchmark_images_template[name] = buildable_images[name]
+        if coverage and 'runner' in name:
+            continue
     return create_cloud_build_spec(oss_fuzz_benchmark_images_template, coverage=coverage)
 
 

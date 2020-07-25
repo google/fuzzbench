@@ -87,7 +87,7 @@ def print_makefile_run_template(name, image, oss_fuzz=False):
         for dep in image['depends_on']:
             print(' ' + dep.format(oss_fuzz_string=oss_fuzz_string), end='')
         print()
-        print('\t docker run \\')
+        print('\tdocker run \\')
         if not run_template == 'test-run':
             print('\t--cpus=1 \\')
         print('\t--cap-add SYS_NICE \\')
@@ -95,7 +95,7 @@ def print_makefile_run_template(name, image, oss_fuzz=False):
         for var in image['env_vars']:
             if var.startswith('FUZZ_TARGET') and not oss_fuzz:
                 continue
-            print('\t-e ' + var + '\\')
+            print('\t-e ' + var + ' \\')
         print('\t', end='')
         if run_template == 'test-run':
             print('-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\\n\t', end='')
