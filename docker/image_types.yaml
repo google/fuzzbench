@@ -23,28 +23,31 @@
   depends_on:
     - 'base-image'
 
-# 'coverage-builder':
+# '.coverage-builder':
 #   tag: 'builders/coverage'
 #   context: 'fuzzers/coverage'
 #   dockerfile: 'fuzzers/coverage/builder.Dockerfile'
 #   depends_on:
 #     - 'base-builder'
 
-# 'coverage-{benchmark}-builder':
+# '.coverage-{benchmark}-builder':
 #   tag: 'builders/coverage/{benchmark}'
 #   context: '.'
 #   dockerfile: 'docker/benchmark-builder/Dockerfile'
+#   build_arg:
+#     - 'fuzzer=coverage'
+#     - 'benchmark={benchmark}'
 #   depends_on:
 #     - 'coverage-builder'
 
-'{fuzzer}-builder':
+'.{fuzzer}-builder':
   tag: 'builders/{fuzzer}'
   context: 'fuzzers/{fuzzer}'
   dockerfile: 'fuzzers/{fuzzer}/builder.Dockerfile'
   depends_on:
     - 'base-builder'
 
-'{fuzzer}-{benchmark}-builder':
+'.{fuzzer}-{benchmark}-builder':
   tag: 'builders/{fuzzer}/{benchmark}'
   context: '.'
   dockerfile: 'docker/benchmark-builder/Dockerfile'
@@ -52,16 +55,16 @@
     - 'fuzzer={fuzzer}'
     - 'benchmark={benchmark}'
   depends_on:
-    - '{fuzzer}-builder'
+    - '.{fuzzer}-builder'
 
-'{fuzzer}-{benchmark}-intermediate-runner':
+'.{fuzzer}-{benchmark}-intermediate-runner':
   tag: 'runners/{fuzzer}/{benchmark}-intermediate'
   context: 'fuzzers/{fuzzer}'
   dockerfile: 'fuzzers/{fuzzer}/runner.Dockerfile'
   depends_on:
     - 'base-runner'
 
-'{fuzzer}-{benchmark}-runner':
+'.{fuzzer}-{benchmark}-runner':
   tag: 'runners/{fuzzer}/{benchmark}'
   context: '.'
   dockerfile: 'docker/benchmark-runner/Dockerfile'
@@ -69,19 +72,24 @@
     - 'fuzzer={fuzzer}'
     - 'benchmark={benchmark}'
   depends_on:
-    - '{fuzzer}-{benchmark}-builder'
-    - '{fuzzer}-{benchmark}-intermediate-runner'
+    - '.{fuzzer}-{benchmark}-builder'
+    - '.{fuzzer}-{benchmark}-intermediate-runner'
 
-'{fuzzer}-{benchmark}-oss-fuzz-builder-intermediate':
+'.{benchmark}-oss-fuzz-project-builder':
+  tag: 'builders/oss-fuzz/{benchmark}'
+  context: 'benchmarks/{benchmark}'
+  dockerfile: 'benchmarks/{benchmark}/Dockerfile'
+
+'.{fuzzer}-{benchmark}-oss-fuzz-builder-intermediate':
   tag: 'builders/{fuzzer}/{benchmark}-intermediate'
   context: 'fuzzers/{fuzzer}'
   dockerfile: 'fuzzers/{fuzzer}/builder.Dockerfile'
   depends_on:
-    - '{benchmark}-project-builder'
+    - '.{benchmark}-oss-fuzz-project-builder'
   build_arg:
     - 'parent_image=gcr.io/fuzzbench/builders/oss-fuzz/{benchmark}'
 
-'{fuzzer}-{benchmark}-oss-fuzz-builder':
+'.{fuzzer}-{benchmark}-oss-fuzz-builder':
   tag: 'builders/{fuzzer}/{benchmark}'
   context: '.'
   dockerfile: 'docker/oss-fuzz-builder/Dockerfile'
@@ -91,19 +99,34 @@
     - 'benchmark={benchmark}'
     - 'checkout_commit=$({benchmark}-commit)'
   depends_on:
-    - '{fuzzer}-{benchmark}-oss-fuzz-builder-intermediate'
+    - '.{fuzzer}-{benchmark}-oss-fuzz-builder-intermediate'
 
-'{fuzzer}-{benchmark}-oss-fuzz-intermediate-runner':
+'.{fuzzer}-{benchmark}-oss-fuzz-intermediate-runner':
   tag: 'runners/{fuzzer}/{benchmark}-intermediate'
   context: 'fuzzers/{fuzzer}'
   dockerfile: 'fuzzers/{fuzzer}/runner.Dockerfile'
   depends_on:
     - 'base-runner'
 
-'{fuzzer}-{benchmark}-oss-fuzz-runner':
+'.{fuzzer}-{benchmark}-oss-fuzz-runner':
   tag: 'runners/{fuzzer}/{benchmark}'
   context: '.'
-  dockerfile: 'docker/oss-fuzz-runner/Dockerfile'
+  dockerfile: 'docker/benchmark-runner/Dockerfile'
   build_arg:
     - 'fuzzer={fuzzer}'
     - 'benchmark={benchmark}'
+  depends_on:
+    - '.{fuzzer}-{benchmark}-oss-fuzz-builder'
+    - '.{fuzzer}-{benchmark}-oss-fuzz-intermediate-runner'
+
+'{{run_template}}-{fuzzer}-{benchmark}':
+  env_vars:
+    - 'FORCE_LOCAL=1'
+    - 'FUZZ_OUTSIDE_EXPERIMENT=1'
+    - 'TRIAL_ID=1'
+    - 'FUZZER={fuzzer}'
+    - 'BENCHMARK={benchmark}'
+    - 'FUZZ_TARGET=$({benchmark}-fuzz-target)'
+  tag: 'runners/{fuzzer}/{benchmark}'
+  depends_on:
+    - '.{fuzzer}-{benchmark}-{{oss_fuzz_string}}runner'

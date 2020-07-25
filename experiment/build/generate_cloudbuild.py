@@ -13,28 +13,68 @@
 # limitations under the License.
 """Generates Cloud Build specification"""
 
-import argparse
-import json
-import yaml
+import os
 
+from common import yaml_utils
 from experiment.build import docker_images
 
 
+BASE_TAG = 'gcr.io/fuzzbench-test'
+EXPERIMENT_TAG = "${_REPO}"
+fuzzer_var = "${_FUZZER}"
+benchmark_var = "${_BENCHMARK}"
+experiment_var = "${_EXPERIMENT}"
+
+
+def _identity(name):
+    return name.replace("${_FUZZER}", "fuzzer").replace("${_BENCHMARK}", "benchmark")
+
+
+def step_enable_buildkit():
+    step = {}
+    step['name'] = 'gcr.io/cloud-builders/docker'
+    step['entrypoint'] = 'bash'
+    step['args'] = ['-c', '| export DOCKER_BUILDKIT=1 || exit 0']
+    return step
+
+
+def coverage_steps():
+    steps = []
+    step = {}
+    step['name'] = 'gcr.io/cloud-builders/docker'
+    step['args'] = ['run', '-v', '/workspace/out:/host-out']
+    step['args'] += [EXPERIMENT_TAG + '/builders/coverage/' + benchmark_var + ':' + experiment_var]
+    step['args'] += ['/bin/bash', '-c']
+    step['args'] += ['cd /out; tar -czvf /host-out/coverage-build-' + benchmark_var + '.tar.gz *']
+    steps.append(step)
+    step = {}
+    step['name'] = 'gcr.io/cloud-builders/gsutil'
+    step['args'] = ['-m', 'cp']
+    step['args'] += ['/workspace/out/coverage-build-' + benchmark_var + '.tar.gz']
+    step['args'] += ['${_GCS_COVERAGE_BINARIES_DIR}/']
+    steps.append(step)
+    return steps
+
+
 # TODO(Tanq16): Add unit test for this.
-def create_cloud_build_spec(buildable_images, docker_registry):
-    """Returns Cloud Build specificatiion."""
+def create_cloud_build_spec(images_template, coverage=False):
+    """Returns Cloud Build specification."""
 
     cloud_build_spec = {}
     cloud_build_spec['steps'] = []
     cloud_build_spec['images'] = []
+    cloud_build_spec['steps'].append(step_enable_buildkit())
 
-    for name, image in buildable_images.items():
+    for name, image in images_template.items():
         step = {}
-        step['id'] = name
+        step['id'] = _identity(name)
         step['name'] = 'gcr.io/cloud-builders/docker'
         step['args'] = []
-        step['args'] += ['--tag', image['tag']]
-        step['args'] += ['--cache-from', docker_registry + image['tag']]
+        step['args'] += ['--tag', BASE_TAG + '/' + image['tag']]
+        step['args'] += ['--tag']
+        step['args'] += [EXPERIMENT_TAG + '/' + image['tag'] + ':' + experiment_var]
+        step['args'] += ['--cache-from']
+        step['args'] += [EXPERIMENT_TAG + '/' + image['tag'] + ':' + experiment_var]
         step['args'] += ['--build-arg', 'BUILDKIT_INLINE_CACHE=1']
         if 'build_arg' in image:
             for build_arg in image['build_arg']:
@@ -45,32 +85,59 @@ def create_cloud_build_spec(buildable_images, docker_registry):
         if 'depends_on' in image:
             step['wait_for'] = []
             for dep in image['depends_on']:
-                step['wait_for'] += [dep]
-        cloud_build_spec['images'].append(name)
+                step['wait_for'] += [_identity(dep)]
+        image_built = EXPERIMENT_TAG + '/' + name + ':' + experiment_var
+        cloud_build_spec['images'].append(image_built)
         cloud_build_spec['steps'].append(step)
+
+    if coverage:
+        cloud_build_spec['steps'] += coverage_steps()
 
     return cloud_build_spec
 
 
-def main():
-    """Generates Cloud Build specification."""
-    parser = argparse.ArgumentParser(description='GCB spec generator.')
-    parser.add_argument('-r',
-                        '--docker-registry',
-                        default='gcr.io/fuzzbench/',
-                        help='Docker registry to use.')
-    args = parser.parse_args()
+def generate_base_images(buildable_images):
+    base_images_template = {}
+    for name in buildable_images:
+        if 'base' in name:
+            base_images_template[name] = buildable_images[name]
+    return create_cloud_build_spec(base_images_template)
 
-    # TODO(Tanq16): Create fuzzer/benchmark list dynamically.
-    fuzzers = ['afl', 'libfuzzer']
-    benchmarks = ['libxml', 'libpng']
-    buildable_images = docker_images.get_images_to_build(fuzzers, benchmarks)
-    cloud_build_spec = create_cloud_build_spec(buildable_images,
-                                               args.docker_registry)
-    # Build spec can be yaml or json, use whichever:
-    # https://cloud.google.com/cloud-build/docs/configuring-builds/create-basic-configuration
-    print(yaml.dump(cloud_build_spec))
-    print(json.dumps(cloud_build_spec))
+
+def generate_benchmark_images(buildable_images, coverage=False):
+    benchmark_images_template = {}
+    for name in buildable_images:
+        if any(_ in name for _ in ('base', 'oss-fuzz')):
+            continue
+        benchmark_images_template[name] = buildable_images[name]
+    return create_cloud_build_spec(benchmark_images_template, coverage=coverage)
+
+
+def generate_oss_fuzz_benchmark_images(buildable_images, coverage=False):
+    oss_fuzz_benchmark_images_template = {}
+    for name in buildable_images:
+        if 'oss-fuzz' in name:
+            oss_fuzz_benchmark_images_template[name] = buildable_images[name]
+    return create_cloud_build_spec(oss_fuzz_benchmark_images_template, coverage=coverage)
+
+
+def write_build_spec(filename, data):
+    file_path = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
+                            'docker', 'gcb', filename)
+    yaml_utils.write(file_path, data)
+
+
+def generate_gcb_build_spec():
+    """Generates Cloud Build specification."""
+
+    buildable_images = docker_images.get_images_to_build_gcb()
+    buildable_images_coverage = docker_images.get_images_to_build_gcb(coverage=True)
+
+    write_build_spec('base-images.yaml', generate_base_images(buildable_images))
+    write_build_spec('fuzzer.yaml', generate_benchmark_images(buildable_images))
+    write_build_spec('coverage.yaml', generate_benchmark_images(buildable_images_coverage, coverage=True))
+    write_build_spec('oss-fuzz-fuzzer.yaml', generate_oss_fuzz_benchmark_images(buildable_images))
+    write_build_spec('oss-fuzz-coverage.yaml', generate_oss_fuzz_benchmark_images(buildable_images_coverage, coverage=True))
 
 
 if __name__ == '__main__':
