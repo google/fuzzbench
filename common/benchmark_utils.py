@@ -61,14 +61,6 @@ def get_builder_image_url(benchmark, fuzzer, docker_registry):
         docker_registry=docker_registry, fuzzer=fuzzer, benchmark=benchmark)
 
 
-def get_oss_fuzz_builder_hash(benchmark):
-    """Get the specified hash of the OSS-Fuzz builder for the OSS-Fuzz project
-    used by |benchmark|."""
-    if is_oss_fuzz(benchmark):
-        return oss_fuzz.get_config(benchmark)['oss_fuzz_builder_hash']
-    raise ValueError('Can only get project on OSS-Fuzz benchmarks.')
-
-
 def validate(benchmark):
     """Return True if |benchmark| is a valid fuzzbench fuzzer."""
     if VALID_BENCHMARK_REGEX.match(benchmark) is None:

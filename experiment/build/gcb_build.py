@@ -69,17 +69,13 @@ def _build_benchmark_coverage(benchmark: str) -> Tuple[int, str]:
 def _build_oss_fuzz_project_fuzzer(benchmark: str,
                                    fuzzer: str) -> Tuple[int, str]:
     """Build a |benchmark|, |fuzzer| runner image on GCB."""
-    project = benchmark_utils.get_project(benchmark)
-    oss_fuzz_builder_hash = benchmark_utils.get_oss_fuzz_builder_hash(benchmark)
     substitutions = {
-        '_OSS_FUZZ_PROJECT': project,
         '_BENCHMARK': benchmark,
         '_FUZZER': fuzzer,
-        '_OSS_FUZZ_BUILDER_HASH': oss_fuzz_builder_hash,
     }
     config_file = get_build_config_file('oss-fuzz-fuzzer.yaml')
-    config_name = 'oss-fuzz-{project}-fuzzer-{fuzzer}-hash-{hash}'.format(
-        project=project, fuzzer=fuzzer, hash=oss_fuzz_builder_hash)
+    config_name = 'oss-fuzz-{benchmark}-fuzzer-{fuzzer}'.format(
+        benchmark=benchmark, fuzzer=fuzzer)
 
     return _build(config_file, config_name, substitutions)
 
@@ -100,19 +96,14 @@ def _build_benchmark_fuzzer(benchmark: str, fuzzer: str) -> Tuple[int, str]:
 
 def _build_oss_fuzz_project_coverage(benchmark: str) -> Tuple[int, str]:
     """Build a coverage build of OSS-Fuzz-based benchmark |benchmark| on GCB."""
-    project = benchmark_utils.get_project(benchmark)
-    oss_fuzz_builder_hash = benchmark_utils.get_oss_fuzz_builder_hash(benchmark)
     coverage_binaries_dir = exp_path.filestore(
         build_utils.get_coverage_binaries_dir())
     substitutions = {
         '_GCS_COVERAGE_BINARIES_DIR': coverage_binaries_dir,
         '_BENCHMARK': benchmark,
-        '_OSS_FUZZ_PROJECT': project,
-        '_OSS_FUZZ_BUILDER_HASH': oss_fuzz_builder_hash,
     }
     config_file = get_build_config_file('oss-fuzz-coverage.yaml')
-    config_name = 'oss-fuzz-{project}-coverage-hash-{hash}'.format(
-        project=project, hash=oss_fuzz_builder_hash)
+    config_name = 'oss-fuzz-{benchmark}-coverage'.format(benchmark=benchmark)
     return _build(config_file, config_name, substitutions)
 
 
