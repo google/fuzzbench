@@ -15,15 +15,12 @@
 ARG parent_image
 FROM $parent_image
 
-# Minor modification to dump_coverage on a successful inner merge step.
-COPY patch.diff /
-
-# Use old libFuzzer code that supports -dump_coverage=1/trace-pc-guard coverage.
-# This is the last libFuzzer version before support was removed.
+# Use a libFuzzer version that supports clang source-based coverage.
 RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
-    cd /llvm-project && \
-    git checkout 0b5e6b11c358e704384520dc036eddb5da1c68bf && \
-    patch -p1 < /patch.diff && \
-    cd /llvm-project/compiler-rt/lib/fuzzer && \
-    bash build.sh && \
-    cp libFuzzer.a /usr/lib
+    cd /llvm-project/ && \
+    git checkout d8981ce5b9f8caa567613b2bf5aa3095e0156130 && \
+    cd compiler-rt/lib/fuzzer && \
+    (for f in *.cpp; do \
+      clang++ -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \
+    done && wait) && \
+    ar r /usr/lib/libFuzzer.a *.o

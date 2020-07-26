@@ -109,7 +109,7 @@ OSS_FUZZER_BENCHMARK_TEMPLATE = """
 .pull-{fuzzer}-{benchmark}-builder: .pull-{fuzzer}-{benchmark}-builder-intermediate
 	docker pull {base_tag}/builders/{fuzzer}/{benchmark}
 
-ifeq (,$(filter {fuzzer},coverage coverage_source_based))
+ifneq ({fuzzer}, coverage)
 
 .{fuzzer}-{benchmark}-intermediate-runner: base-runner
 	docker build \\
