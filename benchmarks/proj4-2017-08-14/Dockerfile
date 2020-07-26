@@ -23,6 +23,7 @@ RUN apt-get update && \
     autoconf \
     libtool \
     sqlite3 \
+    wget \
     libsqlite3-dev
 
 COPY build.sh $SRC/
