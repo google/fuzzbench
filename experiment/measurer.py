@@ -53,6 +53,7 @@ NUM_RETRIES = 3
 RETRY_DELAY = 3
 FAIL_WAIT_SECONDS = 30
 SNAPSHOT_QUEUE_GET_TIMEOUT = 1
+COV_DIFF_QUEUE_GET_TIMEOUT = 1
 SNAPSHOTS_BATCH_SAVE_SIZE = 100
 
 
@@ -67,13 +68,157 @@ def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
                               must_exist=False).retcode == 0
 
 
+def get_summary_file_path(fuzzer: str, benchmark: str, trial_num: int):
+    """Return summary file path."""
+    benchmark_fuzzer_trial_dir = experiment_utils.get_trial_dir(
+        fuzzer, benchmark, trial_num)
+    work_dir = experiment_utils.get_work_dir()
+    measurement_dir = os.path.join(work_dir, 'measurement-folders',
+                                   benchmark_fuzzer_trial_dir)
+    summary_file_path = os.path.join(measurement_dir, 'reports', 'cov_summary.json')
+    return summary_file_path
+
+
+def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):
+    """Return the key in coverage dict for a pair of fuzzer-benchmark."""
+    return fuzzer + '-' + benchmark
+
+
+def get_all_fuzzer_names(experiment: str):
+    """Return all fuzzer names for the experiment."""
+    fuzzers = [
+        fuzzer_tuple[0] for fuzzer_tuple in db_utils.query(models.Trial.fuzzer).
+        distinct().filter(models.Trial.experiment == experiment)
+    ]
+    return fuzzers
+
+
+def get_all_benchmark_names(experiment: str):
+    """Return all benchmark names for the experiment."""
+    benchmarks = [
+        benchmark_tuple[0]
+        for benchmark_tuple in db_utils.query(models.Trial.benchmark).distinct(
+        ).filter(models.Trial.experiment == experiment)
+    ]
+    return benchmarks
+
+
+def get_trial_ids(experiment: str, fuzzer: str, benchmark: str):
+    """Get ids of all finished trials for a pair of fuzzer and benchmark."""
+    trial_ids = [
+        trial_id_tuple[0]
+        for trial_id_tuple in db_utils.query(models.Trial.id).distinct().filter(
+            models.Trial.experiment == experiment, models.Trial.fuzzer ==
+            fuzzer, models.Trial.benchmark == benchmark,
+            ~models.Trial.preempted)
+    ]
+    return trial_ids
+
+
+def eliminate_set(dictionary):
+    """Transform the set structure to list so we can use json.dumps"""
+    for key in dictionary:
+        dictionary[key] = list(dictionary[key])
+
+
+def store_cov_data(experiment: str):
+    """Generate the specific coverage data and store in cloud bucket."""
+    logger.info('Start storing coverage data')
+    with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
+        q = manager.Queue()  # pytype: disable=attribute-error
+        try:
+            covered_regions = get_all_covered_region(experiment, pool, q)
+            json_src_dir = get_experiment_folders_dir()
+            json_src = os.path.join(json_src_dir, 'covered_regions.json')
+            with open(json_src, 'w') as src_file:
+                json.dump(covered_regions, src_file)
+            json_dst = exp_path.filestore(json_src)
+            filestore_utils.cp(json_src, json_dst, expect_zero=False)
+        except Exception:  # pylint: disable=broad-except
+            logger.error('Error occurred during coverage measuring.')
+    logger.info('Finished storing coverage data')
+
+
+def get_all_covered_region(experiment: str, pool, q) -> dict:
+    """Get regions covered for each pair for fuzzer and benchmark."""
+    logger.info('Measuring all fuzzer-benchmark pairs for final coverage data.')
+
+    benchmarks = get_all_benchmark_names(experiment)
+    fuzzers = get_all_fuzzer_names(experiment)
+
+    get_covered_region_args = [(experiment, fuzzer, benchmark, q)
+                               for fuzzer in fuzzers
+                               for benchmark in benchmarks]
+
+    result = pool.starmap_async(get_covered_region, get_covered_region_args)
+
+    # Poll the queue for covered region data and save them in a dict until the
+    # pool is done processing each combination of fuzzers and benchmarks.
+    all_covered_regions = {}
+
+    while True:
+        try:
+            covered_regions = q.get(timeout=COV_DIFF_QUEUE_GET_TIMEOUT)
+            all_covered_regions.update(covered_regions)
+        except queue.Empty:
+            if result.ready():
+                # If "ready" that means pool has finished. Since it is
+                # finished and the queue is empty, we can stop checking
+                # the queue for more covered regions.
+                logger.debug(
+                    'Finished call to map with get_all_covered_region.')
+                break
+
+    eliminate_set(all_covered_regions)
+    logger.info('Done measuring all differential data.')
+    return all_covered_regions
+
+
+def get_covered_region(experiment: str, fuzzer: str, benchmark: str,
+                       q: multiprocessing.Queue):
+    """Get the final covered region for a specific pair of fuzzer-benchmark."""
+    initialize_logs()
+    logger.debug('Measuring covered region: fuzzer: %s, benchmark: %s.', fuzzer,
+                 benchmark)
+    key = get_fuzzer_benchmark_key(fuzzer, benchmark)
+    covered_regions = {key: set()}
+    try:
+        trial_ids = get_trial_ids(experiment, fuzzer, benchmark)
+        for trial_id in trial_ids:
+            logger.info('Measuring covered region: trial_id = %d.', trial_id)
+            summary_file = get_summary_file_path(fuzzer, benchmark, trial_id)
+            with open(summary_file) as summary:
+                coverage_info = json.loads(summary.readlines()[-1])
+                functions_data = coverage_info["data"][0]['functions']
+                for function_data in functions_data:
+                    for region in function_data["regions"]:
+                        if region[4] != 0 and region[-1] == 0:
+                            # region[4] indicates if it is hit
+                            # region[-1] indicates if it a 'code region'
+                            covered_regions[key].add(tuple(region[:4]))
+        q.put(covered_regions)
+    except Exception:  # pylint: disable=broad-except
+        logger.error('Error measuring covered regions.',
+                     extras={
+                         'fuzzer1': fuzzer,
+                         'benchmark': benchmark,
+                     })
+    logger.debug('Done measuring covered region: fuzzer: %s, benchmark: %s.',
+                 fuzzer, benchmark)
+
+
+def measure_main(experiment: str, max_total_time: int):
+    """Do the continuously measuring and the final measuring."""
+    initialize_logs()
+    logger.info('Start measuring.')
+    measure_loop(experiment, max_total_time)
+    store_cov_data(experiment)
+    logger.info('Finished measuring.')
+
+
 def measure_loop(experiment: str, max_total_time: int):
     """Continuously measure trials for |experiment|."""
-    logs.initialize(default_extras={
-        'component': 'dispatcher',
-        'subcomponent': 'measurer',
-    })
-    logs.info('Start measure_loop.')
+    logger.info('Start measure_loop.')
 
     with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
         set_up_coverage_binaries(pool, experiment)
@@ -98,7 +243,7 @@ def measure_loop(experiment: str, max_total_time: int):
 
             time.sleep(FAIL_WAIT_SECONDS)
 
-    logger.info('Finished measuring.')
+    logger.info('Finished measure loop.')
 
 
 def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  # pylint: disable=invalid-name
