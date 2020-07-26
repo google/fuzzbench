@@ -64,7 +64,7 @@ def test_get_current_coverage(fs, experiment):
     fs.add_real_file(json_cov_summary_file, read_only=False)
     snapshot_measurer.cov_summary_file = json_cov_summary_file
     covered_regions = snapshot_measurer.get_current_coverage()
-    assert covered_regions == 7
+    assert covered_regions == 8
 
 
 def test_get_current_coverage_error(fs, experiment):
@@ -150,7 +150,7 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
     snapshot_measurer.generate_summary(CYCLE)
 
     expected = [
-        'llvm-cov', 'export', '-format=text', '-summary-only',
+        'llvm-cov', 'export', '-format=text',
         '/work/coverage-binaries/benchmark-a/fuzz-target',
         '-instr-profile=/reports/data.profdata'
     ]
@@ -473,15 +473,15 @@ def test_path_exists_in_experiment_filestore(mocked_execute, environ):
         expect_zero=False)
 
 
-@mock.patch('experiment.measurer.get_trial_nums')
+@mock.patch('experiment.measurer.get_trial_ids')
 @mock.patch('experiment.measurer.get_summary_file_path')
-def test_get_covered_region(mocked_get_summary_file_path, mocked_get_trial_nums,
+def test_get_covered_region(mocked_get_summary_file_path, mocked_get_trial_ids,
                             fs, experiment):
     """Test that get_covered_region parse the json file correctly"""
-    json_summary_file = get_test_data_path('cov_summary.txt')
+    json_summary_file = get_test_data_path('cov_summary.json')
     fs.add_real_file(json_summary_file, read_only=False)
     mocked_get_summary_file_path.return_value = json_summary_file
-    mocked_get_trial_nums.return_value = [1]
+    mocked_get_trial_ids.return_value = [1]
     q = queue.Queue()
     measurer.get_covered_region(experiment_utils.get_experiment_name(), FUZZER,
                                 BENCHMARK, q)

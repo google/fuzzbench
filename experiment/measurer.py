@@ -75,7 +75,8 @@ def get_summary_file_path(fuzzer: str, benchmark: str, trial_num: int):
     work_dir = experiment_utils.get_work_dir()
     measurement_dir = os.path.join(work_dir, 'measurement-folders',
                                    benchmark_fuzzer_trial_dir)
-    summary_file_path = os.path.join(measurement_dir, 'reports', 'cov_summary.json')
+    summary_file_path = os.path.join(measurement_dir, 'reports',
+                                     'cov_summary.json')
     return summary_file_path
 
 
@@ -564,8 +565,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
         coverage_binary = get_coverage_binary(self.benchmark)
         command = [
-            'llvm-cov', 'export', '-format=text', '-summary-only',
-            coverage_binary,
+            'llvm-cov', 'export', '-format=text', coverage_binary,
             '-instr-profile=%s' % self.profdata_file
         ]
         with open(self.cov_summary_file, 'w') as output_file:
