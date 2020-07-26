@@ -265,7 +265,8 @@ Building benchmarks and fuzzers entails the following process:
    image from the previous step. The fuzzer builder image builds the fuzzer sets
    up anything the fuzzer needs to build the benchmark (such as `FUZZER_LIB`).
 
-1. The benchmark builder image is built. This inherits from the fuzzer builder
+1. The benchmark builder image is built. This image is defined by
+   `docker/benchmark-builder/Dockerfile`. This inherits from the fuzzer builder
    image. This is the first image in this build process that is defined by the
    main FuzzBench code (e.g. not fuzzers, benchmarks, or OSS-Fuzz). Its first
    function is to copy the FuzzBench code and install packages needed to run

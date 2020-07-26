@@ -32,7 +32,7 @@ COPY --from=base-image /usr/local/lib/python3.7 /usr/local/lib/python3.7
 COPY --from=base-image /usr/local/include/python3.7m /usr/local/include/python3.7m
 
 # This is for "standard" benchmarks.
-# TODO(metzman): Get rid of common.sh and this step.
+# TODO(https://github.com/google/fuzzbench/issues/583): Get rid of common.sh and this step.
 COPY benchmarks/common.sh /
 
 COPY fuzzers/$fuzzer/fuzzer.py $SRC/fuzzer.py

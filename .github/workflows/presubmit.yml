@@ -23,7 +23,3 @@ jobs:
     - name: Run presubmit checks
       run: |
         FUZZBENCH_TEST_INTEGRATION=1 make presubmit
-
-    - name: Run end to end CI test
-      run: |
-        make run-end-to-end-test
