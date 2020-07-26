@@ -15,15 +15,6 @@
 
 . $(dirname $0)/../common.sh
 
-apt-get update && \
-  apt-get install -y \
-  make \
-  automake \
-  autoconf \
-  libtool \
-  sqlite3 \
-  libsqlite3-dev
-
 build_lib() {
   rm -rf BUILD
   cp -rf SRC BUILD

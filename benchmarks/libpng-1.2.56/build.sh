@@ -15,15 +15,6 @@
 
 . $(dirname $0)/../common.sh
 
-
-apt-get update && \
-  apt-get install -y \
-  make \
-  autoconf \
-  automake \
-  libtool \
-  zlib1g-dev
-
 [ ! -e libpng-1.2.56.tar.gz ] && wget https://downloads.sourceforge.net/project/libpng/libpng12/older-releases/1.2.56/libpng-1.2.56.tar.gz
 [ ! -e libpng-1.2.56 ] && tar xf libpng-1.2.56.tar.gz
 

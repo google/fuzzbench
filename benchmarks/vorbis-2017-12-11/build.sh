@@ -15,13 +15,6 @@
 
 . $(dirname $0)/../common.sh
 
-apt-get update && \
-  apt-get install -y \
-  make \
-  automake \
-  autoconf \
-  libtool
-
 readonly INSTALL_DIR="$PWD/INSTALL"
 
 build_ogg() {

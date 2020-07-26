@@ -15,5 +15,9 @@
 ################################################################################
 
 FROM gcr.io/oss-fuzz-base/base-builder
+
+RUN apt-get update && \
+    apt-get install -y wget
+
 COPY jasper_fuzz.cc build.sh $SRC/
 ADD seeds /opt/seeds

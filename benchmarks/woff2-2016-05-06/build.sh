@@ -15,13 +15,6 @@
 
 . $(dirname $0)/../common.sh
 
-apt-get update && \
-  apt-get install -y \
-  make \
-  automake \
-  autoconf \
-  libtool
-
 # Get seeds.
 get_git_revision https://github.com/google/oss-fuzz.git e8ffee4077b59e35824a2e97aa214ee95d39ed13 oss-fuzz
 mkdir -p $OUT/seeds

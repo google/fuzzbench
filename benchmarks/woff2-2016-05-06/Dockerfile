@@ -15,4 +15,12 @@
 ################################################################################
 
 FROM gcr.io/oss-fuzz-base/base-builder
+
+RUN apt-get update && \
+    apt-get install -y \
+    make \
+    automake \
+    autoconf \
+    libtool
+
 COPY target.cc build.sh $SRC/

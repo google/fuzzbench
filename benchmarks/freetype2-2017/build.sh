@@ -15,14 +15,6 @@
 
 . $(dirname $0)/../common.sh
 
-apt-get update &&  \
-  apt-get install -y \
-  make \
-  autoconf \
-  libtool \
-  libarchive-dev \
-  zlib1g-dev
-
 build_lib() {
   rm -rf BUILD
   cp -rf SRC BUILD

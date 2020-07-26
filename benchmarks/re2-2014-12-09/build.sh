@@ -15,12 +15,6 @@
 
 . $(dirname $0)/../common.sh
 
-apt-get update && \
-  apt-get install -y \
-  make \
-  autoconf \
-  automake
-
 build_lib() {
   rm -rf BUILD
   cp -rf SRC BUILD
