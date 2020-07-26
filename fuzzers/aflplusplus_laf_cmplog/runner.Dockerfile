@@ -11,20 +11,5 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for AFLplusplus fuzzer."""
 
-from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
-
-
-def build():
-    """Build benchmark."""
-    aflplusplus_fuzzer.build('laf')
-
-
-def fuzz(input_corpus, output_corpus, target_binary):
-    """Run fuzzer."""
-    flags = []
-    aflplusplus_fuzzer.fuzz(input_corpus,
-                            output_corpus,
-                            target_binary,
-                            flags=flags)
+FROM gcr.io/fuzzbench/base-runner

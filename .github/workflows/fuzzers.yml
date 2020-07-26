@@ -35,9 +35,13 @@ jobs:
           - aflplusplus_qemu
           - honggfuzz_qemu
           # temporary variants.
+          - aflplusplus_cmplog
+          - aflplusplus_havoc2
+          - aflplusplus_havoc_cmplog
           - aflplusplus_havoc
           - aflplusplus_honggfuzz
-          - aflplusplus_hybrid
+          - aflplusplus_laf_cmplog
+          - aflplusplus_laf
 
         benchmark_type:
           - oss-fuzz
