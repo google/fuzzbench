@@ -46,8 +46,14 @@ def run_experiment():
 
     while True:
         print('Current status of jobs:')
+        print('\tstarted:\t%d' % queue.started_job_registry.count)
+        print('\tdeferred:\t%d' % queue.deferred_job_registry.count)
+        print('\tfinished:\t%d' % queue.finished_job_registry.count)
+        print('\tscheduled:\t%d' % queue.scheduled_job_registry.count)
+        print('\tfailed:\t%d' % queue.failed_job_registry.count)
         for job in jobs_list:
-            print('  %s%s : %s' % (job.func_name, job.args, job.get_status()))
+            print('  %s : %s\t(%s)' % (job.func_name, job.get_status(), job.id))
+
         if all([job.result is not None for job in jobs_list]):
             break
         time.sleep(3)
