@@ -36,7 +36,7 @@ FUZZER_TEMPLATE = """
 	docker pull {base_tag}/builders/{fuzzer}
 """
 
-OSS_FUZZER_BENCHMARK_RUN_TARGETS_TEMPLATE = """
+FUZZER_BENCHMARK_RUN_TARGETS_TEMPLATE = """
 build-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner
 
 pull-{fuzzer}-{benchmark}: .pull-{fuzzer}-{benchmark}-runner
@@ -83,7 +83,7 @@ debug-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner
     -it {base_tag}/runners/{fuzzer}/{benchmark}
 """
 
-OSS_FUZZER_BENCHMARK_TEMPLATE = """
+FUZZER_BENCHMARK_TEMPLATE = """
 .{fuzzer}-{benchmark}-builder-intermediate: .{benchmark}-project-builder
 	docker build \\
     --tag {base_tag}/builders/{fuzzer}/{benchmark}-intermediate \\
@@ -133,7 +133,7 @@ ifneq ({fuzzer}, coverage)
 .pull-{fuzzer}-{benchmark}-runner: .pull-{fuzzer}-{benchmark}-builder .pull-{fuzzer}-{benchmark}-intermediate-runner
 	docker pull {base_tag}/runners/{fuzzer}/{benchmark}
 
-""" + OSS_FUZZER_BENCHMARK_RUN_TARGETS_TEMPLATE + """
+""" + FUZZER_BENCHMARK_RUN_TARGETS_TEMPLATE + """
 
 else
 
@@ -152,9 +152,9 @@ def generate_fuzzer(fuzzer, benchmarks):
     # Generate rules for fuzzer-benchmark pairs.
     for benchmark in benchmarks:
         print(
-            OSS_FUZZER_BENCHMARK_TEMPLATE.format(fuzzer=fuzzer,
-                                                 benchmark=benchmark,
-                                                 base_tag=BASE_TAG))
+            FUZZER_BENCHMARK_TEMPLATE.format(fuzzer=fuzzer,
+                                             benchmark=benchmark,
+                                             base_tag=BASE_TAG))
 
     # Generate rules for building/pulling all target/benchmark pairs.
     all_build_targets = ' '.join(
