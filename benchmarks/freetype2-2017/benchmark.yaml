@@ -18,4 +18,4 @@
 commit: ''
 commit_date: ''
 fuzz_target: fuzz-target
-project: ''
+project: freetype2
