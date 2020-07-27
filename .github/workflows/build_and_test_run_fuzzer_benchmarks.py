@@ -37,6 +37,9 @@ for benchmark in os.listdir('benchmarks'):
 # Don't build php benchmark since it fills up disk in GH actions.
 OSS_FUZZ_BENCHMARKS.remove('php_php-fuzz-parser')
 
+OSS_FUZZ_BENCHMARKS = set(OSS_FUZZ_BENCHMARKS)
+STANDARD_BENCHMARKS = set(STANDARD_BENCHMARKS)
+
 
 def get_make_targets(benchmarks, fuzzer):
     """Return pull and test targets for |fuzzer| and each benchmark
