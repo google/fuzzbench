@@ -19,6 +19,19 @@
 # are still testing this feature. You should request an experiment by contacting
 # us as you normally do.
 
+- experiment: 2020-07-28
+  fuzzers:
+    - afl
+    - aflplusplus
+    - honggfuzz
+    - aflplusplus_honggfuzz
+    - aflplusplus_cmplog
+    - aflplusplus_havoc_cmplog
+    - aflplusplus_havoc2
+    - aflplusplus_havoc
+    - aflplusplus_laf
+    - aflplusplus_laf_cmplog
+
 - experiment: 2020-07-25
   fuzzers:
     - aflplusplus

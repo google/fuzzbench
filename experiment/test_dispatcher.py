@@ -24,7 +24,6 @@ from experiment import dispatcher
 from test_libs import utils as test_utils
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
-SANCOV_DIR = '/sancov'
 
 # pylint: disable=invalid-name,redefined-outer-name,unused-argument,protected-access
 

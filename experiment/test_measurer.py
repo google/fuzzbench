@@ -39,6 +39,7 @@ BENCHMARKS = ['benchmark-1', 'benchmark-2']
 NUM_TRIALS = 4
 MAX_TOTAL_TIME = 100
 GIT_HASH = 'FAKE-GIT-HASH'
+CYCLE = 1
 
 SNAPSHOT_LOGGER = measurer.logger
 
@@ -55,30 +56,109 @@ def db_experiment(experiment_config, db):
     yield
 
 
-@pytest.mark.parametrize('new_pcs', [['0x1', '0x2'], []])
-def test_merge_new_pcs(new_pcs, fs, experiment):
-    """Tests that merge_new_pcs merges new PCs, and updates the covered-pcs
-    file."""
+def test_get_current_coverage(fs, experiment):
+    """Tests that get_current_coverage reads the correct data from json file."""
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)
+    json_cov_summary_file = get_test_data_path('cov_summary.json')
+    fs.add_real_file(json_cov_summary_file, read_only=False)
+    snapshot_measurer.cov_summary_file = json_cov_summary_file
+    covered_regions = snapshot_measurer.get_current_coverage()
+    assert covered_regions == 7
 
-    covered_pcs_filename = get_test_data_path('covered-pcs.txt')
-    fs.add_real_file(covered_pcs_filename, read_only=False)
-    snapshot_measurer.sancov_dir = os.path.dirname(covered_pcs_filename)
-    snapshot_measurer.covered_pcs_filename = covered_pcs_filename
 
-    with open(covered_pcs_filename) as file_handle:
-        initial_contents = file_handle.read()
+def test_get_current_coverage_error(fs, experiment):
+    """Tests that get_current_coverage returns None from a
+    defective json file."""
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+    json_cov_summary_file = get_test_data_path('cov_summary_defective.json')
+    fs.add_real_file(json_cov_summary_file, read_only=False)
+    snapshot_measurer.cov_summary_file = json_cov_summary_file
+    covered_regions = snapshot_measurer.get_current_coverage()
+    assert not covered_regions
 
-    fs.create_file(os.path.join(snapshot_measurer.sancov_dir, '1.sancov'),
-                   contents='')
-    with mock.patch('third_party.sancov.GetPCs') as mocked_GetPCs:
-        mocked_GetPCs.return_value = new_pcs
-        snapshot_measurer.merge_new_pcs()
-    with open(covered_pcs_filename) as file_handle:
-        new_contents = file_handle.read()
-    assert new_contents == (''.join(pc + '\n' for pc in new_pcs) +
-                            initial_contents)
+
+def test_get_current_coverage_no_file(fs, experiment):
+    """Tests that get_current_coverage returns None with no json file."""
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+    json_cov_summary_file = get_test_data_path('cov_summary_not_exist.json')
+    snapshot_measurer.cov_summary_file = json_cov_summary_file
+    covered_regions = snapshot_measurer.get_current_coverage()
+    assert not covered_regions
+
+
+@mock.patch('common.new_process.execute')
+def test_generate_profdata_create(mocked_execute, experiment, fs):
+    """Tests that generate_profdata can run the correct command."""
+    mocked_execute.return_value = new_process.ProcessResult(0, '', False)
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+    snapshot_measurer.profdata_file = '/work/reports/data.profdata'
+    snapshot_measurer.profraw_file = '/work/reports/data.profraw'
+    fs.create_file(snapshot_measurer.profraw_file, contents='fake_contents')
+    snapshot_measurer.generate_profdata(CYCLE)
+
+    expected = [
+        'llvm-profdata', 'merge', '-sparse', '/work/reports/data.profraw', '-o',
+        '/work/reports/data.profdata'
+    ]
+
+    assert (len(mocked_execute.call_args_list)) == 1
+    args = mocked_execute.call_args_list[0]
+    assert args[0][0] == expected
+
+
+@mock.patch('common.new_process.execute')
+def test_generate_profdata_merge(mocked_execute, experiment, fs):
+    """Tests that generate_profdata can run correctly with existing profraw."""
+    mocked_execute.return_value = new_process.ProcessResult(0, '', False)
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+    snapshot_measurer.profdata_file = '/work/reports/data.profdata'
+    snapshot_measurer.profraw_file = '/work/reports/data.profraw'
+    fs.create_file(snapshot_measurer.profraw_file, contents='fake_contents')
+    fs.create_file(snapshot_measurer.profdata_file, contents='fake_contents')
+    snapshot_measurer.generate_profdata(CYCLE)
+
+    expected = [
+        'llvm-profdata', 'merge', '-sparse', '/work/reports/data.profraw',
+        '/work/reports/data.profdata', '-o', '/work/reports/data.profdata'
+    ]
+
+    assert (len(mocked_execute.call_args_list)) == 1
+    args = mocked_execute.call_args_list[0]
+    assert args[0][0] == expected
+
+
+@mock.patch('common.new_process.execute')
+@mock.patch('experiment.measurer.get_coverage_binary')
+def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
+                          experiment, fs):
+    """Tests that generate_summary can run the correct command."""
+    mocked_execute.return_value = new_process.ProcessResult(0, '', False)
+    coverage_binary_path = '/work/coverage-binaries/benchmark-a/fuzz-target'
+    mocked_get_coverage_binary.return_value = coverage_binary_path
+
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+    snapshot_measurer.cov_summary_file = "/reports/cov_summary.txt"
+    snapshot_measurer.profdata_file = "/reports/data.profdata"
+    fs.create_dir('/reports')
+    fs.create_file(snapshot_measurer.profdata_file, contents='fake_contents')
+    snapshot_measurer.generate_summary(CYCLE)
+
+    expected = [
+        'llvm-cov', 'export', '-format=text', '-summary-only',
+        '/work/coverage-binaries/benchmark-a/fuzz-target',
+        '-instr-profile=/reports/data.profdata'
+    ]
+
+    assert (len(mocked_execute.call_args_list)) == 1
+    args = mocked_execute.call_args_list[0]
+    assert args[0][0] == expected
+    assert args[1]['output_file'].name == "/reports/cov_summary.txt"
 
 
 @mock.patch('common.logs.error')
@@ -226,6 +306,9 @@ def test_run_cov_new_units(mocked_execute, fs, environ):
         fs.create_file(os.path.join(snapshot_measurer.corpus_dir, unit))
     fuzz_target_path = '/work/coverage-binaries/benchmark-a/fuzz-target'
     fs.create_file(fuzz_target_path)
+    profraw_file_path = os.path.join(snapshot_measurer.coverage_dir,
+                                     'data.profraw')
+    fs.create_file(profraw_file_path)
 
     snapshot_measurer.run_cov_new_units()
     assert len(mocked_execute.call_args_list) == 1  # Called once
@@ -235,9 +318,7 @@ def test_run_cov_new_units(mocked_execute, fs, environ):
     expected = {
         'cwd': '/work/coverage-binaries/benchmark-a',
         'env': {
-            'UBSAN_OPTIONS': ('coverage_dir='
-                              '/work/measurement-folders/benchmark-a-fuzzer-a'
-                              '/trial-12/sancovs'),
+            'LLVM_PROFILE_FILE': profraw_file_path,
             'WORK': '/work',
             'EXPERIMENT_FILESTORE': 'gs://bucket',
             'EXPERIMENT': 'experiment',
@@ -269,7 +350,10 @@ class TestIntegrationMeasurement:
             self, mocked_is_cycle_unchanged, db, experiment, tmp_path):
         """Integration test for measure_snapshot_coverage."""
         # WORK is set by experiment to a directory that only makes sense in a
-        # fakefs.
+        # fakefs. A directory containing necessary llvm tools is also added to
+        # PATH.
+        llvm_tools_path = get_test_data_path('llvm_tools')
+        os.environ["PATH"] += os.pathsep + llvm_tools_path
         os.environ['WORK'] = str(tmp_path)
         mocked_is_cycle_unchanged.return_value = False
         # Set up the coverage binary.
@@ -314,7 +398,7 @@ class TestIntegrationMeasurement:
                 snapshot_measurer.trial_num, cycle)
         assert snapshot
         assert snapshot.time == cycle * experiment_utils.get_snapshot_seconds()
-        assert snapshot.edges_covered == 3798
+        assert snapshot.edges_covered == 13178
 
 
 @pytest.mark.parametrize('archive_name',
