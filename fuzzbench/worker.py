@@ -23,8 +23,7 @@ REASSIGN_GAP_TIME = 5
 
 def no_pending_jobs(queue):
     """Checks whether the queue has unfinished jobs."""
-    return (queue.deferred_job_registry.count +
-            queue.scheduled_job_registry.count +
+    return (queue.deferred_job_registry.count + len(queue) +
             queue.started_job_registry.count) == 0
 
 
