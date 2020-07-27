@@ -23,15 +23,15 @@ FUZZERS_DIR = os.path.join(os.path.dirname(__file__), os.pardir, 'fuzzers')
 
 RUN_TEMPLATE = """
 {run_type}-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-{oss_fuzz_string}runner
-    docker run \\
-    --cpus=1 \\
-    --cap-add SYS_NICE \\
-    --cap-add SYS_PTRACE \\
-    -e FUZZ_OUTSIDE_EXPERIMENT=1 \\
-    -e FORCE_LOCAL=1 \\
-    -e TRIAL_ID=1 \\
-    -e FUZZER={fuzzer} \\
-    -e BENCHMARK={benchmark} \\"""
+\tdocker run \\
+\t--cpus=1 \\
+\t--cap-add SYS_NICE \\
+\t--cap-add SYS_PTRACE \\
+\t-e FUZZ_OUTSIDE_EXPERIMENT=1 \\
+\t-e FORCE_LOCAL=1 \\
+\t-e TRIAL_ID=1 \\
+\t-e FUZZER={fuzzer} \\
+\t-e BENCHMARK={benchmark} \\"""
 
 
 def print_oss_fuzz_benchmark_definition(oss_fuzz_benchmarks):
