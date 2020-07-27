@@ -387,6 +387,13 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
     def generate_profdata(self, cycle: int):
         """Generate .profdata file from .profraw file."""
+        if not os.path.exists(self.profraw_file):
+            self.logger.error('No profraw file found for cycle: %d.', cycle)
+            return
+        if not os.path.getsize(self.profraw_file):
+            self.logger.error('Empty profraw file found for cycle: %d.', cycle)
+            return
+
         if os.path.isfile(self.profdata_file):
             # If coverage profdata exists, then merge it with
             # existing available data.
@@ -395,7 +402,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             files_to_merge = [self.profraw_file]
         command = ['llvm-profdata', 'merge', '-sparse'
                   ] + files_to_merge + ['-o', self.profdata_file]
-        result = new_process.execute(command)
+        result = new_process.execute(command, expect_zero=False)
 
         if result.retcode != 0:
             self.logger.error(
@@ -403,6 +410,13 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
     def generate_summary(self, cycle: int):
         """Transform the .profdata file into json form."""
+        if not os.path.exists(self.profdata_file):
+            self.logger.error('No profdata file found for cycle: %d.', cycle)
+            return
+        if not os.path.getsize(self.profdata_file):
+            self.logger.error('Empty profdata file found for cycle: %d.', cycle)
+            return
+
         coverage_binary = get_coverage_binary(self.benchmark)
         command = [
             'llvm-cov', 'export', '-format=text', '-summary-only',
@@ -410,7 +424,9 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             '-instr-profile=%s' % self.profdata_file
         ]
         with open(self.cov_summary_file, 'w') as output_file:
-            result = new_process.execute(command, output_file=output_file)
+            result = new_process.execute(command,
+                                         output_file=output_file,
+                                         expect_zero=False)
         if result.retcode != 0:
             self.logger.error(
                 'Coverage summary json file generation failed for \
