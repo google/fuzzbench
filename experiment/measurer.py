@@ -77,7 +77,7 @@ def get_trial_ids(experiment: str, fuzzer: str, benchmark: str):
     """Get ids of all finished trials for a pair of fuzzer and benchmark."""
     trial_ids = [
         trial_id_tuple[0]
-        for trial_id_tuple in db_utils.query(models.Trial.id).distinct().filter(
+        for trial_id_tuple in db_utils.query(models.Trial.id).filter(
             models.Trial.experiment == experiment, models.Trial.fuzzer ==
             fuzzer, models.Trial.benchmark == benchmark,
             ~models.Trial.preempted)
@@ -90,12 +90,6 @@ def get_coverage_infomation(coverage_summary_file):
     and skip possible warnings in the file."""
     with open(coverage_summary_file) as summary:
         return json.loads(summary.readlines()[-1])
-
-
-def eliminate_set(dictionary):
-    """Transform the set structure to list so we can use json.dumps."""
-    for key in dictionary:
-        dictionary[key] = list(dictionary[key])
 
 
 def store_coverage_data(experiment_config: dict):
@@ -144,7 +138,8 @@ def get_all_covered_regions(experiment_config: dict, pool, q) -> dict:
                     'Finished call to map with get_all_covered_regions.')
                 break
 
-    eliminate_set(all_covered_regions)
+    for key in all_covered_regions:
+        all_covered_regions[key] = list(all_covered_regions[key])
     logger.info('Done measuring all differential data.')
     return all_covered_regions
 
@@ -490,13 +485,17 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         """Get the covered regions for the current trial."""
         covered_regions = set()
         coverage_info = get_coverage_infomation(self.cov_summary_file)
-        functions_data = coverage_info["data"][0]['functions']
+        functions_data = coverage_info['data'][0]['functions']
+        # The fourth number in the region-list indicates if the region is hit.
+        hit_index = 4
+        # The last number in the region-list indicates what type of the region
+        # it is; 'code_region' is used to obtain various code coverage 
+        # statistic and is represented by number 0.
+        region_type_index = -1
         for function_data in functions_data:
-            for region in function_data["regions"]:
-                if region[4] != 0 and region[-1] == 0:
-                    # region[4] indicates if it is hit.
-                    # region[-1] indicates if it a 'code region'.
-                    covered_regions.add(tuple(region[:4]))
+            for region in function_data['regions']:
+                if region[hit_index] != 0 and region[region_type_index] == 0:
+                    covered_regions.add(tuple(region[:hit_index]))
         return covered_regions
 
     def get_current_coverage(self) -> int:
