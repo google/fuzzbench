@@ -27,15 +27,20 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
+
     # Use two tags so that the image builds properly and we can push it to the
     # correct location.
     '--tag',
-    'gcr.io/fuzzbench/builders/${_FUZZER}:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/builders/${_FUZZER}',
+
     '--tag',
     '${_REPO}/builders/${_FUZZER}:${_EXPERIMENT}',
+
     '--file=fuzzers/${_FUZZER}/builder.Dockerfile',
+
     '--cache-from',
     '${_REPO}/builders/${_FUZZER}',
+
     'fuzzers/${_FUZZER}'
   ]
   id: 'build-fuzzer-builder'
@@ -54,17 +59,24 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
+
     '--tag',
-    'gcr.io/fuzzbench/builders/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/builders/${_FUZZER}/${_BENCHMARK}',
+
     '--tag',
     '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}',
+
     '--build-arg',
     'fuzzer=${_FUZZER}',
+
     '--build-arg',
     'benchmark=${_BENCHMARK}',
+
     '--cache-from',
     '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}',
+
     '--file=docker/benchmark-builder/Dockerfile',
+
     '.'
   ]
   wait_for: ['pull-fuzzer-benchmark-builder', 'build-fuzzer-builder']
@@ -83,13 +95,18 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
+
     '--tag',
-    'gcr.io/fuzzbench/runners/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/runners/${_FUZZER}/${_BENCHMARK}-intermediate',
+
     '--tag',
     '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
+
     '--file=fuzzers/${_FUZZER}/runner.Dockerfile',
+
     '--cache-from',
     '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}-intermediate',
+
     './fuzzers/${_FUZZER}',
   ]
   id: 'build-fuzzer-benchmark-intermediate-runner'
@@ -108,17 +125,24 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
+
     '--tag',
-    'gcr.io/fuzzbench/runners/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/runners/${_FUZZER}/${_BENCHMARK}',
+
     '--tag',
     '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}',
+
     '--build-arg',
     'fuzzer=${_FUZZER}',
+
     '--build-arg',
     'benchmark=${_BENCHMARK}',
+
     '--cache-from',
     '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}',
+
     '--file=docker/benchmark-runner/Dockerfile',
+
     '.',
   ]
   wait_for: ['build-fuzzer-benchmark-builder', 'build-fuzzer-benchmark-intermediate-runner', 'pull-fuzzer-benchmark-runner']

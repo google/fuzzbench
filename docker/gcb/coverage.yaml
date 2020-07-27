@@ -27,15 +27,20 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
+
     # Use two tags so that the image builds properly and we can push it to the
     # correct location.
     '--tag',
-    'gcr.io/fuzzbench/builders/coverage:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/builders/coverage',
+
     '--tag',
     '${_REPO}/builders/coverage:${_EXPERIMENT}',
+
     '--cache-from',
     '${_REPO}/builders/coverage',
+
     '--file=fuzzers/coverage/builder.Dockerfile',
+
     'fuzzers/coverage'
   ]
   id: 'build-coverage-builder'
@@ -53,17 +58,24 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
+
     '--tag',
-    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}',
+
     '--tag',
     '${_REPO}/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}',
+
     '--build-arg',
     'fuzzer=coverage',
+
     '--build-arg',
     'benchmark=${_BENCHMARK}',
+
     '--file=docker/benchmark-builder/Dockerfile',
+
     '--cache-from',
     '${_REPO}/builders/coverage/${_BENCHMARK}',
+
     '.'
   ]
   wait_for: ['build-coverage-builder', 'pull-coverage-benchmark']

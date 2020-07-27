@@ -38,14 +38,18 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
+
     # Use two tags so that the image builds properly and we can push it to the
     # correct location.
     '--tag',
-    'gcr.io/fuzzbench/base-image:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/base-image',
+
     '--tag',
     '${_REPO}/base-image:${_EXPERIMENT}',
+
     '--cache-from',
     '${_REPO}/base-image',
+
     'docker/base-image'
   ]
   id: 'base-image'
@@ -63,12 +67,16 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
+
     '--tag',
-    'gcr.io/fuzzbench/base-builder:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/base-builder',
+
     '--tag',
     '${_REPO}/base-builder:${_EXPERIMENT}',
+
     '--cache-from',
     '${_REPO}/base-builder',
+
     'docker/base-builder'
   ]
   wait_for: ['base-image', 'base-builder-pull']
@@ -86,12 +94,16 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
+
     '--tag',
-    'gcr.io/fuzzbench/base-builder:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/base-builder',
+
     '--tag',
     '${_REPO}/base-runner:${_EXPERIMENT}',
+
     '--cache-from',
     '${_REPO}/base-runner',
+
     'docker/base-runner'
   ]
   # Wait for pull and building base-image to finish.
