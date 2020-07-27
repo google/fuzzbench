@@ -13,21 +13,32 @@
 # limitations under the License.
 """Generates Makefile containing docker image targets."""
 
+import os
 from experiment.build import docker_images
 from common import yaml_utils
-import argparse
-import os
 
 BASE_TAG = "gcr.io/fuzzbench"
-BENCHMARKS_DIR = os.path.join(os.path.dirname(__file__), os.pardir, 'benchmarks')
+BENCHMARK_DIR = os.path.join(os.path.dirname(__file__), os.pardir, 'benchmarks')
 FUZZERS_DIR = os.path.join(os.path.dirname(__file__), os.pardir, 'fuzzers')
+
+RUN_TEMPLATE = """
+{run_type}-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-{oss_fuzz_string}runner
+    docker run \\
+    --cpus=1 \\
+    --cap-add SYS_NICE \\
+    --cap-add SYS_PTRACE \\
+    -e FUZZ_OUTSIDE_EXPERIMENT=1 \\
+    -e FORCE_LOCAL=1 \\
+    -e TRIAL_ID=1 \\
+    -e FUZZER={fuzzer} \\
+    -e BENCHMARK={benchmark} \\"""
 
 
 def print_oss_fuzz_benchmark_definition(oss_fuzz_benchmarks):
+    """Prints oss-fuzz benchmark variables from oss-fuzz.yaml files."""
     for benchmark in oss_fuzz_benchmarks:
-        oss_fuzz_yaml = yaml_utils.read(os.path.join(BENCHMARKS_DIR,
-                                                    benchmark,
-                                                    'oss-fuzz.yaml'))
+        oss_fuzz_yaml = yaml_utils.read(os.path.join(BENCHMARK_DIR, benchmark,
+                                                     'oss-fuzz.yaml'))
         print(benchmark + '-project-name=' + oss_fuzz_yaml['project'])
         print(benchmark + '-fuzz-target=' + oss_fuzz_yaml['fuzz_target'])
         if not oss_fuzz_yaml['commit']:
@@ -37,12 +48,13 @@ def print_oss_fuzz_benchmark_definition(oss_fuzz_benchmarks):
 
 
 def get_fuzzers_and_benchmarks():
+    """Returns list of fuzzers, standard benchmarks and oss-fuzz benchmarks."""
     fuzzers = []
     benchmarks = []
     oss_fuzz_benchmarks = []
 
-    for benchmark in os.listdir(BENCHMARKS_DIR):
-        benchmark_path = os.path.join(BENCHMARKS_DIR, benchmark)
+    for benchmark in os.listdir(BENCHMARK_DIR):
+        benchmark_path = os.path.join(BENCHMARK_DIR, benchmark)
         if not os.path.isdir(benchmark_path):
             continue
         if os.path.exists(os.path.join(benchmark_path, 'oss-fuzz.yaml')):
@@ -81,37 +93,32 @@ def print_makefile_build_template(name, image):
 
 
 def print_makefile_run_template(name, image, oss_fuzz=False):
+    """Prints test-run, test and debug command templates."""
     oss_fuzz_string = "oss-fuzz-" if oss_fuzz else ""
-    for run_template in ('test', 'debug', 'test-run'):
-        print(name.format(run_template=run_template) + ":", end="")
-        for dep in image['depends_on']:
-            print(' ' + dep.format(oss_fuzz_string=oss_fuzz_string), end='')
-        print()
-        print('\tdocker run \\')
-        if not run_template == 'test-run':
-            print('\t--cpus=1 \\')
-        print('\t--cap-add SYS_NICE \\')
-        print('\t--cap-add SYS_PTRACE \\')
-        for var in image['env_vars']:
-            if var.startswith('FUZZ_TARGET') and not oss_fuzz:
-                continue
-            print('\t-e ' + var + ' \\')
-        print('\t', end='')
-        if run_template == 'test-run':
-            print('-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\\n\t', end='')
+    fuzzer, benchmark = name.lstrip('.').split('-')[:2]
+    for run_type in ('run', 'debug', 'test-run'):
+        print(RUN_TEMPLATE.format(run_type=run_type, benchmark=benchmark,
+                                  fuzzer=fuzzer,
+                                  oss_fuzz_string=oss_fuzz_string))
+        if oss_fuzz:
+            print('\t-e FUZZ_TARGET=$({benchmark}-fuzz-target) \\'.format(
+                benchmark=benchmark
+            ))
+        if run_type == 'test-run':
+            print('\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\')
+        if run_type == 'debug':
+            print('\t-entrypoint "/bin/bash" \\\n\t-it ', end='')
         else:
-            if run_template == 'debug':
-                print('--entrypoint "/bin/bash" \\\n\t', end='')
-            print('-it ', end='')
+            print('\t', end='')
         print(BASE_TAG + '/' + image['tag'])
         print()
 
 
 def print_makefile(name, image, oss_fuzz=False):
-    if "{run_template}" in name:
+    """Print makefile section for image."""
+    print_makefile_build_template(name, image)
+    if 'runner' in name and not ('intermediate' in name or 'base' in name):
         print_makefile_run_template(name, image, oss_fuzz)
-    else:
-        print_makefile_build_template(name, image)
 
 
 def main():
@@ -119,21 +126,19 @@ def main():
     fuzzers, benchmarks, oss_fuzz_benchmarks = get_fuzzers_and_benchmarks()
 
     buildable_images = docker_images.get_images_to_build(fuzzers, benchmarks)
-    buildable_images_oss_fuzz = docker_images.get_images_to_build(fuzzers,
-                                                                oss_fuzz_benchmarks,
-                                                                oss_fuzz=True,
-                                                                skip_base_images=True)
+    buildable_oss_fuzz = docker_images.get_images_to_build(fuzzers,
+                                                           oss_fuzz_benchmarks,
+                                                           oss_fuzz=True,
+                                                           skip_base=True)
     all_benchmarks = benchmarks + oss_fuzz_benchmarks
-    
-    # print('cache_from = $(if ${RUNNING_ON_CI},--cache-from {fuzzer},)')
     print('export DOCKER_BUILDKIT := 1')
 
-    # Print oss-fuzz benchmarks property variables. 
+    # Print oss-fuzz benchmarks property variables.
     print_oss_fuzz_benchmark_definition(oss_fuzz_benchmarks)
-    
+
     for name, image in buildable_images.items():
         print_makefile(name, image)
-    for name, image in buildable_images_oss_fuzz.items():
+    for name, image in buildable_oss_fuzz.items():
         print_makefile(name, image, oss_fuzz=True)
 
     # Print build targets for all fuzzer-benchmark pairs.
@@ -142,9 +147,15 @@ def main():
         if fuzzer in ('coverage', 'coverage_source_based'):
             image_type = "builder"
         for benchmark in benchmarks:
-            print('build-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-{image_type}\n'.format(fuzzer=fuzzer, benchmark=benchmark, image_type=image_type))
+            print(('build-{fuzzer}-{benchmark}: ' +
+                   '.{fuzzer}-{benchmark}-{image_type}\n').format(
+                       fuzzer=fuzzer, benchmark=benchmark,
+                       image_type=image_type))
         for benchmark in oss_fuzz_benchmarks:
-            print('build-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-{image_type}\n'.format(fuzzer=fuzzer, benchmark=benchmark, image_type=image_type))
+            print(('build-{fuzzer}-{benchmark}: ' +
+                   '.{fuzzer}-{benchmark}-oss-fuzz-{image_type}\n').format(
+                       fuzzer=fuzzer, benchmark=benchmark,
+                       image_type=image_type))
         print()
 
     # Print fuzzer-all benchmarks build targets.
@@ -155,12 +166,12 @@ def main():
         ])
         print('build-{fuzzer}-all: {all_targets}'.format(
             fuzzer=fuzzer, all_targets=all_build_targets))
-    
+
     # Print all targets build target.
     all_build_targets = ' '.join(
         ['build-{0}-all'.format(name) for name in fuzzers])
     print('build-all: {all_targets}'.format(all_targets=all_build_targets))
-    
+
 
 if __name__ == '__main__':
     main()

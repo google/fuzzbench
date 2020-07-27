@@ -23,23 +23,6 @@
   depends_on:
     - 'base-image'
 
-# '.coverage-builder':
-#   tag: 'builders/coverage'
-#   context: 'fuzzers/coverage'
-#   dockerfile: 'fuzzers/coverage/builder.Dockerfile'
-#   depends_on:
-#     - 'base-builder'
-
-# '.coverage-{benchmark}-builder':
-#   tag: 'builders/coverage/{benchmark}'
-#   context: '.'
-#   dockerfile: 'docker/benchmark-builder/Dockerfile'
-#   build_arg:
-#     - 'fuzzer=coverage'
-#     - 'benchmark={benchmark}'
-#   depends_on:
-#     - 'coverage-builder'
-
 '.{fuzzer}-builder':
   tag: 'builders/{fuzzer}'
   context: 'fuzzers/{fuzzer}'
@@ -118,15 +101,3 @@
   depends_on:
     - '.{fuzzer}-{benchmark}-oss-fuzz-builder'
     - '.{fuzzer}-{benchmark}-oss-fuzz-intermediate-runner'
-
-'{{run_template}}-{fuzzer}-{benchmark}':
-  env_vars:
-    - 'FORCE_LOCAL=1'
-    - 'FUZZ_OUTSIDE_EXPERIMENT=1'
-    - 'TRIAL_ID=1'
-    - 'FUZZER={fuzzer}'
-    - 'BENCHMARK={benchmark}'
-    - 'FUZZ_TARGET=$({benchmark}-fuzz-target)'
-  tag: 'runners/{fuzzer}/{benchmark}'
-  depends_on:
-    - '.{fuzzer}-{benchmark}-{{oss_fuzz_string}}runner'

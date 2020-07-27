@@ -27,10 +27,11 @@ experiment_var = "${_EXPERIMENT}"
 
 
 def _identity(name):
-    return name.replace("${_FUZZER}", "fuzzer").replace("${_BENCHMARK}", "benchmark")
+    return name.replace("${_FUZZER}", "fuzzer").replace("${_BENCHMARK}",
+                                                        "benchmark")
 
 
-def step_enable_buildkit():
+def _step_enable_buildkit():
     step = {}
     step['name'] = 'gcr.io/cloud-builders/docker'
     step['entrypoint'] = 'bash'
@@ -39,31 +40,35 @@ def step_enable_buildkit():
 
 
 def coverage_steps():
+    """Return gcb run steps for coverage."""
     steps = []
     step = {}
     step['name'] = 'gcr.io/cloud-builders/docker'
     step['args'] = ['run', '-v', '/workspace/out:/host-out']
-    step['args'] += [EXPERIMENT_TAG + '/builders/coverage/' + benchmark_var + ':' + experiment_var]
+    step['args'] += [EXPERIMENT_TAG + '/builders/coverage/'
+                     + benchmark_var + ':' + experiment_var]
     step['args'] += ['/bin/bash', '-c']
-    step['args'] += ['cd /out; tar -czvf /host-out/coverage-build-' + benchmark_var + '.tar.gz *']
+    step['args'] += ['cd /out; tar -czvf /host-out/coverage-build-'
+                     + benchmark_var + '.tar.gz *']
     steps.append(step)
     step = {}
     step['name'] = 'gcr.io/cloud-builders/gsutil'
     step['args'] = ['-m', 'cp']
-    step['args'] += ['/workspace/out/coverage-build-' + benchmark_var + '.tar.gz']
+    step['args'] += ['/workspace/out/coverage-build-' + benchmark_var
+                     + '.tar.gz']
     step['args'] += ['${_GCS_COVERAGE_BINARIES_DIR}/']
     steps.append(step)
     return steps
 
 
 # TODO(Tanq16): Add unit test for this.
-def create_cloud_build_spec(images_template, coverage=False):
+def create_cloud_build_spec(images_template, coverage=False, base=False):
     """Returns Cloud Build specification."""
 
     cloud_build_spec = {}
     cloud_build_spec['steps'] = []
     cloud_build_spec['images'] = []
-    cloud_build_spec['steps'].append(step_enable_buildkit())
+    cloud_build_spec['steps'].append(_step_enable_buildkit())
 
     for name, image in images_template.items():
         step = {}
@@ -72,9 +77,11 @@ def create_cloud_build_spec(images_template, coverage=False):
         step['args'] = []
         step['args'] += ['--tag', BASE_TAG + '/' + image['tag']]
         step['args'] += ['--tag']
-        step['args'] += [EXPERIMENT_TAG + '/' + image['tag'] + ':' + experiment_var]
+        step['args'] += [EXPERIMENT_TAG + '/' + image['tag']
+                         + ':' + experiment_var]
         step['args'] += ['--cache-from']
-        step['args'] += [EXPERIMENT_TAG + '/' + image['tag'] + ':' + experiment_var]
+        step['args'] += [EXPERIMENT_TAG + '/' + image['tag']
+                         + ':' + experiment_var]
         step['args'] += ['--build-arg', 'BUILDKIT_INLINE_CACHE=1']
         if 'build_arg' in image:
             for build_arg in image['build_arg']:
@@ -85,6 +92,8 @@ def create_cloud_build_spec(images_template, coverage=False):
         if 'depends_on' in image:
             step['wait_for'] = []
             for dep in image['depends_on']:
+                if 'base' in dep and not base:
+                    continue
                 step['wait_for'] += [_identity(dep)]
         image_built = EXPERIMENT_TAG + '/' + name + ':' + experiment_var
         cloud_build_spec['images'].append(image_built)
@@ -96,15 +105,17 @@ def create_cloud_build_spec(images_template, coverage=False):
     return cloud_build_spec
 
 
-def generate_base_images(buildable_images):
+def generate_base_images(buildable_images, base=True):
+    """Returns build spec for base images."""
     base_images_template = {}
     for name in buildable_images:
         if 'base' in name:
             base_images_template[name] = buildable_images[name]
-    return create_cloud_build_spec(base_images_template)
+    return create_cloud_build_spec(base_images_template, base=base)
 
 
 def generate_benchmark_images(buildable_images, coverage=False):
+    """Returns build spec for standard benchmarks."""
     benchmark_images_template = {}
     for name in buildable_images:
         if any(_ in name for _ in ('base', 'oss-fuzz')):
@@ -116,18 +127,21 @@ def generate_benchmark_images(buildable_images, coverage=False):
 
 
 def generate_oss_fuzz_benchmark_images(buildable_images, coverage=False):
+    """Returns build spec for OSS-Fuzz benchmarks."""
     oss_fuzz_benchmark_images_template = {}
     for name in buildable_images:
         if 'oss-fuzz' in name:
             oss_fuzz_benchmark_images_template[name] = buildable_images[name]
         if coverage and 'runner' in name:
             continue
-    return create_cloud_build_spec(oss_fuzz_benchmark_images_template, coverage=coverage)
+    return create_cloud_build_spec(oss_fuzz_benchmark_images_template,
+                                   coverage=coverage)
 
 
-def write_build_spec(filename, data):
+def write_spec(filename, data):
+    """Write build spec to specified file."""
     file_path = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
-                            'docker', 'gcb', filename)
+                             'docker', 'gcb', filename)
     yaml_utils.write(file_path, data)
 
 
@@ -135,14 +149,15 @@ def generate_gcb_build_spec():
     """Generates Cloud Build specification."""
 
     buildable_images = docker_images.get_images_to_build_gcb()
-    buildable_images_coverage = docker_images.get_images_to_build_gcb(coverage=True)
+    buildable_images_coverage = docker_images.get_images_to_build_gcb(
+        coverage=True
+    )
 
-    write_build_spec('base-images.yaml', generate_base_images(buildable_images))
-    write_build_spec('fuzzer.yaml', generate_benchmark_images(buildable_images))
-    write_build_spec('coverage.yaml', generate_benchmark_images(buildable_images_coverage, coverage=True))
-    write_build_spec('oss-fuzz-fuzzer.yaml', generate_oss_fuzz_benchmark_images(buildable_images))
-    write_build_spec('oss-fuzz-coverage.yaml', generate_oss_fuzz_benchmark_images(buildable_images_coverage, coverage=True))
-
-
-if __name__ == '__main__':
-    main()
+    write_spec('base-images.yaml', generate_base_images(buildable_images))
+    write_spec('fuzzer.yaml', generate_benchmark_images(buildable_images))
+    write_spec('coverage.yaml', generate_benchmark_images(
+        buildable_images_coverage, coverage=True))
+    write_spec('oss-fuzz-fuzzer.yaml', generate_oss_fuzz_benchmark_images(
+        buildable_images))
+    write_spec('oss-fuzz-coverage.yaml', generate_oss_fuzz_benchmark_images(
+        buildable_images_coverage, coverage=True))
