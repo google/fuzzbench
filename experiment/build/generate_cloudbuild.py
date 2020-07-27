@@ -91,7 +91,6 @@ def create_cloud_build_spec(images_template, coverage=False, base=False):
                     continue
                 step['wait_for'] += [_identity(dep)]
             if len(step['wait_for']) == 0:
-                step['wait_for'] += ['-']
                 del step['wait_for']
         image_built = EXPERIMENT_TAG + '/' + image['tag'] + ':' + EXPERIMENT_VAR
         cloud_build_spec['images'].append(image_built)

@@ -33,8 +33,6 @@ from experiment.build import build_utils
 
 if not experiment_utils.is_local_experiment():
     import experiment.build.gcb_build as buildlib
-    import experiment.build.generate_cloudbuild as generate_cloudbuild
-    generate_cloudbuild.generate_gcb_build_spec()
 else:
     import experiment.build.local_build as buildlib
 
