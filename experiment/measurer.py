@@ -194,8 +194,8 @@ def get_covered_region(experiment: str, fuzzer: str, benchmark: str,
                 for function_data in functions_data:
                     for region in function_data["regions"]:
                         if region[4] != 0 and region[-1] == 0:
-                            # region[4] indicates if it is hit
-                            # region[-1] indicates if it a 'code region'
+                            # region[4] indicates if it is hit.
+                            # region[-1] indicates if it a 'code region'.
                             covered_regions[key].add(tuple(region[:4]))
         q.put(covered_regions)
     except Exception:  # pylint: disable=broad-except
