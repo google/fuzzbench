@@ -25,6 +25,8 @@ def run_experiment():
     """Main experiment logic."""
     print('Initializing the job queue.')
     queue = rq.Queue()
+    # Initialization.
+    queue.empty()
     jobs_list = []
     jobs_list.append(
         queue.enqueue(jobs.build_image,
@@ -46,6 +48,7 @@ def run_experiment():
 
     while True:
         print('Current status of jobs:')
+        print('\tqueued:\t%d' % len(queue))
         print('\tstarted:\t%d' % queue.started_job_registry.count)
         print('\tdeferred:\t%d' % queue.deferred_job_registry.count)
         print('\tfinished:\t%d' % queue.finished_job_registry.count)
