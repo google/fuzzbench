@@ -140,7 +140,7 @@ def get_all_covered_regions(experiment_config: dict, pool, q) -> dict:
 
     for key in all_covered_regions:
         all_covered_regions[key] = list(all_covered_regions[key])
-    logger.info('Done measuring all differential data.')
+    logger.info('Done measuring all coverage data.')
     return all_covered_regions
 
 
@@ -489,7 +489,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         # The fourth number in the region-list indicates if the region is hit.
         hit_index = 4
         # The last number in the region-list indicates what type of the region
-        # it is; 'code_region' is used to obtain various code coverage 
+        # it is; 'code_region' is used to obtain various code coverage
         # statistic and is represented by number 0.
         region_type_index = -1
         for function_data in functions_data:
