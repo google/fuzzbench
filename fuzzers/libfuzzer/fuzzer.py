@@ -26,8 +26,9 @@ def build():
     # allows us to link against a version of LibFuzzer that we specify.
     cflags = ['-fsanitize=fuzzer-no-link']
 
-    # Can be removed once the patch https://reviews.llvm.org/D83987 lands
-    # and appears in gcr.io/fuzzbench/base-builder
+    # Can be removed once the patch https://reviews.llvm.org/D83987
+    # appears in gcr.io/fuzzbench/base-builder
+    cflags += ['-fno-builtin-bcmp']
     cflags += ['-fno-builtin-memcmp']
     cflags += ['-fno-builtin-strncmp']
     cflags += ['-fno-builtin-strcmp']
