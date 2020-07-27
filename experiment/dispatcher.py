@@ -133,10 +133,8 @@ def dispatcher_main():
                                              args=(experiment.config,))
     scheduler_loop_thread.start()
 
-    max_total_time = experiment.config['max_total_time']
     measurer_main_process = multiprocessing.Process(
-        target=measurer.measure_main,
-        args=(experiment.experiment_name, max_total_time))
+        target=measurer.measure_main, args=(experiment.config,))
 
     measurer_main_process.start()
 

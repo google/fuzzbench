@@ -68,40 +68,9 @@ def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
                               must_exist=False).retcode == 0
 
 
-def get_summary_file_path(fuzzer: str, benchmark: str, trial_num: int):
-    """Return summary file path."""
-    benchmark_fuzzer_trial_dir = experiment_utils.get_trial_dir(
-        fuzzer, benchmark, trial_num)
-    work_dir = experiment_utils.get_work_dir()
-    measurement_dir = os.path.join(work_dir, 'measurement-folders',
-                                   benchmark_fuzzer_trial_dir)
-    summary_file_path = os.path.join(measurement_dir, 'reports',
-                                     'cov_summary.json')
-    return summary_file_path
-
-
 def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):
     """Return the key in coverage dict for a pair of fuzzer-benchmark."""
     return fuzzer + ' ' + benchmark
-
-
-def get_all_fuzzer_names(experiment: str):
-    """Return all fuzzer names for the experiment."""
-    fuzzers = [
-        fuzzer_tuple[0] for fuzzer_tuple in db_utils.query(models.Trial.fuzzer).
-        distinct().filter(models.Trial.experiment == experiment)
-    ]
-    return fuzzers
-
-
-def get_all_benchmark_names(experiment: str):
-    """Return all benchmark names for the experiment."""
-    benchmarks = [
-        benchmark_tuple[0]
-        for benchmark_tuple in db_utils.query(models.Trial.benchmark).distinct(
-        ).filter(models.Trial.experiment == experiment)
-    ]
-    return benchmarks
 
 
 def get_trial_ids(experiment: str, fuzzer: str, benchmark: str):
@@ -116,36 +85,41 @@ def get_trial_ids(experiment: str, fuzzer: str, benchmark: str):
     return trial_ids
 
 
+def get_coverage_infomation(coverage_summary_file):
+    """Read the coverage information from |coverage_summary_file|
+    and skip possible warnings in the file."""
+    with open(coverage_summary_file) as summary:
+        return json.loads(summary.readlines()[-1])
+
+
 def eliminate_set(dictionary):
     """Transform the set structure to list so we can use json.dumps."""
     for key in dictionary:
         dictionary[key] = list(dictionary[key])
 
 
-def store_cov_data(experiment: str):
+def store_coverage_data(experiment_config: dict):
     """Generate the specific coverage data and store in cloud bucket."""
     logger.info('Start storing coverage data')
     with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
         q = manager.Queue()  # pytype: disable=attribute-error
-        try:
-            covered_regions = get_all_covered_region(experiment, pool, q)
-            json_src_dir = get_experiment_folders_dir()
-            json_src = os.path.join(json_src_dir, 'covered_regions.json')
-            with open(json_src, 'w') as src_file:
-                json.dump(covered_regions, src_file)
-            json_dst = exp_path.filestore(json_src)
-            filestore_utils.cp(json_src, json_dst, expect_zero=False)
-        except Exception:  # pylint: disable=broad-except
-            logger.error('Error occurred during coverage measuring.')
+        covered_regions = get_all_covered_regions(experiment_config, pool, q)
+        json_src_dir = get_experiment_folders_dir()
+        json_src = os.path.join(json_src_dir, 'covered_regions.json')
+        with open(json_src, 'w') as src_file:
+            json.dump(covered_regions, src_file)
+        json_dst = exp_path.filestore(json_src)
+        filestore_utils.cp(json_src, json_dst)
     logger.info('Finished storing coverage data')
 
 
-def get_all_covered_region(experiment: str, pool, q) -> dict:
+def get_all_covered_regions(experiment_config: dict, pool, q) -> dict:
     """Get regions covered for each pair for fuzzer and benchmark."""
     logger.info('Measuring all fuzzer-benchmark pairs for final coverage data.')
 
-    benchmarks = get_all_benchmark_names(experiment)
-    fuzzers = get_all_fuzzer_names(experiment)
+    benchmarks = experiment_config['benchmarks'].split(',')
+    fuzzers = experiment_config['fuzzers'].split(',')
+    experiment = experiment_config['experiment_name']
 
     get_covered_region_args = [(experiment, fuzzer, benchmark, q)
                                for fuzzer in fuzzers
@@ -167,7 +141,7 @@ def get_all_covered_region(experiment: str, pool, q) -> dict:
                 # finished and the queue is empty, we can stop checking
                 # the queue for more covered regions.
                 logger.debug(
-                    'Finished call to map with get_all_covered_region.')
+                    'Finished call to map with get_all_covered_regions.')
                 break
 
     eliminate_set(all_covered_regions)
@@ -183,37 +157,36 @@ def get_covered_region(experiment: str, fuzzer: str, benchmark: str,
                  benchmark)
     key = get_fuzzer_benchmark_key(fuzzer, benchmark)
     covered_regions = {key: set()}
-    try:
-        trial_ids = get_trial_ids(experiment, fuzzer, benchmark)
-        for trial_id in trial_ids:
-            logger.info('Measuring covered region: trial_id = %d.', trial_id)
-            summary_file = get_summary_file_path(fuzzer, benchmark, trial_id)
-            with open(summary_file) as summary:
-                coverage_info = json.loads(summary.readlines()[-1])
-                functions_data = coverage_info["data"][0]['functions']
-                for function_data in functions_data:
-                    for region in function_data["regions"]:
-                        if region[4] != 0 and region[-1] == 0:
-                            # region[4] indicates if it is hit.
-                            # region[-1] indicates if it a 'code region'.
-                            covered_regions[key].add(tuple(region[:4]))
-        q.put(covered_regions)
-    except Exception:  # pylint: disable=broad-except
-        logger.error('Error measuring covered regions.',
-                     extras={
-                         'fuzzer1': fuzzer,
-                         'benchmark': benchmark,
-                     })
+    trial_ids = get_trial_ids(experiment, fuzzer, benchmark)
+    for trial_id in trial_ids:
+        logger.info('Measuring covered region: trial_id = %d.', trial_id)
+        snapshot_logger = logs.Logger('measurer',
+                                      default_extras={
+                                          'fuzzer': fuzzer,
+                                          'benchmark': benchmark,
+                                          'trial_id': str(trial_id),
+                                      })
+        snapshot_measurer = SnapshotMeasurer(fuzzer, benchmark, trial_id,
+                                             snapshot_logger)
+        new_covered_regions = snapshot_measurer.get_current_covered_regions()
+        covered_regions[key] = covered_regions[key].union(new_covered_regions)
+    q.put(covered_regions)
     logger.debug('Done measuring covered region: fuzzer: %s, benchmark: %s.',
                  fuzzer, benchmark)
 
 
-def measure_main(experiment: str, max_total_time: int):
+def measure_main(experiment_config):
     """Do the continuously measuring and the final measuring."""
     initialize_logs()
     logger.info('Start measuring.')
+
+    # Start the measure loop first.
+    experiment = experiment_config['experiment']
+    max_total_time = experiment_config['max_total_time']
     measure_loop(experiment, max_total_time)
-    store_cov_data(experiment)
+
+    # Do the final measuring and store the coverage data.
+    store_coverage_data(experiment_config)
     logger.info('Finished measuring.')
 
 
@@ -513,20 +486,31 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         self.UNIT_BLACKLIST[self.benchmark] = (
             self.UNIT_BLACKLIST[self.benchmark].union(set(crashing_units)))
 
+    def get_current_covered_regions(self):
+        """Get the covered regions for the current trial."""
+        covered_regions = set()
+        coverage_info = get_coverage_infomation(self.cov_summary_file)
+        functions_data = coverage_info["data"][0]['functions']
+        for function_data in functions_data:
+            for region in function_data["regions"]:
+                if region[4] != 0 and region[-1] == 0:
+                    # region[4] indicates if it is hit.
+                    # region[-1] indicates if it a 'code region'.
+                    covered_regions.add(tuple(region[:4]))
+        return covered_regions
+
     def get_current_coverage(self) -> int:
         """Get the current number of lines covered."""
         if not os.path.exists(self.cov_summary_file):
             self.logger.warning('No coverage summary json file found.')
             return 0
         try:
-            with open(self.cov_summary_file) as summary:
-                # Using the last line to skip the warning in bloaty
-                coverage_info = json.loads(summary.readlines()[-1])
-                coverage_data = coverage_info["data"][0]
-                summary_data = coverage_data["totals"]
-                regions_coverage_data = summary_data["regions"]
-                regions_covered = regions_coverage_data["covered"]
-                return regions_covered
+            coverage_info = get_coverage_infomation(self.cov_summary_file)
+            coverage_data = coverage_info["data"][0]
+            summary_data = coverage_data["totals"]
+            regions_coverage_data = summary_data["regions"]
+            regions_covered = regions_coverage_data["covered"]
+            return regions_covered
         except Exception:  # pylint: disable=broad-except
             self.logger.error('Coverage summary json file defective.')
             return 0
@@ -563,7 +547,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
                 'Coverage summary json file generation failed for \
                     cycle: %d.', cycle)
 
-    def generate_profdata_then_summary(self, cycle: int):
+    def generate_coverage_information(self, cycle: int):
         """Generate the .profdata file and then transform it into
         json summary."""
         if not os.path.exists(self.profraw_file):
@@ -742,7 +726,7 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     snapshot_measurer.run_cov_new_units()
 
     # Generate profdata and transform it into json form.
-    snapshot_measurer.generate_profdata_then_summary(cycle)
+    snapshot_measurer.generate_coverage_information(cycle)
 
     # Get the coverage of the new corpus units.
     regions_covered = snapshot_measurer.get_current_coverage()

@@ -56,6 +56,17 @@ def db_experiment(experiment_config, db):
     yield
 
 
+def test_get_current_covered_regions(fs, experiment):
+    """Tests that get_current_coverage reads the correct data from json file."""
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+    json_cov_summary_file = get_test_data_path('cov_summary.json')
+    fs.add_real_file(json_cov_summary_file, read_only=False)
+    snapshot_measurer.cov_summary_file = json_cov_summary_file
+    covered_regions = snapshot_measurer.get_current_covered_regions()
+    assert len(covered_regions) == 8
+
+
 def test_get_current_coverage(fs, experiment):
     """Tests that get_current_coverage reads the correct data from json file."""
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
@@ -471,21 +482,3 @@ def test_path_exists_in_experiment_filestore(mocked_execute, environ):
     mocked_execute.assert_called_with(
         ['gsutil', 'ls', 'gs://cloud-bucket/example-experiment'],
         expect_zero=False)
-
-
-@mock.patch('experiment.measurer.get_trial_ids')
-@mock.patch('experiment.measurer.get_summary_file_path')
-def test_get_covered_region(mocked_get_summary_file_path, mocked_get_trial_ids,
-                            fs, experiment):
-    """Test that get_covered_region parse the json file correctly."""
-    json_summary_file = get_test_data_path('cov_summary.json')
-    fs.add_real_file(json_summary_file, read_only=False)
-    mocked_get_summary_file_path.return_value = json_summary_file
-    mocked_get_trial_ids.return_value = [1]
-    q = queue.Queue()
-    measurer.get_covered_region(experiment_utils.get_experiment_name(), FUZZER,
-                                BENCHMARK, q)
-    covered_regions = q.get()
-    print(covered_regions)
-    fuzzer_benchmark_key = measurer.get_fuzzer_benchmark_key(FUZZER, BENCHMARK)
-    assert len(covered_regions[fuzzer_benchmark_key]) == 8
