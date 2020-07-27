@@ -30,6 +30,7 @@ def run_experiment(config):
     """Main experiment logic."""
     print('Initializing the job queue.')
     queue = rq.Queue('build_n_run_queue')
+    queue.empty()
 
     images_to_build = docker_images.get_images_to_build(config['fuzzers'],
                                                         config['benchmarks'])
@@ -63,6 +64,7 @@ def run_experiment(config):
 
     while True:
         print('Current status of jobs:')
+        print('\tqueued:\t%d' % len(queue))
         print('\tstarted:\t%d' % queue.started_job_registry.count)
         print('\tdeferred:\t%d' % queue.deferred_job_registry.count)
         print('\tfinished:\t%d' % queue.finished_job_registry.count)
