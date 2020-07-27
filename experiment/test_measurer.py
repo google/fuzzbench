@@ -477,7 +477,7 @@ def test_path_exists_in_experiment_filestore(mocked_execute, environ):
 @mock.patch('experiment.measurer.get_summary_file_path')
 def test_get_covered_region(mocked_get_summary_file_path, mocked_get_trial_ids,
                             fs, experiment):
-    """Test that get_covered_region parse the json file correctly"""
+    """Test that get_covered_region parse the json file correctly."""
     json_summary_file = get_test_data_path('cov_summary.json')
     fs.add_real_file(json_summary_file, read_only=False)
     mocked_get_summary_file_path.return_value = json_summary_file

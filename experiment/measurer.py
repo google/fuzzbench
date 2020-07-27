@@ -82,7 +82,7 @@ def get_summary_file_path(fuzzer: str, benchmark: str, trial_num: int):
 
 def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):
     """Return the key in coverage dict for a pair of fuzzer-benchmark."""
-    return fuzzer + '-' + benchmark
+    return fuzzer + ' ' + benchmark
 
 
 def get_all_fuzzer_names(experiment: str):
@@ -117,7 +117,7 @@ def get_trial_ids(experiment: str, fuzzer: str, benchmark: str):
 
 
 def eliminate_set(dictionary):
-    """Transform the set structure to list so we can use json.dumps"""
+    """Transform the set structure to list so we can use json.dumps."""
     for key in dictionary:
         dictionary[key] = list(dictionary[key])
 
@@ -533,13 +533,6 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
     def generate_profdata(self, cycle: int):
         """Generate .profdata file from .profraw file."""
-        if not os.path.exists(self.profraw_file):
-            self.logger.error('No profraw file found for cycle: %d.', cycle)
-            return
-        if not os.path.getsize(self.profraw_file):
-            self.logger.error('Empty profraw file found for cycle: %d.', cycle)
-            return
-
         if os.path.isfile(self.profdata_file):
             # If coverage profdata exists, then merge it with
             # existing available data.
@@ -556,13 +549,6 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
     def generate_summary(self, cycle: int):
         """Transform the .profdata file into json form."""
-        if not os.path.exists(self.profdata_file):
-            self.logger.error('No profdata file found for cycle: %d.', cycle)
-            return
-        if not os.path.getsize(self.profdata_file):
-            self.logger.error('Empty profdata file found for cycle: %d.', cycle)
-            return
-
         coverage_binary = get_coverage_binary(self.benchmark)
         command = [
             'llvm-cov', 'export', '-format=text', coverage_binary,
@@ -576,6 +562,25 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             self.logger.error(
                 'Coverage summary json file generation failed for \
                     cycle: %d.', cycle)
+
+    def generate_profdata_then_summary(self, cycle: int):
+        """Generate the .profdata file and then transform it into
+        json summary."""
+        if not os.path.exists(self.profraw_file):
+            self.logger.error('No profraw file found for cycle: %d.', cycle)
+            return
+        if not os.path.getsize(self.profraw_file):
+            self.logger.error('Empty profraw file found for cycle: %d.', cycle)
+            return
+        self.generate_profdata(cycle)
+
+        if not os.path.exists(self.profdata_file):
+            self.logger.error('No profdata file found for cycle: %d.', cycle)
+            return
+        if not os.path.getsize(self.profdata_file):
+            self.logger.error('Empty profdata file found for cycle: %d.', cycle)
+            return
+        self.generate_summary(cycle)
 
     def is_cycle_unchanged(self, cycle: int) -> bool:
         """Returns True if |cycle| is unchanged according to the
@@ -737,8 +742,7 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     snapshot_measurer.run_cov_new_units()
 
     # Generate profdata and transform it into json form.
-    snapshot_measurer.generate_profdata(cycle)
-    snapshot_measurer.generate_summary(cycle)
+    snapshot_measurer.generate_profdata_then_summary(cycle)
 
     # Get the coverage of the new corpus units.
     regions_covered = snapshot_measurer.get_current_coverage()
