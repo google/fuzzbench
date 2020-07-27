@@ -59,7 +59,7 @@
     - '.{fuzzer}-{benchmark}-intermediate-runner'
 
 '.{benchmark}-oss-fuzz-project-builder':
-  tag: 'builders/oss-fuzz/{benchmark}'
+  tag: 'builders/oss-fuzz-project/{benchmark}'
   context: 'benchmarks/{benchmark}'
   dockerfile: 'benchmarks/{benchmark}/Dockerfile'
 
@@ -70,7 +70,7 @@
   depends_on:
     - '.{benchmark}-oss-fuzz-project-builder'
   build_arg:
-    - 'parent_image=gcr.io/fuzzbench/builders/oss-fuzz/{benchmark}'
+    - 'parent_image=gcr.io/fuzzbench/builders/oss-fuzz-project/{benchmark}'
 
 '.{fuzzer}-{benchmark}-oss-fuzz-builder':
   tag: 'builders/{fuzzer}/{benchmark}'

@@ -1,4 +1,4 @@
-    #!/usr/bin/env python3
+#!/usr/bin/env python3
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,8 +44,8 @@ STANDARD_BENCHMARKS = set(STANDARD_BENCHMARKS)
 def get_make_targets(benchmarks, fuzzer):
     """Return pull and test targets for |fuzzer| and each benchmark
     in |benchmarks| to pass to make."""
-    return [('test-run-%s-%s' % (fuzzer, benchmark))
-            for benchmark in benchmarks]
+    return [('test-run-%s-%s' % (fuzzer, benchmark)) for benchmark in benchmarks
+    ]
 
 
 def delete_docker_images():

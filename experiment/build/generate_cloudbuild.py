@@ -78,7 +78,7 @@ def create_cloud_build_spec(images_template, coverage=False, base=False):
         ]
         step['args'] += ['--cache-from']
         step['args'] += [
-            EXPERIMENT_TAG + '/' + image['tag'] + ':' + EXPERIMENT_VAR
+            EXPERIMENT_TAG + '/' + image['tag']# + ':' + EXPERIMENT_VAR
         ]
         step['args'] += ['--build-arg', 'BUILDKIT_INLINE_CACHE=1']
         if 'build_arg' in image:
@@ -93,7 +93,10 @@ def create_cloud_build_spec(images_template, coverage=False, base=False):
                 if 'base' in dep and not base:
                     continue
                 step['wait_for'] += [_identity(dep)]
-        image_built = EXPERIMENT_TAG + '/' + name + ':' + EXPERIMENT_VAR
+            if len(step['wait_for']) == 0:
+                step['wait_for'] += ['-']
+                del step['wait_for']
+        image_built = EXPERIMENT_TAG + '/' + image['tag'] + ':' + EXPERIMENT_VAR
         cloud_build_spec['images'].append(image_built)
         cloud_build_spec['steps'].append(step)
 
@@ -128,10 +131,10 @@ def generate_oss_fuzz_benchmark_images(buildable_images, coverage=False):
     """Returns build spec for OSS-Fuzz benchmarks."""
     oss_fuzz_benchmark_images_template = {}
     for name in buildable_images:
-        if 'oss-fuzz' in name:
-            oss_fuzz_benchmark_images_template[name] = buildable_images[name]
         if coverage and 'runner' in name:
             continue
+        if 'oss-fuzz' in name:
+            oss_fuzz_benchmark_images_template[name] = buildable_images[name]
     return create_cloud_build_spec(oss_fuzz_benchmark_images_template,
                                    coverage=coverage)
 
@@ -157,9 +160,8 @@ def generate_gcb_build_spec():
     write_spec(
         'coverage.yaml',
         generate_benchmark_images(buildable_images_coverage, coverage=True))
-    write_spec(
-        'oss-fuzz-fuzzer.yaml',
-        generate_oss_fuzz_benchmark_images(buildable_images))
+    write_spec('oss-fuzz-fuzzer.yaml',
+               generate_oss_fuzz_benchmark_images(buildable_images))
     write_spec(
         'oss-fuzz-coverage.yaml',
         generate_oss_fuzz_benchmark_images(buildable_images_coverage,

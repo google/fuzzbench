@@ -93,7 +93,7 @@ def print_makefile_build_template(name, image):
 
 
 def print_makefile_run_template(name, image, oss_fuzz=False):
-    """Prints test-run, test and debug command templates."""
+    """Prints test-run, run and debug command templates."""
     oss_fuzz_string = "oss-fuzz-" if oss_fuzz else ""
 
     fuzzer = [name for name in image['build_arg'] if 'fuzzer' in name]
@@ -121,7 +121,7 @@ def print_makefile_run_template(name, image, oss_fuzz=False):
 
 
 def print_makefile(name, image, oss_fuzz=False):
-    """Print makefile section for image."""
+    """Print makefile section for given image."""
     print_makefile_build_template(name, image)
     if 'runner' in name and not ('intermediate' in name or 'base' in name):
         print_makefile_run_template(name, image, oss_fuzz)
@@ -155,12 +155,14 @@ def main():
         for benchmark in benchmarks:
             print(('build-{fuzzer}-{benchmark}: ' +
                    '.{fuzzer}-{benchmark}-{image_type}\n').format(
-                       fuzzer=fuzzer, benchmark=benchmark,
+                       fuzzer=fuzzer,
+                       benchmark=benchmark,
                        image_type=image_type))
         for benchmark in oss_fuzz_benchmarks:
             print(('build-{fuzzer}-{benchmark}: ' +
                    '.{fuzzer}-{benchmark}-oss-fuzz-{image_type}\n').format(
-                       fuzzer=fuzzer, benchmark=benchmark,
+                       fuzzer=fuzzer,
+                       benchmark=benchmark,
                        image_type=image_type))
         print()
 
