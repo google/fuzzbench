@@ -77,9 +77,7 @@ def create_cloud_build_spec(images_template, coverage=False, base=False):
             EXPERIMENT_TAG + '/' + image['tag'] + ':' + EXPERIMENT_VAR
         ]
         step['args'] += ['--cache-from']
-        step['args'] += [
-            EXPERIMENT_TAG + '/' + image['tag']# + ':' + EXPERIMENT_VAR
-        ]
+        step['args'] += [EXPERIMENT_TAG + '/' + image['tag']]
         step['args'] += ['--build-arg', 'BUILDKIT_INLINE_CACHE=1']
         if 'build_arg' in image:
             for build_arg in image['build_arg']:
