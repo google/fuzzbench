@@ -21,22 +21,13 @@ from experiment.build import docker_images
 
 BASE_TAG = 'gcr.io/fuzzbench-test'
 EXPERIMENT_TAG = "${_REPO}"
-fuzzer_var = "${_FUZZER}"
-benchmark_var = "${_BENCHMARK}"
-experiment_var = "${_EXPERIMENT}"
+BENCHMARK_VAR = "${_BENCHMARK}"
+EXPERIMENT_VAR = "${_EXPERIMENT}"
 
 
 def _identity(name):
     return name.replace("${_FUZZER}", "fuzzer").replace("${_BENCHMARK}",
                                                         "benchmark")
-
-
-def _step_enable_buildkit():
-    step = {}
-    step['name'] = 'gcr.io/cloud-builders/docker'
-    step['entrypoint'] = 'bash'
-    step['args'] = ['-c', '| export DOCKER_BUILDKIT=1 || exit 0']
-    return step
 
 
 def coverage_steps():
@@ -45,17 +36,22 @@ def coverage_steps():
     step = {}
     step['name'] = 'gcr.io/cloud-builders/docker'
     step['args'] = ['run', '-v', '/workspace/out:/host-out']
-    step['args'] += [EXPERIMENT_TAG + '/builders/coverage/'
-                     + benchmark_var + ':' + experiment_var]
+    step['args'] += [
+        EXPERIMENT_TAG + '/builders/coverage/' + BENCHMARK_VAR + ':' +
+        EXPERIMENT_VAR
+    ]
     step['args'] += ['/bin/bash', '-c']
-    step['args'] += ['cd /out; tar -czvf /host-out/coverage-build-'
-                     + benchmark_var + '.tar.gz *']
+    step['args'] += [
+        'cd /out; tar -czvf /host-out/coverage-build-' + BENCHMARK_VAR +
+        '.tar.gz *'
+    ]
     steps.append(step)
     step = {}
     step['name'] = 'gcr.io/cloud-builders/gsutil'
     step['args'] = ['-m', 'cp']
-    step['args'] += ['/workspace/out/coverage-build-' + benchmark_var
-                     + '.tar.gz']
+    step['args'] += [
+        '/workspace/out/coverage-build-' + BENCHMARK_VAR + '.tar.gz'
+    ]
     step['args'] += ['${_GCS_COVERAGE_BINARIES_DIR}/']
     steps.append(step)
     return steps
@@ -68,20 +64,22 @@ def create_cloud_build_spec(images_template, coverage=False, base=False):
     cloud_build_spec = {}
     cloud_build_spec['steps'] = []
     cloud_build_spec['images'] = []
-    cloud_build_spec['steps'].append(_step_enable_buildkit())
 
     for name, image in images_template.items():
         step = {}
         step['id'] = _identity(name)
+        step['env'] = ['DOCKER_BUILDKIT=1']
         step['name'] = 'gcr.io/cloud-builders/docker'
-        step['args'] = []
+        step['args'] = ['build']
         step['args'] += ['--tag', BASE_TAG + '/' + image['tag']]
         step['args'] += ['--tag']
-        step['args'] += [EXPERIMENT_TAG + '/' + image['tag']
-                         + ':' + experiment_var]
+        step['args'] += [
+            EXPERIMENT_TAG + '/' + image['tag'] + ':' + EXPERIMENT_VAR
+        ]
         step['args'] += ['--cache-from']
-        step['args'] += [EXPERIMENT_TAG + '/' + image['tag']
-                         + ':' + experiment_var]
+        step['args'] += [
+            EXPERIMENT_TAG + '/' + image['tag'] + ':' + EXPERIMENT_VAR
+        ]
         step['args'] += ['--build-arg', 'BUILDKIT_INLINE_CACHE=1']
         if 'build_arg' in image:
             for build_arg in image['build_arg']:
@@ -95,7 +93,7 @@ def create_cloud_build_spec(images_template, coverage=False, base=False):
                 if 'base' in dep and not base:
                     continue
                 step['wait_for'] += [_identity(dep)]
-        image_built = EXPERIMENT_TAG + '/' + name + ':' + experiment_var
+        image_built = EXPERIMENT_TAG + '/' + name + ':' + EXPERIMENT_VAR
         cloud_build_spec['images'].append(image_built)
         cloud_build_spec['steps'].append(step)
 
@@ -142,6 +140,8 @@ def write_spec(filename, data):
     """Write build spec to specified file."""
     file_path = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
                              'docker', 'gcb', filename)
+    if not os.path.exists(os.path.dirname(file_path)):
+        os.makedirs(os.path.dirname(file_path))
     yaml_utils.write(file_path, data)
 
 
@@ -150,14 +150,17 @@ def generate_gcb_build_spec():
 
     buildable_images = docker_images.get_images_to_build_gcb()
     buildable_images_coverage = docker_images.get_images_to_build_gcb(
-        coverage=True
-    )
+        coverage=True)
 
     write_spec('base-images.yaml', generate_base_images(buildable_images))
     write_spec('fuzzer.yaml', generate_benchmark_images(buildable_images))
-    write_spec('coverage.yaml', generate_benchmark_images(
-        buildable_images_coverage, coverage=True))
-    write_spec('oss-fuzz-fuzzer.yaml', generate_oss_fuzz_benchmark_images(
-        buildable_images))
-    write_spec('oss-fuzz-coverage.yaml', generate_oss_fuzz_benchmark_images(
-        buildable_images_coverage, coverage=True))
+    write_spec(
+        'coverage.yaml',
+        generate_benchmark_images(buildable_images_coverage, coverage=True))
+    write_spec(
+        'oss-fuzz-fuzzer.yaml',
+        generate_oss_fuzz_benchmark_images(buildable_images))
+    write_spec(
+        'oss-fuzz-coverage.yaml',
+        generate_oss_fuzz_benchmark_images(buildable_images_coverage,
+                                           coverage=True))

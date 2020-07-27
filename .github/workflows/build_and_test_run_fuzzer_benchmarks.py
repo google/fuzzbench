@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+    #!/usr/bin/env python3
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,43 +21,26 @@ from src_analysis import diff_utils
 
 ALWAYS_BUILD_FUZZER = 'afl'
 
-# TODO(tanq16): Get list of Benchmarks automatically.
+OSS_FUZZ_BENCHMARKS = []
+STANDARD_BENCHMARKS = []
+
+for benchmark in os.listdir('benchmarks'):
+    benchmark_path = os.path.join('benchmarks', benchmark)
+    if not os.path.isdir(benchmark_path):
+        continue
+    if os.path.exists(os.path.join(benchmark_path, 'oss-fuzz.yaml')):
+        OSS_FUZZ_BENCHMARKS.append(benchmark)
+    elif os.path.exists(os.path.join(benchmark_path, 'build.sh')):
+        STANDARD_BENCHMARKS.append(benchmark)
 
 # Don't build php benchmark since it fills up disk in GH actions.
-OSS_FUZZ_BENCHMARKS = {
-    'bloaty_fuzz_target',
-    'curl_curl_fuzzer_http',
-    'jsoncpp_jsoncpp_fuzzer',
-    'libpcap_fuzz_both',
-    'mbedtls_fuzz_dtlsclient',
-    'openssl_x509',
-    'sqlite3_ossfuzz',
-    'systemd_fuzz-link-parser',
-    'zlib_zlib_uncompress_fuzzer',
-}
-
-STANDARD_BENCHMARKS = {
-    'freetype2-2017',
-    'harfbuzz-1.3.2',
-    'jasper-1.701.0',
-    'lcms-2017-03-21',
-    'libjpeg-turbo-07-2017',
-    'libpng-1.2.56',
-    'libxml2-v2.9.2',
-    'openthread-2019-12-23',
-    'perl-5.21.7',
-    'proj4-2017-08-14',
-    're2-2014-12-09',
-    'vorbis-2017-12-11',
-    'woff2-2016-05-06',
-}
+OSS_FUZZ_BENCHMARKS.remove('php_php-fuzz-parser')
 
 
 def get_make_targets(benchmarks, fuzzer):
     """Return pull and test targets for |fuzzer| and each benchmark
     in |benchmarks| to pass to make."""
-    return [('pull-%s-%s' % (fuzzer, benchmark),
-             'test-run-%s-%s' % (fuzzer, benchmark))
+    return [('test-run-%s-%s' % (fuzzer, benchmark))
             for benchmark in benchmarks]
 
 
@@ -84,11 +67,8 @@ def make_builds(benchmarks, fuzzer):
     print('Building benchmarks: {} for fuzzer: {}'.format(
         ', '.join(benchmarks), fuzzer))
     make_targets = get_make_targets(benchmarks, fuzzer)
-    for pull_target, build_target in make_targets:
-        # Pull target first.
-        subprocess.run(['make', '-j', pull_target], check=False)
-
-        # Then build.
+    for build_target in make_targets:
+        # Build target.
         build_command = ['make', 'RUNNING_ON_CI=yes', '-j', build_target]
         print('Running command:', ' '.join(build_command))
         result = subprocess.run(build_command, check=False)

@@ -77,8 +77,8 @@ def get_images_to_build_gcb(coverage=False):
         if 'base' in name:
             templates[name] = image
             continue
-        sub_name, sub_image = _instantiate_image_obj(name, image,
-                                                     fuzzer, benchmark)
+        sub_name, sub_image = _instantiate_image_obj(name, image, fuzzer,
+                                                     benchmark)
         templates[sub_name] = sub_image
     return templates
 

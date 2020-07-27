@@ -37,8 +37,8 @@ RUN_TEMPLATE = """
 def print_oss_fuzz_benchmark_definition(oss_fuzz_benchmarks):
     """Prints oss-fuzz benchmark variables from oss-fuzz.yaml files."""
     for benchmark in oss_fuzz_benchmarks:
-        oss_fuzz_yaml = yaml_utils.read(os.path.join(BENCHMARK_DIR, benchmark,
-                                                     'oss-fuzz.yaml'))
+        oss_fuzz_yaml = yaml_utils.read(
+            os.path.join(BENCHMARK_DIR, benchmark, 'oss-fuzz.yaml'))
         print(benchmark + '-project-name=' + oss_fuzz_yaml['project'])
         print(benchmark + '-fuzz-target=' + oss_fuzz_yaml['fuzz_target'])
         if not oss_fuzz_yaml['commit']:
@@ -100,15 +100,16 @@ def print_makefile_run_template(name, image, oss_fuzz=False):
     fuzzer = fuzzer[0].split('=')[1]
     benchmark = [name for name in image['build_arg'] if 'benchmark' in name]
     benchmark = benchmark[0].split('=')[1]
-    
+
     for run_type in ('run', 'debug', 'test-run'):
-        print(RUN_TEMPLATE.format(run_type=run_type, benchmark=benchmark,
-                                  fuzzer=fuzzer,
-                                  oss_fuzz_string=oss_fuzz_string))
+        print(
+            RUN_TEMPLATE.format(run_type=run_type,
+                                benchmark=benchmark,
+                                fuzzer=fuzzer,
+                                oss_fuzz_string=oss_fuzz_string))
         if oss_fuzz:
             print('\t-e FUZZ_TARGET=$({benchmark}-fuzz-target) \\'.format(
-                benchmark=benchmark
-            ))
+                benchmark=benchmark))
         if run_type == 'test-run':
             print('\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\')
         if run_type == 'debug':
