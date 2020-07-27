@@ -13,21 +13,16 @@
 # limitations under the License.
 """Integration code for AFLplusplus fuzzer."""
 
-import os
-import shutil
-
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
 def build():
     """Build benchmark."""
-    aflplusplus_fuzzer.build()
-    shutil.copy('/afl/honggfuzz.so', os.environ['OUT'])
+    aflplusplus_fuzzer.build('laf')
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    os.environ['AFL_CUSTOM_MUTATOR_LIBRARY'] = '/out/honggfuzz.so'
     flags = []
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,

@@ -11,15 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Integration code for AFLplusplus fuzzer."""
 
-ARG parent_image
-FROM $parent_image
+from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
-RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
-    cd /llvm-project/ && \
-    git checkout b52b2e1c188072e3cbc91500cfd503fb26d50ffc && \
-    cd compiler-rt/lib/fuzzer && \
-    (for f in *.cpp; do \
-      clang++ -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \
-    done && wait) && \
-    ar r /usr/lib/libFuzzer.a *.o
+
+def build():
+    """Build benchmark."""
+    aflplusplus_fuzzer.build('laf', 'cmplog')
+
+
+def fuzz(input_corpus, output_corpus, target_binary):
+    """Run fuzzer."""
+    flags = []
+    aflplusplus_fuzzer.fuzz(input_corpus,
+                            output_corpus,
+                            target_binary,
+                            flags=flags)

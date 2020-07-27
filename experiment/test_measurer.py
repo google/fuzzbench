@@ -90,13 +90,14 @@ def test_get_current_coverage_no_file(fs, experiment):
 
 
 @mock.patch('common.new_process.execute')
-def test_generate_profdata_create(mocked_execute, experiment):
+def test_generate_profdata_create(mocked_execute, experiment, fs):
     """Tests that generate_profdata can run the correct command."""
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)
     snapshot_measurer.profdata_file = '/work/reports/data.profdata'
     snapshot_measurer.profraw_file = '/work/reports/data.profraw'
+    fs.create_file(snapshot_measurer.profraw_file, contents='fake_contents')
     snapshot_measurer.generate_profdata(CYCLE)
 
     expected = [
@@ -117,7 +118,8 @@ def test_generate_profdata_merge(mocked_execute, experiment, fs):
                                                   SNAPSHOT_LOGGER)
     snapshot_measurer.profdata_file = '/work/reports/data.profdata'
     snapshot_measurer.profraw_file = '/work/reports/data.profraw'
-    fs.create_file('/work/reports/data.profdata')
+    fs.create_file(snapshot_measurer.profraw_file, contents='fake_contents')
+    fs.create_file(snapshot_measurer.profdata_file, contents='fake_contents')
     snapshot_measurer.generate_profdata(CYCLE)
 
     expected = [
@@ -144,6 +146,7 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
     snapshot_measurer.cov_summary_file = "/reports/cov_summary.txt"
     snapshot_measurer.profdata_file = "/reports/data.profdata"
     fs.create_dir('/reports')
+    fs.create_file(snapshot_measurer.profdata_file, contents='fake_contents')
     snapshot_measurer.generate_summary(CYCLE)
 
     expected = [

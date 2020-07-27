@@ -12,14 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG parent_image
-FROM $parent_image
-
-RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
-    cd /llvm-project/ && \
-    git checkout b52b2e1c188072e3cbc91500cfd503fb26d50ffc && \
-    cd compiler-rt/lib/fuzzer && \
-    (for f in *.cpp; do \
-      clang++ -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \
-    done && wait) && \
-    ar r /usr/lib/libFuzzer.a *.o
+FROM gcr.io/fuzzbench/base-runner

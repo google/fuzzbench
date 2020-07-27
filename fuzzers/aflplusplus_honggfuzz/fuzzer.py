@@ -22,7 +22,7 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 def build():
     """Build benchmark."""
-    aflplusplus_fuzzer.build()
+    aflplusplus_fuzzer.build('cmplog')
     shutil.copy('/afl/honggfuzz.so', os.environ['OUT'])
 
 
