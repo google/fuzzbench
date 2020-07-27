@@ -95,7 +95,12 @@ def print_makefile_build_template(name, image):
 def print_makefile_run_template(name, image, oss_fuzz=False):
     """Prints test-run, test and debug command templates."""
     oss_fuzz_string = "oss-fuzz-" if oss_fuzz else ""
-    fuzzer, benchmark = name.lstrip('.').split('-')[:2]
+
+    fuzzer = [name for name in image['build_arg'] if 'fuzzer' in name]
+    fuzzer = fuzzer[0].split('=')[1]
+    benchmark = [name for name in image['build_arg'] if 'benchmark' in name]
+    benchmark = benchmark[0].split('=')[1]
+    
     for run_type in ('run', 'debug', 'test-run'):
         print(RUN_TEMPLATE.format(run_type=run_type, benchmark=benchmark,
                                   fuzzer=fuzzer,
