@@ -92,7 +92,7 @@ Benchmarks in OSS-Fuzz consist of open source code and [a libFuzzer compatible
 entrypoint](https://llvm.org/docs/LibFuzzer.html#fuzz-target) into the targeted
 code that fuzzers such as AFL, libFuzzer and honggfuzz send data to fuzz.
 This section describes how to create a file that defines this entrypoint.
-Thisfile  should define a
+This file  should define a
 `LLVMFuzzerTestOneInput` function that accepts an array of bytes and the
 length of this array. This function should then pass those bytes to an API
 in the project/program that we want to fuzz.
@@ -287,5 +287,4 @@ Building benchmarks and fuzzers entails the following process:
    reset `OUT` so that it can build the benchmark twice since some fuzzers may
    need two different builds of the same benchmark.
 
-### Running (i.e. fuzzing benchmarks)
-TODO
+1. Runners: TODO

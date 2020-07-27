@@ -12,10 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Fields are empty because this is a standard benchmark.
-# TODO(metzman): Use the same method for checking out commits in standard
-# benchmarks.
-commit: ''
-commit_date: ''
 fuzz_target: fuzz-target
 project: freetype2
