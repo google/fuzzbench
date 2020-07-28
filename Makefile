@@ -32,6 +32,18 @@ run-end-to-end-test:
 	docker-compose run run-tests; STATUS=$$?; \
 	docker-compose down; exit $$STATUS
 
+# Stop and clean running environment.
+
+stop-experiment: export COMPOSE_PROJECT_NAME := fuzzbench
+stop-experiment: export COMPOSE_FILE := compose/fuzzbench.yaml
+stop-experiment:
+	docker-compose down
+
+stop-end-to-end-test: export COMPOSE_PROJECT_NAME := e2e-test
+stop-end-to-end-test: export COMPOSE_FILE := compose/fuzzbench.yaml:compose/e2e-test.yaml
+stop-end-to-end-test:
+	docker-compose down
+
 include docker/build.mk
 include docker/generated.mk
 
