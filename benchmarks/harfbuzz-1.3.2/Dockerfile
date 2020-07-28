@@ -26,5 +26,4 @@ RUN apt-get update && \
     pkg-config \
     libcairo2-dev
 
-
 COPY * $SRC/

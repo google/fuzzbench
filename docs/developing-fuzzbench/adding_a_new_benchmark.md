@@ -68,11 +68,12 @@ This process is very similar to adding a project to
 Note that this is not the same as integrating an OSS-Fuzz benchmark, since the
 integration work has already been done in the OSS-Fuzz repo.
 At a high level it involves:
-1. Creating a directory for your benchmark.
-2. Creating a fuzz target for your benchmark.
-3. Creating a Dockerfile and a build.sh to build your benchmark for fuzzing.
-4. Creating a `benchmark.yaml` file to define important details about your
-   benchmark.
+1. [Creating a directory for your benchmark](#create-benchmark-directory).
+2. [Creating a fuzz target for your benchmark](#defining-a-fuzz-target).
+3. [Creating a Dockerfile](#dockerfile) and a [build.sh](#buildsh) to build your
+   benchmark for fuzzing.
+4. [Creating a `benchmark.yaml` file](#benchmarkyaml) to define important
+   details about your benchmark.
 
 ### Create benchmark directory
 
@@ -86,7 +87,7 @@ export BENCHMARK_NAME=<your_benchmark_name>
 mkdir $BENCHMARK_NAME
 ```
 
-### fuzz_target.cc
+### Defining a fuzz target
 
 Benchmarks in OSS-Fuzz consist of open source code and [a libFuzzer compatible
 entrypoint](https://llvm.org/docs/LibFuzzer.html#fuzz-target) into the targeted
@@ -137,11 +138,11 @@ cd BUILD && ./autogen.sh && ./configure && make -j
 
 
 # Build fuzz target in $OUT directory.
-export FUZZ_TARGET_NAME=fuzz_target
+export FUZZ_TARGET=fuzz_target
 $CXX $CXXFLAGS ${SCRIPT_DIR}/fuzz_target.cc \
     -I BUILD/path/to/include/dir BUILD/path/to/project-lib.a \
     $FUZZER_LIB \
-    -o $OUT/$FUZZ_TARGET_NAME
+    -o $OUT/$FUZZ_TARGET
 
 # Optional: Copy seeds directory to $OUT directory.
 cp -r seeds $OUT/

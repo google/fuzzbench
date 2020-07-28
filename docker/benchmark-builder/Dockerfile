@@ -47,8 +47,6 @@ RUN touch $SRC/__init__.py
 # and is not needed during build process.
 ENV ASAN_OPTIONS="detect_leaks=0"
 
-ENV OSS_FUZZ 1
-
 ENV CHECKOUT_COMMIT $checkout_commit
 RUN mkdir /opt/fuzzbench/
 COPY docker/benchmark-builder/checkout_commit.py /opt/fuzzbench/

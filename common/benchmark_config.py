@@ -22,12 +22,11 @@ BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 
 
 def get_config_file(benchmark):
-    """Returns the path to the config for an OSS-Fuzz-based benchmark."""
+    """Returns the path to the config for a benchmark."""
     return os.path.join(BENCHMARKS_DIR, benchmark, 'benchmark.yaml')
 
 
 @functools.lru_cache(maxsize=None)
 def get_config(benchmark):
-    """Returns a dictionary containing the config for an OSS-Fuzz-based
-    benchmark."""
+    """Returns a dictionary containing the config for a benchmark."""
     return yaml_utils.read(get_config_file(benchmark))

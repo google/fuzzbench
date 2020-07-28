@@ -37,7 +37,7 @@ build_lib
 # fuzzer in sanitizer flag / use of FUZZER_LIB.
 $CXX $CXXFLAGS                                \
   -IBUILD                                     \
-  $SRC/perl_fuzz.cc                  \
+  $SRC/perl_fuzz.cc                           \
   BUILD/libperl.a                             \
   -lnsl -ldl -lm -lcrypt -lutil -lc -lpthread \
   $FUZZER_LIB  -o $OUT/fuzz-target
