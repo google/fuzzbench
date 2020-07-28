@@ -15,7 +15,6 @@ jobs:
       matrix:
         fuzzer:
           - afl
-          - aflcc
           - aflfast
           - aflplusplus
           - aflplusplus_optimal
