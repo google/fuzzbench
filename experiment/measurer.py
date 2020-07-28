@@ -95,15 +95,18 @@ def get_coverage_infomation(coverage_summary_file):
 def store_coverage_data(experiment_config: dict):
     """Generate the specific coverage data and store in cloud bucket."""
     logger.info('Start storing coverage data')
-    with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
-        q = manager.Queue()  # pytype: disable=attribute-error
-        covered_regions = get_all_covered_regions(experiment_config, pool, q)
-        json_src_dir = get_experiment_folders_dir()
-        json_src = os.path.join(json_src_dir, 'covered_regions.json')
-        with open(json_src, 'w') as src_file:
-            json.dump(covered_regions, src_file)
-        json_dst = exp_path.filestore(json_src)
-        filestore_utils.cp(json_src, json_dst)
+    try:
+        with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
+            q = manager.Queue()  # pytype: disable=attribute-error
+            covered_regions = get_all_covered_regions(experiment_config, pool, q)
+            json_src_dir = get_experiment_folders_dir()
+            json_src = os.path.join(json_src_dir, 'covered_regions.json')
+            with open(json_src, 'w') as src_file:
+                json.dump(covered_regions, src_file)
+            json_dst = exp_path.filestore(json_src)
+            filestore_utils.cp(json_src, json_dst)
+    except Exception:
+        logger.error('Storing coverage data error.')
     logger.info('Finished storing coverage data')
 
 
@@ -115,9 +118,13 @@ def get_all_covered_regions(experiment_config: dict, pool, q) -> dict:
     fuzzers = experiment_config['fuzzers'].split(',')
     experiment = experiment_config['experiment_name']
 
+
     get_covered_region_args = [(experiment, fuzzer, benchmark, q)
                                for fuzzer in fuzzers
                                for benchmark in benchmarks]
+    
+    logger.info('Got args for all fuzzer-benchmark-pairs.')
+
 
     result = pool.starmap_async(get_covered_region, get_covered_region_args)
 
