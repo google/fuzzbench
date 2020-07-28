@@ -234,13 +234,12 @@ If everything works, submit the integration in a
 
 ## Overview of how builds work in FuzzBench
 
-We don't think most end users (people who integrate benchmarks or fuzzers into
-FuzzBench) need to know how this process works. But we describe it anyway for
-edge cases where this knowledge may help. Note that this process may change
-as it is fairly complex since it needs to ensure that the resulting docker
-images can run FuzzBench, build arbitrary fuzzers and build arbitrary benchmarks
-for their use, while trying to hide some implementation details from fuzzers
-and benchmarks.
+We don't think most end users need to know how this process works. But we
+describe it anyway for edge cases where this knowledge may help. Note that this
+process may change as it is fairly complex since it needs to ensure that the
+resulting docker images can run FuzzBench, build arbitrary fuzzers and build
+arbitrary benchmarks for their use, while trying to hide some implementation
+details from fuzzers and benchmarks.
 
 ### Building benchmarks and fuzzers.
 
