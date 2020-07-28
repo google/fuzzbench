@@ -40,6 +40,6 @@ def oss_fuzz_benchmark(fs):
     benchmark_config_contents = yaml.dump(OSS_FUZZ_BENCHMARK_CONFIG)
     benchmark_config_file = os.path.join(utils.ROOT_DIR, 'benchmarks',
                                          OSS_FUZZ_BENCHMARK_NAME,
-                                         'oss-fuzz.yaml')
+                                         'benchmark.yaml')
     fs.create_file(benchmark_config_file, contents=benchmark_config_contents)
     return OSS_FUZZ_BENCHMARK_NAME

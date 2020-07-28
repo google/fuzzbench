@@ -11,23 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tools for using oss-fuzz."""
-import functools
-import os
+#
+################################################################################
 
-from common import utils
-from common import yaml_utils
+FROM gcr.io/oss-fuzz-base/base-builder
 
-BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
+RUN apt-get update && \
+    apt-get install -y \
+    make \
+    automake \
+    autoconf \
+    libtool
 
-
-def get_config_file(benchmark):
-    """Returns the path to the config for an OSS-Fuzz-based benchmark."""
-    return os.path.join(BENCHMARKS_DIR, benchmark, 'oss-fuzz.yaml')
-
-
-@functools.lru_cache(maxsize=None)
-def get_config(benchmark):
-    """Returns a dictionary containing the config for an OSS-Fuzz-based
-    benchmark."""
-    return yaml_utils.read(get_config_file(benchmark))
+COPY build.sh $SRC/
+ADD seeds /opt/seeds

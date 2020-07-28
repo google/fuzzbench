@@ -20,6 +20,7 @@ apt-get update && \
   make \
   automake \
   autoconf \
+  libtool
 
 build_lib() {
   rm -rf BUILD
@@ -66,4 +67,4 @@ build_lib() {
 get_git_revision https://github.com/openthread/openthread.git 5b0af03afb8e70e8216f69623bd18bcd3d4b8b43 SRC
 build_lib
 
-cp BUILD/tests/fuzz/ip6-send-fuzzer $FUZZ_TARGET
+cp BUILD/tests/fuzz/ip6-send-fuzzer $OUT/fuzz-target
