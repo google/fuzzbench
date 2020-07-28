@@ -484,18 +484,23 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
     def get_current_covered_regions(self):
         """Get the covered regions for the current trial."""
         covered_regions = set()
-        coverage_info = get_coverage_infomation(self.cov_summary_file)
-        functions_data = coverage_info['data'][0]['functions']
-        # The fourth number in the region-list indicates if the region is hit.
-        hit_index = 4
-        # The last number in the region-list indicates what type of the region
-        # it is; 'code_region' is used to obtain various code coverage
-        # statistic and is represented by number 0.
-        region_type_index = -1
-        for function_data in functions_data:
-            for region in function_data['regions']:
-                if region[hit_index] != 0 and region[region_type_index] == 0:
-                    covered_regions.add(tuple(region[:hit_index]))
+        try:
+            coverage_info = get_coverage_infomation(self.cov_summary_file)
+            functions_data = coverage_info['data'][0]['functions']
+            # The fourth number in the region-list indicates if the region
+            # is hit.
+            hit_index = 4
+            # The last number in the region-list indicates what type of the
+            # region it is; 'code_region' is used to obtain various code
+            # coverage statistic and is represented by number 0.
+            region_type_index = -1
+            for function_data in functions_data:
+                for region in function_data['regions']:
+                    if region[hit_index] != 0 and region[region_type_index] == 0:
+                        covered_regions.add(tuple(region[:hit_index]))
+        except Exception:  # pylint: disable=broad-except
+            self.logger.error(
+                'Coverage summary json file defective or missing.')
         return covered_regions
 
     def get_current_coverage(self) -> int:
@@ -511,7 +516,8 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             regions_covered = regions_coverage_data["covered"]
             return regions_covered
         except Exception:  # pylint: disable=broad-except
-            self.logger.error('Coverage summary json file defective.')
+            self.logger.error(
+                'Coverage summary json file defective or missing.')
             return 0
 
     def generate_profdata(self, cycle: int):
