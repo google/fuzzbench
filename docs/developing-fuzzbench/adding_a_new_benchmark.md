@@ -132,10 +132,8 @@ running the fuzzer. You should not have any dependencies outside of `$OUT`.
 ```bash
 #!/bin/bash -ex
 
-rm -rf BUILD
-cp -rf $SRC/<project-source-code> BUILD
-cd BUILD && ./autogen.sh && ./configure && make -j
-
+# Build project.
+./autogen.sh && ./configure && make -j
 
 # Build fuzz target in $OUT directory.
 export FUZZ_TARGET=fuzz_target
