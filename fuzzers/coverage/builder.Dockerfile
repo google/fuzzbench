@@ -15,6 +15,7 @@
 ARG parent_image=gcr.io/fuzzbench/base-builder
 FROM $parent_image
 
+# The patch adds hook to dump clang coverage data when timeout.
 COPY patch.diff /
 
 # Use a libFuzzer version that supports clang source-based coverage.

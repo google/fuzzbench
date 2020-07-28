@@ -20,7 +20,7 @@ index bb15d68e0de..154b6239d53 100644
  EXT_FUNC(__msan_scoped_enable_interceptor_checks, void, (), false);
  EXT_FUNC(__msan_unpoison, void, (const volatile void *, size_t size), false);
 +
-+//Clang source-based coverage functions
++// Clang source-based coverage functions.
 +EXT_FUNC(__llvm_profile_dump, int, (), false);
 diff --git a/compiler-rt/lib/fuzzer/FuzzerTracePC.cpp b/compiler-rt/lib/fuzzer/FuzzerTracePC.cpp
 index b6b11f08579..52309df4696 100644
