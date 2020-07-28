@@ -83,4 +83,6 @@ steps:
 
 images:
   - '${_REPO}/base-image:${_EXPERIMENT}'
+  - '${_REPO}/base-image'
   - '${_REPO}/base-runner:${_EXPERIMENT}'
+  - '${_REPO}/base-runner'

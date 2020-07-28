@@ -66,11 +66,14 @@ $(1)-fuzz-target  := $(shell cat benchmarks/$(1)/benchmark.yaml | \
 $(1)-commit := $(shell cat benchmarks/$(1)/benchmark.yaml | \
                            grep commit: | cut -d ':' -f2 | tr -d ' ')
 
+# TODO: It would be better to call this benchmark builder. But that would be
+# confusing because this doesn't involve benchmark-builder/Dockerfile. Rename
+# that and then rename this.
 .$(1)-project-builder:
 	docker build \
     --tag $(BASE_TAG)/builders/benchmark/$(1) \
     --file benchmarks/$(1)/Dockerfile \
-    $(call cache_from,${BASE_TAG}/builders/oss-fuzz-project/$(1)) \
+    $(call cache_from,${BASE_TAG}/builders/benchmarks/$(1)) \
     benchmarks/$(1)
 
 endef
