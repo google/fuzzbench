@@ -24,7 +24,7 @@ def build_image(tag: str, context: str, dockerfile=None, buildargs=None):
     image_tag = os.path.join(BASE_TAG, tag)
     subprocess.run(['docker', 'pull', image_tag], check=True)
     command = ['docker', 'build', '--tag', image_tag, context]
-    cpu_options = ['--cpu-shares', str(int(os.cpu_count()))]
+    cpu_options = ['--cpu-period', '100000', '--cpu-quota', '100000']
     command.extend(cpu_options)
     if dockerfile:
         command.extend(['--file', dockerfile])
