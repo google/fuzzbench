@@ -25,8 +25,6 @@ def run_experiment():
     """Main experiment logic."""
     print('Initializing the job queue.')
     queue = rq.Queue()
-    # Initialization.
-    queue.empty()
     jobs_list = []
     jobs_list.append(
         queue.enqueue(jobs.build_image,
