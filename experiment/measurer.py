@@ -493,10 +493,10 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             # The last number in the region-list indicates what type of the
             # region it is; 'code_region' is used to obtain various code
             # coverage statistic and is represented by number 0.
-            region_type_index = -1
+            type_index = -1
             for function_data in functions_data:
                 for region in function_data['regions']:
-                    if region[hit_index] != 0 and region[region_type_index] == 0:
+                    if region[hit_index] != 0 and region[type_index] == 0:
                         covered_regions.add(tuple(region[:hit_index]))
         except Exception:  # pylint: disable=broad-except
             self.logger.error(
