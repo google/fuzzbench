@@ -90,7 +90,7 @@ FUZZER_BENCHMARK_TEMPLATE = """
 .pull-{fuzzer}-{benchmark}-builder: .pull-{fuzzer}-builder
 	docker pull {base_tag}/builders/{fuzzer}/{benchmark}
 
-ifeq (,$(filter {fuzzer},coverage coverage_source_based))
+ifneq ({fuzzer}, coverage)
 
 .{fuzzer}-{benchmark}-intermediate-runner: base-runner
 	docker build \\
@@ -125,11 +125,11 @@ endif
 """
 
 OSS_FUZZER_BENCHMARK_RUN_TARGETS_TEMPLATE = """
-build-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
+build-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner
 
-pull-{fuzzer}-{benchmark}: .pull-{fuzzer}-{benchmark}-oss-fuzz-runner
+pull-{fuzzer}-{benchmark}: .pull-{fuzzer}-{benchmark}-runner
 
-run-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
+run-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner
 	docker run \\
     --cpus=1 \\
     --cap-add SYS_NICE \\
@@ -142,7 +142,7 @@ run-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
     -e FUZZ_TARGET=$({benchmark}-fuzz-target) \\
     -it {base_tag}/runners/{fuzzer}/{benchmark}
 
-test-run-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
+test-run-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner
 	docker run \\
     --cap-add SYS_NICE \\
     --cap-add SYS_PTRACE \\
@@ -156,7 +156,7 @@ test-run-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
     -e SNAPSHOT_PERIOD=10 \\
     {base_tag}/runners/{fuzzer}/{benchmark}
 
-debug-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-oss-fuzz-runner
+debug-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner
 	docker run \\
     --cpus=1 \\
     --cap-add SYS_NICE \\
@@ -197,7 +197,7 @@ OSS_FUZZER_BENCHMARK_TEMPLATE = """
 .pull-{fuzzer}-{benchmark}-oss-fuzz-builder: .pull-{fuzzer}-{benchmark}-oss-fuzz-builder-intermediate
 	docker pull {base_tag}/builders/{fuzzer}/{benchmark}
 
-ifeq (,$(filter {fuzzer},coverage coverage_source_based))
+ifneq ({fuzzer}, coverage)
 
 .{fuzzer}-{benchmark}-oss-fuzz-intermediate-runner: base-runner
 	docker build \\
@@ -209,16 +209,16 @@ ifeq (,$(filter {fuzzer},coverage coverage_source_based))
 .pull-{fuzzer}-{benchmark}-oss-fuzz-intermediate-runner: pull-base-runner
 	docker pull {base_tag}/runners/{fuzzer}/{benchmark}-intermediate
 
-.{fuzzer}-{benchmark}-oss-fuzz-runner: .{fuzzer}-{benchmark}-oss-fuzz-builder .{fuzzer}-{benchmark}-oss-fuzz-intermediate-runner
+.{fuzzer}-{benchmark}-runner: .{fuzzer}-{benchmark}-oss-fuzz-builder .{fuzzer}-{benchmark}-oss-fuzz-intermediate-runner
 	docker build \\
     --tag {base_tag}/runners/{fuzzer}/{benchmark} \\
     --build-arg fuzzer={fuzzer} \\
     --build-arg benchmark={benchmark} \\
     $(call cache_from,{base_tag}/runners/{fuzzer}/{benchmark}) \\
-    --file docker/oss-fuzz-runner/Dockerfile \\
+    --file docker/benchmark-runner/Dockerfile \\
     .
 
-.pull-{fuzzer}-{benchmark}-oss-fuzz-runner: .pull-{fuzzer}-{benchmark}-oss-fuzz-builder .pull-{fuzzer}-{benchmark}-oss-fuzz-intermediate-runner
+.pull-{fuzzer}-{benchmark}-runner: .pull-{fuzzer}-{benchmark}-oss-fuzz-builder .pull-{fuzzer}-{benchmark}-oss-fuzz-intermediate-runner
 	docker pull {base_tag}/runners/{fuzzer}/{benchmark}
 
 """ + OSS_FUZZER_BENCHMARK_RUN_TARGETS_TEMPLATE + """

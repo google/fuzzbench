@@ -175,7 +175,7 @@ steps:
     'benchmark=${_BENCHMARK}',
 
     '--file',
-    'docker/oss-fuzz-runner/Dockerfile',
+    'docker/benchmark-runner/Dockerfile',
 
     '.',
   ]
