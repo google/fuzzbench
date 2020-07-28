@@ -116,15 +116,11 @@ def get_all_covered_regions(experiment_config: dict, pool, q) -> dict:
 
     benchmarks = experiment_config['benchmarks'].split(',')
     fuzzers = experiment_config['fuzzers'].split(',')
-    experiment = experiment_config['experiment_name']
-
+    experiment = experiment_config['experiment']
 
     get_covered_region_args = [(experiment, fuzzer, benchmark, q)
                                for fuzzer in fuzzers
                                for benchmark in benchmarks]
-    
-    logger.info('Got args for all fuzzer-benchmark-pairs.')
-
 
     result = pool.starmap_async(get_covered_region, get_covered_region_args)
 
