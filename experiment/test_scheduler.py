@@ -116,9 +116,11 @@ docker run \\
 --name=runner-container \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
-    _test_create_trial_instance(benchmark, expected_image, expected_target,
-                                expected_startup_script, experiment_config,
-                                True)
+    with mock.patch('common.benchmark_utils.get_fuzz_target',
+                    return_value=expected_target):
+        _test_create_trial_instance(benchmark, expected_image, expected_target,
+                                    expected_startup_script, experiment_config,
+                                    True)
 
 
 @pytest.mark.skip(reason='This should fail now because we don\'t tag images by '
@@ -195,6 +197,8 @@ def _test_create_trial_instance(  # pylint: disable=too-many-locals
 
 
 @mock.patch('common.gcloud.create_instance')
+@mock.patch('common.benchmark_utils.get_fuzz_target',
+            return_value='fuzz-target')
 def test_start_trials_not_started(mocked_create_instance, pending_trials,
                                   experiment_config):
     """Test that start_trials returns an empty list nothing when all trials fail
@@ -207,7 +211,9 @@ def test_start_trials_not_started(mocked_create_instance, pending_trials,
 
 @mock.patch('common.new_process.execute')
 @mock.patch('experiment.scheduler.datetime_now')
-def test_schedule(mocked_datetime_now, mocked_execute, pending_trials,
+@mock.patch('common.benchmark_utils.get_fuzz_target',
+            return_value='fuzz-target')
+def test_schedule(_, mocked_datetime_now, mocked_execute, pending_trials,
                   experiment_config):
     """Tests that schedule() ends expired trials and starts new ones as
     needed."""

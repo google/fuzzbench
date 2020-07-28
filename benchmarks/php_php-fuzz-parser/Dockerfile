@@ -18,7 +18,7 @@ FROM gcr.io/oss-fuzz-base/base-builder@sha256:59fdabfe72127e145d8a387b68e883121b
 RUN apt-get update && \
     apt-get install -y autoconf automake libtool bison re2c pkg-config
 
-# php-src will be checked out to the commit hash specified in oss-fuzz.yaml.
+# php-src will be checked out to the commit hash specified in benchmark.yaml.
 RUN git clone --depth 1 --branch master https://github.com/php/php-src.git php-src
 RUN git clone https://github.com/kkos/oniguruma.git php-src/oniguruma
 RUN git -C php-src/oniguruma/ checkout -f 14f5efb82321e26502caa2df3c58aa1c2d36c801
