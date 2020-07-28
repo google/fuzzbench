@@ -19,6 +19,13 @@
 # are still testing this feature. You should request an experiment by contacting
 # us as you normally do.
 
+- experiment: 2020-07-28
+  fuzzers:
+    - afl
+    - honggfuzz
+    - libfuzzer
+    - entropic
+
 - experiment: 2020-07-27
   fuzzers:
     - afl
