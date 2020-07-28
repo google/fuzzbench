@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit: 08f59b2ae229c75b01c50bfcb52e74984c8019fb
-commit_date: 2019-11-18 16:52:25+00:00
+commit: 3cf5c3feca15ab88730d6526b2f06302597926b5
+commit_date: 2020-05-25 18:51:34+00:00
 fuzz_target: fuzz_target
 project: bloaty

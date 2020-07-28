@@ -12,7 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Module for running a sancov instrumented binary on a corpus."""
+"""Module for running a clang source-based coverage instrumented binary
+on a corpus."""
+
 import os
 import tempfile
 from typing import List
@@ -41,10 +43,10 @@ MAX_TOTAL_TIME = experiment_utils.get_snapshot_seconds()
 
 
 def do_coverage_run(  # pylint: disable=too-many-locals
-        coverage_binary: str, new_units_dir: List[str], sancov_dir: str,
+        coverage_binary: str, new_units_dir: List[str], profraw_file: str,
         crashes_dir: str) -> List[str]:
     """Does a coverage run of |coverage_binary| on |new_units_dir|. Writes
-    sancov files to |sancov_dir|. Returns a list of crashing units."""
+    the result to |profraw_file|. Returns a list of crashing units."""
     with tempfile.TemporaryDirectory() as merge_dir:
         command = [
             coverage_binary, '-merge=1', '-dump_coverage=1',
@@ -55,7 +57,7 @@ def do_coverage_run(  # pylint: disable=too-many-locals
         ]
         coverage_binary_dir = os.path.dirname(coverage_binary)
         env = os.environ.copy()
-        env['UBSAN_OPTIONS'] = 'coverage_dir=%s' % sancov_dir
+        env['LLVM_PROFILE_FILE'] = profraw_file
         result = new_process.execute(command,
                                      env=env,
                                      cwd=coverage_binary_dir,
