@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Script for setting up an integration of an OSS-Fuzz benchmark. The script
-will create oss-fuzz.yaml as well as copy the files from OSS-Fuzz to build the
+will create benchmark.yaml as well as copy the files from OSS-Fuzz to build the
 benchmark."""
 import argparse
 import datetime
@@ -159,9 +159,9 @@ def replace_base_builder(benchmark_dir, commit_date):
 
 def create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,
                          benchmark_dir):
-    """Create the oss-fuzz.yaml file in |benchmark_dir| based on the values from
-    |project|, |fuzz_target|, |commit| and |commit_date|."""
-    yaml_filename = os.path.join(benchmark_dir, 'oss-fuzz.yaml')
+    """Create the benchmark.yaml file in |benchmark_dir| based on the values
+    from |project|, |fuzz_target|, |commit| and |commit_date|."""
+    yaml_filename = os.path.join(benchmark_dir, 'benchmark.yaml')
     config = {
         'project': project,
         'fuzz_target': fuzz_target,
@@ -177,7 +177,7 @@ def integrate_benchmark(project,
                         commit_date,
                         benchmark_name=None):
     """Copies files needed to integrate an OSS-Fuzz benchmark and creates the
-    benchmark's oss-fuzz.yaml file."""
+    benchmark's benchmark.yaml file."""
     benchmark_name = get_benchmark_name(project, fuzz_target, benchmark_name)
     benchmark_dir = os.path.join(benchmark_utils.BENCHMARKS_DIR, benchmark_name)
     # TODO(metzman): Replace with dateutil since fromisoformat isn't supposed to
@@ -192,7 +192,7 @@ def integrate_benchmark(project,
 
 def main():
     """Copies files needed to integrate an OSS-Fuzz benchmark and creates the
-    benchmark's oss-fuzz.yaml file."""
+    benchmark's benchmark.yaml file."""
     parser = argparse.ArgumentParser(description='Integrate a new benchmark.')
     parser.add_argument('-p',
                         '--project',

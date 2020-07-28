@@ -21,8 +21,8 @@ build_lib() {
 # Leaving for historical.. there are other options we might wish to toggle.
 #  sh Configure
 #     -Dafl_cc=${AFL_CC}
-#     -Dcc=${LCC} 
-#     -Accflags="${LCFLAGS}"  
+#     -Dcc=${LCC}
+#     -Accflags="${LCFLAGS}"
 #     -de
 #     -Dusedevel
 #     -des
@@ -37,8 +37,8 @@ build_lib
 # fuzzer in sanitizer flag / use of FUZZER_LIB.
 $CXX $CXXFLAGS                                \
   -IBUILD                                     \
-  ${SCRIPT_DIR}/perl_fuzz.cc                  \
+  $SRC/perl_fuzz.cc                           \
   BUILD/libperl.a                             \
   -lnsl -ldl -lm -lcrypt -lutil -lc -lpthread \
-  $FUZZER_LIB  -o $FUZZ_TARGET 
-cp -r $SCRIPT_DIR/seeds $OUT/
+  $FUZZER_LIB  -o $OUT/fuzz-target
+cp -r /opt/seeds $OUT/

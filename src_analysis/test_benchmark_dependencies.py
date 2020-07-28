@@ -19,8 +19,8 @@ from src_analysis import benchmark_dependencies
 
 OSS_FUZZ_BENCHMARK = 'curl_curl_fuzzer_http'
 STANDARD_BENCHMARK = 'libpng-1.2.56'
-OSS_FUZZ_YAML_PATH = os.path.join(benchmark_utils.BENCHMARKS_DIR,
-                                  OSS_FUZZ_BENCHMARK, 'oss-fuzz.yaml')
+BENCHMARK_YAML_PATH = os.path.join(benchmark_utils.BENCHMARKS_DIR,
+                                   OSS_FUZZ_BENCHMARK, 'benchmark.yaml')
 STANDARD_BUILD_SH_PATH = os.path.join(benchmark_utils.BENCHMARKS_DIR,
                                       STANDARD_BENCHMARK, 'build.sh')
 
@@ -29,7 +29,7 @@ def test_is_subpath_of_benchmark():
     """Tests that is_subpath_of_benchmark returns True for subpaths of a
     benchmark and returns False for other paths."""
     assert benchmark_dependencies.is_subpath_of_benchmark(
-        OSS_FUZZ_YAML_PATH, OSS_FUZZ_BENCHMARK)
+        BENCHMARK_YAML_PATH, OSS_FUZZ_BENCHMARK)
     assert not benchmark_dependencies.is_subpath_of_benchmark(
         STANDARD_BUILD_SH_PATH, OSS_FUZZ_BENCHMARK)
 
@@ -40,7 +40,7 @@ def test_get_files_dependent_benchmarks():
     fake_build_sh_path = os.path.join(benchmark_utils.BENCHMARKS_DIR, 'fake',
                                       'build.sh')
     changed_files = [
-        STANDARD_BUILD_SH_PATH, OSS_FUZZ_YAML_PATH, fake_build_sh_path
+        STANDARD_BUILD_SH_PATH, BENCHMARK_YAML_PATH, fake_build_sh_path
     ]
     dependent_benchmarks = (
         benchmark_dependencies.get_files_dependent_benchmarks(changed_files))
