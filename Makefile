@@ -34,14 +34,10 @@ run-end-to-end-test:
 
 # Stop and clean running environment.
 
-stop-experiment: export COMPOSE_PROJECT_NAME := fuzzbench
-stop-experiment: export COMPOSE_FILE := compose/fuzzbench.yaml
 stop-experiment:
+	COMPOSE_PROJECT_NAME=fuzzbench COMPOSE_FILE=compose/fuzzbench.yaml \
 	docker-compose down
-
-stop-end-to-end-test: export COMPOSE_PROJECT_NAME := e2e-test
-stop-end-to-end-test: export COMPOSE_FILE := compose/fuzzbench.yaml:compose/e2e-test.yaml
-stop-end-to-end-test:
+	COMPOSE_PROJECT_NAME=e2e-test COMPOSE_FILE=compose/fuzzbench.yaml:compose/e2e-test.yaml \
 	docker-compose down
 
 include docker/build.mk
