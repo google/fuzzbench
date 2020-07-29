@@ -102,7 +102,6 @@ FUZZER_BENCHMARK_TEMPLATE = """
     --build-arg parent_image={base_tag}/builders/{fuzzer}/{benchmark}-intermediate \\
     --build-arg fuzzer={fuzzer} \\
     --build-arg benchmark={benchmark} \\
-    --build-arg checkout_commit=$({benchmark}-commit) \\
     $(call cache_from,{base_tag}/builders/{fuzzer}/{benchmark}) \\
     .
 
