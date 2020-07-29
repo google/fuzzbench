@@ -16,10 +16,10 @@
 import os
 from common import yaml_utils
 
-BENCHMARK_DIR = os.path.join(os.path.dirname(__file__),
-                             os.pardir, os.pardir, 'benchmarks')
-FUZZERS_DIR = os.path.join(os.path.dirname(__file__),
-                           os.pardir, os.pardir, 'fuzzers')
+BENCHMARK_DIR = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
+                             'benchmarks')
+FUZZERS_DIR = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
+                           'fuzzers')
 
 def _substitute(template, fuzzer, benchmark):
     """Replaces {fuzzer} or {benchmark} with |fuzzer| or |benchmark| in

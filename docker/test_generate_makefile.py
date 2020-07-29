@@ -17,6 +17,7 @@ import sys
 import os
 from docker import generate_makefile
 
+
 def test_print_makefile_build():
     """Tests result of a makefile generation for an image."""
 
@@ -28,7 +29,6 @@ def test_print_makefile_build():
         'depends_on': ['zlib-project-builder'],
         'build_arg': ['parent_image=gcr.io/fuzzbench/builders/benchmark/zlib']
     }
-
 
     generated_makefile_truth = """\
 .afl-zlib-builder-intermediate: .zlib-project-builder
