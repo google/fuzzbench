@@ -17,19 +17,17 @@ import time
 import redis
 import rq
 
-REASSIGN_GAP_TIME = 5
-
 
 def main():
     """Sets up Redis connection and starts the worker."""
     redis_connection = redis.Redis(host="queue-server")
     with rq.Connection(redis_connection):
         queue = rq.Queue('build_n_run_queue')
-        worker = rq.Worker([queue], connection=redis_connection)
+        worker = rq.Worker([queue])
 
         while queue.count + queue.deferred_job_registry.count > 0:
             worker.work(burst=True)
-            time.sleep(REASSIGN_GAP_TIME)
+            time.sleep(5)
 
 
 if __name__ == '__main__':

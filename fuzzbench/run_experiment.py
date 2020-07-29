@@ -24,6 +24,7 @@ from fuzzbench import jobs
 def run_experiment():
     """Main experiment logic."""
     print('Initializing the job queue.')
+    # Create the queue for scheduling build jobs and run jobs.
     queue = rq.Queue('build_n_run_queue')
     jobs_list = []
     jobs_list.append(
@@ -31,12 +32,6 @@ def run_experiment():
                       'base-image',
                       job_timeout=600,
                       job_id='base-image'))
-    jobs_list.append(
-        queue.enqueue(jobs.build_image,
-                      'base-builder',
-                      job_timeout=600,
-                      job_id='base-builder',
-                      depends_on='base-image'))
     jobs_list.append(
         queue.enqueue(jobs.build_image,
                       'base-runner',
