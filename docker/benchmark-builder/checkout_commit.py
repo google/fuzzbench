@@ -49,11 +49,15 @@ def main():
     if len(sys.argv) != 3:
         print("Usage: %s <commit> <src_dir>" % sys.argv[0])
         return 1
+
     commit = sys.argv[1]
     src_dir = sys.argv[2]
     if not commit:
-        print('Not checking out commit.')
+        print('No commit provided, skip.')
         return 0
+
+    print('Checking out commit', commit)
+
     # Infer the project repo directory in the oss-fuzz builder image by
     # iteratively checking out the commit (provided by integrator) in src_dir.
     for _, directories, _ in os.walk(src_dir):

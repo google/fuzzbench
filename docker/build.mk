@@ -63,8 +63,6 @@ dispatcher-image: base-image
 define benchmark_template
 $(1)-fuzz-target  := $(shell cat benchmarks/$(1)/benchmark.yaml | \
                              grep fuzz_target | cut -d ':' -f2 | tr -d ' ')
-$(1)-commit := $(shell cat benchmarks/$(1)/benchmark.yaml | \
-                           grep commit: | cut -d ':' -f2 | tr -d ' ')
 
 # TODO: It would be better to call this benchmark builder. But that would be
 # confusing because this doesn't involve benchmark-builder/Dockerfile. Rename
