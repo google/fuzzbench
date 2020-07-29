@@ -42,7 +42,6 @@ run-end-to-end-test:
 stop-end-to-end-test:
 	docker-compose down
 
-include docker/build.mk
 include docker/generated.mk
 
 SHELL := /bin/bash

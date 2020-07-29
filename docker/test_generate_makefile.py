@@ -22,13 +22,11 @@ def test_print_makefile_build():
 
     name = 'afl-zlib-builder-intermediate'
     image = {
-                'tag': 'builders/afl/zlib-intermediate',
-                'context': 'fuzzers/afl',
-                'dockerfile': 'fuzzers/afl/builder.Dockerfile',
-                'depends_on': ['zlib-project-builder'],
-                'build_arg': [
-                    'parent_image=gcr.io/fuzzbench/builders/benchmark/zlib'
-                ]
+        'tag': 'builders/afl/zlib-intermediate',
+        'context': 'fuzzers/afl',
+        'dockerfile': 'fuzzers/afl/builder.Dockerfile',
+        'depends_on': ['zlib-project-builder'],
+        'build_arg': ['parent_image=gcr.io/fuzzbench/builders/benchmark/zlib']
     }
 
 
