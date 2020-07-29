@@ -52,14 +52,6 @@ steps:
   ]
   id: 'base-image'
 
-- name: 'gcr.io/cloud-builders/docker'
-  args: [
-    'build',
-
-    '--tag',
-    'gcr.io/fuzzbench/base-builder',
-  ]
-
 images:
   - '${_REPO}/base-image:${_EXPERIMENT}'
   - '${_REPO}/base-image'
