@@ -53,7 +53,7 @@ def _print_makefile_build_template(name, image):
     print(name + ':', end='')
     if 'depends_on' in image:
         for dep in image['depends_on']:
-            if 'base' in name:
+            if 'base' in dep:
                 print(' ' + dep, end='')
             else:
                 print(' .' + dep, end='')
