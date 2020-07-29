@@ -45,15 +45,6 @@ base-builder: base-image pull-base-clang
 pull-base-builder: pull-base-image pull-base-clang
 	docker pull $(BASE_TAG)/base-builder
 
-base-runner: base-image
-	docker build \
-    --tag $(BASE_TAG)/base-runner \
-    $(call cache_from_base,${BASE_TAG}/base-runner) \
-    docker/base-runner
-
-pull-base-runner: pull-base-image
-	docker pull $(BASE_TAG)/base-runner
-
 dispatcher-image: base-image
 	docker build \
     --tag $(BASE_TAG)/dispatcher-image \

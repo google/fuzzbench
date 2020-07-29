@@ -23,7 +23,7 @@ def test_images_to_build_list():
     benchmarks = ['libxml', 'libpng']
     all_images = docker_images.get_images_to_build(fuzzers, benchmarks)
     assert set(all_images.keys()) == set([
-        'base-image', 'base-builder', 'base-runner', 'coverage-builder',
+        'base-image', 'base-builder', 'coverage-builder',
         'coverage-libxml-builder', 'coverage-libpng-builder', 'afl-builder',
         'afl-libxml-builder', 'afl-libxml-intermediate-runner',
         'afl-libxml-runner', 'afl-libpng-builder',
