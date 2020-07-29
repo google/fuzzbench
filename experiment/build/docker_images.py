@@ -21,6 +21,7 @@ BENCHMARK_DIR = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
 FUZZERS_DIR = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
                            'fuzzers')
 
+
 def _substitute(template, fuzzer, benchmark):
     """Replaces {fuzzer} or {benchmark} with |fuzzer| or |benchmark| in
     |template| string."""
