@@ -30,6 +30,9 @@
   depends_on:
     - 'base-builder'
 
+# TODO: It would be better to call this benchmark builder. But that would be
+# confusing because this doesn't involve benchmark-builder/Dockerfile. Rename
+# that and then rename this.
 '{benchmark}-project-builder':
   tag: 'builders/benchmark/{benchmark}'
   context: 'benchmarks/{benchmark}'
