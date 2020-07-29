@@ -13,16 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-. $(dirname $0)/../common.sh
+git clone git://git.sv.nongnu.org/freetype/freetype2.git
 
-build_lib() {
-  rm -rf BUILD
-  cp -rf SRC BUILD
-  (cd BUILD && ./autogen.sh && ./configure --with-harfbuzz=no --with-bzip2=no --with-png=no && make clean && make all -j $JOBS)
-}
-
-get_git_revision git://git.sv.nongnu.org/freetype/freetype2.git cd02d359a6d0455e9d16b87bf9665961c4699538 SRC
-build_lib
+cd freetype2
+git checkout cd02d359a6d0455e9d16b87bf9665961c4699538
+./autogen.sh
+./configure --with-harfbuzz=no --with-bzip2=no --with-png=no
+make clean
+make all -j $(nproc)
 
 if [[ ! -d $OUT/seeds ]]; then
   mkdir $OUT/seeds
@@ -33,4 +31,5 @@ if [[ ! -d $OUT/seeds ]]; then
   rm -fr TRT
 fi
 
-$CXX $CXXFLAGS -std=c++11 -I BUILD/include -I BUILD/ BUILD/src/tools/ftfuzzer/ftfuzzer.cc BUILD/objs/.libs/libfreetype.a  $FUZZER_LIB -larchive -lz -o $OUT/fuzz-target
+$CXX $CXXFLAGS -std=c++11 -I include -I . src/tools/ftfuzzer/ftfuzzer.cc \
+    objs/.libs/libfreetype.a $FUZZER_LIB -larchive -lz -o $OUT/fuzz-target

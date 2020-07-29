@@ -21,7 +21,8 @@ RUN apt-get update && \
     make \
     automake \
     autoconf \
-    libtool
+    libtool \
+    wget
 
 COPY build.sh $SRC/
 ADD seeds /opt/seeds

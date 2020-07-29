@@ -13,17 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-. $(dirname $0)/../common.sh
+git clone https://github.com/mm2/Little-CMS.git
 
-build_lib() {
-  rm -rf BUILD
-  cp -rf SRC BUILD
-  (cd BUILD && ./autogen.sh && ./configure && make -j $JOBS)
-}
+cd Little-CMS
+git checkout f9d75ccef0b54c9f4167d95088d4727985133c52
+./autogen.sh
+./configure
+make -j $(nproc)
 
-get_git_revision https://github.com/mm2/Little-CMS.git f9d75ccef0b54c9f4167d95088d4727985133c52 SRC
-build_lib
-
-$CXX $CXXFLAGS $SRC/cms_transform_fuzzer.cc -I BUILD/include/ BUILD/src/.libs/liblcms2.a $FUZZER_LIB -o $OUT/fuzz-target
+$CXX $CXXFLAGS $SRC/cms_transform_fuzzer.cc -I include/ src/.libs/liblcms2.a \
+    $FUZZER_LIB -o $OUT/fuzz-target
 cp -r /opt/seeds $OUT/
-wget -qO $OUT/fuzz-target.dict https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/icc.dict
+wget -qO $OUT/fuzz-target.dict \
+    https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/icc.dict

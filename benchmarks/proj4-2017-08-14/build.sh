@@ -13,21 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-. $(dirname $0)/../common.sh
+git clone https://github.com/OSGeo/PROJ
 
-build_lib() {
-  rm -rf BUILD
-  cp -rf SRC BUILD
-  (cd BUILD && ./autogen.sh &&  ./configure  &&  make clean  && make -j $JOBS )
-}
-
-get_git_revision https://github.com/OSGeo/proj.4.git d00501750b210a73f9fb107ac97a683d4e3d8e7a SRC
-build_lib
+cd PROJ
+git checkout d00501750b210a73f9fb107ac97a683d4e3d8e7a
+./autogen.sh
+./configure
+make -j $(nproc)
 
 if [[ ! -d $OUT/seeds ]]; then
   mkdir $OUT/seeds
-  cp BUILD/nad/* $OUT/seeds
+  cp nad/* $OUT/seeds
 fi
 
-$CXX $CXXFLAGS -std=c++11 -I BUILD/src BUILD/test/fuzzers/standard_fuzzer.cpp BUILD/src/.libs/libproj.a $FUZZER_LIB -o $OUT/fuzz-target -lpthread
-wget -qO $OUT/fuzz-target.dict https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/proj4.dict
+$CXX $CXXFLAGS -std=c++11 -I src test/fuzzers/standard_fuzzer.cpp \
+    src/.libs/libproj.a $FUZZER_LIB -o $OUT/fuzz-target -lpthread
+wget -qO $OUT/fuzz-target.dict \
+    https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/proj4.dict
