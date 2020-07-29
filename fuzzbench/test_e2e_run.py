@@ -39,14 +39,13 @@ class TestEndToEndRunResults:
         """Tests that jobs dependency preserves during working."""
         jobs = {
             name: Job.fetch(name, connection=redis_connection)
-            for name in ['base-image', 'base-builder', 'base-runner']
+            for name in ['base-image', 'base-builder']
         }
         assert jobs['base-image'].ended_at <= jobs['base-builder'].started_at
-        assert jobs['base-image'].ended_at <= jobs['base-runner'].started_at
 
     def test_all_jobs_finished_successfully(self, redis_connection):  # pylint: disable=redefined-outer-name
         """Tests all jobs finished successully."""
-        jobs = Job.fetch_many(['base-image', 'base-builder', 'base-runner'],
+        jobs = Job.fetch_many(['base-image', 'base-builder'],
                               connection=redis_connection)
         for job in jobs:
             assert job.get_status() == 'finished'
