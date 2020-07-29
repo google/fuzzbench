@@ -39,11 +39,6 @@ def print_benchmark_definition(benchmarks):
         benchmark_vars = yaml_utils.read(
             os.path.join(BENCHMARK_DIR, benchmark, 'benchmark.yaml'))
         print(benchmark + '-fuzz-target=' + benchmark_vars['fuzz_target'])
-        if not 'commit' in benchmark_vars.keys():
-            benchmark_vars['commit'] = ""
-        if not benchmark_vars['commit']:
-            benchmark_vars['commit'] = ""
-        print(benchmark + '-commit=' + benchmark_vars['commit'])
         print()
 
 

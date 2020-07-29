@@ -52,7 +52,6 @@
     - 'parent_image=gcr.io/fuzzbench/builders/{fuzzer}/{benchmark}-intermediate'
     - 'fuzzer={fuzzer}'
     - 'benchmark={benchmark}'
-    - 'checkout_commit=$({benchmark}-commit)'
   depends_on:
     - '{fuzzer}-{benchmark}-builder-intermediate'
 
