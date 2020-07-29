@@ -11,51 +11,45 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# Dockerfile for building a specific benchmark for a specific fuzzer.
-#
-# The benchmark/fuzzer pair is defined by build arguments. To specify them, pass
-# the following arguments to docker build:
-#
-# $ docker build \
-#   --build-arg benchmark=afl \
-#   --build-arg fuzzer=freetype2-2017 \
-#   ...
 
-# Start from $fuzzer's builder image.
-ARG fuzzer
-FROM gcr.io/fuzzbench/builders/$fuzzer
+ARG parent_image
 
-# An ARG declared before a FROM is outside of a build stage scope, so we need to
-# re-declare it here.
+# Using multi-stage build to copy latest Python 3.
+FROM gcr.io/fuzzbench/base-image AS base-image
+
+FROM $parent_image
+
 ARG fuzzer
 ARG benchmark
 
-# Set up source and output directories.
-ENV SRC /src
-ENV OUT /out
-
 ENV FUZZER $fuzzer
 ENV BENCHMARK $benchmark
-ENV FUZZ_TARGET $OUT/fuzz-target
 
-WORKDIR $SRC
+# Copy latest python3 from base-image into local.
+COPY --from=base-image /usr/local/bin/python3* /usr/local/bin/
+COPY --from=base-image /usr/local/lib/python3.7 /usr/local/lib/python3.7
+COPY --from=base-image /usr/local/include/python3.7m /usr/local/include/python3.7m
 
-# Copy the build script to the source directory.
-COPY benchmarks/*.sh ./
-COPY benchmarks/$benchmark/ ./benchmark
+# This is for "standard" benchmarks.
+# TODO(https://github.com/google/fuzzbench/issues/583): Get rid of common.sh and this step.
+COPY benchmarks/common.sh /
 
-# Copy the fuzzer config script and run build().
-COPY fuzzers/$fuzzer/fuzzer.py fuzzer.py
+COPY fuzzers/$fuzzer/fuzzer.py $SRC/fuzzer.py
 
 # Copy the entire fuzzers directory tree to allow for module dependencies.
-COPY fuzzers fuzzers
+COPY fuzzers $SRC/fuzzers
 
-# Create output directory for build artifacts.
-RUN mkdir -p $OUT
+# Create empty __init__.py to allow python deps to work.
+RUN touch $SRC/__init__.py
 
 # Disable LeakSanitizer since ptrace is unavailable in Google Cloud build
 # and is not needed during build process.
 ENV ASAN_OPTIONS="detect_leaks=0"
 
-RUN python3 -u -c "from fuzzers import utils; utils.initialize_flags(); import fuzzer; fuzzer.build()"
+RUN mkdir /opt/fuzzbench/
+COPY docker/benchmark-builder/checkout_commit.py /opt/fuzzbench/
+COPY benchmarks/$benchmark/benchmark.yaml /
+RUN export CHECKOUT_COMMIT=$(cat /benchmark.yaml | tr -d ' ' | grep 'commit:' | cut -d ':' -f2) && \
+    python3 -u /opt/fuzzbench/checkout_commit.py $CHECKOUT_COMMIT $SRC
+
+RUN PYTHONPATH=$SRC python3 -u -c "from fuzzers import utils; utils.initialize_flags(); import fuzzer; fuzzer.build()"

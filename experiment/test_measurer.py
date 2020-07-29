@@ -56,6 +56,17 @@ def db_experiment(experiment_config, db):
     yield
 
 
+def test_get_current_covered_regions(fs, experiment):
+    """Tests that get_current_coverage reads the correct data from json file."""
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+    json_cov_summary_file = get_test_data_path('cov_summary.json')
+    fs.add_real_file(json_cov_summary_file, read_only=False)
+    snapshot_measurer.cov_summary_file = json_cov_summary_file
+    covered_regions = snapshot_measurer.get_current_covered_regions()
+    assert len(covered_regions) == 8
+
+
 def test_get_current_coverage(fs, experiment):
     """Tests that get_current_coverage reads the correct data from json file."""
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
@@ -64,7 +75,7 @@ def test_get_current_coverage(fs, experiment):
     fs.add_real_file(json_cov_summary_file, read_only=False)
     snapshot_measurer.cov_summary_file = json_cov_summary_file
     covered_regions = snapshot_measurer.get_current_coverage()
-    assert covered_regions == 7
+    assert covered_regions == 8
 
 
 def test_get_current_coverage_error(fs, experiment):
@@ -150,7 +161,7 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
     snapshot_measurer.generate_summary(CYCLE)
 
     expected = [
-        'llvm-cov', 'export', '-format=text', '-summary-only',
+        'llvm-cov', 'export', '-format=text',
         '/work/coverage-binaries/benchmark-a/fuzz-target',
         '-instr-profile=/reports/data.profdata'
     ]
@@ -284,7 +295,9 @@ def test_is_cycle_unchanged_no_file(mocked_cp, fs, experiment):
 
 
 @mock.patch('common.new_process.execute')
-def test_run_cov_new_units(mocked_execute, fs, environ):
+@mock.patch('common.benchmark_utils.get_fuzz_target',
+            return_value='fuzz-target')
+def test_run_cov_new_units(_, mocked_execute, fs, environ):
     """Tests that run_cov_new_units does a coverage run as we expect."""
     os.environ = {
         'WORK': '/work',

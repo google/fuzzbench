@@ -15,13 +15,6 @@
 
 . $(dirname $0)/../common.sh
 
-apt-get update && \
-  apt-get install -y \
-  make \
-  automake \
-  autoconf \
-  libtool
-
 readonly INSTALL_DIR="$PWD/INSTALL"
 
 build_ogg() {
@@ -64,6 +57,6 @@ build_ogg
 build_vorbis
 
 $CXX $CXXFLAGS -std=c++11 SRC/oss-fuzz/projects/vorbis/decode_fuzzer.cc \
-  -o $FUZZ_TARGET -L"$INSTALL_DIR/lib" -I"$INSTALL_DIR/include" \
+  -o $OUT/fuzz-target -L"$INSTALL_DIR/lib" -I"$INSTALL_DIR/include" \
   $FUZZER_LIB -lvorbisfile  -lvorbis -logg
-cp -r $SCRIPT_DIR/seeds $OUT/
+cp -r /opt/seeds $OUT/

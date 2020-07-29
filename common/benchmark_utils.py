@@ -15,33 +15,23 @@
 import os
 import re
 
-from common import fuzzer_utils
 from common import logs
-from common import oss_fuzz
+from common import benchmark_config
 from common import utils
 
 VALID_BENCHMARK_REGEX = re.compile(r'^[A-Za-z0-9\._\-]+$')
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 
 
-def is_oss_fuzz(benchmark):
-    """Returns True if |benchmark| is OSS-Fuzz-based project."""
-    return os.path.isfile(oss_fuzz.get_config_file(benchmark))
-
-
 def get_project(benchmark):
     """Returns the OSS-Fuzz project of |benchmark| if it is based on an
     OSS-Fuzz project, otherwise raises ValueError."""
-    if is_oss_fuzz(benchmark):
-        return oss_fuzz.get_config(benchmark)['project']
-    raise ValueError('Can only get project on OSS-Fuzz benchmarks.')
+    return benchmark_config.get_config(benchmark)['project']
 
 
 def get_fuzz_target(benchmark):
     """Returns the fuzz target of |benchmark|"""
-    if is_oss_fuzz(benchmark):
-        return oss_fuzz.get_config(benchmark)['fuzz_target']
-    return fuzzer_utils.DEFAULT_FUZZ_TARGET_NAME
+    return benchmark_config.get_config(benchmark)['fuzz_target']
 
 
 def get_runner_image_url(experiment, benchmark, fuzzer, docker_registry):
@@ -69,7 +59,7 @@ def validate(benchmark):
         return False
     if benchmark in get_all_benchmarks():
         return True
-    logs.error('%s must have a build.sh or oss-fuzz.yaml.', benchmark)
+    logs.error('%s must have a benchmark.yaml.', benchmark)
     return False
 
 
@@ -78,10 +68,6 @@ def get_all_benchmarks():
     all_benchmarks = []
     for benchmark in os.listdir(BENCHMARKS_DIR):
         benchmark_path = os.path.join(BENCHMARKS_DIR, benchmark)
-        if os.path.isfile(os.path.join(benchmark_path, 'oss-fuzz.yaml')):
-            # Benchmark is an OSS-Fuzz benchmark.
-            all_benchmarks.append(benchmark)
-        elif os.path.isfile(os.path.join(benchmark_path, 'build.sh')):
-            # Benchmark is a standard benchmark.
+        if os.path.isfile(os.path.join(benchmark_path, 'benchmark.yaml')):
             all_benchmarks.append(benchmark)
     return all_benchmarks

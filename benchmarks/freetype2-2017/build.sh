@@ -15,13 +15,6 @@
 
 . $(dirname $0)/../common.sh
 
-apt-get update &&  \
-  apt-get install -y \
-  make \
-  autoconf \
-  libtool \
-  libarchive-dev
-
 build_lib() {
   rm -rf BUILD
   cp -rf SRC BUILD
@@ -40,4 +33,4 @@ if [[ ! -d $OUT/seeds ]]; then
   rm -fr TRT
 fi
 
-$CXX $CXXFLAGS -std=c++11 -I BUILD/include -I BUILD/ BUILD/src/tools/ftfuzzer/ftfuzzer.cc BUILD/objs/.libs/libfreetype.a  $FUZZER_LIB -larchive -lz -o $FUZZ_TARGET
+$CXX $CXXFLAGS -std=c++11 -I BUILD/include -I BUILD/ BUILD/src/tools/ftfuzzer/ftfuzzer.cc BUILD/objs/.libs/libfreetype.a  $FUZZER_LIB -larchive -lz -o $OUT/fuzz-target

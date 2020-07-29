@@ -15,16 +15,6 @@
 
 . $(dirname $0)/../common.sh
 
-apt-get update && \
-  apt-get install -y \
-  make \
-  autoconf \
-  automake \
-  libtool \
-  ragel \
-  pkg-config \
-  libcairo2-dev
-
 get_git_revision https://github.com/behdad/harfbuzz.git  f73a87d9a8c76a181794b74b527ea268048f78e3 SRC
 
 build_lib() {
@@ -41,4 +31,4 @@ if [[ ! -d $OUT/seeds ]]; then
   cp BUILD/test/shaping/fonts/sha1sum/* $OUT/seeds/
 fi
 
-$CXX $CXXFLAGS -std=c++11 -I BUILD/src/ BUILD/test/fuzzing/hb-fuzzer.cc BUILD/src/.libs/libharfbuzz-fuzzing.a $FUZZER_LIB -lglib-2.0 -o $FUZZ_TARGET
+$CXX $CXXFLAGS -std=c++11 -I BUILD/src/ BUILD/test/fuzzing/hb-fuzzer.cc BUILD/src/.libs/libharfbuzz-fuzzing.a $FUZZER_LIB -lglib-2.0 -o $OUT/fuzz-target

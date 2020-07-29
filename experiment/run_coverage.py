@@ -38,7 +38,7 @@ def find_crashing_units(artifacts_dir: str) -> List[str]:
 
 
 RSS_LIMIT_MB = 2048
-UNIT_TIMEOUT = 5
+UNIT_TIMEOUT = 10
 MAX_TOTAL_TIME = experiment_utils.get_snapshot_seconds()
 
 
