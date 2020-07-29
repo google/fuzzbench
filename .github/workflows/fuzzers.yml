@@ -34,6 +34,8 @@ jobs:
           - honggfuzz_qemu
           # temporary variants.
           - aflplusplus_havoc
+          - libfuzzer_interceptors
+          - entropic_interceptors
 
         benchmark_type:
           - oss-fuzz
