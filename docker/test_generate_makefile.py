@@ -13,8 +13,9 @@
 # limitations under the License.
 """Generate Makefile test."""
 
+import io
 import sys
-import os
+
 from docker import generate_makefile
 
 
@@ -43,13 +44,11 @@ def test_print_makefile_build():
 """
 
     stdout = sys.stdout
-    with open("docker/test_generate_makefile.txt", "w") as sys.stdout:
-        generate_makefile.print_makefile(name, image)
+    print_output = io.StringIO()
+    sys.stdout = print_output
+
+    generate_makefile.print_makefile(name, image)
+    result = print_output.getvalue()
     sys.stdout = stdout
 
-    with open("docker/test_generate_makefile.txt", "r") as file:
-        printed_makefile = file.read()
-
-    os.remove("docker/test_generate_makefile.txt")
-
-    assert printed_makefile == generated_makefile_truth
+    assert result == generated_makefile_truth

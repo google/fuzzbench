@@ -14,11 +14,14 @@
 """Generates Makefile containing docker image targets."""
 
 import os
-from experiment.build import docker_images
+
 from common import yaml_utils
+from common import benchmark_utils
+from common import fuzzer_utils
+from experiment.build import docker_images
 
 BASE_TAG = "gcr.io/fuzzbench"
-BENCHMARK_DIR = os.path.join(os.path.dirname(__file__), os.pardir, 'benchmarks')
+BENCHMARK_DIR = benchmark_utils.BENCHMARKS_DIR
 
 RUN_TEMPLATE = """
 {run_type}-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner
@@ -97,7 +100,8 @@ def print_makefile(name, image):
 
 def main():
     """Generates Makefile with docker image build rules."""
-    fuzzers, benchmarks = docker_images.get_fuzzers_and_benchmarks()
+    fuzzers = fuzzer_utils.get_fuzzer_names()
+    benchmarks = benchmark_utils.get_all_benchmarks()
     buildable_images = docker_images.get_images_to_build(fuzzers, benchmarks)
 
     print('export DOCKER_BUILDKIT := 1')
