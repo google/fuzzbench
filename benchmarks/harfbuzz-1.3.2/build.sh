@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-git clone https://github.com/behdad/harfbuzz.git
-
 cd harfbuzz
 git checkout f73a87d9a8c76a181794b74b527ea268048f78e3
 ./autogen.sh

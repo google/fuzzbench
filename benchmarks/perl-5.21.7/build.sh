@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-git clone https://github.com/Perl/perl5.git
-
 cd perl5
 git checkout v5.21.7
 

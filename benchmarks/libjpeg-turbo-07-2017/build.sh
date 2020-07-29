@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-git clone https://github.com/libjpeg-turbo/libjpeg-turbo.git
-
 cd libjpeg-turbo
 git checkout b0971e47d76fdb81270e93bbf11ff5558073350d
 autoreconf -fiv

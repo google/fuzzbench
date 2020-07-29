@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-wget https://downloads.sourceforge.net/project/libpng/libpng12/older-releases/1.2.56/libpng-1.2.56.tar.gz
 tar xf libpng-1.2.56.tar.gz
 
 cd libpng-1.2.56
@@ -23,5 +22,3 @@ make -j $(nproc)
 $CXX $CXXFLAGS -std=c++11 $SRC/target.cc .libs/libpng12.a $FUZZER_LIB -I . -lz \
     -o $OUT/fuzz-target
 cp -r /opt/seeds $OUT/
-wget -qO fuzz-target.dict \
-    https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/png.dict
