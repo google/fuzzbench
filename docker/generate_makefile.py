@@ -111,7 +111,7 @@ FUZZER_BENCHMARK_TEMPLATE = """
 
 ifneq ({fuzzer}, coverage)
 
-.{fuzzer}-{benchmark}-intermediate-runner: .{fuzzer}-{benchmark}-builder'
+.{fuzzer}-{benchmark}-intermediate-runner: .{fuzzer}-{benchmark}-builder
 	docker build \\
     --tag {base_tag}/runners/{fuzzer}/{benchmark}-intermediate \\
     --file fuzzers/{fuzzer}/runner.Dockerfile \\
