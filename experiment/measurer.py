@@ -95,18 +95,15 @@ def get_coverage_infomation(coverage_summary_file):
 def store_coverage_data(experiment_config: dict):
     """Generate the specific coverage data and store in cloud bucket."""
     logger.info('Start storing coverage data')
-    try:
-        with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
-            q = manager.Queue()  # pytype: disable=attribute-error
-            covered_regions = get_all_covered_regions(experiment_config, pool, q)
-            json_src_dir = get_experiment_folders_dir()
-            json_src = os.path.join(json_src_dir, 'covered_regions.json')
-            with open(json_src, 'w') as src_file:
-                json.dump(covered_regions, src_file)
-            json_dst = exp_path.filestore(json_src)
-            filestore_utils.cp(json_src, json_dst)
-    except Exception:
-        logger.error('Storing coverage data error.')
+    with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
+        q = manager.Queue()  # pytype: disable=attribute-error
+        covered_regions = get_all_covered_regions(experiment_config, pool, q)
+        json_src_dir = get_experiment_folders_dir()
+        json_src = os.path.join(json_src_dir, 'covered_regions.json')
+        with open(json_src, 'w') as src_file:
+            json.dump(covered_regions, src_file)
+        json_dst = exp_path.filestore(json_src)
+        filestore_utils.cp(json_src, json_dst)
     logger.info('Finished storing coverage data')
 
 
