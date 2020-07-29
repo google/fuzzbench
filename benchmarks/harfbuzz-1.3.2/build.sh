@@ -19,10 +19,8 @@ git checkout f73a87d9a8c76a181794b74b527ea268048f78e3
 CCLD="$CXX $CXXFLAGS" ./configure --enable-static --disable-shared
 make -j $(nproc) -C src fuzzing
 
-if [[ ! -d $OUT/seeds ]]; then
-  mkdir $OUT/seeds
-  cp test/shaping/fonts/sha1sum/* $OUT/seeds/
-fi
+mkdir $OUT/seeds
+cp test/shaping/fonts/sha1sum/* $OUT/seeds/
 
 $CXX $CXXFLAGS -std=c++11 -I src/ test/fuzzing/hb-fuzzer.cc \
     src/.libs/libharfbuzz-fuzzing.a $FUZZER_LIB -lglib-2.0 -o $OUT/fuzz-target

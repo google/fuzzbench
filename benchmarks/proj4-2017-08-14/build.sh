@@ -19,10 +19,8 @@ git checkout d00501750b210a73f9fb107ac97a683d4e3d8e7a
 ./configure
 make -j $(nproc)
 
-if [[ ! -d $OUT/seeds ]]; then
-  mkdir $OUT/seeds
-  cp nad/* $OUT/seeds
-fi
+mkdir $OUT/seeds
+cp nad/* $OUT/seeds
 
 $CXX $CXXFLAGS -std=c++11 -I src test/fuzzers/standard_fuzzer.cpp \
     src/.libs/libproj.a $FUZZER_LIB -o $OUT/fuzz-target -lpthread
