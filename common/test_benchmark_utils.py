@@ -24,22 +24,10 @@ DOCKER_REGISTRY = 'gcr.io/fuzzbench'
 OTHER_BENCHMARK = 'benchmark'
 
 
-@pytest.mark.parametrize('benchmark,expected_result',
-                         [(conftest.OSS_FUZZ_BENCHMARK_NAME, True),
-                          (OTHER_BENCHMARK, False)])
-def test_is_oss_fuzz(benchmark, expected_result, oss_fuzz_benchmark):
-    """Test that we can distinguish OSS-Fuzz benchmarks from non-OSS-Fuzz
-    benchmarks."""
-    assert benchmark_utils.is_oss_fuzz(benchmark) == expected_result
-
-
-@pytest.mark.parametrize('benchmark,expected_fuzz_target',
-                         [(conftest.OSS_FUZZ_BENCHMARK_NAME,
-                           conftest.OSS_FUZZ_BENCHMARK_CONFIG['fuzz_target']),
-                          (OTHER_BENCHMARK, 'fuzz-target')])
-def test_get_fuzz_target(benchmark, expected_fuzz_target, oss_fuzz_benchmark):
+def test_get_fuzz_target(oss_fuzz_benchmark):
     """Test that we can get the docker name of a benchmark."""
-    assert benchmark_utils.get_fuzz_target(benchmark) == expected_fuzz_target
+    assert (benchmark_utils.get_fuzz_target(conftest.OSS_FUZZ_BENCHMARK_NAME) ==
+            conftest.OSS_FUZZ_BENCHMARK_CONFIG['fuzz_target'])
 
 
 @pytest.mark.parametrize(

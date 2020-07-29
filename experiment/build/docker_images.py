@@ -13,8 +13,13 @@
 # limitations under the License.
 """Provides the set of buildable images and their dependencies."""
 
+import os
 from common import yaml_utils
 
+BENCHMARK_DIR = os.path.join(os.path.dirname(__file__),
+                             os.pardir, os.pardir, 'benchmarks')
+FUZZERS_DIR = os.path.join(os.path.dirname(__file__),
+                           os.pardir, os.pardir, 'fuzzers')
 
 def _substitute(template, fuzzer, benchmark):
     """Replaces {fuzzer} or {benchmark} with |fuzzer| or |benchmark| in
@@ -28,65 +33,45 @@ def _instantiate_image_obj(name_template, obj_template, fuzzer, benchmark):
     name = _substitute(name_template, fuzzer, benchmark)
     obj = obj_template.copy()
     for key in obj:
-        if key in ('build_arg', 'depends_on', 'env_vars'):
+        if key in ('build_arg', 'depends_on'):
             obj[key] = [_substitute(it, fuzzer, benchmark) for it in obj[key]]
         else:
             obj[key] = _substitute(obj[key], fuzzer, benchmark)
     return name, obj
 
 
-def _instantiate_string_gcb(image_types):
-    all_templates = {}
-    for name in image_types:
-        image = image_types[name]
-        if 'depends_on' in image.keys():
-            image['depends_on'] = [it.lstrip('.') for it in image['depends_on']]
-        all_templates[name.lstrip('.')] = image
-    return all_templates
-
-
-def _get_image_type_templates(oss_fuzz, skip_base):
+def _get_image_type_templates():
     """Loads the image types config that contains "templates" describing how to
     build them and their dependencies."""
     all_templates = yaml_utils.read('docker/image_types.yaml')
-    templates = {}
-    for name, image in all_templates.items():
-        if 'base' in name or 'dispatcher' in name:
-            if not skip_base:
-                templates[name] = [image]
+    return all_templates
+
+
+def get_fuzzers_and_benchmarks():
+    """Returns list of fuzzers, and benchmarks."""
+    fuzzers = []
+    benchmarks = []
+
+    for benchmark in os.listdir(BENCHMARK_DIR):
+        benchmark_path = os.path.join(BENCHMARK_DIR, benchmark)
+        if not os.path.isdir(benchmark_path):
             continue
-        if oss_fuzz:
-            if 'oss-fuzz' in name:
-                templates[name] = image
-                continue
-        elif not oss_fuzz and not 'oss-fuzz' in name:
-            templates[name] = image
-    return templates
+        if os.path.exists(os.path.join(benchmark_path, 'benchmark.yaml')):
+            benchmarks.append(benchmark)
 
-
-def get_images_to_build_gcb(coverage=False):
-    """Returns set of buildable images for GCB."""
-    all_templates = _instantiate_string_gcb(
-        yaml_utils.read('docker/image_types.yaml'))
-    templates = {}
-    fuzzer = 'coverage' if coverage else "${_FUZZER}"
-    benchmark = "${_BENCHMARK}"
-    for name, image in all_templates.items():
-        if 'dispatcher' in name:
+    for fuzzer in os.listdir(FUZZERS_DIR):
+        fuzzer_dir = os.path.join(FUZZERS_DIR, fuzzer)
+        if not os.path.isdir(fuzzer_dir):
             continue
-        if 'base' in name:
-            templates[name] = image
-            continue
-        sub_name, sub_image = _instantiate_image_obj(name, image, fuzzer,
-                                                     benchmark)
-        templates[sub_name] = sub_image
-    return templates
+        fuzzers.append(fuzzer)
+
+    return fuzzers, benchmarks
 
 
-def get_images_to_build(fuzzers, benchmarks, oss_fuzz=False, skip_base=False):
+def get_images_to_build(fuzzers, benchmarks):
     """Returns the set of buildable images."""
     images = {}
-    templates = _get_image_type_templates(oss_fuzz, skip_base)
+    templates = _get_image_type_templates()
     for fuzzer in fuzzers:
         for benchmark in benchmarks:
             for name_templ, obj_templ in templates.items():
@@ -94,7 +79,7 @@ def get_images_to_build(fuzzers, benchmarks, oss_fuzz=False, skip_base=False):
                     if 'runner' in name_templ:
                         continue
                 if 'base' in name_templ or 'dispatcher' in name_templ:
-                    images[name_templ] = obj_templ[0]
+                    images[name_templ] = obj_templ
                     continue
                 name, obj = _instantiate_image_obj(name_templ, obj_templ,
                                                    fuzzer, benchmark)

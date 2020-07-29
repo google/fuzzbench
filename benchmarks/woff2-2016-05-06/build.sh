@@ -15,13 +15,6 @@
 
 . $(dirname $0)/../common.sh
 
-apt-get update && \
-  apt-get install -y \
-  make \
-  automake \
-  autoconf \
-  libtool
-
 # Get seeds.
 get_git_revision https://github.com/google/oss-fuzz.git e8ffee4077b59e35824a2e97aa214ee95d39ed13 oss-fuzz
 mkdir -p $OUT/seeds
@@ -39,4 +32,4 @@ for f in BROTLI/dec/*.c BROTLI/enc/*.cc; do
 done
 wait
 
-$CXX $CXXFLAGS *.o $FUZZER_LIB $SCRIPT_DIR/target.cc -I SRC/src -o $FUZZ_TARGET
+$CXX $CXXFLAGS *.o $FUZZER_LIB $SRC/target.cc -I SRC/src -o $OUT/fuzz-target

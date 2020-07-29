@@ -14,17 +14,22 @@
 
 # Running experiments locally.
 
-run-experiment: export COMPOSE_PROJECT_NAME := fuzzbench
-run-experiment: export COMPOSE_FILE := compose/fuzzbench.yaml
+run-experiment stop-experiment: export COMPOSE_PROJECT_NAME := fuzzbench
+run-experiment stop-experiment: export COMPOSE_FILE := compose/fuzzbench.yaml
 run-experiment:
 	docker-compose up --build --scale worker=2 --detach
 	docker-compose logs --follow run-experiment
 	docker-compose down
 
+# Running this is only necessary if `run-experiment` was interrupted and
+# containers were not cleaned up.
+stop-experiment:
+	docker-compose down
+
 # Development.
 
-run-end-to-end-test: export COMPOSE_PROJECT_NAME := e2e-test
-run-end-to-end-test: export COMPOSE_FILE := compose/fuzzbench.yaml:compose/e2e-test.yaml
+run-end-to-end-test stop-end-to-end-test: export COMPOSE_PROJECT_NAME := e2e-test
+run-end-to-end-test stop-end-to-end-test: export COMPOSE_FILE := compose/fuzzbench.yaml:compose/e2e-test.yaml
 run-end-to-end-test:
 	docker-compose build
 	docker-compose up --detach queue-server
@@ -32,6 +37,12 @@ run-end-to-end-test:
 	docker-compose run run-tests; STATUS=$$?; \
 	docker-compose down; exit $$STATUS
 
+# Running this is only necessary if `run-end-to-end-test` was interrupted and
+# containers were not cleaned up.
+stop-end-to-end-test:
+	docker-compose down
+
+include docker/build.mk
 include docker/generated.mk
 
 SHELL := /bin/bash
