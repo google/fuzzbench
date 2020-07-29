@@ -76,7 +76,7 @@ def delete_docker_images():
                             check=True)
     image_ids = result.stdout.splitlines()
     subprocess.run(['docker', 'rmi', '-f'] + image_ids, check=False)
-    subprocess.run(['docker', 'builder', 'prune', '-f'] + image_ids, check=False)
+    subprocess.run(['docker', 'builder', 'prune', '-f'], check=False)
 
 
 def make_builds(benchmarks, fuzzer):
