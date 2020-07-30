@@ -5,6 +5,12 @@
   tag: 'base-image'
   context: 'docker/base-image'
 
+'base-builder':
+  tag: 'base-builder'
+  context: 'docker/base-builder'
+  depends_on:
+    - 'base-image'
+
 'base-runner':
   tag: 'base-runner'
   context: 'docker/base-runner'
