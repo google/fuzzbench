@@ -57,9 +57,6 @@ def get_images_to_build(fuzzers, benchmarks):
             for name_templ, obj_templ in templates.items():
                 if 'coverage' in fuzzer and 'runner' in name_templ:
                     continue
-                if 'base' in name_templ or 'dispatcher' in name_templ:
-                    images[name_templ] = obj_templ
-                    continue
                 name, obj = _instantiate_image_obj(name_templ, obj_templ,
                                                    fuzzer, benchmark)
                 images[name] = obj

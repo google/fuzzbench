@@ -23,18 +23,6 @@ from experiment.build import docker_images
 BASE_TAG = "gcr.io/fuzzbench"
 BENCHMARK_DIR = benchmark_utils.BENCHMARKS_DIR
 
-RUN_TEMPLATE = """
-{run_type}-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner
-\tdocker run \\
-\t--cpus=1 \\
-\t--cap-add SYS_NICE \\
-\t--cap-add SYS_PTRACE \\
-\t-e FUZZ_OUTSIDE_EXPERIMENT=1 \\
-\t-e FORCE_LOCAL=1 \\
-\t-e TRIAL_ID=1 \\
-\t-e FUZZER={fuzzer} \\
-\t-e BENCHMARK={benchmark} \\"""
-
 
 def print_benchmark_definition(benchmarks):
     """Prints benchmark variables from benchmark.yaml files."""
@@ -45,7 +33,36 @@ def print_benchmark_definition(benchmarks):
         print()
 
 
-def _print_makefile_build_template(name, image):
+def _print_makefile_run_template(image):
+    fuzzer, benchmark = image['tag'].split('/')[1:]
+
+    for run_type in ('run', 'debug', 'test-run'):
+        print(('{run_type}-{fuzzer}-{benchmark}: ' +
+               '.{fuzzer}-{benchmark}-runner').format(run_type=run_type,
+                                                      benchmark=benchmark,
+                                                      fuzzer=fuzzer))
+        print('\tdocker run \\\n\t--cpus=1 \\')
+        print('\t--cap-add SYS_NICE \\\n\t--cap-add SYS_PTRACE \\')
+        print('\t-e FUZZ_OUTSIDE_EXPERIMENT=1 \\')
+        print('\t-e FORCE_LOCAL=1 \\\n\t-e TRIAL_ID=1 \\')
+        print('\t-e FUZZER={fuzzer} \\'.format(fuzzer=fuzzer))
+        print('\t-e BENCHMARK={benchmark} \\'.format(benchmark=benchmark))
+        print('\t-e FUZZ_TARGET=$({benchmark}-fuzz-target) \\'.format(
+            benchmark=benchmark))
+
+        if run_type == 'test-run':
+            print('\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\')
+        if run_type == 'debug':
+            print('\t-entrypoint "/bin/bash" \\\n\t-it ', end='')
+        else:
+            print('\t', end='')
+
+        print(os.path.join(BASE_TAG, image['tag']))
+        print()
+
+
+def print_rules_for_image(name, image):
+    """Print makefile section for given image to stdout."""
     if not ('base' in name or 'dispatcher' in name):
         print('.', end='')
     print(name + ':', end='')
@@ -57,9 +74,9 @@ def _print_makefile_build_template(name, image):
                 print(' .' + dep, end='')
     print()
     print('\tdocker build \\')
-    print('\t--tag ' + BASE_TAG + '/' + image['tag'] + ' \\')
+    print('\t--tag ' + os.path.join(BASE_TAG, image['tag']) + ' \\')
     print('\t--build-arg BUILDKIT_INLINE_CACHE=1 \\')
-    print('\t--cache-from ' + BASE_TAG + '/' + image['tag'] + ' \\')
+    print('\t--cache-from ' + os.path.join(BASE_TAG, image['tag']) + ' \\')
     if name == 'base-builder':
         print('\t--cache-from ' + 'gcr.io/oss-fuzz-base/base-clang \\')
     if 'build_arg' in image:
@@ -70,30 +87,7 @@ def _print_makefile_build_template(name, image):
     print('\t' + image['context'])
     print()
 
-
-def _print_makefile_run_template(image):
-    fuzzer, benchmark = image['tag'].split('/')[1:]
-
-    for run_type in ('run', 'debug', 'test-run'):
-        print(
-            RUN_TEMPLATE.format(run_type=run_type,
-                                benchmark=benchmark,
-                                fuzzer=fuzzer))
-        print('\t-e FUZZ_TARGET=$({benchmark}-fuzz-target) \\'.format(
-            benchmark=benchmark))
-        if run_type == 'test-run':
-            print('\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\')
-        if run_type == 'debug':
-            print('\t-entrypoint "/bin/bash" \\\n\t-it ', end='')
-        else:
-            print('\t', end='')
-        print(BASE_TAG + '/' + image['tag'])
-        print()
-
-
-def print_makefile(name, image):
-    """Print makefile section for given image to stdout."""
-    _print_makefile_build_template(name, image)
+    # Print run, debug, test-run rules if image is a runner.
     if 'runner' in name and not ('intermediate' in name or 'base' in name):
         _print_makefile_run_template(image)
 
@@ -110,7 +104,7 @@ def main():
     print_benchmark_definition(benchmarks)
 
     for name, image in buildable_images.items():
-        print_makefile(name, image)
+        print_rules_for_image(name, image)
 
     # Print build targets for all fuzzer-benchmark pairs.
     for fuzzer in fuzzers:

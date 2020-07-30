@@ -47,7 +47,85 @@ def test_print_makefile_build():
     print_output = io.StringIO()
     sys.stdout = print_output
 
-    generate_makefile.print_makefile(name, image)
+    generate_makefile.print_rules_for_image(name, image)
+    result = print_output.getvalue()
+    sys.stdout = stdout
+
+    assert result == generated_makefile_truth
+
+
+def test_print_makefile_runner_image():
+    """Tests result of a makefile generation for a runner image."""
+
+    name = 'afl-zlib-runner'
+    image = {
+        'tag': 'runners/afl/zlib',
+        'context': '.',
+        'dockerfile': 'docker/benchmark-runner/Dockerfile',
+        'build_arg': ['fuzzer=afl', 'benchmark=zlib'],
+        'depends_on': ['afl-zlib-builder', 'afl-zlib-intermediate-runner']
+    }
+
+    generated_makefile_truth = """\
+.afl-zlib-runner: .afl-zlib-builder .afl-zlib-intermediate-runner
+\tdocker build \\
+\t--tag gcr.io/fuzzbench/runners/afl/zlib \\
+\t--build-arg BUILDKIT_INLINE_CACHE=1 \\
+\t--cache-from gcr.io/fuzzbench/runners/afl/zlib \\
+\t--build-arg fuzzer=afl \\
+\t--build-arg benchmark=zlib \\
+\t--file docker/benchmark-runner/Dockerfile \\
+\t.
+
+run-afl-zlib: .afl-zlib-runner
+\tdocker run \\
+\t--cpus=1 \\
+\t--cap-add SYS_NICE \\
+\t--cap-add SYS_PTRACE \\
+\t-e FUZZ_OUTSIDE_EXPERIMENT=1 \\
+\t-e FORCE_LOCAL=1 \\
+\t-e TRIAL_ID=1 \\
+\t-e FUZZER=afl \\
+\t-e BENCHMARK=zlib \\
+\t-e FUZZ_TARGET=$(zlib-fuzz-target) \\
+\tgcr.io/fuzzbench/runners/afl/zlib
+
+debug-afl-zlib: .afl-zlib-runner
+\tdocker run \\
+\t--cpus=1 \\
+\t--cap-add SYS_NICE \\
+\t--cap-add SYS_PTRACE \\
+\t-e FUZZ_OUTSIDE_EXPERIMENT=1 \\
+\t-e FORCE_LOCAL=1 \\
+\t-e TRIAL_ID=1 \\
+\t-e FUZZER=afl \\
+\t-e BENCHMARK=zlib \\
+\t-e FUZZ_TARGET=$(zlib-fuzz-target) \\
+\t-entrypoint "/bin/bash" \\
+\t-it gcr.io/fuzzbench/runners/afl/zlib
+
+test-run-afl-zlib: .afl-zlib-runner
+\tdocker run \\
+\t--cpus=1 \\
+\t--cap-add SYS_NICE \\
+\t--cap-add SYS_PTRACE \\
+\t-e FUZZ_OUTSIDE_EXPERIMENT=1 \\
+\t-e FORCE_LOCAL=1 \\
+\t-e TRIAL_ID=1 \\
+\t-e FUZZER=afl \\
+\t-e BENCHMARK=zlib \\
+\t-e FUZZ_TARGET=$(zlib-fuzz-target) \\
+\t-e MAX_TOTAL_TIME=20 \\
+\t-e SNAPSHOT_PERIOD=10 \\
+\tgcr.io/fuzzbench/runners/afl/zlib
+
+"""
+
+    stdout = sys.stdout
+    print_output = io.StringIO()
+    sys.stdout = print_output
+
+    generate_makefile.print_rules_for_image(name, image)
     result = print_output.getvalue()
     sys.stdout = stdout
 
