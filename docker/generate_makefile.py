@@ -24,7 +24,7 @@ BASE_TAG = "gcr.io/fuzzbench"
 BENCHMARK_DIR = benchmark_utils.BENCHMARKS_DIR
 
 
-def _print_benchmark_definition(benchmarks):
+def _print_benchmark_fuzz_target(benchmarks):
     """Prints benchmark variables from benchmark.yaml files."""
     for benchmark in benchmarks:
         benchmark_vars = yaml_utils.read(
@@ -41,14 +41,19 @@ def _print_makefile_run_template(image):
                '.{fuzzer}-{benchmark}-runner').format(run_type=run_type,
                                                       benchmark=benchmark,
                                                       fuzzer=fuzzer))
-        print('\tdocker run \\\n\t--cpus=1 \\')
-        print('\t--cap-add SYS_NICE \\\n\t--cap-add SYS_PTRACE \\')
-        print('\t-e FUZZ_OUTSIDE_EXPERIMENT=1 \\')
-        print('\t-e FORCE_LOCAL=1 \\\n\t-e TRIAL_ID=1 \\')
-        print('\t-e FUZZER={fuzzer} \\'.format(fuzzer=fuzzer))
-        print('\t-e BENCHMARK={benchmark} \\'.format(benchmark=benchmark))
-        print('\t-e FUZZ_TARGET=$({benchmark}-fuzz-target) \\'.format(
-            benchmark=benchmark))
+
+        print("""\
+\tdocker run \\
+\t--cpus=1 \\
+\t--cap-add SYS_NICE \\
+\t--cap-add SYS_PTRACE \\
+\t-e FUZZ_OUTSIDE_EXPERIMENT=1 \\
+\t-e FORCE_LOCAL=1 \\
+\t-e TRIAL_ID=1 \\
+\t-e FUZZER={fuzzer} \\
+\t-e BENCHMARK={benchmark} \\
+\t-e FUZZ_TARGET=$({benchmark}-fuzz-target) \\\
+""".format(fuzzer=fuzzer, benchmark=benchmark))
 
         if run_type == 'test-run':
             print('\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\')
@@ -102,7 +107,7 @@ def main():
     print('export DOCKER_BUILDKIT := 1')
 
     # Print oss-fuzz benchmarks property variables.
-    _print_benchmark_definition(benchmarks)
+    _print_benchmark_fuzz_target(benchmarks)
 
     for name, image in buildable_images.items():
         _print_rules_for_image(name, image)

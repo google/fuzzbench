@@ -32,7 +32,10 @@ def test_images_to_build_list():
         'libfuzzer-libxml-builder', 'libfuzzer-libpng-builder-intermediate',
         'libfuzzer-libxml-intermediate-runner', 'libfuzzer-libxml-runner',
         'libfuzzer-libpng-builder', 'libfuzzer-libpng-intermediate-runner',
-        'libfuzzer-libpng-runner', 'libpng-project-builder'
+        'libfuzzer-libpng-runner', 'coverage-libxml-builder-intermediate',
+        'coverage-libpng-builder', 'coverage-libxml-builder-intermediate',
+        'coverage-builder', 'coverage-libpng-builder-intermediate',
+        'coverage-libxml-builder', 'libpng-project-builder'
     ])
 
 
