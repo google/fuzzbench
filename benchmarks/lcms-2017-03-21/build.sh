@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-git clone https://github.com/mm2/Little-CMS.git
-
 cd Little-CMS
 git checkout f9d75ccef0b54c9f4167d95088d4727985133c52
 ./autogen.sh
@@ -24,5 +22,3 @@ make -j $(nproc)
 $CXX $CXXFLAGS $SRC/cms_transform_fuzzer.cc -I include/ src/.libs/liblcms2.a \
     $FUZZER_LIB -o $OUT/fuzz-target
 cp -r /opt/seeds $OUT/
-wget -qO $OUT/fuzz-target.dict \
-    https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/icc.dict

@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-git clone https://gitlab.gnome.org/GNOME/libxml2.git
-
 cd libxml2
 # Git is converting CRLF to LF automatically and causing issues when checking
 # out the branch. So use -f to ignore the complaint about lost changes that we
@@ -27,5 +25,3 @@ make -j $(nproc)
 
 $CXX $CXXFLAGS -std=c++11 $SRC/target.cc -I include .libs/libxml2.a \
     $FUZZER_LIB -o $OUT/fuzz-target
-wget -qO $OUT/fuzz-target.dict \
-    https://raw.githubusercontent.com/google/AFL/debe27037b9444bbf090a0ffbd5d24889bb887ae/dictionaries/xml.dict

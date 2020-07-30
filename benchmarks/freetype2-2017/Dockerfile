@@ -24,4 +24,7 @@ RUN apt-get update &&  \
     libarchive-dev \
     zlib1g-dev
 
+RUN git clone git://git.sv.nongnu.org/freetype/freetype2.git
+RUN git clone https://github.com/unicode-org/text-rendering-tests.git TRT
+
 COPY * $SRC/

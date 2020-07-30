@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-git clone https://github.com/openthread/openthread.git
-
 cd openthread
 git checkout 5b0af03afb8e70e8216f69623bd18bcd3d4b8b43
 ./bootstrap

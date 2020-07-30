@@ -26,4 +26,8 @@ RUN apt-get update && \
     wget \
     libsqlite3-dev
 
+RUN git clone https://github.com/OSGeo/PROJ
+
+RUN wget -qO $OUT/fuzz-target.dict \
+    https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/proj4.dict
 COPY build.sh $SRC/

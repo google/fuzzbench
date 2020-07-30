@@ -23,4 +23,6 @@ RUN apt-get update && \
     autoconf \
     libtool
 
+RUN git clone https://github.com/openthread/openthread.git
+
 COPY build.sh $SRC/
