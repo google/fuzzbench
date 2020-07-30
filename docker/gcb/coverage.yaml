@@ -101,7 +101,7 @@ steps:
     '${_REPO}/builders/coverage/${_BENCHMARK}',
 
     '--build-arg',
-    'parent_image=${_REPO}/builders/coverage/${_BENCHMARK}-intermediate',
+    'parent_image=gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}-intermediate',
 
     '--build-arg',
     'fuzzer=coverage',
