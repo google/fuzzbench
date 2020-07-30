@@ -24,7 +24,7 @@ BASE_TAG = "gcr.io/fuzzbench"
 BENCHMARK_DIR = benchmark_utils.BENCHMARKS_DIR
 
 
-def print_benchmark_definition(benchmarks):
+def _print_benchmark_definition(benchmarks):
     """Prints benchmark variables from benchmark.yaml files."""
     for benchmark in benchmarks:
         benchmark_vars = yaml_utils.read(
@@ -61,7 +61,8 @@ def _print_makefile_run_template(image):
         print()
 
 
-def print_rules_for_image(name, image):
+# TODO(tanq16): Add unit test.
+def _print_rules_for_image(name, image):
     """Print makefile section for given image to stdout."""
     if not ('base' in name or 'dispatcher' in name):
         print('.', end='')
@@ -101,10 +102,10 @@ def main():
     print('export DOCKER_BUILDKIT := 1')
 
     # Print oss-fuzz benchmarks property variables.
-    print_benchmark_definition(benchmarks)
+    _print_benchmark_definition(benchmarks)
 
     for name, image in buildable_images.items():
-        print_rules_for_image(name, image)
+        _print_rules_for_image(name, image)
 
     # Print build targets for all fuzzer-benchmark pairs.
     for fuzzer in fuzzers:
