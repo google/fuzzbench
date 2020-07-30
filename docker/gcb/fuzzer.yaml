@@ -182,13 +182,9 @@ steps:
   wait_for: ['pull-fuzzer-benchmark-runner', 'build-fuzzer-benchmark-runner-intermediate']
 
 images:
-  - '${_REPO}/builders/benchmark/${_BENCHMARK}:${_EXPERIMENT}'
   - '${_REPO}/builders/benchmark/${_BENCHMARK}'
-  - '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}'
   - '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}-intermediate'
-  - '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}'
   - '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}'
-  - '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}-intermediate:${_EXPERIMENT}'
   - '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}-intermediate'
   - '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}:${_EXPERIMENT}'
   - '${_REPO}/runners/${_FUZZER}/${_BENCHMARK}'

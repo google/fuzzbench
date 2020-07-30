@@ -133,9 +133,7 @@ steps:
   ]
 
 images:
-  - '${_REPO}/builders/benchmark/${_BENCHMARK}:${_EXPERIMENT}'
   - '${_REPO}/builders/benchmark/${_BENCHMARK}'
-  - '${_REPO}/builders/coverage/${_BENCHMARK}-intermediate:${_EXPERIMENT}'
   - '${_REPO}/builders/coverage/${_BENCHMARK}-intermediate'
   - '${_REPO}/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}'
   - '${_REPO}/builders/coverage/${_BENCHMARK}'

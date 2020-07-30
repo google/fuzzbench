@@ -82,7 +82,5 @@ steps:
   wait_for: ['base-image', 'base-runner-pull']
 
 images:
-  - '${_REPO}/base-image:${_EXPERIMENT}'
   - '${_REPO}/base-image'
-  - '${_REPO}/base-runner:${_EXPERIMENT}'
   - '${_REPO}/base-runner'
