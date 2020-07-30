@@ -30,6 +30,33 @@
   depends_on:
     - 'base-builder'
 
+'coverage-builder':
+  tag: 'builders/coverage'
+  context: 'fuzzers/coverage'
+  dockerfile: 'fuzzers/coverage/builder.Dockerfile'
+  depends_on:
+    - 'base-builder'
+
+'coverage-{benchmark}-builder-intermediate':
+  tag: 'builders/coverage/{benchmark}-intermediate'
+  context: 'fuzzers/coverage'
+  dockerfile: 'fuzzers/coverage/builder.Dockerfile'
+  depends_on:
+    - '{benchmark}-project-builder'
+  build_arg:
+    - 'parent_image=gcr.io/fuzzbench/builders/benchmark/{benchmark}'
+
+'coverage-{benchmark}-builder':
+  tag: 'builders/coverage/{benchmark}'
+  context: '.'
+  dockerfile: 'docker/benchmark-builder/Dockerfile'
+  build_arg:
+    - 'parent_image=gcr.io/fuzzbench/builders/coverage/{benchmark}-intermediate'
+    - 'fuzzer=coverage'
+    - 'benchmark={benchmark}'
+  depends_on:
+    - 'coverage-{benchmark}-builder-intermediate'
+
 # TODO: It would be better to call this benchmark builder. But that would be
 # confusing because this doesn't involve benchmark-builder/Dockerfile. Rename
 # that and then rename this.

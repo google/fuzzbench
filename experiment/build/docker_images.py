@@ -52,13 +52,9 @@ def get_images_to_build(fuzzers, benchmarks):
     """Returns the set of buildable images."""
     images = {}
     templates = _get_image_type_templates()
-    if not 'coverage' in fuzzers:
-        fuzzers.append('coverage')
     for fuzzer in fuzzers:
         for benchmark in benchmarks:
             for name_templ, obj_templ in templates.items():
-                if 'coverage' in fuzzer and 'runner' in name_templ:
-                    continue
                 name, obj = _instantiate_image_obj(name_templ, obj_templ,
                                                    fuzzer, benchmark)
                 images[name] = obj

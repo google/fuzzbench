@@ -112,10 +112,11 @@ def main():
     for name, image in buildable_images.items():
         _print_rules_for_image(name, image)
 
-    # Print build targets for all fuzzer-benchmark pairs.
+    # Print build targets for all fuzzer-benchmark pairs (including coverage).
+    fuzzers.append('coverage')
     for fuzzer in fuzzers:
         image_type = "runner"
-        if fuzzer in ('coverage', 'coverage_source_based'):
+        if 'coverage' in fuzzer:
             image_type = "builder"
         for benchmark in benchmarks:
             print(('build-{fuzzer}-{benchmark}: ' +
