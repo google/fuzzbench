@@ -25,4 +25,8 @@ RUN apt-get update && \
     libtool \
     libglib2.0-dev
 
+RUN git clone https://gitlab.gnome.org/GNOME/libxml2.git
+
+RUN wget -qO $OUT/fuzz-target.dict \
+    https://raw.githubusercontent.com/google/AFL/debe27037b9444bbf090a0ffbd5d24889bb887ae/dictionaries/xml.dict
 COPY target.cc build.sh $SRC/

@@ -13,12 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-. $(dirname $0)/../common.sh
+cd perl5
+git checkout v5.21.7
 
-build_lib() {
-  rm -rf BUILD
-  cp -rf SRC BUILD
-# Leaving for historical.. there are other options we might wish to toggle.
+# There are other options we might wish to toggle in future.
 #  sh Configure
 #     -Dafl_cc=${AFL_CC}
 #     -Dcc=${LCC}
@@ -28,17 +26,12 @@ build_lib() {
 #     -des
 #     -Aldflags="${LCFLAGS}"
 #     -Alddlflags="-shared"
-  (cd BUILD && ./Configure -des -Dusedevel && make)
-}
+./Configure -des -Dusedevel
+make -j $(nproc)
 
-get_git_tag https://github.com/Perl/perl5.git v5.21.7 SRC
-build_lib
 # To test with the main() in perl_fuzz.cc, use -D_HAS_MAIN and disable any
 # fuzzer in sanitizer flag / use of FUZZER_LIB.
-$CXX $CXXFLAGS                                \
-  -IBUILD                                     \
-  $SRC/perl_fuzz.cc                           \
-  BUILD/libperl.a                             \
-  -lnsl -ldl -lm -lcrypt -lutil -lc -lpthread \
-  $FUZZER_LIB  -o $OUT/fuzz-target
+$CXX $CXXFLAGS -I . $SRC/perl_fuzz.cc libperl.a \
+    -lnsl -ldl -lm -lcrypt -lutil -lc -lpthread \
+     $FUZZER_LIB -o $OUT/fuzz-target
 cp -r /opt/seeds $OUT/

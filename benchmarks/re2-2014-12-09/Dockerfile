@@ -23,4 +23,8 @@ RUN apt-get update && \
     make \
     wget
 
+RUN git clone https://github.com/google/re2.git
+
+RUN wget -qO $OUT/fuzz-target.dict \
+    https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/regexp.dict
 COPY build.sh target.cc $SRC/
