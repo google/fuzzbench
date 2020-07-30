@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Generates Makefile containing docker image targets."""
+"""Simple generator for local Makefile rules."""
 
 import os
 
@@ -42,18 +42,18 @@ def _print_makefile_run_template(image):
                                                       benchmark=benchmark,
                                                       fuzzer=fuzzer))
 
-        print("""\
-\tdocker run \\
-\t--cpus=1 \\
-\t--cap-add SYS_NICE \\
-\t--cap-add SYS_PTRACE \\
-\t-e FUZZ_OUTSIDE_EXPERIMENT=1 \\
-\t-e FORCE_LOCAL=1 \\
-\t-e TRIAL_ID=1 \\
-\t-e FUZZER={fuzzer} \\
-\t-e BENCHMARK={benchmark} \\
+        print('\
+\tdocker run \\\n\
+\t--cpus=1 \\\n\
+\t--cap-add SYS_NICE \\\n\
+\t--cap-add SYS_PTRACE \\\n\
+\t-e FUZZ_OUTSIDE_EXPERIMENT=1 \\\n\
+\t-e FORCE_LOCAL=1 \\\n\
+\t-e TRIAL_ID=1 \\\n\
+\t-e FUZZER={fuzzer} \\\n\
+\t-e BENCHMARK={benchmark} \\\n\
 \t-e FUZZ_TARGET=$({benchmark}-fuzz-target) \\\
-""".format(fuzzer=fuzzer, benchmark=benchmark))
+'.format(fuzzer=fuzzer, benchmark=benchmark))
 
         if run_type == 'test-run':
             print('\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\')
