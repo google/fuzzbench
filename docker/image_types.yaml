@@ -5,18 +5,12 @@
   tag: 'base-image'
   context: 'docker/base-image'
 
-'base-builder':
-  tag: 'base-builder'
-  context: 'docker/base-builder'
-  depends_on:
-    - 'base-image'
-
 'coverage-builder':
   tag: 'builders/coverage'
   context: 'fuzzers/coverage'
   dockerfile: 'fuzzers/coverage/builder.Dockerfile'
   depends_on:
-    - 'base-builder'
+    - 'base-image'
 
 'coverage-{benchmark}-builder':
   tag: 'builders/coverage/{benchmark}'
@@ -33,7 +27,7 @@
   context: 'fuzzers/{fuzzer}'
   dockerfile: 'fuzzers/{fuzzer}/builder.Dockerfile'
   depends_on:
-    - 'base-builder'
+    - 'base-image'
 
 '{fuzzer}-{benchmark}-builder':
   tag: 'builders/{fuzzer}/{benchmark}'

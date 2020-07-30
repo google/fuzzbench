@@ -16,6 +16,7 @@
 
 FROM gcr.io/oss-fuzz-base/base-builder
 
-COPY build.sh perl_fuzz.cc $SRC/
+RUN git clone https://github.com/Perl/perl5.git
 
+COPY build.sh perl_fuzz.cc $SRC/
 ADD seeds /opt/seeds

@@ -15,12 +15,9 @@
 ARG parent_image
 FROM $parent_image
 
-COPY patch.diff /
-
 RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
     cd /llvm-project && \
-    git checkout d8981ce5b9f8caa567613b2bf5aa3095e0156130 && \
-    patch -p1 < /patch.diff && \
+    git checkout 8ef9e2bf355d05bc81d8b0fe1e5333eec59a0a91 && \
     cd /llvm-project/compiler-rt/lib/fuzzer && \
     (for f in *.cpp; do \
       clang++ -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \

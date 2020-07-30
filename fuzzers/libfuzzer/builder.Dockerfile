@@ -17,7 +17,7 @@ FROM $parent_image
 
 RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
     cd /llvm-project/ && \
-    git checkout b52b2e1c188072e3cbc91500cfd503fb26d50ffc && \
+    git checkout 8ef9e2bf355d05bc81d8b0fe1e5333eec59a0a91 && \
     cd compiler-rt/lib/fuzzer && \
     (for f in *.cpp; do \
       clang++ -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \

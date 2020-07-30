@@ -1,4 +1,3 @@
-#!/bin/bash -ex
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,37 +11,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Self-defined worker module."""
+import time
 
-JOBS=${JOBS:-$(nproc)}
+import redis
+import rq
 
-get_git_revision() {
-  GIT_REPO="$1"
-  GIT_REVISION="$2"
-  TO_DIR="$3"
 
-  if [ ! -e $TO_DIR ]; then
-    git clone $GIT_REPO $TO_DIR
-    (cd $TO_DIR && git reset --hard $GIT_REVISION)
-  fi
-}
+def main():
+    """Sets up Redis connection and starts the worker."""
+    redis_connection = redis.Redis(host="queue-server")
+    with rq.Connection(redis_connection):
+        queue = rq.Queue('build_n_run_queue')
+        worker = rq.Worker([queue])
 
-get_git_tag() {
-  GIT_REPO="$1"
-  GIT_TAG="$2"
-  TO_DIR="$3"
+        while queue.count + queue.deferred_job_registry.count > 0:
+            worker.work(burst=True)
+            time.sleep(5)
 
-  if [ ! -e $TO_DIR ]; then
-    git clone $GIT_REPO $TO_DIR
-    (cd $TO_DIR && git checkout $GIT_TAG)
-  fi
-}
 
-get_svn_revision() {
-  SVN_REPO="$1"
-  SVN_REVISION="$2"
-  TO_DIR="$3"
-
-  if [ ! -e $TO_DIR ]; then
-    svn co -r$SVN_REVISION $SVN_REPO $TO_DIR
-  fi
-}
+if __name__ == '__main__':
+    main()

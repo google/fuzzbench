@@ -23,4 +23,8 @@ RUN apt-get update && \
     autoconf \
     libtool
 
+RUN git clone https://github.com/google/woff2.git
+RUN git clone https://github.com/google/brotli.git
+RUN git clone https://github.com/google/oss-fuzz.git
+
 COPY target.cc build.sh $SRC/

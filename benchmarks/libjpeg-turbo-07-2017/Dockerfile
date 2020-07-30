@@ -23,5 +23,7 @@ RUN apt-get update && \
     libtool \
     nasm
 
+RUN git clone https://github.com/libjpeg-turbo/libjpeg-turbo.git
+
 ADD seeds /opt/seeds
 COPY * $SRC/

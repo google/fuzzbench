@@ -102,7 +102,7 @@ steps:
     '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}',
 
     '--build-arg',
-    'parent_image=${_REPO}/builders/${_FUZZER}/${_BENCHMARK}-intermediate',
+    'parent_image=gcr.io/fuzzbench/builders/${_FUZZER}/${_BENCHMARK}-intermediate',
 
     '--build-arg',
     'fuzzer=${_FUZZER}',
