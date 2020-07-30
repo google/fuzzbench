@@ -83,8 +83,6 @@ def _print_rules_for_image(name, image):
     print('\t--tag ' + os.path.join(BASE_TAG, image['tag']) + ' \\')
     print('\t--build-arg BUILDKIT_INLINE_CACHE=1 \\')
     print('\t--cache-from ' + os.path.join(BASE_TAG, image['tag']) + ' \\')
-    if name == 'base-builder':
-        print('\t--cache-from ' + 'gcr.io/oss-fuzz-base/base-clang \\')
     if 'build_arg' in image:
         for arg in image['build_arg']:
             print('\t--build-arg ' + arg + ' \\')
