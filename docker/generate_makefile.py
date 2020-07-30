@@ -25,14 +25,14 @@ cache_from = $(if ${RUNNING_ON_CI},--cache-from {fuzzer},)
 """
 
 FUZZER_TEMPLATE = """
-.{fuzzer}-builder: base-builder
+.{fuzzer}-builder: base-image
 	docker build \\
     --tag {base_tag}/builders/{fuzzer} \\
     --file fuzzers/{fuzzer}/builder.Dockerfile \\
     $(call cache_from,{base_tag}/builders/{fuzzer}) \\
     fuzzers/{fuzzer}
 
-.pull-{fuzzer}-builder: pull-base-builder
+.pull-{fuzzer}-builder: pull-base-image
 	docker pull {base_tag}/builders/{fuzzer}
 """
 
