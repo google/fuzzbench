@@ -12,14 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG parent_image
-FROM $parent_image
-
-RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
-    cd /llvm-project && \
-    git checkout 8ef9e2bf355d05bc81d8b0fe1e5333eec59a0a91 && \
-    cd /llvm-project/compiler-rt/lib/fuzzer && \
-    (for f in *.cpp; do \
-      clang++ -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \
-    done && wait) && \
-    ar r /libEntropic.a *.o
+FROM gcr.io/fuzzbench/base-runner
