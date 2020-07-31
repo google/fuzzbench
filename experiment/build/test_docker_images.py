@@ -23,17 +23,18 @@ def test_images_to_build_list():
     benchmarks = ['libxml', 'libpng']
     all_images = docker_images.get_images_to_build(fuzzers, benchmarks)
     assert set(all_images.keys()) == set([
-        'base-image', 'libxml-project-builder', 'libpng-project-builder',
-        'coverage-libxml-builder-intermediate', 'coverage-libxml-builder',
-        'coverage-libpng-builder-intermediate', 'coverage-libpng-builder',
-        'afl-libxml-builder-intermediate', 'afl-libxml-builder',
-        'afl-libxml-runner-intermediate', 'afl-libxml-runner',
-        'afl-libpng-builder-intermediate', 'afl-libpng-builder',
-        'afl-libpng-runner-intermediate', 'afl-libpng-runner',
-        'libfuzzer-libxml-builder-intermediate', 'libfuzzer-libxml-builder',
-        'libfuzzer-libxml-runner-intermediate', 'libfuzzer-libxml-runner',
-        'libfuzzer-libpng-builder-intermediate', 'libfuzzer-libpng-builder',
-        'libfuzzer-libpng-runner-intermediate', 'libfuzzer-libpng-runner'
+        'base-image', 'dispatcher-image', 'libxml-project-builder',
+        'libpng-project-builder', 'afl-libxml-builder-intermediate',
+        'afl-libxml-intermediate-runner', 'afl-libxml-builder',
+        'coverage-libxml-builder', 'afl-libpng-builder',
+        'afl-libpng-intermediate-runner', 'afl-libpng-builder-intermediate',
+        'afl-libpng-runner', 'libfuzzer-libxml-builder-intermediate',
+        'libfuzzer-libxml-builder', 'libfuzzer-libpng-builder-intermediate',
+        'libfuzzer-libxml-intermediate-runner', 'libfuzzer-libxml-runner',
+        'libfuzzer-libpng-builder', 'libfuzzer-libpng-intermediate-runner',
+        'libfuzzer-libpng-runner', 'coverage-libxml-builder-intermediate',
+        'coverage-libpng-builder', 'coverage-libxml-builder-intermediate',
+        'afl-libxml-runner', 'coverage-libpng-builder-intermediate'
     ])
 
 

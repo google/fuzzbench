@@ -42,7 +42,6 @@ run-end-to-end-test:
 stop-end-to-end-test:
 	docker-compose down
 
-include docker/build.mk
 include docker/generated.mk
 
 SHELL := /bin/bash
@@ -55,7 +54,7 @@ ${VENV_ACTIVATE}: requirements.txt
 install-dependencies: ${VENV_ACTIVATE}
 
 docker/generated.mk: docker/generate_makefile.py $(wildcard fuzzers/*/variants.yaml) ${VENV_ACTIVATE}
-	source ${VENV_ACTIVATE} && python3 $< > $@
+	source ${VENV_ACTIVATE} && PYTHONPATH=. python3 $< > $@
 
 presubmit: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py
