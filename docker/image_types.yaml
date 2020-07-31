@@ -69,6 +69,8 @@
 '{fuzzer}-{benchmark}-runner':
   tag: 'runners/{fuzzer}/{benchmark}'
   context: '.'
+  fuzzer: '{fuzzer}'
+  benchmark: '{benchmark}'
   dockerfile: 'docker/benchmark-runner/Dockerfile'
   build_arg:
     - 'fuzzer={fuzzer}'

@@ -34,7 +34,8 @@ def _print_benchmark_fuzz_target(benchmarks):
 
 
 def _print_makefile_run_template(image):
-    fuzzer, benchmark = image['tag'].split('/')[1:]
+    fuzzer = image['fuzzer']
+    benchmark = image['benchmark']
 
     for run_type in ('run', 'debug', 'test-run'):
         print(('{run_type}-{fuzzer}-{benchmark}: ' +

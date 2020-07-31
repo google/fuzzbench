@@ -37,8 +37,8 @@ def coverage_steps():
     step['name'] = 'gcr.io/cloud-builders/docker'
     step['args'] = ['run', '-v', '/workspace/out:/host-out']
     step['args'] += [
-        os.path.join(EXPERIMENT_TAG, 'builders', 'coverage', BENCHMARK_VAR)
-        + ':' + EXPERIMENT_VAR
+        os.path.join(EXPERIMENT_TAG, 'builders', 'coverage', BENCHMARK_VAR) +
+        ':' + EXPERIMENT_VAR
     ]
     step['args'] += ['/bin/bash', '-c']
     step['args'] += [
@@ -57,7 +57,6 @@ def coverage_steps():
     return steps
 
 
-# TODO(Tanq16): Add unit test for this.
 def create_cloud_build_spec(images_template, base=False):
     """Returns Cloud Build specification."""
 
@@ -72,7 +71,8 @@ def create_cloud_build_spec(images_template, base=False):
         step['name'] = 'gcr.io/cloud-builders/docker'
         step['args'] = ['build']
         step['args'] += [
-            '--tag', os.path.join(BASE_TAG, image['tag']), '--tag',
+            '--tag',
+            os.path.join(BASE_TAG, image['tag']), '--tag',
             os.path.join(EXPERIMENT_TAG, image['tag']) + ':' + EXPERIMENT_VAR
         ]
         step['args'] += ['--cache-from']
@@ -94,9 +94,9 @@ def create_cloud_build_spec(images_template, base=False):
                 del step['wait_for']
 
         cloud_build_spec['images'].append(
-            os.path.join(EXPERIMENT_TAG, image['tag']) + ':' + EXPERIMENT_VAR
-        )
-        cloud_build_spec['images'].append(os.path.join(BASE_TAG, image['tag']))
+            os.path.join(EXPERIMENT_TAG, image['tag']) + ':' + EXPERIMENT_VAR)
+        cloud_build_spec['images'].append(
+            os.path.join(EXPERIMENT_TAG, image['tag']))
         cloud_build_spec['steps'].append(step)
 
     if any('coverage' in _ for _ in images_template.keys()):
@@ -124,7 +124,7 @@ def generate_benchmark_images_build_spec():
     buildable_images = _get_buildable_images()
     images_template = {}
     for name in buildable_images:
-        if any(_ in name for _ in ('base', 'coverage')):
+        if any(_ in name for _ in ('base', 'coverage', 'dispatcher')):
             continue
         images_template[name] = buildable_images[name]
     return create_cloud_build_spec(images_template)
@@ -138,12 +138,3 @@ def generate_coverage_images_build_spec():
         if 'coverage' in name:
             images_template[name] = buildable_images[name]
     return create_cloud_build_spec(images_template)
-
-
-def write_spec(filename, data):
-    """Write build spec to specified file."""
-    file_path = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
-                             'docker', 'gcb', filename)
-    if not os.path.exists(os.path.dirname(file_path)):
-        os.makedirs(os.path.dirname(file_path))
-    yaml_utils.write(file_path, data)

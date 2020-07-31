@@ -21,7 +21,9 @@ from common import experiment_utils
 from common import logs
 from common import new_process
 from common import utils
+from common import yaml_utils
 from experiment.build import build_utils
+from experiment.build import generate_cloudbuild
 
 BUILDER_STEP_IDS = [
     'build-fuzzer-builder',
@@ -41,7 +43,7 @@ logger = logs.Logger('builder')  # pylint: disable=invalid-name
 
 def build_base_images():
     """Build base images on GCB."""
-    _build(get_build_config_file('base-images.yaml'), 'base-images')
+    _build(generate_cloudbuild.generate_base_images_build_spec(), 'base-images')
 
 
 def build_coverage(benchmark):
@@ -52,17 +54,33 @@ def build_coverage(benchmark):
         '_GCS_COVERAGE_BINARIES_DIR': coverage_binaries_dir,
         '_BENCHMARK': benchmark,
     }
-    config_file = get_build_config_file('coverage.yaml')
+    config = generate_cloudbuild.generate_coverage_images_build_spec()
     config_name = 'benchmark-{benchmark}-coverage'.format(benchmark=benchmark)
-    _build(config_file, config_name, substitutions)
+    _build(config, config_name, substitutions)
 
 
-def _build(config_file: str,
+def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
+    """Builds |benchmark| for |fuzzer|."""
+    substitutions = {
+        '_BENCHMARK': benchmark,
+        '_FUZZER': fuzzer,
+    }
+    config = generate_cloudbuild.generate_benchmark_images_build_spec()
+    config_name = 'benchmark-{benchmark}-fuzzer-{fuzzer}'.format(
+        benchmark=benchmark, fuzzer=fuzzer)
+
+    _build(config, config_name, substitutions)
+
+
+def _build(config: Dict[str, str],
            config_name: str,
            substitutions: Dict[str, str] = None,
            timeout_seconds: int = GCB_BUILD_TIMEOUT
           ) -> new_process.ProcessResult:
     """Build each of |args| on gcb."""
+    config_file = os.path.join(utils.ROOT_DIR, 'docker', 'gcb',
+                               'cloudbuild.yaml')
+    yaml_utils.write(config_file, config)
     config_arg = '--config=%s' % config_file
     machine_type_arg = '--machine-type=%s' % GCB_MACHINE_TYPE
 
@@ -107,16 +125,3 @@ def _build(config_file: str,
 def get_build_config_file(filename: str) -> str:
     """Return the path of the GCB build config file |filename|."""
     return os.path.join(utils.ROOT_DIR, 'docker', 'gcb', filename)
-
-
-def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
-    """Builds |benchmark| for |fuzzer|."""
-    substitutions = {
-        '_BENCHMARK': benchmark,
-        '_FUZZER': fuzzer,
-    }
-    config_file = get_build_config_file('fuzzer.yaml')
-    config_name = 'benchmark-{benchmark}-fuzzer-{fuzzer}'.format(
-        benchmark=benchmark, fuzzer=fuzzer)
-
-    _build(config_file, config_name, substitutions)

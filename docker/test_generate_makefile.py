@@ -57,6 +57,8 @@ def test_print_makefile_runner_image(mocked_print):
     name = 'afl-zlib-runner'
     image = {
         'tag': 'runners/afl/zlib',
+        'fuzzer': 'afl',
+        'benchmark': 'zlib',
         'context': '.',
         'dockerfile': 'docker/benchmark-runner/Dockerfile',
         'build_arg': ['fuzzer=afl', 'benchmark=zlib'],
