@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,189 +15,128 @@
 
 import os
 
-BASE_TAG = 'gcr.io/fuzzbench'
-BENCHMARKS_DIR = os.path.join(os.path.dirname(__file__), os.pardir,
-                              'benchmarks')
-FUZZERS_DIR = os.path.join(os.path.dirname(__file__), os.pardir, 'fuzzers')
+from common import yaml_utils
+from common import benchmark_utils
+from common import fuzzer_utils
+from experiment.build import docker_images
 
-BOILERPLATE = """
-cache_from = $(if ${RUNNING_ON_CI},--cache-from {fuzzer},)
-"""
-
-FUZZER_TEMPLATE = """
-.{fuzzer}-builder: base-image
-	docker build \\
-    --tag {base_tag}/builders/{fuzzer} \\
-    --file fuzzers/{fuzzer}/builder.Dockerfile \\
-    $(call cache_from,{base_tag}/builders/{fuzzer}) \\
-    fuzzers/{fuzzer}
-
-.pull-{fuzzer}-builder: pull-base-image
-	docker pull {base_tag}/builders/{fuzzer}
-"""
-
-FUZZER_BENCHMARK_RUN_TARGETS_TEMPLATE = """
-build-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner
-
-pull-{fuzzer}-{benchmark}: .pull-{fuzzer}-{benchmark}-runner
-
-run-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner
-	docker run \\
-    --cpus=1 \\
-    --cap-add SYS_NICE \\
-    --cap-add SYS_PTRACE \\
-    -e FUZZ_OUTSIDE_EXPERIMENT=1 \\
-    -e FORCE_LOCAL=1 \\
-    -e TRIAL_ID=1 \\
-    -e FUZZER={fuzzer} \\
-    -e BENCHMARK={benchmark} \\
-    -e FUZZ_TARGET=$({benchmark}-fuzz-target) \\
-    -it {base_tag}/runners/{fuzzer}/{benchmark}
-
-test-run-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner
-	docker run \\
-    --cap-add SYS_NICE \\
-    --cap-add SYS_PTRACE \\
-    -e FUZZ_OUTSIDE_EXPERIMENT=1 \\
-    -e FORCE_LOCAL=1 \\
-    -e TRIAL_ID=1 \\
-    -e FUZZER={fuzzer} \\
-    -e BENCHMARK={benchmark} \\
-    -e FUZZ_TARGET=$({benchmark}-fuzz-target) \\
-    -e MAX_TOTAL_TIME=20 \\
-    -e SNAPSHOT_PERIOD=10 \\
-    {base_tag}/runners/{fuzzer}/{benchmark}
-
-debug-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner
-	docker run \\
-    --cpus=1 \\
-    --cap-add SYS_NICE \\
-    --cap-add SYS_PTRACE \\
-    -e FUZZ_OUTSIDE_EXPERIMENT=1 \\
-    -e FORCE_LOCAL=1 \\
-    -e TRIAL_ID=1 \\
-    -e FUZZER={fuzzer} \\
-    -e BENCHMARK={benchmark} \\
-    -e FUZZ_TARGET=$({benchmark}-fuzz-target) \\
-    --entrypoint "/bin/bash" \\
-    -it {base_tag}/runners/{fuzzer}/{benchmark}
-"""
-
-FUZZER_BENCHMARK_TEMPLATE = """
-.{fuzzer}-{benchmark}-builder-intermediate: .{benchmark}-project-builder
-	docker build \\
-    --tag {base_tag}/builders/{fuzzer}/{benchmark}-intermediate \\
-    --file=fuzzers/{fuzzer}/builder.Dockerfile \\
-    --build-arg parent_image=gcr.io/fuzzbench/builders/benchmark/{benchmark} \\
-    $(call cache_from,{base_tag}/builders/{fuzzer}/{benchmark}-intermediate) \\
-    fuzzers/{fuzzer}
-
-.pull-{fuzzer}-{benchmark}-builder-intermediate:
-	docker pull {base_tag}/builders/{fuzzer}/{benchmark}-intermediate
-
-.{fuzzer}-{benchmark}-builder: .{fuzzer}-{benchmark}-builder-intermediate
-	docker build \\
-    --tag {base_tag}/builders/{fuzzer}/{benchmark} \\
-    --file=docker/benchmark-builder/Dockerfile \\
-    --build-arg parent_image={base_tag}/builders/{fuzzer}/{benchmark}-intermediate \\
-    --build-arg fuzzer={fuzzer} \\
-    --build-arg benchmark={benchmark} \\
-    $(call cache_from,{base_tag}/builders/{fuzzer}/{benchmark}) \\
-    .
-
-.pull-{fuzzer}-{benchmark}-builder: .pull-{fuzzer}-{benchmark}-builder-intermediate
-	docker pull {base_tag}/builders/{fuzzer}/{benchmark}
-
-ifneq ({fuzzer}, coverage)
-
-.{fuzzer}-{benchmark}-intermediate-runner: .{fuzzer}-{benchmark}-builder
-	docker build \\
-    --tag {base_tag}/runners/{fuzzer}/{benchmark}-intermediate \\
-    --file fuzzers/{fuzzer}/runner.Dockerfile \\
-    $(call cache_from,{base_tag}/runners/{fuzzer}/{benchmark}-intermediate) \\
-    fuzzers/{fuzzer}
-
-.pull-{fuzzer}-{benchmark}-intermediate-runner: pull-base-image
-	docker pull {base_tag}/runners/{fuzzer}/{benchmark}-intermediate
-
-.{fuzzer}-{benchmark}-runner: .{fuzzer}-{benchmark}-intermediate-runner
-	docker build \\
-    --tag {base_tag}/runners/{fuzzer}/{benchmark} \\
-    --build-arg fuzzer={fuzzer} \\
-    --build-arg benchmark={benchmark} \\
-    $(call cache_from,{base_tag}/runners/{fuzzer}/{benchmark}) \\
-    --file docker/benchmark-runner/Dockerfile \\
-    .
-
-.pull-{fuzzer}-{benchmark}-runner: .pull-{fuzzer}-{benchmark}-intermediate-runner
-	docker pull {base_tag}/runners/{fuzzer}/{benchmark}
-
-""" + FUZZER_BENCHMARK_RUN_TARGETS_TEMPLATE + """
-
-else
-
-build-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-builder
-pull-{fuzzer}-{benchmark}: .pull-{fuzzer}-{benchmark}-builder
-
-endif
-"""
+BASE_TAG = "gcr.io/fuzzbench"
+BENCHMARK_DIR = benchmark_utils.BENCHMARKS_DIR
 
 
-def generate_fuzzer(fuzzer, benchmarks):
-    """Output make rules for a single fuzzer."""
-    # Generate build rules for the fuzzer itself.
-    print(FUZZER_TEMPLATE.format(fuzzer=fuzzer, base_tag=BASE_TAG))
-
-    # Generate rules for fuzzer-benchmark pairs.
+def _print_benchmark_fuzz_target(benchmarks):
+    """Prints benchmark variables from benchmark.yaml files."""
     for benchmark in benchmarks:
-        print(
-            FUZZER_BENCHMARK_TEMPLATE.format(fuzzer=fuzzer,
-                                             benchmark=benchmark,
-                                             base_tag=BASE_TAG))
+        benchmark_vars = yaml_utils.read(
+            os.path.join(BENCHMARK_DIR, benchmark, 'benchmark.yaml'))
+        print(benchmark + '-fuzz-target=' + benchmark_vars['fuzz_target'])
+        print()
 
-    # Generate rules for building/pulling all target/benchmark pairs.
-    all_build_targets = ' '.join(
-        ['build-{0}-{1}'.format(fuzzer, benchmark) for benchmark in benchmarks])
-    all_pull_targets = ' '.join(
-        ['pull-{0}-{1}'.format(fuzzer, benchmark) for benchmark in benchmarks])
-    print('build-{fuzzer}-all: {all_targets}'.format(
-        fuzzer=fuzzer, all_targets=all_build_targets))
-    print('pull-{fuzzer}-all: {all_targets}'.format(
-        fuzzer=fuzzer, all_targets=all_pull_targets))
+
+def _print_makefile_run_template(image):
+    fuzzer, benchmark = image['tag'].split('/')[1:]
+
+    for run_type in ('run', 'debug', 'test-run'):
+        print(('{run_type}-{fuzzer}-{benchmark}: ' +
+               '.{fuzzer}-{benchmark}-runner').format(run_type=run_type,
+                                                      benchmark=benchmark,
+                                                      fuzzer=fuzzer))
+
+        print('\
+\tdocker run \\\n\
+\t--cpus=1 \\\n\
+\t--cap-add SYS_NICE \\\n\
+\t--cap-add SYS_PTRACE \\\n\
+\t-e FUZZ_OUTSIDE_EXPERIMENT=1 \\\n\
+\t-e FORCE_LOCAL=1 \\\n\
+\t-e TRIAL_ID=1 \\\n\
+\t-e FUZZER={fuzzer} \\\n\
+\t-e BENCHMARK={benchmark} \\\n\
+\t-e FUZZ_TARGET=$({benchmark}-fuzz-target) \\\
+'.format(fuzzer=fuzzer, benchmark=benchmark))
+
+        if run_type == 'test-run':
+            print('\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\')
+        if run_type == 'debug':
+            print('\t-entrypoint "/bin/bash" \\\n\t-it ', end='')
+        else:
+            print('\t', end='')
+
+        print(os.path.join(BASE_TAG, image['tag']))
+        print()
+
+
+# TODO(tanq16): Add unit test.
+def _print_rules_for_image(name, image):
+    """Print makefile section for given image to stdout."""
+    if not ('base' in name or 'dispatcher' in name):
+        print('.', end='')
+    print(name + ':', end='')
+    if 'depends_on' in image:
+        for dep in image['depends_on']:
+            if 'base' in dep:
+                print(' ' + dep, end='')
+            else:
+                print(' .' + dep, end='')
+    print()
+    print('\tdocker build \\')
+    print('\t--tag ' + os.path.join(BASE_TAG, image['tag']) + ' \\')
+    print('\t--build-arg BUILDKIT_INLINE_CACHE=1 \\')
+    print('\t--cache-from ' + os.path.join(BASE_TAG, image['tag']) + ' \\')
+    if 'build_arg' in image:
+        for arg in image['build_arg']:
+            print('\t--build-arg ' + arg + ' \\')
+    if 'dockerfile' in image:
+        print('\t--file ' + image['dockerfile'] + ' \\')
+    print('\t' + image['context'])
+    print()
+
+    # Print run, debug, test-run rules if image is a runner.
+    if 'runner' in name and not ('intermediate' in name or 'base' in name):
+        _print_makefile_run_template(image)
 
 
 def main():
-    """Main entry point."""
-    # Output boilerplate used by other templates and generated rules.
-    print(BOILERPLATE)
+    """Generates Makefile with docker image build rules."""
+    fuzzers = fuzzer_utils.get_fuzzer_names()
+    benchmarks = benchmark_utils.get_all_benchmarks()
+    buildable_images = docker_images.get_images_to_build(fuzzers, benchmarks)
 
-    # Compute the list of benchmarks.
-    benchmarks = []
-    for benchmark in os.listdir(BENCHMARKS_DIR):
-        benchmark_path = os.path.join(BENCHMARKS_DIR, benchmark)
-        if not os.path.isdir(benchmark_path):
-            continue
-        if os.path.exists(os.path.join(benchmark_path, 'benchmark.yaml')):
-            benchmarks.append(benchmark)
+    print('export DOCKER_BUILDKIT := 1')
 
-    # Generate the build rules for fuzzer/benchmark pairs.
-    fuzzers = []
-    for fuzzer in os.listdir(FUZZERS_DIR):
-        # Skip non-directory files. These do not represent fuzzers.
-        fuzzer_dir = os.path.join(FUZZERS_DIR, fuzzer)
-        if not os.path.isdir(fuzzer_dir):
-            continue
+    # Print oss-fuzz benchmarks property variables.
+    _print_benchmark_fuzz_target(benchmarks)
 
-        generate_fuzzer(fuzzer, benchmarks)
-        fuzzers.append(fuzzer)
+    for name, image in buildable_images.items():
+        _print_rules_for_image(name, image)
 
-    # Generate rules to build all known targets.
+    # Print build targets for all fuzzer-benchmark pairs (including coverage).
+    fuzzers.append('coverage')
+    for fuzzer in fuzzers:
+        image_type = "runner"
+        if 'coverage' in fuzzer:
+            image_type = "builder"
+        for benchmark in benchmarks:
+            print(('build-{fuzzer}-{benchmark}: ' +
+                   '.{fuzzer}-{benchmark}-{image_type}\n').format(
+                       fuzzer=fuzzer,
+                       benchmark=benchmark,
+                       image_type=image_type))
+        print()
+
+    # Print fuzzer-all benchmarks build targets.
+    for fuzzer in fuzzers:
+        all_build_targets = ' '.join([
+            'build-{0}-{1}'.format(fuzzer, benchmark)
+            for benchmark in benchmarks
+        ])
+        print('build-{fuzzer}-all: {all_targets}'.format(
+            fuzzer=fuzzer, all_targets=all_build_targets))
+
+    # Print all targets build target.
     all_build_targets = ' '.join(
         ['build-{0}-all'.format(name) for name in fuzzers])
-    all_pull_targets = ' '.join(
-        ['pull-{0}-all'.format(name) for name in fuzzers])
     print('build-all: {all_targets}'.format(all_targets=all_build_targets))
-    print('pull-all: {all_targets}'.format(all_targets=all_pull_targets))
 
 
 if __name__ == '__main__':

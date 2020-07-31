@@ -77,6 +77,9 @@ def delete_docker_images():
     image_ids = result.stdout.splitlines()
     subprocess.run(['docker', 'rmi', '-f'] + image_ids, check=False)
 
+    # Needed for BUILDKIT to clear build cache & avoid insufficient disk space.
+    subprocess.run(['docker', 'builder', 'prune', '-f'], check=False)
+
 
 def make_builds(benchmarks, fuzzer):
     """Use make to build each target in |build_targets|."""

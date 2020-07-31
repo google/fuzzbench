@@ -13,7 +13,10 @@
 # limitations under the License.
 """Provides the set of buildable images and their dependencies."""
 
+import os
+
 from common import yaml_utils
+from common.utils import ROOT_DIR
 
 
 def _substitute(template, fuzzer, benchmark):
@@ -40,7 +43,9 @@ def _instantiate_image_obj(name_template, obj_template, fuzzer, benchmark):
 def _get_image_type_templates():
     """Loads the image types config that contains "templates" describing how to
     build them and their dependencies."""
-    return yaml_utils.read('docker/image_types.yaml')
+    yaml_file = os.path.join(ROOT_DIR, 'docker', 'image_types.yaml')
+    all_templates = yaml_utils.read(yaml_file)
+    return all_templates
 
 
 def get_images_to_build(fuzzers, benchmarks):
