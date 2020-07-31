@@ -32,12 +32,6 @@ def run_experiment():
                       'base-image',
                       job_timeout=600,
                       job_id='base-image'))
-    jobs_list.append(
-        queue.enqueue(jobs.build_image,
-                      'base-runner',
-                      job_timeout=600,
-                      job_id='base-runner',
-                      depends_on='base-image'))
 
     while True:
         print('Current status of jobs:')

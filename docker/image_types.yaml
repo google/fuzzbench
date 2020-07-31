@@ -5,12 +5,6 @@
   tag: 'base-image'
   context: 'docker/base-image'
 
-'base-runner':
-  tag: 'base-runner'
-  context: 'docker/base-runner'
-  depends_on:
-    - 'base-image'
-
 'coverage-builder':
   tag: 'builders/coverage'
   context: 'fuzzers/coverage'
@@ -50,7 +44,7 @@
   context: 'fuzzers/{fuzzer}'
   dockerfile: 'fuzzers/{fuzzer}/runner.Dockerfile'
   depends_on:
-    - 'base-runner'
+    - '{fuzzer}-{benchmark}-builder'
 
 '{fuzzer}-{benchmark}-runner':
   tag: 'runners/{fuzzer}/{benchmark}'
@@ -60,5 +54,4 @@
     - 'fuzzer={fuzzer}'
     - 'benchmark={benchmark}'
   depends_on:
-    - '{fuzzer}-{benchmark}-builder'
     - '{fuzzer}-{benchmark}-intermediate-runner'

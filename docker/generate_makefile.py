@@ -25,14 +25,14 @@ cache_from = $(if ${RUNNING_ON_CI},--cache-from {fuzzer},)
 """
 
 FUZZER_TEMPLATE = """
-.{fuzzer}-builder: base-builder
+.{fuzzer}-builder: base-image
 	docker build \\
     --tag {base_tag}/builders/{fuzzer} \\
     --file fuzzers/{fuzzer}/builder.Dockerfile \\
     $(call cache_from,{base_tag}/builders/{fuzzer}) \\
     fuzzers/{fuzzer}
 
-.pull-{fuzzer}-builder: pull-base-builder
+.pull-{fuzzer}-builder: pull-base-image
 	docker pull {base_tag}/builders/{fuzzer}
 """
 
@@ -110,17 +110,17 @@ FUZZER_BENCHMARK_TEMPLATE = """
 
 ifneq ({fuzzer}, coverage)
 
-.{fuzzer}-{benchmark}-intermediate-runner: base-runner
+.{fuzzer}-{benchmark}-intermediate-runner: .{fuzzer}-{benchmark}-builder
 	docker build \\
     --tag {base_tag}/runners/{fuzzer}/{benchmark}-intermediate \\
     --file fuzzers/{fuzzer}/runner.Dockerfile \\
     $(call cache_from,{base_tag}/runners/{fuzzer}/{benchmark}-intermediate) \\
     fuzzers/{fuzzer}
 
-.pull-{fuzzer}-{benchmark}-intermediate-runner: pull-base-runner
+.pull-{fuzzer}-{benchmark}-intermediate-runner: pull-base-image
 	docker pull {base_tag}/runners/{fuzzer}/{benchmark}-intermediate
 
-.{fuzzer}-{benchmark}-runner: .{fuzzer}-{benchmark}-builder .{fuzzer}-{benchmark}-intermediate-runner
+.{fuzzer}-{benchmark}-runner: .{fuzzer}-{benchmark}-intermediate-runner
 	docker build \\
     --tag {base_tag}/runners/{fuzzer}/{benchmark} \\
     --build-arg fuzzer={fuzzer} \\
@@ -129,7 +129,7 @@ ifneq ({fuzzer}, coverage)
     --file docker/benchmark-runner/Dockerfile \\
     .
 
-.pull-{fuzzer}-{benchmark}-runner: .pull-{fuzzer}-{benchmark}-builder .pull-{fuzzer}-{benchmark}-intermediate-runner
+.pull-{fuzzer}-{benchmark}-runner: .pull-{fuzzer}-{benchmark}-intermediate-runner
 	docker pull {base_tag}/runners/{fuzzer}/{benchmark}
 
 """ + FUZZER_BENCHMARK_RUN_TARGETS_TEMPLATE + """
