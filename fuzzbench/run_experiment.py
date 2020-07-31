@@ -17,7 +17,6 @@ import time
 
 import redis
 import rq
-from rq.job import Job
 
 from common import config_utils, environment, yaml_utils
 from experiment.build import docker_images
@@ -39,20 +38,16 @@ def run_experiment(config):
         if 'depends_on' not in obj:
             jobs_list.append(
                 queue.enqueue(jobs.build_image,
-                              tag=obj['tag'],
-                              context=obj['context'],
-                              job_timeout=600,
+                              job_obj=obj,
+                              job_timeout=1800,
                               result_ttl=config['max_total_time'],
                               job_id=name))
             continue
 
         jobs_list.append(
             queue.enqueue(jobs.build_image,
-                          tag=obj['tag'],
-                          context=obj['context'],
-                          dockerfile=obj.get('dockerfile', None),
-                          buildargs=obj.get('build_arg', None),
-                          job_timeout=600,
+                          job_obj=obj,
+                          job_timeout=1800,
                           result_ttl=config['max_total_time'],
                           job_id=name,
                           depends_on=obj['depends_on'][0]))

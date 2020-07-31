@@ -5,12 +5,19 @@
   tag: 'base-image'
   context: 'docker/base-image'
 
-'coverage-builder':
-  tag: 'builders/coverage'
+'{benchmark}-project-builder':
+  tag: 'builders/benchmark/{benchmark}'
+  context: 'benchmarks/{benchmark}'
+  dockerfile: 'benchmarks/{benchmark}/Dockerfile'
+
+'coverage-{benchmark}-builder-intermediate':
+  tag: 'builders/coverage/{benchmark}-intermediate'
   context: 'fuzzers/coverage'
   dockerfile: 'fuzzers/coverage/builder.Dockerfile'
+  build_arg:
+    - 'parent_image=gcr.io/fuzzbench/builders/benchmark/{benchmark}'
   depends_on:
-    - 'base-image'
+    - '{benchmark}-project-builder'
 
 'coverage-{benchmark}-builder':
   tag: 'builders/coverage/{benchmark}'
@@ -19,15 +26,20 @@
   build_arg:
     - 'fuzzer=coverage'
     - 'benchmark={benchmark}'
+    - 'parent_image=gcr.io/fuzzbench/builders/benchmark/{benchmark}'
   depends_on:
-    - 'coverage-builder'
+    - 'coverage-{benchmark}-builder-intermediate'
 
-'{fuzzer}-builder':
-  tag: 'builders/{fuzzer}'
+'{fuzzer}-{benchmark}-builder-intermediate':
+  tag: 'builders/{fuzzer}/{benchmark}-intermediate'
   context: 'fuzzers/{fuzzer}'
   dockerfile: 'fuzzers/{fuzzer}/builder.Dockerfile'
+  build_arg:
+    - 'fuzzer={fuzzer}'
+    - 'benchmark={benchmark}'
+    - 'parent_image=gcr.io/fuzzbench/builders/benchmark/{benchmark}'
   depends_on:
-    - 'base-image'
+    - '{benchmark}-project-builder'
 
 '{fuzzer}-{benchmark}-builder':
   tag: 'builders/{fuzzer}/{benchmark}'
@@ -36,10 +48,11 @@
   build_arg:
     - 'fuzzer={fuzzer}'
     - 'benchmark={benchmark}'
+    - 'parent_image=gcr.io/fuzzbench/builders/{fuzzer}/{benchmark}-intermediate'
   depends_on:
-    - '{fuzzer}-builder'
+    - '{fuzzer}-{benchmark}-builder-intermediate'
 
-'{fuzzer}-{benchmark}-intermediate-runner':
+'{fuzzer}-{benchmark}-runner-intermediate':
   tag: 'runners/{fuzzer}/{benchmark}-intermediate'
   context: 'fuzzers/{fuzzer}'
   dockerfile: 'fuzzers/{fuzzer}/runner.Dockerfile'
@@ -54,4 +67,4 @@
     - 'fuzzer={fuzzer}'
     - 'benchmark={benchmark}'
   depends_on:
-    - '{fuzzer}-{benchmark}-intermediate-runner'
+    - '{fuzzer}-{benchmark}-runner-intermediate'
