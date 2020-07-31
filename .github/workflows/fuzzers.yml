@@ -35,7 +35,9 @@ jobs:
           # temporary variants.
           - aflplusplus_havoc
           - libfuzzer_interceptors
+          - libfuzzer_keepseed
           - entropic_interceptors
+          - entropic_keepseed
 
         benchmark_type:
           - oss-fuzz
