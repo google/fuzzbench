@@ -154,17 +154,20 @@ def generate_report(experiment_names,
     # Fetch source files for each benchmark.
     benchmark_names = experiment_df.benchmark.unique()
     fuzzer_names = experiment_df.fuzzer.unique()
-    try:
-        report_utils.fetch_source_files(benchmark_names, report_directory)
-        report_utils.fetch_binary_files(benchmark_names, report_directory)
-        report_utils.get_profdata_files(experiment_names[0], fuzzer_names,
-                                        benchmark_names, report_directory,
-                                        logger)
-    except Exception:
-        logger.error('Failed when fetching files for coverage report.')
+    if in_progress:
+        logger.info('Fetching files for coverage report.')
+        try:
+            report_utils.fetch_source_files(benchmark_names, report_directory)
+            report_utils.fetch_binary_files(benchmark_names, report_directory)
+            report_utils.get_profdata_files(experiment_names[0], fuzzer_names,
+                                            benchmark_names, report_directory,
+                                            logger)
+        except Exception:
+            logger.error('Failed when fetching files for coverage report.')
 
     # Generate coverage reports for each benchmark.
-    
+    """report_utils.generate_cov_reports(benchmark_names, fuzzer_names,
+                                      report_directory, logger)"""
 
 
     data_utils.validate_data(experiment_df)

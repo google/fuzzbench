@@ -14,6 +14,7 @@
 """Utility functions for coverage report generation."""
 
 import os
+import multiprocessing
 
 from common import filestore_utils
 from common import experiment_path as exp_path
@@ -57,10 +58,12 @@ def get_profdata_files(experiment, benchmarks, fuzzers, report_dir, logger):
     for benchmark in benchmarks:
         for fuzzer in fuzzers:
             trial_ids = measurer.get_trial_ids(experiment, fuzzer, benchmark)
+            logger.info('trial ids for profdata is:{trial}'.format(trial=str(trial_ids)))
             files_to_merge = [
                 get_profdata_file_path(fuzzer, benchmark, trial_id)
                 for trial_id in trial_ids
             ]
+            logger.info('files to merge is :{files}'.format(files = str(files_to_merge)))
             dst_dir = os.path.join(report_dir, benchmark, fuzzer)
             filesystem.create_directory(dst_dir)
             dst_file = os.path.join(dst_dir, 'merged.profdata')
@@ -71,4 +74,23 @@ def fetch_binary_files(benchmarks, report_dir):
     """Get binary file for each benchmark."""
     for benchmark in benchmarks:
         src_file = measurer.get_coverage_binary(benchmark)
-        filesystem.copy(src_file, report_dir)
+        dst_dir = os.path.join(report_dir, benchmark)
+        filesystem.copy(src_file, dst_dir)
+
+
+def generate_cov_reports(benchmarks, fuzzers, logger):
+    logger.info('Start generating coverage report for benchmarks.')
+    with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
+        q = manager.Queue()  # pytype: disable=attribute-error
+        generate_cov_report_args = [(benchmark, fuzzer) 
+                                    for benchmark in benchmarks
+                                    for fuzzer in fuzzers]
+        result = pool.starmap_async(generate_cov_report, generate_cov_report_args)
+    logger.info('Finished generating coverage report.')
+
+
+def generate_cov_report(benchmark, fuzzer, report_dir, logger):
+    dst_dir = os.path.join(report_dir, benchmark, fuzzer)
+    command = ['llvm-cov', 'show', '-format=html',
+                '-output-dir=$REPORT_ROOT_DIR' \
+    -Xdemangler c++filt -Xdemangler -n $LLVM_COV_ARGS]
