@@ -19,6 +19,28 @@
 # are still testing this feature. You should request an experiment by contacting
 # us as you normally do.
 
+- experiment: 2020-08-01
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_qemu
+    - afl_qemu
+    - aflsmart
+    - eclipser
+    - entropic
+    - fairfuzz
+    - fastcgs_lm
+    - honggfuzz
+    - honggfuzz_qemu
+    - lafintel
+    - libfuzzer
+    - manul
+    - mopt
+    - libfuzzer_keepseed
+    - entropic_keepseed
+
 - experiment: 2020-07-30
   fuzzers:
     - libfuzzer
