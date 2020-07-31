@@ -72,6 +72,27 @@ def clobber_experiments_data(df, experiments):
     return result
 
 
+def drop_private(experiment_df):
+    """Drop all snapshots from private experiments."""
+    return experiment_df[~experiment_df['private']]
+
+
+def filter_fuzzers_from_experiments(experiment_df, fuzzers_from_experiments):
+    """Drop snapshots whose fuzzer and experiment combination are not in
+    |fuzzers_from_experiments| from experiment_df and returns the result.
+    fuzzers_from_experiments is a list of tuples containing a fuzzer and an
+    experiment."""
+    fuzzers_from_experiments = set(fuzzers_from_experiments)
+
+    def make_fuzzer_experiment_tuple(row):
+        return (row['fuzzer'], row['experiment'])
+
+    fuzzer_and_benchmark = experiment_df.apply(
+        make_fuzzer_experiment_tuple, axis=1)
+
+    return experiment_df[fuzzer_and_benchmark.isin(fuzzers_from_experiments)]
+
+
 def filter_fuzzers(experiment_df, included_fuzzers):
     """Returns table with only rows where fuzzer is in |included_fuzzers|."""
     return experiment_df[experiment_df['fuzzer'].isin(included_fuzzers)]

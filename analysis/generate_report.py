@@ -130,7 +130,9 @@ def generate_report(experiment_names,
                     in_progress=False,
                     end_time=None,
                     merge_with_clobber=False,
-                    merge_with_clobber_nonprivate=False):
+                    merge_with_clobber_nonprivate=False,
+                    fuzzers_from_experiments=None,
+                    drop_private=False):
     """Generate report helper."""
     if merge_with_clobber_nonprivate:
         experiment_names = (
@@ -147,6 +149,8 @@ def generate_report(experiment_names,
     else:
         experiment_df = queries.get_experiment_data(experiment_names)
         # Save the raw data along with the report.
+        if drop_private:
+            experiment_df = data_utils.drop_private(experiment_df)
         experiment_df.to_csv(data_path)
 
     data_utils.validate_data(experiment_df)
@@ -166,6 +170,11 @@ def generate_report(experiment_names,
     if merge_with_clobber:
         experiment_df = data_utils.clobber_experiments_data(
             experiment_df, experiment_names)
+
+    if fuzzers_from_experiments is not None:
+        assert not fuzzers
+        experiment_df = data_utils.filter_fuzzers_from_experiments(
+            experiment_df, fuzzers_from_experiments)
 
     fuzzer_names = experiment_df.fuzzer.unique()
     plotter = plotting.Plotter(fuzzer_names, quick, log_scale)

@@ -1,0 +1,29 @@
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 15px;
+}
+</style>
+<form action="/generate" method="post">
+<table style="width:100%">
+  <tr>
+    <th>fuzzer/experiment</th>
+    {% for experiment in experiments %}
+    <th>{{ experiment }}</th>
+    {% endfor %}
+  </tr>  
+  {% for fuzzer in fuzzers %}
+  <tr>
+  <td>{{ fuzzer }}</td>
+  {% for experiment in experiments %}
+  <th><input type="checkbox" name="{{fuzzer}},{{experiment}}" value="{{fuzzer}},{{experiment}}"/></th>
+  
+  {% endfor %}
+  </tr>
+  {% endfor %}  
+</table>
+<input type="submit" value="Submit">
+</form>
