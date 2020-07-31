@@ -17,32 +17,17 @@ import time
 import redis
 import rq
 
-MAX_TIME_LIMIT = 3600
-REASSIGN_GAP_TIME = 5
-
-
-def no_pending_jobs(queue):
-    """Checks whether the queue has unfinished jobs."""
-    return (queue.deferred_job_registry.count + queue.count +
-            queue.started_job_registry.count) == 0
-
 
 def main():
     """Sets up Redis connection and starts the worker."""
     redis_connection = redis.Redis(host="queue-server")
     with rq.Connection(redis_connection):
         queue = rq.Queue('build_n_run_queue')
-        worker = rq.Worker([queue], connection=redis_connection)
+        worker = rq.Worker([queue])
 
-        start_time = time.time()
-        while time.time() - start_time < MAX_TIME_LIMIT:
-            if not no_pending_jobs(queue):
-                worker.work(burst=True)
-            else:
-                time.sleep(REASSIGN_GAP_TIME)
-                if no_pending_jobs(queue):
-                    return
-            time.sleep(REASSIGN_GAP_TIME)
+        while queue.count + queue.deferred_job_registry.count > 0:
+            worker.work(burst=True)
+            time.sleep(5)
 
 
 if __name__ == '__main__':

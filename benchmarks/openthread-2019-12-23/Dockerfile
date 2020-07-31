@@ -15,4 +15,14 @@
 ################################################################################
 
 FROM gcr.io/oss-fuzz-base/base-builder
+
+RUN apt-get update && \
+    apt-get install -y \
+    make \
+    automake \
+    autoconf \
+    libtool
+
+RUN git clone https://github.com/openthread/openthread.git
+
 COPY build.sh $SRC/

@@ -133,18 +133,16 @@ def dispatcher_main():
                                              args=(experiment.config,))
     scheduler_loop_thread.start()
 
-    max_total_time = experiment.config['max_total_time']
-    measurer_loop_process = multiprocessing.Process(
-        target=measurer.measure_loop,
-        args=(experiment.experiment_name, max_total_time))
+    measurer_main_process = multiprocessing.Process(
+        target=measurer.measure_main, args=(experiment.config,))
 
-    measurer_loop_process.start()
+    measurer_main_process.start()
 
     is_complete = False
     while True:
         time.sleep(LOOP_WAIT_SECONDS)
         if not scheduler_loop_thread.is_alive():
-            is_complete = not measurer_loop_process.is_alive()
+            is_complete = not measurer_main_process.is_alive()
 
         # Generate periodic output reports.
         reporter.output_report(experiment.config, in_progress=not is_complete)
@@ -155,7 +153,7 @@ def dispatcher_main():
 
     logs.info('Dispatcher finished.')
     scheduler_loop_thread.join()
-    measurer_loop_process.join()
+    measurer_main_process.join()
 
 
 def main():

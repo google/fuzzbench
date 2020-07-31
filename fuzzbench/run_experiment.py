@@ -29,14 +29,14 @@ redis_connection = redis.Redis(host="queue-server")  # pylint: disable=invalid-n
 def run_experiment(config):
     """Main experiment logic."""
     print('Initializing the job queue.')
+    # Create the queue for scheduling build jobs and run jobs.
     queue = rq.Queue('build_n_run_queue')
 
     images_to_build = docker_images.get_images_to_build(config['fuzzers'],
                                                         config['benchmarks'])
     jobs_list = []
-    unqueued_build_images = []
     for name, obj in images_to_build.items():
-        if name in ['base-image']:
+        if 'depends_on' not in obj:
             jobs_list.append(
                 queue.enqueue(jobs.build_image,
                               tag=obj['tag'],
@@ -44,10 +44,6 @@ def run_experiment(config):
                               job_timeout=600,
                               result_ttl=config['max_total_time'],
                               job_id=name))
-            continue
-
-        if len(obj['depends_on']) > 1:
-            unqueued_build_images.append((name, obj))
             continue
 
         jobs_list.append(
@@ -70,26 +66,6 @@ def run_experiment(config):
         print('\tfailed:\t%d' % queue.failed_job_registry.count)
         for job in jobs_list:
             print('  %s : %s\t(%s)' % (job.func_name, job.get_status(), job.id))
-
-        for name, obj in unqueued_build_images:
-            depended_jobs = Job.fetch_many(obj['depends_on'],
-                                           connection=redis_connection)
-            if all([
-                    depended_job.get_status() == 'finished'
-                    for depended_job in depended_jobs
-            ]):
-                try:
-                    Job.fetch(name, connection=redis_connection)
-                except:  #pylint: disable=bare-except
-                    jobs_list.append(
-                        queue.enqueue(jobs.build_image,
-                                      tag=obj['tag'],
-                                      context=obj['context'],
-                                      dockerfile=obj.get('dockerfile', None),
-                                      buildargs=obj.get('build_arg', None),
-                                      job_timeout=600,
-                                      result_ttl=config['max_total_time'],
-                                      job_id=name))
 
         if all([job.result is not None for job in jobs_list]):
             break

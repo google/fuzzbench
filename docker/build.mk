@@ -32,28 +32,6 @@ base-image:
 pull-base-image:
 	docker pull $(BASE_TAG)/base-image
 
-pull-base-clang:
-	docker pull gcr.io/oss-fuzz-base/base-clang
-
-base-builder: base-image pull-base-clang
-	docker build \
-    --tag $(BASE_TAG)/base-builder \
-    $(call cache_from_base,${BASE_TAG}/base-builder) \
-    $(call cache_from_base,gcr.io/oss-fuzz-base/base-clang) \
-    docker/base-builder
-
-pull-base-builder: pull-base-image pull-base-clang
-	docker pull $(BASE_TAG)/base-builder
-
-base-runner: base-image
-	docker build \
-    --tag $(BASE_TAG)/base-runner \
-    $(call cache_from_base,${BASE_TAG}/base-runner) \
-    docker/base-runner
-
-pull-base-runner: pull-base-image
-	docker pull $(BASE_TAG)/base-runner
-
 dispatcher-image: base-image
 	docker build \
     --tag $(BASE_TAG)/dispatcher-image \
@@ -63,8 +41,6 @@ dispatcher-image: base-image
 define benchmark_template
 $(1)-fuzz-target  := $(shell cat benchmarks/$(1)/benchmark.yaml | \
                              grep fuzz_target | cut -d ':' -f2 | tr -d ' ')
-$(1)-commit := $(shell cat benchmarks/$(1)/benchmark.yaml | \
-                           grep commit: | cut -d ':' -f2 | tr -d ' ')
 
 # TODO: It would be better to call this benchmark builder. But that would be
 # confusing because this doesn't involve benchmark-builder/Dockerfile. Rename

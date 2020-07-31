@@ -26,4 +26,6 @@ RUN apt-get update && \
     pkg-config \
     libcairo2-dev
 
+RUN git clone https://github.com/behdad/harfbuzz.git
+
 COPY * $SRC/
