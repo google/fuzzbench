@@ -51,7 +51,7 @@ def add_nonprivate_experiments_for_merge_with_clobber(experiment_names):
 
     return nonprivate_experiment_names + experiment_names
 
-# !!! MOVE
+
 def get_fuzzers_and_experiments(nonprivate=True):
     trials_query = db_utils.query(
         Trial.fuzzer,\
