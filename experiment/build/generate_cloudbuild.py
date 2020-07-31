@@ -13,28 +13,70 @@
 # limitations under the License.
 """Generates Cloud Build specification"""
 
-import argparse
-import json
-import yaml
+import os
 
+from common import yaml_utils
 from experiment.build import docker_images
+
+BASE_TAG = 'gcr.io/fuzzbench'
+EXPERIMENT_TAG = "${_REPO}"
+FUZZER_VAR = "${_FUZZER}"
+BENCHMARK_VAR = "${_BENCHMARK}"
+EXPERIMENT_VAR = "${_EXPERIMENT}"
+
+
+def _identity(name):
+    return name.replace(FUZZER_VAR, "fuzzer").replace(BENCHMARK_VAR,
+                                                      "benchmark")
+
+
+def coverage_steps():
+    """Return gcb run steps for coverage."""
+    steps = []
+    step = {}
+    step['name'] = 'gcr.io/cloud-builders/docker'
+    step['args'] = ['run', '-v', '/workspace/out:/host-out']
+    step['args'] += [
+        os.path.join(EXPERIMENT_TAG, 'builders', 'coverage', BENCHMARK_VAR)
+        + ':' + EXPERIMENT_VAR
+    ]
+    step['args'] += ['/bin/bash', '-c']
+    step['args'] += [
+        'cd /out; tar -czvf /host-out/coverage-build-' + BENCHMARK_VAR +
+        '.tar.gz *'
+    ]
+    steps.append(step)
+    step = {}
+    step['name'] = 'gcr.io/cloud-builders/gsutil'
+    step['args'] = ['-m', 'cp']
+    step['args'] += [
+        '/workspace/out/coverage-build-' + BENCHMARK_VAR + '.tar.gz'
+    ]
+    step['args'] += ['${_GCS_COVERAGE_BINARIES_DIR}/']
+    steps.append(step)
+    return steps
 
 
 # TODO(Tanq16): Add unit test for this.
-def create_cloud_build_spec(buildable_images, docker_registry):
-    """Returns Cloud Build specificatiion."""
+def create_cloud_build_spec(images_template, base=False):
+    """Returns Cloud Build specification."""
 
     cloud_build_spec = {}
     cloud_build_spec['steps'] = []
     cloud_build_spec['images'] = []
 
-    for name, image in buildable_images.items():
+    for name, image in images_template.items():
         step = {}
-        step['id'] = name
+        step['id'] = _identity(name)
+        step['env'] = ['DOCKER_BUILDKIT=1']
         step['name'] = 'gcr.io/cloud-builders/docker'
-        step['args'] = []
-        step['args'] += ['--tag', image['tag']]
-        step['args'] += ['--cache-from', docker_registry + image['tag']]
+        step['args'] = ['build']
+        step['args'] += [
+            '--tag', os.path.join(BASE_TAG, image['tag']), '--tag',
+            os.path.join(EXPERIMENT_TAG, image['tag']) + ':' + EXPERIMENT_VAR
+        ]
+        step['args'] += ['--cache-from']
+        step['args'] += [os.path.join(EXPERIMENT_TAG, image['tag'])]
         step['args'] += ['--build-arg', 'BUILDKIT_INLINE_CACHE=1']
         if 'build_arg' in image:
             for build_arg in image['build_arg']:
@@ -45,33 +87,63 @@ def create_cloud_build_spec(buildable_images, docker_registry):
         if 'depends_on' in image:
             step['wait_for'] = []
             for dep in image['depends_on']:
-                step['wait_for'] += [dep]
-        cloud_build_spec['images'].append(name)
+                if 'base' in dep and not base:
+                    continue
+                step['wait_for'] += [_identity(dep)]
+            if len(step['wait_for']) == 0:
+                del step['wait_for']
+
+        cloud_build_spec['images'].append(
+            os.path.join(EXPERIMENT_TAG, image['tag']) + ':' + EXPERIMENT_VAR
+        )
+        cloud_build_spec['images'].append(os.path.join(BASE_TAG, image['tag']))
         cloud_build_spec['steps'].append(step)
+
+    if any('coverage' in _ for _ in images_template.keys()):
+        cloud_build_spec['steps'] += coverage_steps()
 
     return cloud_build_spec
 
 
-def main():
-    """Generates Cloud Build specification."""
-    parser = argparse.ArgumentParser(description='GCB spec generator.')
-    parser.add_argument('-r',
-                        '--docker-registry',
-                        default='gcr.io/fuzzbench/',
-                        help='Docker registry to use.')
-    args = parser.parse_args()
-
-    # TODO(Tanq16): Create fuzzer/benchmark list dynamically.
-    fuzzers = ['afl', 'libfuzzer']
-    benchmarks = ['libxml', 'libpng']
-    buildable_images = docker_images.get_images_to_build(fuzzers, benchmarks)
-    cloud_build_spec = create_cloud_build_spec(buildable_images,
-                                               args.docker_registry)
-    # Build spec can be yaml or json, use whichever:
-    # https://cloud.google.com/cloud-build/docs/configuring-builds/create-basic-configuration
-    print(yaml.dump(cloud_build_spec))
-    print(json.dumps(cloud_build_spec))
+def _get_buildable_images():
+    return docker_images.get_images_to_build([FUZZER_VAR], [BENCHMARK_VAR])
 
 
-if __name__ == '__main__':
-    main()
+def generate_base_images_build_spec():
+    """Returns build spec for base images."""
+    buildable_images = _get_buildable_images()
+    images_template = {}
+    for name in buildable_images:
+        if 'base' in name:
+            images_template[name] = buildable_images[name]
+    return create_cloud_build_spec(images_template, base=True)
+
+
+def generate_benchmark_images_build_spec():
+    """Returns build spec for standard benchmarks."""
+    buildable_images = _get_buildable_images()
+    images_template = {}
+    for name in buildable_images:
+        if any(_ in name for _ in ('base', 'coverage')):
+            continue
+        images_template[name] = buildable_images[name]
+    return create_cloud_build_spec(images_template)
+
+
+def generate_coverage_images_build_spec():
+    """Returns build spec for OSS-Fuzz benchmarks."""
+    buildable_images = _get_buildable_images()
+    images_template = {}
+    for name in buildable_images:
+        if 'coverage' in name:
+            images_template[name] = buildable_images[name]
+    return create_cloud_build_spec(images_template)
+
+
+def write_spec(filename, data):
+    """Write build spec to specified file."""
+    file_path = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
+                             'docker', 'gcb', filename)
+    if not os.path.exists(os.path.dirname(file_path)):
+        os.makedirs(os.path.dirname(file_path))
+    yaml_utils.write(file_path, data)
