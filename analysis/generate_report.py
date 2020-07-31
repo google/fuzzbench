@@ -24,6 +24,7 @@ from analysis import experiment_results
 from analysis import plotting
 from analysis import queries
 from analysis import rendering
+from analysis import report_utils
 from common import filesystem
 from common import logs
 
@@ -119,6 +120,7 @@ def get_arg_parser():
 # pylint: disable=too-many-arguments,too-many-locals
 def generate_report(experiment_names,
                     report_directory,
+                    logger,
                     report_name=None,
                     label_by_experiment=False,
                     benchmarks=None,
@@ -149,6 +151,22 @@ def generate_report(experiment_names,
         # Save the raw data along with the report.
         experiment_df.to_csv(data_path)
 
+    # Fetch source files for each benchmark.
+    benchmark_names = experiment_df.benchmark.unique()
+    fuzzer_names = experiment_df.fuzzer.unique()
+    try:
+        report_utils.fetch_source_files(benchmark_names, report_directory)
+        report_utils.fetch_binary_files(benchmark_names, report_directory)
+        report_utils.get_profdata_files(experiment_names[0], fuzzer_names,
+                                        benchmark_names, report_directory,
+                                        logger)
+    except Exception:
+        logger.error('Failed when fetching files for coverage report.')
+
+    # Generate coverage reports for each benchmark.
+    
+
+
     data_utils.validate_data(experiment_df)
 
     if benchmarks is not None:
@@ -167,7 +185,6 @@ def generate_report(experiment_names,
         experiment_df = data_utils.clobber_experiments_data(
             experiment_df, experiment_names)
 
-    fuzzer_names = experiment_df.fuzzer.unique()
     plotter = plotting.Plotter(fuzzer_names, quick, log_scale)
     experiment_ctx = experiment_results.ExperimentResults(
         experiment_df, report_directory, plotter, experiment_name=report_name)
