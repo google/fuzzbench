@@ -11,6 +11,14 @@
   depends_on:
     - 'base-image'
 
+# TODO: It would be better to call this benchmark builder. But that would be
+# confusing because this doesn't involve benchmark-builder/Dockerfile. Rename
+# that and then rename this.
+'{benchmark}-project-builder':
+  tag: 'builders/benchmark/{benchmark}'
+  context: 'benchmarks/{benchmark}'
+  dockerfile: 'benchmarks/{benchmark}/Dockerfile'
+
 'coverage-{benchmark}-builder-intermediate':
   tag: 'builders/coverage/{benchmark}-intermediate'
   context: 'fuzzers/coverage'
@@ -30,14 +38,6 @@
     - 'benchmark={benchmark}'
   depends_on:
     - 'coverage-{benchmark}-builder-intermediate'
-
-# TODO: It would be better to call this benchmark builder. But that would be
-# confusing because this doesn't involve benchmark-builder/Dockerfile. Rename
-# that and then rename this.
-'{benchmark}-project-builder':
-  tag: 'builders/benchmark/{benchmark}'
-  context: 'benchmarks/{benchmark}'
-  dockerfile: 'benchmarks/{benchmark}/Dockerfile'
 
 '{fuzzer}-{benchmark}-builder-intermediate':
   tag: 'builders/{fuzzer}/{benchmark}-intermediate'

@@ -1,7 +1,5 @@
 benchmarks:
-    - freetype2-2017
     - libpng-1.2.56
 fuzzers:
-    - afl
     - libfuzzer
 max_total_time: 3600
