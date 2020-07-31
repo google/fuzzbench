@@ -15,7 +15,6 @@
 
 import os
 
-from common import yaml_utils
 from experiment.build import docker_images
 
 BASE_TAG = 'gcr.io/fuzzbench'
