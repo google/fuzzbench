@@ -64,7 +64,7 @@ def get_profdata_files(experiment, benchmarks, fuzzers, report_dir, logger):
                 get_profdata_file_path(fuzzer, benchmark, trial_id)
                 for trial_id in trial_ids
             ]
-            logger.info('files to merge is :{files}'.format(files = str(files_to_merge)))
+            logger.info('files to merge is :{files}'.format(files=str(files_to_merge)))
             dst_dir = os.path.join(report_dir, benchmark, fuzzer)
             filesystem.create_directory(dst_dir)
             dst_file = os.path.join(dst_dir, 'merged.profdata')

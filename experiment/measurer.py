@@ -82,6 +82,7 @@ def get_trial_ids(experiment: str, fuzzer: str, benchmark: str):
             fuzzer, models.Trial.benchmark == benchmark,
             ~models.Trial.preempted)
     ]
+    logger.info('trials ids ={ids}'.format(str(trial_ids)))
     return trial_ids
 
 
