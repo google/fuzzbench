@@ -63,7 +63,7 @@
   depends_on:
     - '{fuzzer}-{benchmark}-builder-intermediate'
 
-'{fuzzer}-{benchmark}-runner-intermediate':
+'{fuzzer}-{benchmark}-intermediate-runner':
   tag: 'runners/{fuzzer}/{benchmark}-intermediate'
   context: 'fuzzers/{fuzzer}'
   dockerfile: 'fuzzers/{fuzzer}/runner.Dockerfile'
@@ -78,4 +78,4 @@
     - 'fuzzer={fuzzer}'
     - 'benchmark={benchmark}'
   depends_on:
-    - '{fuzzer}-{benchmark}-runner-intermediate'
+    - '{fuzzer}-{benchmark}-intermediate-runner'
