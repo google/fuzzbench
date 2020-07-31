@@ -87,8 +87,8 @@ def filter_fuzzers_from_experiments(experiment_df, fuzzers_from_experiments):
     def make_fuzzer_experiment_tuple(row):
         return (row['fuzzer'], row['experiment'])
 
-    fuzzer_and_benchmark = experiment_df.apply(
-        make_fuzzer_experiment_tuple, axis=1)
+    fuzzer_and_benchmark = experiment_df.apply(make_fuzzer_experiment_tuple,
+                                               axis=1)
 
     return experiment_df[fuzzer_and_benchmark.isin(fuzzers_from_experiments)]
 
