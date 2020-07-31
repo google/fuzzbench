@@ -21,6 +21,7 @@ from common import experiment_path as exp_path
 from common import filesystem
 from common import experiment_utils
 from common import new_process
+from common import benchmark_utils
 from experiment.build import build_utils
 from experiment import measurer
 
@@ -91,6 +92,19 @@ def generate_cov_reports(benchmarks, fuzzers, logger):
 
 def generate_cov_report(benchmark, fuzzer, report_dir, logger):
     dst_dir = os.path.join(report_dir, benchmark, fuzzer)
+    fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
+    profdata_file_path = os.path.join(dst_dir, 'merged.profdata')
+    binary_file_path = os.path.join(report_dir, benchmark, fuzz_target)
+    source_file_path_prefix = os.path.join(report_dir, benchmark, 'src-files')
     command = ['llvm-cov', 'show', '-format=html',
-                '-output-dir=$REPORT_ROOT_DIR' \
-    -Xdemangler c++filt -Xdemangler -n $LLVM_COV_ARGS]
+               '-path-equivalence=/,{prefix}'.format(
+                   prefix=source_file_path_prefix),
+               '-output-dir={dst_dir}'.format(dst_dir=dst_dir),
+               '-Xdemangler', 'c++filt', '-Xdemangler', '-n', binary_file_path,
+               '-instr-profile={profdata}'.format(profdata=profdata_file_path)]
+    result = new_process.execute(command, expect_zero=False)
+    if result.retcode != 0:
+        logger.error(
+            'Coverage report generation failed for fuzzer:{fuzzer},\
+             benchmark:{benchmark}.'.format(fuzzer=fuzzer, benchmark=benchmark)
+            )

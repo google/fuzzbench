@@ -166,8 +166,8 @@ def generate_report(experiment_names,
             logger.error('Failed when fetching files for coverage report.')
 
     # Generate coverage reports for each benchmark.
-    """report_utils.generate_cov_reports(benchmark_names, fuzzer_names,
-                                      report_directory, logger)"""
+    #report_utils.generate_cov_reports(benchmark_names, fuzzer_names,
+     #                                 report_directory, logger)
 
 
     data_utils.validate_data(experiment_df)
