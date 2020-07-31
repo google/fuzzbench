@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/fuzzbench/base-runner
+FROM gcr.io/fuzzbench/base-image
 
 # Install dotnet, qemu and other Eclipser deps.
 RUN sed -i -- 's/# deb-src/deb-src/g' /etc/apt/sources.list

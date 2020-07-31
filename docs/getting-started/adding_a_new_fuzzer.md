@@ -65,7 +65,7 @@ This file defines the image that will be used to run benchmarks with your
 fuzzer. Making this lightweight allows trial instances to be spun up fast.
 
 ```dockerfile
-FROM gcr.io/fuzzbench/base-runner          # Base runner image (Ubuntu 16.04).
+FROM gcr.io/fuzzbench/base-image           # Base image (Ubuntu 16.04).
 
 RUN apt-get update && \                    # Install any runtime dependencies for your fuzzer.
     apt-get install pkg1 pkg2

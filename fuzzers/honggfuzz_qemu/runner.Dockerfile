@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/fuzzbench/base-runner
+FROM gcr.io/fuzzbench/base-image
 
 # honggfuzz requires libfd and libunwid
 RUN apt-get update -y && apt-get install -y libbfd-dev libunwind-dev

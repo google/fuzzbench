@@ -40,7 +40,16 @@ FROM gcr.io/fuzzbench/builders/$fuzzer/$benchmark AS builder
 # runner.Dockerfile of each fuzzer.
 FROM gcr.io/fuzzbench/runners/$fuzzer/$benchmark-intermediate
 
+# Install runtime dependencies for benchmarks.
+
+RUN apt-get update -y && apt-get install -y \
+    libglib2.0-0 \
+    libxml2 \
+    libarchive13 \
+    libgss3
+
 # Set up the directory for the build artifacts.
+ENV OUT /out
 ENV WORKDIR /out
 RUN mkdir -p $WORKDIR
 WORKDIR $WORKDIR

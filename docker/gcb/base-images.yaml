@@ -13,9 +13,8 @@
 # limitations under the License.
 
 # The order of execution is as follows:
-# 1. Pull base-image, base-runner.
+# 1. Pull base-image.
 # 2. After pulling base-image completes: Build base-image.
-# 3. After pulling base-runner and building base-image completes: Build base-runner.
 # This is optimized to take advantage of concurrency and caching as much as
 # possible. When nothing changes, this does build takes two minutes to complete
 # instead of ten.'
@@ -53,36 +52,6 @@ steps:
   ]
   id: 'base-image'
 
-# Pull base-runner to fill cache.
-- name: 'gcr.io/cloud-builders/docker'
-  entrypoint: 'bash'
-  args:
-    - '-c'
-    - |
-      docker pull ${_REPO}/base-runner || exit 0
-  id: 'base-runner-pull'
-  wait_for: ['-']  # Start this immediately.
-
-- name: 'gcr.io/cloud-builders/docker'
-  args: [
-    'build',
-
-    '--tag',
-    'gcr.io/fuzzbench/base-builder',
-
-    '--tag',
-    '${_REPO}/base-runner:${_EXPERIMENT}',
-
-    '--cache-from',
-    '${_REPO}/base-runner',
-
-    'docker/base-runner'
-  ]
-  # Wait for pull and building base-image to finish.
-  wait_for: ['base-image', 'base-runner-pull']
-
 images:
   - '${_REPO}/base-image:${_EXPERIMENT}'
   - '${_REPO}/base-image'
-  - '${_REPO}/base-runner:${_EXPERIMENT}'
-  - '${_REPO}/base-runner'
