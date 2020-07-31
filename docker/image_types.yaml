@@ -28,7 +28,6 @@
     - 'parent_image=gcr.io/fuzzbench/builders/coverage/{benchmark}-intermediate'
     - 'fuzzer=coverage'
     - 'benchmark={benchmark}'
-    - 'parent_image=gcr.io/fuzzbench/builders/benchmark/{benchmark}'
   depends_on:
     - 'coverage-{benchmark}-builder-intermediate'
 
