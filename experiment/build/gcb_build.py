@@ -78,8 +78,7 @@ def _build(config: Dict[str, str],
            timeout_seconds: int = GCB_BUILD_TIMEOUT
           ) -> new_process.ProcessResult:
     """Build each of |args| on gcb."""
-    config_file = os.path.join(utils.ROOT_DIR, 'docker', 'gcb',
-                               'cloudbuild.yaml')
+    config_file = os.path.join(utils.ROOT_DIR, 'docker', 'cloudbuild.yaml')
     yaml_utils.write(config_file, config)
     config_arg = '--config=%s' % config_file
     machine_type_arg = '--machine-type=%s' % GCB_MACHINE_TYPE
@@ -119,6 +118,7 @@ def _build(config: Dict[str, str],
                                  kill_children=True,
                                  timeout=timeout_seconds)
     build_utils.store_build_logs(config_name, result)
+    os.remove(config_file)
     return result
 
 
