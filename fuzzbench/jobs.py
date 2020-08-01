@@ -19,19 +19,17 @@ import subprocess
 BASE_TAG = 'gcr.io/fuzzbench'
 
 
-def build_image(job_obj):
+def build_image(image):
     """Builds a Docker image and returns whether it succeeds."""
-    image_tag = os.path.join(BASE_TAG, job_obj['tag'])
+    image_tag = os.path.join(BASE_TAG, image['tag'])
     subprocess.run(['docker', 'pull', image_tag], check=True)
-    command = ['docker', 'build', '--tag', image_tag, job_obj['context']]
+    command = ['docker', 'build', '--tag', image_tag, image['context']]
     cpu_options = ['--cpu-period', '100000', '--cpu-quota', '100000']
     command.extend(cpu_options)
-    dockerfile = job_obj.get('dockerfile', None)
-    if dockerfile:
-        command.extend(['--file', dockerfile])
-    buildargs = job_obj.get('build_arg', None)
-    if buildargs:
-        for arg in buildargs:
+    if 'dockerfile' in image:
+        command.extend(['--file', image['dockerfile']])
+    if 'build_arg' in image:
+        for arg in image['build_arg']:
             command.extend(['--build-arg', arg])
     subprocess.run(command, check=True)
     return True

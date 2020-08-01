@@ -22,8 +22,6 @@ from common import config_utils, environment, yaml_utils
 from experiment.build import docker_images
 from fuzzbench import jobs
 
-redis_connection = redis.Redis(host="queue-server")  # pylint: disable=invalid-name
-
 
 def run_experiment(config):
     """Main experiment logic."""
@@ -35,22 +33,14 @@ def run_experiment(config):
                                                         config['benchmarks'])
     jobs_list = []
     for name, obj in images_to_build.items():
-        if 'depends_on' not in obj:
-            jobs_list.append(
-                queue.enqueue(jobs.build_image,
-                              job_obj=obj,
-                              job_timeout=1800,
-                              result_ttl=config['max_total_time'],
-                              job_id=name))
-            continue
-
+        depends = obj.get('depends_on', None)
         jobs_list.append(
             queue.enqueue(jobs.build_image,
-                          job_obj=obj,
+                          image=obj,
                           job_timeout=1800,
-                          result_ttl=config['max_total_time'],
+                          result_ttl=-1,
                           job_id=name,
-                          depends_on=obj['depends_on'][0]))
+                          depends_on=None if not depends else depends[0]))
 
     while True:
         print('Current status of jobs:')
@@ -70,9 +60,10 @@ def run_experiment(config):
 
 def main():
     """Set up Redis connection and start the experiment."""
+    redis_connection = redis.Redis(host="queue-server")
+
     config_path = environment.get('EXPERIMENT_CONFIG', 'config.yaml')
     config = yaml_utils.read(config_path)
-
     config = config_utils.validate_and_expand(config)
 
     with rq.Connection(redis_connection):
