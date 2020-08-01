@@ -79,18 +79,21 @@ def fetch_binary_files(benchmarks, report_dir):
         filesystem.copy(src_file, dst_dir)
 
 
-def generate_cov_reports(benchmarks, fuzzers, logger):
+def generate_cov_reports(benchmarks, fuzzers, report_dir, logger):
+    """Generate coverage reports for each benchmark and fuzzer."""
     logger.info('Start generating coverage report for benchmarks.')
-    with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
-        q = manager.Queue()  # pytype: disable=attribute-error
-        generate_cov_report_args = [(benchmark, fuzzer) 
+    with multiprocessing.Pool() as pool:
+        generate_cov_report_args = [(benchmark, fuzzer, report_dir, logger)
                                     for benchmark in benchmarks
                                     for fuzzer in fuzzers]
         result = pool.starmap_async(generate_cov_report, generate_cov_report_args)
+        while not result.ready():
+            pass
     logger.info('Finished generating coverage report.')
 
 
 def generate_cov_report(benchmark, fuzzer, report_dir, logger):
+    """Generate the coverage report for one pair of benchmark and fuzzer."""
     dst_dir = os.path.join(report_dir, benchmark, fuzzer)
     fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
     profdata_file_path = os.path.join(dst_dir, 'merged.profdata')
