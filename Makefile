@@ -33,7 +33,7 @@ run-end-to-end-test stop-end-to-end-test: export COMPOSE_FILE := compose/fuzzben
 run-end-to-end-test:
 	docker-compose build
 	docker-compose up --detach queue-server
-	docker-compose up --scale worker=6 run-experiment worker
+	docker-compose up --scale worker=3 run-experiment worker
 	docker-compose run run-tests; STATUS=$$?; \
 	docker-compose down; exit $$STATUS
 
