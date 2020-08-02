@@ -28,6 +28,8 @@ from analysis import report_utils
 from common import filesystem
 from common import logs
 
+logger = logs.Logger('reporter')
+
 
 def get_arg_parser():
     """Returns argument parser."""
@@ -120,7 +122,6 @@ def get_arg_parser():
 # pylint: disable=too-many-arguments,too-many-locals
 def generate_report(experiment_names,
                     report_directory,
-                    logger,
                     report_name=None,
                     label_by_experiment=False,
                     benchmarks=None,
@@ -155,18 +156,19 @@ def generate_report(experiment_names,
     benchmark_names = experiment_df.benchmark.unique()
     fuzzer_names = experiment_df.fuzzer.unique()
     if not in_progress:
-        logger.info('Fetching files for coverage report.')
+        logger.info('Generating coverage reports.')
         try:
-            report_utils.fetch_source_files(benchmark_names, report_directory)
-            report_utils.fetch_binary_files(benchmark_names, report_directory)
-            report_utils.get_profdata_files(experiment_names[0], benchmark_names,
-                                            fuzzer_names, report_directory,
-                                            logger)
+            if not from_cached_data:
+                report_utils.fetch_source_files(benchmark_names, report_directory)
+                report_utils.fetch_binary_files(benchmark_names, report_directory)
+                report_utils.get_profdata_files(experiment_names[0], benchmark_names,
+                                                fuzzer_names, report_directory)
+                                                
             # Generate coverage reports for each benchmark.
             report_utils.generate_cov_reports(benchmark_names, fuzzer_names,
-                                              report_directory, logger)
+                                              report_directory)
         except Exception:
-            logger.error('Failed when fetching files for coverage report.')
+            logger.error('Failed when generating coverage reports.')
 
     data_utils.validate_data(experiment_df)
 

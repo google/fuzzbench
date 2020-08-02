@@ -16,14 +16,15 @@
 import os
 import multiprocessing
 
-from common import filestore_utils
-from common import experiment_path as exp_path
 from common import filesystem
 from common import experiment_utils
 from common import new_process
 from common import benchmark_utils
+from common import logs
 from experiment.build import build_utils
 from experiment import measurer
+
+logger = logs.Logger('reporter')  # pylint: disable=invalid-name
 
 
 def get_profdata_file_path(fuzzer, benchmark, trial_id):
@@ -36,7 +37,7 @@ def get_profdata_file_path(fuzzer, benchmark, trial_id):
     return os.path.join(measurement_dir, 'reports', 'data.profdata')
 
 
-def merge_profdata_files(src_files, dst_file, logger):
+def merge_profdata_files(src_files, dst_file):
     """Merge profdata files from |src_files| to |dst_files|."""
     command = ['llvm-profdata', 'merge', '-sparse'
               ] + src_files + ['-o', dst_file]
@@ -54,7 +55,7 @@ def fetch_source_files(benchmarks, report_dir):
         filesystem.copytree(src_path, dst_dir)
 
 
-def get_profdata_files(experiment, benchmarks, fuzzers, report_dir, logger):
+def get_profdata_files(experiment, benchmarks, fuzzers, report_dir):
     """Get profdata files to |report_dir|."""
     for benchmark in benchmarks:
         for fuzzer in fuzzers:
@@ -68,7 +69,7 @@ def get_profdata_files(experiment, benchmarks, fuzzers, report_dir, logger):
             dst_dir = os.path.join(report_dir, benchmark, fuzzer)
             filesystem.create_directory(dst_dir)
             dst_file = os.path.join(dst_dir, 'merged.profdata')
-            merge_profdata_files(files_to_merge, dst_file, logger)
+            merge_profdata_files(files_to_merge, dst_file)
 
 
 def fetch_binary_files(benchmarks, report_dir):
@@ -79,11 +80,11 @@ def fetch_binary_files(benchmarks, report_dir):
         filesystem.copy(src_file, dst_dir)
 
 
-def generate_cov_reports(benchmarks, fuzzers, report_dir, logger):
+def generate_cov_reports(benchmarks, fuzzers, report_dir):
     """Generate coverage reports for each benchmark and fuzzer."""
     logger.info('Start generating coverage report for benchmarks.')
     with multiprocessing.Pool() as pool:
-        generate_cov_report_args = [(benchmark, fuzzer, report_dir, logger)
+        generate_cov_report_args = [(benchmark, fuzzer, report_dir)
                                     for benchmark in benchmarks
                                     for fuzzer in fuzzers]
         result = pool.starmap_async(generate_cov_report, generate_cov_report_args)
@@ -92,8 +93,10 @@ def generate_cov_reports(benchmarks, fuzzers, report_dir, logger):
     logger.info('Finished generating coverage report.')
 
 
-def generate_cov_report(benchmark, fuzzer, report_dir, logger):
+def generate_cov_report(benchmark, fuzzer, report_dir):
     """Generate the coverage report for one pair of benchmark and fuzzer."""
+    logger.info('Generating coverage report for benchmark:{benchmark} \
+                fuzzer:{fuzzer}'.format(benchmark=benchmark, fuzzer=fuzzer))
     dst_dir = os.path.join(report_dir, benchmark, fuzzer)
     fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
     profdata_file_path = os.path.join(dst_dir, 'merged.profdata')
