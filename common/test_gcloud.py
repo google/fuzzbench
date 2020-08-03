@@ -39,7 +39,7 @@ def test_create_instance():
             '--image-project=cos-cloud',
             '--zone=zone-a',
             '--scopes=cloud-platform',
-            '--machine-type=n1-standard-96',
+            '--machine-type=n1-highmem-96',
             '--boot-disk-size=4TB',
             '--boot-disk-type=pd-ssd',
         ]]
