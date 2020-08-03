@@ -163,6 +163,7 @@ def get_covered_region(experiment: str, fuzzer: str, benchmark: str,
                                       })
         snapshot_measurer = SnapshotMeasurer(fuzzer, benchmark, trial_id,
                                              snapshot_logger)
+        snapshot_measurer.generate_summary(0, summary_only=False)
         new_covered_regions = snapshot_measurer.get_current_covered_regions()
         covered_regions[key] = covered_regions[key].union(new_covered_regions)
     q.put(covered_regions)
@@ -536,21 +537,29 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             self.logger.error(
                 'Coverage profdata generation failed for cycle: %d.', cycle)
 
-    def generate_summary(self, cycle: int):
+    def generate_summary(self, cycle: int, summary_only=True):
         """Transform the .profdata file into json form."""
         coverage_binary = get_coverage_binary(self.benchmark)
         command = [
             'llvm-cov', 'export', '-format=text', coverage_binary,
             '-instr-profile=%s' % self.profdata_file
         ]
+
+        if summary_only:
+            command.append('-summary-only')
+
         with open(self.cov_summary_file, 'w') as output_file:
             result = new_process.execute(command,
                                          output_file=output_file,
                                          expect_zero=False)
         if result.retcode != 0:
-            self.logger.error(
-                'Coverage summary json file generation failed for \
-                    cycle: %d.', cycle)
+            if cycle != 0:
+                self.logger.error(
+                    'Coverage summary json file generation failed for \
+                        cycle: %d.', cycle)
+            else:
+                self.logger.error(
+                    'Coverage summary json file generation failed in the end.')
 
     def generate_coverage_information(self, cycle: int):
         """Generate the .profdata file and then transform it into
