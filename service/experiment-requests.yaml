@@ -19,7 +19,7 @@
 # are still testing this feature. You should request an experiment by contacting
 # us as you normally do.
 
-- experiment: 2020-08-01
+- experiment: 2020-08-02
   fuzzers:
     - afl
     - aflfast
@@ -40,6 +40,8 @@
     - mopt
     - libfuzzer_keepseed
     - entropic_keepseed
+    - libfuzzer_interceptors
+    - entropic_interceptors
 
 - experiment: 2020-07-30
   fuzzers:
