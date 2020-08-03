@@ -60,12 +60,10 @@ def get_profdata_files(experiment, benchmarks, fuzzers, report_dir):
     for benchmark in benchmarks:
         for fuzzer in fuzzers:
             trial_ids = measurer.get_trial_ids(experiment, fuzzer, benchmark)
-            logger.info('trial ids for profdata is:{trial}'.format(trial=str(trial_ids)))
             files_to_merge = [
                 get_profdata_file_path(fuzzer, benchmark, trial_id)
                 for trial_id in trial_ids
             ]
-            logger.info('files to merge is :{files}'.format(files=str(files_to_merge)))
             dst_dir = os.path.join(report_dir, benchmark, fuzzer)
             filesystem.create_directory(dst_dir)
             dst_file = os.path.join(dst_dir, 'merged.profdata')
@@ -87,16 +85,16 @@ def generate_cov_reports(benchmarks, fuzzers, report_dir):
         generate_cov_report_args = [(benchmark, fuzzer, report_dir)
                                     for benchmark in benchmarks
                                     for fuzzer in fuzzers]
-        result = pool.starmap_async(generate_cov_report, generate_cov_report_args)
-        while not result.ready():
-            pass
+        pool.starmap_async(generate_cov_report, generate_cov_report_args)
+        pool.close()
+        pool.join()
     logger.info('Finished generating coverage report.')
 
 
 def generate_cov_report(benchmark, fuzzer, report_dir):
     """Generate the coverage report for one pair of benchmark and fuzzer."""
     logger.info('Generating coverage report for benchmark:{benchmark} \
-                fuzzer:{fuzzer}'.format(benchmark=benchmark, fuzzer=fuzzer))
+                fuzzer:{fuzzer}.'.format(benchmark=benchmark, fuzzer=fuzzer))
     dst_dir = os.path.join(report_dir, benchmark, fuzzer)
     fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
     profdata_file_path = os.path.join(dst_dir, 'merged.profdata')
@@ -114,3 +112,5 @@ def generate_cov_report(benchmark, fuzzer, report_dir):
             'Coverage report generation failed for fuzzer:{fuzzer},\
              benchmark:{benchmark}.'.format(fuzzer=fuzzer, benchmark=benchmark)
             )
+    logger.info('Finished generating coverage report for benchmark:{benchmark} \
+                fuzzer:{fuzzer}.'.format(benchmark=benchmark, fuzzer=fuzzer))

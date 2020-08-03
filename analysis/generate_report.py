@@ -152,24 +152,6 @@ def generate_report(experiment_names,
         # Save the raw data along with the report.
         experiment_df.to_csv(data_path)
 
-    # Fetch source files for each benchmark.
-    benchmark_names = experiment_df.benchmark.unique()
-    fuzzer_names = experiment_df.fuzzer.unique()
-    if not in_progress:
-        logger.info('Generating coverage reports.')
-        try:
-            if not from_cached_data:
-                report_utils.fetch_source_files(benchmark_names, report_directory)
-                report_utils.fetch_binary_files(benchmark_names, report_directory)
-                report_utils.get_profdata_files(experiment_names[0], benchmark_names,
-                                                fuzzer_names, report_directory)
-                                                
-            # Generate coverage reports for each benchmark.
-            report_utils.generate_cov_reports(benchmark_names, fuzzer_names,
-                                              report_directory)
-        except Exception:
-            logger.error('Failed when generating coverage reports.')
-
     data_utils.validate_data(experiment_df)
 
     if benchmarks is not None:
@@ -187,6 +169,24 @@ def generate_report(experiment_names,
     if merge_with_clobber:
         experiment_df = data_utils.clobber_experiments_data(
             experiment_df, experiment_names)
+    
+    # Generate coverge reports for each benchmark.
+    benchmark_names = experiment_df.benchmark.unique()
+    fuzzer_names = experiment_df.fuzzer.unique()
+    if not in_progress:
+        logger.info('Generating coverage reports.')
+        try:
+            if not from_cached_data:
+                report_utils.fetch_source_files(benchmark_names, report_directory)
+                report_utils.fetch_binary_files(benchmark_names, report_directory)
+                report_utils.get_profdata_files(experiment_names[0], benchmark_names,
+                                                fuzzer_names, report_directory)
+                                                
+            # Generate coverage reports for each benchmark.
+            report_utils.generate_cov_reports(benchmark_names, fuzzer_names,
+                                              report_directory)
+        except Exception:
+            logger.error('Failed when generating coverage reports.')
 
     plotter = plotting.Plotter(fuzzer_names, quick, log_scale)
     experiment_ctx = experiment_results.ExperimentResults(
