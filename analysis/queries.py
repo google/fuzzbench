@@ -53,6 +53,8 @@ def add_nonprivate_experiments_for_merge_with_clobber(experiment_names):
 
 
 def get_fuzzers_and_experiments(nonprivate=True):
+    """Returns a query for fuzzers and an experiment it ran in. Each item is
+    unique."""
     trials_query = db_utils.query(
         Trial.fuzzer,\
         Trial.experiment)\
