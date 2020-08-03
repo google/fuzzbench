@@ -545,7 +545,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             '-instr-profile=%s' % self.profdata_file
         ]
 
-        if summary:
+        if summary_only:
             command.append('-summary-only')
 
         with open(self.cov_summary_file, 'w') as output_file:
