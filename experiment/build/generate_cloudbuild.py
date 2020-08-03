@@ -14,126 +14,125 @@
 """Generates Cloud Build specification"""
 
 import os
+import posixpath
 
 from experiment.build import docker_images
 
 BASE_TAG = 'gcr.io/fuzzbench'
-EXPERIMENT_TAG = "${_REPO}"
-FUZZER_VAR = "${_FUZZER}"
-BENCHMARK_VAR = "${_BENCHMARK}"
-EXPERIMENT_VAR = "${_EXPERIMENT}"
+EXPERIMENT_REPO = '${_REPO}'
+EXPERIMENT_VAR = '${_EXPERIMENT}'
 
 
-def _identity(name):
-    return name.replace(FUZZER_VAR, "fuzzer").replace(BENCHMARK_VAR,
-                                                      "benchmark")
+def get_experiment_tag_for_image(image):
+    """Returns the registry with the experiment tag for given image."""
+    return posixpath.join(EXPERIMENT_REPO, image['tag']) + ':' + EXPERIMENT_VAR
 
 
-def coverage_steps():
-    """Return gcb run steps for coverage."""
-    steps = []
-    step = {}
-    step['name'] = 'gcr.io/cloud-builders/docker'
-    step['args'] = ['run', '-v', '/workspace/out:/host-out']
-    step['args'] += [
-        os.path.join(EXPERIMENT_TAG, 'builders', 'coverage', BENCHMARK_VAR) +
-        ':' + EXPERIMENT_VAR
+def coverage_steps(benchmark):
+    """Returns GCB run steps for coverage builds."""
+    steps = [{
+        'name': 'gcr.io/cloud-builders/docker',
+        'args': [
+            'run', '-v', '/workspace/out:/host-out',
+            os.path.join(EXPERIMENT_REPO, 'builders', 'coverage', benchmark) +
+            ':' + EXPERIMENT_VAR,
+            '/bin/bash', '-c',
+            'cd /out; tar -czvf /host-out/coverage-build-' + benchmark +
+            '.tar.gz *'
+        ]
+    }]
+    step = {'name': 'gcr.io/cloud-builders/gsutil'}
+    step['args'] = [
+        '-m', 'cp',
+        '/workspace/out/coverage-build-' + benchmark + '.tar.gz',
+        '${_GCS_COVERAGE_BINARIES_DIR}/'
     ]
-    step['args'] += ['/bin/bash', '-c']
-    step['args'] += [
-        'cd /out; tar -czvf /host-out/coverage-build-' + BENCHMARK_VAR +
-        '.tar.gz *'
-    ]
-    steps.append(step)
-    step = {}
-    step['name'] = 'gcr.io/cloud-builders/gsutil'
-    step['args'] = ['-m', 'cp']
-    step['args'] += [
-        '/workspace/out/coverage-build-' + BENCHMARK_VAR + '.tar.gz'
-    ]
-    step['args'] += ['${_GCS_COVERAGE_BINARIES_DIR}/']
     steps.append(step)
     return steps
 
 
-def create_cloud_build_spec(images_template, base=False):
-    """Returns Cloud Build specification."""
+def create_cloud_build_spec(image_templates, benchmark=None,
+                            build_base_images=False):
+    """Generates Cloud Build specification.
+    
+    Args:
+      image_templates: Image types and their properties.
+      benchmark: Name of benchmark (required for coverage builds only).
+      build_base_images: True if building only base images.
 
+    Returns:
+      GCB build steps.
+    """
     cloud_build_spec = {}
     cloud_build_spec['steps'] = []
     cloud_build_spec['images'] = []
 
-    for name, image in images_template.items():
-        step = {}
-        step['id'] = _identity(name)
-        step['env'] = ['DOCKER_BUILDKIT=1']
-        step['name'] = 'gcr.io/cloud-builders/docker'
-        step['args'] = ['build']
-        step['args'] += [
-            '--tag',
-            os.path.join(BASE_TAG, image['tag']), '--tag',
-            os.path.join(EXPERIMENT_TAG, image['tag']) + ':' + EXPERIMENT_VAR
+    for name, image_specs in image_templates.items():
+        step = {
+            'id': name,
+            'env': 'DOCKER_BUILDKIT=1',
+            'name': 'gcr.io/cloud-builders/docker'
+        }
+        step['args'] = [
+            'build',
+            '--tag', posixpath.join(BASE_TAG, image_specs['tag']),
+            '--tag', get_experiment_tag_for_image(image_specs),
+            '--cache-from',
+            get_experiment_tag_for_image(image_specs).split(':')[0],
+            '--build-arg', 'BUILDKIT_INLINE_CACHE=1'
         ]
-        step['args'] += ['--cache-from']
-        step['args'] += [os.path.join(EXPERIMENT_TAG, image['tag'])]
-        step['args'] += ['--build-arg', 'BUILDKIT_INLINE_CACHE=1']
-        if 'build_arg' in image:
-            for build_arg in image['build_arg']:
-                step['args'] += ['--build-arg', build_arg]
-        if 'dockerfile' in image:
-            step['args'] += ['--file', image['dockerfile']]
-        step['args'] += [image['context']]
-        if 'depends_on' in image:
-            step['wait_for'] = []
-            for dep in image['depends_on']:
-                if 'base' in dep and not base:
-                    continue
-                step['wait_for'] += [_identity(dep)]
-            if len(step['wait_for']) == 0:
-                del step['wait_for']
+        for build_arg in image_specs.get('build_arg'):
+            step['args'] += ['--build-arg', build_arg]
+        if 'dockerfile' in image_specs:
+            step['args'] += ['--file', image_specs['dockerfile']]
+        step['args'] += [image_specs['path']]
+        step['wait_for'] = []
+        for dep in image_specs.get('depends_on'):
+            # Base images are built before creating fuzzer benchmark builds,
+            # so it's not required to wait for them to build.
+            if 'base' in dep and not build_base_images:
+                continue
+            step['wait_for'] += [dep]
 
-        cloud_build_spec['images'].append(
-            os.path.join(EXPERIMENT_TAG, image['tag']) + ':' + EXPERIMENT_VAR)
-        cloud_build_spec['images'].append(
-            os.path.join(EXPERIMENT_TAG, image['tag']))
         cloud_build_spec['steps'].append(step)
+        cloud_build_spec['images'].append(
+            get_experiment_tag_for_image(image_specs))
+        cloud_build_spec['images'].append(
+            get_experiment_tag_for_image(image_specs).split(':')[0])
 
-    if any('coverage' in _ for _ in images_template.keys()):
-        cloud_build_spec['steps'] += coverage_steps()
+    if any('coverage' in image_name for image_name in image_templates.keys()):
+        cloud_build_spec['steps'] += coverage_steps(benchmark)
 
     return cloud_build_spec
 
 
-def _get_buildable_images():
-    return docker_images.get_images_to_build([FUZZER_VAR], [BENCHMARK_VAR])
+def _get_buildable_images(fuzzers, benchmarks):
+    return docker_images.get_images_to_build(fuzzers, benchmarks)
 
 
 def generate_base_images_build_spec():
     """Returns build spec for base images."""
-    buildable_images = _get_buildable_images()
-    images_template = {}
-    for name in buildable_images:
-        if 'base' in name:
-            images_template[name] = buildable_images[name]
-    return create_cloud_build_spec(images_template, base=True)
+    buildable_images = _get_buildable_images([''], [''])
+    image_templates = {'base-image': buildable_images['base-image']}
+    return create_cloud_build_spec(image_templates, build_base_images=True)
 
 
-def generate_benchmark_images_build_spec():
-    """Returns build spec for standard benchmarks."""
-    buildable_images = _get_buildable_images()
-    images_template = {}
+def generate_benchmark_build_spec(fuzzers, benchmarks):
+    """Returns build spec for fuzzer-benchmark builds."""
+    buildable_images = _get_buildable_images(fuzzers, benchmarks)
+    image_templates = {}
     for name in buildable_images:
-        if any(_ in name for _ in ('base', 'coverage', 'dispatcher')):
+        if any(image_type in name for image_type in ('base',
+                                                     'coverage', 'dispatcher')):
             continue
-        images_template[name] = buildable_images[name]
-    return create_cloud_build_spec(images_template)
+        image_templates[name] = buildable_images[name]
+    return create_cloud_build_spec(image_templates)
 
 
-def generate_coverage_images_build_spec():
-    """Returns build spec for OSS-Fuzz benchmarks."""
-    buildable_images = _get_buildable_images()
-    images_template = {}
-    for name in buildable_images:
-        if 'coverage' in name:
-            images_template[name] = buildable_images[name]
-    return create_cloud_build_spec(images_template)
+def generate_coverage_build_spec(fuzzers, benchmarks):
+    """Returns build spec for coverage builds."""
+    buildable_images = _get_buildable_images(fuzzers, benchmarks)
+    image_templates = {
+        name: image for name, image in buildable_images.items() if 'coverage' in name
+    }
+    return create_cloud_build_spec(image_templates, benchmark=benchmarks[0])

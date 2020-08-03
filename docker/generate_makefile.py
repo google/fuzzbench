@@ -67,6 +67,7 @@ def _print_makefile_run_template(image):
         print()
 
 
+# TODO(Tanq16): Function must return a string as opposed to printing it.
 def print_rules_for_image(name, image):
     """Print makefile section for given image to stdout."""
     if not ('base' in name or 'dispatcher' in name):
@@ -88,7 +89,7 @@ def print_rules_for_image(name, image):
             print('\t--build-arg ' + arg + ' \\')
     if 'dockerfile' in image:
         print('\t--file ' + image['dockerfile'] + ' \\')
-    print('\t' + image['context'])
+    print('\t' + image['path'])
     print()
 
     # Print run, debug, test-run rules if image is a runner.

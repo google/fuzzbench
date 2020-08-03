@@ -51,28 +51,14 @@ def build_coverage(benchmark):
     coverage_binaries_dir = exp_path.filestore(
         build_utils.get_coverage_binaries_dir())
     substitutions = {
-        '_GCS_COVERAGE_BINARIES_DIR': coverage_binaries_dir,
-        '_BENCHMARK': benchmark,
+        '_GCS_COVERAGE_BINARIES_DIR': coverage_binaries_dir
     }
-    config = generate_cloudbuild.generate_coverage_images_build_spec()
+    config = generate_cloudbuild.generate_coverage_build_spec([''], [benchmark])
     config_name = 'benchmark-{benchmark}-coverage'.format(benchmark=benchmark)
     _build(config, config_name, substitutions)
 
 
-def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
-    """Builds |benchmark| for |fuzzer|."""
-    substitutions = {
-        '_BENCHMARK': benchmark,
-        '_FUZZER': fuzzer,
-    }
-    config = generate_cloudbuild.generate_benchmark_images_build_spec()
-    config_name = 'benchmark-{benchmark}-fuzzer-{fuzzer}'.format(
-        benchmark=benchmark, fuzzer=fuzzer)
-
-    _build(config, config_name, substitutions)
-
-
-def _build(config: Dict[str, str],
+def _build(config: Dict,
            config_name: str,
            substitutions: Dict[str, str] = None,
            timeout_seconds: int = GCB_BUILD_TIMEOUT
@@ -125,3 +111,13 @@ def _build(config: Dict[str, str],
 def get_build_config_file(filename: str) -> str:
     """Return the path of the GCB build config file |filename|."""
     return os.path.join(utils.ROOT_DIR, 'docker', 'gcb', filename)
+
+
+def build_fuzzer_benchmark(fuzzer: str, benchmark: str):
+    """Builds |benchmark| for |fuzzer|."""
+    config = generate_cloudbuild.generate_benchmark_build_spec([fuzzer],
+                                                               [benchmark])
+    config_name = 'benchmark-{benchmark}-fuzzer-{fuzzer}'.format(
+        benchmark=benchmark, fuzzer=fuzzer)
+
+    _build(config, config_name)

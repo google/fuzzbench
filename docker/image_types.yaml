@@ -3,17 +3,17 @@
 
 'base-image':
   tag: 'base-image'
-  context: 'docker/base-image'
+  path: 'docker/base-image'
 
 'dispatcher-image':
   tag: 'dispatcher-image'
-  context: 'docker/dispatcher-image'
+  path: 'docker/dispatcher-image'
   depends_on:
     - 'base-image'
 
 'coverage-{benchmark}-builder-intermediate':
   tag: 'builders/coverage/{benchmark}-intermediate'
-  context: 'fuzzers/coverage'
+  path: 'fuzzers/coverage'
   dockerfile: 'fuzzers/coverage/builder.Dockerfile'
   depends_on:
     - '{benchmark}-project-builder'
@@ -22,7 +22,7 @@
 
 'coverage-{benchmark}-builder':
   tag: 'builders/coverage/{benchmark}'
-  context: '.'
+  path: '.'
   dockerfile: 'docker/benchmark-builder/Dockerfile'
   build_arg:
     - 'parent_image=gcr.io/fuzzbench/builders/coverage/{benchmark}-intermediate'
@@ -36,12 +36,12 @@
 # that and then rename this.
 '{benchmark}-project-builder':
   tag: 'builders/benchmark/{benchmark}'
-  context: 'benchmarks/{benchmark}'
+  path: 'benchmarks/{benchmark}'
   dockerfile: 'benchmarks/{benchmark}/Dockerfile'
 
 '{fuzzer}-{benchmark}-builder-intermediate':
   tag: 'builders/{fuzzer}/{benchmark}-intermediate'
-  context: 'fuzzers/{fuzzer}'
+  path: 'fuzzers/{fuzzer}'
   dockerfile: 'fuzzers/{fuzzer}/builder.Dockerfile'
   depends_on:
     - '{benchmark}-project-builder'
@@ -50,7 +50,7 @@
 
 '{fuzzer}-{benchmark}-builder':
   tag: 'builders/{fuzzer}/{benchmark}'
-  context: '.'
+  path: '.'
   dockerfile: 'docker/benchmark-builder/Dockerfile'
   build_arg:
     - 'parent_image=gcr.io/fuzzbench/builders/{fuzzer}/{benchmark}-intermediate'
@@ -61,14 +61,14 @@
 
 '{fuzzer}-{benchmark}-intermediate-runner':
   tag: 'runners/{fuzzer}/{benchmark}-intermediate'
-  context: 'fuzzers/{fuzzer}'
+  path: 'fuzzers/{fuzzer}'
   dockerfile: 'fuzzers/{fuzzer}/runner.Dockerfile'
   depends_on:
     - '{fuzzer}-{benchmark}-builder'
 
 '{fuzzer}-{benchmark}-runner':
   tag: 'runners/{fuzzer}/{benchmark}'
-  context: '.'
+  path: '.'
   fuzzer: '{fuzzer}'
   benchmark: '{benchmark}'
   dockerfile: 'docker/benchmark-runner/Dockerfile'

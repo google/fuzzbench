@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Generate Makefile test."""
+"""Tests for generate_makefile.py."""
 
 from unittest.mock import patch, call
 
@@ -25,7 +25,7 @@ def test_print_makefile_build(mocked_print):
     name = 'afl-zlib-builder-intermediate'
     image = {
         'tag': 'builders/afl/zlib-intermediate',
-        'context': 'fuzzers/afl',
+        'path': 'fuzzers/afl',
         'dockerfile': 'fuzzers/afl/builder.Dockerfile',
         'depends_on': ['zlib-project-builder'],
         'build_arg': ['parent_image=gcr.io/fuzzbench/builders/benchmark/zlib']
@@ -59,7 +59,7 @@ def test_print_makefile_runner_image(mocked_print):
         'tag': 'runners/afl/zlib',
         'fuzzer': 'afl',
         'benchmark': 'zlib',
-        'context': '.',
+        'path': '.',
         'dockerfile': 'docker/benchmark-runner/Dockerfile',
         'build_arg': ['fuzzer=afl', 'benchmark=zlib'],
         'depends_on': ['afl-zlib-builder', 'afl-zlib-intermediate-runner']
