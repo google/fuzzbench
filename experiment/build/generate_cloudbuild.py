@@ -86,13 +86,13 @@ def create_cloud_build_spec(image_templates,
             get_experiment_tag_for_image(image_specs, experiment),
             '--build-arg', 'BUILDKIT_INLINE_CACHE=1'
         ]
-        for build_arg in image_specs.get('build_arg'):
+        for build_arg in image_specs.get('build_arg', []):
             step['args'] += ['--build-arg', build_arg]
         if 'dockerfile' in image_specs:
             step['args'] += ['--file', image_specs['dockerfile']]
         step['args'] += [image_specs['path']]
         step['wait_for'] = []
-        for dep in image_specs.get('depends_on'):
+        for dep in image_specs.get('depends_on', []):
             # Base images are built before creating fuzzer benchmark builds,
             # so it's not required to wait for them to build.
             if 'base' in dep and not build_base_images:
