@@ -100,17 +100,16 @@ def generate_cov_report(benchmark, fuzzer, report_dir):
     profdata_file_path = os.path.join(dst_dir, 'merged.profdata')
     binary_file_path = os.path.join(report_dir, benchmark, fuzz_target)
     source_file_path_prefix = os.path.join(report_dir, benchmark, 'src-files')
-    command = ['llvm-cov', 'show', '-format=html',
-               '-path-equivalence=/,{prefix}'.format(
-                   prefix=source_file_path_prefix),
-               '-output-dir={dst_dir}'.format(dst_dir=dst_dir),
-               '-Xdemangler', 'c++filt', '-Xdemangler', '-n', binary_file_path,
-               '-instr-profile={profdata}'.format(profdata=profdata_file_path)]
+    command = [
+        'llvm-cov-11', 'show', '-format=html',
+        '-path-equivalence=/,{prefix}'.format(prefix=source_file_path_prefix),
+        '-output-dir={dst_dir}'.format(dst_dir=dst_dir), '-Xdemangler',
+        'c++filt', '-Xdemangler', '-n', binary_file_path,
+        '-instr-profile={profdata}'.format(profdata=profdata_file_path)
+    ]
     result = new_process.execute(command, expect_zero=False)
     if result.retcode != 0:
-        logger.error(
-            'Coverage report generation failed for fuzzer:{fuzzer},\
-             benchmark:{benchmark}.'.format(fuzzer=fuzzer, benchmark=benchmark)
-            )
+        logger.error('Coverage report generation failed for fuzzer:{fuzzer},\
+             benchmark:{benchmark}.'.format(fuzzer=fuzzer, benchmark=benchmark))
     logger.info('Finished generating coverage report for benchmark:{benchmark} \
                 fuzzer:{fuzzer}.'.format(benchmark=benchmark, fuzzer=fuzzer))

@@ -231,7 +231,7 @@
                     </div>
                 </li>
             </ul>
-            
+
             <div class="row">
                 <div class="col s12">
                     <div class="card white darken-1">
@@ -240,12 +240,12 @@
                         <p>Choose the fuzzer to see the coverage report of that fuzzer on this benchmark.</p>
                         </div>
                         <div class="card-action">
-                            <a class='dropdown-trigger btn' href='#' data-target='dropdown1'>FUZZER LIST</a>
+                            <a class='dropdown-trigger btn' href='#' data-target='dropdown-{{ benchmark.name }}'>FUZZER LIST</a>
 
                             <!-- Dropdown Structure -->
-                            <ul id='dropdown1' class='dropdown-content'>
+                            <ul id='dropdown-{{ benchmark.name }}' class='dropdown-content'>
                                 {% for fuzzer in benchmark.fuzzers %}
-                                <li><a href="{{benchmark.name}}/{{fuzzer}}/index.html">{{ fuzzer }}</a></li>
+                                <li><a href="coverage-reports/{{ benchmark.name }}/{{ fuzzer }}/index.html">{{ fuzzer }}</a></li>
                                 {% endfor %}
                             </ul>
                         </div>

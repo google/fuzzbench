@@ -169,23 +169,28 @@ def generate_report(experiment_names,
     if merge_with_clobber:
         experiment_df = data_utils.clobber_experiments_data(
             experiment_df, experiment_names)
-    
+
     # Generate coverge reports for each benchmark.
     benchmark_names = experiment_df.benchmark.unique()
     fuzzer_names = experiment_df.fuzzer.unique()
+    coverage_report_directory = os.path.join(report_directory,
+                                             'coverage-reports')
     if not in_progress:
         logger.info('Generating coverage reports.')
         try:
             if not from_cached_data:
-                report_utils.fetch_source_files(benchmark_names, report_directory)
-                report_utils.fetch_binary_files(benchmark_names, report_directory)
-                report_utils.get_profdata_files(experiment_names[0], benchmark_names,
-                                                fuzzer_names, report_directory)
-                                                
+                report_utils.fetch_source_files(benchmark_names,
+                                                coverage_report_directory)
+                report_utils.fetch_binary_files(benchmark_names,
+                                                coverage_report_directory)
+                report_utils.get_profdata_files(experiment_names[0],
+                                                benchmark_names, fuzzer_names,
+                                                coverage_report_directory)
+
             # Generate coverage reports for each benchmark.
             report_utils.generate_cov_reports(benchmark_names, fuzzer_names,
-                                              report_directory)
-        except Exception:
+                                              coverage_report_directory)
+        except Exception:  # pylint: disable=broad-except
             logger.error('Failed when generating coverage reports.')
 
     plotter = plotting.Plotter(fuzzer_names, quick, log_scale)
