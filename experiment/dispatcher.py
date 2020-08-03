@@ -54,6 +54,11 @@ def create_work_subdirs(subdirs: List[str]):
 def _initialize_experiment_in_db(experiment_config: dict):
     """Initializes |experiment| in the database by creating the experiment
     entity."""
+    experiment_exists = db_utils.query(models.Experiment).filter(
+        models.Experiment.name == experiment_config['experiment']).first()
+    if experiment_exists:
+        raise Exception('Experiment already exists in database.')
+
     db_utils.add_all([
         db_utils.get_or_create(models.Experiment,
                                name=experiment_config['experiment'],
