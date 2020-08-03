@@ -24,9 +24,9 @@ from analysis import experiment_results
 from analysis import plotting
 from analysis import queries
 from analysis import rendering
-from analysis import report_utils
 from common import filesystem
 from common import logs
+from experiment import coverage_utils
 
 logger = logs.Logger('reporter')
 
@@ -179,17 +179,17 @@ def generate_report(experiment_names,
         logger.info('Generating coverage reports.')
         try:
             if not from_cached_data:
-                report_utils.fetch_source_files(benchmark_names,
-                                                coverage_report_directory)
-                report_utils.fetch_binary_files(benchmark_names,
-                                                coverage_report_directory)
-                report_utils.get_profdata_files(experiment_names[0],
-                                                benchmark_names, fuzzer_names,
-                                                coverage_report_directory)
+                coverage_utils.fetch_source_files(benchmark_names,
+                                                  coverage_report_directory)
+                coverage_utils.fetch_binary_files(benchmark_names,
+                                                  coverage_report_directory)
+                coverage_utils.get_profdata_files(experiment_names[0],
+                                                  benchmark_names, fuzzer_names,
+                                                  coverage_report_directory)
 
             # Generate coverage reports for each benchmark.
-            report_utils.generate_cov_reports(benchmark_names, fuzzer_names,
-                                              coverage_report_directory)
+            coverage_utils.generate_cov_reports(benchmark_names, fuzzer_names,
+                                                coverage_report_directory)
         except Exception:  # pylint: disable=broad-except
             logger.error('Failed when generating coverage reports.')
 
