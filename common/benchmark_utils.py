@@ -15,6 +15,7 @@
 import os
 import re
 
+from common import environment
 from common import logs
 from common import benchmark_config
 from common import utils
