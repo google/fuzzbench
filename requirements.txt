@@ -28,3 +28,4 @@ yapf==0.28.0
 
 # Webapp
 Flask==1.1.2
+Flask-WTF==0.14.3
