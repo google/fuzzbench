@@ -50,9 +50,7 @@ def build_coverage(benchmark):
     """Build coverage image for benchmark on GCB."""
     coverage_binaries_dir = exp_path.filestore(
         build_utils.get_coverage_binaries_dir())
-    substitutions = {
-        '_GCS_COVERAGE_BINARIES_DIR': coverage_binaries_dir
-    }
+    substitutions = {'_GCS_COVERAGE_BINARIES_DIR': coverage_binaries_dir}
     config = generate_cloudbuild.generate_coverage_build_spec([''], [benchmark])
     config_name = 'benchmark-{benchmark}-coverage'.format(benchmark=benchmark)
     _build(config, config_name, substitutions)

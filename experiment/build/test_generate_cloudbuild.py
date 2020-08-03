@@ -20,17 +20,17 @@ def test_generate_cloud_build_spec():
     """Tests result of a makefile generation for an image."""
 
     image = {
-        '${_FUZZER}-${_BENCHMARK}-builder-intermediate': {
+        'afl-zlib-builder-intermediate': {
             'tag':
-                'builders/${_FUZZER}/${_BENCHMARK}-intermediate',
+                'builders/afl/zlib-intermediate',
             'path':
-                'fuzzers/${_FUZZER}',
+                'fuzzers/afl',
             'dockerfile':
-                'fuzzers/${_FUZZER}/builder.Dockerfile',
-            'depends_on': ['${_BENCHMARK}-project-builder'],
+                'fuzzers/afl/builder.Dockerfile',
+            'depends_on': ['zlib-project-builder'],
             'build_arg': [
                 'parent_image=gcr.io/fuzzbench/' +
-                'builders/benchmark/${_BENCHMARK}'
+                'builders/benchmark/zlib'
             ]
         }
     }
@@ -40,26 +40,25 @@ def test_generate_cloud_build_spec():
     expected_spec = {
         'steps': [{
             'id': 'fuzzer-benchmark-builder-intermediate',
-            'env': ['DOCKER_BUILDKIT=1'],
+            'env': 'DOCKER_BUILDKIT=1',
             'name': 'gcr.io/cloud-builders/docker',
             'args': [
                 'build', '--tag',
-                'gcr.io/fuzzbench/builders/${_FUZZER}/${_BENCHMARK}-'
+                'gcr.io/fuzzbench/builders/afl/zlib-'
                 'intermediate', '--tag',
-                '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}-'
+                '${_REPO}/builders/afl/zlib-'
                 'intermediate:${_EXPERIMENT}', '--cache-from',
-                '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}-intermediate',
+                '${_REPO}/builders/afl/zlib-intermediate',
                 '--build-arg', 'BUILDKIT_INLINE_CACHE=1', '--build-arg',
                 'parent_image=gcr.io/fuzzbench/'
-                'builders/benchmark/${_BENCHMARK}', '--file',
-                'fuzzers/${_FUZZER}/builder.Dockerfile', 'fuzzers/${_FUZZER}'
+                'builders/benchmark/zlib', '--file',
+                'fuzzers/afl/builder.Dockerfile', 'fuzzers/afl'
             ],
             'wait_for': ['benchmark-project-builder']
         }],
         'images': [
-            '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}-intermediate'
-            ':${_EXPERIMENT}',
-            '${_REPO}/builders/${_FUZZER}/${_BENCHMARK}-intermediate'
+            '${_REPO}/builders/afl/zlib-intermediate:${_EXPERIMENT}',
+            '${_REPO}/builders/afl/zlib-intermediate'
         ]
     }
 
