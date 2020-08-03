@@ -29,8 +29,7 @@ def test_generate_cloud_build_spec():
                 'fuzzers/afl/builder.Dockerfile',
             'depends_on': ['zlib-project-builder'],
             'build_arg': [
-                'parent_image=gcr.io/fuzzbench/' +
-                'builders/benchmark/zlib'
+                'parent_image=gcr.io/fuzzbench/builders/benchmark/zlib'
             ]
         }
     }
@@ -39,22 +38,20 @@ def test_generate_cloud_build_spec():
 
     expected_spec = {
         'steps': [{
-            'id': 'fuzzer-benchmark-builder-intermediate',
+            'id': 'afl-zlib-builder-intermediate',
             'env': 'DOCKER_BUILDKIT=1',
             'name': 'gcr.io/cloud-builders/docker',
             'args': [
-                'build', '--tag',
-                'gcr.io/fuzzbench/builders/afl/zlib-'
-                'intermediate', '--tag',
-                '${_REPO}/builders/afl/zlib-'
+                'build', '--tag', 'gcr.io/fuzzbench/builders/afl/zlib-'
+                'intermediate', '--tag', '${_REPO}/builders/afl/zlib-'
                 'intermediate:${_EXPERIMENT}', '--cache-from',
-                '${_REPO}/builders/afl/zlib-intermediate',
+                '${_REPO}/builders/afl/zlib-intermediate:${_EXPERIMENT}',
                 '--build-arg', 'BUILDKIT_INLINE_CACHE=1', '--build-arg',
                 'parent_image=gcr.io/fuzzbench/'
                 'builders/benchmark/zlib', '--file',
                 'fuzzers/afl/builder.Dockerfile', 'fuzzers/afl'
             ],
-            'wait_for': ['benchmark-project-builder']
+            'wait_for': ['zlib-project-builder']
         }],
         'images': [
             '${_REPO}/builders/afl/zlib-intermediate:${_EXPERIMENT}',

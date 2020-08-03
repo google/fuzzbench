@@ -35,7 +35,7 @@ def get_experiment_tag_for_image(image, experiment=True):
 def coverage_steps(benchmark):
     """Returns GCB run steps for coverage builds."""
     steps = [{
-        'name': 
+        'name':
             'gcr.io/cloud-builders/docker',
         'args': [
             'run', '-v', '/workspace/out:/host-out',
@@ -81,8 +81,8 @@ def create_cloud_build_spec(image_templates,
         step['args'] = [
             'build', '--tag',
             posixpath.join(BASE_TAG, image_specs['tag']), '--tag',
-            get_experiment_tag_for_image(image_specs, experiment),
-            '--cache-from',
+            get_experiment_tag_for_image(image_specs,
+                                         experiment), '--cache-from',
             get_experiment_tag_for_image(image_specs, experiment),
             '--build-arg', 'BUILDKIT_INLINE_CACHE=1'
         ]
@@ -119,7 +119,8 @@ def generate_base_images_build_spec(experiment=True):
     """Returns build spec for base images."""
     buildable_images = _get_buildable_images([''], [''])
     image_templates = {'base-image': buildable_images['base-image']}
-    return create_cloud_build_spec(image_templates, build_base_images=True,
+    return create_cloud_build_spec(image_templates,
+                                   build_base_images=True,
                                    experiment=experiment)
 
 
