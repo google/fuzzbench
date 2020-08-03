@@ -14,6 +14,7 @@
 """Module for building things on Google Cloud Build for use in trials."""
 
 import os
+import tempfile
 from typing import Dict
 
 from common import experiment_path as exp_path
@@ -62,47 +63,46 @@ def _build(config: Dict,
            timeout_seconds: int = GCB_BUILD_TIMEOUT
           ) -> new_process.ProcessResult:
     """Build each of |args| on gcb."""
-    config_file = os.path.join(utils.ROOT_DIR, 'docker', 'cloudbuild.yaml')
-    yaml_utils.write(config_file, config)
-    config_arg = '--config=%s' % config_file
-    machine_type_arg = '--machine-type=%s' % GCB_MACHINE_TYPE
+    with tempfile.NamedTemporaryFile() as config_file:
+        yaml_utils.write(config_file.name, config)
+        config_arg = '--config=%s' % config_file.name
+        machine_type_arg = '--machine-type=%s' % GCB_MACHINE_TYPE
 
-    # Use "s" suffix to denote seconds.
-    timeout_arg = '--timeout=%ds' % timeout_seconds
+        # Use "s" suffix to denote seconds.
+        timeout_arg = '--timeout=%ds' % timeout_seconds
 
-    command = [
-        'gcloud',
-        'builds',
-        'submit',
-        str(utils.ROOT_DIR),
-        config_arg,
-        timeout_arg,
-        machine_type_arg,
-    ]
+        command = [
+            'gcloud',
+            'builds',
+            'submit',
+            str(utils.ROOT_DIR),
+            config_arg,
+            timeout_arg,
+            machine_type_arg,
+        ]
 
-    if substitutions is None:
-        substitutions = {}
+        if substitutions is None:
+            substitutions = {}
 
-    assert '_REPO' not in substitutions
-    substitutions['_REPO'] = experiment_utils.get_base_docker_tag()
+        assert '_REPO' not in substitutions
+        substitutions['_REPO'] = experiment_utils.get_base_docker_tag()
 
-    assert '_EXPERIMENT' not in substitutions
-    substitutions['_EXPERIMENT'] = experiment_utils.get_experiment_name()
+        assert '_EXPERIMENT' not in substitutions
+        substitutions['_EXPERIMENT'] = experiment_utils.get_experiment_name()
 
-    substitutions = [
-        '%s=%s' % (key, value) for key, value in substitutions.items()
-    ]
-    substitutions = ','.join(substitutions)
-    command.append('--substitutions=%s' % substitutions)
+        substitutions = [
+            '%s=%s' % (key, value) for key, value in substitutions.items()
+        ]
+        substitutions = ','.join(substitutions)
+        command.append('--substitutions=%s' % substitutions)
 
-    # Don't write to stdout to make concurrent building faster. Otherwise
-    # writing becomes the bottleneck.
-    result = new_process.execute(command,
-                                 write_to_stdout=False,
-                                 kill_children=True,
-                                 timeout=timeout_seconds)
-    build_utils.store_build_logs(config_name, result)
-    os.remove(config_file)
+        # Don't write to stdout to make concurrent building faster. Otherwise
+        # writing becomes the bottleneck.
+        result = new_process.execute(command,
+                                     write_to_stdout=False,
+                                     kill_children=True,
+                                     timeout=timeout_seconds)
+        build_utils.store_build_logs(config_name, result)
     return result
 
 
