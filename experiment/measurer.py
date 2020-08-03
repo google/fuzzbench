@@ -163,7 +163,7 @@ def get_covered_region(experiment: str, fuzzer: str, benchmark: str,
                                       })
         snapshot_measurer = SnapshotMeasurer(fuzzer, benchmark, trial_id,
                                              snapshot_logger)
-        snapshot_measurer.generate_summary(0, summary=False)
+        snapshot_measurer.generate_summary(0, summary_only=False)
         new_covered_regions = snapshot_measurer.get_current_covered_regions()
         covered_regions[key] = covered_regions[key].union(new_covered_regions)
     q.put(covered_regions)
@@ -537,7 +537,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             self.logger.error(
                 'Coverage profdata generation failed for cycle: %d.', cycle)
 
-    def generate_summary(self, cycle: int, summary=True):
+    def generate_summary(self, cycle: int, summary_only=True):
         """Transform the .profdata file into json form."""
         coverage_binary = get_coverage_binary(self.benchmark)
         command = [
@@ -545,7 +545,6 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             '-instr-profile=%s' % self.profdata_file
         ]
 
-        # Add summary-only flag to reduce memory use.
         if summary:
             command.append('-summary-only')
 
