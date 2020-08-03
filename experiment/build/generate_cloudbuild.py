@@ -148,6 +148,7 @@ def generate_coverage_build_spec(fuzzers, benchmarks):
 
 
 def main():
+    """Write base-images build spec when run from command line."""
     base_images_spec = generate_base_images_build_spec(experiment=False)
     base_images_spec_file = os.path.join(ROOT_DIR, 'docker', 'base-images.yaml')
     yaml_utils.write(base_images_spec_file, base_images_spec)
