@@ -33,12 +33,9 @@ def test_generate_cloud_build_spec():
                 'parent_image=gcr.io/fuzzbench/builders/benchmark/zlib'
             ],
             'depends_on': ['zlib-project-builder'],
-            'dockerfile':
-                'fuzzers/afl/builder.Dockerfile',
-            'path':
-                'fuzzers/afl',
-            'tag':
-                'builders/afl/zlib-intermediate',
+            'dockerfile': 'fuzzers/afl/builder.Dockerfile',
+            'path': 'fuzzers/afl',
+            'tag': 'builders/afl/zlib-intermediate',
             'type': 'builder'
         }
     }
