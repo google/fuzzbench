@@ -20,6 +20,7 @@ import os
 import pathlib
 import posixpath
 import sys
+import tempfile
 import tarfile
 import time
 from typing import List, Set
@@ -43,6 +44,7 @@ from database import models
 from experiment.build import build_utils
 from experiment import run_coverage
 from experiment import scheduler
+from fuzzers import fuzzer_stats
 
 logger = logs.Logger('measurer')  # pylint: disable=invalid-name
 
@@ -662,6 +664,27 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         if not os.path.exists(self.measured_files_path):
             return set()
         return set(filesystem.read(self.measured_files_path).splitlines())
+
+    def get_fuzzer_stats(self, cycle):
+        stats_filename = benchmark_utils.get_stats_filename(cycle)
+        stats_filestore_path = exp_path.filestore(
+            os.path.join(self.trial_dir, stats_filename))
+        return get_fuzzer_stats(stats_filestore_path)
+
+
+def get_fuzzer_stats(stats_filestore_path):
+    with tempfile.NamedTemporaryFile() as temp_file:
+        result = filestore_utils.cp(
+            stats_filestore_path, temp_file.name, expect_zero=False)
+        if result.retcode != 0:
+            return None
+        stats_str = temp_file.read()
+    try:
+        fuzzer_stats.validate_fuzzer_stats(stats_str)
+    except ValueError, json.decoder.JSONDecoderError:
+        self.logger.error('Stats are invalid.')
+        return None
+    return stats_str
 
 
 def measure_trial_coverage(  # pylint: disable=invalid-name

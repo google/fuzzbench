@@ -361,7 +361,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
 
             stats_json_str = fuzzer.get_stats(output_corpus, self.log_file)
             fuzzer_stats.validate_stats_json_str(stats_json_str)
-        except Exception:
+        except ValueError, json.decoder.JSONDecoderError:
             logs.error('Failed to record stats.')
             return
 

@@ -14,7 +14,7 @@
 """SQLAlchemy Database Models."""
 import sqlalchemy
 from sqlalchemy.ext import declarative
-from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, DateTime, JSON
 
 Base = declarative.declarative_base()  # pylint: disable=invalid-name
 
@@ -60,3 +60,4 @@ class Snapshot(Base):
     trial_id = Column(Integer, ForeignKey('trial.id'), primary_key=True)
     trial = sqlalchemy.orm.relationship('Trial', back_populates='snapshots')
     edges_covered = Column(Integer, nullable=False)
+    fuzzer_stats = Column(JSON, nullable=True)
