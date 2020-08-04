@@ -34,6 +34,15 @@ jobs:
           - honggfuzz_qemu
           # temporary variants.
           - aflplusplus_havoc
+          - aflplusplus_coe
+          - aflplusplus_exploit
+          - aflplusplus_explore
+          - aflplusplus_fast
+          - aflplusplus_lin
+          - aflplusplus_mmopt
+          - aflplusplus_quad
+          - aflplusplus_rare
+          - aflplusplus_seek
           - libfuzzer_interceptors
           - libfuzzer_keepseed
           - entropic_interceptors
