@@ -23,15 +23,15 @@ from common.utils import ROOT_DIR
 from experiment.build import build_utils
 
 BASE_TAG = 'gcr.io/fuzzbench'
-REPO = experiment_utils.get_base_docker_tag()
-EXPERIMENT_VAR = experiment_utils.get_experiment_name()
 
 
 def get_experiment_tag_for_image(image, experiment=True):
     """Returns the registry with the experiment tag for given image."""
     if not experiment:
         return posixpath.join(BASE_TAG, image['tag']) + ':test-experiment'
-    return posixpath.join(REPO, image['tag']) + ':' + EXPERIMENT_VAR
+    tag = posixpath.join(experiment_utils.get_base_docker_tag(), image['tag'])
+    tag += ':' + experiment_utils.get_experiment_name()
+    return tag
 
 
 def coverage_steps(benchmark):
@@ -43,8 +43,9 @@ def coverage_steps(benchmark):
             'gcr.io/cloud-builders/docker',
         'args': [
             'run', '-v', '/workspace/out:/host-out',
-            posixpath.join(REPO, 'builders', 'coverage', benchmark) + ':' +
-            EXPERIMENT_VAR, '/bin/bash', '-c',
+            posixpath.join(experiment_utils.get_base_docker_tag(), 'builders',
+                           'coverage', benchmark) + ':' +
+            experiment_utils.get_experiment_name(), '/bin/bash', '-c',
             'cd /out; tar -czvf /host-out/coverage-build-' + benchmark +
             '.tar.gz *'
         ]

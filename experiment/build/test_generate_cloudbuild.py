@@ -34,7 +34,8 @@ def test_generate_cloud_build_spec():
         }
     }
 
-    generated_spec = generate_cloudbuild.create_cloud_build_spec(image)
+    generated_spec = generate_cloudbuild.create_cloud_build_spec(
+        image, experiment=False)
 
     expected_spec = {
         'steps': [{
@@ -44,8 +45,9 @@ def test_generate_cloud_build_spec():
             'args': [
                 'build', '--tag',
                 'gcr.io/fuzzbench/builders/afl/zlib-intermediate', '--tag',
-                '${_REPO}/builders/afl/zlib-intermediate:${_EXPERIMENT}',
-                '--cache-from', '${_REPO}/builders/afl/zlib-intermediate',
+                'gcr.io/fuzzbench/builders/afl/zlib-intermediate'
+                ':test-experiment', '--cache-from',
+                'gcr.io/fuzzbench/builders/afl/zlib-intermediate',
                 '--build-arg', 'BUILDKIT_INLINE_CACHE=1', '--build-arg',
                 'parent_image=gcr.io/fuzzbench/builders/benchmark/zlib',
                 '--file', 'fuzzers/afl/builder.Dockerfile', 'fuzzers/afl'
@@ -53,8 +55,8 @@ def test_generate_cloud_build_spec():
             'wait_for': ['zlib-project-builder']
         }],
         'images': [
-            '${_REPO}/builders/afl/zlib-intermediate:${_EXPERIMENT}',
-            '${_REPO}/builders/afl/zlib-intermediate'
+            'gcr.io/fuzzbench/builders/afl/zlib-intermediate:test-experiment',
+            'gcr.io/fuzzbench/builders/afl/zlib-intermediate'
         ]
     }
 
