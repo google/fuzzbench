@@ -16,8 +16,6 @@
 import tempfile
 from typing import Dict
 
-from common import experiment_path as exp_path
-from common import experiment_utils
 from common import logs
 from common import new_process
 from common import utils
@@ -56,9 +54,6 @@ def build_base_images():
 
 def build_coverage(benchmark):
     """Build coverage image for benchmark on GCB."""
-    coverage_binaries_dir = exp_path.filestore(
-        build_utils.get_coverage_binaries_dir())
-    substitutions = {'_GCS_COVERAGE_BINARIES_DIR': coverage_binaries_dir}
     buildable_images = _get_buildable_images(benchmark=benchmark)
     image_templates = {
         image_name: image_spec
@@ -68,12 +63,11 @@ def build_coverage(benchmark):
     config = generate_cloudbuild.create_cloud_build_spec(image_templates,
                                                          benchmark=benchmark)
     config_name = 'benchmark-{benchmark}-coverage'.format(benchmark=benchmark)
-    _build(config, config_name, substitutions)
+    _build(config, config_name)
 
 
 def _build(config: Dict,
            config_name: str,
-           substitutions: Dict[str, str] = None,
            timeout_seconds: int = GCB_BUILD_TIMEOUT
           ) -> new_process.ProcessResult:
     """Build each of |args| on gcb."""
@@ -94,21 +88,6 @@ def _build(config: Dict,
             timeout_arg,
             machine_type_arg,
         ]
-
-        if substitutions is None:
-            substitutions = {}
-
-        assert '_REPO' not in substitutions
-        substitutions['_REPO'] = experiment_utils.get_base_docker_tag()
-
-        assert '_EXPERIMENT' not in substitutions
-        substitutions['_EXPERIMENT'] = experiment_utils.get_experiment_name()
-
-        substitutions = [
-            '%s=%s' % (key, value) for key, value in substitutions.items()
-        ]
-        substitutions = ','.join(substitutions)
-        command.append('--substitutions=%s' % substitutions)
 
         # Don't write to stdout to make concurrent building faster. Otherwise
         # writing becomes the bottleneck.

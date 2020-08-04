@@ -17,11 +17,14 @@ import os
 import posixpath
 
 from common import yaml_utils
+from common import experiment_utils
+from common import experiment_path as exp_path
 from common.utils import ROOT_DIR
+from experiment.build import build_utils
 
 BASE_TAG = 'gcr.io/fuzzbench'
-REPO = '${_REPO}'
-EXPERIMENT_VAR = '${_EXPERIMENT}'
+REPO = experiment_utils.get_base_docker_tag()
+EXPERIMENT_VAR = experiment_utils.get_experiment_name()
 
 
 def get_experiment_tag_for_image(image, experiment=True):
@@ -33,6 +36,8 @@ def get_experiment_tag_for_image(image, experiment=True):
 
 def coverage_steps(benchmark):
     """Returns GCB run steps for coverage builds."""
+    coverage_binaries_dir = exp_path.filestore(
+        build_utils.get_coverage_binaries_dir())
     steps = [{
         'name':
             'gcr.io/cloud-builders/docker',
@@ -47,7 +52,7 @@ def coverage_steps(benchmark):
     step = {'name': 'gcr.io/cloud-builders/gsutil'}
     step['args'] = [
         '-m', 'cp', '/workspace/out/coverage-build-' + benchmark + '.tar.gz',
-        '${_GCS_COVERAGE_BINARIES_DIR}/'
+        coverage_binaries_dir + '/'
     ]
     steps.append(step)
     return steps
