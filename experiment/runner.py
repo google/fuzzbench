@@ -36,6 +36,8 @@ from common import new_process
 from common import retry
 from common import utils
 
+from fuzzers import fuzzer_stats
+
 NUM_RETRIES = 3
 RETRY_DELAY = 3
 
@@ -234,6 +236,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         self.results_dir = 'results'
         self.unchanged_cycles_path = os.path.join(self.results_dir,
                                                   'unchanged-cycles')
+        self.log_file = os.path.join(self.results_dir, 'fuzzer-log.txt')
         self.last_sync_time = None
         self.corpus_dir_contents = set()
 
@@ -251,12 +254,11 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
     def conduct_trial(self):
         """Conduct the benchmarking trial."""
         self.initialize_directories()
-        log_file = os.path.join(self.results_dir, 'fuzzer-log.txt')
 
         logs.info('Starting trial.')
 
         max_total_time = environment.get('MAX_TOTAL_TIME')
-        args = (max_total_time, log_file)
+        args = (max_total_time, self.log_file)
         fuzz_thread = threading.Thread(target=run_fuzzer, args=args)
         fuzz_thread.start()
         if environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
@@ -340,10 +342,34 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
                 logs.debug('Cycle: %d changed.', self.cycle)
                 self.archive_and_save_corpus()
 
+            self.record_stats()
             self.save_results()
             logs.debug('Finished sync.')
         except Exception:  # pylint: disable=broad-except
             logs.error('Failed to sync cycle: %d.', self.cycle)
+
+    def record_stats(self):
+        # TODO(metzman): Make this more resilient so we don't wait forever and
+        # so that breakages in stats parsing doesn't break runner.
+        output_corpus = environment.get('OUTPUT_CORPUS_DIR')
+        try:
+            import fuzzer
+
+            if not getattr(fuzzer, 'get_stats'):
+                # Stats support is optional.
+                return
+
+            stats_json_str = fuzzer.get_stats(output_corpus, self.log_file)
+            fuzzer_stats.validate_stats_json_str(stats_json_str)
+        except Exception:
+            logs.error('Failed to record stats.')
+            return
+
+        stats_filename = experiment_utils.get_stats_filename(self.cycle)
+        stats_path = os.path.join(self.results_dir, stats_filename)
+        with open(stats_path, 'w') as stats_file_handle:
+            stats_file_handle.write(stats_json_str)
+
 
     def archive_corpus(self):
         """Archive this cycle's corpus."""

@@ -41,6 +41,10 @@ def fuzz(input_corpus, output_corpus, target_binary):
     run_fuzzer(input_corpus, output_corpus, target_binary)
 
 
+def get_stats(output_corpus, fuzzer_log):
+    return '{"avg_execs":20.0}'
+
+
 def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     """Run fuzzer."""
     if extra_flags is None:

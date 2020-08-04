@@ -65,6 +65,11 @@ def get_corpus_archive_name(cycle: int) -> str:
     return 'corpus-archive-%04d.tar.gz' % cycle
 
 
+def get_stats_filename(cycle: int) -> str:
+    """Returns a corpus archive name given a cycle."""
+    return 'stats-%04d.json' % cycle
+
+
 def get_crashes_archive_name(cycle: int) -> str:
     """Return as crashes archive name given a cycle."""
     return 'crashes-%04d.tar.gz' % cycle
