@@ -38,8 +38,8 @@ def coverage_steps(benchmark):
             'gcr.io/cloud-builders/docker',
         'args': [
             'run', '-v', '/workspace/out:/host-out',
-            posixpath.join(REPO, 'builders', 'coverage', benchmark) +
-            ':' + EXPERIMENT_VAR, '/bin/bash', '-c',
+            posixpath.join(REPO, 'builders', 'coverage', benchmark) + ':' +
+            EXPERIMENT_VAR, '/bin/bash', '-c',
             'cd /out; tar -czvf /host-out/coverage-build-' + benchmark +
             '.tar.gz *'
         ]
