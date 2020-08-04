@@ -28,7 +28,7 @@ from common import filesystem
 from common import logs
 from experiment import coverage_utils
 
-logger = logs.Logger('reporter')
+logger = logs.Logger('generate_report')
 
 
 def get_arg_parser():
@@ -173,25 +173,6 @@ def generate_report(experiment_names,
     # Generate coverge reports for each benchmark.
     benchmark_names = experiment_df.benchmark.unique()
     fuzzer_names = experiment_df.fuzzer.unique()
-    coverage_report_directory = os.path.join(report_directory,
-                                             'coverage-reports')
-    if not in_progress:
-        logger.info('Generating coverage reports.')
-        try:
-            if not from_cached_data:
-                coverage_utils.fetch_source_files(benchmark_names,
-                                                  coverage_report_directory)
-                coverage_utils.fetch_binary_files(benchmark_names,
-                                                  coverage_report_directory)
-                coverage_utils.get_profdata_files(experiment_names[0],
-                                                  benchmark_names, fuzzer_names,
-                                                  coverage_report_directory)
-
-            # Generate coverage reports for each benchmark.
-            coverage_utils.generate_cov_reports(benchmark_names, fuzzer_names,
-                                                coverage_report_directory)
-        except Exception:  # pylint: disable=broad-except
-            logger.error('Failed when generating coverage reports.')
 
     plotter = plotting.Plotter(fuzzer_names, quick, log_scale)
     experiment_ctx = experiment_results.ExperimentResults(

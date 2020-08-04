@@ -15,16 +15,20 @@
 
 import os
 import multiprocessing
+import tarfile
+import posixpath
 
 from common import filesystem
 from common import experiment_utils
+from common import experiment_path as exp_path
 from common import new_process
 from common import benchmark_utils
 from common import logs
+from common import filestore_utils
 from experiment.build import build_utils
 from experiment import measurer
 
-logger = logs.Logger('Coverage reporter')  # pylint: disable=invalid-name
+logger = logs.Logger('coverage_utils')  # pylint: disable=invalid-name
 
 
 def get_profdata_file_path(fuzzer, benchmark, trial_id):
@@ -39,8 +43,9 @@ def get_profdata_file_path(fuzzer, benchmark, trial_id):
 
 def merge_profdata_files(src_files, dst_file):
     """Merge profdata files from |src_files| to |dst_files|."""
-    command = ['llvm-profdata', 'merge', '-sparse'
-              ] + src_files + ['-o', dst_file]
+    command = ['llvm-profdata', 'merge', '-sparse']
+    command.extend(src_files)
+    command.extend(['-o', dst_file])
     result = new_process.execute(command, expect_zero=False)
     if result.retcode != 0:
         logger.error('Profdata files merging failed.')
@@ -93,8 +98,8 @@ def generate_cov_reports(benchmarks, fuzzers, report_dir):
 
 def generate_cov_report(benchmark, fuzzer, report_dir):
     """Generate the coverage report for one pair of benchmark and fuzzer."""
-    logger.info('Generating coverage report for benchmark:{benchmark} \
-                fuzzer:{fuzzer}.'.format(benchmark=benchmark, fuzzer=fuzzer))
+    logger.info('Generating coverage report for benchmark: {benchmark} \
+                fuzzer: {fuzzer}.'.format(benchmark=benchmark, fuzzer=fuzzer))
     dst_dir = os.path.join(report_dir, benchmark, fuzzer)
     fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
     profdata_file_path = os.path.join(dst_dir, 'merged.profdata')
@@ -113,3 +118,48 @@ def generate_cov_report(benchmark, fuzzer, report_dir):
              benchmark:{benchmark}.'.format(fuzzer=fuzzer, benchmark=benchmark))
     logger.info('Finished generating coverage report for benchmark:{benchmark} \
                 fuzzer:{fuzzer}.'.format(benchmark=benchmark, fuzzer=fuzzer))
+
+
+def set_up_coverage_files(experiment_names, report_dir, benchmarks):
+    """Sets up coverage binaries for all benchmarks."""
+    # Use set comprehension to select distinct benchmarks.
+    with multiprocessing.Pool() as pool:
+        set_up_coverage_file_args = [(experiment_names, report_dir, benchmark)
+                                     for benchmark in benchmarks]
+        pool.map(set_up_coverage_file, set_up_coverage_file_args)
+
+
+def set_up_coverage_file(experiment_names, report_dir, benchmark):
+    """Sets up coverage binaries for |benchmark|."""
+    for experiment in experiment_names:
+
+        benchmark_coverage_binary_dir = report_dir / benchmark
+        filesystem.create_directory(benchmark_coverage_binary_dir)
+        archive_filestore_path = get_benchmark_archive(experiment, benchmark)
+        if 
+        filestore_utils.cp(archive_filestore_path,
+                        str(benchmark_coverage_binary_dir))
+        archive_path = benchmark_coverage_binary_dir / archive_name
+        tar = tarfile.open(archive_path, 'r:gz')
+        tar.extractall(benchmark_coverage_binary_dir)
+        os.remove(archive_path)
+
+
+def get_coverage_binary(benchmark: str) -> str:
+    """Get the coverage binary for benchmark."""
+    coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
+    fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
+    return fuzzer_utils.get_fuzz_target_binary(coverage_binaries_dir /
+                                               benchmark,
+                                               fuzz_target_name=fuzz_target)
+
+def get_benchmark_archive(experiment_name, benchmark):
+    """Returns the path of the coverage archive in gcs bucket
+    for |benchmark|."""
+    if 'EXPERIMENT_FILESTORE' in os.environ:
+        experiment_filestore = os.environ['EXPERIMENT_FILESTORE']
+    else:
+        experiment_filestore = 'gs://fuzzbench-data'
+    archive_name = 'coverage-build-%s.tar.gz' % benchmark
+    return posixpath.join(experiment_filestore, experiment_name,
+                          'coverage-bianries', archive_name)
