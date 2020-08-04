@@ -15,22 +15,28 @@
 
 import json
 
-SCHEMA = {
-    'avg_execs': float
-}
+SCHEMA = {'avg_execs': float}
+
 
 def validate_fuzzer_stats(stats_json_str):
+    """Validate that stats_json_str is a json representation of valid fuzzer
+    stats. Raises an exception if it is not, otherwise returns successfully."""
     stats = json.loads(stats_json_str)
+
+    if not isinstance(stats, dict):
+        raise ValueError('{stats} is not a dict.'.format(stats=stats))
+
     for key, value in stats:
         if key not in SCHEMA:
             raise ValueError(
                 'Key {key} is not a valid stat key.'.format(key=key))
-        expected_type = SCHMEA[key]
+        expected_type = SCHEMA[key]
         if isinstance(value, expected_type):
             continue
 
         raise ValueError(
             ('Key {key} has value {value} which is type {type}.'
-             'Expecting {expected_type}.').format(
-                 key=key, value=value, type=type(value),
-                 expected_type=expected_type))
+             'Expecting {expected_type}.').format(key=key,
+                                                  value=value,
+                                                  type=type(value),
+                                                  expected_type=expected_type))

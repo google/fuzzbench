@@ -15,6 +15,7 @@
 """Runs fuzzer for trial."""
 
 from collections import namedtuple
+import json
 import os
 import posixpath
 import shlex
@@ -29,14 +30,13 @@ import zipfile
 from common import environment
 from common import experiment_utils
 from common import filesystem
-from common import fuzzer_utils
 from common import filestore_utils
+from common import fuzzer_utils
+from common import fuzzer_stats
 from common import logs
 from common import new_process
 from common import retry
 from common import utils
-
-from fuzzers import fuzzer_stats
 
 NUM_RETRIES = 3
 RETRY_DELAY = 3
@@ -349,19 +349,22 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             logs.error('Failed to sync cycle: %d.', self.cycle)
 
     def record_stats(self):
+        """Use fuzzer.get_stats if it is offered, validate the stats and then
+        save them to a file so that they will be synced to the filestore."""
         # TODO(metzman): Make this more resilient so we don't wait forever and
         # so that breakages in stats parsing doesn't break runner.
         output_corpus = environment.get('OUTPUT_CORPUS_DIR')
         try:
-            import fuzzer
+            import pdb; pdb.set_trace()
+            import fuzzer  # pylint: disable=import-error,import-outside-toplevel
 
             if not getattr(fuzzer, 'get_stats'):
                 # Stats support is optional.
                 return
 
             stats_json_str = fuzzer.get_stats(output_corpus, self.log_file)
-            fuzzer_stats.validate_stats_json_str(stats_json_str)
-        except ValueError, json.decoder.JSONDecoderError:
+            fuzzer_stats.validate_fuzzer_stats(stats_json_str)
+        except (ValueError, json.decoder.JSONDecodeError):
             logs.error('Failed to record stats.')
             return
 
@@ -369,7 +372,6 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         stats_path = os.path.join(self.results_dir, stats_filename)
         with open(stats_path, 'w') as stats_file_handle:
             stats_file_handle.write(stats_json_str)
-
 
     def archive_corpus(self):
         """Archive this cycle's corpus."""

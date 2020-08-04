@@ -14,7 +14,13 @@
 """SQLAlchemy Database Models."""
 import sqlalchemy
 from sqlalchemy.ext import declarative
-from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, DateTime, JSON
+from sqlalchemy import Boolean
+from sqlalchemy import Column
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy import ForeignKey
+from sqlalchemy import DateTime
+from sqlalchemy import JSON
 
 Base = declarative.declarative_base()  # pylint: disable=invalid-name
 
