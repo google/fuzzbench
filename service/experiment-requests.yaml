@@ -21,6 +21,7 @@
 
 - experiment: 2020-08-07
   fuzzers:
+    - aflplusplus_datalenrand
     - aflplusplus_havoc
     - aflplusplus_coe
     - aflplusplus_exploit
