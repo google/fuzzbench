@@ -13,29 +13,37 @@
 # limitations under the License.
 """Tests for generate_cloudbuild.py."""
 
+import os
+
+from unittest.mock import patch
+
 from experiment.build import generate_cloudbuild
 
 
+@patch.dict(os.environ,{
+    'CLOUD_PROJECT': 'fuzzbench',
+    'EXPERIMENT': 'test-experiment'
+})
 def test_generate_cloud_build_spec():
     """Tests result of a makefile generation for an image."""
 
     image = {
         'afl-zlib-builder-intermediate': {
-            'tag':
-                'builders/afl/zlib-intermediate',
-            'path':
-                'fuzzers/afl',
-            'dockerfile':
-                'fuzzers/afl/builder.Dockerfile',
-            'depends_on': ['zlib-project-builder'],
             'build_arg': [
                 'parent_image=gcr.io/fuzzbench/builders/benchmark/zlib'
-            ]
+            ],
+            'depends_on': ['zlib-project-builder'],
+            'dockerfile':
+                'fuzzers/afl/builder.Dockerfile',
+            'path':
+                'fuzzers/afl',
+            'tag':
+                'builders/afl/zlib-intermediate',
+            'type': 'builder'
         }
     }
 
-    generated_spec = generate_cloudbuild.create_cloud_build_spec(
-        image, experiment=False)
+    generated_spec = generate_cloudbuild.create_cloud_build_spec(image)
 
     expected_spec = {
         'steps': [{

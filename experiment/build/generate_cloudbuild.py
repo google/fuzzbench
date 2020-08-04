@@ -28,7 +28,7 @@ BASE_TAG = 'gcr.io/fuzzbench'
 def get_experiment_tag_for_image(image_specs, is_tagged=True):
     """Returns the registry with the experiment tag for given image."""
     tag = posixpath.join(experiment_utils.get_base_docker_tag(),
-        image_specs['tag'])
+                         image_specs['tag'])
     if is_tagged:
         tag += ':' + experiment_utils.get_experiment_name()
     return tag
@@ -119,8 +119,7 @@ def main():
     image_templates = yaml_utils.read(
         os.path.join(ROOT_DIR, 'docker', 'image_types.yaml'))
     base_images_spec = create_cloud_build_spec(
-        {'base-image': image_templates['base-image']},
-        build_base_images=True)
+        {'base-image': image_templates['base-image']}, build_base_images=True)
     base_images_spec_file = os.path.join(ROOT_DIR, 'docker', 'base-images.yaml')
     yaml_utils.write(base_images_spec_file, base_images_spec)
 
