@@ -25,12 +25,12 @@ from experiment.build import build_utils
 BASE_TAG = 'gcr.io/fuzzbench'
 
 
-def get_experiment_tag_for_image(image, experiment=True):
+def get_experiment_tag_for_image(image_specs, is_tagged=True):
     """Returns the registry with the experiment tag for given image."""
-    if not experiment:
-        return posixpath.join(BASE_TAG, image['tag']) + ':test-experiment'
-    tag = posixpath.join(experiment_utils.get_base_docker_tag(), image['tag'])
-    tag += ':' + experiment_utils.get_experiment_name()
+    tag = posixpath.join(experiment_utils.get_base_docker_tag(),
+        image_specs['tag'])
+    if is_tagged:
+        tag += ':' + experiment_utils.get_experiment_name()
     return tag
 
 
@@ -61,7 +61,6 @@ def coverage_steps(benchmark):
 
 def create_cloud_build_spec(image_templates,
                             benchmark='',
-                            experiment=True,
                             build_base_images=False):
     """Generates Cloud Build specification.
 
@@ -84,9 +83,8 @@ def create_cloud_build_spec(image_templates,
         step['args'] = [
             'build', '--tag',
             posixpath.join(BASE_TAG, image_specs['tag']), '--tag',
-            get_experiment_tag_for_image(image_specs,
-                                         experiment), '--cache-from',
-            get_experiment_tag_for_image(image_specs, experiment).split(':')[0],
+            get_experiment_tag_for_image(image_specs), '--cache-from',
+            get_experiment_tag_for_image(image_specs, is_tagged=False),
             '--build-arg', 'BUILDKIT_INLINE_CACHE=1'
         ]
         for build_arg in image_specs.get('build_arg', []):
@@ -96,20 +94,21 @@ def create_cloud_build_spec(image_templates,
             '--file', image_specs['dockerfile'], image_specs['path']
         ]
         step['wait_for'] = []
-        for dep in image_specs.get('depends_on', []):
+        for dependency in image_specs.get('depends_on', []):
             # Base images are built before creating fuzzer benchmark builds,
             # so it's not required to wait for them to build.
-            if 'base' in dep and not build_base_images:
+            if 'base' in dependency and not build_base_images:
                 continue
-            step['wait_for'] += [dep]
+            step['wait_for'] += [dependency]
 
         cloud_build_spec['steps'].append(step)
         cloud_build_spec['images'].append(
-            get_experiment_tag_for_image(image_specs, experiment))
+            get_experiment_tag_for_image(image_specs))
         cloud_build_spec['images'].append(
-            get_experiment_tag_for_image(image_specs, experiment).split(':')[0])
+            get_experiment_tag_for_image(image_specs, is_tagged=False))
 
-    if any('coverage' in image_name for image_name in image_templates.keys()):
+    if any(image_specs['type'] in 'coverage'
+           for _, image_specs in image_templates.items()):
         cloud_build_spec['steps'] += coverage_steps(benchmark)
 
     return cloud_build_spec
@@ -121,11 +120,10 @@ def main():
         os.path.join(ROOT_DIR, 'docker', 'image_types.yaml'))
     base_images_spec = create_cloud_build_spec(
         {'base-image': image_templates['base-image']},
-        build_base_images=True,
-        experiment=False)
+        build_base_images=True)
     base_images_spec_file = os.path.join(ROOT_DIR, 'docker', 'base-images.yaml')
     yaml_utils.write(base_images_spec_file, base_images_spec)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

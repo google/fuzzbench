@@ -56,9 +56,9 @@ def build_coverage(benchmark):
     """Build coverage image for benchmark on GCB."""
     buildable_images = _get_buildable_images(benchmark=benchmark)
     image_templates = {
-        image_name: image_spec
-        for image_name, image_spec in buildable_images.items()
-        if 'coverage' in image_name
+        image_name: image_specs
+        for image_name, image_specs in buildable_images.items()
+        if image_specs['type'] in 'coverage'
     }
     config = generate_cloudbuild.create_cloud_build_spec(image_templates,
                                                          benchmark=benchmark)
@@ -70,7 +70,7 @@ def _build(config: Dict,
            config_name: str,
            timeout_seconds: int = GCB_BUILD_TIMEOUT
           ) -> new_process.ProcessResult:
-    """Build each of |args| on gcb."""
+    """Submit build to GCB."""
     with tempfile.NamedTemporaryFile() as config_file:
         yaml_utils.write(config_file.name, config)
         config_arg = '--config=%s' % config_file.name
@@ -103,11 +103,10 @@ def build_fuzzer_benchmark(fuzzer: str, benchmark: str):
     """Builds |benchmark| for |fuzzer|."""
     image_templates = {}
     buildable_images = _get_buildable_images(fuzzer=fuzzer, benchmark=benchmark)
-    for image_name in buildable_images:
-        if any(image_type in image_name
-               for image_type in ('base', 'coverage', 'dispatcher')):
+    for image_name, image_specs in buildable_images.items():
+        if image_specs['type'] in ('base', 'coverage', 'dispatcher'):
             continue
-        image_templates[image_name] = buildable_images[image_name]
+        image_templates[image_name] = image_specs
     config = generate_cloudbuild.create_cloud_build_spec(image_templates)
     config_name = 'benchmark-{benchmark}-fuzzer-{fuzzer}'.format(
         benchmark=benchmark, fuzzer=fuzzer)

@@ -5,6 +5,7 @@
   dockerfile: 'docker/base-image/Dockerfile'
   path: 'docker/base-image'
   tag: 'base-image'
+  type: 'base'
 
 'dispatcher-image':
   depends_on:
@@ -12,6 +13,7 @@
   dockerfile: 'docker/dispatcher-image/Dockerfile'
   path: 'docker/dispatcher-image'
   tag: 'dispatcher-image'
+  type: 'dispatcher'
 
 'coverage-{benchmark}-builder-intermediate':
   build_arg:
@@ -21,6 +23,7 @@
   dockerfile: 'fuzzers/coverage/builder.Dockerfile'
   path: 'fuzzers/coverage'
   tag: 'builders/coverage/{benchmark}-intermediate'
+  type: 'coverage'
 
 'coverage-{benchmark}-builder':
   build_arg:
@@ -32,6 +35,7 @@
   dockerfile: 'docker/benchmark-builder/Dockerfile'
   path: '.'
   tag: 'builders/coverage/{benchmark}'
+  type: 'coverage'
 
 # TODO: It would be better to call this benchmark builder. But that would be
 # confusing because this doesn't involve benchmark-builder/Dockerfile. Rename
@@ -40,6 +44,7 @@
   dockerfile: 'benchmarks/{benchmark}/Dockerfile'
   path: 'benchmarks/{benchmark}'
   tag: 'builders/benchmark/{benchmark}'
+  type: 'builder'
 
 '{fuzzer}-{benchmark}-builder-intermediate':
   build_arg:
@@ -49,6 +54,7 @@
   dockerfile: 'fuzzers/{fuzzer}/builder.Dockerfile'
   path: 'fuzzers/{fuzzer}'
   tag: 'builders/{fuzzer}/{benchmark}-intermediate'
+  type: 'builder'
 
 '{fuzzer}-{benchmark}-builder':
   build_arg:
@@ -60,6 +66,7 @@
   dockerfile: 'docker/benchmark-builder/Dockerfile'
   path: '.'
   tag: 'builders/{fuzzer}/{benchmark}'
+  type: 'builder'
 
 '{fuzzer}-{benchmark}-intermediate-runner':
   depends_on:
@@ -67,6 +74,7 @@
   dockerfile: 'fuzzers/{fuzzer}/runner.Dockerfile'
   path: 'fuzzers/{fuzzer}'
   tag: 'runners/{fuzzer}/{benchmark}-intermediate'
+  type: 'runner'
 
 '{fuzzer}-{benchmark}-runner':
   benchmark: '{benchmark}'
@@ -79,3 +87,4 @@
   fuzzer: '{fuzzer}'
   path: '.'
   tag: 'runners/{fuzzer}/{benchmark}'
+  type: 'runner'
