@@ -20,6 +20,7 @@
 # us as you normally do.
 
 - experiment: 2020-08-07
+  fuzzers:
     - aflplusplus_havoc
     - aflplusplus_coe
     - aflplusplus_exploit
