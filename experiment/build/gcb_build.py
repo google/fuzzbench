@@ -42,7 +42,7 @@ GCB_MACHINE_TYPE = 'n1-highcpu-8'
 logger = logs.Logger('builder')  # pylint: disable=invalid-name
 
 
-def _get_buildable_images(fuzzer='', benchmark=''):
+def _get_buildable_images(fuzzer=None, benchmark=None):
     return docker_images.get_images_to_build([fuzzer], [benchmark])
 
 
@@ -59,11 +59,11 @@ def build_coverage(benchmark):
     coverage_binaries_dir = exp_path.filestore(
         build_utils.get_coverage_binaries_dir())
     substitutions = {'_GCS_COVERAGE_BINARIES_DIR': coverage_binaries_dir}
-    buildable_images = _get_buildable_images(fuzzer='', benchmark=benchmark)
+    buildable_images = _get_buildable_images(benchmark=benchmark)
     image_templates = {
-        name: image
-        for name, image in buildable_images.items()
-        if 'coverage' in name
+        image_name: image_spec
+        for image_name, image_spec in buildable_images.items()
+        if 'coverage' in image_name
     }
     config = generate_cloudbuild.create_cloud_build_spec(image_templates,
                                                          benchmark=benchmark)
@@ -124,11 +124,11 @@ def build_fuzzer_benchmark(fuzzer: str, benchmark: str):
     """Builds |benchmark| for |fuzzer|."""
     image_templates = {}
     buildable_images = _get_buildable_images(fuzzer=fuzzer, benchmark=benchmark)
-    for name in buildable_images:
-        if any(image_type in name
+    for image_name in buildable_images:
+        if any(image_type in image_name
                for image_type in ('base', 'coverage', 'dispatcher')):
             continue
-        image_templates[name] = buildable_images[name]
+        image_templates[image_name] = buildable_images[image_name]
     config = generate_cloudbuild.create_cloud_build_spec(image_templates)
     config_name = 'benchmark-{benchmark}-fuzzer-{fuzzer}'.format(
         benchmark=benchmark, fuzzer=fuzzer)

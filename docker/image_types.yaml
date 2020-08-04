@@ -2,80 +2,80 @@
 # dependency graph.
 
 'base-image':
-  tag: 'base-image'
   dockerfile: 'docker/base-image/Dockerfile'
   path: 'docker/base-image'
+  tag: 'base-image'
 
 'dispatcher-image':
-  tag: 'dispatcher-image'
-  path: 'docker/dispatcher-image'
-  dockerfile: 'docker/dispatcher-image/Dockerfile'
   depends_on:
     - 'base-image'
+  dockerfile: 'docker/dispatcher-image/Dockerfile'
+  path: 'docker/dispatcher-image'
+  tag: 'dispatcher-image'
 
 'coverage-{benchmark}-builder-intermediate':
-  tag: 'builders/coverage/{benchmark}-intermediate'
-  path: 'fuzzers/coverage'
-  dockerfile: 'fuzzers/coverage/builder.Dockerfile'
-  depends_on:
-    - '{benchmark}-project-builder'
   build_arg:
     - 'parent_image=gcr.io/fuzzbench/builders/benchmark/{benchmark}'
+  depends_on:
+    - '{benchmark}-project-builder'
+  dockerfile: 'fuzzers/coverage/builder.Dockerfile'
+  path: 'fuzzers/coverage'
+  tag: 'builders/coverage/{benchmark}-intermediate'
 
 'coverage-{benchmark}-builder':
-  tag: 'builders/coverage/{benchmark}'
-  path: '.'
-  dockerfile: 'docker/benchmark-builder/Dockerfile'
   build_arg:
-    - 'parent_image=gcr.io/fuzzbench/builders/coverage/{benchmark}-intermediate'
-    - 'fuzzer=coverage'
     - 'benchmark={benchmark}'
+    - 'fuzzer=coverage'
+    - 'parent_image=gcr.io/fuzzbench/builders/coverage/{benchmark}-intermediate'
   depends_on:
     - 'coverage-{benchmark}-builder-intermediate'
+  dockerfile: 'docker/benchmark-builder/Dockerfile'
+  path: '.'
+  tag: 'builders/coverage/{benchmark}'
 
 # TODO: It would be better to call this benchmark builder. But that would be
 # confusing because this doesn't involve benchmark-builder/Dockerfile. Rename
 # that and then rename this.
 '{benchmark}-project-builder':
-  tag: 'builders/benchmark/{benchmark}'
-  path: 'benchmarks/{benchmark}'
   dockerfile: 'benchmarks/{benchmark}/Dockerfile'
+  path: 'benchmarks/{benchmark}'
+  tag: 'builders/benchmark/{benchmark}'
 
 '{fuzzer}-{benchmark}-builder-intermediate':
-  tag: 'builders/{fuzzer}/{benchmark}-intermediate'
-  path: 'fuzzers/{fuzzer}'
-  dockerfile: 'fuzzers/{fuzzer}/builder.Dockerfile'
-  depends_on:
-    - '{benchmark}-project-builder'
   build_arg:
     - 'parent_image=gcr.io/fuzzbench/builders/benchmark/{benchmark}'
+  depends_on:
+    - '{benchmark}-project-builder'
+  dockerfile: 'fuzzers/{fuzzer}/builder.Dockerfile'
+  path: 'fuzzers/{fuzzer}'
+  tag: 'builders/{fuzzer}/{benchmark}-intermediate'
 
 '{fuzzer}-{benchmark}-builder':
-  tag: 'builders/{fuzzer}/{benchmark}'
-  path: '.'
-  dockerfile: 'docker/benchmark-builder/Dockerfile'
   build_arg:
-    - 'parent_image=gcr.io/fuzzbench/builders/{fuzzer}/{benchmark}-intermediate'
-    - 'fuzzer={fuzzer}'
     - 'benchmark={benchmark}'
+    - 'fuzzer={fuzzer}'
+    - 'parent_image=gcr.io/fuzzbench/builders/{fuzzer}/{benchmark}-intermediate'
   depends_on:
     - '{fuzzer}-{benchmark}-builder-intermediate'
+  dockerfile: 'docker/benchmark-builder/Dockerfile'
+  path: '.'
+  tag: 'builders/{fuzzer}/{benchmark}'
 
 '{fuzzer}-{benchmark}-intermediate-runner':
-  tag: 'runners/{fuzzer}/{benchmark}-intermediate'
-  path: 'fuzzers/{fuzzer}'
-  dockerfile: 'fuzzers/{fuzzer}/runner.Dockerfile'
   depends_on:
     - '{fuzzer}-{benchmark}-builder'
+  dockerfile: 'fuzzers/{fuzzer}/runner.Dockerfile'
+  path: 'fuzzers/{fuzzer}'
+  tag: 'runners/{fuzzer}/{benchmark}-intermediate'
 
 '{fuzzer}-{benchmark}-runner':
-  tag: 'runners/{fuzzer}/{benchmark}'
-  path: '.'
-  fuzzer: '{fuzzer}'
   benchmark: '{benchmark}'
-  dockerfile: 'docker/benchmark-runner/Dockerfile'
   build_arg:
-    - 'fuzzer={fuzzer}'
     - 'benchmark={benchmark}'
+    - 'fuzzer={fuzzer}'
   depends_on:
     - '{fuzzer}-{benchmark}-intermediate-runner'
+  dockerfile: 'docker/benchmark-runner/Dockerfile'
+  fuzzer: '{fuzzer}'
+  path: '.'
+  tag: 'runners/{fuzzer}/{benchmark}'

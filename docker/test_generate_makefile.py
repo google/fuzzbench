@@ -13,7 +13,8 @@
 # limitations under the License.
 """Tests for generate_makefile.py."""
 
-from unittest.mock import patch, call
+from unittest.mock import call
+from unittest.mock import patch
 
 from docker import generate_makefile
 

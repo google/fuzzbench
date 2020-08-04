@@ -20,7 +20,7 @@ from common import yaml_utils
 from common.utils import ROOT_DIR
 
 BASE_TAG = 'gcr.io/fuzzbench'
-EXPERIMENT_REPO = '${_REPO}'
+REPO = '${_REPO}'
 EXPERIMENT_VAR = '${_EXPERIMENT}'
 
 
@@ -28,7 +28,7 @@ def get_experiment_tag_for_image(image, experiment=True):
     """Returns the registry with the experiment tag for given image."""
     if not experiment:
         return posixpath.join(BASE_TAG, image['tag']) + ':test-experiment'
-    return posixpath.join(EXPERIMENT_REPO, image['tag']) + ':' + EXPERIMENT_VAR
+    return posixpath.join(REPO, image['tag']) + ':' + EXPERIMENT_VAR
 
 
 def coverage_steps(benchmark):
@@ -38,7 +38,7 @@ def coverage_steps(benchmark):
             'gcr.io/cloud-builders/docker',
         'args': [
             'run', '-v', '/workspace/out:/host-out',
-            posixpath.join(EXPERIMENT_REPO, 'builders', 'coverage', benchmark) +
+            posixpath.join(REPO, 'builders', 'coverage', benchmark) +
             ':' + EXPERIMENT_VAR, '/bin/bash', '-c',
             'cd /out; tar -czvf /host-out/coverage-build-' + benchmark +
             '.tar.gz *'
@@ -67,13 +67,11 @@ def create_cloud_build_spec(image_templates,
     Returns:
       GCB build steps.
     """
-    cloud_build_spec = {}
-    cloud_build_spec['steps'] = []
-    cloud_build_spec['images'] = []
+    cloud_build_spec = {'steps': [], 'images': []}
 
-    for name, image_specs in image_templates.items():
+    for image_name, image_specs in image_templates.items():
         step = {
-            'id': name,
+            'id': image_name,
             'env': 'DOCKER_BUILDKIT=1',
             'name': 'gcr.io/cloud-builders/docker'
         }
@@ -116,7 +114,9 @@ def main():
     image_templates = yaml_utils.read(
         os.path.join(ROOT_DIR, 'docker', 'image_types.yaml'))
     base_images_spec = create_cloud_build_spec(
-        {'base-image': image_templates['base-image']}, build_base_images=True)
+        {'base-image': image_templates['base-image']},
+        build_base_images=True,
+        experiment=False)
     base_images_spec_file = os.path.join(ROOT_DIR, 'docker', 'base-images.yaml')
     yaml_utils.write(base_images_spec_file, base_images_spec)
 
