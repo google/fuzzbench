@@ -36,7 +36,19 @@ def index():
     experiments = sorted(
         set(fuzzer_and_experiment[1]
             for fuzzer_and_experiment in fuzzers_and_experiments), reverse=True)
-    return flask.render_template(INDEX_TEMPLATE_NAME, fuzzers=fuzzers, experiments=experiments)
+
+    # Create mapping so we don't give users the choice to enable fuzzers in
+    # experiments where they weren't run.
+    experiment_fuzzers_mapping = {}
+    for fuzzer, experiment in fuzzers_and_experiments:
+        if experiment not in experiment_fuzzers_mapping:
+            experiment_fuzzers_mapping[experiment] = []
+        experiment_fuzzers_mapping[experiment].append(fuzzer)
+
+
+    return flask.render_template(
+        INDEX_TEMPLATE_NAME, fuzzers=fuzzers, experiments=experiments,
+        experiment_fuzzers_mapping=experiment_fuzzers_mapping)
 
 
 def get_report_url(report_filestore_dir):
@@ -70,9 +82,10 @@ def _generate_report(fuzzers_from_experiments):
 
 @app.route('/generate', methods=['POST'])
 def generate():
+    # Convert form to dict and remove csrf_token so form can be parsed properly.
     form = dict(request.form)
     del form['csrf_token']
-    print(form.keys())
+
     fuzzers_from_experiments = [
         tuple(k.split(',')) for k in form.keys()
     ]
