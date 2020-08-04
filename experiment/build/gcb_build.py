@@ -13,7 +13,6 @@
 # limitations under the License.
 """Module for building things on Google Cloud Build for use in trials."""
 
-import os
 import tempfile
 from typing import Dict
 
@@ -24,6 +23,7 @@ from common import new_process
 from common import utils
 from common import yaml_utils
 from experiment.build import build_utils
+from experiment.build import docker_images
 from experiment.build import generate_cloudbuild
 
 BUILDER_STEP_IDS = [
@@ -42,9 +42,16 @@ GCB_MACHINE_TYPE = 'n1-highcpu-8'
 logger = logs.Logger('builder')  # pylint: disable=invalid-name
 
 
+def _get_buildable_images(fuzzer='', benchmark=''):
+    return docker_images.get_images_to_build([fuzzer], [benchmark])
+
+
 def build_base_images():
     """Build base images on GCB."""
-    _build(generate_cloudbuild.generate_base_images_build_spec(), 'base-images')
+    image_templates = {'base-image': _get_buildable_images()['base-image']}
+    config = generate_cloudbuild.create_cloud_build_spec(image_templates,
+                                                         build_base_images=True)
+    _build(config, 'base-images')
 
 
 def build_coverage(benchmark):
@@ -52,7 +59,14 @@ def build_coverage(benchmark):
     coverage_binaries_dir = exp_path.filestore(
         build_utils.get_coverage_binaries_dir())
     substitutions = {'_GCS_COVERAGE_BINARIES_DIR': coverage_binaries_dir}
-    config = generate_cloudbuild.generate_coverage_build_spec([''], [benchmark])
+    buildable_images = _get_buildable_images(fuzzer='', benchmark=benchmark)
+    image_templates = {
+        name: image
+        for name, image in buildable_images.items()
+        if 'coverage' in name
+    }
+    config = generate_cloudbuild.create_cloud_build_spec(image_templates,
+                                                         benchmark=benchmark)
     config_name = 'benchmark-{benchmark}-coverage'.format(benchmark=benchmark)
     _build(config, config_name, substitutions)
 
@@ -106,15 +120,16 @@ def _build(config: Dict,
     return result
 
 
-def get_build_config_file(filename: str) -> str:
-    """Return the path of the GCB build config file |filename|."""
-    return os.path.join(utils.ROOT_DIR, 'docker', 'gcb', filename)
-
-
 def build_fuzzer_benchmark(fuzzer: str, benchmark: str):
     """Builds |benchmark| for |fuzzer|."""
-    config = generate_cloudbuild.generate_benchmark_build_spec([fuzzer],
-                                                               [benchmark])
+    image_templates = {}
+    buildable_images = _get_buildable_images(fuzzer=fuzzer, benchmark=benchmark)
+    for name in buildable_images:
+        if any(image_type in name
+               for image_type in ('base', 'coverage', 'dispatcher')):
+            continue
+        image_templates[name] = buildable_images[name]
+    config = generate_cloudbuild.create_cloud_build_spec(image_templates)
     config_name = 'benchmark-{benchmark}-fuzzer-{fuzzer}'.format(
         benchmark=benchmark, fuzzer=fuzzer)
 

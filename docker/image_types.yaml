@@ -3,11 +3,13 @@
 
 'base-image':
   tag: 'base-image'
+  dockerfile: 'docker/base-image/Dockerfile'
   path: 'docker/base-image'
 
 'dispatcher-image':
   tag: 'dispatcher-image'
   path: 'docker/dispatcher-image'
+  dockerfile: 'docker/dispatcher-image/Dockerfile'
   depends_on:
     - 'base-image'
 

@@ -16,7 +16,6 @@
 import os
 import posixpath
 
-from experiment.build import docker_images
 from common import yaml_utils
 from common.utils import ROOT_DIR
 
@@ -55,7 +54,7 @@ def coverage_steps(benchmark):
 
 
 def create_cloud_build_spec(image_templates,
-                            benchmark=None,
+                            benchmark='',
                             experiment=True,
                             build_base_images=False):
     """Generates Cloud Build specification.
@@ -83,14 +82,15 @@ def create_cloud_build_spec(image_templates,
             posixpath.join(BASE_TAG, image_specs['tag']), '--tag',
             get_experiment_tag_for_image(image_specs,
                                          experiment), '--cache-from',
-            get_experiment_tag_for_image(image_specs, experiment),
+            get_experiment_tag_for_image(image_specs, experiment).split(':')[0],
             '--build-arg', 'BUILDKIT_INLINE_CACHE=1'
         ]
         for build_arg in image_specs.get('build_arg', []):
             step['args'] += ['--build-arg', build_arg]
-        if 'dockerfile' in image_specs:
-            step['args'] += ['--file', image_specs['dockerfile']]
-        step['args'] += [image_specs['path']]
+
+        step['args'] += [
+            '--file', image_specs['dockerfile'], image_specs['path']
+        ]
         step['wait_for'] = []
         for dep in image_specs.get('depends_on', []):
             # Base images are built before creating fuzzer benchmark builds,
@@ -111,45 +111,12 @@ def create_cloud_build_spec(image_templates,
     return cloud_build_spec
 
 
-def _get_buildable_images(fuzzers, benchmarks):
-    return docker_images.get_images_to_build(fuzzers, benchmarks)
-
-
-def generate_base_images_build_spec(experiment=True):
-    """Returns build spec for base images."""
-    buildable_images = _get_buildable_images([''], [''])
-    image_templates = {'base-image': buildable_images['base-image']}
-    return create_cloud_build_spec(image_templates,
-                                   build_base_images=True,
-                                   experiment=experiment)
-
-
-def generate_benchmark_build_spec(fuzzers, benchmarks):
-    """Returns build spec for fuzzer-benchmark builds."""
-    buildable_images = _get_buildable_images(fuzzers, benchmarks)
-    image_templates = {}
-    for name in buildable_images:
-        if any(image_type in name
-               for image_type in ('base', 'coverage', 'dispatcher')):
-            continue
-        image_templates[name] = buildable_images[name]
-    return create_cloud_build_spec(image_templates)
-
-
-def generate_coverage_build_spec(fuzzers, benchmarks):
-    """Returns build spec for coverage builds."""
-    buildable_images = _get_buildable_images(fuzzers, benchmarks)
-    image_templates = {
-        name: image
-        for name, image in buildable_images.items()
-        if 'coverage' in name
-    }
-    return create_cloud_build_spec(image_templates, benchmark=benchmarks[0])
-
-
 def main():
     """Write base-images build spec when run from command line."""
-    base_images_spec = generate_base_images_build_spec(experiment=False)
+    image_templates = yaml_utils.read(
+        os.path.join(ROOT_DIR, 'docker', 'image_types.yaml'))
+    base_images_spec = create_cloud_build_spec(
+        {'base-image': image_templates['base-image']}, build_base_images=True)
     base_images_spec_file = os.path.join(ROOT_DIR, 'docker', 'base-images.yaml')
     yaml_utils.write(base_images_spec_file, base_images_spec)
 

@@ -42,14 +42,13 @@ def test_generate_cloud_build_spec():
             'env': 'DOCKER_BUILDKIT=1',
             'name': 'gcr.io/cloud-builders/docker',
             'args': [
-                'build', '--tag', 'gcr.io/fuzzbench/builders/afl/zlib-'
-                'intermediate', '--tag', '${_REPO}/builders/afl/zlib-'
-                'intermediate:${_EXPERIMENT}', '--cache-from',
+                'build', '--tag',
+                'gcr.io/fuzzbench/builders/afl/zlib-intermediate', '--tag',
                 '${_REPO}/builders/afl/zlib-intermediate:${_EXPERIMENT}',
+                '--cache-from', '${_REPO}/builders/afl/zlib-intermediate',
                 '--build-arg', 'BUILDKIT_INLINE_CACHE=1', '--build-arg',
-                'parent_image=gcr.io/fuzzbench/'
-                'builders/benchmark/zlib', '--file',
-                'fuzzers/afl/builder.Dockerfile', 'fuzzers/afl'
+                'parent_image=gcr.io/fuzzbench/builders/benchmark/zlib',
+                '--file', 'fuzzers/afl/builder.Dockerfile', 'fuzzers/afl'
             ],
             'wait_for': ['zlib-project-builder']
         }],
