@@ -20,7 +20,7 @@ from unittest.mock import patch
 from experiment.build import generate_cloudbuild
 
 
-@patch.dict(os.environ,{
+@patch.dict(os.environ, {
     'CLOUD_PROJECT': 'fuzzbench',
     'EXPERIMENT': 'test-experiment'
 })
