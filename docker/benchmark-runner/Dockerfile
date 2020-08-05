@@ -58,9 +58,9 @@ WORKDIR $WORKDIR
 # This also copies seed and dictionary files if they are available.
 COPY --from=builder /out/ ./
 # Copy the fuzzer.py file.
-COPY --from=builder /src/fuzzer.py .
+COPY --from=builder /src/fuzzer.py ./fuzzer.py
 # Copy the fuzzers directory.
-COPY --from=builder /src/fuzzers fuzzers
+COPY --from=builder /src/fuzzers ./fuzzers
 # Create empty __init__.py to allow python deps to work.
 RUN touch __init__.py
 
