@@ -37,7 +37,6 @@ from common import logs
 from common import new_process
 from common import utils
 from common import yaml_utils
-from src_analysis import experiment_changes
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
@@ -199,9 +198,13 @@ def get_git_hash():
     return output.strip().decode('utf-8')
 
 
-def start_experiment(experiment_name: str, config_filename: str,
-                     benchmarks: List[str], fuzzers: List[str],
-                     no_seeds=False, no_dictionaries=False):
+def start_experiment(  # pylint: disable=too-many-arguments
+        experiment_name: str,
+        config_filename: str,
+        benchmarks: List[str],
+        fuzzers: List[str],
+        no_seeds=False,
+        no_dictionaries=False):
     """Start a fuzzer benchmarking experiment."""
     check_no_local_changes()
 
@@ -451,26 +454,30 @@ def main():
                                required=False,
                                default=None,
                                choices=all_fuzzers)
-    fuzzers_group.add_argument('-s',
-                               '--no-seeds',
-                               help='Should trials be conducted without seed corpora.',
-                               required=False,
-                               default=False,
-                               action='store_true')
-    fuzzers_group.add_argument('-d',
-                               '--no-dictionaries',
-                               help='Should trials be conducted without dictionaries.',
-                               required=False,
-                               default=False,
-                               action='store_true')
+    fuzzers_group.add_argument(
+        '-s',
+        '--no-seeds',
+        help='Should trials be conducted without seed corpora.',
+        required=False,
+        default=False,
+        action='store_true')
+    fuzzers_group.add_argument(
+        '-d',
+        '--no-dictionaries',
+        help='Should trials be conducted without dictionaries.',
+        required=False,
+        default=False,
+        action='store_true')
 
     args = parser.parse_args()
     fuzzers = args.fuzzers or all_fuzzers
 
-    start_experiment(args.experiment_name, args.experiment_config,
-                     args.benchmarks, fuzzers,
+    start_experiment(args.experiment_name,
+                     args.experiment_config,
+                     args.benchmarks,
+                     fuzzers,
                      no_seeds=args.no_seeds,
-                     no_dictionary=args.no_dictionaries)
+                     no_dictionaries=args.no_dictionaries)
     return 0
 
 

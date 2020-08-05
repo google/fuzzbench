@@ -62,9 +62,9 @@ def test_dictionary_options_file_with_dict(fs):
     assert utils.get_dictionary_path('/fuzz-target') == '/fuzz.dict'
 
 
-def test_dictionary_skip(fs, environ):
-    """Test that None is return when SKIP_DICT is set."""
-    os.environ['SKIP_DICT'] = '1'
+def test_dictionary_no_dictionaries(fs, environ):
+    """Test that None is return when NO_DICTIONARIES is set."""
+    os.environ['NO_DICTIONARIES'] = '1'
     fs.create_file('/fuzz-target.dict', contents='A')
     assert utils.get_dictionary_path('/fuzz-target') is None
 
