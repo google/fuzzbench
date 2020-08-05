@@ -52,6 +52,7 @@ def test_add_nonprivate_experiments_for_merge_with_clobber(db):
 
 
 def test_get_experiment_data_fuzzer_stats(db):
+    """Tests that get_experiment_data handles fuzzer_stats correctly."""
     experiment_name = 'experiment-1'
     db_utils.add_all([
         models.Experiment(name=experiment_name,
@@ -68,6 +69,5 @@ def test_get_experiment_data_fuzzer_stats(db):
                                edges_covered=100,
                                fuzzer_stats=fuzzer_stats)
     db_utils.add_all([snapshot])
-    experiment_df = queries.get_experiment_data([experiment_name])
-    import pdb; pdb.set_trace()
-    pass
+    experiment_df = queries.get_experiment_data([experiment_name])  # pylint: disable=unused-variable
+    # TODO(metzman): Finish this.

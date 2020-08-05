@@ -13,12 +13,9 @@
 # limitations under the License.
 """Tests for runner.py."""
 
-import importlib
 import os
-import contextlib
 import pathlib
 import posixpath
-import sys
 from unittest import mock
 
 import pytest
@@ -65,15 +62,18 @@ FUZZER = 'fuzzer_a'
 
 
 class FuzzerAModule:
+    """A fake fuzzer.py module that impolements get_stats."""
     DEFAULT_STATS = '{"avg_execs":20.0}'
 
     @staticmethod
     def get_stats(output_directory, log_filename):
+        """Returns a stats string."""
         return FuzzerAModule.DEFAULT_STATS
 
 
 @pytest.yield_fixture
 def fuzzer_module():
+    """Fixture that makes sure record_stats uses a fake fuzzer module."""
     with mock.patch('experiment.runner.get_fuzzer_module',
                     return_value=FuzzerAModule):
         yield
@@ -117,7 +117,7 @@ def test_record_stats_unsupported(trial_runner):
     trial_runner.cycle = cycle
 
     class FuzzerAModuleNoGetStats:
-        pass
+        """Fake fuzzer.py module that doesn't implement get_stats."""
 
     with mock.patch('experiment.runner.get_fuzzer_module',
                     return_value=FuzzerAModuleNoGetStats):
@@ -135,14 +135,16 @@ def test_record_stats_invalid(stats_data, trial_runner, fuzzer_module):
     cycle = 1337
     trial_runner.cycle = cycle
 
-    class FuzzerAModuleGetStatsException:
+    class FuzzerAModuleCustomGetStats:
+        """Fake fuzzer.py that implements get_stats."""
 
         @staticmethod
         def get_stats(output_directory, log_filename):
+            """Fake get_stats method that returns stats_data."""
             return stats_data
 
     with mock.patch('experiment.runner.get_fuzzer_module',
-                    return_value=FuzzerAModuleGetStatsException):
+                    return_value=FuzzerAModuleCustomGetStats):
         with mock.patch('common.logs.error') as mocked_log_error:
             trial_runner.record_stats()
 
@@ -159,9 +161,11 @@ def test_record_stats_exception(mocked_log_error, trial_runner, fuzzer_module):
     trial_runner.cycle = cycle
 
     class FuzzerAModuleGetStatsException:
+        """Fake fuzzer.py module that exceptions when get_stats is called."""
 
         @staticmethod
         def get_stats(output_directory, log_filename):
+            """Fake get_stats method that exceptions when called."""
             raise Exception()
 
     with mock.patch('experiment.runner.get_fuzzer_module',

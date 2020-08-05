@@ -367,7 +367,8 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             output_corpus = environment.get('OUTPUT_CORPUS_DIR')
             stats_json_str = fuzzer_module_get_stats(output_corpus,
                                                      self.log_file)
-        except Exception:
+
+        except Exception:  # pylint: disable=broad-except
             logs.error('Call to %d failed.', fuzzer_module_get_stats)
             return
 
@@ -436,9 +437,12 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
 
 
 def get_fuzzer_module(fuzzer):
+    """Returns the fuzzer.py module for |fuzzer|. We made this function so that
+    we can mock the module because importing modules makes hard to undo changes
+    to the python process."""
     fuzzer_module_name = 'fuzzers.{fuzzer}.fuzzer'.format(fuzzer=fuzzer)
     fuzzer_module = importlib.import_module(fuzzer_module_name)
-    return fuzzer
+    return fuzzer_module
 
 
 def archive_directories(directories, archive_path):

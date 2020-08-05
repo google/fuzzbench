@@ -45,10 +45,11 @@ def build():
 
 
 def get_stats(output_corpus, fuzzer_log):  # pylint: disable=unused-argument
+    """Gets fuzzer stats for AFL."""
     # Get a dictionary containing the stats AFL reports.
     stats_file = os.path.join(output_corpus, 'fuzzer_stats')
-    with open(stats_file):
-        stats_file_lines = stats_file.read().splitlines()
+    with open(stats_file) as file_handle:
+        stats_file_lines = file_handle.read().splitlines()
     stats_file_stats = dict(
         stats_line.split(': ') for stats_line in stats_file_lines)
 
@@ -122,7 +123,3 @@ def fuzz(input_corpus, output_corpus, target_binary):
     prepare_fuzz_environment(input_corpus)
 
     run_afl_fuzz(input_corpus, output_corpus, target_binary)
-
-
-def get_stats(output_corpus, fuzzer_log):
-    return '{"avg_execs":20.0}'
