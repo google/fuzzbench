@@ -232,27 +232,7 @@
                 </li>
             </ul>
 
-            <div class="row">
-                <div class="col s12">
-                    <div class="card white darken-1">
-                        <div class="card-content black-text">
-                        <span class="card-title">Coverage reports</span>
-                        <p>Choose the fuzzer to see the coverage report of that fuzzer on this benchmark.</p>
-                        </div>
-                        <div class="card-action">
-                            <a class='dropdown-trigger btn' href='#' data-target='dropdown-{{ benchmark.name }}'>FUZZER LIST</a>
-
-                            <!-- Dropdown Structure -->
-                            <ul id='dropdown-{{ benchmark.name }}' class='dropdown-content'>
-                                {% for fuzzer in benchmark.fuzzers %}
-                                <li><a href="coverage-reports/{{ benchmark.name }}/{{ fuzzer }}/index.html">{{ fuzzer }}</a></li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+            {% if clang_coverage_reports %}
             <ul class="collapsible">
                 <li>
                     <div class="collapsible-header">
@@ -261,16 +241,16 @@
                     <div class="collapsible-body">
                         <div class="row">
                             {% for fuzzer in benchmark.fuzzers %}
-                            <div class="col s1">
-                                <li><a href="coverage-reports/{{ benchmark.name }}/{{ fuzzer }}/index.html">{{ fuzzer }}</a></li>
+                            <div class="col">
+                                <a href="coverage-reports/{{ benchmark.name }}/{{ fuzzer }}/index.html"><a class="waves-effect waves-light btn">{{ fuzzer }}</a></a>
                             </div>
                             {% endfor %}
                         </div>
                     </div>
                 </li>
             </ul>
-
-
+            {% endif %}
+            
         </div> <!-- id="{{ benchmark.name }}" -->
         {% endfor %}
 

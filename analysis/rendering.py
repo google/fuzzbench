@@ -20,7 +20,8 @@ import jinja2
 from common import utils
 
 
-def render_report(experiment_results, template, in_progress):
+def render_report(experiment_results, template, in_progress,
+                  clang_coverage_reports):
     """Renders report with |template| using data provided by the
     |experiment_results| context.
 
@@ -38,4 +39,5 @@ def render_report(experiment_results, template, in_progress):
     )
     template = environment.get_template(template)
     return template.render(experiment=experiment_results,
-                           in_progress=in_progress)
+                           in_progress=in_progress,
+                           clang_coverage_reports=clang_coverage_reports)

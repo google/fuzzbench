@@ -191,7 +191,8 @@ def generate_report(experiment_names,
 
     template = report_type + '.html'
     detailed_report = rendering.render_report(experiment_ctx, template,
-                                              in_progress)
+                                              in_progress,
+                                              clang_coverage_reports)
 
     filesystem.write(os.path.join(report_directory, 'index.html'),
                      detailed_report)
