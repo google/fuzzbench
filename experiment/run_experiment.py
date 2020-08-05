@@ -200,7 +200,8 @@ def get_git_hash():
 
 
 def start_experiment(experiment_name: str, config_filename: str,
-                     benchmarks: List[str], fuzzers: List[str]):
+                     benchmarks: List[str], fuzzers: List[str],
+                     no_seeds=False, no_dictionaries=False):
     """Start a fuzzer benchmarking experiment."""
     check_no_local_changes()
 
@@ -212,6 +213,8 @@ def start_experiment(experiment_name: str, config_filename: str,
     config['benchmarks'] = ','.join(benchmarks)
     config['experiment'] = experiment_name
     config['git_hash'] = get_git_hash()
+    config['no_seeds'] = no_seeds
+    config['no_dictionaries'] = no_dictionaries
 
     set_up_experiment_config_file(config)
 
@@ -448,28 +451,26 @@ def main():
                                required=False,
                                default=None,
                                choices=all_fuzzers)
-    fuzzers_group.add_argument('-cf',
-                               '--changed-fuzzers',
-                               help=('Use fuzzers that have changed since the '
-                                     'last experiment. The last experiment is '
-                                     'determined by the database your '
-                                     'experiment uses, not necessarily the '
-                                     'fuzzbench service'),
-                               action='store_true',
-                               required=False)
+    fuzzers_group.add_argument('-s',
+                               '--no-seeds',
+                               help='Should trials be conducted without seed corpora.',
+                               required=False,
+                               default=False,
+                               action='store_true')
+    fuzzers_group.add_argument('-d',
+                               '--no-dictionaries',
+                               help='Should trials be conducted without dictionaries.',
+                               required=False,
+                               default=False,
+                               action='store_true')
 
     args = parser.parse_args()
-
-    if args.changed_fuzzers:
-        fuzzers = experiment_changes.get_fuzzers_changed_since_last()
-        if not fuzzers:
-            logs.error('No fuzzers changed since last experiment. Exiting.')
-            return 1
-    else:
-        fuzzers = args.fuzzers or all_fuzzers
+    fuzzers = args.fuzzers or all_fuzzers
 
     start_experiment(args.experiment_name, args.experiment_config,
-                     args.benchmarks, fuzzers)
+                     args.benchmarks, fuzzers,
+                     no_seeds=args.no_seeds,
+                     no_dictionary=args.no_dictionaries)
     return 0
 
 
