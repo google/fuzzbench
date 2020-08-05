@@ -56,6 +56,9 @@ def prepare_build_environment():
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
+    # Add flags for various benchmarks.
+    add_compilation_cflags()
+
     os.environ['LLVM_CC_NAME'] = 'clang-6.0'
     os.environ['LLVM_CXX_NAME'] = 'clang++-6.0'
     os.environ['LLVM_AR_NAME'] = 'llvm-ar-6.0'
@@ -64,7 +67,20 @@ def prepare_build_environment():
     os.environ['CC'] = 'wllvm'
     os.environ['CXX'] = 'wllvm++'
 
-    os.environ['FUZZER_LIB'] = '/libAFL.a -L/ -lKleeMock -lpthread'
+    os.environ['FUZZER_LIB'] = '/libAFL.a'  # -L/ -lKleeMock -lpthread'
+
+    # Fix FUZZER_LIB for various benchmarks.
+    fix_fuzzer_lib()
+
+
+def openthread_suppress_error_flags():
+    """Suppress errors for openthread"""
+    return [
+        '-Wno-error=embedded-directive',
+        '-Wno-error=gnu-zero-variadic-macro-arguments',
+        '-Wno-error=overlength-strings', '-Wno-error=c++11-long-long',
+        '-Wno-error=c++11-extensions', '-Wno-error=variadic-macros'
+    ]
 
 
 def get_size_for_benchmark():
@@ -124,20 +140,89 @@ def get_bc_files():
 
 
 def get_fuzz_target():
-    """Get the fuzz target"""
-    out_dir = os.environ['OUT']
-    if is_benchmark('sqlite3'):
-        return os.path.join(out_dir, 'ossfuzz')
-
-    if is_benchmark('zlib'):
-        return os.path.join(out_dir, 'zlib_uncompress_fuzzer')
-
-    # For non oss-projects, FUZZ_TARGET contain the target binary
+    """Get the fuzz target name"""
+    # For non oss-projects, FUZZ_TARGET contain the target binary.
     fuzz_target = os.getenv('FUZZ_TARGET', None)
     if fuzz_target is not None:
-        return fuzz_target
+        return [fuzz_target]
 
-    raise ValueError('Cannot determine fuzz target')
+    print('[get_fuzz_target] FUZZ_TARGET is not defined')
+
+    # For these benchmarks, only return one file.
+    targets = {
+        'curl': 'curl_fuzzer_http',
+        'openssl': 'x509',
+        'systemd': 'fuzz-link-parser',
+        'php': 'php-fuzz-parser'
+    }
+
+    for target, fuzzname in targets.items():
+        if is_benchmark(target):
+            return [os.path.join(os.environ['OUT'], fuzzname)]
+
+    # For the reamining oss-projects, use some heuristics.
+    # We look for binaries in the OUT directory and take it as our targets.
+    # Note that we may return multiple binaries: this is necessary because
+    # sometimes multiple binaries are generated and we don't know which will
+    # be used for fuzzing (e.g., zlib benchmark).
+    # dictionary above.
+    out_dir = os.environ['OUT']
+    files = os.listdir(out_dir)
+    fuzz_targets = []
+    for filename in files:
+        candidate_bin = os.path.join(out_dir, filename)
+        if 'fuzz' in filename and os.access(candidate_bin, os.X_OK):
+            fuzz_targets += [candidate_bin]
+
+    if len(fuzz_targets) == 0:
+        raise ValueError("Cannot find binary")
+    print("[get_fuzz_target] targets: %s" % fuzz_targets)
+    return fuzz_targets
+
+
+def fix_fuzzer_lib():
+    """Fix FUZZER_LIB for certain benchmarks"""
+
+    os.environ['FUZZER_LIB'] += ' -L/ -lKleeMock -lpthread'
+
+    if is_benchmark('curl'):
+        shutil.copy('/libKleeMock.so', '/usr/lib/libKleeMock.so')
+
+    shutil.copy('/libAFL.a', '/usr/lib/libFuzzingEngine.a')
+    if is_benchmark('systemd'):
+        shutil.copy('/libAFL.a', '/usr/lib/libFuzzingEngine.a')
+        ld_flags = ['-lpthread']
+        utils.append_flags('LDFLAGS', ld_flags)
+
+
+def add_compilation_cflags():
+    """Add custom flags for certain benchmarks"""
+    if is_benchmark('openthread'):
+        openthread_flags = openthread_suppress_error_flags()
+        utils.append_flags('CFLAGS', openthread_flags)
+        utils.append_flags('CXXFLAGS', openthread_flags)
+
+    elif is_benchmark('php'):
+        php_flags = ['-D__builtin_cpu_supports\\(x\\)=0']
+        utils.append_flags('CFLAGS', php_flags)
+        utils.append_flags('CXXFLAGS', php_flags)
+
+    # For some benchmarks, we also tell the compiler
+    # to ignore unresolved symbols. This is useful when we cannot change
+    # the build process to add a shared library for linking
+    # (which contains mocked functions: libAflccMock.so).
+    # Note that some functions are only defined post-compilation
+    # during the LLVM passes.
+    elif is_benchmark('bloaty') or is_benchmark('openssl') or is_benchmark(
+            'systemd'):
+        unresolved_flags = ['-Wl,--warn-unresolved-symbols']
+        utils.append_flags('CFLAGS', unresolved_flags)
+        utils.append_flags('CXXFLAGS', unresolved_flags)
+
+    elif is_benchmark('curl'):
+        dl_flags = ['-ldl', '-lpsl']
+        utils.append_flags('CFLAGS', dl_flags)
+        utils.append_flags('CXXFLAGS', dl_flags)
 
 
 def build():
@@ -146,12 +231,14 @@ def build():
 
     utils.build_benchmark()
 
-    fuzz_target = get_fuzz_target()
-    getbc_cmd = 'extract-bc {target}'.format(target=fuzz_target)
+    fuzz_targets = get_fuzz_target()
+    for target in fuzz_targets:
+        getbc_cmd = 'extract-bc {target}'.format(target=target)
 
     if os.system(getbc_cmd) != 0:
-        raise ValueError('get-bc failed')
-    get_bcs_for_shared_libs(fuzz_target)
+        raise ValueError('extract-bc failed')
+    for target in fuzz_targets:
+        get_bcs_for_shared_libs(target)
 
 
 def rmdir(path):
@@ -163,7 +250,9 @@ def rmdir(path):
 def emptydir(path):
     """Empty a directory"""
     rmdir(path)
+
     os.mkdir(path)
+
 
 # pylint: disable=too-many-locals
 def run(command, hide_output=False, ulimit_cmd=None):
@@ -215,12 +304,10 @@ def covert_seed_inputs(ktest_tool, input_klee, input_corpus):
         file_size = os.path.getsize(seedfile)
         benchmark_size = get_size_for_benchmark()
         if file_size > benchmark_size:
-            print(
-                '[run_fuzzer] Truncating {path} ({file_size}) to \
-                    {benchmark_size}'
-                .format(path=seedfile,
-                        file_size=file_size,
-                        benchmark_size=benchmark_size))
+            print('[run_fuzzer] Truncating {path} ({file_size}) to \
+                    {benchmark_size}'.format(path=seedfile,
+                                             file_size=file_size,
+                                             benchmark_size=benchmark_size))
             os.truncate(seedfile, benchmark_size)
 
         seed_in = '{seed}.ktest'.format(seed=seedfile)
@@ -256,6 +343,7 @@ def covert_seed_inputs(ktest_tool, input_klee, input_corpus):
         converted=n_converted))
 
     return n_converted
+
 
 # pylint: disable=wrong-import-position
 # pylint: disable=too-many-locals
@@ -353,10 +441,19 @@ def fuzz(input_corpus, output_corpus, target_binary):
             lib_bc=LIB_BC_DIR, filename=filename))
 
     klee_cmd = [
-        klee_bin, '--optimize', '-max-solver-time', '30s',
-        '-log-timed-out-queries', '--max-time', '{}s'.format(seconds), '-libc',
-        'uclibc', '-libcxx', '-posix-runtime',
-        '-only-output-states-covering-new', '-output-dir', output_klee
+        klee_bin,
+        '-max-solver-time',
+        '30s',
+        '-log-timed-out-queries',
+        '--max-time',
+        '{}s'.format(seconds),
+        '-libc',
+        'uclibc',
+        '-libcxx',
+        '-posix-runtime',
+        '--disable-verify',  # Needed because debug builds don't always work.
+        '-output-dir',
+        output_klee,
     ]
 
     klee_cmd.extend(llvm_link_libs)

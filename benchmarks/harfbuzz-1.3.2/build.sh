@@ -25,12 +25,16 @@ apt-get update && \
   pkg-config \
   libcairo2-dev
 
-get_git_revision https://github.com/behdad/harfbuzz.git  f73a87d9a8c76a181794b74b527ea268048f78e3 SRC
+get_git_revision https://github.com/behdad/harfbuzz.git  \
+  f73a87d9a8c76a181794b74b527ea268048f78e3 SRC
 
 build_lib() {
   rm -rf BUILD
   cp -rf SRC BUILD
-  (cd BUILD && ./autogen.sh && CCLD="$CXX $CXXFLAGS" ./configure --enable-static --disable-shared &&
+  (cd BUILD && ./autogen.sh)
+  (cd BUILD/src/hb-ucdn && CCLD="$CXX $CXXFLAGS" make)
+  (cd BUILD && CCLD="$CXX $CXXFLAGS" ./configure --enable-static \
+    --disable-shared --with-glib=no --with-cairo=no && \
     make -j $JOBS -C src fuzzing)
 }
 
@@ -41,4 +45,5 @@ if [[ ! -d $OUT/seeds ]]; then
   cp BUILD/test/shaping/fonts/sha1sum/* $OUT/seeds/
 fi
 
-$CXX $CXXFLAGS -std=c++11 -I BUILD/src/ BUILD/test/fuzzing/hb-fuzzer.cc BUILD/src/.libs/libharfbuzz-fuzzing.a $FUZZER_LIB -lglib-2.0 -o $FUZZ_TARGET
+$CXX $CXXFLAGS -std=c++11 -I BUILD/src/ BUILD/test/fuzzing/hb-fuzzer.cc \
+  BUILD/src/.libs/libharfbuzz-fuzzing.a $FUZZER_LIB -o $FUZZ_TARGET
