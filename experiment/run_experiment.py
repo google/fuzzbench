@@ -446,22 +446,21 @@ def main():
                         '--experiment-name',
                         help='Experiment name.',
                         required=True)
-    fuzzers_group = parser.add_mutually_exclusive_group()
-    fuzzers_group.add_argument('-f',
-                               '--fuzzers',
-                               help='Fuzzers to use.',
-                               nargs='+',
-                               required=False,
-                               default=None,
-                               choices=all_fuzzers)
-    fuzzers_group.add_argument(
+    parser.add_argument('-f',
+                        '--fuzzers',
+                        help='Fuzzers to use.',
+                        nargs='+',
+                        required=False,
+                        default=None,
+                        choices=all_fuzzers)
+    parser.add_argument(
         '-s',
         '--no-seeds',
         help='Should trials be conducted without seed corpora.',
         required=False,
         default=False,
         action='store_true')
-    fuzzers_group.add_argument(
+    parser.add_argument(
         '-d',
         '--no-dictionaries',
         help='Should trials be conducted without dictionaries.',
