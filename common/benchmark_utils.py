@@ -15,6 +15,7 @@
 import os
 import re
 
+from common import environment
 from common import logs
 from common import benchmark_config
 from common import utils
@@ -37,11 +38,12 @@ def get_fuzz_target(benchmark):
 def get_runner_image_url(experiment, benchmark, fuzzer, docker_registry):
     """Get the URL of the docker runner image for fuzzing the benchmark with
     fuzzer."""
-    return '{docker_registry}/runners/{fuzzer}/{benchmark}:{experiment}'.format(
+    tag = 'latest' if environment.get('LOCAL_EXPERIMENT') else experiment
+    return '{docker_registry}/runners/{fuzzer}/{benchmark}:{tag}'.format(
         docker_registry=docker_registry,
         fuzzer=fuzzer,
         benchmark=benchmark,
-        experiment=experiment)
+        tag=tag)
 
 
 def get_builder_image_url(benchmark, fuzzer, docker_registry):

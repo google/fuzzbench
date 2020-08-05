@@ -45,8 +45,10 @@ def test_output_report_filestore(fs, experiment):
                 'rsync', '-d', '-r', reports_dir,
                 'gs://web-reports/test-experiment'
             ]]
+            experiment_name = os.environ['EXPERIMENT']
             mocked_generate_report.assert_called_with(
-                [os.environ['EXPERIMENT']],
+                [experiment_name],
                 reports_dir,
+                report_name=experiment_name,
                 in_progress=False,
                 merge_with_clobber_nonprivate=False)

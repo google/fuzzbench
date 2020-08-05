@@ -60,6 +60,8 @@ def _print_makefile_run_template(image):
             print('\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\')
         if run_type == 'debug':
             print('\t--entrypoint "/bin/bash" \\\n\t-it ', end='')
+        elif run_type == 'run':
+            print('\t-it ', end='')
         else:
             print('\t', end='')
 

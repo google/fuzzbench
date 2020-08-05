@@ -52,6 +52,7 @@ def output_report(experiment_config: dict, in_progress=False):
         generate_report.generate_report(
             [experiment_name],
             str(reports_dir),
+            report_name=experiment_name,
             in_progress=in_progress,
             merge_with_clobber_nonprivate=merge_with_nonprivate)
         filestore_utils.rsync(str(reports_dir),
