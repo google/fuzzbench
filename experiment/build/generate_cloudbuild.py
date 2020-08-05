@@ -25,11 +25,11 @@ from experiment.build import build_utils
 BASE_TAG = 'gcr.io/fuzzbench'
 
 
-def get_experiment_tag_for_image(image_specs, is_tagged=True):
+def get_experiment_tag_for_image(image_specs, tag_by_experiment=True):
     """Returns the registry with the experiment tag for given image."""
     tag = posixpath.join(experiment_utils.get_base_docker_tag(),
                          image_specs['tag'])
-    if is_tagged:
+    if tag_by_experiment:
         tag += ':' + experiment_utils.get_experiment_name()
     return tag
 
@@ -84,7 +84,7 @@ def create_cloud_build_spec(image_templates,
             'build', '--tag',
             posixpath.join(BASE_TAG, image_specs['tag']), '--tag',
             get_experiment_tag_for_image(image_specs), '--cache-from',
-            get_experiment_tag_for_image(image_specs, is_tagged=False),
+            get_experiment_tag_for_image(image_specs, tag_by_experiment=False),
             '--build-arg', 'BUILDKIT_INLINE_CACHE=1'
         ]
         for build_arg in image_specs.get('build_arg', []):
@@ -105,7 +105,7 @@ def create_cloud_build_spec(image_templates,
         cloud_build_spec['images'].append(
             get_experiment_tag_for_image(image_specs))
         cloud_build_spec['images'].append(
-            get_experiment_tag_for_image(image_specs, is_tagged=False))
+            get_experiment_tag_for_image(image_specs, tag_by_experiment=False))
 
     if any(image_specs['type'] in 'coverage'
            for _, image_specs in image_templates.items()):
