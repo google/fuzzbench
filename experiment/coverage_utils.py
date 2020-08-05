@@ -46,6 +46,7 @@ def generate_cov_reports(experiments, benchmarks, fuzzers, report_dir):
 
 def generate_cov_report(experiments, benchmark, fuzzer, report_dir):
     """Generate the coverage report for one pair of benchmark and fuzzer."""
+    logs.initialize()
     logger.info('Generating coverage report for benchmark: {benchmark} \
                 fuzzer: {fuzzer}.'.format(benchmark=benchmark, fuzzer=fuzzer))
     generator = CoverageReporter(fuzzer, benchmark, experiments, report_dir,
@@ -67,10 +68,15 @@ def set_up_coverage_files(experiment_names, report_dir, benchmarks):
         set_up_coverage_file_args = [(experiment_names, report_dir, benchmark)
                                      for benchmark in benchmarks]
         pool.starmap(set_up_coverage_file, set_up_coverage_file_args)
+        pool.close()
+        pool.join()
 
 
 def set_up_coverage_file(experiment_names, report_dir, benchmark):
     """Sets up coverage files for |benchmark|."""
+    logs.initialize()
+    logger.info('Started setting up coverage file for'
+                'benchmark: {benchmark}'.format(benchmark=benchmark))
     for experiment in experiment_names:
         archive_filestore_path = get_benchmark_archive(experiment, benchmark)
         archive_exist = filestore_utils.ls(archive_filestore_path,
@@ -81,12 +87,15 @@ def set_up_coverage_file(experiment_names, report_dir, benchmark):
             filesystem.create_directory(benchmark_report_dir)
             filestore_utils.cp(archive_filestore_path,
                                str(benchmark_report_dir))
+            print(benchmark_report_dir)
             archive_name = 'coverage-build-%s.tar.gz' % benchmark
-            archive_path = benchmark_report_dir / archive_name
+            archive_path = os.path.join(benchmark_report_dir, archive_name)
             tar = tarfile.open(archive_path, 'r:gz')
             tar.extractall(benchmark_report_dir)
             os.remove(archive_path)
             break
+    logger.info('Finished setting up coverage file for'
+                'benchmark: {benchmark}'.format(benchmark=benchmark))
 
 
 def get_benchmark_archive(experiment_name, benchmark):
@@ -94,8 +103,8 @@ def get_benchmark_archive(experiment_name, benchmark):
     for |benchmark|."""
     experiment_filestore_dir = get_experiment_filestore_path(experiment_name)
     archive_name = 'coverage-build-%s.tar.gz' % benchmark
-    return posixpath.join(experiment_filestore_dir, experiment_name,
-                          'coverage-bianries', archive_name)
+    return posixpath.join(experiment_filestore_dir, 'coverage-binaries',
+                          archive_name)
 
 
 def get_experiment_filestore_path(experiment_name):
@@ -118,12 +127,12 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
     fuzzer and benchmark."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, fuzzer, benchmark, experiments, report_dir, logger):
+    def __init__(self, fuzzer, benchmark, experiments, report_dir, cov_logger):
         self.fuzzer = fuzzer
         self.benchmark = benchmark
         self.experiments = experiments
         self.report_dir = report_dir
-        self.logger = logger
+        self.logger = cov_logger
         self.benchmark_report_dir = os.path.join(self.report_dir, benchmark)
         self.fuzzer_report_dir = os.path.join(self.benchmark_report_dir, fuzzer)
         self.merged_profdata_file = os.path.join(self.fuzzer_report_dir,
@@ -135,6 +144,9 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
 
     def merge_profdata_files(self):
         """Merge profdata files from |src_files| to |dst_files|."""
+        self.logger.info('Merging profdata for fuzzer: '
+                         '{fuzzer},benchmark: {benchmark}.'.format(
+                             fuzzer=self.fuzzer, benchmark=self.benchmark))
         files_to_merge = os.listdir(self.fuzzer_report_dir)
         command = ['llvm-profdata', 'merge', '-sparse']
         command.extend(files_to_merge)
@@ -145,6 +157,9 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
 
     def fetch_profdata_file(self):
         """Fetches the profdata files for |fuzzer| on |benchmark| from gcs."""
+        self.logger.info('Fetching profdata for fuzzer: '
+                         '{fuzzer},benchmark: {benchmark}.'.format(
+                             fuzzer=self.fuzzer, benchmark=self.benchmark))
         files_to_merge = []
         for experiment in self.experiments:
             trial_ids = measurer.get_trial_ids(experiment, self.fuzzer,
@@ -155,7 +170,9 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             ])
         filesystem.create_directory(self.fuzzer_report_dir)
         for file_path in files_to_merge:
-            filestore_utils.cp(file_path, self.fuzzer_report_dir)
+            filestore_utils.cp(file_path,
+                               self.fuzzer_report_dir,
+                               expect_zero=False)
 
     def get_profdata_file_path(self, experiment, trial_id):
         """Gets profdata file path for a specific trial."""
@@ -185,5 +202,5 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         result = new_process.execute(command, expect_zero=False)
         if result.retcode != 0:
             logger.error('Coverage report generation failed for '
-                         'fuzzer:{fuzzer},benchmark:{benchmark}.'.format(
+                         'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
                              fuzzer=self.fuzzer, benchmark=self.benchmark))

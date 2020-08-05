@@ -37,4 +37,3 @@ def generate_coverage_report(experiment_names,
                                             fuzzers, coverage_report_directory)
     except Exception:  # pylint: disable=broad-except
         logger.error('Failed to generate coverage reports.')
-

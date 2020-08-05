@@ -155,7 +155,10 @@ def dispatcher_main():
             is_complete = not measurer_main_process.is_alive()
 
         # Generate periodic output reports.
-        reporter.output_report(experiment.config, in_progress=not is_complete)
+        clang_cov_reports = is_complete
+        reporter.output_report(experiment.config,
+                               in_progress=not is_complete,
+                               clang_coverage_reports=clang_cov_reports)
 
         if is_complete:
             # Experiment is complete, bail out.

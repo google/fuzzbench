@@ -27,7 +27,6 @@ from analysis import rendering
 from analysis import generate_coverage_report as cov_reporter
 from common import filesystem
 from common import logs
-from experiment import coverage_utils
 
 logger = logs.Logger('generate_report')
 
@@ -78,6 +77,11 @@ def get_arg_parser():
                         '--fuzzers',
                         nargs='*',
                         help='Names of the fuzzers to include in the report.')
+    parser.add_argument('-clang',
+                        '--clang-coverage-reports',
+                        action='store_true',
+                        default=False,
+                        help='If set, clang coverage reports are linked.')
 
     # It doesn't make sense to clobber and label by experiment, since nothing
     # can get clobbered like this.
@@ -134,7 +138,8 @@ def generate_report(experiment_names,
                     in_progress=False,
                     end_time=None,
                     merge_with_clobber=False,
-                    merge_with_clobber_nonprivate=False):
+                    merge_with_clobber_nonprivate=False,
+                    clang_coverage_reports=False):
     """Generate report helper."""
     if merge_with_clobber_nonprivate:
         experiment_names = (
@@ -175,12 +180,10 @@ def generate_report(experiment_names,
     benchmark_names = experiment_df.benchmark.unique()
     fuzzer_names = experiment_df.fuzzer.unique()
 
-    try:
+    if clang_coverage_reports:
         cov_reporter.generate_coverage_report(experiment_names,
                                               report_directory, benchmark_names,
                                               fuzzer_names)
-    except Exception:
-        logger.error('Failed generating coverage report.')
 
     plotter = plotting.Plotter(fuzzer_names, quick, log_scale)
     experiment_ctx = experiment_results.ExperimentResults(
@@ -212,7 +215,8 @@ def main():
                     log_scale=args.log_scale,
                     from_cached_data=args.from_cached_data,
                     end_time=args.end_time,
-                    merge_with_clobber=args.merge_with_clobber)
+                    merge_with_clobber=args.merge_with_clobber,
+                    clang_coverage_reports=args.clang_coverage_reports)
 
 
 if __name__ == '__main__':
