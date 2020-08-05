@@ -253,6 +253,23 @@
                 </div>
             </div>
 
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Coverage reports for each fuzzer on this benchmark
+                    </div>
+                    <div class="collapsible-body">
+                        <div class="row">
+                            {% for fuzzer in benchmark.fuzzers %}
+                            <div class="col s1">
+                                <li><a href="coverage-reports/{{ benchmark.name }}/{{ fuzzer }}/index.html">{{ fuzzer }}</a></li>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </li>
+            </ul>
+
 
         </div> <!-- id="{{ benchmark.name }}" -->
         {% endfor %}
