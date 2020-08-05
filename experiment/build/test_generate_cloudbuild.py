@@ -15,7 +15,7 @@
 
 import os
 
-from unittest.mock import patch
+from unittest.mock import patch 
 
 from experiment.build import generate_cloudbuild
 
@@ -34,7 +34,7 @@ def test_generate_cloud_build_spec():
             ],
             'depends_on': ['zlib-project-builder'],
             'dockerfile': 'fuzzers/afl/builder.Dockerfile',
-            'path': 'fuzzers/afl',
+            'context': 'fuzzers/afl',
             'tag': 'builders/afl/zlib-intermediate',
             'type': 'builder'
         }

@@ -26,7 +26,7 @@ def test_print_makefile_build(mocked_print):
     name = 'afl-zlib-builder-intermediate'
     image = {
         'tag': 'builders/afl/zlib-intermediate',
-        'path': 'fuzzers/afl',
+        'context': 'fuzzers/afl',
         'dockerfile': 'fuzzers/afl/builder.Dockerfile',
         'depends_on': ['zlib-project-builder'],
         'build_arg': ['parent_image=gcr.io/fuzzbench/builders/benchmark/zlib']

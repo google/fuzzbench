@@ -3,7 +3,7 @@
 
 'base-image':
   dockerfile: 'docker/base-image/Dockerfile'
-  path: 'docker/base-image'
+  context: 'docker/base-image'
   tag: 'base-image'
   type: 'base'
 
@@ -11,7 +11,7 @@
   depends_on:
     - 'base-image'
   dockerfile: 'docker/dispatcher-image/Dockerfile'
-  path: 'docker/dispatcher-image'
+  context: 'docker/dispatcher-image'
   tag: 'dispatcher-image'
   type: 'dispatcher'
 
@@ -21,7 +21,7 @@
   depends_on:
     - '{benchmark}-project-builder'
   dockerfile: 'fuzzers/coverage/builder.Dockerfile'
-  path: 'fuzzers/coverage'
+  context: 'fuzzers/coverage'
   tag: 'builders/coverage/{benchmark}-intermediate'
   type: 'coverage'
 
@@ -33,7 +33,7 @@
   depends_on:
     - 'coverage-{benchmark}-builder-intermediate'
   dockerfile: 'docker/benchmark-builder/Dockerfile'
-  path: '.'
+  context: '.'
   tag: 'builders/coverage/{benchmark}'
   type: 'coverage'
 
@@ -42,7 +42,7 @@
 # that and then rename this.
 '{benchmark}-project-builder':
   dockerfile: 'benchmarks/{benchmark}/Dockerfile'
-  path: 'benchmarks/{benchmark}'
+  context: 'benchmarks/{benchmark}'
   tag: 'builders/benchmark/{benchmark}'
   type: 'builder'
 
@@ -52,7 +52,7 @@
   depends_on:
     - '{benchmark}-project-builder'
   dockerfile: 'fuzzers/{fuzzer}/builder.Dockerfile'
-  path: 'fuzzers/{fuzzer}'
+  context: 'fuzzers/{fuzzer}'
   tag: 'builders/{fuzzer}/{benchmark}-intermediate'
   type: 'builder'
 
@@ -64,7 +64,7 @@
   depends_on:
     - '{fuzzer}-{benchmark}-builder-intermediate'
   dockerfile: 'docker/benchmark-builder/Dockerfile'
-  path: '.'
+  context: '.'
   tag: 'builders/{fuzzer}/{benchmark}'
   type: 'builder'
 
@@ -72,7 +72,7 @@
   depends_on:
     - '{fuzzer}-{benchmark}-builder'
   dockerfile: 'fuzzers/{fuzzer}/runner.Dockerfile'
-  path: 'fuzzers/{fuzzer}'
+  context: 'fuzzers/{fuzzer}'
   tag: 'runners/{fuzzer}/{benchmark}-intermediate'
   type: 'runner'
 
@@ -85,6 +85,6 @@
     - '{fuzzer}-{benchmark}-intermediate-runner'
   dockerfile: 'docker/benchmark-runner/Dockerfile'
   fuzzer: '{fuzzer}'
-  path: '.'
+  context: '.'
   tag: 'runners/{fuzzer}/{benchmark}'
   type: 'runner'

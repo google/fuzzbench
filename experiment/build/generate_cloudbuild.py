@@ -91,7 +91,7 @@ def create_cloud_build_spec(image_templates,
             step['args'] += ['--build-arg', build_arg]
 
         step['args'] += [
-            '--file', image_specs['dockerfile'], image_specs['path']
+            '--file', image_specs['dockerfile'], image_specs['context']
         ]
         step['wait_for'] = []
         for dependency in image_specs.get('depends_on', []):

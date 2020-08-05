@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Simple generator for local Makefile rules."""
-
+ 
 import os
 
 from common import yaml_utils
@@ -59,7 +59,7 @@ def _print_makefile_run_template(image):
         if run_type == 'test-run':
             print('\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\')
         if run_type == 'debug':
-            print('\t-entrypoint "/bin/bash" \\\n\t-it ', end='')
+            print('\t--entrypoint "/bin/bash" \\\n\t-it ', end='')
         else:
             print('\t', end='')
 
@@ -89,7 +89,7 @@ def print_rules_for_image(name, image):
             print('\t--build-arg ' + arg + ' \\')
     if 'dockerfile' in image:
         print('\t--file ' + image['dockerfile'] + ' \\')
-    print('\t' + image['path'])
+    print('\t' + image['context'])
     print()
 
     # Print run, debug, test-run rules if image is a runner.
