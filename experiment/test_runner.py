@@ -71,6 +71,7 @@ class FuzzerAModule:
     def get_stats(output_directory, log_filename):
         return FuzzerAModule.DEFAULT_STATS
 
+
 @pytest.yield_fixture
 def fuzzer_module():
     with mock.patch('experiment.runner.get_fuzzer_module',
@@ -126,26 +127,28 @@ def test_record_stats_unsupported(trial_runner):
     assert not os.path.exists(stats_file)
 
 
-@pytest.mark.parametrize([stats_data, ('1', '{1:2}', '{"avg_execs": None}'))
-@mock.patch('common.logs.error')
-def test_record_stats_invalid(mocked_log_error, trial_runner, fuzzer_module):
+@pytest.mark.parametrize(('stats_data',), [('1',), ('{1:2}',),
+                                           ('{"avg_execs": None}',)])
+def test_record_stats_invalid(stats_data, trial_runner, fuzzer_module):
     """Tests that record_stats works as intended when fuzzer_module.get_stats
     exceptions."""
     cycle = 1337
     trial_runner.cycle = cycle
 
     class FuzzerAModuleGetStatsException:
+
         @staticmethod
         def get_stats(output_directory, log_filename):
-            raise Exception()
+            return stats_data
 
     with mock.patch('experiment.runner.get_fuzzer_module',
                     return_value=FuzzerAModuleGetStatsException):
-        trial_runner.record_stats()
+        with mock.patch('common.logs.error') as mocked_log_error:
+            trial_runner.record_stats()
 
     stats_file = os.path.join(trial_runner.results_dir, 'stats-%d.json' % cycle)
     assert not os.path.exists(stats_file)
-    mocked_log_error.assert_called_with('Call to %d failed.', FuzzerAModuleGetStatsException.get_stats)
+    mocked_log_error.assert_called_with('Stats are invalid.')
 
 
 @mock.patch('common.logs.error')
@@ -156,6 +159,7 @@ def test_record_stats_exception(mocked_log_error, trial_runner, fuzzer_module):
     trial_runner.cycle = cycle
 
     class FuzzerAModuleGetStatsException:
+
         @staticmethod
         def get_stats(output_directory, log_filename):
             raise Exception()
@@ -166,7 +170,8 @@ def test_record_stats_exception(mocked_log_error, trial_runner, fuzzer_module):
 
     stats_file = os.path.join(trial_runner.results_dir, 'stats-%d.json' % cycle)
     assert not os.path.exists(stats_file)
-    mocked_log_error.assert_called_with('Call to %d failed.', FuzzerAModuleGetStatsException.get_stats)
+    mocked_log_error.assert_called_with(
+        'Call to %d failed.', FuzzerAModuleGetStatsException.get_stats)
 
 
 def test_trial_runner(trial_runner):

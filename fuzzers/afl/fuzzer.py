@@ -18,7 +18,6 @@ import os
 import shutil
 import subprocess
 
-
 from fuzzers import utils
 
 
@@ -50,8 +49,8 @@ def get_stats(output_corpus, fuzzer_log):  # pylint: disable=unused-argument
     stats_file = os.path.join(output_corpus, 'fuzzer_stats')
     with open(stats_file):
         stats_file_lines = stats_file.read().splitlines()
-    stats_file_stats = dict(stats_line.split(': ')
-                        for stats_line in stats_file_lines)
+    stats_file_stats = dict(
+        stats_line.split(': ') for stats_line in stats_file_lines)
 
     # Report to FuzzBench the stats it accepts.
     stats = {'avg_execs': float(stats_file_stats['execs_per_sec'])}

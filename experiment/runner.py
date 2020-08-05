@@ -374,7 +374,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         try:
             fuzzer_stats.validate_fuzzer_stats(stats_json_str)
         except (ValueError, json.decoder.JSONDecodeError):
-            logs.error('Failed to record stats.')
+            logs.error('Stats are invalid.')
             return
 
         stats_filename = experiment_utils.get_stats_filename(self.cycle)
@@ -434,9 +434,9 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         filestore_utils.rsync(
             results_copy, posixpath.join(self.gcs_sync_dir, self.results_dir))
 
+
 def get_fuzzer_module(fuzzer):
-    fuzzer_module_name = 'fuzzers.{fuzzer}.fuzzer'.format(
-        fuzzer=fuzzer)
+    fuzzer_module_name = 'fuzzers.{fuzzer}.fuzzer'.format(fuzzer=fuzzer)
     fuzzer_module = importlib.import_module(fuzzer_module_name)
     return fuzzer
 

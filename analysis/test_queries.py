@@ -20,31 +20,54 @@ from database import utils as db_utils
 
 # pylint: disable=invalid-name,unused-argument
 
+ARBITRARY_DATETIME = datetime.datetime(2020, 1, 1)
+
 
 def test_add_nonprivate_experiments_for_merge_with_clobber(db):
     """Tests that add_nonprivate_experiments_for_merge_with_clobber doesn't
     include private experiments and returns the expected results in the correct
     order."""
     experiment_names = ['1', '2', '3']
-    arbitrary_datetime = datetime.datetime(2020, 1, 1)
     db_utils.add_all([
         models.Experiment(name=name,
-                          time_created=arbitrary_datetime,
+                          time_created=ARBITRARY_DATETIME,
                           private=False) for name in experiment_names
     ])
     db_utils.add_all([
         models.Experiment(name='private',
-                          time_created=arbitrary_datetime,
+                          time_created=ARBITRARY_DATETIME,
                           private=True),
         models.Experiment(name='later-nonprivate',
-                          time_created=arbitrary_datetime +
+                          time_created=ARBITRARY_DATETIME +
                           datetime.timedelta(days=1),
                           private=False),
         models.Experiment(name='nonprivate',
-                          time_created=arbitrary_datetime,
+                          time_created=ARBITRARY_DATETIME,
                           private=False),
     ])
     expected_results = ['nonprivate', 'later-nonprivate', '1', '2', '3']
     results = queries.add_nonprivate_experiments_for_merge_with_clobber(
         experiment_names)
     assert results == expected_results
+
+
+def test_get_experiment_data_fuzzer_stats(db):
+    experiment_name = 'experiment-1'
+    db_utils.add_all([
+        models.Experiment(name=experiment_name,
+                          time_created=ARBITRARY_DATETIME,
+                          private=False)
+    ])
+    trial = models.Trial(fuzzer='afl',
+                         experiment=experiment_name,
+                         benchmark='libpng')
+    db_utils.add_all([trial])
+    fuzzer_stats = {'avg_execs': 100.0}
+    snapshot = models.Snapshot(time=900,
+                               trial_id=trial.id,
+                               edges_covered=100,
+                               fuzzer_stats=fuzzer_stats)
+    db_utils.add_all([snapshot])
+    experiment_df = queries.get_experiment_data([experiment_name])
+    import pdb; pdb.set_trace()
+    pass

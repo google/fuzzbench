@@ -687,7 +687,7 @@ def get_fuzzer_stats(stats_filestore_path):
             return None
         stats_str = temp_file.read()
     fuzzer_stats.validate_fuzzer_stats(stats_str)
-    return stats_str
+    return json.loads(stats_str)
 
 
 def measure_trial_coverage(  # pylint: disable=invalid-name
@@ -738,9 +738,11 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     if snapshot_measurer.is_cycle_unchanged(cycle):
         snapshot_logger.info('Cycle: %d is unchanged.', cycle)
         regions_covered = snapshot_measurer.get_current_coverage()
+        fuzzer_stats = snapshot_measurer.get_fuzzer_stats(cycle)
         return models.Snapshot(time=this_time,
                                trial_id=trial_num,
-                               edges_covered=regions_covered)
+                               edges_covered=regions_covered,
+                               fuzzer_stats=fuzzer_stats)
 
     corpus_archive_dst = os.path.join(
         snapshot_measurer.trial_dir, 'corpus',
@@ -770,9 +772,11 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
 
     # Get the coverage of the new corpus units.
     regions_covered = snapshot_measurer.get_current_coverage()
+    fuzzer_stats = snapshot_measurer.get_fuzzer_stats(cycle)
     snapshot = models.Snapshot(time=this_time,
                                trial_id=trial_num,
-                               edges_covered=regions_covered)
+                               edges_covered=regions_covered,
+                               fuzzer_stats=fuzzer_stats)
 
     # Record the new corpus files.
     snapshot_measurer.update_measured_files()
