@@ -92,6 +92,32 @@ def get_coverage_infomation(coverage_summary_file):
         return json.loads(summary.readlines()[-1])
 
 
+def store_profdata_files(experiment_config: dict):
+    """Store profdata files to gcs bucket."""
+    benchmarks = experiment_config['benchmarks'].split(',')
+    fuzzers = experiment_config['fuzzers'].split(',')
+    experiment = experiment_config['experiment']
+    for benchmark in benchmarks:
+        for fuzzer in fuzzers:
+            trial_ids = [get_trial_ids(experiment, fuzzer, benchmark)]
+            for trial_id in trial_ids:
+                store_profdata_file(fuzzer, benchmark, trial_id)
+
+
+def store_profdata_file(fuzzer, benchmark, trial_id):
+    """Store profdata file for a pair of fuzzer and benchmark to gcs."""
+    snapshot_measurer = SnapshotMeasurer(fuzzer, benchmark, trial_id, logger)
+    src_profdata = snapshot_measurer.profdata_file
+    benchmark_fuzzer_trial_dir = experiment_utils.get_trial_dir(
+        fuzzer, benchmark, trial_id)
+    dst_profdata_exp_dir = os.path.join(get_experiment_folders_dir(),
+                                        benchmark_fuzzer_trial_dir)
+    dst_profdata_dir = exp_path.filestore(dst_profdata_exp_dir)
+    dst_profdata = os.path.join(dst_profdata_dir,
+                                'data-{id}.profdata'.format(id=trial_id))
+    filestore_utils.cp(src_profdata, dst_profdata)
+
+    
 def store_coverage_data(experiment_config: dict):
     """Generate the specific coverage data and store in cloud bucket."""
     logger.info('Start storing coverage data')

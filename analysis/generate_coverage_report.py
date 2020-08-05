@@ -13,19 +13,10 @@
 # limitations under the License.
 """Coverage report generator tool."""
 
-import argparse
 import os
-import sys
 
-import pandas as pd
-
-from analysis import data_utils
-from analysis import experiment_results
-from analysis import plotting
-from analysis import queries
-from analysis import rendering
-from common import filesystem
 from common import logs
+from common import filesystem
 from experiment import coverage_utils
 
 logger = logs.Logger('generate_coverage_report')
@@ -34,27 +25,16 @@ logger = logs.Logger('generate_coverage_report')
 def generate_coverage_report(experiment_names,
                              report_directory,
                              benchmarks=None,
-                             fuzzers=None,
-                             from_cached_data=False,
-                             merge_with_clobber=False,
-                             merge_with_clobber_nonprivate=False):
-
+                             fuzzers=None):
+    """Generates coverage reports."""
     logger.info('Generating coverage reports.')
-
     coverage_report_directory = os.path.join(report_directory,
                                              'coverage-reports')
+    filesystem.create_directory(coverage_report_directory)
     try:
-        if not from_cached_data:
-            coverage_utils.fetch_source_files(benchmarks,
-                                            coverage_report_directory)
-            coverage_utils.fetch_binary_files(benchmarks,
-                                            coverage_report_directory)
-            coverage_utils.get_profdata_files(experiment_names[0],
-                                            benchmarks, fuzzers,
-                                            coverage_report_directory)
-
         # Generate coverage reports for each benchmark.
-        coverage_utils.generate_cov_reports(benchmarks, fuzzers,
-                                            coverage_report_directory)
+        coverage_utils.generate_cov_reports(experiment_names, benchmarks,
+                                            fuzzers, coverage_report_directory)
     except Exception:  # pylint: disable=broad-except
         logger.error('Failed to generate coverage reports.')
+

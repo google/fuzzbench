@@ -20,146 +20,170 @@ import posixpath
 
 from common import filesystem
 from common import experiment_utils
-from common import experiment_path as exp_path
 from common import new_process
 from common import benchmark_utils
+from common import fuzzer_utils
 from common import logs
 from common import filestore_utils
-from experiment.build import build_utils
 from experiment import measurer
 
 logger = logs.Logger('coverage_utils')  # pylint: disable=invalid-name
 
 
-def get_profdata_file_path(fuzzer, benchmark, trial_id):
-    """Get profdata file path for a specific trial."""
-    benchmark_fuzzer_trial_dir = experiment_utils.get_trial_dir(
-        fuzzer, benchmark, trial_id)
-    work_dir = experiment_utils.get_work_dir()
-    measurement_dir = os.path.join(work_dir, 'measurement-folders',
-                                   benchmark_fuzzer_trial_dir)
-    return os.path.join(measurement_dir, 'reports', 'data.profdata')
-
-
-def merge_profdata_files(src_files, dst_file):
-    """Merge profdata files from |src_files| to |dst_files|."""
-    command = ['llvm-profdata', 'merge', '-sparse']
-    command.extend(src_files)
-    command.extend(['-o', dst_file])
-    result = new_process.execute(command, expect_zero=False)
-    if result.retcode != 0:
-        logger.error('Profdata files merging failed.')
-
-
-def fetch_source_files(benchmarks, report_dir):
-    """Fetch source files to |report_dir|."""
-    for benchmark in benchmarks:
-        coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
-        src_path = os.path.join(coverage_binaries_dir, benchmark, 'src-files')
-        dst_dir = os.path.join(report_dir, benchmark, 'src-files')
-        filesystem.copytree(src_path, dst_dir)
-
-
-def get_profdata_files(experiment, benchmarks, fuzzers, report_dir):
-    """Get profdata files to |report_dir|."""
-    for benchmark in benchmarks:
-        for fuzzer in fuzzers:
-            trial_ids = measurer.get_trial_ids(experiment, fuzzer, benchmark)
-            files_to_merge = [
-                get_profdata_file_path(fuzzer, benchmark, trial_id)
-                for trial_id in trial_ids
-            ]
-            dst_dir = os.path.join(report_dir, benchmark, fuzzer)
-            filesystem.create_directory(dst_dir)
-            dst_file = os.path.join(dst_dir, 'merged.profdata')
-            merge_profdata_files(files_to_merge, dst_file)
-
-
-def fetch_binary_files(benchmarks, report_dir):
-    """Get binary file for each benchmark."""
-    for benchmark in benchmarks:
-        src_file = measurer.get_coverage_binary(benchmark)
-        dst_dir = os.path.join(report_dir, benchmark)
-        filesystem.copy(src_file, dst_dir)
-
-
-def generate_cov_reports(benchmarks, fuzzers, report_dir):
+def generate_cov_reports(experiments, benchmarks, fuzzers, report_dir):
     """Generate coverage reports for each benchmark and fuzzer."""
     logger.info('Start generating coverage report for benchmarks.')
+    set_up_coverage_files(experiments, report_dir, benchmarks)
     with multiprocessing.Pool() as pool:
-        generate_cov_report_args = [(benchmark, fuzzer, report_dir)
+        generate_cov_report_args = [(experiments, benchmark, fuzzer, report_dir)
                                     for benchmark in benchmarks
                                     for fuzzer in fuzzers]
-        pool.starmap_async(generate_cov_report, generate_cov_report_args)
+        pool.starmap(generate_cov_report, generate_cov_report_args)
         pool.close()
         pool.join()
     logger.info('Finished generating coverage report.')
 
 
-def generate_cov_report(benchmark, fuzzer, report_dir):
+def generate_cov_report(experiments, benchmark, fuzzer, report_dir):
     """Generate the coverage report for one pair of benchmark and fuzzer."""
     logger.info('Generating coverage report for benchmark: {benchmark} \
                 fuzzer: {fuzzer}.'.format(benchmark=benchmark, fuzzer=fuzzer))
-    dst_dir = os.path.join(report_dir, benchmark, fuzzer)
-    fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
-    profdata_file_path = os.path.join(dst_dir, 'merged.profdata')
-    binary_file_path = os.path.join(report_dir, benchmark, fuzz_target)
-    source_file_path_prefix = os.path.join(report_dir, benchmark, 'src-files')
-    command = [
-        'llvm-cov-11', 'show', '-format=html',
-        '-path-equivalence=/,{prefix}'.format(prefix=source_file_path_prefix),
-        '-output-dir={dst_dir}'.format(dst_dir=dst_dir), '-Xdemangler',
-        'c++filt', '-Xdemangler', '-n', binary_file_path,
-        '-instr-profile={profdata}'.format(profdata=profdata_file_path)
-    ]
-    result = new_process.execute(command, expect_zero=False)
-    if result.retcode != 0:
-        logger.error('Coverage report generation failed for fuzzer:{fuzzer},\
-             benchmark:{benchmark}.'.format(fuzzer=fuzzer, benchmark=benchmark))
-    logger.info('Finished generating coverage report for benchmark:{benchmark} \
-                fuzzer:{fuzzer}.'.format(benchmark=benchmark, fuzzer=fuzzer))
+    generator = CoverageReporter(fuzzer, benchmark, experiments, report_dir,
+                                 logger)
+    # Gets and merges all the profdata files.
+    generator.fetch_profdata_file()
+    generator.merge_profdata_files()
+    # Generates the reports using llvm-cov.
+    generator.generate_cov_report()
+
+    logger.info('Finished generating coverage report for '
+                'benchmark:{benchmark} fuzzer:{fuzzer}.'.format(
+                    benchmark=benchmark, fuzzer=fuzzer))
 
 
 def set_up_coverage_files(experiment_names, report_dir, benchmarks):
-    """Sets up coverage binaries for all benchmarks."""
-    # Use set comprehension to select distinct benchmarks.
+    """Sets up coverage files for all benchmarks."""
     with multiprocessing.Pool() as pool:
         set_up_coverage_file_args = [(experiment_names, report_dir, benchmark)
                                      for benchmark in benchmarks]
-        pool.map(set_up_coverage_file, set_up_coverage_file_args)
+        pool.starmap(set_up_coverage_file, set_up_coverage_file_args)
 
 
 def set_up_coverage_file(experiment_names, report_dir, benchmark):
-    """Sets up coverage binaries for |benchmark|."""
+    """Sets up coverage files for |benchmark|."""
     for experiment in experiment_names:
-
-        benchmark_coverage_binary_dir = report_dir / benchmark
-        filesystem.create_directory(benchmark_coverage_binary_dir)
         archive_filestore_path = get_benchmark_archive(experiment, benchmark)
-        if 
-        filestore_utils.cp(archive_filestore_path,
-                        str(benchmark_coverage_binary_dir))
-        archive_path = benchmark_coverage_binary_dir / archive_name
-        tar = tarfile.open(archive_path, 'r:gz')
-        tar.extractall(benchmark_coverage_binary_dir)
-        os.remove(archive_path)
+        archive_exist = filestore_utils.ls(archive_filestore_path,
+                                           must_exist=False).retcode == 0
+        if archive_exist:
+            benchmark_report_dir = get_benchmark_report_dir(
+                benchmark, report_dir)
+            filesystem.create_directory(benchmark_report_dir)
+            filestore_utils.cp(archive_filestore_path,
+                               str(benchmark_report_dir))
+            archive_name = 'coverage-build-%s.tar.gz' % benchmark
+            archive_path = benchmark_report_dir / archive_name
+            tar = tarfile.open(archive_path, 'r:gz')
+            tar.extractall(benchmark_report_dir)
+            os.remove(archive_path)
+            break
 
-
-def get_coverage_binary(benchmark: str) -> str:
-    """Get the coverage binary for benchmark."""
-    coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
-    fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
-    return fuzzer_utils.get_fuzz_target_binary(coverage_binaries_dir /
-                                               benchmark,
-                                               fuzz_target_name=fuzz_target)
 
 def get_benchmark_archive(experiment_name, benchmark):
     """Returns the path of the coverage archive in gcs bucket
     for |benchmark|."""
+    experiment_filestore_dir = get_experiment_filestore_path(experiment_name)
+    archive_name = 'coverage-build-%s.tar.gz' % benchmark
+    return posixpath.join(experiment_filestore_dir, experiment_name,
+                          'coverage-bianries', archive_name)
+
+
+def get_experiment_filestore_path(experiment_name):
+    """Returns the path of the storage folder for |experiment_name|."""
     if 'EXPERIMENT_FILESTORE' in os.environ:
         experiment_filestore = os.environ['EXPERIMENT_FILESTORE']
     else:
         experiment_filestore = 'gs://fuzzbench-data'
-    archive_name = 'coverage-build-%s.tar.gz' % benchmark
-    return posixpath.join(experiment_filestore, experiment_name,
-                          'coverage-bianries', archive_name)
+    return posixpath.join(experiment_filestore, experiment_name)
+
+
+def get_benchmark_report_dir(benchmark, report_dir):
+    """Gets the directory path which stores files to generate coverage
+    report for |benchmark|."""
+    return os.path.join(report_dir, benchmark)
+
+
+class CoverageReporter:  # pylint: disable=too-many-instance-attributes
+    """Class used to generate coverage report for a pair of
+    fuzzer and benchmark."""
+
+    # pylint: disable=too-many-arguments
+    def __init__(self, fuzzer, benchmark, experiments, report_dir, logger):
+        self.fuzzer = fuzzer
+        self.benchmark = benchmark
+        self.experiments = experiments
+        self.report_dir = report_dir
+        self.logger = logger
+        self.benchmark_report_dir = os.path.join(self.report_dir, benchmark)
+        self.fuzzer_report_dir = os.path.join(self.benchmark_report_dir, fuzzer)
+        self.merged_profdata_file = os.path.join(self.fuzzer_report_dir,
+                                                 'merged.profdata')
+        self.source_files = os.path.join(self.benchmark_report_dir, 'src-files')
+        fuzz_target = benchmark_utils.get_fuzz_target(self.benchmark)
+        self.binary_file = fuzzer_utils.get_fuzz_target_binary(
+            self.benchmark_report_dir, fuzz_target_name=fuzz_target)
+
+    def merge_profdata_files(self):
+        """Merge profdata files from |src_files| to |dst_files|."""
+        files_to_merge = os.listdir(self.fuzzer_report_dir)
+        command = ['llvm-profdata', 'merge', '-sparse']
+        command.extend(files_to_merge)
+        command.extend(['-o', self.merged_profdata_file])
+        result = new_process.execute(command, expect_zero=False)
+        if result.retcode != 0:
+            logger.error('Profdata files merging failed.')
+
+    def fetch_profdata_file(self):
+        """Fetches the profdata files for |fuzzer| on |benchmark| from gcs."""
+        files_to_merge = []
+        for experiment in self.experiments:
+            trial_ids = measurer.get_trial_ids(experiment, self.fuzzer,
+                                               self.benchmark)
+            files_to_merge.extend([
+                self.get_profdata_file_path(experiment, trial_id)
+                for trial_id in trial_ids
+            ])
+        filesystem.create_directory(self.fuzzer_report_dir)
+        for file_path in files_to_merge:
+            filestore_utils.cp(file_path, self.fuzzer_report_dir)
+
+    def get_profdata_file_path(self, experiment, trial_id):
+        """Gets profdata file path for a specific trial."""
+        benchmark_fuzzer_trial_dir = experiment_utils.get_trial_dir(
+            self.fuzzer, self.benchmark, trial_id)
+        experiment_filestore_dir = get_experiment_filestore_path(experiment)
+        profdata_file_path = posixpath.join(
+            experiment_filestore_dir, 'experiment-folders',
+            benchmark_fuzzer_trial_dir,
+            'data-{id}.profdata'.format(id=trial_id))
+        return profdata_file_path
+
+    def generate_cov_report(self):
+        """Generates the coverage report."""
+        dst_dir = self.fuzzer_report_dir
+        profdata_file_path = self.merged_profdata_file
+        binary_file_path = self.binary_file
+        source_file_path_prefix = self.source_files
+        command = [
+            'llvm-cov-11', 'show', '-format=html',
+            '-path-equivalence=/,{prefix}'.format(
+                prefix=source_file_path_prefix),
+            '-output-dir={dst_dir}'.format(dst_dir=dst_dir), '-Xdemangler',
+            'c++filt', '-Xdemangler', '-n', binary_file_path,
+            '-instr-profile={profdata}'.format(profdata=profdata_file_path)
+        ]
+        result = new_process.execute(command, expect_zero=False)
+        if result.retcode != 0:
+            logger.error('Coverage report generation failed for '
+                         'fuzzer:{fuzzer},benchmark:{benchmark}.'.format(
+                             fuzzer=self.fuzzer, benchmark=self.benchmark))
