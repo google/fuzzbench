@@ -79,10 +79,9 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
         shutil.copy(copy_file, os.environ['OUT'])
 
 
-def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-many-branches,too-many-statements
+def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     run_options = []
-    benchmark_name = os.environ['BENCHMARK']
 
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
