@@ -15,7 +15,7 @@
 
 import os
 
-from unittest.mock import patch 
+from unittest.mock import patch
 
 from experiment.build import generate_cloudbuild
 

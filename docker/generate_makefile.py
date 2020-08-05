@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Simple generator for local Makefile rules."""
- 
+
 import os
 
 from common import yaml_utils
