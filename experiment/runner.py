@@ -355,18 +355,23 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         save them to a file so that they will be synced to the filestore."""
         # TODO(metzman): Make this more resilient so we don't wait forever and
         # so that breakages in stats parsing doesn't break runner.
-        output_corpus = environment.get('OUTPUT_CORPUS_DIR')
-        module = 'fuzzers.{fuzzer}.fuzzer'.format(fuzzer=self.fuzzer)
-        import pdb
-        pdb.set_trace()
-        try:
-            fuzzer_module = importlib.import_module(module)
-            if not getattr(fuzzer, 'get_stats'):
-                # Stats support is optional.
-                return
 
-            stats_json_str = fuzzer_module.get_stats(output_corpus,
+        fuzzer_module = get_fuzzer_module(self.fuzzer)
+
+        fuzzer_module_get_stats = getattr(fuzzer_module, 'get_stats', None)
+        if fuzzer_module_get_stats is None:
+            # Stats support is optional.
+            return
+
+        try:
+            output_corpus = environment.get('OUTPUT_CORPUS_DIR')
+            stats_json_str = fuzzer_module_get_stats(output_corpus,
                                                      self.log_file)
+        except Exception:
+            logs.error('Call to %d failed.', fuzzer_module_get_stats)
+            return
+
+        try:
             fuzzer_stats.validate_fuzzer_stats(stats_json_str)
         except (ValueError, json.decoder.JSONDecodeError):
             logs.error('Failed to record stats.')
@@ -428,6 +433,12 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         results_copy = filesystem.make_dir_copy(self.results_dir)
         filestore_utils.rsync(
             results_copy, posixpath.join(self.gcs_sync_dir, self.results_dir))
+
+def get_fuzzer_module(fuzzer):
+    fuzzer_module_name = 'fuzzers.{fuzzer}.fuzzer'.format(
+        fuzzer=fuzzer)
+    fuzzer_module = importlib.import_module(fuzzer_module_name)
+    return fuzzer
 
 
 def archive_directories(directories, archive_path):
