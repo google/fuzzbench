@@ -100,7 +100,7 @@ def store_profdata_files(experiment_config: dict):
     experiment = experiment_config['experiment']
     for benchmark in benchmarks:
         for fuzzer in fuzzers:
-            trial_ids = [get_trial_ids(experiment, fuzzer, benchmark)]
+            trial_ids = get_trial_ids(experiment, fuzzer, benchmark)
             for trial_id in trial_ids:
                 store_profdata_file(fuzzer, benchmark, trial_id)
     logger.info('Finished storing profdata files')
