@@ -42,6 +42,7 @@ def build():
     # Copy out the afl-fuzz binary as a build artifact.
     shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
 
+
 def get_stats(output_corpus, fuzzer_log):
     return '{"avg_execs":20.0}'
 

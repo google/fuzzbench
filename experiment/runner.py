@@ -357,14 +357,16 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         # so that breakages in stats parsing doesn't break runner.
         output_corpus = environment.get('OUTPUT_CORPUS_DIR')
         module = 'fuzzers.{fuzzer}.fuzzer'.format(fuzzer=self.fuzzer)
-        import pdb; pdb.set_trace()
+        import pdb
+        pdb.set_trace()
         try:
             fuzzer_module = importlib.import_module(module)
             if not getattr(fuzzer, 'get_stats'):
                 # Stats support is optional.
                 return
 
-            stats_json_str = fuzzer_module.get_stats(output_corpus, self.log_file)
+            stats_json_str = fuzzer_module.get_stats(output_corpus,
+                                                     self.log_file)
             fuzzer_stats.validate_fuzzer_stats(stats_json_str)
         except (ValueError, json.decoder.JSONDecodeError):
             logs.error('Failed to record stats.')
