@@ -454,14 +454,14 @@ def main():
                         default=None,
                         choices=all_fuzzers)
     parser.add_argument(
-        '-s',
+        '-ns',
         '--no-seeds',
         help='Should trials be conducted without seed corpora.',
         required=False,
         default=False,
         action='store_true')
     parser.add_argument(
-        '-d',
+        '-nd',
         '--no-dictionaries',
         help='Should trials be conducted without dictionaries.',
         required=False,

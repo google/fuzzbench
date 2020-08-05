@@ -70,6 +70,9 @@ def _clean_seed_corpus(seed_corpus_dir):
     from sub-directories into the corpus directory root. Also, deletes any files
     that exceed the 1 MB limit. If the NO_SEEDS env var is specified than the
     seed corpus files are deleted."""
+    if not os.path.exists(seed_corpus_dir):
+        return
+
     if environment.get('NO_SEEDS'):
         logs.info('NO_SEEDS specified, deleting seed corpus files.')
         shutil.rmtree(seed_corpus_dir)
