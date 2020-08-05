@@ -15,6 +15,7 @@
 """Runs fuzzer for trial."""
 
 from collections import namedtuple
+import importlib
 import json
 import os
 import posixpath
@@ -186,9 +187,10 @@ def run_fuzzer(max_total_time, log_filename):
         command = [
             'nice', '-n',
             str(0 - runner_niceness), 'python3', '-u', '-c',
-            ('import fuzzer; '
+            ('from fuzzers.{fuzzer} import fuzzer; '
              'fuzzer.fuzz('
              "'{input_corpus}', '{output_corpus}', '{target_binary}')").format(
+                 fuzzer=environment.get('FUZZER'),
                  input_corpus=shlex.quote(input_corpus),
                  output_corpus=shlex.quote(output_corpus),
                  target_binary=shlex.quote(target_binary))
@@ -220,12 +222,12 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
     """Class for running a trial."""
 
     def __init__(self):
+        self.fuzzer = environment.get('FUZZER')
         if not environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
             benchmark = environment.get('BENCHMARK')
-            fuzzer = environment.get('FUZZER')
             trial_id = environment.get('TRIAL_ID')
             self.gcs_sync_dir = experiment_utils.get_trial_bucket_dir(
-                fuzzer, benchmark, trial_id)
+                self.fuzzer, benchmark, trial_id)
             filestore_utils.rm(self.gcs_sync_dir, force=True, parallel=True)
         else:
             self.gcs_sync_dir = None
@@ -354,15 +356,15 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         # TODO(metzman): Make this more resilient so we don't wait forever and
         # so that breakages in stats parsing doesn't break runner.
         output_corpus = environment.get('OUTPUT_CORPUS_DIR')
+        module = 'fuzzers.{fuzzer}.fuzzer'.format(fuzzer=self.fuzzer)
+        import pdb; pdb.set_trace()
         try:
-            import pdb; pdb.set_trace()
-            import fuzzer  # pylint: disable=import-error,import-outside-toplevel
-
+            fuzzer_module = importlib.import_module(module)
             if not getattr(fuzzer, 'get_stats'):
                 # Stats support is optional.
                 return
 
-            stats_json_str = fuzzer.get_stats(output_corpus, self.log_file)
+            stats_json_str = fuzzer_module.get_stats(output_corpus, self.log_file)
             fuzzer_stats.validate_fuzzer_stats(stats_json_str)
         except (ValueError, json.decoder.JSONDecodeError):
             logs.error('Failed to record stats.')

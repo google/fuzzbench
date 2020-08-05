@@ -30,8 +30,6 @@ COPY --from=base-image /usr/local/bin/python3* /usr/local/bin/
 COPY --from=base-image /usr/local/lib/python3.7 /usr/local/lib/python3.7
 COPY --from=base-image /usr/local/include/python3.7m /usr/local/include/python3.7m
 
-COPY fuzzers/$fuzzer/fuzzer.py $SRC/fuzzer.py
-
 # Copy the entire fuzzers directory tree to allow for module dependencies.
 COPY fuzzers $SRC/fuzzers
 
@@ -48,4 +46,4 @@ COPY benchmarks/$benchmark/benchmark.yaml /
 RUN export CHECKOUT_COMMIT=$(cat /benchmark.yaml | tr -d ' ' | grep 'commit:' | cut -d ':' -f2) && \
     python3 -u /opt/fuzzbench/checkout_commit.py $CHECKOUT_COMMIT $SRC
 
-RUN PYTHONPATH=$SRC python3 -u -c "from fuzzers import utils; utils.initialize_flags(); import fuzzer; fuzzer.build()"
+RUN PYTHONPATH=$SRC python3 -u -c "from fuzzers import utils; utils.initialize_flags(); from fuzzers.$FUZZER import fuzzer; fuzzer.build()"
