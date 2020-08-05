@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# This file is used by GCB to build base images everytime a commit is
+# made to the master branch.
 
 images:
 - gcr.io/fuzzbench/base-image:test-experiment
@@ -32,4 +34,3 @@ steps:
   env: DOCKER_BUILDKIT=1
   id: base-image
   name: gcr.io/cloud-builders/docker
-  wait_for: []

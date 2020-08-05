@@ -22,7 +22,7 @@ from common import experiment_path as exp_path
 from common.utils import ROOT_DIR
 from experiment.build import build_utils
 
-BASE_TAG = 'gcr.io/fuzzbench'
+DOCKER_REGISTRY = 'gcr.io/fuzzbench'
 
 
 def get_experiment_tag_for_image(image_specs, tag_by_experiment=True):
@@ -82,7 +82,7 @@ def create_cloud_build_spec(image_templates,
         }
         step['args'] = [
             'build', '--tag',
-            posixpath.join(BASE_TAG, image_specs['tag']), '--tag',
+            posixpath.join(DOCKER_REGISTRY, image_specs['tag']), '--tag',
             get_experiment_tag_for_image(image_specs), '--cache-from',
             get_experiment_tag_for_image(image_specs, tag_by_experiment=False),
             '--build-arg', 'BUILDKIT_INLINE_CACHE=1'
