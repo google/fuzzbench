@@ -193,7 +193,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         binary_file_path = self.binary_file
         source_file_path_prefix = self.source_files
         command = [
-            'llvm-cov-11', 'show', '-format=html',
+            'llvm-cov', 'show', '-format=html',
             '-path-equivalence=/,{prefix}'.format(
                 prefix=source_file_path_prefix),
             '-output-dir={dst_dir}'.format(dst_dir=dst_dir), '-Xdemangler',
