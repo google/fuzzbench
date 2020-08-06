@@ -108,6 +108,8 @@ docker run \\
 -e EXPERIMENT=test-experiment \\
 -e TRIAL_ID=9 \\
 -e MAX_TOTAL_TIME=86400 \\
+-e NO_SEEDS=False \\
+-e NO_DICTIONARIES=False \\
 -e DOCKER_REGISTRY=gcr.io/fuzzbench -e CLOUD_PROJECT=fuzzbench -e CLOUD_COMPUTE_ZONE=us-central1-a \\
 -e EXPERIMENT_FILESTORE=gs://experiment-data \\
 -e REPORT_FILESTORE=gs://web-reports \\

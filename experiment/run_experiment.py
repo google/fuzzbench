@@ -37,7 +37,6 @@ from common import logs
 from common import new_process
 from common import utils
 from common import yaml_utils
-from src_analysis import experiment_changes
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
@@ -199,8 +198,13 @@ def get_git_hash():
     return output.strip().decode('utf-8')
 
 
-def start_experiment(experiment_name: str, config_filename: str,
-                     benchmarks: List[str], fuzzers: List[str]):
+def start_experiment(  # pylint: disable=too-many-arguments
+        experiment_name: str,
+        config_filename: str,
+        benchmarks: List[str],
+        fuzzers: List[str],
+        no_seeds=False,
+        no_dictionaries=False):
     """Start a fuzzer benchmarking experiment."""
     check_no_local_changes()
 
@@ -212,6 +216,8 @@ def start_experiment(experiment_name: str, config_filename: str,
     config['benchmarks'] = ','.join(benchmarks)
     config['experiment'] = experiment_name
     config['git_hash'] = get_git_hash()
+    config['no_seeds'] = no_seeds
+    config['no_dictionaries'] = no_dictionaries
 
     set_up_experiment_config_file(config)
 
@@ -440,36 +446,35 @@ def main():
                         '--experiment-name',
                         help='Experiment name.',
                         required=True)
-    fuzzers_group = parser.add_mutually_exclusive_group()
-    fuzzers_group.add_argument('-f',
-                               '--fuzzers',
-                               help='Fuzzers to use.',
-                               nargs='+',
-                               required=False,
-                               default=None,
-                               choices=all_fuzzers)
-    fuzzers_group.add_argument('-cf',
-                               '--changed-fuzzers',
-                               help=('Use fuzzers that have changed since the '
-                                     'last experiment. The last experiment is '
-                                     'determined by the database your '
-                                     'experiment uses, not necessarily the '
-                                     'fuzzbench service'),
-                               action='store_true',
-                               required=False)
+    parser.add_argument('-f',
+                        '--fuzzers',
+                        help='Fuzzers to use.',
+                        nargs='+',
+                        required=False,
+                        default=None,
+                        choices=all_fuzzers)
+    parser.add_argument('-ns',
+                        '--no-seeds',
+                        help='Should trials be conducted without seed corpora.',
+                        required=False,
+                        default=False,
+                        action='store_true')
+    parser.add_argument('-nd',
+                        '--no-dictionaries',
+                        help='Should trials be conducted without dictionaries.',
+                        required=False,
+                        default=False,
+                        action='store_true')
 
     args = parser.parse_args()
+    fuzzers = args.fuzzers or all_fuzzers
 
-    if args.changed_fuzzers:
-        fuzzers = experiment_changes.get_fuzzers_changed_since_last()
-        if not fuzzers:
-            logs.error('No fuzzers changed since last experiment. Exiting.')
-            return 1
-    else:
-        fuzzers = args.fuzzers or all_fuzzers
-
-    start_experiment(args.experiment_name, args.experiment_config,
-                     args.benchmarks, fuzzers)
+    start_experiment(args.experiment_name,
+                     args.experiment_config,
+                     args.benchmarks,
+                     fuzzers,
+                     no_seeds=args.no_seeds,
+                     no_dictionaries=args.no_dictionaries)
     return 0
 
 
