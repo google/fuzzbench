@@ -32,7 +32,7 @@ jobs:
           - afl_qemu
           - aflplusplus_qemu
           - honggfuzz_qemu
-          # temporary variants.
+          # Temporary variants.
           - libfuzzer_interceptors
           - libfuzzer_keepseed
           - entropic_interceptors
