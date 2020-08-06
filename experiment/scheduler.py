@@ -733,7 +733,9 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
         'fuzz_target': fuzz_target,
         'docker_image_url': docker_image_url,
         'docker_registry': experiment_config['docker_registry'],
-        'local_experiment': local_experiment
+        'local_experiment': local_experiment,
+        'no_seeds': experiment_config['no_seeds'],
+        'no_dictionaries': experiment_config['no_dictionaries'],
     }
 
     if not local_experiment:
