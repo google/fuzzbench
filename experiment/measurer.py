@@ -24,25 +24,22 @@ import tarfile
 import time
 from typing import List, Set
 import queue
-import json
 
 from sqlalchemy import func
 from sqlalchemy import orm
 
-from common import benchmark_utils
 from common import experiment_utils
 from common import experiment_path as exp_path
 from common import filesystem
-from common import fuzzer_utils
 from common import filestore_utils
 from common import logs
 from common import utils
-from common import new_process
 from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
 from experiment import run_coverage
 from experiment import scheduler
+from experiment import coverage_utils as cov_utils
 
 logger = logs.Logger('measurer')  # pylint: disable=invalid-name
 
@@ -53,150 +50,13 @@ NUM_RETRIES = 3
 RETRY_DELAY = 3
 FAIL_WAIT_SECONDS = 30
 SNAPSHOT_QUEUE_GET_TIMEOUT = 1
-COV_DIFF_QUEUE_GET_TIMEOUT = 1
 SNAPSHOTS_BATCH_SAVE_SIZE = 100
-
-
-def get_experiment_folders_dir():
-    """Return experiment folders directory."""
-    return exp_path.path('experiment-folders')
 
 
 def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
     """Returns True if |path| exists in the experiment_filestore."""
     return filestore_utils.ls(exp_path.filestore(path),
                               must_exist=False).retcode == 0
-
-
-def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):
-    """Return the key in coverage dict for a pair of fuzzer-benchmark."""
-    return fuzzer + ' ' + benchmark
-
-
-def get_trial_ids(experiment: str, fuzzer: str, benchmark: str):
-    """Get ids of all finished trials for a pair of fuzzer and benchmark."""
-    trial_ids = [
-        trial_id_tuple[0]
-        for trial_id_tuple in db_utils.query(models.Trial.id).filter(
-            models.Trial.experiment == experiment, models.Trial.fuzzer ==
-            fuzzer, models.Trial.benchmark == benchmark,
-            ~models.Trial.preempted)
-    ]
-    return trial_ids
-
-
-def get_coverage_infomation(coverage_summary_file):
-    """Read the coverage information from |coverage_summary_file|
-    and skip possible warnings in the file."""
-    with open(coverage_summary_file) as summary:
-        return json.loads(summary.readlines()[-1])
-
-
-def store_profdata_files(experiment_config: dict):
-    """Store profdata files to gcs bucket."""
-    logger.info('Start storing profdata files')
-    benchmarks = experiment_config['benchmarks'].split(',')
-    fuzzers = experiment_config['fuzzers'].split(',')
-    experiment = experiment_config['experiment']
-    for benchmark in benchmarks:
-        for fuzzer in fuzzers:
-            trial_ids = get_trial_ids(experiment, fuzzer, benchmark)
-            for trial_id in trial_ids:
-                store_profdata_file(fuzzer, benchmark, trial_id)
-    logger.info('Finished storing profdata files')
-
-
-def store_profdata_file(fuzzer, benchmark, trial_id):
-    """Store profdata file for a pair of fuzzer and benchmark to gcs."""
-    snapshot_measurer = SnapshotMeasurer(fuzzer, benchmark, trial_id, logger)
-    src_profdata = snapshot_measurer.profdata_file
-    benchmark_fuzzer_trial_dir = experiment_utils.get_trial_dir(
-        fuzzer, benchmark, trial_id)
-    dst_profdata_exp_dir = os.path.join(get_experiment_folders_dir(),
-                                        benchmark_fuzzer_trial_dir)
-    dst_profdata_dir = exp_path.filestore(dst_profdata_exp_dir)
-    dst_profdata = os.path.join(dst_profdata_dir,
-                                'data-{id}.profdata'.format(id=trial_id))
-    filestore_utils.cp(src_profdata, dst_profdata)
-
-
-def store_coverage_data(experiment_config: dict):
-    """Generate the specific coverage data and store in cloud bucket."""
-    logger.info('Start storing coverage data')
-    with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
-        q = manager.Queue()  # pytype: disable=attribute-error
-        covered_regions = get_all_covered_regions(experiment_config, pool, q)
-        json_src_dir = get_experiment_folders_dir()
-        json_src = os.path.join(json_src_dir, 'covered_regions.json')
-        with open(json_src, 'w') as src_file:
-            json.dump(covered_regions, src_file)
-        json_dst = exp_path.filestore(json_src)
-        filestore_utils.cp(json_src, json_dst)
-    logger.info('Finished storing coverage data')
-
-
-def get_all_covered_regions(experiment_config: dict, pool, q) -> dict:
-    """Get regions covered for each pair for fuzzer and benchmark."""
-    logger.info('Measuring all fuzzer-benchmark pairs for final coverage data.')
-
-    benchmarks = experiment_config['benchmarks'].split(',')
-    fuzzers = experiment_config['fuzzers'].split(',')
-    experiment = experiment_config['experiment']
-
-    get_covered_region_args = [(experiment, fuzzer, benchmark, q)
-                               for fuzzer in fuzzers
-                               for benchmark in benchmarks]
-
-    result = pool.starmap_async(get_covered_region, get_covered_region_args)
-
-    # Poll the queue for covered region data and save them in a dict until the
-    # pool is done processing each combination of fuzzers and benchmarks.
-    all_covered_regions = {}
-
-    while True:
-        try:
-            covered_regions = q.get(timeout=COV_DIFF_QUEUE_GET_TIMEOUT)
-            all_covered_regions.update(covered_regions)
-        except queue.Empty:
-            if result.ready():
-                # If "ready" that means pool has finished. Since it is
-                # finished and the queue is empty, we can stop checking
-                # the queue for more covered regions.
-                logger.debug(
-                    'Finished call to map with get_all_covered_regions.')
-                break
-
-    for key in all_covered_regions:
-        all_covered_regions[key] = list(all_covered_regions[key])
-    logger.info('Done measuring all coverage data.')
-    return all_covered_regions
-
-
-def get_covered_region(experiment: str, fuzzer: str, benchmark: str,
-                       q: multiprocessing.Queue):
-    """Get the final covered region for a specific pair of fuzzer-benchmark."""
-    initialize_logs()
-    logger.debug('Measuring covered region: fuzzer: %s, benchmark: %s.', fuzzer,
-                 benchmark)
-    key = get_fuzzer_benchmark_key(fuzzer, benchmark)
-    covered_regions = {key: set()}
-    trial_ids = get_trial_ids(experiment, fuzzer, benchmark)
-    for trial_id in trial_ids:
-        logger.info('Measuring covered region: trial_id = %d.', trial_id)
-        snapshot_logger = logs.Logger('measurer',
-                                      default_extras={
-                                          'fuzzer': fuzzer,
-                                          'benchmark': benchmark,
-                                          'trial_id': str(trial_id),
-                                      })
-        snapshot_measurer = SnapshotMeasurer(fuzzer, benchmark, trial_id,
-                                             snapshot_logger)
-        snapshot_measurer.generate_summary(0, summary_only=False)
-        new_covered_regions = snapshot_measurer.get_current_covered_regions()
-        covered_regions[key] = covered_regions[key].union(new_covered_regions)
-    q.put(covered_regions)
-    logger.debug('Done measuring covered region: fuzzer: %s, benchmark: %s.',
-                 fuzzer, benchmark)
 
 
 def measure_main(experiment_config):
@@ -210,8 +70,7 @@ def measure_main(experiment_config):
     measure_loop(experiment, max_total_time)
 
     # Do the final measuring and store the coverage data.
-    store_coverage_data(experiment_config)
-    store_profdata_files(experiment_config)
+    cov_utils.store_coverage_data(experiment_config)
     logger.info('Finished measuring.')
 
 
@@ -251,7 +110,7 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
     was called first. Otherwise it will use fork which breaks logging."""
     logger.info('Measuring all trials.')
 
-    experiment_folders_dir = get_experiment_folders_dir()
+    experiment_folders_dir = cov_utils.get_experiment_folders_dir()
     if not exists_in_experiment_filestore(experiment_folders_dir):
         return True
 
@@ -449,7 +308,7 @@ def extract_corpus(corpus_archive: str, sha_blacklist: Set[str],
         filesystem.write(file_path, member_contents, 'wb')
 
 
-class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
+class SnapshotMeasurer(cov_utils.TrialCoverage):  # pylint: disable=too-many-instance-attributes
     """Class used for storing details needed to measure coverage of a particular
     trial."""
 
@@ -457,22 +316,13 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
     def __init__(self, fuzzer: str, benchmark: str, trial_num: int,
                  trial_logger: logs.Logger):
-        self.fuzzer = fuzzer
-        self.benchmark = benchmark
-        self.trial_num = trial_num
-        self.logger = trial_logger
-        benchmark_fuzzer_trial_dir = experiment_utils.get_trial_dir(
-            fuzzer, benchmark, trial_num)
-        work_dir = experiment_utils.get_work_dir()
-        measurement_dir = os.path.join(work_dir, 'measurement-folders',
-                                       benchmark_fuzzer_trial_dir)
-        self.corpus_dir = os.path.join(measurement_dir, 'corpus')
+        super().__init__(fuzzer, benchmark, trial_num, trial_logger)
+        self.corpus_dir = os.path.join(self.measurement_dir, 'corpus')
 
-        self.crashes_dir = os.path.join(measurement_dir, 'crashes')
-        self.coverage_dir = os.path.join(measurement_dir, 'coverage')
-        self.report_dir = os.path.join(measurement_dir, 'reports')
-        self.trial_dir = os.path.join(work_dir, 'experiment-folders',
-                                      benchmark_fuzzer_trial_dir)
+        self.crashes_dir = os.path.join(self.measurement_dir, 'crashes')
+        self.coverage_dir = os.path.join(self.measurement_dir, 'coverage')
+        self.trial_dir = os.path.join(self.work_dir, 'experiment-folders',
+                                      self.benchmark_fuzzer_trial_dir)
 
         # Stores the files that have already been measured for a trial.
         self.measured_files_path = os.path.join(self.report_dir,
@@ -502,7 +352,7 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
 
     def run_cov_new_units(self):
         """Run the coverage binary on new units."""
-        coverage_binary = get_coverage_binary(self.benchmark)
+        coverage_binary = cov_utils.get_coverage_binary(self.benchmark)
         crashing_units = run_coverage.do_coverage_run(coverage_binary,
                                                       self.corpus_dir,
                                                       self.profraw_file,
@@ -511,35 +361,14 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
         self.UNIT_BLACKLIST[self.benchmark] = (
             self.UNIT_BLACKLIST[self.benchmark].union(set(crashing_units)))
 
-    def get_current_covered_regions(self):
-        """Get the covered regions for the current trial."""
-        covered_regions = set()
-        try:
-            coverage_info = get_coverage_infomation(self.cov_summary_file)
-            functions_data = coverage_info['data'][0]['functions']
-            # The fourth number in the region-list indicates if the region
-            # is hit.
-            hit_index = 4
-            # The last number in the region-list indicates what type of the
-            # region it is; 'code_region' is used to obtain various code
-            # coverage statistic and is represented by number 0.
-            type_index = -1
-            for function_data in functions_data:
-                for region in function_data['regions']:
-                    if region[hit_index] != 0 and region[type_index] == 0:
-                        covered_regions.add(tuple(region[:hit_index]))
-        except Exception:  # pylint: disable=broad-except
-            self.logger.error(
-                'Coverage summary json file defective or missing.')
-        return covered_regions
-
     def get_current_coverage(self) -> int:
         """Get the current number of lines covered."""
         if not os.path.exists(self.cov_summary_file):
             self.logger.warning('No coverage summary json file found.')
             return 0
         try:
-            coverage_info = get_coverage_infomation(self.cov_summary_file)
+            coverage_info = cov_utils.get_coverage_infomation(
+                self.cov_summary_file)
             coverage_data = coverage_info["data"][0]
             summary_data = coverage_data["totals"]
             regions_coverage_data = summary_data["regions"]
@@ -558,37 +387,12 @@ class SnapshotMeasurer:  # pylint: disable=too-many-instance-attributes
             files_to_merge = [self.profraw_file, self.profdata_file]
         else:
             files_to_merge = [self.profraw_file]
-        command = ['llvm-profdata', 'merge', '-sparse'
-                  ] + files_to_merge + ['-o', self.profdata_file]
-        result = new_process.execute(command, expect_zero=False)
 
-        if result.retcode != 0:
+        result = cov_utils.merge_profdata_files(files_to_merge,
+                                                self.profdata_file)
+        if result != 0:
             self.logger.error(
                 'Coverage profdata generation failed for cycle: %d.', cycle)
-
-    def generate_summary(self, cycle: int, summary_only=True):
-        """Transform the .profdata file into json form."""
-        coverage_binary = get_coverage_binary(self.benchmark)
-        command = [
-            'llvm-cov', 'export', '-format=text', coverage_binary,
-            '-instr-profile=%s' % self.profdata_file
-        ]
-
-        if summary_only:
-            command.append('-summary-only')
-
-        with open(self.cov_summary_file, 'w') as output_file:
-            result = new_process.execute(command,
-                                         output_file=output_file,
-                                         expect_zero=False)
-        if result.retcode != 0:
-            if cycle != 0:
-                self.logger.error(
-                    'Coverage summary json file generation failed for \
-                        cycle: %d.', cycle)
-            else:
-                self.logger.error(
-                    'Coverage summary json file generation failed in the end.')
 
     def generate_coverage_information(self, cycle: int):
         """Generate the .profdata file and then transform it into
@@ -817,15 +621,6 @@ def set_up_coverage_binary(benchmark):
     tar = tarfile.open(archive_path, 'r:gz')
     tar.extractall(benchmark_coverage_binary_dir)
     os.remove(archive_path)
-
-
-def get_coverage_binary(benchmark: str) -> str:
-    """Get the coverage binary for benchmark."""
-    coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
-    fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
-    return fuzzer_utils.get_fuzz_target_binary(coverage_binaries_dir /
-                                               benchmark,
-                                               fuzz_target_name=fuzz_target)
 
 
 def initialize_logs():
