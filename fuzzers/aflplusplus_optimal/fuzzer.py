@@ -56,12 +56,6 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'php_php-fuzz-parser':
         aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
                                  "cmplog")
-    elif benchmark_name == 'proj4-2017-08-14':
-        aflplusplus_fuzzer.build("lto", "cmplog")
-    elif benchmark_name == 're2-2014-12-09':
-        aflplusplus_fuzzer.build("lto", "cmplog")
-    elif benchmark_name == 'sqlite3_ossfuzz':
-        aflplusplus_fuzzer.build("lto", "cmplog")
     elif benchmark_name == 'systemd_fuzz-link-parser':
         aflplusplus_fuzzer.build("tracepc", "cmplog")
     elif benchmark_name == 'vorbis-2017-12-11':
@@ -73,7 +67,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
         aflplusplus_fuzzer.build("classic", "ngram6", "nozero", "skipsingle",
                                  "laf")
     else:
-        aflplusplus_fuzzer.build("lto", "dynamic", "cmplog")
+        aflplusplus_fuzzer.build("lto", "cmplog")
 
     for copy_file in glob.glob("/afl/libc*"):
         shutil.copy(copy_file, os.environ['OUT'])
