@@ -8,7 +8,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - run: |  # Needed for presubmit to work.
-        git fetch origin master --depth 1
+        git fetch origin master --unshallow
         git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
 
     - name: Setup Python environment
