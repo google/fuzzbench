@@ -35,3 +35,4 @@ def fuzz(input_corpus, output_corpus, target_binary):
             '-L',
             '0',
         ])
+# test ci

@@ -69,3 +69,4 @@ def fuzz(input_corpus, output_corpus, target_binary):
             ])
     else:
         afl_fuzzer.run_afl_fuzz(input_corpus, output_corpus, target_binary)
+# test ci

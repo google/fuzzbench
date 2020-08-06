@@ -58,3 +58,4 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     """Run fuzzer."""
     libfuzzer_fuzzer.run_fuzzer(input_corpus, output_corpus, target_binary,
                                 extra_flags)
+# test ci
