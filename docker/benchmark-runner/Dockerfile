@@ -55,7 +55,6 @@ RUN mkdir -p $WORKDIR
 WORKDIR $WORKDIR
 
 ARG fuzzer
-
 # Copy over all the build artifacts (without * to preserve directory structure).
 # This also copies seed and dictionary files if they are available.
 COPY --from=builder /out/ ./
