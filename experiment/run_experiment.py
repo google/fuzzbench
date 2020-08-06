@@ -453,20 +453,18 @@ def main():
                         required=False,
                         default=None,
                         choices=all_fuzzers)
-    parser.add_argument(
-        '-ns',
-        '--no-seeds',
-        help='Should trials be conducted without seed corpora.',
-        required=False,
-        default=False,
-        action='store_true')
-    parser.add_argument(
-        '-nd',
-        '--no-dictionaries',
-        help='Should trials be conducted without dictionaries.',
-        required=False,
-        default=False,
-        action='store_true')
+    parser.add_argument('-ns',
+                        '--no-seeds',
+                        help='Should trials be conducted without seed corpora.',
+                        required=False,
+                        default=False,
+                        action='store_true')
+    parser.add_argument('-nd',
+                        '--no-dictionaries',
+                        help='Should trials be conducted without dictionaries.',
+                        required=False,
+                        default=False,
+                        action='store_true')
 
     args = parser.parse_args()
     fuzzers = args.fuzzers or all_fuzzers
