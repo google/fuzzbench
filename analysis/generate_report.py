@@ -77,8 +77,8 @@ def get_arg_parser():
                         '--fuzzers',
                         nargs='*',
                         help='Names of the fuzzers to include in the report.')
-    parser.add_argument('-clang',
-                        '--clang-coverage-reports',
+    parser.add_argument('-cov',
+                        '--coverage-report',
                         action='store_true',
                         default=False,
                         help='If set, clang coverage reports are linked.')
@@ -114,7 +114,7 @@ def get_arg_parser():
               'not private. See help for --merge-with-clobber for more '
               'details.'))
     parser.add_argument(
-        '-cov',
+        '-c',
         '--from-cached-data',
         action='store_true',
         default=False,

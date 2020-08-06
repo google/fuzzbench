@@ -44,6 +44,16 @@ def generate_cov_reports(experiments, benchmarks, fuzzers, report_dir):
     logger.info('Finished generating coverage report.')
 
 
+def generate_cov_reports_seq(experiments, benchmarks, fuzzers, report_dir):
+    """Generate coverage reports for each benchmark and fuzzer."""
+    logger.info('Start generating coverage report for benchmarks.')
+    set_up_coverage_files(experiments, report_dir, benchmarks)
+    for benchmark in benchmarks:
+        for fuzzer in fuzzers:
+            generate_cov_report(experiments, benchmark, fuzzer, report_dir)
+    logger.info('Finished generating coverage report.')
+
+
 def generate_cov_report(experiments, benchmark, fuzzer, report_dir):
     """Generate the coverage report for one pair of benchmark and fuzzer."""
     logs.initialize()
@@ -71,7 +81,7 @@ def set_up_coverage_files(experiment_names, report_dir, benchmarks):
 def set_up_coverage_file(experiment_names, report_dir, benchmark):
     """Sets up coverage files for |benchmark|."""
     logs.initialize()
-    logger.info('Started setting up coverage file for'
+    logger.info('Started setting up coverage file for '
                 'benchmark: {benchmark}'.format(benchmark=benchmark))
     for experiment in experiment_names:
         archive_filestore_path = get_benchmark_archive(experiment, benchmark)
@@ -145,7 +155,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         profdata_files = os.listdir(self.fuzzer_report_dir)
         files_to_merge = [os.path.join(self.fuzzer_report_dir, profdata_file)
                           for profdata_file in profdata_files]
-        command = ['llvm-profdata', 'merge', '-sparse']
+        command = ['llvm-profdata-11', 'merge', '-sparse']
         command.extend(files_to_merge)
         command.extend(['-o', self.merged_profdata_file])
         result = new_process.execute(command, expect_zero=False)
@@ -185,7 +195,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
     def generate_cov_report(self):
         """Generates the coverage report."""
         command = [
-            'llvm-cov', 'show', '-format=html',
+            'llvm-cov-11', 'show', '-format=html',
             '-path-equivalence=/,{prefix}'.format(
                 prefix=self.source_files),
             '-output-dir={dst_dir}'.format(dst_dir=self.fuzzer_report_dir),

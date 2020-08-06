@@ -33,7 +33,7 @@ def generate_coverage_report(experiment_names,
     filesystem.create_directory(coverage_report_directory)
     try:
         # Generate coverage reports for each benchmark.
-        coverage_utils.generate_cov_reports(experiment_names, benchmarks,
+        coverage_utils.generate_cov_reports_seq(experiment_names, benchmarks,
                                             fuzzers, coverage_report_directory)
     except Exception:  # pylint: disable=broad-except
         logger.error('Failed to generate coverage reports.')
