@@ -120,7 +120,8 @@ def main():
         os.path.join(ROOT_DIR, 'docker', 'image_types.yaml'))
     base_images_spec = create_cloud_build_spec(
         {'base-image': image_templates['base-image']}, build_base_images=True)
-    base_images_spec_file = os.path.join(ROOT_DIR, 'docker', 'base-images.yaml')
+    base_images_spec_file = os.path.join(ROOT_DIR, 'docker', 'gcb',
+                                         'base-images.yaml')
     yaml_utils.write(base_images_spec_file, base_images_spec)
 
 
