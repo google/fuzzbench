@@ -297,6 +297,18 @@ class TestIntegrationRunner:
         mocked_error.assert_not_called()
 
 
+def test_clean_seed_corpus_no_seeds(fs):
+    """Test that seed corpus files are deleted if NO_SEEDS is set in the
+    environment to 'True'."""
+    seed_corpus_dir = '/seeds'
+    fs.create_dir(seed_corpus_dir)
+    seed_file = os.path.join(seed_corpus_dir, 'a')
+    fs.create_file(seed_file, contents='abc')
+    runner._clean_seed_corpus(seed_corpus_dir)  # pylint: disable=protected-access
+    assert not os.path.exists(seed_file)
+    assert os.path.exists(seed_corpus_dir)
+
+
 def test_clean_seed_corpus(fs):
     """Test that seed corpus files are moved to root directory and deletes files
     exceeding 1 MB limit."""
