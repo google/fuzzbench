@@ -50,6 +50,6 @@ def test_output_report_filestore(fs, experiment):
                 [experiment_name],
                 reports_dir,
                 report_name=experiment_name,
-                clang_coverage_reports=False,
+                coverage_report=False,
                 in_progress=False,
                 merge_with_clobber_nonprivate=False)

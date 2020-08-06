@@ -114,7 +114,7 @@ def get_arg_parser():
               'not private. See help for --merge-with-clobber for more '
               'details.'))
     parser.add_argument(
-        '-c',
+        '-cov',
         '--from-cached-data',
         action='store_true',
         default=False,
@@ -139,7 +139,7 @@ def generate_report(experiment_names,
                     end_time=None,
                     merge_with_clobber=False,
                     merge_with_clobber_nonprivate=False,
-                    clang_coverage_reports=False):
+                    coverage_report=False):
     """Generate report helper."""
     if merge_with_clobber_nonprivate:
         experiment_names = (
@@ -176,11 +176,11 @@ def generate_report(experiment_names,
         experiment_df = data_utils.clobber_experiments_data(
             experiment_df, experiment_names)
 
-    # Generate coverge reports for each benchmark.
+    # Generate coverage reports for each benchmark.
     benchmark_names = experiment_df.benchmark.unique()
     fuzzer_names = experiment_df.fuzzer.unique()
 
-    if clang_coverage_reports:
+    if coverage_report:
         cov_reporter.generate_coverage_report(experiment_names,
                                               report_directory, benchmark_names,
                                               fuzzer_names)
@@ -192,7 +192,7 @@ def generate_report(experiment_names,
     template = report_type + '.html'
     detailed_report = rendering.render_report(experiment_ctx, template,
                                               in_progress,
-                                              clang_coverage_reports)
+                                              coverage_report)
 
     filesystem.write(os.path.join(report_directory, 'index.html'),
                      detailed_report)
@@ -217,7 +217,7 @@ def main():
                     from_cached_data=args.from_cached_data,
                     end_time=args.end_time,
                     merge_with_clobber=args.merge_with_clobber,
-                    clang_coverage_reports=args.clang_coverage_reports)
+                    coverage_report=args.coverage_report)
 
 
 if __name__ == '__main__':

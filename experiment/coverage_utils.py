@@ -52,7 +52,7 @@ def generate_cov_report(experiments, benchmark, fuzzer, report_dir):
     generator = CoverageReporter(fuzzer, benchmark, experiments, report_dir,
                                  logger)
     # Gets and merges all the profdata files.
-    generator.fetch_profdata_file()
+    generator.fetch_profdata_files()
     generator.merge_profdata_files()
     # Generates the reports using llvm-cov.
     generator.generate_cov_report()
@@ -64,12 +64,8 @@ def generate_cov_report(experiments, benchmark, fuzzer, report_dir):
 
 def set_up_coverage_files(experiment_names, report_dir, benchmarks):
     """Sets up coverage files for all benchmarks."""
-    with multiprocessing.Pool() as pool:
-        set_up_coverage_file_args = [(experiment_names, report_dir, benchmark)
-                                     for benchmark in benchmarks]
-        pool.starmap(set_up_coverage_file, set_up_coverage_file_args)
-        pool.close()
-        pool.join()
+    for benchmark in benchmarks:
+        set_up_coverage_file(experiment_names, report_dir, benchmark)
 
 
 def set_up_coverage_file(experiment_names, report_dir, benchmark):
@@ -156,7 +152,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         if result.retcode != 0:
             logger.error('Profdata files merging failed.')
 
-    def fetch_profdata_file(self):
+    def fetch_profdata_files(self):
         """Fetches the profdata files for |fuzzer| on |benchmark| from gcs."""
         self.logger.info('Fetching profdata for fuzzer: '
                          '{fuzzer},benchmark: {benchmark}.'.format(
@@ -188,17 +184,14 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
 
     def generate_cov_report(self):
         """Generates the coverage report."""
-        dst_dir = self.fuzzer_report_dir
-        profdata_file_path = self.merged_profdata_file
-        binary_file_path = self.binary_file
-        source_file_path_prefix = self.source_files
         command = [
             'llvm-cov', 'show', '-format=html',
             '-path-equivalence=/,{prefix}'.format(
-                prefix=source_file_path_prefix),
-            '-output-dir={dst_dir}'.format(dst_dir=dst_dir), '-Xdemangler',
-            'c++filt', '-Xdemangler', '-n', binary_file_path,
-            '-instr-profile={profdata}'.format(profdata=profdata_file_path)
+                prefix=self.source_files),
+            '-output-dir={dst_dir}'.format(dst_dir=self.fuzzer_report_dir),
+            '-Xdemangler', 'c++filt', '-Xdemangler', '-n', self.binary_file,
+            '-instr-profile={profdata}'.format(
+                profdata=self.merged_profdata_file)
         ]
         result = new_process.execute(command, expect_zero=False)
         if result.retcode != 0:
