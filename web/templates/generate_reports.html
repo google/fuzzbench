@@ -1,0 +1,69 @@
+<html>
+  <head>
+    <style>
+      table, th, td {
+          border: 1px solid black;
+          border-collapse: collapse;
+      }
+      th, td {
+          padding: 15px;
+      }
+    </style>
+    <script>
+      function changeExperimentBox(box_element) {
+          // Check or uncheck all fuzzer boxes in the experiment.
+          let elements = document.getElementsByClassName(box_element.id + '-fuzzer-box');
+          let new_value;
+          if (box_element.checked) {
+              new_value = true;
+          } else {
+              new_value = false;
+          }
+          for (let i = 0; i < elements.length; i++) {
+              let element = elements[i];
+              if (element.disabled) {
+                  continue;
+              }
+              element.checked = new_value;
+          }
+      }
+      function changeFuzzerBox(fuzzer_box, experiment) {
+          if (fuzzer_box.checked) {
+              return; // Don't bother resetting the experiment box.
+          }
+          document.getElementById(experiment).checked = false;
+      }
+    </script>
+  </head>
+  <body>
+    <form action="/generate" method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      <table style="width:100%">
+        <tr>
+          <!-- TODO(metzman): Link to the experiment report on each experiment. -->
+          <th>fuzzer/experiment</th>
+          {% for experiment in experiments %}
+          <th>
+            {{ experiment }}
+            <br>
+            <input type="checkbox" id="{{experiment}}" onchange="changeExperimentBox(this)"/>
+          </th>
+          {% endfor %}
+        </tr>
+        {% for fuzzer in fuzzers %}
+        <tr>
+          <td>{{ fuzzer }}</td>
+          {% for experiment in experiments %}
+            {% if fuzzer in experiment_fuzzers_mapping[experiment] %}
+              <th><input type="checkbox" class="{{experiment}}-fuzzer-box", name="{{fuzzer}},{{experiment}}" value="{{fuzzer}},{{experiment}}" onchange="changeFuzzerBox(this, '{{experiment}}')"/></th>
+           {% else %}
+          <th><input type="checkbox" class="{{experiment}}-fuzzer-box", disabled="true"/></th>
+           {% endif %}
+         {% endfor %}
+        </tr>
+        {% endfor %}
+      </table>
+      <input type="submit" value="Submit">
+    </form>
+  </body>
+</html>

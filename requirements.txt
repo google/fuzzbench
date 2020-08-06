@@ -25,3 +25,7 @@ sqlalchemy==1.3.13
 pylint==2.4.4
 pytype==2019.11.27
 yapf==0.28.0
+
+# Webapp
+Flask==1.1.2
+Flask-WTF==0.14.3

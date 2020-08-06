@@ -24,6 +24,7 @@ def get_experiment_data(experiment_names):
 
     snapshots_query = db_utils.query(
         Experiment.git_hash,\
+        Experiment.private,\
         Trial.experiment, Trial.fuzzer, Trial.benchmark,\
         Trial.time_started, Trial.time_ended,\
         Snapshot.trial_id, Snapshot.time, Snapshot.edges_covered)\
@@ -49,3 +50,17 @@ def add_nonprivate_experiments_for_merge_with_clobber(experiment_names):
     ]
 
     return nonprivate_experiment_names + experiment_names
+
+
+def get_fuzzers_and_experiments(nonprivate=True):
+    """Returns a query for fuzzers and an experiment it ran in. Each item is
+    unique."""
+    trials_query = db_utils.query(
+        Trial.fuzzer,\
+        Trial.experiment)\
+        .select_from(Experiment)\
+        .join(Trial)\
+        .filter(Trial.preempted.is_(False))
+    if nonprivate:
+        trials_query = trials_query.filter(Experiment.private.is_(False))
+    return trials_query.distinct()
