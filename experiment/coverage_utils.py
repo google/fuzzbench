@@ -147,7 +147,9 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         self.logger.info('Merging profdata for fuzzer: '
                          '{fuzzer},benchmark: {benchmark}.'.format(
                              fuzzer=self.fuzzer, benchmark=self.benchmark))
-        files_to_merge = os.listdir(self.fuzzer_report_dir)
+        profdata_files = os.listdir(self.fuzzer_report_dir)
+        files_to_merge = [os.path.join(self.fuzzer_report_dir, profdata_file)
+                          for profdata_file in profdata_files]
         command = ['llvm-profdata', 'merge', '-sparse']
         command.extend(files_to_merge)
         command.extend(['-o', self.merged_profdata_file])
