@@ -87,7 +87,6 @@ def set_up_coverage_file(experiment_names, report_dir, benchmark):
             filesystem.create_directory(benchmark_report_dir)
             filestore_utils.cp(archive_filestore_path,
                                str(benchmark_report_dir))
-            print(benchmark_report_dir)
             archive_name = 'coverage-build-%s.tar.gz' % benchmark
             archive_path = os.path.join(benchmark_report_dir, archive_name)
             tar = tarfile.open(archive_path, 'r:gz')
