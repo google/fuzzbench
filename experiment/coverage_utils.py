@@ -190,7 +190,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
     def generate_cov_report(self):
         """Generates the coverage report."""
         command = [
-            'llvm-cov-11', 'show', '-format=html',
+            'llvm-cov', 'show', '-format=html',
             '-path-equivalence=/,{prefix}'.format(prefix=self.source_files),
             '-output-dir={dst_dir}'.format(dst_dir=self.fuzzer_report_dir),
             '-Xdemangler', 'c++filt', '-Xdemangler', '-n', self.binary_file,
@@ -247,7 +247,7 @@ def get_trial_ids(experiment: str, fuzzer: str, benchmark: str):
 
 def merge_profdata_files(src_files, dst_file):
     """Uses llvm-profdata to merge |src_files| to |dst_files|."""
-    command = ['llvm-profdata-11', 'merge', '-sparse']
+    command = ['llvm-profdata', 'merge', '-sparse']
     command.extend(src_files)
     command.extend(['-o', dst_file])
     result = new_process.execute(command, expect_zero=False)
