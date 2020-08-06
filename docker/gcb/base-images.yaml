@@ -11,47 +11,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# The order of execution is as follows:
-# 1. Pull base-image.
-# 2. After pulling base-image completes: Build base-image.
-# This is optimized to take advantage of concurrency and caching as much as
-# possible. When nothing changes, this does build takes two minutes to complete
-# instead of ten.'
-# See https://cloud.google.com/cloud-build/docs/speeding-up-builds for a discussion
-# on using caching.
-# See https://cloud.google.com/cloud-build/docs/configuring-builds/configure-build-step-order
-# for a discussion on paralellism/concurrency for build steps in GCB.
-
-steps:
-
-# Pull base-image to fill cache.
-- name: 'gcr.io/cloud-builders/docker'
-  entrypoint: 'bash'
-  args:
-    - '-c'
-    - |
-      docker pull ${_REPO}/base-image || exit 0
-
-- name: 'gcr.io/cloud-builders/docker'
-  args: [
-    'build',
-
-    # Use two tags so that the image builds properly and we can push it to the
-    # correct location.
-    '--tag',
-    'gcr.io/fuzzbench/base-image',
-
-    '--tag',
-    '${_REPO}/base-image:${_EXPERIMENT}',
-
-    '--cache-from',
-    '${_REPO}/base-image',
-
-    'docker/base-image'
-  ]
-  id: 'base-image'
+# This file is used by GCB to build base images everytime a commit is
+# made to the master branch.
 
 images:
-  - '${_REPO}/base-image:${_EXPERIMENT}'
-  - '${_REPO}/base-image'
+- gcr.io/fuzzbench/base-image:test-experiment
+- gcr.io/fuzzbench/base-image
+steps:
+- args:
+  - build
+  - --tag
+  - gcr.io/fuzzbench/base-image
+  - --tag
+  - gcr.io/fuzzbench/base-image:test-experiment
+  - --cache-from
+  - gcr.io/fuzzbench/base-image
+  - --build-arg
+  - BUILDKIT_INLINE_CACHE=1
+  - --file
+  - docker/base-image/Dockerfile
+  - docker/base-image
+  env: DOCKER_BUILDKIT=1
+  id: base-image
+  name: gcr.io/cloud-builders/docker
