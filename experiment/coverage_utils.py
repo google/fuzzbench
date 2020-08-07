@@ -36,7 +36,7 @@ logger = logs.Logger('coverage_utils')  # pylint: disable=invalid-name
 COV_DIFF_QUEUE_GET_TIMEOUT = 1
 
 
-def update_coverage_to_bucket():
+def upload_coverage_reports_to_bucket():
     """Copies the coverage reports to gcs bucket."""
     report_dir = reporter.get_reports_dir()
     src_dir = get_coverage_report_dir()
@@ -44,23 +44,23 @@ def update_coverage_to_bucket():
     filestore_utils.cp(src_dir, dst_dir, recursive=True, parallel=True)
 
 
-def generate_cov_reports(experiment_config: dict):
+def generate_coverage_reports(experiment_config: dict):
     """Generates coverage reports for each benchmark and fuzzer."""
     logger.info('Start generating coverage report for benchmarks.')
     benchmarks = experiment_config['benchmarks'].split(',')
     fuzzers = experiment_config['fuzzers'].split(',')
     experiment = experiment_config['experiment']
     with multiprocessing.Pool() as pool:
-        generate_cov_report_args = [(experiment, benchmark, fuzzer)
-                                    for benchmark in benchmarks
-                                    for fuzzer in fuzzers]
-        pool.starmap(generate_cov_report, generate_cov_report_args)
+        generate_coverage_report_args = [(experiment, benchmark, fuzzer)
+                                         for benchmark in benchmarks
+                                         for fuzzer in fuzzers]
+        pool.starmap(generate_coverage_report, generate_coverage_report_args)
         pool.close()
         pool.join()
     logger.info('Finished generating coverage report.')
 
 
-def generate_cov_report(experiment, benchmark, fuzzer):
+def generate_coverage_report(experiment, benchmark, fuzzer):
     """Generates the coverage report for one pair of benchmark and fuzzer."""
     logs.initialize()
     logger.info('Generating coverage report for benchmark: {benchmark} \
@@ -110,7 +110,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                           logger).profdata_file for trial_id in self.trial_ids
         ]
         result = merge_profdata_files(files_to_merge, self.merged_profdata_file)
-        if result != 0:
+        if result.retcode != 0:
             logger.error('Profdata files merging failed.')
 
     def generate_cov_report(self):
@@ -133,11 +133,6 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
 def get_coverage_archive_name(benchmark):
     """Gets the archive name for |benchmark|."""
     return 'coverage-build-%s.tar.gz' % benchmark
-
-
-def get_experiment_folders_dir():
-    """Returns experiment folders directory."""
-    return exp_path.path('experiment-folders')
 
 
 def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):
@@ -183,7 +178,7 @@ def merge_profdata_files(src_files, dst_file):
     command.extend(src_files)
     command.extend(['-o', dst_file])
     result = new_process.execute(command, expect_zero=False)
-    return result.retcode
+    return result
 
 
 def get_coverage_infomation(coverage_summary_file):

@@ -38,6 +38,8 @@ def render_report(experiment_results, template, in_progress, coverage_report):
     )
     template = environment.get_template(template)
 
+    # FIXME: Use |experiment_filestore_name| from experiment db.
+    # See #642: https://github.com/google/fuzzbench/issues/642
     if 'EXPERIMENT_FILESTORE' in os.environ:
         experiment_filestore = os.environ['EXPERIMENT_FILESTORE']
         prefix = "gs://"

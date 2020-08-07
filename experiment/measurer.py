@@ -39,7 +39,7 @@ from database import models
 from experiment.build import build_utils
 from experiment import run_coverage
 from experiment import scheduler
-from experiment import coverage_utils as cov_utils
+from experiment import coverage_utils
 
 logger = logs.Logger('measurer')  # pylint: disable=invalid-name
 
@@ -70,9 +70,9 @@ def measure_main(experiment_config):
     measure_loop(experiment, max_total_time)
 
     # Do the final measuring and store the coverage data.
-    cov_utils.store_coverage_data(experiment_config)
-    cov_utils.generate_cov_reports(experiment_config)
-    cov_utils.update_coverage_to_bucket()
+    coverage_utils.store_coverage_data(experiment_config)
+    coverage_utils.generate_coverage_reports(experiment_config)
+    coverage_utils.upload_coverage_reports_to_bucket()
     logger.info('Finished measuring.')
 
 
@@ -112,7 +112,7 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
     was called first. Otherwise it will use fork which breaks logging."""
     logger.info('Measuring all trials.')
 
-    experiment_folders_dir = cov_utils.get_experiment_folders_dir()
+    experiment_folders_dir = experiment_utils.get_experiment_folders_dir()
     if not exists_in_experiment_filestore(experiment_folders_dir):
         return True
 
@@ -310,7 +310,7 @@ def extract_corpus(corpus_archive: str, sha_blacklist: Set[str],
         filesystem.write(file_path, member_contents, 'wb')
 
 
-class SnapshotMeasurer(cov_utils.TrialCoverage):  # pylint: disable=too-many-instance-attributes
+class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-many-instance-attributes
     """Class used for storing details needed to measure coverage of a particular
     trial."""
 
@@ -354,7 +354,7 @@ class SnapshotMeasurer(cov_utils.TrialCoverage):  # pylint: disable=too-many-ins
 
     def run_cov_new_units(self):
         """Run the coverage binary on new units."""
-        coverage_binary = cov_utils.get_coverage_binary(self.benchmark)
+        coverage_binary = coverage_utils.get_coverage_binary(self.benchmark)
         crashing_units = run_coverage.do_coverage_run(coverage_binary,
                                                       self.corpus_dir,
                                                       self.profraw_file,
@@ -369,7 +369,7 @@ class SnapshotMeasurer(cov_utils.TrialCoverage):  # pylint: disable=too-many-ins
             self.logger.warning('No coverage summary json file found.')
             return 0
         try:
-            coverage_info = cov_utils.get_coverage_infomation(
+            coverage_info = coverage_utils.get_coverage_infomation(
                 self.cov_summary_file)
             coverage_data = coverage_info["data"][0]
             summary_data = coverage_data["totals"]
@@ -390,9 +390,9 @@ class SnapshotMeasurer(cov_utils.TrialCoverage):  # pylint: disable=too-many-ins
         else:
             files_to_merge = [self.profraw_file]
 
-        result = cov_utils.merge_profdata_files(files_to_merge,
-                                                self.profdata_file)
-        if result != 0:
+        result = coverage_utils.merge_profdata_files(files_to_merge,
+                                                     self.profdata_file)
+        if result.retcode != 0:
             self.logger.error(
                 'Coverage profdata generation failed for cycle: %d.', cycle)
 

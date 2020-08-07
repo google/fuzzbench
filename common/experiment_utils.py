@@ -17,6 +17,7 @@ import os
 import posixpath
 
 from common import environment
+from common import experiment_path as exp_path
 
 DEFAULT_SNAPSHOT_SECONDS = 15 * 60  # Seconds.
 CONFIG_DIR = 'config'
@@ -36,6 +37,11 @@ def get_work_dir():
 def get_experiment_name():
     """Returns experiment name."""
     return os.environ['EXPERIMENT']
+
+
+def get_experiment_folders_dir():
+    """Returns experiment folders directory."""
+    return exp_path.path('experiment-folders')
 
 
 def get_cloud_project():
