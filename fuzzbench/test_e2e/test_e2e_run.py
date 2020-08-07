@@ -37,10 +37,6 @@ def redis_connection():
     """Returns the default redis server connection."""
     return redis.Redis(host='queue-server')
 
-    def test_all_jobs_finished_sucessfully(self):
-        """Fake test to be implemented later."""
-        assert True
-
 
 # pylint: disable=no-self-use
 @pytest.mark.skipif('E2E_INTEGRATION_TEST' not in os.environ,

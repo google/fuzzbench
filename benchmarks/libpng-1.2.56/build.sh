@@ -16,15 +16,23 @@
 tar xf libpng-1.2.56.tar.gz
 tar xf zlib-1.2.11.tar.gz
 
+OLDCXXFLAGS=$CXXFLAGS
+export CXXFLAGS=$(echo ${OLDCXXFLAGS} | sed s/-fsanitize-coverage=trace-pc-guard//g)
+echo ${CXXFLAGS}
+export CFLAGS=${CXXFLAGS}
+
 cd zlib-1.2.11
 ./configure
 make install -j $(nproc)
 
+export CXXFLAGS="${OLDCXXFLAGS}"
+export CFLAGS=${CXXFLAGS}
 cd ../libpng-1.2.56
-./configure
+./configure || cat config.log
 make -j $(nproc)
 
-$CXX $CXXFLAGS -std=c++11 $SRC/target.cc .libs/libpng12.a $FUZZER_LIB -I . \
-    -I ../zlib-1.2.11 ../zlib-1.2.11/libz.so \
+$CXX $CXXFLAGS -std=c++11 -fPIC $SRC/target.cc .libs/libpng12.a $FUZZER_LIB -I . \
+    -lz \
+    -I ../zlib-1.2.11 \
     -o $OUT/fuzz-target
 cp -r /opt/seeds $OUT/

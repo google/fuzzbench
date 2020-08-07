@@ -13,10 +13,3 @@
 # limitations under the License.
 
 FROM gcr.io/fuzzbench/base-runner
-
-RUN apt-get update -y && \
-	apt-get install -y \
-	google-perftools \
-	llvm-6.0 llvm-6.0-dev llvm-6.0-tools
-
-RUN apt-get install -y clang-6.0 vim less

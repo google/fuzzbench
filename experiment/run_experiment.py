@@ -467,7 +467,6 @@ def main():
                         action='store_true')
 
     args = parser.parse_args()
-
     fuzzers = args.fuzzers or all_fuzzers
 
     start_experiment(args.experiment_name,

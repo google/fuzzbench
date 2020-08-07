@@ -14,6 +14,7 @@
 """Simple generator for local Makefile rules."""
 
 import os
+
 from common import yaml_utils
 from common import benchmark_utils
 from common import fuzzer_utils
