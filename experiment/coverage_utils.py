@@ -45,7 +45,7 @@ def update_coverage_to_bucket():
 
 
 def generate_cov_reports(experiment_config: dict):
-    """Generate coverage reports for each benchmark and fuzzer."""
+    """Generates coverage reports for each benchmark and fuzzer."""
     logger.info('Start generating coverage report for benchmarks.')
     benchmarks = experiment_config['benchmarks'].split(',')
     fuzzers = experiment_config['fuzzers'].split(',')
@@ -61,7 +61,7 @@ def generate_cov_reports(experiment_config: dict):
 
 
 def generate_cov_report(experiment, benchmark, fuzzer):
-    """Generate the coverage report for one pair of benchmark and fuzzer."""
+    """Generates the coverage report for one pair of benchmark and fuzzer."""
     logs.initialize()
     logger.info('Generating coverage report for benchmark: {benchmark} \
                 fuzzer: {fuzzer}.'.format(benchmark=benchmark, fuzzer=fuzzer))
@@ -136,12 +136,12 @@ def get_coverage_archive_name(benchmark):
 
 
 def get_experiment_folders_dir():
-    """Return experiment folders directory."""
+    """Returns experiment folders directory."""
     return exp_path.path('experiment-folders')
 
 
 def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):
-    """Return the key in coverage dict for a pair of fuzzer-benchmark."""
+    """Returns the key in coverage dict for a pair of fuzzer-benchmark."""
     return fuzzer + ' ' + benchmark
 
 
@@ -157,7 +157,7 @@ def get_coverage_report_dir():
 
 
 def get_coverage_binary(benchmark: str) -> str:
-    """Get the coverage binary for benchmark."""
+    """Gets the coverage binary for benchmark."""
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
     fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
     return fuzzer_utils.get_fuzz_target_binary(coverage_binaries_dir /
@@ -166,7 +166,7 @@ def get_coverage_binary(benchmark: str) -> str:
 
 
 def get_trial_ids(experiment: str, fuzzer: str, benchmark: str):
-    """Get ids of all finished trials for a pair of fuzzer and benchmark."""
+    """Gets ids of all finished trials for a pair of fuzzer and benchmark."""
     trial_ids = [
         trial_id_tuple[0]
         for trial_id_tuple in db_utils.query(models.Trial.id).filter(
@@ -321,7 +321,7 @@ class TrialCoverage:  # pylint: disable=too-many-instance-attributes
         return covered_regions
 
     def generate_summary(self, cycle: int, summary_only=True):
-        """Transform the .profdata file into json form."""
+        """Transforms the .profdata file into json form."""
         coverage_binary = get_coverage_binary(self.benchmark)
         command = [
             'llvm-cov', 'export', '-format=text', coverage_binary,
