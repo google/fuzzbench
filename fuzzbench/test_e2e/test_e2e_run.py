@@ -26,7 +26,7 @@ from experiment.build import docker_images
 
 
 @pytest.fixture(scope='class')
-def config():
+def experiment_config():
     """Returns the default configuration for end-to-end testing."""
     return config_utils.validate_and_expand(
         yaml_utils.read('fuzzbench/test_e2e/end-to-end-test-config.yaml'))
@@ -41,14 +41,14 @@ def redis_connection():
 # pylint: disable=no-self-use
 @pytest.mark.skipif('E2E_INTEGRATION_TEST' not in os.environ,
                     reason='Not running end-to-end test.')
-@pytest.mark.usefixtures('redis_connection', 'config')
+@pytest.mark.usefixtures('redis_connection', 'experiment_config')
 class TestEndToEndRunResults:
     """Checks the result of a test experiment run."""
 
-    def test_jobs_dependency(self, config, redis_connection):  # pylint: disable=redefined-outer-name
+    def test_jobs_dependency(self, experiment_config, redis_connection):  # pylint: disable=redefined-outer-name
         """Tests that jobs dependency preserves during working."""
-        all_images = docker_images.get_images_to_build(config['fuzzers'],
-                                                       config['benchmarks'])
+        all_images = docker_images.get_images_to_build(
+            experiment_config['fuzzers'], experiment_config['benchmarks'])
         jobs = {
             name: rq.job.Job.fetch(name, connection=redis_connection)
             for name in all_images
@@ -58,10 +58,10 @@ class TestEndToEndRunResults:
                 for dep in image['depends_on']:
                     assert jobs[dep].ended_at <= jobs[name].started_at
 
-    def test_all_jobs_finished_successfully(self, config, redis_connection):  # pylint: disable=redefined-outer-name
+    def test_all_jobs_finished_successfully(self, experiment_config, redis_connection):  # pylint: disable=redefined-outer-name
         """Tests all jobs finished successully."""
-        all_images = docker_images.get_images_to_build(config['fuzzers'],
-                                                       config['benchmarks'])
+        all_images = docker_images.get_images_to_build(
+            experiment_config['fuzzers'], experiment_config['benchmarks'])
         jobs = rq.job.Job.fetch_many(all_images.keys(),
                                      connection=redis_connection)
         for job in jobs:
