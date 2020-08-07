@@ -19,6 +19,44 @@
 # are still testing this feature. You should request an experiment by contacting
 # us as you normally do.
 
+- experiment: 2020-08-07
+  fuzzers:
+    - aflplusplus_datalenrand
+    - aflplusplus_havoc
+    - aflplusplus_coe
+    - aflplusplus_exploit
+    - aflplusplus_explore
+    - aflplusplus_fast
+    - aflplusplus_lin
+    - aflplusplus_mmopt
+    - aflplusplus_quad
+    - aflplusplus_rare
+    - aflplusplus_seek
+
+- experiment: 2020-08-03
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_qemu
+    - afl_qemu
+    - aflsmart
+    - eclipser
+    - entropic
+    - fairfuzz
+    - fastcgs_lm
+    - honggfuzz
+    - honggfuzz_qemu
+    - lafintel
+    - libfuzzer
+    - manul
+    - mopt
+    - libfuzzer_keepseed
+    - entropic_keepseed
+    - libfuzzer_interceptors
+    - entropic_interceptors
+
 - experiment: 2020-07-30
   fuzzers:
     - libfuzzer

@@ -35,7 +35,7 @@ def make(targets):
 
 def build_base_images() -> Tuple[int, str]:
     """Build base images locally."""
-    return make(['base-runner', 'base-builder'])
+    return make(['base-image'])
 
 
 def get_shared_coverage_binaries_dir():

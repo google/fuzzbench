@@ -21,7 +21,7 @@ from common import experiment_utils
 from common import new_process
 
 # Constants for dispatcher specs.
-DISPATCHER_MACHINE_TYPE = 'n1-standard-96'
+DISPATCHER_MACHINE_TYPE = 'n1-highmem-96'
 DISPATCHER_BOOT_DISK_SIZE = '4TB'
 DISPATCHER_BOOT_DISK_TYPE = 'pd-ssd'
 
