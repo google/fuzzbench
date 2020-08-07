@@ -35,6 +35,6 @@ COPY experiment/build experiment/build
 COPY experiment/*.py experiment/
 COPY fuzzbench fuzzbench
 COPY fuzzers fuzzers
-COPY config.yaml config.yaml
+COPY local-experiment-config.yaml local-experiment-config.yaml
 
 CMD PYTHONPATH=. python3 -u fuzzbench/run_experiment.py

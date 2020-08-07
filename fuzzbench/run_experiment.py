@@ -32,15 +32,20 @@ def run_experiment(config):
     images_to_build = docker_images.get_images_to_build(config['fuzzers'],
                                                         config['benchmarks'])
     jobs_list = []
-    for name, obj in images_to_build.items():
-        depends = obj.get('depends_on', None)
+    # TODO(#643): topological sort before enqueuing jobs.
+    for name, image in images_to_build.items():
+        depends = image.get('depends_on', None)
+        if depends is not None:
+            assert len(depends) == 1, 'image %s has %d dependencies. Multiple '\
+            'dependencies are currently not supported.' % (name, len(depends))
         jobs_list.append(
-            queue.enqueue(jobs.build_image,
-                          image=obj,
-                          job_timeout=1800,
-                          result_ttl=-1,
-                          job_id=name,
-                          depends_on=None if not depends else depends[0]))
+            queue.enqueue(
+                jobs.build_image,
+                image=image,
+                job_timeout=30 * 60,
+                result_ttl=-1,
+                job_id=name,
+                depends_on=depends[0] if 'depends_on' in image else None))
 
     while True:
         print('Current status of jobs:')
@@ -62,7 +67,8 @@ def main():
     """Set up Redis connection and start the experiment."""
     redis_connection = redis.Redis(host="queue-server")
 
-    config_path = environment.get('EXPERIMENT_CONFIG', 'config.yaml')
+    config_path = environment.get('EXPERIMENT_CONFIG',
+                                  'local-experiment-config.yaml')
     config = yaml_utils.read(config_path)
     config = config_utils.validate_and_expand(config)
 
