@@ -146,7 +146,7 @@ def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):
 
 
 def get_profdata_file_name(trial_id):
-    """Returns the profdata file name for |trial_id|"""
+    """Returns the profdata file name for |trial_id|."""
     return 'data-{id}.profdata'.format(id=trial_id)
 
 

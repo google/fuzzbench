@@ -37,8 +37,15 @@ def render_report(experiment_results, template, in_progress, coverage_report):
         loader=jinja2.FileSystemLoader(templates_dir),
     )
     template = environment.get_template(template)
-    experiment_filestore = os.environ['EXPERIMENT_FILESTORE']
+
+    if 'EXPERIMENT_FILESTORE' in os.environ:
+        experiment_filestore = os.environ['EXPERIMENT_FILESTORE']
+        prefix = "gs://"
+        experiment_filestore_name = experiment_filestore[len(prefix):]
+    else:
+        experiment_filestore_name = 'fuzzbench-data'
+
     return template.render(experiment=experiment_results,
                            in_progress=in_progress,
                            coverage_report=coverage_report,
-                           experiment_filestore=experiment_filestore)
+                           experiment_filestore_name=experiment_filestore_name)
