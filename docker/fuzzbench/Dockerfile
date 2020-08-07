@@ -31,6 +31,8 @@ COPY benchmarks benchmarks
 COPY common common
 COPY database database
 COPY docker docker
+COPY experiment/build experiment/build
+COPY experiment/*.py experiment/
 COPY fuzzbench fuzzbench
 COPY fuzzers fuzzers
 

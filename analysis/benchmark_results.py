@@ -59,6 +59,12 @@ class BenchmarkResults:  # pylint: disable=too-many-public-methods
         return data_utils.get_benchmark_snapshot(self._benchmark_df)
 
     @property
+    @functools.lru_cache()
+    def fuzzers(self):
+        """Fuzzers with valid trials on this benchmark."""
+        return self._benchmark_df.fuzzer.unique()
+
+    @property
     def fuzzers_with_not_enough_samples(self):
         """Fuzzers with not enough samples."""
         return data_utils.get_fuzzers_with_not_enough_samples(

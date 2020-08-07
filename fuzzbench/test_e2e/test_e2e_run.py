@@ -19,7 +19,17 @@ import os
 
 import pytest
 import redis
-from rq.job import Job
+import rq
+
+from common import config_utils, yaml_utils
+from experiment.build import docker_images
+
+
+@pytest.fixture(scope='class')
+def experiment_config():
+    """Returns the default configuration for end-to-end testing."""
+    return config_utils.validate_and_expand(
+        yaml_utils.read('fuzzbench/test_e2e/end-to-end-test-config.yaml'))
 
 
 @pytest.fixture(scope='class')
@@ -35,17 +45,32 @@ def redis_connection():
 # pylint: disable=no-self-use
 @pytest.mark.skipif('E2E_INTEGRATION_TEST' not in os.environ,
                     reason='Not running end-to-end test.')
-@pytest.mark.usefixtures('redis_connection')
+@pytest.mark.usefixtures('redis_connection', 'experiment_config')
 class TestEndToEndRunResults:
     """Checks the result of a test experiment run."""
 
-    def test_jobs_dependency(self):  # pylint: disable=redefined-outer-name
+    def test_jobs_dependency(self, experiment_config, redis_connection):  # pylint: disable=redefined-outer-name
         """Tests that jobs dependency preserves during working."""
-        assert True
+        all_images = docker_images.get_images_to_build(
+            experiment_config['fuzzers'], experiment_config['benchmarks'])
+        jobs = {
+            name: rq.job.Job.fetch(name, connection=redis_connection)
+            for name in all_images
+        }
+        for name, image in all_images.items():
+            if 'depends_on' in image:
+                for dep in image['depends_on']:
+                    assert jobs[dep].ended_at <= jobs[name].started_at
 
-    def test_all_jobs_finished_successfully(self, redis_connection):  # pylint: disable=redefined-outer-name
+    def test_all_jobs_finished_successfully(
+            self,
+            experiment_config,  # pylint: disable=redefined-outer-name
+            redis_connection):  # pylint: disable=redefined-outer-name
         """Tests all jobs finished successully."""
-        jobs = Job.fetch_many(['base-image'], connection=redis_connection)
+        all_images = docker_images.get_images_to_build(
+            experiment_config['fuzzers'], experiment_config['benchmarks'])
+        jobs = rq.job.Job.fetch_many(all_images.keys(),
+                                     connection=redis_connection)
         for job in jobs:
             assert job.get_status() == 'finished'
 

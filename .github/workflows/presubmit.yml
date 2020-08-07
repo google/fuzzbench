@@ -8,7 +8,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - run: |  # Needed for presubmit to work.
-        git fetch origin master --depth 1
+        git fetch origin master --unshallow
         git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
 
     - name: Setup Python environment
@@ -37,4 +37,7 @@ jobs:
     - name: Run presubmit checks
       run: |
         FUZZBENCH_TEST_INTEGRATION=1 make presubmit
-    # TODO(zhichengcai): Add back end to end test.
+
+    - name: Run end to end CI test
+      run: |
+        make run-end-to-end-test
