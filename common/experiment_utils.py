@@ -88,9 +88,14 @@ def is_local_experiment():
 def get_trial_dir(fuzzer, benchmark, trial_id):
     """Returns the unique directory for |fuzzer|, |benchmark|, and
     |trial_id|."""
-    benchmark_fuzzer_directory = '%s-%s' % (benchmark, fuzzer)
+    benchmark_fuzzer_directory = get_benchmark_fuzzer_dir(benchmark, fuzzer)
     trial_subdir = 'trial-%d' % trial_id
     return posixpath.join(benchmark_fuzzer_directory, trial_subdir)
+
+
+def get_benchmark_fuzzer_dir(benchmark, fuzzer):
+    """Returns the directory for |benchmark| and |fuzzer|."""
+    return '%s-%s' % (benchmark, fuzzer)
 
 
 def get_trial_bucket_dir(fuzzer, benchmark, trial_id):

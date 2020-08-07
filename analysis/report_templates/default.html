@@ -242,7 +242,7 @@
                         <div class="row">
                             {% for fuzzer in benchmark.fuzzers %}
                             <div class="col">
-                                <a class="waves-effect waves-light btn" href="coverage-reports/{{ benchmark.name }}/{{ fuzzer }}/index.html">{{ fuzzer }}</a>
+                                <a class="waves-effect waves-light btn" href="{{ experiment_filestore }}/{{ experiment.name }}/reports/coverage/{{ benchmark.name }}/{{ fuzzer }}/index.html">{{ fuzzer }}</a>
                             </div>
                             {% endfor %}
                         </div>

@@ -71,6 +71,8 @@ def measure_main(experiment_config):
 
     # Do the final measuring and store the coverage data.
     cov_utils.store_coverage_data(experiment_config)
+    cov_utils.generate_cov_reports(experiment_config)
+    cov_utils.update_coverage_to_bucket()
     logger.info('Finished measuring.')
 
 

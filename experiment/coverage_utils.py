@@ -15,12 +15,9 @@
 
 import os
 import multiprocessing
-import tarfile
-import posixpath
 import json
 import queue
 
-from common import filesystem
 from common import experiment_utils as exp_utils
 from common import new_process
 from common import benchmark_utils
@@ -31,18 +28,29 @@ from common import experiment_path as exp_path
 from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
+from experiment import reporter
 
 logger = logs.Logger('coverage_utils')  # pylint: disable=invalid-name
 
 COV_DIFF_QUEUE_GET_TIMEOUT = 1
 
 
-def generate_cov_reports(experiments, benchmarks, fuzzers, report_dir):
+def update_coverage_to_bucket():
+    """Copies the coverage reports to gcs bucket."""
+    report_dir = reporter.get_reports_dir()
+    src_dir = get_coverage_report_dir()
+    dst_dir = exp_path.filestore(report_dir)
+    filestore_utils.cp(src_dir, dst_dir, recursive=True, parallel=True)
+
+
+def generate_cov_reports(experiment_config: dict):
     """Generate coverage reports for each benchmark and fuzzer."""
     logger.info('Start generating coverage report for benchmarks.')
-    set_up_coverage_files(experiments, report_dir, benchmarks)
+    benchmarks = experiment_config['benchmarks'].split(',')
+    fuzzers = experiment_config['fuzzers'].split(',')
+    experiment = experiment_config['experiment']
     with multiprocessing.Pool() as pool:
-        generate_cov_report_args = [(experiments, benchmark, fuzzer, report_dir)
+        generate_cov_report_args = [(experiment, benchmark, fuzzer)
                                     for benchmark in benchmarks
                                     for fuzzer in fuzzers]
         pool.starmap(generate_cov_report, generate_cov_report_args)
@@ -51,24 +59,13 @@ def generate_cov_reports(experiments, benchmarks, fuzzers, report_dir):
     logger.info('Finished generating coverage report.')
 
 
-def generate_cov_reports_seq(experiments, benchmarks, fuzzers, report_dir):
-    """Generate coverage reports for each benchmark and fuzzer."""
-    logger.info('Start generating coverage report for benchmarks.')
-    set_up_coverage_files(experiments, report_dir, benchmarks)
-    for benchmark in benchmarks:
-        for fuzzer in fuzzers:
-            generate_cov_report(experiments, benchmark, fuzzer, report_dir)
-    logger.info('Finished generating coverage report.')
-
-
-def generate_cov_report(experiments, benchmark, fuzzer, report_dir):
+def generate_cov_report(experiment, benchmark, fuzzer):
     """Generate the coverage report for one pair of benchmark and fuzzer."""
     logs.initialize()
     logger.info('Generating coverage report for benchmark: {benchmark} \
                 fuzzer: {fuzzer}.'.format(benchmark=benchmark, fuzzer=fuzzer))
-    generator = CoverageReporter(fuzzer, benchmark, experiments, report_dir)
-    # Gets and merges all the profdata files.
-    generator.fetch_profdata_files()
+    generator = CoverageReporter(fuzzer, benchmark, experiment)
+    # Merges all the profdata files.
     generator.merge_profdata_files()
     # Generates the reports using llvm-cov.
     generator.generate_cov_report()
@@ -78,121 +75,49 @@ def generate_cov_report(experiments, benchmark, fuzzer, report_dir):
                     benchmark=benchmark, fuzzer=fuzzer))
 
 
-def set_up_coverage_files(experiment_names, report_dir, benchmarks):
-    """Sets up coverage files for all benchmarks."""
-    for benchmark in benchmarks:
-        set_up_coverage_file(experiment_names, report_dir, benchmark)
-
-
-def set_up_coverage_file(experiment_names, report_dir, benchmark):
-    """Sets up coverage files for |benchmark|."""
-    logs.initialize()
-    logger.info('Started setting up coverage file for '
-                'benchmark: {benchmark}'.format(benchmark=benchmark))
-    for experiment in experiment_names:
-        archive_filestore_path = get_benchmark_archive(experiment, benchmark)
-        archive_exist = filestore_utils.ls(archive_filestore_path,
-                                           must_exist=False).retcode == 0
-        if archive_exist:
-            benchmark_report_dir = os.path.join(report_dir, benchmark)
-            filesystem.create_directory(benchmark_report_dir)
-            filestore_utils.cp(archive_filestore_path,
-                               str(benchmark_report_dir))
-            archive_name = get_coverage_archive_name(benchmark)
-            archive_path = os.path.join(benchmark_report_dir, archive_name)
-            tar = tarfile.open(archive_path, 'r:gz')
-            tar.extractall(benchmark_report_dir)
-            os.remove(archive_path)
-            break
-    logger.info('Finished setting up coverage file for'
-                'benchmark: {benchmark}'.format(benchmark=benchmark))
-
-
-def get_benchmark_archive(experiment_name, benchmark):
-    """Returns the path of the coverage archive in gcs bucket
-    for |benchmark|."""
-    experiment_filestore_dir = get_experiment_filestore_path(experiment_name)
-    archive_name = get_coverage_archive_name(benchmark)
-    return posixpath.join(experiment_filestore_dir, 'coverage-binaries',
-                          archive_name)
-
-
-def get_experiment_filestore_path(experiment_name):
-    """Returns the path of the storage folder for |experiment_name|."""
-    if 'EXPERIMENT_FILESTORE' in os.environ:
-        experiment_filestore = os.environ['EXPERIMENT_FILESTORE']
-    else:
-        experiment_filestore = 'gs://fuzzbench-data'
-    return posixpath.join(experiment_filestore, experiment_name)
-
-
 class CoverageReporter:  # pylint: disable=too-many-instance-attributes
     """Class used to generate coverage report for a pair of
     fuzzer and benchmark."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, fuzzer, benchmark, experiments, report_dir):
+    def __init__(self, fuzzer, benchmark, experiment):
         self.fuzzer = fuzzer
         self.benchmark = benchmark
-        self.experiments = experiments
-        self.report_dir = report_dir
-        self.benchmark_report_dir = os.path.join(self.report_dir, benchmark)
-        self.fuzzer_report_dir = os.path.join(self.benchmark_report_dir, fuzzer)
-        self.merged_profdata_file = os.path.join(self.fuzzer_report_dir,
+        self.experiment = experiment
+        self.trial_ids = get_trial_ids(experiment, fuzzer, benchmark)
+        cov_report_directory = get_coverage_report_dir()
+        self.report_dir = os.path.join(cov_report_directory, benchmark, fuzzer)
+        benchmark_fuzzer_dir = exp_utils.get_benchmark_fuzzer_dir(
+            benchmark, fuzzer)
+        work_dir = exp_utils.get_work_dir()
+        self.merged_profdata_file = os.path.join(work_dir,
+                                                 'measurement-folders',
+                                                 benchmark_fuzzer_dir,
                                                  'merged.profdata')
-        self.source_files = os.path.join(self.benchmark_report_dir, 'src')
-        fuzz_target = benchmark_utils.get_fuzz_target(self.benchmark)
-        self.binary_file = fuzzer_utils.get_fuzz_target_binary(
-            self.benchmark_report_dir, fuzz_target_name=fuzz_target)
+        coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
+        self.source_files = os.path.join(coverage_binaries_dir, benchmark,
+                                         'src')
+        self.binary_file = get_coverage_binary(benchmark)
 
     def merge_profdata_files(self):
         """Merge profdata files from |src_files| to |dst_files|."""
         logger.info('Merging profdata for fuzzer: '
                     '{fuzzer},benchmark: {benchmark}.'.format(
                         fuzzer=self.fuzzer, benchmark=self.benchmark))
-        profdata_files = os.listdir(self.fuzzer_report_dir)
         files_to_merge = [
-            os.path.join(self.fuzzer_report_dir, profdata_file)
-            for profdata_file in profdata_files
+            TrialCoverage(self.fuzzer, self.benchmark, trial_id,
+                          logger).profdata_file for trial_id in self.trial_ids
         ]
         result = merge_profdata_files(files_to_merge, self.merged_profdata_file)
         if result != 0:
             logger.error('Profdata files merging failed.')
-
-    def fetch_profdata_files(self):
-        """Fetches the profdata files for |fuzzer| on |benchmark| from gcs."""
-        logger.info('Fetching profdata for fuzzer: '
-                    '{fuzzer},benchmark: {benchmark}.'.format(
-                        fuzzer=self.fuzzer, benchmark=self.benchmark))
-        files_to_merge = []
-        for experiment in self.experiments:
-            trial_ids = get_trial_ids(experiment, self.fuzzer, self.benchmark)
-            files_to_merge.extend([
-                self.get_profdata_file_path(experiment, trial_id)
-                for trial_id in trial_ids
-            ])
-        filesystem.create_directory(self.fuzzer_report_dir)
-        for file_path in files_to_merge:
-            filestore_utils.cp(file_path, self.fuzzer_report_dir)
-
-    def get_profdata_file_path(self, experiment, trial_id):
-        """Gets profdata file path for a specific trial."""
-        benchmark_fuzzer_trial_dir = exp_utils.get_trial_dir(
-            self.fuzzer, self.benchmark, trial_id)
-        experiment_filestore_dir = get_experiment_filestore_path(experiment)
-        profdata_file_name = get_profdata_file_name(trial_id)
-        profdata_file_path = posixpath.join(experiment_filestore_dir,
-                                            'experiment-folders',
-                                            benchmark_fuzzer_trial_dir,
-                                            profdata_file_name)
-        return profdata_file_path
 
     def generate_cov_report(self):
         """Generates the coverage report."""
         command = [
             'llvm-cov', 'show', '-format=html',
             '-path-equivalence=/,{prefix}'.format(prefix=self.source_files),
-            '-output-dir={dst_dir}'.format(dst_dir=self.fuzzer_report_dir),
+            '-output-dir={dst_dir}'.format(dst_dir=self.report_dir),
             '-Xdemangler', 'c++filt', '-Xdemangler', '-n', self.binary_file,
             '-instr-profile={profdata}'.format(
                 profdata=self.merged_profdata_file)
@@ -222,6 +147,12 @@ def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):
 def get_profdata_file_name(trial_id):
     """Returns the profdata file name for |trial_id|"""
     return 'data-{id}.profdata'.format(id=trial_id)
+
+
+def get_coverage_report_dir():
+    """Returns the directory to store all the coverage reports."""
+    report_dir = reporter.get_reports_dir()
+    return os.path.join(report_dir, 'coverage')
 
 
 def get_coverage_binary(benchmark: str) -> str:
@@ -261,47 +192,19 @@ def get_coverage_infomation(coverage_summary_file):
         return json.loads(summary.readlines()[-1])
 
 
-def store_profdata_files(experiment_config: dict):
-    """Stores profdata files to gcs bucket."""
-    logger.info('Start storing profdata files')
-    benchmarks = experiment_config['benchmarks'].split(',')
-    fuzzers = experiment_config['fuzzers'].split(',')
-    experiment = experiment_config['experiment']
-    for benchmark in benchmarks:
-        for fuzzer in fuzzers:
-            trial_ids = get_trial_ids(experiment, fuzzer, benchmark)
-            for trial_id in trial_ids:
-                store_profdata_file(fuzzer, benchmark, trial_id)
-    logger.info('Finished storing profdata files')
-
-
-def store_profdata_file(fuzzer, benchmark, trial_id):
-    """Stores profdata file for a pair of fuzzer and benchmark to gcs."""
-    trial_coverage = TrialCoverage(fuzzer, benchmark, trial_id, logger)
-    src_profdata = trial_coverage.profdata_file
-    benchmark_fuzzer_trial_dir = exp_utils.get_trial_dir(
-        fuzzer, benchmark, trial_id)
-    dst_profdata_exp_dir = os.path.join(get_experiment_folders_dir(),
-                                        benchmark_fuzzer_trial_dir)
-    dst_profdata_dir = exp_path.filestore(dst_profdata_exp_dir)
-    profdata_file_name = get_profdata_file_name(trial_id)
-    dst_profdata = os.path.join(dst_profdata_dir, profdata_file_name)
-    filestore_utils.cp(src_profdata, dst_profdata)
-
-
 def store_coverage_data(experiment_config: dict):
     """Generates the specific coverage data and store in cloud bucket."""
     logger.info('Start storing coverage data')
     with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
         q = manager.Queue()  # pytype: disable=attribute-error
         covered_regions = get_all_covered_regions(experiment_config, pool, q)
-        json_src_dir = get_experiment_folders_dir()
+        json_src_dir = reporter.get_reports_dir()
+        os.mkdir(json_src_dir)
         json_src = os.path.join(json_src_dir, 'covered_regions.json')
         with open(json_src, 'w') as src_file:
             json.dump(covered_regions, src_file)
         json_dst = exp_path.filestore(json_src)
         filestore_utils.cp(json_src, json_dst)
-    store_profdata_files(experiment_config)
 
     logger.info('Finished storing coverage data')
 

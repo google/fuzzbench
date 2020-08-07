@@ -24,7 +24,6 @@ from analysis import experiment_results
 from analysis import plotting
 from analysis import queries
 from analysis import rendering
-from analysis import generate_coverage_report as cov_reporter
 from common import filesystem
 from common import logs
 
@@ -177,13 +176,7 @@ def generate_report(experiment_names,
             experiment_df, experiment_names)
 
     # Generate coverage reports for each benchmark.
-    benchmark_names = experiment_df.benchmark.unique()
     fuzzer_names = experiment_df.fuzzer.unique()
-
-    if coverage_report:
-        cov_reporter.generate_coverage_report(experiment_names,
-                                              report_directory, benchmark_names,
-                                              fuzzer_names)
 
     plotter = plotting.Plotter(fuzzer_names, quick, log_scale)
     experiment_ctx = experiment_results.ExperimentResults(
