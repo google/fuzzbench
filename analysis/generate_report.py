@@ -175,9 +175,7 @@ def generate_report(experiment_names,
         experiment_df = data_utils.clobber_experiments_data(
             experiment_df, experiment_names)
 
-    # Generate coverage reports for each benchmark.
     fuzzer_names = experiment_df.fuzzer.unique()
-
     plotter = plotting.Plotter(fuzzer_names, quick, log_scale)
     experiment_ctx = experiment_results.ExperimentResults(
         experiment_df, report_directory, plotter, experiment_name=report_name)
