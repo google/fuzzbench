@@ -15,12 +15,10 @@ jobs:
       matrix:
         fuzzer:
           - afl
-          - aflcc
           - aflfast
           - aflplusplus
           - aflplusplus_optimal
           - aflsmart
-          - ankou
           - entropic
           - fairfuzz
           - fastcgs_lm
@@ -35,6 +33,22 @@ jobs:
           - afl_qemu
           - aflplusplus_qemu
           - honggfuzz_qemu
+          # temporary variants.
+          - aflplusplus_datalenrand
+          - aflplusplus_havoc
+          - aflplusplus_coe
+          - aflplusplus_exploit
+          - aflplusplus_explore
+          - aflplusplus_fast
+          - aflplusplus_lin
+          - aflplusplus_mmopt
+          - aflplusplus_quad
+          - aflplusplus_rare
+          - aflplusplus_seek
+          - libfuzzer_interceptors
+          - libfuzzer_keepseed
+          - entropic_interceptors
+          - entropic_keepseed
 
         benchmark_type:
           - oss-fuzz
@@ -62,6 +76,20 @@ jobs:
       uses: actions/setup-python@v1.1.1
       with:
         python-version: 3.7
+
+    # Copied from:
+    # https://docs.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu.
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements
+        # file.
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
 
     - name: Install dependencies
       run: |

@@ -38,7 +38,7 @@ def get_regular_benchmarks():
 def get_oss_fuzz_benchmarks():
     """Get all non-blacklisted OSS-Fuzz benchmarks."""
     return get_benchmarks_or_fuzzers('benchmarks',
-                                     'oss-fuzz.yaml',
+                                     'benchmark.yaml',
                                      blacklist=set())
 
 

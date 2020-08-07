@@ -24,7 +24,6 @@ from experiment import dispatcher
 from test_libs import utils as test_utils
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
-SANCOV_DIR = '/sancov'
 
 # pylint: disable=invalid-name,redefined-outer-name,unused-argument,protected-access
 
@@ -72,8 +71,9 @@ def test_initialize_experiment_in_db(dispatcher_experiment):
                      benchmark=benchmark)
         for benchmark, _, fuzzer in trials_args
     ]
-    dispatcher._initialize_experiment_in_db(dispatcher_experiment.config,
-                                            trials)
+    dispatcher._initialize_experiment_in_db(dispatcher_experiment.config)
+    dispatcher._initialize_trials_in_db(trials)
+
     db_experiments = db_utils.query(models.Experiment).all()
     assert len(db_experiments) == 1
     db_experiment = db_experiments[0]

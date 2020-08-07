@@ -18,22 +18,32 @@ import time
 import redis
 import rq
 
-from fuzzbench import fake_jobs
+from fuzzbench import jobs
 
 
 def run_experiment():
     """Main experiment logic."""
     print('Initializing the job queue.')
-    queue = rq.Queue()
-    jobs = []
-    for i in range(6):
-        jobs.append(queue.enqueue(fake_jobs.build_image, 'something-%d' % i))
+    # Create the queue for scheduling build jobs and run jobs.
+    queue = rq.Queue('build_n_run_queue')
+    jobs_list = []
+    jobs_list.append(
+        queue.enqueue(jobs.build_image,
+                      'base-image',
+                      job_timeout=600,
+                      job_id='base-image'))
 
     while True:
         print('Current status of jobs:')
-        for job in jobs:
-            print('  %s%s : %s' % (job.func_name, job.args, job.get_status()))
-        if all([job.result is not None for job in jobs]):
+        print('\tqueued:\t%d' % queue.count)
+        print('\tstarted:\t%d' % queue.started_job_registry.count)
+        print('\tdeferred:\t%d' % queue.deferred_job_registry.count)
+        print('\tfinished:\t%d' % queue.finished_job_registry.count)
+        print('\tfailed:\t%d' % queue.failed_job_registry.count)
+        for job in jobs_list:
+            print('  %s : %s\t(%s)' % (job.func_name, job.get_status(), job.id))
+
+        if all([job.result is not None for job in jobs_list]):
             break
         time.sleep(3)
     print('All done!')

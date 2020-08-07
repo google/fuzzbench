@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG parent_image=gcr.io/fuzzbench/base-builder
+ARG parent_image
 FROM $parent_image
 
-# Minor modification to dump_coverage on a successful inner merge step.
+# The patch adds hook to dump clang coverage data when timeout.
 COPY patch.diff /
 
-# Use old libFuzzer code that supports -dump_coverage=1/trace-pc-guard coverage.
-# This is the last libFuzzer version before support was removed.
+# Use a libFuzzer version that supports clang source-based coverage.
 RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
     cd /llvm-project && \
     git checkout 0b5e6b11c358e704384520dc036eddb5da1c68bf && \

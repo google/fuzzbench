@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/fuzzbench/base-runner
+FROM gcr.io/fuzzbench/base-image
 
 ENV LD_LIBRARY_PATH /out

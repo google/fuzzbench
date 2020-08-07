@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG parent_image=gcr.io/fuzzbench/base-builder
+ARG parent_image
 FROM $parent_image
 
 # Install wget to download afl_driver.cpp. Install libstdc++ to use llvm_mode.
@@ -37,7 +37,7 @@ RUN apt-get update && \
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 0da0b5cba05d1b49b7ca10987d11a74ab54892e0 && \
+    git checkout af277a0b56ce3defb6d3972616eea4a134b8fd86 && \
     unset CFLAGS && unset CXXFLAGS && \
     AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
     cd llvm_mode && LLVM_CONFIG=llvm-config-11 REAL_CC=gcc-9 REAL_CXX=g++-9 make && \

@@ -16,6 +16,20 @@ jobs:
       with:
         python-version: 3.7
 
+    # Copied from:
+    # https://docs.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu.
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements
+        # file.
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+
     - name: Install dependencies
       run: |
         make install-dependencies
@@ -23,7 +37,4 @@ jobs:
     - name: Run presubmit checks
       run: |
         FUZZBENCH_TEST_INTEGRATION=1 make presubmit
-
-    - name: Run end to end CI test
-      run: |
-        make run-end-to-end-test
+    # TODO(zhichengcai): Add back end to end test.

@@ -14,7 +14,8 @@ services:
     image: fuzzbench
     environment:
       RQ_REDIS_URL: redis://queue-server
-    command: rq worker --burst
+      PYTHONPATH: .
+    command: python3 fuzzbench/worker.py
     volumes:
       # Allow access to the host's docker daemon.
       - /var/run/docker.sock:/var/run/docker.sock

@@ -13,36 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-. $(dirname $0)/../common.sh
+tar xf libpng-1.2.56.tar.gz
+tar xf zlib-1.2.11.tar.gz
 
+cd zlib-1.2.11
+./configure
+make install -j $(nproc)
 
-apt-get update && \
-  apt-get install -y \
-  make \
-  autoconf \
-  automake \
-  libtool
+cd ../libpng-1.2.56
+./configure
+make -j $(nproc)
 
-[ ! -e libpng-1.2.56.tar.gz ] && wget https://downloads.sourceforge.net/project/libpng/libpng12/older-releases/1.2.56/libpng-1.2.56.tar.gz
-[ ! -e libpng-1.2.56 ] && tar xf libpng-1.2.56.tar.gz
-[ ! -e zlib-1.2.11.tar.gz ] && wget https://www.zlib.net/zlib-1.2.11.tar.gz
-[ ! -e zlib-1.2.11 ] && tar xf zlib-1.2.11.tar.gz
-
-build_zlib() {
-  rm -rf ZLIB_BUILD
-  cp -rf zlib-1.2.11 ZLIB_BUILD
-  (cd ZLIB_BUILD && ./configure &&  make install -j $JOBS)
-}
-
-build_lib() {
-  rm -rf BUILD
-  cp -rf libpng-1.2.56 BUILD
-  (cd BUILD && ./configure &&  make -j $JOBS)
-}
-
-build_zlib
-build_lib
-
-$CXX $CXXFLAGS -std=c++11 $SCRIPT_DIR/target.cc BUILD/.libs/libpng12.a $FUZZER_LIB -I BUILD/ -I BUILD -I ZLIB_BUILD $(pwd)/ZLIB_BUILD/libz.so -o $FUZZ_TARGET
-cp -r $SCRIPT_DIR/seeds $OUT/
-wget -qO $FUZZ_TARGET.dict https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/png.dict
+$CXX $CXXFLAGS -std=c++11 $SRC/target.cc .libs/libpng12.a $FUZZER_LIB -I . \
+    -I ../zlib-1.2.11 ../zlib-1.2.11/libz.so \
+    -o $OUT/fuzz-target
+cp -r /opt/seeds $OUT/

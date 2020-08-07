@@ -165,6 +165,7 @@ def emptydir(path):
     rmdir(path)
     os.mkdir(path)
 
+
 # pylint: disable=too-many-locals
 def run(command, hide_output=False, ulimit_cmd=None):
     """Run the command |command|, optionally, run |ulimit_cmd| first."""
@@ -215,12 +216,10 @@ def covert_seed_inputs(ktest_tool, input_klee, input_corpus):
         file_size = os.path.getsize(seedfile)
         benchmark_size = get_size_for_benchmark()
         if file_size > benchmark_size:
-            print(
-                '[run_fuzzer] Truncating {path} ({file_size}) to \
-                    {benchmark_size}'
-                .format(path=seedfile,
-                        file_size=file_size,
-                        benchmark_size=benchmark_size))
+            print('[run_fuzzer] Truncating {path} ({file_size}) to \
+                    {benchmark_size}'.format(path=seedfile,
+                                             file_size=file_size,
+                                             benchmark_size=benchmark_size))
             os.truncate(seedfile, benchmark_size)
 
         seed_in = '{seed}.ktest'.format(seed=seedfile)
@@ -256,6 +255,7 @@ def covert_seed_inputs(ktest_tool, input_klee, input_corpus):
         converted=n_converted))
 
     return n_converted
+
 
 # pylint: disable=wrong-import-position
 # pylint: disable=too-many-locals

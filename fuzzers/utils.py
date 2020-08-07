@@ -40,10 +40,7 @@ def build_benchmark(env=None):
         # so we can build projects that are using -lFuzzingEngine.
         shutil.copy(fuzzer_lib, OSS_FUZZ_LIB_FUZZING_ENGINE_PATH)
 
-    if os.getenv('OSS_FUZZ'):
-        build_script = os.path.join(os.environ['SRC'], 'build.sh')
-    else:
-        build_script = os.path.join('benchmark', 'build.sh')
+    build_script = os.path.join(os.environ['SRC'], 'build.sh')
 
     benchmark = os.getenv('BENCHMARK')
     fuzzer = os.getenv('FUZZER')
@@ -108,7 +105,7 @@ def restore_directory(directory):
     initial_cwd = os.getcwd()
     with tempfile.TemporaryDirectory() as temp_dir:
         backup = os.path.join(temp_dir, os.path.basename(directory))
-        shutil.copytree(directory, backup)
+        shutil.copytree(directory, backup, symlinks=True)
         yield
         shutil.rmtree(directory)
         shutil.move(backup, directory)
@@ -120,7 +117,8 @@ def restore_directory(directory):
 
 def get_dictionary_path(target_binary):
     """Return dictionary path for a target binary."""
-    if os.getenv('SKIP_DICT'):
+    if os.getenv('NO_DICTIONARIES'):
+        # Don't use dictionaries if experiment specifies not to.
         return None
 
     dictionary_path = target_binary + '.dict'

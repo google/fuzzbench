@@ -51,10 +51,14 @@ def create_work_subdirs(subdirs: List[str]):
         os.mkdir(os.path.join(experiment_utils.get_work_dir(), subdir))
 
 
-def _initialize_experiment_in_db(experiment_config: dict,
-                                 trials: List[models.Trial]):
+def _initialize_experiment_in_db(experiment_config: dict):
     """Initializes |experiment| in the database by creating the experiment
-    entity and entities for each trial in the experiment."""
+    entity."""
+    experiment_exists = db_utils.query(models.Experiment).filter(
+        models.Experiment.name == experiment_config['experiment']).first()
+    if experiment_exists:
+        raise Exception('Experiment already exists in database.')
+
     db_utils.add_all([
         db_utils.get_or_create(models.Experiment,
                                name=experiment_config['experiment'],
@@ -62,6 +66,9 @@ def _initialize_experiment_in_db(experiment_config: dict,
                                private=experiment_config.get('private', True))
     ])
 
+
+def _initialize_trials_in_db(trials: List[models.Trial]):
+    """Initializes entities for each trial in the experiment."""
     # TODO(metzman): Consider doing this without sqlalchemy. This can get
     # slow with SQLalchemy (it's much worse with add_all).
     db_utils.bulk_save(trials)
@@ -121,10 +128,13 @@ def dispatcher_main():
     experiment_config_file_path = os.path.join(_get_config_dir(),
                                                'experiment.yaml')
     experiment = Experiment(experiment_config_file_path)
-    preemptible = experiment.preemptible
+
+    _initialize_experiment_in_db(experiment.config)
+
     trials = build_images_for_trials(experiment.fuzzers, experiment.benchmarks,
-                                     experiment.num_trials, preemptible)
-    _initialize_experiment_in_db(experiment.config, trials)
+                                     experiment.num_trials,
+                                     experiment.preemptible)
+    _initialize_trials_in_db(trials)
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])
 
@@ -133,18 +143,16 @@ def dispatcher_main():
                                              args=(experiment.config,))
     scheduler_loop_thread.start()
 
-    max_total_time = experiment.config['max_total_time']
-    measurer_loop_process = multiprocessing.Process(
-        target=measurer.measure_loop,
-        args=(experiment.experiment_name, max_total_time))
+    measurer_main_process = multiprocessing.Process(
+        target=measurer.measure_main, args=(experiment.config,))
 
-    measurer_loop_process.start()
+    measurer_main_process.start()
 
     is_complete = False
     while True:
         time.sleep(LOOP_WAIT_SECONDS)
         if not scheduler_loop_thread.is_alive():
-            is_complete = not measurer_loop_process.is_alive()
+            is_complete = not measurer_main_process.is_alive()
 
         # Generate periodic output reports.
         reporter.output_report(experiment.config, in_progress=not is_complete)
@@ -155,7 +163,7 @@ def dispatcher_main():
 
     logs.info('Dispatcher finished.')
     scheduler_loop_thread.join()
-    measurer_loop_process.join()
+    measurer_main_process.join()
 
 
 def main():

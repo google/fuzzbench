@@ -21,6 +21,8 @@ from src_analysis import diff_utils
 
 ALWAYS_BUILD_FUZZER = 'afl'
 
+# TODO(tanq16): Get list of Benchmarks automatically.
+
 # Don't build php benchmark since it fills up disk in GH actions.
 OSS_FUZZ_BENCHMARKS = {
     'bloaty_fuzz_target',
@@ -37,7 +39,6 @@ OSS_FUZZ_BENCHMARKS = {
 STANDARD_BENCHMARKS = {
     'freetype2-2017',
     'harfbuzz-1.3.2',
-    'jasper-1.701.0',
     'lcms-2017-03-21',
     'libjpeg-turbo-07-2017',
     'libpng-1.2.56',
@@ -75,6 +76,9 @@ def delete_docker_images():
                             check=True)
     image_ids = result.stdout.splitlines()
     subprocess.run(['docker', 'rmi', '-f'] + image_ids, check=False)
+
+    # Needed for BUILDKIT to clear build cache & avoid insufficient disk space.
+    subprocess.run(['docker', 'builder', 'prune', '-f'], check=False)
 
 
 def make_builds(benchmarks, fuzzer):

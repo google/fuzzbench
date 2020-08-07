@@ -13,36 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-. $(dirname $0)/../common.sh
-
-apt-get update && \
-  apt-get install -y \
-  make \
-  autoconf \
-  automake \
-  libtool \
-  libglib2.0-dev
-
-build_lib() {
-  rm -rf BUILD
-  cp -rf SRC BUILD
-  (cd BUILD && \
-    ./autogen.sh && \
-    CCLD="$CXX $CXXFLAGS" ./configure --without-python --with-threads=no --with-zlib=no --with-lzma=no && \
-    make -j $JOBS
-  )
-}
-
-git clone https://gitlab.gnome.org/GNOME/libxml2.git SRC
-cd SRC
-
+cd libxml2
 # Git is converting CRLF to LF automatically and causing issues when checking
 # out the branch. So use -f to ignore the complaint about lost changes that we
 # don't even want.
 git checkout -f v2.9.2
-cd -
+./autogen.sh
+CCLD="$CXX $CXXFLAGS" ./configure --without-python --with-threads=no \
+    --with-zlib=no --with-lzma=no
+make -j $(nproc)
 
-build_lib
-
-$CXX $CXXFLAGS -std=c++11 $SCRIPT_DIR/target.cc -I BUILD/include BUILD/.libs/libxml2.a $FUZZER_LIB -o $FUZZ_TARGET
-wget https://raw.githubusercontent.com/google/AFL/debe27037b9444bbf090a0ffbd5d24889bb887ae/dictionaries/xml.dict -O $FUZZ_TARGET.dict
+$CXX $CXXFLAGS -std=c++11 $SRC/target.cc -I include .libs/libxml2.a \
+    $FUZZER_LIB -o $OUT/fuzz-target

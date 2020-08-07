@@ -37,53 +37,55 @@ def _make_crashes_dir(parent_path):
     return crashes_dir
 
 
-def _make_sancov_dir(parent_path):
-    """Makes a sancov dir in |parent_path| and returns it."""
-    sancov_dir = os.path.join(str(parent_path), 'sancov')
-    os.mkdir(sancov_dir)
-    return sancov_dir
+def _make_coverage_dir(parent_path):
+    """Makes a profraw dir in |parent_path| and returns it."""
+    coverage_dir = os.path.join(str(parent_path), 'coverage')
+    os.mkdir(coverage_dir)
+    return coverage_dir
 
 
-def _assert_sancov_files(sancov_dir):
-    """Ensure |sancov_dir| has sancov files."""
-    pattern = sancov_dir
+def _assert_profraw_files(coverage_dir):
+    """Ensure |coverage_dir| has profraw files."""
+    pattern = coverage_dir
     if not pattern.endswith('/'):
         pattern += '/'
-    pattern += '*.sancov'
+    pattern += '*.profraw'
     assert glob.glob(pattern)
 
 
 class TestIntegrationRunCoverage:
     """Integration tests for run_coverage.py"""
 
-    COVERAGE_BINARY_PATH = os.path.join(TEST_DATA_PATH, 'fuzz-target')
+    COVERAGE_BINARY_PATH = os.path.join(TEST_DATA_PATH, 'fuzz-target-clang-cov')
 
     def test_integration_do_coverage_run_crash(self, tmp_path):
         """Test that do_coverage_run returns crashing inputs."""
         units = _get_test_data_dir('crash-corpus')
-        sancov_dir = _make_sancov_dir(tmp_path)
+        coverage_dir = _make_coverage_dir(tmp_path)
+        profraw_file = os.path.join(coverage_dir, 'test_crash.profraw')
         crashes_dir = _make_crashes_dir(tmp_path)
         crashing_units = run_coverage.do_coverage_run(self.COVERAGE_BINARY_PATH,
-                                                      units, sancov_dir,
+                                                      units, profraw_file,
                                                       crashes_dir)
 
         # Ensure the crashing units are returned.
         assert crashing_units == ['86f7e437faa5a7fce15d1ddcb9eaeaea377667b8']
-        _assert_sancov_files(sancov_dir)
+        _assert_profraw_files(coverage_dir)
 
     def test_integration_do_coverage_run_no_crash(self, tmp_path):
         """Test that do_coverage_run doesn't return crashing inputs when there
         are none."""
         units = _get_test_data_dir('corpus')
-        sancov_dir = _make_sancov_dir(tmp_path)
+        coverage_dir = _make_coverage_dir(tmp_path)
+        profraw_file = os.path.join(coverage_dir, 'test_no_crash.profraw')
         crashes_dir = _make_crashes_dir(tmp_path)
         crashing_units = run_coverage.do_coverage_run(self.COVERAGE_BINARY_PATH,
-                                                      units, sancov_dir,
+                                                      units, profraw_file,
                                                       crashes_dir)
 
         # Ensure no crashing unit is returned.
         assert not crashing_units
-        _assert_sancov_files(sancov_dir)
+        _assert_profraw_files(coverage_dir)
 
     @mock.patch('common.logs.error')
     @mock.patch('experiment.run_coverage.MAX_TOTAL_TIME', 0)
@@ -91,10 +93,11 @@ class TestIntegrationRunCoverage:
             self, mocked_log_error, tmp_path):
         """Test that do_coverage_run respects max total time."""
         units = _get_test_data_dir('timeout-corpus')
-        sancov_dir = _make_sancov_dir(tmp_path)
+        coverage_dir = _make_coverage_dir(tmp_path)
+        profraw_file = os.path.join(coverage_dir, 'test_max_time.profraw')
         crashes_dir = _make_crashes_dir(tmp_path)
         crashing_units = run_coverage.do_coverage_run(self.COVERAGE_BINARY_PATH,
-                                                      units, sancov_dir,
+                                                      units, profraw_file,
                                                       crashes_dir)
 
         assert mocked_log_error.call_count

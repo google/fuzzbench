@@ -1,0 +1,231 @@
+commit aac9771fa16e3fc00725d4bbd662d71186a09532
+Author: Dokyung Song <dokyungs@google.com>
+Date:   Fri Jul 31 00:07:20 2020 +0000
+
+    [libFuzzer] Optionally keep initial seed inputs regardless of whether they discover new features or not.
+
+diff --git a/compiler-rt/lib/fuzzer/FuzzerCorpus.h b/compiler-rt/lib/fuzzer/FuzzerCorpus.h
+index 54d1e09ec6d..80398a9d7ce 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerCorpus.h
++++ b/compiler-rt/lib/fuzzer/FuzzerCorpus.h
+@@ -33,6 +33,7 @@ struct InputInfo {
+   // Stats.
+   size_t NumExecutedMutations = 0;
+   size_t NumSuccessfullMutations = 0;
++  bool SeedInput = false;
+   bool MayDeleteFile = false;
+   bool Reduced = false;
+   bool HasFocusFunction = false;
+@@ -131,9 +132,11 @@ class InputCorpus {
+ 
+   EntropicOptions Entropic;
+ 
++  bool KeepSeed = false;
++
+ public:
+-  InputCorpus(const std::string &OutputCorpus, EntropicOptions Entropic)
+-      : Entropic(Entropic), OutputCorpus(OutputCorpus) {
++  InputCorpus(const std::string &OutputCorpus, EntropicOptions Entropic, bool KeepSeed)
++      : Entropic(Entropic), OutputCorpus(OutputCorpus), KeepSeed(KeepSeed) {
+     memset(InputSizesPerFeature, 0, sizeof(InputSizesPerFeature));
+     memset(SmallestElementPerFeature, 0, sizeof(SmallestElementPerFeature));
+   }
+@@ -177,7 +180,7 @@ public:
+   bool empty() const { return Inputs.empty(); }
+   const Unit &operator[] (size_t Idx) const { return Inputs[Idx]->U; }
+   InputInfo *AddToCorpus(const Unit &U, size_t NumFeatures, bool MayDeleteFile,
+-                         bool HasFocusFunction,
++                         bool HasFocusFunction, bool SeedInput,
+                          const Vector<uint32_t> &FeatureSet,
+                          const DataFlowTrace &DFT, const InputInfo *BaseII) {
+     assert(!U.empty());
+@@ -187,6 +190,7 @@ public:
+     InputInfo &II = *Inputs.back();
+     II.U = U;
+     II.NumFeatures = NumFeatures;
++    II.SeedInput = SeedInput;
+     II.MayDeleteFile = MayDeleteFile;
+     II.UniqFeatureSet = FeatureSet;
+     II.HasFocusFunction = HasFocusFunction;
+@@ -471,7 +475,7 @@ private:
+ 
+       for (size_t i = 0; i < N; i++) {
+ 
+-        if (Inputs[i]->NumFeatures == 0) {
++        if (Inputs[i]->NumFeatures == 0 && !(Inputs[i]->SeedInput && KeepSeed)) {
+           // If the seed doesn't represent any features, assign zero energy.
+           Weights[i] = 0.;
+         } else if (Inputs[i]->NumExecutedMutations / kMaxMutationFactor >
+@@ -491,7 +495,7 @@ private:
+ 
+     if (VanillaSchedule) {
+       for (size_t i = 0; i < N; i++)
+-        Weights[i] = Inputs[i]->NumFeatures
++        Weights[i] = (Inputs[i]->NumFeatures || (KeepSeed && Inputs[i]->SeedInput))
+                          ? (i + 1) * (Inputs[i]->HasFocusFunction ? 1000 : 1)
+                          : 0.;
+     }
+diff --git a/compiler-rt/lib/fuzzer/FuzzerDriver.cpp b/compiler-rt/lib/fuzzer/FuzzerDriver.cpp
+index 00a33a413d2..ef7991c1e27 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerDriver.cpp
++++ b/compiler-rt/lib/fuzzer/FuzzerDriver.cpp
+@@ -649,6 +649,7 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
+   Options.Verbosity = Flags.verbosity;
+   Options.MaxLen = Flags.max_len;
+   Options.LenControl = Flags.len_control;
++  Options.KeepSeed = Flags.keep_seed;
+   Options.UnitTimeoutSec = Flags.timeout;
+   Options.ErrorExitCode = Flags.error_exitcode;
+   Options.TimeoutExitCode = Flags.timeout_exitcode;
+@@ -753,7 +754,7 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
+ 
+   Random Rand(Seed);
+   auto *MD = new MutationDispatcher(Rand, Options);
+-  auto *Corpus = new InputCorpus(Options.OutputCorpus, Entropic);
++  auto *Corpus = new InputCorpus(Options.OutputCorpus, Entropic, Options.KeepSeed);
+   auto *F = new Fuzzer(Callback, *Corpus, *MD, Options);
+ 
+   for (auto &U: Dictionary)
+diff --git a/compiler-rt/lib/fuzzer/FuzzerFlags.def b/compiler-rt/lib/fuzzer/FuzzerFlags.def
+index 832224a705d..0dac7e705a3 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerFlags.def
++++ b/compiler-rt/lib/fuzzer/FuzzerFlags.def
+@@ -23,6 +23,8 @@ FUZZER_FLAG_INT(len_control, 100, "Try generating small inputs first, "
+ FUZZER_FLAG_STRING(seed_inputs, "A comma-separated list of input files "
+   "to use as an additional seed corpus. Alternatively, an \"@\" followed by "
+   "the name of a file containing the comma-separated list.")
++FUZZER_FLAG_INT(keep_seed, 0, "If 1, keep seed inputs for mutation even if "
++  "they do not produce new coverage.")
+ FUZZER_FLAG_INT(cross_over, 1, "If 1, cross over inputs.")
+ FUZZER_FLAG_INT(mutate_depth, 5,
+             "Apply this number of consecutive mutations to each input.")
+diff --git a/compiler-rt/lib/fuzzer/FuzzerFork.cpp b/compiler-rt/lib/fuzzer/FuzzerFork.cpp
+index d9e6b79443e..38fb82fc12d 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerFork.cpp
++++ b/compiler-rt/lib/fuzzer/FuzzerFork.cpp
+@@ -309,11 +309,17 @@ void FuzzWithFork(Random &Rand, const FuzzingOptions &Options,
+   else
+     Env.MainCorpusDir = CorpusDirs[0];
+ 
+-  auto CFPath = DirPlusFile(Env.TempDir, "merge.txt");
+-  CrashResistantMerge(Env.Args, {}, SeedFiles, &Env.Files, {}, &Env.Features,
+-                      {}, &Env.Cov,
+-                      CFPath, false);
+-  RemoveFile(CFPath);
++  if (Options.KeepSeed) {
++    for (auto &File : SeedFiles)
++      Env.Files.push_back(File.File);
++  }
++  else {
++    auto CFPath = DirPlusFile(Env.TempDir, "merge.txt");
++    CrashResistantMerge(Env.Args, {}, SeedFiles, &Env.Files, {}, &Env.Features,
++                        {}, &Env.Cov,
++                        CFPath, false);
++    RemoveFile(CFPath);
++  }
+   Printf("INFO: -fork=%d: %zd seed inputs, starting to fuzz in %s\n", NumJobs,
+          Env.Files.size(), Env.TempDir.c_str());
+ 
+diff --git a/compiler-rt/lib/fuzzer/FuzzerInternal.h b/compiler-rt/lib/fuzzer/FuzzerInternal.h
+index 31096ce804b..e75807209f5 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerInternal.h
++++ b/compiler-rt/lib/fuzzer/FuzzerInternal.h
+@@ -119,6 +119,8 @@ private:
+ 
+   size_t LastCorpusUpdateRun = 0;
+ 
++  bool IsExecutingSeedCorpora = false;
++
+   bool HasMoreMallocsThanFrees = false;
+   size_t NumberOfLeakDetectionAttempts = 0;
+ 
+diff --git a/compiler-rt/lib/fuzzer/FuzzerLoop.cpp b/compiler-rt/lib/fuzzer/FuzzerLoop.cpp
+index 02db6d27b0a..a9af25a3070 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerLoop.cpp
++++ b/compiler-rt/lib/fuzzer/FuzzerLoop.cpp
+@@ -487,10 +487,11 @@ bool Fuzzer::RunOne(const uint8_t *Data, size_t Size, bool MayDeleteFile,
+     *FoundUniqFeatures = FoundUniqFeaturesOfII;
+   PrintPulseAndReportSlowInput(Data, Size);
+   size_t NumNewFeatures = Corpus.NumFeatureUpdates() - NumUpdatesBefore;
+-  if (NumNewFeatures) {
++  if (NumNewFeatures || (Options.KeepSeed && IsExecutingSeedCorpora)) {
+     TPC.UpdateObservedPCs();
+     auto NewII = Corpus.AddToCorpus({Data, Data + Size}, NumNewFeatures,
+                                     MayDeleteFile, TPC.ObservedFocusFunction(),
++                                    IsExecutingSeedCorpora,
+                                     UniqFeatureSetTmp, DFT, II);
+     WriteFeatureSetToFile(Options.FeaturesDir, Sha1ToString(NewII->Sha1),
+                           NewII->UniqFeatureSet);
+@@ -764,6 +765,8 @@ void Fuzzer::ReadAndExecuteSeedCorpora(Vector<SizedFile> &CorporaFiles) {
+       assert(CorporaFiles.front().Size <= CorporaFiles.back().Size);
+     }
+ 
++    IsExecutingSeedCorpora = true;
++
+     // Load and execute inputs one by one.
+     for (auto &SF : CorporaFiles) {
+       auto U = FileToVector(SF.File, MaxInputLen, /*ExitOnError=*/false);
+@@ -773,6 +776,8 @@ void Fuzzer::ReadAndExecuteSeedCorpora(Vector<SizedFile> &CorporaFiles) {
+       TryDetectingAMemoryLeak(U.data(), U.size(),
+                               /*DuringInitialCorpusExecution*/ true);
+     }
++
++    IsExecutingSeedCorpora = false;
+   }
+ 
+   PrintStats("INITED");
+@@ -785,6 +790,8 @@ void Fuzzer::ReadAndExecuteSeedCorpora(Vector<SizedFile> &CorporaFiles) {
+              Corpus.NumInputsThatTouchFocusFunction());
+   }
+ 
++  Printf("INFO: corpus size = %d\n", Corpus.size());
++
+   if (Corpus.empty() && Options.MaxNumberOfRuns) {
+     Printf("ERROR: no interesting inputs were found. "
+            "Is the code instrumented for coverage? Exiting.\n");
+diff --git a/compiler-rt/lib/fuzzer/FuzzerOptions.h b/compiler-rt/lib/fuzzer/FuzzerOptions.h
+index 9d975bd61fe..ccd0b3dcb56 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerOptions.h
++++ b/compiler-rt/lib/fuzzer/FuzzerOptions.h
+@@ -18,6 +18,7 @@ struct FuzzingOptions {
+   int Verbosity = 1;
+   size_t MaxLen = 0;
+   size_t LenControl = 1000;
++  bool KeepSeed = false;
+   int UnitTimeoutSec = 300;
+   int TimeoutExitCode = 70;
+   int OOMExitCode = 71;
+diff --git a/compiler-rt/lib/fuzzer/tests/FuzzerUnittest.cpp b/compiler-rt/lib/fuzzer/tests/FuzzerUnittest.cpp
+index 0e9435ab8fc..dfc642ab6d0 100644
+--- a/compiler-rt/lib/fuzzer/tests/FuzzerUnittest.cpp
++++ b/compiler-rt/lib/fuzzer/tests/FuzzerUnittest.cpp
+@@ -593,7 +593,8 @@ TEST(Corpus, Distribution) {
+   DataFlowTrace DFT;
+   Random Rand(0);
+   struct EntropicOptions Entropic = {false, 0xFF, 100};
+-  std::unique_ptr<InputCorpus> C(new InputCorpus("", Entropic));
++  bool KeepSeed = false;
++  std::unique_ptr<InputCorpus> C(new InputCorpus("", Entropic, KeepSeed));
+   size_t N = 10;
+   size_t TriesPerUnit = 1<<16;
+   for (size_t i = 0; i < N; i++)
+@@ -1057,7 +1058,8 @@ TEST(Entropic, UpdateFrequency) {
+   size_t Index;
+   // Create input corpus with default entropic configuration
+   struct EntropicOptions Entropic = {true, 0xFF, 100};
+-  std::unique_ptr<InputCorpus> C(new InputCorpus("", Entropic));
++  bool KeepSeed = false;
++  std::unique_ptr<InputCorpus> C(new InputCorpus("", Entropic, KeepSeed));
+   std::unique_ptr<InputInfo> II(new InputInfo());
+ 
+   C->AddRareFeature(FeatIdx1);
+@@ -1094,7 +1096,8 @@ double SubAndSquare(double X, double Y) {
+ TEST(Entropic, ComputeEnergy) {
+   const double Precision = 0.01;
+   struct EntropicOptions Entropic = {true, 0xFF, 100};
+-  std::unique_ptr<InputCorpus> C(new InputCorpus("", Entropic));
++  bool KeepSeed = false;
++  std::unique_ptr<InputCorpus> C(new InputCorpus("", Entropic, KeepSeed));
+   std::unique_ptr<InputInfo> II(new InputInfo());
+   Vector<std::pair<uint32_t, uint16_t>> FeatureFreqs = {{1, 3}, {2, 3}, {3, 3}};
+   II->FeatureFreqs = FeatureFreqs;
