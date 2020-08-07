@@ -70,12 +70,9 @@ def measure_main(experiment_config):
     measure_loop(experiment, max_total_time)
 
     # Do the final measuring and store the coverage data.
-    try:
-        cov_utils.store_coverage_data(experiment_config)
-        cov_utils.generate_cov_reports(experiment_config)
-        cov_utils.update_coverage_to_bucket()
-    except Exception:
-        logger.error('Failed storing data and generating coverage reports.')
+    cov_utils.store_coverage_data(experiment_config)
+    cov_utils.generate_cov_reports(experiment_config)
+    cov_utils.update_coverage_to_bucket()
     logger.info('Finished measuring.')
 
 
