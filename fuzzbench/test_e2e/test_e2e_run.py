@@ -58,7 +58,10 @@ class TestEndToEndRunResults:
                 for dep in image['depends_on']:
                     assert jobs[dep].ended_at <= jobs[name].started_at
 
-    def test_all_jobs_finished_successfully(self, experiment_config, redis_connection):  # pylint: disable=redefined-outer-name
+    def test_all_jobs_finished_successfully(
+            self,
+            experiment_config,  # pylint: disable=redefined-outer-name
+            redis_connection):  # pylint: disable=redefined-outer-name
         """Tests all jobs finished successully."""
         all_images = docker_images.get_images_to_build(
             experiment_config['fuzzers'], experiment_config['benchmarks'])
