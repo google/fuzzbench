@@ -34,5 +34,4 @@ COPY docker docker
 COPY fuzzbench fuzzbench
 COPY fuzzers fuzzers
 
-
 CMD PYTHONPATH=. python3 -u fuzzbench/run_experiment.py
