@@ -45,4 +45,3 @@ def fuzz(input_corpus, output_corpus, target_binary):
         os.path.join(manul_directory, 'manul_lin.config'), target_binary + ' @@'
     ])
     subprocess.check_call(command, cwd=manul_directory)
-# test ci

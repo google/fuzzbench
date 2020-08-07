@@ -71,4 +71,3 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     command = [target_binary, output_corpus, input_corpus] + flags
     print('[run_fuzzer] Running command: ' + ' '.join(command))
     subprocess.check_call(command)
-# test ci

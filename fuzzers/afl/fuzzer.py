@@ -108,4 +108,3 @@ def fuzz(input_corpus, output_corpus, target_binary):
     prepare_fuzz_environment(input_corpus)
 
     run_afl_fuzz(input_corpus, output_corpus, target_binary)
-# test ci

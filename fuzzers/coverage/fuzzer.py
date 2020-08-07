@@ -29,4 +29,3 @@ def build():
     os.environ['FUZZER_LIB'] = '/usr/lib/libFuzzer.a'
 
     utils.build_benchmark()
-# test ci

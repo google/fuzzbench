@@ -63,4 +63,3 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     print('[fuzz] Running command: ' + ' '.join(command))
     subprocess.check_call(command)
-# test ci

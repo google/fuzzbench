@@ -28,4 +28,3 @@ def fuzz(input_corpus, output_corpus, target_binary):
                                 output_corpus,
                                 target_binary,
                                 extra_flags=['-entropic=1', '-keep_seed=1'])
-# test ci

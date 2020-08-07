@@ -48,4 +48,3 @@ def fuzz(input_corpus, output_corpus, target_binary):
                             output_corpus,
                             target_binary,
                             flags=flags)
-# test ci
