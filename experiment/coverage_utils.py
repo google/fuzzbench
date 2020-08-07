@@ -25,6 +25,7 @@ from common import fuzzer_utils
 from common import logs
 from common import filestore_utils
 from common import experiment_path as exp_path
+from common import filesystem
 from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
@@ -199,7 +200,7 @@ def store_coverage_data(experiment_config: dict):
         q = manager.Queue()  # pytype: disable=attribute-error
         covered_regions = get_all_covered_regions(experiment_config, pool, q)
         json_src_dir = reporter.get_reports_dir()
-        os.mkdir(json_src_dir)
+        filesystem.recreate_directory(json_src_dir)
         json_src = os.path.join(json_src_dir, 'covered_regions.json')
         with open(json_src, 'w') as src_file:
             json.dump(covered_regions, src_file)
