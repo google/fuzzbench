@@ -29,6 +29,8 @@
     - aflplusplus_same3
     - honggfuzz
     - weizz
+    - libfuzzer_fixcrossover
+    - entropic_fixcrossover
 
 - experiment: 2020-08-07
   fuzzers:
