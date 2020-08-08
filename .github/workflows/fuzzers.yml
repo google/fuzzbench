@@ -32,11 +32,15 @@ jobs:
           - afl_qemu
           - aflplusplus_qemu
           - honggfuzz_qemu
+          - weizz
           # Temporary variants.
           - libfuzzer_interceptors
           - libfuzzer_keepseed
           - entropic_interceptors
           - entropic_keepseed
+          - aflplusplus_same1
+          - aflplusplus_same2
+          - aflplusplus_same3
 
         benchmark_type:
           - oss-fuzz
