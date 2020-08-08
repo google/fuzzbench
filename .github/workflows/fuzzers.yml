@@ -46,8 +46,10 @@ jobs:
           - aflplusplus_seek
           - libfuzzer_interceptors
           - libfuzzer_keepseed
+          - libfuzzer_fixcrossover
           - entropic_interceptors
           - entropic_keepseed
+          - entropic_fixcrossover
 
         benchmark_type:
           - oss-fuzz

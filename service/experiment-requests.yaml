@@ -19,6 +19,11 @@
 # are still testing this feature. You should request an experiment by contacting
 # us as you normally do.
 
+- experiment: 2020-08-08
+  fuzzers:
+    - libfuzzer_fixcrossover
+    - entropic_fixcrossover
+
 - experiment: 2020-08-07
   fuzzers:
     - aflplusplus_datalenrand
