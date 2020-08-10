@@ -27,6 +27,8 @@ from analysis import rendering
 from common import filesystem
 from common import logs
 
+logger = logs.Logger('generate_report')
+
 
 def get_arg_parser():
     """Returns argument parser."""
@@ -74,6 +76,11 @@ def get_arg_parser():
                         '--fuzzers',
                         nargs='*',
                         help='Names of the fuzzers to include in the report.')
+    parser.add_argument('-cov',
+                        '--coverage-report',
+                        action='store_true',
+                        default=False,
+                        help='If set, clang coverage reports are linked.')
 
     # It doesn't make sense to clobber and label by experiment, since nothing
     # can get clobbered like this.
@@ -130,7 +137,8 @@ def generate_report(experiment_names,
                     in_progress=False,
                     end_time=None,
                     merge_with_clobber=False,
-                    merge_with_clobber_nonprivate=False):
+                    merge_with_clobber_nonprivate=False,
+                    coverage_report=False):
     """Generate report helper."""
     if merge_with_clobber_nonprivate:
         experiment_names = (
@@ -174,7 +182,7 @@ def generate_report(experiment_names,
 
     template = report_type + '.html'
     detailed_report = rendering.render_report(experiment_ctx, template,
-                                              in_progress)
+                                              in_progress, coverage_report)
 
     filesystem.write(os.path.join(report_directory, 'index.html'),
                      detailed_report)
@@ -198,7 +206,8 @@ def main():
                     log_scale=args.log_scale,
                     from_cached_data=args.from_cached_data,
                     end_time=args.end_time,
-                    merge_with_clobber=args.merge_with_clobber)
+                    merge_with_clobber=args.merge_with_clobber,
+                    coverage_report=args.coverage_report)
 
 
 if __name__ == '__main__':
