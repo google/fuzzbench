@@ -38,6 +38,7 @@ jobs:
       run: |
         FUZZBENCH_TEST_INTEGRATION=1 make presubmit
 
-    - name: Run end to end CI test
+  end-to-end-test:
+    - name: Run end to end CI test (experimental)
       run: |
         make run-end-to-end-test
