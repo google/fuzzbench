@@ -346,7 +346,7 @@ class Plotter:
             plt.close(fig)
 
     def rare_region_ranking_plot(self, rare_region_cov_df, axes=None):
-        """Draws rare_region_ranking plot. The fuzzer labels will be in 
+        """Draws rare_region_ranking plot. The fuzzer labels will be in
         the order of their coverage."""
 
         fuzzer_order = rare_region_cov_df.sort_values(by='rare_region_covered',
