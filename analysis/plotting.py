@@ -257,6 +257,14 @@ class Plotter:
                            palette=self._fuzzer_colors,
                            ax=axes)
 
+        if 'rare_region_covered' in benchmark_snapshot_df:
+            sns.barplot(y='rare_region_covered',
+                        x='fuzzer',
+                        data=benchmark_snapshot_df,
+                        order=fuzzer_order,
+                        color='#302928',
+                        ax=axes)
+
         axes.set_title(_formatted_title(benchmark_snapshot_df))
         axes.set(ylabel='Reached edge coverage')
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
@@ -336,3 +344,54 @@ class Plotter:
             fig.savefig(image_path, bbox_inches="tight")
         finally:
             plt.close(fig)
+
+    def rare_region_ranking_plot(self, rare_region_cov_df, axes=None):
+        """Draws rare_region_ranking plot.
+        The fuzzer labels will be in the order of their coverage.
+        """
+
+        fuzzer_order = rare_region_cov_df.sort_values(by='rare_region_covered',
+                                                      ascending=False).fuzzer
+
+        axes = sns.barplot(y='rare_region_covered',
+                           x='fuzzer',
+                           data=rare_region_cov_df,
+                           order=fuzzer_order,
+                           palette=self._fuzzer_colors,
+                           ax=axes)
+
+        axes.set(ylabel='Reached rare region coverage')
+        axes.set(xlabel='Fuzzer (highest coverage on the left)')
+        axes.set_xticklabels(axes.get_xticklabels(),
+                             rotation=_DEFAULT_LABEL_ROTATION,
+                             horizontalalignment='right')
+
+        for p in axes.patches:
+            axes.annotate(format(p.get_height(), '.2f'),
+                          (p.get_x() + p.get_width() / 2., p.get_height()),
+                          ha='center',
+                          va='center',
+                          xytext=(0, 10),
+                          textcoords='offset points')
+
+        sns.despine(ax=axes, trim=True)
+
+    def write_rare_region_ranking_plot(self, rare_region_cov_df, image_path):
+        """Write ranking plot for rare regions"""
+        self._write_plot_to_image(self.rare_region_ranking_plot,
+                                  rare_region_cov_df, image_path)
+
+    def correlation_heatmap_plot(self, correlation_table, axes=None):
+        """Draws the heatmap to visualize correlation between each fuzzers ."""
+        heatmap_args = {
+            'annot': True,
+            'fmt': 'd',
+            'cmap': 'Blues',
+            'linewidths': 0.5
+        }
+        sns.heatmap(correlation_table, **heatmap_args)
+
+    def write_correlation_heatmap_plot(self, correlation_table, image_path):
+        """Writes correlation heatmap plot."""
+        self._write_plot_to_image(self.correlation_heatmap_plot,
+                                  correlation_table, image_path)
