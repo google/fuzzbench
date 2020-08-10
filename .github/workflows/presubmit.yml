@@ -39,6 +39,8 @@ jobs:
         FUZZBENCH_TEST_INTEGRATION=1 make presubmit
 
   end-to-end-test:
+    runs-on: ubuntu-latest
+    steps:
     - name: Run end to end CI test (experimental)
       run: |
         make run-end-to-end-test
