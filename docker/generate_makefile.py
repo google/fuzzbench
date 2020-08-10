@@ -34,8 +34,7 @@ def _print_benchmark_fuzz_target(benchmarks):
 
 
 def _print_makefile_run_template(image):
-    fuzzer = image['fuzzer']
-    benchmark = image['benchmark']
+    fuzzer, benchmark = image['tag'].split('/')[1:]
 
     for run_type in ('run', 'debug', 'test-run'):
         print(('{run_type}-{fuzzer}-{benchmark}: ' +
@@ -69,8 +68,8 @@ def _print_makefile_run_template(image):
         print()
 
 
-# TODO(Tanq16): Function must return a string as opposed to printing it.
-def print_rules_for_image(name, image):
+# TODO(tanq16): Add unit test.
+def _print_rules_for_image(name, image):
     """Print makefile section for given image to stdout."""
     if not ('base' in name or 'dispatcher' in name):
         print('.', end='')
@@ -111,7 +110,7 @@ def main():
     _print_benchmark_fuzz_target(benchmarks)
 
     for name, image in buildable_images.items():
-        print_rules_for_image(name, image)
+        _print_rules_for_image(name, image)
 
     # Print build targets for all fuzzer-benchmark pairs (including coverage).
     fuzzers.append('coverage')
