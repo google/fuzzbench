@@ -18,7 +18,7 @@ import os
 import jinja2
 
 from common import utils
-
+from common import experiment_utils
 
 def render_report(experiment_results, template, in_progress, coverage_report):
     """Renders report with |template| using data provided by the
@@ -37,17 +37,12 @@ def render_report(experiment_results, template, in_progress, coverage_report):
         loader=jinja2.FileSystemLoader(templates_dir),
     )
     template = environment.get_template(template)
-
-    # FIXME: Use |experiment_filestore_name| from experiment db.
-    # See #642: https://github.com/google/fuzzbench/issues/642
-    if 'EXPERIMENT_FILESTORE' in os.environ:
-        experiment_filestore = os.environ['EXPERIMENT_FILESTORE']
-        prefix = "gs://"
-        experiment_filestore_name = experiment_filestore[len(prefix):]
-    else:
-        experiment_filestore_name = 'fuzzbench-data'
+    
+    filestore_path = experiment_utils.get_filestore_path()
+    prefix = "gs://"
+    filestore_name = filestore_path[len(prefix):]
 
     return template.render(experiment=experiment_results,
                            in_progress=in_progress,
                            coverage_report=coverage_report,
-                           experiment_filestore_name=experiment_filestore_name)
+                           filestore_name=filestore_name)
