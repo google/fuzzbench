@@ -68,7 +68,7 @@ def main():
     redis_connection = redis.Redis(host="queue-server")
 
     config_path = environment.get('EXPERIMENT_CONFIG',
-                                  'local-experiment-config.yaml')
+                                  'fuzzbench/local-experiment-config.yaml')
     config = yaml_utils.read(config_path)
     config = config_utils.validate_and_expand(config)
 
