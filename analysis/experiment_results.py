@@ -21,6 +21,7 @@ from analysis import data_utils
 from analysis import stat_tests
 
 
+# pylint: disable=too-many-arguments, too-many-instance-attributes
 class ExperimentResults:
     """Provides the main interface for getting various analysis results and
     plots about an experiment, represented by |experiment_df|.

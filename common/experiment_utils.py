@@ -54,9 +54,10 @@ def get_filestore_path():
     # FIXME: Use |experiment_filestore_name| from experiment db.
     # See #642: https://github.com/google/fuzzbench/issues/642
     if 'EXPERIMENT_FILESTORE' in os.environ:
-        return os.environ['EXPERIMENT_FILESTORE']
+        filestore_path = os.environ['EXPERIMENT_FILESTORE']
     else:
-        return 'gs://fuzzbench-data'
+        filestore_path = 'gs://fuzzbench-data'
+    return filestore_path
 
 
 def get_experiment_filestore_path():

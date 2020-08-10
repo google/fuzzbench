@@ -385,7 +385,7 @@ def test_get_benchmark_cov_dict():
     benchmark_cov_dict = data_utils.get_benchmark_cov_dict(
         coverage_dict, benchmark)
     expected_cov_dict = {
-        "afl": [[0, 0, 1, 1], [0, 0, 2, 2], [0, 0, 3, 3]],
-        "libfuzzer": [[0, 0, 1, 1], [0, 0, 2, 3], [0, 0, 3, 3]]
+        "afl": {(0, 0, 3, 3), (0, 0, 2, 2), (0, 0, 1, 1)},
+        "libfuzzer": {(0, 0, 3, 3), (0, 0, 2, 3), (0, 0, 1, 1)}
     }
     assert expected_cov_dict == benchmark_cov_dict

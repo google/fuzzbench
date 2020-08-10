@@ -13,8 +13,9 @@
 # limitations under the License.
 """Utility functions for data (frame) transformations."""
 import math
-import pandas as pd
 from collections import defaultdict
+import pandas as pd
+
 from analysis import stat_tests
 from common import environment
 

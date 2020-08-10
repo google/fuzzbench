@@ -20,7 +20,8 @@ from analysis import data_utils
 from analysis import stat_tests
 
 
-class BenchmarkResults:  # pylint: disable=too-many-public-methods
+# pylint: disable=too-many-public-methods, too-many-arguments
+class BenchmarkResults:
     """Represents results of various analysis done on benchmark data.
 
     NOTE: Do not create this class manually! Instead, use the |benchmarks|
@@ -69,7 +70,6 @@ class BenchmarkResults:  # pylint: disable=too-many-public-methods
     @functools.lru_cache()
     def _benchmark_coverage_dict(self):
         """Covered regions of each fuzzer on this benchmark."""
-        print('Benchmark:', self.name)
         return data_utils.get_benchmark_cov_dict(self._coverage_dict, self.name)
 
     @property
