@@ -30,3 +30,5 @@ def get_config_file(benchmark):
 def get_config(benchmark):
     """Returns a dictionary containing the config for a benchmark."""
     return yaml_utils.read(get_config_file(benchmark))
+
+# test change
