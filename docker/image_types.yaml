@@ -2,89 +2,76 @@
 # dependency graph.
 
 'base-image':
-  dockerfile: 'docker/base-image/Dockerfile'
-  context: 'docker/base-image'
   tag: 'base-image'
-  type: 'base'
+  context: 'docker/base-image'
 
 'dispatcher-image':
+  tag: 'dispatcher-image'
+  context: 'docker/dispatcher-image'
   depends_on:
     - 'base-image'
-  dockerfile: 'docker/dispatcher-image/Dockerfile'
-  context: 'docker/dispatcher-image'
-  tag: 'dispatcher-image'
-  type: 'dispatcher'
+
+'coverage-{benchmark}-builder-intermediate':
+  tag: 'builders/coverage/{benchmark}-intermediate'
+  context: 'fuzzers/coverage'
+  dockerfile: 'fuzzers/coverage/builder.Dockerfile'
+  depends_on:
+    - '{benchmark}-project-builder'
+  build_arg:
+    - 'parent_image=gcr.io/fuzzbench/builders/benchmark/{benchmark}'
+
+'coverage-{benchmark}-builder':
+  tag: 'builders/coverage/{benchmark}'
+  context: '.'
+  dockerfile: 'docker/benchmark-builder/Dockerfile'
+  build_arg:
+    - 'parent_image=gcr.io/fuzzbench/builders/coverage/{benchmark}-intermediate'
+    - 'fuzzer=coverage'
+    - 'benchmark={benchmark}'
+  depends_on:
+    - 'coverage-{benchmark}-builder-intermediate'
 
 # TODO: It would be better to call this benchmark builder. But that would be
 # confusing because this doesn't involve benchmark-builder/Dockerfile. Rename
 # that and then rename this.
 '{benchmark}-project-builder':
-  dockerfile: 'benchmarks/{benchmark}/Dockerfile'
-  context: 'benchmarks/{benchmark}'
   tag: 'builders/benchmark/{benchmark}'
-  type: 'builder'
-
-'coverage-{benchmark}-builder-intermediate':
-  build_arg:
-    - 'parent_image=gcr.io/fuzzbench/builders/benchmark/{benchmark}'
-  depends_on:
-    - '{benchmark}-project-builder'
-  dockerfile: 'fuzzers/coverage/builder.Dockerfile'
-  context: 'fuzzers/coverage'
-  tag: 'builders/coverage/{benchmark}-intermediate'
-  type: 'coverage'
-
-'coverage-{benchmark}-builder':
-  build_arg:
-    - 'benchmark={benchmark}'
-    - 'fuzzer=coverage'
-    - 'parent_image=gcr.io/fuzzbench/builders/coverage/{benchmark}-intermediate'
-  depends_on:
-    - 'coverage-{benchmark}-builder-intermediate'
-  dockerfile: 'docker/benchmark-builder/Dockerfile'
-  context: '.'
-  tag: 'builders/coverage/{benchmark}'
-  type: 'coverage'
+  context: 'benchmarks/{benchmark}'
+  dockerfile: 'benchmarks/{benchmark}/Dockerfile'
 
 '{fuzzer}-{benchmark}-builder-intermediate':
-  build_arg:
-    - 'parent_image=gcr.io/fuzzbench/builders/benchmark/{benchmark}'
+  tag: 'builders/{fuzzer}/{benchmark}-intermediate'
+  context: 'fuzzers/{fuzzer}'
+  dockerfile: 'fuzzers/{fuzzer}/builder.Dockerfile'
   depends_on:
     - '{benchmark}-project-builder'
-  dockerfile: 'fuzzers/{fuzzer}/builder.Dockerfile'
-  context: 'fuzzers/{fuzzer}'
-  tag: 'builders/{fuzzer}/{benchmark}-intermediate'
-  type: 'builder'
+  build_arg:
+    - 'parent_image=gcr.io/fuzzbench/builders/benchmark/{benchmark}'
 
 '{fuzzer}-{benchmark}-builder':
+  tag: 'builders/{fuzzer}/{benchmark}'
+  context: '.'
+  dockerfile: 'docker/benchmark-builder/Dockerfile'
   build_arg:
-    - 'benchmark={benchmark}'
-    - 'fuzzer={fuzzer}'
     - 'parent_image=gcr.io/fuzzbench/builders/{fuzzer}/{benchmark}-intermediate'
+    - 'fuzzer={fuzzer}'
+    - 'benchmark={benchmark}'
   depends_on:
     - '{fuzzer}-{benchmark}-builder-intermediate'
-  dockerfile: 'docker/benchmark-builder/Dockerfile'
-  context: '.'
-  tag: 'builders/{fuzzer}/{benchmark}'
-  type: 'builder'
 
 '{fuzzer}-{benchmark}-intermediate-runner':
+  tag: 'runners/{fuzzer}/{benchmark}-intermediate'
+  context: 'fuzzers/{fuzzer}'
+  dockerfile: 'fuzzers/{fuzzer}/runner.Dockerfile'
   depends_on:
     - '{fuzzer}-{benchmark}-builder'
-  dockerfile: 'fuzzers/{fuzzer}/runner.Dockerfile'
-  context: 'fuzzers/{fuzzer}'
-  tag: 'runners/{fuzzer}/{benchmark}-intermediate'
-  type: 'runner'
 
 '{fuzzer}-{benchmark}-runner':
-  benchmark: '{benchmark}'
+  tag: 'runners/{fuzzer}/{benchmark}'
+  context: '.'
+  dockerfile: 'docker/benchmark-runner/Dockerfile'
   build_arg:
-    - 'benchmark={benchmark}'
     - 'fuzzer={fuzzer}'
+    - 'benchmark={benchmark}'
   depends_on:
     - '{fuzzer}-{benchmark}-intermediate-runner'
-  dockerfile: 'docker/benchmark-runner/Dockerfile'
-  fuzzer: '{fuzzer}'
-  context: '.'
-  tag: 'runners/{fuzzer}/{benchmark}'
-  type: 'runner'
