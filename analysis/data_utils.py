@@ -323,7 +323,7 @@ _DEFAULT_RARE_REGION_THRESHOLD = 0
 def get_rare_region_dict(benchmark_coverage_dict,
                          threshold=_DEFAULT_RARE_REGION_THRESHOLD):
     """Returns a dictionary containing the covering fuzzers for each
-    rare region, where the |threshold| defines which regions are rare"""
+    rare region, where the |threshold| defines which regions are rare."""
     region_dict = defaultdict(list)
     rare_region_dict = {}
     threshold_count = math.ceil(len(benchmark_coverage_dict) * threshold)
@@ -363,7 +363,6 @@ def get_benchmark_cov_dict(coverage_dict, benchmark):
             for region in covered_regions:
                 covered_regions_in_set.add(tuple(region))
             benchmark_cov_dict[current_fuzzer] = covered_regions_in_set
-    print(benchmark_cov_dict.keys())
     return benchmark_cov_dict
 
 

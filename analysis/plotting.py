@@ -377,12 +377,12 @@ class Plotter:
         sns.despine(ax=axes, trim=True)
 
     def write_rare_region_ranking_plot(self, rare_region_cov_df, image_path):
-        """Write ranking plot for rare regions"""
+        """Write ranking plot for rare regions."""
         self._write_plot_to_image(self.rare_region_ranking_plot,
                                   rare_region_cov_df, image_path)
 
     def correlation_heatmap_plot(self, correlation_table, axes=None):
-        """Draws the heatmap to visualize correlation between each fuzzers ."""
+        """Draws the heatmap to visualize correlation between each fuzzers."""
         heatmap_args = {
             'annot': True,
             'fmt': 'd',
