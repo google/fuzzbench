@@ -15,6 +15,15 @@
   tag: 'dispatcher-image'
   type: 'dispatcher'
 
+# TODO: It would be better to call this benchmark builder. But that would be
+# confusing because this doesn't involve benchmark-builder/Dockerfile. Rename
+# that and then rename this.
+'{benchmark}-project-builder':
+  dockerfile: 'benchmarks/{benchmark}/Dockerfile'
+  context: 'benchmarks/{benchmark}'
+  tag: 'builders/benchmark/{benchmark}'
+  type: 'builder'
+
 'coverage-{benchmark}-builder-intermediate':
   build_arg:
     - 'parent_image=gcr.io/fuzzbench/builders/benchmark/{benchmark}'
@@ -36,15 +45,6 @@
   context: '.'
   tag: 'builders/coverage/{benchmark}'
   type: 'coverage'
-
-# TODO: It would be better to call this benchmark builder. But that would be
-# confusing because this doesn't involve benchmark-builder/Dockerfile. Rename
-# that and then rename this.
-'{benchmark}-project-builder':
-  dockerfile: 'benchmarks/{benchmark}/Dockerfile'
-  context: 'benchmarks/{benchmark}'
-  tag: 'builders/benchmark/{benchmark}'
-  type: 'builder'
 
 '{fuzzer}-{benchmark}-builder-intermediate':
   build_arg:
