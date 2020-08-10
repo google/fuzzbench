@@ -163,7 +163,8 @@ def generate_report(experiment_names,
 
     #Loads the json summary file.
     coverage_data_path = os.path.join(report_directory, 'covered_regions.json')
-    coverage_utils.download_json_summary(experiment_names[0], coverage_data_path)
+    coverage_utils.download_json_summary(experiment_names[0],
+                                         coverage_data_path)
     with open(coverage_data_path) as source:
         coverage_dict = json.load(source)
 
@@ -186,7 +187,11 @@ def generate_report(experiment_names,
     fuzzer_names = experiment_df.fuzzer.unique()
     plotter = plotting.Plotter(fuzzer_names, quick, log_scale)
     experiment_ctx = experiment_results.ExperimentResults(
-        experiment_df, coverage_dict, report_directory, plotter, experiment_name=report_name)
+        experiment_df,
+        coverage_dict,
+        report_directory,
+        plotter,
+        experiment_name=report_name)
 
     template = report_type + '.html'
     detailed_report = rendering.render_report(experiment_ctx, template,

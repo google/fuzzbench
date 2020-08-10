@@ -56,7 +56,7 @@ def get_filestore_path():
     if 'EXPERIMENT_FILESTORE' in os.environ:
         return os.environ['EXPERIMENT_FILESTORE']
     else:
-        return 'gs://fuzzbench-data' 
+        return 'gs://fuzzbench-data'
 
 
 def get_experiment_filestore_path():

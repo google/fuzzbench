@@ -344,7 +344,7 @@ def get_rare_region_cov_df(rare_region_dict, fuzzer_names):
     for region in rare_region_dict:
         for fuzzer in rare_region_dict[region]:
             fuzzers[fuzzer] += 1
-    dict_to_transform = {'fuzzer':[], 'rare_region_covered':[]}
+    dict_to_transform = {'fuzzer': [], 'rare_region_covered': []}
     for fuzzer, covered_num in fuzzers.items():
         dict_to_transform['fuzzer'].append(fuzzer)
         dict_to_transform['rare_region_covered'].append(covered_num)
@@ -382,15 +382,14 @@ def get_correlation_table(benchmark_coverage_dict):
         for fuzzer_in_col in fuzzers:
             correlation_value = get_unique_covered_percentage(
                 benchmark_coverage_dict[fuzzer_in_row],
-                benchmark_coverage_dict[fuzzer_in_col]
-            )
+                benchmark_coverage_dict[fuzzer_in_col])
             row.append(correlation_value)
         correlation_values.append(row)
 
     return pd.DataFrame(correlation_values, index=fuzzers, columns=fuzzers)
 
 
-def get_unique_covered_percentage(fuzzer_row_covered_regions, 
+def get_unique_covered_percentage(fuzzer_row_covered_regions,
                                   fuzzer_col_covered_regions):
     """Returns the number of regions covered by the fuzzer of the column
     but not by the fuzzer of the row."""

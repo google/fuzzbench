@@ -20,6 +20,7 @@ import jinja2
 from common import utils
 from common import experiment_utils
 
+
 def render_report(experiment_results, template, in_progress, coverage_report):
     """Renders report with |template| using data provided by the
     |experiment_results| context.
@@ -37,7 +38,7 @@ def render_report(experiment_results, template, in_progress, coverage_report):
         loader=jinja2.FileSystemLoader(templates_dir),
     )
     template = environment.get_template(template)
-    
+
     filestore_path = experiment_utils.get_filestore_path()
     prefix = "gs://"
     filestore_name = filestore_path[len(prefix):]
