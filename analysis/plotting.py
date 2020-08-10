@@ -366,13 +366,14 @@ class Plotter:
                              rotation=_DEFAULT_LABEL_ROTATION,
                              horizontalalignment='right')
 
-        for p in axes.patches:
-            axes.annotate(format(p.get_height(), '.2f'),
-                          (p.get_x() + p.get_width() / 2., p.get_height()),
-                          ha='center',
-                          va='center',
-                          xytext=(0, 10),
-                          textcoords='offset points')
+        for patch in axes.patches:
+            axes.annotate(
+                format(patch.get_height(), '.2f'),
+                (patch.get_x() + patch.get_width() / 2., patch.get_height()),
+                ha='center',
+                va='center',
+                xytext=(0, 10),
+                textcoords='offset points')
 
         sns.despine(ax=axes, trim=True)
 
@@ -389,7 +390,7 @@ class Plotter:
             'cmap': 'Blues',
             'linewidths': 0.5
         }
-        sns.heatmap(correlation_table, **heatmap_args)
+        sns.heatmap(correlation_table, ax=axes, **heatmap_args)
 
     def write_correlation_heatmap_plot(self, correlation_table, image_path):
         """Writes correlation heatmap plot."""

@@ -83,6 +83,11 @@ def get_arg_parser():
                         action='store_true',
                         default=False,
                         help='If set, clang coverage reports are linked.')
+    parser.add_argument('-diff',
+                        '--differential-graphs',
+                        action='store_true',
+                        default=False,
+                        help='If set, differential graphs are shown.')
 
     # It doesn't make sense to clobber and label by experiment, since nothing
     # can get clobbered like this.
@@ -140,7 +145,8 @@ def generate_report(experiment_names,
                     end_time=None,
                     merge_with_clobber=False,
                     merge_with_clobber_nonprivate=False,
-                    coverage_report=False):
+                    coverage_report=False,
+                    differential_graphs=False):
     """Generate report helper."""
     if merge_with_clobber_nonprivate:
         experiment_names = (
@@ -162,11 +168,14 @@ def generate_report(experiment_names,
     data_utils.validate_data(experiment_df)
 
     #Loads the json summary file.
-    coverage_data_path = os.path.join(report_directory, 'covered_regions.json')
-    coverage_utils.download_json_summary(experiment_names[0],
-                                         coverage_data_path)
-    with open(coverage_data_path) as source:
-        coverage_dict = json.load(source)
+    coverage_dict = {}
+    if differential_graphs:
+        coverage_data_path = os.path.join(report_directory,
+                                          'covered_regions.json')
+        coverage_utils.download_json_summary(experiment_names[0],
+                                             coverage_data_path)
+        with open(coverage_data_path) as source:
+            coverage_dict = json.load(source)
 
     if benchmarks is not None:
         experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks)
@@ -195,7 +204,8 @@ def generate_report(experiment_names,
 
     template = report_type + '.html'
     detailed_report = rendering.render_report(experiment_ctx, template,
-                                              in_progress, coverage_report)
+                                              in_progress, coverage_report,
+                                              differential_graphs)
 
     filesystem.write(os.path.join(report_directory, 'index.html'),
                      detailed_report)
@@ -208,21 +218,20 @@ def main():
     parser = get_arg_parser()
     args = parser.parse_args()
 
-    generate_report(
-        experiment_names=args.experiments,
-        report_directory=args.report_dir,
-        report_name=args.report_name,
-        label_by_experiment=args.label_by_experiment,
-        benchmarks=args.benchmarks,
-        fuzzers=args.fuzzers,
-        report_type=args.report_type,
-        quick=args.quick,
-        log_scale=args.log_scale,
-        from_cached_data=args.from_cached_data,
-        end_time=args.end_time,
-        merge_with_clobber=args.merge_with_clobber,
-        merge_with_clobber_nonprivate=args.merge_with_clobber_nonprivate,
-        coverage_report=args.coverage_report)
+    generate_report(experiment_names=args.experiments,
+                    report_directory=args.report_dir,
+                    report_name=args.report_name,
+                    label_by_experiment=args.label_by_experiment,
+                    benchmarks=args.benchmarks,
+                    fuzzers=args.fuzzers,
+                    report_type=args.report_type,
+                    quick=args.quick,
+                    log_scale=args.log_scale,
+                    from_cached_data=args.from_cached_data,
+                    end_time=args.end_time,
+                    merge_with_clobber=args.merge_with_clobber,
+                    coverage_report=args.coverage_report,
+                    differential_graphs=args.differential_graphs)
 
 
 if __name__ == '__main__':

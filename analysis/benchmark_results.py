@@ -244,6 +244,14 @@ class BenchmarkResults:
     def ranking_plot(self):
         """Ranking plot."""
         plot_filename = self._prefix_with_benchmark('ranking.svg')
+        self._plotter.write_ranking_plot(self._benchmark_snapshot_df,
+                                         self._get_full_path(plot_filename))
+        return plot_filename
+
+    @property
+    def ranking_plot_with_diff(self):
+        """Ranking plot."""
+        plot_filename = self._prefix_with_benchmark('ranking.svg')
         combined_df = self._benchmark_snapshot_df.merge(
             self._rare_region_cov_df, on='fuzzer')
         self._plotter.write_ranking_plot(combined_df,

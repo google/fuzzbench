@@ -168,7 +168,8 @@ def dispatcher_main():
         # Generate periodic output reports.
         reporter.output_report(experiment.config,
                                in_progress=not is_complete,
-                               coverage_report=is_complete)
+                               coverage_report=is_complete,
+                               differential_graphs=is_complete)
 
         if is_complete:
             # Experiment is complete, bail out.
