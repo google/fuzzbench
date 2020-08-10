@@ -31,11 +31,12 @@ class BenchmarkResults:  # pylint: disable=too-many-public-methods
     template, properties are computed on demand and only once.
     """
 
-    def __init__(self, benchmark_name, experiment_df, output_directory,
+    def __init__(self, benchmark_name, experiment_df, coverage_dict, output_directory,
                  plotter):
         self.name = benchmark_name
 
         self._experiment_df = experiment_df
+        self._coverage_dict = coverage_dict
         self._output_directory = output_directory
         self._plotter = plotter
 
@@ -52,17 +53,37 @@ class BenchmarkResults:  # pylint: disable=too-many-public-methods
     def _benchmark_df(self):
         exp_df = self._experiment_df
         return exp_df[exp_df.benchmark == self.name]
+    
+    @property
+    @functools.lru_cache()
+    def _fuzzer_names(self):
+        """Names of valid fuzzers."""
+        return self._benchmark_df.fuzzer.unique()
 
     @property
     @functools.lru_cache()
     def _benchmark_snapshot_df(self):
         return data_utils.get_benchmark_snapshot(self._benchmark_df)
-
+    
     @property
     @functools.lru_cache()
-    def fuzzers(self):
-        """Fuzzers with valid trials on this benchmark."""
-        return self._benchmark_df.fuzzer.unique()
+    def _benchmark_coverage_dict(self):
+        """Covered regions of each fuzzer on this benchmark."""
+        print('Benchmark:', self.name)
+        return data_utils.get_benchmark_cov_dict(self._coverage_dict, self.name)
+    
+    @property
+    @functools.lru_cache()
+    def _rare_region_dict(self):
+        """Rare regions with the fuzzers that cover it."""
+        return data_utils.get_rare_region_dict(self._benchmark_coverage_dict)
+    
+    @property
+    @functools.lru_cache()
+    def _rare_region_cov_df(self):
+        """Fuzzers with the number of covered rare regions."""
+        return data_utils.get_rare_region_cov_df(
+            self._rare_region_dict, self._fuzzer_names)
 
     @property
     def fuzzers_with_not_enough_samples(self):
@@ -223,7 +244,9 @@ class BenchmarkResults:  # pylint: disable=too-many-public-methods
     def ranking_plot(self):
         """Ranking plot."""
         plot_filename = self._prefix_with_benchmark('ranking.svg')
-        self._plotter.write_ranking_plot(self._benchmark_snapshot_df,
+        combined_df = self._benchmark_snapshot_df.merge(
+            self._rare_region_cov_df, on='fuzzer')
+        self._plotter.write_ranking_plot(combined_df,
                                          self._get_full_path(plot_filename))
         return plot_filename
 
@@ -235,4 +258,26 @@ class BenchmarkResults:  # pylint: disable=too-many-public-methods
         plot_filename = self._prefix_with_benchmark('better_than.svg')
         self._plotter.write_better_than_plot(better_than_table,
                                              self._get_full_path(plot_filename))
+        return plot_filename
+
+    @property
+    def rare_region_ranking_plot(self):
+        """Ranking plot for rare region coverage."""
+        plot_filename = self._prefix_with_benchmark('ranking_rare_region.svg')
+        self._plotter.write_rare_region_ranking_plot(self._rare_region_cov_df,
+                                            self._get_full_path(plot_filename))
+        return plot_filename
+
+    @property
+    @functools.lru_cache()
+    def correlation_table(self):
+        """Correlation table for each pair of fuzzers."""
+        return data_utils.get_correlation_table(self._benchmark_coverage_dict)
+
+    @property
+    def correlation_plot(self):
+        """Correlation plot for each pair of fuzzers."""
+        plot_filename = self._prefix_with_benchmark('correlation_plot.svg')
+        self._plotter.write_correlation_heatmap_plot(self.correlation_table,
+                                         self._get_full_path(plot_filename))
         return plot_filename
