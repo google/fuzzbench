@@ -61,6 +61,7 @@ def test_output_report_filestore(fs, experiment):
                     'honggfuzz', 'honggfuzz_qemu', 'lafintel', 'libfuzzer',
                     'manul', 'mopt'
                 ],
+                differential_graphs=False,
                 in_progress=False,
                 merge_with_clobber_nonprivate=False,
                 coverage_report=False)
