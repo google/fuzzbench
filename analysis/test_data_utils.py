@@ -340,3 +340,43 @@ def test_experiment_rank_by_average_normalized_score():
                                 expected_ranking,
                                 check_names=False,
                                 check_less_precise=True)
+
+
+def create_coverage_data():
+    return {"afl libpng-1.2.56": [[0,0,1,1],[0,0,2,2],[0,0,3,3]],
+            "libfuzzer libpng-1.2.56": [[0,0,1,1],[0,0,2,3],[0,0,3,3]]}
+
+
+def test_get_rare_region_dict():
+    coverage_dict = create_coverage_data()
+    benchmark_coverage_dict = data_utils.get_benchmark_cov_dict(coverage_dict,
+                                                                'libpng-1.2.56')
+    rare_region_dict = data_utils.get_rare_region_dict(benchmark_coverage_dict)
+    expected_dict = {(0,0,2,2): ['afl'],
+                     (0,0,2,3): ['libfuzzer']}
+    assert expected_dict == rare_region_dict
+
+
+def test_get_rare_region_cov_df():
+    coverage_dict = create_coverage_data()
+    benchmark_coverage_dict = data_utils.get_benchmark_cov_dict(coverage_dict,
+                                                                'libpng-1.2.56')
+    rare_region_dict = data_utils.get_rare_region_dict(benchmark_coverage_dict)
+    fuzzer_names = ['afl', 'libfuzzer']
+    rare_region_df = data_utils.get_rare_region_cov_df(rare_region_dict, fuzzer_names)
+    rare_region_df = rare_region_df.sort_values(by=['fuzzer']).reset_index(drop=True)
+    expected_df = pd.DataFrame([
+        {'fuzzer': 'afl', 'rare_region_covered': 1},
+        {'fuzzer': 'libfuzzer', 'rare_region_covered': 1}
+    ])
+    print(expected_df, rare_region_df)
+    assert rare_region_df.equals(expected_df)
+
+
+def test_get_benchmark_cov_dict():
+    coverage_dict = create_coverage_data()
+    benchmark = 'libpng-1.2.56'
+    benchmark_cov_dict = data_utils.get_benchmark_cov_dict(coverage_dict, benchmark)
+    expected_cov_dict = {"afl": [[0,0,1,1],[0,0,2,2],[0,0,3,3]],
+                         "libfuzzer": [[0,0,1,1],[0,0,2,3],[0,0,3,3]]}
+    assert expected_cov_dict == benchmark_cov_dict
