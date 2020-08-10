@@ -33,6 +33,7 @@ class ExperimentResults:
 
     def __init__(self,
                  experiment_df,
+                 coverage_dict,
                  output_directory,
                  plotter,
                  experiment_name=None):
@@ -63,6 +64,9 @@ class ExperimentResults:
 
         self._plotter = plotter
 
+        # Dictionary to store the full coverage data
+        self._coverage_dict = coverage_dict
+
     def _get_full_path(self, filename):
         return os.path.join(self._output_directory, filename)
 
@@ -87,6 +91,7 @@ class ExperimentResults:
         benchmark_names = self._experiment_df.benchmark.unique()
         return [
             benchmark_results.BenchmarkResults(name, self._experiment_df,
+                                               self._coverage_dict,
                                                self._output_directory,
                                                self._plotter)
             for name in sorted(benchmark_names)
