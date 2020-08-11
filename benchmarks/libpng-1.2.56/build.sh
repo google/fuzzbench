@@ -14,28 +14,11 @@
 # limitations under the License.
 
 tar xf libpng-1.2.56.tar.gz
-tar xf zlib-1.2.11.tar.gz
 
-OLDCXXFLAGS=${CXXFLAGS}
-export CXXFLAGS=$(echo ${OLDCXXFLAGS} | sed s/-fsanitize-coverage=trace-pc-guard//g)
-export CXXFLAGS=$(echo ${CXXFLAGS} | sed s/-fsanitize=fuzzer-no-link//g)
-
-OLDCFLAGS=${CFLAGS}
-export CFLAGS=$(echo ${OLDCFLAGS} | sed s/-fsanitize-coverage=trace-pc-guard//g)
-export CFLAGS=$(echo ${CFLAGS} | sed s/-fsanitize=fuzzer-no-link//g)
-
-cd zlib-1.2.11
+cd libpng-1.2.56
 ./configure
-make install -j $(nproc)
-
-export CXXFLAGS="${OLDCXXFLAGS}"
-export CFLAGS=${OLDCFLAGS}
-cd ../libpng-1.2.56
-./configure || cat config.log
 make -j $(nproc)
 
-$CXX $CXXFLAGS -std=c++11 -fPIC $SRC/target.cc .libs/libpng12.a $FUZZER_LIB -I . \
-    -lz \
-    -I ../zlib-1.2.11 \
+$CXX $CXXFLAGS -std=c++11 $SRC/target.cc .libs/libpng12.a $FUZZER_LIB -I . -lz \
     -o $OUT/fuzz-target
 cp -r /opt/seeds $OUT/

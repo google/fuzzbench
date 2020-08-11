@@ -22,12 +22,11 @@ RUN apt-get update && \
     autoconf \
     automake \
     libtool \
-    wget
+    wget \
+    zlib1g-dev
 
 RUN wget \
     https://downloads.sourceforge.net/project/libpng/libpng12/older-releases/1.2.56/libpng-1.2.56.tar.gz
-
-RUN wget https://www.zlib.net/zlib-1.2.11.tar.gz
 
 RUN wget -qO $OUT/fuzz-target.dict \
     https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/png.dict
