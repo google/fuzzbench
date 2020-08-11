@@ -40,7 +40,7 @@ steps:
     # Use two tags so that the image builds properly and we can push it to the
     # correct location.
     '--tag',
-    'gcr.io/fuzzbench/base-image:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/base-image',
 
     '--tag',
     '${_REPO}/base-image:${_EXPERIMENT}',
