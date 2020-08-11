@@ -98,6 +98,7 @@ def run_afl_fuzz(input_corpus,
         # performs.
         '2147483647'
     ]
+
     print('[run_afl_fuzz] Running command: ' + ' '.join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
     subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
