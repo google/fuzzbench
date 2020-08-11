@@ -23,7 +23,6 @@
 import os
 import shutil
 
-
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
@@ -31,6 +30,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     aflplusplus_fuzzer.build('tracepc')
     shutil.copy('/afl/afl-qemu-taint', os.environ['OUT'])
+
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
