@@ -21,13 +21,13 @@ import json
 import pandas as pd
 
 from analysis import data_utils
+from analysis import coverage_data_utils
 from analysis import experiment_results
 from analysis import plotting
 from analysis import queries
 from analysis import rendering
 from common import filesystem
 from common import logs
-from experiment import coverage_utils
 
 logger = logs.Logger('generate_report')
 
@@ -78,16 +78,13 @@ def get_arg_parser():
                         '--fuzzers',
                         nargs='*',
                         help='Names of the fuzzers to include in the report.')
-    parser.add_argument('-cov',
-                        '--coverage-report',
-                        action='store_true',
-                        default=False,
-                        help='If set, clang coverage reports are linked.')
-    parser.add_argument('-diff',
-                        '--differential-graphs',
-                        action='store_true',
-                        default=False,
-                        help='If set, differential graphs are shown.')
+    parser.add_argument(
+        '-cov',
+        '--detailed-coverage-report',
+        action='store_true',
+        default=False,
+        help='If set, clang coverage reports and differential matrix are shown.'
+    )
 
     # It doesn't make sense to clobber and label by experiment, since nothing
     # can get clobbered like this.
@@ -145,8 +142,7 @@ def generate_report(experiment_names,
                     end_time=None,
                     merge_with_clobber=False,
                     merge_with_clobber_nonprivate=False,
-                    coverage_report=False,
-                    differential_graphs=False):
+                    detailed_coverage_report=False):
     """Generate report helper."""
     if merge_with_clobber_nonprivate:
         experiment_names = (
@@ -169,11 +165,11 @@ def generate_report(experiment_names,
 
     #Loads the json summary file.
     coverage_dict = {}
-    if differential_graphs:
+    if detailed_coverage_report:
         coverage_data_path = os.path.join(report_directory,
                                           'covered_regions.json')
-        coverage_utils.download_json_summary(experiment_names[0],
-                                             coverage_data_path)
+        coverage_data_utils.download_json_summary(experiment_names[0],
+                                                  coverage_data_path)
         with open(coverage_data_path) as source:
             coverage_dict = json.load(source)
 
@@ -204,8 +200,8 @@ def generate_report(experiment_names,
 
     template = report_type + '.html'
     detailed_report = rendering.render_report(experiment_ctx, template,
-                                              in_progress, coverage_report,
-                                              differential_graphs)
+                                              in_progress,
+                                              detailed_coverage_report)
 
     filesystem.write(os.path.join(report_directory, 'index.html'),
                      detailed_report)
@@ -230,8 +226,7 @@ def main():
                     from_cached_data=args.from_cached_data,
                     end_time=args.end_time,
                     merge_with_clobber=args.merge_with_clobber,
-                    coverage_report=args.coverage_report,
-                    differential_graphs=args.differential_graphs)
+                    detailed_coverage_report=args.detailed_coverage_report)
 
 
 if __name__ == '__main__':

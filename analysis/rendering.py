@@ -21,8 +21,8 @@ from common import utils
 from common import experiment_utils
 
 
-def render_report(experiment_results, template, in_progress, coverage_report,
-                  differential_graphs):
+def render_report(experiment_results, template, in_progress,
+                  detailed_coverage_report):
     """Renders report with |template| using data provided by the
     |experiment_results| context.
 
@@ -46,6 +46,5 @@ def render_report(experiment_results, template, in_progress, coverage_report,
 
     return template.render(experiment=experiment_results,
                            in_progress=in_progress,
-                           coverage_report=coverage_report,
-                           differential_graphs=differential_graphs,
+                           detailed_coverage_report=detailed_coverage_report,
                            filestore_name=filestore_name)

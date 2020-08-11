@@ -17,6 +17,7 @@ import os
 import functools
 
 from analysis import data_utils
+from analysis import coverage_data_utils
 from analysis import stat_tests
 
 
@@ -70,20 +71,22 @@ class BenchmarkResults:
     @functools.lru_cache()
     def _benchmark_coverage_dict(self):
         """Covered regions of each fuzzer on this benchmark."""
-        return data_utils.get_benchmark_cov_dict(self._coverage_dict, self.name)
+        return coverage_data_utils.get_benchmark_cov_dict(
+            self._coverage_dict, self.name)
 
     @property
     @functools.lru_cache()
     def _rare_region_dict(self):
         """Rare regions with the fuzzers that cover it."""
-        return data_utils.get_rare_region_dict(self._benchmark_coverage_dict)
+        return coverage_data_utils.get_rare_region_dict(
+            self._benchmark_coverage_dict)
 
     @property
     @functools.lru_cache()
     def _rare_region_cov_df(self):
         """Fuzzers with the number of covered rare regions."""
-        return data_utils.get_rare_region_cov_df(self._rare_region_dict,
-                                                 self._fuzzer_names)
+        return coverage_data_utils.get_rare_region_cov_df(
+            self._rare_region_dict, self._fuzzer_names)
 
     @property
     def fuzzers_with_not_enough_samples(self):
@@ -280,7 +283,8 @@ class BenchmarkResults:
     @functools.lru_cache()
     def correlation_table(self):
         """Correlation table for each pair of fuzzers."""
-        return data_utils.get_correlation_table(self._benchmark_coverage_dict)
+        return coverage_data_utils.get_correlation_table(
+            self._benchmark_coverage_dict)
 
     @property
     def correlation_plot(self):

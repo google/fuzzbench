@@ -17,7 +17,6 @@ import os
 import multiprocessing
 import json
 import queue
-import posixpath
 
 from common import experiment_utils as exp_utils
 from common import new_process
@@ -187,14 +186,6 @@ def get_coverage_infomation(coverage_summary_file):
     and skip possible warnings in the file."""
     with open(coverage_summary_file) as summary:
         return json.loads(summary.readlines()[-1])
-
-
-def download_json_summary(experiment_name, dst_file):
-    """Downloads the json summary for |experiment_name| to |dst_file|."""
-    filestore_path = exp_utils.get_filestore_path()
-    src_file = posixpath.join(filestore_path, experiment_name, 'reports',
-                              'covered_regions.json')
-    filestore_utils.cp(src_file, dst_file)
 
 
 def store_coverage_data(experiment_config: dict):

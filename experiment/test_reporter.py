@@ -62,6 +62,7 @@ def test_output_report_filestore(fs, experiment):
                     'manul', 'mopt'
                 ],
                 differential_graphs=False,
+                detailed_coverage_report=False,
                 in_progress=False,
                 merge_with_clobber_nonprivate=False,
-                coverage_report=False)
+                detailed_coverage_report=False)

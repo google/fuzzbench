@@ -165,7 +165,7 @@
             <div class="row">
                 <div class="col s6">
                     <h5 class="center-align">Ranking by median reached coverage</h5>
-                    {% if not differential_graphs %}
+                    {% if not detailed_coverage_report %}
                     <img class="responsive-img materialboxed"
                          src="{{ benchmark.ranking_plot }}">
                     {% else %}
@@ -233,7 +233,7 @@
                             </div>
                         </div> <!-- row -->
 
-                        {% if differential_graphs %}
+                        {% if detailed_coverage_report%}
                         <div class="row">
                             <div class="col s6 offset-s3">
                                 <h5 class="center-align">Ranking by rare region covered</h4>
@@ -263,7 +263,7 @@
                 </li>
             </ul>
 
-            {% if coverage_report %}
+            {% if detailed_coverage_report %}
             <ul class="collapsible">
                 <li>
                     <div class="collapsible-header">
