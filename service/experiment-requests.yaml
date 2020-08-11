@@ -31,7 +31,7 @@
     - weizz
     - aflplusplus_taint
 
-- experiment: 2020-08-08
+- experiment: 2020-08-10
   fuzzers:
     - libfuzzer_fixcrossover
     - entropic_fixcrossover
