@@ -39,7 +39,7 @@ def get_experiment_data(experiment_names):
 def add_nonprivate_experiments_for_merge_with_clobber(experiment_names):
     """Returns a new list containing experiment names preeceeded by a list of
     nonprivate experiments in the order in which they were run, such that
-    these nonprivate experiments executed before . This is useful
+    these nonprivate experiments executed before. This is useful
     if you want to combine reports from |experiment_names| and all nonprivate
     experiments."""
     earliest_creation_time = None

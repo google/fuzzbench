@@ -68,10 +68,10 @@ def _initialize_experiment_in_db(experiment_config: dict):
     ])
 
 
-def _end_experiment_in_db(experiment_name: str):
-    """Ends |experiment| in the database."""
+def _record_experiment_time_ended(experiment_name: str):
+    """Record |experiment| end time in the database."""
     experiment = db_utils.query(models.Experiment).filter(
-        models.Experiment.name == experiment_name).first()
+        models.Experiment.name == experiment_name).one()
     experiment.time_ended = datetime.datetime.utcnow()
     db_utils.add_all([experiment])
 
@@ -172,7 +172,7 @@ def dispatcher_main():
             # Experiment is complete, bail out.
             break
 
-    _end_experiment_in_db(experiment.experiment_name)
+    _record_experiment_time_ended(experiment.experiment_name)
 
     logs.info('Dispatcher finished.')
     scheduler_loop_thread.join()

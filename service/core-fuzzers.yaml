@@ -1,0 +1,18 @@
+# Core fuzzers used for benchmarking (excludes variants).
+fuzzers:
+    - afl
+    - afl_qemu
+    - aflfast
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_qemu
+    - aflsmart
+    - eclipser
+    - entropic
+    - fairfuzz
+    - honggfuzz
+    - honggfuzz_qemu
+    - lafintel
+    - libfuzzer
+    - manul
+    - mopt

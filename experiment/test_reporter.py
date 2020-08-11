@@ -27,6 +27,10 @@ from test_libs import utils as test_utils
 def test_output_report_filestore(fs, experiment):
     """Test that output_report writes the report and rsyncs it to the report
     filestore."""
+    config_filepath = os.path.join(os.path.dirname(__file__), '..', 'service',
+                                   'core-fuzzers.yaml')
+    fs.add_real_file(config_filepath)
+
     # Get the config.
     config_filepath = os.path.join(os.path.dirname(__file__), 'test_data',
                                    'experiment-config.yaml')
@@ -52,8 +56,8 @@ def test_output_report_filestore(fs, experiment):
                 report_name=experiment_name,
                 fuzzers=[
                     'afl', 'afl_qemu', 'aflfast', 'aflplusplus',
-                    'aflplusplus_optimal', 'aflsmart', 'eclipser', 'entropic',
-                    'fairfuzz', 'fastcgs_lm', 'fuzzer-a', 'fuzzer-b',
+                    'aflplusplus_optimal', 'aflplusplus_qemu', 'aflsmart',
+                    'eclipser', 'entropic', 'fairfuzz', 'fuzzer-a', 'fuzzer-b',
                     'honggfuzz', 'honggfuzz_qemu', 'lafintel', 'libfuzzer',
                     'manul', 'mopt'
                 ],

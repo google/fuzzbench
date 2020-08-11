@@ -14,16 +14,20 @@
 # limitations under the License.
 """A module containing the interface used by an experiment for generating
 reports."""
+import os
 import posixpath
 
-from common import experiment_constants
 from common import experiment_utils
 from common import experiment_path as exp_path
 from common import filesystem
 from common import filestore_utils
 from common import logs
+from common import yaml_utils
 from analysis import generate_report
 from analysis import data_utils
+
+CORE_FUZZERS_YAML = os.path.join(os.path.dirname(__file__), '..', 'service',
+                                 'core-fuzzers.yaml')
 
 logger = logs.Logger('reporter')  # pylint: disable=invalid-name
 
@@ -43,9 +47,9 @@ def output_report(experiment_config: dict,
 
     reports_dir = get_reports_dir()
 
+    core_fuzzers = yaml_utils.read(CORE_FUZZERS_YAML)['fuzzers']
     fuzzers = sorted(
-        set(experiment_config['fuzzers'].split(',')).union(
-            experiment_constants.FUZZERS))
+        set(experiment_config['fuzzers'].split(',')).union(set(core_fuzzers)))
 
     # Don't merge with nonprivate experiments until the very end as doing it
     # while the experiment is in progress will produce unusable realtime
