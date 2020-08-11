@@ -18,11 +18,11 @@ tar xf zlib-1.2.11.tar.gz
 
 OLDCXXFLAGS=${CXXFLAGS}
 export CXXFLAGS=$(echo ${OLDCXXFLAGS} | sed s/-fsanitize-coverage=trace-pc-guard//g)
-export CXXFLAGS=$(echo ${OLDCXXFLAGS} | sed s/-fsanitize=fuzzer-no-link//g)
+export CXXFLAGS=$(echo ${CXXFLAGS} | sed s/-fsanitize=fuzzer-no-link//g)
 
 OLDCFLAGS=${CFLAGS}
 export CFLAGS=$(echo ${OLDCFLAGS} | sed s/-fsanitize-coverage=trace-pc-guard//g)
-export CFLAGS=$(echo ${OLDCFLAGS} | sed s/-fsanitize=fuzzer-no-link//g)
+export CFLAGS=$(echo ${CFLAGS} | sed s/-fsanitize=fuzzer-no-link//g)
 
 cd zlib-1.2.11
 ./configure
