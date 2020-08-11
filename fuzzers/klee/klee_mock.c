@@ -17,3 +17,4 @@ void klee_make_symbolic(void *addr, size_t len, char const* name) {
 	// do nothing
 	abort();
 }
+

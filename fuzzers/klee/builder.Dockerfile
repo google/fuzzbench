@@ -56,8 +56,8 @@ RUN git clone https://github.com/lmrs2/klee-uclibc.git /klee-uclibc && \
     make -j`nproc` && make install
 
 
-# Install KLEE. Use my personal repo containing additional scripts we need for
-# now.
+# Install KLEE. Use my personal repo containing seed conversion scripts for now.
+# TODO: Include seed conversion scripts in fuzzbench repo.
 RUN git clone https://github.com/lmrs2/klee.git /klee && \
     cd /klee && \
     git checkout debug

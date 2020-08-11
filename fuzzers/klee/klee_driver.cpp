@@ -36,12 +36,12 @@ size_t kleeInputSize = 4096;
 int main(int argc, char **argv)
 {
   kleeInputSize = atoi(argv[1]);
-  uint8_t *KleeInputBuf = (uint8_t *)malloc(kleeInputSize * sizeof(uint8_t));
+  uint8_t *kleeInputBuf = (uint8_t *)malloc(kleeInputSize * sizeof(uint8_t));
   printf("kleeInputSize: %zu\n", kleeInputSize);
 
-  klee_make_symbolic(KleeInputBuf, kleeInputSize, "KleeInputBuf");
-  int result = LLVMFuzzerTestOneInput(KleeInputBuf, kleeInputSize);
+  klee_make_symbolic(kleeInputBuf, kleeInputSize, "kleeInputBuf");
+  int result = LLVMFuzzerTestOneInput(kleeInputBuf, kleeInputSize);
 
-  free(KleeInputBuf);
+  free(kleeInputBuf);
   return result;
 }

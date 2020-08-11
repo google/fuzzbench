@@ -20,3 +20,4 @@ RUN apt-get update -y && \
 	llvm-6.0 llvm-6.0-dev llvm-6.0-tools
 
 RUN apt-get install -y clang-6.0 vim less
+
