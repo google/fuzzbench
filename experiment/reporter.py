@@ -16,6 +16,7 @@
 reports."""
 import posixpath
 
+from common import experiment_constants
 from common import experiment_utils
 from common import experiment_path as exp_path
 from common import filesystem
@@ -42,6 +43,10 @@ def output_report(experiment_config: dict,
 
     reports_dir = get_reports_dir()
 
+    fuzzers = sorted(
+        set(experiment_config['fuzzers'].split(',')).union(
+            experiment_constants.FUZZERS))
+
     # Don't merge with nonprivate experiments until the very end as doing it
     # while the experiment is in progress will produce unusable realtime
     # results.
@@ -55,6 +60,7 @@ def output_report(experiment_config: dict,
             [experiment_name],
             str(reports_dir),
             report_name=experiment_name,
+            fuzzers=fuzzers,
             in_progress=in_progress,
             merge_with_clobber_nonprivate=merge_with_nonprivate,
             coverage_report=coverage_report)

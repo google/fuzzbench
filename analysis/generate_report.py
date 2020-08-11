@@ -171,7 +171,7 @@ def generate_report(experiment_names,
     if end_time is not None:
         experiment_df = data_utils.filter_max_time(experiment_df, end_time)
 
-    if merge_with_clobber:
+    if merge_with_clobber or merge_with_clobber_nonprivate:
         experiment_df = data_utils.clobber_experiments_data(
             experiment_df, experiment_names)
 
@@ -195,19 +195,21 @@ def main():
     parser = get_arg_parser()
     args = parser.parse_args()
 
-    generate_report(experiment_names=args.experiments,
-                    report_directory=args.report_dir,
-                    report_name=args.report_name,
-                    label_by_experiment=args.label_by_experiment,
-                    benchmarks=args.benchmarks,
-                    fuzzers=args.fuzzers,
-                    report_type=args.report_type,
-                    quick=args.quick,
-                    log_scale=args.log_scale,
-                    from_cached_data=args.from_cached_data,
-                    end_time=args.end_time,
-                    merge_with_clobber=args.merge_with_clobber,
-                    coverage_report=args.coverage_report)
+    generate_report(
+        experiment_names=args.experiments,
+        report_directory=args.report_dir,
+        report_name=args.report_name,
+        label_by_experiment=args.label_by_experiment,
+        benchmarks=args.benchmarks,
+        fuzzers=args.fuzzers,
+        report_type=args.report_type,
+        quick=args.quick,
+        log_scale=args.log_scale,
+        from_cached_data=args.from_cached_data,
+        end_time=args.end_time,
+        merge_with_clobber=args.merge_with_clobber,
+        merge_with_clobber_nonprivate=args.merge_with_clobber_nonprivate,
+        coverage_report=args.coverage_report)
 
 
 if __name__ == '__main__':

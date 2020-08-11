@@ -50,6 +50,13 @@ def test_output_report_filestore(fs, experiment):
                 [experiment_name],
                 reports_dir,
                 report_name=experiment_name,
-                coverage_report=False,
+                fuzzers=[
+                    'afl', 'afl_qemu', 'aflfast', 'aflplusplus',
+                    'aflplusplus_optimal', 'aflsmart', 'eclipser', 'entropic',
+                    'fairfuzz', 'fastcgs_lm', 'fuzzer-a', 'fuzzer-b',
+                    'honggfuzz', 'honggfuzz_qemu', 'lafintel', 'libfuzzer',
+                    'manul', 'mopt'
+                ],
                 in_progress=False,
-                merge_with_clobber_nonprivate=False)
+                merge_with_clobber_nonprivate=False,
+                coverage_report=False)

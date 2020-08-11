@@ -30,21 +30,30 @@ def test_add_nonprivate_experiments_for_merge_with_clobber(db):
     db_utils.add_all([
         models.Experiment(name=name,
                           time_created=arbitrary_datetime,
+                          time_ended=arbitrary_datetime +
+                          datetime.timedelta(days=1),
                           private=False) for name in experiment_names
     ])
     db_utils.add_all([
         models.Experiment(name='private',
                           time_created=arbitrary_datetime,
                           private=True),
-        models.Experiment(name='later-nonprivate',
-                          time_created=arbitrary_datetime +
+        models.Experiment(name='earlier-nonprivate',
+                          time_created=arbitrary_datetime -
                           datetime.timedelta(days=1),
+                          time_ended=arbitrary_datetime,
                           private=False),
         models.Experiment(name='nonprivate',
                           time_created=arbitrary_datetime,
+                          time_ended=arbitrary_datetime +
+                          datetime.timedelta(days=1),
+                          private=False),
+        models.Experiment(name='nonprivate-in-progress',
+                          time_created=arbitrary_datetime,
+                          time_ended=None,
                           private=False),
     ])
-    expected_results = ['nonprivate', 'later-nonprivate', '1', '2', '3']
+    expected_results = ['earlier-nonprivate', 'nonprivate', '1', '2', '3']
     results = queries.add_nonprivate_experiments_for_merge_with_clobber(
         experiment_names)
     assert results == expected_results
