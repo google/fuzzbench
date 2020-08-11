@@ -14,10 +14,11 @@
 
 FROM gcr.io/fuzzbench/base-image
 
-# honggfuzz requires libfd and libunwid
-RUN apt-get update -y && apt-get install -y libbfd-dev libunwind-dev
+ENV LD_LIBRARY_PATH /out
+
+# The extra packages are for debugging, desperately needed :(
+RUN apt-get install -y psmisc gdb joe vim bsdmainutils
 
 ENV LD_LIBRARY_PATH /out
 ENV PATH="$PATH:/out"
 ENV AFL_MAP_SIZE=524288
-

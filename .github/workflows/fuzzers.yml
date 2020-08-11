@@ -42,6 +42,7 @@ jobs:
           - aflplusplus_same1
           - aflplusplus_same2
           - aflplusplus_same3
+          - aflplusplus_taint
           - entropic_fixcrossover
 
         benchmark_type:

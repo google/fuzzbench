@@ -58,5 +58,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
         command.extend(['-x', dictionary_path])
     command.extend(['--', target_binary])
 
+    os.system('ulimit -s 16384')
+    
     print('[weizz] Running command: ' + ' '.join(command))
     subprocess.check_call(command)
