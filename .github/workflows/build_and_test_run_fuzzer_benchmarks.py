@@ -54,8 +54,7 @@ STANDARD_BENCHMARKS = {
 def get_make_targets(benchmarks, fuzzer):
     """Returns and test targets for |fuzzer| and each benchmark
     in |benchmarks| to pass to make."""
-    return ['test-run-%s-%s' % (fuzzer, benchmark)
-            for benchmark in benchmarks]
+    return ['test-run-%s-%s' % (fuzzer, benchmark) for benchmark in benchmarks]
 
 
 def delete_docker_images():
@@ -83,11 +82,11 @@ def make_builds(benchmarks, fuzzer):
     """Use make to test the fuzzer on each benchmark in |benchmarks|."""
     print('Building benchmarks: {} for fuzzer: {}'.format(
         ', '.join(benchmarks), fuzzer))
-    test_targets = get_make_targets(benchmarks, fuzzer)
-    for test_target in make_targets:
-        test_command = ['make', 'RUNNING_ON_CI=yes', '-j', test_target]
-        print('Running command:', ' '.join(test_command))
-        result = subprocess.run(test_command, check=False)
+    make_targets = get_make_targets(benchmarks, fuzzer)
+    for make_target in make_targets:
+        make_command = ['make', 'RUNNING_ON_CI=yes', '-j', make_target]
+        print('Running command:', ' '.join(make_command))
+        result = subprocess.run(make_command, check=False)
         if not result.returncode == 0:
             return False
         # Delete docker images so disk doesn't fill up.
