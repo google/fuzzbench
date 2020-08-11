@@ -52,10 +52,9 @@ STANDARD_BENCHMARKS = {
 
 
 def get_make_targets(benchmarks, fuzzer):
-    """Return pull and test targets for |fuzzer| and each benchmark
+    """Returns and test targets for |fuzzer| and each benchmark
     in |benchmarks| to pass to make."""
-    return [('pull-%s-%s' % (fuzzer, benchmark),
-             'test-run-%s-%s' % (fuzzer, benchmark))
+    return ['test-run-%s-%s' % (fuzzer, benchmark)
             for benchmark in benchmarks]
 
 
@@ -81,18 +80,14 @@ def delete_docker_images():
 
 
 def make_builds(benchmarks, fuzzer):
-    """Use make to build each target in |build_targets|."""
+    """Use make to test the fuzzer on each benchmark in |benchmarks|."""
     print('Building benchmarks: {} for fuzzer: {}'.format(
         ', '.join(benchmarks), fuzzer))
-    make_targets = get_make_targets(benchmarks, fuzzer)
-    for pull_target, build_target in make_targets:
-        # Pull target first.
-        subprocess.run(['make', '-j', pull_target], check=False)
-
-        # Then build.
-        build_command = ['make', 'RUNNING_ON_CI=yes', '-j', build_target]
-        print('Running command:', ' '.join(build_command))
-        result = subprocess.run(build_command, check=False)
+    test_targets = get_make_targets(benchmarks, fuzzer)
+    for test_target in make_targets:
+        test_command = ['make', 'RUNNING_ON_CI=yes', '-j', test_target]
+        print('Running command:', ' '.join(test_command))
+        result = subprocess.run(test_command, check=False)
         if not result.returncode == 0:
             return False
         # Delete docker images so disk doesn't fill up.
