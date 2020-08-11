@@ -16,17 +16,20 @@
 tar xf libpng-1.2.56.tar.gz
 tar xf zlib-1.2.11.tar.gz
 
-OLDCXXFLAGS=$CXXFLAGS
+OLDCXXFLAGS=${CXXFLAGS}
 export CXXFLAGS=$(echo ${OLDCXXFLAGS} | sed s/-fsanitize-coverage=trace-pc-guard//g)
-echo ${CXXFLAGS}
-export CFLAGS=${CXXFLAGS}
+export CXXFLAGS=$(echo ${OLDCXXFLAGS} | sed s/-fsanitize=fuzzer-no-link//g)
+
+OLDCFLAGS=${CFLAGS}
+export CFLAGS=$(echo ${OLDCFLAGS} | sed s/-fsanitize-coverage=trace-pc-guard//g)
+export CFLAGS=$(echo ${OLDCFLAGS} | sed s/-fsanitize=fuzzer-no-link//g)
 
 cd zlib-1.2.11
 ./configure
 make install -j $(nproc)
 
 export CXXFLAGS="${OLDCXXFLAGS}"
-export CFLAGS=${CXXFLAGS}
+export CFLAGS=${OLDCFLAGS}
 cd ../libpng-1.2.56
 ./configure || cat config.log
 make -j $(nproc)
