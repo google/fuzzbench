@@ -15,8 +15,6 @@
 ARG parent_image
 FROM $parent_image
 
-RUN cd / && echo Test
-
 # Install wget to download afl_driver.cpp. Install libstdc++ to use llvm_mode.
 RUN apt-get update && \
     apt-get install -y wget libstdc++-5-dev libtool-bin automake \

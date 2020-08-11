@@ -14,8 +14,6 @@
 
 FROM gcr.io/fuzzbench/base-image
 
-ENV LD_LIBRARY_PATH /out
-
 # The extra packages are for debugging, desperately needed :(
 RUN apt-get install -y psmisc gdb joe vim bsdmainutils
 

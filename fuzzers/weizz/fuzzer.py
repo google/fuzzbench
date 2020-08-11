@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for Honggfuzz fuzzer."""
+"""Integration code for weizz fuzzer."""
 
 import os
 import shutil
@@ -28,7 +28,7 @@ def build():
 
     utils.build_benchmark()
 
-    # Copy over honggfuzz's main fuzzing binary.
+    # Copy over weizz's binaries.
     shutil.copy('/weizz/weizz', os.environ['OUT'])
     shutil.copy('/weizz/weizz-qemu', os.environ['OUT'])
 
