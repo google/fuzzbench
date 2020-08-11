@@ -17,16 +17,18 @@ FROM $parent_image
 
 # Install wget to download afl_driver.cpp. Install libstdc++ to use llvm_mode.
 RUN apt-get update && \
-    apt-get install wget libstdc++-5-dev -y
+    apt-get install -y wget libstdc++-5-dev libtool-bin automake \
+                       flex bison libglib2.0-dev libpixman-1-dev \
+                       python2.7-dev python2.7
 
-# Download and compile afl++ (v2.62d).
-# Build without Python support as we don't need it.
-# Set AFL_NO_X86 to skip flaky tests.
+# Get afl++ taint
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && git checkout dev && \
-    git checkout 585ec0450331ec7fd8b9a79737cba6b6937422bf && \
+    cd /afl && cd /afl && git checkout taint && \
+    git checkout b604f5eafcebb816026e198df0ea66ebcbf18421 && \
     unset CFLAGS && unset CXXFLAGS && \
     AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
-    make -C llvm_mode && \
+    CC=clang make -C llvm_mode  && \
     make -C examples/aflpp_driver && \
-    cp examples/aflpp_driver/libAFLDriver.a /
+    cp examples/aflpp_driver/libAFLDriver.a / && \
+    cd qemu_taint && export TAINT_BUILD_OPTIONS=--python=/usr/bin/python2.7 && \
+    ./build_qemu_taint.sh

@@ -13,3 +13,10 @@
 # limitations under the License.
 
 FROM gcr.io/fuzzbench/base-image
+
+# The extra packages are for debugging, desperately needed :(
+RUN apt-get install -y psmisc gdb joe vim bsdmainutils
+
+ENV LD_LIBRARY_PATH /out
+ENV PATH="$PATH:/out"
+ENV AFL_MAP_SIZE=524288

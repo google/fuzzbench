@@ -13,18 +13,30 @@
 # limitations under the License.
 """Integration code for AFLplusplus fuzzer."""
 
+# This optimized afl++ variant should always be run together with
+# "aflplusplus" to show the difference - a default configured afl++ vs.
+# a hand-crafted optimized one. afl++ is configured not to enable the good
+# stuff by default to be as close to vanilla afl as possible.
+# But this means that the good stuff is hidden away in this benchmark
+# otherwise.
+
+import os
+import shutil
+
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
-def build():
+def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
-    aflplusplus_fuzzer.build('tracepc', 'cmplog')
+    aflplusplus_fuzzer.build('tracepc')
+    shutil.copy('/afl/afl-qemu-taint', os.environ['OUT'])
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    flags = ['-p', 'seek']
+    run_options = ['-A', '-s', '1234567890']
+
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
-                            flags=flags)
+                            flags=(run_options))
