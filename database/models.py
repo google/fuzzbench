@@ -28,6 +28,7 @@ class Experiment(Base):
     time_ended = Column(DateTime(), nullable=True)
     git_hash = Column(String, nullable=True)
     private = Column(Boolean, nullable=False, default=False)
+    experiment_filestore = Column(String, nullable=True)
 
 
 class Trial(Base):
