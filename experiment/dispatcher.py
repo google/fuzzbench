@@ -61,10 +61,12 @@ def _initialize_experiment_in_db(experiment_config: dict):
         raise Exception('Experiment already exists in database.')
 
     db_utils.add_all([
-        db_utils.get_or_create(models.Experiment,
-                               name=experiment_config['experiment'],
-                               git_hash=experiment_config['git_hash'],
-                               private=experiment_config.get('private', True))
+        db_utils.get_or_create(
+            models.Experiment,
+            name=experiment_config['experiment'],
+            git_hash=experiment_config['git_hash'],
+            private=experiment_config.get('private', True),
+            experiment_filestore_name=experiment_config['experiment_filestore'])
     ])
 
 
