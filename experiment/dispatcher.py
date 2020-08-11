@@ -16,6 +16,7 @@
 configuration, spawns a runner VM for each benchmark-fuzzer combo, and then
 records coverage data received from the runner VMs."""
 
+import datetime
 import multiprocessing
 import os
 import sys
@@ -65,6 +66,14 @@ def _initialize_experiment_in_db(experiment_config: dict):
                                git_hash=experiment_config['git_hash'],
                                private=experiment_config.get('private', True))
     ])
+
+
+def _record_experiment_time_ended(experiment_name: str):
+    """Record |experiment| end time in the database."""
+    experiment = db_utils.query(models.Experiment).filter(
+        models.Experiment.name == experiment_name).one()
+    experiment.time_ended = datetime.datetime.utcnow()
+    db_utils.add_all([experiment])
 
 
 def _initialize_trials_in_db(trials: List[models.Trial]):
@@ -162,6 +171,8 @@ def dispatcher_main():
         if is_complete:
             # Experiment is complete, bail out.
             break
+
+    _record_experiment_time_ended(experiment.experiment_name)
 
     logs.info('Dispatcher finished.')
     scheduler_loop_thread.join()
