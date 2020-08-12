@@ -15,11 +15,13 @@
 ARG parent_image
 FROM $parent_image
 
+COPY patch-crossover.diff /
 COPY patch.diff /
 
 RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
     cd /llvm-project/ && \
     git checkout b52b2e1c188072e3cbc91500cfd503fb26d50ffc && \
+    patch -p1 < /patch-crossover.diff && \
     patch -p1 < /patch.diff && \
     cd compiler-rt/lib/fuzzer && \
     (for f in *.cpp; do \
