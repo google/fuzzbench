@@ -13,6 +13,7 @@
 # limitations under the License.
 """Utility functions for running fuzzers."""
 
+import ast
 import configparser
 import contextlib
 import os
@@ -117,7 +118,7 @@ def restore_directory(directory):
 
 def get_dictionary_path(target_binary):
     """Return dictionary path for a target binary."""
-    if os.getenv('NO_DICTIONARIES'):
+    if get_env('NO_DICTIONARIES'):
         # Don't use dictionaries if experiment specifies not to.
         return None
 
@@ -166,3 +167,18 @@ def initialize_flags(env=None):
     for flag_var in ['CFLAGS', 'CXXFLAGS']:
         print('{flag_var} = {flag_value}'.format(
             flag_var=flag_var, flag_value=os.getenv(flag_var)))
+
+
+def get_env(env_var, default_value=None):
+    """Return the evaluated value of |env_var| in the environment."""
+    value_string = os.getenv(env_var)
+
+    # value_string will be None if the variable is not defined.
+    if value_string is None:
+        return default_value
+
+    try:
+        return ast.literal_eval(value_string)
+    except Exception:  # pylint: disable=broad-except
+        # String fallback.
+        return value_string
