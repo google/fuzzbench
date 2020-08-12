@@ -170,7 +170,9 @@ def initialize_flags(env=None):
 
 
 def get_env(env_var, default_value=None):
-    """Return the evaluated value of |env_var| in the environment."""
+    """Return the evaluated value of |env_var| in the environment. This is
+    a copy of common.environment.get function as fuzzers can't have source
+    dependencies outside of this directory."""
     value_string = os.getenv(env_var)
 
     # value_string will be None if the variable is not defined.
