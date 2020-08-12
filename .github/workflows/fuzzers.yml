@@ -24,6 +24,7 @@ jobs:
           - fastcgs_lm
           - honggfuzz
           - lafintel
+          - klee
           - libfuzzer
           - manul
           - mopt
