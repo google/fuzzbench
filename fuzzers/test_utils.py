@@ -32,6 +32,13 @@ def test_dictionary_dict_file(fs):
     assert utils.get_dictionary_path('/fuzz-target') == '/fuzz-target.dict'
 
 
+def test_dictionary_dict_file_with_env_var(fs):
+    """Test that target.dict file is returned when it exists."""
+    os.environ['NO_DICTIONARIES'] = 'False'
+    fs.create_file('/fuzz-target.dict', contents='A')
+    assert utils.get_dictionary_path('/fuzz-target') == '/fuzz-target.dict'
+
+
 def test_dictionary_bad_options_file(fs):
     """Test that Exception is returned when options file cannot be parsed."""
     fs.create_file('/fuzz-target.options', contents=']')
@@ -64,7 +71,7 @@ def test_dictionary_options_file_with_dict(fs):
 
 def test_dictionary_no_dictionaries(fs, environ):
     """Test that None is return when NO_DICTIONARIES is set."""
-    os.environ['NO_DICTIONARIES'] = '1'
+    os.environ['NO_DICTIONARIES'] = 'True'
     fs.create_file('/fuzz-target.dict', contents='A')
     assert utils.get_dictionary_path('/fuzz-target') is None
 
