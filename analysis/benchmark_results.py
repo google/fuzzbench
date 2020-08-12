@@ -47,6 +47,16 @@ class BenchmarkResults:
 
     def _get_full_path(self, filename):
         return os.path.join(self._output_directory, filename)
+    
+    def _get_filestore_path(self, fuzzer_name):
+        benchmark_df = self._benchmark_df
+        fuzzer_df = benchmark_df[benchmark_df.fuzzer == fuzzer_name]
+        return fuzzer_df.experiment_filestore.unique()
+    
+    def _get_filestore_name(self, fuzzer_name):
+        filestore_path = self._get_filestore_path(fuzzer_name)
+        prefix = 'gs://'
+        return filestore_path[len(prefix):]
 
     @property
     @functools.lru_cache()

@@ -257,8 +257,8 @@ class Plotter:
                            palette=self._fuzzer_colors,
                            ax=axes)
 
-        if 'rare_region_covereds' in benchmark_snapshot_df:
-            sns.barplot(y='rare_region_covereds',
+        if 'rare_regions_covered' in benchmark_snapshot_df:
+            sns.barplot(y='rare_regions_covered',
                         x='fuzzer',
                         data=benchmark_snapshot_df,
                         order=fuzzer_order,
@@ -349,10 +349,10 @@ class Plotter:
         """Draws rare_region_ranking plot. The fuzzer labels will be in
         the order of their coverage."""
 
-        fuzzer_order = rare_region_cov_df.sort_values(by='rare_region_covereds',
+        fuzzer_order = rare_region_cov_df.sort_values(by='rare_regions_covered',
                                                       ascending=False).fuzzer
 
-        axes = sns.barplot(y='rare_region_covereds',
+        axes = sns.barplot(y='rare_regions_covered',
                            x='fuzzer',
                            data=rare_region_cov_df,
                            order=fuzzer_order,

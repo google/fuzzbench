@@ -273,7 +273,7 @@
                         <div class="row">
                             {% for fuzzer in benchmark._fuzzer_names %}
                             <div class="col">
-                                <a class="waves-effect waves-light btn" href="https://storage.googleapis.com/{{ filestore_name }}/{{ experiment.name }}/reports/coverage/{{ benchmark.name }}/{{ fuzzer }}/index.html">{{ fuzzer }}</a>
+                                <a class="waves-effect waves-light btn" href="https://storage.googleapis.com/{{ benchmark._get_filestore_name(fuzzer) }}/{{ experiment.name }}/reports/coverage/{{ benchmark.name }}/{{ fuzzer }}/index.html">{{ fuzzer }}</a>
                             </div>
                             {% endfor %}
                         </div>
