@@ -166,12 +166,8 @@ def generate_report(experiment_names,
     # Loads the json summary file.
     coverage_dict = {}
     if detailed_coverage_report:
-        coverage_data_path = os.path.join(report_directory,
-                                          'covered_regions.json')
-        coverage_data_utils.copy_json_summary(experiment_names[0],
-                                                  coverage_data_path)
-        with open(coverage_data_path) as source:
-            coverage_dict = json.load(source)
+        coverage_dict = coverage_data_utils.get_covered_regions_dict(
+            experiment_df)
 
     if benchmarks is not None:
         experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks)

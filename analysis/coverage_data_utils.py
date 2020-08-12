@@ -17,6 +17,9 @@ import math
 import posixpath
 from collections import defaultdict
 import pandas as pd
+import tempfile
+import json
+import os
 
 from common import filestore_utils
 from common import experiment_utils as exp_utils
@@ -30,6 +33,47 @@ def copy_json_summary(experiment_name, dst_file):
     src_file = posixpath.join(filestore_path, experiment_name, 'reports',
                               'covered_regions.json')
     filestore_utils.cp(src_file, dst_file)
+
+
+def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):
+    """Returns the key in coverage dict for a pair of fuzzer-benchmark."""
+    return fuzzer + ' ' + benchmark
+
+
+def get_fuzzer_filestore_path(benchmark_df, fuzzer):
+    """Gets the filestore_path for |fuzzer| in |benchmark_df|."""
+    fuzzer_df = benchmark_df[benchmark_df.fuzzer == fuzzer]
+    filestore_path = fuzzer_df.experiment_filestore.unique()
+    exp_name = fuzzer_df.name.unique()
+    return posixpath.join(filestore_path, exp_name)
+
+
+def get_covered_regions_dict(experiment_df):
+    """Combines json files for different fuzzer-benchmark pair
+    in |experiment_df| and returns a dictionary of the covered regions."""
+    covered_regions_dict = {}
+    benchmarks = experiment_df.benchmark.unique()
+    for benchmark in benchmarks:
+        benchmark_df = experiment_df[experiment_df.benchmark==benchmark]
+        fuzzers = benchmark_df.fuzzer.unique()
+        for fuzzer in fuzzers:
+            fuzzer_covered_regions = get_fuzzer_covered_regions(
+                benchmark_df, benchmark, fuzzer)
+            key = get_fuzzer_benchmark_key(fuzzer, benchmark)
+            covered_regions_dict[key] = fuzzer_covered_regions
+    return covered_regions_dict
+
+
+def get_fuzzer_covered_regions(benchmark_df, benchmark, fuzzer):
+    """Gets the covered regions for |fuzzer| in |benchmark_df| from the json
+    file in the bucket."""
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        dst_file = os.path.join(tmpdirname, 'tmp.json')
+        src_filestore_path = get_fuzzer_filestore_path(benchmark_df, fuzzer)
+        src_file = posixpath.join(src_filestore_path, 'data', benchmark, fuzzer, 'covered_regions.json')
+        filestore_utils.cp(src_file, dst_file)
+        with open(dst_file) as json_file:
+            return json.load(json_file)
 
 
 def get_rare_region_dict(benchmark_coverage_dict,

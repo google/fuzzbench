@@ -144,11 +144,6 @@ def get_coverage_archive_name(benchmark):
     return 'coverage-build-%s.tar.gz' % benchmark
 
 
-def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):
-    """Returns the key in coverage dict for a pair of fuzzer-benchmark."""
-    return fuzzer + ' ' + benchmark
-
-
 def get_profdata_file_name(trial_id):
     """Returns the profdata file name for |trial_id|."""
     return 'data-{id}.profdata'.format(id=trial_id)
@@ -241,7 +236,6 @@ def store_covered_region(experiment: str, fuzzer: str, benchmark: str):
 def get_covered_region(experiment: str, fuzzer: str, benchmark: str):
     logger.debug('Measuring covered region: fuzzer: %s, benchmark: %s.', fuzzer,
                  benchmark)
-    key = get_fuzzer_benchmark_key(fuzzer, benchmark)
     covered_regions = set()
     trial_ids = get_trial_ids(experiment, fuzzer, benchmark)
     for trial_id in trial_ids:
