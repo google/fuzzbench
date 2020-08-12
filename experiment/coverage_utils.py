@@ -134,6 +134,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
     def generate_json_summary_file(self, covered_regions):
         """Stores the coverage data in a json file."""
         json_src_dir = self.json_file_dir
+        os.mkdir(json_src_dir)
         json_src = os.path.join(json_src_dir, 'covered_regions.json')
         with open(json_src, 'w') as src_file:
             json.dump(covered_regions, src_file)
