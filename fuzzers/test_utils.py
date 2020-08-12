@@ -33,7 +33,8 @@ def test_dictionary_dict_file(fs):
 
 
 def test_dictionary_dict_file_with_env_var(fs):
-    """Test that target.dict file is returned when it exists."""
+    """Test that target.dict file is returned when it exists and
+    |NO_DICTIONARIES| environment variable is set to False."""
     os.environ['NO_DICTIONARIES'] = 'False'
     fs.create_file('/fuzz-target.dict', contents='A')
     assert utils.get_dictionary_path('/fuzz-target') == '/fuzz-target.dict'
