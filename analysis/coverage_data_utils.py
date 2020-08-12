@@ -24,8 +24,8 @@ from common import experiment_utils as exp_utils
 _DEFAULT_RARE_REGION_THRESHOLD = 0
 
 
-def download_json_summary(experiment_name, dst_file):
-    """Downloads the json summary for |experiment_name| to |dst_file|."""
+def copy_json_summary(experiment_name, dst_file):
+    """Copies the json summary for |experiment_name| to |dst_file|."""
     filestore_path = exp_utils.get_filestore_path()
     src_file = posixpath.join(filestore_path, experiment_name, 'reports',
                               'covered_regions.json')
@@ -57,10 +57,10 @@ def get_rare_region_cov_df(rare_region_dict, fuzzer_names):
     for region in rare_region_dict:
         for fuzzer in rare_region_dict[region]:
             fuzzers[fuzzer] += 1
-    dict_to_transform = {'fuzzer': [], 'rare_region_covered': []}
+    dict_to_transform = {'fuzzer': [], 'rare_regions_covered': []}
     for fuzzer, covered_num in fuzzers.items():
         dict_to_transform['fuzzer'].append(fuzzer)
-        dict_to_transform['rare_region_covered'].append(covered_num)
+        dict_to_transform['rare_regions_covered'].append(covered_num)
     return pd.DataFrame(dict_to_transform)
 
 

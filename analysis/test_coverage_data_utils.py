@@ -51,10 +51,10 @@ def test_get_rare_region_cov_df():
         drop=True)
     expected_df = pd.DataFrame([{
         'fuzzer': 'afl',
-        'rare_region_covered': 1
+        'rare_region_covereds': 1
     }, {
         'fuzzer': 'libfuzzer',
-        'rare_region_covered': 1
+        'rare_region_covereds': 1
     }])
     print(expected_df, rare_region_df)
     assert rare_region_df.equals(expected_df)

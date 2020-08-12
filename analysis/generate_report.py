@@ -82,7 +82,7 @@ def get_arg_parser():
         '-cov',
         '--detailed-coverage-report',
         action='store_true',
-        default=False,
+        default=True,
         help='If set, clang coverage reports and differential matrix are shown.'
     )
 
@@ -163,12 +163,12 @@ def generate_report(experiment_names,
 
     data_utils.validate_data(experiment_df)
 
-    #Loads the json summary file.
+    # Loads the json summary file.
     coverage_dict = {}
     if detailed_coverage_report:
         coverage_data_path = os.path.join(report_directory,
                                           'covered_regions.json')
-        coverage_data_utils.download_json_summary(experiment_names[0],
+        coverage_data_utils.copy_json_summary(experiment_names[0],
                                                   coverage_data_path)
         with open(coverage_data_path) as source:
             coverage_dict = json.load(source)
