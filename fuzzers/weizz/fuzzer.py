@@ -48,6 +48,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
         '-Q',  # Qemu mode.
         '-L',  # Size bounds to disable getdeps for a testcase.
         '8k',  # Size bounds set to 8kb.
+        '-m',  # No memory limits
+        'none',
         '-i',
         input_corpus,
         '-o',
