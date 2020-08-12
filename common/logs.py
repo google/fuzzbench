@@ -197,8 +197,7 @@ def error(message, *args, extras=None, logger=None):
     # I can't figure out how to include both the message and the exception
     # other than this having the exception message preceed the log message
     # (without using private APIs).
-    _report_error_with_retries(traceback.format_exc() + '\nMessage: ' +
-                               message)
+    _report_error_with_retries(traceback.format_exc() + '\nMessage: ' + message)
     extras = {} if extras is None else extras
     extras['traceback'] = traceback.format_exc()
     log(logger, logging.ERROR, message, *args, extras=extras)
