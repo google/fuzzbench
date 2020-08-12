@@ -15,11 +15,13 @@
 
 import os
 import functools
+import posixpath
 
 from analysis import data_utils
 from analysis import coverage_data_utils
 from analysis import stat_tests
 
+from experiment import coverage_utils
 
 # pylint: disable=too-many-public-methods, too-many-arguments
 class BenchmarkResults:
@@ -48,13 +50,15 @@ class BenchmarkResults:
     def _get_full_path(self, filename):
         return os.path.join(self._output_directory, filename)
     
-    def _get_filestore_path(self, fuzzer_name):
+    def _get_experiment_filestore_path(self, fuzzer_name):
         benchmark_df = self._benchmark_df
         fuzzer_df = benchmark_df[benchmark_df.fuzzer == fuzzer_name]
-        return fuzzer_df.experiment_filestore.unique()
+        filestore_path = fuzzer_df.experiment_filestore.unique()
+        exp_name = fuzzer_df.name.unique()
+        return posixpath.join(filestore_path, exp_name)
     
     def _get_filestore_name(self, fuzzer_name):
-        filestore_path = self._get_filestore_path(fuzzer_name)
+        filestore_path = self._get_experiment_filestore_path(fuzzer_name)
         prefix = 'gs://'
         return filestore_path[len(prefix):]
 

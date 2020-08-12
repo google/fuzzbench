@@ -259,7 +259,7 @@ def get_covered_region(experiment: str, fuzzer: str, benchmark: str):
         covered_regions = covered_regions.union(new_covered_regions)
     logger.debug('Done measuring covered region: fuzzer: %s, benchmark: %s.',
                  fuzzer, benchmark)
-    return covered_regions
+    return list(covered_regions)
 
 
 class TrialCoverage:  # pylint: disable=too-many-instance-attributes
