@@ -77,7 +77,7 @@ def test_get_benchmark_cov_dict():
 
 
 def test_get_complementary_pairs_table():
-    """Tests that get_complementary_pairs_table() gives the 
+    """Tests that get_complementary_pairs_table() gives the
     correct dataframe."""
     coverage_dict = create_coverage_data()
     benchmark_coverage_dict = coverage_data_utils.get_benchmark_cov_dict(
