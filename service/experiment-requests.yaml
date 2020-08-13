@@ -19,15 +19,12 @@
 # are still testing this feature. You should request an experiment by contacting
 # us as you normally do.
 
-- experiment: 2020-08-14
+- experiment: 2020-08-13
   fuzzers:
     - libfuzzer_fixcrossover
     - entropic_fixcrossover
     - libfuzzer_keepseed
     - entropic_keepseed
-
-- experiment: 2020-08-13
-  fuzzers:
     - aflplusplus
     - aflplusplus_optimal
     - aflplusplus_qemu
