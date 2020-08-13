@@ -32,7 +32,7 @@ def get_fuzzer_filestore_path(benchmark_df, fuzzer):
     """Gets the filestore_path for |fuzzer| in |benchmark_df|."""
     fuzzer_df = benchmark_df[benchmark_df.fuzzer == fuzzer]
     filestore_path = fuzzer_df.experiment_filestore.unique()[0]
-    exp_name = fuzzer_df.name.unique()[0]
+    exp_name = fuzzer_df.experiment.unique()[0]
     return posixpath.join(filestore_path, exp_name)
 
 

@@ -18,7 +18,6 @@ import os
 import jinja2
 
 from common import utils
-from common import experiment_utils
 
 
 def render_report(experiment_results, template, in_progress,

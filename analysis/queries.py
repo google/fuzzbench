@@ -23,7 +23,7 @@ def get_experiment_data(experiment_names):
     """Get measurements (such as coverage) on experiments from the database."""
 
     snapshots_query = db_utils.query(
-        Experiment.git_hash, Experiment.name, Experiment.experiment_filestore,\
+        Experiment.git_hash, Experiment.experiment_filestore,\
         Trial.experiment, Trial.fuzzer, Trial.benchmark,\
         Trial.time_started, Trial.time_ended,\
         Snapshot.trial_id, Snapshot.time, Snapshot.edges_covered)\

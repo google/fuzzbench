@@ -23,7 +23,6 @@ from common import benchmark_utils
 from common import fuzzer_utils
 from common import logs
 from common import filestore_utils
-from common import experiment_path as exp_path
 from common import filesystem
 from database import utils as db_utils
 from database import models

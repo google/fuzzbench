@@ -366,6 +366,8 @@ class Plotter:
                     x='fuzzer',
                     data=unique_region_cov_df_combined,
                     order=fuzzer_order,
+                    facecolor=(1, 1, 1, 0),
+                    edgecolor='0.2',
                     ax=axes)
 
         axes.set(ylabel='Reached unique edges coverage')
