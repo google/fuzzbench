@@ -52,7 +52,7 @@ def get_changed_files(commit_name: str = 'origin...') -> List[str]:
         pass
     raise DiffError((
         '"%s" failed.\n'
-        'Please run "git fetch origin master && '
+        'Please run "git fetch origin master --unshallow && '
         'git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master" '
         'and try again.\n'
         'Please file an issue if this doesn\'t fix things.') %

@@ -31,25 +31,33 @@ def test_add_nonprivate_experiments_for_merge_with_clobber(db):
     db_utils.add_all([
         models.Experiment(name=name,
                           time_created=ARBITRARY_DATETIME,
+                          time_ended=ARBITRARY_DATETIME +
+                          datetime.timedelta(days=1),
                           private=False) for name in experiment_names
     ])
     db_utils.add_all([
         models.Experiment(name='private',
                           time_created=ARBITRARY_DATETIME,
                           private=True),
-        models.Experiment(name='later-nonprivate',
-                          time_created=ARBITRARY_DATETIME +
+        models.Experiment(name='earlier-nonprivate',
+                          time_created=ARBITRARY_DATETIME -
                           datetime.timedelta(days=1),
+                          time_ended=ARBITRARY_DATETIME,
                           private=False),
         models.Experiment(name='nonprivate',
                           time_created=ARBITRARY_DATETIME,
+                          time_ended=ARBITRARY_DATETIME +
+                          datetime.timedelta(days=1),
+                          private=False),
+        models.Experiment(name='nonprivate-in-progress',
+                          time_created=ARBITRARY_DATETIME,
+                          time_ended=None,
                           private=False),
     ])
-    expected_results = ['nonprivate', 'later-nonprivate', '1', '2', '3']
+    expected_results = ['earlier-nonprivate', 'nonprivate', '1', '2', '3']
     results = queries.add_nonprivate_experiments_for_merge_with_clobber(
         experiment_names)
     assert results == expected_results
-
 
 def test_get_experiment_data_fuzzer_stats(db):
     """Tests that get_experiment_data handles fuzzer_stats correctly."""

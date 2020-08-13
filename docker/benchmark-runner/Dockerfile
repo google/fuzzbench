@@ -60,7 +60,7 @@ ENV ROOT_DIR=/src
 # This also copies seed and dictionary files if they are available.
 COPY --from=builder /out/ ./
 # Copy the fuzzers directory.
-COPY --from=builder /src/fuzzers $ROOT_DIR/fuzzers
+COPY fuzzers $ROOT_DIR/fuzzers
 # Create empty __init__.py to allow python deps to work.
 RUN touch __init__.py
 

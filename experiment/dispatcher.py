@@ -16,6 +16,7 @@
 configuration, spawns a runner VM for each benchmark-fuzzer combo, and then
 records coverage data received from the runner VMs."""
 
+import datetime
 import multiprocessing
 import os
 import sys
@@ -60,11 +61,21 @@ def _initialize_experiment_in_db(experiment_config: dict):
         raise Exception('Experiment already exists in database.')
 
     db_utils.add_all([
-        db_utils.get_or_create(models.Experiment,
-                               name=experiment_config['experiment'],
-                               git_hash=experiment_config['git_hash'],
-                               private=experiment_config.get('private', True))
+        db_utils.get_or_create(
+            models.Experiment,
+            name=experiment_config['experiment'],
+            git_hash=experiment_config['git_hash'],
+            private=experiment_config.get('private', True),
+            experiment_filestore=experiment_config['experiment_filestore'])
     ])
+
+
+def _record_experiment_time_ended(experiment_name: str):
+    """Record |experiment| end time in the database."""
+    experiment = db_utils.query(models.Experiment).filter(
+        models.Experiment.name == experiment_name).one()
+    experiment.time_ended = datetime.datetime.utcnow()
+    db_utils.add_all([experiment])
 
 
 def _initialize_trials_in_db(trials: List[models.Trial]):
@@ -155,11 +166,15 @@ def dispatcher_main():
             is_complete = not measurer_main_process.is_alive()
 
         # Generate periodic output reports.
-        reporter.output_report(experiment.config, in_progress=not is_complete)
+        reporter.output_report(experiment.config,
+                               in_progress=not is_complete,
+                               coverage_report=is_complete)
 
         if is_complete:
             # Experiment is complete, bail out.
             break
+
+    _record_experiment_time_ended(experiment.experiment_name)
 
     logs.info('Dispatcher finished.')
     scheduler_loop_thread.join()

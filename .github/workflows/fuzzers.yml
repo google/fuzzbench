@@ -24,6 +24,7 @@ jobs:
           - fastcgs_lm
           - honggfuzz
           - lafintel
+          - klee
           - libfuzzer
           - manul
           - mopt
@@ -32,12 +33,18 @@ jobs:
           - afl_qemu
           - aflplusplus_qemu
           - honggfuzz_qemu
-          # temporary variants.
-          - aflplusplus_havoc
+          - weizz
+          # Temporary variants.
           - libfuzzer_interceptors
           - libfuzzer_keepseed
+          - libfuzzer_fixcrossover
           - entropic_interceptors
           - entropic_keepseed
+          - aflplusplus_same1
+          - aflplusplus_same2
+          - aflplusplus_same3
+          - aflplusplus_taint
+          - entropic_fixcrossover
 
         benchmark_type:
           - oss-fuzz
@@ -50,7 +57,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - run: |  # Needed for git diff to work.
-        git fetch origin master --depth 1
+        git fetch origin master --unshallow
         git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
 
     - name: Clear unnecessary files

@@ -17,6 +17,7 @@ import os
 import posixpath
 
 from common import environment
+from common import experiment_path as exp_path
 
 DEFAULT_SNAPSHOT_SECONDS = 15 * 60  # Seconds.
 CONFIG_DIR = 'config'
@@ -36,6 +37,11 @@ def get_work_dir():
 def get_experiment_name():
     """Returns experiment name."""
     return os.environ['EXPERIMENT']
+
+
+def get_experiment_folders_dir():
+    """Returns experiment folders directory."""
+    return exp_path.path('experiment-folders')
 
 
 def get_cloud_project():
@@ -93,9 +99,14 @@ def is_local_experiment():
 def get_trial_dir(fuzzer, benchmark, trial_id):
     """Returns the unique directory for |fuzzer|, |benchmark|, and
     |trial_id|."""
-    benchmark_fuzzer_directory = '%s-%s' % (benchmark, fuzzer)
+    benchmark_fuzzer_directory = get_benchmark_fuzzer_dir(benchmark, fuzzer)
     trial_subdir = 'trial-%d' % trial_id
     return posixpath.join(benchmark_fuzzer_directory, trial_subdir)
+
+
+def get_benchmark_fuzzer_dir(benchmark, fuzzer):
+    """Returns the directory for |benchmark| and |fuzzer|."""
+    return '%s-%s' % (benchmark, fuzzer)
 
 
 def get_trial_bucket_dir(fuzzer, benchmark, trial_id):

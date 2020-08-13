@@ -144,7 +144,7 @@ def test_generate_profdata_merge(mocked_execute, experiment, fs):
 
 
 @mock.patch('common.new_process.execute')
-@mock.patch('experiment.measurer.get_coverage_binary')
+@mock.patch('experiment.coverage_utils.get_coverage_binary')
 def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
                           experiment, fs):
     """Tests that generate_summary can run the correct command."""
