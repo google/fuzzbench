@@ -302,7 +302,7 @@ class TrialCoverage:  # pylint: disable=too-many-instance-attributes
             for function_data in functions_data:
                 for region in function_data['regions']:
                     if region[hit_index] != 0 and region[type_index] == 0:
-                        covered_regions.add(tuple(region[:hit_index]))
+                        covered_regions.add(tuple(region))
         except Exception:  # pylint: disable=broad-except
             self.logger.error(
                 'Coverage summary json file defective or missing.')

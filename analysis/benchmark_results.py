@@ -52,7 +52,7 @@ class BenchmarkResults:
         return coverage_data_utils.get_fuzzer_filestore_path(
             self._benchmark_df, fuzzer_name)
 
-    def _get_filestore_name(self, fuzzer_name):
+    def get_filestore_name(self, fuzzer_name):
         filestore_path = self._get_experiment_filestore_path(fuzzer_name)
         prefix = 'gs://'
         return filestore_path[len(prefix):]
@@ -68,7 +68,7 @@ class BenchmarkResults:
     @property
     @functools.lru_cache()
     def _fuzzer_names(self):
-        """Names of valid fuzzers."""
+        """Names of all fuzzers."""
         return self._benchmark_df.fuzzer.unique()
 
     @property
@@ -278,27 +278,28 @@ class BenchmarkResults:
         return plot_filename
 
     @property
-    def unique_region_ranking_plot(self):
-        """Ranking plot for unique region coverage."""
+    def unique_coverage_ranking_plot(self):
+        """Ranking plot for unique coverage."""
         plot_filename = self._prefix_with_benchmark('ranking_unique_region.svg')
         unique_region_cov_df_combined = self._unique_region_cov_df.merge(
             self._benchmark_aggregated_coverage_df, on='fuzzer')
-        self._plotter.write_unique_region_ranking_plot(
+        self._plotter.write_unique_coverage_ranking_plot(
             unique_region_cov_df_combined, self._get_full_path(plot_filename))
         return plot_filename
 
     @property
     @functools.lru_cache()
-    def complementary_pairs_table(self):
-        """Complementary pairs table for each pair of fuzzers."""
-        return coverage_data_utils.get_complementary_pairs_table(
+    def pairwise_unique_coverage_table(self):
+        """Pairwise unique coverage table for each pair of fuzzers."""
+        return coverage_data_utils.get_pairwise_unique_coverage_table(
             self._benchmark_coverage_dict)
 
     @property
-    def complementary_pairs_plot(self):
-        """Complementary pairs plot for each pair of fuzzers."""
+    def pairwise_unique_coverage_plot(self):
+        """Pairwise unique coverage plot for each pair of fuzzers."""
         plot_filename = self._prefix_with_benchmark(
-            'complementary_pairs_plot.svg')
-        self._plotter.write_complementary_pairs_heatmap_plot(
-            self.complementary_pairs_table, self._get_full_path(plot_filename))
+            'cpairwise_unique_coverage_plot.svg')
+        self._plotter.write_pairwise_unique_coverage_heatmap_plot(
+            self.pairwise_unique_coverage_table,
+            self._get_full_path(plot_filename))
         return plot_filename

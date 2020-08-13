@@ -59,7 +59,6 @@ def test_get_unique_region_cov_df():
         'fuzzer': 'libfuzzer',
         'unique_regions_covered': 1
     }])
-    print(expected_df, unique_region_df)
     assert unique_region_df.equals(expected_df)
 
 
@@ -76,13 +75,13 @@ def test_get_benchmark_cov_dict():
     assert expected_cov_dict == benchmark_cov_dict
 
 
-def test_get_complementary_pairs_table():
-    """Tests that get_complementary_pairs_table() gives the
+def test_get_pairwise_unique_coverage_table():
+    """Tests that get_pairwise_unique_coverage_table() gives the
     correct dataframe."""
     coverage_dict = create_coverage_data()
     benchmark_coverage_dict = coverage_data_utils.get_benchmark_cov_dict(
         coverage_dict, 'libpng-1.2.56')
-    table = coverage_data_utils.get_complementary_pairs_table(
+    table = coverage_data_utils.get_pairwise_unique_coverage_table(
         benchmark_coverage_dict)
     fuzzers = ['afl', 'libfuzzer']
     expected_table = pd.DataFrame([[0, 1], [1, 0]],

@@ -120,27 +120,28 @@ def get_benchmark_aggregated_cov_df(benchmark_coverage_dict):
     return pd.DataFrame(dict_to_transform)
 
 
-def get_complementary_pairs_table(benchmark_coverage_dict):
-    """Returns a table that shows how each fuzzer complements the other.
+def get_pairwise_unique_coverage_table(benchmark_coverage_dict):
+    """Returns a table that shows the unique coverage between
+    each pair of fuzzers.
 
-    The complementary pairs table is a square matrix where each row and column
-    represents a fuzzer, and each cell contains a number showing the
-    regions covered by the fuzzer of the column but not by the fuzzer
-    of the row."""
+    The pairwise unique coverage table is a square matrix where each
+    row and column represents a fuzzer, and each cell contains a number
+    showing the regions covered by the fuzzer of the column but not by
+    the fuzzer of the row."""
 
     fuzzers = benchmark_coverage_dict.keys()
 
-    complementary_pairs_values = []
+    pairwise_unique_coverage_values = []
     for fuzzer_in_row in fuzzers:
         row = []
         for fuzzer_in_col in fuzzers:
-            complementary_pairs_value = get_unique_covered_percentage(
+            pairwise_unique_coverage_value = get_unique_covered_percentage(
                 benchmark_coverage_dict[fuzzer_in_row],
                 benchmark_coverage_dict[fuzzer_in_col])
-            row.append(complementary_pairs_value)
-        complementary_pairs_values.append(row)
+            row.append(pairwise_unique_coverage_value)
+        pairwise_unique_coverage_values.append(row)
 
-    return pd.DataFrame(complementary_pairs_values,
+    return pd.DataFrame(pairwise_unique_coverage_values,
                         index=fuzzers,
                         columns=fuzzers)
 

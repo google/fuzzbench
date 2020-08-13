@@ -337,10 +337,10 @@ class Plotter:
         finally:
             plt.close(fig)
 
-    def unique_region_ranking_plot(self,
-                                   unique_region_cov_df_combined,
-                                   axes=None):
-        """Draws unique_region_ranking plot. The fuzzer labels will be in
+    def unique_coverage_ranking_plot(self,
+                                     unique_region_cov_df_combined,
+                                     axes=None):
+        """Draws unique_coverage_ranking plot. The fuzzer labels will be in
         the order of their coverage."""
 
         fuzzer_order = unique_region_cov_df_combined.sort_values(
@@ -378,27 +378,31 @@ class Plotter:
 
         sns.despine(ax=axes, trim=True)
 
-    def write_unique_region_ranking_plot(self, unique_region_cov_df_combined,
-                                         image_path):
-        """Writes ranking plot for unique regions."""
-        self._write_plot_to_image(self.unique_region_ranking_plot,
+    def write_unique_coverage_ranking_plot(self, unique_region_cov_df_combined,
+                                           image_path):
+        """Writes ranking plot for unique coverage."""
+        self._write_plot_to_image(self.unique_coverage_ranking_plot,
                                   unique_region_cov_df_combined, image_path)
 
-    def complementary_pairs_heatmap_plot(self,
-                                         complementary_pairs_table,
-                                         axes=None):
-        """Draws the heatmap to visualize how each fuzzer
-        complements the other."""
+    def pairwise_unique_coverage_heatmap_plot(self,
+                                              pairwise_unique_coverage_table,
+                                              axes=None):
+        """Draws the heatmap to visualize the unique coverage between
+        each pair of fuzzers."""
         heatmap_args = {
             'annot': True,
             'fmt': 'd',
             'cmap': 'Blues',
             'linewidths': 0.5
         }
-        sns.heatmap(complementary_pairs_table, ax=axes, **heatmap_args)
+        axes = sns.heatmap(pairwise_unique_coverage_table,
+                           ax=axes,
+                           **heatmap_args)
+        axes.set(ylabel='Not covered by')
+        axes.set(xlabel='Covered by')
 
-    def write_complementary_pairs_heatmap_plot(self, complementary_pairs_table,
-                                               image_path):
-        """Writes complementary pairs heatmap plot."""
-        self._write_plot_to_image(self.complementary_pairs_heatmap_plot,
-                                  complementary_pairs_table, image_path)
+    def write_pairwise_unique_coverage_heatmap_plot(
+            self, pairwise_unique_coverage_table, image_path):
+        """Writes pairwise unique coverage heatmap plot."""
+        self._write_plot_to_image(self.pairwise_unique_coverage_heatmap_plot,
+                                  pairwise_unique_coverage_table, image_path)
