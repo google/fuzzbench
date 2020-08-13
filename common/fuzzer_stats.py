@@ -15,7 +15,7 @@
 
 import json
 
-SCHEMA = {'avg_execs': float}
+SCHEMA = {'execs_per_sec': float}
 
 
 def validate_fuzzer_stats(stats_json_str):
@@ -26,7 +26,7 @@ def validate_fuzzer_stats(stats_json_str):
     if not isinstance(stats, dict):
         raise ValueError('{stats} is not a dict.'.format(stats=stats))
 
-    for key, value in stats:
+    for key, value in stats.items():
         if key not in SCHEMA:
             raise ValueError(
                 'Key {key} is not a valid stat key.'.format(key=key))

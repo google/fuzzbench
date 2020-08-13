@@ -59,6 +59,7 @@ def test_add_nonprivate_experiments_for_merge_with_clobber(db):
         experiment_names)
     assert results == expected_results
 
+
 def test_get_experiment_data_fuzzer_stats(db):
     """Tests that get_experiment_data handles fuzzer_stats correctly."""
     experiment_name = 'experiment-1'
@@ -71,7 +72,7 @@ def test_get_experiment_data_fuzzer_stats(db):
                          experiment=experiment_name,
                          benchmark='libpng')
     db_utils.add_all([trial])
-    fuzzer_stats = {'avg_execs': 100.0}
+    fuzzer_stats = {'execs_per_sec': 100.0}
     snapshot = models.Snapshot(time=900,
                                trial_id=trial.id,
                                edges_covered=100,

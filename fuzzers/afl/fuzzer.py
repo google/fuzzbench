@@ -54,7 +54,7 @@ def get_stats(output_corpus, fuzzer_log):  # pylint: disable=unused-argument
         stats_line.split(': ') for stats_line in stats_file_lines)
 
     # Report to FuzzBench the stats it accepts.
-    stats = {'avg_execs': float(stats_file_stats['execs_per_sec'])}
+    stats = {'execs_per_sec': float(stats_file_stats['execs_per_sec'])}
     return json.dumps(stats)
 
 

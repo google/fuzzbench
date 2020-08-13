@@ -63,7 +63,7 @@ FUZZER = 'fuzzer_a'
 
 class FuzzerAModule:
     """A fake fuzzer.py module that impolements get_stats."""
-    DEFAULT_STATS = '{"avg_execs":20.0}'
+    DEFAULT_STATS = '{"execs_per_sec":20.0}'
 
     @staticmethod
     def get_stats(output_directory, log_filename):
@@ -71,7 +71,7 @@ class FuzzerAModule:
         return FuzzerAModule.DEFAULT_STATS
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def fuzzer_module():
     """Fixture that makes sure record_stats uses a fake fuzzer module."""
     with mock.patch('experiment.runner.get_fuzzer_module',
@@ -79,7 +79,7 @@ def fuzzer_module():
         yield
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def trial_runner(fs, environ):
     """Fixture that creates a TrialRunner object."""
     os.environ.update({
@@ -103,6 +103,7 @@ def test_record_stats(trial_runner, fuzzer_module):
     trial_runner.cycle = cycle
 
     stats_file = os.path.join(trial_runner.results_dir, 'stats-%d.json' % cycle)
+    import pdb; pdb.set_trace()
     trial_runner.record_stats()
     with open(stats_file) as file_handle:
         stats_file_contents = file_handle.read()
@@ -128,7 +129,7 @@ def test_record_stats_unsupported(trial_runner):
 
 
 @pytest.mark.parametrize(('stats_data',), [('1',), ('{1:2}',),
-                                           ('{"avg_execs": None}',)])
+                                           ('{"execs_per_sec": None}',)])
 def test_record_stats_invalid(stats_data, trial_runner, fuzzer_module):
     """Tests that record_stats works as intended when fuzzer_module.get_stats
     exceptions."""
