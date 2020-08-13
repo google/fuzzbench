@@ -165,13 +165,8 @@
             <div class="row">
                 <div class="col s6">
                     <h5 class="center-align">Ranking by median reached coverage</h5>
-                    {% if not detailed_coverage_report %}
                     <img class="responsive-img materialboxed"
                          src="{{ benchmark.ranking_plot }}">
-                    {% else %}
-                    <img class="responsive-img materialboxed"
-                        src="{{ benchmark.ranking_plot_with_diff }}">
-                    {% endif %}
                 </div>
                 <div class="col s6">
                     <h5 class="center-align">Reached coverage distribution</h5>
@@ -237,6 +232,7 @@
                 </li>
             </ul>
 
+            {% if detailed_coverage_report %}
             <ul class="collapsible">
                 <li>
                     <div class="collapsible-header">
@@ -244,7 +240,6 @@
                     </div>
                     <div class="collapsible-body">
 
-                        {% if detailed_coverage_report%}
                         <div class="row">
                             <div class="col s6 offset-s3">
                                 <h5 class="center-align">Ranking by unique edges covered</h4>
@@ -267,12 +262,11 @@
                                     the fuzzer of the row.
                             </div>
                         </div> <!-- row -->
-                        {% endif %}
 
                     </div>
                 </li>
             </ul>
-            {% if detailed_coverage_report %}
+
             <ul class="collapsible">
                 <li>
                     <div class="collapsible-header">

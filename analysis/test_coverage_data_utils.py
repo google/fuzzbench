@@ -22,6 +22,7 @@ from analysis import coverage_data_utils
 
 
 def create_coverage_data():
+    """Utility function to create test data."""
     return {
         "afl libpng-1.2.56": [[0, 0, 1, 1], [0, 0, 2, 2], [0, 0, 3, 3]],
         "libfuzzer libpng-1.2.56": [[0, 0, 1, 1], [0, 0, 2, 3], [0, 0, 3, 3]]
@@ -29,6 +30,7 @@ def create_coverage_data():
 
 
 def test_get_unique_region_dict():
+    """Tests get_unique_region_dict() function."""
     coverage_dict = create_coverage_data()
     benchmark_coverage_dict = coverage_data_utils.get_benchmark_cov_dict(
         coverage_dict, 'libpng-1.2.56')
@@ -39,6 +41,7 @@ def test_get_unique_region_dict():
 
 
 def test_get_unique_region_cov_df():
+    """Tests get_unique_region_cov_df() function."""
     coverage_dict = create_coverage_data()
     benchmark_coverage_dict = coverage_data_utils.get_benchmark_cov_dict(
         coverage_dict, 'libpng-1.2.56')
@@ -61,6 +64,7 @@ def test_get_unique_region_cov_df():
 
 
 def test_get_benchmark_cov_dict():
+    """Tests that get_benchmark_cov_dict() returns correct dictionary."""
     coverage_dict = create_coverage_data()
     benchmark = 'libpng-1.2.56'
     benchmark_cov_dict = coverage_data_utils.get_benchmark_cov_dict(
@@ -73,6 +77,8 @@ def test_get_benchmark_cov_dict():
 
 
 def test_get_complementary_pairs_table():
+    """Tests that get_complementary_pairs_table() gives the 
+    correct dataframe."""
     coverage_dict = create_coverage_data()
     benchmark_coverage_dict = coverage_data_utils.get_benchmark_cov_dict(
         coverage_dict, 'libpng-1.2.56')

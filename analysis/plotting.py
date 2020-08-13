@@ -380,7 +380,7 @@ class Plotter:
 
     def write_unique_region_ranking_plot(self, unique_region_cov_df_combined,
                                          image_path):
-        """Write ranking plot for unique regions."""
+        """Writes ranking plot for unique regions."""
         self._write_plot_to_image(self.unique_region_ranking_plot,
                                   unique_region_cov_df_combined, image_path)
 
