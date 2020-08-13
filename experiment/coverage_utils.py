@@ -37,7 +37,8 @@ COV_DIFF_QUEUE_GET_TIMEOUT = 1
 def get_coverage_info_dir():
     """Returns the directory to store coverage information including
     coverage report and json summary file."""
-    return exp_path.path('coverage')
+    work_dir = exp_utils.get_work_dir()
+    return os.path.join(work_dir, 'coverage')
 
 
 def upload_coverage_info_to_bucket():
