@@ -292,8 +292,7 @@ class BenchmarkResults:
         unique_region_cov_df_combined = self._unique_region_cov_df.merge(
             self._benchmark_aggregated_coverage_df, on='fuzzer')
         self._plotter.write_unique_region_ranking_plot(
-            unique_region_cov_df_combined,
-            self._get_full_path(plot_filename))
+            unique_region_cov_df_combined, self._get_full_path(plot_filename))
         return plot_filename
 
     @property

@@ -385,7 +385,8 @@ class Plotter:
     def complementary_pairs_heatmap_plot(self,
                                          complementary_pairs_table,
                                          axes=None):
-        """Draws the heatmap to visualize how each fuzzer complements the other."""
+        """Draws the heatmap to visualize how each fuzzer
+        complements the other."""
         heatmap_args = {
             'annot': True,
             'fmt': 'd',

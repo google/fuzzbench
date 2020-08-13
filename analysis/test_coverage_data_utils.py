@@ -76,10 +76,10 @@ def test_get_complementary_pairs_table():
     coverage_dict = create_coverage_data()
     benchmark_coverage_dict = coverage_data_utils.get_benchmark_cov_dict(
         coverage_dict, 'libpng-1.2.56')
-    complementary_pairs_table = coverage_data_utils.get_complementary_pairs_table(
+    table = coverage_data_utils.get_complementary_pairs_table(
         benchmark_coverage_dict)
     fuzzers = ['afl', 'libfuzzer']
     expected_table = pd.DataFrame([[0, 1], [1, 0]],
                                   index=fuzzers,
                                   columns=fuzzers)
-    pd_test.assert_frame_equal(complementary_pairs_table, expected_table)
+    pd_test.assert_frame_equal(table, expected_table)

@@ -40,11 +40,6 @@ def render_report(experiment_results, template, in_progress,
     )
     template = environment.get_template(template)
 
-    filestore_path = experiment_utils.get_filestore_path()
-    prefix = "gs://"
-    filestore_name = filestore_path[len(prefix):]
-
     return template.render(experiment=experiment_results,
                            in_progress=in_progress,
-                           detailed_coverage_report=detailed_coverage_report,
-                           filestore_name=filestore_name)
+                           detailed_coverage_report=detailed_coverage_report)

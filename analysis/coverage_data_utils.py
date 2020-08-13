@@ -13,16 +13,14 @@
 # limitations under the License.
 """Utility functions for coverage data calculation."""
 
-import math
 import posixpath
 from collections import defaultdict
-import pandas as pd
 import tempfile
 import json
 import os
+import pandas as pd
 
 from common import filestore_utils
-from common import experiment_utils as exp_utils
 
 
 def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):

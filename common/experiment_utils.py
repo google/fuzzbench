@@ -49,17 +49,6 @@ def get_cloud_project():
     return os.environ['CLOUD_PROJECT']
 
 
-def get_filestore_path():
-    """Get the filestore path."""
-    # FIXME: Use |experiment_filestore_name| from experiment db.
-    # See #642: https://github.com/google/fuzzbench/issues/642
-    if 'EXPERIMENT_FILESTORE' in os.environ:
-        filestore_path = os.environ['EXPERIMENT_FILESTORE']
-    else:
-        filestore_path = 'gs://fuzzbench-data'
-    return filestore_path
-
-
 def get_experiment_filestore_path():
     """Returns experiment filestore path."""
     experiment_filestore = os.environ['EXPERIMENT_FILESTORE']

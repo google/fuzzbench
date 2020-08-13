@@ -16,7 +16,6 @@
 import os
 import multiprocessing
 import json
-import queue
 
 from common import experiment_utils as exp_utils
 from common import new_process
@@ -240,6 +239,7 @@ def store_covered_region(experiment: str, fuzzer: str, benchmark: str):
 
 
 def get_covered_region(experiment: str, fuzzer: str, benchmark: str):
+    """Gets covered regions for |fuzzer| on |benchmark|."""
     logger.debug('Measuring covered region: fuzzer: %s, benchmark: %s.', fuzzer,
                  benchmark)
     covered_regions = set()
