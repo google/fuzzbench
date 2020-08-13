@@ -53,6 +53,7 @@ class BenchmarkResults:
             self._benchmark_df, fuzzer_name)
 
     def get_filestore_name(self, fuzzer_name):
+        """Returns the filestore name of the |fuzzer_name|."""
         filestore_path = self._get_experiment_filestore_path(fuzzer_name)
         prefix = 'gs://'
         return filestore_path[len(prefix):]
