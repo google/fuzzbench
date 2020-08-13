@@ -93,7 +93,8 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         cov_report_directory = get_coverage_report_dir()
         self.report_dir = os.path.join(cov_report_directory, benchmark, fuzzer)
         coverage_info_dir = get_coverage_info_dir()
-        self.json_file_dir = os.path.join(coverage_info_dir, 'data', benchmark, fuzzer)
+        self.json_file_dir = os.path.join(coverage_info_dir, 'data', benchmark,
+                                          fuzzer)
         benchmark_fuzzer_dir = exp_utils.get_benchmark_fuzzer_dir(
             benchmark, fuzzer)
         work_dir = exp_utils.get_work_dir()
@@ -134,7 +135,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             logger.error('Coverage report generation failed for '
                          'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
                              fuzzer=self.fuzzer, benchmark=self.benchmark))
-    
+
     def generate_json_summary_file(self, covered_regions):
         """Stores the coverage data in a json file."""
         json_src_dir = self.json_file_dir
@@ -201,7 +202,7 @@ def store_coverage_data(experiment_config: dict):
     """Generates the specific coverage data and store in cloud bucket."""
     logger.info('Start storing coverage data')
     with multiprocessing.Pool() as pool:
-        store_all_covered_regions(experiment_config, pool)        
+        store_all_covered_regions(experiment_config, pool)
 
     logger.info('Finished storing coverage data')
 
@@ -215,10 +216,10 @@ def store_all_covered_regions(experiment_config: dict, pool):
     experiment = experiment_config['experiment']
 
     store_covered_region_args = [(experiment, fuzzer, benchmark)
-                               for fuzzer in fuzzers
-                               for benchmark in benchmarks]
+                                 for fuzzer in fuzzers
+                                 for benchmark in benchmarks]
 
-    result = pool.starmap(store_covered_region, store_covered_region_args)
+    pool.starmap(store_covered_region, store_covered_region_args)
     pool.close()
     pool.join()
 

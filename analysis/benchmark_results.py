@@ -15,13 +15,11 @@
 
 import os
 import functools
-import posixpath
 
 from analysis import data_utils
 from analysis import coverage_data_utils
 from analysis import stat_tests
 
-from experiment import coverage_utils
 
 # pylint: disable=too-many-public-methods, too-many-arguments
 class BenchmarkResults:
@@ -49,11 +47,11 @@ class BenchmarkResults:
 
     def _get_full_path(self, filename):
         return os.path.join(self._output_directory, filename)
-    
+
     def _get_experiment_filestore_path(self, fuzzer_name):
         return coverage_data_utils.get_fuzzer_filestore_path(
             self._benchmark_df, fuzzer_name)
-    
+
     def _get_filestore_name(self, fuzzer_name):
         filestore_path = self._get_experiment_filestore_path(fuzzer_name)
         prefix = 'gs://'
@@ -84,7 +82,7 @@ class BenchmarkResults:
         """Covered regions of each fuzzer on this benchmark."""
         return coverage_data_utils.get_benchmark_cov_dict(
             self._coverage_dict, self.name)
-    
+
     @property
     @functools.lru_cache()
     def _benchmark_aggregated_coverage_df(self):
@@ -294,7 +292,7 @@ class BenchmarkResults:
         unique_region_cov_df_combined = self._unique_region_cov_df.merge(
             self._benchmark_aggregated_coverage_df, on='fuzzer')
         self._plotter.write_unique_region_ranking_plot(
-            self._unique_region_cov_df_combined,
+            unique_region_cov_df_combined,
             self._get_full_path(plot_filename))
         return plot_filename
 
@@ -308,7 +306,8 @@ class BenchmarkResults:
     @property
     def complementary_pairs_plot(self):
         """Complementary pairs plot for each pair of fuzzers."""
-        plot_filename = self._prefix_with_benchmark('complementary_pairs_plot.svg')
+        plot_filename = self._prefix_with_benchmark(
+            'complementary_pairs_plot.svg')
         self._plotter.write_complementary_pairs_heatmap_plot(
             self.complementary_pairs_table, self._get_full_path(plot_filename))
         return plot_filename

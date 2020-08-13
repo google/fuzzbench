@@ -337,12 +337,14 @@ class Plotter:
         finally:
             plt.close(fig)
 
-    def unique_region_ranking_plot(self, unique_region_cov_df_combined, axes=None):
+    def unique_region_ranking_plot(self,
+                                   unique_region_cov_df_combined,
+                                   axes=None):
         """Draws unique_region_ranking plot. The fuzzer labels will be in
         the order of their coverage."""
 
-        fuzzer_order = unique_region_cov_df_combined.sort_values(by='unique_regions_covered',
-                                                      ascending=False).fuzzer
+        fuzzer_order = unique_region_cov_df_combined.sort_values(
+            by='unique_regions_covered', ascending=False).fuzzer
 
         axes = sns.barplot(y='unique_regions_covered',
                            x='fuzzer',
@@ -359,13 +361,13 @@ class Plotter:
                 va='center',
                 xytext=(0, 10),
                 textcoords='offset points')
-        
+
         sns.barplot(y='aggregated_edges_covered',
                     x='fuzzer',
-                    data=benchmark_snapshot_df_combined,
+                    data=unique_region_cov_df_combined,
                     order=fuzzer_order,
                     ax=axes)
-        
+
         axes.set(ylabel='Reached unique edges coverage')
         axes.set(xlabel='Fuzzer (highest coverage on the left)')
         axes.set_xticklabels(axes.get_xticklabels(),
@@ -374,12 +376,15 @@ class Plotter:
 
         sns.despine(ax=axes, trim=True)
 
-    def write_unique_region_ranking_plot(self, unique_region_cov_df_combined, image_path):
+    def write_unique_region_ranking_plot(self, unique_region_cov_df_combined,
+                                         image_path):
         """Write ranking plot for unique regions."""
         self._write_plot_to_image(self.unique_region_ranking_plot,
                                   unique_region_cov_df_combined, image_path)
 
-    def complementary_pairs_heatmap_plot(self, complementary_pairs_table, axes=None):
+    def complementary_pairs_heatmap_plot(self,
+                                         complementary_pairs_table,
+                                         axes=None):
         """Draws the heatmap to visualize how each fuzzer complements the other."""
         heatmap_args = {
             'annot': True,
@@ -389,7 +394,8 @@ class Plotter:
         }
         sns.heatmap(complementary_pairs_table, ax=axes, **heatmap_args)
 
-    def write_complementary_pairs_heatmap_plot(self, complementary_pairs_table, image_path):
+    def write_complementary_pairs_heatmap_plot(self, complementary_pairs_table,
+                                               image_path):
         """Writes complementary pairs heatmap plot."""
         self._write_plot_to_image(self.complementary_pairs_heatmap_plot,
                                   complementary_pairs_table, image_path)

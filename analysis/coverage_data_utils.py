@@ -44,7 +44,7 @@ def get_covered_regions_dict(experiment_df):
     covered_regions_dict = {}
     benchmarks = experiment_df.benchmark.unique()
     for benchmark in benchmarks:
-        benchmark_df = experiment_df[experiment_df.benchmark==benchmark]
+        benchmark_df = experiment_df[experiment_df.benchmark == benchmark]
         fuzzers = benchmark_df.fuzzer.unique()
         for fuzzer in fuzzers:
             fuzzer_covered_regions = get_fuzzer_covered_regions(
@@ -60,7 +60,8 @@ def get_fuzzer_covered_regions(benchmark_df, benchmark, fuzzer):
     with tempfile.TemporaryDirectory() as tmpdirname:
         dst_file = os.path.join(tmpdirname, 'tmp.json')
         src_filestore_path = get_fuzzer_filestore_path(benchmark_df, fuzzer)
-        src_file = posixpath.join(src_filestore_path, 'coverage', 'data', benchmark, fuzzer, 'covered_regions.json')
+        src_file = posixpath.join(src_filestore_path, 'coverage', 'data',
+                                  benchmark, fuzzer, 'covered_regions.json')
         filestore_utils.cp(src_file, dst_file)
         with open(dst_file) as json_file:
             return json.load(json_file)
@@ -112,11 +113,12 @@ def get_benchmark_cov_dict(coverage_dict, benchmark):
 def get_benchmark_aggregated_cov_df(benchmark_coverage_dict):
     """Returns a dataframe where each row represents a fuzzer and its
     aggregated coverage number."""
-    dict_to_transform = {'fuzzer':[], 'aggregated_edges_covered': []}
+    dict_to_transform = {'fuzzer': [], 'aggregated_edges_covered': []}
     for fuzzer in benchmark_coverage_dict:
         aggregated_edges_covered = len(benchmark_coverage_dict[fuzzer])
         dict_to_transform['fuzzer'].append(fuzzer)
-        dict_to_transform['aggregated_edges_covered'].append(aggregated_edges_covered)
+        dict_to_transform['aggregated_edges_covered'].append(
+            aggregated_edges_covered)
     return pd.DataFrame(dict_to_transform)
 
 
@@ -140,7 +142,9 @@ def get_complementary_pairs_table(benchmark_coverage_dict):
             row.append(complementary_pairs_value)
         complementary_pairs_values.append(row)
 
-    return pd.DataFrame(complementary_pairs_values, index=fuzzers, columns=fuzzers)
+    return pd.DataFrame(complementary_pairs_values,
+                        index=fuzzers,
+                        columns=fuzzers)
 
 
 def get_unique_covered_percentage(fuzzer_row_covered_regions,

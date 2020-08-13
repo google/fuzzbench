@@ -76,7 +76,7 @@ def measure_main(experiment_config):
         coverage_utils.upload_coverage_info_to_bucket()
     except Exception:
         logger.error('Storing data error.')
-        
+
     logger.info('Finished measuring.')
 
 
