@@ -103,7 +103,6 @@ def test_record_stats(trial_runner, fuzzer_module):
     trial_runner.cycle = cycle
 
     stats_file = os.path.join(trial_runner.results_dir, 'stats-%d.json' % cycle)
-    import pdb; pdb.set_trace()
     trial_runner.record_stats()
     with open(stats_file) as file_handle:
         stats_file_contents = file_handle.read()
