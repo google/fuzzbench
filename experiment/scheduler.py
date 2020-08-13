@@ -231,8 +231,6 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         self.preempted_trials = {}
         self.preemptible_starts_futile = False
 
-        self.base_target_link = gce.get_base_target_link(experiment_config)
-
         # Filter operations happening before the experiment started.
         self.last_preemptible_query = (db_utils.query(models.Experiment).filter(
             models.Experiment.name == experiment_config['experiment']).one(
@@ -428,10 +426,10 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         # Update this now when we know that we have succeded processing the
         # query. It's far worse if we update the query too early than if we
         # don't update the query at this point (which will only result in
-        # redundant work.
+        # redundant work).
         self.last_preemptible_query = query_time
 
-        # Return all preempted instances, those we knew from before hand and
+        # Return all preempted instances, those we knew from beforehand and
         # those we discovered in the query.
         return trials
 
@@ -441,17 +439,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
     def _query_preempted_instances(self):
         project = self.experiment_config['cloud_project']
         zone = self.experiment_config['cloud_compute_zone']
-        operations = gce.filter_by_end_time(self.last_preemptible_query,
-                                            gce.get_operations(project, zone))
-        instances = []
-        for operation in gce.get_preempted_operations(operations):
-            if operation is None:
-                logs.error('Operation is None.')
-                continue
-            instance = gce.get_instance_from_preempted_operation(
-                operation, self.base_target_link)
-            instances.append(instance)
-        return instances
+        return list(gce.get_terminated_instances(project, zone))
 
     def handle_preempted_trials(self):
         """Handle preempted trials by marking them as preempted and creating
