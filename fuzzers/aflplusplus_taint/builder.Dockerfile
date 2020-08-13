@@ -24,7 +24,7 @@ RUN apt-get update && \
 # Get afl++ taint
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && cd /afl && git checkout taint && \
-    git checkout 5f47ef406aa5af886a62a15e7ebfbedac5eb3825 && \
+    git checkout 4c0212a054069b2d1306e2b1b09ac6f4209054e6 && \
     unset CFLAGS && unset CXXFLAGS && \
     AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
     CC=clang make -C llvm_mode  && \
