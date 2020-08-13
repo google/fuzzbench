@@ -233,27 +233,37 @@
                             </div>
                         </div> <!-- row -->
 
+                    </div>
+                </li>
+            </ul>
+
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Differential matrix
+                    </div>
+                    <div class="collapsible-body">
+
                         {% if detailed_coverage_report%}
                         <div class="row">
                             <div class="col s6 offset-s3">
-                                <h5 class="center-align">Ranking by rare region covered</h4>
+                                <h5 class="center-align">Ranking by unique edges covered</h4>
                                     <img class="responsive-img materialboxed"
-                                         src="{{ benchmark.rare_region_ranking_plot }}">
-                                    The table shows the coverage rank of each fuzzer
-                                    on the rare regions for this benchmark. The rare
-                                    region is defined as only being hit by less than
-                                    threshold(default=20%) of all fuzzers.
+                                         src="{{ benchmark.unique_region_ranking_plot }}">
+                                    The table shows the unique edges coverage rank of each fuzzer
+                                    on this benchmark. Unique edges are edges only covered by one
+                                    certain fuzzer.
                             </div>
                         </div> <!-- row -->
 
                         <div class="row">
                             <div class="col s6 offset-s3">
-                                <h5 class="center-align">Correlation table</h4>
+                                <h5 class="center-align">Pair comparison table</h4>
                                     <img class="responsive-img materialboxed"
-                                         src="{{ benchmark.correlation_plot }}">
-                                    The correlation table is a square matrix where each row and column
+                                         src="{{ benchmark.complementary_pairs_plot }}">
+                                    This table is a square matrix where each row and column
                                     represents a fuzzer, and each cell contains a number showing the
-                                    percentage of regions covered by the fuzzer of the column but not by
+                                    number of edges covered by the fuzzer of the column but not by
                                     the fuzzer of the row.
                             </div>
                         </div> <!-- row -->
@@ -262,7 +272,6 @@
                     </div>
                 </li>
             </ul>
-
             {% if detailed_coverage_report %}
             <ul class="collapsible">
                 <li>
@@ -273,7 +282,7 @@
                         <div class="row">
                             {% for fuzzer in benchmark._fuzzer_names %}
                             <div class="col">
-                                <a class="waves-effect waves-light btn" href="https://storage.googleapis.com/{{ benchmark._get_filestore_name(fuzzer) }}/reports/coverage/{{ benchmark.name }}/{{ fuzzer }}/index.html">{{ fuzzer }}</a>
+                                <a class="waves-effect waves-light btn" href="https://storage.googleapis.com/{{ benchmark._get_filestore_name(fuzzer) }}/coverage/reports/{{ benchmark.name }}/{{ fuzzer }}/index.html">{{ fuzzer }}</a>
                             </div>
                             {% endfor %}
                         </div>

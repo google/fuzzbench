@@ -257,14 +257,6 @@ class Plotter:
                            palette=self._fuzzer_colors,
                            ax=axes)
 
-        if 'rare_regions_covered' in benchmark_snapshot_df:
-            sns.barplot(y='rare_regions_covered',
-                        x='fuzzer',
-                        data=benchmark_snapshot_df,
-                        order=fuzzer_order,
-                        color='#302928',
-                        ax=axes)
-
         axes.set_title(_formatted_title(benchmark_snapshot_df))
         axes.set(ylabel='Reached edge coverage')
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
@@ -345,25 +337,19 @@ class Plotter:
         finally:
             plt.close(fig)
 
-    def rare_region_ranking_plot(self, rare_region_cov_df, axes=None):
-        """Draws rare_region_ranking plot. The fuzzer labels will be in
+    def unique_region_ranking_plot(self, unique_region_cov_df_combined, axes=None):
+        """Draws unique_region_ranking plot. The fuzzer labels will be in
         the order of their coverage."""
 
-        fuzzer_order = rare_region_cov_df.sort_values(by='rare_regions_covered',
+        fuzzer_order = unique_region_cov_df_combined.sort_values(by='unique_regions_covered',
                                                       ascending=False).fuzzer
 
-        axes = sns.barplot(y='rare_regions_covered',
+        axes = sns.barplot(y='unique_regions_covered',
                            x='fuzzer',
-                           data=rare_region_cov_df,
+                           data=unique_region_cov_df_combined,
                            order=fuzzer_order,
                            palette=self._fuzzer_colors,
                            ax=axes)
-
-        axes.set(ylabel='Reached rare region coverage')
-        axes.set(xlabel='Fuzzer (highest coverage on the left)')
-        axes.set_xticklabels(axes.get_xticklabels(),
-                             rotation=_DEFAULT_LABEL_ROTATION,
-                             horizontalalignment='right')
 
         for patch in axes.patches:
             axes.annotate(
@@ -373,25 +359,37 @@ class Plotter:
                 va='center',
                 xytext=(0, 10),
                 textcoords='offset points')
+        
+        sns.barplot(y='aggregated_edges_covered',
+                    x='fuzzer',
+                    data=benchmark_snapshot_df_combined,
+                    order=fuzzer_order,
+                    ax=axes)
+        
+        axes.set(ylabel='Reached unique edges coverage')
+        axes.set(xlabel='Fuzzer (highest coverage on the left)')
+        axes.set_xticklabels(axes.get_xticklabels(),
+                             rotation=_DEFAULT_LABEL_ROTATION,
+                             horizontalalignment='right')
 
         sns.despine(ax=axes, trim=True)
 
-    def write_rare_region_ranking_plot(self, rare_region_cov_df, image_path):
-        """Write ranking plot for rare regions."""
-        self._write_plot_to_image(self.rare_region_ranking_plot,
-                                  rare_region_cov_df, image_path)
+    def write_unique_region_ranking_plot(self, unique_region_cov_df_combined, image_path):
+        """Write ranking plot for unique regions."""
+        self._write_plot_to_image(self.unique_region_ranking_plot,
+                                  unique_region_cov_df_combined, image_path)
 
-    def correlation_heatmap_plot(self, correlation_table, axes=None):
-        """Draws the heatmap to visualize correlation between each fuzzers."""
+    def complementary_pairs_heatmap_plot(self, complementary_pairs_table, axes=None):
+        """Draws the heatmap to visualize how each fuzzer complements the other."""
         heatmap_args = {
             'annot': True,
             'fmt': 'd',
             'cmap': 'Blues',
             'linewidths': 0.5
         }
-        sns.heatmap(correlation_table, ax=axes, **heatmap_args)
+        sns.heatmap(complementary_pairs_table, ax=axes, **heatmap_args)
 
-    def write_correlation_heatmap_plot(self, correlation_table, image_path):
-        """Writes correlation heatmap plot."""
-        self._write_plot_to_image(self.correlation_heatmap_plot,
-                                  correlation_table, image_path)
+    def write_complementary_pairs_heatmap_plot(self, complementary_pairs_table, image_path):
+        """Writes complementary pairs heatmap plot."""
+        self._write_plot_to_image(self.complementary_pairs_heatmap_plot,
+                                  complementary_pairs_table, image_path)

@@ -29,18 +29,22 @@ from common import filesystem
 from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
-from experiment import reporter
 
 logger = logs.Logger('coverage_utils')  # pylint: disable=invalid-name
 
 COV_DIFF_QUEUE_GET_TIMEOUT = 1
 
 
+def get_coverage_info_dir():
+    """Returns the directory to store coverage information including
+    coverage report and json summary file."""
+    return exp_path.path('coverage')
+
+
 def upload_coverage_info_to_bucket():
     """Copies the coverage reports and json summary files to gcs bucket."""
-    report_dir = reporter.get_reports_dir()
-    src_dir = get_coverage_report_dir()
-    dst_dir = exp_path.filestore(report_dir)
+    src_dir = get_coverage_info_dir()
+    dst_dir = exp_utils.get_experiment_filestore_path()
     filestore_utils.cp(src_dir, dst_dir, recursive=True, parallel=True)
 
 
@@ -88,8 +92,8 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         self.trial_ids = get_trial_ids(experiment, fuzzer, benchmark)
         cov_report_directory = get_coverage_report_dir()
         self.report_dir = os.path.join(cov_report_directory, benchmark, fuzzer)
-        exp_report_dir = reporter.get_reports_dir()
-        self.json_file_dir = os.path.join(exp_report_dir, 'data', benchmark, fuzzer)
+        coverage_info_dir = get_coverage_info_dir()
+        self.json_file_dir = os.path.join(coverage_info_dir, 'data', benchmark, fuzzer)
         benchmark_fuzzer_dir = exp_utils.get_benchmark_fuzzer_dir(
             benchmark, fuzzer)
         work_dir = exp_utils.get_work_dir()
@@ -152,8 +156,8 @@ def get_profdata_file_name(trial_id):
 
 def get_coverage_report_dir():
     """Returns the directory to store all the coverage reports."""
-    report_dir = reporter.get_reports_dir()
-    return os.path.join(report_dir, 'coverage')
+    coverage_info_dir = get_coverage_info_dir()
+    return os.path.join(coverage_info_dir, 'reports')
 
 
 def get_coverage_binary(benchmark: str) -> str:

@@ -84,20 +84,27 @@ class BenchmarkResults:
         """Covered regions of each fuzzer on this benchmark."""
         return coverage_data_utils.get_benchmark_cov_dict(
             self._coverage_dict, self.name)
-
+    
     @property
     @functools.lru_cache()
-    def _rare_region_dict(self):
-        """Rare regions with the fuzzers that cover it."""
-        return coverage_data_utils.get_rare_region_dict(
+    def _benchmark_aggregated_coverage_df(self):
+        """Aggregated covered regions of each fuzzer on this benchmark."""
+        return coverage_data_utils.get_benchmark_aggregated_cov_df(
             self._benchmark_coverage_dict)
 
     @property
     @functools.lru_cache()
-    def _rare_region_cov_df(self):
-        """Fuzzers with the number of covered rare regions."""
-        return coverage_data_utils.get_rare_region_cov_df(
-            self._rare_region_dict, self._fuzzer_names)
+    def _unique_region_dict(self):
+        """Unique regions with the fuzzers that cover it."""
+        return coverage_data_utils.get_unique_region_dict(
+            self._benchmark_coverage_dict)
+
+    @property
+    @functools.lru_cache()
+    def _unique_region_cov_df(self):
+        """Fuzzers with the number of covered unique regions."""
+        return coverage_data_utils.get_unique_region_cov_df(
+            self._unique_region_dict, self._fuzzer_names)
 
     @property
     def fuzzers_with_not_enough_samples(self):
@@ -266,9 +273,7 @@ class BenchmarkResults:
     def ranking_plot_with_diff(self):
         """Ranking plot."""
         plot_filename = self._prefix_with_benchmark('ranking.svg')
-        combined_df = self._benchmark_snapshot_df.merge(
-            self._rare_region_cov_df, on='fuzzer')
-        self._plotter.write_ranking_plot(combined_df,
+        self._plotter.write_ranking_plot(self._benchmark_snapshot_df,
                                          self._get_full_path(plot_filename))
         return plot_filename
 
@@ -283,24 +288,27 @@ class BenchmarkResults:
         return plot_filename
 
     @property
-    def rare_region_ranking_plot(self):
-        """Ranking plot for rare region coverage."""
-        plot_filename = self._prefix_with_benchmark('ranking_rare_region.svg')
-        self._plotter.write_rare_region_ranking_plot(
-            self._rare_region_cov_df, self._get_full_path(plot_filename))
+    def unique_region_ranking_plot(self):
+        """Ranking plot for unique region coverage."""
+        plot_filename = self._prefix_with_benchmark('ranking_unique_region.svg')
+        unique_region_cov_df_combined = self._unique_region_cov_df.merge(
+            self._benchmark_aggregated_coverage_df, on='fuzzer')
+        self._plotter.write_unique_region_ranking_plot(
+            self._unique_region_cov_df_combined,
+            self._get_full_path(plot_filename))
         return plot_filename
 
     @property
     @functools.lru_cache()
-    def correlation_table(self):
-        """Correlation table for each pair of fuzzers."""
-        return coverage_data_utils.get_correlation_table(
+    def complementary_pairs_table(self):
+        """Complementary pairs table for each pair of fuzzers."""
+        return coverage_data_utils.get_complementary_pairs_table(
             self._benchmark_coverage_dict)
 
     @property
-    def correlation_plot(self):
-        """Correlation plot for each pair of fuzzers."""
-        plot_filename = self._prefix_with_benchmark('correlation_plot.svg')
-        self._plotter.write_correlation_heatmap_plot(
-            self.correlation_table, self._get_full_path(plot_filename))
+    def complementary_pairs_plot(self):
+        """Complementary pairs plot for each pair of fuzzers."""
+        plot_filename = self._prefix_with_benchmark('complementary_pairs_plot.svg')
+        self._plotter.write_complementary_pairs_heatmap_plot(
+            self.complementary_pairs_table, self._get_full_path(plot_filename))
         return plot_filename

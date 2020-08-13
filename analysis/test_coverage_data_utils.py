@@ -28,36 +28,36 @@ def create_coverage_data():
     }
 
 
-def test_get_rare_region_dict():
+def test_get_unique_region_dict():
     coverage_dict = create_coverage_data()
     benchmark_coverage_dict = coverage_data_utils.get_benchmark_cov_dict(
         coverage_dict, 'libpng-1.2.56')
-    rare_region_dict = coverage_data_utils.get_rare_region_dict(
+    unique_region_dict = coverage_data_utils.get_unique_region_dict(
         benchmark_coverage_dict)
     expected_dict = {(0, 0, 2, 2): ['afl'], (0, 0, 2, 3): ['libfuzzer']}
-    assert expected_dict == rare_region_dict
+    assert expected_dict == unique_region_dict
 
 
-def test_get_rare_region_cov_df():
+def test_get_unique_region_cov_df():
     coverage_dict = create_coverage_data()
     benchmark_coverage_dict = coverage_data_utils.get_benchmark_cov_dict(
         coverage_dict, 'libpng-1.2.56')
-    rare_region_dict = coverage_data_utils.get_rare_region_dict(
+    unique_region_dict = coverage_data_utils.get_unique_region_dict(
         benchmark_coverage_dict)
     fuzzer_names = ['afl', 'libfuzzer']
-    rare_region_df = coverage_data_utils.get_rare_region_cov_df(
-        rare_region_dict, fuzzer_names)
-    rare_region_df = rare_region_df.sort_values(by=['fuzzer']).reset_index(
+    unique_region_df = coverage_data_utils.get_unique_region_cov_df(
+        unique_region_dict, fuzzer_names)
+    unique_region_df = unique_region_df.sort_values(by=['fuzzer']).reset_index(
         drop=True)
     expected_df = pd.DataFrame([{
         'fuzzer': 'afl',
-        'rare_regions_covered': 1
+        'unique_regions_covered': 1
     }, {
         'fuzzer': 'libfuzzer',
-        'rare_regions_covered': 1
+        'unique_regions_covered': 1
     }])
-    print(expected_df, rare_region_df)
-    assert rare_region_df.equals(expected_df)
+    print(expected_df, unique_region_df)
+    assert unique_region_df.equals(expected_df)
 
 
 def test_get_benchmark_cov_dict():
@@ -72,14 +72,14 @@ def test_get_benchmark_cov_dict():
     assert expected_cov_dict == benchmark_cov_dict
 
 
-def test_get_correlation_table():
+def test_get_complementary_pairs_table():
     coverage_dict = create_coverage_data()
     benchmark_coverage_dict = coverage_data_utils.get_benchmark_cov_dict(
         coverage_dict, 'libpng-1.2.56')
-    correlation_table = coverage_data_utils.get_correlation_table(
+    complementary_pairs_table = coverage_data_utils.get_complementary_pairs_table(
         benchmark_coverage_dict)
     fuzzers = ['afl', 'libfuzzer']
     expected_table = pd.DataFrame([[0, 1], [1, 0]],
                                   index=fuzzers,
                                   columns=fuzzers)
-    pd_test.assert_frame_equal(correlation_table, expected_table)
+    pd_test.assert_frame_equal(complementary_pairs_table, expected_table)
