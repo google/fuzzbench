@@ -121,7 +121,7 @@ steps:
     '${_REPO}/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}',
     '/bin/bash',
     '-c',
-    'mkdir /out/src; cp -rL --parent /src /work /out/src;'
+    'mkdir /out/src; cp -rL --parent /src /work /out/src;',
     'cd /out; tar -czvf /host-out/coverage-build-${_BENCHMARK}.tar.gz *'
   ]
 
