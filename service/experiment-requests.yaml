@@ -30,6 +30,7 @@
     - honggfuzz
     - weizz
     - aflplusplus_taint
+    - aflplusplus_laf
 
 - experiment: 2020-08-10
   fuzzers:
