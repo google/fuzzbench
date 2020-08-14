@@ -46,6 +46,9 @@ jobs:
           - aflplusplus_same3
           - aflplusplus_taint
           - aflplusplus_laf
+          - aflplusplus_lto
+          - aflplusplus_lto_laf
+          - aflplusplus_lto_cmplog
 
         benchmark_type:
           - oss-fuzz

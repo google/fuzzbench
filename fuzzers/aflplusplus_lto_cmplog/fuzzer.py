@@ -32,38 +32,14 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     benchmark_name = os.environ['BENCHMARK']
 
     if benchmark_name == 'curl_curl_fuzzer_http':
-        aflplusplus_fuzzer.build("tracepc", "cmplog")
-    elif benchmark_name == 'harfbuzz-1.3.2':
-        aflplusplus_fuzzer.build("lto", "laf")
-    elif benchmark_name == 'lcms-2017-03-21':
         aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
                                  "cmplog")
-    elif benchmark_name == 'libjpeg-turbo-07-2017':
-        aflplusplus_fuzzer.build("lto", "laf")
-    elif benchmark_name == 'libpcap_fuzz_both':
-        aflplusplus_fuzzer.build("lto", "laf")
-    elif benchmark_name == 'libpng-1.2.56':
-        aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle")
-    elif benchmark_name == 'libxml2-v2.9.2':
-        aflplusplus_fuzzer.build("lto")
-    elif benchmark_name == 'mbedtls_fuzz_dtlsclient':
-        aflplusplus_fuzzer.build("lto", "laf")
     elif benchmark_name == 'openssl_x509':
-        aflplusplus_fuzzer.build("tracepc", "laf")
-    elif benchmark_name == 'openthread-2019-12-23':
         aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
                                  "cmplog")
     elif benchmark_name == 'php_php-fuzz-parser':
         aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
                                  "cmplog")
-    elif benchmark_name == 'vorbis-2017-12-11':
-        aflplusplus_fuzzer.build("lto", "laf")
-    elif benchmark_name == 'woff2-2016-05-06':
-        aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
-                                 "laf")
-    elif benchmark_name == 'zlib_zlib_uncompress_fuzzer':
-        aflplusplus_fuzzer.build("classic", "ngram6", "nozero", "skipsingle",
-                                 "laf")
     else:
         aflplusplus_fuzzer.build("lto", "cmplog")
 
@@ -73,7 +49,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    run_options = []
+    run_options = ['-s', '1234567890']
 
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,

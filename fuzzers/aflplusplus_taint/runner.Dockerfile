@@ -17,6 +17,9 @@ FROM gcr.io/fuzzbench/base-image
 # The extra packages are for debugging, desperately needed :(
 RUN apt-get install -y psmisc gdb joe vim bsdmainutils
 
-ENV LD_LIBRARY_PATH /out
+# This makes interactive docker runs painless:
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
+ENV AFL_MAP_SIZE=900000
 ENV PATH="$PATH:/out"
-ENV AFL_MAP_SIZE=524288
+ENV AFL_SKIP_CPUFREQ=1
+ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
