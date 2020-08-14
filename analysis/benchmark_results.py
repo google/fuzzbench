@@ -58,7 +58,7 @@ class BenchmarkResults:
         gcs_prefix = 'gs://'
         gcs_http_prefix = 'https://storage.googleapis.com/'
         if filestore_path.startswith(gcs_prefix):
-            filestore_path.replace(gcs_prefix, gcs_http_prefix)
+            filestore_path = filestore_path.replace(gcs_prefix, gcs_http_prefix)
         return filestore_path
 
     @property
@@ -302,7 +302,7 @@ class BenchmarkResults:
     def pairwise_unique_coverage_plot(self):
         """Pairwise unique coverage plot for each pair of fuzzers."""
         plot_filename = self._prefix_with_benchmark(
-            'cpairwise_unique_coverage_plot.svg')
+            'pairwise_unique_coverage_plot.svg')
         self._plotter.write_pairwise_unique_coverage_heatmap_plot(
             self.pairwise_unique_coverage_table,
             self._get_full_path(plot_filename))

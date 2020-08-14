@@ -13,11 +13,11 @@
 # limitations under the License.
 """Utility functions for coverage data calculation."""
 
-import posixpath
-from collections import defaultdict
-import tempfile
+import collections
 import json
 import os
+import posixpath
+import tempfile
 import pandas as pd
 
 from common import filestore_utils
@@ -55,8 +55,8 @@ def get_covered_regions_dict(experiment_df):
 def get_fuzzer_covered_regions(benchmark_df, benchmark, fuzzer):
     """Gets the covered regions for |fuzzer| in |benchmark_df| from the json
     file in the bucket."""
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        dst_file = os.path.join(tmpdirname, 'tmp.json')
+    with tempfile.TemporaryDirectory() as temp_dir:
+        dst_file = os.path.join(temp_dir, 'tmp.json')
         src_filestore_path = get_fuzzer_filestore_path(benchmark_df, fuzzer)
         src_file = posixpath.join(src_filestore_path, 'coverage', 'data',
                                   benchmark, fuzzer, 'covered_regions.json')
@@ -68,7 +68,7 @@ def get_fuzzer_covered_regions(benchmark_df, benchmark, fuzzer):
 def get_unique_region_dict(benchmark_coverage_dict):
     """Returns a dictionary containing the covering fuzzers for each
     unique region, where the |threshold| defines which regions are unique."""
-    region_dict = defaultdict(list)
+    region_dict = collections.defaultdict(list)
     unique_region_dict = {}
     threshold_count = 1
     for fuzzer in benchmark_coverage_dict:
@@ -83,12 +83,13 @@ def get_unique_region_dict(benchmark_coverage_dict):
 def get_unique_region_cov_df(unique_region_dict, fuzzer_names):
     """Returns a DataFrame where the two columns are fuzzers and the number
     of unique regions covered."""
-    fuzzers = {fuzzer_name: 0 for fuzzer_name in fuzzer_names}
+    fuzzers = collections.defaultdict(int)
     for region in unique_region_dict:
         for fuzzer in unique_region_dict[region]:
             fuzzers[fuzzer] += 1
     dict_to_transform = {'fuzzer': [], 'unique_regions_covered': []}
-    for fuzzer, covered_num in fuzzers.items():
+    for fuzzer in fuzzer_names:
+        covered_num = fuzzers[fuzzer]
         dict_to_transform['fuzzer'].append(fuzzer)
         dict_to_transform['unique_regions_covered'].append(covered_num)
     return pd.DataFrame(dict_to_transform)

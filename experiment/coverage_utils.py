@@ -58,8 +58,6 @@ def generate_coverage_reports(experiment_config: dict):
                                          for benchmark in benchmarks
                                          for fuzzer in fuzzers]
         pool.starmap(generate_coverage_report, generate_coverage_report_args)
-        pool.close()
-        pool.join()
     logger.info('Finished generating coverage report.')
 
 
@@ -219,9 +217,6 @@ def store_all_covered_regions(experiment_config: dict, pool):
                                  for benchmark in benchmarks]
 
     pool.starmap(store_covered_region, store_covered_region_args)
-    pool.close()
-    pool.join()
-
     logger.info('Done storing all coverage data.')
 
 

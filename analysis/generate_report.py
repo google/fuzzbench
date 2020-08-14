@@ -140,7 +140,7 @@ def generate_report(experiment_names,
                     end_time=None,
                     merge_with_clobber=False,
                     merge_with_clobber_nonprivate=False,
-                    coverage_report=True):
+                    coverage_report=False):
     """Generate report helper."""
     if merge_with_clobber_nonprivate:
         experiment_names = (
@@ -161,7 +161,7 @@ def generate_report(experiment_names,
 
     data_utils.validate_data(experiment_df)
 
-    # Loads the json summary file.
+    # Load the json summary file.
     coverage_dict = {}
     if coverage_report:
         coverage_dict = coverage_data_utils.get_covered_regions_dict(

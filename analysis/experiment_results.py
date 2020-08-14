@@ -21,7 +21,7 @@ from analysis import data_utils
 from analysis import stat_tests
 
 
-class ExperimentResults:
+class ExperimentResults:  # pylint: disable=too-many-instance-attributes
     """Provides the main interface for getting various analysis results and
     plots about an experiment, represented by |experiment_df|.
 
@@ -31,13 +31,13 @@ class ExperimentResults:
     template, only the properties needed for the given report will be computed.
     """
 
-    # pylint: disable=too-many-arguments, too-many-instance-attributes
-    def __init__(self,
-                 experiment_df,
-                 coverage_dict,
-                 output_directory,
-                 plotter,
-                 experiment_name=None):
+    def __init__(  # pylint: disable=too-many-arguments
+            self,
+            experiment_df,
+            coverage_dict,
+            output_directory,
+            plotter,
+            experiment_name=None):
         if experiment_name:
             self.name = experiment_name
         else:

@@ -11,8 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions andsss
 # limitations under the License.
-
-# pylint: disable=missing-function-docstring
 """Tests for coverage_data_utils.py"""
 
 import pandas as pd
