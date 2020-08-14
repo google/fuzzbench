@@ -151,8 +151,8 @@ def get_unique_covered_percentage(fuzzer_row_covered_regions,
     """Returns the number of regions covered by the fuzzer of the column
     but not by the fuzzer of the row."""
 
-    unique_region_num = 0
+    unique_region_count = 0
     for region in fuzzer_col_covered_regions:
         if region not in fuzzer_row_covered_regions:
-            unique_region_num += 1
-    return unique_region_num
+            unique_region_count += 1
+    return unique_region_count

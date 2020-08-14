@@ -79,11 +79,10 @@ def get_arg_parser():
                         help='Names of the fuzzers to include in the report.')
     parser.add_argument(
         '-cov',
-        '--detailed-coverage-report',
+        '--coverage-report',
         action='store_true',
         default=True,
-        help='If set, clang coverage reports and differential matrix are shown.'
-    )
+        help='If set, clang coverage reports and differential plots are shown.')
 
     # It doesn't make sense to clobber and label by experiment, since nothing
     # can get clobbered like this.
@@ -141,7 +140,7 @@ def generate_report(experiment_names,
                     end_time=None,
                     merge_with_clobber=False,
                     merge_with_clobber_nonprivate=False,
-                    detailed_coverage_report=False):
+                    coverage_report=True):
     """Generate report helper."""
     if merge_with_clobber_nonprivate:
         experiment_names = (
@@ -164,7 +163,7 @@ def generate_report(experiment_names,
 
     # Loads the json summary file.
     coverage_dict = {}
-    if detailed_coverage_report:
+    if coverage_report:
         coverage_dict = coverage_data_utils.get_covered_regions_dict(
             experiment_df)
 
@@ -195,8 +194,7 @@ def generate_report(experiment_names,
 
     template = report_type + '.html'
     detailed_report = rendering.render_report(experiment_ctx, template,
-                                              in_progress,
-                                              detailed_coverage_report)
+                                              in_progress, coverage_report)
 
     filesystem.write(os.path.join(report_directory, 'index.html'),
                      detailed_report)
@@ -221,7 +219,7 @@ def main():
                     from_cached_data=args.from_cached_data,
                     end_time=args.end_time,
                     merge_with_clobber=args.merge_with_clobber,
-                    detailed_coverage_report=args.detailed_coverage_report)
+                    coverage_report=args.coverage_report)
 
 
 if __name__ == '__main__':

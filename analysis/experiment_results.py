@@ -21,7 +21,6 @@ from analysis import data_utils
 from analysis import stat_tests
 
 
-# pylint: disable=too-many-arguments, too-many-instance-attributes
 class ExperimentResults:
     """Provides the main interface for getting various analysis results and
     plots about an experiment, represented by |experiment_df|.
@@ -32,6 +31,7 @@ class ExperimentResults:
     template, only the properties needed for the given report will be computed.
     """
 
+    # pylint: disable=too-many-arguments, too-many-instance-attributes
     def __init__(self,
                  experiment_df,
                  coverage_dict,
@@ -65,7 +65,7 @@ class ExperimentResults:
 
         self._plotter = plotter
 
-        # Dictionary to store the full coverage data
+        # Dictionary to store the full coverage data.
         self._coverage_dict = coverage_dict
 
     def _get_full_path(self, filename):

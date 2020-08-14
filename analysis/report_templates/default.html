@@ -232,7 +232,7 @@
                 </li>
             </ul>
 
-            {% if detailed_coverage_report %}
+            {% if coverage_report %}
             <ul class="collapsible">
                 <li>
                     <div class="collapsible-header">
@@ -272,9 +272,9 @@
                     </div>
                     <div class="collapsible-body">
                         <div class="row">
-                            {% for fuzzer in benchmark._fuzzer_names %}
+                            {% for fuzzer in benchmark.fuzzer_names %}
                             <div class="col">
-                                <a class="waves-effect waves-light btn" href="https://storage.googleapis.com/{{ benchmark.get_filestore_name(fuzzer) }}/coverage/reports/{{ benchmark.name }}/{{ fuzzer }}/index.html">{{ fuzzer }}</a>
+                                <a class="waves-effect waves-light btn" href="{{ benchmark.get_filestore_name(fuzzer) }}/coverage/reports/{{ benchmark.name }}/{{ fuzzer }}/index.html">{{ fuzzer }}</a>
                             </div>
                             {% endfor %}
                         </div>

@@ -63,4 +63,4 @@ def test_output_report_filestore(fs, experiment):
                 ],
                 in_progress=False,
                 merge_with_clobber_nonprivate=False,
-                detailed_coverage_report=False)
+                coverage_report=False)

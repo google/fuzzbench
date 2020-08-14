@@ -55,8 +55,11 @@ class BenchmarkResults:
     def get_filestore_name(self, fuzzer_name):
         """Returns the filestore name of the |fuzzer_name|."""
         filestore_path = self._get_experiment_filestore_path(fuzzer_name)
-        prefix = 'gs://'
-        return filestore_path[len(prefix):]
+        gcs_prefix = 'gs://'
+        gcs_http_prefix = 'https://storage.googleapis.com/'
+        if filestore_path.startswith(gcs_prefix):
+            filestore_path.replace(gcs_prefix, gcs_http_prefix)
+        return filestore_path
 
     @property
     @functools.lru_cache()
@@ -68,7 +71,7 @@ class BenchmarkResults:
 
     @property
     @functools.lru_cache()
-    def _fuzzer_names(self):
+    def fuzzer_names(self):
         """Names of all fuzzers."""
         return self._benchmark_df.fuzzer.unique()
 
@@ -103,7 +106,7 @@ class BenchmarkResults:
     def _unique_region_cov_df(self):
         """Fuzzers with the number of covered unique regions."""
         return coverage_data_utils.get_unique_region_cov_df(
-            self._unique_region_dict, self._fuzzer_names)
+            self._unique_region_dict, self.fuzzer_names)
 
     @property
     def fuzzers_with_not_enough_samples(self):

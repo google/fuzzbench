@@ -25,7 +25,8 @@ def create_coverage_data():
     """Utility function to create test data."""
     return {
         "afl libpng-1.2.56": [[0, 0, 1, 1], [0, 0, 2, 2], [0, 0, 3, 3]],
-        "libfuzzer libpng-1.2.56": [[0, 0, 1, 1], [0, 0, 2, 3], [0, 0, 3, 3]]
+        "libfuzzer libpng-1.2.56": [[0, 0, 1, 1], [0, 0, 2, 3], [0, 0, 3, 3],
+                                    [0, 0, 4, 4]]
     }
 
 
@@ -36,7 +37,11 @@ def test_get_unique_region_dict():
         coverage_dict, 'libpng-1.2.56')
     unique_region_dict = coverage_data_utils.get_unique_region_dict(
         benchmark_coverage_dict)
-    expected_dict = {(0, 0, 2, 2): ['afl'], (0, 0, 2, 3): ['libfuzzer']}
+    expected_dict = {
+        (0, 0, 2, 2): ['afl'],
+        (0, 0, 2, 3): ['libfuzzer'],
+        (0, 0, 4, 4): ['libfuzzer']
+    }
     assert expected_dict == unique_region_dict
 
 
@@ -57,7 +62,7 @@ def test_get_unique_region_cov_df():
         'unique_regions_covered': 1
     }, {
         'fuzzer': 'libfuzzer',
-        'unique_regions_covered': 1
+        'unique_regions_covered': 2
     }])
     assert unique_region_df.equals(expected_df)
 
@@ -70,7 +75,7 @@ def test_get_benchmark_cov_dict():
         coverage_dict, benchmark)
     expected_cov_dict = {
         "afl": {(0, 0, 3, 3), (0, 0, 2, 2), (0, 0, 1, 1)},
-        "libfuzzer": {(0, 0, 3, 3), (0, 0, 2, 3), (0, 0, 1, 1)}
+        "libfuzzer": {(0, 0, 4, 4), (0, 0, 3, 3), (0, 0, 2, 3), (0, 0, 1, 1)}
     }
     assert expected_cov_dict == benchmark_cov_dict
 
@@ -84,7 +89,7 @@ def test_get_pairwise_unique_coverage_table():
     table = coverage_data_utils.get_pairwise_unique_coverage_table(
         benchmark_coverage_dict)
     fuzzers = ['afl', 'libfuzzer']
-    expected_table = pd.DataFrame([[0, 1], [1, 0]],
+    expected_table = pd.DataFrame([[0, 2], [1, 0]],
                                   index=fuzzers,
                                   columns=fuzzers)
     pd_test.assert_frame_equal(table, expected_table)

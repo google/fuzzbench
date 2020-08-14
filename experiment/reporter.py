@@ -39,7 +39,7 @@ def get_reports_dir():
 
 def output_report(experiment_config: dict,
                   in_progress=False,
-                  detailed_coverage_report=False):
+                  coverage_report=False):
     """Generate the HTML report and write it to |web_bucket|."""
     experiment_name = experiment_utils.get_experiment_name()
     web_filestore_path = posixpath.join(experiment_config['report_filestore'],
@@ -67,7 +67,7 @@ def output_report(experiment_config: dict,
             fuzzers=fuzzers,
             in_progress=in_progress,
             merge_with_clobber_nonprivate=merge_with_nonprivate,
-            detailed_coverage_report=detailed_coverage_report)
+            coverage_report=coverage_report)
         filestore_utils.rsync(str(reports_dir),
                               web_filestore_path,
                               gsutil_options=[
