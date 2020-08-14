@@ -38,13 +38,14 @@ jobs:
           - libfuzzer_interceptors
           - libfuzzer_keepseed
           - libfuzzer_fixcrossover
+          - entropic_fixcrossover
           - entropic_interceptors
           - entropic_keepseed
           - aflplusplus_same1
           - aflplusplus_same2
           - aflplusplus_same3
           - aflplusplus_taint
-          - entropic_fixcrossover
+          - aflplusplus_laf
 
         benchmark_type:
           - oss-fuzz
