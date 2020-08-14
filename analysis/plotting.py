@@ -370,7 +370,7 @@ class Plotter:
                     edgecolor='0.2',
                     ax=axes)
 
-        axes.set(ylabel='Reached unique edges coverage')
+        axes.set(ylabel='Reached unique edge coverage')
         axes.set(xlabel='Fuzzer (highest coverage on the left)')
         axes.set_xticklabels(axes.get_xticklabels(),
                              rotation=_DEFAULT_LABEL_ROTATION,
