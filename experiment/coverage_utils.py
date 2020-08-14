@@ -299,10 +299,12 @@ class TrialCoverage:  # pylint: disable=too-many-instance-attributes
             # region it is; 'code_region' is used to obtain various code
             # coverage statistic and is represented by number 0.
             type_index = -1
+            # The number of index 5 represents the file number.
+            file_index = 5
             for function_data in functions_data:
                 for region in function_data['regions']:
                     if region[hit_index] != 0 and region[type_index] == 0:
-                        covered_regions.add(tuple(region))
+                        covered_regions.add(tuple(region[hit_index]+region[file_index:]))
         except Exception:  # pylint: disable=broad-except
             self.logger.error(
                 'Coverage summary json file defective or missing.')
