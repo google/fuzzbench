@@ -51,5 +51,7 @@ RUN export CHECKOUT_COMMIT=$(cat /benchmark.yaml | tr -d ' ' | grep 'commit:' | 
 RUN PYTHONPATH=$SRC python3 -u -c "from fuzzers import utils; utils.initialize_flags(); import fuzzer; fuzzer.build()"
 
 # Copy source code files of benchmark to $OUT for the report generation.
+# TODO(ruikangshi): Implement it in makefile generator and in the yaml file
+# so we could save the space in docker image.
 RUN mkdir $OUT/src && \
     cp -rL --parent $SRC $WORK $OUT/src
