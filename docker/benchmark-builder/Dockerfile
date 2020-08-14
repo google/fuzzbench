@@ -49,3 +49,7 @@ RUN export CHECKOUT_COMMIT=$(cat /benchmark.yaml | tr -d ' ' | grep 'commit:' | 
     python3 -u /opt/fuzzbench/checkout_commit.py $CHECKOUT_COMMIT $SRC
 
 RUN PYTHONPATH=$SRC python3 -u -c "from fuzzers import utils; utils.initialize_flags(); import fuzzer; fuzzer.build()"
+
+# Copy source code files of benchmark to $OUT for the report generation.
+RUN mkdir $OUT/src && \
+    cp -rL --parent $SRC $WORK $OUT/src
