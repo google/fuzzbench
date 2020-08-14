@@ -49,7 +49,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'mbedtls_fuzz_dtlsclient':
         aflplusplus_fuzzer.build("tracepc", "laf")
     elif benchmark_name == 'openssl_x509':
-        aflplusplus_fuzzer.build("lto", "dynamic", "laf")
+        aflplusplus_fuzzer.build("tracepc", "laf")
     elif benchmark_name == 'openthread-2019-12-23':
         aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
                                  "cmplog")
