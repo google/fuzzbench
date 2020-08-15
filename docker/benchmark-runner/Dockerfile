@@ -60,8 +60,6 @@ ARG fuzzer
 # Copy over all the build artifacts (without * to preserve directory structure).
 # This also copies seed and dictionary files if they are available.
 COPY --from=builder /out/ ./
-# Delete useless source files for coverage build.
-RUN rm -rf ./src
 # Copy the fuzzer.py file.
 COPY fuzzers/$fuzzer/fuzzer.py .
 # Copy the fuzzers directory.
