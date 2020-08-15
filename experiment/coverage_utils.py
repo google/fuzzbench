@@ -96,8 +96,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                                                  benchmark_fuzzer_dir,
                                                  'merged.profdata')
         coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
-        self.source_files = os.path.join(coverage_binaries_dir, benchmark,
-                                         'src')
+        self.source_files_dir = os.path.join(coverage_binaries_dir, benchmark)
         self.binary_file = get_coverage_binary(benchmark)
 
     def merge_profdata_files(self):
@@ -117,7 +116,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         """Generates the coverage report."""
         command = [
             'llvm-cov', 'show', '-format=html',
-            '-path-equivalence=/,{prefix}'.format(prefix=self.source_files),
+            '-path-equivalence=/,{prefix}'.format(prefix=self.source_files_dir),
             '-output-dir={dst_dir}'.format(dst_dir=self.report_dir),
             '-Xdemangler', 'c++filt', '-Xdemangler', '-n', self.binary_file,
             '-instr-profile={profdata}'.format(
