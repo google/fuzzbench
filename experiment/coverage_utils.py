@@ -16,7 +16,6 @@
 import os
 import multiprocessing
 import json
-import queue
 
 from common import experiment_utils as exp_utils
 from common import new_process
@@ -24,23 +23,27 @@ from common import benchmark_utils
 from common import fuzzer_utils
 from common import logs
 from common import filestore_utils
-from common import experiment_path as exp_path
 from common import filesystem
 from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
-from experiment import reporter
 
 logger = logs.Logger('coverage_utils')  # pylint: disable=invalid-name
 
 COV_DIFF_QUEUE_GET_TIMEOUT = 1
 
 
-def upload_coverage_reports_to_bucket():
-    """Copies the coverage reports to gcs bucket."""
-    report_dir = reporter.get_reports_dir()
-    src_dir = get_coverage_report_dir()
-    dst_dir = exp_path.filestore(report_dir)
+def get_coverage_info_dir():
+    """Returns the directory to store coverage information including
+    coverage report and json summary file."""
+    work_dir = exp_utils.get_work_dir()
+    return os.path.join(work_dir, 'coverage')
+
+
+def upload_coverage_info_to_bucket():
+    """Copies the coverage reports and json summary files to gcs bucket."""
+    src_dir = get_coverage_info_dir()
+    dst_dir = exp_utils.get_experiment_filestore_path()
     filestore_utils.cp(src_dir, dst_dir, recursive=True, parallel=True)
 
 
@@ -55,8 +58,6 @@ def generate_coverage_reports(experiment_config: dict):
                                          for benchmark in benchmarks
                                          for fuzzer in fuzzers]
         pool.starmap(generate_coverage_report, generate_coverage_report_args)
-        pool.close()
-        pool.join()
     logger.info('Finished generating coverage report.')
 
 
@@ -88,6 +89,9 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         self.trial_ids = get_trial_ids(experiment, fuzzer, benchmark)
         cov_report_directory = get_coverage_report_dir()
         self.report_dir = os.path.join(cov_report_directory, benchmark, fuzzer)
+        coverage_info_dir = get_coverage_info_dir()
+        self.json_file_dir = os.path.join(coverage_info_dir, 'data', benchmark,
+                                          fuzzer)
         benchmark_fuzzer_dir = exp_utils.get_benchmark_fuzzer_dir(
             benchmark, fuzzer)
         work_dir = exp_utils.get_work_dir()
@@ -129,15 +133,18 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                          'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
                              fuzzer=self.fuzzer, benchmark=self.benchmark))
 
+    def generate_json_summary_file(self, covered_regions):
+        """Stores the coverage data in a json file."""
+        json_src_dir = self.json_file_dir
+        filesystem.create_directory(json_src_dir)
+        json_src = os.path.join(json_src_dir, 'covered_regions.json')
+        with open(json_src, 'w') as src_file:
+            json.dump(covered_regions, src_file)
+
 
 def get_coverage_archive_name(benchmark):
     """Gets the archive name for |benchmark|."""
     return 'coverage-build-%s.tar.gz' % benchmark
-
-
-def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):
-    """Returns the key in coverage dict for a pair of fuzzer-benchmark."""
-    return fuzzer + ' ' + benchmark
 
 
 def get_profdata_file_name(trial_id):
@@ -147,8 +154,8 @@ def get_profdata_file_name(trial_id):
 
 def get_coverage_report_dir():
     """Returns the directory to store all the coverage reports."""
-    report_dir = reporter.get_reports_dir()
-    return os.path.join(report_dir, 'coverage')
+    coverage_info_dir = get_coverage_info_dir()
+    return os.path.join(coverage_info_dir, 'reports')
 
 
 def get_coverage_binary(benchmark: str) -> str:
@@ -191,65 +198,46 @@ def get_coverage_infomation(coverage_summary_file):
 def store_coverage_data(experiment_config: dict):
     """Generates the specific coverage data and store in cloud bucket."""
     logger.info('Start storing coverage data')
-    with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
-        q = manager.Queue()  # pytype: disable=attribute-error
-        covered_regions = get_all_covered_regions(experiment_config, pool, q)
-        json_src_dir = reporter.get_reports_dir()
-        filesystem.recreate_directory(json_src_dir)
-        json_src = os.path.join(json_src_dir, 'covered_regions.json')
-        with open(json_src, 'w') as src_file:
-            json.dump(covered_regions, src_file)
-        json_dst = exp_path.filestore(json_src)
-        filestore_utils.cp(json_src, json_dst)
+    with multiprocessing.Pool() as pool:
+        store_all_covered_regions(experiment_config, pool)
 
     logger.info('Finished storing coverage data')
 
 
-def get_all_covered_regions(experiment_config: dict, pool, q) -> dict:
-    """Gets regions covered for each pair for fuzzer and benchmark."""
-    logger.info('Measuring all fuzzer-benchmark pairs for final coverage data.')
+def store_all_covered_regions(experiment_config: dict, pool):
+    """Stores regions covered for each pair for fuzzer and benchmark."""
+    logger.info('Storing all fuzzer-benchmark pairs for final coverage data.')
 
     benchmarks = experiment_config['benchmarks'].split(',')
     fuzzers = experiment_config['fuzzers'].split(',')
     experiment = experiment_config['experiment']
 
-    get_covered_region_args = [(experiment, fuzzer, benchmark, q)
-                               for fuzzer in fuzzers
-                               for benchmark in benchmarks]
+    store_covered_region_args = [(experiment, fuzzer, benchmark)
+                                 for fuzzer in fuzzers
+                                 for benchmark in benchmarks]
 
-    result = pool.starmap_async(get_covered_region, get_covered_region_args)
-
-    # Poll the queue for covered region data and save them in a dict until the
-    # pool is done processing each combination of fuzzers and benchmarks.
-    all_covered_regions = {}
-
-    while True:
-        try:
-            covered_regions = q.get(timeout=COV_DIFF_QUEUE_GET_TIMEOUT)
-            all_covered_regions.update(covered_regions)
-        except queue.Empty:
-            if result.ready():
-                # If "ready" that means pool has finished. Since it is
-                # finished and the queue is empty, we can stop checking
-                # the queue for more covered regions.
-                logger.debug(
-                    'Finished call to map with get_all_covered_regions.')
-                break
-
-    for key in all_covered_regions:
-        all_covered_regions[key] = list(all_covered_regions[key])
-    logger.info('Done measuring all coverage data.')
-    return all_covered_regions
+    pool.starmap(store_covered_region, store_covered_region_args)
+    logger.info('Done storing all coverage data.')
 
 
-def get_covered_region(experiment: str, fuzzer: str, benchmark: str,
-                       q: multiprocessing.Queue):
+def store_covered_region(experiment: str, fuzzer: str, benchmark: str):
     """Gets the final covered region for a specific pair of fuzzer-benchmark."""
     logs.initialize()
+    logger.debug('Storing covered region: fuzzer: %s, benchmark: %s.', fuzzer,
+                 benchmark)
+    covered_regions = get_covered_region(experiment, fuzzer, benchmark)
+    generator = CoverageReporter(fuzzer, benchmark, experiment)
+    generator.generate_json_summary_file(covered_regions)
+
+    logger.debug('Finished storing covered region: fuzzer: %s, benchmark: %s.',
+                 fuzzer, benchmark)
+
+
+def get_covered_region(experiment: str, fuzzer: str, benchmark: str):
+    """Gets covered regions for |fuzzer| on |benchmark|."""
     logger.debug('Measuring covered region: fuzzer: %s, benchmark: %s.', fuzzer,
                  benchmark)
-    key = get_fuzzer_benchmark_key(fuzzer, benchmark)
-    covered_regions = {key: set()}
+    covered_regions = set()
     trial_ids = get_trial_ids(experiment, fuzzer, benchmark)
     for trial_id in trial_ids:
         logger.info('Measuring covered region: trial_id = %d.', trial_id)
@@ -263,10 +251,10 @@ def get_covered_region(experiment: str, fuzzer: str, benchmark: str,
                                        snapshot_logger)
         trial_coverage.generate_summary(0, summary_only=False)
         new_covered_regions = trial_coverage.get_current_covered_regions()
-        covered_regions[key] = covered_regions[key].union(new_covered_regions)
-    q.put(covered_regions)
+        covered_regions = covered_regions.union(new_covered_regions)
     logger.debug('Done measuring covered region: fuzzer: %s, benchmark: %s.',
                  fuzzer, benchmark)
+    return list(covered_regions)
 
 
 class TrialCoverage:  # pylint: disable=too-many-instance-attributes
@@ -306,10 +294,13 @@ class TrialCoverage:  # pylint: disable=too-many-instance-attributes
             # region it is; 'code_region' is used to obtain various code
             # coverage statistic and is represented by number 0.
             type_index = -1
+            # The number of index 5 represents the file number.
+            file_index = 5
             for function_data in functions_data:
                 for region in function_data['regions']:
                     if region[hit_index] != 0 and region[type_index] == 0:
-                        covered_regions.add(tuple(region[:hit_index]))
+                        covered_regions.add(
+                            tuple(region[:hit_index] + region[file_index:]))
         except Exception:  # pylint: disable=broad-except
             self.logger.error(
                 'Coverage summary json file defective or missing.')

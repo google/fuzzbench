@@ -336,3 +336,73 @@ class Plotter:
             fig.savefig(image_path, bbox_inches="tight")
         finally:
             plt.close(fig)
+
+    def unique_coverage_ranking_plot(self,
+                                     unique_region_cov_df_combined,
+                                     axes=None):
+        """Draws unique_coverage_ranking plot. The fuzzer labels will be in
+        the order of their coverage."""
+
+        fuzzer_order = unique_region_cov_df_combined.sort_values(
+            by='unique_regions_covered', ascending=False).fuzzer
+
+        axes = sns.barplot(y='unique_regions_covered',
+                           x='fuzzer',
+                           data=unique_region_cov_df_combined,
+                           order=fuzzer_order,
+                           palette=self._fuzzer_colors,
+                           ax=axes)
+
+        for patch in axes.patches:
+            axes.annotate(
+                format(patch.get_height(), '.2f'),
+                (patch.get_x() + patch.get_width() / 2., patch.get_height()),
+                ha='center',
+                va='center',
+                xytext=(0, 10),
+                textcoords='offset points')
+
+        sns.barplot(y='aggregated_edges_covered',
+                    x='fuzzer',
+                    data=unique_region_cov_df_combined,
+                    order=fuzzer_order,
+                    facecolor=(1, 1, 1, 0),
+                    edgecolor='0.2',
+                    ax=axes)
+
+        axes.set(ylabel='Reached unique edge coverage')
+        axes.set(xlabel='Fuzzer (highest coverage on the left)')
+        axes.set_xticklabels(axes.get_xticklabels(),
+                             rotation=_DEFAULT_LABEL_ROTATION,
+                             horizontalalignment='right')
+
+        sns.despine(ax=axes, trim=True)
+
+    def write_unique_coverage_ranking_plot(self, unique_region_cov_df_combined,
+                                           image_path):
+        """Writes ranking plot for unique coverage."""
+        self._write_plot_to_image(self.unique_coverage_ranking_plot,
+                                  unique_region_cov_df_combined, image_path)
+
+    def pairwise_unique_coverage_heatmap_plot(self,
+                                              pairwise_unique_coverage_table,
+                                              axes=None):
+        """Draws the heatmap to visualize the unique coverage between
+        each pair of fuzzers."""
+        heatmap_args = {
+            'annot': True,
+            'fmt': 'd',
+            'cmap': 'Blues',
+            'linewidths': 0.5
+        }
+        axes = sns.heatmap(pairwise_unique_coverage_table,
+                           ax=axes,
+                           **heatmap_args)
+        axes.set(ylabel='Not covered by')
+        axes.set(xlabel='Covered by')
+
+    def write_pairwise_unique_coverage_heatmap_plot(
+            self, pairwise_unique_coverage_table, image_path):
+        """Writes pairwise unique coverage heatmap plot."""
+        self._write_plot_to_image(self.pairwise_unique_coverage_heatmap_plot,
+                                  pairwise_unique_coverage_table, image_path)
