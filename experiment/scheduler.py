@@ -106,8 +106,12 @@ def all_trials_ended(experiment: str) -> bool:
 
 def delete_instances(instances, experiment_config):
     """Deletes |instances|."""
-    running_instances = gcloud.list_instances()
-    instances_to_delete = [i for i in instances if i in running_instances]
+    cloud_project = experiment_config['cloud_project']
+    cloud_compute_zone = experiment_config['cloud_compute_zone']
+    instances_to_delete = [
+        i for i in gce.get_instances(cloud_project, cloud_compute_zone)
+        if i in instances
+    ]
     return gcloud.delete_instances(instances_to_delete,
                                    experiment_config['cloud_compute_zone'])
 
@@ -408,7 +412,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         started_instances = self._get_started_unfinished_instances()
         query_time = datetime_now()
 
-        preempted_instances = list(self._query_preempted_instances())
+        preempted_instances = self._get_preempted_instances_with_retries()
         trials = []
         for instance in preempted_instances:
             trial = started_instances.get(instance)
@@ -433,13 +437,13 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         # those we discovered in the query.
         return trials
 
-    @retry.wrap(
-        NUM_RETRIES, RETRY_WAIT_SECONDS,
-        'experiment.scheduler.TrialInstanceManager._query_preempted_instances')
-    def _query_preempted_instances(self):
+    @retry.wrap(NUM_RETRIES, RETRY_WAIT_SECONDS,
+                'experiment.scheduler.TrialInstanceManager.'
+                '_get_preempted_instances_with_retries')
+    def _get_preempted_instances_with_retries(self):
         project = self.experiment_config['cloud_project']
         zone = self.experiment_config['cloud_compute_zone']
-        return list(gce.get_terminated_instances(project, zone))
+        return list(gce.get_preempted_instances(project, zone))
 
     def handle_preempted_trials(self):
         """Handle preempted trials by marking them as preempted and creating

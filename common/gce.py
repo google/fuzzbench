@@ -29,14 +29,27 @@ def initialize():
                                            credentials=credentials)
 
 
-def get_terminated_instances(project, zone):
-    """Returns a list of terminated instances in |project| and |zone|."""
+def _get_instance_items(project, zone):
+    """Return an iterator of all instance response items for a project."""
     instances = thread_local.service.instances()
     request = instances.list(project=project, zone=zone)
     while request is not None:
         response = request.execute()
         for instance in response['items']:
-            if instance['status'] == 'TERMINATED':
-                yield instance['name']
+            yield instance
         request = instances.list_next(previous_request=request,
                                       previous_response=response)
+
+
+def get_instances(project, zone):
+    """Return a list of all instance names in |project| and |zone|."""
+    for instance in _get_instance_items(project, zone):
+        yield instance['name']
+
+
+def get_preempted_instances(project, zone):
+    """Return a list of preempted instance names in |project| and |zone|."""
+    for instance in _get_instance_items(project, zone):
+        if (instance['scheduling']['preemptible'] and
+                instance['status'] == 'TERMINATED'):
+            yield instance['name']
