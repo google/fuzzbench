@@ -103,7 +103,7 @@ class BenchmarkResults:
 
     @property
     @functools.lru_cache()
-    def _unique_region_cov_df(self):
+    def unique_region_cov_df(self):
         """Fuzzers with the number of covered unique regions."""
         return coverage_data_utils.get_unique_region_cov_df(
             self._unique_region_dict, self.fuzzer_names)
@@ -285,7 +285,7 @@ class BenchmarkResults:
     def unique_coverage_ranking_plot(self):
         """Ranking plot for unique coverage."""
         plot_filename = self._prefix_with_benchmark('ranking_unique_region.svg')
-        unique_region_cov_df_combined = self._unique_region_cov_df.merge(
+        unique_region_cov_df_combined = self.unique_region_cov_df.merge(
             self._benchmark_aggregated_coverage_df, on='fuzzer')
         self._plotter.write_unique_coverage_ranking_plot(
             unique_region_cov_df_combined, self._get_full_path(plot_filename))

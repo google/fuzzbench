@@ -160,11 +160,9 @@ def get_unique_covered_percentage(fuzzer_row_covered_regions,
     return unique_region_count
 
 
-def rank_by_unique_coverage_average_normalized_score(unique_coverage_df_list):
+def rank_by_average_normalized_score(benchmarks_unique_coverage_list):
     """Returns the rank based on average normalized score on unique coverage."""
-    df_list = [df.set_index('fuzzer') for df in unique_coverage_df_list]
-    print(df_list)
+    df_list = [df.set_index('fuzzer') for df in benchmarks_unique_coverage_list]
     combined_df = pd.concat(df_list, axis=1).astype(float).T
-    print(combined_df)
-    rank_series = data_utils.experiment_rank_by_average_normalized_score(combined_df)
-    return rank_series
+    scores = data_utils.experiment_rank_by_average_normalized_score(combined_df)
+    return scores
