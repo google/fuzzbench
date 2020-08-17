@@ -20,6 +20,7 @@ import posixpath
 import tempfile
 import pandas as pd
 
+from analysis import data_utils
 from common import filestore_utils
 
 
@@ -157,3 +158,13 @@ def get_unique_covered_percentage(fuzzer_row_covered_regions,
         if region not in fuzzer_row_covered_regions:
             unique_region_count += 1
     return unique_region_count
+
+
+def rank_by_unique_coverage_average_normalized_score(unique_coverage_df_list):
+    """Returns the rank based on average normalized score on unique coverage."""
+    df_list = [df.set_index('fuzzer') for df in unique_coverage_df_list]
+    print(df_list)
+    combined_df = pd.concat(df_list, axis=1).astype(float).T
+    print(combined_df)
+    rank_series = data_utils.experiment_rank_by_average_normalized_score(combined_df)
+    return rank_series

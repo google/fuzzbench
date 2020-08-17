@@ -17,6 +17,7 @@ import functools
 import os
 
 from analysis import benchmark_results
+from analysis import coverage_data_utils
 from analysis import data_utils
 from analysis import stat_tests
 
@@ -104,6 +105,17 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
         """A pivot table of medians for each fuzzer on each benchmark."""
         return data_utils.experiment_pivot_table(
             self._experiment_snapshots_df, data_utils.benchmark_rank_by_median)
+    
+    @property
+    def benchmark_unique_coverage_list(self):
+        """A list containing unique coverage dataframe for each benchmark."""
+        return [benchmark._unique_region_cov_df for benchmark in self.benchmarks]
+    
+    @property
+    def rank_by_unique_coverage_average_normalized_score(self):
+        """Rank fuzzers using average normalized score on unique coverage across
+        benchmarks."""
+        return coverage_data_utils.rank_by_unique_coverage_average_normalized_score(self.benchmark_unique_coverage_list)
 
     @property
     def rank_by_average_rank_and_average_rank(self):
