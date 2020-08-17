@@ -21,7 +21,7 @@ from analysis import data_utils
 from analysis import stat_tests
 
 
-class ExperimentResults:
+class ExperimentResults:  # pylint: disable=too-many-instance-attributes
     """Provides the main interface for getting various analysis results and
     plots about an experiment, represented by |experiment_df|.
 
@@ -31,11 +31,13 @@ class ExperimentResults:
     template, only the properties needed for the given report will be computed.
     """
 
-    def __init__(self,
-                 experiment_df,
-                 output_directory,
-                 plotter,
-                 experiment_name=None):
+    def __init__(  # pylint: disable=too-many-arguments
+            self,
+            experiment_df,
+            coverage_dict,
+            output_directory,
+            plotter,
+            experiment_name=None):
         if experiment_name:
             self.name = experiment_name
         else:
@@ -63,6 +65,9 @@ class ExperimentResults:
 
         self._plotter = plotter
 
+        # Dictionary to store the full coverage data.
+        self._coverage_dict = coverage_dict
+
     def _get_full_path(self, filename):
         return os.path.join(self._output_directory, filename)
 
@@ -87,6 +92,7 @@ class ExperimentResults:
         benchmark_names = self._experiment_df.benchmark.unique()
         return [
             benchmark_results.BenchmarkResults(name, self._experiment_df,
+                                               self._coverage_dict,
                                                self._output_directory,
                                                self._plotter)
             for name in sorted(benchmark_names)

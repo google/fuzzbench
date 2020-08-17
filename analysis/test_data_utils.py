@@ -23,7 +23,8 @@ from analysis import data_utils
 
 
 def create_trial_data(  # pylint: disable=too-many-arguments
-        trial_id, benchmark, fuzzer, cycles, reached_coverage, experiment):
+        trial_id, benchmark, fuzzer, cycles, reached_coverage, experiment,
+        experiment_filestore):
     """Utility function to create test trial data."""
     return pd.DataFrame([{
         'experiment': experiment,
@@ -34,22 +35,31 @@ def create_trial_data(  # pylint: disable=too-many-arguments
         'time_ended': None,
         'time': t,
         'edges_covered': reached_coverage,
+        'experiment_filestore': experiment_filestore
     } for t in range(cycles)])
 
 
-def create_experiment_data(experiment='test_experiment', incomplete=False):
+def create_experiment_data(experiment='test_experiment',
+                           incomplete=False,
+                           experiment_filestore='gs://fuzzbench-data'):
     """Utility function to create test experiment data."""
     return pd.concat([
-        create_trial_data(0, 'libpng', 'afl', 10, 100, experiment),
-        create_trial_data(1, 'libpng', 'afl', 10, 200, experiment),
-        create_trial_data(2, 'libpng', 'libfuzzer', 10, 200, experiment),
-        create_trial_data(3, 'libpng', 'libfuzzer', 10, 300, experiment),
+        create_trial_data(0, 'libpng', 'afl', 10, 100, experiment,
+                          experiment_filestore),
+        create_trial_data(1, 'libpng', 'afl', 10, 200, experiment,
+                          experiment_filestore),
+        create_trial_data(2, 'libpng', 'libfuzzer', 10, 200, experiment,
+                          experiment_filestore),
+        create_trial_data(3, 'libpng', 'libfuzzer', 10, 300, experiment,
+                          experiment_filestore),
         create_trial_data(4, 'libxml', 'afl', 6 if incomplete else 10, 1000,
-                          experiment),
-        create_trial_data(5, 'libxml', 'afl', 10, 1200, experiment),
+                          experiment, experiment_filestore),
+        create_trial_data(5, 'libxml', 'afl', 10, 1200, experiment,
+                          experiment_filestore),
         create_trial_data(6, 'libxml', 'libfuzzer', 8 if incomplete else 10,
-                          600, experiment),
-        create_trial_data(7, 'libxml', 'libfuzzer', 10, 800, experiment),
+                          600, experiment, experiment_filestore),
+        create_trial_data(7, 'libxml', 'libfuzzer', 10, 800, experiment,
+                          experiment_filestore),
     ])
 
 
