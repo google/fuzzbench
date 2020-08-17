@@ -122,7 +122,7 @@ def get_benchmark_aggregated_cov_df(benchmark_coverage_dict):
     return pd.DataFrame(dict_to_transform)
 
 
-def get_pairwise_unique_coverage_table(benchmark_coverage_dict):
+def get_pairwise_unique_coverage_table(benchmark_coverage_dict, fuzzers):
     """Returns a table that shows the unique coverage between
     each pair of fuzzers.
 
@@ -130,8 +130,6 @@ def get_pairwise_unique_coverage_table(benchmark_coverage_dict):
     row and column represents a fuzzer, and each cell contains a number
     showing the regions covered by the fuzzer of the column but not by
     the fuzzer of the row."""
-
-    fuzzers = benchmark_coverage_dict.keys()
 
     pairwise_unique_coverage_values = []
     for fuzzer_in_row in fuzzers:

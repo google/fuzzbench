@@ -295,8 +295,10 @@ class BenchmarkResults:
     @functools.lru_cache()
     def pairwise_unique_coverage_table(self):
         """Pairwise unique coverage table for each pair of fuzzers."""
+        fuzzers = self.unique_region_cov_df.sort_values(
+            by='unique_regions_covered', ascending=False).fuzzer
         return coverage_data_utils.get_pairwise_unique_coverage_table(
-            self._benchmark_coverage_dict)
+            self._benchmark_coverage_dict, fuzzers)
 
     @property
     def pairwise_unique_coverage_plot(self):

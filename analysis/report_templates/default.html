@@ -96,13 +96,6 @@
                     {{ experiment.rank_by_median_and_average_rank.round(2).to_frame().to_html() }}
                 </div>
             </div>
-            
-            <div class="row">
-                <div class="col s5 offset-s1">
-                    <h5 class="center-align">By avg. score on unique coverage</h5>
-                    {{ experiment.rank_by_unique_coverage_average_normalized_score.round(2).to_frame().to_html() }}
-                </div>
-            </div>
 
             <ul class="collapsible">
                 <li>
@@ -278,13 +271,9 @@
                         Coverage reports for each fuzzer on this benchmark
                     </div>
                     <div class="collapsible-body">
-                        <div class="row">
+                        <div class="collection">
                             {% for fuzzer in benchmark.fuzzer_names %}
-                            <div class="col">
-                                <p>
-                                    <a class="waves-effect waves-light btn" href="{{ benchmark.get_filestore_name(fuzzer) }}/coverage/reports/{{ benchmark.name }}/{{ fuzzer }}/index.html">{{ fuzzer }}</a>
-                                </p>
-                            </div>
+                            <a href="{{ benchmark.get_filestore_name(fuzzer) }}/coverage/reports/{{ benchmark.name }}/{{ fuzzer }}/index.html" class="collection-item">{{ fuzzer }}</a>
                             {% endfor %}
                         </div>
                     </div>
