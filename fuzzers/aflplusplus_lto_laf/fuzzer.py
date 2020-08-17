@@ -35,10 +35,10 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     if benchmark_name == 'bloaty_fuzz_target':
         aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
                                  "laf")
-    else benchmark_name == 'curl_curl_fuzzer_http':
+    elif benchmark_name == 'curl_curl_fuzzer_http':
         aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
                                  "laf")
-    else benchmark_name == 'libpcap_fuzz_both':
+    elif benchmark_name == 'libpcap_fuzz_both':
         aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
                                  "laf")
     elif benchmark_name == 'openssl_x509':
