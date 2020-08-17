@@ -20,10 +20,6 @@
 # But this means that the good stuff is hidden away in this benchmark
 # otherwise.
 
-import os
-import shutil
-import glob
-
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
