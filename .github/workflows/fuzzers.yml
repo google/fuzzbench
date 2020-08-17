@@ -42,7 +42,9 @@ jobs:
           - entropic_interceptors
           - entropic_keepseed
           - aflplusplus_classic
+          - aflplusplus_lto_pcguard
           - aflplusplus_lto
+          - aflplusplus_lto_fixed
           - aflplusplus_lto_laf
           - aflplusplus_lto_cmplog
 

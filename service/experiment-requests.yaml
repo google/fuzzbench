@@ -23,7 +23,9 @@
   fuzzers:
     - aflplusplus
     - aflplusplus_optimal
+    - aflplusplus_lto_fixed
     - aflplusplus_lto
+    - aflplusplus_lto_pcguard
     - aflplusplus_lto_cmplog
     - aflplusplus_lto_laf
     - aflplusplus_classic
