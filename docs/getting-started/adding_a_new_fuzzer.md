@@ -40,7 +40,7 @@ This file defines the image that will build your fuzzer and benchmarks for use
 with your fuzzer. For most projects, this will look like:
 
 ```dockerfile
-ARG parent_image=gcr.io/fuzzbench/base-builder
+ARG parent_image
 FROM $parent_image                         # Base builder image (Ubuntu 16.04, with latest Clang).
 
 RUN apt-get update && \                    # Install any system dependencies to build your fuzzer.

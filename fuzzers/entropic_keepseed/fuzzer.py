@@ -27,4 +27,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     libfuzzer_fuzzer.run_fuzzer(input_corpus,
                                 output_corpus,
                                 target_binary,
-                                extra_flags=['-entropic=1', '-keep_seed=1'])
+                                extra_flags=[
+                                    '-entropic=1', '-keep_seed=1',
+                                    '-cross_over_uniformdist=1'
+                                ])

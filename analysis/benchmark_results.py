@@ -17,10 +17,12 @@ import os
 import functools
 
 from analysis import data_utils
+from analysis import coverage_data_utils
 from analysis import stat_tests
 
 
-class BenchmarkResults:  # pylint: disable=too-many-public-methods
+# pylint: disable=too-many-public-methods, too-many-arguments
+class BenchmarkResults:
     """Represents results of various analysis done on benchmark data.
 
     NOTE: Do not create this class manually! Instead, use the |benchmarks|
@@ -31,11 +33,12 @@ class BenchmarkResults:  # pylint: disable=too-many-public-methods
     template, properties are computed on demand and only once.
     """
 
-    def __init__(self, benchmark_name, experiment_df, output_directory,
-                 plotter):
+    def __init__(self, benchmark_name, experiment_df, coverage_dict,
+                 output_directory, plotter):
         self.name = benchmark_name
 
         self._experiment_df = experiment_df
+        self._coverage_dict = coverage_dict
         self._output_directory = output_directory
         self._plotter = plotter
 
@@ -44,6 +47,19 @@ class BenchmarkResults:  # pylint: disable=too-many-public-methods
 
     def _get_full_path(self, filename):
         return os.path.join(self._output_directory, filename)
+
+    def _get_experiment_filestore_path(self, fuzzer_name):
+        return coverage_data_utils.get_fuzzer_filestore_path(
+            self._benchmark_df, fuzzer_name)
+
+    def get_filestore_name(self, fuzzer_name):
+        """Returns the filestore name of the |fuzzer_name|."""
+        filestore_path = self._get_experiment_filestore_path(fuzzer_name)
+        gcs_prefix = 'gs://'
+        gcs_http_prefix = 'https://storage.googleapis.com/'
+        if filestore_path.startswith(gcs_prefix):
+            filestore_path = filestore_path.replace(gcs_prefix, gcs_http_prefix)
+        return filestore_path
 
     @property
     @functools.lru_cache()
@@ -55,14 +71,42 @@ class BenchmarkResults:  # pylint: disable=too-many-public-methods
 
     @property
     @functools.lru_cache()
+    def fuzzer_names(self):
+        """Names of all fuzzers."""
+        return self._benchmark_df.fuzzer.unique()
+
+    @property
+    @functools.lru_cache()
     def _benchmark_snapshot_df(self):
         return data_utils.get_benchmark_snapshot(self._benchmark_df)
 
     @property
     @functools.lru_cache()
-    def fuzzers(self):
-        """Fuzzers with valid trials on this benchmark."""
-        return self._benchmark_df.fuzzer.unique()
+    def _benchmark_coverage_dict(self):
+        """Covered regions of each fuzzer on this benchmark."""
+        return coverage_data_utils.get_benchmark_cov_dict(
+            self._coverage_dict, self.name)
+
+    @property
+    @functools.lru_cache()
+    def _benchmark_aggregated_coverage_df(self):
+        """Aggregated covered regions of each fuzzer on this benchmark."""
+        return coverage_data_utils.get_benchmark_aggregated_cov_df(
+            self._benchmark_coverage_dict)
+
+    @property
+    @functools.lru_cache()
+    def _unique_region_dict(self):
+        """Unique regions with the fuzzers that cover it."""
+        return coverage_data_utils.get_unique_region_dict(
+            self._benchmark_coverage_dict)
+
+    @property
+    @functools.lru_cache()
+    def _unique_region_cov_df(self):
+        """Fuzzers with the number of covered unique regions."""
+        return coverage_data_utils.get_unique_region_cov_df(
+            self._unique_region_dict, self.fuzzer_names)
 
     @property
     def fuzzers_with_not_enough_samples(self):
@@ -235,4 +279,31 @@ class BenchmarkResults:  # pylint: disable=too-many-public-methods
         plot_filename = self._prefix_with_benchmark('better_than.svg')
         self._plotter.write_better_than_plot(better_than_table,
                                              self._get_full_path(plot_filename))
+        return plot_filename
+
+    @property
+    def unique_coverage_ranking_plot(self):
+        """Ranking plot for unique coverage."""
+        plot_filename = self._prefix_with_benchmark('ranking_unique_region.svg')
+        unique_region_cov_df_combined = self._unique_region_cov_df.merge(
+            self._benchmark_aggregated_coverage_df, on='fuzzer')
+        self._plotter.write_unique_coverage_ranking_plot(
+            unique_region_cov_df_combined, self._get_full_path(plot_filename))
+        return plot_filename
+
+    @property
+    @functools.lru_cache()
+    def pairwise_unique_coverage_table(self):
+        """Pairwise unique coverage table for each pair of fuzzers."""
+        return coverage_data_utils.get_pairwise_unique_coverage_table(
+            self._benchmark_coverage_dict)
+
+    @property
+    def pairwise_unique_coverage_plot(self):
+        """Pairwise unique coverage plot for each pair of fuzzers."""
+        plot_filename = self._prefix_with_benchmark(
+            'pairwise_unique_coverage_plot.svg')
+        self._plotter.write_pairwise_unique_coverage_heatmap_plot(
+            self.pairwise_unique_coverage_table,
+            self._get_full_path(plot_filename))
         return plot_filename

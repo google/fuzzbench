@@ -236,13 +236,45 @@
             <ul class="collapsible">
                 <li>
                     <div class="collapsible-header">
+                        Unique coverage plots
+                    </div>
+                    <div class="collapsible-body">
+
+                        <div class="row">
+                            <div class="col s6 offset-s3">
+                                <h5 class="center-align">Ranking by unique edge covered</h4>
+                                    <img class="responsive-img materialboxed"
+                                         src="{{ benchmark.unique_coverage_ranking_plot }}">
+                                    Each bar shows the total number of edges found by a given fuzzer.
+                                    The colored area shows the number of unique edges
+                                    (i.e., edges that were not covered by any other fuzzers).
+                            </div>
+                        </div> <!-- row -->
+
+                        <div class="row">
+                            <div class="col s6 offset-s3">
+                                <h5 class="center-align">Pairwise unique coverage</h4>
+                                    <img class="responsive-img materialboxed"
+                                         src="{{ benchmark.pairwise_unique_coverage_plot }}">
+                                    Each cell represents the number of edges covered by the fuzzer
+                                    of the column but not by the fuzzer of the row
+                            </div>
+                        </div> <!-- row -->
+
+                    </div>
+                </li>
+            </ul>
+
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
                         Coverage reports for each fuzzer on this benchmark
                     </div>
                     <div class="collapsible-body">
                         <div class="row">
-                            {% for fuzzer in benchmark.fuzzers %}
+                            {% for fuzzer in benchmark.fuzzer_names %}
                             <div class="col">
-                                <a class="waves-effect waves-light btn" href="https://storage.googleapis.com/{{ experiment_filestore_name }}/{{ experiment.name }}/reports/coverage/{{ benchmark.name }}/{{ fuzzer }}/index.html">{{ fuzzer }}</a>
+                                <a class="waves-effect waves-light btn" href="{{ benchmark.get_filestore_name(fuzzer) }}/coverage/reports/{{ benchmark.name }}/{{ fuzzer }}/index.html">{{ fuzzer }}</a>
                             </div>
                             {% endfor %}
                         </div>
