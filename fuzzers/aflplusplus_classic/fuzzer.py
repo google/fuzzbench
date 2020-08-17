@@ -20,12 +20,21 @@
 # But this means that the good stuff is hidden away in this benchmark
 # otherwise.
 
+import os
+import shutil
+import glob
+
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
-    aflplusplus_fuzzer.build('tracepc', 'laf')
+    benchmark_name = os.environ['BENCHMARK']
+
+    aflplusplus_fuzzer.build("tracepc")
+
+    for copy_file in glob.glob("/afl/libc*"):
+        shutil.copy(copy_file, os.environ['OUT'])
 
 
 def fuzz(input_corpus, output_corpus, target_binary):

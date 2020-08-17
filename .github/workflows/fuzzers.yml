@@ -41,11 +41,7 @@ jobs:
           - entropic_fixcrossover
           - entropic_interceptors
           - entropic_keepseed
-          - aflplusplus_same1
-          - aflplusplus_same2
-          - aflplusplus_same3
-          - aflplusplus_taint
-          - aflplusplus_laf
+          - aflplusplus_classic
           - aflplusplus_lto
           - aflplusplus_lto_laf
           - aflplusplus_lto_cmplog

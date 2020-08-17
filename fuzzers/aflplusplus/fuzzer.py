@@ -56,7 +56,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'instrim' in build_modes:
         # We dont set AFL_LLVM_INSTRIM_LOOPHEAD for better coverage
         os.environ['AFL_LLVM_INSTRIM'] = 'CFG'
-    elif 'tracepc' in build_modes:
+    elif 'tracepc' in build_modes or 'pcguard' in build_modes:
         os.environ['AFL_LLVM_USE_TRACE_PC'] = '1'
     elif 'classic' in build_modes:
         os.environ['AFL_LLVM_INSTRUMENT'] = 'CLASSIC'
@@ -65,6 +65,9 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # Do not use a fixed map location (LTO only)
     if 'dynamic' in build_modes:
         os.environ['AFL_LLVM_MAP_DYNAMIC'] = '1'
+    # Use a fixed map location (LTO only)
+    if 'fixed' in build_modes:
+        os.environ['AFL_LLVM_MAP_ADDR'] = '0x10000'
     # Skip over single block functions
     if 'skipsingle' in build_modes:
         os.environ['AFL_LLVM_SKIPSINGLEBLOCK'] = '1'

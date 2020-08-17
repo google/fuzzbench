@@ -31,13 +31,23 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     benchmark_name = os.environ['BENCHMARK']
 
-    if benchmark_name == 'curl_curl_fuzzer_http':
+    # The following have build times >= 1.5 hours.
+    if benchmark_name == 'bloaty_fuzz_target':
+        aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
+                                 "laf")
+    else benchmark_name == 'curl_curl_fuzzer_http':
+        aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
+                                 "laf")
+    else benchmark_name == 'libpcap_fuzz_both':
         aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
                                  "laf")
     elif benchmark_name == 'openssl_x509':
         aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
                                  "laf")
     elif benchmark_name == 'php_php-fuzz-parser':
+        aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
+                                 "laf")
+    elif benchmark_name == 'sqlite3_ossfuzz':
         aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
                                  "laf")
     else:
