@@ -34,8 +34,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'php_php-fuzz-parser':
         aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle")
     else:
-        os.environ['AFL_LLVM_INSTRUMENT'] = 'CFG'
-        aflplusplus_fuzzer.build("lto")
+        aflplusplus_fuzzer.build("lto", 'instrim')
 
     for copy_file in glob.glob("/afl/libc*"):
         shutil.copy(copy_file, os.environ['OUT'])

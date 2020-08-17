@@ -31,7 +31,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     benchmark_name = os.environ['BENCHMARK']
 
-    elif benchmark_name == 'php_php-fuzz-parser':
+    if benchmark_name == 'php_php-fuzz-parser':
         aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle",
                                  "cmplog")
     else:
