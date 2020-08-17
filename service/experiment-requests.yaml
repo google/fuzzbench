@@ -21,13 +21,13 @@
 
 - experiment: 2020-08-15
   fuzzers:
-
-- experiment: 2020-08-14
-  fuzzers:
     - libfuzzer_fixcrossover
     - entropic_fixcrossover
     - libfuzzer_keepseed
     - entropic_keepseed
+
+- experiment: 2020-08-14
+  fuzzers:
     - aflplusplus
     - aflplusplus_optimal
     - aflplusplus_qemu
