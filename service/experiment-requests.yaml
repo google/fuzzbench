@@ -19,6 +19,10 @@
 # are still testing this feature. You should request an experiment by contacting
 # us as you normally do.
 
+- experiment: 2020-08-21
+  fuzzers:
+    - entropic_exectime
+
 - experiment: 2020-08-20
   fuzzers:
     - aflplusplus
