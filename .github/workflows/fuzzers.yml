@@ -37,11 +37,12 @@ jobs:
           # Temporary variants.
           - libfuzzer_keepseed
           - entropic_keepseed
-          - aflplusplus_same1
-          - aflplusplus_same2
-          - aflplusplus_same3
-          - aflplusplus_taint
-          - aflplusplus_laf
+          - aflplusplus_classic
+          - aflplusplus_lto_pcguard
+          - aflplusplus_lto
+          - aflplusplus_lto_fixed
+          - aflplusplus_lto_laf
+          - aflplusplus_lto_cmplog
 
         benchmark_type:
           - oss-fuzz

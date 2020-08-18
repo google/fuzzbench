@@ -19,6 +19,17 @@
 # are still testing this feature. You should request an experiment by contacting
 # us as you normally do.
 
+- experiment: 2020-08-20
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_lto_fixed
+    - aflplusplus_lto
+    - aflplusplus_lto_pcguard
+    - aflplusplus_lto_cmplog
+    - aflplusplus_lto_laf
+    - aflplusplus_classic
+
 - experiment: 2020-08-15
   fuzzers:
     - libfuzzer_fixcrossover

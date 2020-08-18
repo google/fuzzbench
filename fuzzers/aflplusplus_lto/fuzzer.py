@@ -20,17 +20,29 @@
 # But this means that the good stuff is hidden away in this benchmark
 # otherwise.
 
+import os
+import shutil
+import glob
+
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
-    aflplusplus_fuzzer.build('tracepc')
+    benchmark_name = os.environ['BENCHMARK']
+
+    if benchmark_name == 'php_php-fuzz-parser':
+        aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle")
+    else:
+        aflplusplus_fuzzer.build("lto")
+
+    for copy_file in glob.glob("/afl/libc*"):
+        shutil.copy(copy_file, os.environ['OUT'])
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    run_options = ['-s', '1234567890']
+    run_options = []
 
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
