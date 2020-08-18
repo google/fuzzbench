@@ -35,17 +35,14 @@ jobs:
           - honggfuzz_qemu
           - weizz
           # Temporary variants.
-          - libfuzzer_interceptors
           - libfuzzer_keepseed
-          - libfuzzer_fixcrossover
-          - entropic_fixcrossover
-          - entropic_interceptors
           - entropic_keepseed
-          - aflplusplus_same1
-          - aflplusplus_same2
-          - aflplusplus_same3
-          - aflplusplus_taint
-          - aflplusplus_laf
+          - aflplusplus_classic
+          - aflplusplus_lto_pcguard
+          - aflplusplus_lto
+          - aflplusplus_lto_fixed
+          - aflplusplus_lto_laf
+          - aflplusplus_lto_cmplog
 
         benchmark_type:
           - oss-fuzz

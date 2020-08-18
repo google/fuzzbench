@@ -12,17 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG parent_image
-FROM $parent_image
+FROM gcr.io/fuzzbench/base-image
 
-COPY patch.diff /
-
-RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
-    cd /llvm-project/ && \
-    git checkout b52b2e1c188072e3cbc91500cfd503fb26d50ffc && \
-    patch -p1 < /patch.diff && \
-    cd compiler-rt/lib/fuzzer && \
-    (for f in *.cpp; do \
-      clang++ -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \
-    done && wait) && \
-    ar r /usr/lib/libFuzzer.a *.o
+# This makes interactive docker runs painless:
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
+ENV AFL_MAP_SIZE=900000
+ENV PATH="$PATH:/out"
+ENV AFL_SKIP_CPUFREQ=1
+ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1

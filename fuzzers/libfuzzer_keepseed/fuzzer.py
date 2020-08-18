@@ -13,7 +13,7 @@
 # limitations under the License.
 """Integration code for libFuzzer fuzzer."""
 
-from fuzzers.libfuzzer_interceptors import fuzzer as libfuzzer_fuzzer
+from fuzzers.libfuzzer import fuzzer as libfuzzer_fuzzer
 
 
 def build():
