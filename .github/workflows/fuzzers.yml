@@ -35,11 +35,7 @@ jobs:
           - honggfuzz_qemu
           - weizz
           # Temporary variants.
-          - libfuzzer_interceptors
           - libfuzzer_keepseed
-          - libfuzzer_fixcrossover
-          - entropic_fixcrossover
-          - entropic_interceptors
           - entropic_keepseed
           - aflplusplus_same1
           - aflplusplus_same2
