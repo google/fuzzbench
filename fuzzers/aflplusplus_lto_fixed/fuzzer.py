@@ -37,6 +37,8 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
         aflplusplus_fuzzer.build("lto")
     elif benchmark_name == 'php_php-fuzz-parser':
         aflplusplus_fuzzer.build("classic", "ctx", "nozero", "skipsingle")
+    elif benchmark_name == 'systemd_fuzz-link-parser':
+        aflplusplus_fuzzer.build("lto")
     else:
         aflplusplus_fuzzer.build("lto", "fixed")
 
