@@ -84,10 +84,10 @@ def test_get_pairwise_unique_coverage_table():
     coverage_dict = create_coverage_data()
     benchmark_coverage_dict = coverage_data_utils.get_benchmark_cov_dict(
         coverage_dict, 'libpng-1.2.56')
+    fuzzers = ['libfuzzer', 'afl']
     table = coverage_data_utils.get_pairwise_unique_coverage_table(
-        benchmark_coverage_dict)
-    fuzzers = ['afl', 'libfuzzer']
-    expected_table = pd.DataFrame([[0, 2], [1, 0]],
+        benchmark_coverage_dict, fuzzers)
+    expected_table = pd.DataFrame([[0, 1], [2, 0]],
                                   index=fuzzers,
                                   columns=fuzzers)
     pd_test.assert_frame_equal(table, expected_table)

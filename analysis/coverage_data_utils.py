@@ -20,6 +20,7 @@ import posixpath
 import tempfile
 import pandas as pd
 
+from analysis import data_utils
 from common import filestore_utils
 
 
@@ -121,7 +122,7 @@ def get_benchmark_aggregated_cov_df(benchmark_coverage_dict):
     return pd.DataFrame(dict_to_transform)
 
 
-def get_pairwise_unique_coverage_table(benchmark_coverage_dict):
+def get_pairwise_unique_coverage_table(benchmark_coverage_dict, fuzzers):
     """Returns a table that shows the unique coverage between
     each pair of fuzzers.
 
@@ -129,8 +130,6 @@ def get_pairwise_unique_coverage_table(benchmark_coverage_dict):
     row and column represents a fuzzer, and each cell contains a number
     showing the regions covered by the fuzzer of the column but not by
     the fuzzer of the row."""
-
-    fuzzers = benchmark_coverage_dict.keys()
 
     pairwise_unique_coverage_values = []
     for fuzzer_in_row in fuzzers:
@@ -157,3 +156,11 @@ def get_unique_covered_percentage(fuzzer_row_covered_regions,
         if region not in fuzzer_row_covered_regions:
             unique_region_count += 1
     return unique_region_count
+
+
+def rank_by_average_normalized_score(benchmarks_unique_coverage_list):
+    """Returns the rank based on average normalized score on unique coverage."""
+    df_list = [df.set_index('fuzzer') for df in benchmarks_unique_coverage_list]
+    combined_df = pd.concat(df_list, axis=1).astype(float).T
+    scores = data_utils.experiment_rank_by_average_normalized_score(combined_df)
+    return scores
