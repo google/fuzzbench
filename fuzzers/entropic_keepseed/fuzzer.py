@@ -29,5 +29,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
                                 target_binary,
                                 extra_flags=[
                                     '-entropic=1', '-keep_seed=1',
-                                    '-cross_over_uniformdist=1'
+                                    '-cross_over_uniformdist=1',
+                                    '-entropic_scale_per_exec_time=1'
                                 ])
