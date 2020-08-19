@@ -37,6 +37,7 @@ jobs:
           # Temporary variants.
           - libfuzzer_keepseed
           - entropic_keepseed
+          - entropic_exectime
           - aflplusplus_classic
           - aflplusplus_lto_pcguard
           - aflplusplus_lto
