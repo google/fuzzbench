@@ -46,6 +46,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['CXX'] = '/afl/afl-clang-lto++'
         os.environ['RANLIB'] = 'llvm-ranlib-11'
         os.environ['AR'] = 'llvm-ar-11'
+        os.environ['AS'] = 'llvm-as-11'
     elif 'qemu' in build_modes:
         os.environ['CC'] = 'clang'
         os.environ['CXX'] = 'clang++'
@@ -55,7 +56,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     if 'instrim' in build_modes:
         # We dont set AFL_LLVM_INSTRIM_LOOPHEAD for better coverage
-        os.environ['AFL_LLVM_INSTRIM'] = 'CFG'
+        os.environ['AFL_LLVM_INSTRIM'] = '1'
     elif 'tracepc' in build_modes or 'pcguard' in build_modes:
         os.environ['AFL_LLVM_USE_TRACE_PC'] = '1'
     elif 'classic' in build_modes:
