@@ -45,4 +45,7 @@ RUN chmod +x /usr/local/bin/cloud_sql_proxy
 COPY --from=base-clang /usr/local/bin/llvm-cov /usr/local/bin/
 COPY --from=base-clang /usr/local/bin/llvm-profdata /usr/local/bin/
 
+# Get the Chromium tool for post processing HTML report.
+RUN git clone https://chromium.googlesource.com/chromium/src/tools/code_coverage /opt/code_coverage
+
 COPY startup-dispatcher.sh $WORK/
