@@ -1,14 +1,24 @@
-commit 72e16fc7160185305eee536c257a478ae84f7082
-Author: Dokyung Song <dokyungs@google.com>
-Date:   Fri Jul 31 00:07:20 2020 +0000
-
-    [libFuzzer] Optionally keep initial seed inputs regardless of whether they discover new features or not.
-
 diff --git a/compiler-rt/lib/fuzzer/FuzzerCorpus.h b/compiler-rt/lib/fuzzer/FuzzerCorpus.h
-index 54d1e09ec6d..5c687013c59 100644
+index 54d1e09ec6d..ed7d0837659 100644
 --- a/compiler-rt/lib/fuzzer/FuzzerCorpus.h
 +++ b/compiler-rt/lib/fuzzer/FuzzerCorpus.h
-@@ -33,6 +33,7 @@ struct InputInfo {
+@@ -18,6 +18,7 @@
+ #include "FuzzerSHA1.h"
+ #include "FuzzerTracePC.h"
+ #include <algorithm>
++#include <chrono>
+ #include <numeric>
+ #include <random>
+ #include <unordered_set>
+@@ -26,6 +27,7 @@ namespace fuzzer {
+ 
+ struct InputInfo {
+   Unit U;  // The actual input data.
++  std::chrono::microseconds TimeOfUnit;
+   uint8_t Sha1[kSHA1NumBytes];  // Checksum.
+   // Number of features that this input has and no smaller input has.
+   size_t NumFeatures = 0;
+@@ -33,6 +35,7 @@ struct InputInfo {
    // Stats.
    size_t NumExecutedMutations = 0;
    size_t NumSuccessfullMutations = 0;
@@ -16,7 +26,53 @@ index 54d1e09ec6d..5c687013c59 100644
    bool MayDeleteFile = false;
    bool Reduced = false;
    bool HasFocusFunction = false;
-@@ -131,9 +132,12 @@ class InputCorpus {
+@@ -65,7 +68,8 @@ struct InputInfo {
+   // of the seed. Since we do not know the entropy of a seed that has
+   // never been executed we assign fresh seeds maximum entropy and
+   // let II->Energy approach the true entropy from above.
+-  void UpdateEnergy(size_t GlobalNumberOfFeatures) {
++  void UpdateEnergy(size_t GlobalNumberOfFeatures, bool ScalePerExecTime,
++                    uint64_t AverageTimeOfUnit) {
+     Energy = 0.0;
+     SumIncidence = 0;
+ 
+@@ -88,6 +92,27 @@ struct InputInfo {
+     // Normalize.
+     if (SumIncidence != 0)
+       Energy = (Energy / SumIncidence) + logl(SumIncidence);
++
++    if (ScalePerExecTime) {
++      // Scaling to favor inputs with lower execution time.
++      uint32_t PerfScore = 100;
++      if (TimeOfUnit.count() * 0.1 > AverageTimeOfUnit)
++        PerfScore = 10;
++      else if (TimeOfUnit.count() * 0.25 > AverageTimeOfUnit)
++        PerfScore = 25;
++      else if (TimeOfUnit.count() * 0.5 > AverageTimeOfUnit)
++        PerfScore = 50;
++      else if (TimeOfUnit.count() * 0.75 > AverageTimeOfUnit)
++        PerfScore = 75;
++      else if (TimeOfUnit.count() * 4 < AverageTimeOfUnit)
++        PerfScore = 300;
++      else if (TimeOfUnit.count() * 3 < AverageTimeOfUnit)
++        PerfScore = 200;
++      else if (TimeOfUnit.count() * 2 < AverageTimeOfUnit)
++        PerfScore = 150;
++
++      Energy *= PerfScore;
++    }
+   }
+ 
+   // Increment the frequency of the feature Idx.
+@@ -120,6 +145,7 @@ struct EntropicOptions {
+   bool Enabled;
+   size_t NumberOfRarestFeatures;
+   size_t FeatureFrequencyThreshold;
++  bool ScalePerExecTime;
+ };
+ 
+ class InputCorpus {
+@@ -131,9 +157,12 @@ class InputCorpus {
  
    EntropicOptions Entropic;
  
@@ -31,24 +87,26 @@ index 54d1e09ec6d..5c687013c59 100644
      memset(InputSizesPerFeature, 0, sizeof(InputSizesPerFeature));
      memset(SmallestElementPerFeature, 0, sizeof(SmallestElementPerFeature));
    }
-@@ -177,7 +181,7 @@ public:
+@@ -177,7 +206,8 @@ public:
    bool empty() const { return Inputs.empty(); }
    const Unit &operator[] (size_t Idx) const { return Inputs[Idx]->U; }
    InputInfo *AddToCorpus(const Unit &U, size_t NumFeatures, bool MayDeleteFile,
 -                         bool HasFocusFunction,
 +                         bool HasFocusFunction, bool SeedInput,
++                         std::chrono::microseconds TimeOfUnit,
                           const Vector<uint32_t> &FeatureSet,
                           const DataFlowTrace &DFT, const InputInfo *BaseII) {
      assert(!U.empty());
-@@ -187,6 +191,7 @@ public:
+@@ -187,6 +217,8 @@ public:
      InputInfo &II = *Inputs.back();
      II.U = U;
      II.NumFeatures = NumFeatures;
 +    II.SeedInput = SeedInput;
++    II.TimeOfUnit = TimeOfUnit;
      II.MayDeleteFile = MayDeleteFile;
      II.UniqFeatureSet = FeatureSet;
      II.HasFocusFunction = HasFocusFunction;
-@@ -276,6 +281,11 @@ public:
+@@ -276,6 +308,11 @@ public:
      return Idx;
    }
  
@@ -60,8 +118,28 @@ index 54d1e09ec6d..5c687013c59 100644
    void PrintStats() {
      for (size_t i = 0; i < Inputs.size(); i++) {
        const auto &II = *Inputs[i];
+@@ -460,12 +497,18 @@ private:
+     Weights.resize(N);
+     std::iota(Intervals.begin(), Intervals.end(), 0);
+ 
++    std::chrono::microseconds TotalTimeOfUnit(0);
++    for (auto II : Inputs) {
++      TotalTimeOfUnit += II->TimeOfUnit;
++    }
++
+     bool VanillaSchedule = true;
+     if (Entropic.Enabled) {
+       for (auto II : Inputs) {
+         if (II->NeedsEnergyUpdate && II->Energy != 0.0) {
+           II->NeedsEnergyUpdate = false;
+-          II->UpdateEnergy(RareFeatures.size());
++          II->UpdateEnergy(RareFeatures.size(), Entropic.ScalePerExecTime,
++                           TotalTimeOfUnit.count() / N);
+         }
+       }
+ 
 diff --git a/compiler-rt/lib/fuzzer/FuzzerDriver.cpp b/compiler-rt/lib/fuzzer/FuzzerDriver.cpp
-index 8339697396c..0933af56804 100644
+index bed9e84de67..c11e6a0084a 100644
 --- a/compiler-rt/lib/fuzzer/FuzzerDriver.cpp
 +++ b/compiler-rt/lib/fuzzer/FuzzerDriver.cpp
 @@ -649,6 +649,7 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
@@ -81,7 +159,23 @@ index 8339697396c..0933af56804 100644
    Options.MutateDepth = Flags.mutate_depth;
    Options.ReduceDepth = Flags.reduce_depth;
    Options.UseCounters = Flags.use_counters;
-@@ -753,7 +756,8 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
+@@ -718,6 +721,7 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
+       (size_t)Flags.entropic_feature_frequency_threshold;
+   Options.EntropicNumberOfRarestFeatures =
+       (size_t)Flags.entropic_number_of_rarest_features;
++  Options.EntropicScalePerExecTime = Flags.entropic_scale_per_exec_time;
+   if (Options.Entropic) {
+     if (!Options.FocusFunction.empty()) {
+       Printf("ERROR: The parameters `--entropic` and `--focus_function` cannot "
+@@ -733,6 +737,7 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
+   Entropic.FeatureFrequencyThreshold =
+       Options.EntropicFeatureFrequencyThreshold;
+   Entropic.NumberOfRarestFeatures = Options.EntropicNumberOfRarestFeatures;
++  Entropic.ScalePerExecTime = Options.EntropicScalePerExecTime;
+ 
+   unsigned Seed = Flags.seed;
+   // Initialize Seed.
+@@ -753,7 +758,8 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
  
    Random Rand(Seed);
    auto *MD = new MutationDispatcher(Rand, Options);
@@ -92,7 +186,7 @@ index 8339697396c..0933af56804 100644
  
    for (auto &U: Dictionary)
 diff --git a/compiler-rt/lib/fuzzer/FuzzerFlags.def b/compiler-rt/lib/fuzzer/FuzzerFlags.def
-index 832224a705d..10b1f5f539a 100644
+index 832224a705d..3f66242985d 100644
 --- a/compiler-rt/lib/fuzzer/FuzzerFlags.def
 +++ b/compiler-rt/lib/fuzzer/FuzzerFlags.def
 @@ -23,7 +23,14 @@ FUZZER_FLAG_INT(len_control, 100, "Try generating small inputs first, "
@@ -110,6 +204,14 @@ index 832224a705d..10b1f5f539a 100644
  FUZZER_FLAG_INT(mutate_depth, 5,
              "Apply this number of consecutive mutations to each input.")
  FUZZER_FLAG_INT(reduce_depth, 0, "Experimental/internal. "
+@@ -161,6 +168,7 @@ FUZZER_FLAG_INT(entropic_number_of_rarest_features, 100, "Experimental. If "
+      "entropic is enabled, we keep track of the frequencies only for the "
+      "Top-X least abundant features (union features that are considered as "
+      "rare).")
++FUZZER_FLAG_INT(entropic_scale_per_exec_time, 0, "Experimental.")
+ 
+ FUZZER_FLAG_INT(analyze_dict, 0, "Experimental")
+ FUZZER_DEPRECATED_FLAG(use_clang_coverage)
 diff --git a/compiler-rt/lib/fuzzer/FuzzerFork.cpp b/compiler-rt/lib/fuzzer/FuzzerFork.cpp
 index d9e6b79443e..97e91cbe869 100644
 --- a/compiler-rt/lib/fuzzer/FuzzerFork.cpp
@@ -154,10 +256,18 @@ index 31096ce804b..e75807209f5 100644
    size_t NumberOfLeakDetectionAttempts = 0;
  
 diff --git a/compiler-rt/lib/fuzzer/FuzzerLoop.cpp b/compiler-rt/lib/fuzzer/FuzzerLoop.cpp
-index 02db6d27b0a..28d5f32c0d6 100644
+index 02db6d27b0a..65a02c35758 100644
 --- a/compiler-rt/lib/fuzzer/FuzzerLoop.cpp
 +++ b/compiler-rt/lib/fuzzer/FuzzerLoop.cpp
-@@ -478,7 +478,7 @@ bool Fuzzer::RunOne(const uint8_t *Data, size_t Size, bool MayDeleteFile,
+@@ -469,6 +469,7 @@ bool Fuzzer::RunOne(const uint8_t *Data, size_t Size, bool MayDeleteFile,
+     return false;
+ 
+   ExecuteCallback(Data, Size);
++  auto TimeOfUnit = duration_cast<microseconds>(UnitStopTime - UnitStartTime);
+ 
+   UniqFeatureSetTmp.clear();
+   size_t FoundUniqFeaturesOfII = 0;
+@@ -478,7 +479,7 @@ bool Fuzzer::RunOne(const uint8_t *Data, size_t Size, bool MayDeleteFile,
        UniqFeatureSetTmp.push_back(Feature);
      if (Options.Entropic)
        Corpus.UpdateFeatureFrequency(II, Feature);
@@ -166,24 +276,22 @@ index 02db6d27b0a..28d5f32c0d6 100644
        if (std::binary_search(II->UniqFeatureSet.begin(),
                               II->UniqFeatureSet.end(), Feature))
          FoundUniqFeaturesOfII++;
-@@ -487,11 +487,12 @@ bool Fuzzer::RunOne(const uint8_t *Data, size_t Size, bool MayDeleteFile,
+@@ -487,11 +488,12 @@ bool Fuzzer::RunOne(const uint8_t *Data, size_t Size, bool MayDeleteFile,
      *FoundUniqFeatures = FoundUniqFeaturesOfII;
    PrintPulseAndReportSlowInput(Data, Size);
    size_t NumNewFeatures = Corpus.NumFeatureUpdates() - NumUpdatesBefore;
 -  if (NumNewFeatures) {
 +  if (NumNewFeatures || (Options.KeepSeed && IsExecutingSeedCorpora)) {
      TPC.UpdateObservedPCs();
--    auto NewII = Corpus.AddToCorpus({Data, Data + Size}, NumNewFeatures,
--                                    MayDeleteFile, TPC.ObservedFocusFunction(),
+     auto NewII = Corpus.AddToCorpus({Data, Data + Size}, NumNewFeatures,
+                                     MayDeleteFile, TPC.ObservedFocusFunction(),
 -                                    UniqFeatureSetTmp, DFT, II);
-+    auto NewII =
-+        Corpus.AddToCorpus({Data, Data + Size}, NumNewFeatures, MayDeleteFile,
-+                           TPC.ObservedFocusFunction(),
-+                           IsExecutingSeedCorpora, UniqFeatureSetTmp, DFT, II);
++                                    IsExecutingSeedCorpora,
++                                    TimeOfUnit, UniqFeatureSetTmp, DFT, II);
      WriteFeatureSetToFile(Options.FeaturesDir, Sha1ToString(NewII->Sha1),
                            NewII->UniqFeatureSet);
      return true;
-@@ -664,8 +665,14 @@ void Fuzzer::MutateAndTestOne() {
+@@ -664,8 +666,14 @@ void Fuzzer::MutateAndTestOne() {
    MD.StartMutationSequence();
  
    auto &II = Corpus.ChooseUnitToMutate(MD.GetRand());
@@ -200,7 +308,7 @@ index 02db6d27b0a..28d5f32c0d6 100644
    const auto &U = II.U;
    memcpy(BaseSha1, II.Sha1, sizeof(BaseSha1));
    assert(CurrentUnitData);
-@@ -764,6 +771,8 @@ void Fuzzer::ReadAndExecuteSeedCorpora(Vector<SizedFile> &CorporaFiles) {
+@@ -764,6 +772,8 @@ void Fuzzer::ReadAndExecuteSeedCorpora(Vector<SizedFile> &CorporaFiles) {
        assert(CorporaFiles.front().Size <= CorporaFiles.back().Size);
      }
  
@@ -209,7 +317,7 @@ index 02db6d27b0a..28d5f32c0d6 100644
      // Load and execute inputs one by one.
      for (auto &SF : CorporaFiles) {
        auto U = FileToVector(SF.File, MaxInputLen, /*ExitOnError=*/false);
-@@ -773,6 +782,8 @@ void Fuzzer::ReadAndExecuteSeedCorpora(Vector<SizedFile> &CorporaFiles) {
+@@ -773,6 +783,8 @@ void Fuzzer::ReadAndExecuteSeedCorpora(Vector<SizedFile> &CorporaFiles) {
        TryDetectingAMemoryLeak(U.data(), U.size(),
                                /*DuringInitialCorpusExecution*/ true);
      }
@@ -218,7 +326,7 @@ index 02db6d27b0a..28d5f32c0d6 100644
    }
  
    PrintStats("INITED");
-@@ -785,6 +796,8 @@ void Fuzzer::ReadAndExecuteSeedCorpora(Vector<SizedFile> &CorporaFiles) {
+@@ -785,6 +797,8 @@ void Fuzzer::ReadAndExecuteSeedCorpora(Vector<SizedFile> &CorporaFiles) {
               Corpus.NumInputsThatTouchFocusFunction());
    }
  
@@ -228,7 +336,7 @@ index 02db6d27b0a..28d5f32c0d6 100644
      Printf("ERROR: no interesting inputs were found. "
             "Is the code instrumented for coverage? Exiting.\n");
 diff --git a/compiler-rt/lib/fuzzer/FuzzerOptions.h b/compiler-rt/lib/fuzzer/FuzzerOptions.h
-index 9d975bd61fe..bb2c14be47b 100644
+index b75e7c7af70..9b98383b4aa 100644
 --- a/compiler-rt/lib/fuzzer/FuzzerOptions.h
 +++ b/compiler-rt/lib/fuzzer/FuzzerOptions.h
 @@ -18,6 +18,7 @@ struct FuzzingOptions {
@@ -248,6 +356,14 @@ index 9d975bd61fe..bb2c14be47b 100644
    int MutateDepth = 5;
    bool ReduceDepth = false;
    bool UseCounters = false;
+@@ -47,6 +50,7 @@ struct FuzzingOptions {
+   bool Entropic = false;
+   size_t EntropicFeatureFrequencyThreshold = 0xFF;
+   size_t EntropicNumberOfRarestFeatures = 100;
++  bool EntropicScalePerExecTime = false;
+   std::string OutputCorpus;
+   std::string ArtifactPrefix = "./";
+   std::string ExactArtifactPath;
 diff --git a/compiler-rt/lib/fuzzer/tests/FuzzerUnittest.cpp b/compiler-rt/lib/fuzzer/tests/FuzzerUnittest.cpp
 index 0e9435ab8fc..dfc642ab6d0 100644
 --- a/compiler-rt/lib/fuzzer/tests/FuzzerUnittest.cpp
