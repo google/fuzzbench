@@ -36,9 +36,9 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'curl_curl_fuzzer_http':
         aflplusplus_fuzzer.build("tracepc", "cmplog")
     elif benchmark_name == 'libjpeg-turbo-07-2017':
-        aflplusplus_fuzzer.build("lto", "instrim", "fixed")
+        aflplusplus_fuzzer.build("lto", "fixed")
     elif benchmark_name == 'libpng-1.2.56':
-        aflplusplus_fuzzer.build("lto", "laf", "instrim", "fixed")
+        aflplusplus_fuzzer.build("lto", "laf", "fixed")
     elif benchmark_name == 'libxml2-v2.9.2':
         aflplusplus_fuzzer.build("lto", "fixed")
     elif benchmark_name == 'mbedtls_fuzz_dtlsclient':
@@ -50,15 +50,15 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'proj4-2017-08-14':
         aflplusplus_fuzzer.build("tracepc", "cmplog")
     elif benchmark_name == 'sqlite3_ossfuzz':
-        aflplusplus_fuzzer.build("lto", "instrim", "fixed")
+        aflplusplus_fuzzer.build("lto", "fixed")
     elif benchmark_name == 'vorbis-2017-12-11':
         aflplusplus_fuzzer.build("tracepc", "laf")
     elif benchmark_name == 'woff2-2016-05-06':
-        aflplusplus_fuzzer.build("lto", "instrim", "fixed")
+        aflplusplus_fuzzer.build("lto", "fixed")
     elif benchmark_name == 'zlib_zlib_uncompress_fuzzer':
         aflplusplus_fuzzer.build("tracepc", "cmplog")
     else:
-        aflplusplus_fuzzer.build("lto", "cmplog", "fixed", "instrim")
+        aflplusplus_fuzzer.build("lto", "cmplog", "fixed")
 
     for copy_file in glob.glob("/afl/libc*"):
         shutil.copy(copy_file, os.environ['OUT'])
