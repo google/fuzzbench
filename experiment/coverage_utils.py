@@ -71,6 +71,8 @@ def generate_coverage_info(experiment, benchmark, fuzzer):
     generator = CoverageReporter(fuzzer, benchmark, experiment)
     # Merge all the profdata files.
     generator.merge_profdata_files()
+    # Generate the json file based on merged profdata file.
+    generator.generate_merged_json_summary()
     # Generate the reports using llvm-cov.
     generator.generate_cov_report()
     # Post process the report.
