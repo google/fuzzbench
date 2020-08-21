@@ -276,7 +276,7 @@ def generate_json_summary(coverage_binary,
 
 def extract_coverage_from_json(json_file):
     """Get the covered regions for the current trial."""
-    covered_regions = set()
+    covered_regions = []
     try:
         coverage_info = get_coverage_infomation(json_file)
         functions_data = coverage_info['data'][0]['functions']
@@ -292,8 +292,8 @@ def extract_coverage_from_json(json_file):
         for function_data in functions_data:
             for region in function_data['regions']:
                 if region[hit_index] != 0 and region[type_index] == 0:
-                    covered_regions.add(
-                        tuple(region[:hit_index] + region[file_index:]))
+                    covered_regions.append(region[:hit_index] +
+                                           region[file_index:])
     except Exception:  # pylint: disable=broad-except
         logger.error('Coverage summary json file defective or missing.')
     return covered_regions
