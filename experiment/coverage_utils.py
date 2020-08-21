@@ -266,7 +266,7 @@ def generate_json_summary(coverage_binary,
 
     if summary_only:
         command.append('-summary-only')
-    
+
     with open(output_file, 'w') as dst_file:
         result = new_process.execute(command,
                                      output_file=dst_file,
