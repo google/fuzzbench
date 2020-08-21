@@ -370,12 +370,12 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
 
         if result.retcode != 0:
             self.logger.error(
-                'Coverage summary json file generation failed for \
-                    cycle: %d.', cycle)
+                'Coverage summary json file generation failed for '
+                'cycle: %d.', cycle)
             if cycle != 0:
                 self.logger.error(
-                    'Coverage summary json file generation failed for \
-                        cycle: %d.', cycle)
+                    'Coverage summary json file generation failed for '
+                    'cycle: %d.', cycle)
             else:
                 self.logger.error(
                     'Coverage summary json file generation failed in the end.')

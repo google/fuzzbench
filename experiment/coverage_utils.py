@@ -136,7 +136,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             '-instr-profile={profdata}'.format(
                 profdata=self.merged_profdata_file)
         ]
-        result = new_process.execute(command)
+        result = new_process.execute(command, expect_zero=False)
         if result.retcode != 0:
             logger.error('Coverage report generation failed for '
                          'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
@@ -165,7 +165,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             '-output-dir={report_dir}'.format(report_dir=self.report_dir),
             '-path-equivalence=/,{prefix}'.format(prefix=self.source_files_dir)
         ]
-        result = new_process.execute(command)
+        result = new_process.execute(command, expect_zero=False)
         if result.retcode != 0:
             logger.error('Coverage report post process failed for '
                          'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
@@ -257,7 +257,7 @@ def generate_json_summary(coverage_binary,
                           profdata_file,
                           output_file,
                           summary_only=True):
-    """Generate the json summary file from |coverage_binary|
+    """Generates the json summary file from |coverage_binary|
     and |profdata_file|."""
     command = [
         'llvm-cov', 'export', '-format=text', coverage_binary,
@@ -275,7 +275,7 @@ def generate_json_summary(coverage_binary,
 
 
 def extract_coverage_from_json(json_file):
-    """Get the covered regions for the current trial."""
+    """Returns the covered regions for the current trial."""
     covered_regions = []
     try:
         coverage_info = get_coverage_infomation(json_file)
