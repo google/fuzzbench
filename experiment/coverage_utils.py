@@ -147,7 +147,8 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         coverage_binary = get_coverage_binary(self.benchmark)
         result = generate_json_summary(coverage_binary,
                                        self.merged_profdata_file,
-                                       self.merged_json_summary_file)
+                                       self.merged_json_summary_file,
+                                       summary_only=False)
         if result.retcode != 0:
             logger.error(
                 'Merged coverage summary json file generation failed for '
