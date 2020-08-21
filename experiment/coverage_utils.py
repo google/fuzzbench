@@ -266,13 +266,11 @@ def generate_json_summary(coverage_binary,
 
     if summary_only:
         command.append('-summary-only')
-
-    try:
-        with open(output_file, 'w') as dst_file:
-            result = new_process.execute(command,
-                                        output_file=dst_file)
-    except Exception:
-        logger.error('llvm export error.')
+    
+    with open(output_file, 'w') as dst_file:
+        result = new_process.execute(command,
+                                     output_file=dst_file,
+                                     expect_zero=False)
     return result
 
 

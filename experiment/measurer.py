@@ -73,8 +73,6 @@ def measure_main(experiment_config):
     try:
         coverage_utils.generate_all_coverage_info(experiment_config)
         coverage_utils.upload_coverage_info_to_bucket()
-    except Exception:
-        logger.error('Error when generating coverage info.')
 
     logger.info('Finished measuring.')
 
