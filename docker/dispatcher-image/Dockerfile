@@ -25,7 +25,8 @@ RUN apt-get update -y && apt-get install -y \
     libglib2.0-0 \
     libxml2 \
     libarchive13 \
-    libgss3
+    libgss3 \
+    git
 
 RUN virtualenv --python=$(which python3) $WORK/.venv
 
