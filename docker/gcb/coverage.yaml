@@ -14,16 +14,13 @@
 
 steps:
 
-# Pull builders/coverage to fill cache.
 - name: 'gcr.io/cloud-builders/docker'
   entrypoint: 'bash'
   args:
     - '-c'
     - |
-      docker pull ${_REPO}/builders/coverage || exit 0
+      docker pull ${_REPO}/builders/benchmark/${_BENCHMARK} || exit 0
 
-# TODO: Hoist building builders/coverage so that we don't build it everytime we
-# do a coverage build.
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
@@ -31,20 +28,53 @@ steps:
     # Use two tags so that the image builds properly and we can push it to the
     # correct location.
     '--tag',
-    'gcr.io/fuzzbench/builders/coverage:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/builders/benchmark/${_BENCHMARK}',
 
     '--tag',
-    '${_REPO}/builders/coverage:${_EXPERIMENT}',
+    '${_REPO}/builders/benchmark/${_BENCHMARK}:${_EXPERIMENT}',
+
+    '--file=benchmarks/${_BENCHMARK}/Dockerfile',
 
     '--cache-from',
-    '${_REPO}/builders/coverage',
+    '${_REPO}/builders/benchmark/${_BENCHMARK}:${_EXPERIMENT}',
+
+    'benchmarks/${_BENCHMARK}',
+  ]
+  id: 'build-project-builder'
+
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      docker pull ${_REPO}/builders/coverage/${_BENCHMARK}-intermediate || exit 0
+  id: 'pull-coverage-benchmark-builder-intermediate'
+  wait_for: ['-']
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+
+    # Use two tags so that the image builds properly and we can push it to the
+    # correct location.
+    '--tag',
+    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}-intermediate',
+
+    '--tag',
+    '${_REPO}/builders/coverage/${_BENCHMARK}-intermediate:${_EXPERIMENT}',
 
     '--file=fuzzers/coverage/builder.Dockerfile',
 
-    'fuzzers/coverage'
-  ]
-  id: 'build-coverage-builder'
+    '--cache-from',
+    '${_REPO}/builders/coverage/${_BENCHMARK}-intermediate',
 
+    '--build-arg',
+    'parent_image=gcr.io/fuzzbench/builders/benchmark/${_BENCHMARK}',
+
+    'fuzzers/coverage',
+  ]
+  id: 'build-coverage-benchmark-builder-intermediate'
+  wait_for: ['build-project-builder', 'pull-coverage-benchmark-builder-intermediate']
 
 - name: 'gcr.io/cloud-builders/docker'
   entrypoint: 'bash'
@@ -52,18 +82,26 @@ steps:
     - '-c'
     - |
       docker pull ${_REPO}/builders/coverage/${_BENCHMARK} || exit 0
-  id: 'pull-coverage-benchmark'
-  wait_for: ['-']  # Start this immediately.
+  id: 'pull-coverage-benchmark-builder'
+  wait_for: ['-']
 
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
 
     '--tag',
-    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}',
+    'gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}',
 
     '--tag',
     '${_REPO}/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}',
+
+    '--file=docker/benchmark-builder/Dockerfile',
+
+    '--cache-from',
+    '${_REPO}/builders/coverage/${_BENCHMARK}',
+
+    '--build-arg',
+    'parent_image=gcr.io/fuzzbench/builders/coverage/${_BENCHMARK}-intermediate',
 
     '--build-arg',
     'fuzzer=coverage',
@@ -71,15 +109,9 @@ steps:
     '--build-arg',
     'benchmark=${_BENCHMARK}',
 
-    '--file=docker/benchmark-builder/Dockerfile',
-
-    '--cache-from',
-    '${_REPO}/builders/coverage/${_BENCHMARK}',
-
-    '.'
+    '.',
   ]
-  wait_for: ['build-coverage-builder', 'pull-coverage-benchmark']
-
+  wait_for: ['pull-coverage-benchmark-builder', 'build-coverage-benchmark-builder-intermediate']
 
 - name: 'gcr.io/cloud-builders/docker'
   args: [
@@ -89,7 +121,7 @@ steps:
     '${_REPO}/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}',
     '/bin/bash',
     '-c',
-    'cd /out; tar -czvf /host-out/coverage-build-${_BENCHMARK}.tar.gz *'
+    'cd /out; tar -czvf /host-out/coverage-build-${_BENCHMARK}.tar.gz * /src /work'
   ]
 
 - name: 'gcr.io/cloud-builders/gsutil'
@@ -97,10 +129,13 @@ steps:
     '-m',
     'cp',
     '/workspace/out/coverage-build-${_BENCHMARK}.tar.gz',
-    '${_GCS_COVERAGE_BINARIES_DIR}/'
+    '${_GCS_COVERAGE_BINARIES_DIR}/',
   ]
 
-# Push images so we can take advantage of caching.
 images:
-  - '${_REPO}/builders/coverage:${_EXPERIMENT}'
+  - '${_REPO}/builders/benchmark/${_BENCHMARK}:${_EXPERIMENT}'
+  - '${_REPO}/builders/benchmark/${_BENCHMARK}'
+  - '${_REPO}/builders/coverage/${_BENCHMARK}-intermediate:${_EXPERIMENT}'
+  - '${_REPO}/builders/coverage/${_BENCHMARK}-intermediate'
   - '${_REPO}/builders/coverage/${_BENCHMARK}:${_EXPERIMENT}'
+  - '${_REPO}/builders/coverage/${_BENCHMARK}'

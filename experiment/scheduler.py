@@ -106,8 +106,12 @@ def all_trials_ended(experiment: str) -> bool:
 
 def delete_instances(instances, experiment_config):
     """Deletes |instances|."""
-    running_instances = gcloud.list_instances()
-    instances_to_delete = [i for i in instances if i in running_instances]
+    cloud_project = experiment_config['cloud_project']
+    cloud_compute_zone = experiment_config['cloud_compute_zone']
+    instances_to_delete = [
+        i for i in gce.get_instances(cloud_project, cloud_compute_zone)
+        if i in instances
+    ]
     return gcloud.delete_instances(instances_to_delete,
                                    experiment_config['cloud_compute_zone'])
 
@@ -230,8 +234,6 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
 
         self.preempted_trials = {}
         self.preemptible_starts_futile = False
-
-        self.base_target_link = gce.get_base_target_link(experiment_config)
 
         # Filter operations happening before the experiment started.
         self.last_preemptible_query = (db_utils.query(models.Experiment).filter(
@@ -410,7 +412,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         started_instances = self._get_started_unfinished_instances()
         query_time = datetime_now()
 
-        preempted_instances = list(self._query_preempted_instances())
+        preempted_instances = self._get_preempted_instances_with_retries()
         trials = []
         for instance in preempted_instances:
             trial = started_instances.get(instance)
@@ -428,30 +430,20 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         # Update this now when we know that we have succeded processing the
         # query. It's far worse if we update the query too early than if we
         # don't update the query at this point (which will only result in
-        # redundant work.
+        # redundant work).
         self.last_preemptible_query = query_time
 
-        # Return all preempted instances, those we knew from before hand and
+        # Return all preempted instances, those we knew from beforehand and
         # those we discovered in the query.
         return trials
 
-    @retry.wrap(
-        NUM_RETRIES, RETRY_WAIT_SECONDS,
-        'experiment.scheduler.TrialInstanceManager._query_preempted_instances')
-    def _query_preempted_instances(self):
+    @retry.wrap(NUM_RETRIES, RETRY_WAIT_SECONDS,
+                'experiment.scheduler.TrialInstanceManager.'
+                '_get_preempted_instances_with_retries')
+    def _get_preempted_instances_with_retries(self):
         project = self.experiment_config['cloud_project']
         zone = self.experiment_config['cloud_compute_zone']
-        operations = gce.filter_by_end_time(self.last_preemptible_query,
-                                            gce.get_operations(project, zone))
-        instances = []
-        for operation in gce.get_preempted_operations(operations):
-            if operation is None:
-                logs.error('Operation is None.')
-                continue
-            instance = gce.get_instance_from_preempted_operation(
-                operation, self.base_target_link)
-            instances.append(instance)
-        return instances
+        return list(gce.get_preempted_instances(project, zone))
 
     def handle_preempted_trials(self):
         """Handle preempted trials by marking them as preempted and creating
@@ -733,7 +725,9 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
         'fuzz_target': fuzz_target,
         'docker_image_url': docker_image_url,
         'docker_registry': experiment_config['docker_registry'],
-        'local_experiment': local_experiment
+        'local_experiment': local_experiment,
+        'no_seeds': experiment_config['no_seeds'],
+        'no_dictionaries': experiment_config['no_dictionaries'],
     }
 
     if not local_experiment:

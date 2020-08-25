@@ -14,9 +14,8 @@
 """Module for building things on Google Cloud Build for use in trials."""
 
 import os
-from typing import Dict, Tuple
+from typing import Dict
 
-from common import benchmark_utils
 from common import experiment_path as exp_path
 from common import experiment_utils
 from common import logs
@@ -40,21 +39,13 @@ GCB_MACHINE_TYPE = 'n1-highcpu-8'
 logger = logs.Logger('builder')  # pylint: disable=invalid-name
 
 
-def build_base_images() -> Tuple[int, str]:
+def build_base_images():
     """Build base images on GCB."""
-    return _build(get_build_config_file('base-images.yaml'), 'base-images')
+    _build(get_build_config_file('base-images.yaml'), 'base-images')
 
 
 def build_coverage(benchmark):
     """Build coverage image for benchmark on GCB."""
-    if benchmark_utils.is_oss_fuzz(benchmark):
-        _build_oss_fuzz_project_coverage(benchmark)
-    else:
-        _build_benchmark_coverage(benchmark)
-
-
-def _build_benchmark_coverage(benchmark: str) -> Tuple[int, str]:
-    """Build a coverage build of |benchmark| on GCB."""
     coverage_binaries_dir = exp_path.filestore(
         build_utils.get_coverage_binaries_dir())
     substitutions = {
@@ -63,63 +54,14 @@ def _build_benchmark_coverage(benchmark: str) -> Tuple[int, str]:
     }
     config_file = get_build_config_file('coverage.yaml')
     config_name = 'benchmark-{benchmark}-coverage'.format(benchmark=benchmark)
-    return _build(config_file, config_name, substitutions)
-
-
-def _build_oss_fuzz_project_fuzzer(benchmark: str,
-                                   fuzzer: str) -> Tuple[int, str]:
-    """Build a |benchmark|, |fuzzer| runner image on GCB."""
-    project = benchmark_utils.get_project(benchmark)
-    oss_fuzz_builder_hash = benchmark_utils.get_oss_fuzz_builder_hash(benchmark)
-    substitutions = {
-        '_OSS_FUZZ_PROJECT': project,
-        '_BENCHMARK': benchmark,
-        '_FUZZER': fuzzer,
-        '_OSS_FUZZ_BUILDER_HASH': oss_fuzz_builder_hash,
-    }
-    config_file = get_build_config_file('oss-fuzz-fuzzer.yaml')
-    config_name = 'oss-fuzz-{project}-fuzzer-{fuzzer}-hash-{hash}'.format(
-        project=project, fuzzer=fuzzer, hash=oss_fuzz_builder_hash)
-
-    return _build(config_file, config_name, substitutions)
-
-
-def _build_benchmark_fuzzer(benchmark: str, fuzzer: str) -> Tuple[int, str]:
-    """Build a |benchmark|, |fuzzer| runner image on GCB."""
-    # See link for why substitutions must begin with an underscore:
-    # https://cloud.google.com/cloud-build/docs/configuring-builds/substitute-variable-values#using_user-defined_substitutions
-    substitutions = {
-        '_BENCHMARK': benchmark,
-        '_FUZZER': fuzzer,
-    }
-    config_file = get_build_config_file('fuzzer.yaml')
-    config_name = 'benchmark-{benchmark}-fuzzer-{fuzzer}'.format(
-        benchmark=benchmark, fuzzer=fuzzer)
-    return _build(config_file, config_name, substitutions)
-
-
-def _build_oss_fuzz_project_coverage(benchmark: str) -> Tuple[int, str]:
-    """Build a coverage build of OSS-Fuzz-based benchmark |benchmark| on GCB."""
-    project = benchmark_utils.get_project(benchmark)
-    oss_fuzz_builder_hash = benchmark_utils.get_oss_fuzz_builder_hash(benchmark)
-    coverage_binaries_dir = exp_path.filestore(
-        build_utils.get_coverage_binaries_dir())
-    substitutions = {
-        '_GCS_COVERAGE_BINARIES_DIR': coverage_binaries_dir,
-        '_BENCHMARK': benchmark,
-        '_OSS_FUZZ_PROJECT': project,
-        '_OSS_FUZZ_BUILDER_HASH': oss_fuzz_builder_hash,
-    }
-    config_file = get_build_config_file('oss-fuzz-coverage.yaml')
-    config_name = 'oss-fuzz-{project}-coverage-hash-{hash}'.format(
-        project=project, hash=oss_fuzz_builder_hash)
-    return _build(config_file, config_name, substitutions)
+    _build(config_file, config_name, substitutions)
 
 
 def _build(config_file: str,
            config_name: str,
            substitutions: Dict[str, str] = None,
-           timeout_seconds: int = GCB_BUILD_TIMEOUT) -> Tuple[int, str]:
+           timeout_seconds: int = GCB_BUILD_TIMEOUT
+          ) -> new_process.ProcessResult:
     """Build each of |args| on gcb."""
     config_arg = '--config=%s' % config_file
     machine_type_arg = '--machine-type=%s' % GCB_MACHINE_TYPE
@@ -169,7 +111,12 @@ def get_build_config_file(filename: str) -> str:
 
 def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
     """Builds |benchmark| for |fuzzer|."""
-    if benchmark_utils.is_oss_fuzz(benchmark):
-        _build_oss_fuzz_project_fuzzer(benchmark, fuzzer)
-    else:
-        _build_benchmark_fuzzer(benchmark, fuzzer)
+    substitutions = {
+        '_BENCHMARK': benchmark,
+        '_FUZZER': fuzzer,
+    }
+    config_file = get_build_config_file('fuzzer.yaml')
+    config_name = 'benchmark-{benchmark}-fuzzer-{fuzzer}'.format(
+        benchmark=benchmark, fuzzer=fuzzer)
+
+    _build(config_file, config_name, substitutions)

@@ -27,6 +27,10 @@ from test_libs import utils as test_utils
 def test_output_report_filestore(fs, experiment):
     """Test that output_report writes the report and rsyncs it to the report
     filestore."""
+    config_filepath = os.path.join(os.path.dirname(__file__), '..', 'service',
+                                   'core-fuzzers.yaml')
+    fs.add_real_file(config_filepath)
+
     # Get the config.
     config_filepath = os.path.join(os.path.dirname(__file__), 'test_data',
                                    'experiment-config.yaml')
@@ -45,8 +49,18 @@ def test_output_report_filestore(fs, experiment):
                 'rsync', '-d', '-r', reports_dir,
                 'gs://web-reports/test-experiment'
             ]]
+            experiment_name = os.environ['EXPERIMENT']
             mocked_generate_report.assert_called_with(
-                [os.environ['EXPERIMENT']],
+                [experiment_name],
                 reports_dir,
+                report_name=experiment_name,
+                fuzzers=[
+                    'afl', 'afl_qemu', 'aflfast', 'aflplusplus',
+                    'aflplusplus_optimal', 'aflplusplus_qemu', 'aflsmart',
+                    'eclipser', 'entropic', 'fairfuzz', 'fuzzer-a', 'fuzzer-b',
+                    'honggfuzz', 'honggfuzz_qemu', 'lafintel', 'libfuzzer',
+                    'manul', 'mopt'
+                ],
                 in_progress=False,
-                merge_with_clobber_nonprivate=False)
+                merge_with_clobber_nonprivate=False,
+                coverage_report=False)

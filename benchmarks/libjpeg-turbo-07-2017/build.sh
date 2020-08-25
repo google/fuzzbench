@@ -13,23 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-. $(dirname $0)/../common.sh
+cd libjpeg-turbo
+git checkout b0971e47d76fdb81270e93bbf11ff5558073350d
+autoreconf -fiv
+./configure
+make -j $(nproc)
 
-apt-get update && \
-  apt-get install -y \
-  make \
-  automake \
-  libtool \
-  nasm
-
-build_lib() {
-  rm -rf BUILD
-  cp -rf SRC BUILD
-  (cd BUILD && autoreconf -fiv && ./configure && make -j $JOBS)
-}
-
-get_git_revision https://github.com/libjpeg-turbo/libjpeg-turbo.git b0971e47d76fdb81270e93bbf11ff5558073350d SRC
-build_lib
-
-$CXX $CXXFLAGS -std=c++11 $SCRIPT_DIR/libjpeg_turbo_fuzzer.cc -I BUILD BUILD/.libs/libturbojpeg.a $FUZZER_LIB -o $FUZZ_TARGET
-cp -r $SCRIPT_DIR/seeds $OUT/
+$CXX $CXXFLAGS -std=c++11 $SRC/libjpeg_turbo_fuzzer.cc -I . \
+    .libs/libturbojpeg.a $FUZZER_LIB -o $OUT/fuzz-target
+cp -r /opt/seeds $OUT/

@@ -13,6 +13,7 @@
 # limitations under the License.
 """Utility functions for running fuzzers."""
 
+import ast
 import configparser
 import contextlib
 import os
@@ -40,10 +41,7 @@ def build_benchmark(env=None):
         # so we can build projects that are using -lFuzzingEngine.
         shutil.copy(fuzzer_lib, OSS_FUZZ_LIB_FUZZING_ENGINE_PATH)
 
-    if os.getenv('OSS_FUZZ'):
-        build_script = os.path.join(os.environ['SRC'], 'build.sh')
-    else:
-        build_script = os.path.join('benchmark', 'build.sh')
+    build_script = os.path.join(os.environ['SRC'], 'build.sh')
 
     benchmark = os.getenv('BENCHMARK')
     fuzzer = os.getenv('FUZZER')
@@ -108,7 +106,7 @@ def restore_directory(directory):
     initial_cwd = os.getcwd()
     with tempfile.TemporaryDirectory() as temp_dir:
         backup = os.path.join(temp_dir, os.path.basename(directory))
-        shutil.copytree(directory, backup)
+        shutil.copytree(directory, backup, symlinks=True)
         yield
         shutil.rmtree(directory)
         shutil.move(backup, directory)
@@ -120,7 +118,8 @@ def restore_directory(directory):
 
 def get_dictionary_path(target_binary):
     """Return dictionary path for a target binary."""
-    if os.getenv('SKIP_DICT'):
+    if get_env('NO_DICTIONARIES'):
+        # Don't use dictionaries if experiment specifies not to.
         return None
 
     dictionary_path = target_binary + '.dict'
@@ -168,3 +167,20 @@ def initialize_flags(env=None):
     for flag_var in ['CFLAGS', 'CXXFLAGS']:
         print('{flag_var} = {flag_value}'.format(
             flag_var=flag_var, flag_value=os.getenv(flag_var)))
+
+
+def get_env(env_var, default_value=None):
+    """Return the evaluated value of |env_var| in the environment. This is
+    a copy of common.environment.get function as fuzzers can't have source
+    dependencies outside of this directory."""
+    value_string = os.getenv(env_var)
+
+    # value_string will be None if the variable is not defined.
+    if value_string is None:
+        return default_value
+
+    try:
+        return ast.literal_eval(value_string)
+    except Exception:  # pylint: disable=broad-except
+        # String fallback.
+        return value_string

@@ -13,30 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-. $(dirname $0)/../common.sh
+cd PROJ
+git checkout d00501750b210a73f9fb107ac97a683d4e3d8e7a
+./autogen.sh
+./configure
+make -j $(nproc)
 
-apt-get update && \
-  apt-get install -y \
-  make \
-  automake \
-  autoconf \
-  libtool \
-  sqlite3 \
-  libsqlite3-dev
+mkdir $OUT/seeds
+cp nad/* $OUT/seeds
 
-build_lib() {
-  rm -rf BUILD
-  cp -rf SRC BUILD
-  (cd BUILD && ./autogen.sh &&  ./configure  &&  make clean  && make -j $JOBS )
-}
-
-get_git_revision https://github.com/OSGeo/proj.4.git d00501750b210a73f9fb107ac97a683d4e3d8e7a SRC
-build_lib
-
-if [[ ! -d $OUT/seeds ]]; then
-  mkdir $OUT/seeds
-  cp BUILD/nad/* $OUT/seeds
-fi
-
-$CXX $CXXFLAGS -std=c++11 -I BUILD/src BUILD/test/fuzzers/standard_fuzzer.cpp BUILD/src/.libs/libproj.a $FUZZER_LIB -o $FUZZ_TARGET -lpthread
-wget -qO $FUZZ_TARGET.dict https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/proj4.dict
+$CXX $CXXFLAGS -std=c++11 -I src test/fuzzers/standard_fuzzer.cpp \
+    src/.libs/libproj.a $FUZZER_LIB -o $OUT/fuzz-target -lpthread

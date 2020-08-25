@@ -21,6 +21,8 @@ from src_analysis import diff_utils
 
 ALWAYS_BUILD_FUZZER = 'afl'
 
+# TODO(tanq16): Get list of Benchmarks automatically.
+
 # Don't build php benchmark since it fills up disk in GH actions.
 OSS_FUZZ_BENCHMARKS = {
     'bloaty_fuzz_target',
@@ -37,13 +39,11 @@ OSS_FUZZ_BENCHMARKS = {
 STANDARD_BENCHMARKS = {
     'freetype2-2017',
     'harfbuzz-1.3.2',
-    'jasper-1.701.0',
     'lcms-2017-03-21',
     'libjpeg-turbo-07-2017',
     'libpng-1.2.56',
     'libxml2-v2.9.2',
     'openthread-2019-12-23',
-    'perl-5.21.7',
     'proj4-2017-08-14',
     're2-2014-12-09',
     'vorbis-2017-12-11',
@@ -52,11 +52,9 @@ STANDARD_BENCHMARKS = {
 
 
 def get_make_targets(benchmarks, fuzzer):
-    """Return pull and test targets for |fuzzer| and each benchmark
+    """Returns and test targets for |fuzzer| and each benchmark
     in |benchmarks| to pass to make."""
-    return [('pull-%s-%s' % (fuzzer, benchmark),
-             'test-run-%s-%s' % (fuzzer, benchmark))
-            for benchmark in benchmarks]
+    return ['test-run-%s-%s' % (fuzzer, benchmark) for benchmark in benchmarks]
 
 
 def delete_docker_images():
@@ -76,20 +74,19 @@ def delete_docker_images():
     image_ids = result.stdout.splitlines()
     subprocess.run(['docker', 'rmi', '-f'] + image_ids, check=False)
 
+    # Needed for BUILDKIT to clear build cache & avoid insufficient disk space.
+    subprocess.run(['docker', 'builder', 'prune', '-f'], check=False)
+
 
 def make_builds(benchmarks, fuzzer):
-    """Use make to build each target in |build_targets|."""
+    """Use make to test the fuzzer on each benchmark in |benchmarks|."""
     print('Building benchmarks: {} for fuzzer: {}'.format(
         ', '.join(benchmarks), fuzzer))
     make_targets = get_make_targets(benchmarks, fuzzer)
-    for pull_target, build_target in make_targets:
-        # Pull target first.
-        subprocess.run(['make', '-j', pull_target], check=False)
-
-        # Then build.
-        build_command = ['make', 'RUNNING_ON_CI=yes', '-j', build_target]
-        print('Running command:', ' '.join(build_command))
-        result = subprocess.run(build_command, check=False)
+    for make_target in make_targets:
+        make_command = ['make', 'RUNNING_ON_CI=yes', '-j', make_target]
+        print('Running command:', ' '.join(make_command))
+        result = subprocess.run(make_command, check=False)
         if not result.returncode == 0:
             return False
         # Delete docker images so disk doesn't fill up.

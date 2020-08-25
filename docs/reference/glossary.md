@@ -34,7 +34,7 @@ Examples: [libFuzzer](http://libfuzzer.info),
 A [fuzz target] that is fuzzed to determine the performance of a fuzzer.
 
 It can be an [OSS-Fuzz project](https://github.com/google/oss-fuzz/tree/master/projects)
-([example](https://github.com/google/fuzzbench/blob/master/benchmarks/curl_curl_fuzzer_http/oss-fuzz.yaml))
+([example](https://github.com/google/fuzzbench/blob/master/benchmarks/curl_curl_fuzzer_http/benchmark.yaml))
 or a custom one where you explicitly define the steps to checkout the code and
 build the fuzz target
 ([example integration](https://github.com/google/fuzzbench/blob/master/benchmarks/vorbis-2017-12-11/build.sh)).

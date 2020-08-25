@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG parent_image=gcr.io/fuzzbench/base-builder
+ARG parent_image
 FROM $parent_image
 
 # Honggfuzz requires libbfd and libunwid.
@@ -25,14 +25,14 @@ RUN apt-get update -y && \
     flex bison libglib2.0-dev libpixman-1-dev \
     liblzma-dev
 
-# Download honggfuz version 2.1 + 8e76143f884cefd3054e352eccc09d550788dba0
+# Download honggfuz version 2.1 + d0fbcb0373c32436b8fb922e6937da93b17291f5
 # Set CFLAGS use honggfuzz's defaults except for -mnative which can build CPU
 # dependent code that may not work on the machines we actually fuzz on.
 # Create an empty object file which will become the FUZZER_LIB lib (since
 # honggfuzz doesn't need this when hfuzz-clang(++) is used).
 RUN cd / && git clone https://github.com/google/honggfuzz.git /honggfuzz && \
     cd /honggfuzz && \
-    git checkout 8e76143f884cefd3054e352eccc09d550788dba0 && \
+    git checkout d0fbcb0373c32436b8fb922e6937da93b17291f5 && \
     CFLAGS="-O3 -funroll-loops" make && \
     unset CFLAGS && unset CXXFLAGS && \
     cd qemu_mode && export LIBS=-ldl && TARGETS=x86_64-linux-user make && \

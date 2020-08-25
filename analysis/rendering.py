@@ -20,7 +20,7 @@ import jinja2
 from common import utils
 
 
-def render_report(experiment_results, template, in_progress):
+def render_report(experiment_results, template, in_progress, coverage_report):
     """Renders report with |template| using data provided by the
     |experiment_results| context.
 
@@ -37,5 +37,7 @@ def render_report(experiment_results, template, in_progress):
         loader=jinja2.FileSystemLoader(templates_dir),
     )
     template = environment.get_template(template)
+
     return template.render(experiment=experiment_results,
-                           in_progress=in_progress)
+                           in_progress=in_progress,
+                           coverage_report=coverage_report)

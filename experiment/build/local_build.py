@@ -35,7 +35,7 @@ def make(targets):
 
 def build_base_images() -> Tuple[int, str]:
     """Build base images locally."""
-    return make(['base-runner', 'base-builder'])
+    return make(['base-image'])
 
 
 def get_shared_coverage_binaries_dir():
@@ -72,7 +72,7 @@ def copy_coverage_binaries(benchmark):
     coverage_build_archive = 'coverage-build-{}.tar.gz'.format(benchmark)
     coverage_build_archive_shared_dir_path = os.path.join(
         shared_coverage_binaries_dir, coverage_build_archive)
-    command = 'cd /out; tar -czvf {} *'.format(
+    command = 'cd /out; tar -czvf {} * /src /work'.format(
         coverage_build_archive_shared_dir_path)
     return new_process.execute([
         'docker', 'run', '-v', mount_arg, builder_image_url, '/bin/bash', '-c',

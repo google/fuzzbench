@@ -20,12 +20,15 @@ import sys
 import pandas as pd
 
 from analysis import data_utils
+from analysis import coverage_data_utils
 from analysis import experiment_results
 from analysis import plotting
 from analysis import queries
 from analysis import rendering
 from common import filesystem
 from common import logs
+
+logger = logs.Logger('generate_report')
 
 
 def get_arg_parser():
@@ -74,6 +77,12 @@ def get_arg_parser():
                         '--fuzzers',
                         nargs='*',
                         help='Names of the fuzzers to include in the report.')
+    parser.add_argument(
+        '-cov',
+        '--coverage-report',
+        action='store_true',
+        default=True,
+        help='If set, clang coverage reports and differential plots are shown.')
 
     # It doesn't make sense to clobber and label by experiment, since nothing
     # can get clobbered like this.
@@ -130,7 +139,8 @@ def generate_report(experiment_names,
                     in_progress=False,
                     end_time=None,
                     merge_with_clobber=False,
-                    merge_with_clobber_nonprivate=False):
+                    merge_with_clobber_nonprivate=False,
+                    coverage_report=False):
     """Generate report helper."""
     if merge_with_clobber_nonprivate:
         experiment_names = (
@@ -151,6 +161,12 @@ def generate_report(experiment_names,
 
     data_utils.validate_data(experiment_df)
 
+    # Load the json summary file.
+    coverage_dict = {}
+    if coverage_report:
+        coverage_dict = coverage_data_utils.get_covered_regions_dict(
+            experiment_df)
+
     if benchmarks is not None:
         experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks)
 
@@ -163,18 +179,22 @@ def generate_report(experiment_names,
     if end_time is not None:
         experiment_df = data_utils.filter_max_time(experiment_df, end_time)
 
-    if merge_with_clobber:
+    if merge_with_clobber or merge_with_clobber_nonprivate:
         experiment_df = data_utils.clobber_experiments_data(
             experiment_df, experiment_names)
 
     fuzzer_names = experiment_df.fuzzer.unique()
     plotter = plotting.Plotter(fuzzer_names, quick, log_scale)
     experiment_ctx = experiment_results.ExperimentResults(
-        experiment_df, report_directory, plotter, experiment_name=report_name)
+        experiment_df,
+        coverage_dict,
+        report_directory,
+        plotter,
+        experiment_name=report_name)
 
     template = report_type + '.html'
     detailed_report = rendering.render_report(experiment_ctx, template,
-                                              in_progress)
+                                              in_progress, coverage_report)
 
     filesystem.write(os.path.join(report_directory, 'index.html'),
                      detailed_report)
@@ -198,7 +218,8 @@ def main():
                     log_scale=args.log_scale,
                     from_cached_data=args.from_cached_data,
                     end_time=args.end_time,
-                    merge_with_clobber=args.merge_with_clobber)
+                    merge_with_clobber=args.merge_with_clobber,
+                    coverage_report=args.coverage_report)
 
 
 if __name__ == '__main__':

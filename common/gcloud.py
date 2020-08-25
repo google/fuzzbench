@@ -21,7 +21,7 @@ from common import experiment_utils
 from common import new_process
 
 # Constants for dispatcher specs.
-DISPATCHER_MACHINE_TYPE = 'n1-standard-96'
+DISPATCHER_MACHINE_TYPE = 'n1-highmem-96'
 DISPATCHER_BOOT_DISK_SIZE = '4TB'
 DISPATCHER_BOOT_DISK_TYPE = 'pd-ssd'
 
@@ -98,12 +98,6 @@ def delete_instances(instance_names: List[str], zone: str, **kwargs) -> bool:
         error_occurred = error_occurred or result.retcode != 0
 
     return not error_occurred
-
-
-def list_instances() -> List[str]:
-    """Return list of current running instances."""
-    result = new_process.execute(['gcloud', 'compute', 'instances', 'list'])
-    return [instance.split(' ')[0] for instance in result.output.splitlines()]
 
 
 def set_default_project(cloud_project: str):
