@@ -36,7 +36,9 @@ jobs:
           - weizz
           # Temporary variants.
           - libfuzzer_keepseed
+          - libfuzzer_magicbytes
           - entropic_keepseed
+          - entropic_magicbytes
           - entropic_exectime
 
         benchmark_type:
