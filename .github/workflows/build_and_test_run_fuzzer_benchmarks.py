@@ -29,6 +29,7 @@ OSS_FUZZ_BENCHMARKS = {
     'curl_curl_fuzzer_http',
     'jsoncpp_jsoncpp_fuzzer',
     'libpcap_fuzz_both',
+    'matio_matio_fuzzer',
     'mbedtls_fuzz_dtlsclient',
     'openssl_x509',
     'sqlite3_ossfuzz',
