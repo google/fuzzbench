@@ -21,3 +21,5 @@ RUN git clone --depth 1 git://git.code.sf.net/p/matio/matio matio
 WORKDIR matio
 COPY build.sh $SRC/
 COPY *.cc *.h $SRC/
+COPY testcases/ $SRC/
+COPY testcases/ $SRC/
