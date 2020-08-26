@@ -15,11 +15,36 @@
 #
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
-# NOTE: Users of the FuzzBench service should not be editing this file yet, we
-# are still testing this feature. You should request an experiment by contacting
-# us as you normally do.
 
-- experiment: 2020-08-12
+- experiment: 2020-08-25
+  fuzzers:
+    - libfuzzer_magicbytes
+    - entropic_magicbytes
+
+- experiment: 2020-08-21
+  fuzzers:
+    - entropic_keepseed
+
+- experiment: 2020-08-20
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_lto_fixed
+    - aflplusplus_lto
+    - aflplusplus_lto_pcguard
+    - aflplusplus_lto_cmplog
+    - aflplusplus_lto_laf
+    - aflplusplus_classic
+    - entropic_exectime
+
+- experiment: 2020-08-15
+  fuzzers:
+    - libfuzzer_fixcrossover
+    - entropic_fixcrossover
+    - libfuzzer_keepseed
+    - entropic_keepseed
+
+- experiment: 2020-08-14
   fuzzers:
     - aflplusplus
     - aflplusplus_optimal
@@ -30,6 +55,7 @@
     - honggfuzz
     - weizz
     - aflplusplus_taint
+    - aflplusplus_laf
 
 - experiment: 2020-08-10
   fuzzers:

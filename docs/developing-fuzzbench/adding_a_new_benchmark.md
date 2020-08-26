@@ -27,8 +27,8 @@ repo, you must create these yourself.
 You can use most existing OSS-Fuzz projects a benchmark. First decide which project
 and fuzz target you want to use as a benchmark. Next, find out the commit at which
 you want to use the project for the benchmark. Finally, find out the date and time
-(UTC) of that commit in ISO format. This can be done in the (benchmark) project
-repo as follows:
+(UTC) of that commit in ISO format. You can get the date and time from the project
+(benchmark) repo with this command:
 ```shell
 git --no-pager log -1 $COMMIT_HASH --format=%cd --date=iso-strict
 ```

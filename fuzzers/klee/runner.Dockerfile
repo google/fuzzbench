@@ -11,20 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for libFuzzer fuzzer."""
 
-from fuzzers.entropic_interceptors import fuzzer as entropic_fuzzer
-from fuzzers.libfuzzer_interceptors import fuzzer as libfuzzer_fuzzer
+FROM gcr.io/fuzzbench/base-runner
 
+RUN apt-get update -y && \
+	apt-get install -y \
+	google-perftools \
+	llvm-6.0 llvm-6.0-dev llvm-6.0-tools
 
-def build():
-    """Build benchmark."""
-    entropic_fuzzer.build()
+RUN apt-get install -y clang-6.0 vim less
 
-
-def fuzz(input_corpus, output_corpus, target_binary):
-    """Run fuzzer."""
-    libfuzzer_fuzzer.run_fuzzer(input_corpus,
-                                output_corpus,
-                                target_binary,
-                                extra_flags=['-entropic=1'])

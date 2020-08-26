@@ -15,7 +15,6 @@
 import datetime
 from multiprocessing.pool import ThreadPool
 import os
-import posixpath
 import time
 from unittest import mock
 
@@ -215,7 +214,8 @@ def test_start_trials_not_started(mocked_create_instance, pending_trials,
 @mock.patch('experiment.scheduler.datetime_now')
 @mock.patch('common.benchmark_utils.get_fuzz_target',
             return_value='fuzz-target')
-def test_schedule(_, mocked_datetime_now, mocked_execute, pending_trials,
+@mock.patch('common.gce._get_instance_items', return_value=[])
+def test_schedule(_, __, mocked_datetime_now, mocked_execute, pending_trials,
                   experiment_config):
     """Tests that schedule() ends expired trials and starts new ones as
     needed."""
@@ -376,7 +376,7 @@ def test_get_preempted_trials_nonpreemptible(experiment_config, db):
     assert trial_instance_manager.get_preempted_trials() == []
 
 
-@mock.patch('common.gce.get_operations', return_value=[])
+@mock.patch('common.gce._get_instance_items', return_value=[])
 def test_get_preempted_trials_stale_preempted(_, preempt_exp_conf):
     """Tests that TrialInstanceManager.get_preempted_trials doesn't return
     trials that we already know were preempted."""
@@ -395,37 +395,21 @@ def test_get_preempted_trials_stale_preempted(_, preempt_exp_conf):
         assert trial_instance_manager.get_preempted_trials() == []
 
 
-def _get_preemption_operation(trial_id, exp_conf):
-    zone_url = (
-        'https://www.googleapis.com/compute/v1/projects/{project}/zones/'
-        '{zone}').format(zone=exp_conf['cloud_compute_zone'],
-                         project=exp_conf['cloud_project'])
+def _get_preempted_instance_item(trial_id, exp_conf):
     instance_name = experiment_utils.get_trial_instance_name(
         exp_conf['experiment'], trial_id)
-    target_link = posixpath.join('instances', zone_url, instance_name)
-    name = 'systemevent-blah'
-    self_link = posixpath.join(zone_url, name)
     return {
         'id': '1',
-        'name': name,
-        'zone': zone_url,
-        'operationType': 'compute.instances.preempted',
-        'targetLink': target_link,
-        'targetId': '1',
-        'status': 'DONE',
-        'statusMessage': 'Instance was preempted.',
-        'user': 'system',
-        'progress': 100,
-        'insertTime': '2020-01-24T29:16:46.842-02:00',
-        'startTime': '2020-01-24T29:16:46.842-02:00',
-        'endTime': '2020-01-24T29:16:46.842-02:00',
-        'selfLink': self_link,
-        'kind': 'compute#operation'
+        'name': instance_name,
+        'status': 'TERMINATED',
+        'scheduling': {
+            'preemptible': True,
+        }
     }
 
 
-@mock.patch('common.gce.get_preempted_operations')
-def test_get_preempted_trials_new_preempted(mocked_get_preempted_operations,
+@mock.patch('common.gce._get_instance_items')
+def test_get_preempted_trials_new_preempted(mocked_get_instance_items,
                                             preempt_exp_conf):
     """Tests that TrialInstanceManager.get_preempted_trials returns trials that
     new preempted trials we don't know about until we query for them and not
@@ -445,8 +429,8 @@ def test_get_preempted_trials_new_preempted(mocked_get_preempted_operations,
                                      time_started=time_started)
     trials = [known_preempted, unknown_preempted]
     db_utils.add_all(trials)
-    mocked_get_preempted_operations.return_value = [
-        _get_preemption_operation(trial.id, preempt_exp_conf)
+    mocked_get_instance_items.return_value = [
+        _get_preempted_instance_item(trial.id, preempt_exp_conf)
         for trial in trials
     ]
 

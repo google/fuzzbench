@@ -28,7 +28,7 @@ RUN apt-get update && \
 
 RUN cd / && git clone https://github.com/andreafioraldi/weizz-fuzzer /weizz && \
     cd /weizz && \
-    git checkout 06d2b715556f2d2e8f3b092ce90a01f6279d496e && \
+    git checkout f2a319dfc37ce45c10ed6c7726ea524d17f18503 && \
     export CC=clang-8 && export CXX=clang++-8 && \
     CFLAGS="-O3 -funroll-loops" make
 

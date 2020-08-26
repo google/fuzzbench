@@ -24,6 +24,7 @@ jobs:
           - fastcgs_lm
           - honggfuzz
           - lafintel
+          - klee
           - libfuzzer
           - manul
           - mopt
@@ -34,16 +35,11 @@ jobs:
           - honggfuzz_qemu
           - weizz
           # Temporary variants.
-          - libfuzzer_interceptors
           - libfuzzer_keepseed
-          - libfuzzer_fixcrossover
-          - entropic_interceptors
+          - libfuzzer_magicbytes
           - entropic_keepseed
-          - aflplusplus_same1
-          - aflplusplus_same2
-          - aflplusplus_same3
-          - aflplusplus_taint
-          - entropic_fixcrossover
+          - entropic_magicbytes
+          - entropic_exectime
 
         benchmark_type:
           - oss-fuzz

@@ -1,0 +1,233 @@
+commit c4ecc3388200ea614476cece3a7dde6f0c1a7ca8
+Author: Dokyung Song <dokyungs@google.com>
+Date:   Fri Aug 21 00:54:14 2020 +0000
+
+    [libFuzzer] Extend ChangeBinaryInteger mutator to support overwriting selected input with predefined integers.
+    
+    (Experimental - Uploading this to get early feedback before a large-scale experiment.)
+    
+    This patch extends the ChangeBinaryInteger mutator to support overwriting the
+    selected input with predefined integers. The rationale for this heuristic is
+    that certain byte (word, qword, or qword) overwrite at a specific location (with
+    "magic" integers) in a large input may make an invalid input valid, potentially
+    triggering new neighbor code paths.
+    
+    Currently, triggering such an overwrite is costly in libFuzzer.
+    ChangeBinaryInteger mutator may do the same, but only with a low probability,
+    because the chosen byte (word, dword, or qword) must already be an integer
+    ranging from -10 to 10.
+    
+    CopyPart/CrossOver mutator may also effectively do the same, but only if these
+    predefined integers are found in any of the corpus inputs; even if the corpus
+    inputs do contain the predefined integers, the chances are much narrower because
+    a specific location and a specific width have to be selected.
+    
+    InsertRepeatedBytes combined with EraseBytes mutators (or other combinations of
+    existing mutators) may eventually trigger the desired change, but still the
+    probability is low, as the probabilities of different mutators multiply.
+    
+    This patch allows to find the desired input in a single mutation (as tested by
+    the accompanying test - overwrite-bytes.test), effectively increasing the
+    probability of finding the desired input given a corpus input.
+    
+    Differential Revision: https://reviews.llvm.org/D86358
+
+diff --git a/compiler-rt/lib/fuzzer/FuzzerMutate.cpp b/compiler-rt/lib/fuzzer/FuzzerMutate.cpp
+index 29541eac5dc..75527c95aca 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerMutate.cpp
++++ b/compiler-rt/lib/fuzzer/FuzzerMutate.cpp
+@@ -379,6 +379,67 @@ size_t MutationDispatcher::Mutate_ChangeASCIIInteger(uint8_t *Data, size_t Size,
+   return Size;
+ }
+ 
++#define INTERESTING_8                                                          \
++  -128,    /* Overflow signed 8-bit when decremented  */                       \
++      -1,  /*                                         */                       \
++      0,   /*                                         */                       \
++      1,   /*                                         */                       \
++      16,  /* One-off with common buffer size         */                       \
++      32,  /* One-off with common buffer size         */                       \
++      64,  /* One-off with common buffer size         */                       \
++      100, /* One-off with common buffer size         */                       \
++      127  /* Overflow signed 8-bit when incremented  */
++
++#define INTERESTING_16                                                         \
++  -32768,   /* Overflow signed 16-bit when decremented */                      \
++      -129, /* Overflow signed 8-bit                   */                      \
++      128,  /* Overflow signed 8-bit                   */                      \
++      255,  /* Overflow unsig 8-bit when incremented   */                      \
++      256,  /* Overflow unsig 8-bit                    */                      \
++      512,  /* One-off with common buffer size         */                      \
++      1000, /* One-off with common buffer size         */                      \
++      1024, /* One-off with common buffer size         */                      \
++      4096, /* One-off with common buffer size         */                      \
++      32767 /* Overflow signed 16-bit when incremented */
++
++#define INTERESTING_32                                                         \
++  -2147483648LL,  /* Overflow signed 32-bit when decremented */                \
++      -100663046, /* Large negative number (endian-agnostic) */                \
++      -32769,     /* Overflow signed 16-bit                  */                \
++      32768,      /* Overflow signed 16-bit                  */                \
++      65535,      /* Overflow unsig 16-bit when incremented  */                \
++      65536,      /* Overflow unsig 16 bit                   */                \
++      100663045,  /* Large positive number (endian-agnostic) */                \
++      2147483647  /* Overflow signed 32-bit when incremented */
++
++template <class T> class MagicInt8 {
++public:
++  static constexpr T Values[] = {INTERESTING_8};
++};
++
++template <class T> class MagicInt16 {
++public:
++  static constexpr T Values[] = {INTERESTING_8, INTERESTING_16};
++};
++
++template <class T> class MagicInt32 {
++public:
++  static constexpr T Values[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
++};
++
++// Definitions
++template <class T> constexpr T MagicInt8<T>::Values[];
++template <class T> constexpr T MagicInt16<T>::Values[];
++template <class T> constexpr T MagicInt32<T>::Values[];
++
++template <class T>
++using MagicInt = typename std::conditional<
++    sizeof(T) == 1, MagicInt8<int8_t>,
++    typename std::conditional<
++        sizeof(T) == 2, MagicInt16<int16_t>,
++        typename std::conditional<sizeof(T) == 4, MagicInt32<int32_t>,
++                                  MagicInt32<int64_t>>::type>::type>::type;
++
+ template<class T>
+ size_t ChangeBinaryInteger(uint8_t *Data, size_t Size, Random &Rand) {
+   if (Size < sizeof(T)) return 0;
+@@ -389,6 +450,13 @@ size_t ChangeBinaryInteger(uint8_t *Data, size_t Size, Random &Rand) {
+     Val = Size;
+     if (Rand.RandBool())
+       Val = Bswap(Val);
++  } else if (Rand.RandBool()) {
++    auto SignedVal =
++        MagicInt<T>::Values[Rand(sizeof(MagicInt<T>::Values) / sizeof(T))];
++    memcpy(&Val, &SignedVal, sizeof(SignedVal));
++    if (Rand.RandBool()) {
++      Val = Bswap(Val);
++    }
+   } else {
+     memcpy(&Val, Data + Off, sizeof(Val));
+     T Add = Rand(21);
+diff --git a/compiler-rt/test/fuzzer/OverwriteBytesMain.cpp b/compiler-rt/test/fuzzer/OverwriteBytesMain.cpp
+new file mode 100644
+index 00000000000..0c5f392cde2
+--- /dev/null
++++ b/compiler-rt/test/fuzzer/OverwriteBytesMain.cpp
+@@ -0,0 +1,9 @@
++#include <cstdint>
++#include <cstdio>
++
++#include "OverwriteBytesTest.h"
++
++int main(int argc, char **argv) {
++  fwrite(SeedInput, sizeof(SeedInput[0]), sizeof(SeedInput), stdout);
++  return 0;
++}
+diff --git a/compiler-rt/test/fuzzer/OverwriteBytesTest.cpp b/compiler-rt/test/fuzzer/OverwriteBytesTest.cpp
+new file mode 100644
+index 00000000000..377a8797b70
+--- /dev/null
++++ b/compiler-rt/test/fuzzer/OverwriteBytesTest.cpp
+@@ -0,0 +1,33 @@
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++
++#include <cassert>
++#include <cstdint>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++
++#include <algorithm>
++#include <vector>
++
++#include "OverwriteBytesTest.h"
++
++#define MAGIC_BYTE_VALUE 0x1
++#define MAGIC_BYTE_OFFSET 0xf
++
++static volatile int *Nil = nullptr;
++
++extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
++  if (Size != sizeof(SeedInput)) {
++    return 0;
++  }
++
++  *(uint64_t *)(SeedInput + MAGIC_BYTE_OFFSET) = MAGIC_BYTE_VALUE;
++
++  if (memmem(Data, Size, SeedInput, Size) == Data) {
++    *Nil = 42; // crash.
++  }
++
++  return 0;
++}
+diff --git a/compiler-rt/test/fuzzer/OverwriteBytesTest.h b/compiler-rt/test/fuzzer/OverwriteBytesTest.h
+new file mode 100644
+index 00000000000..def5705a435
+--- /dev/null
++++ b/compiler-rt/test/fuzzer/OverwriteBytesTest.h
+@@ -0,0 +1,38 @@
++uint8_t SeedInput[] = {
++    0xba,
++    0xe3,
++    0x92,
++    0x7c,
++    0x80,
++    0x86,
++    0x73,
++    0x0f,
++    0xf2,
++    0x83,
++    0x23,
++    0x0f,
++    0xf5,
++    0x17,
++    0x4c,
++    0x08,
++    0xf2,
++    0x83,
++    0x23,
++    0x0f,
++    0xd8,
++    0x71,
++    0x58,
++    0x1c,
++    0xb9,
++    0x8d,
++    0xf1,
++    0x0e,
++    0x80,
++    0x86,
++    0x73,
++    0x0f,
++    0xf0,
++    0x83,
++    0x23,
++    0x0f,
++};
+diff --git a/compiler-rt/test/fuzzer/overwrite-bytes.test b/compiler-rt/test/fuzzer/overwrite-bytes.test
+new file mode 100644
+index 00000000000..1383ff54492
+--- /dev/null
++++ b/compiler-rt/test/fuzzer/overwrite-bytes.test
+@@ -0,0 +1,9 @@
++REQUIRES: linux, x86_64
++RUN: %cpp_compiler %S/OverwriteBytesTest.cpp -o %t-OverwriteBytesTest
++RUN: %cpp_compiler -fno-sanitize=fuzzer %S/OverwriteBytesMain.cpp -o %t-OverwriteBytesPrintSeed
++RUN: %t-OverwriteBytesPrintSeed > %t-OverwriteBytesTest.seed
++
++RUN: not %run %t-OverwriteBytesTest -seed=1 -use_memmem=0 -mutate_depth=1 -reduce_inputs=0 -runs=10000000 -seed_inputs=%t-OverwriteBytesTest.seed 2>&1 | FileCheck %s
++
++CHECK: ABORTING
++CHECK-NEXT: MS: 1 ChangeBinInt-;

@@ -1,0 +1,192 @@
+commit cf575f9bb0d180fa2069c30b6b78f8ada3502462
+Author: Dokyung Song <dokyungs@google.com>
+Date:   Mon Aug 17 16:59:59 2020 +0000
+
+    [libFuzzer] Scale energy assigned to each input based on input execution time.
+    
+    This is an experimental patch uploaded to get early feedback.
+    
+    This patch scales the energy computed by the Entropic schedule based on the
+    execution time of each input. The input execution time is compared with the
+    average execution time of inputs in the corpus, and, based on the amount by
+    which they differ, the energy is scaled from 0.1x (for inputs executing slow) to
+    30x (for inputs executing fast). Note that the exact formula is borrowed from
+    AFL.
+    
+    In my short, local experiments, this gives a sizeable throughput increase (which
+    in turn leads to more coverage) on the SQLITE3 benchmark, which I will test
+    further with longer and more experiments with more benchmarks. I am not sure for
+    now that how this execution-time-based energy scaling works with other factors
+    (e.g., the number of globally rare features) that are already considered by the
+    Entropic schedule to compute the energy; I am going to do some more profiling
+    and testing to examine this.
+    
+    Differential Revision: https://reviews.llvm.org/D86092
+
+diff --git a/compiler-rt/lib/fuzzer/FuzzerCorpus.h b/compiler-rt/lib/fuzzer/FuzzerCorpus.h
+index 54d1e09ec6d..66f137e9c7c 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerCorpus.h
++++ b/compiler-rt/lib/fuzzer/FuzzerCorpus.h
+@@ -18,6 +18,7 @@
+ #include "FuzzerSHA1.h"
+ #include "FuzzerTracePC.h"
+ #include <algorithm>
++#include <chrono>
+ #include <numeric>
+ #include <random>
+ #include <unordered_set>
+@@ -26,6 +27,7 @@ namespace fuzzer {
+ 
+ struct InputInfo {
+   Unit U;  // The actual input data.
++  std::chrono::microseconds TimeOfUnit;
+   uint8_t Sha1[kSHA1NumBytes];  // Checksum.
+   // Number of features that this input has and no smaller input has.
+   size_t NumFeatures = 0;
+@@ -65,7 +67,8 @@ struct InputInfo {
+   // of the seed. Since we do not know the entropy of a seed that has
+   // never been executed we assign fresh seeds maximum entropy and
+   // let II->Energy approach the true entropy from above.
+-  void UpdateEnergy(size_t GlobalNumberOfFeatures) {
++  void UpdateEnergy(size_t GlobalNumberOfFeatures, bool ScalePerExecTime,
++                    uint64_t AverageTimeOfUnit) {
+     Energy = 0.0;
+     SumIncidence = 0;
+ 
+@@ -88,6 +91,27 @@ struct InputInfo {
+     // Normalize.
+     if (SumIncidence != 0)
+       Energy = (Energy / SumIncidence) + logl(SumIncidence);
++
++    if (ScalePerExecTime) {
++      // Scaling to favor inputs with lower execution time.
++      uint32_t PerfScore = 100;
++      if (TimeOfUnit.count() * 0.1 > AverageTimeOfUnit)
++        PerfScore = 10;
++      else if (TimeOfUnit.count() * 0.25 > AverageTimeOfUnit)
++        PerfScore = 25;
++      else if (TimeOfUnit.count() * 0.5 > AverageTimeOfUnit)
++        PerfScore = 50;
++      else if (TimeOfUnit.count() * 0.75 > AverageTimeOfUnit)
++        PerfScore = 75;
++      else if (TimeOfUnit.count() * 4 < AverageTimeOfUnit)
++        PerfScore = 300;
++      else if (TimeOfUnit.count() * 3 < AverageTimeOfUnit)
++        PerfScore = 200;
++      else if (TimeOfUnit.count() * 2 < AverageTimeOfUnit)
++        PerfScore = 150;
++
++      Energy *= PerfScore;
++    }
+   }
+ 
+   // Increment the frequency of the feature Idx.
+@@ -120,6 +144,7 @@ struct EntropicOptions {
+   bool Enabled;
+   size_t NumberOfRarestFeatures;
+   size_t FeatureFrequencyThreshold;
++  bool ScalePerExecTime;
+ };
+ 
+ class InputCorpus {
+@@ -178,6 +203,7 @@ public:
+   const Unit &operator[] (size_t Idx) const { return Inputs[Idx]->U; }
+   InputInfo *AddToCorpus(const Unit &U, size_t NumFeatures, bool MayDeleteFile,
+                          bool HasFocusFunction,
++                         std::chrono::microseconds TimeOfUnit,
+                          const Vector<uint32_t> &FeatureSet,
+                          const DataFlowTrace &DFT, const InputInfo *BaseII) {
+     assert(!U.empty());
+@@ -187,6 +213,7 @@ public:
+     InputInfo &II = *Inputs.back();
+     II.U = U;
+     II.NumFeatures = NumFeatures;
++    II.TimeOfUnit = TimeOfUnit;
+     II.MayDeleteFile = MayDeleteFile;
+     II.UniqFeatureSet = FeatureSet;
+     II.HasFocusFunction = HasFocusFunction;
+@@ -460,12 +487,18 @@ private:
+     Weights.resize(N);
+     std::iota(Intervals.begin(), Intervals.end(), 0);
+ 
++    std::chrono::microseconds TotalTimeOfUnit(0);
++    for (auto II : Inputs) {
++      TotalTimeOfUnit += II->TimeOfUnit;
++    }
++
+     bool VanillaSchedule = true;
+     if (Entropic.Enabled) {
+       for (auto II : Inputs) {
+         if (II->NeedsEnergyUpdate && II->Energy != 0.0) {
+           II->NeedsEnergyUpdate = false;
+-          II->UpdateEnergy(RareFeatures.size());
++          II->UpdateEnergy(RareFeatures.size(), Entropic.ScalePerExecTime,
++                           TotalTimeOfUnit.count() / N);
+         }
+       }
+ 
+diff --git a/compiler-rt/lib/fuzzer/FuzzerDriver.cpp b/compiler-rt/lib/fuzzer/FuzzerDriver.cpp
+index bed9e84de67..d31783debff 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerDriver.cpp
++++ b/compiler-rt/lib/fuzzer/FuzzerDriver.cpp
+@@ -718,6 +718,7 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
+       (size_t)Flags.entropic_feature_frequency_threshold;
+   Options.EntropicNumberOfRarestFeatures =
+       (size_t)Flags.entropic_number_of_rarest_features;
++  Options.EntropicScalePerExecTime = Flags.entropic_scale_per_exec_time;
+   if (Options.Entropic) {
+     if (!Options.FocusFunction.empty()) {
+       Printf("ERROR: The parameters `--entropic` and `--focus_function` cannot "
+@@ -733,6 +734,7 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
+   Entropic.FeatureFrequencyThreshold =
+       Options.EntropicFeatureFrequencyThreshold;
+   Entropic.NumberOfRarestFeatures = Options.EntropicNumberOfRarestFeatures;
++  Entropic.ScalePerExecTime = Options.EntropicScalePerExecTime;
+ 
+   unsigned Seed = Flags.seed;
+   // Initialize Seed.
+diff --git a/compiler-rt/lib/fuzzer/FuzzerFlags.def b/compiler-rt/lib/fuzzer/FuzzerFlags.def
+index 832224a705d..dda66e012a8 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerFlags.def
++++ b/compiler-rt/lib/fuzzer/FuzzerFlags.def
+@@ -161,6 +161,7 @@ FUZZER_FLAG_INT(entropic_number_of_rarest_features, 100, "Experimental. If "
+      "entropic is enabled, we keep track of the frequencies only for the "
+      "Top-X least abundant features (union features that are considered as "
+      "rare).")
++FUZZER_FLAG_INT(entropic_scale_per_exec_time, 0, "Experimental.")
+ 
+ FUZZER_FLAG_INT(analyze_dict, 0, "Experimental")
+ FUZZER_DEPRECATED_FLAG(use_clang_coverage)
+diff --git a/compiler-rt/lib/fuzzer/FuzzerLoop.cpp b/compiler-rt/lib/fuzzer/FuzzerLoop.cpp
+index 02db6d27b0a..9bb788c4efe 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerLoop.cpp
++++ b/compiler-rt/lib/fuzzer/FuzzerLoop.cpp
+@@ -469,6 +469,7 @@ bool Fuzzer::RunOne(const uint8_t *Data, size_t Size, bool MayDeleteFile,
+     return false;
+ 
+   ExecuteCallback(Data, Size);
++  auto TimeOfUnit = duration_cast<microseconds>(UnitStopTime - UnitStartTime);
+ 
+   UniqFeatureSetTmp.clear();
+   size_t FoundUniqFeaturesOfII = 0;
+@@ -491,7 +492,7 @@ bool Fuzzer::RunOne(const uint8_t *Data, size_t Size, bool MayDeleteFile,
+     TPC.UpdateObservedPCs();
+     auto NewII = Corpus.AddToCorpus({Data, Data + Size}, NumNewFeatures,
+                                     MayDeleteFile, TPC.ObservedFocusFunction(),
+-                                    UniqFeatureSetTmp, DFT, II);
++                                    TimeOfUnit, UniqFeatureSetTmp, DFT, II);
+     WriteFeatureSetToFile(Options.FeaturesDir, Sha1ToString(NewII->Sha1),
+                           NewII->UniqFeatureSet);
+     return true;
+diff --git a/compiler-rt/lib/fuzzer/FuzzerOptions.h b/compiler-rt/lib/fuzzer/FuzzerOptions.h
+index b75e7c7af70..ed309eabf5c 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerOptions.h
++++ b/compiler-rt/lib/fuzzer/FuzzerOptions.h
+@@ -47,6 +47,7 @@ struct FuzzingOptions {
+   bool Entropic = false;
+   size_t EntropicFeatureFrequencyThreshold = 0xFF;
+   size_t EntropicNumberOfRarestFeatures = 100;
++  bool EntropicScalePerExecTime = false;
+   std::string OutputCorpus;
+   std::string ArtifactPrefix = "./";
+   std::string ExactArtifactPath;

@@ -11,15 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Integration code for libFuzzer fuzzer."""
 
-ARG parent_image
-FROM $parent_image
+from fuzzers.entropic import fuzzer as entropic_fuzzer
+from fuzzers.libfuzzer import fuzzer as libfuzzer_fuzzer
 
-RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
-    cd /llvm-project && \
-    git checkout b52b2e1c188072e3cbc91500cfd503fb26d50ffc && \
-    cd /llvm-project/compiler-rt/lib/fuzzer && \
-    (for f in *.cpp; do \
-      clang++ -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \
-    done && wait) && \
-    ar r /libEntropic.a *.o
+
+def build():
+    """Build benchmark."""
+    entropic_fuzzer.build()
+
+
+def fuzz(input_corpus, output_corpus, target_binary):
+    """Run fuzzer."""
+    libfuzzer_fuzzer.run_fuzzer(
+        input_corpus,
+        output_corpus,
+        target_binary,
+        extra_flags=['-entropic=1', '-entropic_scale_per_exec_time=1'])

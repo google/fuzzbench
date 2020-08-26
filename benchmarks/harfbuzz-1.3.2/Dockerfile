@@ -23,8 +23,7 @@ RUN apt-get update && \
     automake \
     libtool \
     ragel \
-    pkg-config \
-    libcairo2-dev
+    pkg-config
 
 RUN git clone https://github.com/behdad/harfbuzz.git
 

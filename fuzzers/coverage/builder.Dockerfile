@@ -26,7 +26,3 @@ RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
     cd /llvm-project/compiler-rt/lib/fuzzer && \
     bash build.sh && \
     cp libFuzzer.a /usr/lib
-
-# Copy source code files of benchmark to $OUT for the report generation.
-RUN mkdir $OUT/src && \
-    cp -rL --parent $SRC $OUT/src

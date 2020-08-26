@@ -13,8 +13,8 @@
 # limitations under the License.
 """Integration code for libFuzzer fuzzer."""
 
-from fuzzers.entropic_interceptors import fuzzer as entropic_fuzzer
-from fuzzers.libfuzzer_interceptors import fuzzer as libfuzzer_fuzzer
+from fuzzers.entropic import fuzzer as entropic_fuzzer
+from fuzzers.libfuzzer import fuzzer as libfuzzer_fuzzer
 
 
 def build():
@@ -27,4 +27,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
     libfuzzer_fuzzer.run_fuzzer(input_corpus,
                                 output_corpus,
                                 target_binary,
-                                extra_flags=['-entropic=1', '-keep_seed=1'])
+                                extra_flags=[
+                                    '-entropic=1', '-keep_seed=1',
+                                    '-cross_over_uniformdist=1',
+                                    '-entropic_scale_per_exec_time=1'
+                                ])
