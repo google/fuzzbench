@@ -15,6 +15,8 @@
 import os
 import re
 
+import yaml
+
 from common import environment
 from common import logs
 from common import benchmark_config
@@ -54,16 +56,34 @@ def get_builder_image_url(benchmark, fuzzer, docker_registry):
         docker_registry=docker_registry, fuzzer=fuzzer, benchmark=benchmark)
 
 
-def validate(benchmark):
-    """Return True if |benchmark| is a valid fuzzbench fuzzer."""
+def validate_name(benchmark):
+    """Returns True if |benchmark| is a valid fuzzbench benchmark name."""
     if VALID_BENCHMARK_REGEX.match(benchmark) is None:
         logs.error('%s does not conform to %s pattern.', benchmark,
                    VALID_BENCHMARK_REGEX.pattern)
         return False
-    if benchmark in get_all_benchmarks():
-        return True
-    logs.error('%s must have a benchmark.yaml.', benchmark)
-    return False
+    return True
+
+
+def validate(benchmark):
+    """Returns True if |benchmark| is a valid fuzzbench benchmark."""
+    if not validate_name(benchmark):
+        return False
+    if benchmark not in get_all_benchmarks():
+        logs.error('%s must have a benchmark.yaml.', benchmark)
+        return False
+    try:
+        get_fuzz_target(benchmark)
+    except yaml.parser.ParserError:
+        logs.error('%s must have a valid benchmark.yaml file. Failed to parse.',
+                   benchmark)
+        return False
+    except KeyError:
+        logs.error('%s\'s benchmark.yaml does not define "fuzz_target".',
+                   benchmark)
+        return False
+
+    return True
 
 
 def get_all_benchmarks():
