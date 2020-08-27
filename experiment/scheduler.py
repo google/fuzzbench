@@ -32,7 +32,7 @@ from common import retry
 from common import utils
 from common import yaml_utils
 from database import models
-from database import utils as db_utils
+from database import db_utils
 
 # Give the trial runner a little extra time to shut down and account for how
 # long it can take to actually start running once an instance is started. 5

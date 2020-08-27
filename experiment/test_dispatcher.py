@@ -19,7 +19,7 @@ from unittest import mock
 import pytest
 
 from database import models
-from database import utils as db_utils
+from database import db_utils
 from experiment import dispatcher
 from test_libs import utils as test_utils
 

@@ -16,7 +16,7 @@
 import pandas as pd
 
 from database.models import Experiment, Trial, Snapshot
-from database import utils as db_utils
+from database import db_utils
 
 
 def get_experiment_data(experiment_names):

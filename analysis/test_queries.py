@@ -16,7 +16,7 @@ import datetime
 
 from analysis import queries
 from database import models
-from database import utils as db_utils
+from database import db_utils
 
 # pylint: disable=invalid-name,unused-argument
 

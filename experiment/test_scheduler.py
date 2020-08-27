@@ -24,7 +24,7 @@ from common import experiment_utils
 from common import gcloud
 from common import new_process
 from database import models
-from database import utils as db_utils
+from database import db_utils
 from experiment import scheduler
 
 FUZZER = 'fuzzer'

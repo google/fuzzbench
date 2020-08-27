@@ -23,7 +23,7 @@ from common import fuzzer_utils
 from common import logs
 from common import filestore_utils
 from common import filesystem
-from database import utils as db_utils
+from database import db_utils
 from database import models
 from experiment.build import build_utils
 

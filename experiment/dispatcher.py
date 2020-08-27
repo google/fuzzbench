@@ -29,7 +29,7 @@ from common import experiment_utils
 from common import logs
 from common import yaml_utils
 from database import models
-from database import utils as db_utils
+from database import db_utils
 from experiment.build import builder
 from experiment import measurer
 from experiment import reporter

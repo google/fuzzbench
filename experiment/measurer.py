@@ -34,7 +34,7 @@ from common import filesystem
 from common import filestore_utils
 from common import logs
 from common import utils
-from database import utils as db_utils
+from database import db_utils
 from database import models
 from experiment.build import build_utils
 from experiment import run_coverage

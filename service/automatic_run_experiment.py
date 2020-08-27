@@ -27,7 +27,7 @@ from common import fuzzer_utils
 from common import utils
 from common import yaml_utils
 from database import models
-from database import utils as db_utils
+from database import db_utils
 from experiment import run_experiment
 
 logger = logs.Logger('automatic_run_experiment')  # pylint: disable=invalid-name

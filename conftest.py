@@ -32,7 +32,7 @@ new_process.WAIT_SECONDS = 0
 # pylint: disable=wrong-import-position
 os.environ['SQL_DATABASE_URL'] = 'sqlite://'
 
-from database import utils as db_utils
+from database import db_utils
 from database import models
 
 

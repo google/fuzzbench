@@ -23,7 +23,7 @@ import pytest
 from common import experiment_utils
 from common import new_process
 from database import models
-from database import utils as db_utils
+from database import db_utils
 from experiment.build import build_utils
 from experiment import measurer
 from test_libs import utils as test_utils
