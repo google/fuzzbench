@@ -14,7 +14,6 @@
 """Utility functions for coverage report generation."""
 
 import os
-import multiprocessing
 import json
 
 from common import experiment_utils as exp_utils
@@ -49,32 +48,34 @@ def upload_coverage_info_to_bucket():
 
 def generate_coverage_reports(experiment_config: dict):
     """Generates coverage reports for each benchmark and fuzzer."""
-    logger.info('Start generating coverage report for benchmarks.')
+    logger.info('Start generating coverage reports.')
+
     benchmarks = experiment_config['benchmarks'].split(',')
     fuzzers = experiment_config['fuzzers'].split(',')
     experiment = experiment_config['experiment']
-    with multiprocessing.Pool() as pool:
-        generate_coverage_report_args = [(experiment, benchmark, fuzzer)
-                                         for benchmark in benchmarks
-                                         for fuzzer in fuzzers]
-        pool.starmap(generate_coverage_report, generate_coverage_report_args)
-    logger.info('Finished generating coverage report.')
+
+    for benchmark in benchmarks:
+        for fuzzer in fuzzers:
+            generate_coverage_report(experiment, benchmark, fuzzer)
+
+    logger.info('Finished generating coverage reports.')
 
 
 def generate_coverage_report(experiment, benchmark, fuzzer):
     """Generates the coverage report for one pair of benchmark and fuzzer."""
     logs.initialize()
-    logger.info('Generating coverage report for benchmark: {benchmark} \
-                fuzzer: {fuzzer}.'.format(benchmark=benchmark, fuzzer=fuzzer))
-    generator = CoverageReporter(fuzzer, benchmark, experiment)
+    logger.info(
+        ('Generating coverage report for '
+         'benchmark: {benchmark} fuzzer: {fuzzer}.').format(benchmark=benchmark,
+                                                            fuzzer=fuzzer))
+
+    generator = CoverageReporter(experiment, fuzzer, benchmark)
     # Merges all the profdata files.
     generator.merge_profdata_files()
     # Generates the reports using llvm-cov.
     generator.generate_cov_report()
 
-    logger.info('Finished generating coverage report for '
-                'benchmark:{benchmark} fuzzer:{fuzzer}.'.format(
-                    benchmark=benchmark, fuzzer=fuzzer))
+    logger.info('Finished generating coverage report.')
 
 
 class CoverageReporter:  # pylint: disable=too-many-instance-attributes
@@ -82,7 +83,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
     fuzzer and benchmark."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, fuzzer, benchmark, experiment):
+    def __init__(self, experiment, fuzzer, benchmark):
         self.fuzzer = fuzzer
         self.benchmark = benchmark
         self.experiment = experiment
@@ -196,27 +197,17 @@ def get_coverage_infomation(coverage_summary_file):
 
 def store_coverage_data(experiment_config: dict):
     """Generates the specific coverage data and store in cloud bucket."""
-    logger.info('Start storing coverage data')
-    with multiprocessing.Pool() as pool:
-        store_all_covered_regions(experiment_config, pool)
-
-    logger.info('Finished storing coverage data')
-
-
-def store_all_covered_regions(experiment_config: dict, pool):
-    """Stores regions covered for each pair for fuzzer and benchmark."""
     logger.info('Storing all fuzzer-benchmark pairs for final coverage data.')
 
     benchmarks = experiment_config['benchmarks'].split(',')
     fuzzers = experiment_config['fuzzers'].split(',')
     experiment = experiment_config['experiment']
 
-    store_covered_region_args = [(experiment, fuzzer, benchmark)
-                                 for fuzzer in fuzzers
-                                 for benchmark in benchmarks]
+    for benchmark in benchmarks:
+        for fuzzer in fuzzers:
+            store_covered_region(experiment, fuzzer, benchmark)
 
-    pool.starmap(store_covered_region, store_covered_region_args)
-    logger.info('Done storing all coverage data.')
+    logger.info('Finished storing coverage data')
 
 
 def store_covered_region(experiment: str, fuzzer: str, benchmark: str):
@@ -224,8 +215,9 @@ def store_covered_region(experiment: str, fuzzer: str, benchmark: str):
     logs.initialize()
     logger.debug('Storing covered region: fuzzer: %s, benchmark: %s.', fuzzer,
                  benchmark)
+
     covered_regions = get_covered_region(experiment, fuzzer, benchmark)
-    generator = CoverageReporter(fuzzer, benchmark, experiment)
+    generator = CoverageReporter(experiment, fuzzer, benchmark)
     generator.generate_json_summary_file(covered_regions)
 
     logger.debug('Finished storing covered region: fuzzer: %s, benchmark: %s.',

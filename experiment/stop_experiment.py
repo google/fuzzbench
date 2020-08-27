@@ -38,10 +38,7 @@ def stop_experiment(experiment_name, experiment_config_filename):
     gce.initialize()
     instances = list(gce.get_instances(cloud_project, cloud_compute_zone))
 
-    trial_prefix = 'r-' + experiment_name
-    experiment_instances = [
-        instance for instance in instances if instance.startswith(trial_prefix)
-    ]
+    experiment_instances = []
     dispatcher_instance = experiment_utils.get_dispatcher_instance_name(
         experiment_name)
     if dispatcher_instance not in instances:
@@ -49,6 +46,10 @@ def stop_experiment(experiment_name, experiment_config_filename):
     else:
         experiment_instances.append(dispatcher_instance)
 
+    trial_prefix = 'r-' + experiment_name
+    experiment_instances.extend([
+        instance for instance in instances if instance.startswith(trial_prefix)
+    ])
     if not experiment_instances:
         logger.warning('No experiment instances found, no work to do.')
         return True
