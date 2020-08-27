@@ -16,6 +16,13 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-08-26
+  fuzzers:
+    - libfuzzer_before
+    - libfuzzer_after
+    - entropic_before
+    - entropic_after
+
 - experiment: 2020-08-25
   fuzzers:
     - libfuzzer_magicbytes

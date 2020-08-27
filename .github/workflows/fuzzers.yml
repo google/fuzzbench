@@ -35,8 +35,12 @@ jobs:
           - honggfuzz_qemu
           - weizz
           # Temporary variants.
+          - libfuzzer_before
+          - libfuzzer_after
           - libfuzzer_keepseed
           - libfuzzer_magicbytes
+          - entropic_before
+          - entropic_after
           - entropic_keepseed
           - entropic_magicbytes
           - entropic_exectime
