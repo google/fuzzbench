@@ -23,5 +23,12 @@ def test_get_changed_fuzzers_for_ci():
     """Tests that get_changed_fuzzers_for_ci returns all fuzzers when a file
     that affects all fuzzer build was changed."""
     changed_fuzzers = change_utils.get_changed_fuzzers_for_ci(
-        [os.path.join(utils.ROOT_DIR, 'docker', 'build.mk')])
+        [os.path.join(utils.ROOT_DIR, 'docker', 'image_types.yaml')])
     assert changed_fuzzers == fuzzer_utils.get_fuzzer_names()
+
+
+def test_ci_files():
+    """Tests that CI_FILES is not stale by checking every file in it is on
+    disk."""
+    for filename in change_utils.CI_FILES:
+        assert os.path.exists(filename)

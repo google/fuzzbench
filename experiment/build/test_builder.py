@@ -15,6 +15,7 @@
 
 import itertools
 import os
+import sys
 from unittest import mock
 
 import pytest
@@ -24,7 +25,7 @@ from experiment.build import builder
 
 SRC_ROOT = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
 
-FUZZER_BLACKLIST = {'coverage'}
+COVERAGE_TOOLS = {'coverage', 'coverage_source_based'}
 
 # pylint: disable=invalid-name,unused-argument,redefined-outer-name
 
@@ -37,13 +38,13 @@ def get_regular_benchmarks():
 def get_oss_fuzz_benchmarks():
     """Get all non-blacklisted OSS-Fuzz benchmarks."""
     return get_benchmarks_or_fuzzers('benchmarks',
-                                     'oss-fuzz.yaml',
+                                     'benchmark.yaml',
                                      blacklist=set())
 
 
 def get_fuzzers():
     """Get all non-blacklisted fuzzers."""
-    return get_benchmarks_or_fuzzers('fuzzers', 'fuzzer.py', FUZZER_BLACKLIST)
+    return get_benchmarks_or_fuzzers('fuzzers', 'fuzzer.py', COVERAGE_TOOLS)
 
 
 def get_benchmarks_or_fuzzers(benchmarks_or_fuzzers_directory, filename,
@@ -62,6 +63,8 @@ def get_benchmarks_or_fuzzers(benchmarks_or_fuzzers_directory, filename,
     ]
 
 
+@pytest.mark.skipif(sys.version_info.minor > 7,
+                    reason='Test can hang on versions greater than 3.7')
 @mock.patch('experiment.build.builder.build_measurer')
 @mock.patch('time.sleep')
 @pytest.mark.parametrize('build_measurer_return_value', [True, False])
@@ -89,9 +92,10 @@ def builder_integration(experiment):
 
 
 # pylint: disable=no-self-use
-@pytest.mark.skipif(not os.getenv('TEST_INTEGRATION_ALL'),
-                    reason='''Tests take too long and can interfere with real
-    experiments. Find some way of opting-in and isolating the tests.''')
+@pytest.mark.skipif(
+    not os.getenv('TEST_INTEGRATION_ALL'),
+    reason='Tests take too long and can interfere with real '
+    'experiments. Find some way of opting-in and isolating the tests.')
 class TestIntegrationBuild:
     """Integration tests for building."""
 

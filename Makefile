@@ -12,17 +12,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include docker/build.mk
+# Running experiments locally.
+
+run-experiment stop-experiment: export COMPOSE_PROJECT_NAME := fuzzbench
+run-experiment stop-experiment: export COMPOSE_FILE := compose/fuzzbench.yaml
+run-experiment:
+	docker-compose up --build --scale worker=2 --detach
+	docker-compose logs --follow run-experiment
+	docker-compose down
+
+# Running this is only necessary if `run-experiment` was interrupted and
+# containers were not cleaned up.
+stop-experiment:
+	docker-compose down
+
+# Development.
+
+run-end-to-end-test stop-end-to-end-test: export COMPOSE_PROJECT_NAME := e2e-test
+run-end-to-end-test stop-end-to-end-test: export COMPOSE_FILE := compose/fuzzbench.yaml:compose/e2e-test.yaml
+run-end-to-end-test:
+	docker-compose build
+	docker-compose up --detach queue-server
+	docker-compose up --scale worker=3 run-experiment worker
+	docker-compose run run-tests; STATUS=$$?; \
+	docker-compose down; exit $$STATUS
+
+# Running this is only necessary if `run-end-to-end-test` was interrupted and
+# containers were not cleaned up.
+stop-end-to-end-test:
+	docker-compose down
+
+include docker/generated.mk
 
 SHELL := /bin/bash
 VENV_ACTIVATE := .venv/bin/activate
 
 ${VENV_ACTIVATE}: requirements.txt
-	rm -rf .venv
-	python3 -m venv .venv
+	python3.7 -m venv .venv || python3 -m venv .venv
 	source ${VENV_ACTIVATE} && python3 -m pip install -r requirements.txt
 
 install-dependencies: ${VENV_ACTIVATE}
+
+docker/generated.mk: docker/generate_makefile.py $(wildcard fuzzers/*/variants.yaml) ${VENV_ACTIVATE}
+	source ${VENV_ACTIVATE} && PYTHONPATH=. python3 $< > $@
 
 presubmit: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py
@@ -39,5 +71,14 @@ lint: install-dependencies
 typecheck: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py typecheck
 
-docs-serve:
+install-docs-dependencies: docs/Gemfile.lock
+	cd docs && bundle install
+
+docs-serve: install-docs-dependencies
 	cd docs && bundle exec jekyll serve --livereload
+
+clear-cache:
+	docker stop $$(docker ps -a -q) 2>/dev/null ; \
+	docker rm -vf $$(docker ps -a -q) 2>/dev/null ; \
+	docker rmi -f $$(docker images -a -q) 2>/dev/null ; \
+	docker volume rm $$(docker volume ls -q) 2>/dev/null ; true

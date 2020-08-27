@@ -19,7 +19,6 @@ import unittest
 
 import pytest
 
-from common import fuzzer_utils
 from experiment import run_experiment
 
 BENCHMARKS_DIR = os.path.abspath(
@@ -49,9 +48,11 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
     def setUp(self):
         self.config_filename = 'config'
         self.config = {
-            'cloud_experiment_bucket': 'gs://bucket',
-            'cloud_web_bucket': 'gs://web-bucket',
+            'experiment_filestore': 'gs://bucket',
+            'report_filestore': 'gs://web-bucket',
             'experiment': 'experiment-name',
+            'docker_registry': 'gcr.io/fuzzbench',
+            'cloud_project': 'fuzzbench',
             'cloud_compute_zone': 'us-central1-a',
             'trials': 10,
             'max_total_time': 1000,
@@ -61,10 +62,24 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
     def test_missing_required(self, mocked_error):
         """Tests that an error is logged when the config file is missing a
         required config parameter."""
+        # All but trials.
+        del self.config['trials']
+        with mock.patch('common.yaml_utils.read') as mocked_read_yaml:
+            mocked_read_yaml.return_value = self.config
+            with pytest.raises(run_experiment.ValidationError):
+                run_experiment.read_and_validate_experiment_config(
+                    'config_file')
+            mocked_error.assert_called_with('Config does not contain "%s".',
+                                            'trials')
+
+    @mock.patch('common.logs.error')
+    def test_missing_required_cloud(self, mocked_error):
+        """Tests that an error is logged when the config file is missing a
+        required cloudconfig parameter."""
         # All but cloud_compute_zone.
         del self.config['cloud_compute_zone']
         with mock.patch('common.yaml_utils.read') as mocked_read_yaml:
-            mocked_read_yaml.side_effect = lambda config_filename: self.config
+            mocked_read_yaml.return_value = self.config
             with pytest.raises(run_experiment.ValidationError):
                 run_experiment.read_and_validate_experiment_config(
                     'config_file')
@@ -76,41 +91,50 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         parameter that should be a lower case string but has some upper case
         chars."""
         self._test_invalid(
-            'cloud_experiment_bucket', 'gs://EXPERIMENT',
+            'experiment_filestore', 'gs://EXPERIMENT',
             'Config parameter "%s" is "%s". It must be a lowercase string.')
 
     def test_invalid_string(self):
         """Tests that an error is logged when the config file has a config
         parameter that should be a string but is not."""
         self._test_invalid(
-            'cloud_experiment_bucket', 1,
+            'experiment_filestore', 1,
             'Config parameter "%s" is "%s". It must be a lowercase string.')
 
-    def test_invalid_bucket(self):
+    def test_invalid_local_filestore(self):
+        """Tests that an error is logged when the config file has a config
+        parameter that should be a local filestore but is not."""
+        self.config['local_experiment'] = True
+        self.config['experiment_filestore'] = '/user/test/folder'
+        self._test_invalid(
+            'report_filestore', 'gs://wrong-here', 'Config parameter "%s" is '
+            '"%s". Local experiments only support using Posix file systems as '
+            'filestores.')
+
+    def test_invalid_cloud_filestore(self):
         """Tests that an error is logged when the config file has a config
         parameter that should be a GCS bucket but is not."""
         self._test_invalid(
-            'cloud_experiment_bucket', 'invalid',
-            'Config parameter "%s" is "%s". It must start with gs://.')
+            'experiment_filestore', 'invalid', 'Config parameter "%s" is "%s". '
+            'It must start with gs:// when running on Google Cloud.')
 
     @mock.patch('common.logs.error')
     def test_multiple_invalid(self, mocked_error):
         """Test that multiple errors are logged when multiple parameters are
         invalid."""
-        self.config['cloud_experiment_bucket'] = 1
-        self.config['cloud_web_bucket'] = None
+        self.config['experiment_filestore'] = 1
+        self.config['report_filestore'] = None
         with mock.patch('common.yaml_utils.read') as mocked_read_yaml:
-            mocked_read_yaml.side_effect = lambda config_filename: self.config
+            mocked_read_yaml.return_value = self.config
             with pytest.raises(run_experiment.ValidationError):
                 run_experiment.read_and_validate_experiment_config(
                     'config_file')
         mocked_error.assert_any_call(
             'Config parameter "%s" is "%s". It must be a lowercase string.',
-            'cloud_experiment_bucket',
-            str(self.config['cloud_experiment_bucket']))
+            'experiment_filestore', str(self.config['experiment_filestore']))
         mocked_error.assert_any_call(
             'Config parameter "%s" is "%s". It must be a lowercase string.',
-            'cloud_web_bucket', str(self.config['cloud_web_bucket']))
+            'report_filestore', str(self.config['report_filestore']))
 
     @mock.patch('common.logs.error')
     def _test_invalid(self, param, value, expected_log_message, mocked_error):
@@ -119,7 +143,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         # Don't parameterize this function, it would be too messsy.
         self.config[param] = value
         with mock.patch('common.yaml_utils.read') as mocked_read_yaml:
-            mocked_read_yaml.side_effect = lambda config_filename: self.config
+            mocked_read_yaml.return_value = self.config
             with pytest.raises(run_experiment.ValidationError):
                 run_experiment.read_and_validate_experiment_config(
                     'config_file')
@@ -130,45 +154,9 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         """Tests that read_and_validat_experiment_config works as intended when
         config is valid."""
         with mock.patch('common.yaml_utils.read') as mocked_read_yaml:
-            mocked_read_yaml.side_effect = lambda config_filename: self.config
+            mocked_read_yaml.return_value = self.config
             assert (self.config == run_experiment.
                     read_and_validate_experiment_config('config_file'))
-
-
-def test_validate_fuzzer_config():
-    """Tests that validate_fuzzer_config says that a valid fuzzer config name is
-    valid and that an invalid one is not."""
-    config = {'fuzzer': 'afl', 'name': 'name', 'fuzzer_environment': []}
-    run_experiment.validate_fuzzer_config(config)
-
-    with pytest.raises(Exception) as exception:
-        config['fuzzer'] = 'afl:'
-        run_experiment.validate_fuzzer_config(config)
-    assert 'may only contain' in str(exception.value)
-
-    with pytest.raises(Exception) as exception:
-        config['fuzzer'] = 'not_exist'
-        run_experiment.validate_fuzzer_config(config)
-    assert 'does not exist' in str(exception.value)
-    config['fuzzer'] = 'afl'
-
-    with pytest.raises(Exception) as exception:
-        config['invalid_key'] = 'invalid'
-        run_experiment.validate_fuzzer_config(config)
-    assert 'Invalid entry' in str(exception.value)
-    del config['invalid_key']
-
-    with pytest.raises(Exception) as exception:
-        config['fuzzer_environment'] = {'a': 'b'}
-        run_experiment.validate_fuzzer_config(config)
-    assert 'must be a list' in str(exception.value)
-
-
-def test_variant_configs_valid():
-    """Ensure that all variant configs (variants.yaml files) are valid."""
-    fuzzer_configs = fuzzer_utils.get_fuzzer_configs()
-    for config in fuzzer_configs:
-        run_experiment.validate_fuzzer_config(config)
 
 
 def test_validate_fuzzer():
@@ -193,28 +181,37 @@ def test_validate_experiment_name_valid():
 
 @pytest.mark.parametrize(('experiment_name',), [('a' * 100,), ('abc_',)])
 def test_validate_experiment_name_invalid(experiment_name):
-    """Tests that validate_fuzzer_config raises an exception when passed passed
-    |experiment_name|, an invalid experiment name."""
+    """Tests that validate_experiment_name raises an exception when passed an
+    an invalid experiment name."""
     with pytest.raises(Exception) as exception:
         run_experiment.validate_experiment_name(experiment_name)
     assert 'is invalid. Must match' in str(exception.value)
 
 
-def test_copy_resources_to_bucket():
+# This test takes up to a minute to complete.
+@pytest.mark.slow
+def test_copy_resources_to_bucket(tmp_path):
     """Tests that copy_resources_to_bucket copies the correct resources."""
+    # Do this so that Ctrl-C doesn't pollute the repo.
+    cwd = os.getcwd()
+    os.chdir(tmp_path)
+
     config_dir = 'config'
     config = {
-        'cloud_experiment_bucket': 'gs://gsutil-bucket',
+        'experiment_filestore': 'gs://gsutil-bucket',
         'experiment': 'experiment'
     }
-    with mock.patch('common.gsutil.rsync') as mocked_rsync:
-        with mock.patch('common.gsutil.cp') as mocked_cp:
-            run_experiment.copy_resources_to_bucket(config_dir, config)
-            mocked_cp.assert_called_once_with(
-                'src.tar.gz',
-                'gs://gsutil-bucket/experiment/input/',
-                parallel=True)
-            mocked_rsync.assert_called_once_with(
-                'config',
-                'gs://gsutil-bucket/experiment/input/config',
-                parallel=True)
+    try:
+        with mock.patch('common.filestore_utils.rsync') as mocked_rsync:
+            with mock.patch('common.filestore_utils.cp') as mocked_cp:
+                run_experiment.copy_resources_to_bucket(config_dir, config)
+                mocked_cp.assert_called_once_with(
+                    'src.tar.gz',
+                    'gs://gsutil-bucket/experiment/input/',
+                    parallel=True)
+                mocked_rsync.assert_called_once_with(
+                    'config',
+                    'gs://gsutil-bucket/experiment/input/config',
+                    parallel=True)
+    finally:
+        os.chdir(cwd)

@@ -1,0 +1,216 @@
+# Experiment requests have the following format:
+#
+# - experiment: 2020-06-08  # The name of the experiment
+#   fuzzers:  # The fuzzers to run in the experiment.
+#     - aflplusplus
+#     - libfuzzer
+#
+# The name of the experiment must begin with a date using this format:
+# YYYY-MM-DD (year-month-day). It's not important what timezone is used in
+# deciding the date or if this is a day or two off. The most important thing is
+# that is unique.
+# If there already is an experiment for a particular date in this file, you can
+# either: add a suffix (e.g. "-aflplusplus" or "-2") to the experiment name, or
+# use the next date.
+#
+# You can run "make presubmit" to do basic validation on this file.
+# Please add new experiment requests towards the top of this file.
+
+- experiment: 2020-08-25
+  fuzzers:
+    - libfuzzer_magicbytes
+    - entropic_magicbytes
+
+- experiment: 2020-08-21
+  fuzzers:
+    - entropic_keepseed
+
+- experiment: 2020-08-20
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_lto_fixed
+    - aflplusplus_lto
+    - aflplusplus_lto_pcguard
+    - aflplusplus_lto_cmplog
+    - aflplusplus_lto_laf
+    - aflplusplus_classic
+    - entropic_exectime
+
+- experiment: 2020-08-15
+  fuzzers:
+    - libfuzzer_fixcrossover
+    - entropic_fixcrossover
+    - libfuzzer_keepseed
+    - entropic_keepseed
+
+- experiment: 2020-08-14
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_qemu
+    - aflplusplus_same1
+    - aflplusplus_same2
+    - aflplusplus_same3
+    - honggfuzz
+    - weizz
+    - aflplusplus_taint
+    - aflplusplus_laf
+
+- experiment: 2020-08-10
+  fuzzers:
+    - libfuzzer_fixcrossover
+    - entropic_fixcrossover
+
+- experiment: 2020-08-07
+  fuzzers:
+    - aflplusplus_datalenrand
+    - aflplusplus_havoc
+    - aflplusplus_coe
+    - aflplusplus_exploit
+    - aflplusplus_explore
+    - aflplusplus_fast
+    - aflplusplus_lin
+    - aflplusplus_mmopt
+    - aflplusplus_quad
+    - aflplusplus_rare
+    - aflplusplus_seek
+
+- experiment: 2020-08-03
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_qemu
+    - afl_qemu
+    - aflsmart
+    - eclipser
+    - entropic
+    - fairfuzz
+    - fastcgs_lm
+    - honggfuzz
+    - honggfuzz_qemu
+    - lafintel
+    - libfuzzer
+    - manul
+    - mopt
+    - libfuzzer_keepseed
+    - entropic_keepseed
+    - libfuzzer_interceptors
+    - entropic_interceptors
+
+- experiment: 2020-07-30
+  fuzzers:
+    - libfuzzer
+    - libfuzzer_interceptors
+    - entropic
+    - entropic_interceptors
+
+- experiment: 2020-07-29
+  fuzzers:
+    - afl
+    - honggfuzz
+    - libfuzzer
+    - entropic
+
+- experiment: 2020-07-27
+  fuzzers:
+    - afl
+    - aflplusplus
+    - honggfuzz
+    - aflplusplus_honggfuzz
+    - aflplusplus_cmplog
+    - aflplusplus_havoc_cmplog
+    - aflplusplus_havoc2
+    - aflplusplus_havoc
+    - aflplusplus_laf
+    - aflplusplus_laf_cmplog
+
+- experiment: 2020-07-25
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_havoc
+    - aflplusplus_hybrid
+    - aflplusplus_honggfuzz
+    - afl
+    - afl_qemu
+    - honggfuzz
+    - honggfuzz_qemu
+    - mopt
+
+- experiment: 2020-07-22
+  fuzzers:
+    - libfuzzer
+
+- experiment: 2020-07-20
+  fuzzers:
+    - libfuzzer
+
+- experiment: 2020-07-13
+  fuzzers:
+    - aflplusplus_ctx_default
+    - aflplusplus_ctx_nosingle
+    - aflplusplus_ctx_nozero
+    - aflplusplus_ctx_nozerosingle
+    - aflplusplus_ngram4
+    - aflplusplus_ngram6
+    - aflplusplus_ngram8
+
+- experiment: 2020-07-09
+  fuzzers:
+    - aflplusplus_lto_dict
+    - aflplusplus_lto
+    - aflplusplus_ltoinstrim
+    - aflplusplus_ctx
+    - aflplusplus_ngram2
+    - aflplusplus_optimal
+    - aflplusplus_qemu
+    - aflplusplus
+
+- experiment: 2020-06-30
+  fuzzers:
+    - aflplusplus_qemu
+    - afl_qemu
+    - honggfuzz_qemu
+    - aflplusplus_optimal_shmem
+
+- experiment: 2020-06-26
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_optimal_shmem
+    - aflplusplus_shmem
+    - entropic
+
+- experiment: 2020-06-18
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_optimal_shmem
+    - aflplusplus_qemu
+    - aflplusplus_shmem
+
+- experiment: 2020-06-17
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_optimal_shmem
+    - aflplusplus_qemu
+    - aflplusplus_shmem
+
+- experiment: 2020-06-12
+  fuzzers:
+    - aflcc
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_optimal_shmem
+    - aflplusplus_qemu
+    - aflplusplus_shmem
+    - libfuzzer_nocmp
+    - manul
+
+- experiment: 2020-06-08
+  fuzzers:
+    - aflplusplus
+    - libfuzzer

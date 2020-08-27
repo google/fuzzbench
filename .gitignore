@@ -33,3 +33,6 @@ report/
 .bundle/
 docs/_site/
 docs/vendor/
+
+# Auto-generated build files.
+docker/generated.mk

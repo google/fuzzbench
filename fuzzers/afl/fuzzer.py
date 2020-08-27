@@ -19,8 +19,6 @@ import os
 
 from fuzzers import utils
 
-# OUT environment variable is the location of build directory (default is /out).
-
 
 def prepare_build_environment():
     """Set environment variables used to build targets for AFL-based
@@ -74,7 +72,7 @@ def run_afl_fuzz(input_corpus,
     # FIXME: Currently AFL will exit if it encounters a crashing input in seed
     # corpus (usually timeouts). Add a way to skip/delete such inputs and
     # re-run AFL.
-    print('[run_fuzzer] Running target with afl-fuzz')
+    print('[run_afl_fuzz] Running target with afl-fuzz')
     command = [
         './afl-fuzz',
         '-i',
@@ -100,7 +98,7 @@ def run_afl_fuzz(input_corpus,
         # performs.
         '2147483647'
     ]
-    print('[run_fuzzer] Running command: ' + ' '.join(command))
+    print('[run_afl_fuzz] Running command: ' + ' '.join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
     subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
 

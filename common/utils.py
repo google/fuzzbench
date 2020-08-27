@@ -20,12 +20,17 @@ import urllib.error
 
 ROOT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
+assert not (os.getenv('FORCE_NOT_LOCAL') and os.getenv('FORCE_LOCAL')), (
+    'You can\'t set FORCE_LOCAL and FORCE_NOT_LOCAL environment variables to '
+    'True at the same time. If you haven\'t set either of these and/or don\'t '
+    'understand why this is happening please file a bug.')
+
 # pylint: disable=invalid-name
 _is_local = None
 
 if os.getenv('FORCE_NOT_LOCAL'):
     # Allow local users to force is_local to return False. This allows things
-    # like stackdriver logging to happen when running code locally.
+    # like logging to happen when running code locally.
     _is_local = False
 
 if os.getenv('FORCE_LOCAL'):

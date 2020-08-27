@@ -30,7 +30,7 @@ from common import environment
 from common import experiment_utils
 from common import filesystem
 from common import fuzzer_utils
-from common import gsutil
+from common import filestore_utils
 from common import logs
 from common import new_process
 from common import retry
@@ -65,9 +65,18 @@ fuzzer_errored_out = False  # pylint:disable=invalid-name
 
 
 def _clean_seed_corpus(seed_corpus_dir):
-    """Moves seed corpus files from sub-directories into the corpus directory
-    root. Also, deletes any files that exceed the 1 MB limit."""
+    """Prepares |seed_corpus_dir| for the trial. This ensures that it can be
+    used by AFL which is picky about the seed corpus. Moves seed corpus files
+    from sub-directories into the corpus directory root. Also, deletes any files
+    that exceed the 1 MB limit. If the NO_SEEDS env var is specified than the
+    seed corpus files are deleted."""
     if not os.path.exists(seed_corpus_dir):
+        return
+
+    if environment.get('NO_SEEDS'):
+        logs.info('NO_SEEDS specified, deleting seed corpus files.')
+        shutil.rmtree(seed_corpus_dir)
+        os.mkdir(seed_corpus_dir)
         return
 
     failed_to_move_files = []
@@ -218,18 +227,13 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
     """Class for running a trial."""
 
     def __init__(self):
-        benchmark_fuzzer_directory = '%s-%s' % (environment.get('BENCHMARK'),
-                                                environment.get('FUZZER'))
         if not environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
-            bucket = environment.get('CLOUD_EXPERIMENT_BUCKET')
-            experiment_name = environment.get('EXPERIMENT')
-            trial = 'trial-%d' % environment.get('TRIAL_ID')
-            self.gcs_sync_dir = posixpath.join(bucket, experiment_name,
-                                               'experiment-folders',
-                                               benchmark_fuzzer_directory,
-                                               trial)
-            # Clean the directory before we use it.
-            gsutil.rm(self.gcs_sync_dir, force=True, parallel=True)
+            benchmark = environment.get('BENCHMARK')
+            fuzzer = environment.get('FUZZER')
+            trial_id = environment.get('TRIAL_ID')
+            self.gcs_sync_dir = experiment_utils.get_trial_bucket_dir(
+                fuzzer, benchmark, trial_id)
+            filestore_utils.rm(self.gcs_sync_dir, force=True, parallel=True)
         else:
             self.gcs_sync_dir = None
 
@@ -376,7 +380,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         gcs_path = posixpath.join(self.gcs_sync_dir, self.corpus_dir, basename)
 
         # Don't use parallel to avoid stability issues.
-        gsutil.cp(archive, gcs_path)
+        filestore_utils.cp(archive, gcs_path)
 
         # Delete corpus archive so disk doesn't fill up.
         os.remove(archive)
@@ -399,8 +403,8 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         # in size because the log file containing the fuzzer's output is in this
         # directory and can be written to by the fuzzer at any time.
         results_copy = filesystem.make_dir_copy(self.results_dir)
-        gsutil.rsync(results_copy,
-                     posixpath.join(self.gcs_sync_dir, self.results_dir))
+        filestore_utils.rsync(
+            results_copy, posixpath.join(self.gcs_sync_dir, self.results_dir))
 
 
 def archive_directories(directories, archive_path):

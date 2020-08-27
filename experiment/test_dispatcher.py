@@ -17,16 +17,13 @@ import os
 from unittest import mock
 
 import pytest
-import yaml
 
-from common import fuzzer_config_utils
 from database import models
 from database import utils as db_utils
 from experiment import dispatcher
 from test_libs import utils as test_utils
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
-SANCOV_DIR = '/sancov'
 
 # pylint: disable=invalid-name,redefined-outer-name,unused-argument,protected-access
 
@@ -34,9 +31,6 @@ SANCOV_DIR = '/sancov'
 def get_test_data_path(*subpaths):
     """Returns the path of |subpaths| relative to TEST_DATA_PATH."""
     return os.path.join(TEST_DATA_PATH, *subpaths)
-
-
-FUZZERS = ['fuzzer-a', 'fuzzer-b']
 
 
 def mock_split_successes_and_failures(inputs, results):
@@ -55,10 +49,6 @@ def dispatcher_experiment(fs, db, experiment):
     fs.create_dir(os.environ['WORK'])
     experiment_config_filepath = get_test_data_path('experiment-config.yaml')
     fs.add_real_file(experiment_config_filepath)
-    for fuzzer in FUZZERS:
-        fs.create_file(os.path.join(
-            fuzzer_config_utils.get_fuzzer_configs_dir(), fuzzer),
-                       contents=yaml.dump({'fuzzer': fuzzer}))
     return dispatcher.Experiment(experiment_config_filepath)
 
 
@@ -66,9 +56,7 @@ def dispatcher_experiment(fs, db, experiment):
 def test_experiment(dispatcher_experiment):
     """Tests creating an Experiment object."""
     assert dispatcher_experiment.benchmarks == ['benchmark-1', 'benchmark-2']
-    assert dispatcher_experiment.fuzzers == FUZZERS
-    assert (
-        dispatcher_experiment.web_bucket == 'gs://web-reports/test-experiment')
+    assert dispatcher_experiment.fuzzers == ['fuzzer-a', 'fuzzer-b']
 
 
 def test_initialize_experiment_in_db(dispatcher_experiment):
@@ -83,9 +71,9 @@ def test_initialize_experiment_in_db(dispatcher_experiment):
                      benchmark=benchmark)
         for benchmark, _, fuzzer in trials_args
     ]
-    dispatcher._initialize_experiment_in_db(
-        dispatcher_experiment.experiment_name, dispatcher_experiment.git_hash,
-        trials)
+    dispatcher._initialize_experiment_in_db(dispatcher_experiment.config)
+    dispatcher._initialize_trials_in_db(trials)
+
     db_experiments = db_utils.query(models.Experiment).all()
     assert len(db_experiments) == 1
     db_experiment = db_experiments[0]
@@ -106,7 +94,8 @@ def test_build_images_for_trials_base_images_fail(dispatcher_experiment):
     with pytest.raises(Exception):
         dispatcher.build_images_for_trials(dispatcher_experiment.fuzzers,
                                            dispatcher_experiment.benchmarks,
-                                           dispatcher_experiment.num_trials)
+                                           dispatcher_experiment.num_trials,
+                                           dispatcher_experiment.preemptible)
 
 
 @mock.patch('experiment.build.builder.build_base_images')
@@ -122,7 +111,8 @@ def test_build_images_for_trials_build_success(_, dispatcher_experiment):
                         return_value=fuzzer_benchmarks):
             trials = dispatcher.build_images_for_trials(
                 dispatcher_experiment.fuzzers, dispatcher_experiment.benchmarks,
-                dispatcher_experiment.num_trials)
+                dispatcher_experiment.num_trials,
+                dispatcher_experiment.preemptible)
     trial_fuzzer_benchmarks = [
         (trial.fuzzer, trial.benchmark) for trial in trials
     ]
@@ -153,7 +143,8 @@ def test_build_images_for_trials_benchmark_fail(_, dispatcher_experiment):
             assert len(set(dispatcher_experiment.benchmarks)) > 1
             trials = dispatcher.build_images_for_trials(
                 dispatcher_experiment.fuzzers, dispatcher_experiment.benchmarks,
-                dispatcher_experiment.num_trials)
+                dispatcher_experiment.num_trials,
+                dispatcher_experiment.preemptible)
     for trial in trials:
         assert trial.benchmark == successful_benchmark
 
@@ -188,7 +179,7 @@ def test_build_images_for_trials_fuzzer_fail(_, dispatcher_experiment):
         with mock.patch('experiment.build.builder.build_all_fuzzer_benchmarks',
                         side_effect=mocked_build_all_fuzzer_benchmarks):
             trials = dispatcher.build_images_for_trials(fuzzers, benchmarks,
-                                                        num_trials)
+                                                        num_trials, False)
 
     trial_fuzzer_benchmarks = [
         (trial.fuzzer, trial.benchmark) for trial in trials

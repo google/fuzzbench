@@ -2,7 +2,7 @@ name: Build fuzzers
 on:
   pull_request:
     paths:
-      - 'docker/**'  # Base images changes.
+      - 'docker/**'  # Base image changes.
       - 'fuzzers/**' # Changes to fuzzers themselves.
       - 'benchmarks/**'  # Changes to benchmarks.
       - 'src_analysis/**' # Changes that affect what gets built.
@@ -17,23 +17,29 @@ jobs:
           - afl
           - aflfast
           - aflplusplus
-          - aflplusplus_mopt2_17
-          - aflplusplus_lto_mopt
-          - aflplusplus_lto_instrim_mopt
-          - aflplusplus_instrim_mopt
-          - aflplusplus_instrim_mopt2
-          - aflplusplus_instrim_cmplog_mopt
-          - aflplusplus_instrim_laf_mopt2
-          - aflplusplus_instrim_laf_mopt2_17
+          - aflplusplus_optimal
           - aflsmart
-          - eclipser
           - entropic
           - fairfuzz
           - fastcgs_lm
           - honggfuzz
           - lafintel
+          - klee
           - libfuzzer
+          - manul
           - mopt
+          # Binary-only (greybox) fuzzers.
+          - eclipser
+          - afl_qemu
+          - aflplusplus_qemu
+          - honggfuzz_qemu
+          - weizz
+          # Temporary variants.
+          - libfuzzer_keepseed
+          - libfuzzer_magicbytes
+          - entropic_keepseed
+          - entropic_magicbytes
+          - entropic_exectime
 
         benchmark_type:
           - oss-fuzz
@@ -46,7 +52,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - run: |  # Needed for git diff to work.
-        git fetch origin master --depth 1
+        git fetch origin master --unshallow
         git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
 
     - name: Clear unnecessary files
@@ -62,10 +68,24 @@ jobs:
       with:
         python-version: 3.7
 
+    # Copied from:
+    # https://docs.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu.
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements
+        # file.
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+
     - name: Install dependencies
       run: |
         make install-dependencies
 
     - name: Build Benchmarks
       run: |
-        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/test_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER
+        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/build_and_test_run_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER

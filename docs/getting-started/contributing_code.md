@@ -24,6 +24,7 @@ FuzzBench.
 * **docs/** - this documentation.
 * **experiment/** - code for running FuzzBench experiments.
 * **fuzzers/** - fuzzers integrated in the FuzzBench platform (e.g. AFL).
+* **service/** - code for the FuzzBench service run by Google.
 * **test_libs/** - test helper modules.
 * **third_party/** - third-party dependencies (e.g. sancov, oss-fuzz repo).
 

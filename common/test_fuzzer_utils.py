@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for fuzzer_utils.py."""
-import pytest
-
 from common import fuzzer_utils
 
 # pylint: disable=invalid-name,unused-argument
@@ -55,18 +53,3 @@ def test_found_fuzzer_containing_string_without_fuzzer_name_arg(fs, environ):
     fs.create_file('/out/custom-target', contents='\n\nLLVMFuzzerTestOneInput')
     assert fuzzer_utils.get_fuzz_target_binary('/out',
                                                None) == ('/out/custom-target')
-
-
-@pytest.mark.parametrize(('config', 'expected_result'), [
-    ({
-        'name': 'myvariant',
-        'fuzzer': 'myfuzzer'
-    }, 'myvariant'),
-    ({
-        'fuzzer': 'myfuzzer'
-    }, 'myfuzzer'),
-])
-def test_get_fuzzer_from_config(config, expected_result):
-    """Test that get_fuzzer_from_config returns the variant for a
-    variant and the fuzzer for a non-variant fuzzer."""
-    assert fuzzer_utils.get_fuzzer_from_config(config) == expected_result

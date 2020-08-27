@@ -40,18 +40,30 @@ FROM gcr.io/fuzzbench/builders/$fuzzer/$benchmark AS builder
 # runner.Dockerfile of each fuzzer.
 FROM gcr.io/fuzzbench/runners/$fuzzer/$benchmark-intermediate
 
+# Install runtime dependencies for benchmarks.
+
+RUN apt-get update -y && apt-get install -y \
+    libglib2.0-0 \
+    libxml2 \
+    libarchive13 \
+    libgss3
+
 # Set up the directory for the build artifacts.
+ENV OUT /out
 ENV WORKDIR /out
 RUN mkdir -p $WORKDIR
 WORKDIR $WORKDIR
+
+# The argument needs to be re-declared otherwise it becomes an empty string.
+ARG fuzzer
 
 # Copy over all the build artifacts (without * to preserve directory structure).
 # This also copies seed and dictionary files if they are available.
 COPY --from=builder /out/ ./
 # Copy the fuzzer.py file.
-COPY --from=builder /src/fuzzer.py .
+COPY fuzzers/$fuzzer/fuzzer.py .
 # Copy the fuzzers directory.
-COPY --from=builder /src/fuzzers fuzzers
+COPY fuzzers ./fuzzers
 # Create empty __init__.py to allow python deps to work.
 RUN touch __init__.py
 

@@ -8,12 +8,33 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - run: |  # Needed for presubmit to work.
-        git fetch origin master --depth 1
+        git fetch origin master --unshallow
         git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
+
     - name: Setup Python environment
       uses: actions/setup-python@v1.1.1
       with:
         python-version: 3.7
+
+    # Copied from:
+    # https://docs.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu.
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements
+        # file.
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+
+    - name: Install dependencies
+      run: |
+        make install-dependencies
+
     - name: Run presubmit checks
       run: |
         FUZZBENCH_TEST_INTEGRATION=1 make presubmit
+

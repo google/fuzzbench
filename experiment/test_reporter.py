@@ -16,24 +16,51 @@
 import os
 from unittest import mock
 
+import yaml
+
 from experiment import reporter
 from test_libs import utils as test_utils
 
 # pylint: disable=unused-argument,invalid-name
 
 
-def test_output_report_bucket(fs, experiment):
-    """Test that output_report writes the report and rsyncs it to the web
-    bucket."""
-    web_bucket = 'gs://web-bucket/experiment'
+def test_output_report_filestore(fs, experiment):
+    """Test that output_report writes the report and rsyncs it to the report
+    filestore."""
+    config_filepath = os.path.join(os.path.dirname(__file__), '..', 'service',
+                                   'core-fuzzers.yaml')
+    fs.add_real_file(config_filepath)
+
+    # Get the config.
+    config_filepath = os.path.join(os.path.dirname(__file__), 'test_data',
+                                   'experiment-config.yaml')
+    fs.add_real_file(config_filepath)
+
+    with open(config_filepath) as file_handle:
+        experiment_config = yaml.load(file_handle, yaml.SafeLoader)
+
     with test_utils.mock_popen_ctx_mgr() as mocked_popen:
         with mock.patch('analysis.generate_report.generate_report'
                        ) as mocked_generate_report:
-            reporter.output_report(web_bucket)
+            reporter.output_report(experiment_config)
             reports_dir = os.path.join(os.environ['WORK'], 'reports')
             assert mocked_popen.commands == [[
                 'gsutil', '-h', 'Cache-Control:public,max-age=0,no-transform',
-                'rsync', '-d', '-r', reports_dir, 'gs://web-bucket/experiment'
+                'rsync', '-d', '-r', reports_dir,
+                'gs://web-reports/test-experiment'
             ]]
+            experiment_name = os.environ['EXPERIMENT']
             mocked_generate_report.assert_called_with(
-                [os.environ['EXPERIMENT']], reports_dir, in_progress=False)
+                [experiment_name],
+                reports_dir,
+                report_name=experiment_name,
+                fuzzers=[
+                    'afl', 'afl_qemu', 'aflfast', 'aflplusplus',
+                    'aflplusplus_optimal', 'aflplusplus_qemu', 'aflsmart',
+                    'eclipser', 'entropic', 'fairfuzz', 'fuzzer-a', 'fuzzer-b',
+                    'honggfuzz', 'honggfuzz_qemu', 'lafintel', 'libfuzzer',
+                    'manul', 'mopt'
+                ],
+                in_progress=False,
+                merge_with_clobber_nonprivate=False,
+                coverage_report=False)

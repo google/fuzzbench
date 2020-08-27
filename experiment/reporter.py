@@ -14,13 +14,20 @@
 # limitations under the License.
 """A module containing the interface used by an experiment for generating
 reports."""
+import os
+import posixpath
 
 from common import experiment_utils
 from common import experiment_path as exp_path
 from common import filesystem
-from common import gsutil
+from common import filestore_utils
 from common import logs
+from common import yaml_utils
 from analysis import generate_report
+from analysis import data_utils
+
+CORE_FUZZERS_YAML = os.path.join(os.path.dirname(__file__), '..', 'service',
+                                 'core-fuzzers.yaml')
 
 logger = logs.Logger('reporter')  # pylint: disable=invalid-name
 
@@ -30,22 +37,45 @@ def get_reports_dir():
     return exp_path.path('reports')
 
 
-def output_report(web_bucket, in_progress=False):
+def output_report(experiment_config: dict,
+                  in_progress=False,
+                  coverage_report=False):
     """Generate the HTML report and write it to |web_bucket|."""
     experiment_name = experiment_utils.get_experiment_name()
+    web_filestore_path = posixpath.join(experiment_config['report_filestore'],
+                                        experiment_name)
+
     reports_dir = get_reports_dir()
+
+    core_fuzzers = yaml_utils.read(CORE_FUZZERS_YAML)['fuzzers']
+    fuzzers = sorted(
+        set(experiment_config['fuzzers'].split(',')).union(set(core_fuzzers)))
+
+    # Don't merge with nonprivate experiments until the very end as doing it
+    # while the experiment is in progress will produce unusable realtime
+    # results.
+    merge_with_nonprivate = (not in_progress and experiment_config.get(
+        'merge_with_nonprivate', False))
 
     try:
         logger.debug('Generating report.')
         filesystem.recreate_directory(reports_dir)
-        generate_report.generate_report([experiment_name],
-                                        str(reports_dir),
-                                        in_progress=in_progress)
-        gsutil.rsync(str(reports_dir),
-                     web_bucket,
-                     gsutil_options=[
-                         '-h', 'Cache-Control:public,max-age=0,no-transform'
-                     ])
+        generate_report.generate_report(
+            [experiment_name],
+            str(reports_dir),
+            report_name=experiment_name,
+            fuzzers=fuzzers,
+            in_progress=in_progress,
+            merge_with_clobber_nonprivate=merge_with_nonprivate,
+            coverage_report=coverage_report)
+        filestore_utils.rsync(str(reports_dir),
+                              web_filestore_path,
+                              gsutil_options=[
+                                  '-h',
+                                  'Cache-Control:public,max-age=0,no-transform'
+                              ])
         logger.debug('Done generating report.')
+    except data_utils.EmptyDataError:
+        logs.warning('No snapshot data.')
     except Exception:  # pylint: disable=broad-except
         logger.error('Error generating HTML report.')

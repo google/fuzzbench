@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+
+  run-tests:
+    image: fuzzbench
+    links:
+      - queue-server
+    environment:
+      E2E_INTEGRATION_TEST: 1
+    command: python3 -m pytest -vv fuzzbench/test_e2e/test_e2e_run.py
+
+  run-experiment:
+    environment:
+      EXPERIMENT_CONFIG: fuzzbench/test_e2e/end-to-end-test-config.yaml

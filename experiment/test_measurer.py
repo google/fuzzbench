@@ -13,7 +13,6 @@
 # limitations under the License.
 """Tests for measurer.py."""
 
-import datetime
 import os
 import shutil
 from unittest import mock
@@ -26,9 +25,7 @@ from common import new_process
 from database import models
 from database import utils as db_utils
 from experiment.build import build_utils
-from experiment import dispatcher
 from experiment import measurer
-from experiment import scheduler
 from test_libs import utils as test_utils
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -42,36 +39,137 @@ BENCHMARKS = ['benchmark-1', 'benchmark-2']
 NUM_TRIALS = 4
 MAX_TOTAL_TIME = 100
 GIT_HASH = 'FAKE-GIT-HASH'
+CYCLE = 1
 
 SNAPSHOT_LOGGER = measurer.logger
 
 # pylint: disable=unused-argument,invalid-name,redefined-outer-name,protected-access
 
 
-@pytest.mark.parametrize('new_pcs', [['0x1', '0x2'], []])
-def test_merge_new_pcs(new_pcs, fs, experiment):
-    """Tests that merge_new_pcs merges new PCs, and updates the covered-pcs
-    file."""
+@pytest.fixture
+def db_experiment(experiment_config, db):
+    """A fixture that populates the database with an experiment entity with the
+    name specified in the experiment_config fixture."""
+    experiment = models.Experiment(name=experiment_config['experiment'])
+    db_utils.add_all([experiment])
+    # yield so that the experiment exists until the using function exits.
+    yield
+
+
+def test_get_current_covered_regions(fs, experiment):
+    """Tests that get_current_coverage reads the correct data from json file."""
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)
+    json_cov_summary_file = get_test_data_path('cov_summary.json')
+    fs.add_real_file(json_cov_summary_file, read_only=False)
+    snapshot_measurer.cov_summary_file = json_cov_summary_file
+    covered_regions = snapshot_measurer.get_current_covered_regions()
+    assert len(covered_regions) == 8
 
-    covered_pcs_filename = get_test_data_path('covered-pcs.txt')
-    fs.add_real_file(covered_pcs_filename, read_only=False)
-    snapshot_measurer.sancov_dir = os.path.dirname(covered_pcs_filename)
-    snapshot_measurer.covered_pcs_filename = covered_pcs_filename
 
-    with open(covered_pcs_filename) as file_handle:
-        initial_contents = file_handle.read()
+def test_get_current_coverage(fs, experiment):
+    """Tests that get_current_coverage reads the correct data from json file."""
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+    json_cov_summary_file = get_test_data_path('cov_summary.json')
+    fs.add_real_file(json_cov_summary_file, read_only=False)
+    snapshot_measurer.cov_summary_file = json_cov_summary_file
+    covered_regions = snapshot_measurer.get_current_coverage()
+    assert covered_regions == 8
 
-    fs.create_file(os.path.join(snapshot_measurer.sancov_dir, '1.sancov'),
-                   contents='')
-    with mock.patch('third_party.sancov.GetPCs') as mocked_GetPCs:
-        mocked_GetPCs.return_value = new_pcs
-        snapshot_measurer.merge_new_pcs()
-    with open(covered_pcs_filename) as file_handle:
-        new_contents = file_handle.read()
-    assert new_contents == (''.join(pc + '\n' for pc in new_pcs) +
-                            initial_contents)
+
+def test_get_current_coverage_error(fs, experiment):
+    """Tests that get_current_coverage returns None from a
+    defective json file."""
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+    json_cov_summary_file = get_test_data_path('cov_summary_defective.json')
+    fs.add_real_file(json_cov_summary_file, read_only=False)
+    snapshot_measurer.cov_summary_file = json_cov_summary_file
+    covered_regions = snapshot_measurer.get_current_coverage()
+    assert not covered_regions
+
+
+def test_get_current_coverage_no_file(fs, experiment):
+    """Tests that get_current_coverage returns None with no json file."""
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+    json_cov_summary_file = get_test_data_path('cov_summary_not_exist.json')
+    snapshot_measurer.cov_summary_file = json_cov_summary_file
+    covered_regions = snapshot_measurer.get_current_coverage()
+    assert not covered_regions
+
+
+@mock.patch('common.new_process.execute')
+def test_generate_profdata_create(mocked_execute, experiment, fs):
+    """Tests that generate_profdata can run the correct command."""
+    mocked_execute.return_value = new_process.ProcessResult(0, '', False)
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+    snapshot_measurer.profdata_file = '/work/reports/data.profdata'
+    snapshot_measurer.profraw_file = '/work/reports/data.profraw'
+    fs.create_file(snapshot_measurer.profraw_file, contents='fake_contents')
+    snapshot_measurer.generate_profdata(CYCLE)
+
+    expected = [
+        'llvm-profdata', 'merge', '-sparse', '/work/reports/data.profraw', '-o',
+        '/work/reports/data.profdata'
+    ]
+
+    assert (len(mocked_execute.call_args_list)) == 1
+    args = mocked_execute.call_args_list[0]
+    assert args[0][0] == expected
+
+
+@mock.patch('common.new_process.execute')
+def test_generate_profdata_merge(mocked_execute, experiment, fs):
+    """Tests that generate_profdata can run correctly with existing profraw."""
+    mocked_execute.return_value = new_process.ProcessResult(0, '', False)
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+    snapshot_measurer.profdata_file = '/work/reports/data.profdata'
+    snapshot_measurer.profraw_file = '/work/reports/data.profraw'
+    fs.create_file(snapshot_measurer.profraw_file, contents='fake_contents')
+    fs.create_file(snapshot_measurer.profdata_file, contents='fake_contents')
+    snapshot_measurer.generate_profdata(CYCLE)
+
+    expected = [
+        'llvm-profdata', 'merge', '-sparse', '/work/reports/data.profraw',
+        '/work/reports/data.profdata', '-o', '/work/reports/data.profdata'
+    ]
+
+    assert (len(mocked_execute.call_args_list)) == 1
+    args = mocked_execute.call_args_list[0]
+    assert args[0][0] == expected
+
+
+@mock.patch('common.new_process.execute')
+@mock.patch('experiment.coverage_utils.get_coverage_binary')
+def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
+                          experiment, fs):
+    """Tests that generate_summary can run the correct command."""
+    mocked_execute.return_value = new_process.ProcessResult(0, '', False)
+    coverage_binary_path = '/work/coverage-binaries/benchmark-a/fuzz-target'
+    mocked_get_coverage_binary.return_value = coverage_binary_path
+
+    snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
+                                                  SNAPSHOT_LOGGER)
+    snapshot_measurer.cov_summary_file = "/reports/cov_summary.txt"
+    snapshot_measurer.profdata_file = "/reports/data.profdata"
+    fs.create_dir('/reports')
+    fs.create_file(snapshot_measurer.profdata_file, contents='fake_contents')
+    snapshot_measurer.generate_summary(CYCLE)
+
+    expected = [
+        'llvm-cov', 'export', '-format=text',
+        '/work/coverage-binaries/benchmark-a/fuzz-target',
+        '-instr-profile=/reports/data.profdata', '-summary-only'
+    ]
+
+    assert (len(mocked_execute.call_args_list)) == 1
+    args = mocked_execute.call_args_list[0]
+    assert args[0][0] == expected
+    assert args[1]['output_file'].name == "/reports/cov_summary.txt"
 
 
 @mock.patch('common.logs.error')
@@ -93,49 +191,15 @@ def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
     assert mocked_measure_snapshot_coverage.call_args_list == expected_calls
 
 
-@mock.patch('common.gsutil.ls')
-@mock.patch('common.gsutil.rsync')
+@mock.patch('common.filestore_utils.ls')
+@mock.patch('common.filestore_utils.rsync')
 def test_measure_all_trials_not_ready(mocked_rsync, mocked_ls, experiment):
     """Test running measure_all_trials before it is ready works as intended."""
-    mocked_ls.return_value = ([], 1)
+    mocked_ls.return_value = new_process.ProcessResult(1, '', False)
     assert measurer.measure_all_trials(experiment_utils.get_experiment_name(),
                                        MAX_TOTAL_TIME, test_utils.MockPool(),
                                        queue.Queue())
     assert not mocked_rsync.called
-
-
-NEW_UNIT = 'new'
-OLD_UNIT = 'old'
-
-
-@pytest.mark.skip(
-    reason="Figure out how to test this with the async snapshot save loop.")
-@mock.patch('common.new_process.execute')
-@mock.patch('multiprocessing.Manager')
-@mock.patch('multiprocessing.pool')
-def test_measure_all_trials(_, __, mocked_execute, db, fs):
-    """Tests that measure_all_trials does what is intended under normal
-    conditions."""
-    mocked_execute.return_value = new_process.ProcessResult(0, '', False)
-
-    dispatcher._initialize_experiment_in_db(
-        experiment_utils.get_experiment_name(), GIT_HASH, BENCHMARKS, FUZZERS,
-        NUM_TRIALS)
-    trials = scheduler.get_pending_trials(
-        experiment_utils.get_experiment_name()).all()
-    for trial in trials:
-        trial.time_started = datetime.datetime.utcnow()
-    db_utils.add_all(trials)
-
-    fs.create_file(measurer.get_experiment_folders_dir() / NEW_UNIT)
-    mock_pool = test_utils.MockPool()
-
-    assert measurer.measure_all_trials(experiment_utils.get_experiment_name(),
-                                       MAX_TOTAL_TIME, mock_pool, queue.Queue())
-
-    actual_ids = [call[2] for call in mock_pool.func_calls]
-    # 4 (trials) * 2 (fuzzers) * 2 (benchmarks)
-    assert sorted(actual_ids) == list(range(1, 17))
 
 
 @mock.patch('multiprocessing.pool.ThreadPool', test_utils.MockPool)
@@ -164,7 +228,7 @@ def test_is_cycle_unchanged_doesnt_exist(experiment):
         assert not snapshot_measurer.is_cycle_unchanged(this_cycle)
 
 
-@mock.patch('common.gsutil.cp')
+@mock.patch('common.filestore_utils.cp')
 @mock.patch('common.filesystem.read')
 def test_is_cycle_unchanged_first_copy(mocked_read, mocked_cp, experiment):
     """Test that is_cycle_unchanged can properly determine if a cycle is
@@ -197,16 +261,17 @@ def test_is_cycle_unchanged_update(fs, experiment):
     unchanged_cycles_file_contents = (initial_unchanged_cycles_file_contents +
                                       '\n' + str(next_cycle))
     assert snapshot_measurer.is_cycle_unchanged(this_cycle)
-    with mock.patch('common.gsutil.cp') as mocked_cp:
+    with mock.patch('common.filestore_utils.cp') as mocked_cp:
         with mock.patch('common.filesystem.read') as mocked_read:
             mocked_cp.return_value = new_process.ProcessResult(0, '', False)
             mocked_read.return_value = unchanged_cycles_file_contents
             assert snapshot_measurer.is_cycle_unchanged(next_cycle)
 
 
-@mock.patch('common.gsutil.cp')
+@mock.patch('common.filestore_utils.cp')
 def test_is_cycle_unchanged_skip_cp(mocked_cp, fs, experiment):
-    """Check that is_cycle_unchanged doesn't call gsutil.cp unnecessarily."""
+    """Check that is_cycle_unchanged doesn't call filestore_utils.cp
+    unnecessarily."""
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)
     this_cycle = 100
@@ -218,7 +283,7 @@ def test_is_cycle_unchanged_skip_cp(mocked_cp, fs, experiment):
     mocked_cp.assert_not_called()
 
 
-@mock.patch('common.gsutil.cp')
+@mock.patch('common.filestore_utils.cp')
 def test_is_cycle_unchanged_no_file(mocked_cp, fs, experiment):
     """Test that is_cycle_unchanged returns False when there is no
     unchanged-cycles file."""
@@ -230,11 +295,13 @@ def test_is_cycle_unchanged_no_file(mocked_cp, fs, experiment):
 
 
 @mock.patch('common.new_process.execute')
-def test_run_cov_new_units(mocked_execute, fs, environ):
+@mock.patch('common.benchmark_utils.get_fuzz_target',
+            return_value='fuzz-target')
+def test_run_cov_new_units(_, mocked_execute, fs, environ):
     """Tests that run_cov_new_units does a coverage run as we expect."""
     os.environ = {
         'WORK': '/work',
-        'CLOUD_EXPERIMENT_BUCKET': 'gs://bucket',
+        'EXPERIMENT_FILESTORE': 'gs://bucket',
         'EXPERIMENT': 'experiment',
     }
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
@@ -252,6 +319,9 @@ def test_run_cov_new_units(mocked_execute, fs, environ):
         fs.create_file(os.path.join(snapshot_measurer.corpus_dir, unit))
     fuzz_target_path = '/work/coverage-binaries/benchmark-a/fuzz-target'
     fs.create_file(fuzz_target_path)
+    profraw_file_path = os.path.join(snapshot_measurer.coverage_dir,
+                                     'data.profraw')
+    fs.create_file(profraw_file_path)
 
     snapshot_measurer.run_cov_new_units()
     assert len(mocked_execute.call_args_list) == 1  # Called once
@@ -261,11 +331,9 @@ def test_run_cov_new_units(mocked_execute, fs, environ):
     expected = {
         'cwd': '/work/coverage-binaries/benchmark-a',
         'env': {
-            'UBSAN_OPTIONS': ('coverage_dir='
-                              '/work/measurement-folders/benchmark-a/fuzzer-a'
-                              '/trial-12/sancovs'),
+            'LLVM_PROFILE_FILE': profraw_file_path,
             'WORK': '/work',
-            'CLOUD_EXPERIMENT_BUCKET': 'gs://bucket',
+            'EXPERIMENT_FILESTORE': 'gs://bucket',
             'EXPERIMENT': 'experiment',
         },
         'expect_zero': False,
@@ -295,7 +363,10 @@ class TestIntegrationMeasurement:
             self, mocked_is_cycle_unchanged, db, experiment, tmp_path):
         """Integration test for measure_snapshot_coverage."""
         # WORK is set by experiment to a directory that only makes sense in a
-        # fakefs.
+        # fakefs. A directory containing necessary llvm tools is also added to
+        # PATH.
+        llvm_tools_path = get_test_data_path('llvm_tools')
+        os.environ["PATH"] += os.pathsep + llvm_tools_path
         os.environ['WORK'] = str(tmp_path)
         mocked_is_cycle_unchanged.return_value = False
         # Set up the coverage binary.
@@ -331,7 +402,7 @@ class TestIntegrationMeasurement:
         os.makedirs(corpus_dir)
         shutil.copy(archive, corpus_dir)
 
-        with mock.patch('common.gsutil.cp') as mocked_cp:
+        with mock.patch('common.filestore_utils.cp') as mocked_cp:
             mocked_cp.return_value = new_process.ProcessResult(0, '', False)
             # TODO(metzman): Create a system for using actual buckets in
             # integration tests.
@@ -340,7 +411,7 @@ class TestIntegrationMeasurement:
                 snapshot_measurer.trial_num, cycle)
         assert snapshot
         assert snapshot.time == cycle * experiment_utils.get_snapshot_seconds()
-        assert snapshot.edges_covered == 3798
+        assert snapshot.edges_covered == 13178
 
 
 @pytest.mark.parametrize('archive_name',
@@ -357,26 +428,59 @@ def test_extract_corpus(archive_name, tmp_path):
     assert expected_corpus_files.issubset(set(os.listdir(tmp_path)))
 
 
-@mock.patch('experiment.scheduler.all_trials_ended')
+@mock.patch('time.sleep', return_value=None)
 @mock.patch('experiment.measurer.set_up_coverage_binaries')
-@mock.patch('experiment.measurer.measure_all_trials')
+@mock.patch('experiment.measurer.measure_all_trials', return_value=False)
 @mock.patch('multiprocessing.Manager')
 @mock.patch('multiprocessing.pool')
-def test_measure_loop_end(_, mocked_manager, mocked_measure_all_trials, __,
-                          mocked_all_trials_ended):
-    """Tests that measure_loop stops when there is nothing left to measure."""
+@mock.patch('experiment.scheduler.all_trials_ended', return_value=True)
+def test_measure_loop_end(_, __, ___, ____, _____, ______, experiment_config,
+                          db_experiment):
+    """Tests that measure_loop stops when there is nothing left to measure. In
+    this test, there is nothing left to measure on the first call."""
+    measurer.measure_loop(experiment_config, 100)
+    # If everything went well, we should get to this point without any
+    # exceptions.
+
+
+@mock.patch('time.sleep', return_value=None)
+@mock.patch('experiment.measurer.set_up_coverage_binaries')
+@mock.patch('multiprocessing.Manager')
+@mock.patch('multiprocessing.pool')
+@mock.patch('experiment.scheduler.all_trials_ended', return_value=True)
+@mock.patch('experiment.measurer.measure_all_trials')
+def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___,
+                                     ____, _____, experiment_config,
+                                     db_experiment):
+    """Test that measure loop will stop measuring when all trials have ended. In
+    this test, there is more to measure for a few iterations, then the mocked
+    functions will indicate that there is nothing left to measure."""
     call_count = 0
+    # Scheduler is running.
+    loop_iterations = 6
 
     def mock_measure_all_trials(*args, **kwargs):
         # Do the assertions here so that there will be an assert fail on failure
         # instead of an infinite loop.
         nonlocal call_count
-        assert call_count == 0
         call_count += 1
-        return False
+        if call_count >= loop_iterations:
+            return False
+        return True
 
     mocked_measure_all_trials.side_effect = mock_measure_all_trials
-    mocked_all_trials_ended.return_value = True
-    measurer.measure_loop('', 0)
-    # If everything went well, we should get to this point without any exception
-    # failures.
+    measurer.measure_loop(experiment_config, 100)
+    assert call_count == loop_iterations
+
+
+@mock.patch('common.new_process.execute')
+def test_path_exists_in_experiment_filestore(mocked_execute, environ):
+    """Tests that remote_dir_exists calls gsutil properly."""
+    work_dir = '/work'
+    os.environ['WORK'] = work_dir
+    os.environ['EXPERIMENT_FILESTORE'] = 'gs://cloud-bucket'
+    os.environ['EXPERIMENT'] = 'example-experiment'
+    measurer.exists_in_experiment_filestore(work_dir)
+    mocked_execute.assert_called_with(
+        ['gsutil', 'ls', 'gs://cloud-bucket/example-experiment'],
+        expect_zero=False)

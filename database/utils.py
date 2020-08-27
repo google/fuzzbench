@@ -20,14 +20,6 @@ import sqlalchemy
 from sqlalchemy import orm
 
 # pylint: disable=invalid-name
-_DATABASE_URL = os.getenv('SQL_DATABASE_URL')
-
-if not _DATABASE_URL:
-    _POSTGRES_PASSWORD = os.environ['POSTGRES_PASSWORD']
-    _DATABASE_URL = (
-        'postgresql+psycopg2://postgres:{password}@127.0.0.1:5432'.format(
-            password=_POSTGRES_PASSWORD))
-
 engine = None
 session = None
 lock = None
@@ -37,8 +29,16 @@ def initialize():
     """Initialize the database for use. Sets the database engine and session.
     Since this function is called when this module is imported one should rarely
     need to call it (tests are an exception)."""
+    database_url = os.getenv('SQL_DATABASE_URL')
+    if not database_url:
+        postgres_password = os.getenv('POSTGRES_PASSWORD')
+        assert postgres_password, 'POSTGRES_PASSWORD needs to be set.'
+        database_url = (
+            'postgresql+psycopg2://postgres:{password}@127.0.0.1:5432'.format(
+                password=postgres_password))
+
     global engine
-    engine = sqlalchemy.create_engine(_DATABASE_URL)
+    engine = sqlalchemy.create_engine(database_url)
     global session
     Session = orm.sessionmaker(bind=engine)
     session = Session()

@@ -13,17 +13,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Presubmit script for fuzzbench."""
+# pylint: disable=wrong-import-position
+import os
+
+# Many users need this if they are using a Google Cloud instance for development
+# or if their system has a weird setup that makes FuzzBench think it is running
+# on Google Cloud. It's unlikely that setting this will mess anything up so set
+# it.
+# TODO(metzman): Make local the default setting and propagate 'NOT_LOCAL' to all
+# production environments so we don't need to worry about this any more.
+os.environ['FORCE_LOCAL'] = '1'
 
 import argparse
-import os
+import logging
 from pathlib import Path
 import subprocess
 import sys
 from typing import List, Optional
 
+import yaml
+
 from common import benchmark_utils
-from common import logs
 from common import fuzzer_utils
+from common import filesystem
+from common import logs
+from common import yaml_utils
+from service import automatic_run_experiment
 from src_analysis import change_utils
 from src_analysis import diff_utils
 
@@ -42,12 +57,14 @@ _LICENSE_CHECK_EXTENSIONS = [
     '.py',
     '.sh',
 ]
-_LICENSE_CHECK_IGNORE_DIRECTORIES = [
-    'alembic',
-    'third_party',
-]
 _LICENSE_CHECK_STRING = 'http://www.apache.org/licenses/LICENSE-2.0'
+
 _SRC_ROOT = Path(__file__).absolute().parent
+_IGNORE_DIRECTORIES = [
+    os.path.join(_SRC_ROOT, 'database', 'alembic'),
+    os.path.join(_SRC_ROOT, 'third_party'),
+    os.path.join(_SRC_ROOT, 'benchmarks'),
+]
 
 BASE_PYTEST_COMMAND = ['python3', '-m', 'pytest', '-vv']
 
@@ -126,12 +143,12 @@ class FuzzerAndBenchmarkValidator:
         print(benchmark, 'is not valid.')
         return False
 
-    def validate(self, changed_file: Path) -> bool:
-        """If |changed_file| is in an invalid fuzzer or benchmark then return
+    def validate(self, file_path: Path) -> bool:
+        """If |file_path| is in an invalid fuzzer or benchmark then return
         False. If the fuzzer or benchmark is not in |self.invalid_dirs|, then
         print an error message and it to |self.invalid_dirs|."""
-        return (self.validate_fuzzer(changed_file) and
-                self.validate_benchmark(changed_file))
+        return (self.validate_fuzzer(file_path) and
+                self.validate_benchmark(file_path))
 
 
 def is_python(path: Path) -> bool:
@@ -177,16 +194,27 @@ def test_changed_integrations(paths: List[Path]):
     return retcode == 0
 
 
-def lint(paths: List[Path]) -> bool:
-    """Run python's linter on |paths| if it is a python file. Return False if it
-    fails linting."""
-    paths = [path for path in paths if is_python(path)]
-    paths = filter_migrations(paths)
-    if not paths:
-        return True
+def lint(_: List[Path]) -> bool:
+    """Run python's linter on all python code. Return False if it fails
+    linting."""
+
+    to_check = [
+        'analysis',
+        'common',
+        'database',
+        'docker',
+        'experiment',
+        'fuzzbench',
+        'fuzzers',
+        'service',
+        'src_analysis',
+        'test_libs',
+        '.github/workflows/build_and_test_run_fuzzer_benchmarks.py',
+        'presubmit.py',
+    ]
 
     command = ['python3', '-m', 'pylint', '-j', '0']
-    command.extend(paths)
+    command.extend(to_check)
     returncode = subprocess.run(command, check=False).returncode
     return returncode == 0
 
@@ -194,6 +222,15 @@ def lint(paths: List[Path]) -> bool:
 def pytype(paths: List[Path]) -> bool:
     """Run pytype on |path| if it is a python file. Return False if it fails
     type checking."""
+    # Pytype isn't supported on Python3.8+. See
+    # https://github.com/google/pytype/issues/440.
+    assert sys.version_info.major == 3, "Need Python3."
+    if sys.version_info.minor > 7:
+        logs.error(
+            'Python version is: "%s". You should be using 3.7. '
+            'Not running pytype.', sys.version)
+        return True
+
     paths = [path for path in paths if is_python(path)]
     if not paths:
         return True
@@ -224,7 +261,43 @@ def yapf(paths: List[Path], validate: bool = True) -> bool:
     command = ['yapf', validate_argument, '-p']
     command.extend(paths)
     returncode = subprocess.run(command, check=False).returncode
-    return returncode == 0
+    success = returncode == 0
+    if not success:
+        print('Code is not formatted correctly, please run \'make format\'')
+    return success
+
+
+def validate_experiment_requests(paths: List[Path]):
+    """Returns False if service/experiment-requests.yaml it is in |paths| and is
+    not valid."""
+    if Path(automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH) not in paths:
+        return True
+
+    try:
+        experiment_requests = yaml_utils.read(
+            automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
+    except yaml.parser.ParserError:
+        print('Error parsing %s.' %
+              automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
+        return False
+
+    # Only validate the latest request.
+    result = automatic_run_experiment.validate_experiment_requests(
+        experiment_requests[:1])
+
+    if not result:
+        print('%s is not valid.' %
+              automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
+
+    return result
+
+
+def is_path_in_ignore_directory(path: Path) -> bool:
+    """Returns True if |path| is a subpath of an ignored directory."""
+    for ignore_directory in _IGNORE_DIRECTORIES:
+        if filesystem.is_subpath(ignore_directory, path):
+            return True
+    return False
 
 
 def license_check(paths: List[Path]) -> bool:
@@ -240,9 +313,7 @@ def license_check(paths: List[Path]) -> bool:
                 extension not in _LICENSE_CHECK_EXTENSIONS):
             continue
 
-        path_directories = str(path).split(os.sep)
-        if any(d in _LICENSE_CHECK_IGNORE_DIRECTORIES
-               for d in path_directories):
+        if is_path_in_ignore_directory(path):
             continue
 
         with open(path) as file_handle:
@@ -253,25 +324,40 @@ def license_check(paths: List[Path]) -> bool:
     return success
 
 
+def get_all_files() -> List[Path]:
+    """Returns a list of absolute paths of files in this repo."""
+    get_all_files_command = ['git', 'ls-files']
+    output = subprocess.check_output(
+        get_all_files_command).decode().splitlines()
+    return [Path(path).absolute() for path in output if Path(path).is_file()]
+
+
+def filter_ignored_files(paths: List[Path]) -> List[Path]:
+    """Returns a list of absolute paths of files in this repo that can be
+    checked statically."""
+    return [path for path in paths if not is_path_in_ignore_directory(path)]
+
+
 def do_tests() -> bool:
     """Run all unittests."""
     returncode = subprocess.run(BASE_PYTEST_COMMAND, check=False).returncode
     return returncode == 0
 
 
-def do_checks(changed_files: List[Path]) -> bool:
+def do_checks(file_paths: List[Path]) -> bool:
     """Return False if any presubmit check fails."""
     success = True
 
     fuzzer_and_benchmark_validator = FuzzerAndBenchmarkValidator()
-    if not all([
-            fuzzer_and_benchmark_validator.validate(path)
-            for path in changed_files
-    ]):
+    path_valid_statuses = [
+        fuzzer_and_benchmark_validator.validate(path) for path in file_paths
+    ]
+    if not all(path_valid_statuses):
         success = False
 
-    for check in [license_check, yapf, lint, pytype]:
-        if not check(changed_files):
+    checks = [license_check, yapf, lint, pytype, validate_experiment_requests]
+    for check in checks:
+        if not check(file_paths):
             print('ERROR: %s failed, see errors above.' % check.__name__)
             success = False
 
@@ -293,35 +379,54 @@ def bool_to_returncode(success: bool) -> int:
 
 def main() -> int:
     """Check that this branch conforms to the standards of fuzzbench."""
-    logs.initialize()
     parser = argparse.ArgumentParser(
         description='Presubmit script for fuzzbench.')
-    choices = [
-        'format', 'lint', 'typecheck', 'licensecheck',
-        'test_changed_integrations'
-    ]
-    parser.add_argument('command', choices=choices, nargs='?')
-
-    args = parser.parse_args()
-    os.chdir(_SRC_ROOT)
-    changed_files = [Path(path) for path in diff_utils.get_changed_files()]
-
-    if not args.command:
-        success = do_checks(changed_files)
-        return bool_to_returncode(success)
-
     command_check_mapping = {
         'format': yapf,
         'lint': lint,
         'typecheck': pytype,
+        'validate_experiment_requests': validate_experiment_requests,
         'test_changed_integrations': test_changed_integrations
     }
+    parser.add_argument(
+        'command',
+        choices=command_check_mapping.keys(),
+        nargs='?',
+        help='The presubmit check to run. Defaults to all of them')
+    parser.add_argument('--all-files',
+                        action='store_true',
+                        help='Run presubmit check(s) on all files',
+                        default=False)
+    parser.add_argument('-v', '--verbose', action='store_true', default=False)
+
+    args = parser.parse_args()
+
+    os.chdir(_SRC_ROOT)
+
+    if not args.verbose:
+        logs.initialize()
+    else:
+        logs.initialize(log_level=logging.DEBUG)
+
+    if not args.all_files:
+        relevant_files = [Path(path) for path in diff_utils.get_changed_files()]
+    else:
+        relevant_files = get_all_files()
+
+    relevant_files = filter_ignored_files(relevant_files)
+
+    logs.debug('Running presubmit check(s) on: %s',
+               ' '.join(str(path) for path in relevant_files))
+
+    if not args.command:
+        success = do_checks(relevant_files)
+        return bool_to_returncode(success)
 
     check = command_check_mapping[args.command]
     if args.command == 'format':
-        success = check(changed_files, False)
+        success = check(relevant_files, False)
     else:
-        success = check(changed_files)
+        success = check(relevant_files)
     if not success:
         print('ERROR: %s failed, see errors above.' % check.__name__)
     return bool_to_returncode(success)

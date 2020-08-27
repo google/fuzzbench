@@ -11,8 +11,37 @@ index 306e644277c..26db440ecd7 100644
      exit(0);
    }
  
+diff --git a/compiler-rt/lib/fuzzer/FuzzerExtFunctions.def b/compiler-rt/lib/fuzzer/FuzzerExtFunctions.def
+index bb15d68e0de..154b6239d53 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerExtFunctions.def
++++ b/compiler-rt/lib/fuzzer/FuzzerExtFunctions.def
+@@ -48,3 +48,6 @@ EXT_FUNC(__sanitizer_dump_coverage, void, (const uintptr_t *, uintptr_t),
+ EXT_FUNC(__msan_scoped_disable_interceptor_checks, void, (), false);
+ EXT_FUNC(__msan_scoped_enable_interceptor_checks, void, (), false);
+ EXT_FUNC(__msan_unpoison, void, (const volatile void *, size_t size), false);
++
++// Clang source-based coverage functions.
++EXT_FUNC(__llvm_profile_dump, int, (), false);
+diff --git a/compiler-rt/lib/fuzzer/FuzzerTracePC.cpp b/compiler-rt/lib/fuzzer/FuzzerTracePC.cpp
+index b6b11f08579..52309df4696 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerTracePC.cpp
++++ b/compiler-rt/lib/fuzzer/FuzzerTracePC.cpp
+@@ -323,11 +323,8 @@ void TracePC::PrintCoverage() {
+ }
+ 
+ void TracePC::DumpCoverage() {
+-  if (EF->__sanitizer_dump_coverage) {
+-    Vector<uintptr_t> PCsCopy(GetNumPCs());
+-    for (size_t i = 0; i < GetNumPCs(); i++)
+-      PCsCopy[i] = PCs()[i] ? GetPreviousInstructionPc(PCs()[i]) : 0;
+-    EF->__sanitizer_dump_coverage(PCsCopy.data(), PCsCopy.size());
++  if (EF->__llvm_profile_dump) {
++    EF->__llvm_profile_dump();
+   }
+ }
+ 
 diff --git a/compiler-rt/lib/fuzzer/build.sh b/compiler-rt/lib/fuzzer/build.sh
-index 504e54e3a81..cf0690271e4 100755
+index 504e54e3a81..78191272c68 100755
 --- a/compiler-rt/lib/fuzzer/build.sh
 +++ b/compiler-rt/lib/fuzzer/build.sh
 @@ -2,7 +2,7 @@

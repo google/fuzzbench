@@ -1,0 +1,28 @@
+version: "3"
+
+services:
+
+  run-experiment:
+    image: fuzzbench
+    build:
+      context: ../
+      dockerfile: docker/fuzzbench/Dockerfile
+    links:
+      - queue-server
+
+  worker:
+    image: fuzzbench
+    environment:
+      RQ_REDIS_URL: redis://queue-server
+      PYTHONPATH: .
+    command: python3 fuzzbench/worker.py
+    volumes:
+      # Allow access to the host's docker daemon.
+      - /var/run/docker.sock:/var/run/docker.sock
+    links:
+      - queue-server
+    depends_on:
+      - run-experiment
+
+  queue-server:
+    image: redis

@@ -17,19 +17,32 @@ import os
 import subprocess
 from typing import List
 
+from common import utils
+
+
+class DiffError(Exception):
+    """An error diffing commits."""
+
+
+def execute_git_diff(diff_args, repo=utils.ROOT_DIR):
+    """Adds |diff_args| to the command 'git diff' and executes the command in
+    |repo|. Returns a list of each line in the output."""
+    command = ['git', 'diff'] + diff_args
+    # Change directories using cwd instead of using "git -C" because "HEAD"
+    # can't be used with "git -C".
+    return subprocess.check_output(command, cwd=repo).decode().splitlines()
+
 
 def get_changed_files(commit_name: str = 'origin...') -> List[str]:
     """Return a list of absolute paths of files changed in this git branch."""
-    uncommitted_diff_command = ['git', 'diff', '--name-only', 'HEAD']
-    output = subprocess.check_output(
-        uncommitted_diff_command).decode().splitlines()
+    uncommitted_diff_args = ['--name-only', 'HEAD']
+    output = execute_git_diff(uncommitted_diff_args)
     uncommitted_changed_files = set(
         os.path.abspath(path) for path in output if os.path.isfile(path))
 
-    committed_diff_command = ['git', 'diff', '--name-only', commit_name]
+    committed_diff_command = ['--name-only', commit_name]
     try:
-        output = subprocess.check_output(
-            committed_diff_command).decode().splitlines()
+        output = execute_git_diff(committed_diff_command)
         committed_changed_files = set(
             os.path.abspath(path) for path in output if os.path.isfile(path))
         return list(committed_changed_files.union(uncommitted_changed_files))
@@ -37,9 +50,9 @@ def get_changed_files(commit_name: str = 'origin...') -> List[str]:
         # This probably won't happen to anyone. It can happen if your copy
         # of the repo wasn't cloned so give instructions on how to handle.
         pass
-    raise Exception((
+    raise DiffError((
         '"%s" failed.\n'
-        'Please run "git fetch origin master && '
+        'Please run "git fetch origin master --unshallow && '
         'git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master" '
         'and try again.\n'
         'Please file an issue if this doesn\'t fix things.') %

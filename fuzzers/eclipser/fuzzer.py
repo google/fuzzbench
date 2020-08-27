@@ -41,7 +41,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     if not os.path.exists(encoded_temp_corpus):
         os.mkdir(encoded_temp_corpus)
 
-    print('[run_fuzzer] Running target with Eclipser')
+    print('[fuzz] Running target with Eclipser')
     command = [
         'dotnet',
         '/Eclipser/build/Eclipser.dll',
@@ -69,7 +69,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     ]
     if os.listdir(input_corpus):  # Important, otherwise Eclipser crashes.
         command += ['-i', input_corpus]
-    print('[run_fuzzer] Running command: ' + ' '.join(command))
+    print('[fuzz] Running command: ' + ' '.join(command))
     subprocess.Popen(command)
 
     process = Process(target=copy_corpus_directory,

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for coverage builds."""
+"""Integration code for clang source-based coverage builds."""
 
 import os
 
@@ -20,7 +20,7 @@ from fuzzers import utils
 
 def build():
     """Build benchmark."""
-    cflags = ['-fsanitize-coverage=trace-pc-guard']
+    cflags = ['-fprofile-instr-generate', '-fcoverage-mapping']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 

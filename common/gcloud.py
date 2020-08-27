@@ -15,15 +15,13 @@
 
 import enum
 import subprocess
-import time
 from typing import List
 
 from common import experiment_utils
-from common import logs
 from common import new_process
 
 # Constants for dispatcher specs.
-DISPATCHER_MACHINE_TYPE = 'n1-standard-96'
+DISPATCHER_MACHINE_TYPE = 'n1-highmem-96'
 DISPATCHER_BOOT_DISK_SIZE = '4TB'
 DISPATCHER_BOOT_DISK_TYPE = 'pd-ssd'
 
@@ -35,33 +33,6 @@ RUNNER_BOOT_DISK_SIZE = '30GB'
 INSTANCE_BATCH_SIZE = 100
 
 
-def ssh(instance: str, *args, **kwargs):
-    """SSH into |instance|."""
-    zone = kwargs.pop('zone', None)
-    command = kwargs.pop('command', None)
-    ssh_command = ['gcloud', 'beta', 'compute', 'ssh', instance]
-    if command:
-        ssh_command.append('--command=%s' % command)
-    if zone:
-        ssh_command.append('--zone=%s' % zone)
-    return new_process.execute(ssh_command, *args, **kwargs)
-
-
-def robust_begin_gcloud_ssh(instance_name: str, zone: str):
-    """Try to SSH into an instance, |instance_name| in |zone| that might not be
-    ready."""
-    for _ in range(10):
-        result = ssh(instance_name,
-                     zone=zone,
-                     command='echo ping',
-                     expect_zero=False)
-        if result.retcode == 0:
-            return
-        logs.info('GCP instance isn\'t ready yet. Rerunning SSH momentarily.')
-        time.sleep(5)
-    raise Exception('Couldn\'t SSH to instance.')
-
-
 class InstanceType(enum.Enum):
     """Types of instances we need for the experiment."""
     DISPATCHER = 0
@@ -71,11 +42,11 @@ class InstanceType(enum.Enum):
 def create_instance(instance_name: str,
                     instance_type: InstanceType,
                     config: dict,
-                    metadata: dict = None,
                     startup_script: str = None,
+                    preemptible: bool = False,
                     **kwargs) -> bool:
     """Creates a GCE instance with name, |instance_name|, type, |instance_type|
-    and with optionally provided |metadata| and |startup_script|."""
+    and with optionally provided and |startup_script|."""
 
     if experiment_utils.is_local_experiment():
         return run_local_instance(startup_script)
@@ -103,15 +74,9 @@ def create_instance(instance_name: str,
             '--machine-type=%s' % RUNNER_MACHINE_TYPE,
             '--boot-disk-size=%s' % RUNNER_BOOT_DISK_SIZE,
         ])
-        if config.get('preemptible_runners'):
-            # TODO(metzman): Make runners signal to scheduler that they were
-            # preempted, and make scheduler+measurer tolerate preemption.
-            command.append('--preemptible')
 
-    if metadata:
-        metadata_str = ','.join('{key}={value}'.format(key=key, value=value)
-                                for key, value in metadata.items())
-        command.extend(['--metadata', metadata_str])
+    if preemptible:
+        command.append('--preemptible')
     if startup_script:
         command.extend(
             ['--metadata-from-file', 'startup-script=' + startup_script])
@@ -133,12 +98,6 @@ def delete_instances(instance_names: List[str], zone: str, **kwargs) -> bool:
         error_occurred = error_occurred or result.retcode != 0
 
     return not error_occurred
-
-
-def list_instances() -> List[str]:
-    """Return list of current running instances."""
-    result = new_process.execute(['gcloud', 'compute', 'instances', 'list'])
-    return [instance.split(' ')[0] for instance in result.output.splitlines()]
 
 
 def set_default_project(cloud_project: str):

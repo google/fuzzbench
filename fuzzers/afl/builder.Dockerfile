@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG parent_image=gcr.io/fuzzbench/base-builder
+ARG parent_image
 FROM $parent_image
 
 # Download and compile AFL v2.56b.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/google/AFL.git /afl && \
     cd /afl && \
-    git checkout 8da80951dd7eeeb3e3b5a3bcd36c485045f40274 && \
+    git checkout 82b5e359463238d790cadbe2dd494d6a4928bff3 && \
     AFL_NO_X86=1 make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.

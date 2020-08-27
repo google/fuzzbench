@@ -11,16 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 """Integration code for AFLplusplus fuzzer."""
 
 import os
 import shutil
-import glob
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers import utils
-
-# OUT environment variable is the location of build directory (default is /out).
 
 
 def get_cmplog_build_directory(target_directory):
@@ -36,9 +34,11 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
 
+    build_directory = os.environ['OUT']
+
     # If nothing was set this is the default:
     if not build_modes:
-        build_modes = ['tracepc', 'nozero']
+        build_modes = ['tracepc', 'cmplog']
 
     # Instrumentation coverage modes:
     if 'lto' in build_modes:
@@ -46,8 +46,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['CXX'] = '/afl/afl-clang-lto++'
         os.environ['RANLIB'] = 'llvm-ranlib-11'
         os.environ['AR'] = 'llvm-ar-11'
-        for copy_file in glob.glob("/afl/libc*"):
-            shutil.copy(copy_file, os.environ['OUT'])
+        os.environ['AS'] = 'llvm-as-11'
     elif 'qemu' in build_modes:
         os.environ['CC'] = 'clang'
         os.environ['CXX'] = 'clang++'
@@ -57,8 +56,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     if 'instrim' in build_modes:
         # We dont set AFL_LLVM_INSTRIM_LOOPHEAD for better coverage
-        os.environ['AFL_LLVM_INSTRIM'] = 'CFG'
-    elif 'tracepc' in build_modes:
+        os.environ['AFL_LLVM_INSTRIM'] = '1'
+    elif 'tracepc' in build_modes or 'pcguard' in build_modes:
         os.environ['AFL_LLVM_USE_TRACE_PC'] = '1'
     elif 'classic' in build_modes:
         os.environ['AFL_LLVM_INSTRUMENT'] = 'CLASSIC'
@@ -67,6 +66,9 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # Do not use a fixed map location (LTO only)
     if 'dynamic' in build_modes:
         os.environ['AFL_LLVM_MAP_DYNAMIC'] = '1'
+    # Use a fixed map location (LTO only)
+    if 'fixed' in build_modes:
+        os.environ['AFL_LLVM_MAP_ADDR'] = '0x10000'
     # Skip over single block functions
     if 'skipsingle' in build_modes:
         os.environ['AFL_LLVM_SKIPSINGLEBLOCK'] = '1'
@@ -101,6 +103,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'laf' in build_modes:
         os.environ['AFL_LLVM_LAF_SPLIT_SWITCHES'] = '1'
         os.environ['AFL_LLVM_LAF_SPLIT_COMPARES'] = '1'
+        os.environ['AFL_LLVM_LAF_SPLIT_FLOATS'] = '1'
         if 'autodict' not in build_modes:
             os.environ['AFL_LLVM_LAF_TRANSFORM_COMPARES'] = '1'
     # enable auto dictionary for LTO
@@ -115,6 +118,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # cases. Prevent these failures by using AFL_QUIET to stop afl-clang-fast
     # from writing AFL specific messages to stderr.
     os.environ['AFL_QUIET'] = '1'
+    os.environ['AFL_MAP_SIZE'] = '900000'
 
     src = os.getenv('SRC')
     work = os.getenv('WORK')
@@ -132,7 +136,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
         # For CmpLog build, set the OUT and FUZZ_TARGET environment
         # variable to point to the new CmpLog build directory.
-        build_directory = os.environ['OUT']
         cmplog_build_directory = get_cmplog_build_directory(build_directory)
         os.mkdir(cmplog_build_directory)
         new_env['OUT'] = cmplog_build_directory
@@ -144,7 +147,11 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         print('Re-building benchmark for CmpLog fuzzing target')
         utils.build_benchmark(env=new_env)
 
-    shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
+    shutil.copy('/afl/afl-fuzz', build_directory)
+    if os.path.exists('/afl/afl-qemu-trace'):
+        shutil.copy('/afl/afl-qemu-trace', build_directory)
+    if os.path.exists('/aflpp_qemu_driver_hook.so'):
+        shutil.copy('/aflpp_qemu_driver_hook.so', build_directory)
 
 
 def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):
@@ -163,13 +170,12 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):
     # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
     flags = list(flags)
+    if not flags or not flags[0] == '-Q':  # work around for afl-qemu
+        flags += ['-p', 'seek']
     if os.path.exists(cmplog_target_binary):
         flags += ['-c', cmplog_target_binary]
     if 'ADDITIONAL_ARGS' in os.environ:
         flags += os.environ['ADDITIONAL_ARGS'].split(' ')
-
-    # needed for LTO mode to run c++ targets
-    os.environ['LD_LIBRARY_PATH'] = '/out'
 
     afl_fuzzer.run_afl_fuzz(input_corpus,
                             output_corpus,
