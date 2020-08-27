@@ -75,16 +75,16 @@ to misunderstand configuration details that can have an impact on the results.
 If you can, please reach out to the authors to confirm your configuration looks
 good to them.
 
-## I'd like to get my fuzzer evaluated, but I don't want the results and/or the
-   code to be public yet. Can I use the FuzzBench service?
+## I'd like to get my fuzzer evaluated, but I don't want the results and/or code to be public yet. Can I use the FuzzBench service?
 
 Probably yes. We run private experiments for this purpose.
 Please reach out to us at fuzzbench@google.com. If we agree to benchmark your
 fuzzer, please follow the guide on
-[integrating a new fuzzer]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/).
+[adding a new fuzzer]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/)
+on how to integrate your fuzzer with FuzzBench.
 
-You can ignore the parts on [requesting-an-experiment]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/#submitting-your-integration) and
-[submitting your integration]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/#submitting-your-integration).
+You can ignore the sections on [Requesting an experiment]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/#requesting-an-experiment) and
+[Submitting your integration]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/#submitting-your-integration).
 Please test your fuzzer builds and works with our benchmarks, we won't have
 CI to do this for private experiments.
 Ideally, you should test all benchmarks using `make -j test-run-$FUZZER-all`.
@@ -94,7 +94,7 @@ make test-run-$FUZZER-zlib_zlib_uncompress_fuzzer test-run-$FUZZER-libpng-1.2.56
 ```
 
 You should also run `make presubmit` to validate the fuzzer's name and
-integration code. When your fuzzbench integration is ready send us a patch file
+integration code. When your fuzzer is ready send us a patch file
 that applies cleanly to FuzzBench with `git apply <patch_file>`.
 
 ## How can you prevent researchers from optimizing their tools only for these benchmarks?
