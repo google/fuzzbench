@@ -94,8 +94,8 @@ make test-run-$FUZZER-zlib_zlib_uncompress_fuzzer test-run-$FUZZER-libpng-1.2.56
 ```
 
 You should also run `make presubmit` to validate the fuzzer's name and
-integration code. When your fuzzer is ready send us a patch file
-that applies cleanly to FuzzBench with `git apply <patch_file>`.
+integration code. When your fuzzer is ready send us a patch file that applies
+cleanly to FuzzBench with `git apply <patch_file>`.
 
 ## How can you prevent researchers from optimizing their tools only for these benchmarks?
 
