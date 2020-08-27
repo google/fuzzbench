@@ -98,14 +98,22 @@ def get_fuzz_target_binary(search_directory: str,
     return None
 
 
-def validate(fuzzer):
-    """Return True if |fuzzer| is a valid fuzzbench fuzzer."""
+def validate_name(fuzzer):
+    """Return True if |fuzzer| is a valid fuzzbench fuzzer name."""
     # Although importing probably allows a subset of what the regex allows, use
     # the regex anyway to be safe. The regex is enforcing that the fuzzer is a
     # valid path for GCS or a linux system.
     if VALID_FUZZER_REGEX.match(fuzzer) is None:
-        logs.error('%s does not conform to %s pattern.', fuzzer,
+        logs.error('Fuzzer: %s does not conform to pattern: %s.', fuzzer,
                    VALID_FUZZER_REGEX.pattern)
+        return False
+
+    return True
+
+
+def validate(fuzzer):
+    """Return True if |fuzzer| is a valid fuzzbench fuzzer."""
+    if not validate_name(fuzzer):
         return False
 
     # Try importing the fuzzer module.

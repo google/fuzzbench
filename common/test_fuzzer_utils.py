@@ -59,10 +59,12 @@ def test_found_fuzzer_containing_string_without_fuzzer_name_arg(fs, environ):
 
 @pytest.mark.parametrize(('fuzzer_name',), [('afl++',), ('mopt-afl',),
                                             ('mOptAFL',), ('AFL',)])
-def test_validate_invalid_fuzzer_name(fuzzer_name):
-    assert not fuzzer_utils.validate(fuzzer_name)
+def test_validate_name_invalid(fuzzer_name):
+    """Tests that validate_name returns True for an invalid fuzzer name."""
+    assert not fuzzer_utils.validate_name(fuzzer_name)
 
 
 @pytest.mark.parametrize(('fuzzer_name',), [('afl',), ('mopt_afl',), ('afl2',)])
-def test_validate_valid_fuzzer_name(fuzzer_name):
-    assert not fuzzer_utils.validate(fuzzer_name)
+def test_validate_name_valid(fuzzer_name):
+    """Tests that validate_name returns True for a valid fuzzer name."""
+    assert fuzzer_utils.validate_name(fuzzer_name)
