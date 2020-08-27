@@ -20,7 +20,8 @@ from common import logs
 from common import benchmark_config
 from common import utils
 
-VALID_BENCHMARK_REGEX = re.compile(r'^[A-Za-z0-9\._\-]+$')
+# Must be valid in a docker tag.
+VALID_BENCHMARK_REGEX = re.compile(r'^[a-z0-9\._\-]+$')
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 
 
