@@ -75,33 +75,27 @@ to misunderstand configuration details that can have an impact on the results.
 If you can, please reach out to the authors to confirm your configuration looks
 good to them.
 
-## I'd like to get my fuzzer evaluated on the free FuzzBench service, but I don't want the results to be public yet.
+## I'd like to get my fuzzer evaluated, but I don't want the results and/or the
+   code to be public yet. Can I use the FuzzBench service?
 
+Probably yes. We run private experiments for this purpose.
 Please reach out to us at fuzzbench@google.com. If we agree to benchmark your
-fuzzer, please send us a patch file that applies cleanly with `git apply
-<patch_file>` to FuzzBench and please test your fuzzer builds and works with our
-benchmarks. Ideally, you would test all of them using `make -j
-test-run-$FUZZER-all`. This takes too long on most machines so you can try a
-few:
+fuzzer, please follow the guide on
+[integrating a new fuzzer]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/).
+
+You can ignore the parts on [requesting-an-experiment]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/#submitting-your-integration) and
+[submitting your integration]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/#submitting-your-integration).
+Please test your fuzzer builds and works with our benchmarks, we won't have
+CI to do this for private experiments.
+Ideally, you should test all benchmarks using `make -j test-run-$FUZZER-all`.
+This takes too long on most machines so you should try a few of them:
 ```
 make test-run-$FUZZER-zlib_zlib_uncompress_fuzzer test-run-$FUZZER-libpng-1.2.56
 ```
 
-You should also run `make presubmit` to validate the fuzzer's name.
-
-## I'm working on a new tool, but I'm not ready to make my code public yet. Can I use the FuzzBench service?
-
-Please reach out to us at fuzzbench@google.com. If we agree to benchmark your
-fuzzer, please send us a patch file that applies cleanly with `git apply
-<patch_file>` to FuzzBench and please test your fuzzer builds and works with our
-benchmarks. Ideally, you would test all of them using `make -j
-test-run-$FUZZER-all`. This takes too long on most machines so you can try a
-few:
-```
-make test-run-$FUZZER-zlib_zlib_uncompress_fuzzer test-run-$FUZZER-libpng-1.2.56
-```
-
-You should also run `make presubmit` to validate the fuzzer's name.
+You should also run `make presubmit` to validate the fuzzer's name and
+integration code. When your fuzzbench integration is ready send us a patch file
+that applies cleanly to FuzzBench with `git apply <patch_file>`.
 
 ## How can you prevent researchers from optimizing their tools only for these benchmarks?
 
