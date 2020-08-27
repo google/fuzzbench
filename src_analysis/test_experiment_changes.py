@@ -19,7 +19,7 @@ from unittest import mock
 import pytest
 
 from database import models
-from database import utils as db_utils
+from database import db_utils
 from src_analysis import experiment_changes
 from src_analysis import diff_utils
 
