@@ -15,7 +15,7 @@
 import os
 
 from common import benchmark_utils
-from src_analysis import benchmark_dependencies
+from fuzzbench.src_analysis import benchmark_dependencies
 
 OSS_FUZZ_BENCHMARK = 'curl_curl_fuzzer_http'
 STANDARD_BENCHMARK = 'libpng-1.2.56'

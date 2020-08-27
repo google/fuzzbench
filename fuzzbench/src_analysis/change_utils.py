@@ -19,8 +19,8 @@ from typing import List
 from common import utils
 from common import filesystem
 from common import fuzzer_utils
-from src_analysis import benchmark_dependencies
-from src_analysis import fuzzer_dependencies
+from fuzzbench.src_analysis import benchmark_dependencies
+from fuzzbench.src_analysis import fuzzer_dependencies
 
 # This will mean changes to OSS-Fuzz Dockerfiles cause standard benchmarks to be
 # built and vice versa. But until we map the relationship between dockerfiles in

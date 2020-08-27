@@ -20,8 +20,8 @@ import pytest
 
 from database import models
 from database import utils as db_utils
-from src_analysis import experiment_changes
-from src_analysis import diff_utils
+from fuzzbench.src_analysis import experiment_changes
+from fuzzbench.src_analysis import diff_utils
 
 # pylint: disable=invalid-name,unused-argument,redefined-outer-name
 
@@ -39,7 +39,7 @@ def db_experiment(db):
     return experiment
 
 
-@mock.patch('src_analysis.diff_utils.get_changed_files',
+@mock.patch('fuzzbench.src_analysis.diff_utils.get_changed_files',
             return_value=[AFL_FUZZER_PY])
 def test_get_fuzzers_changed_since_last_afl(_, db_experiment):
     """Tests that get_fuzzers_changed_since_last returns the correct
@@ -49,14 +49,16 @@ def test_get_fuzzers_changed_since_last_afl(_, db_experiment):
     assert 'fairfuzz' in changed_fuzzers
 
 
-@mock.patch('src_analysis.diff_utils.get_changed_files', return_value=[])
+@mock.patch('fuzzbench.src_analysis.diff_utils.get_changed_files',
+            return_value=[])
 def test_get_fuzzers_changed_since_last_no_changes(_, db_experiment):
     """Tests that get_fuzzers_changed_since_last returns the
     correct result when no fuzzer has changed."""
     assert not experiment_changes.get_fuzzers_changed_since_last()
 
 
-@mock.patch('src_analysis.diff_utils.get_changed_files', return_value=[])
+@mock.patch('fuzzbench.src_analysis.diff_utils.get_changed_files',
+            return_value=[])
 @mock.patch('common.logs.warning')
 def test_get_fuzzers_changed_since_last_non_master_experiment(
         mocked_info, mocked_get_changed_files, db_experiment):

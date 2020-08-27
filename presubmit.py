@@ -39,8 +39,8 @@ from common import filesystem
 from common import logs
 from common import yaml_utils
 from service import automatic_run_experiment
-from src_analysis import change_utils
-from src_analysis import diff_utils
+from fuzzbench.src_analysis import change_utils
+from fuzzbench.src_analysis import diff_utils
 
 _LICENSE_CHECK_FILENAMES = ['Dockerfile']
 _LICENSE_CHECK_EXTENSIONS = [
@@ -207,7 +207,6 @@ def lint(_: List[Path]) -> bool:
         'fuzzbench',
         'fuzzers',
         'service',
-        'src_analysis',
         'test_libs',
         '.github/workflows/build_and_test_run_fuzzer_benchmarks.py',
         'presubmit.py',

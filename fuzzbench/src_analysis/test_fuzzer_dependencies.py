@@ -16,7 +16,7 @@ import os
 import pytest
 
 from common import utils
-from src_analysis import fuzzer_dependencies
+from fuzzbench.src_analysis import fuzzer_dependencies
 
 # pylint: disable=protected-access,import-outside-toplevel
 

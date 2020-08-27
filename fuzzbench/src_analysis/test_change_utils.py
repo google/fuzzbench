@@ -16,7 +16,7 @@ import os
 
 from common import fuzzer_utils
 from common import utils
-from src_analysis import change_utils
+from fuzzbench.src_analysis import change_utils
 
 
 def test_get_changed_fuzzers_for_ci():

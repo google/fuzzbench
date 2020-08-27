@@ -16,8 +16,8 @@
 import sys
 import subprocess
 
-from src_analysis import change_utils
-from src_analysis import diff_utils
+from fuzzbench.src_analysis import change_utils
+from fuzzbench.src_analysis import diff_utils
 
 ALWAYS_BUILD_FUZZER = 'afl'
 

@@ -12,13 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tools for finding changes between experiments. Unlike the rest of this
+"""Tools for finding changes between experiments. Unlike the rest of
 src_analysis, this can depend on database code."""
 from common import logs
 from database import utils as db_utils
 from database import models
-from src_analysis import change_utils
-from src_analysis import diff_utils
+from fuzzbench.src_analysis import change_utils
+from fuzzbench.src_analysis import diff_utils
 
 
 def get_fuzzers_changed_since_last():
