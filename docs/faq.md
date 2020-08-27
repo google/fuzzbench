@@ -79,15 +79,25 @@ good to them.
 
 Please reach out to us at fuzzbench@google.com. If we agree to benchmark your
 fuzzer, please send us a patch file that applies cleanly with `git apply
-<patch_file>` to FuzzBench and please test your patch using `make
-build-$FUZZER-all`.
+<patch_file>` to FuzzBench and please test your fuzzer builds and works with our
+benchmarks. Ideally, you would test all of them using `make -j
+test-run-$FUZZER-all`. This takes too long on most machines so you can try a
+few:
+```
+make test-run-$FUZZER-zlib_zlib_uncompress_fuzzer test-run-$FUZZER-libpng-1.2.56
+```
 
 ## I'm working on a new tool, but I'm not ready to make my code public yet. Can I use the FuzzBench service?
 
 Please reach out to us at fuzzbench@google.com. If we agree to benchmark your
 fuzzer, please send us a patch file that applies cleanly with `git apply
-<patch_file>` to FuzzBench and please test your patch using `make
-build-$FUZZER-all`.
+<patch_file>` to FuzzBench and please test your fuzzer builds and works with our
+benchmarks. Ideally, you would test all of them using `make -j
+test-run-$FUZZER-all`. This takes too long on most machines so you can try a
+few:
+```
+make test-run-$FUZZER-zlib_zlib_uncompress_fuzzer test-run-$FUZZER-libpng-1.2.56
+```
 
 ## How can you prevent researchers from optimizing their tools only for these benchmarks?
 

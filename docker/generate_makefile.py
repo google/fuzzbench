@@ -134,6 +134,12 @@ def main():
         ])
         print('build-{fuzzer}-all: {all_targets}'.format(
             fuzzer=fuzzer, all_targets=all_build_targets))
+        all_test_run_targets = ' '.join([
+            'test-run-{0}-{1}'.format(fuzzer, benchmark)
+            for benchmark in benchmarks
+        ])
+        print('test-run-{fuzzer}-all: {all_targets}'.format(
+            fuzzer=fuzzer, all_targets=all_test_run_targets))
 
     # Print all targets build target.
     all_build_targets = ' '.join(
