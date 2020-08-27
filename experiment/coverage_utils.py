@@ -69,11 +69,11 @@ def generate_coverage_report(experiment, benchmark, fuzzer):
          'benchmark: {benchmark} fuzzer: {fuzzer}.').format(benchmark=benchmark,
                                                             fuzzer=fuzzer))
 
-    generator = CoverageReporter(experiment, fuzzer, benchmark)
+    coverage_reporter = CoverageReporter(experiment, fuzzer, benchmark)
     # Merges all the profdata files.
-    generator.merge_profdata_files()
+    coverage_reporter.merge_profdata_files()
     # Generates the reports using llvm-cov.
-    generator.generate_cov_report()
+    coverage_reporter.generate_cov_report()
 
     logger.info('Finished generating coverage report.')
 
@@ -217,8 +217,8 @@ def store_covered_region(experiment: str, fuzzer: str, benchmark: str):
                  benchmark)
 
     covered_regions = get_covered_region(experiment, fuzzer, benchmark)
-    generator = CoverageReporter(experiment, fuzzer, benchmark)
-    generator.generate_json_summary_file(covered_regions)
+    coverage_reporter = CoverageReporter(experiment, fuzzer, benchmark)
+    coverage_reporter.generate_json_summary_file(covered_regions)
 
     logger.debug('Finished storing covered region: fuzzer: %s, benchmark: %s.',
                  fuzzer, benchmark)
