@@ -42,7 +42,7 @@ def db():  # pylint: disable=invalid-name
     """Connect to the SQLite database and create all the expected tables."""
     db_utils.initialize()
     models.Base.metadata.create_all(db_utils.engine)
-    with mock.patch('database.utils.cleanup'):
+    with mock.patch('database.db_utils.cleanup'):
         yield
     db_utils.cleanup()
 

@@ -23,7 +23,7 @@ import pytest
 from common import filestore_utils
 from common import new_process
 from experiment import runner
-from fuzzbench.test_libs import test_utils
+from test_libs import utils as test_utils
 
 # pylint: disable=invalid-name,unused-argument,redefined-outer-name
 
