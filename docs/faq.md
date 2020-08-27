@@ -85,17 +85,18 @@ on how to integrate your fuzzer with FuzzBench.
 
 You can ignore the sections on [Requesting an experiment]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/#requesting-an-experiment) and
 [Submitting your integration]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/#submitting-your-integration).
-Please test your fuzzer builds and works with our benchmarks, we won't have
-CI to do this for private experiments.
+Please test your fuzzer works with our benchmarks, we don't have CI to verify
+this for private experiments.
 Ideally, you should test all benchmarks using `make -j test-run-$FUZZER-all`.
-This takes too long on most machines so you should try a few of them:
+This takes too long on most machines so you should at least test a few of them:
 ```
 make test-run-$FUZZER-zlib_zlib_uncompress_fuzzer test-run-$FUZZER-libpng-1.2.56
 ```
 
 You should also run `make presubmit` to validate the fuzzer's name and
-integration code. When your fuzzer is ready send us a patch file that applies
-cleanly to FuzzBench with `git apply <patch_file>`.
+integration code.
+When your fuzzer is ready, send us a patch file that applies cleanly to
+FuzzBench with `git apply <patch_file>`.
 
 ## How can you prevent researchers from optimizing their tools only for these benchmarks?
 
