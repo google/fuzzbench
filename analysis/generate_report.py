@@ -81,7 +81,7 @@ def get_arg_parser():
         '-cov',
         '--coverage-report',
         action='store_true',
-        default=True,
+        default=False,
         help='If set, clang coverage reports and differential plots are shown.')
 
     # It doesn't make sense to clobber and label by experiment, since nothing
