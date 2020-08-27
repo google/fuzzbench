@@ -27,12 +27,6 @@ VALID_BENCHMARK_REGEX = re.compile(r'^[a-z0-9\._\-]+$')
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 
 
-def get_project(benchmark):
-    """Returns the OSS-Fuzz project of |benchmark| if it is based on an
-    OSS-Fuzz project, otherwise raises ValueError."""
-    return benchmark_config.get_config(benchmark)['project']
-
-
 def get_fuzz_target(benchmark):
     """Returns the fuzz target of |benchmark|"""
     return benchmark_config.get_config(benchmark)['fuzz_target']
@@ -69,9 +63,11 @@ def validate(benchmark):
     """Returns True if |benchmark| is a valid fuzzbench benchmark."""
     if not validate_name(benchmark):
         return False
+
     if benchmark not in get_all_benchmarks():
         logs.error('%s must have a benchmark.yaml.', benchmark)
         return False
+
     try:
         get_fuzz_target(benchmark)
     except yaml.parser.ParserError:
