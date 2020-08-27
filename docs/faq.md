@@ -87,6 +87,8 @@ few:
 make test-run-$FUZZER-zlib_zlib_uncompress_fuzzer test-run-$FUZZER-libpng-1.2.56
 ```
 
+You should also run `make presubmit` to validate the fuzzer's name.
+
 ## I'm working on a new tool, but I'm not ready to make my code public yet. Can I use the FuzzBench service?
 
 Please reach out to us at fuzzbench@google.com. If we agree to benchmark your
@@ -98,6 +100,8 @@ few:
 ```
 make test-run-$FUZZER-zlib_zlib_uncompress_fuzzer test-run-$FUZZER-libpng-1.2.56
 ```
+
+You should also run `make presubmit` to validate the fuzzer's name.
 
 ## How can you prevent researchers from optimizing their tools only for these benchmarks?
 
