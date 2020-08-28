@@ -50,6 +50,7 @@ def get_covered_regions_dict(experiment_df):
                 benchmark_df, benchmark, fuzzer)
             key = get_fuzzer_benchmark_key(fuzzer, benchmark)
             covered_regions_dict[key] = fuzzer_covered_regions
+
     return covered_regions_dict
 
 
@@ -61,6 +62,10 @@ def get_fuzzer_covered_regions(benchmark_df, benchmark, fuzzer):
         src_filestore_path = get_fuzzer_filestore_path(benchmark_df, fuzzer)
         src_file = posixpath.join(src_filestore_path, 'coverage', 'data',
                                   benchmark, fuzzer, 'covered_regions.json')
+        if filestore_utils.ls(src_file, must_exist=False).retcode:
+            # Error occurred, coverage file does not exit. Bail out.
+            return {}
+
         filestore_utils.cp(src_file, dst_file)
         with open(dst_file) as json_file:
             return json.load(json_file)
