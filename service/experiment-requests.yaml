@@ -15,9 +15,18 @@
 #
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
-# NOTE: Users of the FuzzBench service should not be editing this file yet, we
-# are still testing this feature. You should request an experiment by contacting
-# us as you normally do.
+
+- experiment: 2020-08-30
+  fuzzers:
+    - libfuzzer_before
+    - libfuzzer_after
+    - entropic_before
+    - entropic_after
+
+- experiment: 2020-08-25
+  fuzzers:
+    - libfuzzer_magicbytes
+    - entropic_magicbytes
 
 - experiment: 2020-08-21
   fuzzers:
