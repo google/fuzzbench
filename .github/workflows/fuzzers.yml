@@ -44,6 +44,8 @@ jobs:
           - entropic_keepseed
           - entropic_magicbytes
           - entropic_exectime
+          - aflplusplus_qemu_cmplog
+          - aflplusplus_nounstable
 
         benchmark_type:
           - oss-fuzz
