@@ -44,6 +44,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     os.environ['AFL_ENTRYPOINT'] = target_func
     os.environ['AFL_QEMU_PERSISTENT_CNT'] = "100000"
     os.environ['AFL_QEMU_DRIVER_NO_HOOK'] = "1"
+    os.environ['AFL_QEMU_DISABLE_CACHE'] = "1"
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
