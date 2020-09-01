@@ -46,6 +46,8 @@ jobs:
           - entropic_exectime
           - aflplusplus_qemu_cmplog
           - aflplusplus_nounstable
+          - aflplusplus_qemu5
+          - aflplusplus_qemu5_cmplog
 
         benchmark_type:
           - oss-fuzz

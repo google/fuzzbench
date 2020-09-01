@@ -22,6 +22,8 @@
     - aflplusplus_nounstable
     - aflplusplus_qemu
     - aflplusplus_qemu_cmplog
+    - aflplusplus_qemu5
+    - aflplusplus_qemu5_cmplog
 
 - experiment: 2020-08-30
   fuzzers:
