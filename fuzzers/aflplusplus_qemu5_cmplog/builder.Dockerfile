@@ -34,7 +34,8 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cp examples/aflpp_driver/libAFLQemuDriver.a /libAFLDriver.a && \
     cp examples/aflpp_driver/aflpp_qemu_driver_hook.so /
 
-RUN cd / && git clone https://github.com/AFLplusplus/qemuafl /qemuafl
+RUN cd / && git clone https://github.com/AFLplusplus/qemuafl /qemuafl && \
+    cd /qemuafl && git checkout 6fe0b5711d78b40f8ec3151039bdf5609d2cf49f
 
 RUN cd /qemuafl && \
     ./configure --disable-system --enable-linux-user --disable-gtk --disable-sdl --disable-vnc   --target-list="x86_64-linux-user" --enable-pie --disable-werror && \
