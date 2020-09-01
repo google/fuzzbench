@@ -36,6 +36,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     target_func = "0x" + nm_proc.stdout.split()[0].decode("utf-8")
     print('[fuzz] afl_qemu_driver_stdin_input() address =', target_func)
 
+    # Dummy entry to to force retest
     # Fuzzer option for qemu_mode.
     flags = ['-Q', '-c', '0']
 
