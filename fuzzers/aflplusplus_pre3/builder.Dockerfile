@@ -19,12 +19,11 @@ FROM $parent_image
 RUN apt-get update && \
     apt-get install wget libstdc++-5-dev -y
 
-# Download and compile afl++ (v2.62d).
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && git checkout dev && \
-    git checkout c39a552cc0e2beea85b519e682771e0325354bda && \
+    git checkout 993b32967d6e581fe8dd23e588bbb9372f62c3c2 && \
     unset CFLAGS && unset CXXFLAGS && \
     AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
     make -C llvm_mode && \
