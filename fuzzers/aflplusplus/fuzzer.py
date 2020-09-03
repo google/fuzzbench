@@ -71,7 +71,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['AFL_LLVM_MAP_ADDR'] = '0x10000'
     # generate an extra dictionary
     if 'dict2file' in build_modes:
-        os.environ['AFL_LLVM_DICT2FILE'] = '/out/afl++.dict'
+        os.environ['AFL_LLVM_DICT2FILE'] = build_directory + 'afl++.dict'
     # Skip over single block functions
     if 'skipsingle' in build_modes:
         os.environ['AFL_LLVM_SKIPSINGLEBLOCK'] = '1'
@@ -177,8 +177,8 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):
         flags += ['-p', 'seek']
     if os.path.exists(cmplog_target_binary):
         flags += ['-c', cmplog_target_binary]
-    if os.path.exists('/out/afl++.dict'):
-        flags += ['-x', '/out/afl++.dict']
+    if os.path.exists('./afl++.dict'):
+        flags += ['-x', './afl++.dict']
     if 'ADDITIONAL_ARGS' in os.environ:
         flags += os.environ['ADDITIONAL_ARGS'].split(' ')
 
