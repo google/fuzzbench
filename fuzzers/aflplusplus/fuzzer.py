@@ -71,7 +71,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['AFL_LLVM_MAP_ADDR'] = '0x10000'
     # generate an extra dictionary
     if 'dict2file' in build_modes:
-        os.environ['AFL_LLVM_DICT2FILE'] = build_directory + 'afl++.dict'
+        os.environ['AFL_LLVM_DICT2FILE'] = build_directory + '/afl++.dict'
     # Skip over single block functions
     if 'skipsingle' in build_modes:
         os.environ['AFL_LLVM_SKIPSINGLEBLOCK'] = '1'

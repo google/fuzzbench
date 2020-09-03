@@ -47,6 +47,9 @@ jobs:
           - aflplusplus_nounstable
           - aflplusplus_qemu5
           - aflplusplus_qemu5_cmplog
+          - aflplusplus_pre3
+          - aflplusplus_pre3_cull
+          - aflplusplus_pre3_dict
 
         benchmark_type:
           - oss-fuzz
