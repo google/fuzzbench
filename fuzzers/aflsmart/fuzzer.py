@@ -56,7 +56,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
         input_model = 'bloaty_composite.xml'
         composite_mode = True
 
-    additional_flags=[
+    additional_flags = [
         # Enable stacked mutations
         '-h',
         # Enable structure-aware fuzzing
@@ -69,14 +69,11 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     # Enable composite mode for targets
     # taking multiple input formats like bloaty
-    if composite_mode == True:
+    if composite_mode:
         additional_flags.append('-c')
 
     if input_model != '':
-        afl_fuzzer.run_afl_fuzz(
-            input_corpus,
-            output_corpus,
-            target_binary,
-            additional_flags)
+        afl_fuzzer.run_afl_fuzz(input_corpus, output_corpus, target_binary,
+                               additional_flags)
     else:
         afl_fuzzer.run_afl_fuzz(input_corpus, output_corpus, target_binary)
