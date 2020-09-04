@@ -48,8 +48,7 @@ def output_report(experiment_config: dict,
     reports_dir = get_reports_dir()
 
     core_fuzzers = yaml_utils.read(CORE_FUZZERS_YAML)['fuzzers']
-    fuzzers = sorted(
-        set(experiment_config['fuzzers'].split(',')).union(set(core_fuzzers)))
+    fuzzers = sorted(set(experiment_config['fuzzers']).union(set(core_fuzzers)))
 
     # Don't merge with nonprivate experiments until the very end as doing it
     # while the experiment is in progress will produce unusable realtime

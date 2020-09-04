@@ -50,8 +50,8 @@ def generate_coverage_reports(experiment_config: dict):
     """Generates coverage reports for each benchmark and fuzzer."""
     logger.info('Start generating coverage reports.')
 
-    benchmarks = experiment_config['benchmarks'].split(',')
-    fuzzers = experiment_config['fuzzers'].split(',')
+    benchmarks = experiment_config['benchmarks']
+    fuzzers = experiment_config['fuzzers']
     experiment = experiment_config['experiment']
 
     for benchmark in benchmarks:
@@ -199,8 +199,8 @@ def store_coverage_data(experiment_config: dict):
     """Generates the specific coverage data and store in cloud bucket."""
     logger.info('Storing all fuzzer-benchmark pairs for final coverage data.')
 
-    benchmarks = experiment_config['benchmarks'].split(',')
-    fuzzers = experiment_config['fuzzers'].split(',')
+    benchmarks = experiment_config['benchmarks']
+    fuzzers = experiment_config['fuzzers']
     experiment = experiment_config['experiment']
 
     for benchmark in benchmarks:
