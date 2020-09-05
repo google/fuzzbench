@@ -49,6 +49,8 @@ jobs:
           - aflplusplus_pre3
           - aflplusplus_pre3_dict
           - aflplusplus_optimal_pre3
+          - aflplusplus_pre3_simple
+          - aflplusplus_pre3_simple_dict 
 
         benchmark_type:
           - oss-fuzz
