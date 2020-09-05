@@ -91,8 +91,8 @@ class Experiment:  # pylint: disable=too-many-instance-attributes
     def __init__(self, experiment_config_filepath: str):
         self.config = yaml_utils.read(experiment_config_filepath)
 
-        self.benchmarks = self.config['benchmarks'].split(',')
-        self.fuzzers = self.config['fuzzers'].split(',')
+        self.benchmarks = self.config['benchmarks']
+        self.fuzzers = self.config['fuzzers']
         self.num_trials = self.config['trials']
         self.experiment_name = self.config['experiment']
         self.git_hash = self.config['git_hash']

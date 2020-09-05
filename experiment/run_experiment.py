@@ -212,8 +212,8 @@ def start_experiment(  # pylint: disable=too-many-arguments
     validate_benchmarks(benchmarks)
 
     config = read_and_validate_experiment_config(config_filename)
-    config['fuzzers'] = ','.join(fuzzers)
-    config['benchmarks'] = ','.join(benchmarks)
+    config['fuzzers'] = fuzzers
+    config['benchmarks'] = benchmarks
     config['experiment'] = experiment_name
     config['git_hash'] = get_git_hash()
     config['no_seeds'] = no_seeds
