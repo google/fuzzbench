@@ -27,15 +27,14 @@ RUN cd / && wget https://github.com/ninja-build/ninja/releases/download/v1.10.1/
 # Build afl++ without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && git checkout bd57784664a7de62c726a0fb2aaabd41471faa0c && \
+    cd /afl && git checkout ded4d093ff59b4459b04aaae9b3b7bbcdaadcdef && \
     unset CFLAGS && unset CXXFLAGS && \
     AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
     make -C examples/aflpp_driver && \
     cp examples/aflpp_driver/libAFLQemuDriver.a /libAFLDriver.a && \
     cp examples/aflpp_driver/aflpp_qemu_driver_hook.so /
 
-RUN cd / && git clone https://github.com/AFLplusplus/qemuafl /qemuafl && \
-    cd /qemuafl && git checkout 6fe0b5711d78b40f8ec3151039bdf5609d2cf49f
+RUN cd / && git clone https://github.com/AFLplusplus/qemuafl /qemuafl
 
 RUN cd /qemuafl && \
     ./configure --disable-system --enable-linux-user --disable-gtk --disable-sdl --disable-vnc   --target-list="x86_64-linux-user" --enable-pie --disable-werror && \
