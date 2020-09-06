@@ -38,9 +38,9 @@ RUN apt-get update && \
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
     git checkout ded4d093ff59b4459b04aaae9b3b7bbcdaadcdef && \
-    unset CFLAGS && unset CXXFLAGS && \
-    AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
-    cd llvm_mode && LLVM_CONFIG=llvm-config-11 REAL_CC=gcc-9 REAL_CXX=g++-9 make && \
+    unset CFLAGS && unset CXXFLAGS && export LLVM_CONFIG=llvm-config-11 && \
+    export REAL_CC=gcc-9 && export REAL_CXX=g++-9 && \
+    AFL_NO_X86=1 CC=gcc-9 PYTHON_INCLUDE=/ make && \
     cd .. && make install && \
     make -C examples/aflpp_driver && \
     cp examples/aflpp_driver/libAFLDriver.a / && \
