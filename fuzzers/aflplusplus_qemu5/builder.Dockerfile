@@ -27,7 +27,7 @@ RUN cd / && wget https://github.com/ninja-build/ninja/releases/download/v1.10.1/
 # Build afl++ without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && git checkout ded4d093ff59b4459b04aaae9b3b7bbcdaadcdef && \
+    cd /afl && git checkout 8ec41b2585390c54256dd823e1beafd6246d9976 && \
     unset CFLAGS && unset CXXFLAGS && \
     AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
     make -C examples/aflpp_driver && \
