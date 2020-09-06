@@ -17,6 +17,7 @@
 # Please add new experiment requests towards the top of this file.
 
 - experiment: 2020-09-08
+  fuzzers:
     - aflplusplus
     - aflplusplus_pre3
     - aflplusplus_optimal
