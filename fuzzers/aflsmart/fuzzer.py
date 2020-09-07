@@ -74,6 +74,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     if input_model != '':
         afl_fuzzer.run_afl_fuzz(input_corpus, output_corpus, target_binary,
-                               additional_flags)
+                                additional_flags)
     else:
         afl_fuzzer.run_afl_fuzz(input_corpus, output_corpus, target_binary)
