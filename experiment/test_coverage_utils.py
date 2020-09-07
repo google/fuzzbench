@@ -24,7 +24,7 @@ def get_test_data_path(*subpaths):
     return os.path.join(TEST_DATA_PATH, *subpaths)
 
 
-def test_get_current_covered_regions(fs):
+def test_extract_covered_regions_from_summary_json(fs):
     """Tests that extract_covered_regions_from_summary_json returns the covered
     regions from summary json file."""
     summary_json_file = get_test_data_path('cov_summary.json')
