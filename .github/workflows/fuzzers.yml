@@ -44,12 +44,13 @@ jobs:
           - entropic_keepseed
           - entropic_magicbytes
           - entropic_exectime
-          - aflplusplus_nounstable
           - aflplusplus_qemu5
           - aflplusplus_qemu5_cmplog
           - aflplusplus_pre3
-          - aflplusplus_pre3_cull
           - aflplusplus_pre3_dict
+          - aflplusplus_optimal_pre3
+          - aflplusplus_pre3_simple
+          - aflplusplus_pre3_simple_dict 
 
         benchmark_type:
           - oss-fuzz
