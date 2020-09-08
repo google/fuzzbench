@@ -374,11 +374,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
                                                       self.profdata_file,
                                                       self.cov_summary_file,
                                                       summary_only=summary_only)
-
         if result.retcode != 0:
-            self.logger.error(
-                'Coverage summary json file generation failed for '
-                'cycle: %d.', cycle)
             if cycle != 0:
                 self.logger.error(
                     'Coverage summary json file generation failed for '
