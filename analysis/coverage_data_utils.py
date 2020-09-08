@@ -115,15 +115,16 @@ def get_benchmark_cov_dict(coverage_dict, benchmark):
     return benchmark_cov_dict
 
 
-def get_benchmark_aggregated_cov_df(benchmark_coverage_dict):
+def get_benchmark_aggregated_cov_df(coverage_dict, benchmark):
     """Returns a dataframe where each row represents a fuzzer and its
     aggregated coverage number."""
     dict_to_transform = {'fuzzer': [], 'aggregated_edges_covered': []}
-    for fuzzer in benchmark_coverage_dict:
-        aggregated_edges_covered = len(benchmark_coverage_dict[fuzzer])
-        dict_to_transform['fuzzer'].append(fuzzer)
-        dict_to_transform['aggregated_edges_covered'].append(
-            aggregated_edges_covered)
+    for key_pair, covered_regions in coverage_dict.items():
+        current_fuzzer, current_benchmark = key_pair.split()
+        if current_benchmark == benchmark:
+            dict_to_transform['fuzzer'].append(current_fuzzer)
+            dict_to_transform['aggregated_edges_covered'].append(
+                len(covered_regions))
     return pd.DataFrame(dict_to_transform)
 
 

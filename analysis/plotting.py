@@ -206,7 +206,7 @@ class Plotter:
                        ax=axes)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
-        axes.set(ylabel='Reached edge coverage')
+        axes.set(ylabel='Reached region coverage')
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
         axes.set_xticklabels(axes.get_xticklabels(),
                              rotation=_DEFAULT_LABEL_ROTATION,
@@ -274,7 +274,7 @@ class Plotter:
                            ax=axes)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
-        axes.set(ylabel='Reached edge coverage')
+        axes.set(ylabel='Reached region coverage')
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
         axes.set_xticklabels(axes.get_xticklabels(),
                              rotation=_DEFAULT_LABEL_ROTATION,
