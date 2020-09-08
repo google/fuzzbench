@@ -257,7 +257,8 @@ good-names=i,
            Run,
            logger,
            _,
-           df
+           df,
+           fs
 
 # Include a hint for the correct naming format with invalid-name.
 include-naming-hint=no
