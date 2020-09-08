@@ -32,13 +32,11 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     benchmark_name = os.environ['BENCHMARK']
 
     if benchmark_name == 'bloaty_fuzz_target':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
+        aflplusplus_fuzzer.build("tracepc", "cmplog")
     elif benchmark_name == 'curl_curl_fuzzer_http':
         aflplusplus_fuzzer.build("tracepc", "cmplog")
     elif benchmark_name == 'libjpeg-turbo-07-2017':
-        aflplusplus_fuzzer.build("tracepc", "dict2file")
-    elif benchmark_name == 'libpcap_fuzz_both':
-        aflplusplus_fuzzer.build("tracepc", "dict2file")
+        aflplusplus_fuzzer.build("lto", "fixed")
     elif benchmark_name == 'libpng-1.2.56':
         aflplusplus_fuzzer.build("lto", "laf", "fixed")
     elif benchmark_name == 'libxml2-v2.9.2':
@@ -46,19 +44,19 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'mbedtls_fuzz_dtlsclient':
         aflplusplus_fuzzer.build("tracepc")
     elif benchmark_name == 'openssl_x509':
-        aflplusplus_fuzzer.build("tracepc", "dict2file")
+        aflplusplus_fuzzer.build("tracepc")
     elif benchmark_name == 'php_php-fuzz-parser':
         aflplusplus_fuzzer.build("classic", "ctx", "cmplog")
     elif benchmark_name == 'proj4-2017-08-14':
         aflplusplus_fuzzer.build("tracepc", "cmplog")
     elif benchmark_name == 'sqlite3_ossfuzz':
-        aflplusplus_fuzzer.build("lto", "fixed", "cmplog")
+        aflplusplus_fuzzer.build("lto", "fixed")
     elif benchmark_name == 'systemd_fuzz-link-parser':
         aflplusplus_fuzzer.build("lto", "cmplog")
     elif benchmark_name == 'vorbis-2017-12-11':
         aflplusplus_fuzzer.build("tracepc", "laf")
     elif benchmark_name == 'woff2-2016-05-06':
-        aflplusplus_fuzzer.build("tracepc", "dict2file")
+        aflplusplus_fuzzer.build("lto", "fixed")
     elif benchmark_name == 'zlib_zlib_uncompress_fuzzer':
         aflplusplus_fuzzer.build("tracepc", "cmplog")
     else:

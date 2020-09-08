@@ -173,7 +173,7 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):
     # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
     flags = list(flags)
-    if not flags or not flags[0] == '-Q':  # work around for afl-qemu
+    if not flags or not flags[0] == '-Q' and '-p' not in flags:
         flags += ['-p', 'seek']
     if os.path.exists(cmplog_target_binary):
         flags += ['-c', cmplog_target_binary]
