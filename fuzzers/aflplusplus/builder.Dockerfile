@@ -17,16 +17,17 @@ FROM $parent_image
 
 # Install wget to download afl_driver.cpp. Install libstdc++ to use llvm_mode.
 RUN apt-get update && \
-    apt-get install wget libstdc++-5-dev -y
+    apt-get install -y wget libstdc++-5-dev libtool-bin automake flex bison \
+                       libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
+                       apt-utils apt-transport-https ca-certificates
 
 # Download and compile afl++ (v2.62d).
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && git checkout dev && \
-    git checkout ee206da3897fd2d9f72206c3c5ea0e3fab109001 && \
-    unset CFLAGS && unset CXXFLAGS && \
-    AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
-    make -C llvm_mode && \
+    cd /afl && \
+    git checkout a4cac3fce58c39e13ab120df7341b03781603b34 && \
+    unset CFLAGS && unset CXXFLAGS && export CC=clang && \
+    AFL_NO_X86=1 PYTHON_INCLUDE=/ make && make install && \
     make -C examples/aflpp_driver && \
     cp examples/aflpp_driver/libAFLDriver.a /

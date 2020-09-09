@@ -9,4 +9,8 @@ The following config active for all benchmarks:
     - in-memory shared memory test cases 
   - "seek" power schedule
 
-url: https://github.com/AFLplusplus/qemuafl
+Repository: [https://github.com/AFLplusplus/AFLplusplus/](https://github.com/AFLplusplus/AFLplusplus/)
+
+[builder.Dockerfile](builder.Dockerfile)
+[fuzzer.py](fuzzer.py)
+[runner.Dockerfile](runner.Dockerfile)

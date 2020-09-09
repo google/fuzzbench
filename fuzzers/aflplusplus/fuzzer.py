@@ -38,7 +38,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     # If nothing was set this is the default:
     if not build_modes:
-        build_modes = ['tracepc', 'cmplog']
+        build_modes = ['tracepc', 'cmplog', 'dict2file']
 
     # Instrumentation coverage modes:
     if 'lto' in build_modes:
