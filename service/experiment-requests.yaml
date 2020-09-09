@@ -16,6 +16,24 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-09-10
+  fuzzers:
+    - aflplusplus_same1
+    - aflplusplus_same2
+    - aflplusplus_same3
+    - aflplusplus_pre3
+    - aflplusplus_pre3_fix
+    - aflplusplus_pre3_fix_p
+    - aflplusplus_optimal_pre3
+    - aflplusplus_optimal_pre3_fix
+    - aflplusplus_optimal_pre3_fix_p
+    - aflplusplus
+    - aflplusplus_fix
+    - aflplusplus_fix_p
+    - aflplusplus_optimal
+    - aflplusplus_optimal_fix
+    - aflplusplus_optimal_fix_p
+
 - experiment: 2020-09-08
   fuzzers:
     - aflplusplus
