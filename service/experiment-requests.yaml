@@ -16,6 +16,16 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-09-11
+  fuzzers:
+    - libfuzzer
+    - libfuzzer_norestart
+    - entropic
+    - entropic_norestart_noexectime
+    - entropic_norestart_yesexectime
+    - aflplusplus
+    - honggfuzz
+
 - experiment: 2020-09-10
   fuzzers:
     - aflplusplus_same1

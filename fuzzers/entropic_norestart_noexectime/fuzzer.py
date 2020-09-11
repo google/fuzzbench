@@ -18,7 +18,6 @@ import os
 from fuzzers import utils
 from fuzzers.libfuzzer import fuzzer as libfuzzer_fuzzer
 
-
 def build():
     """Build benchmark."""
     cflags = ['-fsanitize=fuzzer-no-link']
@@ -39,6 +38,5 @@ def fuzz(input_corpus, output_corpus, target_binary):
                                 target_binary,
                                 extra_flags=[
                                     '-entropic=1', '-keep_seed=1',
-                                    '-cross_over_uniform_dist=1',
-                                    '-entropic_scale_per_exec_time=1'
+                                    '-cross_over_uniform_dist=1'
                                 ])
