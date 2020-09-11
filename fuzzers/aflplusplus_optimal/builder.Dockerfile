@@ -32,7 +32,6 @@ RUN apt-get update && \
       llvm-11 llvm-11-dev llvm-11-runtime llvm-11-tools && \
     apt-get install -y gcc-9 g++-9
 
-# Download and compile afl++ (v2.62d).
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
