@@ -35,8 +35,11 @@ jobs:
           - honggfuzz_qemu
           - weizz
           # Temporary variants.
+          - libfuzzer_norestart
           - libfuzzer_magicbytes
           - entropic_magicbytes
+          - entropic_norestart_noexectime
+          - entropic_norestart_yesexectime
 
         benchmark_type:
           - oss-fuzz
