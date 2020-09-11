@@ -18,8 +18,6 @@ import os
 from fuzzers import utils
 from fuzzers.libfuzzer import fuzzer as libfuzzer_fuzzer
 
-# TODO(metzman): Delete entropic before making the project public.
-
 
 def build():
     """Build benchmark."""
