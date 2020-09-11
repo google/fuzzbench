@@ -7,6 +7,10 @@ The following config active for all benchmarks:
     - entrypoint set to LLVMFuzzerTestOneInput
     - persisten mode set to LLVMFuzzerTestOneInput
     - in-memory shared memory test cases 
-  - "seek" power schedule
+  - "explore" power schedule
 
-url: https://github.com/AFLplusplus/qemuafl
+Repository: [https://github.com/AFLplusplus/AFLplusplus/](https://github.com/AFLplusplus/AFLplusplus/)
+
+[builder.Dockerfile](builder.Dockerfile)
+[fuzzer.py](fuzzer.py)
+[runner.Dockerfile](runner.Dockerfile)
