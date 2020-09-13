@@ -40,6 +40,17 @@ jobs:
           - entropic_magicbytes
           - entropic_norestart_noexectime
           - entropic_norestart_yesexectime
+          - aflplusplus_no_mopt
+          - aflplusplus_coe
+          - aflplusplus_exploit
+          - aflplusplus_explore
+          - aflplusplus_fast
+          - aflplusplus_lin
+          - aflplusplus_mmopt
+          - aflplusplus_quad
+          - aflplusplus_rare
+          - aflplusplus_oldseek
+
 
         benchmark_type:
           - oss-fuzz
