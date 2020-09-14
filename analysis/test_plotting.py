@@ -34,3 +34,26 @@ def test_pariwise_unique_coverage_heatmap_plot(tmp_path):
 
     golden_path = 'analysis/test_data/pairwise_unique_coverage_heatmap.png'
     plt_cmp.compare_images(image_path, golden_path, tol=0.01)
+
+
+def test_unique_coverage_ranking_plot(tmp_path):
+    """Tests that unique coverage ranking plot looks as expected (even with a
+    large number of fuzzers)."""
+    fuzzer_num = 22
+
+    fuzzers = [f'fuzzer-{i}' for i in range(fuzzer_num)]
+    unique_regions = [10 * i for i in range(fuzzer_num)]
+    total_regions = [1000] * fuzzer_num
+
+    df = pd.DataFrame({
+        'fuzzer': fuzzers,
+        'unique_regions_covered': unique_regions,
+        'aggregated_edges_covered': total_regions
+    })
+
+    plotter = plotting.Plotter(fuzzers)
+    image_path = tmp_path / 'out.png'
+    plotter.write_unique_coverage_ranking_plot(df, image_path)
+
+    golden_path = 'analysis/test_data/unique_coverage_ranking.png'
+    plt_cmp.compare_images(image_path, golden_path, tol=0.01)
