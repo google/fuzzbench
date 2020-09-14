@@ -41,6 +41,7 @@ export CPPFLAGS="                                     \
     -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1  \
     -DOPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1 \
     -DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1"
+sed -i 's/ -Werror/ -Wno-error/g' config*  # Disable compiler warnings.
 ./configure --enable-fuzz-targets --enable-cli --enable-ftd --enable-joiner \
     --enable-ncp --disable-docs
 make V=1 -j $(nproc)
