@@ -14,7 +14,7 @@
 # limitations under the License.
 
 cd openthread
-git checkout 5b0af03afb8e70e8216f69623bd18bcd3d4b8b43
+git checkout 5bffd8bc4dadfedb6ce42c534e4ea33b2a3d1f10
 ./bootstrap
 export CPPFLAGS="                                     \
     -DOPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=1         \
