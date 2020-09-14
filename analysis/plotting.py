@@ -371,7 +371,7 @@ class Plotter:
 
         for patch in axes.patches:
             axes.annotate(
-                format(patch.get_height(), '.2f'),
+                format(patch.get_height(), '.0f'),
                 (patch.get_x() + patch.get_width() / 2., patch.get_height()),
                 ha='center',
                 va='center',
@@ -398,7 +398,9 @@ class Plotter:
                                            image_path):
         """Writes ranking plot for unique coverage."""
         self._write_plot_to_image(self.unique_coverage_ranking_plot,
-                                  unique_region_cov_df_combined, image_path)
+                                  unique_region_cov_df_combined,
+                                  image_path,
+                                  wide=True)
 
     def pairwise_unique_coverage_heatmap_plot(self,
                                               pairwise_unique_coverage_table,
@@ -421,4 +423,6 @@ class Plotter:
             self, pairwise_unique_coverage_table, image_path):
         """Writes pairwise unique coverage heatmap plot."""
         self._write_plot_to_image(self.pairwise_unique_coverage_heatmap_plot,
-                                  pairwise_unique_coverage_table, image_path)
+                                  pairwise_unique_coverage_table,
+                                  image_path,
+                                  wide=True)

@@ -54,7 +54,7 @@ ENV WORKDIR /out
 RUN mkdir -p $WORKDIR
 WORKDIR $WORKDIR
 
-# The argument needs to be re-declared otherwise it becomes an empty string.
+# The argument needs to be re-declared otherwise it returns an empty string.
 ARG fuzzer
 
 # Copy over all the build artifacts (without * to preserve directory structure).
@@ -63,7 +63,7 @@ COPY --from=builder /out/ ./
 # Copy the fuzzer.py file.
 COPY fuzzers/$fuzzer/fuzzer.py .
 # Copy the fuzzers directory.
-COPY fuzzers ./fuzzers
+COPY fuzzers/ ./fuzzers
 # Create empty __init__.py to allow python deps to work.
 RUN touch __init__.py
 
