@@ -75,9 +75,10 @@ def create_cloud_build_spec(image_templates,
     """
     cloud_build_spec = {'steps': [], 'images': []}
 
+    # Workaround for bug https://github.com/moby/moby/issues/40262.
+    # This is only needed for base-image as it inherits from ubuntu:xenial.
     if build_base_images:
         cloud_build_spec['steps'].append({
-            # Workaround for bug https://github.com/moby/moby/issues/40262.
             'id': 'pull-ubuntu-xenial',
             'env': 'DOCKER_BUILDKIT=1',
             'name': DOCKER_IMAGE,
