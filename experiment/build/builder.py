@@ -53,22 +53,22 @@ logger = logs.Logger('builder')  # pylint: disable=invalid-name
 
 def get_fuzzer_benchmark_pairs(fuzzers, benchmarks):
     """Return a tuple of (fuzzer, benchmark) pairs to build. Excludes
-    blacklisted fuzzers from each benchmark.
+    unsupported fuzzers from each benchmark.
     """
     fuzzer_benchmark_pairs = list(itertools.product(fuzzers, benchmarks))
 
-    blacklisted_fuzzer_benchmark_pairs = []
+    unsupported_fuzzer_benchmark_pairs = []
     for benchmark in benchmarks:
         config = benchmark_config.get_config(benchmark)
-        blacklisted_fuzzers = config.get('blacklisted_fuzzers')
-        if not blacklisted_fuzzers:
+        unsupported_fuzzers = config.get('unsupported_fuzzers')
+        if not unsupported_fuzzers:
             continue
-        blacklisted_fuzzer_benchmark_pairs += list(
-            itertools.product(blacklisted_fuzzers, [benchmark]))
+        unsupported_fuzzer_benchmark_pairs += list(
+            itertools.product(unsupported_fuzzers, [benchmark]))
 
     return [
         i for i in fuzzer_benchmark_pairs
-        if i not in blacklisted_fuzzer_benchmark_pairs
+        if i not in unsupported_fuzzer_benchmark_pairs
     ]
 
 

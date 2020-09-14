@@ -188,11 +188,11 @@ def mock_get_benchmark_config(benchmark):
     """Mocked version of common.benchmark_config.get_config."""
     if benchmark == 'benchmark1':
         return {
-            'blacklisted_fuzzers': ['fuzzer2'],
+            'unsupported_fuzzers': ['fuzzer2'],
         }
     if benchmark == 'benchmark2':
         return {
-            'blacklisted_fuzzers': ['fuzzer2', 'fuzzer3'],
+            'unsupported_fuzzers': ['fuzzer2', 'fuzzer3'],
         }
     return {}
 
