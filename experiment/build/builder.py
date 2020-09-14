@@ -24,6 +24,7 @@ import sys
 import time
 from typing import Callable, List, Tuple
 
+from common import benchmark_config
 from common import experiment_utils
 from common import filesystem
 from common import utils
@@ -48,6 +49,27 @@ BUILD_FAIL_WAIT = 5 * 60
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 
 logger = logs.Logger('builder')  # pylint: disable=invalid-name
+
+
+def get_fuzzer_benchmark_pairs(fuzzers, benchmarks):
+    """Return a tuple of (fuzzer, benchmark) pairs to build. Excludes
+    blacklisted fuzzers from each benchmark.
+    """
+    fuzzer_benchmark_pairs = list(itertools.product(fuzzers, benchmarks))
+
+    blacklisted_fuzzer_benchmark_pairs = []
+    for benchmark in benchmarks:
+        config = benchmark_config.get_config(benchmark)
+        blacklisted_fuzzers = config.get('blacklisted_fuzzers')
+        if not blacklisted_fuzzers:
+            continue
+        blacklisted_fuzzer_benchmark_pairs += list(
+            itertools.product(blacklisted_fuzzers, [benchmark]))
+
+    return [
+        i for i in fuzzer_benchmark_pairs
+        if i not in blacklisted_fuzzer_benchmark_pairs
+    ]
 
 
 def build_base_images() -> Tuple[int, str]:
@@ -143,7 +165,9 @@ def build_all_fuzzer_benchmarks(fuzzers: List[str],
     in parallel. Returns a list of fuzzer,benchmark pairs that built
     successfully."""
     logger.info('Building all fuzzer benchmarks.')
-    build_fuzzer_benchmark_args = list(itertools.product(fuzzers, benchmarks))
+    build_fuzzer_benchmark_args = get_fuzzer_benchmark_pairs(
+        fuzzers, benchmarks)
+
     # TODO(metzman): Use an asynchronous unordered map variant to schedule
     # eagerly.
     successful_calls = retry_build_loop(build_fuzzer_benchmark,

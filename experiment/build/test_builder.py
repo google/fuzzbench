@@ -13,7 +13,6 @@
 # limitations under the License.
 """Tests for builder.py."""
 
-import itertools
 import os
 import sys
 from unittest import mock
@@ -133,7 +132,7 @@ def _test_build_measurers_benchmarks(benchmarks):
 def _test_build_fuzzers_benchmarks(fuzzers, benchmarks):
     """Asserts that each pair of fuzzer in |fuzzers| and benchmark in
     |benchmarks| can build."""
-    all_pairs = list(itertools.product(fuzzers, benchmarks))
+    all_pairs = builder.get_fuzzer_benchmark_pairs(fuzzers, benchmarks)
     assert builder.build_all_fuzzer_benchmarks(fuzzers, benchmarks) == all_pairs
 
 
@@ -183,3 +182,28 @@ class TestBuildChangedBenchmarksOrFuzzers:
         """Tests that either the specified fuzzers or benchmarks can build."""
         benchmarks = get_specified_benchmarks()
         _test_build_measurers_benchmarks(benchmarks)
+
+
+def mock_get_benchmark_config(benchmark):
+    """Mocked version of common.benchmark_config.get_config."""
+    if benchmark == 'benchmark1':
+        return {
+            'blacklisted_fuzzers': ['fuzzer2'],
+        }
+    if benchmark == 'benchmark2':
+        return {
+            'blacklisted_fuzzers': ['fuzzer2', 'fuzzer3'],
+        }
+    return {}
+
+
+@mock.patch('common.benchmark_config.get_config', mock_get_benchmark_config)
+def test_get_fuzzer_benchmark_pairs():
+    """Tests builder.get_fuzzer_benchmark_pairs."""
+    assert builder.get_fuzzer_benchmark_pairs(
+        ['fuzzer1', 'fuzzer2', 'fuzzer3'],
+        ['benchmark1', 'benchmark2', 'benchmark3']) == [
+            ('fuzzer1', 'benchmark1'), ('fuzzer1', 'benchmark2'),
+            ('fuzzer1', 'benchmark3'), ('fuzzer2', 'benchmark3'),
+            ('fuzzer3', 'benchmark1'), ('fuzzer3', 'benchmark3')
+        ]
