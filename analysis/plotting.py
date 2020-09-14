@@ -371,7 +371,7 @@ class Plotter:
 
         for patch in axes.patches:
             axes.annotate(
-                format(patch.get_height(), '.2f'),
+                format(patch.get_height(), '.0f'),
                 (patch.get_x() + patch.get_width() / 2., patch.get_height()),
                 ha='center',
                 va='center',
