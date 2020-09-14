@@ -33,7 +33,7 @@ jobs:
           - afl_qemu
           - aflplusplus_qemu
           - honggfuzz_qemu
-          - weizz
+          - weizz_qemu
           # Temporary variants.
           - libfuzzer_norestart
           - libfuzzer_magicbytes
