@@ -112,8 +112,6 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             self.benchmark_fuzzer_measurement_dir, 'merged.profdata')
 
         self.trialid_profdata_files = []
-        self.individual_profdata_file = os.path.join(
-            self.benchmark_fuzzer_measurement_dir, 'individual.profdata')
 
         coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
         self.source_files_dir = os.path.join(coverage_binaries_dir, benchmark)
@@ -135,9 +133,10 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             individual_profdata_files.append(profdata_file)
             self.trialid_profdata_files.append((profdata_file, trial_id))
         # collect all individual profile file in destination folder
-        result1 = collect_profdata_files(individual_profdata_files, self.individual_profdata_file)
-        if result1.retcode != 0:
-            logger.error('Profdata files collection failed.')
+            result1 = collect_profdata_files(profdata_file, os.path.join(
+                self.benchmark_fuzzer_measurement_dir, 'trial.{0}.profdata'.format(trial_id)))
+            if result1.retcode != 0:
+                logger.error('Profdata files collection failed.')
         # merge all individual profile file in destination folder for HTML report
         result2 = merge_profdata_files(individual_profdata_files, self.merged_profdata_file)
         if result2.retcode != 0:
@@ -151,7 +150,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             result = generate_json_summary(coverage_binary,
                                            file,
                                            os.path.join(self.benchmark_fuzzer_measurement_dir,
-                                                        'individual_{0}.json'.format(trial_id)),
+                                                        'trial_{0}_coverage_summary.json'.format(trial_id)),
                                            summary_only=False)
             if result.retcode != 0:
                 logger.error(
@@ -181,11 +180,11 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
 
     def generate_coverage_regions_json(self):
         """Stores the coverage data in a json file."""
-        for trials in self.trial_ids:
+        for trial_id in self.trial_ids:
             covered_regions = extract_covered_regions_from_summary_json(
                 os.path.join(self.benchmark_fuzzer_measurement_dir,
-                             'individual_{0}.json'.format(trials)), trial_num=trials)
-            coverage_json_src = os.path.join(self.data_dir, 'covered_regions_{0}.json.'.format(trials))
+                             'trial_{0}_coverage_summary.json'.format(trial_id)), trial_num=trial_id)
+            coverage_json_src = os.path.join(self.data_dir, 'covered_regions_{0}.json.'.format(trial_id))
             coverage_json_dst = exp_path.filestore(coverage_json_src)
             filesystem.create_directory(self.data_dir)
             with open(coverage_json_src, 'w') as file_handle:
