@@ -66,10 +66,10 @@ def generate_coverage_report(experiment, benchmark, fuzzer):
     try:
         coverage_reporter = CoverageReporter(experiment, fuzzer, benchmark)
 
-        # Merges all the profdata files.
-        coverage_reporter.merge_profdata_files()
+        # collects all the profdata files for all trials.
+        coverage_reporter.collect_profdata_files()
 
-        # Generate the coverage summary json file based on merged profdata file.
+        # Generate the coverage summary json file based on profdata file for each trial id.
         coverage_reporter.generate_coverage_summary_json()
 
         # Generate the coverage regions json file.
@@ -100,86 +100,150 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         self.data_dir = os.path.join(coverage_info_dir, 'data', benchmark,
                                      fuzzer)
 
-        benchmark_fuzzer_dir = exp_utils.get_benchmark_fuzzer_dir(
+        ##################################################################################
+        # benchmark_fuzzer_dir = exp_utils.get_benchmark_fuzzer_dir(
+        #     benchmark, fuzzer)
+        # work_dir = exp_utils.get_work_dir()
+        #
+        # benchmark_fuzzer_measurement_dir = os.path.join(work_dir,
+        #                                                      'measurement-folders',
+        #                                                      benchmark_fuzzer_dir)
+        ##################################################################################
+
+        ################################ Added ########################################
+
+        self.benchmark_fuzzer_dir = exp_utils.get_benchmark_fuzzer_dir(
             benchmark, fuzzer)
         work_dir = exp_utils.get_work_dir()
 
-        benchmark_fuzzer_measurement_dir = os.path.join(work_dir,
-                                                        'measurement-folders',
-                                                        benchmark_fuzzer_dir)
+        self.benchmark_fuzzer_measurement_dir = os.path.join(work_dir,
+                                                             'measurement-folders',
+                                                             self.benchmark_fuzzer_dir)
+        ##############################################################################
+
+
         self.merged_profdata_file = os.path.join(
-            benchmark_fuzzer_measurement_dir, 'merged.profdata')
-        self.merged_summary_json_file = os.path.join(
-            benchmark_fuzzer_measurement_dir, 'merged.json')
+            self.benchmark_fuzzer_measurement_dir, 'merged.profdata')
+
+
+        ################################ Added ########################################
+
+        self.trialid_profdata_files = []
+        self.individual_profdata_file = os.path.join(
+            self.benchmark_fuzzer_measurement_dir, 'individual.profdata')
+
+        ##############################################################################
+        # self.merged_summary_json_file = os.path.join(
+        #     benchmark_fuzzer_measurement_dir, 'merged.json')
+        ################################ Added ########################################
+        # self.individual_summary_json_file = os.path.join(
+        #     self.benchmark_fuzzer_measurement_dir, 'individual.json')
+        ##############################################################################
 
         coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
         self.source_files_dir = os.path.join(coverage_binaries_dir, benchmark)
         self.binary_file = get_coverage_binary(benchmark)
 
-    def merge_profdata_files(self):
+    ##################################################################################
+    # def merge_profdata_files(self):
+    #     """Merge profdata files from |src_files| to |dst_files|."""
+    #     logger.info('Merging profdata for fuzzer: '
+    #                 '{fuzzer},benchmark: {benchmark}.'.format(
+    #                     fuzzer=self.fuzzer, benchmark=self.benchmark))
+    #
+    #     files_to_merge = []
+    #     for trial_id in self.trial_ids:
+    #         profdata_file = TrialCoverage(self.fuzzer, self.benchmark,
+    #                                       trial_id).profdata_file
+    #         if not os.path.exists(profdata_file):
+    #             continue
+    #         files_to_merge.append(profdata_file)
+    #
+    #     # result = merge_profdata_files(files_to_merge, self.merged_profdata_file)
+    #     if result.retcode != 0:
+    #         logger.error('Profdata files merging failed.')
+    ###################################################################################
+
+
+    ################################ Added ########################################
+    def collect_profdata_files(self):
         """Merge profdata files from |src_files| to |dst_files|."""
         logger.info('Merging profdata for fuzzer: '
                     '{fuzzer},benchmark: {benchmark}.'.format(
-                        fuzzer=self.fuzzer, benchmark=self.benchmark))
+            fuzzer=self.fuzzer, benchmark=self.benchmark))
 
-        files_to_merge = []
+        individual_profdata_files = []
         for trial_id in self.trial_ids:
             profdata_file = TrialCoverage(self.fuzzer, self.benchmark,
                                           trial_id).profdata_file
             if not os.path.exists(profdata_file):
                 continue
-            files_to_merge.append(profdata_file)
-
-        result = merge_profdata_files(files_to_merge, self.merged_profdata_file)
-        if result.retcode != 0:
+            # storing profdata_file and trial_id as a tuple
+            individual_profdata_files.append(profdata_file)
+            self.trialid_profdata_files.append((profdata_file, trial_id))
+        # collect all individual profile file in destination folder
+        result1 = collect_profdata_files(individual_profdata_files, self.individual_profdata_file)
+        if result1.retcode != 0:
+            logger.error('Profdata files collection failed.')
+        # merge all individual profile file in destination folder for HTML report
+        result2 = merge_profdata_files(individual_profdata_files, self.merged_profdata_file)
+        if result2.retcode != 0:
             logger.error('Profdata files merging failed.')
+    ##################################################################################
 
     def generate_coverage_summary_json(self):
         """Generates the coverage summary json from merged profdata file."""
         coverage_binary = get_coverage_binary(self.benchmark)
-        result = generate_json_summary(coverage_binary,
-                                       self.merged_profdata_file,
-                                       self.merged_summary_json_file,
-                                       summary_only=False)
-        if result.retcode != 0:
-            logger.error(
-                'Merged coverage summary json file generation failed for '
-                'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
-                    fuzzer=self.fuzzer, benchmark=self.benchmark))
+        for pair in self.trialid_profdata_files:
+            file, trial_id = pair
+            result = generate_json_summary(coverage_binary,
+                                           file,
+                                           os.path.join(self.benchmark_fuzzer_measurement_dir,
+                                                        'individual_{0}.json'.format(trial_id)),
+                                           summary_only=False)
+            if result.retcode != 0:
+                logger.error(
+                    'Merged coverage summary json file generation failed for '
+                    'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
+                        fuzzer=self.fuzzer, benchmark=self.benchmark))
 
     def generate_coverage_report(self):
-        """Generates the coverage report and stores in bucket."""
-        command = [
-            'llvm-cov', 'show', '-format=html',
-            '-path-equivalence=/,{prefix}'.format(prefix=self.source_files_dir),
-            '-output-dir={dst_dir}'.format(dst_dir=self.report_dir),
-            '-Xdemangler', 'c++filt', '-Xdemangler', '-n', self.binary_file,
-            '-instr-profile={profdata}'.format(
-                profdata=self.merged_profdata_file)
-        ]
-        result = new_process.execute(command, expect_zero=False)
-        if result.retcode != 0:
-            logger.error('Coverage report generation failed for '
-                         'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
-                             fuzzer=self.fuzzer, benchmark=self.benchmark))
-            return
+        """Generates the coverage report for each trial and stores in bucket."""
+        for trials in self.trial_ids:
+            command = [
+                'llvm-cov', 'show', '-format=html',
+                '-path-equivalence=/,{prefix}'.format(prefix=self.source_files_dir),
+                '-output-dir={dst_dir}'.format(dst_dir=self.report_dir),
+                '-Xdemangler', 'c++filt', '-Xdemangler', '-n', self.binary_file,
+                '-instr-profile={profdata}'.format(self.merged_profdata_file)
+            ]
+            result = new_process.execute(command, expect_zero=False)
+            if result.retcode != 0:
+                logger.error('Coverage report generation failed for '
+                             'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
+                    fuzzer=self.fuzzer, benchmark=self.benchmark))
+                return
 
-        src_dir = self.report_dir
-        dst_dir = exp_path.filestore(self.report_dir)
-        filestore_utils.cp(src_dir, dst_dir, recursive=True, parallel=True)
+            src_dir = self.report_dir
+            dst_dir = exp_path.filestore(self.report_dir)
+            filestore_utils.cp(src_dir, dst_dir, recursive=True, parallel=True)
 
     def generate_coverage_regions_json(self):
         """Stores the coverage data in a json file."""
-        covered_regions = extract_covered_regions_from_summary_json(
-            self.merged_summary_json_file)
-        coverage_json_src = os.path.join(self.data_dir, 'covered_regions.json')
-        coverage_json_dst = exp_path.filestore(coverage_json_src)
-        filesystem.create_directory(self.data_dir)
-        with open(coverage_json_src, 'w') as file_handle:
-            json.dump(covered_regions, file_handle)
-        filestore_utils.cp(coverage_json_src,
-                           coverage_json_dst,
-                           expect_zero=False)
+        for trials in self.trial_ids:
+            # covered_regions = extract_covered_regions_from_summary_json(
+            #     self.merged_summary_json_file)
+            covered_regions = extract_covered_regions_from_summary_json(
+                os.path.join(self.benchmark_fuzzer_measurement_dir,
+                             'individual_{0}.json'.format(trials)), trial_num=trials)
+            coverage_json_src = os.path.join(self.data_dir, 'covered_regions_{0}.json.'.format(trials))
+            coverage_json_dst = exp_path.filestore(coverage_json_src)
+            filesystem.create_directory(self.data_dir)
+            with open(coverage_json_src, 'w') as file_handle:
+                json.dump(covered_regions, file_handle)
+            filestore_utils.cp(coverage_json_src,
+                               coverage_json_dst,
+                               expect_zero=False)
 
 
 def get_coverage_archive_name(benchmark):
@@ -220,6 +284,17 @@ def merge_profdata_files(src_files, dst_file):
     command.extend(['-o', dst_file])
     result = new_process.execute(command, expect_zero=False)
     return result
+
+
+############################# Added #################################
+def collect_profdata_files(src_files, dst_file):
+    """Uses cp to copy |src_files| to |dst_files|."""
+    command = ['cp', '-r']
+    command.extend(src_files)
+    command.extend(dst_file)
+    result = new_process.execute(command, expect_zero=False)
+    return result
+#####################################################################
 
 
 def get_coverage_infomation(coverage_summary_file):
@@ -269,7 +344,7 @@ def generate_json_summary(coverage_binary,
     return result
 
 
-def extract_covered_regions_from_summary_json(summary_json_file):
+def extract_covered_regions_from_summary_json(summary_json_file, trial_num):
     """Returns the covered regions given a coverage summary json file."""
     covered_regions = []
     try:
@@ -288,7 +363,7 @@ def extract_covered_regions_from_summary_json(summary_json_file):
             for region in function_data['regions']:
                 if region[hit_index] != 0 and region[type_index] == 0:
                     covered_regions.append(region[:hit_index] +
-                                           region[file_index:])
+                                           region[file_index:] + trial_num)
     except Exception:  # pylint: disable=broad-except
         logger.error('Coverage summary json file defective or missing.')
     return covered_regions
