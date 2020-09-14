@@ -421,4 +421,6 @@ class Plotter:
             self, pairwise_unique_coverage_table, image_path):
         """Writes pairwise unique coverage heatmap plot."""
         self._write_plot_to_image(self.pairwise_unique_coverage_heatmap_plot,
-                                  pairwise_unique_coverage_table, image_path)
+                                  pairwise_unique_coverage_table,
+                                  image_path,
+                                  wide=True)
