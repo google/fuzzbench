@@ -16,3 +16,6 @@ commit: 99fdffaa194cbfed659b0c1bfd0ace4bfcd2a245
 commit_date: 2020-02-10 16:19:52+00:00
 fuzz_target: fuzz-link-parser
 project: systemd
+unsupported_fuzzers:
+  - aflcc
+  - klee

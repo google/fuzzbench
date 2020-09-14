@@ -16,3 +16,5 @@ commit: 3beb37ea14aec1bdce1a6d542dc464d00f4a6cec
 commit_date: 2020-02-13 21:25:08+00:00
 fuzz_target: jsoncpp_fuzzer
 project: jsoncpp
+unsupported_fuzzers:
+  - klee

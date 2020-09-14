@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit: b0593c086dd303af31dc1e30233149978dd613c4
-commit_date: 2020-02-10 09:22:32+00:00
-fuzz_target: x509
-project: openssl
-unsupported_fuzzers:
-  - klee
+FROM gcr.io/fuzzbench/base-runner
+
+RUN apt-get install -y zlib1g-dev \
+    libarchive-dev \
+    libglib2.0-dev \
+    libpsl-dev \
+    libbsd-dev
