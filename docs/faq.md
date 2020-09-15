@@ -129,15 +129,6 @@ You can use the following BibTeX entry:
     month        = {March},
     journal      = {Google Security Blog},
     url          = {https://security.googleblog.com/2020/03/fuzzbench-fuzzer-benchmarking-as-service.html},
-
-OR
-
-@misc{fuzzbench,
-    author       = {Metzman, Jonathan and Szekeres, Laszlo and Arya, Abhishek},
-    title        = {{FuzzBench: Fuzzer Benchmarking as a Service}},
-    year         = {2020},
-    publisher    = {GitHub},
-    howpublished = {\url{https://github.com/google/fuzzbench}},
 }
 ```
 {% endraw %}
