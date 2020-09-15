@@ -16,3 +16,4 @@ fuzzers:
     - libfuzzer
     - manul
     - mopt
+    - weizz_qemu
