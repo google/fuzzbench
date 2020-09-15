@@ -41,17 +41,26 @@ jobs:
           - entropic_magicbytes
           - entropic_norestart_noexectime
           - entropic_norestart_yesexectime
-          - aflplusplus_no_mopt
           - aflplusplus_coe
           - aflplusplus_exploit
           - aflplusplus_explore
           - aflplusplus_fast
-          - aflplusplus_lin
-          - aflplusplus_mmopt
-          - aflplusplus_quad
-          - aflplusplus_rare
-          - aflplusplus_oldseek
-
+          - aflplusplus_coe_12
+          - aflplusplus_coe_24
+          - aflplusplus_coe_32
+          - aflplusplus_exploit_12
+          - aflplusplus_exploit_24
+          - aflplusplus_exploit_32
+          - aflplusplus_explore_12
+          - aflplusplus_explore_24
+          - aflplusplus_explore_32
+          - aflplusplus_explore_min12
+          - aflplusplus_explore_min24
+          - aflplusplus_explore_pow6
+          - aflplusplus_explore_pow8
+          - aflplusplus_fast_12
+          - aflplusplus_fast_24
+          - aflplusplus_fast_32
 
         benchmark_type:
           - oss-fuzz
