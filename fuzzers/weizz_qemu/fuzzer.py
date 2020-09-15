@@ -40,6 +40,13 @@ def fuzz(input_corpus, output_corpus, target_binary):
     os.environ['WEIZZ_NO_AFFINITY'] = '1'
     os.environ['WEIZZ_I_DONT_CARE_ABOUT_MISSING_CRASHES'] = '1'
     os.environ['WEIZZ_CTX_SENSITIVE'] = '1'
+
+    # Weizz needs at least one non-empty seed to start.
+    if len(os.listdir(input_corpus)) == 0:
+        with open(os.path.join(input_corpus, 'default_seed'),
+                  'w') as file_handle:
+            file_handle.write('hi')
+
     command = [
         './weizz',
         '-d',  # No deterministic mutation.
