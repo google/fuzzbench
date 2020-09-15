@@ -46,8 +46,7 @@ def test_output_report_filestore(fs, experiment):
             reports_dir = os.path.join(os.environ['WORK'], 'reports')
             assert mocked_popen.commands == [[
                 'gsutil', '-h', 'Cache-Control:public,max-age=0,no-transform',
-                'rsync', '-d', '-r', reports_dir,
-                'gs://web-reports/test-experiment'
+                'rsync', '-r', reports_dir, 'gs://web-reports/test-experiment'
             ]]
             experiment_name = os.environ['EXPERIMENT']
             mocked_generate_report.assert_called_with(

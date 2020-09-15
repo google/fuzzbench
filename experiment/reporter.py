@@ -48,8 +48,7 @@ def output_report(experiment_config: dict,
     reports_dir = get_reports_dir()
 
     core_fuzzers = yaml_utils.read(CORE_FUZZERS_YAML)['fuzzers']
-    fuzzers = sorted(
-        set(experiment_config['fuzzers'].split(',')).union(set(core_fuzzers)))
+    fuzzers = sorted(set(experiment_config['fuzzers']).union(set(core_fuzzers)))
 
     # Don't merge with nonprivate experiments until the very end as doing it
     # while the experiment is in progress will produce unusable realtime
@@ -68,12 +67,13 @@ def output_report(experiment_config: dict,
             in_progress=in_progress,
             merge_with_clobber_nonprivate=merge_with_nonprivate,
             coverage_report=coverage_report)
-        filestore_utils.rsync(str(reports_dir),
-                              web_filestore_path,
-                              gsutil_options=[
-                                  '-h',
-                                  'Cache-Control:public,max-age=0,no-transform'
-                              ])
+        filestore_utils.rsync(
+            str(reports_dir),
+            web_filestore_path,
+            delete=False,  # Don't remove existing coverage jsons.
+            gsutil_options=[
+                '-h', 'Cache-Control:public,max-age=0,no-transform'
+            ])
         logger.debug('Done generating report.')
     except data_utils.EmptyDataError:
         logs.warning('No snapshot data.')

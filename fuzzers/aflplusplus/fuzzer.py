@@ -38,7 +38,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     # If nothing was set this is the default:
     if not build_modes:
-        build_modes = ['tracepc', 'cmplog']
+        build_modes = ['tracepc', 'cmplog', 'dict2file']
 
     # Instrumentation coverage modes:
     if 'lto' in build_modes:
@@ -50,14 +50,19 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     elif 'qemu' in build_modes:
         os.environ['CC'] = 'clang'
         os.environ['CXX'] = 'clang++'
+    elif 'gcc' in build_modes:
+        os.environ['CC'] = 'afl-gcc-fast'
+        os.environ['CXX'] = 'afl-g++-fast'
+    elif 'symcc' in build_modes:
+        os.environ['CC'] = '/symcc_build/symcc'
+        os.environ['CXX'] = '/symcc_build/sym++'
+        os.environ['SYMCC_OUTPUT_DIR'] = '/tmp'
+        os.environ['SYMCC_LIBCXX_PATH'] = '/libcxx_symcc_install'
     else:
         os.environ['CC'] = '/afl/afl-clang-fast'
         os.environ['CXX'] = '/afl/afl-clang-fast++'
 
-    if 'instrim' in build_modes:
-        # We dont set AFL_LLVM_INSTRIM_LOOPHEAD for better coverage
-        os.environ['AFL_LLVM_INSTRIM'] = '1'
-    elif 'tracepc' in build_modes or 'pcguard' in build_modes:
+    if 'tracepc' in build_modes or 'pcguard' in build_modes:
         os.environ['AFL_LLVM_USE_TRACE_PC'] = '1'
     elif 'classic' in build_modes:
         os.environ['AFL_LLVM_INSTRUMENT'] = 'CLASSIC'
@@ -69,9 +74,9 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # Use a fixed map location (LTO only)
     if 'fixed' in build_modes:
         os.environ['AFL_LLVM_MAP_ADDR'] = '0x10000'
-    # Skip over single block functions
-    if 'skipsingle' in build_modes:
-        os.environ['AFL_LLVM_SKIPSINGLEBLOCK'] = '1'
+    # generate an extra dictionary
+    if 'dict2file' in build_modes:
+        os.environ['AFL_LLVM_DICT2FILE'] = build_directory + '/afl++.dict'
     # Enable context sentitivity for LLVM mode (non LTO only)
     if 'ctx' in build_modes:
         os.environ['AFL_LLVM_CTX'] = '1'
@@ -93,11 +98,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     elif 'ngram16' in build_modes:
         os.environ['AFL_LLVM_NGRAM_SIZE'] = '16'
 
-    # Further instrumentation options:
-    # Disable neverZero implementation
-    if 'nozero' in build_modes:
-        os.environ['AFL_LLVM_SKIP_NEVERZERO'] = '1'
-
     # Only one of the following OR cmplog
     # enable laf-intel compare splitting
     if 'laf' in build_modes:
@@ -106,9 +106,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['AFL_LLVM_LAF_SPLIT_FLOATS'] = '1'
         if 'autodict' not in build_modes:
             os.environ['AFL_LLVM_LAF_TRANSFORM_COMPARES'] = '1'
-    # enable auto dictionary for LTO
-    if 'autodict' in build_modes:
-        os.environ['AFL_LLVM_LTO_AUTODICTIONARY'] = '1'
 
     os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
 
@@ -170,10 +167,12 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):
     # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
     flags = list(flags)
-    if not flags or not flags[0] == '-Q':  # work around for afl-qemu
+    if not flags or not flags[0] == '-Q' and '-p' not in flags:
         flags += ['-p', 'seek']
     if os.path.exists(cmplog_target_binary):
         flags += ['-c', cmplog_target_binary]
+    if os.path.exists('./afl++.dict'):
+        flags += ['-x', './afl++.dict']
     if 'ADDITIONAL_ARGS' in os.environ:
         flags += os.environ['ADDITIONAL_ARGS'].split(' ')
 

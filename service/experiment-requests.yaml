@@ -16,6 +16,92 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-09-15
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_no_mopt
+    - aflplusplus_coe
+    - aflplusplus_exploit
+    - aflplusplus_explore
+    - aflplusplus_fast
+    - aflplusplus_lin
+    - aflplusplus_mmopt
+    - aflplusplus_quad
+    - aflplusplus_rare
+    - aflplusplus_oldseek
+
+- experiment: 2020-09-11
+  fuzzers:
+    - libfuzzer
+    - libfuzzer_norestart
+    - entropic
+    - entropic_norestart_noexectime
+    - entropic_norestart_yesexectime
+    - aflplusplus
+    - honggfuzz
+
+- experiment: 2020-09-10
+  fuzzers:
+    - aflplusplus_same1
+    - aflplusplus_same2
+    - aflplusplus_same3
+    - aflplusplus_pre3
+    - aflplusplus_pre3_fix
+    - aflplusplus_pre3_fix_p
+    - aflplusplus_optimal_pre3
+    - aflplusplus_optimal_pre3_fix
+    - aflplusplus_optimal_pre3_fix_p
+    - aflplusplus
+    - aflplusplus_fix
+    - aflplusplus_fix_p
+    - aflplusplus_optimal
+    - aflplusplus_optimal_fix
+    - aflplusplus_optimal_fix_p
+
+- experiment: 2020-09-08
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_pre3
+    - aflplusplus_optimal
+    - aflplusplus_optimal_pre3
+    - aflplusplus_pre3_dict
+    - aflplusplus_pre3_simple
+    - aflplusplus_pre3_simple_dict
+    - aflplusplus_qemu
+    - aflplusplus_qemu5
+    - honggfuzz
+    - entropic_after
+    - entropic_keepseed
+
+- experiment: 2020-09-05
+  fuzzers:
+    - aflplusplus_optimal
+    - aflplusplus
+    - aflplusplus_pre3
+    - aflplusplus_pre3_dict
+    - aflplusplus_pre3_cull
+    - aflplusplus_nounstable
+
+- experiment: 2020-09-02
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_nounstable
+    - aflplusplus_qemu
+    - aflplusplus_qemu5
+    - aflplusplus_qemu5_cmplog
+
+- experiment: 2020-08-30
+  fuzzers:
+    - libfuzzer_before
+    - libfuzzer_after
+    - entropic_before
+    - entropic_after
+
+- experiment: 2020-08-25
+  fuzzers:
+    - libfuzzer_magicbytes
+    - entropic_magicbytes
+
 - experiment: 2020-08-21
   fuzzers:
     - entropic_keepseed

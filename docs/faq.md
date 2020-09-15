@@ -116,3 +116,28 @@ a new benchmark.
 
 Please [file an issue on GitHub](https://github.com/google/fuzzbench/issues/new)
 or send a pull request fixing the problem.
+
+## How can I cite FuzzBench in my paper?
+
+You can use the following BibTeX entry:
+{% raw %}
+```
+@misc{fuzzbench,
+    author       = {Metzman, Jonathan and Arya, Abhishek and Szekeres, Laszlo},
+    title        = {{FuzzBench: Fuzzer Benchmarking as a Service}},
+    year         = {2020},
+    month        = {March},
+    journal      = {Google Security Blog},
+    url          = {https://security.googleblog.com/2020/03/fuzzbench-fuzzer-benchmarking-as-service.html},
+
+OR
+
+@misc{fuzzbench,
+    author       = {Metzman, Jonathan and Szekeres, Laszlo and Arya, Abhishek},
+    title        = {{FuzzBench: Fuzzer Benchmarking as a Service}},
+    year         = {2020},
+    publisher    = {GitHub},
+    howpublished = {\url{https://github.com/google/fuzzbench}},
+}
+```
+{% endraw %}

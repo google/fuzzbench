@@ -53,7 +53,7 @@ ${VENV_ACTIVATE}: requirements.txt
 
 install-dependencies: ${VENV_ACTIVATE}
 
-docker/generated.mk: docker/generate_makefile.py $(wildcard fuzzers/*/variants.yaml) ${VENV_ACTIVATE}
+docker/generated.mk: docker/generate_makefile.py fuzzers benchmarks ${VENV_ACTIVATE}
 	source ${VENV_ACTIVATE} && PYTHONPATH=. python3 $< > $@
 
 presubmit: install-dependencies

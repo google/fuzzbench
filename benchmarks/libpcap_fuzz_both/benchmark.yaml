@@ -16,3 +16,5 @@ commit: d615abec7e0237299250c409dca23effb8dd36cc
 commit_date: 2020-02-12 06:46:17+00:00
 fuzz_target: fuzz_both
 project: libpcap
+unsupported_fuzzers:
+  - klee

@@ -92,7 +92,7 @@ class BenchmarkResults:
     def _benchmark_aggregated_coverage_df(self):
         """Aggregated covered regions of each fuzzer on this benchmark."""
         return coverage_data_utils.get_benchmark_aggregated_cov_df(
-            self._benchmark_coverage_dict)
+            self._coverage_dict, self.name)
 
     @property
     @functools.lru_cache()
