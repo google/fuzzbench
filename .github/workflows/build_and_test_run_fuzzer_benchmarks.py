@@ -16,6 +16,7 @@
 import sys
 import subprocess
 
+from experiment.build import builder
 from src_analysis import change_utils
 from src_analysis import diff_utils
 
@@ -51,10 +52,9 @@ STANDARD_BENCHMARKS = {
 }
 
 
-def get_make_targets(benchmarks, fuzzer):
-    """Returns and test targets for |fuzzer| and each benchmark
-    in |benchmarks| to pass to make."""
-    return ['test-run-%s-%s' % (fuzzer, benchmark) for benchmark in benchmarks]
+def get_make_target(fuzzer, benchmark):
+    """Return test target for a fuzzer and benchmark."""
+    return 'test-run-%s-%s' % (fuzzer, benchmark)
 
 
 def delete_docker_images():
@@ -80,10 +80,11 @@ def delete_docker_images():
 
 def make_builds(benchmarks, fuzzer):
     """Use make to test the fuzzer on each benchmark in |benchmarks|."""
-    print('Building benchmarks: {} for fuzzer: {}'.format(
-        ', '.join(benchmarks), fuzzer))
-    make_targets = get_make_targets(benchmarks, fuzzer)
-    for make_target in make_targets:
+    fuzzer_benchmark_pairs = builder.get_fuzzer_benchmark_pairs([fuzzer],
+                                                                benchmarks)
+    print('Building fuzzer-benchmark pairs: {}'.format(fuzzer_benchmark_pairs))
+    for _, benchmark in fuzzer_benchmark_pairs:
+        make_target = get_make_target(fuzzer, benchmark)
         make_command = ['make', 'RUNNING_ON_CI=yes', '-j', make_target]
         print('Running command:', ' '.join(make_command))
         result = subprocess.run(make_command, check=False)
