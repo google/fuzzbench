@@ -14,3 +14,5 @@
 
 fuzz_target: fuzz-target
 project: openthread
+unsupported_fuzzers:
+  - klee

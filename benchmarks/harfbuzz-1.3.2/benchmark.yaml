@@ -14,3 +14,5 @@
 
 fuzz_target: fuzz-target
 project: harfbuzz
+unsupported_fuzzers:
+  - klee
