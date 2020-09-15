@@ -21,7 +21,7 @@ RUN apt-get update -y && \
     clang-6.0 llvm-6.0-dev llvm-6.0-tools \
     wget
 
-# Install KLEE dependencies
+# Install KLEE dependencies.
 RUN apt-get install -y \
     cmake-data build-essential curl libcap-dev \
     git cmake libncurses5-dev python-minimal \
@@ -31,14 +31,14 @@ RUN apt-get install -y \
 
 ENV INSTALL_DIR=/out
 
-# Install minisat
+# Install minisat.
 RUN git clone https://github.com/stp/minisat.git /minisat && \
     cd /minisat && mkdir build && cd build && \
     CXXFLAGS= cmake -DSTATIC_BINARIES=ON \
     -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR -DCMAKE_BUILD_TYPE=Release ../ && \
     make -j`nproc` && make install
 
-# Install STP solver
+# Install STP solver.
 RUN git clone https://github.com/stp/stp.git /stp && \
     cd /stp && git checkout tags/2.1.2 && \
     mkdir build && cd build && \
