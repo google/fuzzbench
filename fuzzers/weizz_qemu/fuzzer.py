@@ -42,10 +42,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     os.environ['WEIZZ_CTX_SENSITIVE'] = '1'
 
     # Weizz needs at least one non-empty seed to start.
-    if len(os.listdir(input_corpus)) == 0:
-        with open(os.path.join(input_corpus, 'default_seed'),
-                  'w') as file_handle:
-            file_handle.write('hi')
+    utils.create_seed_file_for_empty_corpus(input_corpus)
 
     command = [
         './weizz',
