@@ -69,7 +69,8 @@ def generate_coverage_report(experiment, benchmark, fuzzer):
         # collects all the profdata files for all trials.
         coverage_reporter.collect_profdata_files()
 
-        # Generate the coverage summary json file based on profdata file for each trial id.
+        # Generate the coverage summary json file based on profdata
+        # file for each trial id.
         coverage_reporter.generate_coverage_summary_json()
 
         # Generate the coverage regions json file.
@@ -121,7 +122,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         """Merge profdata files from |src_files| to |dst_files|."""
         logger.info('Merging profdata for fuzzer: '
                     '{fuzzer},benchmark: {benchmark}.'.format(
-            fuzzer=self.fuzzer, benchmark=self.benchmark))
+                        fuzzer=self.fuzzer, benchmark=self.benchmark))
 
         individual_profdata_files = []
         for trial_id in self.trial_ids:
@@ -132,13 +133,16 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             # storing profdata_file and trial_id as a tuple
             individual_profdata_files.append(profdata_file)
             self.trialid_profdata_files.append((profdata_file, trial_id))
-        # collect all individual profile file in destination folder
+            # collect all individual profile file in destination folder
             result1 = collect_profdata_files(profdata_file, os.path.join(
-                self.benchmark_fuzzer_measurement_dir, 'trial.{0}.profdata'.format(trial_id)))
+                self.benchmark_fuzzer_measurement_dir,
+                'trial.{0}.profdata'.format(trial_id)))
             if result1.retcode != 0:
                 logger.error('Profdata files collection failed.')
-        # merge all individual profile file in destination folder for HTML report
-        result2 = merge_profdata_files(individual_profdata_files, self.merged_profdata_file)
+        # merge all individual profile file in destination
+        # folder for HTML report
+        result2 = merge_profdata_files(individual_profdata_files,
+                                       self.merged_profdata_file)
         if result2.retcode != 0:
             logger.error('Profdata files merging failed.')
 
@@ -149,8 +153,9 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             file, trial_id = pair
             result = generate_json_summary(coverage_binary,
                                            file,
-                                           os.path.join(self.benchmark_fuzzer_measurement_dir,
-                                                        'trial_{0}_coverage_summary.json'.format(trial_id)),
+                                           os.path.join(
+                                               self.benchmark_fuzzer_measurement_dir,
+                                               'trial_{0}_coverage_summary.json'.format(trial_id)),
                                            summary_only=False)
             if result.retcode != 0:
                 logger.error(
@@ -165,13 +170,13 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             '-path-equivalence=/,{prefix}'.format(prefix=self.source_files_dir),
             '-output-dir={dst_dir}'.format(dst_dir=self.report_dir),
             '-Xdemangler', 'c++filt', '-Xdemangler', '-n', self.binary_file,
-            '-instr-profile={profdata}'.format(self.merged_profdata_file)
+            '-instr-profile={profdata}'.format(profdata=self.merged_profdata_file)
         ]
         result = new_process.execute(command, expect_zero=False)
         if result.retcode != 0:
             logger.error('Coverage report generation failed for '
                          'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
-                fuzzer=self.fuzzer, benchmark=self.benchmark))
+                             fuzzer=self.fuzzer, benchmark=self.benchmark))
             return
 
         src_dir = self.report_dir
@@ -183,8 +188,10 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         for trial_id in self.trial_ids:
             covered_regions = extract_covered_regions_from_summary_json(
                 os.path.join(self.benchmark_fuzzer_measurement_dir,
-                             'trial_{0}_coverage_summary.json'.format(trial_id)), trial_num=trial_id)
-            coverage_json_src = os.path.join(self.data_dir, 'covered_regions_{0}.json.'.format(trial_id))
+                             'trial_{0}_coverage_summary.json'.format(trial_id)),
+                trial_num=trial_id)
+            coverage_json_src = os.path.join(self.data_dir,
+                                             'covered_regions_{0}.json.'.format(trial_id))
             coverage_json_dst = exp_path.filestore(coverage_json_src)
             filesystem.create_directory(self.data_dir)
             with open(coverage_json_src, 'w') as file_handle:
@@ -236,10 +243,12 @@ def merge_profdata_files(src_files, dst_file):
 
 def collect_profdata_files(src_files, dst_file):
     """Uses cp to copy |src_files| to |dst_files|."""
-    command = ['cp', '-r']
-    command.extend(src_files)
-    command.extend(dst_file)
-    result = new_process.execute(command, expect_zero=False)
+    result = 0
+    for file in src_files:
+        command = ['cp', '-r']
+        command.extend(file)
+        command.extend(dst_file)
+        result += new_process.execute(command, expect_zero=False)
     return result
 
 
@@ -308,8 +317,8 @@ def extract_covered_regions_from_summary_json(summary_json_file, trial_num):
             for region in function_data['regions']:
                 if region[hit_index] != 0 and region[type_index] == 0:
                     covered_regions.append(region[:hit_index] +
-                                           region[file_index:] + trial_num)
-                    # added trial_num to the covered_regions o keep track
+                                           region[file_index:] + [trial_num])
+                    # added trial_num to the covered_regions to keep track
     except Exception:  # pylint: disable=broad-except
         logger.error('Coverage summary json file defective or missing.')
     return covered_regions
