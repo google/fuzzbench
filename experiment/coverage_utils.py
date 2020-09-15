@@ -243,12 +243,10 @@ def merge_profdata_files(src_files, dst_file):
 
 def collect_profdata_files(src_files, dst_file):
     """Uses cp to copy |src_files| to |dst_files|."""
-    result = 0
-    for file in src_files:
-        command = ['cp', '-r']
-        command.extend(file)
-        command.extend(dst_file)
-        result += new_process.execute(command, expect_zero=False)
+    command = ['cp', '-r']
+    command.extend(src_files)
+    command.extend(dst_file)
+    result = new_process.execute(command, expect_zero=False)
     return result
 
 
