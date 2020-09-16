@@ -156,7 +156,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                         fuzzer=self.fuzzer, benchmark=self.benchmark))
 
     def generate_coverage_report(self):
-        """Generates the coverage report for each trial and stores in bucket."""
+        """Generates the coverage report and stores in bucket."""
         command = [
             'llvm-cov', 'show', '-format=html',
             '-path-equivalence=/,{prefix}'.format(prefix=self.source_files_dir),
@@ -310,7 +310,7 @@ def generate_json_summary(coverage_binary,
     return result
 
 
-def extract_covered_regions_from_summary_json(summary_json_file, trial_num):
+def extract_covered_regions_from_summary_json(summary_json_file, trial_id):
     """Returns the covered regions given a coverage summary json file."""
     covered_regions = []
     try:
@@ -329,7 +329,7 @@ def extract_covered_regions_from_summary_json(summary_json_file, trial_num):
             for region in function_data['regions']:
                 if region[hit_index] != 0 and region[type_index] == 0:
                     covered_regions.append(region[:hit_index] +
-                                           region[file_index:] + [trial_num])
+                                           region[file_index:] + [trial_id])
                     # added trial_num to the covered_regions to keep track
     except Exception:  # pylint: disable=broad-except
         logger.error('Coverage summary json file defective or missing.')
