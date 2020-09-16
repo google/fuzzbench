@@ -183,7 +183,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             for region in extract_covered_regions_from_summary_json(
                     os.path.join(self.benchmark_fuzzer_measurement_dir,
                                  'coverage_summary_{0}.json'.format(trial_id)),
-                    trial_num=trial_id):
+                    trial_id=trial_id):
                 covered_regions.append(region)
         # making a copy so that the original list is unchanged
         cmp_covered_regions = covered_regions.copy()

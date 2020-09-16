@@ -70,7 +70,18 @@ class TestCoverageJson(TestCase):
         #   7th element - trial.id
         #   8th element - distinct trials covering the same region
         print(distinct_covered_regions)
-        self.assertEqual(len(covered_regions), 15)
+        # asserting the length of covered regions to be 15
+        self.assertEqual(len(covered_regions), 15, msg='passed assertion 1')
+        # asserting distinct regions in distinct_covered_regions
+        self.assertFalse(check_if_duplicates(distinct_covered_regions), msg="passed assertion 2")
+
+
+def check_if_duplicates(list_of_elems):
+    """ Check if given list contains any duplicates """
+    for elem in list_of_elems:
+        if list_of_elems.count(elem) > 1:
+            return True
+    return False
 
 
 if __name__ == '__main__':
