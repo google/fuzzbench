@@ -29,8 +29,6 @@ FuzzBench checkout.
 **NOTE**: Currently, there is no resource control in experiment trials (e.g. allocated cpus, memory),
 but we do plan to add it in the near future.
 
-# run_experiment.py
-
 ## Experiment configuration file
 
 You need to create an experiment configuration yaml file.
