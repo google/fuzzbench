@@ -32,7 +32,7 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
 
 RUN git clone https://github.com/AFLplusplus/libafl /libafl && \
     cd /libafl && \
-    git checkout df9abfaaecf445bda3bd5bf6ad2bf7d7a580d498 && \
+    git checkout fuzzbench && \
     unset CFLAGS && unset CXXFLAGS && export CC=clang && \
     make libaflfuzzer.a && \
     cp -f libaflfuzzer.a /

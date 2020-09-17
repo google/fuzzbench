@@ -31,6 +31,7 @@ def build():
     os.environ['CC'] = 'clang'
     os.environ['CXX'] = 'clang++'
     os.environ['FUZZER_LIB'] = '/libaflfuzzer.a'
+    os.environ['AFL_LLVM_LAF_ALL'] = '1'
 
     utils.build_benchmark()
 

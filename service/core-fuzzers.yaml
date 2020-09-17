@@ -14,5 +14,6 @@ fuzzers:
     - honggfuzz_qemu
     - lafintel
     - libfuzzer
+    - libaflfuzzer
     - manul
     - mopt
