@@ -7,16 +7,14 @@ permalink: /running-a-local-experiment
 
 # Running a local experiment
 
-**NOTE**: This page explains how to run a local [experiment]({{ site.baseurl }}/reference/glossary/#Experiment) on
+This page explains how to run a local [experiment]({{ site.baseurl }}/reference/glossary/#Experiment) on
 your own.
-
-This page assumes a certain level of knowledge about FuzzBench.
 
 - TOC
 {:toc}
 
-This page will walk you through on how to use `run_experiment.py`.
-Experiments are started by the `run_experiment.py` script. The script will
+This page will walk you through on how to use `run_experiment.py` to start
+a local experiment. The `run_experiment.py` script will
 create and run a dispatcher docker container which runs the experiment,
 including:
 1. Building desired fuzzer-benchmark combinations.
@@ -26,7 +24,10 @@ including:
 1. Generating reports based on these measurements.
 
 The rest of this page will assume all commands are run from the root of
-FuzzBench.
+FuzzBench checkout.
+
+**NOTE**: Currently, there is no resource control in experiment trials (e.g. allocated cpus, memory),
+but we do plan to add it in the near future.
 
 # run_experiment.py
 
@@ -39,7 +40,7 @@ Below is an example configuration file with explanations of each required
 parameter.
 
 ```yaml
-# The number of trials of a fuzzer-benchmark pair to do.
+# The number of trials of a fuzzer-benchmark pair.
 trials: 5
 
 # The amount of time in seconds that each trial is run for.
@@ -51,11 +52,11 @@ docker_registry: lab-server:5000
 
 # The local experiment folder that will store most of the experiment data.
 # Please use an absolute path.
-experiment_filestore: /experiment-data
+experiment_filestore: /tmp/experiment-data
 
 # The local report folder where HTML reports and summary data will be stored.
 # Please use an absolute path.
-report_filestore: /report-data
+report_filestore: /tmp/report-data
 ```
 
 ## Benchmarks
@@ -89,4 +90,4 @@ You should eventually be able to see reports from your experiment, that are
 update at some interval throughout the experiment. However, you may have to wait
 a while until they first appear since a lot must happen before there is data to
 generate report. Once they are available, you should be able to view them at:
-`/report-data/$EXPERIMENT_NAME/index.html`
+`/tmp/report-data/$EXPERIMENT_NAME/index.html`.
