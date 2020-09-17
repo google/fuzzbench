@@ -6,7 +6,7 @@ nav_order: 1
 permalink: /internal-documentation/service/
 ---
 
-# # The FuzzBench service
+# The FuzzBench service
 {: .no_toc}
 
 **Note:** This document and most of the `service/` directory is only intended

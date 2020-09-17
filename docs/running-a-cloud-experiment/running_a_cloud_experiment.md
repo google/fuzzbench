@@ -1,9 +1,9 @@
 ---
 layout: default
-title: Running your own experiment
+title: Running an experiment on your Cloud project
 has_children: true
 nav_order: 4
-permalink: /running-your-own-experiment/
+permalink: /running-a-cloud-experiment/
 ---
 
 # Running your own experiment

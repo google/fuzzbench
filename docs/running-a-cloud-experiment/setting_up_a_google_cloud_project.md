@@ -1,9 +1,9 @@
 ---
 layout: default
 title: Setting up a Google Cloud Project
-parent: Running your own experiment
+parent: Running an experiment on your Cloud project
 nav_order: 1
-permalink: /running-your-own-experiment/setting-up-a-google-cloud-project/
+permalink: /running-a-cloud-experiment/setting-up-a-google-cloud-project/
 ---
 
 # Setting up a Google Cloud Project
