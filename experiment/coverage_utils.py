@@ -108,7 +108,6 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                                                              benchmark_fuzzer_dir)
         self.merged_profdata_file = os.path.join(
             self.benchmark_fuzzer_measurement_dir, 'merged.profdata')
-        self.trialid_profdata_files = []
         coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
         self.source_files_dir = os.path.join(coverage_binaries_dir, benchmark)
         self.binary_file = get_coverage_binary(benchmark)
@@ -118,13 +117,13 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         logger.info('Merging profdata for fuzzer: '
                     '{fuzzer},benchmark: {benchmark}.'.format(
                         fuzzer=self.fuzzer, benchmark=self.benchmark))
+        files_to_merge = []
         for trial_id in self.trial_ids:
             profdata_file = TrialCoverage(self.fuzzer, self.benchmark,
                                           trial_id).profdata_file
             if not os.path.exists(profdata_file):
                 continue
-            # storing profdata_file and trial_id as a tuple
-            self.trialid_profdata_files.append((profdata_file, trial_id))
+            files_to_merge.append(profdata_file)
             # collect all individual profile file in destination folder
             result = copy_profdata_files(profdata_file, os.path.join(
                 self.benchmark_fuzzer_measurement_dir,
@@ -133,7 +132,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                 logger.error('Profdata files collection failed.')
         # merge all individual profile file in destination
         # folder for HTML report
-        result = merge_profdata_files([i[0] for i in self.trialid_profdata_files],
+        result = merge_profdata_files(files_to_merge,
                                       self.merged_profdata_file)
         if result.retcode != 0:
             logger.error('Profdata files merging failed.')
@@ -141,10 +140,13 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
     def generate_coverage_summary_json(self):
         """Generates the coverage summary json from merged profdata file."""
         coverage_binary = get_coverage_binary(self.benchmark)
-        for pair in self.trialid_profdata_files:
-            file, trial_id = pair
+        for trial_id in self.trial_ids:
+            profdata_file = TrialCoverage(self.fuzzer, self.benchmark,
+                                          trial_id).profdata_file
+            if not os.path.exists(profdata_file):
+                continue
             result = generate_json_summary(coverage_binary,
-                                           file,
+                                           profdata_file,
                                            os.path.join(
                                                self.benchmark_fuzzer_measurement_dir,
                                                'coverage_summary_{0}.json'.format(trial_id)),
@@ -168,7 +170,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         if result.retcode != 0:
             logger.error('Coverage report generation failed for '
                          'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
-                             fuzzer=self.fuzzer, benchmark=self.benchmark))
+                fuzzer=self.fuzzer, benchmark=self.benchmark))
             return
 
         src_dir = self.report_dir
@@ -187,17 +189,20 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                 covered_regions.append(region)
         # making a copy so that the original list is unchanged
         cmp_covered_regions = covered_regions.copy()
-        # computing distinct trials for the region using the copy
-        # (will see if matrix operations could be performed instead)
-        for coverage in covered_regions:
+        # computing distinct trial count for a region using the copy
+        for region in covered_regions:
             dist_trial_cnt = 1
-            for cmp_coverage in cmp_covered_regions:
-                if coverage[:7] == cmp_coverage[:7] and \
-                        coverage[7] != cmp_coverage[7]:
+            for cmp_region in cmp_covered_regions:
+                # Increment distinct trail_id count if
+                # regions match and the trail_id do not match
+                if region[:7] == cmp_region[:7] and \
+                        region[7] != cmp_region[7]:
                     dist_trial_cnt += 1
                 else:
                     continue
-            coverage[7] = dist_trial_cnt
+            # update the 7th element to be the distinct trial count
+            # rather than it being the trial_id in which the region was covered
+            region[7] = dist_trial_cnt
         # collecting all distinct regions observed in any trial
         # with the number of distinct trials covering it
         for region in covered_regions:

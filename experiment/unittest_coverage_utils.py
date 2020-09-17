@@ -28,7 +28,7 @@ class TestCoverageJson(TestCase):
         self.fs.add_real_file(summary_json_file, read_only=False)
         covered_regions = coverage_utils.extract_covered_regions_from_summary_json(
             summary_json_file, 2)
-        # cmp_covered_regions = covered_regions.copy()
+        # Use this to test for different trial ids
         cmp_covered_regions = [[7, 12, 12, 2, 0, 0, 0, 2],
                                [7, 12, 12, 2, 0, 0, 0, 54],
                                [7, 12, 12, 2, 0, 0, 0, 5],
@@ -48,6 +48,9 @@ class TestCoverageJson(TestCase):
                                [1, 17, 1, 20, 1, 0, 0, 2],
                                [1, 24, 1, 27, 1, 0, 0, 2]]
 
+        # use this to test for same trial ids
+        # cmp_covered_regions = covered_regions.copy()
+
         for coverage in covered_regions:
             count = 1
             for cmp_coverage in cmp_covered_regions:
@@ -57,23 +60,20 @@ class TestCoverageJson(TestCase):
                     continue
             coverage[7] = count
 
-        print(covered_regions)
-
         distinct_covered_regions = []
         for region in covered_regions:
             if region not in distinct_covered_regions:
                 distinct_covered_regions.append(region)
 
-        # all the region are covered by 3 distinct trials, denoted by the [8] element in the array
+        # all the region are covered by 3 distinct trials, denoted by the 8th element in the array
         # output:
         #   0-6th element - region
-        #   7th element - trial.id
-        #   8th element - distinct trials covering the same region
+        #   7th element - distinct trials covering the same region
         print(distinct_covered_regions)
         # asserting the length of covered regions to be 15
-        self.assertEqual(len(covered_regions), 15, msg='passed assertion 1')
+        self.assertEqual(len(covered_regions), 15, msg='did not pass assertion 1')
         # asserting distinct regions in distinct_covered_regions
-        self.assertFalse(check_if_duplicates(distinct_covered_regions), msg="passed assertion 2")
+        self.assertFalse(check_if_duplicates(distinct_covered_regions), msg="did not pass pass assertion 2")
 
 
 def check_if_duplicates(list_of_elems):
