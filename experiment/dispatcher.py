@@ -174,11 +174,11 @@ def dispatcher_main():
             # Experiment is complete, bail out.
             break
 
-    _record_experiment_time_ended(experiment.experiment_name)
-
-    logs.info('Dispatcher finished.')
     scheduler_loop_thread.join()
     measurer_main_process.join()
+
+    _record_experiment_time_ended(experiment.experiment_name)
+    logs.info('Experiment ended.')
 
 
 def main():

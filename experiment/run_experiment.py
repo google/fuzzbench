@@ -299,8 +299,9 @@ class LocalDispatcher:
         experiment_filestore_path = os.path.abspath(
             self.config['experiment_filestore'])
         filesystem.create_directory(experiment_filestore_path)
-        sql_database_arg = 'SQL_DATABASE_URL=sqlite:///{}'.format(
-            os.path.join(experiment_filestore_path, 'local.db'))
+        sql_database_arg = (
+            'SQL_DATABASE_URL=sqlite:///{}?check_same_thread=False'.format(
+                os.path.join(experiment_filestore_path, 'local.db')))
 
         docker_registry = self.config['docker_registry']
         set_instance_name_arg = 'INSTANCE_NAME={instance_name}'.format(

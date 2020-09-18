@@ -23,7 +23,7 @@ import subprocess
 
 from fuzzers import utils
 LIB_BC_DIR = 'lib-bc'
-SYMBOLIC_BUFFER = 'KleeInputBuf'
+SYMBOLIC_BUFFER = 'kleeInputBuf'
 MODEL_VERSION = 'model_version'
 
 

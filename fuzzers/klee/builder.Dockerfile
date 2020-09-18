@@ -49,7 +49,7 @@ RUN git clone https://github.com/stp/stp.git /stp && \
     -DCMAKE_INSTALL_PREFIX=/user/local/ -DCMAKE_BUILD_TYPE=Release .. && \
     make -j`nproc` && make install
 
-RUN git clone https://github.com/lmrs2/klee-uclibc.git /klee-uclibc && \
+RUN git clone https://github.com/klee/klee-uclibc.git /klee-uclibc && \
     cd /klee-uclibc && \
     CC=`which clang-6.0` CXX=`which clang++-6.0` \
     ./configure --make-llvm-lib --with-llvm-config=`which llvm-config-6.0` && \
@@ -58,9 +58,12 @@ RUN git clone https://github.com/lmrs2/klee-uclibc.git /klee-uclibc && \
 
 # Install KLEE. Use my personal repo containing seed conversion scripts for now.
 # TODO: Include seed conversion scripts in fuzzbench repo.
+# Note: don't use the 'debug' branch because it has checks for non-initialized values
+# that need to be fixed for certain syscalls.
+# When we use it, be sure to also use klee-uclibc from https://github.com/lmrs2/klee-uclibc.git.
 RUN git clone https://github.com/lmrs2/klee.git /klee && \
     cd /klee && \
-    git checkout debug
+    wget -O tools/ktest-tool/ktest-tool https://raw.githubusercontent.com/lmrs2/klee/debug/tools/ktest-tool/ktest-tool
 
 # The libcxx build script in the KLEE repo depends on wllvm:
 # We'll upgrade pip first to avoid a build error with the old version of pip.

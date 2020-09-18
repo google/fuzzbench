@@ -1,9 +1,9 @@
 ---
 layout: default
 title: Running an experiment
-parent: Running your own experiment
+parent: Running an experiment on your Cloud project
 nav_order: 2
-permalink: /running-your-own-experiment/running-an-experiment/
+permalink: /running-a-cloud-experiment/running-an-experiment/
 ---
 
 # Running an experiment

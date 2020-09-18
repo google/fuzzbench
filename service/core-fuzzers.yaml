@@ -17,3 +17,4 @@ fuzzers:
     - libaflfuzzer
     - manul
     - mopt
+    - weizz_qemu
