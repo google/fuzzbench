@@ -37,18 +37,8 @@ def build():
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
-    """Run fuzzer. Wrapper that uses the defaults when calling
-    run_fuzzer."""
-    run_fuzzer(input_corpus,
-               output_corpus,
-               target_binary)
-
-
-def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     """Run fuzzer."""
-    if extra_flags is None:
-        extra_flags = []
 
-    command = [target_binary, '1', input_corpus, output_corpus] + extra_flags
+    command = [target_binary, '1', input_corpus, output_corpus]
     print('[run_fuzzer] Running command: ' + ' '.join(command))
     subprocess.check_call(command)
