@@ -349,12 +349,12 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     # Use a dictionary for original afl as well.
     print('[fuzz] Running AFL for original binary')
-    src_file = '{target}-normalized-none-nopt.dict'.format(target=target_binary)
-    dst_file = '{target}-original.dict'.format(target=target_binary)
-    shutil.copy(src_file, dst_file)
-    # Instead of generating a new dict, just hack this one
-    # to be non-optimized to prevent AFL from aborting.
-    os.system('sed -i \'s/OPTIMIZED/NORMAL/g\' {dict}'.format(dict=dst_file))
+    # src_file = '{target}-normalized-none-nopt.dict'.format(target=target_binary)
+    # dst_file = '{target}-original.dict'.format(target=target_binary)
+    # shutil.copy(src_file, dst_file)
+    # # Instead of generating a new dict, just hack this one
+    # # to be non-optimized to prevent AFL from aborting.
+    # os.system('sed -i \'s/OPTIMIZED/NORMAL/g\' {dict}'.format(dict=dst_file))
     afl_fuzz_thread1 = threading.Thread(
         target=run_fuzzer,
         args=(input_corpus, output_corpus,

@@ -32,6 +32,9 @@
     - aflplusplus_explore
     - aflplusplus_explore2exploit
     - aflplusplus_seek
+    - klee
+    - aflcc
+    - aflcc_no_orig_dict
 
 - experiment: 2020-09-18
   fuzzers:
