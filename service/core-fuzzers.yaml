@@ -1,4 +1,5 @@
 # Core fuzzers used for benchmarking (excludes variants).
+# These need to be sorted alphabetical.
 fuzzers:
     - afl
     - afl_qemu
@@ -13,6 +14,8 @@ fuzzers:
     - honggfuzz
     - honggfuzz_qemu
     - lafintel
+    - libaflfuzzer
     - libfuzzer
     - manul
     - mopt
+    - weizz_qemu

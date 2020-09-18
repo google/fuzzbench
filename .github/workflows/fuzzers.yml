@@ -27,6 +27,7 @@ jobs:
           - lafintel
           - klee
           - libfuzzer
+          - libaflfuzzer
           - manul
           - mopt
           # Binary-only (greybox) fuzzers.
@@ -41,17 +42,15 @@ jobs:
           - entropic_magicbytes
           - entropic_norestart_noexectime
           - entropic_norestart_yesexectime
-          - aflplusplus_no_mopt
-          - aflplusplus_coe
           - aflplusplus_exploit
+          - aflplusplus_exploit_28
+          - aflplusplus_exploit_48
+          - aflplusplus_exploit_64
+          - aflplusplus_exploit_pow5
+          - aflplusplus_exploit_pow7
           - aflplusplus_explore
-          - aflplusplus_fast
-          - aflplusplus_lin
-          - aflplusplus_mmopt
-          - aflplusplus_quad
-          - aflplusplus_rare
-          - aflplusplus_oldseek
-
+          - aflplusplus_explore2exploit
+          - aflplusplus_seek
 
         benchmark_type:
           - oss-fuzz
