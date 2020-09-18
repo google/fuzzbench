@@ -69,6 +69,7 @@ def test_output_report_filestore(fs, experiment):
                     'honggfuzz',
                     'honggfuzz_qemu',
                     'lafintel',
+                    'libaflfuzzer',
                     'libfuzzer',
                     'manul',
                     'mopt',
