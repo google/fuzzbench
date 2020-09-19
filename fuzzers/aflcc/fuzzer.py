@@ -24,31 +24,9 @@ from fuzzers.afl import fuzzer as afl_fuzzer
 
 
 def is_benchmark(name):
-    """ Check if the benchmark contains the string 'name' """
-
-    # TODO: return name in os.environ['BENCHMARK]
-    # return benchmark is not None and name in benchmark
-
-    # OSS-fuzz benchmarks do not have a consistent folder content
-    # but typically have the name of the benchmark as part of the
-    # working directory.
-    pwd_dir = os.getcwd()
-
-    if name in pwd_dir:
-        return True
-
-    # Non-OSS-fuzz benchmarks.
-    src_dir = os.environ['SRC']
-    buildfile = os.path.join(src_dir, "benchmark/build.sh")
-    if not os.path.isfile(buildfile):
-        return False
-
-    with open(buildfile, 'r') as file:
-        content = file.read()
-        if name in content:
-            return True
-
-    return False
+    """Check if the benchmark contains the string |name|"""
+    benchmark = os.getenv('BENCHMARK', None)
+    return benchmark is not None and name in benchmark
 
 
 def openthread_suppress_error_flags():
@@ -249,7 +227,7 @@ def post_build(fuzz_target):
     os.environ['AFL_COVERAGE_TYPE'] = 'ORIGINAL'
     os.environ['AFL_CONVERT_COMPARISON_TYPE'] = 'NONE'
     os.environ['AFL_DICT_TYPE'] = 'NORMAL'
-    bin1_cmd = '{compiler} {flags} -O2 {target}.bc -o ' \
+    bin1_cmd = '{compiler} {flags} -O3 {target}.bc -o ' \
     '{target}-original {ldflags}'.format(
         compiler='/afl/aflc-clang-fast++',
         flags=cppflags,

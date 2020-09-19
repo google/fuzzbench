@@ -56,8 +56,6 @@ RUN git clone https://github.com/Samsung/afl_cc.git /afl && \
 RUN cd /afl && \
     sh ./setup-aflc-gclang.sh
 
-#RUN apt-get install -y p7zip-full vim
-
 # Use afl_driver.cpp from LLVM as our fuzzing library.
 ENV CC=/afl/aflc-gclang
 ENV CXX=/afl/aflc-gclang++
