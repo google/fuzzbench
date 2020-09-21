@@ -26,54 +26,63 @@ class TestCoverageJson(TestCase):
         regions from summary json file."""
         summary_json_file = get_test_data_path('cov_summary.json')
         self.fs.add_real_file(summary_json_file, read_only=False)
-        covered_regions = coverage_utils.extract_covered_regions_from_summary_json(
-            summary_json_file, 2)
-        # Use this to test for different trial ids
-        cmp_covered_regions = [[7, 12, 12, 2, 0, 0, 0, 2],
-                               [7, 12, 12, 2, 0, 0, 0, 54],
-                               [7, 12, 12, 2, 0, 0, 0, 5],
-                               [7, 12, 12, 2, 0, 0, 0, 2],
-                               [2, 37, 6, 2, 0, 0, 0, 4],
-                               [3, 24, 3, 30, 0, 0, 0, 4],
-                               [3, 32, 3, 35, 0, 0, 0, 4],
-                               [3, 37, 3, 48, 0, 0, 0, 4],
-                               [1, 16, 1, 28, 1, 0, 0, 4],
-                               [1, 17, 1, 20, 1, 0, 0, 4],
-                               [1, 24, 1, 27, 1, 0, 0, 4],
-                               [2, 37, 6, 2, 0, 0, 0, 2],
-                               [3, 24, 3, 30, 0, 0, 0, 2],
-                               [3, 32, 3, 35, 0, 0, 0, 2],
-                               [3, 37, 3, 48, 0, 0, 0, 2],
-                               [1, 16, 1, 28, 1, 0, 0, 2],
-                               [1, 17, 1, 20, 1, 0, 0, 2],
-                               [1, 24, 1, 27, 1, 0, 0, 2]]
+        code_regions = coverage_utils.extract_covered_regions_from_summary_json(summary_json_file, 2)
 
-        # use this to test for same trial ids
-        # cmp_covered_regions = covered_regions.copy()
+        cmp_code_regions = code_regions.copy()
+        # final list for JSON
+        regions_info = []
+        # keep track of regions iterated
+        regions_track = []
+        json_count = 1
+        for region in code_regions:
+            trials_covered = []
+            trials_uncovered = []
+            # start trial count from 0.
+            count = 0
 
-        for coverage in covered_regions:
-            count = 1
-            for cmp_coverage in cmp_covered_regions:
-                if coverage[:7] == cmp_coverage[:7] and coverage[7] != cmp_coverage[7]:
-                    count += 1
-                else:
-                    continue
-            coverage[7] = count
+            # Start trial Count from 1 if region's hits is greater than 1
+            if region[8] > 0:
+                count += 1
+                trials_covered.append([region[7], region[8]])
+            else:
+                count = 0
+                trials_uncovered.append(region[7])
 
-        distinct_covered_regions = []
-        for region in covered_regions:
-            if region not in distinct_covered_regions:
-                distinct_covered_regions.append(region)
+            # obtains all he trails in the region was hit and not hit
+            # obtain count for distinct trials covering it
+            for cmp_region in cmp_code_regions:
+                if region[:7] == cmp_region[:7] and \
+                        region[7] != cmp_region[7]:
+                    if cmp_region[8] == 0:
+                        trials_uncovered.append(cmp_code_regions[7])
+                    else:
+                        # append [trial_id, hits] if the region was covered in another trial
+                        trials_covered.append([cmp_code_regions[7], cmp_code_regions[8]])
+                        count += 1
 
-        # all the region are covered by 3 distinct trials, denoted by the 8th element in the array
-        # output:
-        #   0-6th element - region
-        #   7th element - distinct trials covering the same region
-        print(distinct_covered_regions)
+            if region[:7] not in regions_track:
+                regions_track.append(region[:7])
+                obj = {"region_arr": region[:7], "covered_trial_nums_hits": trials_covered,
+                       "uncovered_trial_nums": trials_uncovered, "num_unq_trial_covering": count}
+
+                reg = {"region_arr": region[:7]}
+                unq_trials_covered = {"covered_trial_nums_hits": trials_covered}
+                unq_trials_uncovered = {"uncovered_trial_nums": trials_uncovered}
+                total_unique_trials_covering = {"num_unq_trial_covering": count}
+                region_obj = {str(json_count): [reg, unq_trials_covered,
+                              unq_trials_uncovered, total_unique_trials_covering]}
+
+                regions_info.append(obj)
+                json_count += 1
+            else:
+                continue
+
+        region_data = {"Coverage_Data": regions_info}
+
+        print(region_data)
         # asserting the length of covered regions to be 15
-        self.assertEqual(len(covered_regions), 15, msg='did not pass assertion 1')
-        # asserting distinct regions in distinct_covered_regions
-        self.assertFalse(check_if_duplicates(distinct_covered_regions), msg="did not pass pass assertion 2")
+        self.assertNotEqual(len(code_regions), 15, msg='did not pass assertion 1')
+
 
 
 def check_if_duplicates(list_of_elems):
