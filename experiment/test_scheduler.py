@@ -307,46 +307,6 @@ def get_trial_instance_manager(experiment_config: dict):
     return scheduler.TrialInstanceManager(default_num_trials, experiment_config)
 
 
-def test_can_start_nonpreemptible_not_preemptible_runners(preempt_exp_conf):
-    """Tests that test_can_start_nonpreemptible returns True when
-    'preemptible_runners' is not set to True in the experiment_config."""
-    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
-    trial_instance_manager.experiment_config['preemptible_runners'] = False
-    assert trial_instance_manager.can_start_nonpreemptible(100000, 10)
-
-
-def test_can_start_nonpreemptible_above_max(preempt_exp_conf):
-    """Tests that test_can_start_nonpreemptible returns True when we are above
-    the maximum allowed for nonpreemptibles (and 'preemptible_runners' is not
-    set to True in the experiment_config)."""
-    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
-    trials_left_to_run = 1
-    assert not trial_instance_manager.can_start_nonpreemptible(
-        trial_instance_manager.max_nonpreemptibles, trials_left_to_run)
-
-
-def test_can_start_nonpreemptible_too_many_left(preempt_exp_conf):
-    """Tests that we don't start using nonpreemptibles when there is so much
-    left to run that using nonpreemptibles won't salvage the experiment."""
-    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
-    trials_left_to_run = (
-        trial_instance_manager.max_nonpreemptibles /
-        trial_instance_manager.MAX_FRACTION_FOR_NONPREEMPTIBLES) + 1
-    assert not trial_instance_manager.can_start_nonpreemptible(
-        trial_instance_manager.max_nonpreemptibles - 1, trials_left_to_run)
-
-
-def test_can_start_nonpreemptible(preempt_exp_conf):
-    """Tests that we can start a nonpreemptible under the right conditions."""
-    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
-    trials_left_to_run = (
-        trial_instance_manager.max_nonpreemptibles /
-        trial_instance_manager.MAX_FRACTION_FOR_NONPREEMPTIBLES)
-    nonpreemptible_starts = trial_instance_manager.max_nonpreemptibles - 1
-    assert trial_instance_manager.can_start_nonpreemptible(
-        nonpreemptible_starts, trials_left_to_run)
-
-
 def test_can_start_preemptible_not_preemptible_runners(preempt_exp_conf):
     """Tests that test_can_start_preemptible returns False when
     'preemptible_runners' is not set to True in the experiment_config."""
