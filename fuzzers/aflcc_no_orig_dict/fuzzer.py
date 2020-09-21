@@ -13,10 +13,7 @@
 # limitations under the License.
 """Integration code for AFLcc fuzzer."""
 
-import shutil
-import os
 import threading
-import subprocess
 
 from fuzzers.aflcc import fuzzer as aflcc_fuzzer
 
@@ -24,6 +21,7 @@ from fuzzers.aflcc import fuzzer as aflcc_fuzzer
 def build():
     """Build benchmark."""
     aflcc_fuzzer.build()
+
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
@@ -49,8 +47,9 @@ def fuzz(input_corpus, output_corpus, target_binary):
     afl_fuzz_thread2.start()
 
     print('[run_fuzzer] Running AFL for FBSP and optimized dictionary')
-    aflcc_fuzzer.run_fuzzer(input_corpus,
-               output_corpus,
-               '{target}-no-collision-all-opt'.format(target=target_binary),
-               ['-S', 'slave-no-collision-all-opt'],
-               hide_output=False)
+    aflcc_fuzzer.run_fuzzer(
+        input_corpus,
+        output_corpus,
+        '{target}-no-collision-all-opt'.format(target=target_binary),
+        ['-S', 'slave-no-collision-all-opt'],
+        hide_output=False)
