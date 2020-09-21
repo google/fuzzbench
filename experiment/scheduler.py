@@ -187,9 +187,6 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
     handle_preempted_trials method should be called in the scheduling loop.
     See the docstring for handle_preempted_trials for how it works.
     """
-    # How many times the number of trials we need preemptibles can we launch.
-    MAX_PREEMPTIBLES_MULTIPLIER = 4
-
     # How long can we keep trying preemptibles before we have to switch to a
     # nonpreemptibles or stopping the experiment.
     PREEMPTIBLE_WINDOW_MULTIPLIER = 1
@@ -197,12 +194,6 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
     def __init__(self, num_trials, experiment_config):
         self.experiment_config = experiment_config
         self.num_trials = num_trials
-
-        # Bound for the number of preemptibles we can start if the experiment
-        # specified preemptible_runners.
-        self.max_preemptibles = (self.num_trials *
-                                 self.MAX_PREEMPTIBLES_MULTIPLIER)
-        logger.info('Max preemptibles: %d.', self.max_preemptibles)
 
         # Attributes for preemptible retry window. The preemptible retry window
         # is a time period that starts when the last initial trial is started.
@@ -260,20 +251,12 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
 
         return datetime_now() > preemptible_window_end_time
 
-    def can_start_preemptible(self, preemptible_starts: int) -> bool:
-        """Returns True if we can start a preemptible trial.
-        |preemptible_starts| is the number of preemptibles we've already
-        started."""
+    def can_start_preemptible(self) -> bool:
+        """Returns True if we can start a preemptible trial."""
         if not self.experiment_config.get('preemptible_runners'):
             # This code shouldn't be executed in a non preemptible experiment.
             # But just in case it is, it's not OK to create a preemptible trial
             # in a non-preemptible experiment.
-            return False
-
-        if preemptible_starts > self.max_preemptibles:
-            # Don't create more than the maximum number of preemptibles or else
-            # costs can be infinite in the (highly unlikely) worst case
-            # scenario.
             return False
 
         if self.preemptible_window_passed():
@@ -293,28 +276,15 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         # Otherwise, it's fine to create a preemptible instance.
         return True
 
-    def get_preemptible_starts(self) -> int:
-        """Returns the count of preemptible trials that have been started."""
-        return get_started_trials(self.experiment_config['experiment']).filter(
-            models.Trial.preemptible.is_(True)).count()
-
-    def get_nonpreemptible_starts(self) -> int:
-        """Returns the count of nonpreemptible trials that have been started."""
-        return get_started_trials(self.experiment_config['experiment']).filter(
-            models.Trial.preemptible.is_(False)).count()
-
     def _get_preempted_replacements(self,
                                     preempted_trials) -> List[models.Trial]:
         """Returns a list containing a replacement trial for each trial that can
         be replaced in |preempted_trials|."""
         replacements = []
-        preemptible_starts = self.get_preemptible_starts()
-        nonpreemptible_starts = self.get_nonpreemptible_starts()
 
         # The time_ended won't be 100% accurate but that doesn't matter.
         time_ended = datetime_now()
 
-        num_to_replace = len(preempted_trials)
         for trial in preempted_trials:
             # Update the preempted trial.
             trial.preempted = True
@@ -322,17 +292,12 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
 
             # We try to start each replacement trial as a preemptible before
             # trying nonpreemptible to minimize cost.
-            if self.can_start_preemptible(preemptible_starts):
-                # See if we can replace with a preemptible.
-                preemptible_starts += 1
-                num_to_replace -= 1
+            if self.can_start_preemptible():
                 replacements.append(replace_trial(trial, preemptible=True))
                 continue
 
             # If a trial can't be replaced with a preemptible, replace it
             # with a nonpreemptible.
-            nonpreemptible_starts += 1
-            num_to_replace -= 1
             replacements.append(replace_trial(trial, preemptible=False))
 
         return replacements

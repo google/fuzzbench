@@ -312,21 +312,13 @@ def test_can_start_preemptible_not_preemptible_runners(preempt_exp_conf):
     'preemptible_runners' is not set to True in the experiment_config."""
     trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
     trial_instance_manager.experiment_config['preemptible_runners'] = False
-    assert not trial_instance_manager.can_start_preemptible(100)
-
-
-def test_can_start_preemptible_over_max_num(preempt_exp_conf):
-    """Tests that we bound the number of preemptible trials we start."""
-    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
-    preemptible_starts = trial_instance_manager.max_preemptibles + 1
-    assert not trial_instance_manager.can_start_preemptible(preemptible_starts)
+    assert not trial_instance_manager.can_start_preemptible()
 
 
 def test_can_start_preemptible(preempt_exp_conf, pending_trials):
     """Tests that we can start a preemptible instance when expected."""
     trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
-    preemptible_starts = 0
-    assert trial_instance_manager.can_start_preemptible(preemptible_starts)
+    assert trial_instance_manager.can_start_preemptible()
 
 
 def test_get_preempted_trials_nonpreemptible(experiment_config, db):
