@@ -21,13 +21,15 @@ RUN apt-get update && \
                        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
                        apt-utils apt-transport-https ca-certificates
 
+COPY fast.patch /
+
 # Download and compile afl++ (v2.62d).
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout f34fe1f81e804bccdda5315968f6a73a47184822 && \
-    sed -i 's/HAVOC_MAX_MULT .*32/HAVOC_MAX_MULT 28/' include/config.h && \
+    git checkout 688e2c87df90cc63032aa4d1961493f52ebbd3c5 && \
+    git apply /fast.patch && \
     unset CFLAGS && unset CXXFLAGS && export CC=clang && \
     AFL_NO_X86=1 PYTHON_INCLUDE=/ make && make install && \
     make -C examples/aflpp_driver && \
