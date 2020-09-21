@@ -30,7 +30,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    run_options = ['-p', 'seek']
+    run_options = ['-p', 'rare']
 
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
