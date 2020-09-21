@@ -50,8 +50,6 @@ BENCHMARKS = [
     # OSS-Fuzz benchmarks.
     'bloaty_fuzz_target',
     'curl_curl_fuzzer_http',
-    'freetype2-2017',
-    'harfbuzz-1.3.2',
     'jsoncpp_jsoncpp_fuzzer',
     'libpcap_fuzz_both',
     'mbedtls_fuzz_dtlsclient',
@@ -64,6 +62,8 @@ BENCHMARKS = [
     'zlib_zlib_uncompress_fuzzer',
 
     # Standard benchmarks.
+    'freetype2-2017',
+    'harfbuzz-1.3.2',
     'lcms-2017-03-21',
     'libjpeg-turbo-07-2017',
     'libpng-1.2.56',
