@@ -92,7 +92,6 @@ def main():
     # Infer the project repo directory in the oss-fuzz builder image by
     # iteratively checking out the commit (provided by integrator) in src_dir.
     for _, directories, _ in os.walk(src_dir):
-        print(directories)
         for directory in directories:
             entry_to_check = os.path.join(src_dir, directory)
             try:

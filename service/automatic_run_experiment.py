@@ -50,18 +50,18 @@ BENCHMARKS = [
     # OSS-Fuzz benchmarks.
     'bloaty_fuzz_target',
     'curl_curl_fuzzer_http',
+    'freetype2-2017',
+    'harfbuzz-1.3.2',
     'jsoncpp_jsoncpp_fuzzer',
     'libpcap_fuzz_both',
     'mbedtls_fuzz_dtlsclient',
+    'nginx_http_request_fuzzer',
     'openssl_x509',
-
     # Temporarily disabled due to out-of-memory issues with clang coverage.
     # 'php_php-fuzz-parser',
     'sqlite3_ossfuzz',
     'systemd_fuzz-link-parser',
     'zlib_zlib_uncompress_fuzzer',
-    'freetype2-2017',
-    'harfbuzz-1.3.2',
 
     # Standard benchmarks.
     'lcms-2017-03-21',
