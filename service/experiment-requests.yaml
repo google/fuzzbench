@@ -16,6 +16,12 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-09-24
+  fuzzers:
+    - aflcc
+    - klee
+    - aflcc_no_orig_dict
+
 - experiment: 2020-09-23
   fuzzers:
     - aflplusplus_coe3
@@ -31,7 +37,6 @@
     - aflplusplus_explore_32
     - aflplusplus_fast2
     - aflplusplus_coe2
-
 
 - experiment: 2020-09-22
   fuzzers:
@@ -51,7 +56,6 @@
     - aflplusplus_explore_32
     - aflplusplus_fast2
     - aflplusplus_coe2
-
 
 - experiment: 2020-09-19
   fuzzers:
