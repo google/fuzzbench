@@ -18,6 +18,7 @@ import google.auth
 from googleapiclient import discovery
 
 thread_local = threading.local()  # pylint: disable=invalid-name
+NUM_RETRIES = 10
 
 
 def initialize():
@@ -34,7 +35,7 @@ def _get_instance_items(project, zone):
     instances = thread_local.service.instances()
     request = instances.list(project=project, zone=zone)
     while request is not None:
-        response = request.execute()
+        response = request.execute(num_retries=NUM_RETRIES)
         for instance in response['items']:
             yield instance
         request = instances.list_next(previous_request=request,
