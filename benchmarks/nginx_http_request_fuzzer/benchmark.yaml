@@ -2,3 +2,6 @@ commit: 052ecc68d350
 commit_date: 2020-09-16 15:26:25+00:00
 fuzz_target: http_request_fuzzer
 project: nginx
+unsupported_fuzzers:
+  - aflcc
+  - klee
