@@ -339,7 +339,6 @@ def constrct_json(code_regions):
     cmp_code_regions = code_regions.copy()
     regions_info = []
     regions_track = []
-    json_count = 1
 
     for region in code_regions:
         trials_covered = []
@@ -367,14 +366,9 @@ def constrct_json(code_regions):
 
         if region[:7] not in regions_track:
             regions_track.append(region[:7])
-            reg = {'region_arr': region[:7]}
-            unq_trials_covered = {'unique_covered_trials': trials_covered}
-            unq_trials_uncovered = {'unique_uncovered_trials': trials_uncovered}
-            total_unique_trials_covering = {'num_trial_covering': count}
-            region_obj = {str(json_count): [reg, unq_trials_covered,
-                                            unq_trials_uncovered, total_unique_trials_covering]}
-            regions_info.append(region_obj)
-            json_count += 1
+            obj = {"region_arr": region[:7], "covered_trial_nums_hits": trials_covered,
+                   "uncovered_trial_nums": trials_uncovered, "num_unq_trial_covering": count}
+            regions_info.append(obj)
         else:
             continue
 

@@ -33,7 +33,7 @@ class TestCoverageJson(TestCase):
         regions_info = []
         # keep track of regions iterated
         regions_track = []
-        json_count = 1
+
         for region in code_regions:
             trials_covered = []
             trials_uncovered = []
@@ -64,16 +64,7 @@ class TestCoverageJson(TestCase):
                 regions_track.append(region[:7])
                 obj = {"region_arr": region[:7], "covered_trial_nums_hits": trials_covered,
                        "uncovered_trial_nums": trials_uncovered, "num_unq_trial_covering": count}
-
-                reg = {"region_arr": region[:7]}
-                unq_trials_covered = {"covered_trial_nums_hits": trials_covered}
-                unq_trials_uncovered = {"uncovered_trial_nums": trials_uncovered}
-                total_unique_trials_covering = {"num_unq_trial_covering": count}
-                region_obj = {str(json_count): [reg, unq_trials_covered,
-                              unq_trials_uncovered, total_unique_trials_covering]}
-
                 regions_info.append(obj)
-                json_count += 1
             else:
                 continue
 
