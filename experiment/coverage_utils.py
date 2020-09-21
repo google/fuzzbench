@@ -27,7 +27,6 @@ from common import filesystem
 from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
-import itertools
 
 logger = logs.Logger('coverage_utils')  # pylint: disable=invalid-name
 
@@ -117,7 +116,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         """Merge profdata files from |src_files| to |dst_files|."""
         logger.info('Merging profdata for fuzzer: '
                     '{fuzzer},benchmark: {benchmark}.'.format(
-            fuzzer=self.fuzzer, benchmark=self.benchmark))
+                        fuzzer=self.fuzzer, benchmark=self.benchmark))
         files_to_merge = []
         for trial_id in self.trial_ids:
             profdata_file = TrialCoverage(self.fuzzer, self.benchmark,
@@ -171,7 +170,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         if result.retcode != 0:
             logger.error('Coverage report generation failed for '
                          'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
-                fuzzer=self.fuzzer, benchmark=self.benchmark))
+                             fuzzer=self.fuzzer, benchmark=self.benchmark))
             return
 
         src_dir = self.report_dir
@@ -180,18 +179,15 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
 
     def generate_coverage_regions_json(self):
         """Stores the coverage data in a json file."""
-
         code_regions = []
-
         for trial_id in self.trial_ids:
             code_regions.append(extract_covered_regions_from_summary_json(
                 os.path.join(self.benchmark_fuzzer_measurement_dir,
                              'coverage_summary_{0}.json'.format(trial_id)),
                 trial_id=trial_id))
-
-        region_data = constrct_json(code_regions)
-
-        coverage_json_src = os.path.join(self.data_dir, 'coverage_frontier_regions.json')
+        region_data = construct_json(code_regions)
+        # Final JSON output "regions.json"
+        coverage_json_src = os.path.join(self.data_dir, 'regions.json')
         coverage_json_dst = exp_path.filestore(coverage_json_src)
         filesystem.create_directory(self.data_dir)
         with open(coverage_json_src, 'w') as file_handle:
@@ -298,8 +294,6 @@ def generate_json_summary(coverage_binary,
 
 def extract_covered_regions_from_summary_json(summary_json_file, trial_id):
     """Returns the covered regions given a coverage summary json file."""
-    covered_regions = []
-    uncovered_regions = []
     regions = []
     try:
         coverage_info = get_coverage_infomation(summary_json_file)
@@ -313,64 +307,69 @@ def extract_covered_regions_from_summary_json(summary_json_file, trial_id):
         type_index = -1
         # The number of index 5 represents the file number.
         file_index = 5
-        # for function_data in functions_data:
-        #     for region in function_data['regions']:
-        #         if region[hit_index] != 0 and region[type_index] == 0:
-        #             covered_regions.append(region[:hit_index] +
-        #                                    region[file_index:] + [trial_id])
+
         for function_data in functions_data:
             for region in function_data['regions']:
                 if region[type_index] == 0:
-                    regions.append(region[:hit_index] + region[file_index:] + [trial_id] + [region[hit_index]])
-                    # added trial_num to the covered_regions to keep track
-        # for function_data in functions_data:
-        #     for region in function_data['regions']:
-        #         if region[hit_index] == 0 and region[type_index] == 0:
-        #             uncovered_regions.append(region[:hit_index] +
-        #                                      region[file_index:] + [trial_id])
+                    regions.append(region[:hit_index] +
+                                   region[file_index:] +
+                                   [trial_id] +
+                                   [region[hit_index]])
     except Exception:  # pylint: disable=broad-except
         logger.error('Coverage summary json file defective or missing.')
     return regions
-    # return covered_regions, uncovered_regions
 
 
-def constrct_json(code_regions):
-
+def construct_json(code_regions):
     cmp_code_regions = code_regions.copy()
     regions_info = []
-    regions_track = []
+    # keep track of regions iterated over already
+    keep_track = []
 
     for region in code_regions:
-        trials_covered = []
-        trials_uncovered = []
-        # start trial count from 0.
-        count = 0
-        # Start trial Count from 1 if region's hits is greater than 1
-        if region[8] > 0:
-            count += 1
-            trials_covered.append([region[7], region[8]])
-        else:
+        region_arr = region[:7]
+        trial_id = region[7]
+        trial_hits = region[8]
+        if region_arr not in keep_track:
+            trials_covered = []
+            trials_uncovered = []
+            # start trial count from 0.
             count = 0
-            trials_uncovered.append(region[7])
-        # obtains all he trails in the region was hit and not hit
-        # obtain count for distinct trials covering it
-        for cmp_region in cmp_code_regions:
-            if region[:7] == cmp_region[:7] and \
-                    region[7] != cmp_region[7]:
-                if cmp_region[8] == 0:
-                    trials_uncovered.append(cmp_code_regions[7])
-                else:
-                    # append [trial_id, hits] if the region was covered in another trial
-                    trials_covered.append([cmp_code_regions[7], cmp_code_regions[8]])
-                    count += 1
+            # start trial Count from 1 if region's hits is greater than 1
+            if trial_hits > 0:
+                count += 1
+                trials_covered.append([trial_id, trial_hits])
+            # else start count from zero and add the
+            else:
+                count = 0
+                trials_uncovered.append(trial_id)
+            # obtains all he trials in the region was hit and not hit
+            # obtain count for distinct trials covering it
+            for cmp_region in cmp_code_regions:
+                cmp_region_arr = cmp_region[:7]
+                cmp_trial_id = cmp_region[7]
+                cmp_trial_hits = cmp_region[8]
+                if cmp_region_arr not in keep_track:
+                    if region_arr == cmp_region_arr and \
+                            trial_id != cmp_trial_id:
+                        # append only trial_id if the region was not covered
+                        if cmp_trial_hits == 0:
+                            trials_uncovered.append(cmp_trial_id)
+                        # append [trial_id, hits] if the region was
+                        # covered in another trial
+                        else:
+                            trials_covered.append([cmp_trial_id,
+                                                   cmp_trial_hits])
+                            count += 1
 
-        if region[:7] not in regions_track:
-            regions_track.append(region[:7])
-            obj = {"region_arr": region[:7], "covered_trial_nums_hits": trials_covered,
-                   "uncovered_trial_nums": trials_uncovered, "num_unq_trial_covering": count}
+            # Constructing Json object for the region
+            obj = {"region_arr": region_arr,
+                   "covered_trial_nums_hits": trials_covered,
+                   "not_covered_trial_ids": trials_uncovered,
+                   "num_unq_trials_covered": count}
+            # Adding to the list of all region objects
             regions_info.append(obj)
-        else:
-            continue
-
-    region_data = {'Coverage_Data': regions_info}
+            # Adding to keep track (Later te same region is not repeated)
+            keep_track.append(region_arr)
+    region_data = {"Coverage_Data": regions_info}
     return region_data
