@@ -24,10 +24,12 @@ class TestCoverageJson(TestCase):
     def test_extract_covered_regions_from_summary_json(self):
         """Tests that extract_covered_regions_from_summary_json returns the covered
         regions from summary json file."""
+        code_regions = []
         summary_json_file = get_test_data_path('cov_summary.json')
         self.fs.add_real_file(summary_json_file, read_only=False)
-        code_regions = coverage_utils.extract_covered_regions_from_summary_json(summary_json_file, 2)
-
+        for region in coverage_utils.extract_covered_regions_from_summary_json(summary_json_file, 2):
+            code_regions.append(region)
+        print(code_regions)
         cmp_code_regions = code_regions.copy()
         # final list for JSON
         regions_info = []

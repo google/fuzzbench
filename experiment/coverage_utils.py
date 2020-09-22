@@ -116,7 +116,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         """Merge profdata files from |src_files| to |dst_files|."""
         logger.info('Merging profdata for fuzzer: '
                     '{fuzzer},benchmark: {benchmark}.'.format(
-                        fuzzer=self.fuzzer, benchmark=self.benchmark))
+            fuzzer=self.fuzzer, benchmark=self.benchmark))
         files_to_merge = []
         for trial_id in self.trial_ids:
             profdata_file = TrialCoverage(self.fuzzer, self.benchmark,
@@ -170,7 +170,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         if result.retcode != 0:
             logger.error('Coverage report generation failed for '
                          'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
-                             fuzzer=self.fuzzer, benchmark=self.benchmark))
+                fuzzer=self.fuzzer, benchmark=self.benchmark))
             return
 
         src_dir = self.report_dir
@@ -181,12 +181,15 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         """Stores the coverage data in a json file."""
         code_regions = []
         for trial_id in self.trial_ids:
-            code_regions.append(extract_covered_regions_from_summary_json(
-                os.path.join(self.benchmark_fuzzer_measurement_dir,
-                             'coverage_summary_{0}.json'.format(trial_id)),
-                trial_id=trial_id))
+            # adding regions from all th trials to teh same pool
+            # to reduce iterations and for easier wrangling
+            for region in extract_covered_regions_from_summary_json(
+                    os.path.join(self.benchmark_fuzzer_measurement_dir,
+                                 'coverage_summary_{0}.json'.format(trial_id)),
+                    trial_id=trial_id):
+                code_regions.append(region)
         region_data = construct_json(code_regions)
-        # Final JSON output "regions.json"
+        # Final JSON output "regions.json" [earlier "covered_regions.json"]
         coverage_json_src = os.path.join(self.data_dir, 'regions.json')
         coverage_json_dst = exp_path.filestore(coverage_json_src)
         filesystem.create_directory(self.data_dir)
