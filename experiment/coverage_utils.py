@@ -67,7 +67,7 @@ def generate_coverage_report(experiment, benchmark, fuzzer):
         coverage_reporter = CoverageReporter(experiment, fuzzer, benchmark)
 
         # collects all the profdata files for all trials.
-        coverage_reporter.collect_profdata_files()
+        coverage_reporter.merge_profdata_files()
 
         # Generate the coverage summary json file based on profdata
         # file for each trial id.
@@ -103,16 +103,15 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         benchmark_fuzzer_dir = exp_utils.get_benchmark_fuzzer_dir(
             benchmark, fuzzer)
         work_dir = exp_utils.get_work_dir()
-        self.benchmark_fuzzer_measurement_dir = os.path.join(work_dir,
-                                                        'measurement-folders',
-                                                        benchmark_fuzzer_dir)
+        self.benchmark_fuzzer_measurement_dir = os.path.join(
+            work_dir, 'measurement-folders', benchmark_fuzzer_dir)
         self.merged_profdata_file = os.path.join(
             self.benchmark_fuzzer_measurement_dir, 'merged.profdata')
         coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
         self.source_files_dir = os.path.join(coverage_binaries_dir, benchmark)
         self.binary_file = get_coverage_binary(benchmark)
 
-    def collect_profdata_files(self):
+    def merge_profdata_files(self):
         """Merge profdata files from |src_files| to |dst_files|."""
         logger.info('Merging profdata for fuzzer: '
                     '{fuzzer},benchmark: {benchmark}.'.format(
@@ -126,15 +125,15 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             files_to_merge.append(profdata_file)
             # Collect the individual profile files
             # in the destination folder.
-            result = copy_profdata_files(profdata_file, os.path.join(
-                self.benchmark_fuzzer_measurement_dir,
-                'trial_{0}.profdata'.format(trial_id)))
+            result = copy_profdata_files(
+                profdata_file,
+                os.path.join(self.benchmark_fuzzer_measurement_dir,
+                             'trial_{0}.profdata'.format(trial_id)))
             if result.retcode != 0:
                 logger.error('Profdata files collection failed.')
         # Merge the individual profile files into one
         # profile file for HTML report.
-        result = merge_profdata_files(files_to_merge,
-                                      self.merged_profdata_file)
+        result = merge_profdata_files(files_to_merge, self.merged_profdata_file)
         if result.retcode != 0:
             logger.error('Profdata files merging failed.')
 
@@ -146,17 +145,19 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                                           trial_id).profdata_file
             if not os.path.exists(profdata_file):
                 continue
-            result = generate_json_summary(coverage_binary,
-                                           profdata_file,
-                                           os.path.join(
-                                               self.benchmark_fuzzer_measurement_dir,
-                                               'coverage_summary_{0}.json'.format(trial_id)),
-                                           summary_only=False)
+            result = generate_json_summary(
+                coverage_binary,
+                profdata_file,
+                os.path.join(self.benchmark_fuzzer_measurement_dir,
+                             'coverage_summary_{0}.json'.format(trial_id)),
+                summary_only=False)
             if result.retcode != 0:
                 logger.error(
                     'coverage summary json file for trail_id: {trial_id} '
-                    'generation failed for fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
-                        fuzzer=self.fuzzer, benchmark=self.benchmark, trial_id=trial_id))
+                    'generation failed for fuzzer: {fuzzer},benchmark: {benchmark}.'
+                    .format(fuzzer=self.fuzzer,
+                            benchmark=self.benchmark,
+                            trial_id=trial_id))
 
     def generate_coverage_report(self):
         """Generates the coverage report and stores in bucket."""
@@ -189,7 +190,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                                  'coverage_summary_{0}.json'.format(trial_id)),
                     trial_id=trial_id):
                 code_regions.append(region)
-        region_data = construct_json(code_regions)
+        region_data = prepare_coverage_information_for_json(code_regions)
         # Final JSON output "covered_regions.json"
         coverage_json_src = os.path.join(self.data_dir, 'covered_regions.json')
         coverage_json_dst = exp_path.filestore(coverage_json_src)
@@ -315,10 +316,8 @@ def extract_covered_regions_from_summary_json(summary_json_file, trial_id):
         for function_data in functions_data:
             for region in function_data['regions']:
                 if region[type_index] == 0:
-                    regions.append(region[:hit_index] +
-                                   region[file_index:] +
-                                   [trial_id] +
-                                   [region[hit_index]])
+                    regions.append(region[:hit_index] + region[file_index:] +
+                                   [trial_id] + [region[hit_index]])
     except Exception:  # pylint: disable=broad-except
         logger.error('Coverage summary json file defective or missing.')
     return regions
@@ -365,14 +364,16 @@ def prepare_coverage_information_for_json(code_regions):
                         # append [trial_id, hits] if the region was
                         # covered in another trial
                         else:
-                            trials_covered.append([cmp_trial_id,
-                                                   cmp_trial_hits])
+                            trials_covered.append(
+                                [cmp_trial_id, cmp_trial_hits])
                             count += 1
             # Constructing Json object for the region
-            obj = {"region_arr": region_arr,
-                   "covered_trial_nums_hits": trials_covered,
-                   "not_covered_trial_ids": trials_uncovered,
-                   "num_unq_trials_covered": count}
+            obj = {
+                "region_arr": region_arr,
+                "covered_trial_nums_hits": trials_covered,
+                "not_covered_trial_ids": trials_uncovered,
+                "num_unq_trials_covered": count
+            }
             # Adding to the list of all region objects
             regions_info.append(obj)
             # Adding to keep track (Later te same region is not repeated)
