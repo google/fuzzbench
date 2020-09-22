@@ -1,0 +1,8 @@
+commit: 2c20c70cd81e5ba51dc8e160fbd1c855eb97f065
+commit_date: 2020-09-20 15:01:51+00:00
+fuzz_target: xpath
+project: libxslt
+unsupported_fuzzers:
+  - aflcc
+  - klee
+  - weizz_qemu
