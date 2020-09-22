@@ -47,6 +47,9 @@ PYTHONPATH=. python3 benchmarks/oss_fuzz_benchmark_integration.py -p bloaty
     -f fuzz_target -c f572d396fae9206628714fb2ce00f72e94f2258f -d 2019-10-19T09:07:25+01:00
 ```
 
+If you want to use latest corpus from OSS-Fuzz, add the `--oss-fuzz-corpus`
+argument to the above comamnd.
+
 The script should create the benchmark directory in
 `benchmarks/$PROJECT_$FUZZ_TARGET` (unless you specify the name manually) with
 all the files needed to build the benchmark. You should remove unnecessary files

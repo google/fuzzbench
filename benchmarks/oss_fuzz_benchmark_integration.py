@@ -31,7 +31,9 @@ from common import logs
 from common import new_process
 from common import yaml_utils
 
-
+CORPUS_BACKUP_URL_FORMAT = (
+    'gs://{project}-backup.clusterfuzz-external.appspot.com/corpus/'
+    'libFuzzer/{fuzz_target}/public.zip')
 OSS_FUZZ_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz')
 OSS_FUZZ_REPO_PATH = os.path.join(OSS_FUZZ_DIR, 'infra')
 
@@ -83,7 +85,8 @@ def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
         # Find an OSS-Fuzz commit that can be used to build the benchmark.
         _, oss_fuzz_commit, _ = oss_fuzz_repo_manager.git([
             'log', '--before=' + commit_date.isoformat(), '-n1', '--format=%H',
-            projects_dir])
+            projects_dir
+        ])
         oss_fuzz_commit = oss_fuzz_commit.strip()
         if not oss_fuzz_commit:
             logs.warning('No suitable earlier OSS-Fuzz commit found.')
@@ -94,6 +97,34 @@ def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
         return True
     finally:
         oss_fuzz_repo_manager.git(['reset', '--hard'])
+
+
+def add_oss_fuzz_corpus(project, fuzz_target, benchmark_dir):
+    """Add latest public corpus from OSS-Fuzz as the seed corpus."""
+    if not fuzz_target.startswith(project):
+        full_fuzz_target = '%s_%s' % (project, fuzz_target)
+    else:
+        full_fuzz_target = fuzz_target
+
+    corpus_backup_url = CORPUS_BACKUP_URL_FORMAT.format(
+        project=project, fuzz_target=full_fuzz_target)
+    command = ['gsutil', 'ls', corpus_backup_url]
+    result = subprocess.run(command, stdout=subprocess.PIPE)
+    if result.returncode:
+        raise Exception(f'No corpus found for project {project}.')
+
+    archive_filename = f'{fuzz_target}_seed_corpus.zip'
+    archive_path = os.path.join(benchmark_dir, archive_filename)
+    command = ['gsutil', '-q', 'cp', corpus_backup_url, archive_path]
+    subprocess.check_call(command)
+
+    dockerfile_file_path = os.path.join(benchmark_dir, 'Dockerfile')
+    with open(dockerfile_file_path, 'a') as file_handle:
+        file_handle.write(f'\nCOPY {archive_filename} $SRC/\n')
+
+    build_sh_file_path = os.path.join(benchmark_dir, 'build.sh')
+    with open(build_sh_file_path, 'a') as file_handle:
+        file_handle.write(f'\ncp $SRC/{archive_filename} $OUT/\n')
 
 
 def get_benchmark_name(project, fuzz_target, benchmark_name=None):
@@ -123,7 +154,7 @@ def _load_base_builder_docker_repo():
     repo = BaseBuilderDockerRepo()
     for image in result:
         timestamp = datetime.datetime.fromisoformat(
-        image['timestamp']['datetime']).astimezone(datetime.timezone.utc)
+            image['timestamp']['datetime']).astimezone(datetime.timezone.utc)
         repo.add_digest(timestamp, image['digest'])
 
     return repo
@@ -171,11 +202,8 @@ def create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,
     yaml_utils.write(yaml_filename, config)
 
 
-def integrate_benchmark(project,
-                        fuzz_target,
-                        commit,
-                        commit_date,
-                        benchmark_name=None):
+def integrate_benchmark(project, fuzz_target, benchmark_name, commit,
+                        commit_date, use_oss_fuzz_corpus):
     """Copies files needed to integrate an OSS-Fuzz benchmark and creates the
     benchmark's benchmark.yaml file."""
     benchmark_name = get_benchmark_name(project, fuzz_target, benchmark_name)
@@ -188,6 +216,8 @@ def integrate_benchmark(project,
     replace_base_builder(benchmark_dir, commit_date)
     create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,
                          benchmark_dir)
+    if use_oss_fuzz_corpus:
+        add_oss_fuzz_corpus(project, fuzz_target, benchmark_dir)
 
 
 def main():
@@ -198,19 +228,30 @@ def main():
                         '--project',
                         help='Project for benchmark. Example: "zlib"',
                         required=True)
-    parser.add_argument('-f',
-                        '--fuzz-target',
-                        help='Fuzz target for benchmark. Example: "zlib_uncompress_fuzzer"',
-                        required=True)
-    parser.add_argument('-n',
-                        '--benchmark-name',
-                        help='Benchmark name. Defaults to <project>_<fuzz_target>',
-                        required=False)
+    parser.add_argument(
+        '-f',
+        '--fuzz-target',
+        help='Fuzz target for benchmark. Example: "zlib_uncompress_fuzzer"',
+        required=True)
+    parser.add_argument(
+        '-n',
+        '--benchmark-name',
+        help='Benchmark name. Defaults to <project>_<fuzz_target>',
+        required=False)
     parser.add_argument('-c', '--commit', help='Project commit hash.')
-    parser.add_argument('-d', '--date', help='Date of the commit. Example: 2019-10-19T09:07:25+01:00')
+    parser.add_argument(
+        '-d',
+        '--date',
+        help='Date of the commit. Example: 2019-10-19T09:07:25+01:00')
+    parser.add_argument(
+        '-o',
+        '--oss-fuzz-corpus',
+        help='Use latest corpus from OSS-Fuzz. Defaults to False.',
+        default=False,
+        action='store_true')
     args = parser.parse_args()
-    integrate_benchmark(args.project, args.fuzz_target, args.commit, args.date,
-                        args.benchmark_name)
+    integrate_benchmark(args.project, args.fuzz_target, args.benchmark_name,
+                        args.commit, args.date, args.oss_fuzz_corpus)
     return 0
 
 

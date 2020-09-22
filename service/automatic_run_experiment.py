@@ -52,6 +52,7 @@ BENCHMARKS = [
     'curl_curl_fuzzer_http',
     'jsoncpp_jsoncpp_fuzzer',
     'libpcap_fuzz_both',
+    'libxslt_xslt',
     'mbedtls_fuzz_dtlsclient',
     'nginx_http_request_fuzzer',
     'openssl_x509',
