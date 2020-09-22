@@ -324,7 +324,7 @@ def extract_covered_regions_from_summary_json(summary_json_file, trial_id):
     return regions
 
 
-def construct_json(code_regions):
+def prepare_coverage_information_for_json(code_regions):
     """Returns the json structure for covered regions given a
     list of regions with hit and trial ids."""
     cmp_code_regions = code_regions.copy()
