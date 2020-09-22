@@ -38,55 +38,34 @@ class TestCoverageJson(TestCase):
         keep_track = []
 
         for region in code_regions:
-
-            region_arr = region[:7]
-            trial_id = region[7]
-            trial_hits = region[8]
-
             if region[:7] not in keep_track:
                 trials_covered = []
                 trials_uncovered = []
-                # start trial count from 0.
                 count = 0
-                # Start trial Count from 1 if region's hits is greater than 1
-                # and append [trial_id, hits] of the current specimen
                 if region[8] > 0:
                     count += 1
                     trials_covered.append([region[7], region[8]])
-                # Else start count from zero and add the
                 else:
                     count = 0
                     trials_uncovered.append(region[7])
-                # obtains all he trials in the region was hit and not hit
-                # obtain count for distinct trials covering it
-                c = 0
                 for cmp_region in cmp_code_regions:
                     if cmp_region[:7] not in keep_track:
                         if region[:7] == cmp_region[:7] and \
                                 region[7] != cmp_region[7]:
-                            # append only trial_id if the region was not covered
                             if cmp_region[8] == 0:
                                 trials_uncovered.append(cmp_region[7])
-                            # append [trial_id, hits] if the region was
-                            # covered in another trial
                             else:
                                 trials_covered.append([cmp_region[7],
                                                        cmp_region[8]])
                                 count += 1
-
-                # Constructing Json object for the region
                 obj = {"region_arr": region[:7],
                        "covered_trial_nums_hits": trials_covered,
                        "not_covered_trial_ids": trials_uncovered,
                        "num_unq_trials_covered": count}
-                # Adding to the list of all region objects
                 regions_info.append(obj)
-                # Adding to keep track (Later te same region is not repeated)
                 keep_track.append(region[:7])
         region_data = {"Coverage_Data": regions_info}
         print(region_data)
-        # asserting the length of covered regions to not be 15
-        # Just checking the the JSON output
         self.assertNotEqual(len(code_regions), 15, msg='did not pass assertion 1')
 
 

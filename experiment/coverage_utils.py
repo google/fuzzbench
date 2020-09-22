@@ -346,6 +346,7 @@ def prepare_coverage_information_for_json(code_regions):
                 count += 1
                 trials_covered.append([trial_id, trial_hits])
             # else start count from zero and add the
+            # trial_id to the list
             else:
                 count = 0
                 trials_uncovered.append(trial_id)
