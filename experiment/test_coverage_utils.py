@@ -33,37 +33,14 @@ def get_test_data_path(*subpaths):
 def test_extract_covered_regions_from_summary_json(fs):
     """Tests that extract_covered_regions_from_summary_json returns the covered
     regions from summary json file."""
-    code_regions = []
+    num_functions_in_cov_summary = 3  # for testing
+    num_segments_in_cov_summary = 21  # for testing
     summary_json_file = get_test_data_path('cov_summary.json')
     fs.add_real_file(summary_json_file, read_only=False)
-    for region in coverage_utils.extract_covered_regions_from_summary_json(
-            summary_json_file, 2):
-        code_regions.append(region)
-    print(code_regions)
-
-    # TODO Instead of re-implementing the same method to construct the
-    # covered_regions.json file, please test the implementation to construct
-    # the covered_regions.json. Specifically, you could just test whether
-    # it produces the following output or structure:
-
-    #{"Coverage_Data": [
-    #  {"region_arr": [7, 12, 12, 2, 0, 0, 0], "covered_trial_nums_hits": [[2, 1]], "uncovered_trial_nums": [], "num_unq_trial_covering": 1},
-    #  {"region_arr": [11, 3, 12, 2, 0, 0, 0], "covered_trial_nums_hits": [], "uncovered_trial_nums": [2], "num_unq_trial_covering": 0},
-    #  {"region_arr": [2, 37, 6, 2, 0, 0, 0], "covered_trial_nums_hits": [[2, 1]], "uncovered_trial_nums": [], "num_unq_trial_covering": 1},
-    #  {"region_arr": [3, 24, 3, 30, 0, 0, 0], "covered_trial_nums_hits": [[2, 11]], "uncovered_trial_nums": [], "num_unq_trial_covering": 1},
-    #  {"region_arr": [3, 32, 3, 35, 0, 0, 0], "covered_trial_nums_hits": [[2, 10]], "uncovered_trial_nums": [], "num_unq_trial_covering": 1},
-    #  {"region_arr": [3, 37, 3, 48, 0, 0, 0], "covered_trial_nums_hits": [[2, 10]], "uncovered_trial_nums": [], "num_unq_trial_covering": 1},
-    #  {"region_arr": [5, 3, 6, 2, 0, 0, 0], "covered_trial_nums_hits": [], "uncovered_trial_nums": [2], "num_unq_trial_covering": 0},
-    #  {"region_arr": [1, 16, 1, 28, 1, 0, 0], "covered_trial_nums_hits": [[2, 10]], "uncovered_trial_nums": [], "num_unq_trial_covering": 1},
-    #  {"region_arr": [1, 17, 1, 20, 1, 0, 0], "covered_trial_nums_hits": [[2, 10]], "uncovered_trial_nums": [], "num_unq_trial_covering": 1},
-    #  {"region_arr": [1, 24, 1, 27, 1, 0, 0], "covered_trial_nums_hits": [[2, 1]], "uncovered_trial_nums": [], "num_unq_trial_covering": 1}]}
-
-    # assertNotEqual(len(code_regions), 15, msg='did not pass assertion 1')
-
-
-def check_if_duplicates(list_of_elems):
-    """ Check if given list contains any duplicates """
-    for elem in list_of_elems:
-        if list_of_elems.count(elem) > 1:
-            return True
-    return False
+    benchmark = 'freetype2'  # for testing
+    fuzzer = 'afl'  # for testing
+    trial_id = 2  # for testing
+    seg_df, func_df = coverage_utils.extract_covered_segments_and_regions_from_summary_json(
+        summary_json_file, benchmark, fuzzer, trial_id)
+    assert ((len(seg_df) == num_segments_in_cov_summary)
+            and (len(func_df) == num_functions_in_cov_summary))

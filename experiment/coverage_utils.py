@@ -27,6 +27,7 @@ from common import filesystem
 from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
+import pandas as pd
 
 logger = logs.Logger('coverage_utils')  # pylint: disable=invalid-name
 
@@ -74,7 +75,7 @@ def generate_coverage_report(experiment, benchmark, fuzzer):
         coverage_reporter.generate_coverage_summary_json()
 
         # Generate the coverage regions json file.
-        coverage_reporter.generate_coverage_regions_json()
+        coverage_reporter.generate_segment_function_csv()
 
         # Generates the html reports using llvm-cov.
         coverage_reporter.generate_coverage_report()
@@ -117,7 +118,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         """Merge profdata files from |src_files| to |dst_files|."""
         logger.info('Merging profdata for fuzzer: '
                     '{fuzzer},benchmark: {benchmark}.'.format(
-                        fuzzer=self.fuzzer, benchmark=self.benchmark))
+            fuzzer=self.fuzzer, benchmark=self.benchmark))
         files_to_merge = []
         for trial_id in self.trial_ids:
             profdata_file = TrialCoverage(self.fuzzer, self.benchmark,
@@ -150,9 +151,9 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                 logger.error(
                     'coverage summary json file for trail_id: {trial_id} '
                     'generation failed for fuzzer: {fuzzer},benchmark: {benchmark}.'
-                    .format(fuzzer=self.fuzzer,
-                            benchmark=self.benchmark,
-                            trial_id=trial_id))
+                        .format(fuzzer=self.fuzzer,
+                                benchmark=self.benchmark,
+                                trial_id=trial_id))
         # merged JSON summary
         result = generate_json_summary(coverage_binary,
                                        self.merged_profdata_file,
@@ -178,25 +179,38 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         if result.retcode != 0:
             logger.error('Coverage report generation failed for '
                          'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
-                             fuzzer=self.fuzzer, benchmark=self.benchmark))
+                fuzzer=self.fuzzer, benchmark=self.benchmark))
             return
 
         src_dir = self.report_dir
         dst_dir = exp_path.filestore(src_dir)
         filestore_utils.cp(src_dir, dst_dir, recursive=True, parallel=True)
 
-    def generate_coverage_regions_json(self):
-        """Stores the coverage data in a json file."""
-        covered_regions = extract_covered_regions_from_summary_json(
-            self.merged_summary_json_file)
-        coverage_json_src = os.path.join(self.data_dir, 'covered_regions.json')
-        coverage_json_dst = exp_path.filestore(coverage_json_src)
+    def generate_segment_function_csv(self):
+        """Stores the segment and function info in CSV file"""
+        segment_df_column_names = ["benchmark", "fuzzer", "trial_id",
+                                   "filename", "line", "col", "hits"]
+        segment_df = pd.DataFrame(columns=segment_df_column_names)
+
+        function_df_column_names = ["benchmark", "fuzzer", "trial_id",
+                                    "function_name", "hits"]
+        function_df = pd.DataFrame(columns=function_df_column_names)
+
+        for trial_id in self.trial_ids:
+            seg_df, func_df = extract_covered_segments_and_regions_from_summary_json(
+                os.path.join(self.benchmark_fuzzer_measurement_dir,
+                             'coverage_summary_{0}.json'.format(trial_id)),
+                benchmark=self.benchmark,
+                fuzzer=self.fuzzer,
+                trial_id=trial_id)
+            segment_df = pd.concat([segment_df, seg_df], axis=0, ignore_index=True)
+            function_df = pd.concat([function_df, func_df], axis=0, ignore_index=True)
+
+        segment_csv_src = os.path.join(self.data_dir, 'segments.csv')
+        function_csv_src = os.path.join(self.data_dir, 'functions.csv')
         filesystem.create_directory(self.data_dir)
-        with open(coverage_json_src, 'w') as file_handle:
-            json.dump(covered_regions, file_handle)
-        filestore_utils.cp(coverage_json_src,
-                           coverage_json_dst,
-                           expect_zero=False)
+        segment_df.to_csv(segment_csv_src, index=False)
+        function_df.to_csv(function_csv_src, index=False)
 
 
 def get_coverage_archive_name(benchmark):
@@ -285,26 +299,41 @@ def generate_json_summary(coverage_binary,
     return result
 
 
-def extract_covered_regions_from_summary_json(summary_json_file):
-    """Returns the covered regions given a coverage summary json file."""
-    covered_regions = []
+def extract_covered_segments_and_regions_from_summary_json(summary_json_file, benchmark, fuzzer, trial_id):
+    """Returns the segments and the function given a coverage summary json file.
+    in two separate data frames for reports"""
+    segment_df_column_names = ["benchmark", "fuzzer", "trial_id",
+                               "filename", "line", "col", "hits"]
+    segment_df = pd.DataFrame(columns=segment_df_column_names)
+
+    function_df_column_names = ["benchmark", "fuzzer", "trial_id",
+                                "function_name", "hits"]
+    function_df = pd.DataFrame(columns=function_df_column_names)
     try:
         coverage_info = get_coverage_infomation(summary_json_file)
-        functions_data = coverage_info['data'][0]['functions']
-        # The fourth number in the region-list indicates if the region
-        # is hit.
-        hit_index = 4
-        # The last number in the region-list indicates what type of the
-        # region it is; 'code_region' is used to obtain various code
-        # coverage statistic and is represented by number 0.
-        type_index = -1
-        # The number of index 5 represents the file number.
-        file_index = 5
+        coverage_data = coverage_info['data']
+        functions_data = coverage_data[0]['functions']
+        files = coverage_info['data'][0]['files']
+
+        line_index = 0
+        col_index = 1
+        hit_index = 2
+
         for function_data in functions_data:
-            for region in function_data['regions']:
-                if region[hit_index] != 0 and region[type_index] == 0:
-                    covered_regions.append(region[:hit_index] +
-                                           region[file_index:])
+            to_append = [benchmark, fuzzer, trial_id,
+                         function_data['name'], function_data['count']]
+            a_series = pd.Series(to_append, index=function_df.columns)
+            function_df = function_df.append(a_series, ignore_index=True)
+
+        for file in files:
+            filename = file['filename']
+            for segment in file['segments']:
+                to_append = [benchmark, fuzzer, trial_id, filename,
+                             segment[line_index], segment[col_index],
+                             segment[hit_index]]
+                a_series = pd.Series(to_append, index=segment_df.columns)
+                segment_df = segment_df.append(a_series, ignore_index=True)
+
     except Exception:  # pylint: disable=broad-except
-        logger.error('Coverage summary json file defective or missing.')
-    return covered_regions
+        logger.error('Segment df & function df defective or missing.')
+    return segment_df, function_df
