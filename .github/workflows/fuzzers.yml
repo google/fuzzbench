@@ -38,11 +38,8 @@ jobs:
           - weizz_qemu
           # Temporary variants.
           - aflcc_no_orig_dict
-          - libfuzzer_norestart
           - libfuzzer_magicbytes
           - entropic_magicbytes
-          - entropic_norestart_noexectime
-          - entropic_norestart_yesexectime
           - aflplusplus_coe
           - aflplusplus_coe3
           - aflplusplus_exploit
