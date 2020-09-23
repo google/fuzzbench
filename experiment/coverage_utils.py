@@ -107,6 +107,8 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             work_dir, 'measurement-folders', benchmark_fuzzer_dir)
         self.merged_profdata_file = os.path.join(
             self.benchmark_fuzzer_measurement_dir, 'merged.profdata')
+        self.merged_summary_json_file = os.path.join(
+            self.benchmark_fuzzer_measurement_dir, 'merged.json')
         coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
         self.source_files_dir = os.path.join(coverage_binaries_dir, benchmark)
         self.binary_file = get_coverage_binary(benchmark)
@@ -123,14 +125,6 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             if not os.path.exists(profdata_file):
                 continue
             files_to_merge.append(profdata_file)
-            # Collect the individual profile files
-            # in the destination folder.
-            result = copy_profdata_files(
-                profdata_file,
-                os.path.join(self.benchmark_fuzzer_measurement_dir,
-                             'trial_{0}.profdata'.format(trial_id)))
-            if result.retcode != 0:
-                logger.error('Profdata files collection failed.')
         # Merge the individual profile files into one
         # profile file for HTML report.
         result = merge_profdata_files(files_to_merge, self.merged_profdata_file)
@@ -140,6 +134,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
     def generate_coverage_summary_json(self):
         """Generates the coverage summary json from merged profdata file."""
         coverage_binary = get_coverage_binary(self.benchmark)
+        # individual JSON Summary
         for trial_id in self.trial_ids:
             profdata_file = TrialCoverage(self.fuzzer, self.benchmark,
                                           trial_id).profdata_file
@@ -158,6 +153,16 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                     .format(fuzzer=self.fuzzer,
                             benchmark=self.benchmark,
                             trial_id=trial_id))
+        # merged JSON summary
+        result = generate_json_summary(coverage_binary,
+                                       self.merged_profdata_file,
+                                       self.merged_summary_json_file,
+                                       summary_only=False)
+        if result.retcode != 0:
+            logger.error(
+                'Merged coverage summary json file generation failed for '
+                'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
+                    fuzzer=self.fuzzer, benchmark=self.benchmark))
 
     def generate_coverage_report(self):
         """Generates the coverage report and stores in bucket."""
@@ -177,26 +182,18 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             return
 
         src_dir = self.report_dir
-        dst_dir = exp_path.filestore(self.report_dir)
+        dst_dir = exp_path.filestore(src_dir)
         filestore_utils.cp(src_dir, dst_dir, recursive=True, parallel=True)
 
     def generate_coverage_regions_json(self):
         """Stores the coverage data in a json file."""
-        code_regions = []
-        for trial_id in self.trial_ids:
-            # Adding all trial-specific covered regions into code_regions list.
-            for region in extract_covered_regions_from_summary_json(
-                    os.path.join(self.benchmark_fuzzer_measurement_dir,
-                                 'coverage_summary_{0}.json'.format(trial_id)),
-                    trial_id=trial_id):
-                code_regions.append(region)
-        region_data = prepare_coverage_information_for_json(code_regions)
-        # Final JSON output "covered_regions.json"
+        covered_regions = extract_covered_regions_from_summary_json(
+            self.merged_summary_json_file)
         coverage_json_src = os.path.join(self.data_dir, 'covered_regions.json')
         coverage_json_dst = exp_path.filestore(coverage_json_src)
         filesystem.create_directory(self.data_dir)
         with open(coverage_json_src, 'w') as file_handle:
-            json.dump(region_data, file_handle)
+            json.dump(covered_regions, file_handle)
         filestore_utils.cp(coverage_json_src,
                            coverage_json_dst,
                            expect_zero=False)
@@ -238,15 +235,6 @@ def merge_profdata_files(src_files, dst_file):
     command = ['llvm-profdata', 'merge', '-sparse']
     command.extend(src_files)
     command.extend(['-o', dst_file])
-    result = new_process.execute(command, expect_zero=False)
-    return result
-
-
-def copy_profdata_files(src_files, dst_file):
-    """Uses cp to copy |src_files| to |dst_files|."""
-    command = ['cp', '-r']
-    command.extend(src_files)
-    command.extend(dst_file)
     result = new_process.execute(command, expect_zero=False)
     return result
 
@@ -297,9 +285,9 @@ def generate_json_summary(coverage_binary,
     return result
 
 
-def extract_covered_regions_from_summary_json(summary_json_file, trial_id):
+def extract_covered_regions_from_summary_json(summary_json_file):
     """Returns the covered regions given a coverage summary json file."""
-    regions = []
+    covered_regions = []
     try:
         coverage_info = get_coverage_infomation(summary_json_file)
         functions_data = coverage_info['data'][0]['functions']
@@ -312,71 +300,11 @@ def extract_covered_regions_from_summary_json(summary_json_file, trial_id):
         type_index = -1
         # The number of index 5 represents the file number.
         file_index = 5
-
         for function_data in functions_data:
             for region in function_data['regions']:
-                if region[type_index] == 0:
-                    regions.append(region[:hit_index] + region[file_index:] +
-                                   [trial_id] + [region[hit_index]])
+                if region[hit_index] != 0 and region[type_index] == 0:
+                    covered_regions.append(region[:hit_index] +
+                                           region[file_index:])
     except Exception:  # pylint: disable=broad-except
         logger.error('Coverage summary json file defective or missing.')
-    return regions
-
-
-def prepare_coverage_information_for_json(code_regions):
-    """Returns the json structure for covered regions given a
-    list of regions with hit and trial ids."""
-    cmp_code_regions = code_regions.copy()
-    regions_info = []
-    # keep track of regions iterated over already
-    keep_track = []
-
-    for region in code_regions:
-        region_arr = region[:7]
-        trial_id = region[7]
-        trial_hits = region[8]
-        if region_arr not in keep_track:
-            trials_covered = []
-            trials_uncovered = []
-            # start trial count from 0.
-            count = 0
-            # start trial Count from 1 if region's hits is greater than 1
-            if trial_hits > 0:
-                count += 1
-                trials_covered.append([trial_id, trial_hits])
-            # else start count from zero and add the
-            # trial_id to the list
-            else:
-                count = 0
-                trials_uncovered.append(trial_id)
-            # obtains all the trials if the region was hit or not hit
-            # obtain the count for distinct trials covering the region
-            for cmp_region in cmp_code_regions:
-                cmp_region_arr = cmp_region[:7]
-                cmp_trial_id = cmp_region[7]
-                cmp_trial_hits = cmp_region[8]
-                if cmp_region_arr not in keep_track:
-                    if region_arr == cmp_region_arr and \
-                            trial_id != cmp_trial_id:
-                        # append only trial_id if the region was not covered
-                        if cmp_trial_hits == 0:
-                            trials_uncovered.append(cmp_trial_id)
-                        # append [trial_id, hits] if the region was
-                        # covered in another trial
-                        else:
-                            trials_covered.append(
-                                [cmp_trial_id, cmp_trial_hits])
-                            count += 1
-            # Constructing Json object for the region
-            obj = {
-                "region_arr": region_arr,
-                "covered_trial_nums_hits": trials_covered,
-                "not_covered_trial_ids": trials_uncovered,
-                "num_unq_trials_covered": count
-            }
-            # Adding to the list of all region objects
-            regions_info.append(obj)
-            # Adding to keep track (Later te same region is not repeated)
-            keep_track.append(region_arr)
-    region_data = {"Coverage_Data": regions_info}
-    return region_data
+    return covered_regions
