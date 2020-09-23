@@ -74,6 +74,9 @@ def generate_coverage_report(experiment, benchmark, fuzzer):
         coverage_reporter.generate_coverage_summary_json()
 
         # Generate the coverage regions json file.
+        coverage_reporter.generate_coverage_regions_json()
+
+        # Generate the segment and function CSV files.
         coverage_reporter.generate_segment_function_csv()
 
         # Generates the html reports using llvm-cov.
@@ -134,7 +137,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
     def generate_coverage_summary_json(self):
         """Generates the coverage summary json from merged profdata file."""
         coverage_binary = get_coverage_binary(self.benchmark)
-        # individual JSON Summary
+        # Trial-specific coverage summary json.
         for trial_id in self.trial_ids:
             profdata_file = TrialCoverage(self.fuzzer, self.benchmark,
                                           trial_id).profdata_file
@@ -148,13 +151,14 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                 summary_only=False)
             if result.retcode != 0:
                 logger.error(
-                    'coverage summary json file for trail_id: {trial_id} '
-                    'generation failed for fuzzer: {fuzzer},'
-                    'generation failed for benchmark: {benchmark}.'
+                    'Coverage summary json file generation failed for:'
+                    'benchmark: {benchmark}'
+                    'fuzzer: {fuzzer}, '
+                    'trial-id: {trial_id}'
                     .format(fuzzer=self.fuzzer,
                             benchmark=self.benchmark,
                             trial_id=trial_id))
-        # merged JSON summary
+        # Merged coverage summary json.
         result = generate_json_summary(coverage_binary,
                                        self.merged_profdata_file,
                                        self.merged_summary_json_file,
@@ -214,6 +218,19 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         filesystem.create_directory(self.data_dir)
         segment_df.to_csv(segment_csv_src, index=False)
         function_df.to_csv(function_csv_src, index=False)
+
+    def generate_coverage_regions_json(self):
+        """Stores the coverage data in a json file."""
+        covered_regions = extract_covered_regions_from_summary_json(
+            self.merged_summary_json_file)
+        coverage_json_src = os.path.join(self.data_dir, 'covered_regions.json')
+        coverage_json_dst = exp_path.filestore(coverage_json_src)
+        filesystem.create_directory(self.data_dir)
+        with open(coverage_json_src, 'w') as file_handle:
+            json.dump(covered_regions, file_handle)
+        filestore_utils.cp(coverage_json_src,
+                           coverage_json_dst,
+                           expect_zero=False)
 
 
 def get_coverage_archive_name(benchmark):
@@ -342,3 +359,28 @@ def extract_covered_segments_and_regions_from_summary_json(summary_json_file,
     except Exception:  # pylint: disable=broad-except
         logger.error('Segment df & function df defective or missing.')
     return segment_df, function_df
+
+
+def extract_covered_regions_from_summary_json(summary_json_file):
+    """Returns the covered regions given a coverage summary json file."""
+    covered_regions = []
+    try:
+        coverage_info = get_coverage_infomation(summary_json_file)
+        functions_data = coverage_info['data'][0]['functions']
+        # The fourth number in the region-list indicates if the region
+        # is hit.
+        hit_index = 4
+        # The last number in the region-list indicates what type of the
+        # region it is; 'code_region' is used to obtain various code
+        # coverage statistic and is represented by number 0.
+        type_index = -1
+        # The number of index 5 represents the file number.
+        file_index = 5
+        for function_data in functions_data:
+            for region in function_data['regions']:
+                if region[hit_index] != 0 and region[type_index] == 0:
+                    covered_regions.append(region[:hit_index] +
+                                           region[file_index:])
+    except Exception:  # pylint: disable=broad-except
+        logger.error('Coverage summary json file defective or missing.')
+    return covered_regions
