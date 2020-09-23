@@ -20,8 +20,6 @@ import inspect
 import sys
 import time
 
-from common import logs
-
 
 def sleep(seconds):
     """Invoke time.sleep."""
@@ -41,6 +39,8 @@ def wrap(  # pylint: disable=too-many-arguments
         exception_type=Exception,
         retry_on_false=False):
     """Retry decorator for a function."""
+    # To avoid circular dependency.
+    from common import logs
 
     assert delay > 0
     assert backoff >= 1
