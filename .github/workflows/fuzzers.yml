@@ -37,7 +37,6 @@ jobs:
           - honggfuzz_qemu
           - weizz_qemu
           # Temporary variants.
-          - aflcc_no_orig_dict
           - libfuzzer_magicbytes
           - entropic_magicbytes
           - aflplusplus_coe
