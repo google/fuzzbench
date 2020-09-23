@@ -25,4 +25,4 @@ RUN git clone --depth 1 https://gitlab.gnome.org/GNOME/libxml2.git
 RUN git clone --depth 1 https://gitlab.gnome.org/GNOME/libxslt.git
 WORKDIR libxslt
 COPY build.sh $SRC/
-COPY xpath_seed_corpus.zip $SRC/
+COPY oss_fuzz_corpus.zip $SRC/xpath_seed_corpus.zip

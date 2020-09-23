@@ -40,7 +40,7 @@ def wrap(  # pylint: disable=too-many-arguments
         retry_on_false=False):
     """Retry decorator for a function."""
     # To avoid circular dependency.
-    from common import logs
+    from common import logs  # pylint:disable=import-outside-toplevel
 
     assert delay > 0
     assert backoff >= 1

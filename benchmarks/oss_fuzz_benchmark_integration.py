@@ -113,18 +113,19 @@ def add_oss_fuzz_corpus(project, fuzz_target, benchmark_dir):
     if result.returncode:
         raise Exception(f'No corpus found for project {project}.')
 
-    archive_filename = f'{fuzz_target}_seed_corpus.zip'
+    archive_filename = 'oss_fuzz_corpus.zip'
+    seed_corpus_filename = f'{fuzz_target}_seed_corpus.zip'
     archive_path = os.path.join(benchmark_dir, archive_filename)
     command = ['gsutil', '-q', 'cp', corpus_backup_url, archive_path]
     subprocess.check_call(command)
 
     dockerfile_file_path = os.path.join(benchmark_dir, 'Dockerfile')
     with open(dockerfile_file_path, 'a') as file_handle:
-        file_handle.write(f'\nCOPY {archive_filename} $SRC/\n')
+        file_handle.write(f'\nCOPY {archive_filename} $SRC/{seed_corpus_filename}\n')
 
     build_sh_file_path = os.path.join(benchmark_dir, 'build.sh')
     with open(build_sh_file_path, 'a') as file_handle:
-        file_handle.write(f'\ncp $SRC/{archive_filename} $OUT/\n')
+        file_handle.write(f'\ncp $SRC/{seed_corpus_filename} $OUT/\n')
 
 
 def get_benchmark_name(project, fuzz_target, benchmark_name=None):
