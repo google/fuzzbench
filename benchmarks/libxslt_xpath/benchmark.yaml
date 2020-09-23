@@ -4,5 +4,6 @@ fuzz_target: xpath
 project: libxslt
 unsupported_fuzzers:
   - aflcc
+  - aflplusplus_qemu
   - klee
   - weizz_qemu
