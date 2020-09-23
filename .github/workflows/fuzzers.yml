@@ -41,7 +41,12 @@ jobs:
           - libfuzzer_magicbytes
           - entropic_magicbytes
           - aflplusplus_coe
+          - aflplusplus_coe2
           - aflplusplus_coe3
+          - aflplusplus_coe4
+          - aflplusplus_fast2
+          - aflplusplus_fast3
+          - aflplusplus_fast4
           - aflplusplus_exploit
           - aflplusplus_exploit_12
           - aflplusplus_exploit_16
