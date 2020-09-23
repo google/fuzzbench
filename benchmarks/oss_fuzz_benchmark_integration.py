@@ -121,7 +121,8 @@ def add_oss_fuzz_corpus(project, fuzz_target, benchmark_dir):
 
     dockerfile_file_path = os.path.join(benchmark_dir, 'Dockerfile')
     with open(dockerfile_file_path, 'a') as file_handle:
-        file_handle.write(f'\nCOPY {archive_filename} $SRC/{seed_corpus_filename}\n')
+        file_handle.write(
+            f'\nCOPY {archive_filename} $SRC/{seed_corpus_filename}\n')
 
     build_sh_file_path = os.path.join(benchmark_dir, 'build.sh')
     with open(build_sh_file_path, 'a') as file_handle:
