@@ -21,6 +21,7 @@ from src_analysis import change_utils
 from src_analysis import diff_utils
 
 ALWAYS_BUILD_FUZZER = 'afl'
+FAIL_RETRIES = 2
 
 # TODO(tanq16): Get list of Benchmarks automatically.
 
@@ -80,6 +81,16 @@ def delete_docker_images():
     subprocess.run(['docker', 'builder', 'prune', '-f'], check=False)
 
 
+def run_with_retries(command):
+    """Runs a command with retries until success."""
+    for _ in range(FAIL_RETRIES):
+        result = subprocess.run(command, check=False)
+        if result.returncode == 0:
+            return True
+
+    return False
+
+
 def make_builds(benchmarks, fuzzer):
     """Use make to test the fuzzer on each benchmark in |benchmarks|."""
     fuzzer_benchmark_pairs = builder.get_fuzzer_benchmark_pairs([fuzzer],
@@ -89,9 +100,9 @@ def make_builds(benchmarks, fuzzer):
         make_target = get_make_target(fuzzer, benchmark)
         make_command = ['make', 'RUNNING_ON_CI=yes', '-j', make_target]
         print('Running command:', ' '.join(make_command))
-        result = subprocess.run(make_command, check=False)
-        if not result.returncode == 0:
+        if not run_with_retries(make_command):
             return False
+
         # Delete docker images so disk doesn't fill up.
         delete_docker_images()
     return True
