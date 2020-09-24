@@ -30,7 +30,7 @@ def get_test_data_path(*subpaths):
     return os.path.join(TEST_DATA_PATH, *subpaths)
 
 
-def test_extract_covered_regions_from_summary_json(fs):
+def test_extract_segment_and_function_from_summary_json(fs):
     """Tests that extract_covered_regions_from_summary_json returns the covered
     regions from summary json file."""
     num_functions_in_cov_summary = 3  # for testing
@@ -40,7 +40,17 @@ def test_extract_covered_regions_from_summary_json(fs):
     benchmark = 'freetype2'  # for testing
     fuzzer = 'afl'  # for testing
     trial_id = 2  # for testing
-    seg_df, func_df = coverage_utils.extract_covered_segments_and_regions_from_summary_json(
+    seg_df, func_df = coverage_utils.extract_covered_segments_and_functions_from_summary_json(
         summary_json_file, benchmark, fuzzer, trial_id)
     assert ((len(seg_df) == num_segments_in_cov_summary)
             and (len(func_df) == num_functions_in_cov_summary))
+
+
+def test_extract_covered_regions_from_summary_json(fs):
+    """Tests that extract_covered_regions_from_summary_json returns the covered
+    regions from summary json file."""
+    summary_json_file = get_test_data_path('cov_summary.json')
+    fs.add_real_file(summary_json_file, read_only=False)
+    covered_regions = coverage_utils.extract_covered_regions_from_summary_json(
+        summary_json_file)
+    assert(len(covered_regions) == 15)

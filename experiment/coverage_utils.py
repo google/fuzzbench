@@ -66,7 +66,7 @@ def generate_coverage_report(experiment, benchmark, fuzzer):
     try:
         coverage_reporter = CoverageReporter(experiment, fuzzer, benchmark)
 
-        # collects all the profdata files for all trials.
+        # merge all the profdata files.
         coverage_reporter.merge_profdata_files()
 
         # Generate the coverage summary json file based on profdata
@@ -152,7 +152,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             if result.retcode != 0:
                 logger.error(
                     'Coverage summary json file generation failed for:'
-                    'benchmark: {benchmark}'
+                    'benchmark: {benchmark},'
                     'fuzzer: {fuzzer}, '
                     'trial-id: {trial_id}'
                     .format(fuzzer=self.fuzzer,
@@ -202,7 +202,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
 
         for trial_id in self.trial_ids:
             seg_df, func_df = \
-                extract_covered_segments_and_regions_from_summary_json(
+                extract_covered_segments_and_functions_from_summary_json(
                     os.path.join(self.benchmark_fuzzer_measurement_dir,
                                  'coverage_summary_{0}.json'.format(trial_id)),
                     benchmark=self.benchmark,
@@ -213,9 +213,10 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             function_df = pd.concat([function_df, func_df], axis=0,
                                     ignore_index=True)
 
-        segment_csv_src = os.path.join(self.data_dir, 'segments.csv')
-        function_csv_src = os.path.join(self.data_dir, 'functions.csv')
-        filesystem.create_directory(self.data_dir)
+        segment_csv_src = os.path.join(self.benchmark_fuzzer_measurement_dir,
+                                       'segments.csv')
+        function_csv_src = os.path.join(self.benchmark_fuzzer_measurement_dir,
+                                        'functions.csv')
         segment_df.to_csv(segment_csv_src, index=False)
         function_df.to_csv(function_csv_src, index=False)
 
@@ -294,6 +295,7 @@ class TrialCoverage:  # pylint: disable=too-many-instance-attributes
                                             'measurement-folders',
                                             self.benchmark_fuzzer_trial_dir)
         self.report_dir = os.path.join(self.measurement_dir, 'reports')
+
         # Store the profdata file for the current trial.
         self.profdata_file = os.path.join(self.report_dir, 'data.profdata')
 
@@ -319,7 +321,7 @@ def generate_json_summary(coverage_binary,
     return result
 
 
-def extract_covered_segments_and_regions_from_summary_json(summary_json_file,
+def extract_covered_segments_and_functions_from_summary_json(summary_json_file,
                                                            benchmark, fuzzer,
                                                            trial_id):
     """Returns the segments and the function given a coverage summary json file.
@@ -355,7 +357,6 @@ def extract_covered_segments_and_regions_from_summary_json(summary_json_file,
                              segment[hit_index]]
                 a_series = pd.Series(to_append, index=segment_df.columns)
                 segment_df = segment_df.append(a_series, ignore_index=True)
-
     except Exception:  # pylint: disable=broad-except
         logger.error('Segment df & function df defective or missing.')
     return segment_df, function_df
