@@ -16,6 +16,7 @@
 import os
 import json
 import pandas as pd
+
 from common import experiment_path as exp_path
 from common import experiment_utils as exp_utils
 from common import new_process
@@ -103,15 +104,18 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                                        fuzzer)
         self.data_dir = os.path.join(coverage_info_dir, 'data', benchmark,
                                      fuzzer)
+
         benchmark_fuzzer_dir = exp_utils.get_benchmark_fuzzer_dir(
             benchmark, fuzzer)
         work_dir = exp_utils.get_work_dir()
+
         self.benchmark_fuzzer_measurement_dir = os.path.join(
             work_dir, 'measurement-folders', benchmark_fuzzer_dir)
         self.merged_profdata_file = os.path.join(
             self.benchmark_fuzzer_measurement_dir, 'merged.profdata')
         self.merged_summary_json_file = os.path.join(
             self.benchmark_fuzzer_measurement_dir, 'merged.json')
+
         coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
         self.source_files_dir = os.path.join(coverage_binaries_dir, benchmark)
         self.binary_file = get_coverage_binary(benchmark)
@@ -121,6 +125,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         logger.info('Merging profdata for fuzzer: '
                     '{fuzzer},benchmark: {benchmark}.'.format(
                         fuzzer=self.fuzzer, benchmark=self.benchmark))
+
         files_to_merge = []
         for trial_id in self.trial_ids:
             profdata_file = TrialCoverage(self.fuzzer, self.benchmark,
@@ -128,8 +133,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             if not os.path.exists(profdata_file):
                 continue
             files_to_merge.append(profdata_file)
-        # Merge the individual profile files into one
-        # profile file for HTML report.
+
         result = merge_profdata_files(files_to_merge, self.merged_profdata_file)
         if result.retcode != 0:
             logger.error('Profdata files merging failed.')
@@ -137,18 +141,21 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
     def generate_coverage_summary_json(self):
         """Generates the coverage summary json from merged profdata file."""
         coverage_binary = get_coverage_binary(self.benchmark)
-        # Trial-specific coverage summary json.
+
+        # Generate trial-specific coverage summary json.
         for trial_id in self.trial_ids:
             profdata_file = TrialCoverage(self.fuzzer, self.benchmark,
                                           trial_id).profdata_file
             if not os.path.exists(profdata_file):
                 continue
+
             result = generate_json_summary(
                 coverage_binary,
                 profdata_file,
                 os.path.join(self.benchmark_fuzzer_measurement_dir,
                              'coverage_summary_{0}.json'.format(trial_id)),
                 summary_only=False)
+
             if result.retcode != 0:
                 logger.error(
                     'Coverage summary json file generation failed for:'
@@ -158,11 +165,13 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                     .format(fuzzer=self.fuzzer,
                             benchmark=self.benchmark,
                             trial_id=trial_id))
-        # Merged coverage summary json.
+
+        # Generate merged coverage summary json.
         result = generate_json_summary(coverage_binary,
                                        self.merged_profdata_file,
                                        self.merged_summary_json_file,
                                        summary_only=False)
+
         if result.retcode != 0:
             logger.error(
                 'Merged coverage summary json file generation failed for '
@@ -333,32 +342,36 @@ def extract_covered_segments_and_functions_from_summary_json(summary_json_file,
     function_df_column_names = ["benchmark", "fuzzer", "trial_id",
                                 "function_name", "hits"]
     function_df = pd.DataFrame(columns=function_df_column_names)
+
     try:
         coverage_info = get_coverage_infomation(summary_json_file)
         coverage_data = coverage_info['data']
         functions_data = coverage_data[0]['functions']
         files = coverage_info['data'][0]['files']
 
-        line_index = 0
-        col_index = 1
-        hit_index = 2
-
+        # Extract coverage information for functions.
         for function_data in functions_data:
             to_append = [benchmark, fuzzer, trial_id,
                          function_data['name'], function_data['count']]
             a_series = pd.Series(to_append, index=function_df.columns)
             function_df = function_df.append(a_series, ignore_index=True)
 
+        # Extract coverage information for files/segments.
+        line_index = 0
+        col_index  = 1
+        hits_index  = 2
         for file in files:
             filename = file['filename']
             for segment in file['segments']:
                 to_append = [benchmark, fuzzer, trial_id, filename,
                              segment[line_index], segment[col_index],
-                             segment[hit_index]]
+                             segment[hits_index]]
                 a_series = pd.Series(to_append, index=segment_df.columns)
                 segment_df = segment_df.append(a_series, ignore_index=True)
+
     except Exception:  # pylint: disable=broad-except
         logger.error('Segment df & function df defective or missing.')
+
     return segment_df, function_df
 
 
