@@ -16,6 +16,33 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-09-26
+  fuzzers:
+    - aflplusplus_exploit # baseline
+    - aflplusplus_explore # baseline
+    - aflplusplus_coe2
+    - aflplusplus_coe3
+    - aflplusplus_coe4
+    - aflplusplus_fast2
+    - aflplusplus_fast3
+    - aflplusplus_fast4
+    - aflplusplus_coe2_shorthandicap
+    - aflplusplus_fast2_shorthandicap
+
+- experiment: 2020-09-25
+  fuzzers:
+    - libaflfuzzer
+    - aflplusplus_coe3
+    - aflplusplus_exploit
+    - aflplusplus_exploit_12
+    - aflplusplus_exploit_16
+    - aflplusplus_exploit_24
+    - aflplusplus_exploit_28
+    - aflplusplus_explore_pow4
+    - aflplusplus_explore_pow5
+    - aflplusplus_explore
+    - aflplusplus_mmopt
+
 - experiment: 2020-09-24
   fuzzers:
     - aflcc

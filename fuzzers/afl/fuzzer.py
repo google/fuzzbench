@@ -81,7 +81,9 @@ def run_afl_fuzz(input_corpus,
         '-d',
         # Use no memory limit as ASAN doesn't play nicely with one.
         '-m',
-        'none'
+        'none',
+        '-t',
+        '1000+',  # Use same default 1 sec timeout, but add '+' to skip hangs.
     ]
     if additional_flags:
         command.extend(additional_flags)

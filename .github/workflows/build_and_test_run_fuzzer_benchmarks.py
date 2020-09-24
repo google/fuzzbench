@@ -16,11 +16,14 @@
 import sys
 import subprocess
 
+from common import retry
 from experiment.build import builder
 from src_analysis import change_utils
 from src_analysis import diff_utils
 
 ALWAYS_BUILD_FUZZER = 'afl'
+NUM_RETRIES = 2
+RETRY_DELAY = 60
 
 # TODO(tanq16): Get list of Benchmarks automatically.
 
@@ -30,7 +33,9 @@ OSS_FUZZ_BENCHMARKS = {
     'curl_curl_fuzzer_http',
     'jsoncpp_jsoncpp_fuzzer',
     'libpcap_fuzz_both',
+    'libxslt_xpath',
     'mbedtls_fuzz_dtlsclient',
+    'nginx_http_request_fuzzer',
     'openssl_x509',
     'sqlite3_ossfuzz',
     'systemd_fuzz-link-parser',
@@ -78,6 +83,13 @@ def delete_docker_images():
     subprocess.run(['docker', 'builder', 'prune', '-f'], check=False)
 
 
+@retry.wrap(NUM_RETRIES, RETRY_DELAY, 'run_command')
+def run_command(command):
+    """Runs a command with retries until success."""
+    print('Running command:', ' '.join(command))
+    subprocess.check_call(command)
+
+
 def make_builds(benchmarks, fuzzer):
     """Use make to test the fuzzer on each benchmark in |benchmarks|."""
     fuzzer_benchmark_pairs = builder.get_fuzzer_benchmark_pairs([fuzzer],
@@ -86,12 +98,11 @@ def make_builds(benchmarks, fuzzer):
     for _, benchmark in fuzzer_benchmark_pairs:
         make_target = get_make_target(fuzzer, benchmark)
         make_command = ['make', 'RUNNING_ON_CI=yes', '-j', make_target]
-        print('Running command:', ' '.join(make_command))
-        result = subprocess.run(make_command, check=False)
-        if not result.returncode == 0:
-            return False
+        run_command(make_command)
+
         # Delete docker images so disk doesn't fill up.
         delete_docker_images()
+
     return True
 
 
