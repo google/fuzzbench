@@ -35,7 +35,6 @@ OSS_FUZZ_BENCHMARKS = {
     'libpcap_fuzz_both',
     'libxslt_xpath',
     'mbedtls_fuzz_dtlsclient',
-    'nginx_http_request_fuzzer',
     'openssl_x509',
     'sqlite3_ossfuzz',
     'systemd_fuzz-link-parser',
