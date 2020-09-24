@@ -66,7 +66,7 @@ def generate_coverage_report(experiment, benchmark, fuzzer):
     try:
         coverage_reporter = CoverageReporter(experiment, fuzzer, benchmark)
 
-        # merge all the profdata files.
+        # Merges all the profdata files.
         coverage_reporter.merge_profdata_files()
 
         # Generate the coverage summary json file based on profdata
