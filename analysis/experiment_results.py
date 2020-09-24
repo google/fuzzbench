@@ -74,12 +74,12 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
 
     def linkify_names(self, df):
         """For any DataFrame which is indexed by fuzzer names, turns the fuzzer
-        names into links to their descriptions on GitHub."""
+        names into links to their directory with a description on GitHub."""
         assert df.index.name == 'fuzzer'
 
         def description_link(commit, fuzzer):
             return (f'<a href="https://github.com/google/fuzzbench/blob/'
-                    f'{commit}/fuzzers/{fuzzer}/description.md">{fuzzer}</a>')
+                    f'{commit}/fuzzers/{fuzzer}">{fuzzer}</a>')
 
         commit = self.git_hash if self.git_hash else 'master'
         df.index = df.index.map(lambda fuzzer: description_link(commit, fuzzer))

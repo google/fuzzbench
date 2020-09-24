@@ -30,4 +30,4 @@ def test_linkify_fuzzer_names_in_ranking():
 
     assert ranking.index[0] == (
         '<a href="https://github.com/google/fuzzbench/blob/'
-        'master/fuzzers/afl/description.md">afl</a>')
+        'master/fuzzers/afl">afl</a>')
