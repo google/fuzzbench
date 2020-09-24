@@ -54,7 +54,6 @@ BENCHMARKS = [
     'libpcap_fuzz_both',
     'libxslt_xpath',
     'mbedtls_fuzz_dtlsclient',
-    'nginx_http_request_fuzzer',
     'openssl_x509',
     # Temporarily disabled due to out-of-memory issues with clang coverage.
     # 'php_php-fuzz-parser',
