@@ -19,6 +19,8 @@ import os
 from unittest import mock
 import glob
 
+import pytest
+
 from experiment import run_coverage
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data',
@@ -53,6 +55,8 @@ def _assert_profraw_files(coverage_dir):
     assert glob.glob(pattern)
 
 
+@pytest.mark.skipif(not os.getenv('FUZZBENCH_TEST_INTEGRATION'),
+                    reason='Not running integration tests.')
 class TestIntegrationRunCoverage:
     """Integration tests for run_coverage.py"""
 
