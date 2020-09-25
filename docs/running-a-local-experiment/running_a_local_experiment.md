@@ -82,6 +82,10 @@ PYTHONPATH=. python3 experiment/run_experiment.py \
 
 where `$EXPERIMENT_NAME` is the name you want to give the experiment.
 
+You can optionally add:
+* `--no-seeds` - to skip using seed corpus across all benchmarks.
+* `--no-dictionaries` - to skip using dictionaries across all benchmarks.
+
 ## Viewing reports
 
 You should eventually be able to see reports from your experiment, that are
