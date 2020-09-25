@@ -2,20 +2,14 @@
 # These need to be sorted alphabetical.
 fuzzers:
     - afl
-    - afl_qemu
     - aflfast
-    - aflplusplus
     - aflplusplus_optimal
-    - aflplusplus_qemu
     - aflsmart
-    - eclipser
     - entropic
     - fairfuzz
     - honggfuzz
-    - honggfuzz_qemu
     - lafintel
     - libaflfuzzer
     - libfuzzer
-    - manul
     - mopt
-    - weizz_qemu
+
