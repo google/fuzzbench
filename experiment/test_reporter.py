@@ -16,28 +16,62 @@
 import os
 from unittest import mock
 
-import yaml
-
+from common import yaml_utils
 from experiment import reporter
 from test_libs import utils as test_utils
 
 # pylint: disable=unused-argument,invalid-name
 
 
-def test_output_report_filestore(fs, experiment):
-    """Test that output_report writes the report and rsyncs it to the report
-    filestore."""
-    config_filepath = os.path.join(os.path.dirname(__file__), '..', 'service',
-                                   'core-fuzzers.yaml')
-    fs.add_real_file(config_filepath)
+def _setup_experiment_files(fs):
+    """Set up experiment config and core-fuzzers files and return experiment
+    config yaml."""
+    core_fuzzers_filepath = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), '..', 'service',
+                     'core-fuzzers.yaml'))
+    fs.add_real_file(core_fuzzers_filepath)
+    core_fuzzers = yaml_utils.read(core_fuzzers_filepath)['fuzzers']
 
-    # Get the config.
     config_filepath = os.path.join(os.path.dirname(__file__), 'test_data',
                                    'experiment-config.yaml')
     fs.add_real_file(config_filepath)
+    experiment_config = yaml_utils.read(config_filepath)
 
-    with open(config_filepath) as file_handle:
-        experiment_config = yaml.load(file_handle, yaml.SafeLoader)
+    return experiment_config, core_fuzzers
+
+
+def test_output_report_filestore_with_fuzzer_variants(fs, experiment):
+    """Test that output_report writes the report and rsyncs it to the report
+    filestore in experimental subdirectory with fuzzer variants."""
+    experiment_config, core_fuzzers = _setup_experiment_files(fs)
+    expected_fuzzers = sorted(core_fuzzers + ['fuzzer-a', 'fuzzer-b'])
+
+    with test_utils.mock_popen_ctx_mgr() as mocked_popen:
+        with mock.patch('analysis.generate_report.generate_report'
+                       ) as mocked_generate_report:
+            reporter.output_report(experiment_config)
+            reports_dir = os.path.join(os.environ['WORK'], 'reports')
+            assert mocked_popen.commands == [[
+                'gsutil', '-h', 'Cache-Control:public,max-age=0,no-transform',
+                'rsync', '-r', reports_dir,
+                'gs://web-reports/experimental/test-experiment'
+            ]]
+            experiment_name = os.environ['EXPERIMENT']
+            mocked_generate_report.assert_called_with(
+                [experiment_name],
+                reports_dir,
+                report_name=experiment_name,
+                fuzzers=expected_fuzzers,
+                in_progress=False,
+                merge_with_clobber_nonprivate=False,
+                coverage_report=False)
+
+
+def test_output_report_filestore_with_core_fuzzers(fs, experiment):
+    """Test that output_report writes the report and rsyncs it to the report
+    filestore with core fuzzers."""
+    experiment_config, core_fuzzers = _setup_experiment_files(fs)
+    experiment_config['fuzzers'] = core_fuzzers
 
     with test_utils.mock_popen_ctx_mgr() as mocked_popen:
         with mock.patch('analysis.generate_report.generate_report'
@@ -53,21 +87,7 @@ def test_output_report_filestore(fs, experiment):
                 [experiment_name],
                 reports_dir,
                 report_name=experiment_name,
-                fuzzers=[
-                    'afl',
-                    'aflfast',
-                    'aflplusplus_optimal',
-                    'aflsmart',
-                    'entropic',
-                    'fairfuzz',
-                    'fuzzer-a',
-                    'fuzzer-b',
-                    'honggfuzz',
-                    'lafintel',
-                    'libaflfuzzer',
-                    'libfuzzer',
-                    'mopt',
-                ],
+                fuzzers=core_fuzzers,
                 in_progress=False,
                 merge_with_clobber_nonprivate=False,
                 coverage_report=False)
