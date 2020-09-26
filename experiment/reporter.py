@@ -56,7 +56,7 @@ def output_report(experiment_config: dict,
 
     # Calculate path to store report files in filestore.
     web_filestore_path = experiment_config['report_filestore']
-    if experiment_fuzzers != core_fuzzers:
+    if len(fuzzers) > len(core_fuzzers):
         # This means that we are running an experimental report with fuzzer
         # variants. So, store these in |experimental| sub-directory.
         web_filestore_path = os.path.join(web_filestore_path, 'experimental')
