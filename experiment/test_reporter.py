@@ -100,7 +100,7 @@ def test_output_report_filestore_with_core_fuzzers_subset(fs, experiment):
 
     with test_utils.mock_popen_ctx_mgr() as mocked_popen:
         with mock.patch('analysis.generate_report.generate_report'
-                        ) as mocked_generate_report:
+                       ) as mocked_generate_report:
             reporter.output_report(experiment_config)
             reports_dir = os.path.join(os.environ['WORK'], 'reports')
             assert mocked_popen.commands == [[
