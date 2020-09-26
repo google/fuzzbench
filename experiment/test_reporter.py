@@ -26,24 +26,21 @@ from test_libs import utils as test_utils
 def _setup_experiment_files(fs):
     """Set up experiment config and core-fuzzers files and return experiment
     config yaml."""
-    core_fuzzers_filepath = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), '..', 'service',
-                     'core-fuzzers.yaml'))
-    fs.add_real_file(core_fuzzers_filepath)
-    core_fuzzers = yaml_utils.read(core_fuzzers_filepath)['fuzzers']
+    fs.add_real_file(reporter.CORE_FUZZERS_YAML)
 
     config_filepath = os.path.join(os.path.dirname(__file__), 'test_data',
                                    'experiment-config.yaml')
     fs.add_real_file(config_filepath)
     experiment_config = yaml_utils.read(config_filepath)
 
-    return experiment_config, core_fuzzers
+    return experiment_config
 
 
 def test_output_report_filestore_with_fuzzer_variants(fs, experiment):
     """Test that output_report writes the report and rsyncs it to the report
     filestore in experimental subdirectory with fuzzer variants."""
-    experiment_config, core_fuzzers = _setup_experiment_files(fs)
+    experiment_config = _setup_experiment_files(fs)
+    core_fuzzers = reporter.get_core_fuzzers()
     expected_fuzzers = sorted(core_fuzzers + ['fuzzer-a', 'fuzzer-b'])
 
     with test_utils.mock_popen_ctx_mgr() as mocked_popen:
@@ -70,7 +67,8 @@ def test_output_report_filestore_with_fuzzer_variants(fs, experiment):
 def test_output_report_filestore_with_core_fuzzers(fs, experiment):
     """Test that output_report writes the report and rsyncs it to the report
     filestore with core fuzzers."""
-    experiment_config, core_fuzzers = _setup_experiment_files(fs)
+    experiment_config = _setup_experiment_files(fs)
+    core_fuzzers = reporter.get_core_fuzzers()
     experiment_config['fuzzers'] = core_fuzzers
 
     with test_utils.mock_popen_ctx_mgr() as mocked_popen:

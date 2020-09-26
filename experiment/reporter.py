@@ -26,8 +26,9 @@ from common import yaml_utils
 from analysis import generate_report
 from analysis import data_utils
 
-CORE_FUZZERS_YAML = os.path.join(os.path.dirname(__file__), '..', 'service',
-                                 'core-fuzzers.yaml')
+CORE_FUZZERS_YAML = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..', 'service',
+                 'core-fuzzers.yaml'))
 
 logger = logs.Logger('reporter')  # pylint: disable=invalid-name
 
@@ -37,6 +38,11 @@ def get_reports_dir():
     return exp_path.path('reports')
 
 
+def get_core_fuzzers():
+    """Return list of core fuzzers to be used for merging experiment data."""
+    return yaml_utils.read(CORE_FUZZERS_YAML)['fuzzers']
+
+
 def output_report(experiment_config: dict,
                   in_progress=False,
                   coverage_report=False):
@@ -44,7 +50,7 @@ def output_report(experiment_config: dict,
     experiment_name = experiment_utils.get_experiment_name()
     reports_dir = get_reports_dir()
 
-    core_fuzzers = set(yaml_utils.read(CORE_FUZZERS_YAML)['fuzzers'])
+    core_fuzzers = set(get_core_fuzzers())
     experiment_fuzzers = set(experiment_config['fuzzers'])
     fuzzers = sorted(experiment_fuzzers.union(core_fuzzers))
 
