@@ -55,6 +55,9 @@ experiment_filestore: /tmp/experiment-data
 # The local report folder where HTML reports and summary data will be stored.
 # Please use an absolute path.
 report_filestore: /tmp/report-data
+
+# Flag that indicates this is a local experiment.
+local_experiment: true
 ```
 
 ## Benchmarks
