@@ -55,6 +55,9 @@ experiment_filestore: /tmp/experiment-data
 # The local report folder where HTML reports and summary data will be stored.
 # Please use an absolute path.
 report_filestore: /tmp/report-data
+
+# Flag that indicates this is a local experiment.
+local_experiment: true
 ```
 
 ## Benchmarks
@@ -81,6 +84,10 @@ PYTHONPATH=. python3 experiment/run_experiment.py \
 ```
 
 where `$EXPERIMENT_NAME` is the name you want to give the experiment.
+
+You can optionally add:
+* `--no-seeds` - to skip using seed corpus across all benchmarks.
+* `--no-dictionaries` - to skip using dictionaries across all benchmarks.
 
 ## Viewing reports
 

@@ -26,8 +26,9 @@ from common import yaml_utils
 from analysis import generate_report
 from analysis import data_utils
 
-CORE_FUZZERS_YAML = os.path.join(os.path.dirname(__file__), '..', 'service',
-                                 'core-fuzzers.yaml')
+CORE_FUZZERS_YAML = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..', 'service',
+                 'core-fuzzers.yaml'))
 
 logger = logs.Logger('reporter')  # pylint: disable=invalid-name
 
@@ -37,18 +38,29 @@ def get_reports_dir():
     return exp_path.path('reports')
 
 
+def get_core_fuzzers():
+    """Return list of core fuzzers to be used for merging experiment data."""
+    return yaml_utils.read(CORE_FUZZERS_YAML)['fuzzers']
+
+
 def output_report(experiment_config: dict,
                   in_progress=False,
                   coverage_report=False):
     """Generate the HTML report and write it to |web_bucket|."""
     experiment_name = experiment_utils.get_experiment_name()
-    web_filestore_path = posixpath.join(experiment_config['report_filestore'],
-                                        experiment_name)
-
     reports_dir = get_reports_dir()
 
-    core_fuzzers = yaml_utils.read(CORE_FUZZERS_YAML)['fuzzers']
-    fuzzers = sorted(set(experiment_config['fuzzers']).union(set(core_fuzzers)))
+    core_fuzzers = set(get_core_fuzzers())
+    experiment_fuzzers = set(experiment_config['fuzzers'])
+    fuzzers = experiment_fuzzers.union(core_fuzzers)
+
+    # Calculate path to store report files in filestore.
+    web_filestore_path = experiment_config['report_filestore']
+    if not fuzzers.issubset(core_fuzzers):
+        # This means that we are running an experimental report with fuzzers
+        # not in the core list. So, store these in |experimental| sub-directory.
+        web_filestore_path = os.path.join(web_filestore_path, 'experimental')
+    web_filestore_path = posixpath.join(web_filestore_path, experiment_name)
 
     # Don't merge with nonprivate experiments until the very end as doing it
     # while the experiment is in progress will produce unusable realtime
