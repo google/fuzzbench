@@ -12,13 +12,7 @@
 # See the License for the specific language governing permissions andsss
 # limitations under the License.
 """Tests for coverage_utils.py"""
-import unittest
 import os
-import sys
-from pyfakefs.fake_filesystem_unittest import TestCase
-
-file_dir = os.path.dirname('coverage_utils.py')
-sys.path.append(file_dir)
 
 from experiment import coverage_utils
 
@@ -40,8 +34,9 @@ def test_extract_segment_and_function_from_summary_json(fs):
     benchmark = 'freetype2'  # for testing
     fuzzer = 'afl'  # for testing
     trial_id = 2  # for testing
-    seg_df, func_df = coverage_utils.extract_covered_segments_and_functions_from_summary_json(
-        summary_json_file, benchmark, fuzzer, trial_id)
+    seg_df, func_df = \
+        coverage_utils.extract_covered_segments_and_functions_from_summary_json(
+            summary_json_file, benchmark, fuzzer, trial_id)
     assert ((len(seg_df) == num_segments_in_cov_summary)
             and (len(func_df) == num_functions_in_cov_summary))
 
@@ -53,4 +48,4 @@ def test_extract_covered_regions_from_summary_json(fs):
     fs.add_real_file(summary_json_file, read_only=False)
     covered_regions = coverage_utils.extract_covered_regions_from_summary_json(
         summary_json_file)
-    assert(len(covered_regions) == 15)
+    assert len(covered_regions) == 15

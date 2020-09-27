@@ -331,8 +331,8 @@ def generate_json_summary(coverage_binary,
 
 
 def extract_covered_segments_and_functions_from_summary_json(summary_json_file,
-                                                           benchmark, fuzzer,
-                                                           trial_id):
+                                                             benchmark, fuzzer,
+                                                             trial_id):
     """Returns the segments and the function given a coverage summary json file.
     in two separate data frames for reports"""
     segment_df_column_names = ["benchmark", "fuzzer", "trial_id",
@@ -358,8 +358,8 @@ def extract_covered_segments_and_functions_from_summary_json(summary_json_file,
 
         # Extract coverage information for files/segments.
         line_index = 0
-        col_index  = 1
-        hits_index  = 2
+        col_index = 1
+        hits_index = 2
         for file in files:
             filename = file['filename']
             for segment in file['segments']:
