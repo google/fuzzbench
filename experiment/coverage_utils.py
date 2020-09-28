@@ -202,7 +202,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
     def generate_segment_function_csv(self):
         """Stores the segment and function info in CSV file"""
         segment_df_column_names = ["benchmark", "fuzzer", "trial_id",
-                                   "filename", "line", "col", "hits"]
+                                   "file_name", "line", "col", "hits"]
         segment_df = pd.DataFrame(columns=segment_df_column_names)
 
         function_df_column_names = ["benchmark", "fuzzer", "trial_id",
