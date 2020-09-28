@@ -157,14 +157,13 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                 summary_only=False)
 
             if result.retcode != 0:
-                logger.error(
-                    'Coverage summary json file generation failed for:'
-                    'benchmark: {benchmark},'
-                    'fuzzer: {fuzzer}, '
-                    'trial-id: {trial_id}'
-                    .format(fuzzer=self.fuzzer,
-                            benchmark=self.benchmark,
-                            trial_id=trial_id))
+                logger.error('Coverage summary json file generation failed for:'
+                             'benchmark: {benchmark},'
+                             'fuzzer: {fuzzer}, '
+                             'trial-id: {trial_id}'.format(
+                                 fuzzer=self.fuzzer,
+                                 benchmark=self.benchmark,
+                                 trial_id=trial_id))
 
         # Generate merged coverage summary json.
         result = generate_json_summary(coverage_binary,
@@ -192,7 +191,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         if result.retcode != 0:
             logger.error('Coverage report generation failed for '
                          'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
-                fuzzer=self.fuzzer, benchmark=self.benchmark))
+                             fuzzer=self.fuzzer, benchmark=self.benchmark))
             return
 
         src_dir = self.report_dir
@@ -201,12 +200,15 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
 
     def generate_segment_function_csv(self):
         """Stores the segment and function info in CSV file"""
-        segment_df_column_names = ["benchmark", "fuzzer", "trial_id",
-                                   "file_name", "line", "col", "hits"]
+        segment_df_column_names = [
+            "benchmark", "fuzzer", "trial_id", "file_name", "line", "col",
+            "hits"
+        ]
         segment_df = pd.DataFrame(columns=segment_df_column_names)
 
-        function_df_column_names = ["benchmark", "fuzzer", "trial_id",
-                                    "function_name", "hits"]
+        function_df_column_names = [
+            "benchmark", "fuzzer", "trial_id", "function_name", "hits"
+        ]
         function_df = pd.DataFrame(columns=function_df_column_names)
 
         for trial_id in self.trial_ids:
@@ -217,9 +219,11 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                     benchmark=self.benchmark,
                     fuzzer=self.fuzzer,
                     trial_id=trial_id)
-            segment_df = pd.concat([segment_df, seg_df], axis=0,
+            segment_df = pd.concat([segment_df, seg_df],
+                                   axis=0,
                                    ignore_index=True)
-            function_df = pd.concat([function_df, func_df], axis=0,
+            function_df = pd.concat([function_df, func_df],
+                                    axis=0,
                                     ignore_index=True)
 
         segment_csv_src = os.path.join(self.benchmark_fuzzer_measurement_dir,
@@ -330,17 +334,19 @@ def generate_json_summary(coverage_binary,
     return result
 
 
-def extract_covered_segments_and_functions_from_summary_json(summary_json_file,
-                                                             benchmark, fuzzer,
-                                                             trial_id):  # pylint: disable=too-many-arguments
+# pylint: disable=too-many-locals
+def extract_covered_segments_and_functions_from_summary_json(
+        summary_json_file, benchmark, fuzzer, trial_id):
     """Returns the segments and the function given a coverage summary json file.
     in two separate data frames for reports"""
-    segment_df_column_names = ["benchmark", "fuzzer", "trial_id",
-                               "file_name", "line", "col", "hits"]
+    segment_df_column_names = [
+        "benchmark", "fuzzer", "trial_id", "file_name", "line", "col", "hits"
+    ]
     segment_df = pd.DataFrame(columns=segment_df_column_names)
 
-    function_df_column_names = ["benchmark", "fuzzer", "trial_id",
-                                "function_name", "hits"]
+    function_df_column_names = [
+        "benchmark", "fuzzer", "trial_id", "function_name", "hits"
+    ]
     function_df = pd.DataFrame(columns=function_df_column_names)
 
     try:
@@ -351,8 +357,10 @@ def extract_covered_segments_and_functions_from_summary_json(summary_json_file,
 
         # Extract coverage information for functions.
         for function_data in functions_data:
-            to_append = [benchmark, fuzzer, trial_id,
-                         function_data['name'], function_data['count']]
+            to_append = [
+                benchmark, fuzzer, trial_id, function_data['name'],
+                function_data['count']
+            ]
             a_series = pd.Series(to_append, index=function_df.columns)
             function_df = function_df.append(a_series, ignore_index=True)
 
@@ -363,9 +371,10 @@ def extract_covered_segments_and_functions_from_summary_json(summary_json_file,
         for file in files:
             filename = file['filename']
             for segment in file['segments']:
-                to_append = [benchmark, fuzzer, trial_id, filename,
-                             segment[line_index], segment[col_index],
-                             segment[hits_index]]
+                to_append = [
+                    benchmark, fuzzer, trial_id, filename, segment[line_index],
+                    segment[col_index], segment[hits_index]
+                ]
                 a_series = pd.Series(to_append, index=segment_df.columns)
                 segment_df = segment_df.append(a_series, ignore_index=True)
 
