@@ -162,9 +162,9 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                     'benchmark: {benchmark},'
                     'fuzzer: {fuzzer}, '
                     'trial-id: {trial_id}'
-                        .format(fuzzer=self.fuzzer,
-                                benchmark=self.benchmark,
-                                trial_id=trial_id))
+                    .format(fuzzer=self.fuzzer,
+                            benchmark=self.benchmark,
+                            trial_id=trial_id))
 
         # Generate merged coverage summary json.
         result = generate_json_summary(coverage_binary,
@@ -330,14 +330,13 @@ def generate_json_summary(coverage_binary,
     return result
 
 
-# pylint: disable=too-many-arguments
 def extract_covered_segments_and_functions_from_summary_json(summary_json_file,
                                                              benchmark, fuzzer,
-                                                             trial_id):
+                                                             trial_id):  # pylint: disable=too-many-arguments
     """Returns the segments and the function given a coverage summary json file.
     in two separate data frames for reports"""
     segment_df_column_names = ["benchmark", "fuzzer", "trial_id",
-                               "filename", "line", "col", "hits"]
+                               "file_name", "line", "col", "hits"]
     segment_df = pd.DataFrame(columns=segment_df_column_names)
 
     function_df_column_names = ["benchmark", "fuzzer", "trial_id",
