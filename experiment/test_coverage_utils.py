@@ -37,8 +37,8 @@ def test_extract_segment_and_function_from_summary_json(fs):
     seg_df, func_df = \
         coverage_utils.extract_covered_segments_and_functions_from_summary_json(
             summary_json_file, benchmark, fuzzer, trial_id)
-    assert ((len(seg_df) == num_segments_in_cov_summary)
-            and (len(func_df) == num_functions_in_cov_summary))
+    assert ((len(seg_df) == num_segments_in_cov_summary) and
+            (len(func_df) == num_functions_in_cov_summary))
 
 
 def test_extract_covered_regions_from_summary_json(fs):
