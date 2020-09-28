@@ -22,13 +22,12 @@ from common import experiment_path as exp_path
 from common import filesystem
 from common import filestore_utils
 from common import logs
+from common import utils
 from common import yaml_utils
 from analysis import generate_report
 from analysis import data_utils
 
-CORE_FUZZERS_YAML = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..', 'service',
-                 'core-fuzzers.yaml'))
+CORE_FUZZERS_YAML = os.path.join(utils.ROOT_DIR, 'service', 'core-fuzzers.yaml')
 
 logger = logs.Logger('reporter')  # pylint: disable=invalid-name
 
