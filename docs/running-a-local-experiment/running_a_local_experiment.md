@@ -45,7 +45,9 @@ trials: 5
 # 1 day = 24 * 60 * 60 = 86400
 max_total_time: 86400
 
-# The location of your docker registry.
+# The location of the docker registry.
+# FIXME: Support custom docker registry.
+# See https://github.com/google/fuzzbench/issues/777
 docker_registry: gcr.io/fuzzbench
 
 # The local experiment folder that will store most of the experiment data.
