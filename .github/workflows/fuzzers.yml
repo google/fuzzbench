@@ -40,21 +40,22 @@ jobs:
           - libfuzzer_magicbytes
           - entropic_magicbytes
           - aflplusplus_coe
+          - aflplusplus_fast
+          - aflplusplus_rare
+          - aflplusplus_exploit
+          - aflplusplus_explore
+          - aflplusplus_exploit_48
+          - aflplusplus_exploit_64
+          - aflplusplus_explore_min8
+          - aflplusplus_explore_min16
+          - aflplusplus_explore_pow3
+          - aflplusplus_explore_pow5
           - aflplusplus_coe2
           - aflplusplus_coe3
           - aflplusplus_coe4
           - aflplusplus_fast2
           - aflplusplus_fast3
           - aflplusplus_fast4
-          - aflplusplus_exploit
-          - aflplusplus_exploit_12
-          - aflplusplus_exploit_16
-          - aflplusplus_exploit_24
-          - aflplusplus_exploit_28
-          - aflplusplus_explore_pow4
-          - aflplusplus_explore_pow5
-          - aflplusplus_explore
-          - aflplusplus_mmopt
 
         benchmark_type:
           - oss-fuzz

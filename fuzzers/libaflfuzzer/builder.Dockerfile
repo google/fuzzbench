@@ -26,13 +26,13 @@ RUN apt-get update && \
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 60ef1f730551eab66cdfecf4e9815cd841582561 && \
+    git checkout 383cd487a2c28012c80341f8517e473120af4d19 && \
     unset CFLAGS && unset CXXFLAGS && export CC=clang && \
     AFL_NO_X86=1 PYTHON_INCLUDE=/ make && make install
 
 RUN git clone https://github.com/AFLplusplus/libafl /libafl && \
     cd /libafl && \
-    git checkout 32b8f96382aa869a4e40fe6d8607ac973ac2ee12 && \
+    git checkout 454d861d2e25ce5b6445fc13e4600a9151a743a4 && \
     unset CFLAGS && unset CXXFLAGS && export CC=clang && \
     make libaflfuzzer.a && \
     cp -f libaflfuzzer.a /
