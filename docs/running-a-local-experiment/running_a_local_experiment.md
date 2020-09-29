@@ -46,7 +46,7 @@ trials: 5
 max_total_time: 86400
 
 # The location of your docker registry.
-docker_registry: lab-server:5000
+docker_registry: gcr.io/fuzzbench
 
 # The local experiment folder that will store most of the experiment data.
 # Please use an absolute path.
