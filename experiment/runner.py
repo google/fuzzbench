@@ -31,6 +31,7 @@ from common import experiment_utils
 from common import filesystem
 from common import fuzzer_utils
 from common import filestore_utils
+from common import gsutil
 from common import logs
 from common import new_process
 from common import retry
@@ -139,8 +140,18 @@ def _unpack_clusterfuzz_seed_corpus(fuzz_target_path, corpus_directory):
     corpus directory if it exists. Copied from unpack_seed_corpus in
     engine_common.py in ClusterFuzz.
     """
-    seed_corpus_archive_path = get_clusterfuzz_seed_corpus_path(
-        fuzz_target_path)
+    oss_fuzz_corpus_url = environment.get('OSS_FUZZ_CORPUS_URL')
+    if oss_fuzz_corpus_url:
+        seed_corpus_archive_path = f'{fuzz_target_path}_oss_fuzz_corpus.zip'
+
+        # Use gsutil instead of filestore_utils, as this is always a
+        # Google Cloud Storage url. This works in local experiments as
+        # this is an unauthenticated / public url and gsutil tools are available
+        # in docker container.
+        gsutil.cp(oss_fuzz_corpus_url, seed_corpus_archive_path)
+    else:
+        seed_corpus_archive_path = get_clusterfuzz_seed_corpus_path(
+            fuzz_target_path)
 
     if not seed_corpus_archive_path:
         return

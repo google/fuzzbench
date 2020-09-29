@@ -28,8 +28,13 @@ BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 
 
 def get_fuzz_target(benchmark):
-    """Returns the fuzz target of |benchmark|"""
+    """Returns the fuzz target of |benchmark|."""
     return benchmark_config.get_config(benchmark)['fuzz_target']
+
+
+def get_oss_fuzz_corpus_url(benchmark):
+    """Returns the OSS-Fuzz corpus of |benchmark| if exists."""
+    return benchmark_config.get_config(benchmark).get('oss_fuzz_corpus_url', '')
 
 
 def get_runner_image_url(experiment, benchmark, fuzzer, docker_registry):

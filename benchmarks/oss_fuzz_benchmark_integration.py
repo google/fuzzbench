@@ -31,6 +31,7 @@ from common import logs
 from common import new_process
 from common import yaml_utils
 
+CORPUS_STORAGE_BUCKET = 'fuzzbench-oss-fuzz-corpora'
 CORPUS_BACKUP_URL_FORMAT = (
     'gs://{project}-backup.clusterfuzz-external.appspot.com/corpus/'
     'libFuzzer/{fuzz_target}/public.zip')
@@ -99,7 +100,7 @@ def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
         oss_fuzz_repo_manager.git(['reset', '--hard'])
 
 
-def add_oss_fuzz_corpus(project, fuzz_target, benchmark_dir):
+def get_oss_fuzz_corpus_url(project, fuzz_target):
     """Add latest public corpus from OSS-Fuzz as the seed corpus."""
     if not fuzz_target.startswith(project):
         full_fuzz_target = '%s_%s' % (project, fuzz_target)
@@ -113,20 +114,12 @@ def add_oss_fuzz_corpus(project, fuzz_target, benchmark_dir):
     if result.returncode:
         raise Exception(f'No corpus found for project {project}.')
 
-    archive_filename = 'oss_fuzz_corpus.zip'
-    seed_corpus_filename = f'{fuzz_target}_seed_corpus.zip'
-    archive_path = os.path.join(benchmark_dir, archive_filename)
-    command = ['gsutil', '-q', 'cp', corpus_backup_url, archive_path]
+    oss_fuzz_corpus_url = (
+        f'gs://{CORPUS_STORAGE_BUCKET}/{project}/'
+        f'{fuzz_target}_oss_fuzz_corpus.zip')
+    command = ['gsutil', '-q', 'cp', corpus_backup_url, oss_fuzz_corpus_url]
     subprocess.check_call(command)
-
-    dockerfile_file_path = os.path.join(benchmark_dir, 'Dockerfile')
-    with open(dockerfile_file_path, 'a') as file_handle:
-        file_handle.write(
-            f'\nCOPY {archive_filename} $SRC/{seed_corpus_filename}\n')
-
-    build_sh_file_path = os.path.join(benchmark_dir, 'build.sh')
-    with open(build_sh_file_path, 'a') as file_handle:
-        file_handle.write(f'\ncp $SRC/{seed_corpus_filename} $OUT/\n')
+    return oss_fuzz_corpus_url
 
 
 def get_benchmark_name(project, fuzz_target, benchmark_name=None):
@@ -191,7 +184,7 @@ def replace_base_builder(benchmark_dir, commit_date):
 
 
 def create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,
-                         benchmark_dir):
+                         benchmark_dir, oss_fuzz_corpus_url):
     """Create the benchmark.yaml file in |benchmark_dir| based on the values
     from |project|, |fuzz_target|, |commit| and |commit_date|."""
     yaml_filename = os.path.join(benchmark_dir, 'benchmark.yaml')
@@ -201,6 +194,8 @@ def create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,
         'commit': commit,
         'commit_date': commit_date,
     }
+    if oss_fuzz_corpus_url:
+        config['oss_fuzz_corpus_url'] = oss_fuzz_corpus_url
     yaml_utils.write(yaml_filename, config)
 
 
@@ -216,10 +211,12 @@ def integrate_benchmark(project, fuzz_target, benchmark_name, commit,
         datetime.timezone.utc)
     copy_oss_fuzz_files(project, commit_date, benchmark_dir)
     replace_base_builder(benchmark_dir, commit_date)
-    create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,
-                         benchmark_dir)
+
+    oss_fuzz_corpus_url = None
     if use_oss_fuzz_corpus:
-        add_oss_fuzz_corpus(project, fuzz_target, benchmark_dir)
+        oss_fuzz_corpus_url = get_oss_fuzz_corpus_url(project, fuzz_target)
+    create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,
+                         benchmark_dir, oss_fuzz_corpus_url)
 
 
 def main():

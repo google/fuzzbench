@@ -204,7 +204,8 @@ def start_experiment(  # pylint: disable=too-many-arguments
         benchmarks: List[str],
         fuzzers: List[str],
         no_seeds=False,
-        no_dictionaries=False):
+        no_dictionaries=False,
+        oss_fuzz_corpus=False):
     """Start a fuzzer benchmarking experiment."""
     check_no_local_changes()
 
@@ -218,6 +219,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
     config['git_hash'] = get_git_hash()
     config['no_seeds'] = no_seeds
     config['no_dictionaries'] = no_dictionaries
+    config['oss_fuzz_corpus'] = oss_fuzz_corpus
 
     set_up_experiment_config_file(config)
 
@@ -466,6 +468,13 @@ def main():
                         required=False,
                         default=False,
                         action='store_true')
+    parser.add_argument(
+        '-o',
+        '--oss-fuzz-corpus',
+        help='Should trials be conducted with OSS-Fuzz corpus (if available).',
+        required=False,
+        default=False,
+        action='store_true')
 
     args = parser.parse_args()
     fuzzers = args.fuzzers or all_fuzzers
@@ -475,7 +484,8 @@ def main():
                      args.benchmarks,
                      fuzzers,
                      no_seeds=args.no_seeds,
-                     no_dictionaries=args.no_dictionaries)
+                     no_dictionaries=args.no_dictionaries,
+                     oss_fuzz_corpus=args.oss_fuzz_corpus)
     return 0
 
 

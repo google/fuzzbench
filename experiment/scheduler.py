@@ -665,8 +665,12 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
     docker_image_url = benchmark_utils.get_runner_image_url(
         experiment, benchmark, fuzzer, experiment_config['docker_registry'])
     fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
-
     local_experiment = experiment_utils.is_local_experiment()
+
+    oss_fuzz_corpus_url = ''
+    if experiment_config['oss_fuzz_corpus']:
+        oss_fuzz_corpus_url = benchmark_utils.get_oss_fuzz_corpus_url(benchmark)
+
     template = JINJA_ENV.get_template('runner-startup-script-template.sh')
     kwargs = {
         'instance_name': instance_name,
@@ -683,6 +687,7 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
         'local_experiment': local_experiment,
         'no_seeds': experiment_config['no_seeds'],
         'no_dictionaries': experiment_config['no_dictionaries'],
+        'oss_fuzz_corpus_url': oss_fuzz_corpus_url,
     }
 
     if not local_experiment:
