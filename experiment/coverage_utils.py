@@ -228,10 +228,20 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
 
         segment_csv_src = os.path.join(self.data_dir,
                                        'segments.csv')
+        segment_csv_dst = exp_path.filestore(segment_csv_src)
         function_csv_src = os.path.join(self.data_dir,
                                         'functions.csv')
-        segment_df.to_csv(segment_csv_src, index=False)
-        function_df.to_csv(function_csv_src, index=False)
+        function_csv_dst = exp_path.filestore(function_csv_src)
+        segment_df.to_csv(segment_csv_src,
+                          index=False)
+        function_df.to_csv(function_csv_src,
+                           index=False)
+        filestore_utils.cp(segment_csv_src,
+                           segment_csv_dst,
+                           expect_zero=False)
+        filestore_utils.cp(function_csv_src,
+                           function_csv_dst,
+                           expect_zero=False)
 
     def generate_coverage_regions_json(self):
         """Stores the coverage data in a json file."""
