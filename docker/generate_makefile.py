@@ -37,7 +37,7 @@ def _print_makefile_run_template(image):
     fuzzer = image['fuzzer']
     benchmark = image['benchmark']
 
-    for run_type in ('run', 'debug', 'test-run'):
+    for run_type in ('run', 'debug', 'test-run', 'repro-check'):
         print(('{run_type}-{fuzzer}-{benchmark}: ' +
                '.{fuzzer}-{benchmark}-runner').format(run_type=run_type,
                                                       benchmark=benchmark,
@@ -60,6 +60,8 @@ def _print_makefile_run_template(image):
             print('\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\')
         if run_type == 'debug':
             print('\t--entrypoint "/bin/bash" \\\n\t-it ', end='')
+        elif run_type == 'repro-check':
+            print('\t--entrypoint "/bin/bash -c \'/bin/echo ciao\'" \\\n\t-it ', end='')
         elif run_type == 'run':
             print('\t-it ', end='')
         else:
