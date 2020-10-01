@@ -121,6 +121,8 @@ where `$EXPERIMENT_NAME` is the name you want to give the experiment.
 You can optionally add:
 * `--no-seeds` - to skip using seed corpus across all benchmarks.
 * `--no-dictionaries` - to skip using dictionaries across all benchmarks.
+* `--oss-fuzz-corpus` - use the latest corpora from OSS-Fuzz across all
+  benchmarks (where available).
 
 ## Viewing reports
 
