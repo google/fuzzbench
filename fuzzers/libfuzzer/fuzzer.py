@@ -38,7 +38,10 @@ def build():
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer. Wrapper that uses the defaults when calling
     run_fuzzer."""
-    run_fuzzer(input_corpus, output_corpus, target_binary)
+    run_fuzzer(input_corpus,
+               output_corpus,
+               target_binary,
+               extra_flags=['-keep_seed=1', '-cross_over_uniform_dist=1'])
 
 
 def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):

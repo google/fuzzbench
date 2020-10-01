@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for fuzzer_utils.py."""
+import pytest
+
 from common import fuzzer_utils
 
 # pylint: disable=invalid-name,unused-argument
@@ -53,3 +55,16 @@ def test_found_fuzzer_containing_string_without_fuzzer_name_arg(fs, environ):
     fs.create_file('/out/custom-target', contents='\n\nLLVMFuzzerTestOneInput')
     assert fuzzer_utils.get_fuzz_target_binary('/out',
                                                None) == ('/out/custom-target')
+
+
+@pytest.mark.parametrize(('fuzzer_name',), [('afl++',), ('mopt-afl',),
+                                            ('mOptAFL',), ('AFL',)])
+def test_validate_name_invalid(fuzzer_name):
+    """Tests that validate_name returns False for an invalid fuzzer name."""
+    assert not fuzzer_utils.validate_name(fuzzer_name)
+
+
+@pytest.mark.parametrize(('fuzzer_name',), [('afl',), ('mopt_afl',), ('afl2',)])
+def test_validate_name_valid(fuzzer_name):
+    """Tests that validate_name returns True for a valid fuzzer name."""
+    assert fuzzer_utils.validate_name(fuzzer_name)

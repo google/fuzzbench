@@ -50,6 +50,7 @@ def get_covered_regions_dict(experiment_df):
                 benchmark_df, benchmark, fuzzer)
             key = get_fuzzer_benchmark_key(fuzzer, benchmark)
             covered_regions_dict[key] = fuzzer_covered_regions
+
     return covered_regions_dict
 
 
@@ -61,6 +62,10 @@ def get_fuzzer_covered_regions(benchmark_df, benchmark, fuzzer):
         src_filestore_path = get_fuzzer_filestore_path(benchmark_df, fuzzer)
         src_file = posixpath.join(src_filestore_path, 'coverage', 'data',
                                   benchmark, fuzzer, 'covered_regions.json')
+        if filestore_utils.ls(src_file, must_exist=False).retcode:
+            # Error occurred, coverage file does not exit. Bail out.
+            return {}
+
         filestore_utils.cp(src_file, dst_file)
         with open(dst_file) as json_file:
             return json.load(json_file)
@@ -110,15 +115,16 @@ def get_benchmark_cov_dict(coverage_dict, benchmark):
     return benchmark_cov_dict
 
 
-def get_benchmark_aggregated_cov_df(benchmark_coverage_dict):
+def get_benchmark_aggregated_cov_df(coverage_dict, benchmark):
     """Returns a dataframe where each row represents a fuzzer and its
     aggregated coverage number."""
     dict_to_transform = {'fuzzer': [], 'aggregated_edges_covered': []}
-    for fuzzer in benchmark_coverage_dict:
-        aggregated_edges_covered = len(benchmark_coverage_dict[fuzzer])
-        dict_to_transform['fuzzer'].append(fuzzer)
-        dict_to_transform['aggregated_edges_covered'].append(
-            aggregated_edges_covered)
+    for key_pair, covered_regions in coverage_dict.items():
+        current_fuzzer, current_benchmark = key_pair.split()
+        if current_benchmark == benchmark:
+            dict_to_transform['fuzzer'].append(current_fuzzer)
+            dict_to_transform['aggregated_edges_covered'].append(
+                len(covered_regions))
     return pd.DataFrame(dict_to_transform)
 
 

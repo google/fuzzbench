@@ -90,3 +90,11 @@ You can format your changes using the following command:
 ```bash
 make format
 ```
+
+### Local Support
+
+If you want to run FuzzBench [locally]({{ site.baseurl }}/running-a-local-experiment/#Running a local experiment)
+on your own machine or servers, it needs `rsync` installed:
+```bash
+sudo apt-get install rsync
+```

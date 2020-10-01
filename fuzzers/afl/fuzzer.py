@@ -56,10 +56,7 @@ def prepare_fuzz_environment(input_corpus):
     os.environ['AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES'] = '1'
 
     # AFL needs at least one non-empty seed to start.
-    if len(os.listdir(input_corpus)) == 0:
-        with open(os.path.join(input_corpus, 'default_seed'),
-                  'w') as file_handle:
-            file_handle.write('hi')
+    utils.create_seed_file_for_empty_corpus(input_corpus)
 
 
 def run_afl_fuzz(input_corpus,
@@ -84,7 +81,9 @@ def run_afl_fuzz(input_corpus,
         '-d',
         # Use no memory limit as ASAN doesn't play nicely with one.
         '-m',
-        'none'
+        'none',
+        '-t',
+        '1000+',  # Use same default 1 sec timeout, but add '+' to skip hangs.
     ]
     if additional_flags:
         command.extend(additional_flags)

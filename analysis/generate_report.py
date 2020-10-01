@@ -81,7 +81,7 @@ def get_arg_parser():
         '-cov',
         '--coverage-report',
         action='store_true',
-        default=True,
+        default=False,
         help='If set, clang coverage reports and differential plots are shown.')
 
     # It doesn't make sense to clobber and label by experiment, since nothing
@@ -161,12 +161,6 @@ def generate_report(experiment_names,
 
     data_utils.validate_data(experiment_df)
 
-    # Load the json summary file.
-    coverage_dict = {}
-    if coverage_report:
-        coverage_dict = coverage_data_utils.get_covered_regions_dict(
-            experiment_df)
-
     if benchmarks is not None:
         experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks)
 
@@ -182,6 +176,12 @@ def generate_report(experiment_names,
     if merge_with_clobber or merge_with_clobber_nonprivate:
         experiment_df = data_utils.clobber_experiments_data(
             experiment_df, experiment_names)
+
+    # Load the coverage json summary file.
+    coverage_dict = {}
+    if coverage_report:
+        coverage_dict = coverage_data_utils.get_covered_regions_dict(
+            experiment_df)
 
     fuzzer_names = experiment_df.fuzzer.unique()
     plotter = plotting.Plotter(fuzzer_names, quick, log_scale)

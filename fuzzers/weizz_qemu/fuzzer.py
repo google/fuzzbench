@@ -40,6 +40,10 @@ def fuzz(input_corpus, output_corpus, target_binary):
     os.environ['WEIZZ_NO_AFFINITY'] = '1'
     os.environ['WEIZZ_I_DONT_CARE_ABOUT_MISSING_CRASHES'] = '1'
     os.environ['WEIZZ_CTX_SENSITIVE'] = '1'
+
+    # Weizz needs at least one non-empty seed to start.
+    utils.create_seed_file_for_empty_corpus(input_corpus)
+
     command = [
         './weizz',
         '-d',  # No deterministic mutation.
@@ -54,6 +58,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
         input_corpus,
         '-o',
         output_corpus,
+        '-t',
+        '1000+',  # Use same default 1 sec timeout, but add '+' to skip hangs.
     ]
     dictionary_path = utils.get_dictionary_path(target_binary)
     if dictionary_path:

@@ -2,7 +2,7 @@
 layout: default
 title: FAQ
 has_children: false
-nav_order: 6
+nav_order: 7
 permalink: /faq/
 ---
 
@@ -75,13 +75,28 @@ to misunderstand configuration details that can have an impact on the results.
 If you can, please reach out to the authors to confirm your configuration looks
 good to them.
 
-## I'd like to get my fuzzer evaluated on the free FuzzBench service, but I don't want the results to be public yet.
+## I'd like to get my fuzzer evaluated, but I don't want the results and/or code to be public yet. Can I use the FuzzBench service?
 
-Please reach out to us at fuzzbench@google.com.
+Probably yes. We run private experiments for this purpose.
+Please reach out to us at fuzzbench@google.com. If we agree to benchmark your
+fuzzer, please follow the guide on
+[adding a new fuzzer]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/)
+on how to integrate your fuzzer with FuzzBench.
 
-## I'm working on a new tool, but I'm not ready to make my code public yet. Can I use the FuzzBench service?
+You can ignore the sections on [Requesting an experiment]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/#requesting-an-experiment) and
+[Submitting your integration]({{ site.baseurl }}/getting-started/adding-a-new-fuzzer/#submitting-your-integration).
+Please test your fuzzer works with our benchmarks, we don't have CI to verify
+this for private experiments.
+Ideally, you should test all benchmarks using `make -j test-run-$FUZZER-all`.
+This takes too long on most machines so you should at least test a few of them:
+```
+make test-run-$FUZZER-zlib_zlib_uncompress_fuzzer test-run-$FUZZER-libpng-1.2.56
+```
 
-Yes, please reach out to us at fuzzbench@google.com.
+You should also run `make presubmit` to validate the fuzzer's name and
+integration code.
+When your fuzzer is ready, send us a patch file that applies cleanly to
+FuzzBench with `git apply <patch_file>`.
 
 ## How can you prevent researchers from optimizing their tools only for these benchmarks?
 
@@ -116,3 +131,19 @@ a new benchmark.
 
 Please [file an issue on GitHub](https://github.com/google/fuzzbench/issues/new)
 or send a pull request fixing the problem.
+
+## How can I cite FuzzBench in my paper?
+
+You can use the following BibTeX entry:
+{% raw %}
+```
+@misc{fuzzbench,
+    author       = {Metzman, Jonathan and Arya, Abhishek and Szekeres, Laszlo},
+    title        = {{FuzzBench: Fuzzer Benchmarking as a Service}},
+    year         = {2020},
+    month        = {March},
+    journal      = {Google Security Blog},
+    url          = {https://security.googleblog.com/2020/03/fuzzbench-fuzzer-benchmarking-as-service.html},
+}
+```
+{% endraw %}

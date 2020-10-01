@@ -14,16 +14,17 @@
 """Module for using the Google Compute Engine (GCE) API."""
 import threading
 
+import google.auth
 from googleapiclient import discovery
-from oauth2client.client import GoogleCredentials
 
 thread_local = threading.local()  # pylint: disable=invalid-name
+NUM_RETRIES = 10
 
 
 def initialize():
     """Initialize the thread-local configuration with things we need to use the
     GCE API."""
-    credentials = GoogleCredentials.get_application_default()
+    credentials, _ = google.auth.default()
     thread_local.service = discovery.build('compute',
                                            'v1',
                                            credentials=credentials)
@@ -34,7 +35,7 @@ def _get_instance_items(project, zone):
     instances = thread_local.service.instances()
     request = instances.list(project=project, zone=zone)
     while request is not None:
-        response = request.execute()
+        response = request.execute(num_retries=NUM_RETRIES)
         for instance in response['items']:
             yield instance
         request = instances.list_next(previous_request=request,
