@@ -1,0 +1,37 @@
+diff --git a/src/afl-fuzz-queue.c b/src/afl-fuzz-queue.c
+index 0d7d031..46d7340 100644
+--- a/src/afl-fuzz-queue.c
++++ b/src/afl-fuzz-queue.c
+@@ -649,6 +649,7 @@ u32 calculate_score(afl_state_t *afl, struct queue_entry *q) {
+ 
+         /* Never skip favourites */
+         if (!q->favored) factor = 0;
++        else perf_score = 10;
+ 
+         break;
+ 
+@@ -678,21 +679,19 @@ u32 calculate_score(afl_state_t *afl, struct queue_entry *q) {
+           break;
+ 
+         case 6:
+-          if (!q->favored) factor = 0.8;
++          factor = 0.8;
+           break;
+ 
+         case 7:
+-          if (!q->favored) factor = 0.6;
++          factor = 0.6;
+           break;
+ 
+         default:
+-          if (!q->favored) factor = 0.4;
++          factor = 0.4;
+           break;
+ 
+       }
+ 
+-      if (q->favored) factor *= 1.15;
+-
+       break;
+ 
+     case LIN:
