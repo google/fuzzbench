@@ -39,6 +39,7 @@ jobs:
           # Temporary variants.
           - libfuzzer_magicbytes
           - entropic_magicbytes
+          - aflplusplus_lightweizz
           - aflplusplus_coe
           - aflplusplus_fast
           - aflplusplus_rare
