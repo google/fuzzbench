@@ -28,7 +28,7 @@ COPY patch.diff /
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout daa2285083a1046ff69e398366a858a2558134fb && \
+    git checkout 383cd487a2c28012c80341f8517e473120af4d19 && \
     git apply /patch.diff && \
     unset CFLAGS && unset CXXFLAGS && export CC=clang && \
     AFL_NO_X86=1 PYTHON_INCLUDE=/ make && make install && \
