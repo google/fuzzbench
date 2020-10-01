@@ -6,7 +6,7 @@ index 0d7d031..46d7340 100644
  
          /* Never skip favourites */
          if (!q->favored) factor = 0;
-+        else perf_factor = 10;
++        else perf_score = 10;
  
          break;
  
