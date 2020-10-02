@@ -15,6 +15,7 @@
 
 import os
 import json
+import pandas as pd
 
 from common import experiment_path as exp_path
 from common import experiment_utils as exp_utils
@@ -45,18 +46,48 @@ def generate_coverage_reports(experiment_config: dict):
     logs.initialize()
     logger.info('Start generating coverage reports.')
 
+    # Create experiment-specific data frames
+    segment_df = pd.DataFrame(
+        columns=["benchmark", "fuzzer", "trial_id", "file_name", "line", "col"])
+    function_df = pd.DataFrame(
+        columns=["benchmark", "fuzzer", "trial_id", "function_name", "hits"])
+    benchmark_name_df = pd.DataFrame(columns=['benchmark_id', 'benchmark'])
+    fuzzer_name_df = pd.DataFrame(columns=['fuzzer_id', 'fuzzer'])
+    filename_df = pd.DataFrame(columns=['file_id', 'file_name'])
+    function_name_df = pd.DataFrame(columns=['function_id', 'function_name'])
+
+    df_container = DataFrameContainer(segment_df, function_df,
+                                      benchmark_name_df, fuzzer_name_df,
+                                      filename_df, function_name_df)
+
     benchmarks = experiment_config['benchmarks']
     fuzzers = experiment_config['fuzzers']
     experiment = experiment_config['experiment']
 
     for benchmark in benchmarks:
         for fuzzer in fuzzers:
-            generate_coverage_report(experiment, benchmark, fuzzer)
+            generate_coverage_report(experiment, benchmark, fuzzer,
+                                     df_container)
 
+    populate_all_dfs_for_3nf(df_container)
+    wrangle_df_for_csv_generation(df_container)
+    generate_csv_and_store(df_container)
     logger.info('Finished generating coverage reports.')
 
 
-def generate_coverage_report(experiment, benchmark, fuzzer):
+class DataFrameContainer:
+
+    def __init__(self, segment_df, function_df, benchmark_name_df,
+                 fuzzer_name_df, filename_df, function_name_df):
+        self.segment_df = segment_df
+        self.function_df = function_df
+        self.benchmark_name_df = benchmark_name_df
+        self.fuzzer_name_df = fuzzer_name_df
+        self.filename_df = filename_df
+        self.function_name_df = function_name_df
+
+
+def generate_coverage_report(experiment, benchmark, fuzzer, df_container):
     """Generates the coverage report for one pair of benchmark and fuzzer."""
     logger.info(
         ('Generating coverage report for '
@@ -69,11 +100,15 @@ def generate_coverage_report(experiment, benchmark, fuzzer):
         # Merges all the profdata files.
         coverage_reporter.merge_profdata_files()
 
-        # Generate the coverage summary json file based on merged profdata file.
+        # Generate the coverage summary json file based on profdata
+        # file for each trial id.
         coverage_reporter.generate_coverage_summary_json()
 
         # Generate the coverage regions json file.
         coverage_reporter.generate_coverage_regions_json()
+
+        # Generate the segment and function CSV files.
+        coverage_reporter.store_segment_and_function_data(df_container)
 
         # Generates the html reports using llvm-cov.
         coverage_reporter.generate_coverage_report()
@@ -104,13 +139,12 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             benchmark, fuzzer)
         work_dir = exp_utils.get_work_dir()
 
-        benchmark_fuzzer_measurement_dir = os.path.join(work_dir,
-                                                        'measurement-folders',
-                                                        benchmark_fuzzer_dir)
+        self.benchmark_fuzzer_measurement_dir = os.path.join(
+            work_dir, 'measurement-folders', benchmark_fuzzer_dir)
         self.merged_profdata_file = os.path.join(
-            benchmark_fuzzer_measurement_dir, 'merged.profdata')
+            self.benchmark_fuzzer_measurement_dir, 'merged.profdata')
         self.merged_summary_json_file = os.path.join(
-            benchmark_fuzzer_measurement_dir, 'merged.json')
+            self.benchmark_fuzzer_measurement_dir, 'merged.json')
 
         coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
         self.source_files_dir = os.path.join(coverage_binaries_dir, benchmark)
@@ -130,6 +164,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                 continue
             files_to_merge.append(profdata_file)
 
+        filesystem.create_directory(self.benchmark_fuzzer_measurement_dir)
         result = merge_profdata_files(files_to_merge, self.merged_profdata_file)
         if result.retcode != 0:
             logger.error('Profdata files merging failed.')
@@ -137,10 +172,36 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
     def generate_coverage_summary_json(self):
         """Generates the coverage summary json from merged profdata file."""
         coverage_binary = get_coverage_binary(self.benchmark)
+
+        # Generate trial-specific coverage summary json.
+        for trial_id in self.trial_ids:
+            profdata_file = TrialCoverage(self.fuzzer, self.benchmark,
+                                          trial_id).profdata_file
+            if not os.path.exists(profdata_file):
+                continue
+
+            result = generate_json_summary(
+                coverage_binary,
+                profdata_file,
+                os.path.join(self.benchmark_fuzzer_measurement_dir,
+                             'coverage_summary_{0}.json'.format(trial_id)),
+                summary_only=False)
+
+            if result.retcode != 0:
+                logger.error('Coverage summary json file generation failed for:'
+                             'benchmark: {benchmark},'
+                             'fuzzer: {fuzzer}, '
+                             'trial-id: {trial_id}'.format(
+                                 fuzzer=self.fuzzer,
+                                 benchmark=self.benchmark,
+                                 trial_id=trial_id))
+
+        # Generate merged coverage summary json.
         result = generate_json_summary(coverage_binary,
                                        self.merged_profdata_file,
                                        self.merged_summary_json_file,
                                        summary_only=False)
+
         if result.retcode != 0:
             logger.error(
                 'Merged coverage summary json file generation failed for '
@@ -165,8 +226,19 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             return
 
         src_dir = self.report_dir
-        dst_dir = exp_path.filestore(self.report_dir)
+        dst_dir = exp_path.filestore(src_dir)
         filestore_utils.cp(src_dir, dst_dir, recursive=True, parallel=True)
+
+    def store_segment_and_function_data(self, df_container):
+        """Stores the segment and function info in CSV file"""
+        for trial_id in self.trial_ids:
+            extract_covered_segments_and_functions_from_summary_json(
+                os.path.join(self.benchmark_fuzzer_measurement_dir,
+                             'coverage_summary_{0}.json'.format(trial_id)),
+                benchmark=self.benchmark,
+                fuzzer=self.fuzzer,
+                trial_id=trial_id,
+                df_container=df_container)
 
     def generate_coverage_regions_json(self):
         """Stores the coverage data in a json file."""
@@ -269,6 +341,46 @@ def generate_json_summary(coverage_binary,
     return result
 
 
+# pylint: disable=too-many-locals
+def extract_covered_segments_and_functions_from_summary_json(
+        summary_json_file, benchmark, fuzzer, trial_id, df_container):
+    """Returns the segments and the function given a coverage summary json file.
+    in two separate data frames for reports"""
+    try:
+        coverage_info = get_coverage_infomation(summary_json_file)
+
+        # Extract coverage information for functions.
+        for function_data in coverage_info['data'][0]['functions']:
+            to_append = [
+                benchmark, fuzzer, trial_id, function_data['name'],
+                function_data['count']
+            ]
+            a_series = pd.Series(to_append,
+                                 index=df_container.function_df.columns)
+            df_container.function_df = df_container.function_df.append(
+                a_series, ignore_index=True)
+
+        # Extract coverage information for functions and segments.
+        line_index = 0
+        col_index = 1
+        hits_index = 2
+        for file in coverage_info['data'][0]['files']:
+            filename = file['filename']
+            for segment in file['segments']:
+                if segment[hits_index] != 0:
+                    to_append = [
+                        benchmark, fuzzer, trial_id, filename,
+                        segment[line_index], segment[col_index]
+                    ]
+                    a_series = pd.Series(to_append,
+                                         index=df_container.segment_df.columns)
+                    df_container.segment_df = df_container.segment_df.append(
+                        a_series, ignore_index=True)
+
+    except Exception:  # pylint: disable=broad-except
+        logger.error('Failed to extract segment or function data frame.')
+
+
 def extract_covered_regions_from_summary_json(summary_json_file):
     """Returns the covered regions given a coverage summary json file."""
     covered_regions = []
@@ -292,3 +404,165 @@ def extract_covered_regions_from_summary_json(summary_json_file):
     except Exception:  # pylint: disable=broad-except
         logger.error('Coverage summary json file defective or missing.')
     return covered_regions
+
+
+def populate_all_dfs_for_3nf(df_container):
+    """Generates a CSV containing coverage information for all functions and
+    segments for all benchmark, fuzzers, and trials. Also creates a CSV file
+    to store benchmark names, file names, and function names."""
+
+    # Collect segment and function CSV for all benchmark-fuzzer combinations.
+    try:
+        # Separate file names into a different CSV file and allocate ID's
+        # for each unique file name.
+        df_container.filename_df['file_name'] = \
+            df_container.segment_df['file_name'].unique()
+        df_container.filename_df.reset_index()
+        df_container.filename_df['file_id'] = \
+            df_container.filename_df.index + 1
+
+        # Separate function names into a different CSV and allocate ID's
+        # for each unique function name.
+        df_container.function_name_df['function_name'] = \
+            df_container.function_df['function_name'].unique()
+        df_container.function_name_df.reset_index()
+        df_container.function_name_df['function_id'] = \
+            df_container.function_name_df.index + 1
+
+        # Separate benchmark names into a different CSV and allocate ID's
+        # for each unique benchmark name.
+        df_container.benchmark_name_df['benchmark'] = \
+            df_container.segment_df['benchmark'].unique()
+        df_container.benchmark_name_df.reset_index()
+        df_container.benchmark_name_df['benchmark_id'] = \
+            df_container.benchmark_name_df.index + 1
+
+        # Separate fuzzer names into a different CSV and allocate ID's
+        # for each unique fuzzer name.
+        df_container.fuzzer_name_df['fuzzer'] = \
+            df_container.segment_df['fuzzer'].unique()
+        df_container.fuzzer_name_df.reset_index()
+        df_container.fuzzer_name_df['fuzzer_id'] = \
+            df_container.fuzzer_name_df.index + 1
+
+    except Exception:  # pylint: disable=broad-except
+        logger.error('Error occurred when populating all dfs for 3NF.')
+
+
+def wrangle_df_for_csv_generation(df_container):
+    try:
+        # Left-Join to collect file IDs in segment df.
+        df_container.segment_df = pd.merge(df_container.segment_df,
+                                           df_container.filename_df,
+                                           on='file_name',
+                                           how='outer')
+        # Drop file_name column as we have file IDs now.
+        df_container.segment_df = df_container.\
+            segment_df.drop(columns=['file_name'])
+
+        # Left-Join to collect function IDs in fuzzer df.
+        df_container.segment_df = pd.merge(df_container.segment_df,
+                                           df_container.fuzzer_name_df,
+                                           on='fuzzer',
+                                           how='outer')
+        # Drop function_name column as we have fuzzer IDs now.
+        df_container.segment_df = df_container.\
+            segment_df.drop(columns=['fuzzer'])
+
+        # Left-Join to collect function IDs in benchmark df.
+        df_container.segment_df = pd.merge(df_container.segment_df,
+                                           df_container.benchmark_name_df,
+                                           on='benchmark',
+                                           how='outer')
+        # Drop function_name column as we have benchmark IDs now.
+        df_container.segment_df = df_container.\
+            segment_df.drop(columns=['benchmark'])
+
+        # Left-Join to collect function IDs in function df.
+        df_container.function_df = pd.merge(df_container.function_df,
+                                            df_container.function_name_df,
+                                            on='function_name',
+                                            how='outer')
+        # Drop function_name column as we have function IDs now.
+        df_container.function_df = df_container.\
+            function_df.drop(columns=['function_name'])
+
+        # Left-Join to collect function IDs in fuzzer df.
+        df_container.function_df = pd.merge(df_container.function_df,
+                                            df_container.fuzzer_name_df,
+                                            on='fuzzer',
+                                            how='outer')
+        # Drop function_name column as we have fuzzer IDs now.
+        df_container.function_df = df_container.\
+            function_df.drop(columns=['fuzzer'])
+
+        # Left-Join to collect function IDs in benchmark df.
+        df_container.function_df = pd.merge(df_container.function_df,
+                                            df_container.benchmark_name_df,
+                                            on='benchmark',
+                                            how='outer')
+        # Drop function_name column as we have benchmark IDs now.
+        df_container.function_df = df_container.\
+            function_df.drop(columns=['benchmark'])
+
+    except Exception:  # pylint: disable=broad-except
+        logger.error('Error occurred when wrangling for CSV generation.')
+
+
+def generate_csv_and_store(df_container):
+    try:
+        # store merged function csv in local fs or gutils.
+        combined_function_csv_src = os.path.join(get_coverage_info_dir(),
+                                                 'data', 'functions.csv')
+        combined_function_csv_dst = exp_path.filestore(
+            combined_function_csv_src)
+        df_container.function_df.to_csv(combined_function_csv_src, index=False)
+        filestore_utils.cp(combined_function_csv_src,
+                           combined_function_csv_dst,
+                           expect_zero=False)
+
+        # store merged segment csv in local fs or gutils.
+        combined_segment_csv_src = os.path.join(get_coverage_info_dir(), 'data',
+                                                'segments.csv')
+        combined_segments_csv_dst = exp_path.filestore(combined_segment_csv_src)
+        df_container.segment_df.to_csv(combined_segment_csv_src, index=False)
+        filestore_utils.cp(combined_segment_csv_src,
+                           combined_segments_csv_dst,
+                           expect_zero=False)
+
+        # store function names csv in local fs or gutils.
+        function_names_src = os.path.join(get_coverage_info_dir(), 'data',
+                                          'function_names.csv')
+        function_names_dst = exp_path.filestore(function_names_src)
+        df_container.function_name_df.to_csv(function_names_src, index=False)
+        filestore_utils.cp(function_names_src,
+                           function_names_dst,
+                           expect_zero=False)
+
+        # store file names csv in local fs or gutils.
+        file_names_src = os.path.join(get_coverage_info_dir(), 'data',
+                                      'file_names.csv')
+        file_names_dst = exp_path.filestore(file_names_src)
+        df_container.filename_df.to_csv(file_names_src, index=False)
+        filestore_utils.cp(file_names_src, file_names_dst, expect_zero=False)
+
+        # store fuzzer names csv in local fs or gutils.
+        fuzzer_names_src = os.path.join(get_coverage_info_dir(), 'data',
+                                        'fuzzer.csv')
+        fuzzer_names_dst = exp_path.filestore(fuzzer_names_src)
+        df_container.fuzzer_name_df.to_csv(fuzzer_names_src, index=False)
+        filestore_utils.cp(fuzzer_names_src,
+                           fuzzer_names_dst,
+                           expect_zero=False)
+
+        # store benchmark names csv in local fs or gutils.
+        benchmark_names_src = os.path.join(get_coverage_info_dir(), 'data',
+                                           'benchmark.csv')
+        benchmark_names_dst = exp_path.filestore(benchmark_names_src)
+        df_container.benchmark_name_df.to_csv(benchmark_names_src, index=False)
+        filestore_utils.cp(benchmark_names_src,
+                           benchmark_names_dst,
+                           expect_zero=False)
+
+    except Exception:  # pylint: disable=broad-except
+        logger.error('Error occurred when generating CSV files.')
