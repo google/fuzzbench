@@ -69,14 +69,17 @@ def generate_coverage_reports(experiment_config: dict):
             generate_coverage_report(experiment, benchmark, fuzzer,
                                      df_container)
 
-    populate_all_dfs_for_3nf(df_container)
-    wrangle_df_for_csv_generation(df_container)
-    generate_csv_and_store(df_container)
+    prepare_name_dataframes(df_container)
+    replace_names_with_ids_in_segment_and_function_dataframes(df_container)
+    generate_segment_and_function_csv_files(df_container)
     logger.info('Finished generating coverage reports.')
 
 
 class DataFrameContainer:
+    """Class used for holding DataFrames to extract experiment specific
+    information from  all fuzzer, benchmark and trial combination"""
 
+    # pylint: disable=too-many-arguments
     def __init__(self, segment_df, function_df, benchmark_name_df,
                  fuzzer_name_df, filename_df, function_name_df):
         self.segment_df = segment_df
@@ -164,7 +167,6 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                 continue
             files_to_merge.append(profdata_file)
 
-        filesystem.create_directory(self.benchmark_fuzzer_measurement_dir)
         result = merge_profdata_files(files_to_merge, self.merged_profdata_file)
         if result.retcode != 0:
             logger.error('Profdata files merging failed.')
@@ -406,10 +408,9 @@ def extract_covered_regions_from_summary_json(summary_json_file):
     return covered_regions
 
 
-def populate_all_dfs_for_3nf(df_container):
-    """Generates a CSV containing coverage information for all functions and
-    segments for all benchmark, fuzzers, and trials. Also creates a CSV file
-    to store benchmark names, file names, and function names."""
+def prepare_name_dataframes(df_container):
+    """Populating DataFrames with experiment specific
+    benchmark names, file names, and function names."""
 
     # Collect segment and function CSV for all benchmark-fuzzer combinations.
     try:
@@ -449,7 +450,10 @@ def populate_all_dfs_for_3nf(df_container):
         logger.error('Error occurred when populating all dfs for 3NF.')
 
 
-def wrangle_df_for_csv_generation(df_container):
+def replace_names_with_ids_in_segment_and_function_dataframes(df_container):
+    """Populating segment df and function df with benchmark_id,
+    fuzzer id, function_id and filename_id to make all he data to be
+    exported to third normal form tio reduce size"""
     try:
         # Left-Join to collect file IDs in segment df.
         df_container.segment_df = pd.merge(df_container.segment_df,
@@ -509,7 +513,10 @@ def wrangle_df_for_csv_generation(df_container):
         logger.error('Error occurred when wrangling for CSV generation.')
 
 
-def generate_csv_and_store(df_container):
+def generate_segment_and_function_csv_files(df_container):
+    """generates segment, function, function_name, file_name, fuzzer
+    and benchmark csv from DataFrames. All file together contain
+    experiment specific  information"""
     try:
         # store merged function csv in local fs or gutils.
         combined_function_csv_src = os.path.join(get_coverage_info_dir(),
