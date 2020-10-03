@@ -77,7 +77,7 @@ def generate_coverage_reports(experiment_config: dict):
 
 class DataFrameContainer:
     """Class used for holding DataFrames to extract experiment specific
-    information from  all fuzzer, benchmark and trial combination"""
+    information from all fuzzer, benchmark and trial combination"""
 
     # pylint: disable=too-many-arguments
     def __init__(self, segment_df, function_df, benchmark_name_df,
@@ -343,7 +343,6 @@ def generate_json_summary(coverage_binary,
     return result
 
 
-# pylint: disable=too-many-locals
 def extract_covered_segments_and_functions_from_summary_json(
         summary_json_file, benchmark, fuzzer, trial_id, df_container):
     """Returns the segments and the function given a coverage summary json file.
@@ -357,10 +356,10 @@ def extract_covered_segments_and_functions_from_summary_json(
                 benchmark, fuzzer, trial_id, function_data['name'],
                 function_data['count']
             ]
-            a_series = pd.Series(to_append,
-                                 index=df_container.function_df.columns)
+            series = pd.Series(to_append,
+                               index=df_container.function_df.columns)
             df_container.function_df = df_container.function_df.append(
-                a_series, ignore_index=True)
+                series, ignore_index=True)
 
         # Extract coverage information for functions and segments.
         line_index = 0
@@ -374,10 +373,10 @@ def extract_covered_segments_and_functions_from_summary_json(
                         benchmark, fuzzer, trial_id, filename,
                         segment[line_index], segment[col_index]
                     ]
-                    a_series = pd.Series(to_append,
-                                         index=df_container.segment_df.columns)
+                    series = pd.Series(to_append,
+                                       index=df_container.segment_df.columns)
                     df_container.segment_df = df_container.segment_df.append(
-                        a_series, ignore_index=True)
+                        series, ignore_index=True)
 
     except Exception:  # pylint: disable=broad-except
         logger.error('Failed to extract segment or function data frame.')
@@ -409,51 +408,49 @@ def extract_covered_regions_from_summary_json(summary_json_file):
 
 
 def prepare_name_dataframes(df_container):
-    """Populating DataFrames with experiment specific
-    benchmark names, file names, and function names."""
+    """Populates DataFrames with experiment specificbenchmark names, file
+    names, and function names."""
 
     # Collect segment and function CSV for all benchmark-fuzzer combinations.
-    try:
-        # Separate file names into a different CSV file and allocate ID's
-        # for each unique file name.
-        df_container.filename_df['file_name'] = \
-            df_container.segment_df['file_name'].unique()
-        df_container.filename_df.reset_index()
-        df_container.filename_df['file_id'] = \
-            df_container.filename_df.index + 1
+    # Separate file names into a different CSV file and allocate ID's
+    # for each unique file name.
+    df_container.filename_df['file_name'] = df_container.segment_df[
+        'file_name'].unique()
+    df_container.filename_df.reset_index()
+    df_container.filename_df['file_id'] = df_container.filename_df.index + 1
 
-        # Separate function names into a different CSV and allocate ID's
-        # for each unique function name.
-        df_container.function_name_df['function_name'] = \
-            df_container.function_df['function_name'].unique()
-        df_container.function_name_df.reset_index()
-        df_container.function_name_df['function_id'] = \
-            df_container.function_name_df.index + 1
+    # Separate function names into a different CSV and allocate ID's
+    # for each unique function name.
+    df_container.function_name_df['function_name'] = df_container.function_df[
+        'function_name'].unique()
+    df_container.function_name_df.reset_index()
+    df_container.function_name_df[
+        'function_id'] = df_container.function_name_df.index + 1
 
-        # Separate benchmark names into a different CSV and allocate ID's
-        # for each unique benchmark name.
-        df_container.benchmark_name_df['benchmark'] = \
-            df_container.segment_df['benchmark'].unique()
-        df_container.benchmark_name_df.reset_index()
-        df_container.benchmark_name_df['benchmark_id'] = \
-            df_container.benchmark_name_df.index + 1
+    # Separate benchmark names into a different CSV and allocate Ids
+    # for each unique benchmark name.
+    df_container.benchmark_name_df['benchmark'] = df_container.segment_df[
+        'benchmark'].unique()
+    df_container.benchmark_name_df.reset_index()
+    df_container.benchmark_name_df[
+        'benchmark_id'] = df_container.benchmark_name_df.index + 1
 
-        # Separate fuzzer names into a different CSV and allocate ID's
-        # for each unique fuzzer name.
-        df_container.fuzzer_name_df['fuzzer'] = \
-            df_container.segment_df['fuzzer'].unique()
-        df_container.fuzzer_name_df.reset_index()
-        df_container.fuzzer_name_df['fuzzer_id'] = \
-            df_container.fuzzer_name_df.index + 1
+    # Separate fuzzer names into a different CSV and allocate Ids
+    # for each unique fuzzer name.
+    df_container.fuzzer_name_df['fuzzer'] = df_container.segment_df[
+        'fuzzer'].unique()
+    df_container.fuzzer_name_df.reset_index()
+    df_container.fuzzer_name_df[
+        'fuzzer_id'] = df_container.fuzzer_name_df.index + 1
 
-    except Exception:  # pylint: disable=broad-except
-        logger.error('Error occurred when populating all dfs for 3NF.')
+    logger.error('Error occurred when populating all dfs for 3NF.')
 
 
 def replace_names_with_ids_in_segment_and_function_dataframes(df_container):
-    """Populating segment df and function df with benchmark_id,
-    fuzzer id, function_id and filename_id to make all he data to be
-    exported to third normal form tio reduce size"""
+    """Populates segment df and function df with benchmark_id, fuzzer id,
+    function_id and filename_id to make all he data to be atexported to
+    third normal form tio reduce size"""
+
     try:
         # Left-Join to collect file IDs in segment df.
         df_container.segment_df = pd.merge(df_container.segment_df,
@@ -461,8 +458,8 @@ def replace_names_with_ids_in_segment_and_function_dataframes(df_container):
                                            on='file_name',
                                            how='outer')
         # Drop file_name column as we have file IDs now.
-        df_container.segment_df = df_container.\
-            segment_df.drop(columns=['file_name'])
+        df_container.segment_df = df_container.segment_df.drop(
+            columns=['file_name'])
 
         # Left-Join to collect function IDs in fuzzer df.
         df_container.segment_df = pd.merge(df_container.segment_df,
@@ -470,8 +467,8 @@ def replace_names_with_ids_in_segment_and_function_dataframes(df_container):
                                            on='fuzzer',
                                            how='outer')
         # Drop function_name column as we have fuzzer IDs now.
-        df_container.segment_df = df_container.\
-            segment_df.drop(columns=['fuzzer'])
+        df_container.segment_df = df_container.segment_df.drop(
+            columns=['fuzzer'])
 
         # Left-Join to collect function IDs in benchmark df.
         df_container.segment_df = pd.merge(df_container.segment_df,
@@ -479,8 +476,8 @@ def replace_names_with_ids_in_segment_and_function_dataframes(df_container):
                                            on='benchmark',
                                            how='outer')
         # Drop function_name column as we have benchmark IDs now.
-        df_container.segment_df = df_container.\
-            segment_df.drop(columns=['benchmark'])
+        df_container.segment_df = df_container.segment_df.drop(
+            columns=['benchmark'])
 
         # Left-Join to collect function IDs in function df.
         df_container.function_df = pd.merge(df_container.function_df,
@@ -488,8 +485,8 @@ def replace_names_with_ids_in_segment_and_function_dataframes(df_container):
                                             on='function_name',
                                             how='outer')
         # Drop function_name column as we have function IDs now.
-        df_container.function_df = df_container.\
-            function_df.drop(columns=['function_name'])
+        df_container.function_df = df_container.function_df.drop(
+            columns=['function_name'])
 
         # Left-Join to collect function IDs in fuzzer df.
         df_container.function_df = pd.merge(df_container.function_df,
@@ -497,8 +494,8 @@ def replace_names_with_ids_in_segment_and_function_dataframes(df_container):
                                             on='fuzzer',
                                             how='outer')
         # Drop function_name column as we have fuzzer IDs now.
-        df_container.function_df = df_container.\
-            function_df.drop(columns=['fuzzer'])
+        df_container.function_df = df_container.function_df.drop(
+            columns=['fuzzer'])
 
         # Left-Join to collect function IDs in benchmark df.
         df_container.function_df = pd.merge(df_container.function_df,
@@ -506,70 +503,40 @@ def replace_names_with_ids_in_segment_and_function_dataframes(df_container):
                                             on='benchmark',
                                             how='outer')
         # Drop function_name column as we have benchmark IDs now.
-        df_container.function_df = df_container.\
-            function_df.drop(columns=['benchmark'])
+        df_container.function_df = df_container.function_df.drop(
+            columns=['benchmark'])
 
     except Exception:  # pylint: disable=broad-except
         logger.error('Error occurred when wrangling for CSV generation.')
 
 
 def generate_segment_and_function_csv_files(df_container):
-    """generates segment, function, function_name, file_name, fuzzer
-    and benchmark csv from DataFrames. All file together contain
-    experiment specific  information"""
-    try:
-        # store merged function csv in local fs or gutils.
-        combined_function_csv_src = os.path.join(get_coverage_info_dir(),
-                                                 'data', 'functions.csv')
-        combined_function_csv_dst = exp_path.filestore(
-            combined_function_csv_src)
-        df_container.function_df.to_csv(combined_function_csv_src, index=False)
-        filestore_utils.cp(combined_function_csv_src,
-                           combined_function_csv_dst,
-                           expect_zero=False)
+    """generates segment, function, function_name, file_name, fuzzer and
+    benchmark csv from DataFrames. All file together contain experiment
+    specific  information"""
 
-        # store merged segment csv in local fs or gutils.
-        combined_segment_csv_src = os.path.join(get_coverage_info_dir(), 'data',
-                                                'segments.csv')
-        combined_segments_csv_dst = exp_path.filestore(combined_segment_csv_src)
-        df_container.segment_df.to_csv(combined_segment_csv_src, index=False)
-        filestore_utils.cp(combined_segment_csv_src,
-                           combined_segments_csv_dst,
-                           expect_zero=False)
+    # Store merged function csv in filestore.
+    csv_filestore_helper('functions.tar.xz', df_container.function_df)
 
-        # store function names csv in local fs or gutils.
-        function_names_src = os.path.join(get_coverage_info_dir(), 'data',
-                                          'function_names.csv')
-        function_names_dst = exp_path.filestore(function_names_src)
-        df_container.function_name_df.to_csv(function_names_src, index=False)
-        filestore_utils.cp(function_names_src,
-                           function_names_dst,
-                           expect_zero=False)
+    # Store merged segment csv in filestore.
+    csv_filestore_helper('segment.tar.xz', df_container.segment_df)
 
-        # store file names csv in local fs or gutils.
-        file_names_src = os.path.join(get_coverage_info_dir(), 'data',
-                                      'file_names.csv')
-        file_names_dst = exp_path.filestore(file_names_src)
-        df_container.filename_df.to_csv(file_names_src, index=False)
-        filestore_utils.cp(file_names_src, file_names_dst, expect_zero=False)
+    # store function_names csv in filestore.
+    csv_filestore_helper('function_names.tar.xz', df_container.function_name_df)
 
-        # store fuzzer names csv in local fs or gutils.
-        fuzzer_names_src = os.path.join(get_coverage_info_dir(), 'data',
-                                        'fuzzer.csv')
-        fuzzer_names_dst = exp_path.filestore(fuzzer_names_src)
-        df_container.fuzzer_name_df.to_csv(fuzzer_names_src, index=False)
-        filestore_utils.cp(fuzzer_names_src,
-                           fuzzer_names_dst,
-                           expect_zero=False)
+    # store file_names csv in filestore.
+    csv_filestore_helper('file_names.tar.xz', df_container.filename_df)
 
-        # store benchmark names csv in local fs or gutils.
-        benchmark_names_src = os.path.join(get_coverage_info_dir(), 'data',
-                                           'benchmark.csv')
-        benchmark_names_dst = exp_path.filestore(benchmark_names_src)
-        df_container.benchmark_name_df.to_csv(benchmark_names_src, index=False)
-        filestore_utils.cp(benchmark_names_src,
-                           benchmark_names_dst,
-                           expect_zero=False)
+    # store fuzzer csv in filestore.
+    csv_filestore_helper('fuzzer.tar.xz', df_container.fuzzer_name_df)
 
-    except Exception:  # pylint: disable=broad-except
-        logger.error('Error occurred when generating CSV files.')
+    # store benchmark csv in filestore.
+    csv_filestore_helper('benchmark.tar.xz', df_container.benchmark_name_df)
+
+
+def csv_filestore_helper(file_name, df):
+    """Helper function for storing csv files in filestore"""
+    src = os.path.join(get_coverage_info_dir(), 'data', file_name)
+    dst = exp_path.filestore(src)
+    df.to_csv(dst, index=False)
+    filestore_utils.cp(src, dst)

@@ -50,11 +50,12 @@ def test_extract_segment_and_function_from_summary_json(fs):
                                                      fuzzer_name_df,
                                                      filename_df,
                                                      function_name_df)
+
     coverage_utils.extract_covered_segments_and_functions_from_summary_json(
         summary_json_file, benchmark, fuzzer, trial_id, df_container)
-    assert ((len(
-        df_container.segment_df) == num_covered_segments_in_cov_summary) and
-            (len(df_container.function_df) == num_functions_in_cov_summary))
+
+    assert len(df_container.segment_df) == num_covered_segments_in_cov_summary
+    assert len(df_container.function_df) == num_functions_in_cov_summary
 
 
 def test_prepare_name_dataframes(fs):
@@ -84,10 +85,11 @@ def test_prepare_name_dataframes(fs):
     coverage_utils.extract_covered_segments_and_functions_from_summary_json(
         summary_json_file, benchmark, fuzzer, trial_id, df_container)
     coverage_utils.prepare_name_dataframes(df_container)
-    assert (len(df_container.function_name_df) != 0 and
-            len(df_container.benchmark_name_df) != 0 and
-            len(df_container.filename_df) != 0 and
-            len(df_container.fuzzer_name_df) != 0)
+
+    assert len(df_container.function_name_df) != 0
+    assert len(df_container.benchmark_name_df) != 0
+    assert len(df_container.filename_df) != 0
+    assert len(df_container.fuzzer_name_df) != 0
 
 
 def test_replace_names_with_ids_in_segment_and_function_dataframes(fs):
@@ -117,20 +119,21 @@ def test_replace_names_with_ids_in_segment_and_function_dataframes(fs):
     coverage_utils.extract_covered_segments_and_functions_from_summary_json(
         summary_json_file, benchmark, fuzzer, trial_id, df_container)
     coverage_utils.prepare_name_dataframes(df_container)
-    coverage_utils.\
-        replace_names_with_ids_in_segment_and_function_dataframes(df_container)
-    assert (len(df_container.function_name_df['function_id']) == len(
-        df_container.function_df['function_id'].unique()) and
-            len(df_container.filename_df['file_id']) == len(
-                df_container.segment_df['file_id'].unique()) and
-            len(df_container.benchmark_name_df['benchmark_id']) == len(
-                df_container.segment_df['benchmark_id'].unique()) and
-            len(df_container.benchmark_name_df['benchmark_id']) == len(
-                df_container.function_df['benchmark_id'].unique()) and
-            len(df_container.fuzzer_name_df['fuzzer_id']) == len(
-                df_container.segment_df['fuzzer_id'].unique()) and
-            len(df_container.fuzzer_name_df['fuzzer_id']) == len(
-                df_container.function_df['fuzzer_id'].unique()))
+    coverage_utils.replace_names_with_ids_in_segment_and_function_dataframes(
+        df_container)
+
+    assert len(df_container.function_name_df['function_id']) == len(
+        df_container.function_df['function_id'].unique())
+    assert len(df_container.filename_df['file_id']) == len(
+        df_container.segment_df['file_id'].unique())
+    assert len(df_container.benchmark_name_df['benchmark_id']) == len(
+        df_container.segment_df['benchmark_id'].unique())
+    assert len(df_container.benchmark_name_df['benchmark_id']) == len(
+        df_container.function_df['benchmark_id'].unique())
+    assert len(df_container.fuzzer_name_df['fuzzer_id']) == len(
+        df_container.segment_df['fuzzer_id'].unique())
+    assert len(df_container.fuzzer_name_df['fuzzer_id']) == len(
+        df_container.function_df['fuzzer_id'].unique())
 
 
 def test_extract_covered_regions_from_summary_json(fs):
