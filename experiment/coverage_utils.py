@@ -79,9 +79,9 @@ class DataFrameContainer:
     """Class used for holding DataFrames to extract experiment specific
     information from all fuzzer, benchmark and trial combination"""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, segment_df, function_df, benchmark_name_df,
                  fuzzer_name_df, filename_df, function_name_df):
+        # pylint: disable=too-many-arguments
         self.segment_df = segment_df
         self.function_df = function_df
         self.benchmark_name_df = benchmark_name_df
