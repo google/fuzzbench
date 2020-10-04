@@ -25,6 +25,7 @@
     - afl_fast_nohandicap_late_2
     - afl_fast_nohandicap_late_s
     - afl_fast_nohandicap_late_o
+    - afl_fast_nohandicap_late_32
 
 - experiment: 2020-10-01-lightweizz
   fuzzers:
