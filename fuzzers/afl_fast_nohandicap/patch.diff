@@ -1,0 +1,118 @@
+diff --git a/Makefile b/Makefile
+index 3819312..8a9e26e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -33,7 +33,7 @@ CFLAGS     += -Wall -D_FORTIFY_SOURCE=2 -g -Wno-pointer-sign \
+ 	      -DBIN_PATH=\"$(BIN_PATH)\"
+ 
+ ifneq "$(filter Linux GNU%,$(shell uname))" ""
+-  LDFLAGS  += -ldl
++  LDFLAGS  += -ldl -lm
+ endif
+ 
+ ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
+diff --git a/afl-fuzz.c b/afl-fuzz.c
+index fc9d210..c2c50a9 100644
+--- a/afl-fuzz.c
++++ b/afl-fuzz.c
+@@ -56,6 +56,7 @@
+ #include <termios.h>
+ #include <dlfcn.h>
+ #include <sched.h>
++#include <math.h>
+ 
+ #include <sys/wait.h>
+ #include <sys/time.h>
+@@ -87,6 +88,9 @@
+ #  define EXP_ST static
+ #endif /* ^AFL_LIB */
+ 
++#define HIT_COUNTS_SIZE (1 << 21)
++u32 *hit_counts;
++
+ /* Lots of globals, but mostly for the status UI and other things where it
+    really makes no sense to haul them around as function parameters. */
+ 
+@@ -1509,6 +1513,9 @@ static void read_testcases(void) {
+ 
+     add_to_queue(fn, st.st_size, passed_det);
+ 
++    u32 cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
++    hit_counts[cksum % HIT_COUNTS_SIZE] = 1;
++
+   }
+ 
+   free(nl); /* not tracked */
+@@ -3166,6 +3173,12 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+   s32 fd;
+   u8  keeping = 0, res;
+ 
++  u32 cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
++
++  /* Saturated increment */
++  if (hit_counts[cksum % HIT_COUNTS_SIZE] < 0xFFFFFFFF)
++    hit_counts[cksum % HIT_COUNTS_SIZE]++;
++
+   if (fault == crash_mode) {
+ 
+     /* Keep only if there are new bits in the map, add to queue for
+@@ -3194,7 +3207,9 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+       queued_with_cov++;
+     }
+ 
+-    queue_top->exec_cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
++    queue_top->exec_cksum = cksum;
++
++    hit_counts[cksum % HIT_COUNTS_SIZE] = 1;
+ 
+     /* Try to calibrate inline; this also calls update_bitmap_score() when
+        successful. */
+@@ -4770,35 +4785,9 @@ static u32 calculate_score(struct queue_entry* q) {
+   else if (q->bitmap_size * 2 < avg_bitmap_size) perf_score *= 0.5;
+   else if (q->bitmap_size * 1.5 < avg_bitmap_size) perf_score *= 0.75;
+ 
+-  /* Adjust score based on handicap. Handicap is proportional to how late
+-     in the game we learned about this path. Latecomers are allowed to run
+-     for a bit longer until they catch up with the rest. */
+-
+-  if (q->handicap >= 4) {
+-
+-    perf_score *= 4;
+-    q->handicap -= 4;
+-
+-  } else if (q->handicap) {
+-
+-    perf_score *= 2;
+-    q->handicap--;
+-
+-  }
+-
+-  /* Final adjustment based on input depth, under the assumption that fuzzing
+-     deeper test cases is more likely to reveal stuff that can't be
+-     discovered with traditional fuzzers. */
+-
+-  switch (q->depth) {
+-
+-    case 0 ... 3:   break;
+-    case 4 ... 7:   perf_score *= 2; break;
+-    case 8 ... 13:  perf_score *= 3; break;
+-    case 14 ... 25: perf_score *= 4; break;
+-    default:        perf_score *= 5;
+-
+-  }
++  double log_hits = log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE]);
++  if (q->favored && !q->was_fuzzed) perf_score *= 16;
++  else if (16 - log_hits > 0) perf_score *= 16 - log_hits;
+ 
+   /* Make sure that we don't go over limit. */
+ 
+@@ -7990,6 +7979,9 @@ int main(int argc, char** argv) {
+   setup_signal_handlers();
+   check_asan_opts();
+ 
++  /* Dynamically allocate memory for AFLFast schedules */
++  hit_counts = ck_alloc(HIT_COUNTS_SIZE * sizeof(u32));
++
+   if (sync_id) fix_up_sync();
+ 
+   if (!strcmp(in_dir, out_dir))

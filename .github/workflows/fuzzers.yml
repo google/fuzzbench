@@ -51,14 +51,11 @@ jobs:
           - aflplusplus_explore_min16
           - aflplusplus_explore_pow3
           - aflplusplus_explore_pow5
-          - aflplusplus_coe_skip
-          - aflplusplus_fast_skip
-          - aflplusplus_coe_nofav
-          - aflplusplus_fast_nofav
-          - aflplusplus_coe_rareoften
-          - aflplusplus_fast_rareoften
-          - aflplusplus_coe_maxfactor
-          - aflplusplus_fast_maxfactor
+          - afl_fast
+          - afl_fast_nohandicap
+          - afl_fast_nohandicap_late
+          - afl_fast_nohandicap_late2
+          - afl_fast_nohandicap_late_s
 
         benchmark_type:
           - oss-fuzz
