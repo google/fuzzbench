@@ -31,6 +31,4 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
 
-    afl_fuzzer.fuzz(input_corpus,
-                    output_corpus,
-                    target_binary)
+    afl_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
