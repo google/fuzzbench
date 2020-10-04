@@ -22,9 +22,14 @@ import struct
 import subprocess
 
 from fuzzers import utils
+
 LIB_BC_DIR = 'lib-bc'
 SYMBOLIC_BUFFER = 'kleeInputBuf'
 MODEL_VERSION = 'model_version'
+
+MAX_MEMORY_MB = 3200  # Slightly less than 3.75 GB available on n1-standard-1.
+MAX_SOLVER_TIME_SECONDS = 30
+MAX_TOTAL_TIME_DEFAULT = 82800  # Default experiment duration = 23 hrs.
 
 
 def is_benchmark(name):
@@ -139,47 +144,6 @@ def get_bc_files():
     return bc_files
 
 
-def get_fuzz_target():
-    """Get the fuzz target name"""
-    # For non oss-projects, FUZZ_TARGET contain the target binary.
-    fuzz_target = os.getenv('FUZZ_TARGET', None)
-    if fuzz_target is not None:
-        return [fuzz_target]
-
-    print('[get_fuzz_target] FUZZ_TARGET is not defined')
-
-    # For these benchmarks, only return one file.
-    targets = {
-        'curl': 'curl_fuzzer_http',
-        'openssl': 'x509',
-        'systemd': 'fuzz-link-parser',
-        'php': 'php-fuzz-parser'
-    }
-
-    for target, fuzzname in targets.items():
-        if is_benchmark(target):
-            return [os.path.join(os.environ['OUT'], fuzzname)]
-
-    # For the reamining oss-projects, use some heuristics.
-    # We look for binaries in the OUT directory and take it as our targets.
-    # Note that we may return multiple binaries: this is necessary because
-    # sometimes multiple binaries are generated and we don't know which will
-    # be used for fuzzing (e.g., zlib benchmark).
-    # dictionary above.
-    out_dir = os.environ['OUT']
-    files = os.listdir(out_dir)
-    fuzz_targets = []
-    for filename in files:
-        candidate_bin = os.path.join(out_dir, filename)
-        if 'fuzz' in filename and os.access(candidate_bin, os.X_OK):
-            fuzz_targets += [candidate_bin]
-
-    if len(fuzz_targets) == 0:
-        raise ValueError("Cannot find binary")
-    print("[get_fuzz_target] targets: %s" % fuzz_targets)
-    return fuzz_targets
-
-
 def fix_fuzzer_lib():
     """Fix FUZZER_LIB for certain benchmarks"""
 
@@ -231,14 +195,12 @@ def build():
 
     utils.build_benchmark()
 
-    fuzz_targets = get_fuzz_target()
-    for target in fuzz_targets:
-        getbc_cmd = 'extract-bc {target}'.format(target=target)
-
+    fuzz_target = os.getenv('FUZZ_TARGET')
+    fuzz_target_path = os.path.join(os.environ['OUT'], fuzz_target)
+    getbc_cmd = f'extract-bc {fuzz_target_path}'
     if os.system(getbc_cmd) != 0:
         raise ValueError('extract-bc failed')
-    for target in fuzz_targets:
-        get_bcs_for_shared_libs(target)
+    get_bcs_for_shared_libs(fuzz_target_path)
 
 
 def rmdir(path):
@@ -430,7 +392,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     klee_bin = os.path.join(out_dir, 'bin/klee')
     target_binary_bc = '{}.bc'.format(target_binary)
-    seconds = int(int(os.getenv('MAX_TOTAL_TIME', str(246060))) * 4 / 5)
+    max_time_seconds = (
+        int(os.getenv('MAX_TOTAL_TIME', str(MAX_TOTAL_TIME_DEFAULT))) * 4) // 5
 
     seeds_option = ['-zero-seed-extension', '-seed-dir', input_klee
                    ] if n_converted > 0 else []
@@ -442,16 +405,18 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     klee_cmd = [
         klee_bin,
+        '-max-memory',
+        f'{MAX_MEMORY_MB}',
         '-max-solver-time',
-        '30s',
+        f'{MAX_SOLVER_TIME_SECONDS}s',
         '-log-timed-out-queries',
-        '--max-time',
-        '{}s'.format(seconds),
+        '-max-time',
+        f'{max_time_seconds}s',
         '-libc',
         'uclibc',
         '-libcxx',
         '-posix-runtime',
-        '--disable-verify',  # Needed because debug builds don't always work.
+        '-disable-verify',  # Needed because debug builds don't always work.
         '-output-dir',
         output_klee,
     ]
