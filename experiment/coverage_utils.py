@@ -16,6 +16,7 @@
 import os
 import json
 import pandas as pd
+import numpy as np
 
 from common import experiment_path as exp_path
 from common import experiment_utils as exp_utils
@@ -51,14 +52,9 @@ def generate_coverage_reports(experiment_config: dict):
         columns=["benchmark", "fuzzer", "trial_id", "file_name", "line", "col"])
     function_df = pd.DataFrame(
         columns=["benchmark", "fuzzer", "trial_id", "function_name", "hits"])
-    benchmark_name_df = pd.DataFrame(columns=['benchmark_id', 'benchmark'])
-    fuzzer_name_df = pd.DataFrame(columns=['fuzzer_id', 'fuzzer'])
-    filename_df = pd.DataFrame(columns=['file_id', 'file_name'])
-    function_name_df = pd.DataFrame(columns=['function_id', 'function_name'])
+    name_df = pd.DataFrame(columns=['id', 'name', 'type'])
 
-    df_container = DataFrameContainer(segment_df, function_df,
-                                      benchmark_name_df, fuzzer_name_df,
-                                      filename_df, function_name_df)
+    df_container = DataFrameContainer(segment_df, function_df, name_df)
 
     benchmarks = experiment_config['benchmarks']
     fuzzers = experiment_config['fuzzers']
@@ -70,7 +66,6 @@ def generate_coverage_reports(experiment_config: dict):
                                      df_container)
 
     prepare_name_dataframes(df_container)
-    replace_names_with_ids_in_segment_and_function_dataframes(df_container)
     generate_segment_and_function_csv_files(df_container)
     logger.info('Finished generating coverage reports.')
 
@@ -79,15 +74,10 @@ class DataFrameContainer:
     """Class used for holding DataFrames to extract experiment specific
     information from all fuzzer, benchmark and trial combination"""
 
-    def __init__(self, segment_df, function_df, benchmark_name_df,
-                 fuzzer_name_df, filename_df, function_name_df):
-        # pylint: disable=too-many-arguments
+    def __init__(self, segment_df, function_df, name_df):
         self.segment_df = segment_df
         self.function_df = function_df
-        self.benchmark_name_df = benchmark_name_df
-        self.fuzzer_name_df = fuzzer_name_df
-        self.filename_df = filename_df
-        self.function_name_df = function_name_df
+        self.name_df = name_df
 
 
 def generate_coverage_report(experiment, benchmark, fuzzer, df_container):
@@ -408,135 +398,102 @@ def extract_covered_regions_from_summary_json(summary_json_file):
 
 
 def prepare_name_dataframes(df_container):
-    """Populates DataFrames with experiment specificbenchmark names, file
-    names, and function names."""
-
-    # Collect segment and function CSV for all benchmark-fuzzer combinations.
-    # Separate file names into a different CSV file and allocate ID's
-    # for each unique file name.
-    df_container.filename_df['file_name'] = df_container.segment_df[
-        'file_name'].unique()
-    df_container.filename_df.reset_index()
-    df_container.filename_df['file_id'] = df_container.filename_df.index + 1
-
-    # Separate function names into a different CSV and allocate ID's
-    # for each unique function name.
-    df_container.function_name_df['function_name'] = df_container.function_df[
-        'function_name'].unique()
-    df_container.function_name_df.reset_index()
-    df_container.function_name_df[
-        'function_id'] = df_container.function_name_df.index + 1
-
-    # Separate benchmark names into a different CSV and allocate Ids
-    # for each unique benchmark name.
-    df_container.benchmark_name_df['benchmark'] = df_container.segment_df[
-        'benchmark'].unique()
-    df_container.benchmark_name_df.reset_index()
-    df_container.benchmark_name_df[
-        'benchmark_id'] = df_container.benchmark_name_df.index + 1
-
-    # Separate fuzzer names into a different CSV and allocate Ids
-    # for each unique fuzzer name.
-    df_container.fuzzer_name_df['fuzzer'] = df_container.segment_df[
-        'fuzzer'].unique()
-    df_container.fuzzer_name_df.reset_index()
-    df_container.fuzzer_name_df[
-        'fuzzer_id'] = df_container.fuzzer_name_df.index + 1
-
-    logger.error('Error occurred when populating all dfs for 3NF.')
-
-
-def replace_names_with_ids_in_segment_and_function_dataframes(df_container):
-    """Populates segment df and function df with benchmark_id, fuzzer id,
-    function_id and filename_id to make all he data to be atexported to
-    third normal form tio reduce size"""
-
+    """Populates DataFrames with experiment specific benchmark names, file names
+    and function names and also replaces names with ids in segment and function
+    DataFrames"""
     try:
-        # Left-Join to collect file IDs in segment df.
-        df_container.segment_df = pd.merge(df_container.segment_df,
-                                           df_container.filename_df,
-                                           on='file_name',
-                                           how='outer')
-        # Drop file_name column as we have file IDs now.
-        df_container.segment_df = df_container.segment_df.drop(
-            columns=['file_name'])
+        # Stacking all names into a single numpy array
+        names = np.hstack([
+            df_container.segment_df['benchmark'].unique(),
+            df_container.segment_df['fuzzer'].unique(),
+            df_container.function_df['function_name'].unique(),
+            df_container.segment_df['file_name'].unique()
+        ])
 
-        # Left-Join to collect function IDs in fuzzer df.
-        df_container.segment_df = pd.merge(df_container.segment_df,
-                                           df_container.fuzzer_name_df,
-                                           on='fuzzer',
-                                           how='outer')
-        # Drop function_name column as we have fuzzer IDs now.
-        df_container.segment_df = df_container.segment_df.drop(
-            columns=['fuzzer'])
+        # Creating the column type with type names to match the stack above
+        types = ['benchmark'] * len(
+            df_container.segment_df['benchmark'].unique())
+        types.extend(['fuzzer'] *
+                     len(df_container.segment_df['fuzzer'].unique()))
+        types.extend(['function'] *
+                     len(df_container.function_df['function_name'].unique()))
+        types.extend(['file_name'] *
+                     len(df_container.segment_df['file_name'].unique()))
 
-        # Left-Join to collect function IDs in benchmark df.
-        df_container.segment_df = pd.merge(df_container.segment_df,
-                                           df_container.benchmark_name_df,
-                                           on='benchmark',
-                                           how='outer')
-        # Drop function_name column as we have benchmark IDs now.
-        df_container.segment_df = df_container.segment_df.drop(
-            columns=['benchmark'])
+        # Populating name DataFrame.
+        df_container.name_df['name'] = names
+        df_container.name_df['type'] = types
+        df_container.name_df.reset_index()
+        df_container.name_df['id'] = df_container.name_df.index + 1
 
-        # Left-Join to collect function IDs in function df.
-        df_container.function_df = pd.merge(df_container.function_df,
-                                            df_container.function_name_df,
-                                            on='function_name',
-                                            how='outer')
-        # Drop function_name column as we have function IDs now.
-        df_container.function_df = df_container.function_df.drop(
-            columns=['function_name'])
+        # Reshaping DataFrames for joins.
+        reshaped_name_df = df_container.name_df.pivot(index='name',
+                                                      columns='type',
+                                                      values='id')
+        # making "name" as a column again
+        reshaped_name_df['name'] = reshaped_name_df.index
 
-        # Left-Join to collect function IDs in fuzzer df.
-        df_container.function_df = pd.merge(df_container.function_df,
-                                            df_container.fuzzer_name_df,
-                                            on='fuzzer',
-                                            how='outer')
-        # Drop function_name column as we have fuzzer IDs now.
-        df_container.function_df = df_container.function_df.drop(
-            columns=['fuzzer'])
+        # Renaming columns for easy joins.
+        reshaped_name_df.columns = [
+            'benchmark_id', 'file_id', 'function_id', 'fuzzer_id', 'name'
+        ]
 
-        # Left-Join to collect function IDs in benchmark df.
-        df_container.function_df = pd.merge(df_container.function_df,
-                                            df_container.benchmark_name_df,
-                                            on='benchmark',
-                                            how='outer')
-        # Drop function_name column as we have benchmark IDs now.
-        df_container.function_df = df_container.function_df.drop(
-            columns=['benchmark'])
+        # Replacing names with ids by joining DataFrames.
+        df_container.segment_df = rename_drop_columns_and_leftjoin(
+            df_container.segment_df, reshaped_name_df, ['fuzzer', 'fuzzer_id'])
 
-    except Exception:  # pylint: disable=broad-except
-        logger.error('Error occurred when wrangling for CSV generation.')
+        df_container.function_df = rename_drop_columns_and_leftjoin(
+            df_container.function_df, reshaped_name_df, ['fuzzer', 'fuzzer_id'])
+
+        df_container.segment_df = rename_drop_columns_and_leftjoin(
+            df_container.segment_df, reshaped_name_df,
+            ['benchmark', 'benchmark_id'])
+
+        df_container.function_df = rename_drop_columns_and_leftjoin(
+            df_container.function_df, reshaped_name_df,
+            ['benchmark', 'benchmark_id'])
+
+        df_container.segment_df = rename_drop_columns_and_leftjoin(
+            df_container.segment_df, reshaped_name_df, ['file_name', 'file_id'])
+
+        df_container.function_df = rename_drop_columns_and_leftjoin(
+            df_container.function_df, reshaped_name_df,
+            ['function_name', 'function_id'])
+
+    except (ValueError, KeyError, IndexError) as error_e:  # pylint: disable=unused-variable
+        logger.error('Error occurred when preparing name DataFrame.')
 
 
 def generate_segment_and_function_csv_files(df_container):
     """generates segment, function, function_name, file_name, fuzzer and
     benchmark csv from DataFrames. All file together contain experiment
     specific  information"""
-
     # Store merged function csv in filestore.
-    csv_filestore_helper('functions.tar.xz', df_container.function_df)
+    csv_filestore_helper('functions.csv.gz', df_container.function_df)
 
     # Store merged segment csv in filestore.
-    csv_filestore_helper('segment.tar.xz', df_container.segment_df)
+    csv_filestore_helper('segment.csv.gz', df_container.segment_df)
 
     # store function_names csv in filestore.
-    csv_filestore_helper('function_names.tar.xz', df_container.function_name_df)
-
-    # store file_names csv in filestore.
-    csv_filestore_helper('file_names.tar.xz', df_container.filename_df)
-
-    # store fuzzer csv in filestore.
-    csv_filestore_helper('fuzzer.tar.xz', df_container.fuzzer_name_df)
-
-    # store benchmark csv in filestore.
-    csv_filestore_helper('benchmark.tar.xz', df_container.benchmark_name_df)
+    csv_filestore_helper('names.csv.gz', df_container.name_df)
 
 
 def csv_filestore_helper(file_name, df):
     """Helper function for storing csv files in filestore"""
     src = os.path.join(get_coverage_info_dir(), 'data', file_name)
     dst = exp_path.filestore(src)
-    df.to_csv(dst, index=False)
+    df.to_csv(src, index=False, compression='infer')
     filestore_utils.cp(src, dst)
+
+
+def rename_drop_columns_and_leftjoin(df1, df2, name_list):
+    """Helper function to rename DataFrame df2 to easily merge DataFrame
+    df1 on a given key. The name is being replaced by ids in df1 is also dropped
+    to for referencing"""
+    df2.columns = [
+        'benchmark_id', 'file_id', 'function_id', 'fuzzer_id', name_list[0]
+    ]
+    cols = [col for col in df2.columns if col not in name_list]
+    df = pd.merge(df1, df2.drop(columns=cols), on=name_list[0], how='outer')
+    df = df.drop(columns=[name_list[0]])
+    return df.dropna()
