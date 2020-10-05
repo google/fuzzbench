@@ -433,11 +433,6 @@ def prepare_name_dataframes(df_container):
         # making "name" as a column again
         reshaped_name_df['name'] = reshaped_name_df.index
 
-        # Renaming columns for easy joins.
-        reshaped_name_df.columns = [
-            'benchmark_id', 'file_id', 'function_id', 'fuzzer_id', 'name'
-        ]
-
         # Replacing names with ids by joining DataFrames.
         df_container.segment_df = rename_drop_columns_and_leftjoin(
             df_container.segment_df, reshaped_name_df, ['fuzzer', 'fuzzer_id'])
@@ -487,9 +482,8 @@ def csv_filestore_helper(file_name, df):
 
 
 def rename_drop_columns_and_leftjoin(df1, df2, name_list):
-    """Helper function to rename DataFrame df2 to easily merge DataFrame
-    df1 on a given key. The name is being replaced by ids in df1 is also dropped
-    to for referencing"""
+    """Helper function to rename DataFrame df2 to easily merge DataFrame df1 on
+    a given key. The name is being replaced by ids in df1 for referencing"""
     df2.columns = [
         'benchmark_id', 'file_id', 'function_id', 'fuzzer_id', name_list[0]
     ]
