@@ -27,7 +27,7 @@ def get_test_data_path(*subpaths):
 
 def test_extract_segment_and_function_from_summary_json(fs):
     """Tests that extract_covered_regions_from_summary_json returns the covered
-    regions from summary json file."""
+    segments and functions from summary json file."""
     num_functions_in_cov_summary = 3  # for testing
     num_covered_segments_in_cov_summary = 16  # for testing
     summary_json_file = get_test_data_path('cov_summary.json')
@@ -53,10 +53,9 @@ def test_extract_segment_and_function_from_summary_json(fs):
 
 
 def test_prepare_name_dataframes(fs):
-    """Tests that prepare_name_dataframes extract all the name from
-    segment and function data frames and creates name data frame with all names
-    and ids to reference the same"""
-
+    """Tests that prepare_name_dataframes extracts all the names from segment
+    and function data frames and creates name data frame with all names and ids
+    to reference the same"""
     summary_json_file = get_test_data_path('cov_summary.json')
     fs.add_real_file(summary_json_file, read_only=False)
     benchmark = 'freetype2'  # for testing
