@@ -39,10 +39,12 @@ from common import new_process
 from common import utils
 from common import yaml_utils
 
+CONFIG_DIR = 'config'
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
 OSS_FUZZ_PROJECTS_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz',
                                      'projects')
+RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
 FUZZER_NAME_REGEX = re.compile(r'^[a-z0-9_]+$')
 EXPERIMENT_CONFIG_REGEX = re.compile(r'^[a-z0-9-]{0,30}$')
 FILTER_SOURCE_REGEX = re.compile(r'('
@@ -58,13 +60,9 @@ FILTER_SOURCE_REGEX = re.compile(r'('
                                  r'^third_party/oss-fuzz/build/|'
                                  r'^docker/generated.mk$|'
                                  r'^docs/)')
-OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT = (
+_OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT = (
     'gs://{project}-backup.clusterfuzz-external.appspot.com/corpus/'
     'libFuzzer/{fuzz_target}/public.zip')
-
-CONFIG_DIR = 'config'
-
-RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
 
 
 def read_and_validate_experiment_config(config_filename: str) -> Dict:
@@ -257,7 +255,7 @@ def add_oss_fuzz_corpus(benchmark, oss_fuzz_corpora_dir):
     else:
         full_fuzz_target = fuzz_target
 
-    src_corpus_url = OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT.format(
+    src_corpus_url = _OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT.format(
         project=project, fuzz_target=full_fuzz_target)
     dest_corpus_url = os.path.join(oss_fuzz_corpora_dir, f'{benchmark}.zip')
     gsutil.cp(src_corpus_url, dest_corpus_url, parallel=True, expect_zero=False)
