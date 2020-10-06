@@ -27,6 +27,7 @@ RUN apt-get update && \
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
     git checkout bab60b68d968492d689bc5963bd775b10c6292e8 && \
+    sed -i 's/HAVOC_MAX_MULT .*32/HAVOC_MAX_MULT 48/' include/config.h && \
     unset CFLAGS && unset CXXFLAGS && export CC=clang && \
     AFL_NO_X86=1 PYTHON_INCLUDE=/ make && make install && \
     make -C examples/aflpp_driver && \
