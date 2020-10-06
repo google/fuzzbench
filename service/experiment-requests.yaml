@@ -24,7 +24,7 @@
     - afl_fast_32
     - afl_fast_late_32
     - afl_fast_coll_32
-    - afl_fast_nohit_32
+    - afl_fast_nohits_32
     - afl_fast_nohandicap_late_32
 
 - experiment: 2020-10-05-aflfast
