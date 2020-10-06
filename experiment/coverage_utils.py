@@ -64,7 +64,7 @@ def generate_coverage_reports(experiment_config: dict):
         for fuzzer in fuzzers:
             generate_coverage_report(experiment, benchmark, fuzzer,
                                      df_container)
-    # Generating experiment-specific CSV files
+    # Generate experiment-specific CSV files
     prepare_name_dataframes(df_container)
     generate_segment_and_function_csv_files(df_container)
     logger.info('Finished generating coverage reports.')
@@ -224,7 +224,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         filestore_utils.cp(src_dir, dst_dir, recursive=True, parallel=True)
 
     def store_segment_and_function_data(self, df_container):
-        """Extracts and Stores the segment and function coverage information for
+        """Extracts and stores the segment and function coverage information for
         all trials in a benchmark-fuzzer combination in experiment specific data
         frames. """
         for trial_id in self.trial_ids:
