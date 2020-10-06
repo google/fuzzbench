@@ -71,4 +71,3 @@ for fuzzer in xpath; do
 done
 
 cp tests/fuzz/xpath.dict tests/fuzz/xpath.xml $OUT/
-cp $SRC/xpath_seed_corpus.zip $OUT/
