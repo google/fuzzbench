@@ -12,7 +12,7 @@ index 3819312..8a9e26e 100644
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index fc9d210..c2c50a9 100644
+index fc9d210..31b73a4 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -67,46 +67,50 @@ index fc9d210..c2c50a9 100644
  
      /* Try to calibrate inline; this also calls update_bitmap_score() when
         successful. */
-@@ -4770,35 +4785,9 @@ static u32 calculate_score(struct queue_entry* q) {
-   else if (q->bitmap_size * 2 < avg_bitmap_size) perf_score *= 0.5;
-   else if (q->bitmap_size * 1.5 < avg_bitmap_size) perf_score *= 0.75;
+@@ -4800,6 +4815,42 @@ static u32 calculate_score(struct queue_entry* q) {
  
--  /* Adjust score based on handicap. Handicap is proportional to how late
--     in the game we learned about this path. Latecomers are allowed to run
--     for a bit longer until they catch up with the rest. */
--
--  if (q->handicap >= 4) {
--
--    perf_score *= 4;
--    q->handicap -= 4;
--
--  } else if (q->handicap) {
--
--    perf_score *= 2;
--    q->handicap--;
--
--  }
--
--  /* Final adjustment based on input depth, under the assumption that fuzzing
--     deeper test cases is more likely to reveal stuff that can't be
--     discovered with traditional fuzzers. */
--
--  switch (q->depth) {
--
--    case 0 ... 3:   break;
--    case 4 ... 7:   perf_score *= 2; break;
--    case 8 ... 13:  perf_score *= 3; break;
--    case 14 ... 25: perf_score *= 4; break;
--    default:        perf_score *= 5;
--
--  }
-+  double log_hits = log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE]);
-+  if (q->favored && !q->was_fuzzed) perf_score *= 16;
-+  else if (16 - log_hits > 0) perf_score *= 16 - log_hits;
+   }
  
++  /* FAST */
++  switch ((u32)log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE])) {
++
++    case 0 ... 1:
++      perf_score *= 4;
++      break;
++
++    case 2 ... 3:
++      perf_score *= 3;
++      break;
++
++    case 4:
++       perf_score *= 2;
++      break;
++
++    case 5:
++      break;
++
++    case 6:
++      if (!q->favored) perf_score *= 0.8;
++      break;
++
++    case 7:
++      if (!q->favored) perf_score *= 0.6;
++      break;
++
++    default:
++      if (!q->favored) perf_score *= 0.4;
++      break;
++
++  }
++
++  if (q->favored)
++    perf_score *= 1.15;
++
++
    /* Make sure that we don't go over limit. */
  
-@@ -7990,6 +7979,9 @@ int main(int argc, char** argv) {
+   if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
+@@ -7990,6 +8041,9 @@ int main(int argc, char** argv) {
    setup_signal_handlers();
    check_asan_opts();
  
@@ -116,3 +120,16 @@ index fc9d210..c2c50a9 100644
    if (sync_id) fix_up_sync();
  
    if (!strcmp(in_dir, out_dir))
+diff --git a/config.h b/config.h
+index 46dd857..8aae20b 100644
+--- a/config.h
++++ b/config.h
+@@ -94,7 +94,7 @@
+ /* Maximum multiplier for the above (should be a power of two, beware
+    of 32-bit int overflows): */
+ 
+-#define HAVOC_MAX_MULT      16
++#define HAVOC_MAX_MULT      32
+ 
+ /* Absolute minimum number of havoc cycles (after all adjustments): */
+ 
