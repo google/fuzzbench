@@ -5,29 +5,36 @@ project: matio
 unsupported_fuzzers:
   - aflcc
   - aflplusplus
-  - klee
-  - libaflfuzzer
-  - afl_qemu
-  - aflplusplus_qemu
-  - honggfuzz_qemu
-  - weizz_qemu
-  - aflplusplus_lightweizz
   - aflplusplus_coe
-  - aflplusplus_fast
-  - aflplusplus_rare
+  - aflplusplus_coe_maxfactor
+  - aflplusplus_coe_nofav
+  - aflplusplus_coe_rareoften
+  - aflplusplus_coe_skip
+  - aflplusplus_coe_24
+  - aflplusplus_coe_48
+  - aflplusplus_coe_64
   - aflplusplus_exploit
-  - aflplusplus_explore
   - aflplusplus_exploit_48
   - aflplusplus_exploit_64
+  - aflplusplus_explore
   - aflplusplus_explore_min8
   - aflplusplus_explore_min16
   - aflplusplus_explore_pow3
   - aflplusplus_explore_pow5
-  - aflplusplus_coe_skip
-  - aflplusplus_fast_skip
-  - aflplusplus_coe_nofav
-  - aflplusplus_fast_nofav
-  - aflplusplus_coe_rareoften
-  - aflplusplus_fast_rareoften
-  - aflplusplus_coe_maxfactor
+  - aflplusplus_fast
   - aflplusplus_fast_maxfactor
+  - aflplusplus_fast_nofav
+  - aflplusplus_fast_rareoften
+  - aflplusplus_fast_skip
+  - aflplusplus_fast_24
+  - aflplusplus_fast_48
+  - aflplusplus_fast_64
+  - aflplusplus_lightweizz
+  - aflplusplus_qemu
+  - aflplusplus_rare
+  - afl_qemu
+  - honggfuzz_qemu
+  - klee
+  - libaflfuzzer
+  - weizz_qemu
+
