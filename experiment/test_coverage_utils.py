@@ -40,16 +40,10 @@ def test_extract_segment_and_function_from_summary_json(fs):
         columns=["benchmark", "fuzzer", "trial_id", "file_name", "line", "col"])
     function_df = pd.DataFrame(
         columns=["benchmark", "fuzzer", "trial_id", "function_name", "hits"])
-    benchmark_name_df = pd.DataFrame(columns=['benchmark_id', 'benchmark'])
-    fuzzer_name_df = pd.DataFrame(columns=['fuzzer_id', 'fuzzer'])
-    filename_df = pd.DataFrame(columns=['file_id', 'file_name'])
-    function_name_df = pd.DataFrame(columns=['function_id', 'function_name'])
+    name_df = pd.DataFrame(columns=['id', 'name', 'type'])
 
     df_container = coverage_utils.DataFrameContainer(segment_df, function_df,
-                                                     benchmark_name_df,
-                                                     fuzzer_name_df,
-                                                     filename_df,
-                                                     function_name_df)
+                                                     name_df)
 
     coverage_utils.extract_covered_segments_and_functions_from_summary_json(
         summary_json_file, benchmark, fuzzer, trial_id, df_container)
@@ -60,80 +54,66 @@ def test_extract_segment_and_function_from_summary_json(fs):
 
 def test_prepare_name_dataframes(fs):
     """Tests that prepare_name_dataframes extract all the name from
-    segment and function df and creates file name, function name,
-    fuzzer name and benchmark name df"""
+    segment and function data frames and creates name data frame with all names
+    and ids to reference the same"""
+
     summary_json_file = get_test_data_path('cov_summary.json')
     fs.add_real_file(summary_json_file, read_only=False)
     benchmark = 'freetype2'  # for testing
     fuzzer = 'afl'  # for testing
     trial_id = 2  # for testing
+    function_name_test_cov_summary = ['main', '_Z3fooIiEvT_', '_Z3fooIfEvT_']
+    filename_test_cov_summary = ['/home/test/fuzz_no_fuzzer.cc']
 
     segment_df = pd.DataFrame(
         columns=["benchmark", "fuzzer", "trial_id", "file_name", "line", "col"])
     function_df = pd.DataFrame(
         columns=["benchmark", "fuzzer", "trial_id", "function_name", "hits"])
-    benchmark_name_df = pd.DataFrame(columns=['benchmark_id', 'benchmark'])
-    fuzzer_name_df = pd.DataFrame(columns=['fuzzer_id', 'fuzzer'])
-    filename_df = pd.DataFrame(columns=['file_id', 'file_name'])
-    function_name_df = pd.DataFrame(columns=['function_id', 'function_name'])
+    name_df = pd.DataFrame(columns=['id', 'name', 'type'])
 
     df_container = coverage_utils.DataFrameContainer(segment_df, function_df,
-                                                     benchmark_name_df,
-                                                     fuzzer_name_df,
-                                                     filename_df,
-                                                     function_name_df)
+                                                     name_df)
+
     coverage_utils.extract_covered_segments_and_functions_from_summary_json(
         summary_json_file, benchmark, fuzzer, trial_id, df_container)
     coverage_utils.prepare_name_dataframes(df_container)
 
-    assert len(df_container.function_name_df) != 0
-    assert len(df_container.benchmark_name_df) != 0
-    assert len(df_container.filename_df) != 0
-    assert len(df_container.fuzzer_name_df) != 0
+    for func_id in list(df_container.function_df['function_id'].unique()):
+        assert (df_container.name_df.loc[df_container.name_df['id'] ==
+                                         func_id, 'name'].iloc[0] in
+                function_name_test_cov_summary)
 
+    for file_id in list(df_container.segment_df['file_id'].unique()):
+        assert (df_container.name_df.loc[df_container.name_df['id'] ==
+                                         file_id, 'name'].iloc[0] in
+                filename_test_cov_summary)
 
-def test_replace_names_with_ids_in_segment_and_function_dataframes(fs):
-    """Tests that extract_names_from_segment_and_function_dataframes returns
-    segment and function dfs with ids instead of names."""
-    summary_json_file = get_test_data_path('cov_summary.json')
-    fs.add_real_file(summary_json_file, read_only=False)
-    benchmark = 'freetype2'  # for testing
-    fuzzer = 'afl'  # for testing
-    trial_id = 2  # for testing
+    for fuzzer_id in list(df_container.segment_df['fuzzer_id'].unique()):
+        assert df_container.name_df.loc[df_container.name_df['id'] ==
+                                        fuzzer_id, 'name'].iloc[0] == 'afl'
 
-    segment_df = pd.DataFrame(
-        columns=["benchmark", "fuzzer", "trial_id", "file_name", "line", "col"])
-    function_df = pd.DataFrame(
-        columns=["benchmark", "fuzzer", "trial_id", "function_name", "hits"])
-    benchmark_name_df = pd.DataFrame(columns=['benchmark_id', 'benchmark'])
-    fuzzer_name_df = pd.DataFrame(columns=['fuzzer_id', 'fuzzer'])
-    filename_df = pd.DataFrame(columns=['file_id', 'file_name'])
-    function_name_df = pd.DataFrame(columns=['function_id', 'function_name'])
+    for fuzzer_id in list(df_container.function_df['fuzzer_id'].unique()):
+        assert df_container.name_df.loc[df_container.name_df['id'] ==
+                                        fuzzer_id, 'name'].iloc[0] == 'afl'
 
-    df_container = coverage_utils.DataFrameContainer(segment_df, function_df,
-                                                     benchmark_name_df,
-                                                     fuzzer_name_df,
-                                                     filename_df,
-                                                     function_name_df)
+    for benchmark_id in list(df_container.segment_df['benchmark_id'].unique()):
+        assert df_container.name_df.loc[df_container.name_df['id'] ==
+                                        benchmark_id,
+                                        'name'].iloc[0] == 'freetype2'
 
-    coverage_utils.extract_covered_segments_and_functions_from_summary_json(
-        summary_json_file, benchmark, fuzzer, trial_id, df_container)
-    coverage_utils.prepare_name_dataframes(df_container)
-    coverage_utils.replace_names_with_ids_in_segment_and_function_dataframes(
-        df_container)
+    for benchmark_id in list(df_container.segment_df['benchmark_id'].unique()):
+        assert df_container.name_df.loc[df_container.name_df['id'] ==
+                                        benchmark_id,
+                                        'name'].iloc[0] == 'freetype2'
 
-    assert len(df_container.function_name_df['function_id']) == len(
-        df_container.function_df['function_id'].unique())
-    assert len(df_container.filename_df['file_id']) == len(
-        df_container.segment_df['file_id'].unique())
-    assert len(df_container.benchmark_name_df['benchmark_id']) == len(
-        df_container.segment_df['benchmark_id'].unique())
-    assert len(df_container.benchmark_name_df['benchmark_id']) == len(
-        df_container.function_df['benchmark_id'].unique())
-    assert len(df_container.fuzzer_name_df['fuzzer_id']) == len(
-        df_container.segment_df['fuzzer_id'].unique())
-    assert len(df_container.fuzzer_name_df['fuzzer_id']) == len(
-        df_container.function_df['fuzzer_id'].unique())
+    assert len(df_container.name_df.loc[df_container.name_df['type'] ==
+                                        'fuzzer', 'id']) == 1
+    assert len(df_container.name_df.loc[df_container.name_df['type'] ==
+                                        'benchmark', 'id']) == 1
+    assert len(df_container.name_df.loc[df_container.name_df['type'] ==
+                                        'file', 'id']) == 1
+    assert len(df_container.name_df.loc[df_container.name_df['type'] ==
+                                        'function', 'id']) == 3
 
 
 def test_extract_covered_regions_from_summary_json(fs):

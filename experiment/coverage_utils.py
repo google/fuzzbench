@@ -71,8 +71,8 @@ def generate_coverage_reports(experiment_config: dict):
 
 
 class DataFrameContainer:
-    """Class used for holding DataFrames to extract experiment specific
-    information from all fuzzer, benchmark and trial combination"""
+    """ Holds experiment-specific segment and function coverage information for
+    all fuzzers, benchmarks, and trials"""
 
     def __init__(self, segment_df, function_df, name_df):
         self.segment_df = segment_df
@@ -335,8 +335,8 @@ def generate_json_summary(coverage_binary,
 
 def extract_covered_segments_and_functions_from_summary_json(
         summary_json_file, benchmark, fuzzer, trial_id, df_container):
-    """Returns the segments and the function given a coverage summary json file.
-    in two separate data frames for reports"""
+    """Extracts information on segment and function coverage on to a data frames
+    given a trial specific coverage summary json file."""
     try:
         coverage_info = get_coverage_infomation(summary_json_file)
 
@@ -368,7 +368,7 @@ def extract_covered_segments_and_functions_from_summary_json(
                     df_container.segment_df = df_container.segment_df.append(
                         series, ignore_index=True)
 
-    except Exception:  # pylint: disable=broad-except
+    except (ValueError, KeyError, IndexError):
         logger.error('Failed to extract segment or function data frame.')
 
 
@@ -398,9 +398,9 @@ def extract_covered_regions_from_summary_json(summary_json_file):
 
 
 def prepare_name_dataframes(df_container):
-    """Populates DataFrames with experiment specific benchmark names, file names
-    and function names and also replaces names with ids in segment and function
-    DataFrames"""
+    """Populates data frames with experiment specific benchmark names, file
+    names and function names and also replaces names with ids in segment and
+    function data frames for referencing"""
     try:
         # Stacking all names into a single numpy array
         names = np.hstack([
@@ -417,7 +417,7 @@ def prepare_name_dataframes(df_container):
                      len(df_container.segment_df['fuzzer'].unique()))
         types.extend(['function'] *
                      len(df_container.function_df['function_name'].unique()))
-        types.extend(['file_name'] *
+        types.extend(['file'] *
                      len(df_container.segment_df['file_name'].unique()))
 
         # Populating name DataFrame.
@@ -455,14 +455,15 @@ def prepare_name_dataframes(df_container):
             df_container.function_df, reshaped_name_df,
             ['function_name', 'function_id'])
 
-    except (ValueError, KeyError, IndexError) as error_e:  # pylint: disable=unused-variable
+    except (ValueError, KeyError, IndexError):
         logger.error('Error occurred when preparing name DataFrame.')
 
 
 def generate_segment_and_function_csv_files(df_container):
-    """generates segment, function, function_name, file_name, fuzzer and
-    benchmark csv from DataFrames. All file together contain experiment
-    specific  information"""
+    """Generates three compressed CSV files containing coverage information for
+    all fuzzers, benchmarks, and trials. To maintain a small file size, all
+    strings, such as file and function names, are referenced by id and resolved
+    in names.csv"""
     # Store merged function csv in filestore.
     csv_filestore_helper('functions.csv.gz', df_container.function_df)
 
