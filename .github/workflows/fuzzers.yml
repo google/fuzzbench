@@ -49,12 +49,12 @@ jobs:
           - aflplusplus_fast_24
           - aflplusplus_fast_48
           - aflplusplus_fast_64
+          - afl_32
           - afl_fast
-          - afl_fast_nohandicap
-          - afl_fast_nohandicap_late
-          - afl_fast_nohandicap_late_2
-          - afl_fast_nohandicap_late_s
-          - afl_fast_nohandicap_late_o
+          - afl_fast_32
+          - afl_fast_late_32
+          - afl_fast_coll_32
+          - afl_fast_nohit_32
           - afl_fast_nohandicap_late_32
 
         benchmark_type:
