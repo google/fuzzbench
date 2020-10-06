@@ -7,7 +7,7 @@ index 3819312..8a9e26e 100644
  
  ifneq "$(filter Linux GNU%,$(shell uname))" ""
 -  LDFLAGS  += -ldl
-+  LDFLAGS  += -ldl -lm
++  LDFLAGS  += -ldl  -lm
  endif
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
