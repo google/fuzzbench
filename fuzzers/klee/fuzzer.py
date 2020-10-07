@@ -27,7 +27,7 @@ LIB_BC_DIR = 'lib-bc'
 SYMBOLIC_BUFFER = 'kleeInputBuf'
 MODEL_VERSION = 'model_version'
 
-MAX_MEMORY_MB = 1024  # Avoid path explosion and memory limit on n1-standard-1.
+MAX_MEMORY_MB = 3200  # Slightly less than 3.75 GB available on n1-standard-1.
 MAX_SOLVER_TIME_SECONDS = 30
 MAX_TOTAL_TIME_DEFAULT = 82800  # Default experiment duration = 23 hrs.
 
