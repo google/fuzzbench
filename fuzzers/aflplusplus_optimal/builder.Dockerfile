@@ -32,16 +32,14 @@ RUN apt-get update && \
       llvm-11 llvm-11-dev llvm-11-runtime llvm-11-tools && \
     apt-get install -y gcc-9 g++-9
 
-# Download and compile afl++ (v2.62d).
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 45d0e4765e9b60f4107fcf87a128ce521bf2665b && \
-    unset CFLAGS && unset CXXFLAGS && \
-    AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
-    cd llvm_mode && LLVM_CONFIG=llvm-config-11 REAL_CC=gcc-9 REAL_CXX=g++-9 make && \
-    cd .. && make install && \
+    git checkout bab60b68d968492d689bc5963bd775b10c6292e8 && \
+    unset CFLAGS && unset CXXFLAGS && export LLVM_CONFIG=llvm-config-11 && \
+    export REAL_CC=gcc-9 && export REAL_CXX=g++-9 && \
+    AFL_NO_X86=1 CC=gcc-9 PYTHON_INCLUDE=/ make && make install && \
     make -C examples/aflpp_driver && \
     cp examples/aflpp_driver/libAFLDriver.a / && \
     cp -va `llvm-config-11 --libdir`/libc++* /afl/

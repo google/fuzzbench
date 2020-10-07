@@ -184,3 +184,15 @@ def get_env(env_var, default_value=None):
     except Exception:  # pylint: disable=broad-except
         # String fallback.
         return value_string
+
+
+def create_seed_file_for_empty_corpus(input_corpus):
+    """Create a fake seed file in an empty corpus, skip otherwise."""
+    if os.listdir(input_corpus):
+        # Input corpus has some files, no need of a seed file. Bail out.
+        return
+
+    print('Creating a fake seed file in empty corpus directory.')
+    default_seed_file = os.path.join(input_corpus, 'default_seed')
+    with open(default_seed_file, 'w') as file_handle:
+        file_handle.write('hi')

@@ -21,7 +21,7 @@ RUN apt-get update -y && \
     clang-6.0 llvm-6.0-dev llvm-6.0-tools \
     wget
 
-# Install KLEE dependencies
+# Install KLEE dependencies.
 RUN apt-get install -y \
     cmake-data build-essential curl libcap-dev \
     git cmake libncurses5-dev python-minimal \
@@ -31,14 +31,14 @@ RUN apt-get install -y \
 
 ENV INSTALL_DIR=/out
 
-# Install minisat
+# Install minisat.
 RUN git clone https://github.com/stp/minisat.git /minisat && \
     cd /minisat && mkdir build && cd build && \
     CXXFLAGS= cmake -DSTATIC_BINARIES=ON \
     -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR -DCMAKE_BUILD_TYPE=Release ../ && \
     make -j`nproc` && make install
 
-# Install STP solver
+# Install STP solver.
 RUN git clone https://github.com/stp/stp.git /stp && \
     cd /stp && git checkout tags/2.1.2 && \
     mkdir build && cd build && \
@@ -49,7 +49,7 @@ RUN git clone https://github.com/stp/stp.git /stp && \
     -DCMAKE_INSTALL_PREFIX=/user/local/ -DCMAKE_BUILD_TYPE=Release .. && \
     make -j`nproc` && make install
 
-RUN git clone https://github.com/lmrs2/klee-uclibc.git /klee-uclibc && \
+RUN git clone https://github.com/klee/klee-uclibc.git /klee-uclibc && \
     cd /klee-uclibc && \
     CC=`which clang-6.0` CXX=`which clang++-6.0` \
     ./configure --make-llvm-lib --with-llvm-config=`which llvm-config-6.0` && \
@@ -58,9 +58,12 @@ RUN git clone https://github.com/lmrs2/klee-uclibc.git /klee-uclibc && \
 
 # Install KLEE. Use my personal repo containing seed conversion scripts for now.
 # TODO: Include seed conversion scripts in fuzzbench repo.
+# Note: don't use the 'debug' branch because it has checks for non-initialized values
+# that need to be fixed for certain syscalls.
+# When we use it, be sure to also use klee-uclibc from https://github.com/lmrs2/klee-uclibc.git.
 RUN git clone https://github.com/lmrs2/klee.git /klee && \
     cd /klee && \
-    git checkout debug
+    wget -O tools/ktest-tool/ktest-tool https://raw.githubusercontent.com/lmrs2/klee/debug/tools/ktest-tool/ktest-tool
 
 # The libcxx build script in the KLEE repo depends on wllvm:
 # We'll upgrade pip first to avoid a build error with the old version of pip.

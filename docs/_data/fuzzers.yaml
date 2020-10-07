@@ -18,8 +18,8 @@ Fuzzers:
   year: 2020
   url: https://arxiv.org/pdf/1911.00621.pdf
   dblp: journals/corr/abs-1911-00621
-  repo:
-  dir:
+  repo: https://github.com/andreafioraldi/weizz-fuzzer
+  dir: weizz_qemu
   issue:
 
 - name: Kirenenko
@@ -39,7 +39,6 @@ Fuzzers:
   repo:
   dir: entropic
   issue:
-  experimental: true
 
 - name: Fastcgs
   desc: AFL modifications.

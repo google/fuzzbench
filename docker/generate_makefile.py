@@ -34,7 +34,8 @@ def _print_benchmark_fuzz_target(benchmarks):
 
 
 def _print_makefile_run_template(image):
-    fuzzer, benchmark = image['tag'].split('/')[1:]
+    fuzzer = image['fuzzer']
+    benchmark = image['benchmark']
 
     for run_type in ('run', 'debug', 'test-run'):
         print(('{run_type}-{fuzzer}-{benchmark}: ' +
@@ -68,10 +69,10 @@ def _print_makefile_run_template(image):
         print()
 
 
-# TODO(tanq16): Add unit test.
-def _print_rules_for_image(name, image):
+# TODO(Tanq16): Function must return a string as opposed to printing it.
+def print_rules_for_image(name, image):
     """Print makefile section for given image to stdout."""
-    if not ('base' in name or 'dispatcher' in name):
+    if not ('base-' in name or 'dispatcher-' in name):
         print('.', end='')
     print(name + ':', end='')
     if 'depends_on' in image:
@@ -81,6 +82,8 @@ def _print_rules_for_image(name, image):
             else:
                 print(' .' + dep, end='')
     print()
+    if 'base-' in name:
+        print('\tdocker pull ubuntu:xenial')
     print('\tdocker build \\')
     print('\t--tag ' + os.path.join(BASE_TAG, image['tag']) + ' \\')
     print('\t--build-arg BUILDKIT_INLINE_CACHE=1 \\')
@@ -110,7 +113,7 @@ def main():
     _print_benchmark_fuzz_target(benchmarks)
 
     for name, image in buildable_images.items():
-        _print_rules_for_image(name, image)
+        print_rules_for_image(name, image)
 
     # Print build targets for all fuzzer-benchmark pairs (including coverage).
     fuzzers.append('coverage')
@@ -134,6 +137,12 @@ def main():
         ])
         print('build-{fuzzer}-all: {all_targets}'.format(
             fuzzer=fuzzer, all_targets=all_build_targets))
+        all_test_run_targets = ' '.join([
+            'test-run-{0}-{1}'.format(fuzzer, benchmark)
+            for benchmark in benchmarks
+        ])
+        print('test-run-{fuzzer}-all: {all_targets}'.format(
+            fuzzer=fuzzer, all_targets=all_test_run_targets))
 
     # Print all targets build target.
     all_build_targets = ' '.join(

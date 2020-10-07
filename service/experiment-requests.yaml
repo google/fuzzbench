@@ -15,18 +15,284 @@
 #
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
-# NOTE: Users of the FuzzBench service should not be editing this file yet, we
-# are still testing this feature. You should request an experiment by contacting
-# us as you normally do.
 
-- experiment: 2020-08-14
+- experiment: 2020-10-05-aflfast
+  fuzzers:
+    - aflplusplus_explore
+    - aflplusplus_coe
+    - aflplusplus_coe_24
+    - aflplusplus_coe_48
+    - aflplusplus_coe_64
+    - aflplusplus_fast
+    - aflplusplus_fast_24
+    - aflplusplus_fast_48
+    - aflplusplus_fast_64
+
+- experiment: 2020-10-05
+  fuzzers:
+    - afl
+    - afl_fast
+    - afl_fast_nohandicap
+    - afl_fast_nohandicap_late
+    - afl_fast_nohandicap_late_2
+    - afl_fast_nohandicap_late_s
+    - afl_fast_nohandicap_late_o
+    - afl_fast_nohandicap_late_32
+
+- experiment: 2020-10-01-lightweizz
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_lightweizz
+    - weizz_qemu
+    - aflsmart
+    - afl
+
+- experiment: 2020-10-01
+  fuzzers:
+    - aflplusplus_coe
+    - aflplusplus_fast
+    - aflplusplus_coe_skip
+    - aflplusplus_fast_skip
+    - aflplusplus_coe_nofav
+    - aflplusplus_fast_nofav
+    - aflplusplus_coe_rareoften
+    - aflplusplus_fast_rareoften
+    - aflplusplus_coe_maxfactor
+    - aflplusplus_fast_maxfactor
+
+- experiment: 2020-09-30
+  fuzzers:
+    - aflplusplus_coe
+    - aflplusplus_fast
+    - aflplusplus_rare
+    - aflplusplus_exploit
+    - aflplusplus_explore
+    - aflplusplus_exploit_48
+    - aflplusplus_exploit_64
+    - aflplusplus_explore_min8
+    - aflplusplus_explore_min16
+    - aflplusplus_explore_pow3
+    - aflplusplus_explore_pow5
+    - libaflfuzzer
+
+- experiment: 2020-09-26
+  fuzzers:
+    - aflplusplus_exploit # baseline
+    - aflplusplus_explore # baseline
+    - aflplusplus_coe2
+    - aflplusplus_coe3
+    - aflplusplus_coe4
+    - aflplusplus_fast2
+    - aflplusplus_fast3
+    - aflplusplus_fast4
+    - aflplusplus_coe2_shorthandicap
+    - aflplusplus_fast2_shorthandicap
+
+- experiment: 2020-09-25
+  fuzzers:
+    - libaflfuzzer
+    - aflplusplus_coe3
+    - aflplusplus_exploit
+    - aflplusplus_exploit_12
+    - aflplusplus_exploit_16
+    - aflplusplus_exploit_24
+    - aflplusplus_exploit_28
+    - aflplusplus_explore_pow4
+    - aflplusplus_explore_pow5
+    - aflplusplus_explore
+    - aflplusplus_mmopt
+
+- experiment: 2020-09-24
+  fuzzers:
+    - aflcc
+    - klee
+    - aflcc_no_orig_dict
+
+- experiment: 2020-09-23
+  fuzzers:
+    - aflplusplus_coe3
+    - aflplusplus_fast3
+    - aflplusplus_coe2_fastcount
+    - aflplusplus_fast2_fastcount
+    - aflplusplus_coe2_lateboost
+    - aflplusplus_fast2_lateboost
+    - aflplusplus_coe2_shortcycles
+    - aflplusplus_fast2_shortcycles
+    - aflplusplus_coe2_shorthandicap
+    - aflplusplus_fast2_shorthandicap
+    - aflplusplus_explore_32
+    - aflplusplus_fast2
+    - aflplusplus_coe2
+
+- experiment: 2020-09-22
+  fuzzers:
+    - aflplusplus_coe
+    - aflplusplus_coe2
+    - aflplusplus_exploit
+    - aflplusplus_exploit_28
+    - aflplusplus_exploit_48
+    - aflplusplus_exploit_pow4
+    - aflplusplus_exploit_pow5
+    - aflplusplus_explore
+    - aflplusplus_mmopt
+    - aflplusplus_rare
+
+- experiment: 2020-09-20
+  fuzzers:
+    - aflplusplus_explore_32
+    - aflplusplus_fast2
+    - aflplusplus_coe2
+
+- experiment: 2020-09-19
+  fuzzers:
+    - aflplusplus
+    - afl
+    - libaflfuzzer
+    - libfuzzer
+    - lafintel
+    - aflplusplus_exploit
+    - aflplusplus_exploit_28
+    - aflplusplus_exploit_48
+    - aflplusplus_exploit_64
+    - aflplusplus_exploit_pow5
+    - aflplusplus_exploit_pow7
+    - aflplusplus_explore
+    - aflplusplus_explore2exploit
+    - aflplusplus_seek
+
+- experiment: 2020-09-18
+  fuzzers:
+    - aflsmart
+
+- experiment: 2020-09-16
+  fuzzers:
+    - aflplusplus_coe_12
+    - aflplusplus_coe_24
+    - aflplusplus_coe_32
+    - aflplusplus_exploit_12
+    - aflplusplus_exploit_24
+    - aflplusplus_exploit_32
+    - aflplusplus_explore_12
+    - aflplusplus_explore_24
+    - aflplusplus_explore_32
+    - aflplusplus_explore_min12
+    - aflplusplus_explore_min24
+    - aflplusplus_explore_pow6
+    - aflplusplus_explore_pow8
+    - aflplusplus_fast_12
+    - aflplusplus_fast_24
+    - aflplusplus_fast_32
+
+- experiment: 2020-09-15
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_no_mopt
+    - aflplusplus_coe
+    - aflplusplus_exploit
+    - aflplusplus_explore
+    - aflplusplus_fast
+    - aflplusplus_lin
+    - aflplusplus_mmopt
+    - aflplusplus_quad
+    - aflplusplus_rare
+    - aflplusplus_oldseek
+
+- experiment: 2020-09-11
+  fuzzers:
+    - libfuzzer
+    - libfuzzer_norestart
+    - entropic
+    - entropic_norestart_noexectime
+    - entropic_norestart_yesexectime
+    - aflplusplus
+    - honggfuzz
+
+- experiment: 2020-09-10
+  fuzzers:
+    - aflplusplus_same1
+    - aflplusplus_same2
+    - aflplusplus_same3
+    - aflplusplus_pre3
+    - aflplusplus_pre3_fix
+    - aflplusplus_pre3_fix_p
+    - aflplusplus_optimal_pre3
+    - aflplusplus_optimal_pre3_fix
+    - aflplusplus_optimal_pre3_fix_p
+    - aflplusplus
+    - aflplusplus_fix
+    - aflplusplus_fix_p
+    - aflplusplus_optimal
+    - aflplusplus_optimal_fix
+    - aflplusplus_optimal_fix_p
+
+- experiment: 2020-09-08
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_pre3
+    - aflplusplus_optimal
+    - aflplusplus_optimal_pre3
+    - aflplusplus_pre3_dict
+    - aflplusplus_pre3_simple
+    - aflplusplus_pre3_simple_dict
+    - aflplusplus_qemu
+    - aflplusplus_qemu5
+    - honggfuzz
+    - entropic_after
+    - entropic_keepseed
+
+- experiment: 2020-09-05
+  fuzzers:
+    - aflplusplus_optimal
+    - aflplusplus
+    - aflplusplus_pre3
+    - aflplusplus_pre3_dict
+    - aflplusplus_pre3_cull
+    - aflplusplus_nounstable
+
+- experiment: 2020-09-02
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_nounstable
+    - aflplusplus_qemu
+    - aflplusplus_qemu5
+    - aflplusplus_qemu5_cmplog
+
+- experiment: 2020-08-30
+  fuzzers:
+    - libfuzzer_before
+    - libfuzzer_after
+    - entropic_before
+    - entropic_after
+
+- experiment: 2020-08-25
+  fuzzers:
+    - libfuzzer_magicbytes
+    - entropic_magicbytes
+
+- experiment: 2020-08-21
+  fuzzers:
+    - entropic_keepseed
+
+- experiment: 2020-08-20
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_lto_fixed
+    - aflplusplus_lto
+    - aflplusplus_lto_pcguard
+    - aflplusplus_lto_cmplog
+    - aflplusplus_lto_laf
+    - aflplusplus_classic
+    - entropic_exectime
+
+- experiment: 2020-08-15
   fuzzers:
     - libfuzzer_fixcrossover
     - entropic_fixcrossover
     - libfuzzer_keepseed
     - entropic_keepseed
 
-- experiment: 2020-08-13
+- experiment: 2020-08-14
   fuzzers:
     - aflplusplus
     - aflplusplus_optimal
@@ -37,6 +303,7 @@
     - honggfuzz
     - weizz
     - aflplusplus_taint
+    - aflplusplus_laf
 
 - experiment: 2020-08-10
   fuzzers:

@@ -16,3 +16,5 @@ commit: 376d5bb323c03c0fc4af266c03abac8f067fbd0e
 commit_date: 2020-07-26 21:48:36+00:00
 fuzz_target: curl_fuzzer_http
 project: curl
+unsupported_fuzzers:
+  - klee

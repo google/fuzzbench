@@ -63,10 +63,26 @@ class Plotter:
     """Plotter that uses the same color for the same fuzzer."""
     # Tableau 20 colors.
     _COLOR_PALETTE = [
-        '#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a',
-        '#d62728', '#ff9896', '#9467bd', '#c5b0d5', '#8c564b', '#c49c94',
-        '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d',
-        '#17becf', '#9edae5'
+        '#1f77b4',
+        '#98df8a',
+        '#d62728',
+        '#c7c7c7',
+        '#ff7f0e',
+        '#ff9896',
+        '#e377c2',
+        '#dbdb8d',
+        '#2ca02c',
+        '#c5b0d5',
+        '#7f7f7f',
+        '#9edae5',
+        '#aec7e8',
+        '#8c564b',
+        '#c49c94',
+        '#bcbd22',
+        '#ffbb78',
+        '#9467bd',
+        '#f7b6d2',
+        '#17becf',
     ]
 
     def __init__(self, fuzzers, quick=False, logscale=False):
@@ -190,7 +206,7 @@ class Plotter:
                        ax=axes)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
-        axes.set(ylabel='Reached edge coverage')
+        axes.set(ylabel='Reached region coverage')
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
         axes.set_xticklabels(axes.get_xticklabels(),
                              rotation=_DEFAULT_LABEL_ROTATION,
@@ -258,7 +274,7 @@ class Plotter:
                            ax=axes)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
-        axes.set(ylabel='Reached edge coverage')
+        axes.set(ylabel='Reached region coverage')
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
         axes.set_xticklabels(axes.get_xticklabels(),
                              rotation=_DEFAULT_LABEL_ROTATION,
@@ -336,3 +352,77 @@ class Plotter:
             fig.savefig(image_path, bbox_inches="tight")
         finally:
             plt.close(fig)
+
+    def unique_coverage_ranking_plot(self,
+                                     unique_region_cov_df_combined,
+                                     axes=None):
+        """Draws unique_coverage_ranking plot. The fuzzer labels will be in
+        the order of their coverage."""
+
+        fuzzer_order = unique_region_cov_df_combined.sort_values(
+            by='unique_regions_covered', ascending=False).fuzzer
+
+        axes = sns.barplot(y='unique_regions_covered',
+                           x='fuzzer',
+                           data=unique_region_cov_df_combined,
+                           order=fuzzer_order,
+                           palette=self._fuzzer_colors,
+                           ax=axes)
+
+        for patch in axes.patches:
+            axes.annotate(
+                format(patch.get_height(), '.0f'),
+                (patch.get_x() + patch.get_width() / 2., patch.get_height()),
+                ha='center',
+                va='center',
+                xytext=(0, 10),
+                textcoords='offset points')
+
+        sns.barplot(y='aggregated_edges_covered',
+                    x='fuzzer',
+                    data=unique_region_cov_df_combined,
+                    order=fuzzer_order,
+                    facecolor=(1, 1, 1, 0),
+                    edgecolor='0.2',
+                    ax=axes)
+
+        axes.set(ylabel='Reached unique edge coverage')
+        axes.set(xlabel='Fuzzer (highest coverage on the left)')
+        axes.set_xticklabels(axes.get_xticklabels(),
+                             rotation=_DEFAULT_LABEL_ROTATION,
+                             horizontalalignment='right')
+
+        sns.despine(ax=axes, trim=True)
+
+    def write_unique_coverage_ranking_plot(self, unique_region_cov_df_combined,
+                                           image_path):
+        """Writes ranking plot for unique coverage."""
+        self._write_plot_to_image(self.unique_coverage_ranking_plot,
+                                  unique_region_cov_df_combined,
+                                  image_path,
+                                  wide=True)
+
+    def pairwise_unique_coverage_heatmap_plot(self,
+                                              pairwise_unique_coverage_table,
+                                              axes=None):
+        """Draws the heatmap to visualize the unique coverage between
+        each pair of fuzzers."""
+        heatmap_args = {
+            'annot': True,
+            'fmt': 'd',
+            'cmap': 'Blues',
+            'linewidths': 0.5
+        }
+        axes = sns.heatmap(pairwise_unique_coverage_table,
+                           ax=axes,
+                           **heatmap_args)
+        axes.set(ylabel='Not covered by')
+        axes.set(xlabel='Covered by')
+
+    def write_pairwise_unique_coverage_heatmap_plot(
+            self, pairwise_unique_coverage_table, image_path):
+        """Writes pairwise unique coverage heatmap plot."""
+        self._write_plot_to_image(self.pairwise_unique_coverage_heatmap_plot,
+                                  pairwise_unique_coverage_table,
+                                  image_path,
+                                  wide=True)

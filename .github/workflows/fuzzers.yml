@@ -15,6 +15,7 @@ jobs:
       matrix:
         fuzzer:
           - afl
+          - aflcc
           - aflfast
           - aflplusplus
           - aflplusplus_optimal
@@ -26,6 +27,7 @@ jobs:
           - lafintel
           - klee
           - libfuzzer
+          - libaflfuzzer
           - manul
           - mopt
           # Binary-only (greybox) fuzzers.
@@ -33,18 +35,27 @@ jobs:
           - afl_qemu
           - aflplusplus_qemu
           - honggfuzz_qemu
-          - weizz
+          - weizz_qemu
           # Temporary variants.
-          - libfuzzer_interceptors
-          - libfuzzer_keepseed
-          - libfuzzer_fixcrossover
-          - entropic_interceptors
-          - entropic_keepseed
-          - aflplusplus_same1
-          - aflplusplus_same2
-          - aflplusplus_same3
-          - aflplusplus_taint
-          - entropic_fixcrossover
+          - libfuzzer_magicbytes
+          - entropic_magicbytes
+          - aflplusplus_lightweizz
+          - aflplusplus_explore
+          - aflplusplus_coe
+          - aflplusplus_fast
+          - aflplusplus_coe_24
+          - aflplusplus_coe_48
+          - aflplusplus_coe_64
+          - aflplusplus_fast_24
+          - aflplusplus_fast_48
+          - aflplusplus_fast_64
+          - afl_fast
+          - afl_fast_nohandicap
+          - afl_fast_nohandicap_late
+          - afl_fast_nohandicap_late_2
+          - afl_fast_nohandicap_late_s
+          - afl_fast_nohandicap_late_o
+          - afl_fast_nohandicap_late_32
 
         benchmark_type:
           - oss-fuzz

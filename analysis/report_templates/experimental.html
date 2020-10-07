@@ -53,5 +53,12 @@
     </div>
 </div>
 
+<h5>Rank by average normalized score of unique coverage on benchmarks</h5>
+<div class="row">
+    <div class="col s5 offset-s1">
+        {{ experiment.rank_by_unique_coverage_average_normalized_score.round(2).to_frame().to_html() }}
+    </div>
+</div>
+
 {% endblock %}
 

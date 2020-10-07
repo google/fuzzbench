@@ -65,7 +65,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
         # Default is low (0.5 sec), recommended to use higher:
         # https://github.com/google/fuzzbench/issues/70#issuecomment-596060572
         '--exectimeout',
-        '2000',
+        '5000',
     ]
     if os.listdir(input_corpus):  # Important, otherwise Eclipser crashes.
         command += ['-i', input_corpus]

@@ -40,3 +40,19 @@ def test_get_runner_image_url(benchmark, expected_url, oss_fuzz_benchmark):
     assert benchmark_utils.get_runner_image_url('experiment', benchmark,
                                                 'fuzzer',
                                                 DOCKER_REGISTRY) == expected_url
+
+
+@pytest.mark.parametrize(('benchmark_name',), [
+    ('libPNG',),
+    ('libpng!',),
+])
+def test_validate_name_invalid(benchmark_name):
+    """Tests that validate_name returns False for am invalid benchmark name."""
+    assert not benchmark_utils.validate_name(benchmark_name)
+
+
+@pytest.mark.parametrize(('benchmark_name',), [('libpng',), ('libpng_1',),
+                                               ('libpng-1',), ('libpng.1',)])
+def test_validate_name_valid(benchmark_name):
+    """Tests that validate_name returns True for a valid benchmark name."""
+    assert benchmark_utils.validate_name(benchmark_name)

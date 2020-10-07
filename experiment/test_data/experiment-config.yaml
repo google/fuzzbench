@@ -21,8 +21,13 @@ cloud_compute_zone: us-central1-a
 experiment_filestore: gs://experiment-data
 report_filestore: gs://web-reports
 cloud_sql_instance_connection_name: "fuzzbench:us-central1:experiment-db=tcp:5432"
-benchmarks: "benchmark-1,benchmark-2"
-fuzzers: "fuzzer-a,fuzzer-b"
+benchmarks:
+  - benchmark-1
+  - benchmark-2
+fuzzers:
+  - fuzzer-a
+  - fuzzer-b
 git_hash: "git-hash"
 no_seeds: false
 no_dictionaries: false
+oss_fuzz_corpus: false

@@ -20,6 +20,7 @@ import sys
 import pandas as pd
 
 from analysis import data_utils
+from analysis import coverage_data_utils
 from analysis import experiment_results
 from analysis import plotting
 from analysis import queries
@@ -76,11 +77,12 @@ def get_arg_parser():
                         '--fuzzers',
                         nargs='*',
                         help='Names of the fuzzers to include in the report.')
-    parser.add_argument('-cov',
-                        '--coverage-report',
-                        action='store_true',
-                        default=False,
-                        help='If set, clang coverage reports are linked.')
+    parser.add_argument(
+        '-cov',
+        '--coverage-report',
+        action='store_true',
+        default=False,
+        help='If set, clang coverage reports and differential plots are shown.')
 
     # It doesn't make sense to clobber and label by experiment, since nothing
     # can get clobbered like this.
@@ -175,10 +177,20 @@ def generate_report(experiment_names,
         experiment_df = data_utils.clobber_experiments_data(
             experiment_df, experiment_names)
 
+    # Load the coverage json summary file.
+    coverage_dict = {}
+    if coverage_report:
+        coverage_dict = coverage_data_utils.get_covered_regions_dict(
+            experiment_df)
+
     fuzzer_names = experiment_df.fuzzer.unique()
     plotter = plotting.Plotter(fuzzer_names, quick, log_scale)
     experiment_ctx = experiment_results.ExperimentResults(
-        experiment_df, report_directory, plotter, experiment_name=report_name)
+        experiment_df,
+        coverage_dict,
+        report_directory,
+        plotter,
+        experiment_name=report_name)
 
     template = report_type + '.html'
     detailed_report = rendering.render_report(experiment_ctx, template,
@@ -195,21 +207,19 @@ def main():
     parser = get_arg_parser()
     args = parser.parse_args()
 
-    generate_report(
-        experiment_names=args.experiments,
-        report_directory=args.report_dir,
-        report_name=args.report_name,
-        label_by_experiment=args.label_by_experiment,
-        benchmarks=args.benchmarks,
-        fuzzers=args.fuzzers,
-        report_type=args.report_type,
-        quick=args.quick,
-        log_scale=args.log_scale,
-        from_cached_data=args.from_cached_data,
-        end_time=args.end_time,
-        merge_with_clobber=args.merge_with_clobber,
-        merge_with_clobber_nonprivate=args.merge_with_clobber_nonprivate,
-        coverage_report=args.coverage_report)
+    generate_report(experiment_names=args.experiments,
+                    report_directory=args.report_dir,
+                    report_name=args.report_name,
+                    label_by_experiment=args.label_by_experiment,
+                    benchmarks=args.benchmarks,
+                    fuzzers=args.fuzzers,
+                    report_type=args.report_type,
+                    quick=args.quick,
+                    log_scale=args.log_scale,
+                    from_cached_data=args.from_cached_data,
+                    end_time=args.end_time,
+                    merge_with_clobber=args.merge_with_clobber,
+                    coverage_report=args.coverage_report)
 
 
 if __name__ == '__main__':

@@ -17,11 +17,12 @@ import functools
 import os
 
 from analysis import benchmark_results
+from analysis import coverage_data_utils
 from analysis import data_utils
 from analysis import stat_tests
 
 
-class ExperimentResults:
+class ExperimentResults:  # pylint: disable=too-many-instance-attributes
     """Provides the main interface for getting various analysis results and
     plots about an experiment, represented by |experiment_df|.
 
@@ -31,11 +32,13 @@ class ExperimentResults:
     template, only the properties needed for the given report will be computed.
     """
 
-    def __init__(self,
-                 experiment_df,
-                 output_directory,
-                 plotter,
-                 experiment_name=None):
+    def __init__(  # pylint: disable=too-many-arguments
+            self,
+            experiment_df,
+            coverage_dict,
+            output_directory,
+            plotter,
+            experiment_name=None):
         if experiment_name:
             self.name = experiment_name
         else:
@@ -63,8 +66,24 @@ class ExperimentResults:
 
         self._plotter = plotter
 
+        # Dictionary to store the full coverage data.
+        self._coverage_dict = coverage_dict
+
     def _get_full_path(self, filename):
         return os.path.join(self._output_directory, filename)
+
+    def linkify_names(self, df):
+        """For any DataFrame which is indexed by fuzzer names, turns the fuzzer
+        names into links to their directory with a description on GitHub."""
+        assert df.index.name == 'fuzzer'
+
+        def description_link(commit, fuzzer):
+            return (f'<a href="https://github.com/google/fuzzbench/blob/'
+                    f'{commit}/fuzzers/{fuzzer}">{fuzzer}</a>')
+
+        commit = self.git_hash if self.git_hash else 'master'
+        df.index = df.index.map(lambda fuzzer: description_link(commit, fuzzer))
+        return df
 
     @property
     @functools.lru_cache()
@@ -87,6 +106,7 @@ class ExperimentResults:
         benchmark_names = self._experiment_df.benchmark.unique()
         return [
             benchmark_results.BenchmarkResults(name, self._experiment_df,
+                                               self._coverage_dict,
                                                self._output_directory,
                                                self._plotter)
             for name in sorted(benchmark_names)
@@ -98,6 +118,16 @@ class ExperimentResults:
         """A pivot table of medians for each fuzzer on each benchmark."""
         return data_utils.experiment_pivot_table(
             self._experiment_snapshots_df, data_utils.benchmark_rank_by_median)
+
+    @property
+    def rank_by_unique_coverage_average_normalized_score(self):
+        """Rank fuzzers using average normalized score on unique coverage across
+        benchmarks."""
+        benchmarks_unique_coverage_list = [
+            benchmark.unique_region_cov_df for benchmark in self.benchmarks
+        ]
+        return coverage_data_utils.rank_by_average_normalized_score(
+            benchmarks_unique_coverage_list)
 
     @property
     def rank_by_average_rank_and_average_rank(self):

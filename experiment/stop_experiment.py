@@ -18,6 +18,7 @@ import sys
 
 from common import experiment_utils
 from common import logs
+from common import gce
 from common import gcloud
 from common import yaml_utils
 
@@ -27,18 +28,17 @@ logger = logs.Logger('stop_experiment')  # pylint: disable=invalid-name
 def stop_experiment(experiment_name, experiment_config_filename):
     """Stop the experiment specified by |experiment_config_filename|."""
     experiment_config = yaml_utils.read(experiment_config_filename)
-
     if experiment_config.get('local_experiment', False):
         raise NotImplementedError(
             'Local experiment stop logic is not implemented.')
 
-    instances = gcloud.list_instances()
-
+    cloud_project = experiment_config['cloud_project']
     cloud_compute_zone = experiment_config['cloud_compute_zone']
-    trial_prefix = 'r-' + experiment_name
-    experiment_instances = [
-        instance for instance in instances if instance.startswith(trial_prefix)
-    ]
+
+    gce.initialize()
+    instances = list(gce.get_instances(cloud_project, cloud_compute_zone))
+
+    experiment_instances = []
     dispatcher_instance = experiment_utils.get_dispatcher_instance_name(
         experiment_name)
     if dispatcher_instance not in instances:
@@ -46,6 +46,10 @@ def stop_experiment(experiment_name, experiment_config_filename):
     else:
         experiment_instances.append(dispatcher_instance)
 
+    trial_prefix = 'r-' + experiment_name
+    experiment_instances.extend([
+        instance for instance in instances if instance.startswith(trial_prefix)
+    ])
     if not experiment_instances:
         logger.warning('No experiment instances found, no work to do.')
         return True

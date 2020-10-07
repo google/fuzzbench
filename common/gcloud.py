@@ -100,12 +100,6 @@ def delete_instances(instance_names: List[str], zone: str, **kwargs) -> bool:
     return not error_occurred
 
 
-def list_instances() -> List[str]:
-    """Return list of current running instances."""
-    result = new_process.execute(['gcloud', 'compute', 'instances', 'list'])
-    return [instance.split(' ')[0] for instance in result.output.splitlines()]
-
-
 def set_default_project(cloud_project: str):
     """Set default project for future gcloud and gsutil commands."""
     return new_process.execute(

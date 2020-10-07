@@ -15,6 +15,7 @@
 """Module for measuring snapshots from trial runners."""
 
 import collections
+import gc
 import multiprocessing
 import json
 import os
@@ -73,10 +74,12 @@ def measure_main(experiment_config):
     max_total_time = experiment_config['max_total_time']
     measure_loop(experiment, max_total_time)
 
+    # Clean up resources.
+    gc.collect()
+
     # Do the final measuring and store the coverage data.
-    coverage_utils.store_coverage_data(experiment_config)
     coverage_utils.generate_coverage_reports(experiment_config)
-    coverage_utils.upload_coverage_reports_to_bucket()
+
     logger.info('Finished measuring.')
 
 
@@ -322,7 +325,8 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
 
     def __init__(self, fuzzer: str, benchmark: str, trial_num: int,
                  trial_logger: logs.Logger):
-        super().__init__(fuzzer, benchmark, trial_num, trial_logger)
+        super().__init__(fuzzer, benchmark, trial_num)
+        self.logger = trial_logger
         self.corpus_dir = os.path.join(self.measurement_dir, 'corpus')
 
         self.crashes_dir = os.path.join(self.measurement_dir, 'crashes')
@@ -366,6 +370,22 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
 
         self.UNIT_BLACKLIST[self.benchmark] = (
             self.UNIT_BLACKLIST[self.benchmark].union(set(crashing_units)))
+
+    def generate_summary(self, cycle: int, summary_only=True):
+        """Transforms the .profdata file into json form."""
+        coverage_binary = coverage_utils.get_coverage_binary(self.benchmark)
+        result = coverage_utils.generate_json_summary(coverage_binary,
+                                                      self.profdata_file,
+                                                      self.cov_summary_file,
+                                                      summary_only=summary_only)
+        if result.retcode != 0:
+            if cycle != 0:
+                self.logger.error(
+                    'Coverage summary json file generation failed for '
+                    'cycle: %d.', cycle)
+            else:
+                self.logger.error(
+                    'Coverage summary json file generation failed in the end.')
 
     def get_current_coverage(self) -> int:
         """Get the current number of lines covered."""
