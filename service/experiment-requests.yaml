@@ -21,6 +21,7 @@
     - aflplusplus
     - aflplusplus_nocycles
     - aflplusplus_memcache
+    - aflplusplus_memcache_inf
 
 - experiment: 2020-10-07
   fuzzers:

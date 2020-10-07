@@ -41,6 +41,7 @@ jobs:
           - entropic_magicbytes
           - aflplusplus_lightweizz
           - aflplusplus_memcache
+          - aflplusplus_memcache_inf
           - aflplusplus_nocycles
           - afl_32
           - afl_fast
