@@ -36,4 +36,5 @@ for f in ../brotli/dec/*.c ../brotli/enc/*.cc; do
 done
 wait
 
-$CXX $CXXFLAGS *.o $FUZZER_LIB $SRC/target.cc -I src -o $OUT/fuzz-target
+$CXX $CXXFLAGS *.o $FUZZER_LIB $SRC/target.cc -I src \
+    -o $OUT/convert_woff2ttf_fuzzer

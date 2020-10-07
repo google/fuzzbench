@@ -46,4 +46,4 @@ sed -i 's/ -Werror//g' config*  # Disable compiler warnings.
     --enable-ncp --disable-docs
 make V=1 -j $(nproc)
 
-cp tests/fuzz/ip6-send-fuzzer $OUT/fuzz-target
+cp tests/fuzz/ip6-send-fuzzer $OUT/
