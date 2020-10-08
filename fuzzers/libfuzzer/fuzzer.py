@@ -71,6 +71,6 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     if dictionary_path:
         flags.append('-dict=' + dictionary_path)
 
-    command = [target_binary, output_corpus, input_corpus] + flags
+    command = [target_binary] + flags + [output_corpus, input_corpus]
     print('[run_fuzzer] Running command: ' + ' '.join(command))
     subprocess.check_call(command)
