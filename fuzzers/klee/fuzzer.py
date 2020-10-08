@@ -22,6 +22,7 @@ import struct
 import subprocess
 import threading
 import time
+from datetime import datetime
 
 from fuzzers import utils
 
@@ -338,6 +339,7 @@ def convert_individual_ktest(ktest_tool, kfile, queue_dir, output_klee,
         shutil.copy(info_in, info_out)
     return n_crashes
 
+
 def convert_outputs(ktest_tool, output_klee, crash_dir, queue_dir, info_dir):
     """Convert output files from KLEE format to binary format."""
 
@@ -368,6 +370,25 @@ def convert_outputs(ktest_tool, output_klee, crash_dir, queue_dir, info_dir):
         print(
             '[convert_thread] Converted {converted} output files. Found {crashes} crashes'
             .format(converted=n_converted, crashes=n_crashes))
+
+
+def monitor_resource_usage():
+    """Monitor resource consumption."""
+
+    import psutil
+    print('[resource_thread] Starting resource usage monitoring...')
+
+    start = datetime.now().time()
+    while True:
+        time.sleep(60 * 5)
+        message = '{cputimes}\n{virtmem}\n{swap}'.format(
+            cputimes=psutil.cpu_times_percent(percpu=False),
+            virtmem=psutil.virtual_memory(),
+            swap=psutil.swap_memory())
+        now = datetime.now().time()
+        print('[resource_thread] Resource usage after {time}:\n{message}',
+              time=now - start,
+              message=message)
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
@@ -404,6 +425,10 @@ def fuzz(input_corpus, output_corpus, target_binary):
                                          args=(ktest_tool, output_klee,
                                                crash_dir, queue_dir, info_dir))
     converting_thread.start()
+
+    print('[run_fuzzer] Starting resource monitoring thread')
+    monitoring_thread = threading.Thread(target=monitor_resource_usage)
+    monitoring_thread.start()
 
     print('[run_fuzzer] Running target with klee')
 
@@ -453,4 +478,3 @@ def fuzz(input_corpus, output_corpus, target_binary):
     done_file = os.path.join(queue_dir, 'DONE')
     with open(done_file, 'w') as file:
         file.write("DONE")
-
