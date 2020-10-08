@@ -7,12 +7,12 @@ index 3819312..8a9e26e 100644
  
  ifneq "$(filter Linux GNU%,$(shell uname))" ""
 -  LDFLAGS  += -ldl
-+  LDFLAGS  += -ldl  -lm
++  LDFLAGS  += -ldl -lm
  endif
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index fc9d210..e1c3ca2 100644
+index fc9d210..31b73a4 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -56,17 +56,7 @@ index fc9d210..e1c3ca2 100644
    if (fault == crash_mode) {
  
      /* Keep only if there are new bits in the map, add to queue for
-@@ -3176,6 +3189,9 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
-       return 0;
-     }    
- 
-+    /* Only add seeds that increase coverage. */
-+    if (hnb != 2) return 0;
-+
- #ifndef SIMPLE_FILES
- 
-     fn = alloc_printf("%s/queue/id:%06u,%s", out_dir, queued_paths,
-@@ -3194,7 +3210,9 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+@@ -3194,7 +3207,9 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
        queued_with_cov++;
      }
  
@@ -77,7 +67,7 @@ index fc9d210..e1c3ca2 100644
  
      /* Try to calibrate inline; this also calls update_bitmap_score() when
         successful. */
-@@ -4800,6 +4818,42 @@ static u32 calculate_score(struct queue_entry* q) {
+@@ -4800,6 +4815,42 @@ static u32 calculate_score(struct queue_entry* q) {
  
    }
  
@@ -120,7 +110,7 @@ index fc9d210..e1c3ca2 100644
    /* Make sure that we don't go over limit. */
  
    if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
-@@ -7990,6 +8044,9 @@ int main(int argc, char** argv) {
+@@ -7990,6 +8041,9 @@ int main(int argc, char** argv) {
    setup_signal_handlers();
    check_asan_opts();
  
@@ -131,7 +121,7 @@ index fc9d210..e1c3ca2 100644
  
    if (!strcmp(in_dir, out_dir))
 diff --git a/config.h b/config.h
-index 46dd857..8aae20b 100644
+index 46dd857..b45bc71 100644
 --- a/config.h
 +++ b/config.h
 @@ -94,7 +94,7 @@
@@ -142,4 +132,18 @@ index 46dd857..8aae20b 100644
 +#define HAVOC_MAX_MULT      32
  
  /* Absolute minimum number of havoc cycles (after all adjustments): */
+ 
+@@ -132,11 +132,11 @@
+ 
+ /* Splicing cycle count: */
+ 
+-#define SPLICE_CYCLES       15
++#define SPLICE_CYCLES       5 
+ 
+ /* Nominal per-splice havoc cycle length: */
+ 
+-#define SPLICE_HAVOC        32
++#define SPLICE_HAVOC        4
+ 
+ /* Maximum offset for integer addition / subtraction stages: */
  

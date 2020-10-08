@@ -1,0 +1,534 @@
+diff --git a/Makefile b/Makefile
+index 3819312..8a9e26e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -33,7 +33,7 @@ CFLAGS     += -Wall -D_FORTIFY_SOURCE=2 -g -Wno-pointer-sign \
+ 	      -DBIN_PATH=\"$(BIN_PATH)\"
+ 
+ ifneq "$(filter Linux GNU%,$(shell uname))" ""
+-  LDFLAGS  += -ldl
++  LDFLAGS  += -ldl -lm
+ endif
+ 
+ ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
+diff --git a/afl-fuzz.c b/afl-fuzz.c
+index fc9d210..5e8ad2c 100644
+--- a/afl-fuzz.c
++++ b/afl-fuzz.c
+@@ -56,6 +56,7 @@
+ #include <termios.h>
+ #include <dlfcn.h>
+ #include <sched.h>
++#include <math.h>
+ 
+ #include <sys/wait.h>
+ #include <sys/time.h>
+@@ -87,6 +88,9 @@
+ #  define EXP_ST static
+ #endif /* ^AFL_LIB */
+ 
++#define HIT_COUNTS_SIZE (1 << 21)
++u32 *hit_counts;
++
+ /* Lots of globals, but mostly for the status UI and other things where it
+    really makes no sense to haul them around as function parameters. */
+ 
+@@ -150,11 +154,11 @@ static s32 forksrv_pid,               /* PID of the fork server           */
+ 
+ EXP_ST u8* trace_bits;                /* SHM with instrumentation bitmap  */
+ 
+-EXP_ST u8  virgin_bits[MAP_SIZE],     /* Regions yet untouched by fuzzing */
+-           virgin_tmout[MAP_SIZE],    /* Bits we haven't seen in tmouts   */
+-           virgin_crash[MAP_SIZE];    /* Bits we haven't seen in crashes  */
++EXP_ST u8  virgin_bits[MAP_SIZE >> 3],     /* Regions yet untouched by fuzzing */
++           virgin_tmout[MAP_SIZE >> 3],    /* Bits we haven't seen in tmouts   */
++           virgin_crash[MAP_SIZE >> 3];    /* Bits we haven't seen in crashes  */
+ 
+-static u8  var_bytes[MAP_SIZE];       /* Bytes that appear to be variable */
++static u8  var_bytes[MAP_SIZE >> 3];       /* Bytes that appear to be variable */
+ 
+ static s32 shm_id;                    /* ID of the SHM region             */
+ 
+@@ -872,7 +876,7 @@ EXP_ST void write_bitmap(void) {
+ 
+   if (fd < 0) PFATAL("Unable to open '%s'", fname);
+ 
+-  ck_write(fd, virgin_bits, MAP_SIZE, fname);
++  ck_write(fd, virgin_bits, MAP_SIZE >> 3, fname);
+ 
+   close(fd);
+   ck_free(fname);
+@@ -888,7 +892,7 @@ EXP_ST void read_bitmap(u8* fname) {
+ 
+   if (fd < 0) PFATAL("Unable to open '%s'", fname);
+ 
+-  ck_read(fd, virgin_bits, MAP_SIZE, fname);
++  ck_read(fd, virgin_bits, MAP_SIZE >> 3, fname);
+ 
+   close(fd);
+ 
+@@ -910,10 +914,12 @@ static inline u8 has_new_bits(u8* virgin_map) {
+   u64* current = (u64*)trace_bits;
+   u64* virgin  = (u64*)virgin_map;
+ 
+-  u32  i = (MAP_SIZE >> 3);
++  u32  i = (MAP_SIZE >> 6);
+ 
+ #else
+ 
++  echo "Not implemented"
++
+   u32* current = (u32*)trace_bits;
+   u32* virgin  = (u32*)virgin_map;
+ 
+@@ -931,32 +937,7 @@ static inline u8 has_new_bits(u8* virgin_map) {
+ 
+     if (unlikely(*current) && unlikely(*current & *virgin)) {
+ 
+-      if (likely(ret < 2)) {
+-
+-        u8* cur = (u8*)current;
+-        u8* vir = (u8*)virgin;
+-
+-        /* Looks like we have not found any new bytes yet; see if any non-zero
+-           bytes in current[] are pristine in virgin[]. */
+-
+-#ifdef WORD_SIZE_64
+-
+-        if ((cur[0] && vir[0] == 0xff) || (cur[1] && vir[1] == 0xff) ||
+-            (cur[2] && vir[2] == 0xff) || (cur[3] && vir[3] == 0xff) ||
+-            (cur[4] && vir[4] == 0xff) || (cur[5] && vir[5] == 0xff) ||
+-            (cur[6] && vir[6] == 0xff) || (cur[7] && vir[7] == 0xff)) ret = 2;
+-        else ret = 1;
+-
+-#else
+-
+-        if ((cur[0] && vir[0] == 0xff) || (cur[1] && vir[1] == 0xff) ||
+-            (cur[2] && vir[2] == 0xff) || (cur[3] && vir[3] == 0xff)) ret = 2;
+-        else ret = 1;
+-
+-#endif /* ^WORD_SIZE_64 */
+-
+-      }
+-
++      ret = 2;
+       *virgin &= ~*current;
+ 
+     }
+@@ -979,7 +960,7 @@ static inline u8 has_new_bits(u8* virgin_map) {
+ static u32 count_bits(u8* mem) {
+ 
+   u32* ptr = (u32*)mem;
+-  u32  i   = (MAP_SIZE >> 2);
++  u32  i   = (MAP_SIZE >> 5);
+   u32  ret = 0;
+ 
+   while (i--) {
+@@ -1014,7 +995,7 @@ static u32 count_bits(u8* mem) {
+ static u32 count_bytes(u8* mem) {
+ 
+   u32* ptr = (u32*)mem;
+-  u32  i   = (MAP_SIZE >> 2);
++  u32  i   = (MAP_SIZE >> 5);
+   u32  ret = 0;
+ 
+   while (i--) {
+@@ -1040,7 +1021,7 @@ static u32 count_bytes(u8* mem) {
+ static u32 count_non_255_bytes(u8* mem) {
+ 
+   u32* ptr = (u32*)mem;
+-  u32  i   = (MAP_SIZE >> 2);
++  u32  i   = (MAP_SIZE >> 5);
+   u32  ret = 0;
+ 
+   while (i--) {
+@@ -1139,41 +1120,19 @@ static void simplify_trace(u32* mem) {
+    preprocessing step for any newly acquired traces. Called on every exec,
+    must be fast. */
+ 
+-static const u8 count_class_lookup8[256] = {
++static const u8 nohits_lookup8[256] = {
+ 
+   [0]           = 0,
+-  [1]           = 1,
+-  [2]           = 2,
+-  [3]           = 4,
+-  [4 ... 7]     = 8,
+-  [8 ... 15]    = 16,
+-  [16 ... 31]   = 32,
+-  [32 ... 127]  = 64,
+-  [128 ... 255] = 128
++  [1 ... 255]   = 1
+ 
+ };
+ 
+-static u16 count_class_lookup16[65536];
+-
+-
+-EXP_ST void init_count_class16(void) {
+-
+-  u32 b1, b2;
+-
+-  for (b1 = 0; b1 < 256; b1++) 
+-    for (b2 = 0; b2 < 256; b2++)
+-      count_class_lookup16[(b1 << 8) + b2] = 
+-        (count_class_lookup8[b1] << 8) |
+-        count_class_lookup8[b2];
+-
+-}
+-
+-
+ #ifdef WORD_SIZE_64
+ 
+ static inline void classify_counts(u64* mem) {
+ 
+   u32 i = MAP_SIZE >> 3;
++  u8* dst = (u8*)mem;
+ 
+   while (i--) {
+ 
+@@ -1181,16 +1140,21 @@ static inline void classify_counts(u64* mem) {
+ 
+     if (unlikely(*mem)) {
+ 
+-      u16* mem16 = (u16*)mem;
++      u8* mem8 = (u8*)mem;
+ 
+-      mem16[0] = count_class_lookup16[mem16[0]];
+-      mem16[1] = count_class_lookup16[mem16[1]];
+-      mem16[2] = count_class_lookup16[mem16[2]];
+-      mem16[3] = count_class_lookup16[mem16[3]];
++      *dst  = nohits_lookup8[mem8[0]];
++      *dst |= nohits_lookup8[mem8[1]];
++      *dst |= nohits_lookup8[mem8[2]];
++      *dst |= nohits_lookup8[mem8[3]];
++      *dst |= nohits_lookup8[mem8[4]];
++      *dst |= nohits_lookup8[mem8[5]];
++      *dst |= nohits_lookup8[mem8[6]];
++      *dst |= nohits_lookup8[mem8[7]];
+ 
+     }
+ 
+     mem++;
++    dst++;
+ 
+   }
+ 
+@@ -1198,6 +1162,8 @@ static inline void classify_counts(u64* mem) {
+ 
+ #else
+ 
++echo "Not implemented"
++
+ static inline void classify_counts(u32* mem) {
+ 
+   u32 i = MAP_SIZE >> 2;
+@@ -1239,14 +1205,8 @@ static void remove_shm(void) {
+ 
+ static void minimize_bits(u8* dst, u8* src) {
+ 
+-  u32 i = 0;
+-
+-  while (i < MAP_SIZE) {
+-
+-    if (*(src++)) dst[i >> 3] |= 1 << (i & 7);
+-    i++;
+-
+-  }
++  // Already minimized
++  memcpy(dst, src, MAP_SIZE >> 3);
+ 
+ }
+ 
+@@ -1271,7 +1231,7 @@ static void update_bitmap_score(struct queue_entry* q) {
+ 
+   for (i = 0; i < MAP_SIZE; i++)
+ 
+-    if (trace_bits[i]) {
++    if (trace_bits[i >> 3] & (1 << (i & 7))) {
+ 
+        if (top_rated[i]) {
+ 
+@@ -1338,7 +1298,7 @@ static void cull_queue(void) {
+      If yes, and if it has a top_rated[] contender, let's use it. */
+ 
+   for (i = 0; i < MAP_SIZE; i++)
+-    if (top_rated[i] && (temp_v[i >> 3] & (1 << (i & 7)))) {
++    if (top_rated[i] && temp_v[i >> 3] & (1 << (i & 7))) {
+ 
+       u32 j = MAP_SIZE >> 3;
+ 
+@@ -1371,10 +1331,10 @@ EXP_ST void setup_shm(void) {
+ 
+   u8* shm_str;
+ 
+-  if (!in_bitmap) memset(virgin_bits, 255, MAP_SIZE);
++  if (!in_bitmap) memset(virgin_bits, 255, MAP_SIZE >> 3);
+ 
+-  memset(virgin_tmout, 255, MAP_SIZE);
+-  memset(virgin_crash, 255, MAP_SIZE);
++  memset(virgin_tmout, 255, MAP_SIZE >> 3);
++  memset(virgin_crash, 255, MAP_SIZE >> 3);
+ 
+   shm_id = shmget(IPC_PRIVATE, MAP_SIZE, IPC_CREAT | IPC_EXCL | 0600);
+ 
+@@ -1509,6 +1469,9 @@ static void read_testcases(void) {
+ 
+     add_to_queue(fn, st.st_size, passed_det);
+ 
++    u32 cksum = hash32(trace_bits, MAP_SIZE >> 3, HASH_CONST);
++    hit_counts[cksum % HIT_COUNTS_SIZE] = 1;
++
+   }
+ 
+   free(nl); /* not tracked */
+@@ -2570,7 +2533,7 @@ static void show_stats(void);
+ static u8 calibrate_case(char** argv, struct queue_entry* q, u8* use_mem,
+                          u32 handicap, u8 from_queue) {
+ 
+-  static u8 first_trace[MAP_SIZE];
++  static u8 first_trace[MAP_SIZE >> 3];
+ 
+   u8  fault = 0, new_bits = 0, var_detected = 0, hnb = 0,
+       first_run = (q->exec_cksum == 0);
+@@ -2602,7 +2565,7 @@ static u8 calibrate_case(char** argv, struct queue_entry* q, u8* use_mem,
+ 
+   if (q->exec_cksum) {
+ 
+-    memcpy(first_trace, trace_bits, MAP_SIZE);
++    memcpy(first_trace, trace_bits, MAP_SIZE >> 3);
+     hnb = has_new_bits(virgin_bits);
+     if (hnb > new_bits) new_bits = hnb;
+ 
+@@ -2630,7 +2593,7 @@ static u8 calibrate_case(char** argv, struct queue_entry* q, u8* use_mem,
+       goto abort_calibration;
+     }
+ 
+-    cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
++    cksum = hash32(trace_bits, MAP_SIZE >> 3, HASH_CONST);
+ 
+     if (q->exec_cksum != cksum) {
+ 
+@@ -2641,7 +2604,7 @@ static u8 calibrate_case(char** argv, struct queue_entry* q, u8* use_mem,
+ 
+         u32 i;
+ 
+-        for (i = 0; i < MAP_SIZE; i++) {
++        for (i = 0; i < MAP_SIZE >> 3; i++) {
+ 
+           if (!var_bytes[i] && first_trace[i] != trace_bits[i]) {
+ 
+@@ -2657,7 +2620,7 @@ static u8 calibrate_case(char** argv, struct queue_entry* q, u8* use_mem,
+       } else {
+ 
+         q->exec_cksum = cksum;
+-        memcpy(first_trace, trace_bits, MAP_SIZE);
++        memcpy(first_trace, trace_bits, MAP_SIZE >> 3);
+ 
+       }
+ 
+@@ -2726,9 +2689,9 @@ static void check_map_coverage(void) {
+ 
+   u32 i;
+ 
+-  if (count_bytes(trace_bits) < 100) return;
++  if (count_bytes(trace_bits) < 100 / 3) return;
+ 
+-  for (i = (1 << (MAP_SIZE_POW2 - 1)); i < MAP_SIZE; i++)
++  for (i = (1 << (MAP_SIZE_POW2 - 4)); i < MAP_SIZE >> 3; i++)
+     if (trace_bits[i]) return;
+ 
+   WARNF("Recompile binary with newer version of afl to improve coverage!");
+@@ -3166,6 +3129,12 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+   s32 fd;
+   u8  keeping = 0, res;
+ 
++  u32 cksum = hash32(trace_bits, MAP_SIZE >> 3, HASH_CONST);
++
++  /* Saturated increment */
++  if (hit_counts[cksum % HIT_COUNTS_SIZE] < 0xFFFFFFFF)
++    hit_counts[cksum % HIT_COUNTS_SIZE]++;
++
+   if (fault == crash_mode) {
+ 
+     /* Keep only if there are new bits in the map, add to queue for
+@@ -3194,7 +3163,9 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+       queued_with_cov++;
+     }
+ 
+-    queue_top->exec_cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
++    queue_top->exec_cksum = cksum;
++
++    hit_counts[cksum % HIT_COUNTS_SIZE] = 1;
+ 
+     /* Try to calibrate inline; this also calls update_bitmap_score() when
+        successful. */
+@@ -3984,7 +3955,7 @@ static void show_stats(void) {
+   /* Do some bitmap stats. */
+ 
+   t_bytes = count_non_255_bytes(virgin_bits);
+-  t_byte_ratio = ((double)t_bytes * 100) / MAP_SIZE;
++  t_byte_ratio = ((double)t_bytes * 100) / (MAP_SIZE >> 3);
+ 
+   if (t_bytes) 
+     stab_ratio = 100 - ((double)var_byte_count) * 100 / t_bytes;
+@@ -4024,7 +3995,7 @@ static void show_stats(void) {
+ 
+   /* Compute some mildly useful bitmap stats. */
+ 
+-  t_bits = (MAP_SIZE << 3) - count_bits(virgin_bits);
++  t_bits = MAP_SIZE - count_bits(virgin_bits);
+ 
+   /* Now, for the visuals... */
+ 
+@@ -4162,7 +4133,7 @@ static void show_stats(void) {
+   SAYF(bV bSTOP "  now processing : " cRST "%-17s " bSTG bV bSTOP, tmp);
+ 
+   sprintf(tmp, "%0.02f%% / %0.02f%%", ((double)queue_cur->bitmap_size) * 
+-          100 / MAP_SIZE, t_byte_ratio);
++          100 / (MAP_SIZE >> 3), t_byte_ratio);
+ 
+   SAYF("    map density : %s%-21s " bSTG bV "\n", t_byte_ratio > 70 ? cLRD : 
+        ((t_bytes < 200 && !dumb_mode) ? cPIN : cRST), tmp);
+@@ -4525,7 +4496,7 @@ static u32 next_p2(u32 val) {
+ static u8 trim_case(char** argv, struct queue_entry* q, u8* in_buf) {
+ 
+   static u8 tmp[64];
+-  static u8 clean_trace[MAP_SIZE];
++  static u8 clean_trace[MAP_SIZE >>  3];
+ 
+   u8  needs_write = 0, fault = 0;
+   u32 trim_exec = 0;
+@@ -4573,7 +4544,7 @@ static u8 trim_case(char** argv, struct queue_entry* q, u8* in_buf) {
+ 
+       /* Note that we don't keep track of crashes or hangs here; maybe TODO? */
+ 
+-      cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
++      cksum = hash32(trace_bits, MAP_SIZE >> 3, HASH_CONST);
+ 
+       /* If the deletion had no impact on the trace, make it permanent. This
+          isn't perfect for variable-path inputs, but we're just making a
+@@ -4596,7 +4567,7 @@ static u8 trim_case(char** argv, struct queue_entry* q, u8* in_buf) {
+         if (!needs_write) {
+ 
+           needs_write = 1;
+-          memcpy(clean_trace, trace_bits, MAP_SIZE);
++          memcpy(clean_trace, trace_bits, MAP_SIZE >> 3);
+ 
+         }
+ 
+@@ -4629,7 +4600,7 @@ static u8 trim_case(char** argv, struct queue_entry* q, u8* in_buf) {
+     ck_write(fd, in_buf, q->len, q->fname);
+     close(fd);
+ 
+-    memcpy(trace_bits, clean_trace, MAP_SIZE);
++    memcpy(trace_bits, clean_trace, MAP_SIZE >> 3);
+     update_bitmap_score(q);
+ 
+   }
+@@ -4800,6 +4771,42 @@ static u32 calculate_score(struct queue_entry* q) {
+ 
+   }
+ 
++  /* FAST */
++  switch ((u32)log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE])) {
++
++    case 0 ... 1:
++      perf_score *= 4;
++      break;
++
++    case 2 ... 3:
++      perf_score *= 3;
++      break;
++
++    case 4:
++       perf_score *= 2;
++      break;
++
++    case 5:
++      break;
++
++    case 6:
++      if (!q->favored) perf_score *= 0.8;
++      break;
++
++    case 7:
++      if (!q->favored) perf_score *= 0.6;
++      break;
++
++    default:
++      if (!q->favored) perf_score *= 0.4;
++      break;
++
++  }
++
++  if (q->favored)
++    perf_score *= 1.15;
++
++
+   /* Make sure that we don't go over limit. */
+ 
+   if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
+@@ -5217,7 +5224,7 @@ static u8 fuzz_one(char** argv) {
+ 
+     if (!dumb_mode && (stage_cur & 7) == 7) {
+ 
+-      u32 cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
++      u32 cksum = hash32(trace_bits, MAP_SIZE >> 3, HASH_CONST);
+ 
+       if (stage_cur == stage_max - 1 && cksum == prev_cksum) {
+ 
+@@ -5373,7 +5380,7 @@ static u8 fuzz_one(char** argv) {
+          without wasting time on checksums. */
+ 
+       if (!dumb_mode && len >= EFF_MIN_LEN)
+-        cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
++        cksum = hash32(trace_bits, MAP_SIZE >> 3, HASH_CONST);
+       else
+         cksum = ~queue_cur->exec_cksum;
+ 
+@@ -7990,6 +7997,9 @@ int main(int argc, char** argv) {
+   setup_signal_handlers();
+   check_asan_opts();
+ 
++  /* Dynamically allocate memory for AFLFast schedules */
++  hit_counts = ck_alloc(HIT_COUNTS_SIZE * sizeof(u32));
++
+   if (sync_id) fix_up_sync();
+ 
+   if (!strcmp(in_dir, out_dir))
+@@ -8041,7 +8051,6 @@ int main(int argc, char** argv) {
+ 
+   setup_post();
+   setup_shm();
+-  init_count_class16();
+ 
+   setup_dirs_fds();
+   read_testcases();
+diff --git a/config.h b/config.h
+index 46dd857..c6fe455 100644
+--- a/config.h
++++ b/config.h
+@@ -94,7 +94,7 @@
+ /* Maximum multiplier for the above (should be a power of two, beware
+    of 32-bit int overflows): */
+ 
+-#define HAVOC_MAX_MULT      16
++#define HAVOC_MAX_MULT      32
+ 
+ /* Absolute minimum number of havoc cycles (after all adjustments): */
+ 
+@@ -132,11 +132,11 @@
+ 
+ /* Splicing cycle count: */
+ 
+-#define SPLICE_CYCLES       15
++#define SPLICE_CYCLES       6
+ 
+ /* Nominal per-splice havoc cycle length: */
+ 
+-#define SPLICE_HAVOC        32
++#define SPLICE_HAVOC        4 
+ 
+ /* Maximum offset for integer addition / subtraction stages: */
+ 
