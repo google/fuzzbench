@@ -52,6 +52,8 @@ jobs:
           - afl_fast_spliceless
           - afl_fast_spliceless2
           - afl_fast_nohandicap_late_32
+          - afl_nohandicap_spliceless
+          - afl_nohandicap_spliceless2
 
         benchmark_type:
           - oss-fuzz

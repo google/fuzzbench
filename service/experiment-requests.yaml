@@ -26,6 +26,8 @@
     - afl_fast_spliceless
     - afl_fast_spliceless2
     - afl_fast_nohits_srsly
+    - afl_nohandicap_spliceless
+    - afl_nohandicap_spliceless2
 
 - experiment: 2020-10-09
   fuzzers:
