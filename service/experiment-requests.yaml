@@ -16,9 +16,9 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
-- experiment: 2020-10-09
+
+- experiment: 2020-10-10
   fuzzers:
-<<<<<<< HEAD
     - afl
     - afl_fast_32
     - afl_fast_xxh3
@@ -26,12 +26,13 @@
     - afl_fast_spliceless
     - afl_fast_spliceless2
     - afl_fast_nohits_srsly
-=======
+
+- experiment: 2020-10-09
+  fuzzers:
     - aflplusplus
     - aflplusplus_nocycles
     - aflplusplus_memcache
     - aflplusplus_memcache_inf
->>>>>>> upstream/master
 
 - experiment: 2020-10-07
   fuzzers:
