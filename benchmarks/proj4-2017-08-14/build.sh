@@ -23,4 +23,4 @@ mkdir $OUT/seeds
 cp nad/* $OUT/seeds
 
 $CXX $CXXFLAGS -std=c++11 -I src test/fuzzers/standard_fuzzer.cpp \
-    src/.libs/libproj.a $FUZZER_LIB -o $OUT/fuzz-target -lpthread
+    src/.libs/libproj.a $FUZZER_LIB -o $OUT/standard_fuzzer -lpthread

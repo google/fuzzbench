@@ -19,6 +19,21 @@ import sys
 import subprocess
 
 
+class RepoType:
+    """Enum for various types of supported source repositories."""
+    GIT = 'git'
+    MERCURIAL = 'hg'
+
+
+def get_repo_type(repo_dir):
+    """Return repo type."""
+    if os.path.exists(os.path.join(repo_dir, '.git')):
+        return RepoType.GIT
+    if os.path.exists(os.path.join(repo_dir, '.hg')):
+        return RepoType.MERCURIAL
+    return None
+
+
 def git(git_args, repo_dir):
     """
     Execute a git command with |git_args| for the repo located in |repo_dir|.
@@ -30,18 +45,34 @@ def git(git_args, repo_dir):
     return subprocess.check_call(command, cwd=repo_dir) == 0
 
 
-def fetch_unshallow(repo_dir):
+def git_fetch_unshallow(repo_dir):
     """Gets the history of |repo_dir|."""
     shallow_file = os.path.join(repo_dir, '.git', 'shallow')
     if os.path.exists(shallow_file):
         git(['fetch', '--unshallow'], repo_dir)
 
 
+def hg(hg_args, repo_dir):  # pylint: disable=invalid-name
+    """
+    Execute a hg command with |hg_args| for the repo located in |repo_dir|.
+    Returns:
+      True if successful.
+      Raises subprocess.CalledError if unsuccessful.
+    """
+    command = ['hg'] + hg_args
+    return subprocess.check_call(command, cwd=repo_dir) == 0
+
+
 def checkout_repo_commit(commit, repo_dir):
     """Checkout |commit| in |repo_dir|."""
-    fetch_unshallow(repo_dir)
-    # TODO(metzman): Figure out if we need to run clean.
-    return git(['checkout', '-f', commit], repo_dir)
+    repo_type = get_repo_type(repo_dir)
+    if repo_type == RepoType.GIT:
+        git_fetch_unshallow(repo_dir)
+        # TODO(metzman): Figure out if we need to run clean.
+        return git(['checkout', '-f', commit], repo_dir)
+    if repo_type == RepoType.MERCURIAL:
+        return hg(['update', '-r', commit], repo_dir)
+    return False
 
 
 def main():

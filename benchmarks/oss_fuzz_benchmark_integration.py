@@ -31,7 +31,6 @@ from common import logs
 from common import new_process
 from common import yaml_utils
 
-
 OSS_FUZZ_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz')
 OSS_FUZZ_REPO_PATH = os.path.join(OSS_FUZZ_DIR, 'infra')
 
@@ -83,7 +82,8 @@ def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
         # Find an OSS-Fuzz commit that can be used to build the benchmark.
         _, oss_fuzz_commit, _ = oss_fuzz_repo_manager.git([
             'log', '--before=' + commit_date.isoformat(), '-n1', '--format=%H',
-            projects_dir])
+            projects_dir
+        ])
         oss_fuzz_commit = oss_fuzz_commit.strip()
         if not oss_fuzz_commit:
             logs.warning('No suitable earlier OSS-Fuzz commit found.')
@@ -123,7 +123,7 @@ def _load_base_builder_docker_repo():
     repo = BaseBuilderDockerRepo()
     for image in result:
         timestamp = datetime.datetime.fromisoformat(
-        image['timestamp']['datetime']).astimezone(datetime.timezone.utc)
+            image['timestamp']['datetime']).astimezone(datetime.timezone.utc)
         repo.add_digest(timestamp, image['digest'])
 
     return repo
@@ -171,11 +171,8 @@ def create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,
     yaml_utils.write(yaml_filename, config)
 
 
-def integrate_benchmark(project,
-                        fuzz_target,
-                        commit,
-                        commit_date,
-                        benchmark_name=None):
+def integrate_benchmark(project, fuzz_target, benchmark_name, commit,
+                        commit_date):
     """Copies files needed to integrate an OSS-Fuzz benchmark and creates the
     benchmark's benchmark.yaml file."""
     benchmark_name = get_benchmark_name(project, fuzz_target, benchmark_name)
@@ -198,19 +195,24 @@ def main():
                         '--project',
                         help='Project for benchmark. Example: "zlib"',
                         required=True)
-    parser.add_argument('-f',
-                        '--fuzz-target',
-                        help='Fuzz target for benchmark. Example: "zlib_uncompress_fuzzer"',
-                        required=True)
-    parser.add_argument('-n',
-                        '--benchmark-name',
-                        help='Benchmark name. Defaults to <project>_<fuzz_target>',
-                        required=False)
+    parser.add_argument(
+        '-f',
+        '--fuzz-target',
+        help='Fuzz target for benchmark. Example: "zlib_uncompress_fuzzer"',
+        required=True)
+    parser.add_argument(
+        '-n',
+        '--benchmark-name',
+        help='Benchmark name. Defaults to <project>_<fuzz_target>',
+        required=False)
     parser.add_argument('-c', '--commit', help='Project commit hash.')
-    parser.add_argument('-d', '--date', help='Date of the commit. Example: 2019-10-19T09:07:25+01:00')
+    parser.add_argument(
+        '-d',
+        '--date',
+        help='Date of the commit. Example: 2019-10-19T09:07:25+01:00')
     args = parser.parse_args()
-    integrate_benchmark(args.project, args.fuzz_target, args.commit, args.date,
-                        args.benchmark_name)
+    integrate_benchmark(args.project, args.fuzz_target, args.benchmark_name,
+                        args.commit, args.date, args.oss_fuzz_corpus)
     return 0
 
 

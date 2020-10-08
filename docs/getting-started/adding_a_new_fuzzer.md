@@ -290,16 +290,20 @@ twice a day at 6:00 AM PT (13:00 UTC) and 6:00 PM PT (01:00 UTC). If you want
 the FuzzBench service to run an experiment on specific fuzzers (such as the one
 you are adding): add an experiment request to
 [service/experiment-requests.yaml](https://github.com/google/fuzzbench/blob/master/service/experiment-requests.yaml).
-`service/experiment-requests.yaml` explains how to do this. At the end of the
-experiment, FuzzBench will generate a report comparing your fuzzer to the latest
-versions of other fuzzers, so you only need to include fuzzers that you've
-modified in a meaningful way (i.e. fuzzers whose results are likely affected by
-your
-change). This report, and a real-time report of your experiment can be viewed at
-`https://www.fuzzbench.com/reports/$YOUR_EXPERIMENT_NAME`. Note that real-time
-reports may not appear until a few hours after the experiment starts since every
-fuzzer-benchmark pair in the experiment must build in order for fuzzing to
-start.
+`service/experiment-requests.yaml` explains how to do this.
+
+At the end of the experiment, FuzzBench will generate a report comparing your
+fuzzer to the latest versions of other fuzzers, so you only need to include
+fuzzers that you've modified in a meaningful way (i.e. fuzzers whose results are
+likely affected by your change).
+
+This report, and a real-time report of your experiment can be viewed at
+`https://www.fuzzbench.com/reports/experimental/$YOUR_EXPERIMENT_NAME` (remove
+the `experimental/` directory in path if you are modifying or adding a
+[core fuzzer](https://github.com/google/fuzzbench/blob/master/service/core-fuzzers.yaml)).
+Note that real-time reports may not appear until a few hours after the
+experiment starts since every fuzzer-benchmark pair in the experiment must build
+in order for fuzzing to start.
 
 ## Submitting your integration
 

@@ -37,21 +37,19 @@ jobs:
           - honggfuzz_qemu
           - weizz_qemu
           # Temporary variants.
-          - libfuzzer_norestart
           - libfuzzer_magicbytes
           - entropic_magicbytes
-          - entropic_norestart_noexectime
-          - entropic_norestart_yesexectime
-          - aflplusplus_coe
-          - aflplusplus_coe2
-          - aflplusplus_exploit
-          - aflplusplus_exploit_28
-          - aflplusplus_exploit_48
-          - aflplusplus_exploit_pow4
-          - aflplusplus_exploit_pow5
-          - aflplusplus_explore
-          - aflplusplus_mmopt
-          - aflplusplus_rare
+          - aflplusplus_lightweizz
+          - aflplusplus_memcache
+          - aflplusplus_memcache_inf
+          - aflplusplus_nocycles
+          - afl_32
+          - afl_fast
+          - afl_fast_32
+          - afl_fast_late_32
+          - afl_fast_coll_32
+          - afl_fast_nohits_32
+          - afl_fast_nohandicap_late_32
 
         benchmark_type:
           - oss-fuzz

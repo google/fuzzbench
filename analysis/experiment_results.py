@@ -72,6 +72,19 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
     def _get_full_path(self, filename):
         return os.path.join(self._output_directory, filename)
 
+    def linkify_names(self, df):
+        """For any DataFrame which is indexed by fuzzer names, turns the fuzzer
+        names into links to their directory with a description on GitHub."""
+        assert df.index.name == 'fuzzer'
+
+        def description_link(commit, fuzzer):
+            return (f'<a href="https://github.com/google/fuzzbench/blob/'
+                    f'{commit}/fuzzers/{fuzzer}">{fuzzer}</a>')
+
+        commit = self.git_hash if self.git_hash else 'master'
+        df.index = df.index.map(lambda fuzzer: description_link(commit, fuzzer))
+        return df
+
     @property
     @functools.lru_cache()
     # TODO(lszekeres): With python3.8+, replace above two decorators with:

@@ -109,6 +109,7 @@ docker run \\
 -e MAX_TOTAL_TIME=86400 \\
 -e NO_SEEDS=False \\
 -e NO_DICTIONARIES=False \\
+-e OSS_FUZZ_CORPUS=False \\
 -e DOCKER_REGISTRY=gcr.io/fuzzbench -e CLOUD_PROJECT=fuzzbench -e CLOUD_COMPUTE_ZONE=us-central1-a \\
 -e EXPERIMENT_FILESTORE=gs://experiment-data \\
 -e REPORT_FILESTORE=gs://web-reports \\
@@ -312,7 +313,7 @@ def test_can_start_nonpreemptible_not_preemptible_runners(preempt_exp_conf):
     'preemptible_runners' is not set to True in the experiment_config."""
     trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
     trial_instance_manager.experiment_config['preemptible_runners'] = False
-    assert trial_instance_manager.can_start_nonpreemptible(100000, 10)
+    assert trial_instance_manager.can_start_nonpreemptible(100000)
 
 
 def test_can_start_nonpreemptible_above_max(preempt_exp_conf):
@@ -320,31 +321,15 @@ def test_can_start_nonpreemptible_above_max(preempt_exp_conf):
     the maximum allowed for nonpreemptibles (and 'preemptible_runners' is not
     set to True in the experiment_config)."""
     trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
-    trials_left_to_run = 1
     assert not trial_instance_manager.can_start_nonpreemptible(
-        trial_instance_manager.max_nonpreemptibles, trials_left_to_run)
-
-
-def test_can_start_nonpreemptible_too_many_left(preempt_exp_conf):
-    """Tests that we don't start using nonpreemptibles when there is so much
-    left to run that using nonpreemptibles won't salvage the experiment."""
-    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
-    trials_left_to_run = (
-        trial_instance_manager.max_nonpreemptibles /
-        trial_instance_manager.MAX_FRACTION_FOR_NONPREEMPTIBLES) + 1
-    assert not trial_instance_manager.can_start_nonpreemptible(
-        trial_instance_manager.max_nonpreemptibles - 1, trials_left_to_run)
+        trial_instance_manager.max_nonpreemptibles)
 
 
 def test_can_start_nonpreemptible(preempt_exp_conf):
     """Tests that we can start a nonpreemptible under the right conditions."""
     trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
-    trials_left_to_run = (
-        trial_instance_manager.max_nonpreemptibles /
-        trial_instance_manager.MAX_FRACTION_FOR_NONPREEMPTIBLES)
-    nonpreemptible_starts = trial_instance_manager.max_nonpreemptibles - 1
     assert trial_instance_manager.can_start_nonpreemptible(
-        nonpreemptible_starts, trials_left_to_run)
+        trial_instance_manager.max_nonpreemptibles - 1)
 
 
 def test_can_start_preemptible_not_preemptible_runners(preempt_exp_conf):
@@ -352,21 +337,13 @@ def test_can_start_preemptible_not_preemptible_runners(preempt_exp_conf):
     'preemptible_runners' is not set to True in the experiment_config."""
     trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
     trial_instance_manager.experiment_config['preemptible_runners'] = False
-    assert not trial_instance_manager.can_start_preemptible(100)
-
-
-def test_can_start_preemptible_over_max_num(preempt_exp_conf):
-    """Tests that we bound the number of preemptible trials we start."""
-    trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
-    preemptible_starts = trial_instance_manager.max_preemptibles + 1
-    assert not trial_instance_manager.can_start_preemptible(preemptible_starts)
+    assert not trial_instance_manager.can_start_preemptible()
 
 
 def test_can_start_preemptible(preempt_exp_conf, pending_trials):
     """Tests that we can start a preemptible instance when expected."""
     trial_instance_manager = get_trial_instance_manager(preempt_exp_conf)
-    preemptible_starts = 0
-    assert trial_instance_manager.can_start_preemptible(preemptible_starts)
+    assert trial_instance_manager.can_start_preemptible()
 
 
 def test_get_preempted_trials_nonpreemptible(experiment_config, db):

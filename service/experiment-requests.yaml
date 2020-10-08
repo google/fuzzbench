@@ -16,6 +16,110 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-10-09
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_nocycles
+    - aflplusplus_memcache
+    - aflplusplus_memcache_inf
+
+- experiment: 2020-10-07
+  fuzzers:
+    - afl
+    - afl_32
+    - afl_fast
+    - afl_fast_32
+    - afl_fast_late_32
+    - afl_fast_coll_32
+    - afl_fast_nohits_32
+    - afl_fast_nohandicap_late_32
+
+- experiment: 2020-10-05-aflfast
+  fuzzers:
+    - aflplusplus_explore
+    - aflplusplus_coe
+    - aflplusplus_coe_24
+    - aflplusplus_coe_48
+    - aflplusplus_coe_64
+    - aflplusplus_fast
+    - aflplusplus_fast_24
+    - aflplusplus_fast_48
+    - aflplusplus_fast_64
+
+- experiment: 2020-10-05
+  fuzzers:
+    - afl
+    - afl_fast
+    - afl_fast_nohandicap
+    - afl_fast_nohandicap_late
+    - afl_fast_nohandicap_late_2
+    - afl_fast_nohandicap_late_s
+    - afl_fast_nohandicap_late_o
+    - afl_fast_nohandicap_late_32
+
+- experiment: 2020-10-01-lightweizz
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_lightweizz
+    - weizz_qemu
+    - aflsmart
+    - afl
+
+- experiment: 2020-10-01
+  fuzzers:
+    - aflplusplus_coe
+    - aflplusplus_fast
+    - aflplusplus_coe_skip
+    - aflplusplus_fast_skip
+    - aflplusplus_coe_nofav
+    - aflplusplus_fast_nofav
+    - aflplusplus_coe_rareoften
+    - aflplusplus_fast_rareoften
+    - aflplusplus_coe_maxfactor
+    - aflplusplus_fast_maxfactor
+
+- experiment: 2020-09-30
+  fuzzers:
+    - aflplusplus_coe
+    - aflplusplus_fast
+    - aflplusplus_rare
+    - aflplusplus_exploit
+    - aflplusplus_explore
+    - aflplusplus_exploit_48
+    - aflplusplus_exploit_64
+    - aflplusplus_explore_min8
+    - aflplusplus_explore_min16
+    - aflplusplus_explore_pow3
+    - aflplusplus_explore_pow5
+    - libaflfuzzer
+
+- experiment: 2020-09-26
+  fuzzers:
+    - aflplusplus_exploit # baseline
+    - aflplusplus_explore # baseline
+    - aflplusplus_coe2
+    - aflplusplus_coe3
+    - aflplusplus_coe4
+    - aflplusplus_fast2
+    - aflplusplus_fast3
+    - aflplusplus_fast4
+    - aflplusplus_coe2_shorthandicap
+    - aflplusplus_fast2_shorthandicap
+
+- experiment: 2020-09-25
+  fuzzers:
+    - libaflfuzzer
+    - aflplusplus_coe3
+    - aflplusplus_exploit
+    - aflplusplus_exploit_12
+    - aflplusplus_exploit_16
+    - aflplusplus_exploit_24
+    - aflplusplus_exploit_28
+    - aflplusplus_explore_pow4
+    - aflplusplus_explore_pow5
+    - aflplusplus_explore
+    - aflplusplus_mmopt
+
 - experiment: 2020-09-24
   fuzzers:
     - aflcc

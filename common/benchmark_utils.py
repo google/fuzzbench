@@ -32,6 +32,11 @@ def get_fuzz_target(benchmark):
     return benchmark_config.get_config(benchmark)['fuzz_target']
 
 
+def get_project(benchmark):
+    """Returns the project of |benchmark|"""
+    return benchmark_config.get_config(benchmark)['project']
+
+
 def get_runner_image_url(experiment, benchmark, fuzzer, docker_registry):
     """Get the URL of the docker runner image for fuzzing the benchmark with
     fuzzer."""

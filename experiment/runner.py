@@ -139,8 +139,20 @@ def _unpack_clusterfuzz_seed_corpus(fuzz_target_path, corpus_directory):
     corpus directory if it exists. Copied from unpack_seed_corpus in
     engine_common.py in ClusterFuzz.
     """
-    seed_corpus_archive_path = get_clusterfuzz_seed_corpus_path(
-        fuzz_target_path)
+    oss_fuzz_corpus = environment.get('OSS_FUZZ_CORPUS')
+    if oss_fuzz_corpus:
+        benchmark = environment.get('BENCHMARK')
+        corpus_archive_filename = f'{benchmark}.zip'
+        oss_fuzz_corpus_archive_path = posixpath.join(
+            experiment_utils.get_oss_fuzz_corpora_filestore_path(),
+            corpus_archive_filename)
+        seed_corpus_archive_path = posixpath.join(FUZZ_TARGET_DIR,
+                                                  corpus_archive_filename)
+        filestore_utils.cp(oss_fuzz_corpus_archive_path,
+                           seed_corpus_archive_path)
+    else:
+        seed_corpus_archive_path = get_clusterfuzz_seed_corpus_path(
+            fuzz_target_path)
 
     if not seed_corpus_archive_path:
         return

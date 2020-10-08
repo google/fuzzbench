@@ -52,18 +52,18 @@ BENCHMARKS = [
     'curl_curl_fuzzer_http',
     'jsoncpp_jsoncpp_fuzzer',
     'libpcap_fuzz_both',
+    'libxslt_xpath',
     'mbedtls_fuzz_dtlsclient',
     'openssl_x509',
-
     # Temporarily disabled due to out-of-memory issues with clang coverage.
     # 'php_php-fuzz-parser',
     'sqlite3_ossfuzz',
     'systemd_fuzz-link-parser',
     'zlib_zlib_uncompress_fuzzer',
-    'freetype2-2017',
-    'harfbuzz-1.3.2',
 
     # Standard benchmarks.
+    'freetype2-2017',
+    'harfbuzz-1.3.2',
     'lcms-2017-03-21',
     'libjpeg-turbo-07-2017',
     'libpng-1.2.56',
