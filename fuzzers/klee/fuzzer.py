@@ -422,7 +422,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     klee_cmd = [
         klee_bin,
-        'always-output-seeds',
+        '-always-output-seeds',
         '-max-memory',
         f'{MAX_MEMORY_MB}',
         '-max-solver-time',
