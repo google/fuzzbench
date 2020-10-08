@@ -20,6 +20,8 @@ import glob
 import pathlib
 import struct
 import subprocess
+import threading
+import time
 
 from fuzzers import utils
 
@@ -240,9 +242,9 @@ def run(command, hide_output=False, ulimit_cmd=None):
                                                                 cmd=cmd))
 
 
-def covert_seed_inputs(ktest_tool, input_klee, input_corpus):
+def convert_seed_inputs(ktest_tool, input_klee, input_corpus):
     """
-    Covert seeds to a format KLEE understands.
+    Convert seeds to a format KLEE understands.
 
     Returns the number of converted seeds.
     """
@@ -336,28 +338,36 @@ def convert_individual_ktest(ktest_tool, kfile, queue_dir, output_klee,
         shutil.copy(info_in, info_out)
     return n_crashes
 
+def convert_outputs(ktest_tool, output_klee, crash_dir, queue_dir, info_dir):
+    """Convert output files from KLEE format to binary format."""
 
-def convert_ktests(ktest_tool, output_klee, crash_dir, queue_dir, info_dir):
-    """
-    Convert KLEE output to binary seeds. Return the number of crashes
-    """
+    print('[convert_thread] Waiting for ktests...')
 
-    # Convert the output .ktest to binary format
-    print('[run_fuzzer] Converting output files...')
-
+    n_ktest = 1
     n_converted = 0
     n_crashes = 0
+    while True:
+        ktest_file = os.path.join(output_klee,
+                                  'test{0:0{1}d}'.format(n_ktest, 6) + '.ktest')
+        print('[convert_thread] Waiting for file {filename}'.format(
+            filename=ktest_file))
+        while not os.path.isfile(ktest_file):
+            time.sleep(60)
+        # We have new files to convert.
+        print('[convert_thread] Starting new conversion with {filename}'.format(
+            filename=ktest_file))
+        while os.path.isfile(ktest_file):
+            n_crashes += convert_individual_ktest(ktest_tool, ktest_file,
+                                                  queue_dir, output_klee,
+                                                  crash_dir, info_dir)
+            n_ktest += 1
+            n_converted += 1
+            ktest_file = os.path.join(
+                output_klee, 'test{0:0{1}d}'.format(n_ktest, 6) + '.ktest')
 
-    files = glob.glob(os.path.join(output_klee, '*.ktest'))
-    for kfile in files:
-        n_crashes += convert_individual_ktest(ktest_tool, kfile, queue_dir,
-                                              output_klee, crash_dir, info_dir)
-        n_converted += 1
-
-    print('[run_fuzzer] Converted {converted} output files'.format(
-        converted=n_converted))
-
-    return n_crashes
+        print(
+            '[convert_thread] Converted {converted} output files. Found {crashes} crashes'
+            .format(converted=n_converted, crashes=n_crashes))
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
@@ -381,12 +391,19 @@ def fuzz(input_corpus, output_corpus, target_binary):
     emptydir(input_klee)
     rmdir(output_klee)
 
-    n_converted = covert_seed_inputs(ktest_tool, input_klee, input_corpus)
+    n_converted = convert_seed_inputs(ktest_tool, input_klee, input_corpus)
     # Run KLEE
     # Option -only-output-states-covering-new makes
     # dumping ktest files faster.
     # New coverage means a new edge.
     # See lib/Core/StatsTracker.cpp:markBranchVisited()
+
+    # Start converting thread.
+    print('[run_fuzzer] Starting converting thread')
+    converting_thread = threading.Thread(target=convert_outputs,
+                                         args=(ktest_tool, output_klee,
+                                               crash_dir, queue_dir, info_dir))
+    converting_thread.start()
 
     print('[run_fuzzer] Running target with klee')
 
@@ -405,6 +422,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     klee_cmd = [
         klee_bin,
+        'always-output-seeds',
         '-max-memory',
         f'{MAX_MEMORY_MB}',
         '-max-solver-time',
@@ -430,14 +448,9 @@ def fuzz(input_corpus, output_corpus, target_binary):
     klee_cmd += [target_binary_bc, str(size)]
     run(klee_cmd, ulimit_cmd='ulimit -s unlimited')
 
-    n_crashes = convert_ktests(ktest_tool, output_klee, crash_dir, queue_dir,
-                               info_dir)
-
-    print('[run_fuzzer] Found {crashed} crash files'.format(crashed=n_crashes))
-
     # For sanity check, we write a file to ensure
     # KLEE was able to terminate and convert all files
-    done_file = os.path.join(output_corpus, 'DONE')
+    done_file = os.path.join(queue_dir, 'DONE')
     with open(done_file, 'w') as file:
-        file.write('Converted: {converted}\nBugs: {bugs}'.format(
-            converted=n_converted, bugs=n_crashes))
+        file.write("DONE")
+
