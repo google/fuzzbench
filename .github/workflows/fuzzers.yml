@@ -46,10 +46,14 @@ jobs:
           - afl_32
           - afl_fast
           - afl_fast_32
+          - afl_fast_xxh3
           - afl_fast_late_32
-          - afl_fast_coll_32
-          - afl_fast_nohits_32
+          - afl_fast_branches
+          - afl_fast_spliceless
+          - afl_fast_spliceless2
           - afl_fast_nohandicap_late_32
+          - afl_nohandicap_spliceless
+          - afl_nohandicap_spliceless2
 
         benchmark_type:
           - oss-fuzz

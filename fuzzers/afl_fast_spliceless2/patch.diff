@@ -12,7 +12,7 @@ index 3819312..8a9e26e 100644
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index fc9d210..6c59b38 100644
+index fc9d210..451194a 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -27,8 +27,8 @@ index fc9d210..6c59b38 100644
  #  define EXP_ST static
  #endif /* ^AFL_LIB */
  
-+#define HIT_COUNTS_SIZE (1 << 24)
-+u8 *hit_counts;
++#define HIT_COUNTS_SIZE (1 << 21)
++u32 *hit_counts;
 +
  /* Lots of globals, but mostly for the status UI and other things where it
     really makes no sense to haul them around as function parameters. */
@@ -50,7 +50,7 @@ index fc9d210..6c59b38 100644
 +  u32 cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
 +
 +  /* Saturated increment */
-+  if (hit_counts[cksum % HIT_COUNTS_SIZE] < 0xFF)
++  if (hit_counts[cksum % HIT_COUNTS_SIZE] < 0xFFFFFFFF)
 +    hit_counts[cksum % HIT_COUNTS_SIZE]++;
 +
    if (fault == crash_mode) {
@@ -110,12 +110,21 @@ index fc9d210..6c59b38 100644
    /* Make sure that we don't go over limit. */
  
    if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
+@@ -6138,7 +6189,7 @@ havoc_stage:
+     sprintf(tmp, "splice %u", splice_cycle);
+     stage_name  = tmp;
+     stage_short = "splice";
+-    stage_max   = SPLICE_HAVOC * perf_score / havoc_div / 100;
++    stage_max   = SPLICE_HAVOC / havoc_div;
+ 
+   }
+ 
 @@ -7990,6 +8041,9 @@ int main(int argc, char** argv) {
    setup_signal_handlers();
    check_asan_opts();
  
 +  /* Dynamically allocate memory for AFLFast schedules */
-+  hit_counts = ck_alloc(HIT_COUNTS_SIZE * sizeof(u8));
++  hit_counts = ck_alloc(HIT_COUNTS_SIZE * sizeof(u32));
 +
    if (sync_id) fix_up_sync();
  
