@@ -14,6 +14,8 @@
 """Tests for queries.py"""
 import datetime
 
+import pytest
+
 from analysis import queries
 from database import models
 from database import utils as db_utils
@@ -60,6 +62,7 @@ def test_add_nonprivate_experiments_for_merge_with_clobber(db):
     assert results == expected_results
 
 
+@pytest.mark.skip(reason='We don\'t query stats data yet.')
 def test_get_experiment_data_fuzzer_stats(db):
     """Tests that get_experiment_data handles fuzzer_stats correctly."""
     experiment_name = 'experiment-1'
@@ -79,4 +82,3 @@ def test_get_experiment_data_fuzzer_stats(db):
                                fuzzer_stats=fuzzer_stats)
     db_utils.add_all([snapshot])
     experiment_df = queries.get_experiment_data([experiment_name])  # pylint: disable=unused-variable
-    # TODO(metzman): Finish this.
