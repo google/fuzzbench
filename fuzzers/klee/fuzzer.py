@@ -473,8 +473,18 @@ def fuzz(input_corpus, output_corpus, target_binary):
     klee_cmd += [target_binary_bc, str(size)]
     run(klee_cmd, ulimit_cmd='ulimit -s unlimited')
 
-    # For sanity check, we write a file to ensure
-    # KLEE was able to terminate and convert all files
-    done_file = os.path.join(queue_dir, 'DONE')
-    with open(done_file, 'w') as file:
-        file.write("DONE")
+    # Klee has now terminated.
+    print('[run_fuzzer] Klee has terminated.')
+
+    # Give the converting thread enough time to complete.
+    n_ktest = len(glob.glob(os.path.join(output_klee, '*.ktest')))
+    n_converted = len(os.listdir(queue_dir)) + len(os.listdir(crash_dir))
+    print(
+        '[run_fuzzer] {ktests} ktests and {converted} converted files.'.format(
+            ktests=n_ktest, converted=n_converted))
+    while n_ktest != n_converted:
+        time.sleep(30)
+        n_converted = len(os.listdir(queue_dir)) + len(os.listdir(crash_dir))
+
+    # Let's log the end.
+    print('[run_fuzzer] Main thread terminated successfully.')
