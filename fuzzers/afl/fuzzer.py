@@ -50,11 +50,13 @@ def get_stats(output_corpus, fuzzer_log):  # pylint: disable=unused-argument
     stats_file = os.path.join(output_corpus, 'fuzzer_stats')
     with open(stats_file) as file_handle:
         stats_file_lines = file_handle.read().splitlines()
-    stats_file_stats = dict(
-        stats_line.split(': ') for stats_line in stats_file_lines)
+    stats_file_dict = {}
+    for stats_line in stats_file_lines:
+        key, value = stats_line.split(': ')
+        stats_file_dict[key.strip()] = value.strip()
 
     # Report to FuzzBench the stats it accepts.
-    stats = {'execs_per_sec': float(stats_file_stats['execs_per_sec'])}
+    stats = {'execs_per_sec': float(stats_file_dict['execs_per_sec'])}
     return json.dumps(stats)
 
 
