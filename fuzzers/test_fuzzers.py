@@ -83,7 +83,8 @@ def test_fuzz_function_errors():
 
 def test_afl_get_stats(tmp_path):
     """Tests that AFL's get_stats function works."""
-    fuzzer_stats_src = os.path.join(utils.ROOT_DIR, 'test_libs', 'test_data', 'afl_fuzzer_stats')
+    fuzzer_stats_src = os.path.join(utils.ROOT_DIR, 'test_libs', 'test_data',
+                                    'afl_fuzzer_stats')
     fuzzer_stats_dst = os.path.join(tmp_path, 'fuzzer_stats')
     shutil.copy(fuzzer_stats_src, fuzzer_stats_dst)
     fuzzer_log = os.path.join(tmp_path, 'afl.log')
