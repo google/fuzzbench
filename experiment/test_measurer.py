@@ -367,7 +367,7 @@ class TestIntegrationMeasurement:
 
         os.makedirs(benchmark_cov_binary_dir)
         coverage_binary_dst_dir = os.path.join(benchmark_cov_binary_dir,
-                                               'fuzz-target')
+                                               'ftfuzzer')
 
         shutil.copy(coverage_binary_src, coverage_binary_dst_dir)
 

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-fuzz_target: fuzz-target
+fuzz_target: ip6-send-fuzzer
 project: openthread
 unsupported_fuzzers:
   - klee

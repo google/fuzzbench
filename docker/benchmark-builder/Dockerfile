@@ -46,4 +46,5 @@ COPY benchmarks/$benchmark/benchmark.yaml /
 RUN export CHECKOUT_COMMIT=$(cat /benchmark.yaml | tr -d ' ' | grep 'commit:' | cut -d ':' -f2) && \
     python3 -u /opt/fuzzbench/checkout_commit.py $CHECKOUT_COMMIT $SRC
 
-RUN PYTHONPATH=$SRC python3 -u -c "from fuzzers import utils; utils.initialize_flags(); from fuzzers.$FUZZER import fuzzer; fuzzer.build()"
+RUN export FUZZ_TARGET=$(cat /benchmark.yaml | tr -d ' ' | grep 'fuzz_target:' | cut -d ':' -f2) && \
+    PYTHONPATH=$SRC python3 -u -c "from fuzzers import utils; utils.initialize_flags(); from fuzzers.$FUZZER import fuzzer; fuzzer.build()"

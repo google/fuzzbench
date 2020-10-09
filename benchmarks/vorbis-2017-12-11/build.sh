@@ -39,6 +39,6 @@ make install
 cd ..
 
 $CXX $CXXFLAGS -std=c++11 decode_fuzzer.cc \
-  -o $OUT/fuzz-target -L"$INSTALL_DIR/lib" -I"$INSTALL_DIR/include" \
-  $FUZZER_LIB -lvorbisfile -lvorbis -logg
+    -o $OUT/decode_fuzzer -L"$INSTALL_DIR/lib" -I"$INSTALL_DIR/include" \
+    $FUZZER_LIB -lvorbisfile -lvorbis -logg
 cp -r /opt/seeds $OUT/

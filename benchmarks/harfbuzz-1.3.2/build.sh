@@ -25,4 +25,4 @@ mkdir $OUT/seeds
 cp test/shaping/fonts/sha1sum/* $OUT/seeds/
 
 $CXX $CXXFLAGS -std=c++11 -I src/ test/fuzzing/hb-fuzzer.cc \
-    src/.libs/libharfbuzz-fuzzing.a $FUZZER_LIB -o $OUT/fuzz-target
+    src/.libs/libharfbuzz-fuzzing.a $FUZZER_LIB -o $OUT/hb-shape-fuzzer
