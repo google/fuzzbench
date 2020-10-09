@@ -215,8 +215,8 @@ def _query_unmeasured_trials(experiment: str):
                               started_trials_filter, nonpreempted_trials_filter)
 
 
-def _get_unmeasured_first_snapshots(
-        experiment: str) -> List[SnapshotMeasureRequest]:
+def _get_unmeasured_first_snapshots(experiment: str
+                                   ) -> List[SnapshotMeasureRequest]:
     """Returns a list of unmeasured SnapshotMeasureRequests that are the first
     snapshot for their trial. The trials are trials in |experiment|."""
     trials_without_snapshots = _query_unmeasured_trials(experiment)
@@ -247,8 +247,8 @@ def _query_measured_latest_snapshots(experiment: str):
     return (SnapshotWithTime(*snapshot) for snapshot in snapshots_query)
 
 
-def _get_unmeasured_next_snapshots(
-        experiment: str, max_cycle: int) -> List[SnapshotMeasureRequest]:
+def _get_unmeasured_next_snapshots(experiment: str, max_cycle: int
+                                  ) -> List[SnapshotMeasureRequest]:
     """Returns a list of the latest unmeasured SnapshotMeasureRequests of
     trials in |experiment| that have been measured at least once in
     |experiment|. |max_total_time| is used to determine if a trial has another
