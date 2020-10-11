@@ -42,19 +42,10 @@ def get_coverage_info_dir():
     return os.path.join(work_dir, 'coverage')
 
 
-def generate_coverage_reports(experiment_config: dict):
+def generate_coverage_reports(experiment_config: dict, df_container):
     """Generates coverage reports for each benchmark and fuzzer."""
     logs.initialize()
     logger.info('Start generating coverage reports.')
-
-    # Create experiment-specific data frames
-    segment_df = pd.DataFrame(
-        columns=["benchmark", "fuzzer", "trial_id", "file_name", "line", "col"])
-    function_df = pd.DataFrame(
-        columns=["benchmark", "fuzzer", "trial_id", "function_name", "hits"])
-    name_df = pd.DataFrame(columns=['id', 'name', 'type'])
-
-    df_container = DataFrameContainer(segment_df, function_df, name_df)
 
     benchmarks = experiment_config['benchmarks']
     fuzzers = experiment_config['fuzzers']
@@ -62,10 +53,10 @@ def generate_coverage_reports(experiment_config: dict):
 
     for benchmark in benchmarks:
         for fuzzer in fuzzers:
-            generate_coverage_report(experiment, benchmark, fuzzer,
-                                     df_container)
+            generate_coverage_report(experiment, benchmark, fuzzer)
     # Generate experiment-specific CSV files
-    prepare_name_dataframes(df_container)
+    prepare_name_dataframe(df_container)
+    remove_redundant_duplicates(df_container)
     generate_segment_and_function_csv_files(df_container)
     logger.info('Finished generating coverage reports.')
 
@@ -80,7 +71,7 @@ class DataFrameContainer:
         self.name_df = name_df
 
 
-def generate_coverage_report(experiment, benchmark, fuzzer, df_container):
+def generate_coverage_report(experiment, benchmark, fuzzer):
     """Generates the coverage report for one pair of benchmark and fuzzer."""
     logger.info(
         ('Generating coverage report for '
@@ -94,15 +85,10 @@ def generate_coverage_report(experiment, benchmark, fuzzer, df_container):
         coverage_reporter.merge_profdata_files()
 
         # Generate the coverage summary json file based on merged profdata file
-        # and trial-specific coverage summary json file based on trial specific
-        # profdata file.
         coverage_reporter.generate_coverage_summary_json()
 
         # Generate the coverage regions json file.
         coverage_reporter.generate_coverage_regions_json()
-
-        # Store trial-specific information on segment and function coverage.
-        coverage_reporter.store_segment_and_function_data(df_container)
 
         # Generates the html reports using llvm-cov.
         coverage_reporter.generate_coverage_report()
@@ -128,17 +114,17 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                                        fuzzer)
         self.data_dir = os.path.join(coverage_info_dir, 'data', benchmark,
                                      fuzzer)
-
         benchmark_fuzzer_dir = exp_utils.get_benchmark_fuzzer_dir(
             benchmark, fuzzer)
         work_dir = exp_utils.get_work_dir()
 
-        self.benchmark_fuzzer_measurement_dir = os.path.join(
-            work_dir, 'measurement-folders', benchmark_fuzzer_dir)
+        benchmark_fuzzer_measurement_dir = os.path.join(work_dir,
+                                                        'measurement-folders',
+                                                        benchmark_fuzzer_dir)
         self.merged_profdata_file = os.path.join(
-            self.benchmark_fuzzer_measurement_dir, 'merged.profdata')
+            benchmark_fuzzer_measurement_dir, 'merged.profdata')
         self.merged_summary_json_file = os.path.join(
-            self.benchmark_fuzzer_measurement_dir, 'merged.json')
+            benchmark_fuzzer_measurement_dir, 'merged.json')
 
         coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
         self.source_files_dir = os.path.join(coverage_binaries_dir, benchmark)
@@ -167,29 +153,6 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         trial-specific coverage summary json from trial-specific profdata file.
         """
         coverage_binary = get_coverage_binary(self.benchmark)
-
-        # Generate trial-specific coverage summary json.
-        for trial_id in self.trial_ids:
-            profdata_file = TrialCoverage(self.fuzzer, self.benchmark,
-                                          trial_id).profdata_file
-            if not os.path.exists(profdata_file):
-                continue
-
-            result = generate_json_summary(
-                coverage_binary,
-                profdata_file,
-                os.path.join(self.benchmark_fuzzer_measurement_dir,
-                             'coverage_summary_{0}.json'.format(trial_id)),
-                summary_only=False)
-
-            if result.retcode != 0:
-                logger.error('Trial-specific coverage summary json file '
-                             'generation failed for:benchmark: {benchmark},'
-                             'fuzzer: {fuzzer}, trial-id: {trial_id}'.format(
-                                 fuzzer=self.fuzzer,
-                                 benchmark=self.benchmark,
-                                 trial_id=trial_id))
-
         # Generate merged coverage summary json.
         result = generate_json_summary(coverage_binary,
                                        self.merged_profdata_file,
@@ -222,19 +185,6 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         src_dir = self.report_dir
         dst_dir = exp_path.filestore(self.report_dir)
         filestore_utils.cp(src_dir, dst_dir, recursive=True, parallel=True)
-
-    def store_segment_and_function_data(self, df_container):
-        """Extracts and stores the segment and function coverage information for
-        all trials in a benchmark-fuzzer combination in experiment specific data
-        frames. """
-        for trial_id in self.trial_ids:
-            extract_covered_segments_and_functions_from_summary_json(
-                os.path.join(self.benchmark_fuzzer_measurement_dir,
-                             'coverage_summary_{0}.json'.format(trial_id)),
-                benchmark=self.benchmark,
-                fuzzer=self.fuzzer,
-                trial_id=trial_id,
-                df_container=df_container)
 
     def generate_coverage_regions_json(self):
         """Stores the coverage data in a json file."""
@@ -337,11 +287,20 @@ def generate_json_summary(coverage_binary,
     return result
 
 
-def extract_covered_segments_and_functions_from_summary_json(
-        summary_json_file, benchmark, fuzzer, trial_id, df_container):
+def extract_segments_and_functions_from_summary_json(  # pylint: disable=too-many-locals
+        summary_json_file, benchmark, fuzzer, trial_id, time_stamp):
     """Extracts and stores information on segment and function coverage for a
     trial in experiment-specific data frames given a trial-specific coverage
     summary json file."""
+
+    segment_df = pd.DataFrame(columns=[
+        "benchmark", "fuzzer", "trial_id", "file_name", "line", "col",
+        "timestamp"
+    ])
+    function_df = pd.DataFrame(columns=[
+        "benchmark", "fuzzer", "trial_id", "function_name", "hits", "timestamp"
+    ])
+
     try:
         coverage_info = get_coverage_infomation(summary_json_file)
 
@@ -349,12 +308,10 @@ def extract_covered_segments_and_functions_from_summary_json(
         for function_data in coverage_info['data'][0]['functions']:
             to_append = [
                 benchmark, fuzzer, trial_id, function_data['name'],
-                function_data['count']
+                function_data['count'], time_stamp
             ]
-            series = pd.Series(to_append,
-                               index=df_container.function_df.columns)
-            df_container.function_df = df_container.function_df.append(
-                series, ignore_index=True)
+            series = pd.Series(to_append, index=function_df.columns)
+            function_df = function_df.append(series, ignore_index=True)
 
         # Extract coverage information for functions and segments.
         line_index = 0
@@ -366,16 +323,15 @@ def extract_covered_segments_and_functions_from_summary_json(
                 if segment[hits_index] != 0:
                     to_append = [
                         benchmark, fuzzer, trial_id, filename,
-                        segment[line_index], segment[col_index]
+                        segment[line_index], segment[col_index], time_stamp
                     ]
-                    series = pd.Series(to_append,
-                                       index=df_container.segment_df.columns)
-                    df_container.segment_df = df_container.segment_df.append(
-                        series, ignore_index=True)
+                    series = pd.Series(to_append, index=segment_df.columns)
+                    segment_df = segment_df.append(series, ignore_index=True)
 
     except (ValueError, KeyError, IndexError):
         logger.error('Failed when extracting trial-specific segment and'
                      'function information from coverage summary')
+    return segment_df, function_df
 
 
 def extract_covered_regions_from_summary_json(summary_json_file):
@@ -403,7 +359,7 @@ def extract_covered_regions_from_summary_json(summary_json_file):
     return covered_regions
 
 
-def prepare_name_dataframes(df_container):
+def prepare_name_dataframe(df_container):
     """Populates name data frame with experiment specific benchmark names,
     fuzzer names, file names and function names and also replaces names with ids
     in segment and function data frames."""
@@ -463,6 +419,30 @@ def prepare_name_dataframes(df_container):
 
     except (ValueError, KeyError, IndexError):
         logger.error('Error occurred when preparing name DataFrame.')
+
+
+def remove_redundant_duplicates(df_container):
+    """Removes entries with same segment coverage information but different
+    timestamps (keeps the data with smallest timestamp (in secs)). Also removes
+    redundant rows from function data frame, if any, to reduce the size of the
+    data being exported"""
+    try:
+        # Drop duplicates but with different timestamps in segment data.
+        df_container.segment_df = df_container.segment_df.sort_values(
+            by=['timestamp'])
+        df_container.segment_df = df_container.segment_df.drop_duplicates(
+            subset=df_container.segment_df.columns.difference(['timestamp']),
+            keep="first")
+        # Drop duplicates in segments data if any.
+        df_container.segment_df = df_container.segment_df.drop_duplicates(
+            keep="first")
+        # Drop duplicates in function data with if any.
+        df_container.function_df = df_container.function_df.sort_values(
+            by=['timestamp'])
+        df_container.function_df = df_container.function_df.drop_duplicates(
+            keep="first")
+    except (ValueError, KeyError, IndexError):
+        logger.error('Error occurred when removing duplicates.')
 
 
 def generate_segment_and_function_csv_files(df_container):
