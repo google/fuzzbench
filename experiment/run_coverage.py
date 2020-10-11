@@ -25,6 +25,18 @@ from common import new_process
 
 logger = logs.Logger('run_coverage')
 
+# Time buffer for libfuzzer merge to gracefully exit.
+EXIT_BUFFER = 15
+
+# Memory limit for libfuzzer merge.
+RSS_LIMIT_MB = 2048
+
+# Per-unit processing timeout for libfuzzer merge.
+UNIT_TIMEOUT = 10
+
+# Max time to spend on libfuzzer merge.
+MAX_TOTAL_TIME = experiment_utils.get_snapshot_seconds()
+
 
 def find_crashing_units(artifacts_dir: str) -> List[str]:
     """Returns the crashing unit in coverage_binary_output."""
@@ -37,27 +49,23 @@ def find_crashing_units(artifacts_dir: str) -> List[str]:
     ]
 
 
-RSS_LIMIT_MB = 2048
-UNIT_TIMEOUT = 10
-MAX_TOTAL_TIME = experiment_utils.get_snapshot_seconds()
-
-
 def do_coverage_run(  # pylint: disable=too-many-locals
-        coverage_binary: str, new_units_dir: List[str], profraw_file: str,
-        crashes_dir: str) -> List[str]:
+        coverage_binary: str, new_units_dir: List[str],
+        profraw_file_pattern: str, crashes_dir: str) -> List[str]:
     """Does a coverage run of |coverage_binary| on |new_units_dir|. Writes
-    the result to |profraw_file|. Returns a list of crashing units."""
+    the result to |profraw_file_pattern|. Returns a list of crashing units."""
     with tempfile.TemporaryDirectory() as merge_dir:
         command = [
             coverage_binary, '-merge=1', '-dump_coverage=1',
             '-artifact_prefix=%s/' % crashes_dir,
             '-timeout=%d' % UNIT_TIMEOUT,
             '-rss_limit_mb=%d' % RSS_LIMIT_MB,
-            '-max_total_time=%d' % MAX_TOTAL_TIME, merge_dir, new_units_dir
+            '-max_total_time=%d' % (MAX_TOTAL_TIME - EXIT_BUFFER), merge_dir,
+            new_units_dir
         ]
         coverage_binary_dir = os.path.dirname(coverage_binary)
         env = os.environ.copy()
-        env['LLVM_PROFILE_FILE'] = profraw_file
+        env['LLVM_PROFILE_FILE'] = profraw_file_pattern
         result = new_process.execute(command,
                                      env=env,
                                      cwd=coverage_binary_dir,
