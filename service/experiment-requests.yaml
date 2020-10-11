@@ -17,6 +17,16 @@
 # Please add new experiment requests towards the top of this file.
 
 
+- experiment: 2020-10-12
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_nocycles
+    - aflplusplus_explore
+    - honggfuzz
+    - entropic
+    - entropic_magicbytes
+
 - experiment: 2020-10-10
   fuzzers:
     - afl

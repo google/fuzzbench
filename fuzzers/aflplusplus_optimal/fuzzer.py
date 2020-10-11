@@ -68,9 +68,24 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
         shutil.copy(copy_file, os.environ['OUT'])
 
 
-def fuzz(input_corpus, output_corpus, target_binary):
+def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-many-branches,too-many-statements
     """Run fuzzer."""
-    run_options = []
+    benchmark_name = os.environ['BENCHMARK']
+
+    if benchmark_name == 'bloaty_fuzz_target':
+        run_options = ['-Z']
+    if benchmark_name == 'lcms-2017-03-21':
+        run_options = ['-Z']
+    if benchmark_name == 'libpcap_fuzz_both':
+        run_options = ['-Z']
+    if benchmark_name == 'libxslt_xpath':
+        run_options = ['-Z']
+    if benchmark_name == 'openssl_x509':
+        run_options = ['-Z']
+    if benchmark_name == 'proj4-2017-08-14':
+        run_options = ['-Z']
+    else:
+        run_options = []
 
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
