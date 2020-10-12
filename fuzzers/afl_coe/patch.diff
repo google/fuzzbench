@@ -12,7 +12,7 @@ index 3819312..8a9e26e 100644
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index fc9d210..83a641f 100644
+index fc9d210..c5eb5c6 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -23,191 +23,129 @@ index fc9d210..83a641f 100644
  
  #include <sys/wait.h>
  #include <sys/time.h>
-@@ -152,7 +153,8 @@ EXP_ST u8* trace_bits;                /* SHM with instrumentation bitmap  */
+@@ -87,6 +88,9 @@
+ #  define EXP_ST static
+ #endif /* ^AFL_LIB */
  
- EXP_ST u8  virgin_bits[MAP_SIZE],     /* Regions yet untouched by fuzzing */
-            virgin_tmout[MAP_SIZE],    /* Bits we haven't seen in tmouts   */
--           virgin_crash[MAP_SIZE];    /* Bits we haven't seen in crashes  */
-+           virgin_crash[MAP_SIZE],    /* Bits we haven't seen in crashes  */
-+           branch_hit_counts[MAP_SIZE];
- 
- static u8  var_bytes[MAP_SIZE];       /* Bytes that appear to be variable */
- 
-@@ -171,6 +173,7 @@ EXP_ST u32 queued_paths,              /* Total number of queued testcases */
-            queued_with_cov,           /* Paths with new coverage bytes    */
-            pending_not_fuzzed,        /* Queued but not done yet          */
-            pending_favored,           /* Pending favored paths            */
-+           pending_champions,         /* Pending champion seeds           */
-            cur_skipped_paths,         /* Abandoned inputs in cur cycle    */
-            cur_depth,                 /* Current path depth               */
-            max_depth,                 /* Max path depth                   */
-@@ -250,6 +253,7 @@ struct queue_entry {
-       has_new_cov,                    /* Triggers new coverage?           */
-       var_behavior,                   /* Variable behavior?               */
-       favored,                        /* Currently favored?               */
-+      champion,                       /* Currently champion?              */
-       fs_redundant;                   /* Marked as redundant in the fs?   */
- 
-   u32 bitmap_size,                    /* Number of bits set in bitmap     */
-@@ -909,6 +913,7 @@ static inline u8 has_new_bits(u8* virgin_map) {
- 
-   u64* current = (u64*)trace_bits;
-   u64* virgin  = (u64*)virgin_map;
-+  u64* hits    = (u64*)branch_hit_counts;
- 
-   u32  i = (MAP_SIZE >> 3);
- 
-@@ -916,6 +921,7 @@ static inline u8 has_new_bits(u8* virgin_map) {
- 
-   u32* current = (u32*)trace_bits;
-   u32* virgin  = (u32*)virgin_map;
-+  u32* hits    = (u32*)branch_hit_counts;
- 
-   u32  i = (MAP_SIZE >> 2);
- 
-@@ -929,40 +935,57 @@ static inline u8 has_new_bits(u8* virgin_map) {
-        that have not been already cleared from the virgin map - since this will
-        almost always be the case. */
- 
--    if (unlikely(*current) && unlikely(*current & *virgin)) {
-+    if (unlikely(*current)) {
- 
--      if (likely(ret < 2)) {
-+      u8* cur = (u8*)current;
-+      u8* hit = (u8*)hits;
- 
--        u8* cur = (u8*)current;
--        u8* vir = (u8*)virgin;
-+  #ifdef WORD_SIZE_64
-+      for (int i = 0; i < 8; i++) {
-+  #else
-+      for (int i = 0; i < 4; i++) {
-+  #endif
- 
--        /* Looks like we have not found any new bytes yet; see if any non-zero
--           bytes in current[] are pristine in virgin[]. */
-+        if (cur[i] && hit[i] < 0xFF) hit[i]++;
- 
--#ifdef WORD_SIZE_64
-+      }
- 
--        if ((cur[0] && vir[0] == 0xff) || (cur[1] && vir[1] == 0xff) ||
--            (cur[2] && vir[2] == 0xff) || (cur[3] && vir[3] == 0xff) ||
--            (cur[4] && vir[4] == 0xff) || (cur[5] && vir[5] == 0xff) ||
--            (cur[6] && vir[6] == 0xff) || (cur[7] && vir[7] == 0xff)) ret = 2;
--        else ret = 1;
-+      if (unlikely(*current & *virgin)) {
- 
--#else
-+        if (likely(ret < 2)) {
- 
--        if ((cur[0] && vir[0] == 0xff) || (cur[1] && vir[1] == 0xff) ||
--            (cur[2] && vir[2] == 0xff) || (cur[3] && vir[3] == 0xff)) ret = 2;
--        else ret = 1;
-+          u8* vir = (u8*)virgin;
- 
--#endif /* ^WORD_SIZE_64 */
-+          /* Looks like we have not found any new bytes yet; see if any non-zero
-+             bytes in current[] are pristine in virgin[]. */
- 
--      }
-+  #ifdef WORD_SIZE_64
- 
--      *virgin &= ~*current;
-+          if ((cur[0] && vir[0] == 0xff) || (cur[1] && vir[1] == 0xff) ||
-+              (cur[2] && vir[2] == 0xff) || (cur[3] && vir[3] == 0xff) ||
-+              (cur[4] && vir[4] == 0xff) || (cur[5] && vir[5] == 0xff) ||
-+              (cur[6] && vir[6] == 0xff) || (cur[7] && vir[7] == 0xff)) ret = 2;
-+          else ret = 1;
++#define HIT_COUNTS_SIZE (1 << 21)
++u32 *hit_counts;
 +
-+  #else
-+
-+          if ((cur[0] && vir[0] == 0xff) || (cur[1] && vir[1] == 0xff) ||
-+              (cur[2] && vir[2] == 0xff) || (cur[3] && vir[3] == 0xff)) ret = 2;
-+          else ret = 1;
-+
-+  #endif /* ^WORD_SIZE_64 */
-+
-+        }
-+
-+        *virgin &= ~*current;
-+
-+      }
+ /* Lots of globals, but mostly for the status UI and other things where it
+    really makes no sense to haul them around as function parameters. */
  
+@@ -1509,6 +1513,9 @@ static void read_testcases(void) {
+ 
+     add_to_queue(fn, st.st_size, passed_det);
+ 
++    u32 cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
++    hit_counts[cksum % HIT_COUNTS_SIZE] = 1;
++
+   }
+ 
+   free(nl); /* not tracked */
+@@ -3166,6 +3173,12 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+   s32 fd;
+   u8  keeping = 0, res;
+ 
++  u32 cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
++
++  /* Saturated increment */
++  if (hit_counts[cksum % HIT_COUNTS_SIZE] < 0xFFFFFFFF)
++    hit_counts[cksum % HIT_COUNTS_SIZE]++;
++
+   if (fault == crash_mode) {
+ 
+     /* Keep only if there are new bits in the map, add to queue for
+@@ -3194,7 +3207,9 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+       queued_with_cov++;
      }
  
-     current++;
-     virgin++;
-+    hits++;
+-    queue_top->exec_cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
++    queue_top->exec_cksum = cksum;
++
++    hit_counts[cksum % HIT_COUNTS_SIZE] = 1;
+ 
+     /* Try to calibrate inline; this also calls update_bitmap_score() when
+        successful. */
+@@ -4800,6 +4815,65 @@ static u32 calculate_score(struct queue_entry* q) {
  
    }
  
-@@ -1326,11 +1349,13 @@ static void cull_queue(void) {
- 
-   queued_favored  = 0;
-   pending_favored = 0;
-+  pending_champions = 0;
- 
-   q = queue;
- 
-   while (q) {
-     q->favored = 0;
-+    q->champion = 0;
-     q = q->next;
-   }
- 
-@@ -1348,11 +1373,19 @@ static void cull_queue(void) {
-         if (top_rated[i]->trace_mini[j])
-           temp_v[j] &= ~top_rated[i]->trace_mini[j];
- 
++  /* COE */
++  u32 n_paths = 0;
++  long double fuzz_mu = 0.0;
++  struct queue_entry *queue_it = queue;
 +
-       top_rated[i]->favored = 1;
-       queued_favored++;
- 
-       if (!top_rated[i]->was_fuzzed) pending_favored++;
- 
-+      if (branch_hit_counts[i] < 0xFF) {
++  while (queue_it) {
 +
-+        top_rated[i]->champion = 1;
-+        pending_champions++;
++    fuzz_mu += log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE]);
++    n_paths ++;
 +
-+      }
++    queue_it = queue_it->next;
 +
-     }
++  }
++
++  fuzz_mu /= n_paths;
++
++  if (log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE]) > fuzz_mu) {
++
++    if (q->favored) perf_score /= 4;
++    else perf_score = 0;
++
++  } else {
++  
++    switch ((u32)log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE])) {
++  
++      case 0 ... 1:
++        perf_score *= 4;
++        break;
++  
++      case 2 ... 3:
++        perf_score *= 3;
++        break;
++  
++      case 4:
++         perf_score *= 2;
++        break;
++  
++      case 5:
++        break;
++  
++      case 6:
++        if (!q->favored) perf_score *= 0.8;
++        break;
++  
++      case 7:
++        if (!q->favored) perf_score *= 0.6;
++        break;
++  
++      default:
++        if (!q->favored) perf_score *= 0.4;
++        break;
++  
++    }
++  
++    if (q->favored)
++      perf_score *= 1.15;
++
++  }
++
+   /* Make sure that we don't go over limit. */
  
-   q = queue;
-@@ -1375,6 +1408,7 @@ EXP_ST void setup_shm(void) {
+   if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
+@@ -5141,6 +5215,11 @@ static u8 fuzz_one(char** argv) {
  
-   memset(virgin_tmout, 255, MAP_SIZE);
-   memset(virgin_crash, 255, MAP_SIZE);
-+  memset(branch_hit_counts,     0, MAP_SIZE);
+   orig_perf = perf_score = calculate_score(queue_cur);
  
-   shm_id = shmget(IPC_PRIVATE, MAP_SIZE, IPC_CREAT | IPC_EXCL | 0600);
- 
-@@ -5020,14 +5054,16 @@ static u8 fuzz_one(char** argv) {
- 
- #else
- 
--  if (pending_favored) {
-+  if (pending_favored || pending_champions) {
- 
--    /* If we have any favored, non-fuzzed new arrivals in the queue,
--       possibly skip to them at the expense of already-fuzzed or non-favored
--       cases. */
-+    /* If we have any champions or favored, non-fuzzed new arrivals in the
-+       queue, possibly skip to them at the expense of already-fuzzed or
-+       non-favored cases. */
- 
--    if ((queue_cur->was_fuzzed || !queue_cur->favored) &&
--        UR(100) < SKIP_TO_NEW_PROB) return 1;
-+    if (!queue_cur->champion &&
-+          (queue_cur->was_fuzzed || !queue_cur->favored) &&
-+          UR(100) < SKIP_TO_NEW_PROB)
-+      return 1;
- 
-   } else if (!dumb_mode && !queue_cur->favored && queued_paths > 10) {
- 
-@@ -6138,7 +6174,7 @@ havoc_stage:
++  if (perf_score == 0) {
++    cur_skipped_paths++;
++    goto abandon_entry;
++  }
++
+   /* Skip right away if -d is given, if we have done deterministic fuzzing on
+      this entry ourselves (was_fuzzed), or if it has gone through deterministic
+      testing in earlier, resumed runs (passed_det). */
+@@ -6138,7 +6217,7 @@ havoc_stage:
      sprintf(tmp, "splice %u", splice_cycle);
      stage_name  = tmp;
      stage_short = "splice";
@@ -216,6 +154,16 @@ index fc9d210..83a641f 100644
  
    }
  
+@@ -7990,6 +8069,9 @@ int main(int argc, char** argv) {
+   setup_signal_handlers();
+   check_asan_opts();
+ 
++  /* Dynamically allocate memory for AFLFast schedules */
++  hit_counts = ck_alloc(HIT_COUNTS_SIZE * sizeof(u32));
++
+   if (sync_id) fix_up_sync();
+ 
+   if (!strcmp(in_dir, out_dir))
 diff --git a/config.h b/config.h
 index 46dd857..8aae20b 100644
 --- a/config.h

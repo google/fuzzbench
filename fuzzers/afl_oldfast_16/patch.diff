@@ -1,0 +1,226 @@
+diff --git a/Makefile b/Makefile
+index 5e800db..8a9e26e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -33,7 +33,7 @@ CFLAGS     += -Wall -D_FORTIFY_SOURCE=2 -g -Wno-pointer-sign \
+ 	      -DBIN_PATH=\"$(BIN_PATH)\"
+ 
+ ifneq "$(filter Linux GNU%,$(shell uname))" ""
+-  LDFLAGS  += -ldl
++  LDFLAGS  += -ldl -lm
+ endif
+ 
+ ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
+@@ -133,7 +133,7 @@ endif
+ 	set -e; for i in afl-g++ afl-clang afl-clang++; do ln -sf afl-gcc $${DESTDIR}$(BIN_PATH)/$$i; done
+ 	install -m 755 afl-as $${DESTDIR}$(HELPER_PATH)
+ 	ln -sf afl-as $${DESTDIR}$(HELPER_PATH)/as
+-	install -m 644 docs/README docs/ChangeLog docs/*.txt $${DESTDIR}$(DOC_PATH)
++	install -m 644 README.md docs/ChangeLog docs/*.txt $${DESTDIR}$(DOC_PATH)
+ 	cp -r testcases/ $${DESTDIR}$(MISC_PATH)
+ 	cp -r dictionaries/ $${DESTDIR}$(MISC_PATH)
+ 
+diff --git a/afl-fuzz.c b/afl-fuzz.c
+index fc9d210..babc826 100644
+--- a/afl-fuzz.c
++++ b/afl-fuzz.c
+@@ -56,6 +56,7 @@
+ #include <termios.h>
+ #include <dlfcn.h>
+ #include <sched.h>
++#include <math.h>
+ 
+ #include <sys/wait.h>
+ #include <sys/time.h>
+@@ -87,6 +88,9 @@
+ #  define EXP_ST static
+ #endif /* ^AFL_LIB */
+ 
++#define HIT_COUNTS_SIZE (1 << 21)
++u32 *hit_counts;
++
+ /* Lots of globals, but mostly for the status UI and other things where it
+    really makes no sense to haul them around as function parameters. */
+ 
+@@ -253,7 +257,8 @@ struct queue_entry {
+       fs_redundant;                   /* Marked as redundant in the fs?   */
+ 
+   u32 bitmap_size,                    /* Number of bits set in bitmap     */
+-      exec_cksum;                     /* Checksum of the execution trace  */
++      exec_cksum,                     /* Checksum of the execution trace  */
++      fuzz_level;
+ 
+   u64 exec_us,                        /* Execution time (us)              */
+       handicap,                       /* Number of queue cycles behind    */
+@@ -1509,6 +1514,9 @@ static void read_testcases(void) {
+ 
+     add_to_queue(fn, st.st_size, passed_det);
+ 
++    u32 cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
++    hit_counts[cksum % HIT_COUNTS_SIZE] = 1;
++
+   }
+ 
+   free(nl); /* not tracked */
+@@ -3166,6 +3174,12 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+   s32 fd;
+   u8  keeping = 0, res;
+ 
++  u32 cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
++
++  /* Saturated increment */
++  if (hit_counts[cksum % HIT_COUNTS_SIZE] < 0xFFFFFFFF)
++    hit_counts[cksum % HIT_COUNTS_SIZE]++;
++
+   if (fault == crash_mode) {
+ 
+     /* Keep only if there are new bits in the map, add to queue for
+@@ -3194,7 +3208,9 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+       queued_with_cov++;
+     }
+ 
+-    queue_top->exec_cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
++    queue_top->exec_cksum = cksum;
++
++    hit_counts[cksum % HIT_COUNTS_SIZE] = 1;
+ 
+     /* Try to calibrate inline; this also calls update_bitmap_score() when
+        successful. */
+@@ -4800,6 +4816,10 @@ static u32 calculate_score(struct queue_entry* q) {
+ 
+   }
+ 
++  /* FAST */
++  perf_score *= 16 * (q->fuzz_level + 1) / (log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE]) + 1);
++
++
+   /* Make sure that we don't go over limit. */
+ 
+   if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
+@@ -6138,7 +6158,7 @@ havoc_stage:
+     sprintf(tmp, "splice %u", splice_cycle);
+     stage_name  = tmp;
+     stage_short = "splice";
+-    stage_max   = SPLICE_HAVOC * perf_score / havoc_div / 100;
++    stage_max   = SPLICE_HAVOC / havoc_div;
+ 
+   }
+ 
+@@ -6675,6 +6695,7 @@ abandon_entry:
+     pending_not_fuzzed--;
+     if (queue_cur->favored) pending_favored--;
+   }
++  queue_cur->fuzz_level++;
+ 
+   munmap(orig_in, queue_cur->len);
+ 
+@@ -7990,6 +8011,9 @@ int main(int argc, char** argv) {
+   setup_signal_handlers();
+   check_asan_opts();
+ 
++  /* Dynamically allocate memory for AFLFast schedules */
++  hit_counts = ck_alloc(HIT_COUNTS_SIZE * sizeof(u32));
++
+   if (sync_id) fix_up_sync();
+ 
+   if (!strcmp(in_dir, out_dir))
+diff --git a/config.h b/config.h
+index 46dd857..8aae20b 100644
+--- a/config.h
++++ b/config.h
+@@ -94,7 +94,7 @@
+ /* Maximum multiplier for the above (should be a power of two, beware
+    of 32-bit int overflows): */
+ 
+-#define HAVOC_MAX_MULT      16
++#define HAVOC_MAX_MULT      32
+ 
+ /* Absolute minimum number of havoc cycles (after all adjustments): */
+ 
+diff --git a/docs/README b/docs/README
+deleted file mode 100644
+index e69de29..0000000
+diff --git a/hash.h b/hash.h
+index e17fc8f..55e6428 100644
+--- a/hash.h
++++ b/hash.h
+@@ -36,73 +36,23 @@
+ 
+ #include "types.h"
+ 
+-#ifdef __x86_64__
++#define XXH_INLINE_ALL
++#include "xxhash.h"
++#undef XXH_INLINE_ALL
+ 
+-#define ROL64(_x, _r)  ((((u64)(_x)) << (_r)) | (((u64)(_x)) >> (64 - (_r))))
++#ifdef __x86_64__
+ 
+ static inline u32 hash32(const void* key, u32 len, u32 seed) {
+ 
+-  const u64* data = (u64*)key;
+-  u64 h1 = seed ^ len;
+-
+-  len >>= 3;
+-
+-  while (len--) {
+-
+-    u64 k1 = *data++;
+-
+-    k1 *= 0x87c37b91114253d5ULL;
+-    k1  = ROL64(k1, 31);
+-    k1 *= 0x4cf5ad432745937fULL;
+-
+-    h1 ^= k1;
+-    h1  = ROL64(h1, 27);
+-    h1  = h1 * 5 + 0x52dce729;
+-
+-  }
+-
+-  h1 ^= h1 >> 33;
+-  h1 *= 0xff51afd7ed558ccdULL;
+-  h1 ^= h1 >> 33;
+-  h1 *= 0xc4ceb9fe1a85ec53ULL;
+-  h1 ^= h1 >> 33;
+-
+-  return h1;
++  return (u32) XXH64(key, len, seed);
+ 
+ }
+ 
+ #else 
+ 
+-#define ROL32(_x, _r)  ((((u32)(_x)) << (_r)) | (((u32)(_x)) >> (32 - (_r))))
+-
+ static inline u32 hash32(const void* key, u32 len, u32 seed) {
+ 
+-  const u32* data  = (u32*)key;
+-  u32 h1 = seed ^ len;
+-
+-  len >>= 2;
+-
+-  while (len--) {
+-
+-    u32 k1 = *data++;
+-
+-    k1 *= 0xcc9e2d51;
+-    k1  = ROL32(k1, 15);
+-    k1 *= 0x1b873593;
+-
+-    h1 ^= k1;
+-    h1  = ROL32(h1, 13);
+-    h1  = h1 * 5 + 0xe6546b64;
+-
+-  }
+-
+-  h1 ^= h1 >> 16;
+-  h1 *= 0x85ebca6b;
+-  h1 ^= h1 >> 13;
+-  h1 *= 0xc2b2ae35;
+-  h1 ^= h1 >> 16;
+-
+-  return h1;
++  return (u32) XXH32(key, len, seed);
+ 
+ }
+ 
