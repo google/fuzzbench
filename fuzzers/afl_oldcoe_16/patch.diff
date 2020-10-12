@@ -21,7 +21,7 @@ index 5e800db..8a9e26e 100644
  	cp -r dictionaries/ $${DESTDIR}$(MISC_PATH)
  
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index fc9d210..b8c891b 100644
+index fc9d210..6ba9263 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -97,7 +97,7 @@ index fc9d210..b8c891b 100644
 +
 +  while (queue_it) {
 +
-+    fuzz_mu += log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE]);
++    fuzz_mu += log2(hit_counts[queue_it->exec_cksum % HIT_COUNTS_SIZE]);
 +    n_paths ++;
 +
 +    queue_it = queue_it->next;
@@ -106,17 +106,17 @@ index fc9d210..b8c891b 100644
 +
 +  fuzz_mu /= n_paths;
 +
-+  if (log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE]) > fuzz_mu) {
++  if (fuzz_mu > 1 && log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE]) > fuzz_mu) {
 +
 +    if (q->favored) perf_score /= 4;
-+   else perf_score = 0;
++    else perf_score = 0;
 +
 +  } else {
 +
 +    perf_score *= 16 * (q->fuzz_level + 1) / (log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE]) + 1);
++    if (perf_score < 10) perf_score = 10;
 +
 +  }
-+
 +
    /* Make sure that we don't go over limit. */
  

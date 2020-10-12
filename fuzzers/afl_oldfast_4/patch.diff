@@ -21,7 +21,7 @@ index 5e800db..8a9e26e 100644
  	cp -r dictionaries/ $${DESTDIR}$(MISC_PATH)
  
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index fc9d210..2c4367d 100644
+index fc9d210..3ac091d 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -86,18 +86,29 @@ index fc9d210..2c4367d 100644
  
      /* Try to calibrate inline; this also calls update_bitmap_score() when
         successful. */
-@@ -4800,6 +4816,10 @@ static u32 calculate_score(struct queue_entry* q) {
+@@ -4800,6 +4816,9 @@ static u32 calculate_score(struct queue_entry* q) {
  
    }
  
-+  /* FAST */
 +  perf_score *= 4 * (q->fuzz_level + 1) / (log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE]) + 1);
-+
++  if (perf_score < 10) perf_score = 10;
 +
    /* Make sure that we don't go over limit. */
  
    if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
-@@ -6138,7 +6158,7 @@ havoc_stage:
+@@ -5141,6 +5160,11 @@ static u8 fuzz_one(char** argv) {
+ 
+   orig_perf = perf_score = calculate_score(queue_cur);
+ 
++  if (perf_score == 0) {
++    cur_skipped_paths++;
++    goto abandon_entry;
++  }
++
+   /* Skip right away if -d is given, if we have done deterministic fuzzing on
+      this entry ourselves (was_fuzzed), or if it has gone through deterministic
+      testing in earlier, resumed runs (passed_det). */
+@@ -6138,7 +6162,7 @@ havoc_stage:
      sprintf(tmp, "splice %u", splice_cycle);
      stage_name  = tmp;
      stage_short = "splice";
@@ -106,7 +117,7 @@ index fc9d210..2c4367d 100644
  
    }
  
-@@ -6675,6 +6695,7 @@ abandon_entry:
+@@ -6675,6 +6699,7 @@ abandon_entry:
      pending_not_fuzzed--;
      if (queue_cur->favored) pending_favored--;
    }
@@ -114,7 +125,7 @@ index fc9d210..2c4367d 100644
  
    munmap(orig_in, queue_cur->len);
  
-@@ -7990,6 +8011,9 @@ int main(int argc, char** argv) {
+@@ -7990,6 +8015,9 @@ int main(int argc, char** argv) {
    setup_signal_handlers();
    check_asan_opts();
  
