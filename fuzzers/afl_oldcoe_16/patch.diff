@@ -21,7 +21,7 @@ index 5e800db..8a9e26e 100644
  	cp -r dictionaries/ $${DESTDIR}$(MISC_PATH)
  
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index fc9d210..af5a117 100644
+index fc9d210..b8c891b 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -121,7 +121,19 @@ index fc9d210..af5a117 100644
    /* Make sure that we don't go over limit. */
  
    if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
-@@ -6138,7 +6182,7 @@ havoc_stage:
+@@ -5141,6 +5185,11 @@ static u8 fuzz_one(char** argv) {
+ 
+   orig_perf = perf_score = calculate_score(queue_cur);
+ 
++  if (perf_score == 0) {
++    cur_skipped_paths++;
++    goto abandon_entry;
++  }
++
+   /* Skip right away if -d is given, if we have done deterministic fuzzing on
+      this entry ourselves (was_fuzzed), or if it has gone through deterministic
+      testing in earlier, resumed runs (passed_det). */
+@@ -6138,7 +6187,7 @@ havoc_stage:
      sprintf(tmp, "splice %u", splice_cycle);
      stage_name  = tmp;
      stage_short = "splice";
@@ -130,7 +142,7 @@ index fc9d210..af5a117 100644
  
    }
  
-@@ -6675,6 +6719,7 @@ abandon_entry:
+@@ -6675,6 +6724,7 @@ abandon_entry:
      pending_not_fuzzed--;
      if (queue_cur->favored) pending_favored--;
    }
@@ -138,7 +150,7 @@ index fc9d210..af5a117 100644
  
    munmap(orig_in, queue_cur->len);
  
-@@ -7990,6 +8035,9 @@ int main(int argc, char** argv) {
+@@ -7990,6 +8040,9 @@ int main(int argc, char** argv) {
    setup_signal_handlers();
    check_asan_opts();
  
