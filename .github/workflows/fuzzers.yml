@@ -42,7 +42,8 @@ jobs:
           - aflplusplus_lightweizz
           - aflplusplus_memcache
           - aflplusplus_memcache_inf
-          - aflplusplus_nocycles
+          - aflplusplus_coe_z
+          - aflplusplus_explore_z
           - afl_32
           - afl_fast
           - afl_fast_32

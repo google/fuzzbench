@@ -17,6 +17,15 @@
 # Please add new experiment requests towards the top of this file.
 
 
+- experiment: 2020-10-13
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_explore
+    - aflplusplus_coe_z
+    - aflplusplus_explore_z
+    - aflplusplus_memcache
+    - aflplusplus_memcache_inf
+
 - experiment: 2020-10-12
   fuzzers:
     - aflplusplus
