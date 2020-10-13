@@ -29,10 +29,10 @@ EXPERIMENT = '2020-01-01'
 EXPERIMENT_REQUESTS = [{
     'experiment': datetime.date(2020, 6, 8),
     'fuzzers': ['aflplusplus', 'libfuzzer'],
-    'description': 'Test experiment'
 }, {
     'experiment': datetime.date(2020, 6, 5),
-    'fuzzers': ['honggfuzz', 'afl']
+    'fuzzers': ['honggfuzz', 'afl'],
+    'description': 'Test experiment',
 }]
 
 
