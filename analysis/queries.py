@@ -42,7 +42,7 @@ def get_experiment_description(experiment_name):
     # results from get_experiment_data.
     return db_utils.query(Experiment.description)\
             .select_from(Experiment)\
-            .filter(Experiment.name.in_(experiment_names)).one()
+            .filter(Experiment.name == experiment_name).one()
 
 
 def add_nonprivate_experiments_for_merge_with_clobber(experiment_names):

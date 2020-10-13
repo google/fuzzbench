@@ -21,6 +21,7 @@ import collections
 import os
 import re
 import sys
+from typing import Optional
 
 from common import logs
 from common import fuzzer_utils
@@ -84,7 +85,7 @@ def _get_experiment_name(experiment_config: dict) -> str:
     return str(experiment_config['experiment'])
 
 
-def _get_description(experiment_config: dict) -> str:
+def _get_description(experiment_config: dict) -> Optional[str]:
     """Returns the description of the experiment described by
     |experiment_config| as a string."""
     return experiment_config.get('description')
