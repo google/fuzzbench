@@ -11,11 +11,6 @@ jobs:
         git fetch origin master --unshallow
         git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
 
-    - name: Setup Python environment
-      uses: actions/setup-python@v1.1.1
-      with:
-        python-version: 3.7
-
     # Copied from:
     # https://docs.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions
     - name: Cache pip
