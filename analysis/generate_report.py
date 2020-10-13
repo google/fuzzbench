@@ -157,6 +157,8 @@ def generate_report(experiment_names,
     else:
         experiment_df = queries.get_experiment_data(experiment_names)
 
+    description = queries.get_experiment_description(experiment_names[0])
+
     data_utils.validate_data(experiment_df)
 
     if benchmarks is not None:
@@ -197,7 +199,8 @@ def generate_report(experiment_names,
 
     template = report_type + '.html'
     detailed_report = rendering.render_report(experiment_ctx, template,
-                                              in_progress, coverage_report)
+                                              in_progress, coverage_report,
+                                              description)
 
     filesystem.write(os.path.join(report_directory, 'index.html'),
                      detailed_report)

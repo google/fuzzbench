@@ -36,6 +36,15 @@ def get_experiment_data(experiment_names):
     return pd.read_sql_query(snapshots_query.statement, db_utils.engine)
 
 
+def get_experiment_description(experiment_name):
+    """Get the description of the experiment named by |experiment_name|."""
+    # Do another query for the description so we don't explode the size of the
+    # results from get_experiment_data.
+    return db_utils.query(Experiment.description)\
+            .select_from(Experiment)\
+            .filter(Experiment.name.in_(experiment_names)).one()
+
+
 def add_nonprivate_experiments_for_merge_with_clobber(experiment_names):
     """Returns a new list containing experiment names preeceeded by a list of
     nonprivate experiments in the order in which they were run, such that
