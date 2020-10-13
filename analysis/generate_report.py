@@ -147,7 +147,8 @@ def generate_report(experiment_names,
             queries.add_nonprivate_experiments_for_merge_with_clobber(
                 experiment_names))
 
-    report_name = report_name or experiment_names[0]
+    main_experiment_name = experiment_names[0]
+    report_name = report_name or main_experiment_name
 
     filesystem.create_directory(report_directory)
 
@@ -157,7 +158,7 @@ def generate_report(experiment_names,
     else:
         experiment_df = queries.get_experiment_data(experiment_names)
 
-    description = queries.get_experiment_description(experiment_names[0])
+    description = queries.get_experiment_description(main_experiment_name)
 
     data_utils.validate_data(experiment_df)
 

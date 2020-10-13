@@ -28,7 +28,8 @@ EXPERIMENT = '2020-01-01'
 
 EXPERIMENT_REQUESTS = [{
     'experiment': datetime.date(2020, 6, 8),
-    'fuzzers': ['aflplusplus', 'libfuzzer']
+    'fuzzers': ['aflplusplus', 'libfuzzer'],
+    'description': 'Test experiment'
 }, {
     'experiment': datetime.date(2020, 6, 5),
     'fuzzers': ['honggfuzz', 'afl']
@@ -94,7 +95,7 @@ def test_run_requested_experiment(mocked_get_requested_experiments,
     ]
     expected_calls = [
         mock.call(expected_experiment_name, expected_config_file,
-                  expected_benchmarks, expected_fuzzers, None)
+                  expected_benchmarks, expected_fuzzers, 'Test experiment')
     ]
     start_experiment_call_args = mocked_start_experiment.call_args_list
     assert len(start_experiment_call_args) == 1
