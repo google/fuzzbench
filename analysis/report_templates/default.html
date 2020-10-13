@@ -286,7 +286,7 @@
                 </li>
             </ul>
             {% endif %}
-            
+
         </div> <!-- id="{{ benchmark.name }}" -->
         {% endfor %}
 
@@ -302,6 +302,12 @@
             <br><br>
             The experiment was conducted using this FuzzBench commit:
             <a href="https://github.com/google/fuzzbench/commits/{{ experiment.git_hash }}">{{ experiment.git_hash }}</a>
+            {% endif %}
+
+            {% if experiment.description %}
+            <br><br>
+            Experiment Description:<br><br>
+            {{ experiment.description }}
             {% endif %}
         </div>    <!-- id="data" -->
 
