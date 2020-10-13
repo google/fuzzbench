@@ -109,4 +109,5 @@ def fuzz(input_corpus, output_corpus, target_binary):
     """Run afl-fuzz on target."""
     prepare_fuzz_environment(input_corpus)
 
+    # test
     run_afl_fuzz(input_corpus, output_corpus, target_binary)
