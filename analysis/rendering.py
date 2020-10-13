@@ -44,4 +44,5 @@ def render_report(experiment_results, template, in_progress, coverage_report,
 
     return template.render(experiment=experiment_results,
                            in_progress=in_progress,
-                           coverage_report=coverage_report)
+                           coverage_report=coverage_report,
+                           description=description)
