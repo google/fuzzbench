@@ -78,7 +78,7 @@ index fc9d210..c5eb5c6 100644
 +
 +  while (queue_it) {
 +
-+    fuzz_mu += log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE]);
++    fuzz_mu += log2(hit_counts[queue_it->exec_cksum % HIT_COUNTS_SIZE]);
 +    n_paths ++;
 +
 +    queue_it = queue_it->next;
