@@ -75,7 +75,7 @@ jobs:
         df -h
 
     - name: Setup Python environment
-      uses: actions/setup-python@v1.1.1
+      uses: actions/setup-python@v2
       with:
         python-version: 3.7
 
