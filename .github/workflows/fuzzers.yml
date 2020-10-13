@@ -60,10 +60,6 @@ jobs:
           - oss-fuzz
           - standard
 
-    env:
-      FUZZER: ${{ matrix.fuzzer }}
-      BENCHMARK_TYPE: ${{ matrix.benchmark_type }}
-
     steps:
     - uses: actions/checkout@v2
     - run: |  # Needed for git diff to work.
