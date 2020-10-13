@@ -97,11 +97,13 @@ def get_benchmark(path: Path) -> Optional[str]:
 def is_fuzzer_tested_in_ci(fuzzer: str) -> bool:
     """Returns True if |fuzzer| is in the list of fuzzers tested in
     fuzzers.yml."""
-    yaml_filepath = os.path.join(_SRC_ROOT, '.github', 'workflows',
-                                 'fuzzers.yml')
+    yaml_filepath = _SRC_ROOT / '.github' / 'workflows' / 'fuzzers.yml'
     yaml_contents = yaml_utils.read(yaml_filepath)
     fuzzer_list = yaml_contents['jobs']['build']['strategy']['matrix']['fuzzer']
-    return fuzzer in fuzzer_list
+    is_tested = fuzzer in fuzzer_list
+    if not is_tested:
+        print(f'{fuzzer} is not included in fuzzer list in {yaml_filepath}.')
+    return is_tested
 
 
 class FuzzerAndBenchmarkValidator:
@@ -125,7 +127,6 @@ class FuzzerAndBenchmarkValidator:
 
         if not is_fuzzer_tested_in_ci(fuzzer):
             self.invalid_fuzzers.add(fuzzer)
-            print(fuzzer, 'is not included in fuzzer list in fuzzers.yml.')
             return False
 
         if fuzzer_utils.validate(fuzzer):
