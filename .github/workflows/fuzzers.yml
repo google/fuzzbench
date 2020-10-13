@@ -60,10 +60,6 @@ jobs:
           - oss-fuzz
           - standard
 
-    env:
-      FUZZER: ${{ matrix.fuzzer }}
-      BENCHMARK_TYPE: ${{ matrix.benchmark_type }}
-
     steps:
     - uses: actions/checkout@v2
     - run: |  # Needed for git diff to work.
@@ -79,7 +75,7 @@ jobs:
         df -h
 
     - name: Setup Python environment
-      uses: actions/setup-python@v1.1.1
+      uses: actions/setup-python@v2
       with:
         python-version: 3.7
 
@@ -103,4 +99,4 @@ jobs:
 
     - name: Build Benchmarks
       run: |
-        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/build_and_test_run_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER
+        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/build_and_test_run_fuzzer_benchmarks.py ${{ matrix.benchmark_type }} ${{ matrix.fuzzer }}
