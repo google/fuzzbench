@@ -30,7 +30,6 @@ LIB_BC_DIR = 'lib-bc'
 SYMBOLIC_BUFFER = 'kleeInputBuf'
 MODEL_VERSION = 'model_version'
 
-MAX_MEMORY_MB = 3200  # Slightly less than 3.75 GB available on n1-standard-1.
 MAX_SOLVER_TIME_SECONDS = 30
 MAX_TOTAL_TIME_DEFAULT = 82800  # Default experiment duration = 23 hrs.
 
@@ -367,32 +366,36 @@ def convert_outputs(ktest_tool, output_klee, crash_dir, queue_dir, info_dir):
             ktest_file = os.path.join(
                 output_klee, 'test{0:0{1}d}'.format(n_ktest, 6) + '.ktest')
 
-        print(
-            '[convert_thread] Converted {converted} output files. Found {crashes} crashes'
-            .format(converted=n_converted, crashes=n_crashes))
+        print('[convert_thread] Converted {converted} output files. \
+                Found {crashes} crashes'.format(converted=n_converted,
+                                                crashes=n_crashes))
 
-
+# pylint: disable=import-error
+# pylint: disable=import-outside-toplevel
 def monitor_resource_usage():
     """Monitor resource consumption."""
 
     import psutil
     print('[resource_thread] Starting resource usage monitoring...')
 
-    start = datetime.now().time()
+    start = datetime.now()
     while True:
         time.sleep(60 * 5)
         message = '{cputimes}\n{virtmem}\n{swap}'.format(
             cputimes=psutil.cpu_times_percent(percpu=False),
             virtmem=psutil.virtual_memory(),
             swap=psutil.swap_memory())
-        now = datetime.now().time()
+        now = datetime.now()
         print('[resource_thread] Resource usage after {time}:\n{message}',
               time=now - start,
               message=message)
 
-
+# pylint: disable=import-error
+# pylint: disable=import-outside-toplevel
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
+
+    import psutil
 
     # Set ulimit. Note: must be changed as this does not take effect
     if os.system('ulimit -s unlimited') != 0:
@@ -445,11 +448,13 @@ def fuzz(input_corpus, output_corpus, target_binary):
         llvm_link_libs.append('-link-llvm-lib=./{lib_bc}/{filename}'.format(
             lib_bc=LIB_BC_DIR, filename=filename))
 
+    max_memory_mb = str(int(psutil.virtual_memory().available // 10**6 * 0.9))
+
     klee_cmd = [
         klee_bin,
         '-always-output-seeds',
         '-max-memory',
-        f'{MAX_MEMORY_MB}',
+        max_memory_mb,
         '-max-solver-time',
         f'{MAX_SOLVER_TIME_SECONDS}s',
         '-log-timed-out-queries',
