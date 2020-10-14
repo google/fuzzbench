@@ -91,8 +91,8 @@ def _get_description(experiment_config: dict) -> Optional[str]:
     return experiment_config.get('description')
 
 
-def _use_oss_fuzz_corpus(experiment_config: dict) -> Optional[str]:
-    """Returns the OSS-Fuzz corpus flag of the experiment described by
+def _use_oss_fuzz_corpus(experiment_config: dict) -> bool:
+    """Returns the oss_fuzz_corpus flag of the experiment described by
     |experiment_config| as a bool."""
     return bool(experiment_config.get('oss_fuzz_corpus'))
 
