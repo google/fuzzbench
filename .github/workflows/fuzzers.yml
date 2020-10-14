@@ -40,6 +40,7 @@ jobs:
           - libfuzzer_magicbytes
           - entropic_magicbytes
           - aflplusplus_lightweizz
+          - aflplusplus_explore
           - aflplusplus_memcache_pre
           - aflplusplus_memcache_2mb
           - aflplusplus_memcache_2000mb
