@@ -36,9 +36,7 @@ def test_extract_segments_and_functions_from_summary_json(fs):
     trial_id = 2  # for testing
     timestamp = 900
 
-    df_container = coverage_utils.create_experiment_specific_data_frames(
-        dummies=False)
-    df_container.segment_df, df_container.function_df = (
+    df_container = (
         coverage_utils.extract_segments_and_functions_from_summary_json(
             summary_json_file, benchmark, fuzzer, trial_id, timestamp))
 
@@ -59,12 +57,11 @@ def test_prepare_name_dataframes(fs):
     function_name_test_cov_summary = ['main', '_Z3fooIiEvT_', '_Z3fooIfEvT_']
     filename_test_cov_summary = ['/home/test/fuzz_no_fuzzer.cc']
 
-    df_container = coverage_utils.create_experiment_specific_data_frames(
-        dummies=False)
-    df_container.segment_df, df_container.function_df = (
+    df_container = (
         coverage_utils.extract_segments_and_functions_from_summary_json(
             summary_json_file, benchmark, fuzzer, trial_id, timestamp))
-    coverage_utils.prepare_name_dataframe(df_container)
+
+    df_container.prepare_name_dataframe()
 
     for func_id in list(df_container.function_df['function_id'].unique()):
         assert (df_container.name_df.loc[df_container.name_df['id'] ==
