@@ -99,10 +99,10 @@ def measure_loop(experiment: str, max_total_time: int,
 
         # Use multiprocess list to collect information on segment and function
         # coverage from all processes.
-        segment_list = manager.list(
+        segment_list = manager.list(  # pytype: disable=attribute-error
             [experiment_specific_df_container.segment_df])
 
-        function_list = manager.list(
+        function_list = manager.list(  # pytype: disable=attribute-error
             [experiment_specific_df_container.function_df])
         while True:
             try:
@@ -559,8 +559,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
 
 def measure_trial_coverage(  # pylint: disable=invalid-name
         measure_req, max_cycle: int, q: multiprocessing.Queue, segment_list,
-        function_list
-) -> Tuple[models.Snapshot, coverage_utils.DataFrameContainer]:
+        function_list):
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
