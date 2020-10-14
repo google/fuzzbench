@@ -19,7 +19,6 @@ from unittest import mock
 import queue
 
 import pytest
-import pandas as pd
 
 from common import experiment_utils
 from common import new_process
@@ -43,19 +42,6 @@ GIT_HASH = 'FAKE-GIT-HASH'
 CYCLE = 1
 
 SNAPSHOT_LOGGER = measurer.logger
-
-SEGMENT_DF = pd.DataFrame(columns=[
-    "benchmark", "fuzzer", "trial_id", "file_name", "line", "col", "timestamp"
-])
-
-FUNCTION_DF = pd.DataFrame(columns=[
-    "benchmark", "fuzzer", "trial_id", "function_name", "hits", "timestamp"
-])
-
-NAME_DF = pd.DataFrame(columns=['id', 'name', 'type'])
-
-DF_CONTAINER = coverage_utils.DataFrameContainer(SEGMENT_DF, FUNCTION_DF,
-                                                 NAME_DF)
 
 
 # pylint: disable=unused-argument,invalid-name,redefined-outer-name,protected-access
@@ -451,8 +437,8 @@ def test_measure_loop_end(_, __, ___, ____, _____, ______, experiment_config,
                           db_experiment):
     """Tests that measure_loop stops when there is nothing left to measure. In
     this test, there is nothing left to measure on the first call."""
-    global DF_CONTAINER
-    measurer.measure_loop(experiment_config, 100, DF_CONTAINER)
+    measurer.measure_loop(experiment_config, 100,
+                          coverage_utils.DataFrameContainer())
     # If everything went well, we should get to this point without any
     # exceptions.
 
@@ -483,7 +469,8 @@ def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___,
         return True
 
     mocked_measure_all_trials.side_effect = mock_measure_all_trials
-    measurer.measure_loop(experiment_config, 100, DF_CONTAINER)
+    measurer.measure_loop(experiment_config, 100,
+                          coverage_utils.DataFrameContainer())
     assert call_count == loop_iterations
 
 

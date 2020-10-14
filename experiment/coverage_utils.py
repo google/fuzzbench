@@ -64,29 +64,20 @@ def generate_coverage_reports(experiment_config: dict,
     logger.info('Finished generating coverage reports.')
 
 
-def create_empty_dataframe_container():
-    """Helper function to create experiment specific data frames"""
-    segment_df = pd.DataFrame(columns=[
-        "benchmark", "fuzzer", "trial_id", "file_name", "line", "col",
-        "time_stamp"
-    ])
-    function_df = pd.DataFrame(columns=[
-        "benchmark", "fuzzer", "trial_id", "function_name", "hits", "time_stamp"
-    ])
-    name_df = pd.DataFrame(columns=['id', 'name', 'type'])
-
-    df_container = DataFrameContainer(segment_df, function_df, name_df)
-    return df_container
-
-
 class DataFrameContainer:
     """ Holds experiment-specific segment and function coverage information for
     all fuzzers, benchmarks, and trials"""
 
-    def __init__(self, segment_df, function_df, name_df):
-        self.segment_df = segment_df
-        self.function_df = function_df
-        self.name_df = name_df
+    def __init__(self):
+        self.segment_df = pd.DataFrame(columns=[
+            "benchmark", "fuzzer", "trial_id", "file_name", "line", "col",
+            "time_stamp"
+        ])
+        self.function_df = pd.DataFrame(columns=[
+            "benchmark", "fuzzer", "trial_id", "function_name", "hits",
+            "time_stamp"
+        ])
+        self.name_df = pd.DataFrame(columns=['id', 'name', 'type'])
 
     def prepare_name_dataframe(self):
         """Populates name data frame with experiment specific benchmark names,
@@ -400,7 +391,7 @@ def extract_segments_and_functions_from_summary_json(  # pylint: disable=too-man
     # multiple processes while measuring. So each process returns a
     # process-specific data frame container with all the information collected
     # in that particular process
-    process_specific_df_container = create_empty_dataframe_container()
+    process_specific_df_container = DataFrameContainer()
 
     try:
         coverage_info = get_coverage_infomation(summary_json_file)

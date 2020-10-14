@@ -68,8 +68,7 @@ def measure_main(experiment_config):
 
     # Create experiment specific data frames for recording segment and function
     # data over time
-    experiment_specific_df_container = (
-        coverage_utils.create_empty_dataframe_container())
+    experiment_specific_df_container = coverage_utils.DataFrameContainer()
 
     # Start the measure loop first.
     experiment = experiment_config['experiment']
@@ -718,8 +717,7 @@ def main():
 
     # Create experiment specific data frames for recording segment and function
     # data over time
-    experiment_specific_df_container = (
-        coverage_utils.create_empty_dataframe_container())
+    experiment_specific_df_container = coverage_utils.DataFrameContainer()
 
     try:
         measure_loop(experiment_name, int(sys.argv[1]),
