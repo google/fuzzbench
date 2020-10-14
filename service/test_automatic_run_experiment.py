@@ -152,6 +152,18 @@ def test_validate_experiment_name(name, expected_result):
             'experiment': EXPERIMENT,
             'fuzzers': ['1']
         }, False),
+        # Invalid description.
+        ({
+            'experiment': EXPERIMENT,
+            'fuzzers': ['afl'],
+            'description': 1,
+        }, False),
+        # Invalid oss_fuzz_corpus flag.
+        ({
+            'experiment': EXPERIMENT,
+            'fuzzers': ['afl'],
+            'oss_fuzz_corpus': 'invalid',
+        }, False),
     ])
 def test_validate_experiment_requests(exp_request, expected_result):
     """Tests that validate_experiment_requests returns True for valid fuzzres

@@ -148,6 +148,23 @@ def _validate_individual_experiment_requests(experiment_requests):
                          experiment)
             valid = False
 
+        description = request.get('description')
+        if description is not None and not isinstance(description, str):
+            logger.error(
+                'Request: %s "description" attribute is not a valid string.',
+                request)
+            valid = False
+            continue
+
+        oss_fuzz_corpus = request.get('oss_fuzz_corpus')
+        if oss_fuzz_corpus is not None and not isinstance(
+                oss_fuzz_corpus, bool):
+            logger.error(
+                'Request: %s "oss_fuzz_corpus" attribute is not a valid bool.',
+                request)
+            valid = False
+            continue
+
     return valid
 
 
