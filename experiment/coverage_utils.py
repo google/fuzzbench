@@ -61,10 +61,11 @@ def generate_coverage_reports(experiment_config: dict,
 
 
 class DataFrameContainer:
-    """ Holds experiment-specific segment and function coverage information for
-    all fuzzers, benchmarks, and trials"""
+    """Maintains segment and function coverage information, and writes this
+    information to CSV files."""
 
     def __init__(self):
+        """Construct data frames."""
         self.segment_df = pd.DataFrame(columns=[
             "benchmark", "fuzzer", "trial_id", "file_name", "line", "col",
             "time_stamp"
@@ -101,52 +102,52 @@ class DataFrameContainer:
             self.name_df.reset_index()
             self.name_df['id'] = self.name_df.index + 1
 
-            # Reshape DataFrames for joins.
+            # Reshape data frames for joins.
             reshaped_name_df = self.name_df.pivot(index='name',
                                                   columns='type',
                                                   values='id')
-            # making "name" as a column again
+            # Make "name" a column again.
             reshaped_name_df['name'] = reshaped_name_df.index
 
-            # Replacing names with ids by joining DataFrames.
-            self.segment_df = self.rename_drop_columns_and_leftjoin(
+            # Helper function to rename, drop, and leftjoin in bulk.
+            def rename_drop_columns_and_leftjoin(df1, df2, name_list):  # pylint: disable=no-self-use
+                column_name = name_list[0]
+                df2.columns = [
+                    'benchmark_id', 'file_id', 'function_id', 'fuzzer_id',
+                    column_name
+                ]
+                cols = [col for col in df2.columns if col not in name_list]
+                df = pd.merge(df1,
+                              df2.drop(columns=cols),
+                              on=column_name,
+                              how='outer')
+                df = df.drop(columns=[column_name])
+                return df.dropna()
+
+            # Replace names with ids by joining data frames.
+            self.segment_df = rename_drop_columns_and_leftjoin(
                 self.segment_df, reshaped_name_df, ['fuzzer', 'fuzzer_id'])
 
-            self.function_df = self.rename_drop_columns_and_leftjoin(
+            self.function_df = rename_drop_columns_and_leftjoin(
                 self.function_df, reshaped_name_df, ['fuzzer', 'fuzzer_id'])
 
-            self.segment_df = self.rename_drop_columns_and_leftjoin(
+            self.segment_df = rename_drop_columns_and_leftjoin(
                 self.segment_df, reshaped_name_df,
                 ['benchmark', 'benchmark_id'])
 
-            self.function_df = self.rename_drop_columns_and_leftjoin(
+            self.function_df = rename_drop_columns_and_leftjoin(
                 self.function_df, reshaped_name_df,
                 ['benchmark', 'benchmark_id'])
 
-            self.segment_df = self.rename_drop_columns_and_leftjoin(
+            self.segment_df = rename_drop_columns_and_leftjoin(
                 self.segment_df, reshaped_name_df, ['file_name', 'file_id'])
 
-            self.function_df = self.rename_drop_columns_and_leftjoin(
+            self.function_df = rename_drop_columns_and_leftjoin(
                 self.function_df, reshaped_name_df,
                 ['function_name', 'function_id'])
 
         except (ValueError, KeyError, IndexError):
             logger.error('Error occurred when preparing name DataFrame.')
-
-    def rename_drop_columns_and_leftjoin(self, df1, df2, name_list):  # pylint: disable=no-self-use
-        """Helper function to rename data frame df2 and merge data frame df1 and
-        df2 on a given column."""
-        column_name = name_list[0]
-        df2.columns = [
-            'benchmark_id', 'file_id', 'function_id', 'fuzzer_id', column_name
-        ]
-        # Select columns to drop.
-        cols = [col for col in df2.columns if col not in name_list]
-        # Lef-join action.
-        df = pd.merge(df1, df2.drop(columns=cols), on=column_name, how='outer')
-        # Drop unnecessary columns.
-        df = df.drop(columns=[column_name])
-        return df.dropna()
 
     def remove_redundant_duplicates(self):
         """Removes redundant entries in segment_df. Before calling this

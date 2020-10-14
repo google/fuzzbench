@@ -66,8 +66,7 @@ def measure_main(experiment_config):
     initialize_logs()
     logger.info('Start measuring.')
 
-    # Create experiment specific data frames for recording segment and function
-    # data over time
+    # Create data frame contaienr for segment and function coverage info.
     experiment_specific_df_container = coverage_utils.DataFrameContainer()
 
     # Start the measure loop first.
@@ -96,13 +95,12 @@ def measure_loop(experiment: str, max_total_time: int,
         # inheriting queue.
         q = manager.Queue()  # pytype: disable=attribute-error
 
-        # Use multiprocess list to collect information on segment and function
-        # coverage from all processes.
         segment_list = manager.list(  # pytype: disable=attribute-error
             [experiment_specific_df_container.segment_df])
 
         function_list = manager.list(  # pytype: disable=attribute-error
             [experiment_specific_df_container.function_df])
+
         while True:
             try:
                 # Get whether all trials have ended before we measure to prevent
@@ -113,23 +111,22 @@ def measure_loop(experiment: str, max_total_time: int,
                                           segment_list, function_list):
                     # We didn't measure any trials.
                     if all_trials_ended:
-                        # The if-statement here is to pass
-                        # "test_measure_loop_end"
-                        if not lists_are_empty(segment_list, function_list):
-                            # Concatenate all data frames in the segment and
-                            # function multiprocessing list.
-                            experiment_specific_df_container.segment_df = (
-                                pd.concat(segment_list, ignore_index=True))
+                        # Concatenate all data frames in the segment and
+                        # function multiprocessing list.
+                        experiment_specific_df_container.segment_df = (
+                            pd.concat(segment_list, ignore_index=True))
 
-                            experiment_specific_df_container.function_df = (
-                                pd.concat(function_list, ignore_index=True))
+                        experiment_specific_df_container.function_df = (
+                            pd.concat(function_list, ignore_index=True))
                         # There are no trials producing snapshots to measure.
                         # Given that we couldn't measure any snapshots, we won't
                         # be able to measure any the future, so stop now.
                         break
             except Exception:  # pylint: disable=broad-except
                 logger.error('Error occurred during measuring.')
+
             time.sleep(FAIL_WAIT_SECONDS)
+
     logger.info('Finished measure loop.')
 
 
@@ -570,8 +567,8 @@ def measure_trial_coverage(  # pylint: disable=invalid-name
             snapshot, process_specific_df_container = measure_snapshot_coverage(
                 measure_req.fuzzer, measure_req.benchmark, measure_req.trial_id,
                 cycle)
-            # Append the data frames in process specific data frame container to
-            # respective multiprocessing list.
+            # Append the process-specific data frames to respective
+            # multiprocessing list.
             segment_list.append(process_specific_df_container.segment_df)
             function_list.append(process_specific_df_container.function_df)
             if not snapshot:
@@ -701,13 +698,6 @@ def initialize_logs():
     })
 
 
-def lists_are_empty(segment_list, function_list):
-    """ Function checks if the run is a test or or an actual run. In an actual
-    run the the length on the segment or function list would not be zero. This
-    has been written to pass test_measure_loop_end in the test_measurer.py"""
-    return bool(len(segment_list) == 0 or len(function_list) == 0)
-
-
 def main():
     """Measure the experiment."""
     initialize_logs()
@@ -715,13 +705,9 @@ def main():
 
     experiment_name = experiment_utils.get_experiment_name()
 
-    # Create experiment specific data frames for recording segment and function
-    # data over time
-    experiment_specific_df_container = coverage_utils.DataFrameContainer()
-
     try:
         measure_loop(experiment_name, int(sys.argv[1]),
-                     experiment_specific_df_container)
+                     coverage_utils.DataFrameContainer())
     except Exception as error:
         logs.error('Error conducting experiment.')
         raise error

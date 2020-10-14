@@ -15,6 +15,7 @@
 
 import os
 import shutil
+import signal
 from unittest import mock
 import queue
 
@@ -160,11 +161,11 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
     assert args[1]['output_file'].name == "/reports/cov_summary.txt"
 
 
-@mock.patch('multiprocessing.list')
-@mock.patch('multiprocessing.list')
 @mock.patch('common.logs.error')
 @mock.patch('experiment.measurer.initialize_logs')
 @mock.patch('multiprocessing.Queue')
+@mock.patch('multiprocessing.list')
+@mock.patch('multiprocessing.list')
 @mock.patch('experiment.measurer.measure_snapshot_coverage')
 def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
                                 _, __, mocked_seg_list, mocked_func_list):
@@ -197,7 +198,6 @@ def test_measure_all_trials_not_ready(mocked_rsync, mocked_ls, mocked_seg_list,
     assert not mocked_rsync.called
 
 
-@mock.patch('multiprocessing.list')
 @mock.patch('multiprocessing.list')
 @mock.patch('multiprocessing.pool.ThreadPool', test_utils.MockPool)
 @mock.patch('common.new_process.execute')
@@ -427,23 +427,34 @@ def test_extract_corpus(archive_name, tmp_path):
 
 
 @mock.patch('time.sleep', return_value=None)
+@mock.patch('pandas.concat')
 @mock.patch('experiment.measurer.set_up_coverage_binaries')
 @mock.patch('experiment.measurer.measure_all_trials', return_value=False)
 @mock.patch('multiprocessing.Manager')
 @mock.patch('multiprocessing.pool')
 @mock.patch('experiment.scheduler.all_trials_ended', return_value=True)
-@mock.patch('experiment.measurer.lists_are_empty', return_value=True)
 def test_measure_loop_end(_, __, ___, ____, _____, ______, experiment_config,
                           db_experiment):
     """Tests that measure_loop stops when there is nothing left to measure. In
     this test, there is nothing left to measure on the first call."""
+
+    # Register timeout handler and set timeout.
+    def handler(signum, frame):
+        raise Exception("Timeout")
+
+    signal.signal(signal.SIGALRM, handler)
+    signal.alarm(1)  # second
+
     measurer.measure_loop(experiment_config, 100,
                           coverage_utils.DataFrameContainer())
+
+    signal.alarm(0)
     # If everything went well, we should get to this point without any
     # exceptions.
 
 
 @mock.patch('time.sleep', return_value=None)
+@mock.patch('pandas.concat')
 @mock.patch('experiment.measurer.set_up_coverage_binaries')
 @mock.patch('multiprocessing.Manager')
 @mock.patch('multiprocessing.pool')
@@ -468,9 +479,19 @@ def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___,
             return False
         return True
 
+    # Register timeout handler and set timeout.
+    def handler(signum, frame):
+        raise Exception("Timeout")
+
+    signal.signal(signal.SIGALRM, handler)
+    signal.alarm(1)  # second
+
     mocked_measure_all_trials.side_effect = mock_measure_all_trials
     measurer.measure_loop(experiment_config, 100,
                           coverage_utils.DataFrameContainer())
+
+    signal.alarm(0)
+
     assert call_count == loop_iterations
 
 
