@@ -74,15 +74,7 @@ def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-man
 
     if benchmark_name == 'bloaty_fuzz_target':
         run_options = ['-Z']
-    if benchmark_name == 'lcms-2017-03-21':
-        run_options = ['-Z']
-    if benchmark_name == 'libpcap_fuzz_both':
-        run_options = ['-Z']
-    if benchmark_name == 'libxslt_xpath':
-        run_options = ['-Z']
-    if benchmark_name == 'openssl_x509':
-        run_options = ['-Z']
-    if benchmark_name == 'proj4-2017-08-14':
+    elif benchmark_name == 'harfbuzz-1.3.2':
         run_options = ['-Z']
     else:
         run_options = []
