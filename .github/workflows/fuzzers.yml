@@ -40,10 +40,9 @@ jobs:
           - libfuzzer_magicbytes
           - entropic_magicbytes
           - aflplusplus_lightweizz
-          - aflplusplus_memcache
-          - aflplusplus_memcache_inf
-          - aflplusplus_coe_z
-          - aflplusplus_explore_z
+          - aflplusplus_memcache_pre
+          - aflplusplus_memcache_2mb
+          - aflplusplus_memcache_2000mb
           - afl_32
           - afl_coe
           - afl_fast_32
