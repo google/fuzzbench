@@ -56,11 +56,7 @@ def generate_coverage_reports(experiment_config: dict,
         for fuzzer in fuzzers:
             generate_coverage_report(experiment, benchmark, fuzzer)
 
-    # Clean and prune experiment-specific data frames
-    experiment_specific_df_container.prepare_name_dataframe()
-    experiment_specific_df_container.remove_redundant_duplicates()
-    # Generate experiment-specific CSV files
-    generate_segment_and_function_csv_files(experiment_specific_df_container)
+    experiment_specific_df_container.generate_csv_files()
     logger.info('Finished generating coverage reports.')
 
 
@@ -153,10 +149,12 @@ class DataFrameContainer:
         return df.dropna()
 
     def remove_redundant_duplicates(self):
-        """Removes entries with same segment coverage information but different
-        timestamps (keeps the data with smallest timestamp (in secs)). Also
-        removes redundant rows from function data frame, if any, to reduce the
-        size of the data being exported"""
+        """Removes redundant entries in segment_df. Before calling this
+        function, for each time stamp, segment_df contains all segments that
+        are covered in this time stamp. After calling this function, for each
+        time stamp, segment_df only contains segments that have been covered
+        since the previous time stamp. This signifcantly reduces the size of
+        the resulting CSV file."""
         try:
             # Drop duplicates but with different timestamps in segment data.
             self.segment_df = self.segment_df.sort_values(by=['time_stamp'])
@@ -165,6 +163,28 @@ class DataFrameContainer:
                 keep="first")
         except (ValueError, KeyError, IndexError):
             logger.error('Error occurred when removing duplicates.')
+
+    def generate_csv_files(self):
+        """Generates three compressed CSV files containing coverage information
+        for all fuzzers, benchmarks, and trials. To maintain a small file size,
+        all strings, such as file and function names, are referenced by id and
+        resolved in 'names.csv'."""
+
+        # Clean and prune experiment-specific data frames.
+        self.prepare_name_dataframe()
+        self.remove_redundant_duplicates()
+
+        # Write CSV files to file store.
+        def csv_filestore_helper(file_name, df):
+            """Helper function for storing csv files in filestore."""
+            src = os.path.join(get_coverage_info_dir(), 'data', file_name)
+            dst = exp_path.filestore(src)
+            df.to_csv(src, index=False, compression='infer')
+            filestore_utils.cp(src, dst)
+
+        csv_filestore_helper('functions.csv.gz', self.function_df)
+        csv_filestore_helper('segments.csv.gz', self.segment_df)
+        csv_filestore_helper('names.csv.gz', self.name_df)
 
 
 def generate_coverage_report(experiment, benchmark, fuzzer):
@@ -456,26 +476,3 @@ def extract_covered_regions_from_summary_json(summary_json_file):
     except Exception:  # pylint: disable=broad-except
         logger.error('Coverage summary json file defective or missing.')
     return covered_regions
-
-
-def generate_segment_and_function_csv_files(df_container):
-    """Generates three compressed CSV files containing coverage information for
-    all fuzzers, benchmarks, and trials. To maintain a small file size, all
-    strings, such as file and function names, are referenced by id and resolved
-    in "names.csv"."""
-    # Store compressed (gzip) function csv in filestore.
-    csv_filestore_helper('functions.csv.gz', df_container.function_df)
-
-    # Store compressed (gzip) segment csv in filestore.
-    csv_filestore_helper('segments.csv.gz', df_container.segment_df)
-
-    # Store compressed (gzip) names csv in filestore.
-    csv_filestore_helper('names.csv.gz', df_container.name_df)
-
-
-def csv_filestore_helper(file_name, df):
-    """Helper function for storing csv files in filestore."""
-    src = os.path.join(get_coverage_info_dir(), 'data', file_name)
-    dst = exp_path.filestore(src)
-    df.to_csv(src, index=False, compression='infer')
-    filestore_utils.cp(src, dst)
