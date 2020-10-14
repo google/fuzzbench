@@ -22,7 +22,7 @@ last_crash        : 0
 last_hang         : 0
 execs_since_crash : 24
 exec_timeout      : 20
-afl_banner        : test-instr2
+afl_banner        : test-instr
 afl_version       : 2.52b
 target_mode       : default
-command_line      : ./afl-fuzz -i /usr/local/google/home/metzman/tmp/i -o /tmp/o ./test-instr2
+command_line      : ./afl-fuzz -i /tmp/i -o /tmp/o ./test-instr

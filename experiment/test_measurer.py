@@ -96,13 +96,14 @@ def test_generate_profdata_create(mocked_execute, experiment, fs):
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)
     snapshot_measurer.profdata_file = '/work/reports/data.profdata'
-    snapshot_measurer.profraw_file = '/work/reports/data.profraw'
-    fs.create_file(snapshot_measurer.profraw_file, contents='fake_contents')
+    snapshot_measurer.profraw_file_pattern = '/work/reports/data-%m.profraw'
+    profraw_file = '/work/reports/data-123.profraw'
+    fs.create_file(profraw_file, contents='fake_contents')
     snapshot_measurer.generate_profdata(CYCLE)
 
     expected = [
-        'llvm-profdata', 'merge', '-sparse', '/work/reports/data.profraw', '-o',
-        '/work/reports/data.profdata'
+        'llvm-profdata', 'merge', '-sparse', '/work/reports/data-123.profraw',
+        '-o', '/work/reports/data.profdata'
     ]
 
     assert (len(mocked_execute.call_args_list)) == 1
@@ -117,13 +118,14 @@ def test_generate_profdata_merge(mocked_execute, experiment, fs):
     snapshot_measurer = measurer.SnapshotMeasurer(FUZZER, BENCHMARK, TRIAL_NUM,
                                                   SNAPSHOT_LOGGER)
     snapshot_measurer.profdata_file = '/work/reports/data.profdata'
-    snapshot_measurer.profraw_file = '/work/reports/data.profraw'
-    fs.create_file(snapshot_measurer.profraw_file, contents='fake_contents')
+    snapshot_measurer.profraw_file_pattern = '/work/reports/data-%m.profraw'
+    profraw_file = '/work/reports/data-123.profraw'
+    fs.create_file(profraw_file, contents='fake_contents')
     fs.create_file(snapshot_measurer.profdata_file, contents='fake_contents')
     snapshot_measurer.generate_profdata(CYCLE)
 
     expected = [
-        'llvm-profdata', 'merge', '-sparse', '/work/reports/data.profraw',
+        'llvm-profdata', 'merge', '-sparse', '/work/reports/data-123.profraw',
         '/work/reports/data.profdata', '-o', '/work/reports/data.profdata'
     ]
 
@@ -320,7 +322,9 @@ def test_run_cov_new_units(_, mocked_execute, fs, environ):
     expected = {
         'cwd': '/work/coverage-binaries/benchmark-a',
         'env': {
-            'LLVM_PROFILE_FILE': profraw_file_path,
+            'LLVM_PROFILE_FILE':
+                ('/work/measurement-folders/'
+                 'benchmark-a-fuzzer-a/trial-12/coverage/data-%m.profraw'),
             'WORK': '/work',
             'EXPERIMENT_FILESTORE': 'gs://bucket',
             'EXPERIMENT': 'experiment',

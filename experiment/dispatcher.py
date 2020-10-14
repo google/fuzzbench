@@ -66,7 +66,8 @@ def _initialize_experiment_in_db(experiment_config: dict):
             name=experiment_config['experiment'],
             git_hash=experiment_config['git_hash'],
             private=experiment_config.get('private', True),
-            experiment_filestore=experiment_config['experiment_filestore'])
+            experiment_filestore=experiment_config['experiment_filestore'],
+            description=experiment_config['description']),
     ])
 
 

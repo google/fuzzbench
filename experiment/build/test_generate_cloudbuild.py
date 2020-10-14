@@ -40,12 +40,12 @@ def test_generate_cloud_build_spec_build_base_image():
     expected_spec = {
         'steps': [{
             'id': 'pull-ubuntu-xenial',
-            'env': 'DOCKER_BUILDKIT=1',
+            'env': ['DOCKER_BUILDKIT=1'],
             'name': 'docker:19.03.12',
             'args': ['pull', 'ubuntu:xenial']
         }, {
             'id': 'base-image',
-            'env': 'DOCKER_BUILDKIT=1',
+            'env': ['DOCKER_BUILDKIT=1'],
             'name': 'docker:19.03.12',
             'args': [
                 'build', '--tag', 'gcr.io/fuzzbench/base-image', '--tag',
@@ -90,7 +90,7 @@ def test_generate_cloud_build_spec_build_fuzzer_benchmark():
     expected_spec = {
         'steps': [{
             'id': 'afl-zlib-builder-intermediate',
-            'env': 'DOCKER_BUILDKIT=1',
+            'env': ['DOCKER_BUILDKIT=1'],
             'name': 'docker:19.03.12',
             'args': [
                 'build', '--tag',
@@ -159,7 +159,7 @@ def test_generate_cloud_build_spec_build_benchmark_coverage():
     expected_spec = {
         'steps': [{
             'id': 'zlib-project-builder',
-            'env': 'DOCKER_BUILDKIT=1',
+            'env': ['DOCKER_BUILDKIT=1'],
             'name': 'docker:19.03.12',
             'args': [
                 'build', '--tag', 'gcr.io/fuzzbench/builders/benchmark/zlib',
@@ -172,7 +172,7 @@ def test_generate_cloud_build_spec_build_benchmark_coverage():
             'wait_for': []
         }, {
             'id': 'coverage-zlib-builder-intermediate',
-            'env': 'DOCKER_BUILDKIT=1',
+            'env': ['DOCKER_BUILDKIT=1'],
             'name': 'docker:19.03.12',
             'args': [
                 'build', '--tag',
@@ -188,7 +188,7 @@ def test_generate_cloud_build_spec_build_benchmark_coverage():
             'wait_for': ['zlib-project-builder']
         }, {
             'id': 'coverage-zlib-builder',
-            'env': 'DOCKER_BUILDKIT=1',
+            'env': ['DOCKER_BUILDKIT=1'],
             'name': 'docker:19.03.12',
             'args': [
                 'build', '--tag', 'gcr.io/fuzzbench/builders/coverage/zlib',

@@ -80,7 +80,7 @@ def create_cloud_build_spec(image_templates,
     if build_base_images:
         cloud_build_spec['steps'].append({
             'id': 'pull-ubuntu-xenial',
-            'env': 'DOCKER_BUILDKIT=1',
+            'env': ['DOCKER_BUILDKIT=1'],
             'name': DOCKER_IMAGE,
             'args': ['pull', 'ubuntu:xenial'],
         })
@@ -88,7 +88,7 @@ def create_cloud_build_spec(image_templates,
     for image_name, image_specs in image_templates.items():
         step = {
             'id': image_name,
-            'env': 'DOCKER_BUILDKIT=1',
+            'env': ['DOCKER_BUILDKIT=1'],
             'name': DOCKER_IMAGE,
         }
         step['args'] = [

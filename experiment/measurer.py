@@ -16,6 +16,7 @@
 
 import collections
 import gc
+import glob
 import multiprocessing
 import json
 import os
@@ -344,7 +345,8 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
                                                   'unchanged-cycles')
 
         # Store the profraw file containing coverage data for each cycle.
-        self.profraw_file = os.path.join(self.coverage_dir, 'data.profraw')
+        self.profraw_file_pattern = os.path.join(self.coverage_dir,
+                                                 'data-%m.profraw')
 
         # Store the profdata file for the current trial.
         self.profdata_file = os.path.join(self.report_dir, 'data.profdata')
@@ -352,6 +354,13 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         # Store the coverage information in json form.
         self.cov_summary_file = os.path.join(self.report_dir,
                                              'cov_summary.json')
+
+    def get_profraw_files(self):
+        """Return generated profraw files."""
+        return [
+            f for f in glob.glob(self.profraw_file_pattern.replace('%m', '*'))
+            if os.path.getsize(f)
+        ]
 
     def initialize_measurement_dirs(self):
         """Initialize directories that will be needed for measuring
@@ -365,7 +374,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         coverage_binary = coverage_utils.get_coverage_binary(self.benchmark)
         crashing_units = run_coverage.do_coverage_run(coverage_binary,
                                                       self.corpus_dir,
-                                                      self.profraw_file,
+                                                      self.profraw_file_pattern,
                                                       self.crashes_dir)
 
         self.UNIT_BLACKLIST[self.benchmark] = (
@@ -407,12 +416,11 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
 
     def generate_profdata(self, cycle: int):
         """Generate .profdata file from .profraw file."""
+        files_to_merge = self.get_profraw_files()
         if os.path.isfile(self.profdata_file):
             # If coverage profdata exists, then merge it with
             # existing available data.
-            files_to_merge = [self.profraw_file, self.profdata_file]
-        else:
-            files_to_merge = [self.profraw_file]
+            files_to_merge += [self.profdata_file]
 
         result = coverage_utils.merge_profdata_files(files_to_merge,
                                                      self.profdata_file)
@@ -423,11 +431,9 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
     def generate_coverage_information(self, cycle: int):
         """Generate the .profdata file and then transform it into
         json summary."""
-        if not os.path.exists(self.profraw_file):
-            self.logger.error('No profraw file found for cycle: %d.', cycle)
-            return
-        if not os.path.getsize(self.profraw_file):
-            self.logger.error('Empty profraw file found for cycle: %d.', cycle)
+        if not self.get_profraw_files():
+            self.logger.error('No valid profraw files found for cycle: %d.',
+                              cycle)
             return
         self.generate_profdata(cycle)
 
