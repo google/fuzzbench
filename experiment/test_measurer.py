@@ -418,7 +418,7 @@ class TestIntegrationMeasurement:
             mocked_cp.return_value = new_process.ProcessResult(0, '', False)
             # TODO(metzman): Create a system for using actual buckets in
             # integration tests.
-            snapshot, df1, df2 = measurer.measure_snapshot_coverage(  # pylint: disable=unused-variable
+            snapshot, _, __ = measurer.measure_snapshot_coverage(  # pylint: disable=unused-variable
                 snapshot_measurer.fuzzer, snapshot_measurer.benchmark,
                 snapshot_measurer.trial_num, cycle)
         assert snapshot
@@ -446,6 +446,7 @@ def test_extract_corpus(archive_name, tmp_path):
 @mock.patch('multiprocessing.Manager')
 @mock.patch('multiprocessing.pool')
 @mock.patch('experiment.scheduler.all_trials_ended', return_value=True)
+@mock.patch('experiment.measurer.lists_are_empty', return_value=True)
 def test_measure_loop_end(_, __, ___, ____, _____, ______, experiment_config,
                           db_experiment):
     """Tests that measure_loop stops when there is nothing left to measure. In

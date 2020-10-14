@@ -292,15 +292,11 @@ def extract_segments_and_functions_from_summary_json(  # pylint: disable=too-man
     """Extracts and stores information on segment and function coverage for a
     trial in experiment-specific data frames given a trial-specific coverage
     summary json file."""
-
-    segment_df = pd.DataFrame(columns=[
-        "benchmark", "fuzzer", "trial_id", "file_name", "line", "col",
-        "timestamp"
-    ])
-    function_df = pd.DataFrame(columns=[
-        "benchmark", "fuzzer", "trial_id", "function_name", "hits", "timestamp"
-    ])
-
+    # Create dummy data frames for recording segment and function. These
+    # data frames would be concatenated to the main experiment specific
+    # data frames after recording all segment and function coverage data.
+    segment_df, function_df = create_experiment_specific_data_frames(
+        dummies=True)
     try:
         coverage_info = get_coverage_infomation(summary_json_file)
 
@@ -429,18 +425,11 @@ def remove_redundant_duplicates(df_container):
     try:
         # Drop duplicates but with different timestamps in segment data.
         df_container.segment_df = df_container.segment_df.sort_values(
-            by=['timestamp'])
+            by=['time_stamp'])
         df_container.segment_df = df_container.segment_df.drop_duplicates(
-            subset=df_container.segment_df.columns.difference(['timestamp']),
+            subset=df_container.segment_df.columns.difference(['time_stamp']),
             keep="first")
-        # Drop duplicates in segments data if any.
-        df_container.segment_df = df_container.segment_df.drop_duplicates(
-            keep="first")
-        # Drop duplicates in function data with if any.
-        df_container.function_df = df_container.function_df.sort_values(
-            by=['timestamp'])
-        df_container.function_df = df_container.function_df.drop_duplicates(
-            keep="first")
+
     except (ValueError, KeyError, IndexError):
         logger.error('Error occurred when removing duplicates.')
 
@@ -482,3 +471,26 @@ def rename_drop_columns_and_leftjoin(df1, df2, name_list):
     # Drop unnecessary columns.
     df = df.drop(columns=[column_name])
     return df.dropna()
+
+
+def create_experiment_specific_data_frames(dummies: bool):
+    """Helper function to create experiment specific data frames. It also allows
+    creation of dummies data frames with same header to collect data and append
+    to he main data frame. Avoids declaration of data frames anywhere again."""
+    segment_df = pd.DataFrame(columns=[
+        "benchmark", "fuzzer", "trial_id", "file_name", "line", "col",
+        "time_stamp"
+    ])
+    function_df = pd.DataFrame(columns=[
+        "benchmark", "fuzzer", "trial_id", "function_name", "hits", "time_stamp"
+    ])
+    name_df = pd.DataFrame(columns=['id', 'name', 'type'])
+    # If creating dummies for easy appending and concatenation then, only
+    # segment and function data frames are returned
+    if dummies:
+        return segment_df, function_df
+
+    # If not creating dummies then, all the experiment specific data frames are
+    # returned as DataFrameContainer object together
+    df_container = DataFrameContainer(segment_df, function_df, name_df)
+    return df_container

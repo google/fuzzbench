@@ -14,7 +14,6 @@
 """Tests for coverage_utils.py"""
 import os
 
-import pandas as pd
 from experiment import coverage_utils
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -35,14 +34,16 @@ def test_extract_segments_and_functions_from_summary_json(fs):
     benchmark = 'freetype2'  # for testing
     fuzzer = 'afl'  # for testing
     trial_id = 2  # for testing
-    timestamp = "10 OCT 2020 10:10:10"
+    timestamp = 900
 
-    segment_df, function_df = (
+    df_container = coverage_utils.create_experiment_specific_data_frames(
+        dummies=False)
+    df_container.segment_df, df_container.function_df = (
         coverage_utils.extract_segments_and_functions_from_summary_json(
             summary_json_file, benchmark, fuzzer, trial_id, timestamp))
 
-    assert len(segment_df) == num_covered_segments_in_cov_summary
-    assert len(function_df) == num_functions_in_cov_summary
+    assert len(df_container.segment_df) == num_covered_segments_in_cov_summary
+    assert len(df_container.function_df) == num_functions_in_cov_summary
 
 
 def test_prepare_name_dataframes(fs):
@@ -54,20 +55,15 @@ def test_prepare_name_dataframes(fs):
     benchmark = 'freetype2'  # for testing
     fuzzer = 'afl'  # for testing
     trial_id = 2  # for testing
+    timestamp = "900"
     function_name_test_cov_summary = ['main', '_Z3fooIiEvT_', '_Z3fooIfEvT_']
     filename_test_cov_summary = ['/home/test/fuzz_no_fuzzer.cc']
 
-    segment_df = pd.DataFrame(
-        columns=["benchmark", "fuzzer", "trial_id", "file_name", "line", "col"])
-    function_df = pd.DataFrame(
-        columns=["benchmark", "fuzzer", "trial_id", "function_name", "hits"])
-    name_df = pd.DataFrame(columns=['id', 'name', 'type'])
-
-    df_container = coverage_utils.DataFrameContainer(segment_df, function_df,
-                                                     name_df)
+    df_container = coverage_utils.create_experiment_specific_data_frames(
+        dummies=False)
     df_container.segment_df, df_container.function_df = (
         coverage_utils.extract_segments_and_functions_from_summary_json(
-            summary_json_file, benchmark, fuzzer, trial_id, df_container))
+            summary_json_file, benchmark, fuzzer, trial_id, timestamp))
     coverage_utils.prepare_name_dataframe(df_container)
 
     for func_id in list(df_container.function_df['function_id'].unique()):
