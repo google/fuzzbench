@@ -375,7 +375,6 @@ def convert_outputs(ktest_tool, output_klee, crash_dir, queue_dir, info_dir):
 # pylint: disable=import-outside-toplevel
 def monitor_resource_usage():
     """Monitor resource consumption."""
-
     import psutil
     print('[resource_thread] Starting resource usage monitoring...')
 
@@ -387,9 +386,9 @@ def monitor_resource_usage():
             virtmem=psutil.virtual_memory(),
             swap=psutil.swap_memory())
         now = datetime.now()
-        print('[resource_thread] Resource usage after {time}:\n{message}',
-              time=now - start,
-              message=message)
+        print(
+            '[resource_thread] Resource usage after {time}:\n{message}'.format(
+                time=now - start, message=message))
 
 
 # pylint: disable=import-error
