@@ -147,7 +147,8 @@ def generate_report(experiment_names,
             queries.add_nonprivate_experiments_for_merge_with_clobber(
                 experiment_names))
 
-    report_name = report_name or experiment_names[0]
+    main_experiment_name = experiment_names[0]
+    report_name = report_name or main_experiment_name
 
     filesystem.create_directory(report_directory)
 
@@ -156,6 +157,8 @@ def generate_report(experiment_names,
         experiment_df = pd.read_csv(data_path)
     else:
         experiment_df = queries.get_experiment_data(experiment_names)
+
+    description = queries.get_experiment_description(main_experiment_name)
 
     data_utils.validate_data(experiment_df)
 
@@ -197,7 +200,8 @@ def generate_report(experiment_names,
 
     template = report_type + '.html'
     detailed_report = rendering.render_report(experiment_ctx, template,
-                                              in_progress, coverage_report)
+                                              in_progress, coverage_report,
+                                              description)
 
     filesystem.write(os.path.join(report_directory, 'index.html'),
                      detailed_report)

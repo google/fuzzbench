@@ -205,6 +205,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
         config_filename: str,
         benchmarks: List[str],
         fuzzers: List[str],
+        description: str = None,
         no_seeds=False,
         no_dictionaries=False,
         oss_fuzz_corpus=False):
@@ -222,6 +223,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
     config['no_seeds'] = no_seeds
     config['no_dictionaries'] = no_dictionaries
     config['oss_fuzz_corpus'] = oss_fuzz_corpus
+    config['description'] = description
 
     set_up_experiment_config_file(config)
 
@@ -476,6 +478,10 @@ def main():
                         '--experiment-name',
                         help='Experiment name.',
                         required=True)
+    parser.add_argument('-d',
+                        '--description',
+                        help='Description of the experiment.',
+                        required=False)
     parser.add_argument('-f',
                         '--fuzzers',
                         help='Fuzzers to use.',
@@ -509,6 +515,7 @@ def main():
                      args.experiment_config,
                      args.benchmarks,
                      fuzzers,
+                     description=args.description,
                      no_seeds=args.no_seeds,
                      no_dictionaries=args.no_dictionaries,
                      oss_fuzz_corpus=args.oss_fuzz_corpus)

@@ -20,13 +20,17 @@ import jinja2
 from common import utils
 
 
-def render_report(experiment_results, template, in_progress, coverage_report):
+def render_report(experiment_results, template, in_progress, coverage_report,
+                  description):
     """Renders report with |template| using data provided by the
     |experiment_results| context.
 
     Arguments:
       template: filename of the report template. E.g., 'default.html'.
       experiment_results: an ExperimentResults object.
+      in_progress: Whether the experiment is still in progress.
+      coverage_report: Whether to report detailed info about coverage.
+      description: A description of the experiment.
 
     Returns the rendered template.
     """
@@ -40,4 +44,5 @@ def render_report(experiment_results, template, in_progress, coverage_report):
 
     return template.render(experiment=experiment_results,
                            in_progress=in_progress,
-                           coverage_report=coverage_report)
+                           coverage_report=coverage_report,
+                           description=description)

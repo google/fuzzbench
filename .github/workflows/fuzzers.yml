@@ -45,24 +45,20 @@ jobs:
           - aflplusplus_coe_z
           - aflplusplus_explore_z
           - afl_32
-          - afl_fast
+          - afl_coe
           - afl_fast_32
-          - afl_fast_xxh3
+          - afl_oldcoe_16
+          - afl_oldfast_4
+          - afl_oldfast_16
+          - afl_fast_nofav
           - afl_fast_late_32
           - afl_fast_branches
-          - afl_fast_spliceless
-          - afl_fast_spliceless2
-          - afl_fast_nohandicap_late_32
-          - afl_nohandicap_spliceless
+          - afl_fast_branches2
           - afl_nohandicap_spliceless2
 
         benchmark_type:
           - oss-fuzz
           - standard
-
-    env:
-      FUZZER: ${{ matrix.fuzzer }}
-      BENCHMARK_TYPE: ${{ matrix.benchmark_type }}
 
     steps:
     - uses: actions/checkout@v2
@@ -79,7 +75,7 @@ jobs:
         df -h
 
     - name: Setup Python environment
-      uses: actions/setup-python@v1.1.1
+      uses: actions/setup-python@v2
       with:
         python-version: 3.7
 
@@ -103,4 +99,4 @@ jobs:
 
     - name: Build Benchmarks
       run: |
-        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/build_and_test_run_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER
+        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/build_and_test_run_fuzzer_benchmarks.py ${{ matrix.benchmark_type }} ${{ matrix.fuzzer }}

@@ -12,7 +12,7 @@ index 3819312..8a9e26e 100644
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index fc9d210..31b73a4 100644
+index fc9d210..029d104 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -67,7 +67,7 @@ index fc9d210..31b73a4 100644
  
      /* Try to calibrate inline; this also calls update_bitmap_score() when
         successful. */
-@@ -4800,6 +4815,42 @@ static u32 calculate_score(struct queue_entry* q) {
+@@ -4800,6 +4815,38 @@ static u32 calculate_score(struct queue_entry* q) {
  
    }
  
@@ -90,27 +90,44 @@ index fc9d210..31b73a4 100644
 +      break;
 +
 +    case 6:
-+      if (!q->favored) perf_score *= 0.8;
++      perf_score *= 0.8;
 +      break;
 +
 +    case 7:
-+      if (!q->favored) perf_score *= 0.6;
++      perf_score *= 0.6;
 +      break;
 +
 +    default:
-+      if (!q->favored) perf_score *= 0.4;
++      perf_score *= 0.4;
 +      break;
 +
 +  }
 +
-+  if (q->favored)
-+    perf_score *= 1.15;
-+
-+
    /* Make sure that we don't go over limit. */
  
    if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
-@@ -7990,6 +8041,9 @@ int main(int argc, char** argv) {
+@@ -5141,6 +5188,11 @@ static u8 fuzz_one(char** argv) {
+ 
+   orig_perf = perf_score = calculate_score(queue_cur);
+ 
++  if (perf_score == 0) {
++    cur_skipped_paths++;
++    goto abandon_entry;
++  }
++
+   /* Skip right away if -d is given, if we have done deterministic fuzzing on
+      this entry ourselves (was_fuzzed), or if it has gone through deterministic
+      testing in earlier, resumed runs (passed_det). */
+@@ -6138,7 +6190,7 @@ havoc_stage:
+     sprintf(tmp, "splice %u", splice_cycle);
+     stage_name  = tmp;
+     stage_short = "splice";
+-    stage_max   = SPLICE_HAVOC * perf_score / havoc_div / 100;
++    stage_max   = SPLICE_HAVOC / havoc_div;
+ 
+   }
+ 
+@@ -7990,6 +8042,9 @@ int main(int argc, char** argv) {
    setup_signal_handlers();
    check_asan_opts();
  
@@ -132,6 +149,90 @@ index 46dd857..8aae20b 100644
 +#define HAVOC_MAX_MULT      32
  
  /* Absolute minimum number of havoc cycles (after all adjustments): */
+ 
+diff --git a/hash.h b/hash.h
+index e17fc8f..55e6428 100644
+--- a/hash.h
++++ b/hash.h
+@@ -36,73 +36,23 @@
+ 
+ #include "types.h"
+ 
+-#ifdef __x86_64__
++#define XXH_INLINE_ALL
++#include "xxhash.h"
++#undef XXH_INLINE_ALL
+ 
+-#define ROL64(_x, _r)  ((((u64)(_x)) << (_r)) | (((u64)(_x)) >> (64 - (_r))))
++#ifdef __x86_64__
+ 
+ static inline u32 hash32(const void* key, u32 len, u32 seed) {
+ 
+-  const u64* data = (u64*)key;
+-  u64 h1 = seed ^ len;
+-
+-  len >>= 3;
+-
+-  while (len--) {
+-
+-    u64 k1 = *data++;
+-
+-    k1 *= 0x87c37b91114253d5ULL;
+-    k1  = ROL64(k1, 31);
+-    k1 *= 0x4cf5ad432745937fULL;
+-
+-    h1 ^= k1;
+-    h1  = ROL64(h1, 27);
+-    h1  = h1 * 5 + 0x52dce729;
+-
+-  }
+-
+-  h1 ^= h1 >> 33;
+-  h1 *= 0xff51afd7ed558ccdULL;
+-  h1 ^= h1 >> 33;
+-  h1 *= 0xc4ceb9fe1a85ec53ULL;
+-  h1 ^= h1 >> 33;
+-
+-  return h1;
++  return (u32) XXH64(key, len, seed);
+ 
+ }
+ 
+ #else 
+ 
+-#define ROL32(_x, _r)  ((((u32)(_x)) << (_r)) | (((u32)(_x)) >> (32 - (_r))))
+-
+ static inline u32 hash32(const void* key, u32 len, u32 seed) {
+ 
+-  const u32* data  = (u32*)key;
+-  u32 h1 = seed ^ len;
+-
+-  len >>= 2;
+-
+-  while (len--) {
+-
+-    u32 k1 = *data++;
+-
+-    k1 *= 0xcc9e2d51;
+-    k1  = ROL32(k1, 15);
+-    k1 *= 0x1b873593;
+-
+-    h1 ^= k1;
+-    h1  = ROL32(h1, 13);
+-    h1  = h1 * 5 + 0xe6546b64;
+-
+-  }
+-
+-  h1 ^= h1 >> 16;
+-  h1 *= 0x85ebca6b;
+-  h1 ^= h1 >> 13;
+-  h1 *= 0xc2b2ae35;
+-  h1 ^= h1 >> 16;
+-
+-  return h1;
++  return (u32) XXH32(key, len, seed);
+ 
+ }
  
 diff --git a/xxhash.h b/xxhash.h
 new file mode 100644
