@@ -33,6 +33,7 @@ EXPERIMENT_REQUESTS = [{
     'experiment': datetime.date(2020, 6, 5),
     'fuzzers': ['honggfuzz', 'afl'],
     'description': 'Test experiment',
+    'oss_fuzz_corpus': True,
 }]
 
 
@@ -94,8 +95,12 @@ def test_run_requested_experiment(mocked_get_requested_experiments,
         'woff2-2016-05-06',
     ]
     expected_calls = [
-        mock.call(expected_experiment_name, expected_config_file,
-                  expected_benchmarks, expected_fuzzers, 'Test experiment')
+        mock.call(expected_experiment_name,
+                  expected_config_file,
+                  expected_benchmarks,
+                  expected_fuzzers,
+                  description='Test experiment',
+                  oss_fuzz_corpus=True)
     ]
     start_experiment_call_args = mocked_start_experiment.call_args_list
     assert len(start_experiment_call_args) == 1
