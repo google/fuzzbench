@@ -66,7 +66,7 @@ def measure_main(experiment_config):
     initialize_logs()
     logger.info('Start measuring.')
 
-    # Create data frame contaienr for segment and function coverage info.
+    # Create data frame container for segment and function coverage info.
     experiment_specific_df_container = coverage_utils.DataFrameContainer()
 
     # Start the measure loop first.
@@ -78,8 +78,10 @@ def measure_main(experiment_config):
     gc.collect()
 
     # Do the final measuring and store the coverage data.
-    coverage_utils.generate_coverage_reports(experiment_config,
-                                             experiment_specific_df_container)
+    coverage_utils.generate_coverage_reports(experiment_config)
+
+    # Generate segment and function coverage CSV files.
+    experiment_specific_df_container.generate_csv_files()
 
     logger.info('Finished measuring.')
 
@@ -567,10 +569,10 @@ def measure_trial_coverage(  # pylint: disable=invalid-name
             snapshot, process_specific_df_container = measure_snapshot_coverage(
                 measure_req.fuzzer, measure_req.benchmark, measure_req.trial_id,
                 cycle)
-            # Append the process-specific data frames to respective
-            # multiprocessing list.
+
             segment_list.append(process_specific_df_container.segment_df)
             function_list.append(process_specific_df_container.function_df)
+
             if not snapshot:
                 break
             q.put(snapshot)

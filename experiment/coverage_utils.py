@@ -42,8 +42,7 @@ def get_coverage_info_dir():
     return os.path.join(work_dir, 'coverage')
 
 
-def generate_coverage_reports(experiment_config: dict,
-                              experiment_specific_df_container):
+def generate_coverage_reports(experiment_config: dict):
     """Generates coverage reports for each benchmark and fuzzer."""
     logs.initialize()
     logger.info('Start generating coverage reports.')
@@ -56,7 +55,6 @@ def generate_coverage_reports(experiment_config: dict,
         for fuzzer in fuzzers:
             generate_coverage_report(experiment, benchmark, fuzzer)
 
-    experiment_specific_df_container.generate_csv_files()
     logger.info('Finished generating coverage reports.')
 
 
@@ -201,7 +199,7 @@ def generate_coverage_report(experiment, benchmark, fuzzer):
         # Merges all the profdata files.
         coverage_reporter.merge_profdata_files()
 
-        # Generate the coverage summary json file based on merged profdata file
+        # Generate the coverage summary json file based on merged profdata file.
         coverage_reporter.generate_coverage_summary_json()
 
         # Generate the coverage regions json file.
@@ -231,6 +229,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
                                        fuzzer)
         self.data_dir = os.path.join(coverage_info_dir, 'data', benchmark,
                                      fuzzer)
+
         benchmark_fuzzer_dir = exp_utils.get_benchmark_fuzzer_dir(
             benchmark, fuzzer)
         work_dir = exp_utils.get_work_dir()
@@ -266,20 +265,16 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             logger.error('Profdata files merging failed.')
 
     def generate_coverage_summary_json(self):
-        """Generates the coverage summary json from merged profdata file and
-        trial-specific coverage summary json from trial-specific profdata file.
-        """
+        """Generates the coverage summary json from merged profdata file."""
         coverage_binary = get_coverage_binary(self.benchmark)
-        # Generate merged coverage summary json.
         result = generate_json_summary(coverage_binary,
                                        self.merged_profdata_file,
                                        self.merged_summary_json_file,
                                        summary_only=False)
-
         if result.retcode != 0:
             logger.error(
                 'Merged coverage summary json file generation failed for '
-                'fuzzer: {fuzzer}, benchmark: {benchmark}.'.format(
+                'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
                     fuzzer=self.fuzzer, benchmark=self.benchmark))
 
     def generate_coverage_report(self):
@@ -406,12 +401,9 @@ def generate_json_summary(coverage_binary,
 
 def extract_segments_and_functions_from_summary_json(  # pylint: disable=too-many-locals
         summary_json_file, benchmark, fuzzer, trial_id, time_stamp):
-    """Return a process-specific data frame with segment and function coverage
-    information given a trial-specific coverage summary json file."""
-    # Create process specific data frame container as this function is called by
-    # multiple processes while measuring. So each process returns a
-    # process-specific data frame container with all the information collected
-    # in that particular process
+    """Return a trial-specific data frame container with segment and function
+     coverage information given a trial-specific coverage summary json file."""
+
     process_specific_df_container = DataFrameContainer()
 
     try:
@@ -429,7 +421,7 @@ def extract_segments_and_functions_from_summary_json(  # pylint: disable=too-man
                 process_specific_df_container.function_df.append(
                     series, ignore_index=True))
 
-        # Extract coverage information for functions and segments.
+        # Extract coverage information for segments.
         line_index = 0
         col_index = 1
         hits_index = 2
