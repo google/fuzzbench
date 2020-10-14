@@ -21,6 +21,7 @@ import collections
 import os
 import re
 import sys
+from typing import Optional
 
 from common import logs
 from common import fuzzer_utils
@@ -77,11 +78,17 @@ BENCHMARKS = [
 
 
 def _get_experiment_name(experiment_config: dict) -> str:
-    """Returns the name of the experiment described by experiment_config as a
+    """Returns the name of the experiment described by |experiment_config| as a
     string."""
     # Use str because the yaml parser will parse things like `2020-05-06` as
     # a datetime if not included in quotes.
     return str(experiment_config['experiment'])
+
+
+def _get_description(experiment_config: dict) -> Optional[str]:
+    """Returns the description of the experiment described by
+    |experiment_config| as a string."""
+    return experiment_config.get('description')
 
 
 def _get_requested_experiments():
@@ -203,10 +210,11 @@ def run_requested_experiment(dry_run):
 
     logs.info('Running experiment: %s with fuzzers: %s.', experiment_name,
               ' '.join(fuzzers))
-    return _run_experiment(experiment_name, fuzzers, dry_run)
+    description = _get_description(requested_experiment)
+    return _run_experiment(experiment_name, fuzzers, description, dry_run)
 
 
-def _run_experiment(experiment_name, fuzzers, dry_run=False):
+def _run_experiment(experiment_name, fuzzers, description, dry_run=False):
     """Run an experiment named |experiment_name| on |fuzzer_configs| and shut it
     down once it terminates."""
     logs.info('Starting experiment: %s.', experiment_name)
@@ -214,7 +222,7 @@ def _run_experiment(experiment_name, fuzzers, dry_run=False):
         logs.info('Dry run. Not actually running experiment.')
         return
     run_experiment.start_experiment(experiment_name, EXPERIMENT_CONFIG_FILE,
-                                    BENCHMARKS, fuzzers)
+                                    BENCHMARKS, fuzzers, description)
 
 
 def main():
