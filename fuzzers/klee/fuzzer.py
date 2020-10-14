@@ -370,6 +370,7 @@ def convert_outputs(ktest_tool, output_klee, crash_dir, queue_dir, info_dir):
                 Found {crashes} crashes'.format(converted=n_converted,
                                                 crashes=n_crashes))
 
+
 # pylint: disable=import-error
 # pylint: disable=import-outside-toplevel
 def monitor_resource_usage():
@@ -389,6 +390,7 @@ def monitor_resource_usage():
         print('[resource_thread] Resource usage after {time}:\n{message}',
               time=now - start,
               message=message)
+
 
 # pylint: disable=import-error
 # pylint: disable=import-outside-toplevel
