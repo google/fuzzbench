@@ -408,7 +408,7 @@ class TestIntegrationMeasurement:
             mocked_cp.return_value = new_process.ProcessResult(0, '', False)
             # TODO(metzman): Create a system for using actual buckets in
             # integration tests.
-            snapshot, _, __ = measurer.measure_snapshot_coverage(  # pylint: disable=unused-variable
+            snapshot, _ = measurer.measure_snapshot_coverage(  # pylint: disable=unused-variable
                 snapshot_measurer.fuzzer, snapshot_measurer.benchmark,
                 snapshot_measurer.trial_num, cycle)
         assert snapshot
