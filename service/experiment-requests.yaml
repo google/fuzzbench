@@ -19,6 +19,7 @@
 # Please add new experiment requests towards the top of this file.
 
 - experiment: 2020-10-16
+  description: "memcache test"
   fuzzers:
     - aflplusplus
     - aflplusplus_optimal
