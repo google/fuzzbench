@@ -23,6 +23,7 @@ import re
 import sys
 from typing import Optional
 
+from common import experiment_utils
 from common import logs
 from common import fuzzer_utils
 from common import utils
@@ -83,6 +84,13 @@ def _get_experiment_name(experiment_config: dict) -> str:
     # Use str because the yaml parser will parse things like `2020-05-06` as
     # a datetime if not included in quotes.
     return str(experiment_config['experiment'])
+
+
+def _get_experiment_type(experiment_config: dict) -> str:
+    """Returns the type of the experiment described by
+    |experiment_config| as a string, defaults to coverage."""
+    return experiment_config.get('type',
+                                 experiment_utils.ExperimentType.COVERAGE)
 
 
 def _get_description(experiment_config: dict) -> Optional[str]:
@@ -153,6 +161,15 @@ def _validate_individual_experiment_requests(experiment_requests):
             logger.error(
                 'Request: %s "description" attribute is not a valid string.',
                 request)
+            valid = False
+            continue
+
+        experiment_type = request.get('type')
+        if experiment_type is not None and experiment_type not in [
+                experiment_utils.ExperimentType.COVERAGE,
+                experiment_utils.ExperimentType.BUG
+        ]:
+            logger.error('Request: %s "type" attribute is not valid.', request)
             valid = False
             continue
 
@@ -233,14 +250,18 @@ def run_requested_experiment(dry_run):
 
     logs.info('Running experiment: %s with fuzzers: %s.', experiment_name,
               ' '.join(fuzzers))
+
+    experiment_type = _get_experiment_type(requested_experiment)
     description = _get_description(requested_experiment)
     oss_fuzz_corpus = _use_oss_fuzz_corpus(requested_experiment)
-    return _run_experiment(experiment_name, fuzzers, description,
-                           oss_fuzz_corpus, dry_run)
+    return _run_experiment(experiment_name, fuzzers, experiment_type,
+                           description, oss_fuzz_corpus, dry_run)
 
 
+# pylint: disable=too-many-arguments
 def _run_experiment(experiment_name,
                     fuzzers,
+                    experiment_type,
                     description,
                     oss_fuzz_corpus,
                     dry_run=False):
@@ -254,6 +275,7 @@ def _run_experiment(experiment_name,
                                     EXPERIMENT_CONFIG_FILE,
                                     BENCHMARKS,
                                     fuzzers,
+                                    experiment_type=experiment_type,
                                     description=description,
                                     oss_fuzz_corpus=oss_fuzz_corpus)
 

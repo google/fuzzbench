@@ -23,6 +23,12 @@ DEFAULT_SNAPSHOT_SECONDS = 15 * 60  # Seconds.
 CONFIG_DIR = 'config'
 
 
+class ExperimentType:
+    """Type of experiment."""
+    COVERAGE = 'cov'
+    BUG = 'bug'
+
+
 def get_snapshot_seconds():
     """Returns the amount of time in seconds between snapshots of a
     fuzzer's corpus during an experiment."""

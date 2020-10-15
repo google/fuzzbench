@@ -99,6 +99,7 @@ def test_run_requested_experiment(mocked_get_requested_experiments,
                   expected_config_file,
                   expected_benchmarks,
                   expected_fuzzers,
+                  experiment_type='cov',
                   description='Test experiment',
                   oss_fuzz_corpus=True)
     ]
@@ -163,6 +164,12 @@ def test_validate_experiment_name(name, expected_result):
             'experiment': EXPERIMENT,
             'fuzzers': ['afl'],
             'oss_fuzz_corpus': 'invalid',
+        }, False),
+        # Invalid type flag.
+        ({
+            'experiment': EXPERIMENT,
+            'fuzzers': ['afl'],
+            'type': 'invalid',
         }, False),
     ])
 def test_validate_experiment_requests(exp_request, expected_result):

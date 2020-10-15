@@ -36,6 +36,7 @@ class Experiment(Base):
     private = Column(Boolean, nullable=False, default=False)
     experiment_filestore = Column(String, nullable=True)
     description = Column(UnicodeText, nullable=True)
+    type = Column(String, nullable=True)
 
 
 class Trial(Base):

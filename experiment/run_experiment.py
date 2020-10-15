@@ -205,6 +205,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
         config_filename: str,
         benchmarks: List[str],
         fuzzers: List[str],
+        experiment_type: str = None,
         description: str = None,
         no_seeds=False,
         no_dictionaries=False,
@@ -220,10 +221,11 @@ def start_experiment(  # pylint: disable=too-many-arguments
     config['benchmarks'] = benchmarks
     config['experiment'] = experiment_name
     config['git_hash'] = get_git_hash()
+    config['type'] = experiment_type
+    config['description'] = description
     config['no_seeds'] = no_seeds
     config['no_dictionaries'] = no_dictionaries
     config['oss_fuzz_corpus'] = oss_fuzz_corpus
-    config['description'] = description
 
     set_up_experiment_config_file(config)
 
@@ -508,6 +510,16 @@ def main():
         required=False,
         default=False,
         action='store_true')
+    parser.add_argument(
+        '-t',
+        '--type',
+        help='Experiment type (either \'cov\' or \'bug\'). Default - cov.',
+        required=False,
+        default=experiment_utils.ExperimentType.COVERAGE,
+        choices=[
+            experiment_utils.ExperimentType.COVERAGE,
+            experiment_utils.ExperimentType.BUG
+        ])
     args = parser.parse_args()
     fuzzers = args.fuzzers or all_fuzzers
 
@@ -515,6 +527,7 @@ def main():
                      args.experiment_config,
                      args.benchmarks,
                      fuzzers,
+                     experiment_type=args.type,
                      description=args.description,
                      no_seeds=args.no_seeds,
                      no_dictionaries=args.no_dictionaries,

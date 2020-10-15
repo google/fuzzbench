@@ -67,7 +67,8 @@ def _initialize_experiment_in_db(experiment_config: dict):
             git_hash=experiment_config['git_hash'],
             private=experiment_config.get('private', True),
             experiment_filestore=experiment_config['experiment_filestore'],
-            description=experiment_config['description']),
+            description=experiment_config['description'],
+            type=experiment_config['type']),
     ])
 
 
@@ -96,6 +97,7 @@ class Experiment:  # pylint: disable=too-many-instance-attributes
         self.fuzzers = self.config['fuzzers']
         self.num_trials = self.config['trials']
         self.experiment_name = self.config['experiment']
+        self.experiment_type = self.config['type']
         self.git_hash = self.config['git_hash']
         self.preemptible = self.config.get('preemptible_runners')
 
