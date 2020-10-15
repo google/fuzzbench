@@ -332,8 +332,7 @@ def get_coverage_binary(benchmark: str) -> str:
 
 
 def get_trial_ids(experiment: str, fuzzer: str, benchmark: str):
-    """Gets ids of all finished trials for a pair of
-    fuzzer and benchmark."""
+    """Gets ids of all finished trials for a pair of fuzzer and benchmark."""
     trial_ids = [
         trial_id_tuple[0]
         for trial_id_tuple in db_utils.query(models.Trial.id).filter(
