@@ -17,6 +17,7 @@ import ast
 import configparser
 import contextlib
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -25,7 +26,23 @@ import tempfile
 # specifies it.
 DEFAULT_OPTIMIZATION_LEVEL = '-O3'
 
+# Flags to use when using sanitizer for bug based benchmarking.
+SANITIZER_FLAGS = ['-fsanitize=address']
+
+# Use these flags when compiling benchmark code without a sanitizer (e.g. when
+# using eclipser). This is necessary because many OSS-Fuzz targets cannot
+# otherwise be compiled without a sanitizer because they implicitly depend on
+# libraries linked into the sanitizer runtime. These flags link against those
+# libraries.
+NO_SANITIZER_COMPAT_CFLAGS = [
+    '-pthread', '-Wl,--no-as-needed', '-Wl,-ldl', '-Wl,-lm',
+    '-Wno-unused-command-line-argument'
+]
+NO_SANITIZER_COMPAT_CXXFLAGS = ['-stdlib=libc++'] + NO_SANITIZER_COMPAT_CFLAGS
+
 OSS_FUZZ_LIB_FUZZING_ENGINE_PATH = '/usr/lib/libFuzzingEngine.a'
+BENCHMARK_CONFIG_YAML_PATH = '/benchmark.yaml'
+CONFIG_ATTR_VAL_REGEX = re.compile(r'(?P<attribute>\w+)\s*:\s*(?P<value>\w+)')
 
 
 def build_benchmark(env=None):
@@ -55,31 +72,23 @@ def append_flags(env_var, additional_flags, env=None):
     and assign env_var to the result."""
     if env is None:
         env = os.environ
-    flags = env.get(env_var, '').split(' ')
+
+    env_var_value = env.get(env_var)
+    flags = env_var_value.split(' ') if env_var_value else []
     flags.extend(additional_flags)
     env[env_var] = ' '.join(flags)
 
 
-# Use these flags when compiling benchmark code without a sanitizer (e.g. when
-# using eclipser). This is necessary because many OSS-Fuzz targets cannot
-# otherwise be compiled without a sanitizer because they implicitly depend on
-# libraries linked into the sanitizer runtime. These flags link against those
-# libraries.
-NO_SANITIZER_COMPAT_CFLAGS = [
-    '-pthread', '-Wl,--no-as-needed', '-Wl,-ldl', '-Wl,-lm',
-    '-Wno-unused-command-line-argument'
-]
-NO_SANITIZER_COMPAT_CXXFLAGS = ['-stdlib=libc++'] + NO_SANITIZER_COMPAT_CFLAGS
-
-
-def set_no_sanitizer_compilation_flags(env=None):
-    """Set compilation flags (CFLAGS and CXXFLAGS) in |env| so that a benchmark
-    can be compiled without a sanitizer. If |env| is not provided, the program's
-    environment will be used."""
-    if env is None:
-        env = os.environ
-    env['CFLAGS'] = ' '.join(NO_SANITIZER_COMPAT_CFLAGS)
-    env['CXXFLAGS'] = ' '.join(NO_SANITIZER_COMPAT_CXXFLAGS)
+def get_config_value(attribute):
+    """Gets config attribute value from benchmark config yaml file."""
+    with open(BENCHMARK_CONFIG_YAML_PATH) as file_handle:
+        # Hacky yaml parsing without PyYAML dependency.
+        content = file_handle.read()
+        for line in content.splitlines():
+            match = CONFIG_ATTR_VAL_REGEX.match(line)
+            if match and match.group('attribute') == attribute:
+                return match.group('value')
+    return None
 
 
 @contextlib.contextmanager
@@ -150,19 +159,43 @@ def get_dictionary_path(target_binary):
     return None
 
 
-def set_default_optimization_flag(env=None):
-    """Set default optimization flag if none is already set."""
-    if not env:
+def set_fuzz_target(env=None):
+    """Set compilation flags."""
+    if env is None:
         env = os.environ
 
-    for flag_var in ['CFLAGS', 'CXXFLAGS']:
-        append_flags(flag_var, [DEFAULT_OPTIMIZATION_LEVEL], env=env)
+    env['FUZZ_TARGET'] = get_config_value('fuzz_target')
+
+
+def set_compilation_flags(env=None):
+    """Set compilation flags."""
+    if env is None:
+        env = os.environ
+
+    env['CFLAGS'] = ''
+    env['CXXFLAGS'] = ''
+
+    if get_config_value('type') == 'bug':
+        append_flags('CFLAGS',
+                     SANITIZER_FLAGS + [DEFAULT_OPTIMIZATION_LEVEL],
+                     env=env)
+        append_flags('CXXFLAGS',
+                     SANITIZER_FLAGS + [DEFAULT_OPTIMIZATION_LEVEL],
+                     env=env)
+    else:
+        append_flags('CFLAGS',
+                     NO_SANITIZER_COMPAT_CFLAGS + [DEFAULT_OPTIMIZATION_LEVEL],
+                     env=env)
+        append_flags('CXXFLAGS',
+                     NO_SANITIZER_COMPAT_CXXFLAGS +
+                     [DEFAULT_OPTIMIZATION_LEVEL],
+                     env=env)
 
 
 def initialize_flags(env=None):
     """Set initial flags before fuzzer.build() is called."""
-    set_no_sanitizer_compilation_flags(env)
-    set_default_optimization_flag(env)
+    set_fuzz_target(env)
+    set_compilation_flags(env)
 
     for flag_var in ['CFLAGS', 'CXXFLAGS']:
         print('{flag_var} = {flag_value}'.format(

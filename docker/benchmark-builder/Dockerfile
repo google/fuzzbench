@@ -42,11 +42,10 @@ RUN touch $SRC/__init__.py
 # and is not needed during build process.
 ENV ASAN_OPTIONS="detect_leaks=0"
 
+COPY benchmarks/$benchmark/benchmark.yaml /
+
 RUN mkdir /opt/fuzzbench/
 COPY docker/benchmark-builder/checkout_commit.py /opt/fuzzbench/
-COPY benchmarks/$benchmark/benchmark.yaml /
 RUN export CHECKOUT_COMMIT=$(cat /benchmark.yaml | tr -d ' ' | grep 'commit:' | cut -d ':' -f2) && \
     python3 -u /opt/fuzzbench/checkout_commit.py $CHECKOUT_COMMIT $SRC
-
-RUN export FUZZ_TARGET=$(cat /benchmark.yaml | tr -d ' ' | grep 'fuzz_target:' | cut -d ':' -f2) && \
-    PYTHONPATH=$SRC python3 -u -c "from fuzzers import utils; utils.initialize_flags(); import fuzzer; fuzzer.build()"
+RUN PYTHONPATH=$SRC python3 -u -c "from fuzzers import utils; utils.initialize_flags(); import fuzzer; fuzzer.build()"
