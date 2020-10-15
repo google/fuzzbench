@@ -14,7 +14,6 @@
 """Tests for coverage_utils.py"""
 import os
 
-import pandas as pd
 from experiment import coverage_utils
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -25,7 +24,7 @@ def get_test_data_path(*subpaths):
     return os.path.join(TEST_DATA_PATH, *subpaths)
 
 
-def test_extract_segment_and_function_from_summary_json(fs):
+def test_extract_segments_and_functions_from_summary_json(fs):
     """Tests that extract_covered_regions_from_summary_json returns the covered
     segments and functions from summary json file."""
     num_functions_in_cov_summary = 3  # for testing
@@ -35,25 +34,18 @@ def test_extract_segment_and_function_from_summary_json(fs):
     benchmark = 'freetype2'  # for testing
     fuzzer = 'afl'  # for testing
     trial_id = 2  # for testing
+    timestamp = 900
 
-    segment_df = pd.DataFrame(
-        columns=["benchmark", "fuzzer", "trial_id", "file_name", "line", "col"])
-    function_df = pd.DataFrame(
-        columns=["benchmark", "fuzzer", "trial_id", "function_name", "hits"])
-    name_df = pd.DataFrame(columns=['id', 'name', 'type'])
-
-    df_container = coverage_utils.DataFrameContainer(segment_df, function_df,
-                                                     name_df)
-
-    coverage_utils.extract_covered_segments_and_functions_from_summary_json(
-        summary_json_file, benchmark, fuzzer, trial_id, df_container)
+    df_container = (
+        coverage_utils.extract_segments_and_functions_from_summary_json(
+            summary_json_file, benchmark, fuzzer, trial_id, timestamp))
 
     assert len(df_container.segment_df) == num_covered_segments_in_cov_summary
     assert len(df_container.function_df) == num_functions_in_cov_summary
 
 
 def test_prepare_name_dataframes(fs):
-    """Tests that prepare_name_dataframes extracts all the names from segment
+    """Tests that prepare_name_dataframe extracts all the names from segment
     and function data frames and creates name data frame with all names and ids
     to reference the same"""
     summary_json_file = get_test_data_path('cov_summary.json')
@@ -61,21 +53,15 @@ def test_prepare_name_dataframes(fs):
     benchmark = 'freetype2'  # for testing
     fuzzer = 'afl'  # for testing
     trial_id = 2  # for testing
+    timestamp = "900"
     function_name_test_cov_summary = ['main', '_Z3fooIiEvT_', '_Z3fooIfEvT_']
     filename_test_cov_summary = ['/home/test/fuzz_no_fuzzer.cc']
 
-    segment_df = pd.DataFrame(
-        columns=["benchmark", "fuzzer", "trial_id", "file_name", "line", "col"])
-    function_df = pd.DataFrame(
-        columns=["benchmark", "fuzzer", "trial_id", "function_name", "hits"])
-    name_df = pd.DataFrame(columns=['id', 'name', 'type'])
+    df_container = (
+        coverage_utils.extract_segments_and_functions_from_summary_json(
+            summary_json_file, benchmark, fuzzer, trial_id, timestamp))
 
-    df_container = coverage_utils.DataFrameContainer(segment_df, function_df,
-                                                     name_df)
-
-    coverage_utils.extract_covered_segments_and_functions_from_summary_json(
-        summary_json_file, benchmark, fuzzer, trial_id, df_container)
-    coverage_utils.prepare_name_dataframes(df_container)
+    df_container.prepare_name_dataframe()
 
     for func_id in list(df_container.function_df['function_id'].unique()):
         assert (df_container.name_df.loc[df_container.name_df['id'] ==
