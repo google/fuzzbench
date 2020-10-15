@@ -36,8 +36,8 @@ COV_DIFF_QUEUE_GET_TIMEOUT = 1
 
 
 def get_coverage_info_dir():
-    """Returns the directory to store coverage information including
-    coverage report and json summary file."""
+    """Returns the directory to store coverage information including coverage
+    report and json summary file."""
     work_dir = exp_utils.get_work_dir()
     return os.path.join(work_dir, 'coverage')
 
@@ -108,7 +108,7 @@ class DataFrameContainer:
             reshaped_name_df['name'] = reshaped_name_df.index
 
             # Helper function to rename, drop, and leftjoin in bulk.
-            def rename_drop_columns_and_leftjoin(df1, df2, name_list):  # pylint: disable=no-self-use
+            def rename_drop_columns_and_leftjoin(df1, df2, name_list):
                 column_name = name_list[0]
                 df2.columns = [
                     'benchmark_id', 'file_id', 'function_id', 'fuzzer_id',
@@ -149,11 +149,11 @@ class DataFrameContainer:
 
     def remove_redundant_duplicates(self):
         """Removes redundant entries in segment_df. Before calling this
-        function, for each time stamp, segment_df contains all segments that
-        are covered in this time stamp. After calling this function, for each
-        time stamp, segment_df only contains segments that have been covered
-        since the previous time stamp. This signifcantly reduces the size of
-        the resulting CSV file."""
+        function, for each time stamp, segment_df contains all segments that are
+        covered in this time stamp. After calling this function, for each time
+        stamp, segment_df only contains segments that have been covered since
+        the previous time stamp. This significantly reduces the size of the
+        resulting CSV file."""
         try:
             # Drop duplicates but with different timestamps in segment data.
             self.segment_df = self.segment_df.sort_values(by=['time_stamp'])
@@ -214,8 +214,8 @@ def generate_coverage_report(experiment, benchmark, fuzzer):
 
 
 class CoverageReporter:  # pylint: disable=too-many-instance-attributes
-    """Class used to generate coverage report for a pair of
-    fuzzer and benchmark."""
+    """Class used to generate coverage report for a pair of fuzzer and
+    benchmark."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, experiment, fuzzer, benchmark):
@@ -332,7 +332,8 @@ def get_coverage_binary(benchmark: str) -> str:
 
 
 def get_trial_ids(experiment: str, fuzzer: str, benchmark: str):
-    """Gets ids of all finished trials for a pair of fuzzer and benchmark."""
+    """Gets ids of all finished trials for a pair of
+    fuzzer and benchmark."""
     trial_ids = [
         trial_id_tuple[0]
         for trial_id_tuple in db_utils.query(models.Trial.id).filter(
