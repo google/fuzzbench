@@ -26,6 +26,8 @@ import tempfile
 # specifies it.
 DEFAULT_OPTIMIZATION_LEVEL = '-O3'
 
+LIBCPLUSPLUS_FLAG = '-stdlib=libc++'
+
 # Flags to use when using sanitizer for bug based benchmarking.
 SANITIZER_FLAGS = ['-fsanitize=address']
 
@@ -38,7 +40,6 @@ NO_SANITIZER_COMPAT_CFLAGS = [
     '-pthread', '-Wl,--no-as-needed', '-Wl,-ldl', '-Wl,-lm',
     '-Wno-unused-command-line-argument'
 ]
-NO_SANITIZER_COMPAT_CXXFLAGS = ['-stdlib=libc++'] + NO_SANITIZER_COMPAT_CFLAGS
 
 OSS_FUZZ_LIB_FUZZING_ENGINE_PATH = '/usr/lib/libFuzzingEngine.a'
 BENCHMARK_CONFIG_YAML_PATH = '/benchmark.yaml'
@@ -180,15 +181,16 @@ def set_compilation_flags(env=None):
                      SANITIZER_FLAGS + [DEFAULT_OPTIMIZATION_LEVEL],
                      env=env)
         append_flags('CXXFLAGS',
-                     SANITIZER_FLAGS + [DEFAULT_OPTIMIZATION_LEVEL],
+                     SANITIZER_FLAGS +
+                     [LIBCPLUSPLUS_FLAG, DEFAULT_OPTIMIZATION_LEVEL],
                      env=env)
     else:
         append_flags('CFLAGS',
                      NO_SANITIZER_COMPAT_CFLAGS + [DEFAULT_OPTIMIZATION_LEVEL],
                      env=env)
         append_flags('CXXFLAGS',
-                     NO_SANITIZER_COMPAT_CXXFLAGS +
-                     [DEFAULT_OPTIMIZATION_LEVEL],
+                     NO_SANITIZER_COMPAT_CFLAGS +
+                     [LIBCPLUSPLUS_FLAG, DEFAULT_OPTIMIZATION_LEVEL],
                      env=env)
 
 

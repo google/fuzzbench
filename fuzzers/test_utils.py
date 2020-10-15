@@ -87,8 +87,8 @@ def test_initialize_flags_in_environment_without_sanitizer(fs, environ):
         '-pthread -Wl,--no-as-needed -Wl,-ldl -Wl,-lm '
         '-Wno-unused-command-line-argument -O3')
     assert os.getenv('CXXFLAGS') == (
-        '-stdlib=libc++ -pthread -Wl,--no-as-needed -Wl,-ldl -Wl,-lm '
-        '-Wno-unused-command-line-argument -O3')
+        '-pthread -Wl,--no-as-needed -Wl,-ldl -Wl,-lm '
+        '-Wno-unused-command-line-argument -stdlib=libc++ -O3')
 
 
 def test_initialize_flags_in_environment_with_sanitizer(fs, environ):
@@ -98,7 +98,7 @@ def test_initialize_flags_in_environment_with_sanitizer(fs, environ):
     utils.initialize_flags()
     assert os.getenv('FUZZ_TARGET') == 'fuzzer'
     assert os.getenv('CFLAGS') == '-fsanitize=address -O3'
-    assert os.getenv('CXXFLAGS') == '-fsanitize=address -O3'
+    assert os.getenv('CXXFLAGS') == '-fsanitize=address -stdlib=libc++ -O3'
 
 
 def test_initialize_flags_in_var_without_sanitizer(fs):
@@ -110,8 +110,8 @@ def test_initialize_flags_in_var_without_sanitizer(fs):
     assert env.get('CFLAGS') == ('-pthread -Wl,--no-as-needed -Wl,-ldl -Wl,-lm '
                                  '-Wno-unused-command-line-argument -O3')
     assert env.get('CXXFLAGS') == (
-        '-stdlib=libc++ -pthread -Wl,--no-as-needed -Wl,-ldl -Wl,-lm '
-        '-Wno-unused-command-line-argument -O3')
+        '-pthread -Wl,--no-as-needed -Wl,-ldl -Wl,-lm '
+        '-Wno-unused-command-line-argument -stdlib=libc++ -O3')
 
 
 def test_initialize_flags_in_var_with_sanitizer(fs):
@@ -121,4 +121,4 @@ def test_initialize_flags_in_var_with_sanitizer(fs):
     utils.initialize_flags(env)
     assert env.get('FUZZ_TARGET') == 'fuzzer'
     assert env.get('CFLAGS') == '-fsanitize=address -O3'
-    assert env.get('CXXFLAGS') == '-fsanitize=address -O3'
+    assert env.get('CXXFLAGS') == '-fsanitize=address -stdlib=libc++ -O3'
