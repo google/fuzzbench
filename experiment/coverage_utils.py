@@ -160,12 +160,42 @@ class DataFrameContainer:
             self.segment_df = self.segment_df.drop_duplicates(
                 subset=self.segment_df.columns.difference(['time_stamp']),
                 keep="first")
-            # Converting all values to integer
-            self.segment_df = self.segment_df.astype(int)
-            self.function_df = self.function_df.astype(int)
 
         except (ValueError, KeyError, IndexError):
             logger.error('Error occurred when removing duplicates.')
+
+    def change_all_numeric_columns_to_int(self):
+        """Casts all the columns in segment_df and function_df to integer
+        type to avoid float/numeric types with decimal values"""
+        try:
+            # Cast all columns in segment_df and function_df to integer.
+            self.segment_df = self.segment_df.astype(int)
+            self.function_df = self.function_df.astype(int)
+        except TypeError:
+            logger.error('Error occurred when casting all columns in DataFrame'
+                         ' to integer type.')
+
+    def reorder_columns_in_segment_and_function_df(self):
+        """Re-orders the columns of segment_df and fucntion_df to the desired
+        order"""
+        try:
+            # Re-order columns in segment_df.
+            segmentdf_col_names = [
+                "benchmark_id", "fuzzer_id", "trial_id", "time_stamp",
+                "file_id", "line", "col"
+            ]
+            self.segment_df = self.segment_df.reindex(
+                columns=segmentdf_col_names)
+            # Re-order columns in function_df.
+            functiondf_col_names = [
+                "benchmark_id", "fuzzer_id", "trial_id", "time_stamp",
+                "function_id", "hits"
+            ]
+            self.function_df = self.function_df.reindex(
+                columns=functiondf_col_names)
+        except (IndexError, ValueError, KeyError):
+            logger.error('Error occurred when reordering columns in '
+                         'DataFrames.')
 
     def generate_csv_files(self):
         """Generates three compressed CSV files containing coverage information
@@ -176,6 +206,8 @@ class DataFrameContainer:
         # Clean and prune experiment-specific data frames.
         self.prepare_name_dataframe()
         self.remove_redundant_duplicates()
+        self.change_all_numeric_columns_to_int()
+        self.reorder_columns_in_segment_and_function_df()
 
         # Write CSV files to file store.
         def csv_filestore_helper(file_name, df):
