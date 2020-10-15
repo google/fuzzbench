@@ -172,7 +172,7 @@ class DataFrameContainer:
             self.segment_df = self.segment_df.astype(int)
             self.function_df = self.function_df.astype(int)
         except TypeError:
-            logger.error('Error occurred when casting all colums in dataframe'
+            logger.error('Error occurred when casting all columns in DataFrame'
                          ' to integer type.')
 
     def reorder_columns_in_segment_and_function_df(self):
@@ -186,12 +186,12 @@ class DataFrameContainer:
                 columns=segmentdf_col_names)
             # Re-order columns in function_df.
             functiondf_col_names = ["benchmark_id", "fuzzer_id", "trial_id",
-                                   "time_stamp", "function_id", "hits"]
+                                    "time_stamp", "function_id", "hits"]
             self.function_df = self.function_df.reindex(
                 columns=functiondf_col_names)
         except (IndexError, ValueError, KeyError):
             logger.error('Error occurred when reordering columns in '
-                         'dataframes.')
+                         'DataFrames.')
 
     def generate_csv_files(self):
         """Generates three compressed CSV files containing coverage information

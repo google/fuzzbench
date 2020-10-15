@@ -576,8 +576,9 @@ def measure_trial_coverage(  # pylint: disable=invalid-name
                 measure_req.fuzzer, measure_req.benchmark, measure_req.trial_id,
                 cycle)
 
-            segment_list.append(process_specific_df_container.segment_df)
-            function_list.append(process_specific_df_container.function_df)
+            if process_specific_df_container is not None:
+                segment_list.append(process_specific_df_container.segment_df)
+                function_list.append(process_specific_df_container.function_df)
 
             if not snapshot:
                 break
