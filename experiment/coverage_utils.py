@@ -180,13 +180,17 @@ class DataFrameContainer:
         order"""
         try:
             # Re-order columns in segment_df.
-            segmentdf_col_names = ["benchmark_id", "fuzzer_id", "trial_id",
-                                   "time_stamp", "file_id", "line", "col"]
+            segmentdf_col_names = [
+                "benchmark_id", "fuzzer_id", "trial_id", "time_stamp",
+                "file_id", "line", "col"
+            ]
             self.segment_df = self.segment_df.reindex(
                 columns=segmentdf_col_names)
             # Re-order columns in function_df.
-            functiondf_col_names = ["benchmark_id", "fuzzer_id", "trial_id",
-                                    "time_stamp", "function_id", "hits"]
+            functiondf_col_names = [
+                "benchmark_id", "fuzzer_id", "trial_id", "time_stamp",
+                "function_id", "hits"
+            ]
             self.function_df = self.function_df.reindex(
                 columns=functiondf_col_names)
         except (IndexError, ValueError, KeyError):
