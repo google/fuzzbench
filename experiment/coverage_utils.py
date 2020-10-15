@@ -160,6 +160,10 @@ class DataFrameContainer:
             self.segment_df = self.segment_df.drop_duplicates(
                 subset=self.segment_df.columns.difference(['time_stamp']),
                 keep="first")
+            # Converting all values to integer
+            self.segment_df = self.segment_df.astype(int)
+            self.function_df = self.function_df.astype(int)
+
         except (ValueError, KeyError, IndexError):
             logger.error('Error occurred when removing duplicates.')
 
