@@ -43,7 +43,8 @@ NO_SANITIZER_COMPAT_CFLAGS = [
 
 OSS_FUZZ_LIB_FUZZING_ENGINE_PATH = '/usr/lib/libFuzzingEngine.a'
 BENCHMARK_CONFIG_YAML_PATH = '/benchmark.yaml'
-CONFIG_ATTR_VAL_REGEX = re.compile(r'(?P<attribute>\w+)\s*:\s*(?P<value>\w+)')
+CONFIG_ATTR_VAL_REGEX = re.compile(
+    r'(?P<attribute>[^\s]+)\s*:\s*(?P<value>[^\s]+)')
 
 
 def build_benchmark(env=None):

@@ -6,4 +6,3 @@ type: bug
 unsupported_fuzzers:
   - aflcc
   - klee
-
