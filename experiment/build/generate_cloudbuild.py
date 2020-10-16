@@ -65,8 +65,8 @@ def get_docker_registry():
 
 
 def create_cloudbuild_spec(image_templates,
-                            benchmark='',
-                            build_base_images=False):
+                           benchmark='',
+                           build_base_images=False):
     """Generates Cloud Build specification.
 
     Args:
@@ -99,8 +99,7 @@ def create_cloudbuild_spec(image_templates,
         }
         step['args'] = [
             'build', '--tag',
-            posixpath.join(docker_registry,
-                           image_specs['tag']), '--tag',
+            posixpath.join(docker_registry, image_specs['tag']), '--tag',
             get_experiment_tag_for_image(image_specs), '--cache-from',
             get_experiment_tag_for_image(image_specs, tag_by_experiment=False),
             '--build-arg', 'BUILDKIT_INLINE_CACHE=1'

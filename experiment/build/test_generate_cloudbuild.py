@@ -13,18 +13,11 @@
 # limitations under the License.
 """Tests for generate_cloudbuild.py."""
 
-import os
-
-from unittest.mock import patch
-
 from experiment.build import generate_cloudbuild
 
+# pylint: disable=unused-argument
 
-@patch.dict(os.environ, {
-    'CLOUD_PROJECT': 'fuzzbench',
-    'EXPERIMENT': 'test-experiment'
-})
-def test_generate_cloudbuild_spec_build_base_image():
+def test_generate_cloudbuild_spec_build_base_image(experiment):
     """Tests cloud build configuration yaml for the base image."""
     image_templates = {
         'base-image': {
@@ -65,11 +58,7 @@ def test_generate_cloudbuild_spec_build_base_image():
     assert generated_spec == expected_spec
 
 
-@patch.dict(os.environ, {
-    'CLOUD_PROJECT': 'fuzzbench',
-    'EXPERIMENT': 'test-experiment'
-})
-def test_generate_cloudbuild_spec_build_fuzzer_benchmark():
+def test_generate_cloudbuild_spec_build_fuzzer_benchmark(experiment):
     """Tests cloud build configuration yaml for a fuzzer-benchmark build."""
     image_templates = {
         'afl-zlib-builder-intermediate': {
@@ -84,8 +73,7 @@ def test_generate_cloudbuild_spec_build_fuzzer_benchmark():
         }
     }
 
-    generated_spec = generate_cloudbuild.create_cloudbuild_spec(
-        image_templates)
+    generated_spec = generate_cloudbuild.create_cloudbuild_spec(image_templates)
 
     expected_spec = {
         'steps': [{
@@ -113,14 +101,7 @@ def test_generate_cloudbuild_spec_build_fuzzer_benchmark():
     assert generated_spec == expected_spec
 
 
-@patch.dict(
-    os.environ, {
-        'CLOUD_PROJECT': 'fuzzbench',
-        'EXPERIMENT': 'test-experiment',
-        'EXPERIMENT_FILESTORE': 'gs://fuzzbench-data',
-        'WORK': '/work',
-    })
-def test_generate_cloudbuild_spec_build_benchmark_coverage():
+def test_generate_cloudbuild_spec_build_benchmark_coverage(experiment):
     """Tests cloud build configuration yaml for a benchmark coverage build."""
     image_templates = {
         'zlib-project-builder': {
@@ -218,7 +199,7 @@ def test_generate_cloudbuild_spec_build_benchmark_coverage():
                 'gcr.io/cloud-builders/gsutil',
             'args': [
                 '-m', 'cp', '/workspace/out/coverage-build-zlib.tar.gz',
-                'gs://fuzzbench-data/test-experiment/coverage-binaries/'
+                'gs://experiment-data/test-experiment/coverage-binaries/'
             ]
         }],
         'images': [
