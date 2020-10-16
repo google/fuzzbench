@@ -19,6 +19,7 @@ jobs:
     # Copied from:
     # https://docs.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions
     - name: Cache pip
+      id: cache
       uses: actions/cache@v2
       with:
         # This path is specific to Ubuntu.
