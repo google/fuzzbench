@@ -56,7 +56,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
         output_corpus,
 
         # Store crashes along with corpus for bug based benchmarking.
-        '--crashdir',
+        '--workspace',
         output_corpus,
         '-s',
     ]
