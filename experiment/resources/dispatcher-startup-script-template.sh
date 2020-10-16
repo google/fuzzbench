@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+docker-credential-gcr configure-docker -include-artifact-registry
 echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
 docker run --rm \
   -e INSTANCE_NAME={{instance_name}} -e EXPERIMENT={{experiment}} \
