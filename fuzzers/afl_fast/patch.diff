@@ -1,9 +1,3 @@
-commit 744077c5a27d32a81e572f56b9a6e768617a99f2
-Author: Marcel Boehme <marcel.boehme@acm.org>
-Date:   Mon Oct 12 10:20:57 2020 +0000
-
-    AFLFast
-
 diff --git a/Makefile b/Makefile
 index 3819312..8a9e26e 100644
 --- a/Makefile
@@ -18,7 +12,7 @@ index 3819312..8a9e26e 100644
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index fc9d210..451194a 100644
+index fc9d210..029d104 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -73,7 +67,7 @@ index fc9d210..451194a 100644
  
      /* Try to calibrate inline; this also calls update_bitmap_score() when
         successful. */
-@@ -4800,6 +4815,42 @@ static u32 calculate_score(struct queue_entry* q) {
+@@ -4800,6 +4815,38 @@ static u32 calculate_score(struct queue_entry* q) {
  
    }
  
@@ -96,27 +90,35 @@ index fc9d210..451194a 100644
 +      break;
 +
 +    case 6:
-+      if (!q->favored) perf_score *= 0.8;
++      perf_score *= 0.8;
 +      break;
 +
 +    case 7:
-+      if (!q->favored) perf_score *= 0.6;
++      perf_score *= 0.6;
 +      break;
 +
 +    default:
-+      if (!q->favored) perf_score *= 0.4;
++      perf_score *= 0.4;
 +      break;
 +
 +  }
 +
-+  if (q->favored)
-+    perf_score *= 1.15;
-+
-+
    /* Make sure that we don't go over limit. */
  
    if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
-@@ -6138,7 +6189,7 @@ havoc_stage:
+@@ -5141,6 +5188,11 @@ static u8 fuzz_one(char** argv) {
+ 
+   orig_perf = perf_score = calculate_score(queue_cur);
+ 
++  if (perf_score == 0) {
++    cur_skipped_paths++;
++    goto abandon_entry;
++  }
++
+   /* Skip right away if -d is given, if we have done deterministic fuzzing on
+      this entry ourselves (was_fuzzed), or if it has gone through deterministic
+      testing in earlier, resumed runs (passed_det). */
+@@ -6138,7 +6190,7 @@ havoc_stage:
      sprintf(tmp, "splice %u", splice_cycle);
      stage_name  = tmp;
      stage_short = "splice";
@@ -125,7 +127,7 @@ index fc9d210..451194a 100644
  
    }
  
-@@ -7990,6 +8041,9 @@ int main(int argc, char** argv) {
+@@ -7990,6 +8042,9 @@ int main(int argc, char** argv) {
    setup_signal_handlers();
    check_asan_opts();
  

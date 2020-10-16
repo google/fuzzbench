@@ -12,7 +12,7 @@ index 5e800db..4abc484 100644
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index 61a3ee9..06a59b4 100644
+index 61a3ee9..7b34ab6 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -67,71 +67,7 @@ index 61a3ee9..06a59b4 100644
  
      /* Try to calibrate inline; this also calls update_bitmap_score() when
         successful. */
-@@ -4784,6 +4799,63 @@ static u32 calculate_score(struct queue_entry* q) {
- 
-   }
- 
-+  /* COE */
-+  u32 n_paths = 0;
-+  long double fuzz_mu = 0.0;
-+  struct queue_entry *queue_it = queue;
-+
-+  while (queue_it) {
-+
-+    fuzz_mu += log2(hit_counts[queue_it->exec_cksum % HIT_COUNTS_SIZE]);
-+    n_paths ++;
-+
-+    queue_it = queue_it->next;
-+
-+  }
-+
-+  fuzz_mu /= n_paths;
-+
-+  if (log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE]) > fuzz_mu) {
-+
-+    if (q->favored) perf_score = 5;
-+    else perf_score = 0;
-+
-+  } else {
-+
-+    /* FAST */
-+    switch ((u32)log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE])) {
-+  
-+      case 0 ... 1:
-+        perf_score *= 4;
-+        break;
-+  
-+      case 2 ... 3:
-+        perf_score *= 3;
-+        break;
-+  
-+      case 4:
-+         perf_score *= 2;
-+        break;
-+  
-+      case 5:
-+        break;
-+  
-+      case 6:
-+        perf_score *= 0.8;
-+        break;
-+  
-+      case 7:
-+        perf_score *= 0.6;
-+        break;
-+  
-+      default:
-+        perf_score *= 0.4;
-+        break;
-+
-+    }
-+
-+  }
-+
-   /* Make sure that we don't go over limit. */
- 
-   if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
-@@ -5125,6 +5197,11 @@ static u8 fuzz_one(char** argv) {
+@@ -5125,6 +5140,11 @@ static u8 fuzz_one(char** argv) {
  
    orig_perf = perf_score = calculate_score(queue_cur);
  
@@ -143,7 +79,7 @@ index 61a3ee9..06a59b4 100644
    /* Skip right away if -d is given, if we have done deterministic fuzzing on
       this entry ourselves (was_fuzzed), or if it has gone through deterministic
       testing in earlier, resumed runs (passed_det). */
-@@ -6122,7 +6199,7 @@ havoc_stage:
+@@ -6122,7 +6142,7 @@ havoc_stage:
      sprintf(tmp, "splice %u", splice_cycle);
      stage_name  = tmp;
      stage_short = "splice";
@@ -152,7 +88,7 @@ index 61a3ee9..06a59b4 100644
  
    }
  
-@@ -7955,6 +8032,9 @@ int main(int argc, char** argv) {
+@@ -7955,6 +7975,9 @@ int main(int argc, char** argv) {
    setup_signal_handlers();
    check_asan_opts();
  
