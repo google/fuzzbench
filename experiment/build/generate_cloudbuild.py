@@ -16,14 +16,13 @@
 import os
 import posixpath
 
-from common import yaml_utils
-from common import experiment_utils
 from common import experiment_path as exp_path
+from common import experiment_utils
+from common import yaml_utils
 from common.utils import ROOT_DIR
 from experiment.build import build_utils
 
 DOCKER_IMAGE = 'docker:19.03.12'
-PROJECT_DOCKER_REGISTRY = 'gcr.io/fuzzbench'
 
 
 def get_experiment_tag_for_image(image_specs, tag_by_experiment=True):
@@ -60,9 +59,14 @@ def coverage_steps(benchmark):
     return steps
 
 
-def create_cloud_build_spec(image_templates,
-                            benchmark='',
-                            build_base_images=False):
+def get_docker_registry():
+    """Returns the docker registry for this experiment."""
+    return os.environ['DOCKER_REGISTRY']
+
+
+def create_cloudbuild_spec(image_templates,
+                           benchmark='',
+                           build_base_images=False):
     """Generates Cloud Build specification.
 
     Args:
@@ -73,17 +77,19 @@ def create_cloud_build_spec(image_templates,
     Returns:
       GCB build steps.
     """
-    cloud_build_spec = {'steps': [], 'images': []}
+    cloudbuild_spec = {'steps': [], 'images': []}
 
     # Workaround for bug https://github.com/moby/moby/issues/40262.
     # This is only needed for base-image as it inherits from ubuntu:xenial.
     if build_base_images:
-        cloud_build_spec['steps'].append({
+        cloudbuild_spec['steps'].append({
             'id': 'pull-ubuntu-xenial',
             'env': ['DOCKER_BUILDKIT=1'],
             'name': DOCKER_IMAGE,
             'args': ['pull', 'ubuntu:xenial'],
         })
+
+    docker_registry = get_docker_registry()
 
     for image_name, image_specs in image_templates.items():
         step = {
@@ -93,8 +99,7 @@ def create_cloud_build_spec(image_templates,
         }
         step['args'] = [
             'build', '--tag',
-            posixpath.join(PROJECT_DOCKER_REGISTRY,
-                           image_specs['tag']), '--tag',
+            posixpath.join(docker_registry, image_specs['tag']), '--tag',
             get_experiment_tag_for_image(image_specs), '--cache-from',
             get_experiment_tag_for_image(image_specs, tag_by_experiment=False),
             '--build-arg', 'BUILDKIT_INLINE_CACHE=1'
@@ -113,24 +118,24 @@ def create_cloud_build_spec(image_templates,
                 continue
             step['wait_for'] += [dependency]
 
-        cloud_build_spec['steps'].append(step)
-        cloud_build_spec['images'].append(
+        cloudbuild_spec['steps'].append(step)
+        cloudbuild_spec['images'].append(
             get_experiment_tag_for_image(image_specs))
-        cloud_build_spec['images'].append(
+        cloudbuild_spec['images'].append(
             get_experiment_tag_for_image(image_specs, tag_by_experiment=False))
 
     if any(image_specs['type'] in 'coverage'
            for _, image_specs in image_templates.items()):
-        cloud_build_spec['steps'] += coverage_steps(benchmark)
+        cloudbuild_spec['steps'] += coverage_steps(benchmark)
 
-    return cloud_build_spec
+    return cloudbuild_spec
 
 
 def main():
     """Write base-images build spec when run from command line."""
     image_templates = yaml_utils.read(
         os.path.join(ROOT_DIR, 'docker', 'image_types.yaml'))
-    base_images_spec = create_cloud_build_spec(
+    base_images_spec = create_cloudbuild_spec(
         {'base-image': image_templates['base-image']}, build_base_images=True)
     base_images_spec_file = os.path.join(ROOT_DIR, 'docker', 'gcb',
                                          'base-images.yaml')
