@@ -27,8 +27,7 @@ DOCKER_IMAGE = 'docker:19.03.12'
 
 def get_experiment_tag_for_image(image_specs, tag_by_experiment=True):
     """Returns the registry with the experiment tag for given image."""
-    tag = posixpath.join(experiment_utils.get_base_docker_tag(),
-                         image_specs['tag'])
+    tag = posixpath.join(get_docker_registry(), image_specs['tag'])
     if tag_by_experiment:
         tag += ':' + experiment_utils.get_experiment_name()
     return tag
@@ -43,8 +42,8 @@ def coverage_steps(benchmark):
             DOCKER_IMAGE,
         'args': [
             'run', '-v', '/workspace/out:/host-out',
-            posixpath.join(experiment_utils.get_base_docker_tag(), 'builders',
-                           'coverage', benchmark) + ':' +
+            posixpath.join(get_docker_registry(), 'builders', 'coverage',
+                           benchmark) + ':' +
             experiment_utils.get_experiment_name(), '/bin/bash', '-c',
             'cd /out; tar -czvf /host-out/coverage-build-' + benchmark +
             '.tar.gz * /src /work'
