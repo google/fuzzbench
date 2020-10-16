@@ -4,6 +4,8 @@
 #   fuzzers:  # The fuzzers to run in the experiment.
 #     - aflplusplus
 #     - libfuzzer
+#   description: "Explain the intent of the experiment"
+#   # oss-fuzz-corpus: true  # Set to use latest saturated corpora from OSS-Fuzz.
 #
 # The name of the experiment must begin with a date using this format:
 # YYYY-MM-DD (year-month-day). It's not important what timezone is used in
@@ -15,6 +17,23 @@
 #
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
+
+- experiment: 2020-10-16
+  description: "memcache test"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_memcache_2000mb
+    - aflplusplus_memcache_2mb
+    - aflplusplus_memcache_pre
+
+- experiment: 2020-10-15
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_memcache_2000mb
+    - aflplusplus_memcache_2mb
+    - aflplusplus_memcache_pre
 
 - experiment: 2020-10-13-2
   fuzzers:
