@@ -52,6 +52,10 @@ def fuzz(input_corpus, output_corpus, target_binary):
         input_corpus,
         '--output',
         output_corpus,
+
+        # Store crashes along with corpus for bug based benchmarking.
+        '--workspace',
+        output_corpus,
     ]
     dictionary_path = utils.get_dictionary_path(target_binary)
     if dictionary_path:
