@@ -54,7 +54,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
         output_corpus,
 
         # Store crashes along with corpus for bug based benchmarking.
-        '--workspace',
+        '--crashdir',
         output_corpus,
     ]
     dictionary_path = utils.get_dictionary_path(target_binary)
