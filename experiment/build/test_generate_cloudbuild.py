@@ -17,6 +17,7 @@ from experiment.build import generate_cloudbuild
 
 # pylint: disable=unused-argument
 
+
 def test_generate_cloudbuild_spec_build_base_image(experiment):
     """Tests cloud build configuration yaml for the base image."""
     image_templates = {
