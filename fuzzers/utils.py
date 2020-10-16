@@ -27,12 +27,32 @@ DEFAULT_OPTIMIZATION_LEVEL = '-O3'
 
 OSS_FUZZ_LIB_FUZZING_ENGINE_PATH = '/usr/lib/libFuzzingEngine.a'
 
+FILEPATH = os.path.abspath(__file__)
+
+
+def compile_wrapper_object(env):
+    wrapper_filepath = os.path.join(os.path.dirname(FILEPATH), 'wrapper.c')
+    wrapper_obj_filepath = os.path.join('/tmp', 'wrapper.o')
+    cc = env['CC']
+    cflags = env['CFLAGS'].split(' ')
+    print(os.path.exists(wrapper_filepath))
+    command = [cc] + cflags
+    command += ['-c', wrapper_filepath, '-o', wrapper_obj_filepath]
+    subprocess.check_call(command, env=env)
+    return wrapper_obj_filepath
+
+def wrap_llvmfuzzertestoneinput(env):
+    wrapper_obj_filepath = compile_wrapper_object(env)
+    wrap_options = f'{wrapper_obj_filepath} -Wl,-wrap=LLVMFuzzerTestOneInput'
+    env['FUZZER_LIB'] = env['FUZZER_LIB'] + ' ' + wrap_options
+
 
 def build_benchmark(env=None):
     """Build a benchmark using fuzzer library."""
     if not env:
         env = os.environ.copy()
 
+    wrap_llvmfuzzertestoneinput(env)
     # Add OSS-Fuzz environment variable for fuzzer library.
     fuzzer_lib = env['FUZZER_LIB']
     env['LIB_FUZZING_ENGINE'] = fuzzer_lib
