@@ -15,11 +15,14 @@
 ARG parent_image
 FROM $parent_image
 
+ADD patch.diff /
+
 # Download and compile AFL v2.56b.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/google/AFL.git /afl && \
     cd /afl && \
     git checkout 82b5e359463238d790cadbe2dd494d6a4928bff3 && \
+    git apply /patch.diff && \
     AFL_NO_X86=1 make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.

@@ -12,7 +12,7 @@ index 5e800db..4abc484 100644
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index 61a3ee9..7b34ab6 100644
+index 61a3ee9..40eb3f7 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -98,6 +98,15 @@ index 61a3ee9..7b34ab6 100644
    if (sync_id) fix_up_sync();
  
    if (!strcmp(in_dir, out_dir))
+@@ -7972,6 +7995,8 @@ int main(int argc, char** argv) {
+   if (getenv("AFL_NO_ARITH"))      no_arith         = 1;
+   if (getenv("AFL_SHUFFLE_QUEUE")) shuffle_queue    = 1;
+   if (getenv("AFL_FAST_CAL"))      fast_cal         = 1;
++    - afl_fast_late_32
++    - afl_fast_late_3f
+ 
+   if (getenv("AFL_HANG_TMOUT")) {
+     hang_tmout = atoi(getenv("AFL_HANG_TMOUT"));
 diff --git a/config.h b/config.h
 index 46dd857..8aae20b 100644
 --- a/config.h
