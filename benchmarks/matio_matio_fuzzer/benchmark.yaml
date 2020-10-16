@@ -4,5 +4,6 @@ fuzz_target: matio_fuzzer
 project: matio
 type: bug
 unsupported_fuzzers:
+  - aflcc
   - klee
 
