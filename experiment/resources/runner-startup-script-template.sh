@@ -23,6 +23,7 @@ echo core >/proc/sys/kernel/core_pattern
 
 # Start docker.
 {% if not local_experiment %}
+docker-credential-gcr configure-docker -include-artifact-registry
 while ! docker pull {{docker_image_url}}
 do
   echo 'Error pulling image, retrying...'
