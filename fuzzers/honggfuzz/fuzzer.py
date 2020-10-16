@@ -37,9 +37,12 @@ def build():
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    # Honggfuzz needs the output directory to exist.
-    if not os.path.exists(output_corpus):
-        os.makedirs(output_corpus)
+    # Seperate out corpus and crash directories as sub-directories of
+    # |output_corpus| to avoid conflicts when corpus directory is reloaded.
+    crashes_dir = os.path.join(output_corpus, 'crashes')
+    output_corpus = os.path.join(output_corpus, 'corpus')
+    os.makedirs(crashes_dir)
+    os.makedirs(output_corpus)
 
     print('[fuzz] Running target with honggfuzz')
     command = [
@@ -55,7 +58,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
         # Store crashes along with corpus for bug based benchmarking.
         '--crashdir',
-        output_corpus,
+        crashes_dir,
     ]
     dictionary_path = utils.get_dictionary_path(target_binary)
     if dictionary_path:
