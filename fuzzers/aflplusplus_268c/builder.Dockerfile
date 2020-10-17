@@ -18,20 +18,16 @@ FROM $parent_image
 # Install wget to download afl_driver.cpp. Install libstdc++ to use llvm_mode.
 RUN apt-get update && \
     apt-get install -y wget libstdc++-5-dev libtool-bin automake flex bison \
-                       libglib2.0-dev libpixman-1-dev python3-setuptools unzip
+                       libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
+                       apt-utils apt-transport-https ca-certificates
 
-# Why do some build images have ninja, other not? Weird.
-RUN cd / && wget https://github.com/ninja-build/ninja/releases/download/v1.10.1/ninja-linux.zip && \
-    unzip ninja-linux.zip && chmod 755 ninja && mv ninja /usr/local/bin
-
-# Build afl++ without Python support as we don't need it.
+# Download and compile afl++ (v2.62d).
+# Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && git checkout fcea01a8ea7ec507b675d839035eb0fed2f06867 && \
-    unset CFLAGS && unset CXXFLAGS && \
-    AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
-    cd qemu_mode && ./build_qemu_support.sh && cd .. && \
+    cd /afl && \
+    git checkout ee206da3897fd2d9f72206c3c5ea0e3fab109001 && \
+    unset CFLAGS && unset CXXFLAGS && export CC=clang && \
+    AFL_NO_X86=1 PYTHON_INCLUDE=/ make && make install && \
     make -C examples/aflpp_driver && \
-    cp examples/aflpp_driver/libAFLQemuDriver.a /libAFLDriver.a && \
-    cp examples/aflpp_driver/aflpp_qemu_driver_hook.so /
-
+    cp examples/aflpp_driver/libAFLDriver.a /
