@@ -32,7 +32,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    os.environ['AFL_TESTCACHE_SIZE'] = '2000'
+    os.environ['AFL_TESTCACHE_SIZE'] = '20'
 
     run_options = []
 

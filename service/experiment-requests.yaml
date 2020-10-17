@@ -19,6 +19,17 @@
 # Please add new experiment requests towards the top of this file.
 
 
+- experiment: 2020-10-18
+  description: "further memcache tests and test current vs 2.68c"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_268c
+    - aflplusplus_optimal
+    - aflplusplus_memcache_2mb
+    - aflplusplus_memcache_20mb
+    - aflplusplus_memcache_50mb
+    - aflplusplus_memcache_200mb
+
 - experiment: 2020-10-17
   description: > 
     Evaluating several AFL schedules. There are two edge-count-based boosting
@@ -46,7 +57,6 @@
     - afl_oldfast_025
     - afl_fast_branches_u8
     - afl_fast_branches_u16
-
 
 - experiment: 2020-10-16
   description: "memcache test"
