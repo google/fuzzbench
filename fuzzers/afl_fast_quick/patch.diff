@@ -1,5 +1,5 @@
 diff --git a/Makefile b/Makefile
-index 5e800db..8a9e26e 100644
+index 5e800db..4abc484 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -33,7 +33,7 @@ CFLAGS     += -Wall -D_FORTIFY_SOURCE=2 -g -Wno-pointer-sign \
@@ -11,17 +11,8 @@ index 5e800db..8a9e26e 100644
  endif
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
-@@ -133,7 +133,7 @@ endif
- 	set -e; for i in afl-g++ afl-clang afl-clang++; do ln -sf afl-gcc $${DESTDIR}$(BIN_PATH)/$$i; done
- 	install -m 755 afl-as $${DESTDIR}$(HELPER_PATH)
- 	ln -sf afl-as $${DESTDIR}$(HELPER_PATH)/as
--	install -m 644 docs/README docs/ChangeLog docs/*.txt $${DESTDIR}$(DOC_PATH)
-+	install -m 644 README.md docs/ChangeLog docs/*.txt $${DESTDIR}$(DOC_PATH)
- 	cp -r testcases/ $${DESTDIR}$(MISC_PATH)
- 	cp -r dictionaries/ $${DESTDIR}$(MISC_PATH)
- 
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index fc9d210..e29ab9e 100644
+index 61a3ee9..376aebe 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -42,17 +33,7 @@ index fc9d210..e29ab9e 100644
  /* Lots of globals, but mostly for the status UI and other things where it
     really makes no sense to haul them around as function parameters. */
  
-@@ -253,7 +257,8 @@ struct queue_entry {
-       fs_redundant;                   /* Marked as redundant in the fs?   */
- 
-   u32 bitmap_size,                    /* Number of bits set in bitmap     */
--      exec_cksum;                     /* Checksum of the execution trace  */
-+      exec_cksum,                     /* Checksum of the execution trace  */
-+      fuzz_level;
- 
-   u64 exec_us,                        /* Execution time (us)              */
-       handicap,                       /* Number of queue cycles behind    */
-@@ -1509,6 +1514,9 @@ static void read_testcases(void) {
+@@ -1493,6 +1497,9 @@ static void read_testcases(void) {
  
      add_to_queue(fn, st.st_size, passed_det);
  
@@ -62,7 +43,7 @@ index fc9d210..e29ab9e 100644
    }
  
    free(nl); /* not tracked */
-@@ -3166,6 +3174,12 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+@@ -3150,6 +3157,12 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
    s32 fd;
    u8  keeping = 0, res;
  
@@ -75,7 +56,7 @@ index fc9d210..e29ab9e 100644
    if (fault == crash_mode) {
  
      /* Keep only if there are new bits in the map, add to queue for
-@@ -3194,7 +3208,9 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+@@ -3178,7 +3191,9 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
        queued_with_cov++;
      }
  
@@ -86,17 +67,57 @@ index fc9d210..e29ab9e 100644
  
      /* Try to calibrate inline; this also calls update_bitmap_score() when
         successful. */
-@@ -4800,6 +4816,9 @@ static u32 calculate_score(struct queue_entry* q) {
+@@ -4736,7 +4751,9 @@ static u32 calculate_score(struct queue_entry* q) {
+      global average. Multiplier ranges from 0.1x to 3x. Fast inputs are
+      less expensive to fuzz, so we're giving them more air time. */
+ 
+-  if (q->exec_us * 0.1 > avg_exec_us) perf_score = 10;
++  if (q->exec_us * 0.01 > avg_exec_us || q->exec_us > 50000) return 1;
++  else if (q->exec_us * 0.05 > avg_exec_us || q->exec_us > 10000) return 5;
++  else if (q->exec_us * 0.1 > avg_exec_us) perf_score = 10;
+   else if (q->exec_us * 0.25 > avg_exec_us) perf_score = 25;
+   else if (q->exec_us * 0.5 > avg_exec_us) perf_score = 50;
+   else if (q->exec_us * 0.75 > avg_exec_us) perf_score = 75;
+@@ -4784,6 +4801,38 @@ static u32 calculate_score(struct queue_entry* q) {
  
    }
  
-+  perf_score *= 16 * (q->fuzz_level + 1) / (log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE]) + 1);
-+  if (perf_score < 10) perf_score = 10;
++  /* FAST */
++  switch ((u32)log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE])) {
++
++    case 0 ... 1:
++      perf_score *= 4;
++      break;
++
++    case 2 ... 3:
++      perf_score *= 3;
++      break;
++
++    case 4:
++       perf_score *= 2;
++      break;
++
++    case 5:
++      break;
++
++    case 6:
++      perf_score *= 0.8;
++      break;
++
++    case 7:
++      perf_score *= 0.6;
++      break;
++
++    default:
++      perf_score *= 0.4;
++      break;
++
++  }
 +
    /* Make sure that we don't go over limit. */
  
    if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
-@@ -5141,6 +5160,11 @@ static u8 fuzz_one(char** argv) {
+@@ -5125,6 +5174,11 @@ static u8 fuzz_one(char** argv) {
  
    orig_perf = perf_score = calculate_score(queue_cur);
  
@@ -108,7 +129,7 @@ index fc9d210..e29ab9e 100644
    /* Skip right away if -d is given, if we have done deterministic fuzzing on
       this entry ourselves (was_fuzzed), or if it has gone through deterministic
       testing in earlier, resumed runs (passed_det). */
-@@ -6138,7 +6162,7 @@ havoc_stage:
+@@ -6122,7 +6176,7 @@ havoc_stage:
      sprintf(tmp, "splice %u", splice_cycle);
      stage_name  = tmp;
      stage_short = "splice";
@@ -117,15 +138,7 @@ index fc9d210..e29ab9e 100644
  
    }
  
-@@ -6675,6 +6699,7 @@ abandon_entry:
-     pending_not_fuzzed--;
-     if (queue_cur->favored) pending_favored--;
-   }
-+  queue_cur->fuzz_level++;
- 
-   munmap(orig_in, queue_cur->len);
- 
-@@ -7990,6 +8015,9 @@ int main(int argc, char** argv) {
+@@ -7955,6 +8009,9 @@ int main(int argc, char** argv) {
    setup_signal_handlers();
    check_asan_opts();
  
@@ -148,9 +161,6 @@ index 46dd857..8aae20b 100644
  
  /* Absolute minimum number of havoc cycles (after all adjustments): */
  
-diff --git a/docs/README b/docs/README
-deleted file mode 100644
-index e69de29..0000000
 diff --git a/hash.h b/hash.h
 index e17fc8f..55e6428 100644
 --- a/hash.h
