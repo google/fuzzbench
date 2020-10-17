@@ -41,9 +41,11 @@ jobs:
           - entropic_magicbytes
           - aflplusplus_lightweizz
           - aflplusplus_explore
-          - aflplusplus_memcache_pre
+          - aflplusplus_268c
           - aflplusplus_memcache_2mb
-          - aflplusplus_memcache_2000mb
+          - aflplusplus_memcache_20mb
+          - aflplusplus_memcache_50mb
+          - aflplusplus_memcache_200mb
           - afl_coe
           - afl_fast
           - afl_quick
