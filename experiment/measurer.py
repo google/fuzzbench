@@ -78,27 +78,6 @@ def measure_main(experiment_config):
     # Clean up resources.
     gc.collect()
 
-    # Do the final measuring and store the coverage data.
-    coverage_utils.generate_coverage_reports(experiment_config)
-
-    segment_df_size_in_gb = experiment_specific_df_container.segment_df.\
-        memory_usage(index=True).sum() / (1024 * 1024 * 1024)
-
-    function_df_size_in_gb = experiment_specific_df_container.function_df. \
-        memory_usage(index=True).sum() / (1024 * 1024 * 1024)
-
-    name_df_size_in_gb = experiment_specific_df_container.name_df. \
-        memory_usage(index=True).sum() / (1024 * 1024 * 1024)
-
-    logger.info('Size of segment data frame (GB): {size_in_gb}'.format(
-        size_in_gb=segment_df_size_in_gb))
-
-    logger.info('Size of segment data frame (GB): {size_in_gb}'.format(
-        size_in_gb=function_df_size_in_gb))
-
-    logger.info('Size of segment data frame (GB): {size_in_gb}'.format(
-        size_in_gb=name_df_size_in_gb))
-
     # Generate segment and function coverage CSV files.
     experiment_specific_df_container.generate_csv_files()
 
