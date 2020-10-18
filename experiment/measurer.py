@@ -78,6 +78,9 @@ def measure_main(experiment_config):
     # Clean up resources.
     gc.collect()
 
+    # Do the final measuring and store the coverage data.
+    coverage_utils.generate_coverage_reports(experiment_config)
+
     # Generate segment and function coverage CSV files.
     experiment_specific_df_container.generate_csv_files()
 
