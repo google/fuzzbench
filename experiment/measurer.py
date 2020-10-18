@@ -81,6 +81,24 @@ def measure_main(experiment_config):
     # Do the final measuring and store the coverage data.
     coverage_utils.generate_coverage_reports(experiment_config)
 
+    segment_df_size_in_gb = experiment_specific_df_container.segment_df.\
+        memory_usage(index=True).sum() / (1024 * 1024 * 1024)
+
+    function_df_size_in_gb = experiment_specific_df_container.function_df. \
+        memory_usage(index=True).sum() / (1024 * 1024 * 1024)
+
+    name_df_size_in_gb = experiment_specific_df_container.name_df. \
+        memory_usage(index=True).sum() / (1024 * 1024 * 1024)
+
+    logger.info('Size of segment data frame (GB): {size_in_gb}'.format(
+        size_in_gb=segment_df_size_in_gb))
+
+    logger.info('Size of segment data frame (GB): {size_in_gb}'.format(
+        size_in_gb=function_df_size_in_gb))
+
+    logger.info('Size of segment data frame (GB): {size_in_gb}'.format(
+        size_in_gb=name_df_size_in_gb))
+
     # Generate segment and function coverage CSV files.
     experiment_specific_df_container.generate_csv_files()
 
@@ -98,29 +116,17 @@ def measure_loop(experiment: str, max_total_time: int,
         # inheriting queue.
         q = manager.Queue()  # pytype: disable=attribute-error
 
-        segment_list = manager.list(  # pytype: disable=attribute-error
-            [experiment_specific_df_container.segment_df])
-
-        function_list = manager.list(  # pytype: disable=attribute-error
-            [experiment_specific_df_container.function_df])
-
         while True:
             try:
                 # Get whether all trials have ended before we measure to prevent
                 # races.
                 all_trials_ended = scheduler.all_trials_ended(experiment)
 
-                if not measure_all_trials(experiment, max_total_time, pool, q,
-                                          segment_list, function_list):
+                if not measure_all_trials(experiment, max_total_time, pool,
+                                          manager, q,
+                                          experiment_specific_df_container):
                     # We didn't measure any trials.
                     if all_trials_ended:
-                        # Concatenate all data frames in the segment and
-                        # function multiprocessing list.
-                        experiment_specific_df_container.segment_df = (
-                            pd.concat(segment_list, ignore_index=True))
-
-                        experiment_specific_df_container.function_df = (
-                            pd.concat(function_list, ignore_index=True))
                         # There are no trials producing snapshots to measure.
                         # Given that we couldn't measure any snapshots, we won't
                         # be able to measure any the future, so stop now.
@@ -134,8 +140,8 @@ def measure_loop(experiment: str, max_total_time: int,
 
 
 def measure_all_trials(  # pylint: disable=too-many-arguments
-        experiment: str, max_total_time: int, pool, q, segment_list,
-        function_list) -> bool:  # pylint: disable=invalid-name
+        experiment: str, max_total_time: int, pool, manager, q,
+        experiment_specific_df_container) -> bool:  # pylint: disable=invalid-name
     """Get coverage data (with coverage runs) for all active trials. Note that
     this should not be called unless multiprocessing.set_start_method('spawn')
     was called first. Otherwise it will use fork which breaks logging."""
@@ -150,6 +156,12 @@ def measure_all_trials(  # pylint: disable=too-many-arguments
 
     if not unmeasured_snapshots:
         return False
+
+    segment_list = manager.list(  # pytype: disable=attribute-error
+        [experiment_specific_df_container.segment_df])
+
+    function_list = manager.list(  # pytype: disable=attribute-error
+        [experiment_specific_df_container.function_df])
 
     measure_trial_coverage_args = [
         (unmeasured_snapshot, max_cycle, q, segment_list, function_list)
@@ -199,8 +211,21 @@ def measure_all_trials(  # pylint: disable=too-many-arguments
         if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE and not result.ready():
             save_snapshots()
 
+    def concat_all_df_in_multiprocessing_list():
+        """Concats all trail specific df in the list and save it in experiment
+        specific and clean and prune experiment specific df."""
+        experiment_specific_df_container.segment_df = (
+            pd.concat(segment_list, ignore_index=True))
+
+        experiment_specific_df_container.function_df = (
+            pd.concat(function_list, ignore_index=True))
+
+        experiment_specific_df_container.remove_redundant_duplicates()
+
     # If we have any snapshots left save them now.
     save_snapshots()
+    # concat all trail-specific dfs and remove duplicates
+    concat_all_df_in_multiprocessing_list()
 
     logger.info('Done measuring all trials.')
     return snapshots_measured
