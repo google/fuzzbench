@@ -33,7 +33,7 @@
     - afl_fast
     - afl_xxh3
     - afl_oldfast_1
-    - afl_fast_nocycles
+    - afl_fast_nocycle
     - afl_fast_branches_u8
     - afl_fast_branches_u16
 
