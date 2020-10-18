@@ -48,13 +48,11 @@ jobs:
           - aflplusplus_memcache_200mb
           - afl_coe
           - afl_fast
-          - afl_quick
-          - afl_nofast
-          - afl_shuffled
+          - afl_xxh3
           - afl_oldfast_1
           - afl_fast_quick
-          - afl_oldfast_025
           - afl_fast_late_32
+          - afl_fast_nocycle
           - afl_fast_branches_u8
           - afl_fast_branches_u16
           - afl_nohandicap_spliceless2

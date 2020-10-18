@@ -18,6 +18,24 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-10-19
+  description: >
+    Experiments from 2020-10-17 showed quite some overhead [afl vs afl_nofast].
+    Checking overhead of xxh3 (afl_xxh3). Reduced overhead of addressing 8MB
+    of memory for hit counts (afl_fast, etc. u8* instead of u32*). After some
+    debugging, I found that schedules that speed up cycles are penalized,
+    because queue_cycle determines a seed's handicap (fuzzed 4x longer) and the
+    size of the mutated blocks in the seed (larger blocks for later cycles).
+    For schedules afl_fast_no_cycles, afl_oldfast_1, afl_fast_branches_u8/16,
+    the current cycle is computed as "fuzzed_paths / queued_paths".
+  fuzzers:
+    - afl
+    - afl_fast
+    - afl_xxh3
+    - afl_oldfast_1
+    - afl_fast_nocycle
+    - afl_fast_branches_u8
+    - afl_fast_branches_u16
 
 - experiment: 2020-10-18
   description: "further memcache tests and test current vs 2.68c"
