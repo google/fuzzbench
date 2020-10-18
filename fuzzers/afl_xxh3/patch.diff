@@ -12,7 +12,7 @@ index 5e800db..4abc484 100644
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index 61a3ee9..40eb3f7 100644
+index 61a3ee9..782bde7 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -23,51 +23,17 @@ index 61a3ee9..40eb3f7 100644
  
  #include <sys/wait.h>
  #include <sys/time.h>
-@@ -87,6 +88,9 @@
- #  define EXP_ST static
- #endif /* ^AFL_LIB */
- 
-+#define HIT_COUNTS_SIZE (1 << 21)
-+u32 *hit_counts;
-+
- /* Lots of globals, but mostly for the status UI and other things where it
-    really makes no sense to haul them around as function parameters. */
- 
-@@ -1493,6 +1497,9 @@ static void read_testcases(void) {
- 
-     add_to_queue(fn, st.st_size, passed_det);
- 
-+    u32 cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
-+    hit_counts[cksum % HIT_COUNTS_SIZE] = 1;
-+
-   }
- 
-   free(nl); /* not tracked */
-@@ -3150,6 +3157,12 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
-   s32 fd;
-   u8  keeping = 0, res;
- 
-+  u32 cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
-+
-+  /* Saturated increment */
-+  if (hit_counts[cksum % HIT_COUNTS_SIZE] < 0xFFFFFFFF)
-+    hit_counts[cksum % HIT_COUNTS_SIZE]++;
-+
-   if (fault == crash_mode) {
- 
-     /* Keep only if there are new bits in the map, add to queue for
-@@ -3178,7 +3191,9 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+@@ -3178,7 +3179,8 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
        queued_with_cov++;
      }
  
 -    queue_top->exec_cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
++    u32 cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
 +    queue_top->exec_cksum = cksum;
-+
-+    hit_counts[cksum % HIT_COUNTS_SIZE] = 1;
  
      /* Try to calibrate inline; this also calls update_bitmap_score() when
         successful. */
-@@ -5125,6 +5140,11 @@ static u8 fuzz_one(char** argv) {
+@@ -5125,6 +5127,11 @@ static u8 fuzz_one(char** argv) {
  
    orig_perf = perf_score = calculate_score(queue_cur);
  
@@ -79,7 +45,7 @@ index 61a3ee9..40eb3f7 100644
    /* Skip right away if -d is given, if we have done deterministic fuzzing on
       this entry ourselves (was_fuzzed), or if it has gone through deterministic
       testing in earlier, resumed runs (passed_det). */
-@@ -6122,7 +6142,7 @@ havoc_stage:
+@@ -6122,7 +6129,7 @@ havoc_stage:
      sprintf(tmp, "splice %u", splice_cycle);
      stage_name  = tmp;
      stage_short = "splice";
@@ -88,16 +54,6 @@ index 61a3ee9..40eb3f7 100644
  
    }
  
-@@ -7955,6 +7975,9 @@ int main(int argc, char** argv) {
-   setup_signal_handlers();
-   check_asan_opts();
- 
-+  /* Dynamically allocate memory for AFLFast schedules */
-+  hit_counts = ck_alloc(HIT_COUNTS_SIZE * sizeof(u32));
-+
-   if (sync_id) fix_up_sync();
- 
-   if (!strcmp(in_dir, out_dir))
 diff --git a/config.h b/config.h
 index 46dd857..8aae20b 100644
 --- a/config.h
