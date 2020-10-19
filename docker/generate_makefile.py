@@ -55,19 +55,23 @@ def _print_makefile_run_template(image):
 \t-e BENCHMARK={benchmark} \\\n\
 \t-e FUZZ_TARGET=$({benchmark}-fuzz-target) \\\
 '.format(fuzzer=fuzzer, benchmark=benchmark))
-
+        
+        params=""
         if run_type == 'test-run':
             print('\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\')
         if run_type == 'debug':
             print('\t--entrypoint "/bin/bash" \\\n\t-it ', end='')
         elif run_type == 'repro-check':
-            print('\t--entrypoint "/bin/bash -c \'/bin/echo ciao\'" \\\n\t-it ', end='')
+            if os.path.isdir(os.path.join(BENCHMARK_DIR, benchmark, 'testcases')):
+                print('\t--entrypoint /bin/bash ', end='')
+                params=" -c \"for f in \\$$OUT/testcases/*; do \\$$OUT/\\$$FUZZ_TARGET -timeout=25 -rss_limit_mb=2560 \\$$f; done;\""
         elif run_type == 'run':
             print('\t-it ', end='')
         else:
             print('\t', end='')
-
-        print(os.path.join(BASE_TAG, image['tag']))
+        
+        print(os.path.join(BASE_TAG, image['tag']), end='')
+        print(params)
         print()
 
 
