@@ -158,7 +158,7 @@ def get_dictionary_path(target_binary):
 
 
 def set_fuzz_target(env=None):
-    """Set compilation flags."""
+    """Set |FUZZ_TARGET| env flag."""
     if env is None:
         env = os.environ
 
