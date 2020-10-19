@@ -20,7 +20,7 @@
 ./configure
 make -j$(nproc)
 make install
-
+CXXFLAGS="$CXXFLAGS -fsanitize=undefined,address" 
 # build fuzzers
 for fuzzers in $(find $SRC -name '*_fuzzer.cc'); do
   base=$(basename -s .cc $fuzzers)
