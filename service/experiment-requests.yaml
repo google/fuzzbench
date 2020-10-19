@@ -4,6 +4,8 @@
 #   fuzzers:  # The fuzzers to run in the experiment.
 #     - aflplusplus
 #     - libfuzzer
+#   description: "Explain the intent of the experiment"
+#   # oss-fuzz-corpus: true  # Set to use latest saturated corpora from OSS-Fuzz.
 #
 # The name of the experiment must begin with a date using this format:
 # YYYY-MM-DD (year-month-day). It's not important what timezone is used in
@@ -15,6 +17,81 @@
 #
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
+
+- experiment: 2020-10-19
+  description: >
+    Experiments from 2020-10-17 showed quite some overhead [afl vs afl_nofast].
+    Checking overhead of xxh3 (afl_xxh3). Reduced overhead of addressing 8MB
+    of memory for hit counts (afl_fast, etc. u8* instead of u32*). After some
+    debugging, I found that schedules that speed up cycles are penalized,
+    because queue_cycle determines a seed's handicap (fuzzed 4x longer) and the
+    size of the mutated blocks in the seed (larger blocks for later cycles).
+    For schedules afl_fast_no_cycles, afl_oldfast_1, afl_fast_branches_u8/16,
+    the current cycle is computed as "fuzzed_paths / queued_paths".
+  fuzzers:
+    - afl
+    - afl_fast
+    - afl_xxh3
+    - afl_oldfast_1
+    - afl_fast_nocycle
+    - afl_fast_branches_u8
+    - afl_fast_branches_u16
+
+- experiment: 2020-10-18
+  description: "further memcache tests and test current vs 2.68c"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_268c
+    - aflplusplus_optimal
+    - aflplusplus_memcache_2mb
+    - aflplusplus_memcache_20mb
+    - aflplusplus_memcache_50mb
+    - aflplusplus_memcache_200mb
+
+- experiment: 2020-10-17
+  description: > 
+    Evaluating several AFL schedules. There are two edge-count-based boosting
+    schedules (afl_branches_u8, afl_branches_16). For each edge, AFL already
+    maintains favourite seeds (the fastest and smallest seed). We choose 
+    identify rarely executed edges and mark those favourites as 'champions',
+    and skip most non-champions as long as some champions exist. There are two
+    FAST schedules that also consider the number of times a seed is fuzzed
+    (afl_old_fast_1, afl_old_fast_025). There are two schedules that further
+    de-prioritize slow seeds (afl_quick, afl_fast_quick). In previous
+    experiments, we observed that AFL doesn't get through the entire queue in
+    23 hours. There are five baselines (afl, afl_shuffled, afl_nofast,
+    afl_fast, and afl_coe) where afl_shuffled starts with a shuffled queue,
+    and afl_nofast uses xxh3 for hashing.
+ 
+  fuzzers:
+    - afl
+    - afl_coe
+    - afl_fast
+    - afl_quick
+    - afl_nofast
+    - afl_shuffled
+    - afl_oldfast_1
+    - afl_fast_quick
+    - afl_oldfast_025
+    - afl_fast_branches_u8
+    - afl_fast_branches_u16
+
+- experiment: 2020-10-16
+  description: "memcache test"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_memcache_2000mb
+    - aflplusplus_memcache_2mb
+    - aflplusplus_memcache_pre
+
+- experiment: 2020-10-15
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_memcache_2000mb
+    - aflplusplus_memcache_2mb
+    - aflplusplus_memcache_pre
 
 - experiment: 2020-10-13-2
   fuzzers:

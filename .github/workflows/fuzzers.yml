@@ -40,20 +40,21 @@ jobs:
           - libfuzzer_magicbytes
           - entropic_magicbytes
           - aflplusplus_lightweizz
-          - aflplusplus_memcache
-          - aflplusplus_memcache_inf
-          - aflplusplus_coe_z
-          - aflplusplus_explore_z
-          - afl_32
+          - aflplusplus_explore
+          - aflplusplus_268c
+          - aflplusplus_memcache_2mb
+          - aflplusplus_memcache_20mb
+          - aflplusplus_memcache_50mb
+          - aflplusplus_memcache_200mb
           - afl_coe
-          - afl_fast_32
-          - afl_oldcoe_16
-          - afl_oldfast_4
-          - afl_oldfast_16
-          - afl_fast_nofav
+          - afl_fast
+          - afl_xxh3
+          - afl_oldfast_1
+          - afl_fast_quick
           - afl_fast_late_32
-          - afl_fast_branches
-          - afl_fast_branches2
+          - afl_fast_nocycle
+          - afl_fast_branches_u8
+          - afl_fast_branches_u16
           - afl_nohandicap_spliceless2
 
         benchmark_type:

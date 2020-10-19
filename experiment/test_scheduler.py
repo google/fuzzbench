@@ -94,6 +94,7 @@ def test_create_trial_instance(benchmark, expected_image, expected_target,
     and creates a startup script for the instance, as we expect it to."""
     expected_startup_script = '''# Start docker.
 
+docker-credential-gcr configure-docker -include-artifact-registry
 while ! docker pull {docker_image_url}
 do
   echo 'Error pulling image, retrying...'

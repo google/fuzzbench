@@ -20,17 +20,21 @@
 # But this means that the good stuff is hidden away in this benchmark
 # otherwise.
 
+import os
+
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
-    aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
+    aflplusplus_fuzzer.build()
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    run_options = ['-Z']
+    os.environ['AFL_TESTCACHE_SIZE'] = '20'
+
+    run_options = []
 
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,

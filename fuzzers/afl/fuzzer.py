@@ -69,9 +69,6 @@ def run_afl_fuzz(input_corpus,
                  hide_output=False):
     """Run afl-fuzz."""
     # Spawn the afl fuzzing process.
-    # FIXME: Currently AFL will exit if it encounters a crashing input in seed
-    # corpus (usually timeouts). Add a way to skip/delete such inputs and
-    # re-run AFL.
     print('[run_afl_fuzz] Running target with afl-fuzz')
     command = [
         './afl-fuzz',
