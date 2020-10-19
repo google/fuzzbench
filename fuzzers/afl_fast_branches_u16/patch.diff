@@ -12,7 +12,7 @@ index 5e800db..4abc484 100644
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index 61a3ee9..67d2e15 100644
+index 61a3ee9..eb274e8 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -23,24 +23,35 @@ index 61a3ee9..67d2e15 100644
  
  #include <sys/wait.h>
  #include <sys/time.h>
-@@ -151,6 +152,8 @@ EXP_ST u8  virgin_bits[MAP_SIZE],     /* Regions yet untouched by fuzzing */
+@@ -150,6 +151,7 @@ EXP_ST u8* trace_bits;                /* SHM with instrumentation bitmap  */
+ EXP_ST u8  virgin_bits[MAP_SIZE],     /* Regions yet untouched by fuzzing */
             virgin_tmout[MAP_SIZE],    /* Bits we haven't seen in tmouts   */
             virgin_crash[MAP_SIZE];    /* Bits we haven't seen in crashes  */
++EXP_ST u16 branch_hit_counts[MAP_SIZE];
  
-+EXP_ST u16  hit_counts[MAP_SIZE];
-+
  static u8  var_bytes[MAP_SIZE];       /* Bytes that appear to be variable */
  
- static s32 shm_id;                    /* ID of the SHM region             */
-@@ -168,6 +171,7 @@ EXP_ST u32 queued_paths,              /* Total number of queued testcases */
+@@ -166,8 +168,10 @@ EXP_ST u32 queued_paths,              /* Total number of queued testcases */
+            queued_imported,           /* Items imported via -S            */
+            queued_favored,            /* Paths deemed favorable           */
             queued_with_cov,           /* Paths with new coverage bytes    */
++           fuzzed_paths,
             pending_not_fuzzed,        /* Queued but not done yet          */
             pending_favored,           /* Pending favored paths            */
 +           pending_champions,         /* Pending champion seeds           */
             cur_skipped_paths,         /* Abandoned inputs in cur cycle    */
             cur_depth,                 /* Current path depth               */
             max_depth,                 /* Max path depth                   */
-@@ -247,6 +251,7 @@ struct queue_entry {
+@@ -188,8 +192,6 @@ EXP_ST u64 total_crashes,             /* Total number of crashes          */
+            last_crash_time,           /* Time for most recent crash (ms)  */
+            last_hang_time,            /* Time for most recent hang (ms)   */
+            last_crash_execs,          /* Exec counter at last crash       */
+-           queue_cycle,               /* Queue round counter              */
+-           cycles_wo_finds,           /* Cycles without any new paths     */
+            trim_execs,                /* Execs done to trim input files   */
+            bytes_trim_in,             /* Bytes coming into the trimmer    */
+            bytes_trim_out,            /* Bytes coming outa the trimmer    */
+@@ -247,6 +249,7 @@ struct queue_entry {
        has_new_cov,                    /* Triggers new coverage?           */
        var_behavior,                   /* Variable behavior?               */
        favored,                        /* Currently favored?               */
@@ -48,23 +59,32 @@ index 61a3ee9..67d2e15 100644
        fs_redundant;                   /* Marked as redundant in the fs?   */
  
    u32 bitmap_size,                    /* Number of bits set in bitmap     */
-@@ -893,6 +898,7 @@ static inline u8 has_new_bits(u8* virgin_map) {
+@@ -806,8 +809,6 @@ static void add_to_queue(u8* fname, u32 len, u8 passed_det) {
+   queued_paths++;
+   pending_not_fuzzed++;
+ 
+-  cycles_wo_finds = 0;
+-
+   if (!(queued_paths % 100)) {
+ 
+     q_prev100->next_100 = q;
+@@ -893,6 +894,7 @@ static inline u8 has_new_bits(u8* virgin_map) {
  
    u64* current = (u64*)trace_bits;
    u64* virgin  = (u64*)virgin_map;
-+  u64* hits    = (u64*)hit_counts;
++  u64* hits    = (u64*)branch_hit_counts;
  
    u32  i = (MAP_SIZE >> 3);
  
-@@ -900,6 +906,7 @@ static inline u8 has_new_bits(u8* virgin_map) {
+@@ -900,6 +902,7 @@ static inline u8 has_new_bits(u8* virgin_map) {
  
    u32* current = (u32*)trace_bits;
    u32* virgin  = (u32*)virgin_map;
-+  u32* hits    = (u32*)hit_counts;
++  u32* hits    = (u32*)branch_hit_counts;
  
    u32  i = (MAP_SIZE >> 2);
  
-@@ -913,41 +920,59 @@ static inline u8 has_new_bits(u8* virgin_map) {
+@@ -913,41 +916,59 @@ static inline u8 has_new_bits(u8* virgin_map) {
         that have not been already cleared from the virgin map - since this will
         almost always be the case. */
  
@@ -111,7 +131,8 @@ index 61a3ee9..67d2e15 100644
  
 -      }
 +  #ifdef WORD_SIZE_64
-+
+ 
+-      *virgin &= ~*current;
 +          if ((cur[0] && vir[0] == 0xff) || (cur[1] && vir[1] == 0xff) ||
 +              (cur[2] && vir[2] == 0xff) || (cur[3] && vir[3] == 0xff) ||
 +              (cur[4] && vir[4] == 0xff) || (cur[5] && vir[5] == 0xff) ||
@@ -129,8 +150,7 @@ index 61a3ee9..67d2e15 100644
 +        }
 +
 +        *virgin &= ~*current;
- 
--      *virgin &= ~*current;
++
 +      }
  
      }
@@ -143,7 +163,7 @@ index 61a3ee9..67d2e15 100644
    }
  
    if (ret && virgin_map == virgin_bits) bitmap_changed = 1;
-@@ -1310,17 +1335,21 @@ static void cull_queue(void) {
+@@ -1310,17 +1331,21 @@ static void cull_queue(void) {
  
    queued_favored  = 0;
    pending_favored = 0;
@@ -165,7 +185,7 @@ index 61a3ee9..67d2e15 100644
    for (i = 0; i < MAP_SIZE; i++)
      if (top_rated[i] && (temp_v[i >> 3] & (1 << (i & 7)))) {
  
-@@ -1332,11 +1361,34 @@ static void cull_queue(void) {
+@@ -1332,11 +1357,34 @@ static void cull_queue(void) {
          if (top_rated[i]->trace_mini[j])
            temp_v[j] &= ~top_rated[i]->trace_mini[j];
  
@@ -175,12 +195,12 @@ index 61a3ee9..67d2e15 100644
  
        if (!top_rated[i]->was_fuzzed) pending_favored++;
  
-+      if (hit_counts[i] < champion_threshold) {
++      if (branch_hit_counts[i] < champion_threshold) {
 +
 +        u16 new_champion_threshold = 0xFFFF;
-+        if (hit_counts[i] < 0xF) new_champion_threshold = 0xF;
-+        else if (hit_counts[i] < 0xFF) new_champion_threshold = 0xFF;
-+        else if (hit_counts[i] < 0xFFF) new_champion_threshold = 0xFFF;
++        if (branch_hit_counts[i] < 0xF) new_champion_threshold = 0xF;
++        else if (branch_hit_counts[i] < 0xFF) new_champion_threshold = 0xFF;
++        else if (branch_hit_counts[i] < 0xFFF) new_champion_threshold = 0xFFF;
 +
 +        if (champion_threshold != new_champion_threshold) {
 +          q = queue;
@@ -200,19 +220,115 @@ index 61a3ee9..67d2e15 100644
      }
  
    q = queue;
-@@ -1357,8 +1409,9 @@ EXP_ST void setup_shm(void) {
+@@ -1359,6 +1407,7 @@ EXP_ST void setup_shm(void) {
  
-   if (!in_bitmap) memset(virgin_bits, 255, MAP_SIZE);
- 
--  memset(virgin_tmout, 255, MAP_SIZE);
--  memset(virgin_crash, 255, MAP_SIZE);
-+  memset(virgin_tmout, 255, sizeof(u8)  * MAP_SIZE);
-+  memset(virgin_crash, 255, sizeof(u8)  * MAP_SIZE);
-+  memset(hit_counts,     0, sizeof(u16) * MAP_SIZE);
+   memset(virgin_tmout, 255, MAP_SIZE);
+   memset(virgin_crash, 255, MAP_SIZE);
++  memset(branch_hit_counts,     0, MAP_SIZE);
  
    shm_id = shmget(IPC_PRIVATE, MAP_SIZE, IPC_CREAT | IPC_EXCL | 0600);
  
-@@ -5004,14 +5057,16 @@ static u8 fuzz_one(char** argv) {
+@@ -3183,7 +3232,7 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+     /* Try to calibrate inline; this also calls update_bitmap_score() when
+        successful. */
+ 
+-    res = calibrate_case(argv, queue_top, mem, queue_cycle - 1, 0);
++    res = calibrate_case(argv, queue_top, mem, fuzzed_paths / queued_paths, 0);
+ 
+     if (res == FAULT_ERROR)
+       FATAL("Unable to execute target application");
+@@ -3463,7 +3512,7 @@ static void write_stats_file(double bitmap_cvg, double stability, double eps) {
+              "command_line      : %s\n"
+              "slowest_exec_ms   : %llu\n",
+              start_time / 1000, get_cur_time() / 1000, getpid(),
+-             queue_cycle ? (queue_cycle - 1) : 0, total_execs, eps,
++             fuzzed_paths / queued_paths, total_execs, eps,
+              queued_paths, queued_favored, queued_discovered, queued_imported,
+              max_depth, current_entry, pending_favored, pending_not_fuzzed,
+              queued_variable, stability, bitmap_cvg, unique_crashes,
+@@ -3507,14 +3556,14 @@ static void maybe_update_plot_file(double bitmap_cvg, double eps) {
+ 
+   if (prev_qp == queued_paths && prev_pf == pending_favored && 
+       prev_pnf == pending_not_fuzzed && prev_ce == current_entry &&
+-      prev_qc == queue_cycle && prev_uc == unique_crashes &&
++      prev_qc == fuzzed_paths / queued_paths && prev_uc == unique_crashes &&
+       prev_uh == unique_hangs && prev_md == max_depth) return;
+ 
+   prev_qp  = queued_paths;
+   prev_pf  = pending_favored;
+   prev_pnf = pending_not_fuzzed;
+   prev_ce  = current_entry;
+-  prev_qc  = queue_cycle;
++  prev_qc  = fuzzed_paths / queued_paths;
+   prev_uc  = unique_crashes;
+   prev_uh  = unique_hangs;
+   prev_md  = max_depth;
+@@ -3527,7 +3576,7 @@ static void maybe_update_plot_file(double bitmap_cvg, double eps) {
+ 
+   fprintf(plot_file, 
+           "%llu, %llu, %u, %u, %u, %u, %0.02f%%, %llu, %llu, %u, %0.02f\n",
+-          get_cur_time() / 1000, queue_cycle - 1, current_entry, queued_paths,
++          get_cur_time() / 1000, fuzzed_paths / queued_paths, current_entry, queued_paths,
+           pending_not_fuzzed, pending_favored, bitmap_cvg, unique_crashes,
+           unique_hangs, max_depth, eps); /* ignore errors */
+ 
+@@ -3995,11 +4044,6 @@ static void show_stats(void) {
+  
+   }
+ 
+-  /* Honor AFL_EXIT_WHEN_DONE and AFL_BENCH_UNTIL_CRASH. */
+-
+-  if (!dumb_mode && cycles_wo_finds > 100 && !pending_not_fuzzed &&
+-      getenv("AFL_EXIT_WHEN_DONE")) stop_soon = 2;
+-
+   if (total_crashes && getenv("AFL_BENCH_UNTIL_CRASH")) stop_soon = 2;
+ 
+   /* If we're not on TTY, bail out. */
+@@ -4067,31 +4111,18 @@ static void show_stats(void) {
+ 
+   } else {
+ 
+-    u64 min_wo_finds = (cur_ms - last_path_time) / 1000 / 60;
+-
+-    /* First queue cycle: don't stop now! */
+-    if (queue_cycle == 1 || min_wo_finds < 15) strcpy(tmp, cMGN); else
+-
+-    /* Subsequent cycles, but we're still making finds. */
+-    if (cycles_wo_finds < 25 || min_wo_finds < 30) strcpy(tmp, cYEL); else
+-
+-    /* No finds for a long time and no test cases to try. */
+-    if (cycles_wo_finds > 100 && !pending_not_fuzzed && min_wo_finds > 120)
+-      strcpy(tmp, cLGN);
+-
+-    /* Default: cautiously OK to stop? */
+-    else strcpy(tmp, cLBL);
++    strcpy(tmp, cLBL);
+ 
+   }
+ 
+   SAYF(bV bSTOP "        run time : " cRST "%-34s " bSTG bV bSTOP
+        "  cycles done : %s%-5s  " bSTG bV "\n",
+-       DTD(cur_ms, start_time), tmp, DI(queue_cycle - 1));
++       DTD(cur_ms, start_time), tmp, DI(fuzzed_paths / queued_paths));
+ 
+   /* We want to warn people about not seeing new paths after a full cycle,
+      except when resuming fuzzing or running in non-instrumented mode. */
+ 
+-  if (!dumb_mode && (last_path_time || resuming_fuzz || queue_cycle == 1 ||
++  if (!dumb_mode && (last_path_time || resuming_fuzz || fuzzed_paths / queued_paths == 0 ||
+       in_bitmap || crash_mode)) {
+ 
+     SAYF(bV bSTOP "   last new path : " cRST "%-34s ",
+@@ -4685,7 +4716,7 @@ EXP_ST u8 common_fuzz_stuff(char** argv, u8* out_buf, u32 len) {
+ static u32 choose_block_len(u32 limit) {
+ 
+   u32 min_value, max_value;
+-  u32 rlim = MIN(queue_cycle, 3);
++  u32 rlim = MIN(1 + fuzzed_paths / queued_paths, 3);
+ 
+   if (!run_over10m) rlim = 1;
+ 
+@@ -5004,14 +5035,16 @@ static u8 fuzz_one(char** argv) {
  
  #else
  
@@ -235,7 +351,25 @@ index 61a3ee9..67d2e15 100644
  
    } else if (!dumb_mode && !queue_cur->favored && queued_paths > 10) {
  
-@@ -6122,7 +6177,7 @@ havoc_stage:
+@@ -5019,7 +5052,7 @@ static u8 fuzz_one(char** argv) {
+        The odds of skipping stuff are higher for already-fuzzed inputs and
+        lower for never-fuzzed entries. */
+ 
+-    if (queue_cycle > 1 && !queue_cur->was_fuzzed) {
++    if (fuzzed_paths / queued_paths > 0 && !queue_cur->was_fuzzed) {
+ 
+       if (UR(100) < SKIP_NFAV_NEW_PROB) return 1;
+ 
+@@ -5079,7 +5112,7 @@ static u8 fuzz_one(char** argv) {
+ 
+       queue_cur->exec_cksum = 0;
+ 
+-      res = calibrate_case(argv, queue_cur, in_buf, queue_cycle - 1, 0);
++      res = calibrate_case(argv, queue_cur, in_buf, fuzzed_paths / queued_paths, 0);
+ 
+       if (res == FAULT_ERROR)
+         FATAL("Unable to execute target application");
+@@ -6122,7 +6155,7 @@ havoc_stage:
      sprintf(tmp, "splice %u", splice_cycle);
      stage_name  = tmp;
      stage_short = "splice";
@@ -244,6 +378,59 @@ index 61a3ee9..67d2e15 100644
  
    }
  
+@@ -8060,7 +8093,6 @@ int main(int argc, char** argv) {
+ 
+     if (!queue_cur) {
+ 
+-      queue_cycle++;
+       current_entry     = 0;
+       cur_skipped_paths = 0;
+       queue_cur         = queue;
+@@ -8073,25 +8105,17 @@ int main(int argc, char** argv) {
+ 
+       show_stats();
+ 
+-      if (not_on_tty) {
+-        ACTF("Entering queue cycle %llu.", queue_cycle);
+-        fflush(stdout);
+-      }
+-
+       /* If we had a full queue cycle with no new finds, try
+          recombination strategies next. */
+ 
+       if (queued_paths == prev_queued) {
+ 
+-        if (use_splicing) cycles_wo_finds++; else use_splicing = 1;
++        if (!use_splicing) use_splicing = 1;
+ 
+-      } else cycles_wo_finds = 0;
++      }
+ 
+       prev_queued = queued_paths;
+ 
+-      if (sync_id && queue_cycle == 1 && getenv("AFL_IMPORT_FIRST"))
+-        sync_fuzzers(use_argv);
+-
+     }
+ 
+     skipped_fuzz = fuzz_one(use_argv);
+@@ -8134,16 +8158,6 @@ stop_fuzzing:
+   SAYF(CURSOR_SHOW cLRD "\n\n+++ Testing aborted %s +++\n" cRST,
+        stop_soon == 2 ? "programmatically" : "by user");
+ 
+-  /* Running for more than 30 minutes but still doing first cycle? */
+-
+-  if (queue_cycle == 1 && get_cur_time() - start_time > 30 * 60 * 1000) {
+-
+-    SAYF("\n" cYEL "[!] " cRST
+-           "Stopped during the first cycle, results may be incomplete.\n"
+-           "    (For info on resuming, see %s/README.)\n", doc_path);
+-
+-  }
+-
+   fclose(plot_file);
+   destroy_queue();
+   destroy_extras();
 diff --git a/config.h b/config.h
 index 46dd857..8aae20b 100644
 --- a/config.h
