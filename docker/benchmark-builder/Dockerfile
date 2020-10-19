@@ -29,6 +29,7 @@ ENV BENCHMARK $benchmark
 COPY --from=base-image /usr/local/bin/python3* /usr/local/bin/
 COPY --from=base-image /usr/local/lib/python3.7 /usr/local/lib/python3.7
 COPY --from=base-image /usr/local/include/python3.7m /usr/local/include/python3.7m
+COPY --from=base-image /usr/local/lib/python3.7/site-packages /usr/local/lib/python3.7/site-packages
 
 COPY fuzzers/$fuzzer/fuzzer.py $SRC/fuzzer.py
 

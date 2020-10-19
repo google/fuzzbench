@@ -14,15 +14,17 @@
 """Integration code for AFL fuzzer."""
 # pylint: disable=too-many-arguments
 
-import shutil
 import os
 import glob
 import pathlib
+import shutil
 import struct
 import subprocess
 import threading
 import time
 from datetime import datetime
+
+import psutil
 
 from fuzzers import utils
 
@@ -371,11 +373,8 @@ def convert_outputs(ktest_tool, output_klee, crash_dir, queue_dir, info_dir):
                                                 crashes=n_crashes))
 
 
-# pylint: disable=import-error
-# pylint: disable=import-outside-toplevel
 def monitor_resource_usage():
     """Monitor resource consumption."""
-    import psutil
     print('[resource_thread] Starting resource usage monitoring...')
 
     start = datetime.now()
@@ -391,13 +390,8 @@ def monitor_resource_usage():
                 time=now - start, message=message))
 
 
-# pylint: disable=import-error
-# pylint: disable=import-outside-toplevel
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-
-    import psutil
-
     # Set ulimit. Note: must be changed as this does not take effect
     if os.system('ulimit -s unlimited') != 0:
         raise ValueError('ulimit failed')

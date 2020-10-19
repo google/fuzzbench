@@ -21,6 +21,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import yaml
 
 # Keep all fuzzers at same optimization level until fuzzer explicitly needs or
 # specifies it.
@@ -84,13 +85,8 @@ def append_flags(env_var, additional_flags, env=None):
 def get_config_value(attribute):
     """Gets config attribute value from benchmark config yaml file."""
     with open(BENCHMARK_CONFIG_YAML_PATH) as file_handle:
-        # Hacky yaml parsing without PyYAML dependency.
-        content = file_handle.read()
-        for line in content.splitlines():
-            match = CONFIG_ATTR_VAL_REGEX.match(line)
-            if match and match.group('attribute') == attribute:
-                return match.group('value')
-    return None
+        config = yaml.load(file_handle, yaml.SafeLoader)
+        return config.get(attribute)
 
 
 @contextlib.contextmanager
@@ -200,7 +196,7 @@ def initialize_flags(env=None):
     set_fuzz_target(env)
     set_compilation_flags(env)
 
-    for flag_var in ['CFLAGS', 'CXXFLAGS']:
+    for flag_var in ['CFLAGS', 'CXXFLAGS', 'FUZZ_TARGET']:
         print('{flag_var} = {flag_value}'.format(
             flag_var=flag_var, flag_value=os.getenv(flag_var)))
 
