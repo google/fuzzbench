@@ -7,7 +7,7 @@ index 5e800db..4abc484 100644
  
  ifneq "$(filter Linux GNU%,$(shell uname))" ""
 -  LDFLAGS  += -ldl
-+  LDFLAGS  += -ldl -lm
++  LDFLAGS  += -ldl  -lm
  endif
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
