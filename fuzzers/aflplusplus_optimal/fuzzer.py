@@ -85,7 +85,7 @@ def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-man
     elif benchmark_name == 'libpcap_fuzz_both':
         os.environ['AFL_TESTCACHE_SIZE'] = '50'
     elif benchmark_name == 'harfbuzz-1.3.2':
-    #    run_options = ['-Z']
+        run_options = []  # ['-Z']
     elif benchmark_name == 'libxml2-v2.9.2':
         os.environ['AFL_TESTCACHE_SIZE'] = '2'
     elif benchmark_name == 'libxml2-v2.9.2':
