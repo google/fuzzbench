@@ -196,7 +196,7 @@ def initialize_flags(env=None):
     set_fuzz_target(env)
     set_compilation_flags(env)
 
-    for flag_var in ['CFLAGS', 'CXXFLAGS', 'FUZZ_TARGET']:
+    for flag_var in ['FUZZ_TARGET', 'CFLAGS', 'CXXFLAGS']:
         print('{flag_var} = {flag_value}'.format(
             flag_var=flag_var, flag_value=os.getenv(flag_var)))
 
