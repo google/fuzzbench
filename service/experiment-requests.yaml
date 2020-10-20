@@ -18,6 +18,16 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-10-21
+  description: "further memcache tests with fixed random"
+  fuzzers:
+    - aflplusplus_fixed
+    - aflplusplus_optimal
+    - aflplusplus_memcache_2mb
+    - aflplusplus_memcache_5mb
+    - aflplusplus_memcache_20mb
+    - aflplusplus_memcache_200mb
+
 - experiment: 2020-10-19
   description: >
     Experiments from 2020-10-17 showed quite some overhead [afl vs afl_nofast].

@@ -78,14 +78,32 @@ def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-man
     """Run fuzzer."""
     benchmark_name = os.environ['BENCHMARK']
 
+    run_options = []
+
     if benchmark_name == 'bloaty_fuzz_target':
         run_options = ['-Z']
-    #elif benchmark_name == 'harfbuzz-1.3.2':
-    #    run_options = ['-Z']
+    elif benchmark_name == 'libpcap_fuzz_both':
+        os.environ['AFL_TESTCACHE_SIZE'] = '50'
+    elif benchmark_name == 'harfbuzz-1.3.2':
+        run_options = []  # ['-Z']
+    elif benchmark_name == 'libxml2-v2.9.2':
+        os.environ['AFL_TESTCACHE_SIZE'] = '2'
+    elif benchmark_name == 'libxml2-v2.9.2':
+        os.environ['AFL_TESTCACHE_SIZE'] = '20'
+    elif benchmark_name == 'mbedtls_fuzz_dtlsclient':
+        os.environ['AFL_TESTCACHE_SIZE'] = '2'
+    elif benchmark_name == 'openssl_x509':
+        os.environ['AFL_TESTCACHE_SIZE'] = '2'
+    elif benchmark_name == 'openthread-2019-12-23':
+        os.environ['AFL_TESTCACHE_SIZE'] = '50'
+    elif benchmark_name == 'proj4-2017-08-14':
+        os.environ['AFL_TESTCACHE_SIZE'] = '2'
+    elif benchmark_name == 're2-2014-12-09':
+        os.environ['AFL_TESTCACHE_SIZE'] = '20'
+    elif benchmark_name == 'sqlite3_ossfuzz':
+        os.environ['AFL_TESTCACHE_SIZE'] = '20'
     else:
-        run_options = []
-
-    os.environ['AFL_TESTCACHE_SIZE'] = '20'
+        os.environ['AFL_TESTCACHE_SIZE'] = '200'
 
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
