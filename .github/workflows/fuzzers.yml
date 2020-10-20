@@ -42,9 +42,10 @@ jobs:
           - aflplusplus_lightweizz
           - aflplusplus_explore
           - aflplusplus_268c
+          - aflplusplus_fixed
           - aflplusplus_memcache_2mb
+          - aflplusplus_memcache_5mb
           - aflplusplus_memcache_20mb
-          - aflplusplus_memcache_50mb
           - aflplusplus_memcache_200mb
           - afl_coe
           - afl_fast

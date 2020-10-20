@@ -18,13 +18,14 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
-
 - experiment: 2020-10-20
   description: >
-    The last experiment (afl_fast_nocycle vs afl_fast) where we modifying the
-    queue_cycle to go more rapidly through the queue without penalty was
-    successful. In this experiment, we move the power schedule from the
-    modifying perf_score to modifying the probability to select a seed.
+    The last experiment (afl_fast_nocycle vs afl_fast) where we modified the
+    queue_cycle to facilitate a rapid progression through the queue without
+    penalty was successful. In this experiment, we move the power schedule from
+    the modifying perf_score to modifying the probability to select a seed.
+    For all of afl_fast_*_v2, AFL will not proceed through the queue from
+    first to last seed, but rather jump to the most interesting seeds first.
     In the last experiment, afl_fast_branches_u8 and afl_fast_branches_u16
     contained a bug, where we never progressed beyond the first cycle.
     Trying a fixed version, that is also integrated with the moved fast
@@ -37,6 +38,15 @@
     - afl_fast_v2_exp
     - afl_fast_branches_v2
      
+- experiment: 2020-10-21
+  description: "further memcache tests with fixed random"
+  fuzzers:
+    - aflplusplus_fixed
+    - aflplusplus_optimal
+    - aflplusplus_memcache_2mb
+    - aflplusplus_memcache_5mb
+    - aflplusplus_memcache_20mb
+    - aflplusplus_memcache_200mb
 
 - experiment: 2020-10-19
   description: >
