@@ -19,6 +19,7 @@ from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
+from sqlalchemy import JSON
 from sqlalchemy import String
 from sqlalchemy import UnicodeText
 
@@ -69,3 +70,4 @@ class Snapshot(Base):
     trial_id = Column(Integer, ForeignKey('trial.id'), primary_key=True)
     trial = sqlalchemy.orm.relationship('Trial', back_populates='snapshots')
     edges_covered = Column(Integer, nullable=False)
+    fuzzer_stats = Column(JSON, nullable=True)
