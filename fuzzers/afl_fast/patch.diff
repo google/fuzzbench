@@ -12,7 +12,7 @@ index 5e800db..4abc484 100644
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index 61a3ee9..292ce9c 100644
+index 61a3ee9..ceea8c6 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -33,7 +33,15 @@ index 61a3ee9..292ce9c 100644
  /* Lots of globals, but mostly for the status UI and other things where it
     really makes no sense to haul them around as function parameters. */
  
-@@ -1493,6 +1497,9 @@ static void read_testcases(void) {
+@@ -166,6 +170,7 @@ EXP_ST u32 queued_paths,              /* Total number of queued testcases */
+            queued_imported,           /* Items imported via -S            */
+            queued_favored,            /* Paths deemed favorable           */
+            queued_with_cov,           /* Paths with new coverage bytes    */
++           fuzzed_paths,
+            pending_not_fuzzed,        /* Queued but not done yet          */
+            pending_favored,           /* Pending favored paths            */
+            cur_skipped_paths,         /* Abandoned inputs in cur cycle    */
+@@ -1493,6 +1498,9 @@ static void read_testcases(void) {
  
      add_to_queue(fn, st.st_size, passed_det);
  
@@ -43,7 +51,7 @@ index 61a3ee9..292ce9c 100644
    }
  
    free(nl); /* not tracked */
-@@ -3150,6 +3157,12 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+@@ -3150,6 +3158,12 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
    s32 fd;
    u8  keeping = 0, res;
  
@@ -56,7 +64,7 @@ index 61a3ee9..292ce9c 100644
    if (fault == crash_mode) {
  
      /* Keep only if there are new bits in the map, add to queue for
-@@ -3178,7 +3191,9 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+@@ -3178,7 +3192,9 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
        queued_with_cov++;
      }
  
@@ -67,7 +75,7 @@ index 61a3ee9..292ce9c 100644
  
      /* Try to calibrate inline; this also calls update_bitmap_score() when
         successful. */
-@@ -4784,6 +4799,38 @@ static u32 calculate_score(struct queue_entry* q) {
+@@ -4784,6 +4800,38 @@ static u32 calculate_score(struct queue_entry* q) {
  
    }
  
@@ -106,7 +114,7 @@ index 61a3ee9..292ce9c 100644
    /* Make sure that we don't go over limit. */
  
    if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
-@@ -5125,6 +5172,11 @@ static u8 fuzz_one(char** argv) {
+@@ -5125,6 +5173,11 @@ static u8 fuzz_one(char** argv) {
  
    orig_perf = perf_score = calculate_score(queue_cur);
  
@@ -118,7 +126,7 @@ index 61a3ee9..292ce9c 100644
    /* Skip right away if -d is given, if we have done deterministic fuzzing on
       this entry ourselves (was_fuzzed), or if it has gone through deterministic
       testing in earlier, resumed runs (passed_det). */
-@@ -6122,7 +6174,7 @@ havoc_stage:
+@@ -6122,7 +6175,7 @@ havoc_stage:
      sprintf(tmp, "splice %u", splice_cycle);
      stage_name  = tmp;
      stage_short = "splice";
@@ -127,6 +135,14 @@ index 61a3ee9..292ce9c 100644
  
    }
  
+@@ -7759,7 +7812,6 @@ static void save_cmdline(u32 argc, char** argv) {
+ int main(int argc, char** argv) {
+ 
+   s32 opt;
+-  u64 prev_queued = 0;
+   u32 sync_interval_cnt = 0, seek_to;
+   u8  *extras_dir = 0;
+   u8  mem_limit_given = 0;
 @@ -7955,6 +8007,9 @@ int main(int argc, char** argv) {
    setup_signal_handlers();
    check_asan_opts();
@@ -137,6 +153,78 @@ index 61a3ee9..292ce9c 100644
    if (sync_id) fix_up_sync();
  
    if (!strcmp(in_dir, out_dir))
+@@ -8052,15 +8107,19 @@ int main(int argc, char** argv) {
+     if (stop_soon) goto stop_fuzzing;
+   }
+ 
++  queue_cycle = 1;
++
++  cull_queue();
++
++  if (sync_id && getenv("AFL_IMPORT_FIRST"))
++    sync_fuzzers(use_argv);
++
+   while (1) {
+ 
+     u8 skipped_fuzz;
+ 
+-    cull_queue();
+-
+     if (!queue_cur) {
+ 
+-      queue_cycle++;
+       current_entry     = 0;
+       cur_skipped_paths = 0;
+       queue_cur         = queue;
+@@ -8073,36 +8132,28 @@ int main(int argc, char** argv) {
+ 
+       show_stats();
+ 
+-      if (not_on_tty) {
+-        ACTF("Entering queue cycle %llu.", queue_cycle);
+-        fflush(stdout);
+-      }
+-
+-      /* If we had a full queue cycle with no new finds, try
+-         recombination strategies next. */
++    }
+ 
+-      if (queued_paths == prev_queued) {
++    skipped_fuzz = fuzz_one(use_argv);
+ 
+-        if (use_splicing) cycles_wo_finds++; else use_splicing = 1;
++    if (!skipped_fuzz) {
+ 
+-      } else cycles_wo_finds = 0;
++      cull_queue();
+ 
+-      prev_queued = queued_paths;
++      if (!stop_soon && sync_id) {
+ 
+-      if (sync_id && queue_cycle == 1 && getenv("AFL_IMPORT_FIRST"))
+-        sync_fuzzers(use_argv);
++        if (!(sync_interval_cnt++ % SYNC_INTERVAL))
++          sync_fuzzers(use_argv);
+ 
+-    }
+-
+-    skipped_fuzz = fuzz_one(use_argv);
++      }
+ 
+-    if (!stop_soon && sync_id && !skipped_fuzz) {
+-      
+-      if (!(sync_interval_cnt++ % SYNC_INTERVAL))
+-        sync_fuzzers(use_argv);
++      fuzzed_paths++;
++      queue_cycle = 1 + (100 / (100 - SKIP_NFAV_NEW_PROB))
++                        * fuzzed_paths / queued_paths;
+ 
+     }
+ 
++
+     if (!stop_soon && exit_1) stop_soon = 2;
+ 
+     if (stop_soon) break;
 diff --git a/config.h b/config.h
 index 46dd857..8aae20b 100644
 --- a/config.h
