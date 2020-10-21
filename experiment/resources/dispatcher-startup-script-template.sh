@@ -15,7 +15,7 @@
 
 # Hack because container-optmized-os doesn't support writing to /home/root
 export HOME=/home/chronos
-mkdir HOME || true
+mkdir -p $HOME
 docker-credential-gcr configure-docker -include-artifact-registry
 echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
 docker run --rm \
