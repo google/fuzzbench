@@ -31,6 +31,8 @@ COPY --from=base-image /usr/local/lib/python3.7 /usr/local/lib/python3.7
 COPY --from=base-image /usr/local/include/python3.7m /usr/local/include/python3.7m
 COPY --from=base-image /usr/local/lib/python3.7/site-packages /usr/local/lib/python3.7/site-packages
 
+COPY fuzzers/$fuzzer/fuzzer.py $SRC/fuzzer.pyss
+
 # Copy the entire fuzzers directory tree to allow for module dependencies.
 COPY fuzzers $SRC/fuzzers
 
