@@ -80,6 +80,7 @@ def experiment(environ):  # pylint: disable=redefined-outer-name,unused-argument
     os.environ['EXPERIMENT_FILESTORE'] = 'gs://experiment-data'
     os.environ['REPORT_FILESTORE'] = 'gs://web-bucket'
     os.environ['CLOUD_PROJECT'] = 'fuzzbench'
+    os.environ['DOCKER_REGISTRY'] = 'gcr.io/fuzzbench'
 
 
 @pytest.fixture
