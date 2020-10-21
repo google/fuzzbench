@@ -20,4 +20,4 @@ RUN apt-get update -y && \
 	llvm-6.0 llvm-6.0-dev llvm-6.0-tools
 
 RUN apt-get install -y clang-6.0 vim less
-RUN pip3 install psutil
+RUN pip3 install psutil==5.7.2
