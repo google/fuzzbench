@@ -129,18 +129,4 @@ def test_print_makefile_runner_image(mocked_print):
         call('gcr.io/fuzzbench/runners/afl/zlib', end=''),
         call(''),
         call(),
-        call('repro-check-afl-zlib: .afl-zlib-runner'),
-        call('\tdocker run \\\n\
-\t--cpus=1 \\\n\
-\t--cap-add SYS_NICE \\\n\
-\t--cap-add SYS_PTRACE \\\n\
-\t-e FUZZ_OUTSIDE_EXPERIMENT=1 \\\n\
-\t-e FORCE_LOCAL=1 \\\n\
-\t-e TRIAL_ID=1 \\\n\
-\t-e FUZZER=afl \\\n\
-\t-e BENCHMARK=zlib \\\n\
-\t-e FUZZ_TARGET=$(zlib-fuzz-target) \\'),
-        call('gcr.io/fuzzbench/runners/afl/zlib', end=''),
-        call(''),
-        call()
     ]

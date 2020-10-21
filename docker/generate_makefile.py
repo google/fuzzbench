@@ -38,11 +38,14 @@ def _print_makefile_run_template(image):
     benchmark = image['benchmark']
 
     for run_type in ('run', 'debug', 'test-run', 'repro-check'):
+        if run_type == 'repro-check':
+            bench_path = os.path.join(BENCHMARK_DIR, benchmark, 'testcases')
+            if not os.path.isdir(bench_path):
+                continue
         print(('{run_type}-{fuzzer}-{benchmark}: ' +
                '.{fuzzer}-{benchmark}-runner').format(run_type=run_type,
                                                       benchmark=benchmark,
                                                       fuzzer=fuzzer))
-
         print('\
 \tdocker run \\\n\
 \t--cpus=1 \\\n\
@@ -62,12 +65,14 @@ def _print_makefile_run_template(image):
         if run_type == 'debug':
             print('\t--entrypoint "/bin/bash" \\\n\t-it ', end='')
         elif run_type == 'repro-check':
-            if os.path.isdir(os.path.join(BENCHMARK_DIR, benchmark,
-                                          'testcases')):
-                print('\t--entrypoint /bin/bash ', end='')
-                params = " -c \"for f in \\$$OUT/testcases/*; do\
-                        \\$$OUT/\\$$FUZZ_TARGET -timeout=25\
-                        -rss_limit_mb=2560 \\$$f; done;\""
+            print('\t-v {path}:/testcases \\\n\
+\t--entrypoint /bin/bash '.format(path=bench_path),
+                  end='')
+            params = " -c \"for f in /testcases/*; do\
+                    echo _________________________________________;\
+                    echo \\$$f:;\
+                    \\$$OUT/\\$$FUZZ_TARGET -timeout=25\
+                    -rss_limit_mb=2560 \\$$f; done;\""
 
         elif run_type == 'run':
             print('\t-it ', end='')

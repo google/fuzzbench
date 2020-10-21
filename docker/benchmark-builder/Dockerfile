@@ -45,12 +45,6 @@ ENV ASAN_OPTIONS="detect_leaks=0"
 RUN mkdir /opt/fuzzbench/
 COPY docker/benchmark-builder/checkout_commit.py /opt/fuzzbench/
 COPY benchmarks/$benchmark/benchmark.yaml /
-# Use multiple copy on benchmark.yaml and the testcases folder, so as to not throw an error in case the folder doesn't exist
-COPY benchmarks/$benchmark/benchmark.yaml benchmarks/$benchmark/testcase[s] /$OUT/testcases/
-# Delete the second copy of benchmark.yaml since it was only needed to allow for a conditional copy
-RUN rm /$OUT/testcases/benchmark.yaml
-# Delete the newly created testcases folder if no testcases were copied
-RUN if [ ! "$(ls -A /out/testcases/)" ]; then rmdir /$OUT/testcases; fi
 RUN export CHECKOUT_COMMIT=$(cat /benchmark.yaml | tr -d ' ' | grep 'commit:' | cut -d ':' -f2) && \
     python3 -u /opt/fuzzbench/checkout_commit.py $CHECKOUT_COMMIT $SRC
 
