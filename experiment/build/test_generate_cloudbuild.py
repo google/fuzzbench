@@ -267,4 +267,5 @@ def test_generate_cloudbuild_spec_build_benchmark_coverage(experiment):
             'gcr.io/fuzzbench/builders/coverage/zlib'
         ]
     }
+
     assert generated_spec == expected_spec
