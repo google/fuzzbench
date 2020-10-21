@@ -13,9 +13,10 @@
 # limitations under the License.
 """Integration code for AFL fuzzer."""
 
+import json
+import os
 import shutil
 import subprocess
-import os
 
 from fuzzers import utils
 
@@ -41,6 +42,22 @@ def build():
     print('[post_build] Copying afl-fuzz to $OUT directory')
     # Copy out the afl-fuzz binary as a build artifact.
     shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
+
+
+def get_stats(output_corpus, fuzzer_log):  # pylint: disable=unused-argument
+    """Gets fuzzer stats for AFL."""
+    # Get a dictionary containing the stats AFL reports.
+    stats_file = os.path.join(output_corpus, 'fuzzer_stats')
+    with open(stats_file) as file_handle:
+        stats_file_lines = file_handle.read().splitlines()
+    stats_file_dict = {}
+    for stats_line in stats_file_lines:
+        key, value = stats_line.split(': ')
+        stats_file_dict[key.strip()] = value.strip()
+
+    # Report to FuzzBench the stats it accepts.
+    stats = {'execs_per_sec': float(stats_file_dict['execs_per_sec'])}
+    return json.dumps(stats)
 
 
 def prepare_fuzz_environment(input_corpus):

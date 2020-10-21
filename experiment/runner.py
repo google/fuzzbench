@@ -15,6 +15,8 @@
 """Runs fuzzer for trial."""
 
 from collections import namedtuple
+import importlib
+import json
 import os
 import posixpath
 import shlex
@@ -29,8 +31,9 @@ import zipfile
 from common import environment
 from common import experiment_utils
 from common import filesystem
-from common import fuzzer_utils
 from common import filestore_utils
+from common import fuzzer_utils
+from common import fuzzer_stats
 from common import logs
 from common import new_process
 from common import retry
@@ -205,9 +208,10 @@ def run_fuzzer(max_total_time, log_filename):
         command = [
             'nice', '-n',
             str(0 - runner_niceness), 'python3', '-u', '-c',
-            ('import fuzzer; '
+            ('from fuzzers.{fuzzer} import fuzzer; '
              'fuzzer.fuzz('
              "'{input_corpus}', '{output_corpus}', '{target_binary}')").format(
+                 fuzzer=environment.get('FUZZER'),
                  input_corpus=shlex.quote(input_corpus),
                  output_corpus=shlex.quote(output_corpus),
                  target_binary=shlex.quote(target_binary))
@@ -239,12 +243,12 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
     """Class for running a trial."""
 
     def __init__(self):
+        self.fuzzer = environment.get('FUZZER')
         if not environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
             benchmark = environment.get('BENCHMARK')
-            fuzzer = environment.get('FUZZER')
             trial_id = environment.get('TRIAL_ID')
             self.gcs_sync_dir = experiment_utils.get_trial_bucket_dir(
-                fuzzer, benchmark, trial_id)
+                self.fuzzer, benchmark, trial_id)
             filestore_utils.rm(self.gcs_sync_dir, force=True, parallel=True)
         else:
             self.gcs_sync_dir = None
@@ -255,6 +259,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         self.results_dir = 'results'
         self.unchanged_cycles_path = os.path.join(self.results_dir,
                                                   'unchanged-cycles')
+        self.log_file = os.path.join(self.results_dir, 'fuzzer-log.txt')
         self.last_sync_time = None
         self.corpus_dir_contents = set()
 
@@ -272,12 +277,11 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
     def conduct_trial(self):
         """Conduct the benchmarking trial."""
         self.initialize_directories()
-        log_file = os.path.join(self.results_dir, 'fuzzer-log.txt')
 
         logs.info('Starting trial.')
 
         max_total_time = environment.get('MAX_TOTAL_TIME')
-        args = (max_total_time, log_file)
+        args = (max_total_time, self.log_file)
         fuzz_thread = threading.Thread(target=run_fuzzer, args=args)
         fuzz_thread.start()
         if environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
@@ -361,10 +365,44 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
                 logs.debug('Cycle: %d changed.', self.cycle)
                 self.archive_and_save_corpus()
 
+            self.record_stats()
             self.save_results()
             logs.debug('Finished sync.')
         except Exception:  # pylint: disable=broad-except
             logs.error('Failed to sync cycle: %d.', self.cycle)
+
+    def record_stats(self):
+        """Use fuzzer.get_stats if it is offered, validate the stats and then
+        save them to a file so that they will be synced to the filestore."""
+        # TODO(metzman): Make this more resilient so we don't wait forever and
+        # so that breakages in stats parsing doesn't break runner.
+
+        fuzzer_module = get_fuzzer_module(self.fuzzer)
+
+        fuzzer_module_get_stats = getattr(fuzzer_module, 'get_stats', None)
+        if fuzzer_module_get_stats is None:
+            # Stats support is optional.
+            return
+
+        try:
+            output_corpus = environment.get('OUTPUT_CORPUS_DIR')
+            stats_json_str = fuzzer_module_get_stats(output_corpus,
+                                                     self.log_file)
+
+        except Exception:  # pylint: disable=broad-except
+            logs.error('Call to %d failed.', fuzzer_module_get_stats)
+            return
+
+        try:
+            fuzzer_stats.validate_fuzzer_stats(stats_json_str)
+        except (ValueError, json.decoder.JSONDecodeError):
+            logs.error('Stats are invalid.')
+            return
+
+        stats_filename = experiment_utils.get_stats_filename(self.cycle)
+        stats_path = os.path.join(self.results_dir, stats_filename)
+        with open(stats_path, 'w') as stats_file_handle:
+            stats_file_handle.write(stats_json_str)
 
     def archive_corpus(self):
         """Archive this cycle's corpus."""
@@ -417,6 +455,15 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         results_copy = filesystem.make_dir_copy(self.results_dir)
         filestore_utils.rsync(
             results_copy, posixpath.join(self.gcs_sync_dir, self.results_dir))
+
+
+def get_fuzzer_module(fuzzer):
+    """Returns the fuzzer.py module for |fuzzer|. We made this function so that
+    we can mock the module because importing modules makes hard to undo changes
+    to the python process."""
+    fuzzer_module_name = 'fuzzers.{fuzzer}.fuzzer'.format(fuzzer=fuzzer)
+    fuzzer_module = importlib.import_module(fuzzer_module_name)
+    return fuzzer_module
 
 
 def archive_directories(directories, archive_path):
