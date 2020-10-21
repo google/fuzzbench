@@ -89,9 +89,8 @@ def test_generate_cloudbuild_spec_other_registry(experiment):
             'name': 'docker:19.03.12',
             'args': [
                 'build', '--tag', 'gcr.io/not-fuzzbench/base-image'
-                ':test-experiment',
-                '--tag', 'gcr.io/fuzzbench/base-image', '--tag',
-                'gcr.io/not-fuzzbench/base-image', '--cache-from',
+                ':test-experiment', '--tag', 'gcr.io/fuzzbench/base-image',
+                '--tag', 'gcr.io/not-fuzzbench/base-image', '--cache-from',
                 'gcr.io/not-fuzzbench/base-image', '--build-arg',
                 'BUILDKIT_INLINE_CACHE=1', '--file',
                 'docker/base-image/Dockerfile', 'docker/base-image'
