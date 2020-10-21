@@ -168,16 +168,19 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
 @mock.patch('multiprocessing.Queue')
 @mock.patch('multiprocessing.list')
 @mock.patch('multiprocessing.list')
+@mock.patch('multiprocessing.list')
 @mock.patch('experiment.measurer.measure_snapshot_coverage')
 def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
-                                _, __, mocked_seg_list, mocked_func_list):
+                                _, __, mocked_seg_list, mocked_func_list,
+                                mocked_name_list):
     """Tests that measure_trial_coverage works as expected."""
     min_cycle = 1
     max_cycle = 10
     measure_request = measurer.SnapshotMeasureRequest(FUZZER, BENCHMARK,
                                                       TRIAL_NUM, min_cycle)
     measurer.measure_trial_coverage(measure_request, max_cycle, mocked_queue(),
-                                    mocked_seg_list(), mocked_func_list())
+                                    mocked_seg_list(), mocked_func_list(),
+                                    mocked_name_list())
     expected_calls = [
         mock.call(FUZZER, BENCHMARK, TRIAL_NUM, cycle)
         for cycle in range(min_cycle, max_cycle + 1)

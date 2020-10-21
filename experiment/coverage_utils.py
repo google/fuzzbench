@@ -15,8 +15,8 @@
 
 import os
 import json
+import hashlib
 import pandas as pd
-import numpy as np
 
 from common import experiment_path as exp_path
 from common import experiment_utils as exp_utils
@@ -65,87 +65,14 @@ class DataFrameContainer:
     def __init__(self):
         """Construct data frames."""
         self.segment_df = pd.DataFrame(columns=[
-            "benchmark", "fuzzer", "trial_id", "file_name", "line", "col",
+            "benchmark_id", "fuzzer_id", "trial_id", "file_id", "line", "col",
             "time_stamp"
         ])
         self.function_df = pd.DataFrame(columns=[
-            "benchmark", "fuzzer", "trial_id", "function_name", "hits",
+            "benchmark_id", "fuzzer_id", "trial_id", "function_id", "hits",
             "time_stamp"
         ])
         self.name_df = pd.DataFrame(columns=['id', 'name', 'type'])
-
-    def prepare_name_dataframe(self):
-        """Populates name data frame with experiment specific benchmark names,
-        fuzzer names, file names and function names and also replaces names with
-        ids in segment and function data frames."""
-        try:
-            # Stack all names into a single numpy array.
-            names = np.hstack([
-                self.segment_df['benchmark'].unique(),
-                self.segment_df['fuzzer'].unique(),
-                self.function_df['function_name'].unique(),
-                self.segment_df['file_name'].unique()
-            ])
-
-            # Create a list with "type" of names to match the stack above.
-            types = ['benchmark'] * len(self.segment_df['benchmark'].unique())
-            types.extend(['fuzzer'] * len(self.segment_df['fuzzer'].unique()))
-            types.extend(['function'] *
-                         len(self.function_df['function_name'].unique()))
-            types.extend(['file'] * len(self.segment_df['file_name'].unique()))
-
-            # Populate name DataFrame.
-            self.name_df['name'] = names
-            self.name_df['type'] = types
-            self.name_df.reset_index()
-            self.name_df['id'] = self.name_df.index + 1
-
-            # Reshape data frames for joins.
-            reshaped_name_df = self.name_df.pivot(index='name',
-                                                  columns='type',
-                                                  values='id')
-            # Make "name" a column again.
-            reshaped_name_df['name'] = reshaped_name_df.index
-
-            # Helper function to rename, drop, and leftjoin in bulk.
-            def rename_drop_columns_and_leftjoin(df1, df2, name_list):
-                column_name = name_list[0]
-                df2.columns = [
-                    'benchmark_id', 'file_id', 'function_id', 'fuzzer_id',
-                    column_name
-                ]
-                cols = [col for col in df2.columns if col not in name_list]
-                df = pd.merge(df1,
-                              df2.drop(columns=cols),
-                              on=column_name,
-                              how='outer')
-                df = df.drop(columns=[column_name])
-                return df.dropna()
-
-            # Replace names with ids by joining data frames.
-            self.segment_df = rename_drop_columns_and_leftjoin(
-                self.segment_df, reshaped_name_df, ['fuzzer', 'fuzzer_id'])
-
-            self.function_df = rename_drop_columns_and_leftjoin(
-                self.function_df, reshaped_name_df, ['fuzzer', 'fuzzer_id'])
-
-            self.segment_df = rename_drop_columns_and_leftjoin(
-                self.segment_df, reshaped_name_df,
-                ['benchmark', 'benchmark_id'])
-
-            self.function_df = rename_drop_columns_and_leftjoin(
-                self.function_df, reshaped_name_df,
-                ['benchmark', 'benchmark_id'])
-
-            self.segment_df = rename_drop_columns_and_leftjoin(
-                self.segment_df, reshaped_name_df, ['file_name', 'file_id'])
-
-            self.function_df = rename_drop_columns_and_leftjoin(
-                self.function_df, reshaped_name_df,
-                ['function_name', 'function_id'])
-
-        except (ValueError, KeyError, IndexError):
-            logger.error('Error occurred when preparing name DataFrame.')
 
     def remove_redundant_duplicates(self):
         """Removes redundant entries in segment_df. Before calling this
@@ -160,20 +87,19 @@ class DataFrameContainer:
             self.segment_df = self.segment_df.drop_duplicates(
                 subset=self.segment_df.columns.difference(['time_stamp']),
                 keep="first")
+            self.name_df = self.name_df.drop_duplicates(keep="first")
 
         except (ValueError, KeyError, IndexError):
             logger.error('Error occurred when removing duplicates.')
 
-    def change_all_numeric_columns_to_int(self):
-        """Casts all the columns in segment_df and function_df to integer
-        type to avoid float/numeric types with decimal values"""
-        try:
-            # Cast all columns in segment_df and function_df to integer.
-            self.segment_df = self.segment_df.astype(int)
-            self.function_df = self.function_df.astype(int)
-        except TypeError:
-            logger.error('Error occurred when casting all columns in DataFrame'
-                         ' to integer type.')
+    def check_if_all_ids_in_name_df_are_unique(self):
+        """Checks if all ids in name_df are unique"""
+        list_of_ids = self.name_df['id'].to_list()
+
+        if len(list_of_ids) == len(set(list_of_ids)):
+            logger.info("All ids in name_df are unique")
+        else:
+            logger.info("Ids in name_df are not unique")
 
     def reorder_columns_in_segment_and_function_df(self):
         """Re-orders the columns of segment_df and fucntion_df to the desired
@@ -204,9 +130,8 @@ class DataFrameContainer:
         resolved in 'names.csv'."""
 
         # Clean and prune experiment-specific data frames.
-        self.prepare_name_dataframe()
         self.remove_redundant_duplicates()
-        self.change_all_numeric_columns_to_int()
+        self.check_if_all_ids_in_name_df_are_unique()
         self.reorder_columns_in_segment_and_function_df()
 
         # Write CSV files to file store.
@@ -435,27 +360,59 @@ def generate_json_summary(coverage_binary,
     return result
 
 
-def extract_segments_and_functions_from_summary_json(  # pylint: disable=too-many-locals
-        summary_json_file, benchmark, fuzzer, trial_id, time_stamp):
+def extract_segments_and_functions_from_summary_json(
+        # pylint: disable=too-many-locals
+        summary_json_file,
+        benchmark,
+        fuzzer,
+        trial_id,
+        time_stamp):
     """Return a trial-specific data frame container with segment and function
      coverage information given a trial-specific coverage summary json file."""
 
     process_specific_df_container = DataFrameContainer()
 
+    def append_to_specified_df(list_to_append, data_frame):
+        series_to_append = pd.Series(list_to_append, index=data_frame.columns)
+        df = data_frame.append(series_to_append, ignore_index=True)
+        return df
+
+    def generate_hexdecimal_hash(obj):
+        return hashlib.md5(obj.encode()).hexdigest()[:7]
+
+    # Allocating unique ids by computing hash.
+    benchmark_id = generate_hexdecimal_hash(benchmark)
+    fuzzer_id = generate_hexdecimal_hash(fuzzer)
+
+    # Append benchmark-name with id to name_df.
+    to_append = [benchmark_id, benchmark, "benchmark"]
+    process_specific_df_container.name_df = append_to_specified_df(
+        to_append, process_specific_df_container.name_df)
+
+    # Append fuzzer-name with id to name_df.
+    to_append = [fuzzer_id, fuzzer, "fuzzer"]
+    process_specific_df_container.name_df = append_to_specified_df(
+        to_append, process_specific_df_container.name_df)
+
     try:
         coverage_info = get_coverage_infomation(summary_json_file)
         # Extract coverage information for functions.
         for function_data in coverage_info['data'][0]['functions']:
+            function_name = function_data['name']
+            # Allocating unique ids by computing hash.
+            function_id = generate_hexdecimal_hash(function_name)
+            # Append function-name with id to name_df.
+            to_append = [function_id, function_name, "function"]
+            process_specific_df_container.name_df = append_to_specified_df(
+                to_append, process_specific_df_container.name_df)
+
+            # Append function coverage info to function_df.
             to_append = [
-                benchmark, fuzzer, trial_id, function_data['name'],
+                benchmark_id, fuzzer_id, trial_id, function_id,
                 function_data['count'], time_stamp
             ]
-            series = pd.Series(
-                to_append,
-                index=process_specific_df_container.function_df.columns)
-            process_specific_df_container.function_df = (
-                process_specific_df_container.function_df.append(
-                    series, ignore_index=True))
+            process_specific_df_container.function_df = append_to_specified_df(
+                to_append, process_specific_df_container.function_df)
 
         # Extract coverage information for segments.
         line_index = 0
@@ -463,18 +420,22 @@ def extract_segments_and_functions_from_summary_json(  # pylint: disable=too-man
         hits_index = 2
         for file in coverage_info['data'][0]['files']:
             filename = file['filename']
+            # Allocating unique ids by computing hash.
+            file_id = generate_hexdecimal_hash(filename)
+            # Append file-name with id to name_df.
+            to_append = [file_id, filename, "file"]
+            process_specific_df_container.name_df = append_to_specified_df(
+                to_append, process_specific_df_container.name_df)
             for segment in file['segments']:
                 if segment[hits_index] != 0:
                     to_append = [
-                        benchmark, fuzzer, trial_id, filename,
+                        benchmark_id, fuzzer_id, trial_id, file_id,
                         segment[line_index], segment[col_index], time_stamp
                     ]
-                    series = pd.Series(
-                        to_append,
-                        index=process_specific_df_container.segment_df.columns)
                     process_specific_df_container.segment_df = (
-                        process_specific_df_container.segment_df.append(
-                            series, ignore_index=True))
+                        append_to_specified_df(
+                            to_append,
+                            process_specific_df_container.segment_df))
 
     except (ValueError, KeyError, IndexError):
         logger.error('Failed when extracting trial-specific segment and'

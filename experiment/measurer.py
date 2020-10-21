@@ -121,7 +121,7 @@ def measure_loop(experiment: str, max_total_time: int,
     logger.info('Finished measure loop.')
 
 
-def measure_all_trials(  # pylint: disable=too-many-arguments
+def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
         experiment: str, max_total_time: int, pool, manager, q,
         experiment_specific_df_container) -> bool:  # pylint: disable=invalid-name
     """Get coverage data (with coverage runs) for all active trials. Note that
@@ -145,9 +145,12 @@ def measure_all_trials(  # pylint: disable=too-many-arguments
     function_list = manager.list(  # pytype: disable=attribute-error
         [experiment_specific_df_container.function_df])
 
+    name_list = manager.list(  # pytype: disable=attribute-error
+        [experiment_specific_df_container.name_df])
+
     measure_trial_coverage_args = [
-        (unmeasured_snapshot, max_cycle, q, segment_list, function_list)
-        for unmeasured_snapshot in unmeasured_snapshots
+        (unmeasured_snapshot, max_cycle, q, segment_list, function_list,
+         name_list) for unmeasured_snapshot in unmeasured_snapshots
     ]
 
     result = pool.starmap_async(measure_trial_coverage,
@@ -194,14 +197,18 @@ def measure_all_trials(  # pylint: disable=too-many-arguments
             save_snapshots()
 
     def concat_all_df_in_multiprocessing_list():
-        """Concats all trail specific df in the list and save it in experiment
-        specific and clean and prune experiment specific df."""
-        experiment_specific_df_container.segment_df = (
-            pd.concat(segment_list, ignore_index=True))
+        """Concatenates all trial specific df in the list, saves it in
+        experiment specific and cleans and prunes the experiment specific df."""
+        experiment_specific_df_container.segment_df = (pd.concat(
+            segment_list, ignore_index=True))
 
-        experiment_specific_df_container.function_df = (
-            pd.concat(function_list, ignore_index=True))
+        experiment_specific_df_container.function_df = (pd.concat(
+            function_list, ignore_index=True))
 
+        experiment_specific_df_container.name_df = (pd.concat(
+            name_list, ignore_index=True))
+
+        # Prune all data frames to reduce the memory consumption
         experiment_specific_df_container.remove_redundant_duplicates()
 
     # If we have any snapshots left save them now.
@@ -568,9 +575,9 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         return set(filesystem.read(self.measured_files_path).splitlines())
 
 
-def measure_trial_coverage(  # pylint: disable=invalid-name
+def measure_trial_coverage(  # pylint: disable=invalid-name,too-many-arguments
         measure_req, max_cycle: int, q: multiprocessing.Queue, segment_list,
-        function_list):
+        function_list, name_list):
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
@@ -586,6 +593,7 @@ def measure_trial_coverage(  # pylint: disable=invalid-name
             if process_specific_df_container is not None:
                 segment_list.append(process_specific_df_container.segment_df)
                 function_list.append(process_specific_df_container.function_df)
+                name_list.append(process_specific_df_container.name_df)
 
             if not snapshot:
                 break
