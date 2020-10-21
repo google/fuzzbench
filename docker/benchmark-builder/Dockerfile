@@ -47,5 +47,5 @@ RUN mkdir /opt/fuzzbench/
 COPY docker/benchmark-builder/checkout_commit.py /opt/fuzzbench/
 RUN export CHECKOUT_COMMIT=$(cat /benchmark.yaml | tr -d ' ' | grep 'commit:' | cut -d ':' -f2) && \
     python3 -u /opt/fuzzbench/checkout_commit.py $CHECKOUT_COMMIT $SRC
-RUN PYTHONPATH=$SRC python3 -u -c "from fuzzers import utils; utils.initialize_flags(); from fuzzers.$FUZZER import fuzzer; fuzzer.build()"
+RUN PYTHONPATH=$SRC python3 -u -c "from fuzzers import utils; utils.initialize_env(); from fuzzers.$FUZZER import fuzzer; fuzzer.build()"
 

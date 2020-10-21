@@ -77,11 +77,11 @@ def test_dictionary_no_dictionaries(fs, environ):
     assert utils.get_dictionary_path('/fuzz-target') is None
 
 
-def test_initialize_flags_in_environment_without_sanitizer(fs, environ):
+def test_initialize_env_in_environment_without_sanitizer(fs, environ):
     """Test that CFLAGS and CXXFLAGS are correctly initialized in
     environment."""
     fs.create_file('/benchmark.yaml', contents='fuzz_target: fuzzer')
-    utils.initialize_flags()
+    utils.initialize_env()
     assert os.getenv('FUZZ_TARGET') == 'fuzzer'
     assert os.getenv('CFLAGS') == (
         '-pthread -Wl,--no-as-needed -Wl,-ldl -Wl,-lm '
@@ -91,21 +91,21 @@ def test_initialize_flags_in_environment_without_sanitizer(fs, environ):
         '-Wno-unused-command-line-argument -stdlib=libc++ -O3')
 
 
-def test_initialize_flags_in_environment_with_sanitizer(fs, environ):
+def test_initialize_env_in_environment_with_sanitizer(fs, environ):
     """Test that CFLAGS and CXXFLAGS are correctly initialized in
     environment."""
     fs.create_file('/benchmark.yaml', contents='fuzz_target: fuzzer\ntype: bug')
-    utils.initialize_flags()
+    utils.initialize_env()
     assert os.getenv('FUZZ_TARGET') == 'fuzzer'
     assert os.getenv('CFLAGS') == '-fsanitize=address -O3'
     assert os.getenv('CXXFLAGS') == '-fsanitize=address -stdlib=libc++ -O3'
 
 
-def test_initialize_flags_in_var_without_sanitizer(fs):
+def test_initialize_env_in_var_without_sanitizer(fs):
     """Test that CFLAGS and CXXFLAGS are correctly initialized in variable."""
     fs.create_file('/benchmark.yaml', contents='fuzz_target: fuzzer')
     env = {}
-    utils.initialize_flags(env)
+    utils.initialize_env(env)
     assert env.get('FUZZ_TARGET') == 'fuzzer'
     assert env.get('CFLAGS') == ('-pthread -Wl,--no-as-needed -Wl,-ldl -Wl,-lm '
                                  '-Wno-unused-command-line-argument -O3')
@@ -114,11 +114,11 @@ def test_initialize_flags_in_var_without_sanitizer(fs):
         '-Wno-unused-command-line-argument -stdlib=libc++ -O3')
 
 
-def test_initialize_flags_in_var_with_sanitizer(fs):
+def test_initialize_env_in_var_with_sanitizer(fs):
     """Test that CFLAGS and CXXFLAGS are correctly initialized in variable."""
     fs.create_file('/benchmark.yaml', contents='fuzz_target: fuzzer\ntype: bug')
     env = {}
-    utils.initialize_flags(env)
+    utils.initialize_env(env)
     assert env.get('FUZZ_TARGET') == 'fuzzer'
     assert env.get('CFLAGS') == '-fsanitize=address -O3'
     assert env.get('CXXFLAGS') == '-fsanitize=address -stdlib=libc++ -O3'

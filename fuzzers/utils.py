@@ -17,10 +17,10 @@ import ast
 import configparser
 import contextlib
 import os
-import re
 import shutil
 import subprocess
 import tempfile
+
 import yaml
 
 # Keep all fuzzers at same optimization level until fuzzer explicitly needs or
@@ -44,8 +44,6 @@ NO_SANITIZER_COMPAT_CFLAGS = [
 
 OSS_FUZZ_LIB_FUZZING_ENGINE_PATH = '/usr/lib/libFuzzingEngine.a'
 BENCHMARK_CONFIG_YAML_PATH = '/benchmark.yaml'
-CONFIG_ATTR_VAL_REGEX = re.compile(
-    r'(?P<attribute>[^\s]+)\s*:\s*(?P<value>[^\s]+)')
 
 
 def build_benchmark(env=None):
@@ -191,14 +189,14 @@ def set_compilation_flags(env=None):
                      env=env)
 
 
-def initialize_flags(env=None):
+def initialize_env(env=None):
     """Set initial flags before fuzzer.build() is called."""
     set_fuzz_target(env)
     set_compilation_flags(env)
 
-    for flag_var in ['FUZZ_TARGET', 'CFLAGS', 'CXXFLAGS']:
-        print('{flag_var} = {flag_value}'.format(
-            flag_var=flag_var, flag_value=os.getenv(flag_var)))
+    for env_var in ['FUZZ_TARGET', 'CFLAGS', 'CXXFLAGS']:
+        print('{env_var} = {env_value}'.format(env_var=env_var,
+                                               env_value=os.getenv(env_var)))
 
 
 def get_env(env_var, default_value=None):
