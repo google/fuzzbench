@@ -74,6 +74,28 @@ class DataFrameContainer:
         ])
         self.name_df = pd.DataFrame(columns=['id', 'name', 'type'])
 
+    def add_name_entry(self, _id, _name, _type):
+        """Adds an entry to the name_df."""
+        self.name_df = append_to_specified_df([_id, _name, type], self.name_df)
+
+    def add_function_entry(self, benchmark_id, fuzzer_id, trial_id, function_id,
+                           function_hits, time_stamp):
+        # pylint: disable=too-many-arguments
+        """Adds an entry to the function_df."""
+        self.function_df = append_to_specified_df([
+            benchmark_id, fuzzer_id, trial_id, function_id, function_hits,
+            time_stamp
+        ], self.function_df)
+
+    def add_segment_entry(self, benchmark_id, fuzzer_id, trial_id, file_id,
+                          segment_line, segment_col, time_stamp):
+        # pylint: disable=too-many-arguments
+        """Adds an entry to the segment_df."""
+        self.segment_df = append_to_specified_df([
+            benchmark_id, fuzzer_id, trial_id, file_id, segment_line,
+            segment_col, time_stamp
+        ], self.segment_df)
+
     def remove_redundant_duplicates(self):
         """Removes redundant entries in segment_df. Before calling this
         function, for each time stamp, segment_df contains all segments that are
@@ -91,15 +113,6 @@ class DataFrameContainer:
 
         except (ValueError, KeyError, IndexError):
             logger.error('Error occurred when removing duplicates.')
-
-    def check_if_all_ids_in_name_df_are_unique(self):
-        """Checks if all ids in name_df are unique"""
-        list_of_ids = self.name_df['id'].to_list()
-
-        if len(list_of_ids) == len(set(list_of_ids)):
-            logger.info("All ids in name_df are unique")
-        else:
-            logger.info("Ids in name_df are not unique")
 
     def reorder_columns_in_segment_and_function_df(self):
         """Re-orders the columns of segment_df and fucntion_df to the desired
@@ -131,7 +144,6 @@ class DataFrameContainer:
 
         # Clean and prune experiment-specific data frames.
         self.remove_redundant_duplicates()
-        self.check_if_all_ids_in_name_df_are_unique()
         self.reorder_columns_in_segment_and_function_df()
 
         # Write CSV files to file store.
@@ -320,6 +332,14 @@ def get_coverage_infomation(coverage_summary_file):
         return json.loads(summary.readlines()[-1])
 
 
+def append_to_specified_df(list_to_append, data_frame):
+    """Helper function to append a list as a series to a specified data
+    frame."""
+    series_to_append = pd.Series(list_to_append, index=data_frame.columns)
+    df = data_frame.append(series_to_append, ignore_index=True)
+    return df
+
+
 class TrialCoverage:  # pylint: disable=too-many-instance-attributes
     """Base class for storing and getting coverage data for a trial."""
 
@@ -360,22 +380,12 @@ def generate_json_summary(coverage_binary,
     return result
 
 
-def extract_segments_and_functions_from_summary_json(
-        # pylint: disable=too-many-locals
-        summary_json_file,
-        benchmark,
-        fuzzer,
-        trial_id,
-        time_stamp):
+def extract_segments_and_functions_from_summary_json(  # pylint: disable=too-many-locals
+        summary_json_file, benchmark, fuzzer, trial_id, time_stamp):
     """Return a trial-specific data frame container with segment and function
      coverage information given a trial-specific coverage summary json file."""
 
     process_specific_df_container = DataFrameContainer()
-
-    def append_to_specified_df(list_to_append, data_frame):
-        series_to_append = pd.Series(list_to_append, index=data_frame.columns)
-        df = data_frame.append(series_to_append, ignore_index=True)
-        return df
 
     def generate_hexdecimal_hash(obj):
         return hashlib.md5(obj.encode()).hexdigest()[:7]
@@ -383,16 +393,11 @@ def extract_segments_and_functions_from_summary_json(
     # Allocating unique ids by computing hash.
     benchmark_id = generate_hexdecimal_hash(benchmark)
     fuzzer_id = generate_hexdecimal_hash(fuzzer)
-
     # Append benchmark-name with id to name_df.
-    to_append = [benchmark_id, benchmark, "benchmark"]
-    process_specific_df_container.name_df = append_to_specified_df(
-        to_append, process_specific_df_container.name_df)
-
+    process_specific_df_container.add_name_entry(benchmark_id, benchmark,
+                                                 "benchmark")
     # Append fuzzer-name with id to name_df.
-    to_append = [fuzzer_id, fuzzer, "fuzzer"]
-    process_specific_df_container.name_df = append_to_specified_df(
-        to_append, process_specific_df_container.name_df)
+    process_specific_df_container.add_name_entry(fuzzer_id, fuzzer, "fuzzer")
 
     try:
         coverage_info = get_coverage_infomation(summary_json_file)
@@ -402,17 +407,12 @@ def extract_segments_and_functions_from_summary_json(
             # Allocating unique ids by computing hash.
             function_id = generate_hexdecimal_hash(function_name)
             # Append function-name with id to name_df.
-            to_append = [function_id, function_name, "function"]
-            process_specific_df_container.name_df = append_to_specified_df(
-                to_append, process_specific_df_container.name_df)
-
+            process_specific_df_container.add_name_entry(
+                function_id, function_name, "function")
             # Append function coverage info to function_df.
-            to_append = [
+            process_specific_df_container.add_function_entry(
                 benchmark_id, fuzzer_id, trial_id, function_id,
-                function_data['count'], time_stamp
-            ]
-            process_specific_df_container.function_df = append_to_specified_df(
-                to_append, process_specific_df_container.function_df)
+                function_data['count'], time_stamp)
 
         # Extract coverage information for segments.
         line_index = 0
@@ -423,19 +423,13 @@ def extract_segments_and_functions_from_summary_json(
             # Allocating unique ids by computing hash.
             file_id = generate_hexdecimal_hash(filename)
             # Append file-name with id to name_df.
-            to_append = [file_id, filename, "file"]
-            process_specific_df_container.name_df = append_to_specified_df(
-                to_append, process_specific_df_container.name_df)
+            process_specific_df_container.add_name_entry(
+                file_id, filename, "file")
             for segment in file['segments']:
                 if segment[hits_index] != 0:
-                    to_append = [
+                    process_specific_df_container.add_segment_entry(
                         benchmark_id, fuzzer_id, trial_id, file_id,
-                        segment[line_index], segment[col_index], time_stamp
-                    ]
-                    process_specific_df_container.segment_df = (
-                        append_to_specified_df(
-                            to_append,
-                            process_specific_df_container.segment_df))
+                        segment[line_index], segment[col_index], time_stamp)
 
     except (ValueError, KeyError, IndexError):
         logger.error('Failed when extracting trial-specific segment and'

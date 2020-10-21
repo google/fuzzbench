@@ -196,25 +196,20 @@ def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
         if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE and not result.ready():
             save_snapshots()
 
-    def concat_all_df_in_multiprocessing_list():
-        """Concatenates all trial specific df in the list, saves it in
-        experiment specific and cleans and prunes the experiment specific df."""
-        experiment_specific_df_container.segment_df = (pd.concat(
-            segment_list, ignore_index=True))
-
-        experiment_specific_df_container.function_df = (pd.concat(
-            function_list, ignore_index=True))
-
-        experiment_specific_df_container.name_df = (pd.concat(
-            name_list, ignore_index=True))
-
-        # Prune all data frames to reduce the memory consumption
-        experiment_specific_df_container.remove_redundant_duplicates()
-
     # If we have any snapshots left save them now.
     save_snapshots()
     # concat all trail-specific dfs and remove duplicates
-    concat_all_df_in_multiprocessing_list()
+    experiment_specific_df_container.segment_df = (pd.concat(segment_list,
+                                                             ignore_index=True))
+
+    experiment_specific_df_container.function_df = (pd.concat(
+        function_list, ignore_index=True))
+
+    experiment_specific_df_container.name_df = (pd.concat(name_list,
+                                                          ignore_index=True))
+
+    # Prune all data frames to reduce the memory consumption
+    experiment_specific_df_container.remove_redundant_duplicates()
 
     logger.info('Done measuring all trials.')
     return snapshots_measured
