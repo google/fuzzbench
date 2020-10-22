@@ -40,7 +40,6 @@
     - 'fuzzer=coverage'
     - 'parent_image=gcr.io/fuzzbench/builders/coverage/{benchmark}-intermediate'
   depends_on:
-    - 'base-image'
     - 'coverage-{benchmark}-builder-intermediate'
   dockerfile: 'docker/benchmark-builder/Dockerfile'
   context: '.'
@@ -63,7 +62,6 @@
     - 'fuzzer={fuzzer}'
     - 'parent_image=gcr.io/fuzzbench/builders/{fuzzer}/{benchmark}-intermediate'
   depends_on:
-    - 'base-image'
     - '{fuzzer}-{benchmark}-builder-intermediate'
   dockerfile: 'docker/benchmark-builder/Dockerfile'
   context: '.'

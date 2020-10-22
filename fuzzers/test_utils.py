@@ -78,8 +78,7 @@ def test_dictionary_no_dictionaries(fs, environ):
 
 
 def test_initialize_env_in_environment_without_sanitizer(fs, environ):
-    """Test that CFLAGS and CXXFLAGS are correctly initialized in
-    environment."""
+    """Test that environment is correctly initialized without sanitizer."""
     fs.create_file('/benchmark.yaml', contents='fuzz_target: fuzzer')
     utils.initialize_env()
     assert os.getenv('FUZZ_TARGET') == 'fuzzer'
@@ -92,17 +91,17 @@ def test_initialize_env_in_environment_without_sanitizer(fs, environ):
 
 
 def test_initialize_env_in_environment_with_sanitizer(fs, environ):
-    """Test that CFLAGS and CXXFLAGS are correctly initialized in
-    environment."""
+    """Test that environment is correctly initialized with sanitizer."""
     fs.create_file('/benchmark.yaml', contents='fuzz_target: fuzzer\ntype: bug')
     utils.initialize_env()
     assert os.getenv('FUZZ_TARGET') == 'fuzzer'
-    assert os.getenv('CFLAGS') == '-fsanitize=address -O3'
-    assert os.getenv('CXXFLAGS') == '-fsanitize=address -stdlib=libc++ -O3'
+    assert os.getenv('CFLAGS') == '-fsanitize=address,undefined -O3'
+    assert os.getenv('CXXFLAGS') == (
+        '-fsanitize=address,undefined -stdlib=libc++ -O3')
 
 
 def test_initialize_env_in_var_without_sanitizer(fs):
-    """Test that CFLAGS and CXXFLAGS are correctly initialized in variable."""
+    """Test that environment var is correctly initialized without sanitizer."""
     fs.create_file('/benchmark.yaml', contents='fuzz_target: fuzzer')
     env = {}
     utils.initialize_env(env)
@@ -115,10 +114,11 @@ def test_initialize_env_in_var_without_sanitizer(fs):
 
 
 def test_initialize_env_in_var_with_sanitizer(fs):
-    """Test that CFLAGS and CXXFLAGS are correctly initialized in variable."""
+    """TTest that environment var is correctly initialized with sanitizer."""
     fs.create_file('/benchmark.yaml', contents='fuzz_target: fuzzer\ntype: bug')
     env = {}
     utils.initialize_env(env)
     assert env.get('FUZZ_TARGET') == 'fuzzer'
-    assert env.get('CFLAGS') == '-fsanitize=address -O3'
-    assert env.get('CXXFLAGS') == '-fsanitize=address -stdlib=libc++ -O3'
+    assert env.get('CFLAGS') == '-fsanitize=address,undefined -O3'
+    assert env.get('CXXFLAGS') == (
+        '-fsanitize=address,undefined -stdlib=libc++ -O3')

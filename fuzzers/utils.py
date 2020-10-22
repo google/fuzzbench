@@ -30,7 +30,7 @@ DEFAULT_OPTIMIZATION_LEVEL = '-O3'
 LIBCPLUSPLUS_FLAG = '-stdlib=libc++'
 
 # Flags to use when using sanitizer for bug based benchmarking.
-SANITIZER_FLAGS = ['-fsanitize=address']
+SANITIZER_FLAGS = ['-fsanitize=address,undefined']
 
 # Use these flags when compiling benchmark code without a sanitizer (e.g. when
 # using eclipser). This is necessary because many OSS-Fuzz targets cannot
