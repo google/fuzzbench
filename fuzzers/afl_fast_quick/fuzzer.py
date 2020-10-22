@@ -30,6 +30,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     afl_fuzzer.build()
 
+
 def run_afl_fuzz(input_corpus,
                  output_corpus,
                  target_binary,
@@ -51,7 +52,7 @@ def run_afl_fuzz(input_corpus,
         '-m',
         'none',
         '-t',
-        '10+', # Substantially reduced timeout.
+        '10+',  # Substantially reduced timeout.
     ]
     if additional_flags:
         command.extend(additional_flags)
