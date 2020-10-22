@@ -3,6 +3,7 @@
 fuzzers:
     - afl
     - aflfast
+    - aflplusplus
     - aflplusplus_optimal
     - aflsmart
     - entropic
