@@ -138,7 +138,8 @@ def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
     if not unmeasured_snapshots:
         return False
 
-    process_specific_df_containers = manager.list()  # pytype: disable=attribute-error
+    process_specific_df_containers = \
+        manager.list()  # pytype: disable=attribute-error
 
     measure_trial_coverage_args = [
         (unmeasured_snapshot, max_cycle, q, process_specific_df_containers)
