@@ -186,18 +186,17 @@ def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
     assert mocked_measure_snapshot_coverage.call_args_list == expected_calls
 
 
-@mock.patch('multiprocessing.list')
-@mock.patch('multiprocessing.list')
 @mock.patch('common.filestore_utils.ls')
 @mock.patch('common.filestore_utils.rsync')
-def test_measure_all_trials_not_ready(mocked_rsync, mocked_ls, mocked_seg_list,
-                                      mocked_func_list, experiment):
+@mock.patch('multiprocessing.Manager')
+def test_measure_all_trials_not_ready(mocked_rsync, mocked_ls, mocked_manager,
+                                      experiment):
     """Test running measure_all_trials before it is ready works as intended."""
     mocked_ls.return_value = new_process.ProcessResult(1, '', False)
     assert measurer.measure_all_trials(experiment_utils.get_experiment_name(),
                                        MAX_TOTAL_TIME, test_utils.MockPool(),
-                                       queue.Queue(), mocked_seg_list(),
-                                       mocked_func_list())
+                                       mocked_manager, queue.Queue(),
+                                       coverage_utils.DataFrameContainer())
     assert not mocked_rsync.called
 
 
@@ -205,10 +204,10 @@ def test_measure_all_trials_not_ready(mocked_rsync, mocked_ls, mocked_seg_list,
 @mock.patch('multiprocessing.pool.ThreadPool', test_utils.MockPool)
 @mock.patch('common.new_process.execute')
 @mock.patch('common.filesystem.directories_have_same_files')
+@mock.patch('multiprocessing.Manager')
 @pytest.mark.skip(reason="See crbug.com/1012329")
 def test_measure_all_trials_no_more(mocked_directories_have_same_files,
-                                    mocked_execute, mock_segment_list,
-                                    mock_function_list):
+                                    mocked_execute, mocked_manager):
     """Test measure_all_trials does what is intended when the experiment is
     done."""
     mocked_directories_have_same_files.return_value = True
@@ -216,7 +215,7 @@ def test_measure_all_trials_no_more(mocked_directories_have_same_files,
     mock_pool = test_utils.MockPool()
     assert not measurer.measure_all_trials(
         experiment_utils.get_experiment_name(), MAX_TOTAL_TIME, mock_pool,
-        queue.Queue(), mock_segment_list(), mock_function_list())
+        mocked_manager, queue.Queue(), coverage_utils.DataFrameContainer())
 
 
 def test_is_cycle_unchanged_doesnt_exist(experiment):
