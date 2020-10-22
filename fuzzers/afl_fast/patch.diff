@@ -178,7 +178,7 @@ index 61a3ee9..cec8e1e 100644
      stage_name  = tmp;
      stage_short = "splice";
 -    stage_max   = SPLICE_HAVOC * perf_score / havoc_div / 100;
-+    stage_max   = SPLICE_HAVOC / havoc_div;
++    stage_max   = SPLICE_HAVOC * perf_score / havoc_div / 100;
  
    }
  
