@@ -15,7 +15,6 @@
 
 import os
 import shutil
-import signal
 from unittest import mock
 import queue
 
@@ -433,7 +432,6 @@ def test_extract_corpus(archive_name, tmp_path):
 
 
 @mock.patch('time.sleep', return_value=None)
-@mock.patch('pandas.concat')
 @mock.patch('experiment.measurer.set_up_coverage_binaries')
 @mock.patch('experiment.measurer.measure_all_trials', return_value=False)
 @mock.patch('multiprocessing.Manager')
@@ -443,24 +441,13 @@ def test_measure_loop_end(_, __, ___, ____, _____, ______, experiment_config,
                           db_experiment):
     """Tests that measure_loop stops when there is nothing left to measure. In
     this test, there is nothing left to measure on the first call."""
-
-    # Register timeout handler and set timeout.
-    def handler(signum, frame):
-        raise Exception("Timeout")
-
-    signal.signal(signal.SIGALRM, handler)
-    signal.alarm(1)  # second
-
     measurer.measure_loop(experiment_config, 100,
                           coverage_utils.DataFrameContainer())
-
-    signal.alarm(0)
     # If everything went well, we should get to this point without any
     # exceptions.
 
 
 @mock.patch('time.sleep', return_value=None)
-@mock.patch('pandas.concat')
 @mock.patch('experiment.measurer.set_up_coverage_binaries')
 @mock.patch('multiprocessing.Manager')
 @mock.patch('multiprocessing.pool')
@@ -485,19 +472,9 @@ def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___,
             return False
         return True
 
-    # Register timeout handler and set timeout.
-    def handler(signum, frame):
-        raise Exception("Timeout")
-
-    signal.signal(signal.SIGALRM, handler)
-    signal.alarm(1)  # second
-
     mocked_measure_all_trials.side_effect = mock_measure_all_trials
     measurer.measure_loop(experiment_config, 100,
                           coverage_utils.DataFrameContainer())
-
-    signal.alarm(0)
-
     assert call_count == loop_iterations
 
 

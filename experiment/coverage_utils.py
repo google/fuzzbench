@@ -70,7 +70,7 @@ class DataFrameContainer:  # pylint: disable=too-many-instance-attributes
         self.benchmark_names = dict()
         self.function_names = dict()
         self.file_names = dict()
-        # Will be initialized upon done_adding_entries()
+        # Will be initialized upon done_adding_entries().
         self.segment_df = None
         self.function_df = None
         self.name_df = None
@@ -412,14 +412,14 @@ def extract_segments_and_functions_from_summary_json(  # pylint: disable=too-man
         # Extract coverage information for segments.
         for file in coverage_info['data'][0]['files']:
             for segment in file['segments']:
-                if segment[2] != 0:  # hits
+                if segment[2] != 0:  # Segment hits.
                     process_specific_df_container.add_segment_entry(
                         benchmark,
                         fuzzer,
                         trial_id,
                         file['filename'],
-                        segment[0],  # line
-                        segment[1],  # column
+                        segment[0],  # Segment line.
+                        segment[1],  # Segment column.
                         time)
 
     except (ValueError, KeyError, IndexError):
