@@ -104,7 +104,7 @@ class DataFrameContainer:  # pylint: disable=too-many-instance-attributes
 
         segment_entry = [
             benchmark_id, fuzzer_id, trial_id, time, file_id, line, column
-        ]  #,
+        ]
         self.segment_entries.append(segment_entry)
 
     def done_adding_entries(self):
