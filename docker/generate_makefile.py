@@ -38,7 +38,7 @@ def _print_makefile_run_template(image):
     benchmark = image['benchmark']
 
     for run_type in ('run', 'debug', 'test-run', 'repro-bugs'):
-        if run_type == 'repro-check':
+        if run_type == 'repro-bugs':
             bench_path = os.path.join(BENCHMARK_DIR, benchmark, 'testcases')
             if not os.path.isdir(bench_path):
                 continue
@@ -64,7 +64,7 @@ def _print_makefile_run_template(image):
             print('\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\')
         if run_type == 'debug':
             print('\t--entrypoint "/bin/bash" \\\n\t-it ', end='')
-        elif run_type == 'repro-check':
+        elif run_type == 'repro-bugs':
             print('\t-v {path}:/testcases \\\n\
 \t--entrypoint /bin/bash '.format(path=bench_path),
                   end='')
