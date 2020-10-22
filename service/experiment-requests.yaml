@@ -19,9 +19,9 @@
 # Please add new experiment requests towards the top of this file.
 
 - experiment: 2020-10-23
-    description: >
+  description: >
     Experiment aflplusplus_cmplog and aflplusplus_dict2file variants with other fuzzers
-    fuzzers:
+  fuzzers:
     - aflplusplus_cmplog
     - aflplusplus_dict2file
     - afl
