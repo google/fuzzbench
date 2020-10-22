@@ -37,12 +37,16 @@ def _print_makefile_run_template(image):
     fuzzer = image['fuzzer']
     benchmark = image['benchmark']
 
-    for run_type in ('run', 'debug', 'test-run'):
+    for run_type in ('run', 'debug', 'test-run', 'repro-bugs'):
+        if run_type == 'repro-bugs':
+            bugs_testcases_dir = os.path.join(BENCHMARK_DIR, benchmark,
+                                              'testcases')
+            if not os.path.isdir(bugs_testcases_dir):
+                continue
         print(('{run_type}-{fuzzer}-{benchmark}: ' +
                '.{fuzzer}-{benchmark}-runner').format(run_type=run_type,
                                                       benchmark=benchmark,
                                                       fuzzer=fuzzer))
-
         print('\
 \tdocker run \\\n\
 \t--cpus=1 \\\n\
@@ -56,16 +60,31 @@ def _print_makefile_run_template(image):
 \t-e FUZZ_TARGET=$({benchmark}-fuzz-target) \\\
 '.format(fuzzer=fuzzer, benchmark=benchmark))
 
+        params = ""
         if run_type == 'test-run':
             print('\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\')
         if run_type == 'debug':
             print('\t--entrypoint "/bin/bash" \\\n\t-it ', end='')
+        elif run_type == 'repro-bugs':
+            print('\t-v {path}:/testcases \\\n\
+\t--entrypoint /bin/bash '.format(path=bugs_testcases_dir),
+                  end='')
+            params = " -c \"for f in /testcases/*; do\
+                    echo _________________________________________;\
+                    echo \\$$f:;\
+                    \\$$OUT/\\$$FUZZ_TARGET -timeout=25\
+                    -rss_limit_mb=2560 \\$$f; done;\""
+
         elif run_type == 'run':
             print('\t-it ', end='')
         else:
             print('\t', end='')
 
-        print(os.path.join(BASE_TAG, image['tag']))
+        if params:
+            print(os.path.join(BASE_TAG, image['tag']), end='')
+            print(params)
+        else:
+            print(os.path.join(BASE_TAG, image['tag']))
         print()
 
 
