@@ -12,7 +12,7 @@ index 5e800db..4abc484 100644
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index 61a3ee9..7d9d1cc 100644
+index 61a3ee9..1867796 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -75,12 +75,21 @@ index 61a3ee9..7d9d1cc 100644
  
      /* Try to calibrate inline; this also calls update_bitmap_score() when
         successful. */
+@@ -4726,7 +4742,7 @@ static u32 choose_block_len(u32 limit) {
+    A helper function for fuzz_one(). Maybe some of these constants should
+    go into config.h. */
+ 
+-static u32 calculate_score(struct queue_entry* q) {
++static u32 calculate_score(struct queue_entry* q, u8 splicing) {
+ 
+   u32 avg_exec_us = total_cal_us / total_cal_cycles;
+   u32 avg_bitmap_size = total_bitmap_size / total_bitmap_entries;
 @@ -4784,6 +4800,22 @@ static u32 calculate_score(struct queue_entry* q) {
  
    }
  
 +  /* FAST */
-+  if (queue_cycle > 3) {
++  if (queue_cycle > 3 && !splicing) {
 +
 +    u8 hits = hit_counts[q->exec_cksum % HIT_COUNTS_SIZE];
 +
@@ -98,6 +107,15 @@ index 61a3ee9..7d9d1cc 100644
    /* Make sure that we don't go over limit. */
  
    if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
+@@ -4988,7 +5020,7 @@ static u8 fuzz_one(char** argv) {
+   s32 len, fd, temp_len, i, j;
+   u8  *in_buf, *out_buf, *orig_in, *ex_tmp, *eff_map = 0;
+   u64 havoc_queued,  orig_hit_cnt, new_hit_cnt;
+-  u32 splice_cycle = 0, perf_score = 100, orig_perf, prev_cksum, eff_cnt = 1;
++  u32 splice_cycle = 0, perf_score = 100, prev_cksum, eff_cnt = 1;
+ 
+   u8  ret_val = 1, doing_det = 0;
+ 
 @@ -5033,9 +5065,19 @@ static u8 fuzz_one(char** argv) {
  
  #endif /* ^IGNORE_FINDS */
@@ -120,7 +138,22 @@ index 61a3ee9..7d9d1cc 100644
      fflush(stdout);
    }
  
-@@ -6122,7 +6164,7 @@ havoc_stage:
+@@ -5123,7 +5165,7 @@ static u8 fuzz_one(char** argv) {
+    * PERFORMANCE SCORE *
+    *********************/
+ 
+-  orig_perf = perf_score = calculate_score(queue_cur);
++  perf_score = calculate_score(queue_cur, 0);
+ 
+   /* Skip right away if -d is given, if we have done deterministic fuzzing on
+      this entry ourselves (was_fuzzed), or if it has gone through deterministic
+@@ -6117,12 +6159,12 @@ havoc_stage:
+ 
+     static u8 tmp[32];
+ 
+-    perf_score = orig_perf;
++    perf_score = calculate_score(queue_cur, 1);
+ 
      sprintf(tmp, "splice %u", splice_cycle);
      stage_name  = tmp;
      stage_short = "splice";
