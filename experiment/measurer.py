@@ -143,7 +143,7 @@ def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
         return False
 
     process_specific_df_containers = \
-        manager.list( # pytype: disable=attribute-error
+        manager.list(  # pytype: disable=attribute-error
             experiment_specific_df_container)
 
     measure_trial_coverage_args = [
