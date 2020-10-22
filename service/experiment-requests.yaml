@@ -33,6 +33,16 @@
     - entropic
     - honggfuzz
 
+- experiment: 2020-10-22
+  description: "Fix bugs in v2-schedules and tune others."
+  fuzzers:
+    - afl
+    - afl_fast
+    - afl_fast_v2
+    - afl_fast_agg
+    - afl_fast_quick
+    - afl_fast_branches_v2
+
 - experiment: 2020-10-20
   description: >
     The last experiment (afl_fast_nocycle vs afl_fast) where we modified the
