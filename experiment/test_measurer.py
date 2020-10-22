@@ -360,8 +360,8 @@ class TestIntegrationMeasurement:
     # portable binary.
     @pytest.mark.skipif(not os.getenv('FUZZBENCH_TEST_INTEGRATION'),
                         reason='Not running integration tests.')
-    @mock.patch('experiment.measurer.SnapshotMeasurer.is_cycle_unchanged')
     @mock.patch('multiprocessing.list')
+    @mock.patch('experiment.measurer.SnapshotMeasurer.is_cycle_unchanged')
     def test_measure_snapshot_coverage(  # pylint: disable=too-many-locals,too-many-arguments
             self, mocked_is_cycle_unchanged, mocked_df_container_list, db,
             experiment, tmp_path):
