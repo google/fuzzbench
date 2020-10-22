@@ -14,11 +14,15 @@
 """Tests for queries.py"""
 import datetime
 
+import pytest
+
 from analysis import queries
 from database import models
 from database import utils as db_utils
 
 # pylint: disable=invalid-name,unused-argument
+
+ARBITRARY_DATETIME = datetime.datetime(2020, 1, 1)
 
 
 def test_add_nonprivate_experiments_for_merge_with_clobber(db):
@@ -26,30 +30,29 @@ def test_add_nonprivate_experiments_for_merge_with_clobber(db):
     include private experiments and returns the expected results in the correct
     order."""
     experiment_names = ['1', '2', '3']
-    arbitrary_datetime = datetime.datetime(2020, 1, 1)
     db_utils.add_all([
         models.Experiment(name=name,
-                          time_created=arbitrary_datetime,
-                          time_ended=arbitrary_datetime +
+                          time_created=ARBITRARY_DATETIME,
+                          time_ended=ARBITRARY_DATETIME +
                           datetime.timedelta(days=1),
                           private=False) for name in experiment_names
     ])
     db_utils.add_all([
         models.Experiment(name='private',
-                          time_created=arbitrary_datetime,
+                          time_created=ARBITRARY_DATETIME,
                           private=True),
         models.Experiment(name='earlier-nonprivate',
-                          time_created=arbitrary_datetime -
+                          time_created=ARBITRARY_DATETIME -
                           datetime.timedelta(days=1),
-                          time_ended=arbitrary_datetime,
+                          time_ended=ARBITRARY_DATETIME,
                           private=False),
         models.Experiment(name='nonprivate',
-                          time_created=arbitrary_datetime,
-                          time_ended=arbitrary_datetime +
+                          time_created=ARBITRARY_DATETIME,
+                          time_ended=ARBITRARY_DATETIME +
                           datetime.timedelta(days=1),
                           private=False),
         models.Experiment(name='nonprivate-in-progress',
-                          time_created=arbitrary_datetime,
+                          time_created=ARBITRARY_DATETIME,
                           time_ended=None,
                           private=False),
     ])
@@ -57,3 +60,26 @@ def test_add_nonprivate_experiments_for_merge_with_clobber(db):
     results = queries.add_nonprivate_experiments_for_merge_with_clobber(
         experiment_names)
     assert results == expected_results
+
+
+@pytest.mark.skip(reason='We don\'t query stats data yet.')
+def test_get_experiment_data_fuzzer_stats(db):
+    """Tests that get_experiment_data handles fuzzer_stats correctly."""
+    experiment_name = 'experiment-1'
+    db_utils.add_all([
+        models.Experiment(name=experiment_name,
+                          time_created=ARBITRARY_DATETIME,
+                          private=False)
+    ])
+    trial = models.Trial(fuzzer='afl',
+                         experiment=experiment_name,
+                         benchmark='libpng')
+    db_utils.add_all([trial])
+    fuzzer_stats = {'execs_per_sec': 100.0}
+    snapshot = models.Snapshot(time=900,
+                               trial_id=trial.id,
+                               edges_covered=100,
+                               fuzzer_stats=fuzzer_stats)
+    db_utils.add_all([snapshot])
+    experiment_df = queries.get_experiment_data([experiment_name])  # pylint: disable=unused-variable
+    # TODO(metzman): Finish this test.

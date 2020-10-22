@@ -76,19 +76,14 @@ def get_corpus_archive_name(cycle: int) -> str:
     return 'corpus-archive-%04d.tar.gz' % cycle
 
 
+def get_stats_filename(cycle: int) -> str:
+    """Returns a corpus archive name given a cycle."""
+    return 'stats-%04d.json' % cycle
+
+
 def get_crashes_archive_name(cycle: int) -> str:
     """Return as crashes archive name given a cycle."""
     return 'crashes-%04d.tar.gz' % cycle
-
-
-def get_base_docker_tag(cloud_project=None):
-    """Returns the base docker tag (i.e. Docker repo URL) given cloud_project.
-    If cloud is not provided, then the value of the environment variable
-    CLOUD_PROJECT is used."""
-    # Google Cloud Docker repos use the form "gcr.io/$CLOUD_PROJECT"
-    if cloud_project is None:
-        cloud_project = get_cloud_project()
-    return posixpath.join('gcr.io', cloud_project)
 
 
 def is_local_experiment():

@@ -1,5 +1,5 @@
 diff --git a/Makefile b/Makefile
-index 3819312..8a9e26e 100644
+index 5e800db..4abc484 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -33,7 +33,7 @@ CFLAGS     += -Wall -D_FORTIFY_SOURCE=2 -g -Wno-pointer-sign \
@@ -12,7 +12,7 @@ index 3819312..8a9e26e 100644
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index fc9d210..c5eb5c6 100644
+index 61a3ee9..06a59b4 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -33,7 +33,7 @@ index fc9d210..c5eb5c6 100644
  /* Lots of globals, but mostly for the status UI and other things where it
     really makes no sense to haul them around as function parameters. */
  
-@@ -1509,6 +1513,9 @@ static void read_testcases(void) {
+@@ -1493,6 +1497,9 @@ static void read_testcases(void) {
  
      add_to_queue(fn, st.st_size, passed_det);
  
@@ -43,7 +43,7 @@ index fc9d210..c5eb5c6 100644
    }
  
    free(nl); /* not tracked */
-@@ -3166,6 +3173,12 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+@@ -3150,6 +3157,12 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
    s32 fd;
    u8  keeping = 0, res;
  
@@ -56,7 +56,7 @@ index fc9d210..c5eb5c6 100644
    if (fault == crash_mode) {
  
      /* Keep only if there are new bits in the map, add to queue for
-@@ -3194,7 +3207,9 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+@@ -3178,7 +3191,9 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
        queued_with_cov++;
      }
  
@@ -67,7 +67,7 @@ index fc9d210..c5eb5c6 100644
  
      /* Try to calibrate inline; this also calls update_bitmap_score() when
         successful. */
-@@ -4800,6 +4815,65 @@ static u32 calculate_score(struct queue_entry* q) {
+@@ -4784,6 +4799,63 @@ static u32 calculate_score(struct queue_entry* q) {
  
    }
  
@@ -89,11 +89,12 @@ index fc9d210..c5eb5c6 100644
 +
 +  if (log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE]) > fuzz_mu) {
 +
-+    if (q->favored) perf_score /= 4;
++    if (q->favored) perf_score = 5;
 +    else perf_score = 0;
 +
 +  } else {
-+  
++
++    /* FAST */
 +    switch ((u32)log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE])) {
 +  
 +      case 0 ... 1:
@@ -112,28 +113,25 @@ index fc9d210..c5eb5c6 100644
 +        break;
 +  
 +      case 6:
-+        if (!q->favored) perf_score *= 0.8;
++        perf_score *= 0.8;
 +        break;
 +  
 +      case 7:
-+        if (!q->favored) perf_score *= 0.6;
++        perf_score *= 0.6;
 +        break;
 +  
 +      default:
-+        if (!q->favored) perf_score *= 0.4;
++        perf_score *= 0.4;
 +        break;
-+  
++
 +    }
-+  
-+    if (q->favored)
-+      perf_score *= 1.15;
 +
 +  }
 +
    /* Make sure that we don't go over limit. */
  
    if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
-@@ -5141,6 +5215,11 @@ static u8 fuzz_one(char** argv) {
+@@ -5125,6 +5197,11 @@ static u8 fuzz_one(char** argv) {
  
    orig_perf = perf_score = calculate_score(queue_cur);
  
@@ -145,7 +143,7 @@ index fc9d210..c5eb5c6 100644
    /* Skip right away if -d is given, if we have done deterministic fuzzing on
       this entry ourselves (was_fuzzed), or if it has gone through deterministic
       testing in earlier, resumed runs (passed_det). */
-@@ -6138,7 +6217,7 @@ havoc_stage:
+@@ -6122,7 +6199,7 @@ havoc_stage:
      sprintf(tmp, "splice %u", splice_cycle);
      stage_name  = tmp;
      stage_short = "splice";
@@ -154,7 +152,7 @@ index fc9d210..c5eb5c6 100644
  
    }
  
-@@ -7990,6 +8069,9 @@ int main(int argc, char** argv) {
+@@ -7955,6 +8032,9 @@ int main(int argc, char** argv) {
    setup_signal_handlers();
    check_asan_opts();
  

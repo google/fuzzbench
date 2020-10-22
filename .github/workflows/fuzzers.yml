@@ -41,19 +41,20 @@ jobs:
           - entropic_magicbytes
           - aflplusplus_lightweizz
           - aflplusplus_explore
-          - aflplusplus_memcache_pre
+          - aflplusplus_268c
+          - aflplusplus_fixed
           - aflplusplus_memcache_2mb
-          - aflplusplus_memcache_2000mb
-          - afl_32
+          - aflplusplus_memcache_5mb
+          - aflplusplus_memcache_20mb
+          - aflplusplus_memcache_200mb
           - afl_coe
-          - afl_fast_32
-          - afl_oldcoe_16
-          - afl_oldfast_4
-          - afl_oldfast_16
-          - afl_fast_nofav
+          - afl_fast
+          - afl_coe_v2
+          - afl_fast_v2
+          - afl_fast_quick
+          - afl_fast_v2_exp
           - afl_fast_late_32
-          - afl_fast_branches
-          - afl_fast_branches2
+          - afl_fast_branches_v2
           - afl_nohandicap_spliceless2
 
         benchmark_type:

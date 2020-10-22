@@ -13,6 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Hack because container-optmized-os doesn't support writing to /home/root.
+# docker-credential-gcr needs to write to a dotfile in $HOME.
+export HOME=/home/chronos
+mkdir -p $HOME
+docker-credential-gcr configure-docker -include-artifact-registry
 echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
 docker run --rm \
   -e INSTANCE_NAME={{instance_name}} -e EXPERIMENT={{experiment}} \
@@ -20,6 +25,7 @@ docker run --rm \
   -e EXPERIMENT_FILESTORE={{experiment_filestore}} \
   -e POSTGRES_PASSWORD={{postgres_password}} \
   -e CLOUD_SQL_INSTANCE_CONNECTION_NAME={{cloud_sql_instance_connection_name}} \
+  -e DOCKER_REGISTRY={{docker_registry}} \
   --cap-add=SYS_PTRACE --cap-add=SYS_NICE \
   -v /var/run/docker.sock:/var/run/docker.sock --name=dispatcher-container \
   {{docker_registry}}/dispatcher-image /work/startup-dispatcher.sh

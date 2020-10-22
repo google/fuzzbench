@@ -23,6 +23,12 @@ echo core >/proc/sys/kernel/core_pattern
 
 # Start docker.
 {% if not local_experiment %}
+# Hack because container-optmized-os doesn't support writing to /home/root.
+# docker-credential-gcr needs to write to a dotfile in $HOME.
+export HOME=/home/chronos
+mkdir -p $HOME
+docker-credential-gcr configure-docker -include-artifact-registry
+
 while ! docker pull {{docker_image_url}}
 do
   echo 'Error pulling image, retrying...'

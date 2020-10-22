@@ -37,7 +37,7 @@ steps:
   - BUILDKIT_INLINE_CACHE=1
   - --file
   - docker/base-image/Dockerfile
-  - docker/base-image
+  - .
   env:
     - DOCKER_BUILDKIT=1
   id: base-image

@@ -94,6 +94,12 @@ def test_create_trial_instance(benchmark, expected_image, expected_target,
     and creates a startup script for the instance, as we expect it to."""
     expected_startup_script = '''# Start docker.
 
+# Hack because container-optmized-os doesn't support writing to /home/root.
+# docker-credential-gcr needs to write to a dotfile in $HOME.
+export HOME=/home/chronos
+mkdir -p $HOME
+docker-credential-gcr configure-docker -include-artifact-registry
+
 while ! docker pull {docker_image_url}
 do
   echo 'Error pulling image, retrying...'
