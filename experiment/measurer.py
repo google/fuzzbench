@@ -138,8 +138,7 @@ def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
     if not unmeasured_snapshots:
         return False
 
-    process_specific_df_containers = \
-        manager.list() # pytype: disable=attribute-error
+    process_specific_df_containers = manager.list()  # pytype: disable=attribute-error
 
     measure_trial_coverage_args = [
         (unmeasured_snapshot, max_cycle, q, process_specific_df_containers)
@@ -191,7 +190,7 @@ def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
     # If we have any snapshots left save them now.
     save_snapshots()
 
-    # Concatinate all process-specific data frames and remove duplicates.
+    # Concatenates all process-specific data frames and remove duplicates.
     experiment_specific_df_container.segment_df = pd.concat(
         [df.segment_df for df in process_specific_df_containers],
         ignore_index=True)
