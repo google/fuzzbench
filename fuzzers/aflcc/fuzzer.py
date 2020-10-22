@@ -131,8 +131,6 @@ def prepare_fuzz_environment(input_corpus):
 
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
-    utils.set_no_sanitizer_compilation_flags()
-
     # Update compiler flags for clang-3.8.
     cflags = ['-fPIC']
     cppflags = cflags + [

@@ -3,7 +3,7 @@
 
 'base-image':
   dockerfile: 'docker/base-image/Dockerfile'
-  context: 'docker/base-image'
+  context: '.'
   tag: 'base-image'
   type: 'base'
 
