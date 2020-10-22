@@ -51,7 +51,7 @@ def run_afl_fuzz(input_corpus,
         '-m',
         'none',
         '-t',
-        '10+', # Substantially reduced timeout. 
+        '10+', # Substantially reduced timeout.
     ]
     if additional_flags:
         command.extend(additional_flags)
@@ -75,4 +75,3 @@ def fuzz(input_corpus, output_corpus, target_binary):
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
 
     run_afl_fuzz(input_corpus, output_corpus, target_binary)
-
