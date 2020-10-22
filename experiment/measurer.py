@@ -620,9 +620,9 @@ def measure_trial_coverage(  # pylint: disable=invalid-name,too-many-arguments
     logger.debug('Done measuring trial: %d.', measure_req.trial_id)
 
 
-def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
-                              cycle: int, process_specific_df_containers
-                             ) -> models.Snapshot:
+def measure_snapshot_coverage(  # pylint: disable=too-many-locals
+        fuzzer: str, benchmark: str, trial_num: int, cycle: int,
+        process_specific_df_containers) -> models.Snapshot:
     """Measure coverage of the snapshot for |cycle| for |trial_num| of |fuzzer|
     and |benchmark|."""
     snapshot_logger = logs.Logger('measurer',
