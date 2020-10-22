@@ -37,7 +37,7 @@ def _print_makefile_run_template(image):
     fuzzer = image['fuzzer']
     benchmark = image['benchmark']
 
-    for run_type in ('run', 'debug', 'test-run', 'repro-check'):
+    for run_type in ('run', 'debug', 'test-run', 'repro-bugs'):
         if run_type == 'repro-check':
             bench_path = os.path.join(BENCHMARK_DIR, benchmark, 'testcases')
             if not os.path.isdir(bench_path):
