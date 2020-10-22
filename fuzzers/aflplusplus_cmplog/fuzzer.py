@@ -48,7 +48,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'libxslt_xpath':
         aflplusplus_fuzzer.build("tracepc", "cmplog")
     elif benchmark_name == 'mbedtls_fuzz_dtlsclient':
-        aflplusplus_fuzzer.build("tracepc","cmplog")
+        aflplusplus_fuzzer.build("tracepc", "cmplog")
     elif benchmark_name == 'openssl_x509':
         aflplusplus_fuzzer.build("tracepc", "cmplog")
     elif benchmark_name == 'php_php-fuzz-parser':
@@ -60,7 +60,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'sqlite3_ossfuzz':
         aflplusplus_fuzzer.build("tracepc", "cmplog")
     elif benchmark_name == 'systemd_fuzz-link-parser':
-        aflplusplus_fuzzer.build("lto", "cmplog")
+        aflplusplus_fuzzer.build("tracepc", "cmplog")
     elif benchmark_name == 'vorbis-2017-12-11':
         aflplusplus_fuzzer.build("tracepc", "cmplog")
     elif benchmark_name == 'woff2-2016-05-06':
