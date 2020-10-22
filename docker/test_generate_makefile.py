@@ -95,8 +95,7 @@ def test_print_makefile_runner_image(mocked_print):
 \t-e BENCHMARK=zlib \\\n\
 \t-e FUZZ_TARGET=$(zlib-fuzz-target) \\'),
         call('\t-it ', end=''),
-        call('gcr.io/fuzzbench/runners/afl/zlib', end=''),
-        call(''),
+        call('gcr.io/fuzzbench/runners/afl/zlib'),
         call(),
         call('debug-afl-zlib: .afl-zlib-runner'),
         call('\tdocker run \\\n\
@@ -110,8 +109,7 @@ def test_print_makefile_runner_image(mocked_print):
 \t-e BENCHMARK=zlib \\\n\
 \t-e FUZZ_TARGET=$(zlib-fuzz-target) \\'),
         call('\t--entrypoint "/bin/bash" \\\n\t-it ', end=''),
-        call('gcr.io/fuzzbench/runners/afl/zlib', end=''),
-        call(''),
+        call('gcr.io/fuzzbench/runners/afl/zlib'),
         call(),
         call('test-run-afl-zlib: .afl-zlib-runner'),
         call('\tdocker run \\\n\
@@ -126,7 +124,6 @@ def test_print_makefile_runner_image(mocked_print):
 \t-e FUZZ_TARGET=$(zlib-fuzz-target) \\'),
         call('\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\'),
         call('\t', end=''),
-        call('gcr.io/fuzzbench/runners/afl/zlib', end=''),
-        call(''),
+        call('gcr.io/fuzzbench/runners/afl/zlib'),
         call(),
     ]
