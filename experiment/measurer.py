@@ -24,7 +24,7 @@ import posixpath
 import sys
 import tarfile
 import time
-from typing import List, Set, Tuple
+from typing import List, Set
 import queue
 import pandas as pd
 
@@ -97,7 +97,6 @@ def measure_loop(experiment: str, max_total_time: int,
         # Using Multiprocessing.Queue will fail with a complaint about
         # inheriting queue.
         q = manager.Queue()  # pytype: disable=attribute-error
-
         while True:
             try:
                 # Get whether all trials have ended before we measure to prevent
@@ -139,18 +138,12 @@ def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
     if not unmeasured_snapshots:
         return False
 
-    segment_list = manager.list(  # pytype: disable=attribute-error
-        [experiment_specific_df_container.segment_df])
-
-    function_list = manager.list(  # pytype: disable=attribute-error
-        [experiment_specific_df_container.function_df])
-
-    name_list = manager.list(  # pytype: disable=attribute-error
-        [experiment_specific_df_container.name_df])
+    process_specific_df_containers = \
+        manager.list() # pytype: disable=attribute-error
 
     measure_trial_coverage_args = [
-        (unmeasured_snapshot, max_cycle, q, segment_list, function_list,
-         name_list) for unmeasured_snapshot in unmeasured_snapshots
+        (unmeasured_snapshot, max_cycle, q, process_specific_df_containers)
+        for unmeasured_snapshot in unmeasured_snapshots
     ]
 
     result = pool.starmap_async(measure_trial_coverage,
@@ -177,7 +170,6 @@ def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
         try:
             snapshot = q.get(timeout=SNAPSHOT_QUEUE_GET_TIMEOUT)
             snapshots.append(snapshot)
-
         except queue.Empty:
             if result.ready():
                 # If "ready" that means pool has finished calling on each
@@ -198,17 +190,17 @@ def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
 
     # If we have any snapshots left save them now.
     save_snapshots()
-    # concat all trail-specific dfs and remove duplicates
-    experiment_specific_df_container.segment_df = (pd.concat(segment_list,
-                                                             ignore_index=True))
 
-    experiment_specific_df_container.function_df = (pd.concat(
-        function_list, ignore_index=True))
-
-    experiment_specific_df_container.name_df = (pd.concat(name_list,
-                                                          ignore_index=True))
-
-    # Prune all data frames to reduce the memory consumption
+    # Concatinate all process-specific data frames and remove duplicates.
+    experiment_specific_df_container.segment_df = pd.concat(
+        [df.segment_df for df in process_specific_df_containers],
+        ignore_index=True)
+    experiment_specific_df_container.function_df = pd.concat(
+        [df.function_df for df in process_specific_df_containers],
+        ignore_index=True)
+    experiment_specific_df_container.name_df = pd.concat(
+        [df.name_df for df in process_specific_df_containers],
+        ignore_index=True)
     experiment_specific_df_container.remove_redundant_duplicates()
 
     logger.info('Done measuring all trials.')
@@ -445,15 +437,16 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
                 'Coverage summary json file defective or missing.')
             return 0
 
-    def get_current_segment_and_function_coverage(self, time_stamp):
+    def record_segment_and_function_coverage(self,
+                                             process_specific_df_containers,
+                                             time_stamp):
         """Returns a process specific data frame with current segment and
         function coverage"""
-        return coverage_utils.extract_segments_and_functions_from_summary_json(
-            self.cov_summary_file,
-            benchmark=self.benchmark,
-            fuzzer=self.fuzzer,
-            trial_id=self.trial_num,
-            time_stamp=time_stamp)
+
+        process_specific_df_containers.append(
+            coverage_utils.extract_segments_and_functions_from_summary_json(
+                self.cov_summary_file, self.benchmark, self.fuzzer,
+                self.trial_num, time_stamp))
 
     def generate_profdata(self, cycle: int):
         """Generate .profdata file from .profraw file."""
@@ -571,8 +564,8 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
 
 
 def measure_trial_coverage(  # pylint: disable=invalid-name,too-many-arguments
-        measure_req, max_cycle: int, q: multiprocessing.Queue, segment_list,
-        function_list, name_list):
+        measure_req, max_cycle: int, q: multiprocessing.Queue,
+        process_specific_df_containers):
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
@@ -581,15 +574,9 @@ def measure_trial_coverage(  # pylint: disable=invalid-name,too-many-arguments
     # Add 1 to ensure we measure the last cycle.
     for cycle in range(min_cycle, max_cycle + 1):
         try:
-            snapshot, process_specific_df_container = measure_snapshot_coverage(
+            snapshot = measure_snapshot_coverage(
                 measure_req.fuzzer, measure_req.benchmark, measure_req.trial_id,
-                cycle)
-
-            if process_specific_df_container is not None:
-                segment_list.append(process_specific_df_container.segment_df)
-                function_list.append(process_specific_df_container.function_df)
-                name_list.append(process_specific_df_container.name_df)
-
+                cycle, process_specific_df_containers)
             if not snapshot:
                 break
             q.put(snapshot)
@@ -604,9 +591,9 @@ def measure_trial_coverage(  # pylint: disable=invalid-name,too-many-arguments
     logger.debug('Done measuring trial: %d.', measure_req.trial_id)
 
 
-def measure_snapshot_coverage(  # pylint: disable=too-many-locals
-        fuzzer: str, benchmark: str, trial_num: int, cycle: int
-) -> Tuple[models.Snapshot, coverage_utils.DataFrameContainer]:
+def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
+                              cycle: int, process_specific_df_containers
+                             ) -> models.Snapshot:
     """Measure coverage of the snapshot for |cycle| for |trial_num| of |fuzzer|
     and |benchmark|."""
     snapshot_logger = logs.Logger('measurer',
@@ -625,13 +612,11 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
     if snapshot_measurer.is_cycle_unchanged(cycle):
         snapshot_logger.info('Cycle: %d is unchanged.', cycle)
         regions_covered = snapshot_measurer.get_current_coverage()
-        process_specific_df_container = (
-            snapshot_measurer.get_current_segment_and_function_coverage(
-                this_time))
-        snapshot = models.Snapshot(time=this_time,
-                                   trial_id=trial_num,
-                                   edges_covered=regions_covered)
-        return snapshot, process_specific_df_container
+        snapshot_measurer.record_segment_and_function_coverage(
+            process_specific_df_containers, this_time)
+        return models.Snapshot(time=this_time,
+                               trial_id=trial_num,
+                               edges_covered=regions_covered)
 
     corpus_archive_dst = os.path.join(
         snapshot_measurer.trial_dir, 'corpus',
@@ -646,7 +631,7 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
                           corpus_archive_dst,
                           expect_zero=False).retcode:
         snapshot_logger.warning('Corpus not found for cycle: %d.', cycle)
-        return None, None
+        return None
 
     snapshot_measurer.initialize_measurement_dirs()
     snapshot_measurer.extract_corpus(corpus_archive_dst)
@@ -661,8 +646,8 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
 
     # Get the coverage of the new corpus units.
     regions_covered = snapshot_measurer.get_current_coverage()
-    process_specific_df_container = (
-        snapshot_measurer.get_current_segment_and_function_coverage(this_time))
+    snapshot_measurer.record_segment_and_function_coverage(
+        process_specific_df_containers, this_time)
     snapshot = models.Snapshot(time=this_time,
                                trial_id=trial_num,
                                edges_covered=regions_covered)
@@ -675,7 +660,7 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
     measuring_time = round(time.time() - measuring_start_time, 2)
     snapshot_logger.info('Measured cycle: %d in %f seconds.', cycle,
                          measuring_time)
-    return snapshot, process_specific_df_container
+    return snapshot
 
 
 def set_up_coverage_binaries(pool, experiment):

@@ -36,8 +36,8 @@ COV_DIFF_QUEUE_GET_TIMEOUT = 1
 
 
 def get_coverage_info_dir():
-    """Returns the directory to store coverage information including coverage
-    report and json summary file."""
+    """Returns the directory to store coverage information including
+    coverage report and json summary file."""
     work_dir = exp_utils.get_work_dir()
     return os.path.join(work_dir, 'coverage')
 
@@ -58,43 +58,88 @@ def generate_coverage_reports(experiment_config: dict):
     logger.info('Finished generating coverage reports.')
 
 
-class DataFrameContainer:
+class DataFrameContainer:  # pylint: disable=too-many-instance-attributes
     """Maintains segment and function coverage information, and writes this
     information to CSV files."""
 
     def __init__(self):
-        """Construct data frames."""
-        self.segment_df = pd.DataFrame(columns=[
-            "benchmark_id", "fuzzer_id", "trial_id", "file_id", "line", "col",
-            "time_stamp"
-        ])
-        self.function_df = pd.DataFrame(columns=[
-            "benchmark_id", "fuzzer_id", "trial_id", "function_id", "hits",
-            "time_stamp"
-        ])
-        self.name_df = pd.DataFrame(columns=['id', 'name', 'type'])
+        """Constructor"""
+        self.segment_entries = []
+        self.function_entries = []
+        self.fuzzer_names = dict()
+        self.benchmark_names = dict()
+        self.function_names = dict()
+        self.file_names = dict()
+        # Will be initialized upon done_adding_entries()
+        self.segment_df = None
+        self.function_df = None
+        self.name_df = None
 
-    def add_name_entry(self, _id, _name, _type):
-        """Adds an entry to the name_df."""
-        self.name_df = append_to_specified_df([_id, _name, type], self.name_df)
-
-    def add_function_entry(self, benchmark_id, fuzzer_id, trial_id, function_id,
-                           function_hits, time_stamp):
+    def add_function_entry(self, benchmark, fuzzer, trial_id, function,
+                           function_hits, time):
         # pylint: disable=too-many-arguments
         """Adds an entry to the function_df."""
-        self.function_df = append_to_specified_df([
-            benchmark_id, fuzzer_id, trial_id, function_id, function_hits,
-            time_stamp
-        ], self.function_df)
+        fuzzer_id = self.name_to_id(fuzzer)
+        benchmark_id = self.name_to_id(benchmark)
+        function_id = self.name_to_id(function)
+        self.fuzzer_names[fuzzer] = fuzzer_id
+        self.benchmark_names[benchmark] = benchmark_id
+        self.function_names[function] = function_id
 
-    def add_segment_entry(self, benchmark_id, fuzzer_id, trial_id, file_id,
-                          segment_line, segment_col, time_stamp):
+        function_entry = [
+            benchmark_id, fuzzer_id, trial_id, time, function_id, function_hits
+        ]
+        self.function_entries.append(function_entry)
+
+    def add_segment_entry(self, benchmark, fuzzer, trial_id, file_name, line,
+                          column, time):
         # pylint: disable=too-many-arguments
         """Adds an entry to the segment_df."""
-        self.segment_df = append_to_specified_df([
-            benchmark_id, fuzzer_id, trial_id, file_id, segment_line,
-            segment_col, time_stamp
-        ], self.segment_df)
+        fuzzer_id = self.name_to_id(fuzzer)
+        benchmark_id = self.name_to_id(benchmark)
+        file_id = self.name_to_id(file_name)
+        self.fuzzer_names[fuzzer] = fuzzer_id
+        self.benchmark_names[benchmark] = benchmark_id
+        self.file_names[file_name] = file_id
+
+        segment_entry = [
+            benchmark_id, fuzzer_id, trial_id, time, file_id, line, column
+        ]  #,
+        self.segment_entries.append(segment_entry)
+
+    def done_adding_entries(self):
+        """Generates the data frames from the individual entries."""
+
+        if len(self.segment_entries) == 0:
+            logger.error('Finalizing, but no entries were added.')
+            return
+
+        self.segment_df = pd.DataFrame(self.segment_entries,
+                                       columns=[
+                                           "benchmark", "fuzzer", "trial",
+                                           "time", "file", "line", "column"
+                                       ])
+        self.function_df = pd.DataFrame(self.function_entries,
+                                        columns=[
+                                            "benchmark", "fuzzer", "trial",
+                                            "time", "function", "hits"
+                                        ])
+
+        name_entries = []
+        for name in self.benchmark_names:
+            name_entries.append([self.benchmark_names[name], name, "benchmark"])
+        for name in self.fuzzer_names:
+            name_entries.append([self.fuzzer_names[name], name, "fuzzer"])
+        for name in self.function_names:
+            name_entries.append([self.function_names[name], name, "function"])
+        for name in self.file_names:
+            name_entries.append([self.file_names[name], name, "file"])
+        self.name_df = pd.DataFrame(name_entries,
+                                    columns=["id", "name", "type"])
+
+    def name_to_id(self, name):  # pylint: disable=no-self-use
+        """Generates a hash for the name. This is to save disk storage"""
+        return hashlib.md5(name.encode()).hexdigest()[:7]
 
     def remove_redundant_duplicates(self):
         """Removes redundant entries in segment_df. Before calling this
@@ -105,36 +150,14 @@ class DataFrameContainer:
         resulting CSV file."""
         try:
             # Drop duplicates but with different timestamps in segment data.
-            self.segment_df = self.segment_df.sort_values(by=['time_stamp'])
+            self.segment_df = self.segment_df.sort_values(by=['time'])
             self.segment_df = self.segment_df.drop_duplicates(
-                subset=self.segment_df.columns.difference(['time_stamp']),
+                subset=self.segment_df.columns.difference(['time']),
                 keep="first")
             self.name_df = self.name_df.drop_duplicates(keep="first")
 
         except (ValueError, KeyError, IndexError):
             logger.error('Error occurred when removing duplicates.')
-
-    def reorder_columns_in_segment_and_function_df(self):
-        """Re-orders the columns of segment_df and fucntion_df to the desired
-        order"""
-        try:
-            # Re-order columns in segment_df.
-            segmentdf_col_names = [
-                "benchmark_id", "fuzzer_id", "trial_id", "time_stamp",
-                "file_id", "line", "col"
-            ]
-            self.segment_df = self.segment_df.reindex(
-                columns=segmentdf_col_names)
-            # Re-order columns in function_df.
-            functiondf_col_names = [
-                "benchmark_id", "fuzzer_id", "trial_id", "time_stamp",
-                "function_id", "hits"
-            ]
-            self.function_df = self.function_df.reindex(
-                columns=functiondf_col_names)
-        except (IndexError, ValueError, KeyError):
-            logger.error('Error occurred when reordering columns in '
-                         'DataFrames.')
 
     def generate_csv_files(self):
         """Generates three compressed CSV files containing coverage information
@@ -144,7 +167,6 @@ class DataFrameContainer:
 
         # Clean and prune experiment-specific data frames.
         self.remove_redundant_duplicates()
-        self.reorder_columns_in_segment_and_function_df()
 
         # Write CSV files to file store.
         def csv_filestore_helper(file_name, df):
@@ -187,8 +209,8 @@ def generate_coverage_report(experiment, benchmark, fuzzer):
 
 
 class CoverageReporter:  # pylint: disable=too-many-instance-attributes
-    """Class used to generate coverage report for a pair of fuzzer and
-    benchmark."""
+    """Class used to generate coverage report for a pair of
+    fuzzer and benchmark."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, experiment, fuzzer, benchmark):
@@ -332,14 +354,6 @@ def get_coverage_infomation(coverage_summary_file):
         return json.loads(summary.readlines()[-1])
 
 
-def append_to_specified_df(list_to_append, data_frame):
-    """Helper function to append a list as a series to a specified data
-    frame."""
-    series_to_append = pd.Series(list_to_append, index=data_frame.columns)
-    df = data_frame.append(series_to_append, ignore_index=True)
-    return df
-
-
 class TrialCoverage:  # pylint: disable=too-many-instance-attributes
     """Base class for storing and getting coverage data for a trial."""
 
@@ -381,59 +395,39 @@ def generate_json_summary(coverage_binary,
 
 
 def extract_segments_and_functions_from_summary_json(  # pylint: disable=too-many-locals
-        summary_json_file, benchmark, fuzzer, trial_id, time_stamp):
+        summary_json_file, benchmark, fuzzer, trial_id, time):
     """Return a trial-specific data frame container with segment and function
      coverage information given a trial-specific coverage summary json file."""
 
     process_specific_df_container = DataFrameContainer()
 
-    def generate_hexdecimal_hash(obj):
-        return hashlib.md5(obj.encode()).hexdigest()[:7]
-
-    # Allocating unique ids by computing hash.
-    benchmark_id = generate_hexdecimal_hash(benchmark)
-    fuzzer_id = generate_hexdecimal_hash(fuzzer)
-    # Append benchmark-name with id to name_df.
-    process_specific_df_container.add_name_entry(benchmark_id, benchmark,
-                                                 "benchmark")
-    # Append fuzzer-name with id to name_df.
-    process_specific_df_container.add_name_entry(fuzzer_id, fuzzer, "fuzzer")
-
     try:
         coverage_info = get_coverage_infomation(summary_json_file)
         # Extract coverage information for functions.
         for function_data in coverage_info['data'][0]['functions']:
-            function_name = function_data['name']
-            # Allocating unique ids by computing hash.
-            function_id = generate_hexdecimal_hash(function_name)
-            # Append function-name with id to name_df.
-            process_specific_df_container.add_name_entry(
-                function_id, function_name, "function")
-            # Append function coverage info to function_df.
             process_specific_df_container.add_function_entry(
-                benchmark_id, fuzzer_id, trial_id, function_id,
-                function_data['count'], time_stamp)
+                benchmark, fuzzer, trial_id, function_data['name'],
+                function_data['count'], time)
 
         # Extract coverage information for segments.
-        line_index = 0
-        col_index = 1
-        hits_index = 2
         for file in coverage_info['data'][0]['files']:
-            filename = file['filename']
-            # Allocating unique ids by computing hash.
-            file_id = generate_hexdecimal_hash(filename)
-            # Append file-name with id to name_df.
-            process_specific_df_container.add_name_entry(
-                file_id, filename, "file")
             for segment in file['segments']:
-                if segment[hits_index] != 0:
+                if segment[2] != 0:  # hits
                     process_specific_df_container.add_segment_entry(
-                        benchmark_id, fuzzer_id, trial_id, file_id,
-                        segment[line_index], segment[col_index], time_stamp)
+                        benchmark,
+                        fuzzer,
+                        trial_id,
+                        file['filename'],
+                        segment[0],  # line
+                        segment[1],  # column
+                        time)
 
     except (ValueError, KeyError, IndexError):
         logger.error('Failed when extracting trial-specific segment and'
                      'function information from coverage summary')
+
+    process_specific_df_container.done_adding_entries()
+
     return process_specific_df_container
 
 
