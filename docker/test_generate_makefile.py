@@ -44,6 +44,7 @@ def test_get_rules_for_image():
         '\tfuzzers/afl\n'
         '\n')
 
+
 @patch('builtins.print')
 def test_get_rules_for_runner_image(mocked_print):
     """Tests result of a makefile generation for a runner image."""
@@ -69,8 +70,7 @@ def test_get_rules_for_runner_image(mocked_print):
         '\t--build-arg benchmark=zlib \\\n'
         '\t--file docker/benchmark-runner/Dockerfile \\\n'
         '\t.\n\n'
-        'run-afl-zlib: .afl-zlib-runner\n' +
-        ('\
+        'run-afl-zlib: .afl-zlib-runner\n' + ('\
 \tdocker run \\\n\
 \t--cpus=1 \\\n\
 \t--cap-add SYS_NICE \\\n\
@@ -81,10 +81,8 @@ def test_get_rules_for_runner_image(mocked_print):
 \t-e FUZZER=afl \\\n\
 \t-e BENCHMARK=zlib \\\n\
 \t-e FUZZ_TARGET=$(zlib-fuzz-target) \\\
-\n') +
-        '\t-it gcr.io/fuzzbench/runners/afl/zlib\n\n'
-        'debug-afl-zlib: .afl-zlib-runner\n' +
-        ('\
+\n') + '\t-it gcr.io/fuzzbench/runners/afl/zlib\n\n'
+        'debug-afl-zlib: .afl-zlib-runner\n' + ('\
 \tdocker run \\\n\
 \t--cpus=1 \\\n\
 \t--cap-add SYS_NICE \\\n\
@@ -95,11 +93,9 @@ def test_get_rules_for_runner_image(mocked_print):
 \t-e FUZZER=afl \\\n\
 \t-e BENCHMARK=zlib \\\n\
 \t-e FUZZ_TARGET=$(zlib-fuzz-target) \\\
-\n') +
-        '\t--entrypoint "/bin/bash" \\\n\t-it gcr.io/fuzzbench/runners/afl/zlib'
+\n') + '\t--entrypoint "/bin/bash" \\\n\t-it gcr.io/fuzzbench/runners/afl/zlib'
         '\n\n'
-        'test-run-afl-zlib: .afl-zlib-runner\n' +
-        ('\
+        'test-run-afl-zlib: .afl-zlib-runner\n' + ('\
 \tdocker run \\\n\
 \t--cpus=1 \\\n\
 \t--cap-add SYS_NICE \\\n\
@@ -110,7 +106,5 @@ def test_get_rules_for_runner_image(mocked_print):
 \t-e FUZZER=afl \\\n\
 \t-e BENCHMARK=zlib \\\n\
 \t-e FUZZ_TARGET=$(zlib-fuzz-target) \\\
-\n') +
-        '\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\\n'
-        '\tgcr.io/fuzzbench/runners/afl/zlib\n\n'
-    )
+\n') + '\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\\n'
+        '\tgcr.io/fuzzbench/runners/afl/zlib\n\n')
