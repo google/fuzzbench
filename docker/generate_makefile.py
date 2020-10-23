@@ -42,7 +42,12 @@ def _get_makefile_run_template(image):
     benchmark = image['benchmark']
     section = ''
 
-    for run_type in ('run', 'debug', 'test-run'):
+    run_types = ['run', 'debug', 'test-run']
+    testcases_dir = os.path.join(BENCHMARK_DIR, benchmark, 'testcases')
+    if os.path.exists(bugs_testcases_dir):
+        run_types.append('repro-bugs')
+
+    for run_type in repro_bugs:
         section += (
             f'{run_type}-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner\n')
 
@@ -63,6 +68,17 @@ def _get_makefile_run_template(image):
             section += '\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\\n'
         if run_type == 'debug':
             section += '\t--entrypoint "/bin/bash" \\\n\t-it '
+        elif run_type == 'repro-bugs':
+            section += f'\t-v {bugs_testcases_dir}:/testcases \\\n\t'
+            section += '--entrypoint /bin/bash '
+            section += '-c "for f in /testcases/*; do '
+            section += 'echo _________________________________________;'
+            section += 'echo \\$$f:;'
+            section += '\\$$OUT/\\$$FUZZ_TARGET -timeout=25 -rss_limit_mb=2560 '
+            section += '\\$$f; done;"'
+            section += os.path.join(BASE_TAG, image['tag'])
+            section += '\n\n'
+            continue
         elif run_type == 'run':
             section += '\t-it '
         else:
