@@ -18,6 +18,20 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-10-23
+  description: >
+    Experiment aflplusplus_cmplog and aflplusplus_dict2file variants with other fuzzers
+  fuzzers:
+    - aflplusplus_cmplog
+    - aflplusplus_dict2file
+    - afl
+    - aflfast
+    - aflsmart
+    - lafintel
+    - fairfuzz
+    - libfuzzer
+    - entropic
+    - honggfuzz
 
 - experiment: 2020-10-22
   description: "Fix bugs in v2-schedules and tune others."
