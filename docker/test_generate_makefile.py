@@ -13,9 +13,6 @@
 # limitations under the License.
 """Tests for generate_makefile.py."""
 
-from unittest.mock import call
-from unittest.mock import patch
-
 from docker import generate_makefile
 
 
@@ -45,8 +42,7 @@ def test_get_rules_for_image():
         '\n')
 
 
-@patch('builtins.print')
-def test_get_rules_for_runner_image(mocked_print):
+def test_get_rules_for_runner_image():
     """Tests result of a makefile generation for a runner image."""
 
     name = 'afl-zlib-runner'

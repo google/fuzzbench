@@ -138,6 +138,7 @@ def main():
 
 
 def generate_makefile():
+    """Generates the contents of the makefile and returns it."""
     fuzzers = fuzzer_utils.get_fuzzer_names()
     benchmarks = benchmark_utils.get_all_benchmarks()
     buildable_images = docker_images.get_images_to_build(fuzzers, benchmarks)
