@@ -71,12 +71,12 @@ def _get_makefile_run_template(image):
         elif run_type == 'repro-bugs':
             section += f'\t-v {testcases_dir}:/testcases \\\n\t'
             section += '--entrypoint /bin/bash '
-            section += '-c "for f in /testcases/*; do '
+            section += os.path.join(BASE_TAG, image['tag'])
+            section += ' -c "for f in /testcases/*; do '
             section += 'echo _________________________________________; '
             section += 'echo \\$$f:; '
             section += '\\$$OUT/\\$$FUZZ_TARGET -timeout=25 -rss_limit_mb=2560 '
             section += '\\$$f; done;" '
-            section += os.path.join(BASE_TAG, image['tag'])
             section += '\n\n'
             continue
         elif run_type == 'run':
