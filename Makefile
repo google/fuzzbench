@@ -54,7 +54,7 @@ ${VENV_ACTIVATE}: requirements.txt
 install-dependencies: ${VENV_ACTIVATE}
 
 docker/generated.mk: docker/generate_makefile.py fuzzers benchmarks ${VENV_ACTIVATE}
-	source ${VENV_ACTIVATE} && PYTHONPATH=. python3 $< > $@
+	source ${VENV_ACTIVATE} && PYTHONPATH=. python3 $< $@
 
 presubmit: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py
