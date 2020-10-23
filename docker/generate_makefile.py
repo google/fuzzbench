@@ -69,7 +69,7 @@ def _get_makefile_run_template(image):
             section += '\t'
 
         section += os.path.join(BASE_TAG, image['tag'])
-        section += '\n'
+        section += '\n\n'
     return section
 
 
