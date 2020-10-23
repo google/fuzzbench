@@ -33,7 +33,7 @@
     - entropic
     - honggfuzz
 
-- experiment: 2020-10-22
+- experiment: 2020-10-22-2
   description: "Fix bugs in v2-schedules and tune others."
   fuzzers:
     - afl
