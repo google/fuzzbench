@@ -81,13 +81,5 @@ COPY experiment/runner.py $ROOT_DIR/experiment/runner.py
 COPY docker/benchmark-runner $ROOT_DIR/docker/benchmark-runner
 
 ENV PYTHONPATH=$ROOT_DIR
-
-# |VIRTUALENV_DIR| is set so that python code can know the location of current
-# virtualenv directory and strip it if needed to execute in system python
-# environment.
-ENV VIRTUALENV_DIR=$ROOT_DIR/.venv
-RUN virtualenv --python=$(which python3) $VIRTUALENV_DIR
-RUN /bin/bash -c "source $VIRTUALENV_DIR/bin/activate && \
-    pip3 install -r $ROOT_DIR/docker/benchmark-runner/requirements.txt"
 RUN chmod +x $ROOT_DIR/docker/benchmark-runner/startup-runner.sh
 ENTRYPOINT $ROOT_DIR/docker/benchmark-runner/startup-runner.sh
