@@ -44,7 +44,7 @@ def _get_makefile_run_template(image):
 
     for run_type in ('run', 'debug', 'test-run'):
         section += (
-            f'{run_type}-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner')
+            f'{run_type}-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner\n')
 
         section += '\
 \tdocker run \\\n\
@@ -125,7 +125,7 @@ def generate_makefile():
     benchmarks = benchmark_utils.get_all_benchmarks()
     buildable_images = docker_images.get_images_to_build(fuzzers, benchmarks)
 
-    makefile = 'export DOCKER_BUILDKIT := 1\n'
+    makefile = 'export DOCKER_BUILDKIT := 1\n\n'
 
     # Print oss-fuzz benchmarks property variables.
     makefile += _get_benchmark_fuzz_target(benchmarks)
