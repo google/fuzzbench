@@ -46,7 +46,7 @@ def _get_makefile_run_template(image):
         section += (
             f'{run_type}-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner\n')
 
-        section += '\
+        section += f'\
 \tdocker run \\\n\
 \t--cpus=1 \\\n\
 \t--cap-add SYS_NICE \\\n\
@@ -57,7 +57,7 @@ def _get_makefile_run_template(image):
 \t-e FUZZER={fuzzer} \\\n\
 \t-e BENCHMARK={benchmark} \\\n\
 \t-e FUZZ_TARGET=$({benchmark}-fuzz-target) \\\
-\n'.format(fuzzer=fuzzer, benchmark=benchmark)
+\n'
 
         if run_type == 'test-run':
             section += '\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\\n'
@@ -140,32 +140,27 @@ def generate_makefile():
         if 'coverage' in fuzzer:
             image_type = 'builder'
         for benchmark in benchmarks:
-            makefile += ('build-{fuzzer}-{benchmark}: ' +
-                         '.{fuzzer}-{benchmark}-{image_type}\n').format(
-                             fuzzer=fuzzer,
-                             benchmark=benchmark,
-                             image_type=image_type)
+            makefile += (f'build-{fuzzer}-{benchmark}: ' +
+                         f'.{fuzzer}-{benchmark}-{image_type}\n')
         makefile += '\n'
 
     # Print fuzzer-all benchmarks build targets.
     for fuzzer in fuzzers:
         all_build_targets = ' '.join([
-            'build-{0}-{1}'.format(fuzzer, benchmark)
+            f'build-{fuzzer}-{benchmark}'
             for benchmark in benchmarks
         ])
-        makefile += 'build-{fuzzer}-all: {all_targets}\n'.format(
-            fuzzer=fuzzer, all_targets=all_build_targets)
+        makefile += f'build-{fuzzer}-all: {all_build_targets}\n'
         all_test_run_targets = ' '.join([
-            'test-run-{0}-{1}'.format(fuzzer, benchmark)
+            f'test-run-{fuzzer}-{benchmark}'
             for benchmark in benchmarks
         ])
-        makefile += 'test-run-{fuzzer}-all: {all_targets}\n'.format(
-            fuzzer=fuzzer, all_targets=all_test_run_targets)
+        makefile += f'test-run-{fuzzer}-all: {all_test_run_targets}\n'
 
     # Print all targets build target.
     all_build_targets = ' '.join(
-        ['build-{0}-all'.format(name) for name in fuzzers])
-    makefile += 'build-all: {all_targets}'.format(all_targets=all_build_targets)
+        [f'build-{fuzzer}-all' for fuzzer in fuzzers])
+    makefile += f'build-all: {all_build_targets}'
     return makefile
 
 
