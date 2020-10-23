@@ -13,6 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Hack because container-optmized-os doesn't support writing to /home/root.
+# docker-credential-gcr needs to write to a dotfile in $HOME.
+export HOME=/home/chronos
+mkdir -p $HOME
 docker-credential-gcr configure-docker -include-artifact-registry
 echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
 docker run --rm \

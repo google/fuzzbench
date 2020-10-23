@@ -29,7 +29,7 @@ from test_libs import utils as test_utils
 
 
 @mock.patch('subprocess.Popen.communicate')
-def test_run_fuzzer_log_file(mocked_communicate, fs):
+def test_run_fuzzer_log_file(mocked_communicate, fs, environ):
     """Test that run_fuzzer invokes the fuzzer defined run_fuzzer function as
     expected."""
     mocked_communicate.return_value = ('', 0)
@@ -40,12 +40,14 @@ def test_run_fuzzer_log_file(mocked_communicate, fs):
     os.environ['OUTPUT_CORPUS_DIR'] = '/out/corpus'
     os.environ['FUZZ_TARGET'] = '/out/fuzz-target'
     os.environ['RUNNER_NICENESS'] = '-5'
+    os.environ['FUZZER'] = 'afl'
     fs.create_file('/out/fuzz-target')
 
     with test_utils.mock_popen_ctx_mgr() as mocked_popen:
         runner.run_fuzzer(max_total_time, log_filename)
         assert mocked_popen.commands == [[
-            'nice', '-n', '5', 'python3', '-u', '-c', "import fuzzer; "
+            'nice', '-n', '5', 'python3', '-u', '-c',
+            'from fuzzers.afl import fuzzer; '
             "fuzzer.fuzz('/out/seeds', '/out/corpus', '/out/fuzz-target')"
         ]]
     assert os.path.exists(log_filename)
@@ -56,10 +58,28 @@ EXPERIMENT_FILESTORE = 'gs://bucket'
 BENCHMARK = 'benchmark-1'
 EXPERIMENT = 'experiment-name'
 TRIAL_NUM = 1
-FUZZER = 'fuzzer-name-a'
+FUZZER = 'fuzzer_a'
 
 
-@pytest.yield_fixture
+class FuzzerAModule:
+    """A fake fuzzer.py module that impolements get_stats."""
+    DEFAULT_STATS = '{"execs_per_sec":20.0}'
+
+    @staticmethod
+    def get_stats(output_directory, log_filename):
+        """Returns a stats string."""
+        return FuzzerAModule.DEFAULT_STATS
+
+
+@pytest.fixture
+def fuzzer_module():
+    """Fixture that makes sure record_stats uses a fake fuzzer module."""
+    with mock.patch('experiment.runner.get_fuzzer_module',
+                    return_value=FuzzerAModule):
+        yield
+
+
+@pytest.fixture
 def trial_runner(fs, environ):
     """Fixture that creates a TrialRunner object."""
     os.environ.update({
@@ -77,11 +97,92 @@ def trial_runner(fs, environ):
     yield trial_runner
 
 
+def test_record_stats(trial_runner, fuzzer_module):
+    """Tests that record_stats records stats to a JSON file."""
+    cycle = 1337
+    trial_runner.cycle = cycle
+
+    stats_file = os.path.join(trial_runner.results_dir, 'stats-%d.json' % cycle)
+    trial_runner.record_stats()
+    with open(stats_file) as file_handle:
+        stats_file_contents = file_handle.read()
+
+    assert stats_file_contents == FuzzerAModule.DEFAULT_STATS
+
+
+def test_record_stats_unsupported(trial_runner):
+    """Tests that record_stats works as intended when fuzzer_module doesn't
+    support get_stats."""
+    cycle = 1338
+    trial_runner.cycle = cycle
+
+    class FuzzerAModuleNoGetStats:
+        """Fake fuzzer.py module that doesn't implement get_stats."""
+
+    with mock.patch('experiment.runner.get_fuzzer_module',
+                    return_value=FuzzerAModuleNoGetStats):
+        trial_runner.record_stats()
+
+    stats_file = os.path.join(trial_runner.results_dir, 'stats-%d.json' % cycle)
+    assert not os.path.exists(stats_file)
+
+
+@pytest.mark.parametrize(('stats_data',), [('1',), ('{1:2}',),
+                                           ('{"execs_per_sec": None}',)])
+def test_record_stats_invalid(stats_data, trial_runner, fuzzer_module):
+    """Tests that record_stats works as intended when fuzzer_module.get_stats
+    exceptions."""
+    cycle = 1337
+    trial_runner.cycle = cycle
+
+    class FuzzerAModuleCustomGetStats:
+        """Fake fuzzer.py that implements get_stats."""
+
+        @staticmethod
+        def get_stats(output_directory, log_filename):
+            """Fake get_stats method that returns stats_data."""
+            return stats_data
+
+    with mock.patch('experiment.runner.get_fuzzer_module',
+                    return_value=FuzzerAModuleCustomGetStats):
+        with mock.patch('common.logs.error') as mocked_log_error:
+            trial_runner.record_stats()
+
+    stats_file = os.path.join(trial_runner.results_dir, 'stats-%d.json' % cycle)
+    assert not os.path.exists(stats_file)
+    mocked_log_error.assert_called_with('Stats are invalid.')
+
+
+@mock.patch('common.logs.error')
+def test_record_stats_exception(mocked_log_error, trial_runner, fuzzer_module):
+    """Tests that record_stats works as intended when fuzzer_module.get_stats
+    exceptions."""
+    cycle = 1337
+    trial_runner.cycle = cycle
+
+    class FuzzerAModuleGetStatsException:
+        """Fake fuzzer.py module that exceptions when get_stats is called."""
+
+        @staticmethod
+        def get_stats(output_directory, log_filename):
+            """Fake get_stats method that exceptions when called."""
+            raise Exception()
+
+    with mock.patch('experiment.runner.get_fuzzer_module',
+                    return_value=FuzzerAModuleGetStatsException):
+        trial_runner.record_stats()
+
+    stats_file = os.path.join(trial_runner.results_dir, 'stats-%d.json' % cycle)
+    assert not os.path.exists(stats_file)
+    mocked_log_error.assert_called_with(
+        'Call to %d failed.', FuzzerAModuleGetStatsException.get_stats)
+
+
 def test_trial_runner(trial_runner):
     """Tests that TrialRunner gets initialized as it is supposed to."""
     assert trial_runner.gcs_sync_dir == (
         'gs://bucket/experiment-name/'
-        'experiment-folders/benchmark-1-fuzzer-name-a/trial-1')
+        'experiment-folders/benchmark-1-fuzzer_a/trial-1')
 
     assert trial_runner.cycle == 1
 
@@ -98,7 +199,7 @@ def test_save_corpus_archive(_, trial_runner, fs):
             'gsutil', 'cp', archive_name,
             posixpath.join(
                 'gs://bucket/experiment-name/experiment-folders/'
-                'benchmark-1-fuzzer-name-a/trial-1/corpus', archive_name)
+                'benchmark-1-fuzzer_a/trial-1/corpus', archive_name)
         ]]
     assert not os.path.exists(archive_name)
 
@@ -115,7 +216,7 @@ def test_archive_corpus_name_correct(_, trial_runner):
 @mock.patch('common.logs.debug')
 @mock.patch('experiment.runner.TrialRunner.is_corpus_dir_same')
 def test_do_sync_unchanged(mocked_is_corpus_dir_same, mocked_debug,
-                           trial_runner):
+                           trial_runner, fuzzer_module):
     """Test that do_sync records if there was no corpus change since last
     cycle."""
     trial_runner.cycle = 1337
@@ -125,7 +226,7 @@ def test_do_sync_unchanged(mocked_is_corpus_dir_same, mocked_debug,
         assert mocked_popen.commands == [[
             'gsutil', 'rsync', '-d', '-r', 'results-copy',
             ('gs://bucket/experiment-name/experiment-folders/'
-             'benchmark-1-fuzzer-name-a/trial-1/results')
+             'benchmark-1-fuzzer_a/trial-1/results')
         ]]
     mocked_debug.assert_any_call('Cycle: %d unchanged.', trial_runner.cycle)
     unchanged_cycles_path = os.path.join(trial_runner.results_dir,
@@ -138,7 +239,7 @@ def test_do_sync_unchanged(mocked_is_corpus_dir_same, mocked_debug,
 @mock.patch('experiment.runner.TrialRunner.is_corpus_dir_same')
 @mock.patch('common.new_process.execute')
 def test_do_sync_changed(mocked_execute, mocked_is_corpus_dir_same, fs,
-                         trial_runner):
+                         trial_runner, fuzzer_module):
     """Test that do_sync archives and saves a corpus if it changed from the
     previous one."""
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
@@ -151,14 +252,14 @@ def test_do_sync_changed(mocked_execute, mocked_is_corpus_dir_same, fs,
         mock.call([
             'gsutil', 'cp', 'corpus-archives/corpus-archive-1337.tar.gz',
             ('gs://bucket/experiment-name/experiment-folders/'
-             'benchmark-1-fuzzer-name-a/trial-1/corpus/'
+             'benchmark-1-fuzzer_a/trial-1/corpus/'
              'corpus-archive-1337.tar.gz')
         ],
                   expect_zero=True),
         mock.call([
             'gsutil', 'rsync', '-d', '-r', 'results-copy',
             ('gs://bucket/experiment-name/experiment-folders/'
-             'benchmark-1-fuzzer-name-a/trial-1/results')
+             'benchmark-1-fuzzer_a/trial-1/results')
         ],
                   expect_zero=True)
     ]
