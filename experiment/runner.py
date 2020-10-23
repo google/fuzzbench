@@ -104,30 +104,6 @@ def _clean_seed_corpus(seed_corpus_dir):
         logs.error('Failed to move seed corpus files: %s', failed_to_move_files)
 
 
-def _get_fuzzer_environment():
-    """Returns environment to run the fuzzer in (outside virtualenv)."""
-    env = os.environ.copy()
-
-    path = env.get('PATH')
-    if not path:
-        return env
-
-    path_parts = path.split(':')
-
-    # |VIRTUALENV_DIR| is the virtualenv environment that runner.py is running
-    # in. Fuzzer dependencies are installed in the system python environment,
-    # so need to remove it from |PATH|.
-    virtualenv_dir = env.get('VIRTUALENV_DIR')
-    if not virtualenv_dir:
-        return env
-
-    path_parts_without_virtualenv = [
-        p for p in path_parts if not p.startswith(virtualenv_dir)
-    ]
-    env['PATH'] = ':'.join(path_parts_without_virtualenv)
-    return env
-
-
 def get_clusterfuzz_seed_corpus_path(fuzz_target_path):
     """Returns the path of the clusterfuzz seed corpus archive if one exists.
     Otherwise returns None."""
@@ -217,22 +193,19 @@ def run_fuzzer(max_total_time, log_filename):
                  target_binary=shlex.quote(target_binary))
         ]
 
-        fuzzer_environment = _get_fuzzer_environment()
         # Write output to stdout if user is fuzzing from command line.
         # Otherwise, write output to the log file.
         if environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
             new_process.execute(command,
                                 timeout=max_total_time,
                                 write_to_stdout=True,
-                                kill_children=True,
-                                env=fuzzer_environment)
+                                kill_children=True)
         else:
             with open(log_filename, 'wb') as log_file:
                 new_process.execute(command,
                                     timeout=max_total_time,
                                     output_file=log_file,
-                                    kill_children=True,
-                                    env=fuzzer_environment)
+                                    kill_children=True)
     except subprocess.CalledProcessError:
         global fuzzer_errored_out  # pylint:disable=invalid-name
         fuzzer_errored_out = True
