@@ -33,6 +33,17 @@
     - entropic
     - honggfuzz
 
+- experiment: 2020-10-23
+  description: "test new memcache algorithm"
+  fuzzers:
+    - aflplusplus_fixed
+    - aflplusplus_memcache_2mb
+    - aflplusplus_memcache_2mb_old
+    - aflplusplus_memcache_2mb_new
+    - aflplusplus_memcache_20mb
+    - aflplusplus_memcache_200mb
+    - aflplusplus_memcache_200mb_old
+
 - experiment: 2020-10-22
   description: "Fix bugs in v2-schedules and tune others."
   fuzzers:
