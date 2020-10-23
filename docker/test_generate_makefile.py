@@ -19,8 +19,7 @@ from unittest.mock import patch
 from docker import generate_makefile
 
 
-@patch('builtins.print')
-def test_print_makefile_build(mocked_print):
+def test_get_rules_for_image():
     """Tests result of a makefile generation for an image."""
 
     name = 'afl-zlib-builder-intermediate'
@@ -32,24 +31,18 @@ def test_print_makefile_build(mocked_print):
         'build_arg': ['parent_image=gcr.io/fuzzbench/builders/benchmark/zlib']
     }
 
-    generate_makefile.print_rules_for_image(name, image)
-    assert mocked_print.mock_calls == [
-        call('.', end=''),
-        call('afl-zlib-builder-intermediate:', end=''),
-        call(' .zlib-project-builder', end=''),
-        call(),
-        call('\tdocker build \\'),
-        call('\t--tag gcr.io/fuzzbench/builders/afl/zlib-intermediate \\'),
-        call('\t--build-arg BUILDKIT_INLINE_CACHE=1 \\'),
-        call('\t--cache-from gcr.io/fuzzbench/builders/afl/zlib-intermediate \\'
-            ),
-        call('\t--build-arg parent_image=gcr.io/' +
-             'fuzzbench/builders/benchmark/zlib \\'),
-        call('\t--file fuzzers/afl/builder.Dockerfile \\'),
-        call('\tfuzzers/afl'),
-        call()
-    ]
-
+    rules_for_image = generate_makefile.get_rules_for_image(name, image)
+    assert rules_for_image == (
+        '.afl-zlib-builder-intermediate: .zlib-project-builder\n'
+        '\tdocker build \\\n'
+        '\t--tag gcr.io/fuzzbench/builders/afl/zlib-intermediate \\\n'
+        '\t--build-arg BUILDKIT_INLINE_CACHE=1 \\\n'
+        '\t--cache-from gcr.io/fuzzbench/builders/afl/zlib-intermediate \\\n'
+        '\t--build-arg parent_image=gcr.io/fuzzbench/builders/benchmark/zlib \\'
+        '\n'
+        '\t--file fuzzers/afl/builder.Dockerfile \\\n'
+        '\tfuzzers/afl\n'
+        '\n')
 
 @patch('builtins.print')
 def test_print_makefile_runner_image(mocked_print):
