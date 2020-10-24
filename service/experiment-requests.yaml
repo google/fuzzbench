@@ -18,6 +18,33 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-10-24
+  description: >
+    There are mainly two versions; one boosts via perf_score and one that
+    boosts via selection probability (v2). The one that boosts via perf_score
+    spends 4x more time per seed compared to vanilla AFL at the beginning of the
+    campaign when most seeds are still rare. In the previous experiment, it was
+    activated only from the third queue cycle (unsuccessfully). Now, it will
+    reduce perf_score to match vanilla AFL at the beginning, and increase as the
+    seed is chosen more often, but is still rare. For the version that boosts
+    via selection score (v2), the opposite is done. We reduce the probability
+    for seeds that have already been chosen several times. In the previous
+    experiment, There was also a bug in choosing based on hit counts. We have
+    two late boosting schedules that prioritize seeds added later (late). There
+    are two additional schedules; nohandicap disables the handicap bonus (as
+    we already penalize seeds that have been chosen several times) while
+    spliceless reduces energy on splicing even further.
+  - fuzzers:
+      - afl_fast_branches_v2_late
+      - afl_fast_branches_v2
+      - afl_fast_v2_nohandicap
+      - afl_fast_v2_spliceless
+      - afl_fast_v2_late
+      - afl_fast_v2
+      - afl_fast
+      - afl
+
+
 - experiment: 2020-10-23-2
   description: >
     Experiment aflplusplus_cmplog and aflplusplus_dict2file variants with other fuzzers
