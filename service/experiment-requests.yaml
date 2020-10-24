@@ -34,15 +34,15 @@
     are two additional schedules; nohandicap disables the handicap bonus (as
     we already penalize seeds that have been chosen several times) while
     spliceless reduces energy on splicing even further.
-  - fuzzers:
-      - afl_fast_branches_v2_late
-      - afl_fast_branches_v2
-      - afl_fast_v2_nohandicap
-      - afl_fast_v2_spliceless
-      - afl_fast_v2_late
-      - afl_fast_v2
-      - afl_fast
-      - afl
+  fuzzers:
+    - afl_fast_branches_v2_late
+    - afl_fast_branches_v2
+    - afl_fast_v2_nohandicap
+    - afl_fast_v2_spliceless
+    - afl_fast_v2_late
+    - afl_fast_v2
+    - afl_fast
+    - afl
 
 
 - experiment: 2020-10-23-2
