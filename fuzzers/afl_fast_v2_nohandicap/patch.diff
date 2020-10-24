@@ -12,7 +12,7 @@ index 5e800db..4abc484 100644
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index 61a3ee9..9560e15 100644
+index 61a3ee9..7fceca0 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -92,7 +92,29 @@ index 61a3ee9..9560e15 100644
  
    if (!run_over10m) rlim = 1;
  
-@@ -4978,22 +4995,24 @@ static u8 could_be_interest(u32 old_val, u32 new_val, u8 blen, u8 check_le) {
+@@ -4754,21 +4771,8 @@ static u32 calculate_score(struct queue_entry* q) {
+   else if (q->bitmap_size * 2 < avg_bitmap_size) perf_score *= 0.5;
+   else if (q->bitmap_size * 1.5 < avg_bitmap_size) perf_score *= 0.75;
+ 
+-  /* Adjust score based on handicap. Handicap is proportional to how late
+-     in the game we learned about this path. Latecomers are allowed to run
+-     for a bit longer until they catch up with the rest. */
+-
+-  if (q->handicap >= 4) {
+-
+-    perf_score *= 4;
+-    q->handicap -= 4;
+-
+-  } else if (q->handicap) {
+ 
+     perf_score *= 2;
+-    q->handicap--;
+-
+-  }
+ 
+   /* Final adjustment based on input depth, under the assumption that fuzzing
+      deeper test cases is more likely to reveal stuff that can't be
+@@ -4978,22 +4982,24 @@ static u8 could_be_interest(u32 old_val, u32 new_val, u8 blen, u8 check_le) {
  
  }
  
@@ -128,7 +150,7 @@ index 61a3ee9..9560e15 100644
  
  #ifdef IGNORE_FINDS
  
-@@ -5004,38 +5023,46 @@ static u8 fuzz_one(char** argv) {
+@@ -5004,38 +5010,46 @@ static u8 fuzz_one(char** argv) {
  
  #else
  
@@ -194,7 +216,7 @@ index 61a3ee9..9560e15 100644
      fflush(stdout);
    }
  
-@@ -7759,7 +7786,6 @@ static void save_cmdline(u32 argc, char** argv) {
+@@ -7759,7 +7773,6 @@ static void save_cmdline(u32 argc, char** argv) {
  int main(int argc, char** argv) {
  
    s32 opt;
@@ -202,7 +224,7 @@ index 61a3ee9..9560e15 100644
    u32 sync_interval_cnt = 0, seek_to;
    u8  *extras_dir = 0;
    u8  mem_limit_given = 0;
-@@ -7955,6 +7981,9 @@ int main(int argc, char** argv) {
+@@ -7955,6 +7968,9 @@ int main(int argc, char** argv) {
    setup_signal_handlers();
    check_asan_opts();
  
@@ -212,7 +234,7 @@ index 61a3ee9..9560e15 100644
    if (sync_id) fix_up_sync();
  
    if (!strcmp(in_dir, out_dir))
-@@ -8052,15 +8081,19 @@ int main(int argc, char** argv) {
+@@ -8052,15 +8068,19 @@ int main(int argc, char** argv) {
      if (stop_soon) goto stop_fuzzing;
    }
  
@@ -235,7 +257,7 @@ index 61a3ee9..9560e15 100644
        current_entry     = 0;
        cur_skipped_paths = 0;
        queue_cur         = queue;
-@@ -8071,38 +8104,29 @@ int main(int argc, char** argv) {
+@@ -8071,38 +8091,29 @@ int main(int argc, char** argv) {
          queue_cur = queue_cur->next;
        }
  

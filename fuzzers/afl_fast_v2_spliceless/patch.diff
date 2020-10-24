@@ -286,6 +286,24 @@ index 61a3ee9..9560e15 100644
      if (!stop_soon && exit_1) stop_soon = 2;
  
      if (stop_soon) break;
+diff --git a/config.h b/config.h
+index 46dd857..5383bec 100644
+--- a/config.h
++++ b/config.h
+@@ -132,11 +132,11 @@
+ 
+ /* Splicing cycle count: */
+ 
+-#define SPLICE_CYCLES       15
++#define SPLICE_CYCLES       10
+ 
+ /* Nominal per-splice havoc cycle length: */
+ 
+-#define SPLICE_HAVOC        32
++#define SPLICE_HAVOC        16
+ 
+ /* Maximum offset for integer addition / subtraction stages: */
+ 
 diff --git a/hash.h b/hash.h
 index e17fc8f..55e6428 100644
 --- a/hash.h
