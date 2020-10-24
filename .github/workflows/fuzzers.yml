@@ -56,7 +56,7 @@ jobs:
           - afl_fast_v2_spliceless
           - afl_fast_late_32
           - afl_fast_branches_v2
-          - afl_fast_bancches_v2_late
+          - afl_fast_branches_v2_late
           - afl_nohandicap_spliceless2
           - aflplusplus_cmplog
           - aflplusplus_dict2file
