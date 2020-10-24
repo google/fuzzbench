@@ -12,7 +12,7 @@ index 5e800db..4abc484 100644
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index 61a3ee9..06a59b4 100644
+index 61a3ee9..7fceca0 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -28,12 +28,28 @@ index 61a3ee9..06a59b4 100644
  #endif /* ^AFL_LIB */
  
 +#define HIT_COUNTS_SIZE (1 << 21)
-+u32 *hit_counts;
++u8 *hit_counts;
 +
  /* Lots of globals, but mostly for the status UI and other things where it
     really makes no sense to haul them around as function parameters. */
  
-@@ -1493,6 +1497,9 @@ static void read_testcases(void) {
+@@ -166,6 +170,7 @@ EXP_ST u32 queued_paths,              /* Total number of queued testcases */
+            queued_imported,           /* Items imported via -S            */
+            queued_favored,            /* Paths deemed favorable           */
+            queued_with_cov,           /* Paths with new coverage bytes    */
++           fuzzed_paths,
+            pending_not_fuzzed,        /* Queued but not done yet          */
+            pending_favored,           /* Pending favored paths            */
+            cur_skipped_paths,         /* Abandoned inputs in cur cycle    */
+@@ -247,6 +252,7 @@ struct queue_entry {
+       has_new_cov,                    /* Triggers new coverage?           */
+       var_behavior,                   /* Variable behavior?               */
+       favored,                        /* Currently favored?               */
++      n_chosen,
+       fs_redundant;                   /* Marked as redundant in the fs?   */
+ 
+   u32 bitmap_size,                    /* Number of bits set in bitmap     */
+@@ -1493,6 +1499,9 @@ static void read_testcases(void) {
  
      add_to_queue(fn, st.st_size, passed_det);
  
@@ -43,20 +59,20 @@ index 61a3ee9..06a59b4 100644
    }
  
    free(nl); /* not tracked */
-@@ -3150,6 +3157,12 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+@@ -3150,6 +3159,12 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
    s32 fd;
    u8  keeping = 0, res;
  
 +  u32 cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
 +
 +  /* Saturated increment */
-+  if (hit_counts[cksum % HIT_COUNTS_SIZE] < 0xFFFFFFFF)
++  if (hit_counts[cksum % HIT_COUNTS_SIZE] < 0xFF)
 +    hit_counts[cksum % HIT_COUNTS_SIZE]++;
 +
    if (fault == crash_mode) {
  
      /* Keep only if there are new bits in the map, add to queue for
-@@ -3178,7 +3191,9 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+@@ -3178,7 +3193,9 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
        queued_with_cov++;
      }
  
@@ -67,114 +83,231 @@ index 61a3ee9..06a59b4 100644
  
      /* Try to calibrate inline; this also calls update_bitmap_score() when
         successful. */
-@@ -4784,6 +4799,63 @@ static u32 calculate_score(struct queue_entry* q) {
+@@ -4685,7 +4702,7 @@ EXP_ST u8 common_fuzz_stuff(char** argv, u8* out_buf, u32 len) {
+ static u32 choose_block_len(u32 limit) {
  
-   }
+   u32 min_value, max_value;
+-  u32 rlim = MIN(queue_cycle, 3);
++  u32 rlim = MIN(queue_cur->n_chosen + 1, 3);
  
-+  /* COE */
-+  u32 n_paths = 0;
-+  long double fuzz_mu = 0.0;
-+  struct queue_entry *queue_it = queue;
-+
-+  while (queue_it) {
-+
-+    fuzz_mu += log2(hit_counts[queue_it->exec_cksum % HIT_COUNTS_SIZE]);
-+    n_paths ++;
-+
-+    queue_it = queue_it->next;
-+
+   if (!run_over10m) rlim = 1;
+ 
+@@ -4754,21 +4771,8 @@ static u32 calculate_score(struct queue_entry* q) {
+   else if (q->bitmap_size * 2 < avg_bitmap_size) perf_score *= 0.5;
+   else if (q->bitmap_size * 1.5 < avg_bitmap_size) perf_score *= 0.75;
+ 
+-  /* Adjust score based on handicap. Handicap is proportional to how late
+-     in the game we learned about this path. Latecomers are allowed to run
+-     for a bit longer until they catch up with the rest. */
+-
+-  if (q->handicap >= 4) {
+-
+-    perf_score *= 4;
+-    q->handicap -= 4;
+-
+-  } else if (q->handicap) {
+ 
+     perf_score *= 2;
+-    q->handicap--;
+-
+-  }
+ 
+   /* Final adjustment based on input depth, under the assumption that fuzzing
+      deeper test cases is more likely to reveal stuff that can't be
+@@ -4978,22 +4982,24 @@ static u8 could_be_interest(u32 old_val, u32 new_val, u8 blen, u8 check_le) {
+ 
+ }
+ 
++static u32 compute_weight(struct queue_entry *q, u32 q_index) {
+ 
+-/* Take the current entry from the queue, fuzz it for a while. This
+-   function is a tad too long... returns 0 if fuzzed successfully, 1 if
+-   skipped or bailed out. */
++  u8 hits = hit_counts[q->exec_cksum % HIT_COUNTS_SIZE];
++  if (hits == 0) hits = 1;
+ 
+-static u8 fuzz_one(char** argv) {
++  u32 weight = 1024 / hits;
++  if (q->favored) weight *= 20;
++  if (!q->was_fuzzed) weight *= 2.5;
++  weight /= (q->n_chosen + 1);
+ 
+-  s32 len, fd, temp_len, i, j;
+-  u8  *in_buf, *out_buf, *orig_in, *ex_tmp, *eff_map = 0;
+-  u64 havoc_queued,  orig_hit_cnt, new_hit_cnt;
+-  u32 splice_cycle = 0, perf_score = 100, orig_perf, prev_cksum, eff_cnt = 1;
++  return weight > 1 ? weight : 1;
++}
+ 
+-  u8  ret_val = 1, doing_det = 0;
+ 
+-  u8  a_collect[MAX_AUTO_EXTRA];
+-  u32 a_len = 0;
++/* Take the current entry from the queue, fuzz it for a while. This
++   function is a tad too long... returns 0 if fuzzed successfully, 1 if
++   skipped or bailed out. */
++static u8 fuzz_one(char** argv) {
+ 
+ #ifdef IGNORE_FINDS
+ 
+@@ -5004,38 +5010,46 @@ static u8 fuzz_one(char** argv) {
+ 
+ #else
+ 
+-  if (pending_favored) {
++  struct queue_entry* q = queue;
++  u64 total_weight = 0;
++  u32 q_index = 0;
+ 
+-    /* If we have any favored, non-fuzzed new arrivals in the queue,
+-       possibly skip to them at the expense of already-fuzzed or non-favored
+-       cases. */
++  while (q) {
+ 
+-    if ((queue_cur->was_fuzzed || !queue_cur->favored) &&
+-        UR(100) < SKIP_TO_NEW_PROB) return 1;
++    total_weight += compute_weight(q, q_index);
++    q_index++;
+ 
+-  } else if (!dumb_mode && !queue_cur->favored && queued_paths > 10) {
++    q = q->next;
+ 
+-    /* Otherwise, still possibly skip non-favored cases, albeit less often.
+-       The odds of skipping stuff are higher for already-fuzzed inputs and
+-       lower for never-fuzzed entries. */
 +  }
-+
-+  fuzz_mu /= n_paths;
-+
-+  if (log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE]) > fuzz_mu) {
-+
-+    if (q->favored) perf_score = 5;
-+    else perf_score = 0;
-+
-+  } else {
-+
-+    /* FAST */
-+    switch ((u32)log2(hit_counts[q->exec_cksum % HIT_COUNTS_SIZE])) {
-+  
-+      case 0 ... 1:
-+        perf_score *= 4;
-+        break;
-+  
-+      case 2 ... 3:
-+        perf_score *= 3;
-+        break;
-+  
-+      case 4:
-+         perf_score *= 2;
-+        break;
-+  
-+      case 5:
-+        break;
-+  
-+      case 6:
-+        perf_score *= 0.8;
-+        break;
-+  
-+      case 7:
-+        perf_score *= 0.6;
-+        break;
-+  
-+      default:
-+        perf_score *= 0.4;
-+        break;
-+
+ 
+-    if (queue_cycle > 1 && !queue_cur->was_fuzzed) {
++  if (compute_weight(queue_cur, current_entry) < UR(total_weight + 1)) return 1;
+ 
+-      if (UR(100) < SKIP_NFAV_NEW_PROB) return 1;
++#endif /* ^IGNORE_FINDS */
+ 
+-    } else {
++  s32 len, fd, temp_len, i, j;
++  u8  *in_buf, *out_buf, *orig_in, *ex_tmp, *eff_map = 0;
++  u64 havoc_queued,  orig_hit_cnt, new_hit_cnt;
++  u32 splice_cycle = 0, perf_score = 100, orig_perf, prev_cksum, eff_cnt = 1;
+ 
+-      if (UR(100) < SKIP_NFAV_OLD_PROB) return 1;
++  u8  ret_val = 1, doing_det = 0;
+ 
+-    }
++  u8  a_collect[MAX_AUTO_EXTRA];
++  u32 a_len = 0;
+ 
++  u32 rare = 0;
++  q = queue;
++  while (q) {
++    u8 hits = hit_counts[q->exec_cksum % HIT_COUNTS_SIZE];
++    if (hits < 0xFF) {
++      rare++;
 +    }
-+
-+  }
-+
-   /* Make sure that we don't go over limit. */
- 
-   if (perf_score > HAVOC_MAX_MULT * 100) perf_score = HAVOC_MAX_MULT * 100;
-@@ -5125,6 +5197,11 @@ static u8 fuzz_one(char** argv) {
- 
-   orig_perf = perf_score = calculate_score(queue_cur);
- 
-+  if (perf_score == 0) {
-+    cur_skipped_paths++;
-+    goto abandon_entry;
-+  }
-+
-   /* Skip right away if -d is given, if we have done deterministic fuzzing on
-      this entry ourselves (was_fuzzed), or if it has gone through deterministic
-      testing in earlier, resumed runs (passed_det). */
-@@ -6122,7 +6199,7 @@ havoc_stage:
-     sprintf(tmp, "splice %u", splice_cycle);
-     stage_name  = tmp;
-     stage_short = "splice";
--    stage_max   = SPLICE_HAVOC * perf_score / havoc_div / 100;
-+    stage_max   = SPLICE_HAVOC / havoc_div;
- 
++    q = q->next;
    }
  
-@@ -7955,6 +8032,9 @@ int main(int argc, char** argv) {
+-#endif /* ^IGNORE_FINDS */
+-
+   if (not_on_tty) {
+-    ACTF("Fuzzing test case #%u (%u total, %llu uniq crashes found)...",
+-         current_entry, queued_paths, unique_crashes);
++    ACTF("Fuzzing test case #%u (%u total, %llu uniq crashes found, cycle=%llu, rare=%u)...",
++         current_entry, queued_paths, unique_crashes, queue_cycle, rare);
+     fflush(stdout);
+   }
+ 
+@@ -7759,7 +7773,6 @@ static void save_cmdline(u32 argc, char** argv) {
+ int main(int argc, char** argv) {
+ 
+   s32 opt;
+-  u64 prev_queued = 0;
+   u32 sync_interval_cnt = 0, seek_to;
+   u8  *extras_dir = 0;
+   u8  mem_limit_given = 0;
+@@ -7955,6 +7968,9 @@ int main(int argc, char** argv) {
    setup_signal_handlers();
    check_asan_opts();
  
 +  /* Dynamically allocate memory for AFLFast schedules */
-+  hit_counts = ck_alloc(HIT_COUNTS_SIZE * sizeof(u32));
++  hit_counts = ck_alloc(HIT_COUNTS_SIZE * sizeof(u8));
 +
    if (sync_id) fix_up_sync();
  
    if (!strcmp(in_dir, out_dir))
-diff --git a/config.h b/config.h
-index 46dd857..8aae20b 100644
---- a/config.h
-+++ b/config.h
-@@ -94,7 +94,7 @@
- /* Maximum multiplier for the above (should be a power of two, beware
-    of 32-bit int overflows): */
+@@ -8052,15 +8068,19 @@ int main(int argc, char** argv) {
+     if (stop_soon) goto stop_fuzzing;
+   }
  
--#define HAVOC_MAX_MULT      16
-+#define HAVOC_MAX_MULT      32
++  queue_cycle = 1;
++
++  cull_queue();
++
++  if (sync_id && getenv("AFL_IMPORT_FIRST"))
++    sync_fuzzers(use_argv);
++
+   while (1) {
  
- /* Absolute minimum number of havoc cycles (after all adjustments): */
+     u8 skipped_fuzz;
  
+-    cull_queue();
+-
+     if (!queue_cur) {
+ 
+-      queue_cycle++;
+       current_entry     = 0;
+       cur_skipped_paths = 0;
+       queue_cur         = queue;
+@@ -8071,38 +8091,29 @@ int main(int argc, char** argv) {
+         queue_cur = queue_cur->next;
+       }
+ 
+-      show_stats();
+-
+-      if (not_on_tty) {
+-        ACTF("Entering queue cycle %llu.", queue_cycle);
+-        fflush(stdout);
+-      }
+-
+-      /* If we had a full queue cycle with no new finds, try
+-         recombination strategies next. */
++    }
+ 
+-      if (queued_paths == prev_queued) {
++    skipped_fuzz = fuzz_one(use_argv);
+ 
+-        if (use_splicing) cycles_wo_finds++; else use_splicing = 1;
++    if (!skipped_fuzz) {
+ 
+-      } else cycles_wo_finds = 0;
++      cull_queue();
+ 
+-      prev_queued = queued_paths;
++      if (!stop_soon && sync_id) {
+ 
+-      if (sync_id && queue_cycle == 1 && getenv("AFL_IMPORT_FIRST"))
+-        sync_fuzzers(use_argv);
++        if (!(sync_interval_cnt++ % SYNC_INTERVAL))
++          sync_fuzzers(use_argv);
+ 
+-    }
++      }
+ 
+-    skipped_fuzz = fuzz_one(use_argv);
++      fuzzed_paths++;
++      queue_cycle = 1 + fuzzed_paths / queued_paths;
+ 
+-    if (!stop_soon && sync_id && !skipped_fuzz) {
+-      
+-      if (!(sync_interval_cnt++ % SYNC_INTERVAL))
+-        sync_fuzzers(use_argv);
++      queue_cur->n_chosen++;
+ 
+     }
+ 
++
+     if (!stop_soon && exit_1) stop_soon = 2;
+ 
+     if (stop_soon) break;
 diff --git a/hash.h b/hash.h
 index e17fc8f..55e6428 100644
 --- a/hash.h

@@ -12,7 +12,7 @@ index 5e800db..4abc484 100644
  
  ifeq "$(findstring clang, $(shell $(CC) --version 2>/dev/null))" ""
 diff --git a/afl-fuzz.c b/afl-fuzz.c
-index 61a3ee9..ee25e8d 100644
+index 61a3ee9..6efeec6 100644
 --- a/afl-fuzz.c
 +++ b/afl-fuzz.c
 @@ -56,6 +56,7 @@
@@ -43,17 +43,7 @@ index 61a3ee9..ee25e8d 100644
  
  static u8  var_bytes[MAP_SIZE];       /* Bytes that appear to be variable */
  
-@@ -159,6 +164,9 @@ static volatile u8 stop_soon,         /* Ctrl-C pressed?                  */
-                    clear_screen = 1,  /* Window resized?                  */
-                    child_timed_out;   /* Traced process timed out?        */
- 
-+EXP_ST u8 chosen_abundant,
-+          focus_on_rare;
-+
- EXP_ST u32 queued_paths,              /* Total number of queued testcases */
-            queued_variable,           /* Testcases with variable behavior */
-            queued_at_start,           /* Total number of initial inputs   */
-@@ -166,8 +174,10 @@ EXP_ST u32 queued_paths,              /* Total number of queued testcases */
+@@ -166,8 +171,10 @@ EXP_ST u32 queued_paths,              /* Total number of queued testcases */
             queued_imported,           /* Items imported via -S            */
             queued_favored,            /* Paths deemed favorable           */
             queued_with_cov,           /* Paths with new coverage bytes    */
@@ -64,16 +54,16 @@ index 61a3ee9..ee25e8d 100644
             cur_skipped_paths,         /* Abandoned inputs in cur cycle    */
             cur_depth,                 /* Current path depth               */
             max_depth,                 /* Max path depth                   */
-@@ -247,6 +257,8 @@ struct queue_entry {
+@@ -247,6 +254,8 @@ struct queue_entry {
        has_new_cov,                    /* Triggers new coverage?           */
        var_behavior,                   /* Variable behavior?               */
        favored,                        /* Currently favored?               */
-+      n_chosen,
 +      champion,
++      n_chosen,
        fs_redundant;                   /* Marked as redundant in the fs?   */
  
    u32 bitmap_size,                    /* Number of bits set in bitmap     */
-@@ -893,6 +905,7 @@ static inline u8 has_new_bits(u8* virgin_map) {
+@@ -893,6 +902,7 @@ static inline u8 has_new_bits(u8* virgin_map) {
  
    u64* current = (u64*)trace_bits;
    u64* virgin  = (u64*)virgin_map;
@@ -81,7 +71,7 @@ index 61a3ee9..ee25e8d 100644
  
    u32  i = (MAP_SIZE >> 3);
  
-@@ -900,6 +913,7 @@ static inline u8 has_new_bits(u8* virgin_map) {
+@@ -900,6 +910,7 @@ static inline u8 has_new_bits(u8* virgin_map) {
  
    u32* current = (u32*)trace_bits;
    u32* virgin  = (u32*)virgin_map;
@@ -89,78 +79,47 @@ index 61a3ee9..ee25e8d 100644
  
    u32  i = (MAP_SIZE >> 2);
  
-@@ -913,40 +927,54 @@ static inline u8 has_new_bits(u8* virgin_map) {
+@@ -913,12 +924,23 @@ static inline u8 has_new_bits(u8* virgin_map) {
         that have not been already cleared from the virgin map - since this will
         almost always be the case. */
  
 -    if (unlikely(*current) && unlikely(*current & *virgin)) {
-+    if (unlikely(*current)) { 
++    if (unlikely(*current)) {
 +
 +      u8* cur = (u8*)current;
 +      u8* hit = (u8*)hits;
-+
+ 
+-      if (likely(ret < 2)) {
 +#ifdef WORD_SIZE_64
 +      for (int i = 0; i < 8; i++)
 +#else
 +      for (int i = 0; i < 4; i++)
 +#endif
 +        if (cur[i] && hit[i] < 0xFF) hit[i]++;
-+
-+      if (unlikely(*current & *virgin)) {
- 
--      if (likely(ret < 2)) {
-+        if (likely(ret < 2)) {
  
 -        u8* cur = (u8*)current;
 -        u8* vir = (u8*)virgin;
++      if (unlikely(*current & *virgin)) {
++
++        if (likely(ret < 2)) {
++
 +          u8* vir = (u8*)virgin;
  
--        /* Looks like we have not found any new bytes yet; see if any non-zero
--           bytes in current[] are pristine in virgin[]. */
-+          /* Looks like we have not found any new bytes yet; see if any non-zero
-+             bytes in current[] are pristine in virgin[]. */
- 
- #ifdef WORD_SIZE_64
- 
--        if ((cur[0] && vir[0] == 0xff) || (cur[1] && vir[1] == 0xff) ||
--            (cur[2] && vir[2] == 0xff) || (cur[3] && vir[3] == 0xff) ||
--            (cur[4] && vir[4] == 0xff) || (cur[5] && vir[5] == 0xff) ||
--            (cur[6] && vir[6] == 0xff) || (cur[7] && vir[7] == 0xff)) ret = 2;
--        else ret = 1;
-+          if ((cur[0] && vir[0] == 0xff) || (cur[1] && vir[1] == 0xff) ||
-+              (cur[2] && vir[2] == 0xff) || (cur[3] && vir[3] == 0xff) ||
-+              (cur[4] && vir[4] == 0xff) || (cur[5] && vir[5] == 0xff) ||
-+              (cur[6] && vir[6] == 0xff) || (cur[7] && vir[7] == 0xff)) ret = 2;
-+          else ret = 1;
- 
- #else
- 
--        if ((cur[0] && vir[0] == 0xff) || (cur[1] && vir[1] == 0xff) ||
--            (cur[2] && vir[2] == 0xff) || (cur[3] && vir[3] == 0xff)) ret = 2;
--        else ret = 1;
-+          if ((cur[0] && vir[0] == 0xff) || (cur[1] && vir[1] == 0xff) ||
-+              (cur[2] && vir[2] == 0xff) || (cur[3] && vir[3] == 0xff)) ret = 2;
-+          else ret = 1;
- 
- #endif /* ^WORD_SIZE_64 */
- 
--      }
-+        }
-+
-+        *virgin &= ~*current;
- 
--      *virgin &= ~*current;
-+      }
+         /* Looks like we have not found any new bytes yet; see if any non-zero
+            bytes in current[] are pristine in virgin[]. */
+@@ -944,9 +966,10 @@ static inline u8 has_new_bits(u8* virgin_map) {
+       *virgin &= ~*current;
  
      }
- 
+-
++    }
      current++;
      virgin++;
 +    hits++;
  
    }
  
-@@ -1310,11 +1338,13 @@ static void cull_queue(void) {
+@@ -1310,11 +1333,13 @@ static void cull_queue(void) {
  
    queued_favored  = 0;
    pending_favored = 0;
@@ -174,7 +133,7 @@ index 61a3ee9..ee25e8d 100644
      q = q->next;
    }
  
-@@ -1337,6 +1367,11 @@ static void cull_queue(void) {
+@@ -1337,6 +1362,11 @@ static void cull_queue(void) {
  
        if (!top_rated[i]->was_fuzzed) pending_favored++;
  
@@ -186,7 +145,7 @@ index 61a3ee9..ee25e8d 100644
      }
  
    q = queue;
-@@ -1359,6 +1394,7 @@ EXP_ST void setup_shm(void) {
+@@ -1359,6 +1389,7 @@ EXP_ST void setup_shm(void) {
  
    memset(virgin_tmout, 255, MAP_SIZE);
    memset(virgin_crash, 255, MAP_SIZE);
@@ -194,7 +153,7 @@ index 61a3ee9..ee25e8d 100644
  
    shm_id = shmget(IPC_PRIVATE, MAP_SIZE, IPC_CREAT | IPC_EXCL | 0600);
  
-@@ -1493,6 +1529,9 @@ static void read_testcases(void) {
+@@ -1493,6 +1524,9 @@ static void read_testcases(void) {
  
      add_to_queue(fn, st.st_size, passed_det);
  
@@ -204,7 +163,7 @@ index 61a3ee9..ee25e8d 100644
    }
  
    free(nl); /* not tracked */
-@@ -3150,6 +3189,12 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+@@ -3150,6 +3184,12 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
    s32 fd;
    u8  keeping = 0, res;
  
@@ -217,7 +176,7 @@ index 61a3ee9..ee25e8d 100644
    if (fault == crash_mode) {
  
      /* Keep only if there are new bits in the map, add to queue for
-@@ -3178,7 +3223,9 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
+@@ -3178,7 +3218,9 @@ static u8 save_if_interesting(char** argv, void* mem, u32 len, u8 fault) {
        queued_with_cov++;
      }
  
@@ -228,42 +187,45 @@ index 61a3ee9..ee25e8d 100644
  
      /* Try to calibrate inline; this also calls update_bitmap_score() when
         successful. */
-@@ -4978,22 +5025,31 @@ static u8 could_be_interest(u32 old_val, u32 new_val, u8 blen, u8 check_le) {
+@@ -4685,7 +4727,7 @@ EXP_ST u8 common_fuzz_stuff(char** argv, u8* out_buf, u32 len) {
+ static u32 choose_block_len(u32 limit) {
+ 
+   u32 min_value, max_value;
+-  u32 rlim = MIN(queue_cycle, 3);
++  u32 rlim = MIN(queue_cur->n_chosen + 1, 3);
+ 
+   if (!run_over10m) rlim = 1;
+ 
+@@ -4978,22 +5020,25 @@ static u8 could_be_interest(u32 old_val, u32 new_val, u8 blen, u8 check_le) {
  
  }
  
-+static u64 compute_weight(struct queue_entry *q, u32 q_index) {
++static u32 compute_weight(struct queue_entry *q, u32 q_index) {
  
 -/* Take the current entry from the queue, fuzz it for a while. This
 -   function is a tad too long... returns 0 if fuzzed successfully, 1 if
 -   skipped or bailed out. */
-+  if (!focus_on_rare && chosen_abundant <= 3)
-+    return (q->favored ? 4 : 1 ) * q_index + 1;
++  u8 hits = hit_counts[q->exec_cksum % HIT_COUNTS_SIZE];
++  if (hits == 0) hits = 1;
  
 -static u8 fuzz_one(char** argv) {
-+  focus_on_rare = 1;
++  u32 weight = 1024 / hits;
++  if (q->favored) weight *= 20;
++  if (q->champion) weight *= 4;
++  if (!q->was_fuzzed) weight *= 2.5;
++  weight /= (q->n_chosen + 1);
  
 -  s32 len, fd, temp_len, i, j;
 -  u8  *in_buf, *out_buf, *orig_in, *ex_tmp, *eff_map = 0;
 -  u64 havoc_queued,  orig_hit_cnt, new_hit_cnt;
 -  u32 splice_cycle = 0, perf_score = 100, orig_perf, prev_cksum, eff_cnt = 1;
-+  u8 hits = hit_counts[q->exec_cksum % HIT_COUNTS_SIZE];
++  return weight > 1 ? weight : 1;
++}
  
 -  u8  ret_val = 1, doing_det = 0;
-+  if (hits == 0xFF) {
  
 -  u8  a_collect[MAX_AUTO_EXTRA];
 -  u32 a_len = 0;
-+    if (q->favored) return 4;
-+    else return 1;
-+
-+  }
-+
-+  return (0x100 - hits) * (q->favored ? 4 : 1) * 4;
-+
-+}
-+
-+
 +/* Take the current entry from the queue, fuzz it for a while. This
 +   function is a tad too long... returns 0 if fuzzed successfully, 1 if
 +   skipped or bailed out. */
@@ -271,124 +233,73 @@ index 61a3ee9..ee25e8d 100644
  
  #ifdef IGNORE_FINDS
  
-@@ -5007,35 +5063,103 @@ static u8 fuzz_one(char** argv) {
-   if (pending_favored) {
+@@ -5004,38 +5049,46 @@ static u8 fuzz_one(char** argv) {
  
-     /* If we have any favored, non-fuzzed new arrivals in the queue,
+ #else
+ 
+-  if (pending_favored) {
++  struct queue_entry* q = queue;
++  u64 total_weight = 0;
++  u32 q_index = 0;
++
++  while (q) {
+ 
+-    /* If we have any favored, non-fuzzed new arrivals in the queue,
 -       possibly skip to them at the expense of already-fuzzed or non-favored
-+       skip to them at the expense of already-fuzzed or non-favored
-        cases. */
+-       cases. */
++    total_weight += compute_weight(q, q_index);
++    q_index++;
  
 -    if ((queue_cur->was_fuzzed || !queue_cur->favored) &&
 -        UR(100) < SKIP_TO_NEW_PROB) return 1;
-+    chosen_abundant = 0;
-+    focus_on_rare = 0;
-+
-+    if (queue_cur->was_fuzzed || !queue_cur->favored) return 1;
-+
-+  } else if (pending_champions) {
-+
-+    if (!queue_cur->champion) return 1;
-+
-+  } else {
-+
-+    u8 hits;
-+    u8 has_rare_paths = 0;
-+    struct queue_entry* q = queue;
-+    while (q) {
-+      hits = hit_counts[q->exec_cksum % HIT_COUNTS_SIZE];
-+      if (hits < 0xFF) {
-+        has_rare_paths = 1;
-+        break;
-+      }
-+      q = q->next;
-+    }
-+
-+    if (has_rare_paths) {
-+
-+      u64 total_weight = 0;
-+      u32 q_index = 0;
++    q = q->next;
  
 -  } else if (!dumb_mode && !queue_cur->favored && queued_paths > 10) {
-+      q = queue;
-+      while (q) {
++  }
  
 -    /* Otherwise, still possibly skip non-favored cases, albeit less often.
 -       The odds of skipping stuff are higher for already-fuzzed inputs and
 -       lower for never-fuzzed entries. */
-+        q_index++;
-+        total_weight += compute_weight(q, q_index);
++  if (compute_weight(queue_cur, current_entry) < UR(total_weight + 1)) return 1;
  
 -    if (queue_cycle > 1 && !queue_cur->was_fuzzed) {
-+        q = q->next;
++#endif /* ^IGNORE_FINDS */
  
 -      if (UR(100) < SKIP_NFAV_NEW_PROB) return 1;
-+      }
-+
-+      if (compute_weight(queue_cur, current_entry) < UR(total_weight + 1)) return 1;
- 
-     } else {
- 
--      if (UR(100) < SKIP_NFAV_OLD_PROB) return 1;
-+      /* If there are no rare paths, fall back to vanilla AFL */
-+
-+      if (!queue_cur->favored && !dumb_mode && queued_paths > 10) {
-+
-+        /* Otherwise, still possibly skip non-favored cases, albeit less often.
-+           The odds of skipping stuff are higher for already-fuzzed inputs and
-+           lower for never-fuzzed entries. */
-+
-+        if (queue_cycle > 1 && !queue_cur->was_fuzzed) {
-+
-+          if (UR(100) < SKIP_NFAV_NEW_PROB) return 1;
-+
-+        } else {
-+
-+          if (UR(100) < SKIP_NFAV_OLD_PROB) return 1;
-+
-+        }
-+
-+      }
- 
-     }
- 
--  }
-+    if (hit_counts[queue_cur->exec_cksum % HIT_COUNTS_SIZE] >= 0x20)
-+      chosen_abundant++;
-+    else chosen_abundant = 0;
- 
-+  }
- #endif /* ^IGNORE_FINDS */
- 
 +  s32 len, fd, temp_len, i, j;
 +  u8  *in_buf, *out_buf, *orig_in, *ex_tmp, *eff_map = 0;
 +  u64 havoc_queued,  orig_hit_cnt, new_hit_cnt;
 +  u32 splice_cycle = 0, perf_score = 100, orig_perf, prev_cksum, eff_cnt = 1;
-+
+ 
+-    } else {
 +  u8  ret_val = 1, doing_det = 0;
-+
+ 
+-      if (UR(100) < SKIP_NFAV_OLD_PROB) return 1;
 +  u8  a_collect[MAX_AUTO_EXTRA];
 +  u32 a_len = 0;
-+
+ 
 +  u32 rare = 0;
-+  struct queue_entry *q = queue;
++  q = queue;
 +  while (q) {
 +    u8 hits = hit_counts[q->exec_cksum % HIT_COUNTS_SIZE];
 +    if (hits < 0xFF) {
 +      rare++;
-+    }
+     }
+-
 +    q = q->next;
-+  }
-+
+   }
+ 
+-#endif /* ^IGNORE_FINDS */
+-
    if (not_on_tty) {
 -    ACTF("Fuzzing test case #%u (%u total, %llu uniq crashes found)...",
 -         current_entry, queued_paths, unique_crashes);
-+    ACTF("Fuzzing test case #%u (%u total, %llu uniq crashes found, cycle=%llu, rare=%u, champions=%u)...",
-+         current_entry, queued_paths, unique_crashes, queue_cycle, rare, pending_champions);
++    ACTF("Fuzzing test case #%u (%u total, %llu uniq crashes found, cycle=%llu, rare=%u)...",
++         current_entry, queued_paths, unique_crashes, queue_cycle, rare);
      fflush(stdout);
    }
  
-@@ -7759,7 +7883,6 @@ static void save_cmdline(u32 argc, char** argv) {
+@@ -7759,7 +7812,6 @@ static void save_cmdline(u32 argc, char** argv) {
  int main(int argc, char** argv) {
  
    s32 opt;
@@ -396,7 +307,7 @@ index 61a3ee9..ee25e8d 100644
    u32 sync_interval_cnt = 0, seek_to;
    u8  *extras_dir = 0;
    u8  mem_limit_given = 0;
-@@ -7955,6 +8078,9 @@ int main(int argc, char** argv) {
+@@ -7955,6 +8007,9 @@ int main(int argc, char** argv) {
    setup_signal_handlers();
    check_asan_opts();
  
@@ -406,7 +317,7 @@ index 61a3ee9..ee25e8d 100644
    if (sync_id) fix_up_sync();
  
    if (!strcmp(in_dir, out_dir))
-@@ -8052,15 +8178,19 @@ int main(int argc, char** argv) {
+@@ -8052,15 +8107,19 @@ int main(int argc, char** argv) {
      if (stop_soon) goto stop_fuzzing;
    }
  
@@ -429,7 +340,7 @@ index 61a3ee9..ee25e8d 100644
        current_entry     = 0;
        cur_skipped_paths = 0;
        queue_cur         = queue;
-@@ -8071,38 +8201,29 @@ int main(int argc, char** argv) {
+@@ -8071,38 +8130,29 @@ int main(int argc, char** argv) {
          queue_cur = queue_cur->next;
        }
  
@@ -466,7 +377,7 @@ index 61a3ee9..ee25e8d 100644
  
 -    skipped_fuzz = fuzz_one(use_argv);
 +      fuzzed_paths++;
-+      queue_cycle = 1 + 4 * fuzzed_paths / queued_paths;
++      queue_cycle = 1 + fuzzed_paths / queued_paths;
  
 -    if (!stop_soon && sync_id && !skipped_fuzz) {
 -      
