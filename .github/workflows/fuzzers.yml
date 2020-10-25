@@ -51,15 +51,17 @@ jobs:
           - aflplusplus_memcache_200mb_old
           - afl_fast
           - afl_fast_v2
-          - afl_fast_v2_late
-          - afl_fast_v2_nohandicap
-          - afl_fast_v2_spliceless
-          - afl_fast_late_32
           - afl_fast_branches_v2
-          - afl_fast_branches_v2_late
           - afl_nohandicap_spliceless2
           - aflplusplus_cmplog
           - aflplusplus_dict2file
+          - aflplusplus_coe_lessmem
+          - aflplusplus_fast_lessmem
+          - aflplusplus_fast_v1
+          - aflplusplus_fast_v2
+          - aflplusplus_fast_v2_late
+          - aflplusplus_fast_branches_v2
+           
         benchmark_type:
           - oss-fuzz
           - standard
