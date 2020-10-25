@@ -1,0 +1,79 @@
+diff --git a/include/afl-fuzz.h b/include/afl-fuzz.h
+index 85b3179..89f924f 100644
+--- a/include/afl-fuzz.h
++++ b/include/afl-fuzz.h
+@@ -508,7 +508,7 @@ typedef struct afl_state {
+   u8 *var_bytes;                        /* Bytes that appear to be variable */
+ 
+ #define N_FUZZ_SIZE (1 << 21)
+-  u32 *n_fuzz;
++  u8 *n_fuzz;
+ 
+   volatile u8 stop_soon,                /* Ctrl-C pressed?                  */
+       clear_screen;                     /* Window resized?                  */
+diff --git a/src/afl-fuzz-bitmap.c b/src/afl-fuzz-bitmap.c
+index 2653b9f..b129d01 100644
+--- a/src/afl-fuzz-bitmap.c
++++ b/src/afl-fuzz-bitmap.c
+@@ -556,7 +556,7 @@ save_if_interesting(afl_state_t *afl, void *mem, u32 len, u8 fault) {
+     cksum = hash64(afl->fsrv.trace_bits, afl->fsrv.map_size, HASH_CONST);
+ 
+     /* Saturated increment */
+-    if (afl->n_fuzz[cksum % N_FUZZ_SIZE] < 0xFFFFFFFF)
++    if (afl->n_fuzz[cksum % N_FUZZ_SIZE] < 0xFF)
+       afl->n_fuzz[cksum % N_FUZZ_SIZE]++;
+ 
+   }
+diff --git a/src/afl-fuzz-queue.c b/src/afl-fuzz-queue.c
+index d107dbc..1a13bae 100644
+--- a/src/afl-fuzz-queue.c
++++ b/src/afl-fuzz-queue.c
+@@ -767,28 +767,28 @@ u32 calculate_score(afl_state_t *afl, struct queue_entry *q) {
+       // Don't modify unfuzzed seeds
+       if (q->fuzz_level == 0) break;
+ 
+-      switch ((u32)log2(afl->n_fuzz[q->n_fuzz_entry])) {
++      switch (afl->n_fuzz[q->n_fuzz_entry]) {
+ 
+-        case 0 ... 1:
++        case 0 ... 3:
+           factor = 4;
+           break;
+ 
+-        case 2 ... 3:
++        case 4 ... 15:
+           factor = 3;
+           break;
+ 
+-        case 4:
++        case 16 ... 31:
+           factor = 2;
+           break;
+ 
+-        case 5:
++        case 32 ... 63:
+           break;
+ 
+-        case 6:
++        case 64 ... 127:
+           if (!q->favored) factor = 0.8;
+           break;
+ 
+-        case 7:
++        case 128 ... 254:
+           if (!q->favored) factor = 0.6;
+           break;
+ 
+diff --git a/src/afl-fuzz.c b/src/afl-fuzz.c
+index 22e6d57..c562845 100644
+--- a/src/afl-fuzz.c
++++ b/src/afl-fuzz.c
+@@ -966,7 +966,7 @@ int main(int argc, char **argv_orig, char **envp) {
+   /* Dynamically allocate memory for AFLFast schedules */
+   if (afl->schedule >= FAST && afl->schedule <= RARE) {
+ 
+-    afl->n_fuzz = ck_alloc(N_FUZZ_SIZE * sizeof(u32));
++    afl->n_fuzz = ck_alloc(N_FUZZ_SIZE * sizeof(u8));
+ 
+   }
+ 

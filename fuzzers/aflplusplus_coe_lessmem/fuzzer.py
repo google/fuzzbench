@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for AFL fuzzer."""
+"""Integration code for AFLplusplus fuzzer."""
 
 # This optimized afl++ variant should always be run together with
 # "aflplusplus" to show the difference - a default configured afl++ vs.
@@ -20,15 +20,19 @@
 # But this means that the good stuff is hidden away in this benchmark
 # otherwise.
 
-from fuzzers.afl import fuzzer as afl_fuzzer
+from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
-    afl_fuzzer.build()
+    aflplusplus_fuzzer.build()
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
+    run_options = ['-p', 'coe']
 
-    afl_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
+    aflplusplus_fuzzer.fuzz(input_corpus,
+                            output_corpus,
+                            target_binary,
+                            flags=(run_options))
