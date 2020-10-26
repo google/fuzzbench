@@ -1,0 +1,4 @@
+commit: 8fea658fe9b5bdf51de7e321a1a549056ba4b150
+commit_date: 2019-11-06 03:07:00+00:00
+fuzz_target: fuzz_pkcs15_reader
+project: opensc
