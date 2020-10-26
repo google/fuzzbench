@@ -42,9 +42,25 @@ export CXXFLAGS="$CXXFLAGS -fno-sanitize=object-size"
     --with-pic
 make -j$(nproc)
 
-# Generate initial corpus for parser fuzzer
-sapi/cli/php sapi/fuzzer/generate_parser_corpus.php
-cp sapi/fuzzer/dict/parser $OUT/php-fuzz-parser.dict
+# Generate corpuses and dictionaries.
+sapi/cli/php sapi/fuzzer/generate_all.php
 
-cp sapi/fuzzer/php-fuzz-parser $OUT/
-zip -j $OUT/php-fuzz-parser_seed_corpus.zip sapi/fuzzer/corpus/parser/*
+# Copy dictionaries to expected locations.
+cp sapi/fuzzer/dict/unserialize $OUT/php-fuzz-unserialize.dict
+cp sapi/fuzzer/dict/parser $OUT/php-fuzz-parser.dict
+cp sapi/fuzzer/json.dict $OUT/php-fuzz-json.dict
+
+FUZZERS="php-fuzz-json
+php-fuzz-exif
+php-fuzz-mbstring
+php-fuzz-unserialize
+php-fuzz-unserializehash
+php-fuzz-parser"
+for fuzzerName in $FUZZERS; do
+	cp sapi/fuzzer/$fuzzerName $OUT/
+done
+# copy corpora from source
+for fuzzerName in `ls sapi/fuzzer/corpus`; do
+	zip -j $OUT/php-fuzz-${fuzzerName}_seed_corpus.zip sapi/fuzzer/corpus/${fuzzerName}/*
+done
+
