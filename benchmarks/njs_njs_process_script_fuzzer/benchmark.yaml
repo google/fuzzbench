@@ -1,0 +1,4 @@
+commit: ff39edb94acf932a1abfe134fa0d580f3064d697
+commit_date: 2020-06-02 02:06:00+00:00
+fuzz_target: njs_process_script_fuzzer
+project: njs
