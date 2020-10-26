@@ -32,6 +32,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     run_options = ['-s', '123456789']
 
+    os.environ['AFL_TESTCACHE_SIZE'] = '0'
+
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
