@@ -15,13 +15,6 @@
 #
 ################################################################################
 
-# remove this line when this change is upstreamed
-sed '2d' $SRC/stb/tests/stb_png_read_fuzzer.cpp > $SRC/stb/tests/stbi_read_fuzzer.c
-
-$CXX $CXXFLAGS -std=c++11 -I. -DSTBI_ONLY_PNG  \
-    $SRC/stb/tests/stbi_read_fuzzer.c \
-    -o $OUT/stb_png_read_fuzzer $LIB_FUZZING_ENGINE
-
 $CXX $CXXFLAGS -std=c++11 -I. \
     $SRC/stb/tests/stbi_read_fuzzer.c \
     -o $OUT/stbi_read_fuzzer $LIB_FUZZING_ENGINE
