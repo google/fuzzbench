@@ -39,6 +39,7 @@ OSS_FUZZ_BENCHMARKS = {
     'openh264_decoder_fuzzer',
     'openssl_x509',
     'sqlite3_ossfuzz',
+    'stb_stbi_read_fuzzer',
     'systemd_fuzz-link-parser',
     'zlib_zlib_uncompress_fuzzer',
 }
