@@ -1,0 +1,4 @@
+commit: 91a17cedb1ee880fe7915fb14cfd74c04e8d6588
+commit_date: 2019-12-19 04:49:00+00:00
+fuzz_target: fuzz_real_query
+project: mysql-server
