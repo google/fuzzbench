@@ -90,7 +90,7 @@ def eclipser(input_corpus, output_corpus, target_binary):
         '-v',  # Controls the verbosity.
         '2',
         '--exectimeout',
-        '4000',
+        '5000',
     ]
     if os.listdir(input_corpus):  # Specify inputs only if any seed exists.
         command += ['-i', input_corpus]
