@@ -1,0 +1,4 @@
+commit: af6da216a20c8ce07600991ccf412a52cf7aba95
+commit_date: 2020-02-14 03:22:00+00:00
+fuzz_target: vm-fuzzer
+project: mtail
