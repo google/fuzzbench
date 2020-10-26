@@ -129,6 +129,8 @@ def do_build(build_type, fuzzer, always_build):
     # Otherwise, only build benchmarks that have changed.
     changed_benchmarks = set(change_utils.get_changed_benchmarks(changed_files))
     benchmarks = benchmarks.intersection(changed_benchmarks)
+    # Sort benchmarks so that they get built in a deterministic order.
+    benchmarks = sorted(benchmarks)
     return make_builds(benchmarks, fuzzer)
 
 
