@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 ################################################################################
+sed '2d' $SRC/stb/tests/stb_png_read_fuzzer.cpp > $SRC/stb/tests/stbi_read_fuzzer.c
 
 $CXX $CXXFLAGS -std=c++11 -I. \
     $SRC/stb/tests/stbi_read_fuzzer.c \
