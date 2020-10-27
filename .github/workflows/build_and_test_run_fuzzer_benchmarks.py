@@ -39,6 +39,7 @@ OSS_FUZZ_BENCHMARKS = {
     'openssl_x509',
     'sqlite3_ossfuzz',
     'systemd_fuzz-link-parser',
+    'wabt_wasm2wat_fuzzer',
     'zlib_zlib_uncompress_fuzzer',
 }
 
