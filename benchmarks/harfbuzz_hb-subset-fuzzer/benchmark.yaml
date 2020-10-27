@@ -1,0 +1,6 @@
+commit: 48ad745996159337fb4733561e834a0ffbe3a1ae
+commit_date: 2020-07-29 02:08:00+00:00
+fuzz_target: hb-subset-fuzzer
+project: harfbuzz
+unsupported_fuzzers:
+  - klee
