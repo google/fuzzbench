@@ -33,6 +33,7 @@ OSS_FUZZ_BENCHMARKS = {
     'curl_curl_fuzzer_http',
     'harfbuzz_hb-subset-fuzzer',
     'jsoncpp_jsoncpp_fuzzer',
+    'libhevc_hevc_dec_fuzzer',
     'libpcap_fuzz_both',
     'libxslt_xpath',
     'matio_matio_fuzzer',
