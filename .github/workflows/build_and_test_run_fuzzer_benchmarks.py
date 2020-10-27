@@ -37,6 +37,7 @@ OSS_FUZZ_BENCHMARKS = {
     'matio_matio_fuzzer',
     'mbedtls_fuzz_dtlsclient',
     'openssl_x509',
+    'php_php-fuzz-execute',
     'sqlite3_ossfuzz',
     'systemd_fuzz-link-parser',
     'zlib_zlib_uncompress_fuzzer',
