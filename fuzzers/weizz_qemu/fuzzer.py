@@ -35,11 +35,13 @@ def build():
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
+    # FIXME: Share code with afl.fuzz.
     os.environ['WEIZZ_NO_UI'] = '1'
     os.environ['WEIZZ_SKIP_CPUFREQ'] = '1'
     os.environ['WEIZZ_NO_AFFINITY'] = '1'
     os.environ['WEIZZ_I_DONT_CARE_ABOUT_MISSING_CRASHES'] = '1'
     os.environ['WEIZZ_CTX_SENSITIVE'] = '1'
+    os.environ['WEIZZ_SKIP_CRASHES'] = '1'
 
     # Weizz needs at least one non-empty seed to start.
     utils.create_seed_file_for_empty_corpus(input_corpus)

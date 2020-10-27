@@ -53,8 +53,8 @@ ${VENV_ACTIVATE}: requirements.txt
 
 install-dependencies: ${VENV_ACTIVATE}
 
-docker/generated.mk: docker/generate_makefile.py fuzzers benchmarks ${VENV_ACTIVATE}
-	source ${VENV_ACTIVATE} && PYTHONPATH=. python3 $< > $@
+docker/generated.mk: docker/generate_makefile.py docker/image_types.yaml fuzzers benchmarks ${VENV_ACTIVATE}
+	source ${VENV_ACTIVATE} && PYTHONPATH=. python3 $< $@
 
 presubmit: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py
@@ -76,9 +76,3 @@ install-docs-dependencies: docs/Gemfile.lock
 
 docs-serve: install-docs-dependencies
 	cd docs && bundle exec jekyll serve --livereload
-
-clear-cache:
-	docker stop $$(docker ps -a -q) 2>/dev/null ; \
-	docker rm -vf $$(docker ps -a -q) 2>/dev/null ; \
-	docker rmi -f $$(docker images -a -q) 2>/dev/null ; \
-	docker volume rm $$(docker volume ls -q) 2>/dev/null ; true

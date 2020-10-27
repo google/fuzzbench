@@ -13,10 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Script to run on creation of the runner container.
-# Loads the virtualenv before executing the runner script.
-source $VIRTUALENV_DIR/bin/activate
-
 # The runner runs at a higher priority than other processes to ensure that it's
 # able to finish infrastructure tasks regardless of the fuzzing workload.
 export RUNNER_NICENESS="-5"

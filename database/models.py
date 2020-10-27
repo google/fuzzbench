@@ -14,7 +14,14 @@
 """SQLAlchemy Database Models."""
 import sqlalchemy
 from sqlalchemy.ext import declarative
-from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Boolean
+from sqlalchemy import Column
+from sqlalchemy import DateTime
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy import JSON
+from sqlalchemy import String
+from sqlalchemy import UnicodeText
 
 Base = declarative.declarative_base()  # pylint: disable=invalid-name
 
@@ -29,6 +36,7 @@ class Experiment(Base):
     git_hash = Column(String, nullable=True)
     private = Column(Boolean, nullable=False, default=False)
     experiment_filestore = Column(String, nullable=True)
+    description = Column(UnicodeText, nullable=True)
 
 
 class Trial(Base):
@@ -62,3 +70,4 @@ class Snapshot(Base):
     trial_id = Column(Integer, ForeignKey('trial.id'), primary_key=True)
     trial = sqlalchemy.orm.relationship('Trial', back_populates='snapshots')
     edges_covered = Column(Integer, nullable=False)
+    fuzzer_stats = Column(JSON, nullable=True)

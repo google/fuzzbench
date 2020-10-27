@@ -12,13 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for fuzzers/."""
-import os
 import importlib
+import json
+import os
+import shutil
 
 from pyfakefs.fake_filesystem_unittest import Patcher
 import pytest
 
 from common import utils
+import fuzzers.afl.fuzzer
 
 # pylint: disable=invalid-name,unused-argument
 COVERAGE_TOOLS = {'coverage', 'coverage_source_based'}
@@ -76,3 +79,14 @@ def test_fuzz_function_errors():
         # so fail if we see one. If that is not the case than this assert
         # should be removed.
         assert not isinstance(error.value, TypeError)
+
+
+def test_afl_get_stats(tmp_path):
+    """Tests that AFL's get_stats function works."""
+    fuzzer_stats_src = os.path.join(utils.ROOT_DIR, 'test_libs', 'test_data',
+                                    'afl_fuzzer_stats')
+    fuzzer_stats_dst = os.path.join(tmp_path, 'fuzzer_stats')
+    shutil.copy(fuzzer_stats_src, fuzzer_stats_dst)
+    fuzzer_log = os.path.join(tmp_path, 'afl.log')
+    stats = json.loads(fuzzers.afl.fuzzer.get_stats(tmp_path, fuzzer_log))
+    assert stats['execs_per_sec'] == 1846.15

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/fuzzbench/base-runner
+FROM gcr.io/fuzzbench/base-image
 
 RUN apt-get update -y && \
 	apt-get install -y \
@@ -20,4 +20,4 @@ RUN apt-get update -y && \
 	llvm-6.0 llvm-6.0-dev llvm-6.0-tools
 
 RUN apt-get install -y clang-6.0 vim less
-RUN pip3 install psutil
+RUN pip3 install psutil==5.7.2

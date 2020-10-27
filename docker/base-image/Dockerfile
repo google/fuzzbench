@@ -41,6 +41,10 @@ RUN cd /tmp/ && \
     make -j install && \
     rm -r /tmp/Python-$PYTHON_VERSION.tar.xz /tmp/Python-$PYTHON_VERSION
 
+# Install common python dependencies.
+COPY ./requirements.txt /
+RUN pip3 install -r /requirements.txt
+
 # Install google-cloud-sdk.
 RUN apt-get update -y && apt-get install -y \
     apt-transport-https \

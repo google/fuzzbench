@@ -16,11 +16,14 @@
 
 import collections
 import gc
+import glob
 import multiprocessing
+import json
 import os
 import pathlib
 import posixpath
 import sys
+import tempfile
 import tarfile
 import time
 from typing import List, Set
@@ -32,6 +35,8 @@ from sqlalchemy import orm
 from common import experiment_utils
 from common import experiment_path as exp_path
 from common import filesystem
+from common import fuzzer_stats
+
 from common import filestore_utils
 from common import logs
 from common import utils
@@ -340,7 +345,8 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
                                                   'unchanged-cycles')
 
         # Store the profraw file containing coverage data for each cycle.
-        self.profraw_file = os.path.join(self.coverage_dir, 'data.profraw')
+        self.profraw_file_pattern = os.path.join(self.coverage_dir,
+                                                 'data-%m.profraw')
 
         # Store the profdata file for the current trial.
         self.profdata_file = os.path.join(self.report_dir, 'data.profdata')
@@ -348,6 +354,13 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         # Store the coverage information in json form.
         self.cov_summary_file = os.path.join(self.report_dir,
                                              'cov_summary.json')
+
+    def get_profraw_files(self):
+        """Return generated profraw files."""
+        return [
+            f for f in glob.glob(self.profraw_file_pattern.replace('%m', '*'))
+            if os.path.getsize(f)
+        ]
 
     def initialize_measurement_dirs(self):
         """Initialize directories that will be needed for measuring
@@ -361,7 +374,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         coverage_binary = coverage_utils.get_coverage_binary(self.benchmark)
         crashing_units = run_coverage.do_coverage_run(coverage_binary,
                                                       self.corpus_dir,
-                                                      self.profraw_file,
+                                                      self.profraw_file_pattern,
                                                       self.crashes_dir)
 
         self.UNIT_BLACKLIST[self.benchmark] = (
@@ -403,12 +416,11 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
 
     def generate_profdata(self, cycle: int):
         """Generate .profdata file from .profraw file."""
+        files_to_merge = self.get_profraw_files()
         if os.path.isfile(self.profdata_file):
             # If coverage profdata exists, then merge it with
             # existing available data.
-            files_to_merge = [self.profraw_file, self.profdata_file]
-        else:
-            files_to_merge = [self.profraw_file]
+            files_to_merge += [self.profdata_file]
 
         result = coverage_utils.merge_profdata_files(files_to_merge,
                                                      self.profdata_file)
@@ -419,11 +431,9 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
     def generate_coverage_information(self, cycle: int):
         """Generate the .profdata file and then transform it into
         json summary."""
-        if not os.path.exists(self.profraw_file):
-            self.logger.error('No profraw file found for cycle: %d.', cycle)
-            return
-        if not os.path.getsize(self.profraw_file):
-            self.logger.error('Empty profraw file found for cycle: %d.', cycle)
+        if not self.get_profraw_files():
+            self.logger.error('No valid profraw files found for cycle: %d.',
+                              cycle)
             return
         self.generate_profdata(cycle)
 
@@ -518,6 +528,30 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             return set()
         return set(filesystem.read(self.measured_files_path).splitlines())
 
+    def get_fuzzer_stats(self, cycle):
+        """Get the fuzzer stats for |cycle|."""
+        stats_filename = experiment_utils.get_stats_filename(cycle)
+        stats_filestore_path = exp_path.filestore(
+            os.path.join(self.trial_dir, stats_filename))
+        try:
+            return get_fuzzer_stats(stats_filestore_path)
+        except (ValueError, json.decoder.JSONDecodeError):
+            logger.error('Stats are invalid.')
+            return None
+
+
+def get_fuzzer_stats(stats_filestore_path):
+    """Reads, validates and returns the stats in |stats_filestore_path|."""
+    with tempfile.NamedTemporaryFile() as temp_file:
+        result = filestore_utils.cp(stats_filestore_path,
+                                    temp_file.name,
+                                    expect_zero=False)
+        if result.retcode != 0:
+            return None
+        stats_str = temp_file.read()
+    fuzzer_stats.validate_fuzzer_stats(stats_str)
+    return json.loads(stats_str)
+
 
 def measure_trial_coverage(  # pylint: disable=invalid-name
         measure_req, max_cycle: int,
@@ -567,9 +601,11 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     if snapshot_measurer.is_cycle_unchanged(cycle):
         snapshot_logger.info('Cycle: %d is unchanged.', cycle)
         regions_covered = snapshot_measurer.get_current_coverage()
+        fuzzer_stats_data = snapshot_measurer.get_fuzzer_stats(cycle)
         return models.Snapshot(time=this_time,
                                trial_id=trial_num,
-                               edges_covered=regions_covered)
+                               edges_covered=regions_covered,
+                               fuzzer_stats=fuzzer_stats_data)
 
     corpus_archive_dst = os.path.join(
         snapshot_measurer.trial_dir, 'corpus',
@@ -599,9 +635,11 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
 
     # Get the coverage of the new corpus units.
     regions_covered = snapshot_measurer.get_current_coverage()
+    fuzzer_stats_data = snapshot_measurer.get_fuzzer_stats(cycle)
     snapshot = models.Snapshot(time=this_time,
                                trial_id=trial_num,
-                               edges_covered=regions_covered)
+                               edges_covered=regions_covered,
+                               fuzzer_stats=fuzzer_stats_data)
 
     # Record the new corpus files.
     snapshot_measurer.update_measured_files()

@@ -387,9 +387,9 @@ def monitor_resource_usage():
             virtmem=psutil.virtual_memory(),
             swap=psutil.swap_memory())
         now = datetime.now()
-        print('[resource_thread] Resource usage after {time}:\n{message}',
-              time=now - start,
-              message=message)
+        print(
+            '[resource_thread] Resource usage after {time}:\n{message}'.format(
+                time=now - start, message=message))
 
 
 # pylint: disable=import-error
