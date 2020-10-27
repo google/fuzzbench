@@ -1,22 +1,24 @@
-# Copyright 2020 Google LLC
+# Copyright 2018 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+################################################################################
 
-FROM gcr.io/fuzzbench/base-image
-
-# This makes interactive docker runs painless:
-ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
-ENV AFL_MAP_SIZE=900000
-ENV PATH="$PATH:/out"
-ENV AFL_SKIP_CPUFREQ=1
-ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
+FROM gcr.io/oss-fuzz-base/base-builder
+MAINTAINER twsmith@mozilla.com
+RUN dpkg --add-architecture i386 && \
+    apt-get update && \
+    apt-get install -y libstdc++-5-dev libstdc++-5-dev:i386 nasm subversion
+RUN git clone --depth 1 https://github.com/cisco/openh264.git openh264
+WORKDIR openh264
+COPY build.sh decoder_fuzzer.cpp $SRC/
