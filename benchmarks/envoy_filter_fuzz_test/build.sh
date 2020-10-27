@@ -18,7 +18,7 @@
 export CFLAGS="$CFLAGS"
 export CXXFLAGS="$CXXFLAGS"
 
-declare -r FUZZER_TARGETS_CC=$(find . -name *_fuzz_test.cc)
+declare -r FUZZER_TARGETS_CC=$(find . -name filter_fuzz_test.cc)
 declare -r FUZZER_TARGETS="$(for t in ${FUZZER_TARGETS_CC}; do echo "${t:2:-3}"; done)"
 
 FUZZER_DICTIONARIES="\
@@ -39,12 +39,15 @@ for f in ${CXXFLAGS}; do
   echo "--cxxopt=${f}" "--linkopt=${f}"
 done
 
-if [ "$SANITIZER" = "undefined" ]
-then
-  # Bazel uses clang to link binary, which does not link clang_rt ubsan library for C++ automatically.
-  # See issue: https://github.com/bazelbuild/bazel/issues/8777
-  echo "--linkopt=\"$(find $(llvm-config --libdir) -name libclang_rt.ubsan_standalone_cxx-x86_64.a | head -1)\""
-fi
+for f in (${CFLAGS} ${CXXFLAGS}); do
+	if [[ $f =~ -fsanitize=.*,?undefined ]]	
+	then
+		# Bazel uses clang to link binary, which does not link clang_rt ubsan library for C++ automatically.
+		# See issue: https://github.com/bazelbuild/bazel/issues/8777
+  		echo "--linkopt=\"$(find $(llvm-config --libdir) -name libclang_rt.ubsan_standalone_cxx-x86_64.a | head -1)\""
+		break
+	fi
+done
 )"
 
 declare BAZEL_BUILD_TARGETS=""
