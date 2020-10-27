@@ -97,13 +97,6 @@ def eclipser(input_corpus, output_corpus, target_binary):
     subprocess.Popen(command)
 
 
-def afl_master(input_corpus, output_corpus, target_binary):
-    """Run AFL master instance."""
-    print('[afl_master] Run AFL master')
-    afl_fuzzer.run_afl_fuzz(input_corpus, output_corpus, target_binary,
-                            ['-M', 'afl-master'], True)
-
-
 def afl_worker(input_corpus, output_corpus, target_binary):
     """Run AFL worker instance."""
     print('[afl_worker] Run AFL worker')
@@ -125,9 +118,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     afl_args = (input_corpus, output_corpus, target_binary)
     eclipser_args = (input_corpus, output_corpus, uninstrumented_target_binary)
-    print('[fuzz] Running AFL master')
-    afl_master_thread = threading.Thread(target=afl_master, args=afl_args)
-    afl_master_thread.start()
+    # Do not launch AFL master instance for now, to reduce memory usage and
+    # align with the vanilla AFL.
     print('[fuzz] Running AFL worker')
     afl_worker_thread = threading.Thread(target=afl_worker, args=afl_args)
     afl_worker_thread.start()
@@ -135,6 +127,5 @@ def fuzz(input_corpus, output_corpus, target_binary):
     eclipser_thread = threading.Thread(target=eclipser, args=eclipser_args)
     eclipser_thread.start()
     print('[fuzz] Now waiting for threads to finish...')
-    afl_master_thread.join()
     afl_worker_thread.join()
     eclipser_thread.join()
