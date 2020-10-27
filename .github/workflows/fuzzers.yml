@@ -30,6 +30,7 @@ jobs:
           - libaflfuzzer
           - manul
           - mopt
+          - kirenenko
           # Binary-only (greybox) fuzzers.
           - eclipser
           - afl_qemu
