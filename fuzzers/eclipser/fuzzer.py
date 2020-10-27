@@ -50,10 +50,9 @@ def build():
     new_env['CC'] = 'clang'
     new_env['CXX'] = 'clang++'
     new_env['FUZZER_LIB'] = '/libStandaloneFuzzTarget.a'
-    # Reset compilation flags only using NO_SANITIZER_COMPAT_* flags. Eclipser
-    # module prefers unoptimized binaries, as hacky binary code can impede its
-    # grey-box concolic technique. Note that we can still use optimized binaries
-    # for AFL module.
+    # Ensure to compile with NO_SANITIZER_COMPAT* flags even for bug benchmarks,
+    # as QEMU is incompatible with sanitizers. Also, Eclipser prefers clean and
+    # unoptimized binaries. We leave fast random fuzzing as AFL's job.
     new_env['CFLAGS'] = ' '.join(utils.NO_SANITIZER_COMPAT_CFLAGS)
     cxxflags = [utils.LIBCPLUSPLUS_FLAG] + utils.NO_SANITIZER_COMPAT_CFLAGS
     new_env['CXXFLAGS'] = ' '.join(cxxflags)
@@ -107,7 +106,7 @@ def afl_master(input_corpus, output_corpus, target_binary):
 
 def afl_worker(input_corpus, output_corpus, target_binary):
     """Run AFL worker instance."""
-    print('[afl_slave] Run AFL worker')
+    print('[afl_worker] Run AFL worker')
     afl_fuzzer.run_afl_fuzz(input_corpus, output_corpus, target_binary,
                             ['-S', 'afl-worker'], True)
 
