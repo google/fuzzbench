@@ -42,6 +42,7 @@ OSS_FUZZ_BENCHMARKS = {
     'sqlite3_ossfuzz',
     'stb_stbi_read_fuzzer',
     'systemd_fuzz-link-parser',
+    'wabt_wasm2wat_fuzzer',
     'zlib_zlib_uncompress_fuzzer',
 }
 
