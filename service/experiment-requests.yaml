@@ -18,6 +18,15 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-10-26
+  description: "test new memcache algorithm, hopefully for the last time"
+  fuzzers:
+    - aflplusplus_fixed
+    - aflplusplus_memcache_2mb
+    - aflplusplus_memcache_20mb
+    - aflplusplus_memcache_200mb
+
+
 - experiment: 2020-10-25
   description: >
     These are AFLPlusplus experiments. Using Marc's implementation of the Vose

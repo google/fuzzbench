@@ -32,14 +32,19 @@ OSS_FUZZ_BENCHMARKS = {
     'bloaty_fuzz_target',
     'curl_curl_fuzzer_http',
     'envoy_filter_fuzz_test',
+    'harfbuzz_hb-subset-fuzzer',
     'jsoncpp_jsoncpp_fuzzer',
+    'libhevc_hevc_dec_fuzzer',
     'libpcap_fuzz_both',
     'libxslt_xpath',
     'matio_matio_fuzzer',
     'mbedtls_fuzz_dtlsclient',
+    'openh264_decoder_fuzzer',
     'openssl_x509',
     'sqlite3_ossfuzz',
+    'stb_stbi_read_fuzzer',
     'systemd_fuzz-link-parser',
+    'wabt_wasm2wat_fuzzer',
     'zlib_zlib_uncompress_fuzzer',
 }
 
@@ -95,6 +100,9 @@ def make_builds(benchmarks, fuzzer):
     """Use make to test the fuzzer on each benchmark in |benchmarks|."""
     fuzzer_benchmark_pairs = builder.get_fuzzer_benchmark_pairs([fuzzer],
                                                                 benchmarks)
+    # Sort benchmarks so that they get built in a deterministic order.
+    fuzzer_benchmark_pairs = sorted(fuzzer_benchmark_pairs,
+                                    key=lambda pair: pair[1])
     print('Building fuzzer-benchmark pairs: {}'.format(fuzzer_benchmark_pairs))
     for _, benchmark in fuzzer_benchmark_pairs:
         make_target = get_make_target(fuzzer, benchmark)
