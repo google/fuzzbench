@@ -31,6 +31,7 @@ RETRY_DELAY = 60
 OSS_FUZZ_BENCHMARKS = {
     'bloaty_fuzz_target',
     'curl_curl_fuzzer_http',
+    'harfbuzz_hb-subset-fuzzer',
     'jsoncpp_jsoncpp_fuzzer',
     'libpcap_fuzz_both',
     'libxslt_xpath',
