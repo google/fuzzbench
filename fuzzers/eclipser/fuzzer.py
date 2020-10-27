@@ -100,66 +100,16 @@ def eclipser(input_corpus, output_corpus, target_binary):
 
 def afl_master(input_corpus, output_corpus, target_binary):
     """Run AFL master instance."""
-    command = [
-        './afl-fuzz',
-        '-i',
-        input_corpus,
-        '-o',
-        output_corpus,
-        # Use no memory limit as ASAN doesn't play nicely with one.
-        '-m',
-        'none',
-        # Use same default 1 sec timeout, but add '+' to skip hangs.
-        '-t',
-        '1000+',
-        '-M',
-        'afl-master',
-    ]
-    dictionary_path = utils.get_dictionary_path(target_binary)
-    if dictionary_path:
-        command.extend(['-x', dictionary_path])
-    command += [
-        '--',
-        target_binary,
-        # Pass INT_MAX to afl the maximize the number of persistent loops it
-        # performs.
-        '2147483647'
-    ]
-    print('[afl_master] Run AFL master with command: ' + ' '.join(command))
-    output_stream = subprocess.DEVNULL
-    subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
+    print('[afl_master] Run AFL master')
+    afl_fuzzer.run_afl_fuzz(input_corpus, output_corpus, target_binary,
+                            ['-M', 'afl-master'], True)
 
 
 def afl_worker(input_corpus, output_corpus, target_binary):
     """Run AFL worker instance."""
-    command = [
-        './afl-fuzz',
-        '-i',
-        input_corpus,
-        '-o',
-        output_corpus,
-        # Use no memory limit as ASAN doesn't play nicely with one.
-        '-m',
-        'none',
-        # Use same default 1 sec timeout, but add '+' to skip hangs.
-        '-t',
-        '1000+',
-        '-S',
-        'afl-worker',
-    ]
-    dictionary_path = utils.get_dictionary_path(target_binary)
-    if dictionary_path:
-        command.extend(['-x', dictionary_path])
-    command += [
-        '--',
-        target_binary,
-        # Pass INT_MAX to afl the maximize the number of persistent loops it
-        # performs.
-        '2147483647'
-    ]
-    print('[afl_worker] Run AFL worker with command: ' + ' '.join(command))
-    output_stream = subprocess.DEVNULL
-    subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
+    print('[afl_slave] Run AFL worker')
+    afl_fuzzer.run_afl_fuzz(input_corpus, output_corpus, target_binary,
+                            ['-S', 'afl-worker'], True)
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
