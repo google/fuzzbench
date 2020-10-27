@@ -36,6 +36,7 @@ OSS_FUZZ_BENCHMARKS = {
     'libxslt_xpath',
     'matio_matio_fuzzer',
     'mbedtls_fuzz_dtlsclient',
+    'mysql-server_fuzz_real_query',
     'openssl_x509',
     'sqlite3_ossfuzz',
     'systemd_fuzz-link-parser',
