@@ -1,4 +1,4 @@
-# Copyright 2020 Google Inc.
+# Copyright 2016 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,15 +15,8 @@
 ################################################################################
 
 FROM gcr.io/oss-fuzz-base/base-builder
-
-RUN apt-get update && \
-    apt-get install -y wget tar
-
-RUN git clone --depth 1 https://github.com/nothings/stb.git
-
-RUN wget -O $SRC/stb/gif.tar.gz https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/imagetestsuite/imagetestsuite-gif-1.00.tar.gz
-RUN wget -O $SRC/stb/jpg.tar.gz https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/imagetestsuite/imagetestsuite-jpg-1.00.tar.gz
-RUN wget -O $SRC/stb/tests/gif.dict https://raw.githubusercontent.com/mirrorer/afl/master/dictionaries/gif.dict &> /dev/null
-
-WORKDIR stb
+RUN apt-get update && apt-get install -y python3-pip ragel pkg-config && \
+    pip3 install meson==0.53.0 ninja
+RUN git clone --depth 1 https://github.com/harfbuzz/harfbuzz.git
+WORKDIR harfbuzz
 COPY build.sh $SRC/

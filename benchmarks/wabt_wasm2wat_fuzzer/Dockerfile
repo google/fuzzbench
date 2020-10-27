@@ -1,4 +1,4 @@
-# Copyright 2020 Google Inc.
+# Copyright 2019 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,15 +15,10 @@
 ################################################################################
 
 FROM gcr.io/oss-fuzz-base/base-builder
-
-RUN apt-get update && \
-    apt-get install -y wget tar
-
-RUN git clone --depth 1 https://github.com/nothings/stb.git
-
-RUN wget -O $SRC/stb/gif.tar.gz https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/imagetestsuite/imagetestsuite-gif-1.00.tar.gz
-RUN wget -O $SRC/stb/jpg.tar.gz https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/imagetestsuite/imagetestsuite-jpg-1.00.tar.gz
-RUN wget -O $SRC/stb/tests/gif.dict https://raw.githubusercontent.com/mirrorer/afl/master/dictionaries/gif.dict &> /dev/null
-
-WORKDIR stb
-COPY build.sh $SRC/
+MAINTAINER binji@chromium.org
+RUN apt-get update && apt-get install -y cmake libtool make python
+RUN git clone --recursive https://github.com/WebAssembly/wabt
+WORKDIR wabt
+RUN git submodule init
+RUN git submodule update
+COPY build.sh wasm2wat_fuzzer.cc $SRC/
