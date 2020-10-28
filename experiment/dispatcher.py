@@ -31,7 +31,7 @@ from common import yaml_utils
 from database import models
 from database import utils as db_utils
 from experiment.build import builder
-from experiment import measurer
+from experiment.measurer import measurer
 from experiment import reporter
 from experiment import scheduler
 from experiment import stop_experiment
