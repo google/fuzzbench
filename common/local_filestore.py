@@ -23,8 +23,8 @@ def cp(  # pylint: disable=invalid-name
         source,
         destination,
         recursive=False,
-        parallel=False,  # pylint: disable=unused-argument
-        expect_zero=True):
+        expect_zero=True,
+        parallel=False):  # pylint: disable=unused-argument
     """Executes "cp" command from |source| to |destination|."""
     # Create intermediate folders for `cp` command to behave like `gsutil.cp`.
     filesystem.create_directory(os.path.dirname(destination))
@@ -91,3 +91,9 @@ def rsync(  # pylint: disable=too-many-arguments
         source = source + '/'
     command.extend([source, destination])
     return new_process.execute(command, expect_zero=True)
+
+
+def cat(file_path, expect_zero=True):
+    """Does cat on |file_path| and returns the result."""
+    command = ['cat', file_path]
+    return new_process.execute(command, expect_zero=expect_zero)
