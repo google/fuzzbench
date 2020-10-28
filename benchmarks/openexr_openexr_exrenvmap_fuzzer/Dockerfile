@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:1de3a8f8be448cb9f477ee157df52a1a0e6004a0d3da89b18130c06c97f66f20
 RUN apt-get update && apt-get install -y make autoconf automake libtool zlib1g-dev
 RUN git clone --depth 1 https://github.com/AcademySoftwareFoundation/openexr openexr
 WORKDIR openexr
