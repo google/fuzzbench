@@ -149,11 +149,11 @@ def replace_base_builder(benchmark_dir, commit_date):
     """Replace the parent image of the Dockerfile in |benchmark_dir|,
     base-builder (latest), with a version of base-builder that is likely to
     build the project as it was on |commit_date| without issue."""
-    base_builder_repo = _load_base_builder_docker_repo()  # pylint: disable=protected-access
+    base_builder_repo = _load_base_builder_docker_repo()
     if base_builder_repo:
         base_builder_digest = base_builder_repo.find_digest(commit_date)
         logs.info('Using base-builder with digest %s.', base_builder_digest)
-        _replace_base_builder_digest(  # pylint: disable=protected-access
+        _replace_base_builder_digest(
             os.path.join(benchmark_dir, 'Dockerfile'), base_builder_digest)
 
 
