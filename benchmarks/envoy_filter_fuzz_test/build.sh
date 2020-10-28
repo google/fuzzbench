@@ -39,7 +39,7 @@ for f in ${CXXFLAGS}; do
   echo "--cxxopt=${f}" "--linkopt=${f}"
 done
 
-for f in (${CFLAGS} ${CXXFLAGS}); do
+for f in "${CFLAGS} ${CXXFLAGS}"; do
 	if [[ $f =~ -fsanitize=.*,?undefined ]]	
 	then
 		# Bazel uses clang to link binary, which does not link clang_rt ubsan library for C++ automatically.
