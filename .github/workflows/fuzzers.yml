@@ -52,10 +52,11 @@ jobs:
           - aflplusplus_fast_v2
           - aflplusplus_fast_v2_late
           - aflplusplus_fast_branches_v2
-           
+
         benchmark_type:
           - oss-fuzz
           - standard
+          - bug
 
     steps:
     - uses: actions/checkout@v2
