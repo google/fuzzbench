@@ -23,6 +23,8 @@ FuzzBench.
 * **docker/** - Dockerfiles for infra images (does not include fuzzer images).
 * **docs/** - this documentation.
 * **experiment/** - code for running FuzzBench experiments.
+* **experiment/build** - code for building benchmarks and fuzzers for experiments.
+* **experiment/measurer** - code for measuring coverage trial coverage.
 * **fuzzers/** - fuzzers integrated in the FuzzBench platform (e.g. AFL).
 * **service/** - code for the FuzzBench service run by Google.
 * **test_libs/** - test helper modules.
