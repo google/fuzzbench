@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:8e56964113db5e06130b8bc5b94becb5d90a88e90c9b593f2ea24f33b0a467d0
 MAINTAINER dev@arrow.apache.org
 
 ENV DEBIAN_FRONTEND noninteractive
