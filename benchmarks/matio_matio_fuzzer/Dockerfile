@@ -16,7 +16,7 @@
 
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:2d4bb8bfef67b3012ca72bc193ac96fb35d2f02a9924b88a96742c266bdf1f05
 MAINTAINER t-beu@users.sourceforge.net
-RUN apt-get update && apt-get install -y make autoconf automake libtool
+RUN apt-get update && apt-get install -y make autoconf automake libtool libz-dev
 RUN git clone --depth 1 git://git.code.sf.net/p/matio/matio matio
 WORKDIR matio
 COPY build.sh $SRC/
