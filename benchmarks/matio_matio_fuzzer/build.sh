@@ -26,5 +26,5 @@ for fuzzers in $(find $SRC -name '*_fuzzer.cc'); do
   base=$(basename -s .cc $fuzzers)
   $CXX $CXXFLAGS -std=c++11 -Iinclude \
   $fuzzers ./getopt/.libs/libgetopt.a \
-  ./src/.libs/libmatio.a -lz -o $OUT/$base $LIB_FUZZING_ENGINE
+  ./src/.libs/libmatio.a -o $OUT/$base $LIB_FUZZING_ENGINE
 done
