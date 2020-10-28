@@ -13,5 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source $VIRTUALENV_DIR/bin/activate
 rq worker $EXPERIMENT --url redis://$REDIS_HOST:6379
