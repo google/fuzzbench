@@ -36,7 +36,7 @@ OSS_FUZZ_REPO_PATH = os.path.join(OSS_FUZZ_DIR, 'infra')
 
 
 class GitRepoManager:
-    """Base repo manager."""
+    """Git repo manager."""
 
     def __init__(self, repo_dir):
         self.repo_dir = repo_dir
@@ -76,6 +76,11 @@ class BaseBuilderDockerRepo:
 def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
     """Checkout the right files from OSS-Fuzz to build the benchmark based on
     |project| and |commit_date|. Then copy them to |benchmark_dir|."""
+    if not os.path.exists(os.path.join(OSS_FUZZ_DIR, '.git')):
+        logs.error(
+            '%s is not a git repo. Try running git submodule update --init',
+            OSS_FUZZ_DIR)
+        raise RuntimeError('%s is not a git repo.' % OSS_FUZZ_DIR)
     oss_fuzz_repo_manager = GitRepoManager(OSS_FUZZ_DIR)
     projects_dir = os.path.join(OSS_FUZZ_DIR, 'projects', project)
     try:
