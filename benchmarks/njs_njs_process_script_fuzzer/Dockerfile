@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:818389df172aff8d3df77d36cf82d43414ddf3688e5884c184d404bb6e8431b7
 MAINTAINER mmoroz@chromium.org
 RUN apt-get update && apt-get install -y make autoconf automake libtool \
     mercurial libpcre3-dev subversion
