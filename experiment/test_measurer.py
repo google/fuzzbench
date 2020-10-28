@@ -25,7 +25,7 @@ from common import new_process
 from database import models
 from database import utils as db_utils
 from experiment.build import build_utils
-from experiment import measurer
+from experiment import measurer, coverage_utils
 from test_libs import utils as test_utils
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -154,7 +154,7 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
     expected = [
         'llvm-cov', 'export', '-format=text',
         '/work/coverage-binaries/benchmark-a/fuzz-target',
-        '-instr-profile=/reports/data.profdata', '-summary-only'
+        '-instr-profile=/reports/data.profdata'
     ]
 
     assert (len(mocked_execute.call_args_list)) == 1
@@ -166,17 +166,20 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
 @mock.patch('common.logs.error')
 @mock.patch('experiment.measurer.initialize_logs')
 @mock.patch('multiprocessing.Queue')
+@mock.patch('multiprocessing.list')
 @mock.patch('experiment.measurer.measure_snapshot_coverage')
 def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
-                                _, __):
+                                _, __, mocked_process_specific_df_containers):
     """Tests that measure_trial_coverage works as expected."""
     min_cycle = 1
     max_cycle = 10
     measure_request = measurer.SnapshotMeasureRequest(FUZZER, BENCHMARK,
                                                       TRIAL_NUM, min_cycle)
-    measurer.measure_trial_coverage(measure_request, max_cycle, mocked_queue())
+    measurer.measure_trial_coverage(measure_request, max_cycle, mocked_queue(),
+                                    mocked_process_specific_df_containers)
     expected_calls = [
-        mock.call(FUZZER, BENCHMARK, TRIAL_NUM, cycle)
+        mock.call(FUZZER, BENCHMARK, TRIAL_NUM, cycle,
+                  mocked_process_specific_df_containers)
         for cycle in range(min_cycle, max_cycle + 1)
     ]
     assert mocked_measure_snapshot_coverage.call_args_list == expected_calls
@@ -184,21 +187,26 @@ def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
 
 @mock.patch('common.filestore_utils.ls')
 @mock.patch('common.filestore_utils.rsync')
-def test_measure_all_trials_not_ready(mocked_rsync, mocked_ls, experiment):
+@mock.patch('multiprocessing.Manager')
+def test_measure_all_trials_not_ready(mocked_rsync, mocked_ls, mocked_manager,
+                                      experiment):
     """Test running measure_all_trials before it is ready works as intended."""
     mocked_ls.return_value = new_process.ProcessResult(1, '', False)
     assert measurer.measure_all_trials(experiment_utils.get_experiment_name(),
                                        MAX_TOTAL_TIME, test_utils.MockPool(),
-                                       queue.Queue())
+                                       mocked_manager, queue.Queue(),
+                                       coverage_utils.DataFrameContainer())
     assert not mocked_rsync.called
 
 
+@mock.patch('multiprocessing.list')
 @mock.patch('multiprocessing.pool.ThreadPool', test_utils.MockPool)
 @mock.patch('common.new_process.execute')
 @mock.patch('common.filesystem.directories_have_same_files')
+@mock.patch('multiprocessing.Manager')
 @pytest.mark.skip(reason="See crbug.com/1012329")
 def test_measure_all_trials_no_more(mocked_directories_have_same_files,
-                                    mocked_execute):
+                                    mocked_execute, mocked_manager):
     """Test measure_all_trials does what is intended when the experiment is
     done."""
     mocked_directories_have_same_files.return_value = True
@@ -206,7 +214,7 @@ def test_measure_all_trials_no_more(mocked_directories_have_same_files,
     mock_pool = test_utils.MockPool()
     assert not measurer.measure_all_trials(
         experiment_utils.get_experiment_name(), MAX_TOTAL_TIME, mock_pool,
-        queue.Queue())
+        mocked_manager, queue.Queue(), coverage_utils.DataFrameContainer())
 
 
 def test_is_cycle_unchanged_doesnt_exist(experiment):
@@ -351,9 +359,11 @@ class TestIntegrationMeasurement:
     # portable binary.
     @pytest.mark.skipif(not os.getenv('FUZZBENCH_TEST_INTEGRATION'),
                         reason='Not running integration tests.')
+    @mock.patch('multiprocessing.list')
     @mock.patch('experiment.measurer.SnapshotMeasurer.is_cycle_unchanged')
-    def test_measure_snapshot_coverage(  # pylint: disable=too-many-locals
-            self, mocked_is_cycle_unchanged, db, experiment, tmp_path):
+    def test_measure_snapshot_coverage(  # pylint: disable=too-many-locals,too-many-arguments
+            self, mocked_is_cycle_unchanged, mocked_df_container_list, db,
+            experiment, tmp_path):
         """Integration test for measure_snapshot_coverage."""
         # WORK is set by experiment to a directory that only makes sense in a
         # fakefs. A directory containing necessary llvm tools is also added to
@@ -399,9 +409,9 @@ class TestIntegrationMeasurement:
             mocked_cp.return_value = new_process.ProcessResult(0, '', False)
             # TODO(metzman): Create a system for using actual buckets in
             # integration tests.
-            snapshot = measurer.measure_snapshot_coverage(
+            snapshot = measurer.measure_snapshot_coverage(  # pylint: disable=unused-variable
                 snapshot_measurer.fuzzer, snapshot_measurer.benchmark,
-                snapshot_measurer.trial_num, cycle)
+                snapshot_measurer.trial_num, cycle, mocked_df_container_list)
         assert snapshot
         assert snapshot.time == cycle * experiment_utils.get_snapshot_seconds()
         assert snapshot.edges_covered == 13178
@@ -431,7 +441,8 @@ def test_measure_loop_end(_, __, ___, ____, _____, ______, experiment_config,
                           db_experiment):
     """Tests that measure_loop stops when there is nothing left to measure. In
     this test, there is nothing left to measure on the first call."""
-    measurer.measure_loop(experiment_config, 100)
+    measurer.measure_loop(experiment_config, 100,
+                          coverage_utils.DataFrameContainer())
     # If everything went well, we should get to this point without any
     # exceptions.
 
@@ -462,7 +473,8 @@ def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___,
         return True
 
     mocked_measure_all_trials.side_effect = mock_measure_all_trials
-    measurer.measure_loop(experiment_config, 100)
+    measurer.measure_loop(experiment_config, 100,
+                          coverage_utils.DataFrameContainer())
     assert call_count == loop_iterations
 
 
