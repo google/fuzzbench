@@ -43,9 +43,9 @@ from common import utils
 from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
-from experiment import run_coverage
+from experiment.measurer import coverage_utils
+from experiment.measurer import run_coverage
 from experiment import scheduler
-from experiment import coverage_utils
 
 logger = logs.Logger('measurer')  # pylint: disable=invalid-name
 
