@@ -32,16 +32,19 @@ from common import experiment_utils
 from common import filesystem
 from common import fuzzer_utils
 from common import gcloud
+from common import gsutil
 from common import filestore_utils
 from common import logs
 from common import new_process
 from common import utils
 from common import yaml_utils
 
+CONFIG_DIR = 'config'
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
 OSS_FUZZ_PROJECTS_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz',
                                      'projects')
+RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
 FUZZER_NAME_REGEX = re.compile(r'^[a-z0-9_]+$')
 EXPERIMENT_CONFIG_REGEX = re.compile(r'^[a-z0-9-]{0,30}$')
 FILTER_SOURCE_REGEX = re.compile(r'('
@@ -57,10 +60,9 @@ FILTER_SOURCE_REGEX = re.compile(r'('
                                  r'^third_party/oss-fuzz/build/|'
                                  r'^docker/generated.mk$|'
                                  r'^docs/)')
-
-CONFIG_DIR = 'config'
-
-RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
+_OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT = (
+    'gs://{project}-backup.clusterfuzz-external.appspot.com/corpus/'
+    'libFuzzer/{fuzz_target}/public.zip')
 
 
 def read_and_validate_experiment_config(config_filename: str) -> Dict:
@@ -203,8 +205,10 @@ def start_experiment(  # pylint: disable=too-many-arguments
         config_filename: str,
         benchmarks: List[str],
         fuzzers: List[str],
+        description: str = None,
         no_seeds=False,
-        no_dictionaries=False):
+        no_dictionaries=False,
+        oss_fuzz_corpus=False):
     """Start a fuzzer benchmarking experiment."""
     check_no_local_changes()
 
@@ -218,6 +222,8 @@ def start_experiment(  # pylint: disable=too-many-arguments
     config['git_hash'] = get_git_hash()
     config['no_seeds'] = no_seeds
     config['no_dictionaries'] = no_dictionaries
+    config['oss_fuzz_corpus'] = oss_fuzz_corpus
+    config['description'] = description
 
     set_up_experiment_config_file(config)
 
@@ -238,6 +244,23 @@ def start_dispatcher(config: Dict, config_dir: str):
     copy_resources_to_bucket(config_dir, config)
     if not os.getenv('MANUAL_EXPERIMENT'):
         dispatcher.start()
+
+
+def add_oss_fuzz_corpus(benchmark, oss_fuzz_corpora_dir):
+    """Add latest public corpus from OSS-Fuzz as the seed corpus for various
+    fuzz targets."""
+    project = benchmark_utils.get_project(benchmark)
+    fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
+
+    if not fuzz_target.startswith(project):
+        full_fuzz_target = '%s_%s' % (project, fuzz_target)
+    else:
+        full_fuzz_target = fuzz_target
+
+    src_corpus_url = _OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT.format(
+        project=project, fuzz_target=full_fuzz_target)
+    dest_corpus_url = os.path.join(oss_fuzz_corpora_dir, f'{benchmark}.zip')
+    gsutil.cp(src_corpus_url, dest_corpus_url, parallel=True, expect_zero=False)
 
 
 def copy_resources_to_bucket(config_dir: str, config: Dict):
@@ -268,6 +291,14 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
     # Send config files.
     destination = os.path.join(base_destination, 'config')
     filestore_utils.rsync(config_dir, destination, parallel=True)
+
+    # If |oss_fuzz_corpus| flag is set, copy latest corpora from each benchmark
+    # (if available) in our filestore bucket.
+    if config['oss_fuzz_corpus']:
+        oss_fuzz_corpora_dir = (
+            experiment_utils.get_oss_fuzz_corpora_filestore_path())
+        for benchmark in config['benchmarks']:
+            add_oss_fuzz_corpus(benchmark, oss_fuzz_corpora_dir)
 
 
 class BaseDispatcher:
@@ -447,6 +478,10 @@ def main():
                         '--experiment-name',
                         help='Experiment name.',
                         required=True)
+    parser.add_argument('-d',
+                        '--description',
+                        help='Description of the experiment.',
+                        required=False)
     parser.add_argument('-f',
                         '--fuzzers',
                         help='Fuzzers to use.',
@@ -466,7 +501,13 @@ def main():
                         required=False,
                         default=False,
                         action='store_true')
-
+    parser.add_argument(
+        '-o',
+        '--oss-fuzz-corpus',
+        help='Should trials be conducted with OSS-Fuzz corpus (if available).',
+        required=False,
+        default=False,
+        action='store_true')
     args = parser.parse_args()
     fuzzers = args.fuzzers or all_fuzzers
 
@@ -474,8 +515,10 @@ def main():
                      args.experiment_config,
                      args.benchmarks,
                      fuzzers,
+                     description=args.description,
                      no_seeds=args.no_seeds,
-                     no_dictionaries=args.no_dictionaries)
+                     no_dictionaries=args.no_dictionaries,
+                     oss_fuzz_corpus=args.oss_fuzz_corpus)
     return 0
 
 

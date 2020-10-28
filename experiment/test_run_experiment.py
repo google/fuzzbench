@@ -199,19 +199,30 @@ def test_copy_resources_to_bucket(tmp_path):
     config_dir = 'config'
     config = {
         'experiment_filestore': 'gs://gsutil-bucket',
-        'experiment': 'experiment'
+        'experiment': 'experiment',
+        'benchmarks': ['libxslt_xpath'],
+        'oss_fuzz_corpus': True,
     }
     try:
-        with mock.patch('common.filestore_utils.rsync') as mocked_rsync:
-            with mock.patch('common.filestore_utils.cp') as mocked_cp:
-                run_experiment.copy_resources_to_bucket(config_dir, config)
-                mocked_cp.assert_called_once_with(
-                    'src.tar.gz',
-                    'gs://gsutil-bucket/experiment/input/',
-                    parallel=True)
-                mocked_rsync.assert_called_once_with(
-                    'config',
-                    'gs://gsutil-bucket/experiment/input/config',
-                    parallel=True)
+        with mock.patch('common.filestore_utils.cp') as mocked_filestore_cp:
+            with mock.patch(
+                    'common.filestore_utils.rsync') as mocked_filestore_rsync:
+                with mock.patch('common.gsutil.cp') as mocked_gsutil_cp:
+                    run_experiment.copy_resources_to_bucket(config_dir, config)
+                    mocked_filestore_cp.assert_called_once_with(
+                        'src.tar.gz',
+                        'gs://gsutil-bucket/experiment/input/',
+                        parallel=True)
+                    mocked_filestore_rsync.assert_called_once_with(
+                        'config',
+                        'gs://gsutil-bucket/experiment/input/config',
+                        parallel=True)
+                    mocked_gsutil_cp.assert_called_once_with(
+                        'gs://libxslt-backup.clusterfuzz-external.appspot.com/'
+                        'corpus/libFuzzer/libxslt_xpath/public.zip',
+                        'gs://gsutil-bucket/experiment/oss_fuzz_corpora/'
+                        'libxslt_xpath.zip',
+                        expect_zero=False,
+                        parallel=True)
     finally:
         os.chdir(cwd)

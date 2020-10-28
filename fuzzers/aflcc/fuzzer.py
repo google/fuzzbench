@@ -131,8 +131,6 @@ def prepare_fuzz_environment(input_corpus):
 
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
-    utils.set_no_sanitizer_compilation_flags()
-
     # Update compiler flags for clang-3.8.
     cflags = ['-fPIC']
     cppflags = cflags + [
@@ -152,46 +150,6 @@ def prepare_build_environment():
 
     # Fix FUZZER_LIB for various benchmarks.
     fix_fuzzer_lib()
-
-
-def get_fuzz_targets():
-    """Get the fuzz target name"""
-    # For non oss-projects, FUZZ_TARGET contain the target binary.
-    fuzz_target = os.getenv('FUZZ_TARGET', None)
-    if fuzz_target is not None:
-        return [fuzz_target]
-
-    print('FUZZ_TARGET is not defined')
-
-    # For these benchmarks, only return one file.
-    targets = {
-        'curl': 'curl_fuzzer_http',
-        'openssl': 'x509',
-        'systemd': 'fuzz-link-parser',
-        'php': 'php-fuzz-parser'
-    }
-
-    for target, fuzzname in targets.items():
-        if is_benchmark(target):
-            return [os.path.join(os.environ['OUT'], fuzzname)]
-
-    # For the reamining oss-projects, use some heuristics.
-    # We look for binaries in the OUT directory and take it as our targets.
-    # Note that we may return multiple binaries: this is necessary because
-    # sometimes multiple binaries are generated and we don't know which will
-    # be used for fuzzing (e.g., zlib benchmark).
-    # dictionary above.
-    out_dir = os.environ['OUT']
-    files = os.listdir(out_dir)
-    fuzz_targets = []
-    for filename in files:
-        candidate_bin = os.path.join(out_dir, filename)
-        if 'fuzz' in filename and os.access(candidate_bin, os.X_OK):
-            fuzz_targets += [candidate_bin]
-
-    if len(fuzz_targets) == 0:
-        raise ValueError("Cannot find binary")
-    return fuzz_targets
 
 
 def post_build(fuzz_target):
@@ -276,9 +234,9 @@ def build():
     utils.build_benchmark()
 
     print('[post_build] Extracting .bc file')
-    fuzz_targets = get_fuzz_targets()
-    for fuzz_target in fuzz_targets:
-        post_build(fuzz_target)
+    fuzz_target = os.getenv('FUZZ_TARGET')
+    fuzz_target_path = os.path.join(os.environ['OUT'], fuzz_target)
+    post_build(fuzz_target_path)
 
 
 def run_fuzzer(input_corpus,

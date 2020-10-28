@@ -20,11 +20,18 @@ import glob
 import pathlib
 import struct
 import subprocess
+import threading
+import time
+from datetime import datetime
 
 from fuzzers import utils
+
 LIB_BC_DIR = 'lib-bc'
 SYMBOLIC_BUFFER = 'kleeInputBuf'
 MODEL_VERSION = 'model_version'
+
+MAX_SOLVER_TIME_SECONDS = 30
+MAX_TOTAL_TIME_DEFAULT = 82800  # Default experiment duration = 23 hrs.
 
 
 def is_benchmark(name):
@@ -139,47 +146,6 @@ def get_bc_files():
     return bc_files
 
 
-def get_fuzz_target():
-    """Get the fuzz target name"""
-    # For non oss-projects, FUZZ_TARGET contain the target binary.
-    fuzz_target = os.getenv('FUZZ_TARGET', None)
-    if fuzz_target is not None:
-        return [fuzz_target]
-
-    print('[get_fuzz_target] FUZZ_TARGET is not defined')
-
-    # For these benchmarks, only return one file.
-    targets = {
-        'curl': 'curl_fuzzer_http',
-        'openssl': 'x509',
-        'systemd': 'fuzz-link-parser',
-        'php': 'php-fuzz-parser'
-    }
-
-    for target, fuzzname in targets.items():
-        if is_benchmark(target):
-            return [os.path.join(os.environ['OUT'], fuzzname)]
-
-    # For the reamining oss-projects, use some heuristics.
-    # We look for binaries in the OUT directory and take it as our targets.
-    # Note that we may return multiple binaries: this is necessary because
-    # sometimes multiple binaries are generated and we don't know which will
-    # be used for fuzzing (e.g., zlib benchmark).
-    # dictionary above.
-    out_dir = os.environ['OUT']
-    files = os.listdir(out_dir)
-    fuzz_targets = []
-    for filename in files:
-        candidate_bin = os.path.join(out_dir, filename)
-        if 'fuzz' in filename and os.access(candidate_bin, os.X_OK):
-            fuzz_targets += [candidate_bin]
-
-    if len(fuzz_targets) == 0:
-        raise ValueError("Cannot find binary")
-    print("[get_fuzz_target] targets: %s" % fuzz_targets)
-    return fuzz_targets
-
-
 def fix_fuzzer_lib():
     """Fix FUZZER_LIB for certain benchmarks"""
 
@@ -231,14 +197,12 @@ def build():
 
     utils.build_benchmark()
 
-    fuzz_targets = get_fuzz_target()
-    for target in fuzz_targets:
-        getbc_cmd = 'extract-bc {target}'.format(target=target)
-
+    fuzz_target = os.getenv('FUZZ_TARGET')
+    fuzz_target_path = os.path.join(os.environ['OUT'], fuzz_target)
+    getbc_cmd = f'extract-bc {fuzz_target_path}'
     if os.system(getbc_cmd) != 0:
         raise ValueError('extract-bc failed')
-    for target in fuzz_targets:
-        get_bcs_for_shared_libs(target)
+    get_bcs_for_shared_libs(fuzz_target_path)
 
 
 def rmdir(path):
@@ -278,9 +242,9 @@ def run(command, hide_output=False, ulimit_cmd=None):
                                                                 cmd=cmd))
 
 
-def covert_seed_inputs(ktest_tool, input_klee, input_corpus):
+def convert_seed_inputs(ktest_tool, input_klee, input_corpus):
     """
-    Covert seeds to a format KLEE understands.
+    Convert seeds to a format KLEE understands.
 
     Returns the number of converted seeds.
     """
@@ -375,31 +339,64 @@ def convert_individual_ktest(ktest_tool, kfile, queue_dir, output_klee,
     return n_crashes
 
 
-def convert_ktests(ktest_tool, output_klee, crash_dir, queue_dir, info_dir):
-    """
-    Convert KLEE output to binary seeds. Return the number of crashes
-    """
+def convert_outputs(ktest_tool, output_klee, crash_dir, queue_dir, info_dir):
+    """Convert output files from KLEE format to binary format."""
 
-    # Convert the output .ktest to binary format
-    print('[run_fuzzer] Converting output files...')
+    print('[convert_thread] Waiting for ktests...')
 
+    n_ktest = 1
     n_converted = 0
     n_crashes = 0
+    while True:
+        ktest_file = os.path.join(output_klee,
+                                  'test{0:0{1}d}'.format(n_ktest, 6) + '.ktest')
+        print('[convert_thread] Waiting for file {filename}'.format(
+            filename=ktest_file))
+        while not os.path.isfile(ktest_file):
+            time.sleep(60)
+        # We have new files to convert.
+        print('[convert_thread] Starting new conversion with {filename}'.format(
+            filename=ktest_file))
+        while os.path.isfile(ktest_file):
+            n_crashes += convert_individual_ktest(ktest_tool, ktest_file,
+                                                  queue_dir, output_klee,
+                                                  crash_dir, info_dir)
+            n_ktest += 1
+            n_converted += 1
+            ktest_file = os.path.join(
+                output_klee, 'test{0:0{1}d}'.format(n_ktest, 6) + '.ktest')
 
-    files = glob.glob(os.path.join(output_klee, '*.ktest'))
-    for kfile in files:
-        n_crashes += convert_individual_ktest(ktest_tool, kfile, queue_dir,
-                                              output_klee, crash_dir, info_dir)
-        n_converted += 1
-
-    print('[run_fuzzer] Converted {converted} output files'.format(
-        converted=n_converted))
-
-    return n_crashes
+        print('[convert_thread] Converted {converted} output files. \
+                Found {crashes} crashes'.format(converted=n_converted,
+                                                crashes=n_crashes))
 
 
+# pylint: disable=import-error
+# pylint: disable=import-outside-toplevel
+def monitor_resource_usage():
+    """Monitor resource consumption."""
+    import psutil
+    print('[resource_thread] Starting resource usage monitoring...')
+
+    start = datetime.now()
+    while True:
+        time.sleep(60 * 5)
+        message = '{cputimes}\n{virtmem}\n{swap}'.format(
+            cputimes=psutil.cpu_times_percent(percpu=False),
+            virtmem=psutil.virtual_memory(),
+            swap=psutil.swap_memory())
+        now = datetime.now()
+        print(
+            '[resource_thread] Resource usage after {time}:\n{message}'.format(
+                time=now - start, message=message))
+
+
+# pylint: disable=import-error
+# pylint: disable=import-outside-toplevel
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
+
+    import psutil
 
     # Set ulimit. Note: must be changed as this does not take effect
     if os.system('ulimit -s unlimited') != 0:
@@ -419,18 +416,30 @@ def fuzz(input_corpus, output_corpus, target_binary):
     emptydir(input_klee)
     rmdir(output_klee)
 
-    n_converted = covert_seed_inputs(ktest_tool, input_klee, input_corpus)
+    n_converted = convert_seed_inputs(ktest_tool, input_klee, input_corpus)
     # Run KLEE
     # Option -only-output-states-covering-new makes
     # dumping ktest files faster.
     # New coverage means a new edge.
     # See lib/Core/StatsTracker.cpp:markBranchVisited()
 
+    # Start converting thread.
+    print('[run_fuzzer] Starting converting thread')
+    converting_thread = threading.Thread(target=convert_outputs,
+                                         args=(ktest_tool, output_klee,
+                                               crash_dir, queue_dir, info_dir))
+    converting_thread.start()
+
+    print('[run_fuzzer] Starting resource monitoring thread')
+    monitoring_thread = threading.Thread(target=monitor_resource_usage)
+    monitoring_thread.start()
+
     print('[run_fuzzer] Running target with klee')
 
     klee_bin = os.path.join(out_dir, 'bin/klee')
     target_binary_bc = '{}.bc'.format(target_binary)
-    seconds = int(int(os.getenv('MAX_TOTAL_TIME', str(246060))) * 4 / 5)
+    max_time_seconds = (
+        int(os.getenv('MAX_TOTAL_TIME', str(MAX_TOTAL_TIME_DEFAULT))) * 4) // 5
 
     seeds_option = ['-zero-seed-extension', '-seed-dir', input_klee
                    ] if n_converted > 0 else []
@@ -440,18 +449,23 @@ def fuzz(input_corpus, output_corpus, target_binary):
         llvm_link_libs.append('-link-llvm-lib=./{lib_bc}/{filename}'.format(
             lib_bc=LIB_BC_DIR, filename=filename))
 
+    max_memory_mb = str(int(psutil.virtual_memory().available // 10**6 * 0.9))
+
     klee_cmd = [
         klee_bin,
+        '-always-output-seeds',
+        '-max-memory',
+        max_memory_mb,
         '-max-solver-time',
-        '30s',
+        f'{MAX_SOLVER_TIME_SECONDS}s',
         '-log-timed-out-queries',
-        '--max-time',
-        '{}s'.format(seconds),
+        '-max-time',
+        f'{max_time_seconds}s',
         '-libc',
         'uclibc',
         '-libcxx',
         '-posix-runtime',
-        '--disable-verify',  # Needed because debug builds don't always work.
+        '-disable-verify',  # Needed because debug builds don't always work.
         '-output-dir',
         output_klee,
     ]
@@ -465,14 +479,18 @@ def fuzz(input_corpus, output_corpus, target_binary):
     klee_cmd += [target_binary_bc, str(size)]
     run(klee_cmd, ulimit_cmd='ulimit -s unlimited')
 
-    n_crashes = convert_ktests(ktest_tool, output_klee, crash_dir, queue_dir,
-                               info_dir)
+    # Klee has now terminated.
+    print('[run_fuzzer] Klee has terminated.')
 
-    print('[run_fuzzer] Found {crashed} crash files'.format(crashed=n_crashes))
+    # Give the converting thread enough time to complete.
+    n_ktest = len(glob.glob(os.path.join(output_klee, '*.ktest')))
+    n_converted = len(os.listdir(queue_dir)) + len(os.listdir(crash_dir))
+    print(
+        '[run_fuzzer] {ktests} ktests and {converted} converted files.'.format(
+            ktests=n_ktest, converted=n_converted))
+    while n_ktest != n_converted:
+        time.sleep(30)
+        n_converted = len(os.listdir(queue_dir)) + len(os.listdir(crash_dir))
 
-    # For sanity check, we write a file to ensure
-    # KLEE was able to terminate and convert all files
-    done_file = os.path.join(output_corpus, 'DONE')
-    with open(done_file, 'w') as file:
-        file.write('Converted: {converted}\nBugs: {bugs}'.format(
-            converted=n_converted, bugs=n_crashes))
+    # Let's log the end.
+    print('[run_fuzzer] Main thread terminated successfully.')

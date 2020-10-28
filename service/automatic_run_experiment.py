@@ -21,6 +21,7 @@ import collections
 import os
 import re
 import sys
+from typing import Optional
 
 from common import logs
 from common import fuzzer_utils
@@ -77,11 +78,23 @@ BENCHMARKS = [
 
 
 def _get_experiment_name(experiment_config: dict) -> str:
-    """Returns the name of the experiment described by experiment_config as a
+    """Returns the name of the experiment described by |experiment_config| as a
     string."""
     # Use str because the yaml parser will parse things like `2020-05-06` as
     # a datetime if not included in quotes.
     return str(experiment_config['experiment'])
+
+
+def _get_description(experiment_config: dict) -> Optional[str]:
+    """Returns the description of the experiment described by
+    |experiment_config| as a string."""
+    return experiment_config.get('description')
+
+
+def _use_oss_fuzz_corpus(experiment_config: dict) -> bool:
+    """Returns the oss_fuzz_corpus flag of the experiment described by
+    |experiment_config| as a bool."""
+    return bool(experiment_config.get('oss_fuzz_corpus'))
 
 
 def _get_requested_experiments():
@@ -134,6 +147,23 @@ def _validate_individual_experiment_requests(experiment_requests):
             logger.error('Fuzzer: %s in experiment %s is not valid.', fuzzer,
                          experiment)
             valid = False
+
+        description = request.get('description')
+        if description is not None and not isinstance(description, str):
+            logger.error(
+                'Request: %s "description" attribute is not a valid string.',
+                request)
+            valid = False
+            continue
+
+        oss_fuzz_corpus = request.get('oss_fuzz_corpus')
+        if oss_fuzz_corpus is not None and not isinstance(
+                oss_fuzz_corpus, bool):
+            logger.error(
+                'Request: %s "oss_fuzz_corpus" attribute is not a valid bool.',
+                request)
+            valid = False
+            continue
 
     return valid
 
@@ -203,18 +233,29 @@ def run_requested_experiment(dry_run):
 
     logs.info('Running experiment: %s with fuzzers: %s.', experiment_name,
               ' '.join(fuzzers))
-    return _run_experiment(experiment_name, fuzzers, dry_run)
+    description = _get_description(requested_experiment)
+    oss_fuzz_corpus = _use_oss_fuzz_corpus(requested_experiment)
+    return _run_experiment(experiment_name, fuzzers, description,
+                           oss_fuzz_corpus, dry_run)
 
 
-def _run_experiment(experiment_name, fuzzers, dry_run=False):
+def _run_experiment(experiment_name,
+                    fuzzers,
+                    description,
+                    oss_fuzz_corpus,
+                    dry_run=False):
     """Run an experiment named |experiment_name| on |fuzzer_configs| and shut it
     down once it terminates."""
     logs.info('Starting experiment: %s.', experiment_name)
     if dry_run:
         logs.info('Dry run. Not actually running experiment.')
         return
-    run_experiment.start_experiment(experiment_name, EXPERIMENT_CONFIG_FILE,
-                                    BENCHMARKS, fuzzers)
+    run_experiment.start_experiment(experiment_name,
+                                    EXPERIMENT_CONFIG_FILE,
+                                    BENCHMARKS,
+                                    fuzzers,
+                                    description=description,
+                                    oss_fuzz_corpus=oss_fuzz_corpus)
 
 
 def main():

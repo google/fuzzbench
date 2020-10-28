@@ -7,7 +7,7 @@ The following config active for all benchmarks:
     - entrypoint set to LLVMFuzzerTestOneInput
     - persisten mode set to LLVMFuzzerTestOneInput
     - in-memory shared memory test cases 
-  - "exploit" power schedule
+  - "coe" power schedule
 
 Repository: [https://github.com/AFLplusplus/AFLplusplus/](https://github.com/AFLplusplus/AFLplusplus/)
 

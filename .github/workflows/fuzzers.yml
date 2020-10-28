@@ -41,29 +41,25 @@ jobs:
           - entropic_magicbytes
           - aflplusplus_lightweizz
           - aflplusplus_explore
-          - aflplusplus_coe
-          - aflplusplus_fast
-          - aflplusplus_coe_24
-          - aflplusplus_coe_48
-          - aflplusplus_coe_64
-          - aflplusplus_fast_24
-          - aflplusplus_fast_48
-          - aflplusplus_fast_64
+          - aflplusplus_268c
+          - aflplusplus_fixed
+          - aflplusplus_memcache_2mb
+          - aflplusplus_memcache_20mb
+          - aflplusplus_memcache_200mb
           - afl_fast
-          - afl_fast_nohandicap
-          - afl_fast_nohandicap_late
-          - afl_fast_nohandicap_late_2
-          - afl_fast_nohandicap_late_s
-          - afl_fast_nohandicap_late_o
-          - afl_fast_nohandicap_late_32
-
+          - afl_fast_v2
+          - afl_fast_branches_v2
+          - afl_nohandicap_spliceless2
+          - aflplusplus_coe_lessmem
+          - aflplusplus_fast_lessmem
+          - aflplusplus_fast_v1
+          - aflplusplus_fast_v2
+          - aflplusplus_fast_v2_late
+          - aflplusplus_fast_branches_v2
+           
         benchmark_type:
           - oss-fuzz
           - standard
-
-    env:
-      FUZZER: ${{ matrix.fuzzer }}
-      BENCHMARK_TYPE: ${{ matrix.benchmark_type }}
 
     steps:
     - uses: actions/checkout@v2
@@ -80,7 +76,7 @@ jobs:
         df -h
 
     - name: Setup Python environment
-      uses: actions/setup-python@v1.1.1
+      uses: actions/setup-python@v2
       with:
         python-version: 3.7
 
@@ -104,4 +100,4 @@ jobs:
 
     - name: Build Benchmarks
       run: |
-        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/build_and_test_run_fuzzer_benchmarks.py $BENCHMARK_TYPE $FUZZER
+        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/build_and_test_run_fuzzer_benchmarks.py ${{ matrix.benchmark_type }} ${{ matrix.fuzzer }}

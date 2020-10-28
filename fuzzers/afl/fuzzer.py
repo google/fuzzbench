@@ -13,9 +13,10 @@
 # limitations under the License.
 """Integration code for AFL fuzzer."""
 
+import json
+import os
 import shutil
 import subprocess
-import os
 
 from fuzzers import utils
 
@@ -43,6 +44,22 @@ def build():
     shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
 
 
+def get_stats(output_corpus, fuzzer_log):  # pylint: disable=unused-argument
+    """Gets fuzzer stats for AFL."""
+    # Get a dictionary containing the stats AFL reports.
+    stats_file = os.path.join(output_corpus, 'fuzzer_stats')
+    with open(stats_file) as file_handle:
+        stats_file_lines = file_handle.read().splitlines()
+    stats_file_dict = {}
+    for stats_line in stats_file_lines:
+        key, value = stats_line.split(': ')
+        stats_file_dict[key.strip()] = value.strip()
+
+    # Report to FuzzBench the stats it accepts.
+    stats = {'execs_per_sec': float(stats_file_dict['execs_per_sec'])}
+    return json.dumps(stats)
+
+
 def prepare_fuzz_environment(input_corpus):
     """Prepare to fuzz with AFL or another AFL-based fuzzer."""
     # Tell AFL to not use its terminal UI so we get usable logs.
@@ -54,9 +71,21 @@ def prepare_fuzz_environment(input_corpus):
     # AFL will abort on startup if the core pattern sends notifications to
     # external programs. We don't care about this.
     os.environ['AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES'] = '1'
+    # Don't exit when crashes are found. This can happen when corpus from
+    # OSS-Fuzz is used.
+    os.environ['AFL_SKIP_CRASHES'] = '1'
 
     # AFL needs at least one non-empty seed to start.
     utils.create_seed_file_for_empty_corpus(input_corpus)
+
+
+def check_skip_det_compatible(additional_flags):
+    """ Checks if additional flags are compatible with '-d' option"""
+    # AFL refuses to take in '-d' with '-M' or '-S' options for parallel mode.
+    # (cf. https://github.com/google/AFL/blob/8da80951/afl-fuzz.c#L7477)
+    if '-M' in additional_flags or '-S' in additional_flags:
+        return False
+    return True
 
 
 def run_afl_fuzz(input_corpus,
@@ -66,9 +95,6 @@ def run_afl_fuzz(input_corpus,
                  hide_output=False):
     """Run afl-fuzz."""
     # Spawn the afl fuzzing process.
-    # FIXME: Currently AFL will exit if it encounters a crashing input in seed
-    # corpus (usually timeouts). Add a way to skip/delete such inputs and
-    # re-run AFL.
     print('[run_afl_fuzz] Running target with afl-fuzz')
     command = [
         './afl-fuzz',
@@ -76,15 +102,16 @@ def run_afl_fuzz(input_corpus,
         input_corpus,
         '-o',
         output_corpus,
-        # Use deterministic mode as it does best when we don't have
-        # seeds which is often the case.
-        '-d',
         # Use no memory limit as ASAN doesn't play nicely with one.
         '-m',
         'none',
         '-t',
         '1000+',  # Use same default 1 sec timeout, but add '+' to skip hangs.
     ]
+    # Use '-d' to skip deterministic mode, as long as it it compatible with
+    # additional flags.
+    if not additional_flags or check_skip_det_compatible(additional_flags):
+        command.append('-d')
     if additional_flags:
         command.extend(additional_flags)
     dictionary_path = utils.get_dictionary_path(target_binary)

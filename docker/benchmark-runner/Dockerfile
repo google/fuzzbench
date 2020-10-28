@@ -54,16 +54,13 @@ ENV WORKDIR /out
 RUN mkdir -p $WORKDIR
 WORKDIR $WORKDIR
 
-# The argument needs to be re-declared otherwise it returns an empty string.
-ARG fuzzer
+ENV ROOT_DIR=/src
 
 # Copy over all the build artifacts (without * to preserve directory structure).
 # This also copies seed and dictionary files if they are available.
 COPY --from=builder /out/ ./
-# Copy the fuzzer.py file.
-COPY fuzzers/$fuzzer/fuzzer.py .
 # Copy the fuzzers directory.
-COPY fuzzers/ ./fuzzers
+COPY fuzzers $ROOT_DIR/fuzzers
 # Create empty __init__.py to allow python deps to work.
 RUN touch __init__.py
 
@@ -79,19 +76,10 @@ RUN mkdir -p $SEED_CORPUS_DIR $OUTPUT_CORPUS_DIR
 # Copy the source code into the image. We do this here instead of in base-image
 # because it is likely to change, particularly in development. If this were done
 # earlier, build cycles would be intolerably slow.
-ENV ROOT_DIR=/src
 COPY common $ROOT_DIR/common
 COPY experiment/runner.py $ROOT_DIR/experiment/runner.py
 COPY docker/benchmark-runner $ROOT_DIR/docker/benchmark-runner
 
 ENV PYTHONPATH=$ROOT_DIR
-
-# |VIRTUALENV_DIR| is set so that python code can know the location of current
-# virtualenv directory and strip it if needed to execute in system python
-# environment.
-ENV VIRTUALENV_DIR=$ROOT_DIR/.venv
-RUN virtualenv --python=$(which python3) $VIRTUALENV_DIR
-RUN /bin/bash -c "source $VIRTUALENV_DIR/bin/activate && \
-    pip3 install -r $ROOT_DIR/docker/benchmark-runner/requirements.txt"
 RUN chmod +x $ROOT_DIR/docker/benchmark-runner/startup-runner.sh
 ENTRYPOINT $ROOT_DIR/docker/benchmark-runner/startup-runner.sh

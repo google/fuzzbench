@@ -94,6 +94,12 @@ def test_create_trial_instance(benchmark, expected_image, expected_target,
     and creates a startup script for the instance, as we expect it to."""
     expected_startup_script = '''# Start docker.
 
+# Hack because container-optmized-os doesn't support writing to /home/root.
+# docker-credential-gcr needs to write to a dotfile in $HOME.
+export HOME=/home/chronos
+mkdir -p $HOME
+docker-credential-gcr configure-docker -include-artifact-registry
+
 while ! docker pull {docker_image_url}
 do
   echo 'Error pulling image, retrying...'
@@ -109,6 +115,7 @@ docker run \\
 -e MAX_TOTAL_TIME=86400 \\
 -e NO_SEEDS=False \\
 -e NO_DICTIONARIES=False \\
+-e OSS_FUZZ_CORPUS=False \\
 -e DOCKER_REGISTRY=gcr.io/fuzzbench -e CLOUD_PROJECT=fuzzbench -e CLOUD_COMPUTE_ZONE=us-central1-a \\
 -e EXPERIMENT_FILESTORE=gs://experiment-data \\
 -e REPORT_FILESTORE=gs://web-reports \\
