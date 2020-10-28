@@ -339,38 +339,6 @@ def convert_individual_ktest(ktest_tool, kfile, queue_dir, output_klee,
     return n_crashes
 
 
-# def convert_outputs(ktest_tool, output_klee, crash_dir, queue_dir, info_dir):
-#     """Convert output files from KLEE format to binary format."""
-
-#     print('[convert_thread] Waiting for ktests...')
-#     return
-#     n_ktest = 1
-#     n_converted = 0
-#     n_crashes = 0
-#     while True:
-#         ktest_file = os.path.join(output_klee,
-#                                   'test{0:0{1}d}'.format(n_ktest, 6) + '.ktest')
-#         print('[convert_thread] Waiting for file {filename}'.format(
-#             filename=ktest_file))
-#         while not os.path.isfile(ktest_file):
-#             time.sleep(60)
-#         # We have new files to convert.
-#         print('[convert_thread] Starting new conversion with {filename}'.format(
-#             filename=ktest_file))
-#         while os.path.isfile(ktest_file):
-#             n_crashes += convert_individual_ktest(ktest_tool, ktest_file,
-#                                                   queue_dir, output_klee,
-#                                                   crash_dir, info_dir)
-#             n_ktest += 1
-#             n_converted += 1
-#             ktest_file = os.path.join(
-#                 output_klee, 'test{0:0{1}d}'.format(n_ktest, 6) + '.ktest')
-
-#         print('[convert_thread] Converted {converted} output files. \
-#                 Found {crashes} crashes'.format(converted=n_converted,
-#                                                 crashes=n_crashes))
-
-
 # pylint: disable=import-error
 # pylint: disable=import-outside-toplevel
 def monitor_resource_usage():
@@ -422,13 +390,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # Option -only-output-states-covering-new makes
     # dumping ktest files faster.
     # See lib/Core/StatsTracker.cpp:markBranchVisited()
-
-    # Start converting thread.
-    # print('[run_fuzzer] Starting converting thread')
-    # converting_thread = threading.Thread(target=convert_outputs,
-    #                                      args=(ktest_tool, output_klee,
-    #                                            crash_dir, queue_dir, info_dir))
-    # converting_thread.start()
 
     print('[run_fuzzer] Starting resource monitoring thread')
     monitoring_thread = threading.Thread(target=monitor_resource_usage)
@@ -485,16 +446,3 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     # Klee has now terminated.
     print('[run_fuzzer] Klee has terminated.')
-
-    # Give the converting thread enough time to complete.
-    # n_ktest = len(glob.glob(os.path.join(output_klee, '*.ktest')))
-    # n_converted = len(os.listdir(queue_dir)) + len(os.listdir(crash_dir))
-    # print(
-    #     '[run_fuzzer] {ktests} ktests and {converted} converted files.'.format(
-    #         ktests=n_ktest, converted=n_converted))
-    # while n_ktest > n_converted:
-    #     time.sleep(30)
-    #     n_converted = len(os.listdir(queue_dir)) + len(os.listdir(crash_dir))
-
-    # # Let's log the end.
-    # print('[run_fuzzer] Main thread terminated successfully.')
