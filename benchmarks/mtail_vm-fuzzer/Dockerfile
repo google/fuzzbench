@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:23d37c3272089a31233f93c1f1a8c477b8cdef586ad1e750113e4f08e8ce07e4
 MAINTAINER jaq@spacepants.org
 RUN mkdir -p github.com/google
 RUN git clone --depth 1 https://github.com/google/mtail github.com/google/mtail
