@@ -51,7 +51,13 @@ cp sapi/fuzzer/dict/unserialize $OUT/php-fuzz-unserialize.dict
 cp sapi/fuzzer/dict/parser $OUT/php-fuzz-parser.dict
 cp sapi/fuzzer/json.dict $OUT/php-fuzz-json.dict
 
-FUZZERS="php-fuzz-execute"
+FUZZERS="php-fuzz-json
+php-fuzz-exif
+php-fuzz-mbstring
+php-fuzz-unserialize
+php-fuzz-unserializehash
+php-fuzz-parser
+php-fuzz-execute"
 for fuzzerName in $FUZZERS; do
 	cp sapi/fuzzer/$fuzzerName $OUT/
 done
