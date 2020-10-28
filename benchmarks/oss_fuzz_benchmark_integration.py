@@ -212,7 +212,7 @@ def main():
         help='Date of the commit. Example: 2019-10-19T09:07:25+01:00')
     args = parser.parse_args()
     integrate_benchmark(args.project, args.fuzz_target, args.benchmark_name,
-                        args.commit, args.date, args.oss_fuzz_corpus)
+                        args.commit, args.date)
     return 0
 
 
