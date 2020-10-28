@@ -46,6 +46,7 @@ def _get_buildable_images(fuzzer=None, benchmark=None):
 
 def build_base_images():
     """Build base images on GCB."""
+    import pdb; pdb.set_trace()
     image_templates = {'base-image': _get_buildable_images()['base-image']}
     config = generate_cloudbuild.create_cloudbuild_spec(image_templates,
                                                         build_base_images=True)
