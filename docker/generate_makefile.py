@@ -91,7 +91,7 @@ def _get_makefile_run_template(image):
 
 def get_rules_for_image(name, image):
     """Returns makefile section for |image|."""
-    if not ('base-' in name or 'dispatcher-' in name):
+    if not ('base-' in name or 'dispatcher-' in name or name == 'worker'):
         section = '.'
     else:
         section = ''
