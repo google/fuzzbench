@@ -18,6 +18,24 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-10-27
+  description: "Official experiment"
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflsmart
+    - entropic
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - lafintel
+    - libaflfuzzer
+    - libfuzzer
+    - mopt
+
+
 - experiment: 2020-10-26
   description: "test new memcache algorithm, hopefully for the last time"
   fuzzers:
