@@ -74,6 +74,8 @@ def prepare_fuzz_environment(input_corpus):
     # Don't exit when crashes are found. This can happen when corpus from
     # OSS-Fuzz is used.
     os.environ['AFL_SKIP_CRASHES'] = '1'
+    # Shuffle the queue
+    os.environ['AFL_SHUFFLE_QUEUE'] = '1'
 
     # AFL needs at least one non-empty seed to start.
     utils.create_seed_file_for_empty_corpus(input_corpus)
@@ -124,7 +126,6 @@ def run_afl_fuzz(input_corpus,
         # performs.
         '2147483647'
     ]
-    os.environ['AFL_SHUFFLE_QUEUE'] = '1'
     print('[run_afl_fuzz] Running command: ' + ' '.join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
     subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
