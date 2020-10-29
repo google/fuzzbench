@@ -272,6 +272,7 @@ def run_fuzzer(input_corpus,
         # performs.
         '2147483647'
     ]
+    os.environ['AFL_SHUFFLE_QUEUE'] = '1'
     print('[run_fuzzer] Running command: ' + ' '.join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
     subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
