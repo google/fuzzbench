@@ -135,7 +135,7 @@ def test_generate_profdata_merge(mocked_execute, experiment, fs):
 
 
 @mock.patch('common.new_process.execute')
-@mock.patch('experiment.measure_manager.coverage_utils.get_coverage_binary')
+@mock.patch('experiment.measurer.coverage_utils.get_coverage_binary')
 def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
                           experiment, fs):
     """Tests that generate_summary can run the correct command."""
@@ -352,8 +352,10 @@ class TestIntegrationMeasurement:
     # portable binary.
     @pytest.mark.skipif(not os.getenv('FUZZBENCH_TEST_INTEGRATION'),
                         reason='Not running integration tests.')
-    @mock.patch('experiment.measurer.measure_manager.SnapshotMeasurer'
-                '.is_cycle_unchanged')
+    @mock.patch(
+        'experiment.measurer.measure_manager.SnapshotMeasurer'
+        '.is_cycle_unchanged'
+    )
     def test_measure_snapshot_coverage(  # pylint: disable=too-many-locals
             self, mocked_is_cycle_unchanged, db, experiment, tmp_path):
         """Integration test for measure_snapshot_coverage."""
