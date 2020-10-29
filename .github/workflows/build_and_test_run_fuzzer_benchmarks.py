@@ -29,12 +29,10 @@ RETRY_DELAY = 60
 OSS_FUZZ_BENCHMARKS = {
     'bloaty_fuzz_target',
     'curl_curl_fuzzer_http',
-    'harfbuzz_hb-subset-fuzzer',
     'jsoncpp_jsoncpp_fuzzer',
     'libpcap_fuzz_both',
     'libxslt_xpath',
     'mbedtls_fuzz_dtlsclient',
-    'openh264_decoder_fuzzer',
     'openssl_x509',
     'sqlite3_ossfuzz',
     'systemd_fuzz-link-parser',
@@ -56,9 +54,11 @@ STANDARD_BENCHMARKS = {
 }
 
 BUG_BENCHMARKS = {
+    'harfbuzz_hb-subset-fuzzer',
     'libhevc_hevc_dec_fuzzer',
     'matio_matio_fuzzer',
     'ndpi_fuzz_ndpi_reader',
+    'openh264_decoder_fuzzer',
     'stb_stbi_read_fuzzer',
     'wabt_wasm2wat_fuzzer',
 }
