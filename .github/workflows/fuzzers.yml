@@ -55,7 +55,6 @@ jobs:
 
         benchmark_type:
           - oss-fuzz
-          - standard
           - bug
 
     steps:
