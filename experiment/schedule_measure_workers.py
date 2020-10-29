@@ -45,6 +45,12 @@ def get_measure_worker_instance_template_name(experiment: str):
     return 'worker-' + experiment
 
 
+def get_base_worker_instance_name(experiment):
+    """GCE will create instances for this group in the format
+    "w-|experiment|-$UNIQUE_ID". 'w' is short for "worker"."""
+    return 'w-' + experiment
+
+
 def initialize(experiment_config: dict):
     """Initialize everything that will be needed to schedule measurers."""
     logger.info('Initializing worker scheduling.')
@@ -74,9 +80,7 @@ def initialize(experiment_config: dict):
 
     instance_group_name = get_instance_group_name(experiment)
 
-    # GCE will create instances for this group in the format
-    # "m-$experiment-$UNIQUE_ID". Use 'm' is short for "measurer".
-    base_instance_name = 'm-' + experiment
+    base_instance_name = get_base_worker_instance_name(experiment)
 
     gce.create_instance_group(instance_group_name, instance_template_url,
                               base_instance_name, project, zone)
