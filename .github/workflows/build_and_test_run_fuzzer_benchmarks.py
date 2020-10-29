@@ -25,7 +25,6 @@ ALWAYS_BUILD_FUZZER = 'afl'
 NUM_RETRIES = 2
 RETRY_DELAY = 60
 
-
 # Don't build php benchmark since it fills up disk in GH actions.
 OSS_FUZZ_BENCHMARKS = {
     'bloaty_fuzz_target',

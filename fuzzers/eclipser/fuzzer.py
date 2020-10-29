@@ -128,4 +128,5 @@ def fuzz(input_corpus, output_corpus, target_binary):
     eclipser_thread.start()
     print('[fuzz] Now waiting for threads to finish...')
     afl_worker_thread.join()
+    # test
     eclipser_thread.join()
