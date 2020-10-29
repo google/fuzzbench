@@ -36,3 +36,5 @@ docker/generated.mk
 # Emacs backup files.
 *~
 \#*\#
+
+.vscode
