@@ -5,7 +5,10 @@ on:
       - 'docker/**'  # Base image changes.
       - 'fuzzers/**' # Changes to fuzzers themselves.
       - 'benchmarks/**'  # Changes to benchmarks.
-      - 'src_analysis/**' # Changes that affect what gets built.
+      # Changes that affect what gets built.
+      - 'src_analysis/**'
+      - '.github/worfkflows/fuzzers.yml'
+      - '.github/worfkflows/build_and_test_run_fuzzer_benchmarks.py'
 
 jobs:
   build:
@@ -52,10 +55,11 @@ jobs:
           - aflplusplus_fast_v2
           - aflplusplus_fast_v2_late
           - aflplusplus_fast_branches_v2
-           
+
         benchmark_type:
           - oss-fuzz
           - standard
+          - bug
 
     steps:
     - uses: actions/checkout@v2

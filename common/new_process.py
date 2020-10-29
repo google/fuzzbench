@@ -109,8 +109,8 @@ def execute(  # pylint: disable=too-many-locals,too-many-branches
 
     retcode = process.returncode
 
-    log_message = ('Executed command: "{command}" returned: {retcode}.'.format(
-        command=(' '.join(command))[:LOG_LIMIT_FIELD], retcode=retcode))
+    command_log_str = ' '.join(command)[:LOG_LIMIT_FIELD]
+    log_message = 'Executed command: "%s" returned: %d.'
 
     if output is not None:
         output = output.decode('utf-8', errors='ignore')
@@ -120,8 +120,8 @@ def execute(  # pylint: disable=too-many-locals,too-many-branches
         log_extras = None
 
     if expect_zero and retcode != 0 and not wrapped_process.timed_out:
-        logs.error(log_message, extras=log_extras)
+        logs.error(log_message, command_log_str, retcode, extras=log_extras)
         raise subprocess.CalledProcessError(retcode, command)
 
-    logs.debug(log_message, extras=log_extras)
+    logs.debug(log_message, command_log_str, retcode, extras=log_extras)
     return ProcessResult(retcode, output, wrapped_process.timed_out)
