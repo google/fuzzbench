@@ -46,6 +46,51 @@ OSS_FUZZ_LIB_FUZZING_ENGINE_PATH = '/usr/lib/libFuzzingEngine.a'
 BENCHMARK_CONFIG_YAML_PATH = '/benchmark.yaml'
 
 
+def exclude_sanitizers(env=None, excluded_sanitizers=None):
+    """Remove specific sanitizers from the CFLAGS and CXXFLAGS
+    of an environment, if they exist"""
+
+    def modify_fsanitizer_flag(flags):
+        item = None
+        for flag in flags:
+            if flag.startswith('-fsanitize='):
+                item = flag
+                break
+        if item is None:
+            return flags
+        flags.remove(item)
+        try:
+            sanitizers = item.split('=')[1].split(',')
+            sanitizers_to_use = [
+                x for x in sanitizers if x not in excluded_sanitizers
+            ]
+            if sanitizers_to_use:
+                flags.append('-fsanitize=' + ','.join(sanitizers_to_use))
+            else:
+                flags.extend(NO_SANITIZER_COMPAT_CFLAGS)
+        except IndexError:
+            pass
+        return flags
+
+    if not excluded_sanitizers:
+        return
+
+    if not env:
+        env = os.environ
+
+    cflags = env.get('CFLAGS')
+    cxxflags = env.get('CXXFLAGS')
+
+    cflags = modify_fsanitizer_flag(cflags.split(' ') if cflags else [])
+    cxxflags = modify_fsanitizer_flag(cxxflags.split(' ') if cxxflags else [])
+
+    env['CFLAGS'] = ''
+    env['CXXFLAGS'] = ''
+
+    append_flags('CFLAGS', cflags, env)
+    append_flags('CXXFLAGS', cxxflags, env)
+
+
 def build_benchmark(env=None):
     """Build a benchmark using fuzzer library."""
     if not env:
@@ -65,6 +110,7 @@ def build_benchmark(env=None):
     fuzzer = os.getenv('FUZZER')
     print('Building benchmark {benchmark} with fuzzer {fuzzer}'.format(
         benchmark=benchmark, fuzzer=fuzzer))
+    print(env)
     subprocess.check_call(['/bin/bash', '-ex', build_script], env=env)
 
 
