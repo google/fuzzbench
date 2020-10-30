@@ -60,10 +60,10 @@ RUN rm -rf /usr/include/llvm && rm -rf /usr/include/llvm-c
 RUN ln -s /usr/lib/llvm-6.0/include/llvm /usr/include/llvm
 RUN ln -s /usr/lib/llvm-6.0/include/llvm-c /usr/include/llvm-c
 RUN git clone https://github.com/ChengyuSong/Kirenenko.git  /Kirenenko
-#COPY kir.patch /Kirenenko/kir.patch
-#RUN cd /Kirenenko && git checkout 0390f27d23cd69337a1e8f31cd5cc93422107ec2  && patch -p1 < kir.patch && ./build/build.sh
-COPY kirenenko-pro /Kirenenko
-RUN cd /Kirenenko && ./build/build.sh
+COPY kir.patch /Kirenenko/kir.patch
+RUN cd /Kirenenko && git checkout 0390f27d23cd69337a1e8f31cd5cc93422107ec2  && patch -p1 < kir.patch && ./build/build.sh
+#COPY kirenenko-pro /Kirenenko
+#RUN cd /Kirenenko && ./build/build.sh
 RUN cd /Kirenenko/tests/mini && KO_CC=clang-6.0 KO_DONT_OPTIMIZE=1 ../../bin/ko-clang mini.c
 
 #list
