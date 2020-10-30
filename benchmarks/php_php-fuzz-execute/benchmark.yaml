@@ -2,3 +2,4 @@ commit: 1902f730ee2bda60552f34c0643e2d7b47e4fb64
 commit_date: 2020-08-29 05:28:00+00:00
 fuzz_target: php-fuzz-execute
 project: php
+type: bug\nunsupported_fuzzers:\n  - aflcc\n  - afl_qemu\n  - aflplusplus_qemu\n  - honggfuzz_qemu\n  - klee\n  - weizz_qemu
