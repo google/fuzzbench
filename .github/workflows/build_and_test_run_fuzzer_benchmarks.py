@@ -34,7 +34,6 @@ OSS_FUZZ_BENCHMARKS = {
     'libxslt_xpath',
     'mbedtls_fuzz_dtlsclient',
     'openssl_x509',
-    'php_php-fuzz-execute',
     'sqlite3_ossfuzz',
     'systemd_fuzz-link-parser',
     'zlib_zlib_uncompress_fuzzer',
@@ -60,6 +59,7 @@ BUG_BENCHMARKS = {
     'matio_matio_fuzzer',
     'ndpi_fuzz_ndpi_reader',
     'openh264_decoder_fuzzer',
+    'php_php-fuzz-execute',
     'stb_stbi_read_fuzzer',
     'wabt_wasm2wat_fuzzer',
 }
