@@ -25,7 +25,7 @@ from common import new_process
 from database import models
 from database import utils as db_utils
 from experiment.build import build_utils
-from experiment import measurer
+from experiment.measurer import measurer
 from test_libs import utils as test_utils
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -135,7 +135,7 @@ def test_generate_profdata_merge(mocked_execute, experiment, fs):
 
 
 @mock.patch('common.new_process.execute')
-@mock.patch('experiment.coverage_utils.get_coverage_binary')
+@mock.patch('experiment.measurer.coverage_utils.get_coverage_binary')
 def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
                           experiment, fs):
     """Tests that generate_summary can run the correct command."""
@@ -164,9 +164,9 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
 
 
 @mock.patch('common.logs.error')
-@mock.patch('experiment.measurer.initialize_logs')
+@mock.patch('experiment.measurer.measurer.initialize_logs')
 @mock.patch('multiprocessing.Queue')
-@mock.patch('experiment.measurer.measure_snapshot_coverage')
+@mock.patch('experiment.measurer.measurer.measure_snapshot_coverage')
 def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
                                 _, __):
     """Tests that measure_trial_coverage works as expected."""
@@ -351,7 +351,8 @@ class TestIntegrationMeasurement:
     # portable binary.
     @pytest.mark.skipif(not os.getenv('FUZZBENCH_TEST_INTEGRATION'),
                         reason='Not running integration tests.')
-    @mock.patch('experiment.measurer.SnapshotMeasurer.is_cycle_unchanged')
+    @mock.patch(
+        'experiment.measurer.measurer.SnapshotMeasurer.is_cycle_unchanged')
     def test_measure_snapshot_coverage(  # pylint: disable=too-many-locals
             self, mocked_is_cycle_unchanged, db, experiment, tmp_path):
         """Integration test for measure_snapshot_coverage."""
@@ -422,8 +423,9 @@ def test_extract_corpus(archive_name, tmp_path):
 
 
 @mock.patch('time.sleep', return_value=None)
-@mock.patch('experiment.measurer.set_up_coverage_binaries')
-@mock.patch('experiment.measurer.measure_all_trials', return_value=False)
+@mock.patch('experiment.measurer.measurer.set_up_coverage_binaries')
+@mock.patch('experiment.measurer.measurer.measure_all_trials',
+            return_value=False)
 @mock.patch('multiprocessing.Manager')
 @mock.patch('multiprocessing.pool')
 @mock.patch('experiment.scheduler.all_trials_ended', return_value=True)
@@ -437,11 +439,11 @@ def test_measure_loop_end(_, __, ___, ____, _____, ______, experiment_config,
 
 
 @mock.patch('time.sleep', return_value=None)
-@mock.patch('experiment.measurer.set_up_coverage_binaries')
+@mock.patch('experiment.measurer.measurer.set_up_coverage_binaries')
 @mock.patch('multiprocessing.Manager')
 @mock.patch('multiprocessing.pool')
 @mock.patch('experiment.scheduler.all_trials_ended', return_value=True)
-@mock.patch('experiment.measurer.measure_all_trials')
+@mock.patch('experiment.measurer.measurer.measure_all_trials')
 def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___,
                                      ____, _____, experiment_config,
                                      db_experiment):

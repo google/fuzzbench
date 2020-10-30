@@ -14,7 +14,7 @@
 """Tests for coverage_utils.py"""
 import os
 
-from experiment import coverage_utils
+from experiment.measurer import coverage_utils
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
 

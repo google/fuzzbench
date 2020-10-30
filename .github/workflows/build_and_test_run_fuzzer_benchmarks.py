@@ -25,26 +25,17 @@ ALWAYS_BUILD_FUZZER = 'afl'
 NUM_RETRIES = 2
 RETRY_DELAY = 60
 
-# TODO(tanq16): Get list of Benchmarks automatically.
-
 # Don't build php benchmark since it fills up disk in GH actions.
 OSS_FUZZ_BENCHMARKS = {
     'bloaty_fuzz_target',
     'curl_curl_fuzzer_http',
-    'harfbuzz_hb-subset-fuzzer',
     'jsoncpp_jsoncpp_fuzzer',
-    'libhevc_hevc_dec_fuzzer',
     'libpcap_fuzz_both',
     'libxslt_xpath',
-    'matio_matio_fuzzer',
     'mbedtls_fuzz_dtlsclient',
-    'ndpi_fuzz_ndpi_reader',
-    'openh264_decoder_fuzzer',
     'openssl_x509',
     'sqlite3_ossfuzz',
-    'stb_stbi_read_fuzzer',
     'systemd_fuzz-link-parser',
-    'wabt_wasm2wat_fuzzer',
     'zlib_zlib_uncompress_fuzzer',
 }
 
@@ -60,6 +51,16 @@ STANDARD_BENCHMARKS = {
     're2-2014-12-09',
     'vorbis-2017-12-11',
     'woff2-2016-05-06',
+}
+
+BUG_BENCHMARKS = {
+    'harfbuzz_hb-subset-fuzzer',
+    'libhevc_hevc_dec_fuzzer',
+    'matio_matio_fuzzer',
+    'ndpi_fuzz_ndpi_reader',
+    'openh264_decoder_fuzzer',
+    'stb_stbi_read_fuzzer',
+    'wabt_wasm2wat_fuzzer',
 }
 
 
@@ -121,6 +122,8 @@ def do_build(build_type, fuzzer, always_build):
         benchmarks = OSS_FUZZ_BENCHMARKS
     elif build_type == 'standard':
         benchmarks = STANDARD_BENCHMARKS
+    elif build_type == 'bug':
+        benchmarks = BUG_BENCHMARKS
     else:
         raise Exception('Invalid build_type: %s' % build_type)
 

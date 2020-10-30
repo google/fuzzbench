@@ -147,3 +147,42 @@ def test_delete_instances_fail(mocked_execute):
     result = gcloud.delete_instances(instances, zone)
     assert not result
     mocked_execute.assert_called_with(expected_command, expect_zero=False)
+
+
+@mock.patch('common.new_process.execute')
+def test_create_instance_template(mocked_execute):
+    """Tests that create_instance_template uses the correct gcloud command and
+    returns the correct instance template URL."""
+    template_name = 'my-template'
+    docker_image = 'docker_image'
+    env = {'ENV_VAR': 'value'}
+    project = 'fuzzbench'
+    result = gcloud.create_instance_template(template_name, docker_image, env,
+                                             project, ZONE)
+    expected_command = [
+        'gcloud', 'compute', '--project', project, 'instance-templates',
+        'create-with-container', template_name, '--no-address',
+        '--image-family=cos-stable', '--image-project=cos-cloud',
+        '--region=zone-a', '--scopes=cloud-platform',
+        '--machine-type=n1-standard-1', '--boot-disk-size=50GB',
+        '--preemptible', '--container-image', docker_image, '--container-env',
+        'ENV_VAR=value'
+    ]
+    mocked_execute.assert_called_with(expected_command)
+    expected_result = (
+        'https://www.googleapis.com/compute/v1/projects/{project}'
+        '/global/instanceTemplates/{name}').format(project=project,
+                                                   name=template_name)
+    assert result == expected_result
+
+
+@mock.patch('common.new_process.execute')
+def test_delete_instance_template(mocked_execute):
+    """Tests that delete_instance_template uses the correct gcloud command to
+    delete an instance template."""
+    template_name = 'my-template'
+    gcloud.delete_instance_template(template_name)
+    expected_command = [
+        'gcloud', 'compute', 'instance-templates', 'delete', template_name
+    ]
+    mocked_execute.assert_called_with(expected_command)
