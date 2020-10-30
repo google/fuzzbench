@@ -23,4 +23,4 @@ make clean
 ./configure --without-python --with-threads=no --with-zlib=no --with-lzma=no
 make -j $(nproc)
 
-$CC $CFLAGS  /buildScript/libxml2-v2.9.2/target.c /buildScript/libxml2-v2.9.2/standaloneengine.c -I include .libs/libxml2.a  -o $OUT/xml_kir
+$CC $CFLAGS  /buildScript/libxml2-v2.9.2/target.c /buildScript/standaloneengine.c -I include .libs/libxml2.a  -o $OUT/xml_kir

@@ -40,7 +40,7 @@ make -j $(nproc)
 make install
 cd ..
 
-$CC $CFLAGS  /buildScript/vorbis-2017-12-11/decode_fuzzer.c /buildScript/vorbis-2017-12-11/standaloneengine.c \
+$CC $CFLAGS  /buildScript/vorbis-2017-12-11/decode_fuzzer.c /buildScript/standaloneengine.c \
     -o $OUT/decode_fuzzer_vani -L"$INSTALL_DIR/lib" -I"$INSTALL_DIR/include" \
 			 -lvorbisfile -lvorbis -logg
 cp -r /opt/seeds $OUT/

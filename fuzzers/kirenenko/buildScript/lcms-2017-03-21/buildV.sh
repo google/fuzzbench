@@ -21,7 +21,7 @@ make clean
 make -j $(nproc)
 
 
-$CC $CFLAGS /buildScript/lcms-2017-03-21/standaloneengine.c /buildScript/lcms-2017-03-21/cms_transform_fuzzer.c -I include/ src/.libs/liblcms2.a \
+$CC $CFLAGS /buildScript/standaloneengine.c /buildScript/lcms-2017-03-21/cms_transform_fuzzer.c -I include/ src/.libs/liblcms2.a \
      -o $OUT/cms_transform_fuzzer_vani
 #cp -r /opt/seeds $OUT/
 #cp -r /opt/seeds $OUT/

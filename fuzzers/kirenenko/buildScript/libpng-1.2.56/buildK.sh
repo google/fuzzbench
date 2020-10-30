@@ -22,6 +22,6 @@ make -j $(nproc)
 
 #$CXX $CXXFLAGS -std=c++11 $SRC/target.cc .libs/libpng12.a $FUZZER_LIB -I . -lz \
 #    -o $OUT/libpng_read_fuzzer
-$CC $CFLAGS  /buildScript/libpng-1.2.56/libpng_target.c .libs/libpng12.a /buildScript/libpng-1.2.56/libpng_driver.c -I . -lz \
+$CC $CFLAGS  /buildScript/libpng-1.2.56/libpng_target.c .libs/libpng12.a /buildScript/standaloneengine.c -I . -lz \
     -o $OUT/libpng_read_fuzzer_kir
 cp -r /opt/seeds $OUT/

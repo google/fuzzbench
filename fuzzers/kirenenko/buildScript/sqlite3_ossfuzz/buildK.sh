@@ -33,7 +33,7 @@ export CFLAGS="$CFLAGS -DSQLITE_MAX_LENGTH=128000000 \
 make -j$(nproc)
 make sqlite3.c
 
-$CC $CFLAGS -I. $SRC/sqlite3/test/ossfuzz.c /buildScript/sqlite3_ossfuzz/standaloneengine.c sqlite3.o  -o $OUT/ossfuzz_kir
+$CC $CFLAGS -I. $SRC/sqlite3/test/ossfuzz.c /buildScript/standaloneengine.c sqlite3.o  -o $OUT/ossfuzz_kir
 
 #$CXX $CXXFLAGS \
 #    $SRC/sqlite3/test/ossfuzz.o -o $OUT/ossfuzz \

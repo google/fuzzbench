@@ -23,5 +23,5 @@ make -j $(nproc)
 #$CXX $CXXFLAGS -std=c++11 $SRC/libjpeg_turbo_fuzzer.cc -I . \
 #    .libs/libturbojpeg.a  -o $OUT/libjpeg_turbo_fuzzer_vani
 
-$CC $CFLAGS  /buildScript/libjpeg-turbo-07-2017/libjpeg_turbo_fuzzer.c .libs/libturbojpeg.a /buildScript/libjpeg-turbo-07-2017/libjpeg_driver.c -I .  \
+$CC $CFLAGS  /buildScript/libjpeg-turbo-07-2017/libjpeg_turbo_fuzzer.c .libs/libturbojpeg.a /buildScript/standaloneengine.c -I .  \
     -o $OUT/libjpeg_turbo_fuzzer_vani

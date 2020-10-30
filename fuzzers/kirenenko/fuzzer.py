@@ -20,6 +20,7 @@ import time
 import queue as Q
 from fuzzers import utils
 
+
 def is_benchmark(name):
     "check if benchmark matches"
     benchmark = os.getenv('BENCHMARK', None)
@@ -58,7 +59,7 @@ def build():
     env = os.environ.copy()
 
     benchmark = os.getenv('BENCHMARK', None)
-    build_script = os.path.join('/buildScript/', benchmark, '/buildK.sh')
+    build_script = '/buildScript/' + benchmark + '/buildK.sh'
     subprocess.check_call(['/bin/bash', '-ex', build_script], env=env)
 
     # build Vanilla
@@ -66,7 +67,7 @@ def build():
     os.environ['CXX'] = 'clang++-6.0'
     env = os.environ.copy()
 
-    build_script = os.path.join('/buildScript/', benchmark, '/buildV.sh')
+    build_script = '/buildScript/' + benchmark + '/buildV.sh'
     subprocess.check_call(['/bin/bash', '-ex', build_script], env=env)
 
     shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
@@ -111,7 +112,7 @@ def sync_afl(output_corpus, index, q):
 def fuzz(input_corpus, output_corpus, target_binary):
     "fuzz loop"
 
-    shutil.copy('/grader/afl-fuzz', os.environ['OUT']+'/aflgrader')
+    shutil.copy('/grader/afl-fuzz', os.environ['OUT'] + '/aflgrader')
     shutil.copy('/grader/afl-qemu-trace', os.environ['OUT'])
     utils.create_seed_file_for_empty_corpus(input_corpus)
 
@@ -130,19 +131,11 @@ def fuzz(input_corpus, output_corpus, target_binary):
     if not os.path.exists("/out/path/_crashes/"):
         os.makedirs("/out/path/_crashes/")
 
-    grader_cmd = ['timeout',
-                  '10h',
-                  '/out/aflgrader',
-                  '-Q',
-                  '-S',
-                  'MQfilter',
-                  '-s',
-                  '/out/kir_src',
-                  '-o',
-                  '/out/corpus/',
-                  '--',
-                  target_binary+'_vani',
-                  '@@']
+    grader_cmd = [
+        'timeout', '10h', '/out/aflgrader', '-Q', '-S', 'MQfilter', '-s',
+        '/out/kir_src', '-o', '/out/corpus/', '--', target_binary + '_vani',
+        '@@'
+    ]
     try:
         subprocess.Popen(grader_cmd,
                          stdout=subprocess.DEVNULL,
@@ -151,22 +144,11 @@ def fuzz(input_corpus, output_corpus, target_binary):
         print("something wrong")
 
 # run AFL
-    afl_cmd = ['/out/afl-fuzz',
-               '-i',
-               '/out/seeds',
-               '-o',
-               '/out/corpus',
-               '-S',
-               'slave',
-               '-m',
-               'none',
-               '-t',
-               '1000+',
-               '-x',
-               '/out/afl++.dict',
-               '--',
-               target_binary,
-               '2147483647']
+    afl_cmd = [
+        '/out/afl-fuzz', '-i', '/out/seeds', '-o', '/out/corpus', '-S', 'slave',
+        '-m', 'none', '-t', '1000+', '-x', '/out/afl++.dict', '--',
+        target_binary, '2147483647'
+    ]
     try:
         subprocess.Popen(afl_cmd,
                          stdout=subprocess.DEVNULL,
