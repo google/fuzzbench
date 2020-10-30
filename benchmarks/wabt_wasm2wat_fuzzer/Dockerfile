@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:c0466abc5bd8515aaceb3fa06725c982522c1127d3559da8615ad22fc43c78a7
 MAINTAINER binji@chromium.org
 RUN apt-get update && apt-get install -y cmake libtool make python
 RUN git clone --recursive https://github.com/WebAssembly/wabt
