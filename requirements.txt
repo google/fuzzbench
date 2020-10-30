@@ -12,7 +12,7 @@ pyfakefs==3.7.1
 pytest==5.3.5
 python-dateutil==2.8.1
 pytz==2019.3
-PyYAML==5.3
+PyYAML==5.3.1
 redis==3.5.3
 rq==1.4.3
 scikit-posthocs==0.6.2
