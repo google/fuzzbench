@@ -15,7 +15,9 @@
 #
 ################################################################################
 
-mkdir bld
+if [ ! -d bld ]; then
+    mkdir bld
+fi
 cd bld
 
 export ASAN_OPTIONS=detect_leaks=0
@@ -30,14 +32,15 @@ export CFLAGS="$CFLAGS -DSQLITE_MAX_LENGTH=128000000 \
                -DSQLITE_MAX_PAGE_COUNT=16384"             
                
 ../configure
+make clean
 make -j$(nproc)
 make sqlite3.c
 
 $CC $CFLAGS -I. -c \
     $SRC/sqlite3/test/ossfuzz.c -o $SRC/sqlite3/test/ossfuzz.o
 
-$CXX $CXXFLAGS \
-    $SRC/sqlite3/test/ossfuzz.o -o $OUT/ossfuzz \
+$CC $CFLAGS \
+    $SRC/sqlite3/test/ossfuzz.o -o $OUT/$FUZZ_TARGET \
     $LIB_FUZZING_ENGINE ./sqlite3.o
 
 cp $SRC/*.dict $SRC/*.zip $OUT/

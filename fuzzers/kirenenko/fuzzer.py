@@ -49,25 +49,41 @@ def build():
 
     # build Kirenenko
     os.environ['CC'] = '/Kirenenko/bin/ko-clang'
-    #os.environ['CXX']='/Kirenenko/bin/ko-clang++'
+    os.environ['CXX'] = '/Kirenenko/bin/ko-clang'
     os.environ['KO_CC'] = 'clang-6.0'
     #os.environ['KO_CXX']='clang++-6.0'
     os.environ['KO_DONT_OPTIMIZE'] = '1'
 
     os.remove('/usr/lib/libFuzzingEngine.a')
     #build Kirenenko target
-    env = os.environ.copy()
 
-    benchmark = os.getenv('BENCHMARK', None)
-    build_script = '/buildScript/' + benchmark + '/buildK.sh'
+    env = os.environ.copy()
+    subprocess.check_call([
+        '/Kirenenko/bin/ko-clang', '-c', '/src/standaloneengine.c', '-o',
+        '/libDriver.o'
+    ],
+                          env=env)
+    os.environ['FUZZER_LIB'] = '/libDriver.o'
+    os.environ['LIB_FUZZING_ENGINE'] = '/libDriver.o'
+
+    fuzz_target = os.getenv('FUZZ_TARGET', None)
+    os.environ['FUZZ_TARGET'] = fuzz_target + '_kir'
+    build_script = os.path.join(os.environ['SRC'], 'build.sh')
+    env = os.environ.copy()
     subprocess.check_call(['/bin/bash', '-ex', build_script], env=env)
 
     # build Vanilla
     os.environ['CC'] = 'clang-6.0'
     os.environ['CXX'] = 'clang++-6.0'
+
+    subprocess.check_call(
+        ['clang-6.0', '-c', '/src/standaloneengine.c', '-o', '/libVDriver.o'],
+        env=env)
+    os.environ['FUZZER_LIB'] = '/libVDriver.o'
+    os.environ['LIB_FUZZING_ENGINE'] = '/libVDriver.o'
+    os.environ['FUZZ_TARGET'] = fuzz_target + '_vani'
     env = os.environ.copy()
 
-    build_script = '/buildScript/' + benchmark + '/buildV.sh'
     subprocess.check_call(['/bin/bash', '-ex', build_script], env=env)
 
     shutil.copy('/afl/afl-fuzz', os.environ['OUT'])

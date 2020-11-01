@@ -17,13 +17,18 @@
 
 # build project
 perl scripts/config.pl set MBEDTLS_PLATFORM_TIME_ALT
-git -C crypto checkout -f 819799cfc68e4c4381673a8a27af19802c8263f2
-mkdir build
+if [ ! -d crypto ]; then
+    git -C crypto checkout -f 819799cfc68e4c4381673a8a27af19802c8263f2
+fi
+if [ ! -d build ]; then
+    mkdir build
+fi
 cd build
+rm -rf *
 cmake ..
 # build including fuzzers
 make -j$(nproc) all
-cp programs/fuzz/fuzz_* $OUT/
+cp programs/fuzz/fuzz_dtlsclient $OUT/$FUZZ_TARGET
 
 # build corpuses
 cd ../programs

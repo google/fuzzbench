@@ -17,8 +17,9 @@ tar xf libpng-1.2.56.tar.gz
 
 cd libpng-1.2.56
 ./configure
+make clean
 make -j $(nproc)
 
-$CXX $CXXFLAGS -std=c++11 $SRC/target.cc .libs/libpng12.a $FUZZER_LIB -I . -lz \
-    -o $OUT/libpng_read_fuzzer
+$CC $CFLAGS  $SRC/target.c .libs/libpng12.a $FUZZER_LIB -I . -lz \
+    -o $OUT/$FUZZ_TARGET
 cp -r /opt/seeds $OUT/

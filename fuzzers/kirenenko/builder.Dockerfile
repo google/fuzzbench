@@ -72,7 +72,7 @@ COPY discard.list  /discard.list
 RUN cat /untrack.list >> /Kirenenko/bin/rules/zlib_abilist.txt
 RUN cat /discard.list >> /Kirenenko/bin/rules/zlib_abilist.txt
 
-COPY buildScript /buildScript
+COPY standaloneengine.c /src
 
 RUN pip install --upgrade pip
 
