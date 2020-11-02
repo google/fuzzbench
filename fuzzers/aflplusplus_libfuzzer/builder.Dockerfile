@@ -30,6 +30,6 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     unset CFLAGS && unset CXXFLAGS && export CC=clang && \
     AFL_NO_X86=1 NO_SPLICING=1 PYTHON_INCLUDE=/ make && \
     make -C custom_mutators/libfuzzer/ && make install && \
-    cp custom_mutators/libfuzzer/libfuzzer-mutator.so / && \
+    cp custom_mutators/libfuzzer/libfuzzer-mutator.so /out && \
     make -C examples/aflpp_driver && \
     cp examples/aflpp_driver/libAFLDriver.a /

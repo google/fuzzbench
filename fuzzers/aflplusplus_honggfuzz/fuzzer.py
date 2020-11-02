@@ -34,7 +34,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     run_options = ['-p', 'explore']
 
-    os.environ['AFL_CUSTOM_MUTATOR_LIBRARY'] = '/honggfuzz-mutator.so'
+    os.environ['AFL_CUSTOM_MUTATOR_LIBRARY'] = '/out/honggfuzz-mutator.so'
     os.environ['AFL_CUSTOM_MUTATOR_ONLY'] = '1'
 
     aflplusplus_fuzzer.fuzz(input_corpus,
