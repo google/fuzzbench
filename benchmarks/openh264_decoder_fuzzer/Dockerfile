@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:d321113ffaca3cd8dcec0ceff2c594c01b6a860971d02058da7d42c0c82e3d23
 MAINTAINER twsmith@mozilla.com
 RUN dpkg --add-architecture i386 && \
     apt-get update && \
