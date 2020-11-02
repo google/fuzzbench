@@ -35,13 +35,12 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
         return 0;
     }
 
-    //std::unique_ptr<unsigned char[]> buf(new unsigned char[width * height * 3]);
-		unsigned char* buf = (unsigned char *)malloc(width*height*3);
+	unsigned char* buf = (unsigned char *)malloc(width*height*3);
     tjDecompress2(
         jpegDecompressor, data, size, buf, width, 0, height, TJPF_RGB, 0);
 
     tjDestroy(jpegDecompressor);
-		free(buf);
+    free(buf);
 
     return 0;
 }

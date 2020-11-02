@@ -21,12 +21,6 @@ import queue as Q
 from fuzzers import utils
 
 
-def is_benchmark(name):
-    "check if benchmark matches"
-    benchmark = os.getenv('BENCHMARK', None)
-    return benchmark is not None and name in benchmark
-
-
 def build_afl():
     "build afl binary"
     build_directory = os.environ['OUT']
@@ -36,7 +30,6 @@ def build_afl():
     os.environ['AFL_LLVM_DICT2FILE'] = build_directory + '/afl++.dict'
     env = os.environ.copy()
     build_script = os.path.join(os.environ['SRC'], 'build.sh')
-    print("build script path is " + build_script)
     subprocess.check_call(['/bin/bash', '-ex', build_script], env=env)
 
 

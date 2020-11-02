@@ -13,7 +13,6 @@
 
 ARG parent_image=gcr.io/fuzzbench/base-builder
 FROM $parent_image
-#FROM ubuntu:16.04
 
 # Install Clang/LLVM 6.0.
 RUN apt-get update -y && \
@@ -28,7 +27,7 @@ RUN apt-get install -y libstdc++-5-dev libtool-bin automake flex bison \
                        apt-utils apt-transport-https ca-certificates
 
 
-#download install AFL++
+# Download and install AFL++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
     git checkout f41aafa4f7aa446c3cb1cbe6d77364cf32a6c6cb && \
@@ -50,9 +49,6 @@ RUN cd /redis-6.0.8 && make && make install
 RUN git clone https://github.com/redis/hiredis.git /hiredis
 RUN cd /hiredis && make -j && make install
 
-
-#RUN git clone https://github.com/sewenew/redis-plus-plus.git /redis-plus-plus
-#RUN cd /redis-plus-plus && mkdir compile && cd compile && cmake .. && make -j && make install
 RUN ldconfig
 
 RUN rm -rf /usr/local/include/llvm && rm -rf /usr/local/include/llvm-c
@@ -62,11 +58,8 @@ RUN ln -s /usr/lib/llvm-6.0/include/llvm-c /usr/include/llvm-c
 RUN git clone https://github.com/ChengyuSong/Kirenenko.git  /Kirenenko
 COPY kir.patch /Kirenenko/kir.patch
 RUN cd /Kirenenko && git checkout 0390f27d23cd69337a1e8f31cd5cc93422107ec2  && patch -p1 < kir.patch && ./build/build.sh
-#COPY kirenenko-pro /Kirenenko
-#RUN cd /Kirenenko && ./build/build.sh
 RUN cd /Kirenenko/tests/mini && KO_CC=clang-6.0 KO_DONT_OPTIMIZE=1 ../../bin/ko-clang mini.c
 
-#list
 COPY untrack.list  /untrack.list
 COPY discard.list  /discard.list
 RUN cat /untrack.list >> /Kirenenko/bin/rules/zlib_abilist.txt

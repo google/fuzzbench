@@ -36,53 +36,19 @@ void user_read_data(png_structp png_ptr, png_bytep data, png_size_t length) {
 }
 
 static const int kPngHeaderSize = 8;
-/*
-struct ScopedPngObject {
-  ~ScopedPngObject() {
-    if (row && png_ptr) {
-      png_free(png_ptr, row);
-    }
-    if (png_ptr && info_ptr) {
-      png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
-    }
-    free (buf_state);
-  }
-  png_infop info_ptr = nullptr;
-  png_voidp row = 0;
-  png_structp png_ptr = nullptr;
-  BufState *buf_state = nullptr;
-};
-*/
-/*
-bool DetectLargeSize(const uint8_t *data, size_t size) {
-  uint8_t *ihdr = (uint8_t *)(memmem(data, size, "IHDR", 4));
-  if (!ihdr) return false;
-  if (ihdr + 12 > data + size) return false;
-  uint32_t W = *(uint32_t*)(ihdr + 4);
-  uint32_t H = *(uint32_t*)(ihdr + 8);
-  W = __builtin_bswap32(W);
-  H = __builtin_bswap32(H);
-  uint64_t WxH = (uint64_t)(W) * H;
-  if (WxH > 100000ULL) {
-    // fprintf(stderr, "ZZZ %zu %u %u\n", WxH, W, H);
-    return true;
-  }
-  return false;
-}
-*/
+
 // Fuzzing entry point. Roughly follows the libpng book example:
 // http://www.libpng.org/pub/png/book/chapter13.html
 int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   if (size < kPngHeaderSize) {
     return 0;
   }
-  //ScopedPngObject O;
+
   if (png_sig_cmp((uint8_t*)data, 0, kPngHeaderSize)) {
     // not a PNG.
     return 0;
   }
 
-  // if (DetectLargeSize(data, size)) return 0;
 
   png_structp png_ptr = png_create_read_struct
     (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
@@ -94,12 +60,10 @@ int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   (png_ptr)->flags &= ~PNG_FLAG_CRC_ANCILLARY_MASK;
   (png_ptr)->flags |= PNG_FLAG_CRC_ANCILLARY_NOWARN;
 
-  //png_infop info_ptr = &O.info_ptr;
   png_infop  info_ptr = png_create_info_struct(png_ptr);
   assert(info_ptr);
 
   // Setting up reading from buffer.
-  //BufState** buf_state = &O.buf_state;
   struct BufState* buf_state = (struct BufState*)malloc(sizeof(struct BufState));
   (buf_state)->data = data + kPngHeaderSize;
   (buf_state)->bytes_left = size - kPngHeaderSize;
@@ -112,7 +76,6 @@ int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     return 0;
   }
 
-  // png_ptr->mode & PNG_HAVE_IDAT
   // Reading
   png_read_info(png_ptr, info_ptr);
 
