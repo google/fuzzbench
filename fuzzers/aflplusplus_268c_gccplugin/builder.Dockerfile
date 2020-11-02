@@ -23,8 +23,8 @@ RUN apt-get update && \
 
 RUN apt-get install -y wget libstdc++-5-dev libexpat1-dev && \
     apt-get install -y apt-utils apt-transport-https ca-certificates && \
-    echo deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu xenial main
-    apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 1E9377A2BA9EF27F &&
+    echo deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu xenial main && \
+    apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 1E9377A2BA9EF27F && \
     apt-get update && \
     apt-get install -y gcc-9 g++-9 gcc-9-plugin-dev
 
