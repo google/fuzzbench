@@ -39,6 +39,9 @@ RUN curl https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 > \
     /usr/local/bin/cloud_sql_proxy
 RUN chmod +x /usr/local/bin/cloud_sql_proxy
 
+# Add libClusterFuzz for stacktrace parsing.
+RUN pip3 install clusterfuzz
+
 # Copy llvm-tool binaries needed for clang source-code based coverage.
 COPY --from=base-clang /usr/local/bin/llvm-cov /usr/local/bin/
 COPY --from=base-clang /usr/local/bin/llvm-profdata /usr/local/bin/
