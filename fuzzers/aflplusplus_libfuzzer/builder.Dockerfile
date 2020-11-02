@@ -26,7 +26,7 @@ RUN apt-get update && \
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout e0fe546459d90c77255982d9b93a6dd1e38b02a7 && \
+    git checkout e24f8ba4b086ea72cfeeb008a4afb9725d1de1bb && \
     unset CFLAGS && unset CXXFLAGS && export CC=clang && \
     AFL_NO_X86=1 NO_SPLICING=1 PYTHON_INCLUDE=/ make && \
     make -C custom_mutators/libfuzzer/ && make install && \
