@@ -26,7 +26,7 @@ RUN apt-get update && \
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout e24f8ba4b086ea72cfeeb008a4afb9725d1de1bb && \
+    git checkout fd20432debfcc7c63c3fa71a4b604791fdf07a9f && \
     unset CFLAGS && unset CXXFLAGS && export CC=clang && \
     AFL_NO_X86=1 NO_SPLICING=1 PYTHON_INCLUDE=/ make && \
     make -C custom_mutators/honggfuzz/ && make install && \

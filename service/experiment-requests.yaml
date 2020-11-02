@@ -29,9 +29,6 @@
     - aflplusplus_mopt
     - aflplusplus_mopt_both
     - aflplusplus_noextrasplice
-    - aflplusplus_268c_gccplugin
-    - aflplusplus_gccplugin
-    - aflplusplus_tracepc
     - afl
 
 - experiment: 2020-11-01
