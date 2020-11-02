@@ -21,7 +21,6 @@ WORKDIR $WORK
 
 # Install runtime dependencies for benchmarks, easy json parsing.
 RUN apt-get update -y && apt-get install -y \
-    git \
     jq \
     libglib2.0-0 \
     libxml2 \
@@ -39,12 +38,6 @@ RUN DOCKER_VERSION=18.09.7 && \
 RUN curl https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 > \
     /usr/local/bin/cloud_sql_proxy
 RUN chmod +x /usr/local/bin/cloud_sql_proxy
-
-# Clone ClusterFuzz and install libClusterFuzz package for parsing stacktraces.
-RUN git clone --depth=1 https://github.com/google/clusterfuzz $WORK/clusterfuzz && \
-    cd $WORK/clusterfuzz/src/python/lib && \
-    pip3 install wheel==0.35.1 && \
-    ./build.sh
 
 # Copy llvm-tool binaries needed for clang source-code based coverage.
 COPY --from=base-clang /usr/local/bin/llvm-cov /usr/local/bin/
