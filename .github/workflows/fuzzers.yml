@@ -45,6 +45,12 @@ jobs:
           - aflplusplus_lightweizz
           - aflplusplus_explore
           - aflplusplus_268c
+          - aflplusplus_havoc
+          - aflplusplus_libfuzzer
+          - aflplusplus_honggfuzz
+          - aflplusplus_mopt
+          - aflplusplus_mopt_both
+          - aflplusplus_noextrasplice
           - afl_fast
           - afl_fast_v2
           - aflplusplus_fast_v1

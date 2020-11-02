@@ -28,6 +28,6 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
     git checkout 416e01d3c6277988ed39e67f9404bd7a6034820b && \
     unset CFLAGS && unset CXXFLAGS && export CC=clang && \
-    AFL_NO_X86=1 PYTHON_INCLUDE=/ make && make install && \
+    AFL_NO_X86=1 NO_SPLICING=1 PYTHON_INCLUDE=/ make && make install && \
     make -C examples/aflpp_driver && \
     cp examples/aflpp_driver/libAFLDriver.a /
