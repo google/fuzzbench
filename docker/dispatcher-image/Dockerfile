@@ -27,8 +27,6 @@ RUN apt-get update -y && apt-get install -y \
     libarchive13 \
     libgss3
 
-RUN virtualenv --python=$(which python3) $WORK/.venv
-
 # Install docker cli.
 RUN DOCKER_VERSION=18.09.7 && \
     curl -O https://download.docker.com/linux/static/stable/x86_64/docker-$DOCKER_VERSION.tgz && \
@@ -40,6 +38,9 @@ RUN DOCKER_VERSION=18.09.7 && \
 RUN curl https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 > \
     /usr/local/bin/cloud_sql_proxy
 RUN chmod +x /usr/local/bin/cloud_sql_proxy
+
+# Add libClusterFuzz for stacktrace parsing.
+RUN pip3 install clusterfuzz
 
 # Copy llvm-tool binaries needed for clang source-code based coverage.
 COPY --from=base-clang /usr/local/bin/llvm-cov /usr/local/bin/

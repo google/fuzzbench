@@ -108,8 +108,8 @@ def get_bcs_for_shared_libs(fuzz_target):
     output = ''
     try:
         output = subprocess.check_output(ldd_cmd, universal_newlines=True)
-    except subprocess.CalledProcessError:
-        raise ValueError('ldd failed')
+    except subprocess.CalledProcessError as error:
+        raise ValueError('ldd failed') from error
 
     for line in output.split('\n'):
         if '=>' not in line:
