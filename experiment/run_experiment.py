@@ -389,8 +389,6 @@ class LocalDispatcher:
             '"${EXPERIMENT_FILESTORE}/${EXPERIMENT}/input/" ${WORK} && '
             'mkdir ${WORK}/src && '
             'tar -xvzf ${WORK}/src.tar.gz -C ${WORK}/src && '
-            'source "${WORK}/.venv/bin/activate" && '
-            'pip3 install -r "${WORK}/src/requirements.txt" && '
             'PYTHONPATH=${WORK}/src python3 '
             '${WORK}/src/experiment/dispatcher.py || '
             '/bin/bash'  # Open shell if experiment fails.
