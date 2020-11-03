@@ -28,6 +28,8 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
     git checkout 26d78ce2eca33d58e1195b5e733c850496c57cec && \
     unset CFLAGS && unset CXXFLAGS && export CC=clang && \
-    AFL_NO_X86=1 PYTHON_INCLUDE=/ make && make install && \
+    AFL_NO_X86=1 NO_SPLICING=1 PYTHON_INCLUDE=/ make && \
+    unset CC && make -C custom_mutators/honggfuzz/ && make install && \
+    cp custom_mutators/honggfuzz/honggfuzz-mutator.so /out/ && \
     make -C examples/aflpp_driver && \
     cp examples/aflpp_driver/libAFLDriver.a /
