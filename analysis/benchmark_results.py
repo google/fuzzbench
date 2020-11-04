@@ -250,9 +250,13 @@ class BenchmarkResults:
     @property
     def coverage_growth_plot_logscale(self):
         """Coverage growth plot."""
-        plot_filename = self._prefix_with_benchmark('coverage_growth_logscale.svg')
+        plot_filename = self._prefix_with_benchmark(
+            'coverage_growth_logscale.svg')
         self._plotter.write_coverage_growth_plot(
-            self._benchmark_df, self._get_full_path(plot_filename), wide=True, logscale=True)
+            self._benchmark_df,
+            self._get_full_path(plot_filename),
+            wide=True,
+            logscale=True)
         return plot_filename
 
     @property
