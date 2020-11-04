@@ -502,7 +502,6 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
 
         logs.info('Storing crashes in database.', crashes)
         experiment_name = experiment_utils.get_experiment_name()
-        crash_entities = []
         for crash_key in crashes:
             crash = crashes[crash_key]
             if db_utils.query(models.Crash).filter_by(
@@ -514,17 +513,21 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
                 continue
 
             logs.info('New crash found, storing in database: %s', crash)
-            crash_entities.append(
-                models.Crash(experiment=experiment_name,
-                             fuzzer=self.fuzzer,
-                             benchmark=self.benchmark,
-                             crash_key=crash_key,
-                             crash_testcase=crash.crash_testcase,
-                             crash_type=crash.crash_type,
-                             crash_address=crash.crash_address,
-                             crash_state=crash.crash_state,
-                             crash_stacktrace=crash.crash_stacktrace))
-        db_utils.bulk_save(crash_entities)
+            try:
+                db_utils.add_all([
+                    models.Crash(experiment=experiment_name,
+                                 fuzzer=self.fuzzer,
+                                 benchmark=self.benchmark,
+                                 crash_key=crash_key,
+                                 crash_testcase=crash.crash_testcase,
+                                 crash_type=crash.crash_type,
+                                 crash_address=crash.crash_address,
+                                 crash_state=crash.crash_state,
+                                 crash_stacktrace=crash.crash_stacktrace)
+                ])
+            except Exception:
+                # Can happen due to race condition with db updates.
+                logs.error('Failed to store crash.')
 
         logs.info('Storing crashes in metadata file.')
         trial_crashes_dir = posixpath.join(self.trial_dir, 'crashes')
