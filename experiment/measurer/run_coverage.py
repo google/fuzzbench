@@ -21,6 +21,7 @@ from typing import List
 from common import experiment_utils
 from common import logs
 from common import new_process
+from common import sanitizer
 
 logger = logs.Logger('run_coverage')
 
@@ -65,6 +66,7 @@ def do_coverage_run(  # pylint: disable=too-many-locals
         coverage_binary_dir = os.path.dirname(coverage_binary)
         env = os.environ.copy()
         env['LLVM_PROFILE_FILE'] = profraw_file_pattern
+        sanitizer.set_sanitizer_options(env)
         result = new_process.execute(command,
                                      env=env,
                                      cwd=coverage_binary_dir,

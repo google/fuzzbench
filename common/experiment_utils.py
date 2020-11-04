@@ -88,8 +88,13 @@ def get_stats_filename(cycle: int) -> str:
     return get_cycle_filename('stats', cycle) + '.json'
 
 
+def get_crashes_metadata_filename(cycle: int) -> str:
+    """Returns a crashes metadata name given a cycle."""
+    return get_cycle_filename('crashes', cycle) + '.json'
+
+
 def get_crashes_archive_name(cycle: int) -> str:
-    """Return as crashes archive name given a cycle."""
+    """Returns a crashes archive name given a cycle."""
     return get_cycle_filename('crashes', cycle) + '.tar.gz'
 
 
