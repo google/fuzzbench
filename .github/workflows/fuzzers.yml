@@ -51,6 +51,7 @@ jobs:
           - aflplusplus_mopt
           - aflplusplus_mopt_both
           - aflplusplus_noextrasplice
+          - aflplusplus_nofavskip
           - afl_fast
           - afl_fast_v2
           - aflplusplus_fast_v1
