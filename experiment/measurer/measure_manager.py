@@ -525,7 +525,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
                                  crash_state=crash.crash_state,
                                  crash_stacktrace=crash.crash_stacktrace)
                 ])
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 # Can happen due to race condition with db updates.
                 logs.error('Failed to store crash.')
 
