@@ -495,8 +495,8 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         extract_corpus(corpus_archive_path, unit_blacklist, self.corpus_dir)
         return True
 
-    def save_crashes(self, crashes, cycle):
-        """Saves crashes in database and metadata file for cycle."""
+    def save_crash_metadata(self, crashes, cycle):
+        """Stores crash metadata in database and per-cycle metadata file."""
         if not crashes:
             return
 
@@ -505,44 +505,43 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         crash_entities = []
         for crash_key in crashes:
             crash = crashes[crash_key]
-            logs.info('Crash: %s', crash)
-            crash_entity = db_utils.get_or_create(models.Crash,
-                                                  experiment=experiment_name,
-                                                  fuzzer=self.fuzzer,
-                                                  benchmark=self.benchmark,
-                                                  crash_key=crash_key)
-            crash_entity.crash_testcase = crash.crash_testcase
-            crash_entity.crash_type = crash.crash_type
-            crash_entity.crash_address = crash.crash_address
-            crash_entity.crash_stacktrace = crash.crash_stacktrace
-            crash_entities.append(crash_entity)
+            if db_utils.query(models.Crash).filter_by(
+                    experiment=experiment_name,
+                    fuzzer=self.fuzzer,
+                    benchmark=self.benchmark,
+                    crash_key=crash_key).first():
+                logs.info('Crash already exists in database: %s', crash)
+                continue
+
+            logs.info('New crash found, storing in database: %s', crash)
+            crash_entities.append(
+                models.Crash(experiment=experiment_name,
+                             fuzzer=self.fuzzer,
+                             benchmark=self.benchmark,
+                             crash_key=crash_key,
+                             crash_testcase=crash.crash_testcase,
+                             crash_type=crash.crash_type,
+                             crash_address=crash.crash_address,
+                             crash_state=crash.crash_state,
+                             crash_stacktrace=crash.crash_stacktrace))
         db_utils.bulk_save(crash_entities)
 
         logs.info('Storing crashes in metadata file.')
         trial_crashes_dir = posixpath.join(self.trial_dir, 'crashes')
-        crashes_metadata_name = (
-            experiment_utils.get_crashes_metadata_filename(cycle))
-        crashes_metadata_local_path = os.path.join(
-            os.path.dirname(self.crashes_dir), crashes_metadata_name)
-        crashes_metadata_filestore_path = exp_path.filestore(
-            posixpath.join(trial_crashes_dir, crashes_metadata_name))
-        with open(crashes_metadata_local_path, 'w') as file_handle:
+        crash_metadata_name = (
+            experiment_utils.get_crash_metadata_filename(cycle))
+        crash_metadata_local_path = os.path.join(
+            os.path.dirname(self.crashes_dir), crash_metadata_name)
+        crash_metadata_filestore_path = exp_path.filestore(
+            posixpath.join(trial_crashes_dir, crash_metadata_name))
+        with open(crash_metadata_local_path, 'w') as file_handle:
             file_handle.write(json.dumps(crashes, indent=2, sort_keys=True))
-        filestore_utils.cp(crashes_metadata_local_path,
-                           crashes_metadata_filestore_path)
-        os.remove(crashes_metadata_local_path)
+        filestore_utils.cp(crash_metadata_local_path,
+                           crash_metadata_filestore_path)
+        os.remove(crash_metadata_local_path)
 
-    def process_crashes(self, cycle):
-        """Archive this cycle's crashes into filestore."""
-        if not os.listdir(self.crashes_dir):
-            logs.info('No crashes found for cycle %d.', cycle)
-            return
-
-        logs.info('Processing crashes for cycle %d.', cycle)
-        app_binary = coverage_utils.get_coverage_binary(self.benchmark)
-        crashes = run_crashes.do_crashes_run(app_binary, self.crashes_dir)
-        self.save_crashes(crashes, cycle)
-
+    def save_crash_files(self, cycle):
+        """Save crashes in per-cycle crash archive."""
         crashes_archive_name = experiment_utils.get_crashes_archive_name(cycle)
         archive_path = os.path.join(os.path.dirname(self.crashes_dir),
                                     crashes_archive_name)
@@ -554,6 +553,20 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             posixpath.join(trial_crashes_dir, crashes_archive_name))
         filestore_utils.cp(archive_path, archive_filestore_path)
         os.remove(archive_path)
+
+    def process_crashes(self, cycle):
+        """Process and store crashes."""
+        if not os.listdir(self.crashes_dir):
+            logs.info('No crashes found for cycle %d.', cycle)
+            return
+
+        logs.info('Processing crashes for cycle %d.', cycle)
+        app_binary = coverage_utils.get_coverage_binary(self.benchmark)
+        crash_metadata = run_crashes.do_crashes_run(app_binary,
+                                                    self.crashes_dir)
+
+        self.save_crash_metadata(crash_metadata, cycle)
+        self.save_crash_files(cycle)
 
     def update_measured_files(self):
         """Updates the measured-files.txt file for this trial with
