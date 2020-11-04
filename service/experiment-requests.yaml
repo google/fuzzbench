@@ -18,6 +18,16 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-11-04
+  description: "AFL++ mutator experiments (again)"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_mopt
+    - aflplusplus_mopt_both
+    - aflplusplus_noextrasplice
+    - aflplusplus_nofavskip
+    - aflplusplus_introspection
+
 - experiment: 2020-11-02
   description: "AFL++ mutator experiments"
   fuzzers:
