@@ -182,15 +182,27 @@
             </div>
             <div class="row">
                 <div class="col s12">
+                    <ul class="tabs">
+                      <li class="tab col s6"><a href="#{{ benchmark.name }}_region_normal" class="green-text text-darken-3">Region coverage (linear)</a></li>
+                      <li class="tab col s6"><a href="#{{ benchmark.name }}_region_logscale" class="green-text text-darken-3">Region coverage (log)</a></li>
+                    </ul>
+                </div>
+                <div id="{{ benchmark.name }}_region_normal" class="col s12">
                     <h5 class="center-align">Mean coverage growth over time</h5>
                     <img class="responsive-img materialboxed"
                          src="{{ benchmark.coverage_growth_plot }}">
-                    <div class="center-align">
-                        * The error bands show the 95% confidence interval
-                          around the mean coverage.
-                    </div>
+                </div>
+                <div id="{{ benchmark.name }}_region_logscale" class="col s12">
+                    <h5 class="center-align">Mean coverage growth over time</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.coverage_growth_plot_logscale }}">
+                </div>
+                <div class="center-align">
+                    * The error bands show the 95% confidence interval
+                      around the mean coverage.
                 </div>
             </div>
+
 
             {% if benchmark.fuzzers_with_not_enough_samples and not in_progress %}
             <div class="card-panel deep-orange lighten-3">
@@ -336,6 +348,10 @@
          var scrollspy_elems = document.querySelectorAll('.scrollspy');
          var scrollspy_options = {scrollOffset: 0};
          M.ScrollSpy.init(scrollspy_elems, scrollspy_options);
+
+         var tabs_elems = document.querySelectorAll('.tabs');
+         var tabs_options = {duration: 500};
+         var instance = M.Tabs.init(tabs_elems, tabs_options);
      });
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.2.2/anchor.min.js"></script>

@@ -155,10 +155,10 @@ def generate_report(experiment_names,
     data_path = os.path.join(report_directory, 'data.csv.gz')
     if from_cached_data and os.path.exists(data_path):
         experiment_df = pd.read_csv(data_path)
+        description = "from cached data"
     else:
         experiment_df = queries.get_experiment_data(experiment_names)
-
-    description = queries.get_experiment_description(main_experiment_name)
+        description = queries.get_experiment_description(main_experiment_name)
 
     data_utils.validate_data(experiment_df)
 
