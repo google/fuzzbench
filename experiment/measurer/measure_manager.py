@@ -495,30 +495,53 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         extract_corpus(corpus_archive_path, unit_blacklist, self.corpus_dir)
         return True
 
+    def save_crashes(self, crashes, cycle):
+        """Saves crashes in database and metadata file for cycle."""
+        if not crashes:
+            return
+
+        logs.info('Storing crashes in database.', crashes)
+        experiment_name = experiment_utils.get_experiment_name()
+        crash_entities = []
+        for crash_key in crashes:
+            crash = crashes[crash_key]
+            logs.info('Crash: %s', crash)
+            crash_entity = db_utils.get_or_create(models.Crash,
+                                                  experiment=experiment_name,
+                                                  fuzzer=self.fuzzer,
+                                                  benchmark=self.benchmark,
+                                                  crash_key=crash_key)
+            crash_entity.crash_testcase = crash.crash_testcase
+            crash_entity.crash_type = crash.crash_type
+            crash_entity.crash_address = crash.crash_address
+            crash_entity.crash_stacktrace = crash.crash_stacktrace
+            crash_entities.append(crash_entity)
+        db_utils.bulk_save(crash_entities)
+
+        logs.info('Storing crashes in metadata file.')
+        trial_crashes_dir = posixpath.join(self.trial_dir, 'crashes')
+        crashes_metadata_name = (
+            experiment_utils.get_crashes_metadata_filename(cycle))
+        crashes_metadata_local_path = os.path.join(
+            os.path.dirname(self.crashes_dir), crashes_metadata_name)
+        crashes_metadata_filestore_path = exp_path.filestore(
+            posixpath.join(trial_crashes_dir, crashes_metadata_name))
+        with open(crashes_metadata_local_path, 'w') as file_handle:
+            file_handle.write(json.dumps(crashes, indent=2, sort_keys=True))
+        filestore_utils.cp(crashes_metadata_local_path,
+                           crashes_metadata_filestore_path)
+        os.remove(crashes_metadata_local_path)
+
     def process_crashes(self, cycle):
         """Archive this cycle's crashes into filestore."""
         if not os.listdir(self.crashes_dir):
             logs.info('No crashes found for cycle %d.', cycle)
             return
 
-        trial_crashes_dir = posixpath.join(self.trial_dir, 'crashes')
-
         logs.info('Processing crashes for cycle %d.', cycle)
         app_binary = coverage_utils.get_coverage_binary(self.benchmark)
         crashes = run_crashes.do_crashes_run(app_binary, self.crashes_dir)
-        if crashes:
-            logs.info('Found crashes: %s', crashes)
-            crashes_metadata_name = (
-                experiment_utils.get_crashes_metadata_filename(cycle))
-            crashes_metadata_local_path = os.path.join(
-                os.path.dirname(self.crashes_dir), crashes_metadata_name)
-            crashes_metadata_filestore_path = exp_path.filestore(
-                posixpath.join(trial_crashes_dir, crashes_metadata_name))
-            with open(crashes_metadata_local_path, 'w') as file_handle:
-                file_handle.write(json.dumps(crashes, indent=2, sort_keys=True))
-            filestore_utils.cp(crashes_metadata_local_path,
-                               crashes_metadata_filestore_path)
-            os.remove(crashes_metadata_local_path)
+        self.save_crashes(crashes, cycle)
 
         crashes_archive_name = experiment_utils.get_crashes_archive_name(cycle)
         archive_path = os.path.join(os.path.dirname(self.crashes_dir),
@@ -526,6 +549,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         with tarfile.open(archive_path, 'w:gz') as tar:
             tar.add(self.crashes_dir,
                     arcname=os.path.basename(self.crashes_dir))
+        trial_crashes_dir = posixpath.join(self.trial_dir, 'crashes')
         archive_filestore_path = exp_path.filestore(
             posixpath.join(trial_crashes_dir, crashes_archive_name))
         filestore_utils.cp(archive_path, archive_filestore_path)

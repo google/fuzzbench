@@ -13,6 +13,7 @@
 # limitations under the License.
 """Module for processing crashes."""
 
+import collections
 import os
 
 from clusterfuzz import stacktraces
@@ -23,14 +24,19 @@ from common import sanitizer
 
 logger = logs.Logger('run_crashes')
 
-# Memory limit for libfuzzer merge.
+# Memory limit for libfuzzer crash.
 RSS_LIMIT_MB = 2048
 
 # Per-unit processing timeout for libfuzzer crash.
 UNIT_TIMEOUT = 10
 
+Crash = collections.namedtuple('Crash', [
+    'crash_testcase', 'crash_type', 'crash_address', 'crash_state',
+    'crash_stacktrace'
+])
 
-def process_crash(app_binary, crash_testcase_path):
+
+def process_crash(app_binary, crash_testcase_path, crashes_dir):
     """Returns the crashing unit in coverage_binary_output."""
     # Run the crash with sanitizer options set in environment.
     env = os.environ.copy()
@@ -61,7 +67,13 @@ def process_crash(app_binary, crash_testcase_path):
     if not crash_result.crash_state:
         # No crash occurred. Bail out.
         return None
-    return crash_result
+
+    return Crash(crash_testcase=os.path.relpath(crash_testcase_path,
+                                                crashes_dir),
+                 crash_type=crash_result.crash_type,
+                 crash_address=crash_result.crash_address,
+                 crash_state=crash_result.crash_state,
+                 crash_stacktrace=crash_result.crash_stacktrace)
 
 
 def _get_crash_key(crash_result):
@@ -76,14 +88,7 @@ def do_crashes_run(app_binary, crashes_dir):
     for root, _, filenames in os.walk(crashes_dir):
         for filename in filenames:
             crash_testcase_path = os.path.join(root, filename)
-            crash_result = process_crash(app_binary, crash_testcase_path)
-            if crash_result:
-                crash_key = _get_crash_key(crash_result)
-                crashes[crash_key] = {
-                    'crash_testcase': filename,
-                    'crash_type': crash_result.crash_type,
-                    'crash_address': crash_result.crash_address,
-                    'crash_state': crash_result.crash_state,
-                    'crash_stacktrace': crash_result.crash_stacktrace,
-                }
+            crash = process_crash(app_binary, crash_testcase_path, crashes_dir)
+            if crash:
+                crashes[_get_crash_key(crash)] = crash
     return crashes

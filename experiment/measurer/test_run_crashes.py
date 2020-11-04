@@ -44,9 +44,10 @@ class TestIntegrationRunCoverage:
         expected_crash_key = 'Abrt:fuzz_target.c\n'
         assert len(crashes) == 1
         assert expected_crash_key in crashes
-        assert crashes[expected_crash_key]['crash_testcase'] == 'crash'
-        assert crashes[expected_crash_key]['crash_type'] == 'Abrt'
-        assert crashes[expected_crash_key]['crash_address']
-        assert crashes[expected_crash_key]['crash_state'] == 'fuzz_target.c\n'
+        actual_crash = crashes[expected_crash_key]
+        assert actual_crash.crash_testcase == 'crash'
+        assert actual_crash.crash_type == 'Abrt'
+        assert actual_crash.crash_address
+        assert actual_crash.crash_state == 'fuzz_target.c\n'
         assert ('ERROR: AddressSanitizer: ABRT on unknown address'
-                in crashes[expected_crash_key]['crash_stacktrace'])
+                in actual_crash.crash_stacktrace)
