@@ -26,6 +26,7 @@
     - aflplusplus_mopt_both
     - aflplusplus_noextrasplice
     - aflplusplus_nofavskip
+    - aflplusplus_introspection
 
 - experiment: 2020-11-02
   description: "AFL++ mutator experiments"
