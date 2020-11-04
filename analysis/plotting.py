@@ -174,13 +174,17 @@ class Plotter:
 
         sns.despine(ax=axes, trim=True)
 
-    def write_coverage_growth_plot(self, benchmark_df, image_path, wide=False):
+    def write_coverage_growth_plot(self,
+                                   benchmark_df,
+                                   image_path,
+                                   wide=False,
+                                   logscale=False):
         """Writes coverage growth plot."""
         self._write_plot_to_image(self.coverage_growth_plot,
                                   benchmark_df,
                                   image_path,
                                   wide=wide,
-                                  logscale=False)
+                                  logscale=logscale)
 
     def violin_plot(self, benchmark_snapshot_df, axes=None):
         """Draws violin plot.
