@@ -380,7 +380,8 @@ def generate_json_summary(coverage_binary,
     """Generates the json summary file from |coverage_binary|
     and |profdata_file|."""
     command = [
-        'llvm-cov', 'export', '-format=text', coverage_binary,
+        'llvm-cov', 'export', '-format=text', '-num-threads=1',
+        '-region-coverage-gt=0', '-skip-expansions', coverage_binary,
         '-instr-profile=%s' % profdata_file
     ]
 
