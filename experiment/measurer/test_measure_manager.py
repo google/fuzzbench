@@ -176,9 +176,11 @@ def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
     max_cycle = 10
     measure_request = measure_manager.SnapshotMeasureRequest(
         FUZZER, BENCHMARK, TRIAL_NUM, min_cycle)
-    measure_manager.\
-        measure_trial_coverage(measure_request, max_cycle, mocked_queue(),
-                               mocked_process_specific_df_containers)
+
+    measure_manager.measure_trial_coverage(
+        measure_request, max_cycle, mocked_queue(),
+        mocked_process_specific_df_containers)
+
     expected_calls = [
         mock.call(FUZZER, BENCHMARK, TRIAL_NUM, cycle,
                   mocked_process_specific_df_containers)
@@ -444,6 +446,7 @@ def test_measure_loop_end(_, __, ___, ____, _____, ______, experiment_config,
                           db_experiment):
     """Tests that measure_loop stops when there is nothing left to measure. In
     this test, there is nothing left to measure on the first call."""
+
     measure_manager.measure_loop(experiment_config, 100,
                                  coverage_utils.DataFrameContainer())
     # If everything went well, we should get to this point without any
