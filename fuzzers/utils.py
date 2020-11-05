@@ -139,9 +139,9 @@ def get_dictionary_path(target_binary):
     with open(options_file_path, 'r') as file_handle:
         try:
             config.read_file(file_handle)
-        except configparser.Error:
+        except configparser.Error as error:
             raise Exception('Failed to parse fuzzer options file: ' +
-                            options_file_path)
+                            options_file_path) from error
 
     for section in config.sections():
         for key, value in config.items(section):

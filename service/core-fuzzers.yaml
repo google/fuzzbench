@@ -3,13 +3,14 @@
 fuzzers:
     - afl
     - aflfast
+    - aflplusplus
     - aflplusplus_optimal
     - aflsmart
     - entropic
+    - eclipser
     - fairfuzz
     - honggfuzz
     - lafintel
-    - libaflfuzzer
     - libfuzzer
     - mopt
 

@@ -46,7 +46,10 @@ def _get_buildable_images(fuzzer=None, benchmark=None):
 
 def build_base_images():
     """Build base images on GCB."""
-    image_templates = {'base-image': _get_buildable_images()['base-image']}
+    buildable_images = _get_buildable_images()
+    image_templates = {
+        image: buildable_images[image] for image in ['base-image', 'worker']
+    }
     config = generate_cloudbuild.create_cloudbuild_spec(image_templates,
                                                         build_base_images=True)
     _build(config, 'base-images')
@@ -67,10 +70,10 @@ def build_coverage(benchmark):
     _build(config, config_name)
 
 
-def _build(config: Dict,
-           config_name: str,
-           timeout_seconds: int = GCB_BUILD_TIMEOUT
-          ) -> new_process.ProcessResult:
+def _build(
+        config: Dict,
+        config_name: str,
+        timeout_seconds: int = GCB_BUILD_TIMEOUT) -> new_process.ProcessResult:
     """Submit build to GCB."""
     with tempfile.NamedTemporaryFile() as config_file:
         yaml_utils.write(config_file.name, config)

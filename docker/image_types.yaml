@@ -15,6 +15,14 @@
   tag: 'dispatcher-image'
   type: 'dispatcher'
 
+'worker':
+  depends_on:
+    - 'base-image'
+  dockerfile: 'docker/worker/Dockerfile'
+  context: '.'
+  tag: 'worker'
+  type: 'worker'
+
 # TODO: It would be better to call this benchmark builder. But that would be
 # confusing because this doesn't involve benchmark-builder/Dockerfile. Rename
 # that and then rename this.
@@ -41,6 +49,7 @@
     - 'parent_image=gcr.io/fuzzbench/builders/coverage/{benchmark}-intermediate'
   depends_on:
     - 'coverage-{benchmark}-builder-intermediate'
+    - 'base-image'
   dockerfile: 'docker/benchmark-builder/Dockerfile'
   context: '.'
   tag: 'builders/coverage/{benchmark}'
@@ -63,6 +72,7 @@
     - 'parent_image=gcr.io/fuzzbench/builders/{fuzzer}/{benchmark}-intermediate'
   depends_on:
     - '{fuzzer}-{benchmark}-builder-intermediate'
+    - 'base-image'
   dockerfile: 'docker/benchmark-builder/Dockerfile'
   context: '.'
   tag: 'builders/{fuzzer}/{benchmark}'
@@ -71,6 +81,7 @@
 '{fuzzer}-{benchmark}-intermediate-runner':
   depends_on:
     - '{fuzzer}-{benchmark}-builder'
+    - 'base-image'
   dockerfile: 'fuzzers/{fuzzer}/runner.Dockerfile'
   context: 'fuzzers/{fuzzer}'
   tag: 'runners/{fuzzer}/{benchmark}-intermediate'

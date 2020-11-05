@@ -1,0 +1,119 @@
+diff --git a/src/afl-fuzz-queue.c b/src/afl-fuzz-queue.c
+index c78df8b..cc609b3 100644
+--- a/src/afl-fuzz-queue.c
++++ b/src/afl-fuzz-queue.c
+@@ -715,7 +715,6 @@ u32 calculate_score(afl_state_t *afl, struct queue_entry *q) {
+ 
+   }
+ 
+-  u32         n_paths;
+   double      factor = 1.0;
+   long double fuzz_mu;
+ 
+@@ -733,7 +732,6 @@ u32 calculate_score(afl_state_t *afl, struct queue_entry *q) {
+ 
+     case COE:
+       fuzz_mu = 0.0;
+-      n_paths = 0;
+ 
+       // Don't modify perf_score for unfuzzed seeds
+       if (q->fuzz_level == 0) break;
+@@ -742,15 +740,12 @@ u32 calculate_score(afl_state_t *afl, struct queue_entry *q) {
+       while (queue_it) {
+ 
+         fuzz_mu += log2(afl->n_fuzz[q->n_fuzz_entry]);
+-        n_paths++;
+ 
+         queue_it = queue_it->next;
+ 
+       }
+ 
+-      if (unlikely(!n_paths)) { FATAL("Queue state corrupt"); }
+-
+-      fuzz_mu = fuzz_mu / n_paths;
++      fuzz_mu /= afl->queued_paths;
+ 
+       if (log2(afl->n_fuzz[q->n_fuzz_entry]) > fuzz_mu) {
+ 
+@@ -767,39 +762,14 @@ u32 calculate_score(afl_state_t *afl, struct queue_entry *q) {
+       // Don't modify unfuzzed seeds
+       if (q->fuzz_level == 0) break;
+ 
+-      switch ((u32)log2(afl->n_fuzz[q->n_fuzz_entry])) {
+-
+-        case 0 ... 1:
+-          factor = 4;
+-          break;
+-
+-        case 2 ... 3:
+-          factor = 3;
+-          break;
+-
+-        case 4:
+-          factor = 2;
+-          break;
+-
+-        case 5:
+-          break;
+-
+-        case 6:
+-          if (!q->favored) factor = 0.8;
+-          break;
+-
+-        case 7:
+-          if (!q->favored) factor = 0.6;
+-          break;
+-
+-        default:
+-          if (!q->favored) factor = 0.4;
+-          break;
++      u32 hits = afl->n_fuzz[q->n_fuzz_entry];
+ 
++      if (hits < 64) factor *= 5 - log2(hits) / 1.5;
++      else if(!q->favored) {
++        if (hits < 256) factor *= 64.0 / hits;
++        else factor *= 0.25;
+       }
+ 
+-      if (q->favored) factor *= 1.15;
+-
+       break;
+ 
+     case LIN:
+@@ -845,8 +815,35 @@ u32 calculate_score(afl_state_t *afl, struct queue_entry *q) {
+ 
+   if (unlikely(afl->schedule >= EXPLOIT && afl->schedule <= QUAD)) {
+ 
++    double factor_mu = 0.0;
++    struct queue_entry *queue_it = afl->queue;
++    while (queue_it) {
++
++      if (queue_it->fuzz_level == 0) {
++
++        factor_mu += 1.0;
++
++      } else {
++
++        u32 hits = afl->n_fuzz[q->n_fuzz_entry];
++        if (hits < 64) {
++          factor_mu += 5 - log2(hits) / 1.5;
++        } else if(!q->favored) {
++          if (hits < 256) factor_mu += 64.0 / hits;
++          else factor_mu += 0.25;
++        }
++
++      }
++
++      queue_it = queue_it->next;
++
++    }
++
++    factor_mu /= afl->queued_paths;
++    factor /= factor_mu; 
++
+     if (factor > MAX_FACTOR) { factor = MAX_FACTOR; }
+-    perf_score *= factor / POWER_BETA;
++    perf_score *= factor;
+ 
+   }
+ 

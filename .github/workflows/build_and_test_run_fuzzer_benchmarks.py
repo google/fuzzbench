@@ -25,8 +25,6 @@ ALWAYS_BUILD_FUZZER = 'afl'
 NUM_RETRIES = 2
 RETRY_DELAY = 60
 
-# TODO(tanq16): Get list of Benchmarks automatically.
-
 # Don't build php benchmark since it fills up disk in GH actions.
 OSS_FUZZ_BENCHMARKS = {
     'bloaty_fuzz_target',
@@ -34,7 +32,6 @@ OSS_FUZZ_BENCHMARKS = {
     'jsoncpp_jsoncpp_fuzzer',
     'libpcap_fuzz_both',
     'libxslt_xpath',
-    'matio_matio_fuzzer',
     'mbedtls_fuzz_dtlsclient',
     'openssl_x509',
     'sqlite3_ossfuzz',
@@ -54,6 +51,16 @@ STANDARD_BENCHMARKS = {
     're2-2014-12-09',
     'vorbis-2017-12-11',
     'woff2-2016-05-06',
+}
+
+BUG_BENCHMARKS = {
+    'harfbuzz_hb-subset-fuzzer',
+    'libhevc_hevc_dec_fuzzer',
+    'matio_matio_fuzzer',
+    'ndpi_fuzz_ndpi_reader',
+    'openh264_decoder_fuzzer',
+    'stb_stbi_read_fuzzer',
+    'wabt_wasm2wat_fuzzer',
 }
 
 
@@ -94,6 +101,9 @@ def make_builds(benchmarks, fuzzer):
     """Use make to test the fuzzer on each benchmark in |benchmarks|."""
     fuzzer_benchmark_pairs = builder.get_fuzzer_benchmark_pairs([fuzzer],
                                                                 benchmarks)
+    # Sort benchmarks so that they get built in a deterministic order.
+    fuzzer_benchmark_pairs = sorted(fuzzer_benchmark_pairs,
+                                    key=lambda pair: pair[1])
     print('Building fuzzer-benchmark pairs: {}'.format(fuzzer_benchmark_pairs))
     for _, benchmark in fuzzer_benchmark_pairs:
         make_target = get_make_target(fuzzer, benchmark)
@@ -112,6 +122,8 @@ def do_build(build_type, fuzzer, always_build):
         benchmarks = OSS_FUZZ_BENCHMARKS
     elif build_type == 'standard':
         benchmarks = STANDARD_BENCHMARKS
+    elif build_type == 'bug':
+        benchmarks = BUG_BENCHMARKS
     else:
         raise Exception('Invalid build_type: %s' % build_type)
 

@@ -1,3 +1,0 @@
-# Keep these small, so the runner is more likely to work on diverse images.
-google-cloud-error-reporting==0.32.1
-google-cloud-logging==1.12.1

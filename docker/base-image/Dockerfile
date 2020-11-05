@@ -14,9 +14,9 @@
 
 FROM ubuntu:xenial
 
-# Build Python 3.7.6 from source because pandas doesn't support xenial's
+# Build Python 3.8.6 from source because pandas doesn't support xenial's
 # Python3 version (3.5.2).
-ENV PYTHON_VERSION 3.7.6
+ENV PYTHON_VERSION 3.8.6
 RUN apt-get update -y && apt-get install -y \
     build-essential \
     rsync \
