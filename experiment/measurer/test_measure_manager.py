@@ -152,7 +152,8 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
     snapshot_measurer.generate_summary(CYCLE)
 
     expected = [
-        'llvm-cov', 'export', '-format=text',
+        'llvm-cov', 'export', '-format=text', '-num-threads=1',
+        '-region-coverage-gt=0', '-skip-expansions',
         '/work/coverage-binaries/benchmark-a/fuzz-target',
         '-instr-profile=/reports/data.profdata'
     ]
@@ -175,9 +176,9 @@ def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
     max_cycle = 10
     measure_request = measure_manager.SnapshotMeasureRequest(
         FUZZER, BENCHMARK, TRIAL_NUM, min_cycle)
-    measure_manager.measure_trial_coverage(
-        measure_request, max_cycle, mocked_queue(),
-        mocked_process_specific_df_containers)
+    measure_manager.\
+        measure_trial_coverage(measure_request, max_cycle, mocked_queue(),
+                               mocked_process_specific_df_containers)
     expected_calls = [
         mock.call(FUZZER, BENCHMARK, TRIAL_NUM, cycle,
                   mocked_process_specific_df_containers)
@@ -363,7 +364,7 @@ class TestIntegrationMeasurement:
     @mock.patch('multiprocessing.list')
     @mock.patch('experiment.measurer.measure_manager.SnapshotMeasurer'
                 '.is_cycle_unchanged')
-    def test_measure_snapshot_coverage(  # pylint: disable=too-many-locals,too-many-arguments
+    def test_measure_snapshot_coverage(  # pylint: disable=too-many-locals, too-many-arguments
             self, mocked_is_cycle_unchanged, mocked_df_container_list, db,
             experiment, tmp_path):
         """Integration test for measure_snapshot_coverage."""
@@ -410,7 +411,7 @@ class TestIntegrationMeasurement:
             mocked_cp.return_value = new_process.ProcessResult(0, '', False)
             # TODO(metzman): Create a system for using actual buckets in
             # integration tests.
-            snapshot = measure_manager.measure_snapshot_coverage(  # pylint: disable=unused-variable
+            snapshot = measure_manager.measure_snapshot_coverage(
                 snapshot_measurer.fuzzer, snapshot_measurer.benchmark,
                 snapshot_measurer.trial_num, cycle, mocked_df_container_list)
         assert snapshot
@@ -433,7 +434,6 @@ def test_extract_corpus(archive_name, tmp_path):
 
 
 @mock.patch('time.sleep', return_value=None)
-@mock.patch('pandas.concat')
 @mock.patch('experiment.measurer.measure_manager.set_up_coverage_binaries')
 @mock.patch('experiment.measurer.measure_manager.measure_all_trials',
             return_value=False)
@@ -444,7 +444,6 @@ def test_measure_loop_end(_, __, ___, ____, _____, ______, experiment_config,
                           db_experiment):
     """Tests that measure_loop stops when there is nothing left to measure. In
     this test, there is nothing left to measure on the first call."""
-
     measure_manager.measure_loop(experiment_config, 100,
                                  coverage_utils.DataFrameContainer())
     # If everything went well, we should get to this point without any
@@ -452,7 +451,6 @@ def test_measure_loop_end(_, __, ___, ____, _____, ______, experiment_config,
 
 
 @mock.patch('time.sleep', return_value=None)
-@mock.patch('pandas.concat')
 @mock.patch('experiment.measurer.measure_manager.set_up_coverage_binaries')
 @mock.patch('multiprocessing.Manager')
 @mock.patch('multiprocessing.pool')
