@@ -592,7 +592,7 @@ def get_fuzzer_stats(stats_filestore_path):
 
 def measure_trial_coverage(  # pylint: disable=invalid-name,too-many-arguments
         measure_req, max_cycle: int, q: multiprocessing.Queue,
-        process_specific_df_containers):
+        process_specific_df_containers) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
