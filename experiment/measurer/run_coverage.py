@@ -21,7 +21,7 @@ from typing import List
 from common import experiment_utils
 from common import logs
 from common import new_process
-from common import sanitizer
+from experiment.measurer import sanitizer
 
 logger = logs.Logger('run_coverage')
 

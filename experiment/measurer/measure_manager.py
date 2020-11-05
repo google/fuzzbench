@@ -500,7 +500,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         if not crashes:
             return
 
-        logs.info('Storing crashes in database.', crashes)
+        logs.info('Storing crashes in database.')
         experiment_name = experiment_utils.get_experiment_name()
         crash_time = experiment_utils.get_cycle_time(cycle)
         for crash_key in crashes:

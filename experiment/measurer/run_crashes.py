@@ -20,7 +20,7 @@ from clusterfuzz import stacktraces
 
 from common import logs
 from common import new_process
-from common import sanitizer
+from experiment.measurer import sanitizer
 
 logger = logs.Logger('run_crashes')
 
