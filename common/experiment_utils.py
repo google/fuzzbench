@@ -29,6 +29,11 @@ def get_snapshot_seconds():
     return environment.get('SNAPSHOT_PERIOD', DEFAULT_SNAPSHOT_SECONDS)
 
 
+def get_cycle_time(cycle):
+    """Return time elapsed for a cycle."""
+    return cycle * get_snapshot_seconds()
+
+
 def get_work_dir():
     """Returns work directory."""
     return os.environ['WORK']

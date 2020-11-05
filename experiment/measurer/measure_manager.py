@@ -502,6 +502,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
 
         logs.info('Storing crashes in database.', crashes)
         experiment_name = experiment_utils.get_experiment_name()
+        crash_time = experiment_utils.get_cycle_time(cycle)
         for crash_key in crashes:
             crash = crashes[crash_key]
             if db_utils.query(models.Crash).filter_by(
@@ -523,7 +524,8 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
                                  crash_type=crash.crash_type,
                                  crash_address=crash.crash_address,
                                  crash_state=crash.crash_state,
-                                 crash_stacktrace=crash.crash_stacktrace)
+                                 crash_stacktrace=crash.crash_stacktrace,
+                                 crash_time=crash_time)
                 ])
             except Exception:  # pylint: disable=broad-except
                 # Can happen due to race condition with db updates.
@@ -655,7 +657,7 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
 
     measuring_start_time = time.time()
     snapshot_logger.info('Measuring cycle: %d.', cycle)
-    this_time = cycle * experiment_utils.get_snapshot_seconds()
+    this_time = experiment_utils.get_cycle_time(cycle)
     if snapshot_measurer.is_cycle_unchanged(cycle):
         snapshot_logger.info('Cycle: %d is unchanged.', cycle)
         regions_covered = snapshot_measurer.get_current_coverage()

@@ -89,3 +89,4 @@ class Crash(Base):
     crash_state = Column(String, nullable=False)
     crash_stacktrace = Column(String, nullable=False)
     crash_testcase = Column(String, nullable=False)
+    crash_time = Column(Integer, nullable=False)
