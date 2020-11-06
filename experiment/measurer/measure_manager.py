@@ -142,8 +142,8 @@ def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
         return False
 
     process_specific_df_containers = \
-        manager.list( # pytype: disable=attribute-error
-            experiment_specific_df_container)
+        manager.list([  # pytype: disable=attribute-error
+            experiment_specific_df_container])
 
     measure_trial_coverage_args = [
         (unmeasured_snapshot, max_cycle, q, process_specific_df_containers)
@@ -195,7 +195,7 @@ def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
     # If we have any snapshots left save them now.
     save_snapshots()
 
-    # Concatenates all process-specific data frames and remove duplicates.
+    # Concatenate all process-specific data frames and remove duplicates.
     experiment_specific_df_container.segment_df = pd.concat(
         [df.segment_df for df in process_specific_df_containers],
         ignore_index=True)
@@ -446,7 +446,6 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
                                              time_stamp):
         """Returns a process specific data frame with current segment and
         function coverage"""
-
         process_specific_df_containers.append(
             coverage_utils.extract_segments_and_functions_from_summary_json(
                 self.cov_summary_file, self.benchmark, self.fuzzer,
@@ -593,7 +592,7 @@ def get_fuzzer_stats(stats_filestore_path):
 
 def measure_trial_coverage(  # pylint: disable=invalid-name,too-many-arguments
         measure_req, max_cycle: int, q: multiprocessing.Queue,
-        process_specific_df_containers):
+        process_specific_df_containers) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
