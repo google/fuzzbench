@@ -18,6 +18,13 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-11-08
+  description: "AFL++ seed selection test + introspection"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_oldnew
+    - aflplusplus_introspection
+
 - experiment: 2020-11-05
   description: "AFL++ mutator experiments (retry failed 2020-11-02)"
   fuzzers:
