@@ -291,7 +291,7 @@ benchmarks integrated in FuzzBench. This can be done locally using the
 fuzzer pull request and wait for the CI results.
 
 There can be unavoidable cases where your fuzzer cannot work with a particular
-benchmark. In those case, you can add your fuzzer to the `unsupported_fuzzers`
+benchmark. In those cases, you can add your fuzzer to the `unsupported_fuzzers`
 attribute of the benchmark's `benchmark.yaml` file. Check out an example
 [here](https://github.com/google/fuzzbench/blob/bd281252287ed8bdf6eef31fbd7ea268c1b17cc9/benchmarks/bloaty_fuzz_target/benchmark.yaml#L19).
 
