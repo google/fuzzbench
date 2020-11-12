@@ -27,6 +27,7 @@ RETRY_DELAY = 60
 
 # Don't build php benchmark since it fills up disk in GH actions.
 OSS_FUZZ_BENCHMARKS = {
+    'arrow_parquet-arrow-fuzz',
     'bloaty_fuzz_target',
     'curl_curl_fuzzer_http',
     'jsoncpp_jsoncpp_fuzzer',
