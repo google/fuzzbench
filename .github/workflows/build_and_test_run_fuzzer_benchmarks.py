@@ -59,6 +59,7 @@ BUG_BENCHMARKS = {
     'matio_matio_fuzzer',
     'ndpi_fuzz_ndpi_reader',
     'openh264_decoder_fuzzer',
+    'php_php-fuzz-execute',
     'stb_stbi_read_fuzzer',
     'wabt_wasm2wat_fuzzer',
 }

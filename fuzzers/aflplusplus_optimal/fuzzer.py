@@ -53,6 +53,8 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
         aflplusplus_fuzzer.build("tracepc", "dict2file")
     elif benchmark_name == 'openssl_x509':
         aflplusplus_fuzzer.build("tracepc", "dict2file")
+    elif benchmark_name == 'php_php-fuzz-execute':
+        aflplusplus_fuzzer.build("classic", "ctx", "cmplog")
     elif benchmark_name == 'php_php-fuzz-parser':
         aflplusplus_fuzzer.build("classic", "ctx", "cmplog")
     elif benchmark_name == 'proj4-2017-08-14':
