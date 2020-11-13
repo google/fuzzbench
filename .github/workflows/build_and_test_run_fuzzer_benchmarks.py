@@ -61,6 +61,7 @@ BUG_BENCHMARKS = {
     'ndpi_fuzz_ndpi_reader',
     'openh264_decoder_fuzzer',
     'php_php-fuzz-execute',
+    'php_php-fuzz-parser-2020-07-25',
     'stb_stbi_read_fuzzer',
     'wabt_wasm2wat_fuzzer',
 }
