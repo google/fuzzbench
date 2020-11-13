@@ -1,0 +1,12 @@
+commit: c74e612ff9d95d6afd1bbfb6d9656655aa6d70ed
+commit_date: 2020-01-28 07:03:00+00:00
+fuzz_target: wasm2wat_fuzzer
+project: wabt
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - honggfuzz_qemu
+  - klee
+  - weizz_qemu

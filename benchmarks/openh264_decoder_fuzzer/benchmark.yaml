@@ -1,0 +1,12 @@
+commit: c185ac351eff0ae277bfe14a3b2ad52e9ed8ab81
+commit_date: 2019-10-22 04:51:00+00:00
+fuzz_target: decoder_fuzzer
+project: openh264
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - honggfuzz_qemu
+  - klee
+  - weizz_qemu

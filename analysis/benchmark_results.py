@@ -239,13 +239,26 @@ class BenchmarkResults:
             self._get_full_path(plot_filename))
         return plot_filename
 
+    def _coverage_growth_plot(self, filename, logscale=False):
+        """Coverage growth plot helper function"""
+        plot_filename = self._prefix_with_benchmark(filename)
+        self._plotter.write_coverage_growth_plot(
+            self._benchmark_df,
+            self._get_full_path(plot_filename),
+            wide=True,
+            logscale=logscale)
+        return plot_filename
+
     @property
     def coverage_growth_plot(self):
-        """Coverage growth plot."""
-        plot_filename = self._prefix_with_benchmark('coverage_growth.svg')
-        self._plotter.write_coverage_growth_plot(
-            self._benchmark_df, self._get_full_path(plot_filename), wide=True)
-        return plot_filename
+        """Coverage growth plot (linear scale)."""
+        return self._coverage_growth_plot('coverage_growth.svg')
+
+    @property
+    def coverage_growth_plot_logscale(self):
+        """Coverage growth plot (logscale)."""
+        return self._coverage_growth_plot('coverage_growth_logscale.svg',
+                                          logscale=True)
 
     @property
     def violin_plot(self):

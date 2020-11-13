@@ -60,9 +60,9 @@ _LICENSE_CHECK_EXTENSIONS = [
 _LICENSE_CHECK_STRING = 'http://www.apache.org/licenses/LICENSE-2.0'
 
 _SRC_ROOT = Path(__file__).absolute().parent
+THIRD_PARTY_DIR_NAME = 'third_party'
 _IGNORE_DIRECTORIES = [
     os.path.join(_SRC_ROOT, 'database', 'alembic'),
-    os.path.join(_SRC_ROOT, 'third_party'),
     os.path.join(_SRC_ROOT, 'benchmarks'),
 ]
 
@@ -236,15 +236,6 @@ def lint(_: List[Path]) -> bool:
 def pytype(paths: List[Path]) -> bool:
     """Run pytype on |path| if it is a python file. Return False if it fails
     type checking."""
-    # Pytype isn't supported on Python3.8+. See
-    # https://github.com/google/pytype/issues/440.
-    assert sys.version_info.major == 3, "Need Python3."
-    if sys.version_info.minor > 7:
-        logs.error(
-            'Python version is: "%s". You should be using 3.7. '
-            'Not running pytype.', sys.version)
-        return True
-
     paths = [path for path in paths if is_python(path)]
     if not paths:
         return True
@@ -306,11 +297,18 @@ def validate_experiment_requests(paths: List[Path]):
     return result
 
 
-def is_path_in_ignore_directory(path: Path) -> bool:
-    """Returns True if |path| is a subpath of an ignored directory."""
+def is_path_ignored(path: Path) -> bool:
+    """Returns True if |path| is a subpath of an ignored directory or is a
+    third_party directory."""
     for ignore_directory in _IGNORE_DIRECTORIES:
         if filesystem.is_subpath(ignore_directory, path):
             return True
+
+    # Third party directories can be anywhere.
+    path_parts = str(path).split(os.sep)
+    if any(path_part == THIRD_PARTY_DIR_NAME for path_part in path_parts):
+        return True
+
     return False
 
 
@@ -327,7 +325,7 @@ def license_check(paths: List[Path]) -> bool:
                 extension not in _LICENSE_CHECK_EXTENSIONS):
             continue
 
-        if is_path_in_ignore_directory(path):
+        if is_path_ignored(path):
             continue
 
         with open(path) as file_handle:
@@ -349,7 +347,7 @@ def get_all_files() -> List[Path]:
 def filter_ignored_files(paths: List[Path]) -> List[Path]:
     """Returns a list of absolute paths of files in this repo that can be
     checked statically."""
-    return [path for path in paths if not is_path_in_ignore_directory(path)]
+    return [path for path in paths if not is_path_ignored(path)]
 
 
 def do_tests() -> bool:

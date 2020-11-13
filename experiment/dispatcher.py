@@ -31,7 +31,7 @@ from common import yaml_utils
 from database import models
 from database import utils as db_utils
 from experiment.build import builder
-from experiment import measurer
+from experiment.measurer import measure_manager
 from experiment import reporter
 from experiment import scheduler
 from experiment import stop_experiment
@@ -156,7 +156,7 @@ def dispatcher_main():
     scheduler_loop_thread.start()
 
     measurer_main_process = multiprocessing.Process(
-        target=measurer.measure_main, args=(experiment.config,))
+        target=measure_manager.measure_main, args=(experiment.config,))
 
     measurer_main_process.start()
 
