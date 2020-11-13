@@ -1,0 +1,1 @@
+<?$illegalValues=['[]-5'];foreach($illegalValues as$illegalValue){try{eval("~$illegalValue;");}catch(ÿ){}}

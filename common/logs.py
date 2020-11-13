@@ -150,7 +150,7 @@ class LogSeverity(Enum):
     DEBUG = logging.DEBUG
 
 
-@retry.wrap(NUM_RETRIES, RETRY_DELAY, 'common.logs.log')
+@retry.wrap(NUM_RETRIES, RETRY_DELAY, 'common.logs.log', log_retries=False)
 def log(logger, severity, message, *args, extras=None):
     """Log a message with severity |severity|. If using stack driver logging
     then |extras| is also logged (in addition to default extras)."""

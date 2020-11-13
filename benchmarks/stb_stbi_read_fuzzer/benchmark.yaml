@@ -1,0 +1,12 @@
+commit: f54acd4e13430c5122cab4ca657705c84aa61b08
+commit_date: 2020-05-27 02:31:00+00:00
+fuzz_target: stbi_read_fuzzer
+project: stb
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - honggfuzz_qemu
+  - klee
+  - weizz_qemu
