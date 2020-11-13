@@ -1,5 +1,21 @@
-commit: 8664ff7ae174c610769c36a712eeea80cc3ad933
-commit_date: 2020-07-25 01:16:00+00:00
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+commit: 3516a9c8f096a71f493b90fb6b2be3ee3b0f0293
+commit_date: 2020-06-30 16:43:40+00:00
 fuzz_target: php-fuzz-parser
 project: php
-type: bug\nunsupported_fuzzers:\n  - aflcc\n  - afl_qemu\n  - aflplusplus_qemu\n  - honggfuzz_qemu\n  - klee\n  - weizz_qemu
+unsupported_fuzzers:
+  - aflcc
+  - klee
