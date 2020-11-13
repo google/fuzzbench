@@ -58,6 +58,7 @@ BUG_BENCHMARKS = {
     'harfbuzz_hb-subset-fuzzer',
     'libhevc_hevc_dec_fuzzer',
     'matio_matio_fuzzer',
+    'mtail_vm-fuzzer',
     'ndpi_fuzz_ndpi_reader',
     'openh264_decoder_fuzzer',
     'php_php-fuzz-execute',
