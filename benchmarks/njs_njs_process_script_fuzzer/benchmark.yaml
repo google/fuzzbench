@@ -2,4 +2,11 @@ commit: ff39edb94acf932a1abfe134fa0d580f3064d697
 commit_date: 2020-06-02 02:06:00+00:00
 fuzz_target: njs_process_script_fuzzer
 project: njs
-type: bug\nunsupported_fuzzers:\n  - aflcc\n  - afl_qemu\n  - aflplusplus_qemu\n  - honggfuzz_qemu\n  - klee\n  - weizz_qemu
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - honggfuzz_qemu
+  - klee
+  - weizz_qemu

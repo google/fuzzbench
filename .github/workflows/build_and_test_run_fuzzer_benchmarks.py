@@ -59,6 +59,7 @@ BUG_BENCHMARKS = {
     'libhevc_hevc_dec_fuzzer',
     'matio_matio_fuzzer',
     'ndpi_fuzz_ndpi_reader',
+    'njs_njs_process_script_fuzzer',
     'openh264_decoder_fuzzer',
     'php_php-fuzz-execute',
     'stb_stbi_read_fuzzer',
