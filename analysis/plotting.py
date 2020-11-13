@@ -118,7 +118,7 @@ class Plotter:
         finally:
             plt.close(fig)
 
-    def coverage_growth_plot(self, benchmark_df, axes=None):
+    def coverage_growth_plot(self, benchmark_df, axes=None, logscale=False):
         """Draws coverage growth plot on given |axes|.
 
         The fuzzer labels will be in the order of their mean coverage at the
@@ -156,7 +156,7 @@ class Plotter:
         axes.set(ylabel='Edge coverage')
         axes.set(xlabel='Time (hour:minute)')
 
-        if self._logscale:
+        if self._logscale or logscale:
             axes.set_xscale('log')
             ticks = np.logspace(
                 # Start from the time of the first measurement.
@@ -174,12 +174,17 @@ class Plotter:
 
         sns.despine(ax=axes, trim=True)
 
-    def write_coverage_growth_plot(self, benchmark_df, image_path, wide=False):
+    def write_coverage_growth_plot(self,
+                                   benchmark_df,
+                                   image_path,
+                                   wide=False,
+                                   logscale=False):
         """Writes coverage growth plot."""
         self._write_plot_to_image(self.coverage_growth_plot,
                                   benchmark_df,
                                   image_path,
-                                  wide=wide)
+                                  wide=wide,
+                                  logscale=logscale)
 
     def violin_plot(self, benchmark_snapshot_df, axes=None):
         """Draws violin plot.

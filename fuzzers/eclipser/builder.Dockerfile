@@ -15,9 +15,20 @@
 ARG parent_image
 FROM $parent_image
 
-# Use StandaloneFuzzTargetMain.c from LLVM as the library.
+# Download and compile AFL v2.56b, since Eclipser now adopts AFL as its random
+# fuzzing module. Set AFL_NO_X86 to skip flaky tests.
+RUN git clone https://github.com/google/AFL.git /afl && \
+    cd /afl && \
+    git checkout 82b5e359463238d790cadbe2dd494d6a4928bff3 && \
+    AFL_NO_X86=1 make
+
+# Use afl_driver.cpp for AFL, and StandaloneFuzzTargetMain.c for Eclipser.
 RUN apt-get update && \
     apt-get install wget -y && \
+    wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
+    clang -Wno-pointer-sign -c /afl/llvm_mode/afl-llvm-rt.o.c -I/afl && \
+    clang++ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp && \
+    ar r /libAFL.a *.o && \
     wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/standalone/StandaloneFuzzTargetMain.c -O /StandaloneFuzzTargetMain.c && \
     clang -O2 -c /StandaloneFuzzTargetMain.c && \
     ar rc /libStandaloneFuzzTarget.a StandaloneFuzzTargetMain.o && \

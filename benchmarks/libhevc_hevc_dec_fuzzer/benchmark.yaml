@@ -1,0 +1,13 @@
+commit: d28f2210ee8e65afdfb07a1fd6582285d3d178e0
+commit_date: 2019-09-06 01:29:00+00:00
+fuzz_target: hevc_dec_fuzzer
+project: libhevc
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - honggfuzz_qemu
+  - klee
+  - weizz_qemu
+

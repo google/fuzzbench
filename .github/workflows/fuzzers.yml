@@ -5,7 +5,10 @@ on:
       - 'docker/**'  # Base image changes.
       - 'fuzzers/**' # Changes to fuzzers themselves.
       - 'benchmarks/**'  # Changes to benchmarks.
-      - 'src_analysis/**' # Changes that affect what gets built.
+      # Changes that affect what gets built.
+      - 'src_analysis/**'
+      - '.github/worfkflows/fuzzers.yml'
+      - '.github/worfkflows/build_and_test_run_fuzzer_benchmarks.py'
 
 jobs:
   build:
@@ -42,29 +45,22 @@ jobs:
           - aflplusplus_lightweizz
           - aflplusplus_explore
           - aflplusplus_268c
-          - aflplusplus_fixed
-          - aflplusplus_memcache_2mb
-          - aflplusplus_memcache_2mb_old
-          - aflplusplus_memcache_2mb_new
-          - aflplusplus_memcache_20mb
-          - aflplusplus_memcache_200mb
-          - aflplusplus_memcache_200mb_old
+          - aflplusplus_oldnew
+          - aflplusplus_introspection
           - afl_fast
           - afl_fast_v2
-          - afl_fast_branches_v2
-          - afl_nohandicap_spliceless2
-          - aflplusplus_cmplog
-          - aflplusplus_dict2file
-          - aflplusplus_coe_lessmem
-          - aflplusplus_fast_lessmem
           - aflplusplus_fast_v1
           - aflplusplus_fast_v2
-          - aflplusplus_fast_v2_late
+          - aflplusplus_fast_v1_time
+          - aflplusplus_fast_v2_time
           - aflplusplus_fast_branches_v2
-           
+          - aflplusplus_cmplog
+          - aflplusplus_dict2file
+
         benchmark_type:
           - oss-fuzz
           - standard
+          - bug
 
     steps:
     - uses: actions/checkout@v2
@@ -83,7 +79,7 @@ jobs:
     - name: Setup Python environment
       uses: actions/setup-python@v2
       with:
-        python-version: 3.7
+        python-version: 3.8
 
     # Copied from:
     # https://docs.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions

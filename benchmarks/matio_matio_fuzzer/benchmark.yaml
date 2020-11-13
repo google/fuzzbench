@@ -5,4 +5,8 @@ project: matio
 type: bug
 unsupported_fuzzers:
   - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - honggfuzz_qemu
   - klee
+  - weizz_qemu

@@ -6,13 +6,13 @@ google-cloud-logging==1.14.0
 Jinja2==2.11.1
 numpy==1.18.1
 Orange3==3.24.1
-pandas==1.0.1
+pandas==1.0.4
 psycopg2-binary==2.8.4
 pyfakefs==3.7.1
-pytest==5.3.5
+pytest==6.1.2
 python-dateutil==2.8.1
 pytz==2019.3
-PyYAML==5.3
+PyYAML==5.3.1
 redis==3.5.3
 rq==1.4.3
 scikit-posthocs==0.6.2
@@ -21,6 +21,6 @@ seaborn==0.10.0
 sqlalchemy==1.3.19
 
 # Needed for development.
-pylint==2.4.4
-pytype==2019.11.27
-yapf==0.28.0
+pylint==2.6.0
+pytype==2020.11.3
+yapf==0.30.0

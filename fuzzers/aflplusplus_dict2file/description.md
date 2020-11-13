@@ -1,11 +1,11 @@
 # aflplusplus
 
-AFL++ fuzzer instance that has hand-selected settings for every benchmark
-to show the improvements that can be gained when optimizing to a target.
-
-The schedule is "coe".
-
-See the fuzzer.py for the ever changing configuration :-)
+AFL++ fuzzer instance that has the following config active for all benchmarks:
+  - PCGUARD instrumentation 
+  - cmplog feature
+  - dict2file feature
+  - "explore" power schedule
+  - persistent mode + shared memory test cases
 
 Repository: [https://github.com/AFLplusplus/AFLplusplus/](https://github.com/AFLplusplus/AFLplusplus/)
 

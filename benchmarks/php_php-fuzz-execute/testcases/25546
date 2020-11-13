@@ -1,0 +1,1 @@
+<?class st{function __get($var){{$this->{$var.''};}}}$test=new st;$test->ÿ?>
