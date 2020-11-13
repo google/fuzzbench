@@ -39,7 +39,7 @@ RUN wget -q https://storage.googleapis.com/fuzzbench-files/packages-microsoft-pr
     rm packages-microsoft-prod.deb
 
 # Build Eclipser.
-RUN git clone https://github.com/SoftSec-KAIST/Eclipser /Eclipser && \
+RUN git clone https://github.com/SoftSec-KAIST/Eclipser.git /Eclipser && \
     cd /Eclipser && \
-    git checkout b072f045324869c607d3cdfa8fae0cdfed944492 && \
+    git checkout 310220649a4d790f8bc858ef85873399bba79a8c && \
     make

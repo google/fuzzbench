@@ -19,7 +19,7 @@ import threading
 import sqlalchemy
 from sqlalchemy import orm
 
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name,no-member
 engine = None
 session = None
 lock = None
