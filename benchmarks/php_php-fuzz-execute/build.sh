@@ -46,6 +46,7 @@ make -j$(nproc)
 # Generate corpuses and dictionaries.
 sapi/cli/php sapi/fuzzer/generate_all.php
 
+
 FUZZERS="php-fuzz-execute"
 for fuzzerName in $FUZZERS; do
 	cp sapi/fuzzer/$fuzzerName $OUT/
