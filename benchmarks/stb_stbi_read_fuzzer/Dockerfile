@@ -25,5 +25,4 @@ RUN wget -O $SRC/stb/gif.tar.gz https://storage.googleapis.com/google-code-archi
 RUN wget -O $SRC/stb/jpg.tar.gz https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/imagetestsuite/imagetestsuite-jpg-1.00.tar.gz
 RUN wget -O $SRC/stb/tests/gif.dict https://raw.githubusercontent.com/mirrorer/afl/master/dictionaries/gif.dict &> /dev/null
 
-WORKDIR stb
 COPY build.sh $SRC/
