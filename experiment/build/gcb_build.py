@@ -70,10 +70,10 @@ def build_coverage(benchmark):
     _build(config, config_name)
 
 
-def _build(config: Dict,
-           config_name: str,
-           timeout_seconds: int = GCB_BUILD_TIMEOUT
-          ) -> new_process.ProcessResult:
+def _build(
+        config: Dict,
+        config_name: str,
+        timeout_seconds: int = GCB_BUILD_TIMEOUT) -> new_process.ProcessResult:
     """Submit build to GCB."""
     with tempfile.NamedTemporaryFile() as config_file:
         yaml_utils.write(config_file.name, config)
