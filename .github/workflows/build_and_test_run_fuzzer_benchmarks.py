@@ -62,7 +62,6 @@ BUG_BENCHMARKS = {
     'openh264_decoder_fuzzer',
     'php_php-fuzz-execute',
     'stb_stbi_read_fuzzer',
-    'wabt_wasm2wat_fuzzer',
 }
 
 
