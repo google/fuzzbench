@@ -34,8 +34,8 @@ CONFIG_DIR = 'config'
 # Maximum time to wait for a GCB config to finish build.
 GCB_BUILD_TIMEOUT = 4 * 60 * 60  # 4 hours.
 
-# High cpu configuration for faster builds.
-GCB_MACHINE_TYPE = 'n1-highcpu-8'
+# High cpu and memory configuration, matches OSS-Fuzz.
+GCB_MACHINE_TYPE = 'n1-highcpu-32'
 
 logger = logs.Logger('builder')  # pylint: disable=invalid-name
 
