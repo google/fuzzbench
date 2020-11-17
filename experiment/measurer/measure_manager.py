@@ -495,56 +495,6 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         extract_corpus(corpus_archive_path, unit_blacklist, self.corpus_dir)
         return True
 
-    def save_crash_metadata(self, crashes, cycle):
-        """Stores crash metadata in database and per-cycle metadata file."""
-        if not crashes:
-            return
-
-        logs.info('Storing crashes in database.')
-        experiment_name = experiment_utils.get_experiment_name()
-        crash_time = experiment_utils.get_cycle_time(cycle)
-        for crash_key in crashes:
-            crash = crashes[crash_key]
-            if db_utils.query(models.Crash).filter_by(
-                    experiment=experiment_name,
-                    fuzzer=self.fuzzer,
-                    benchmark=self.benchmark,
-                    crash_key=crash_key).first():
-                logs.info('Crash already exists in database: %s', crash)
-                continue
-
-            logs.info('New crash found, storing in database: %s', crash)
-            try:
-                db_utils.add_all([
-                    models.Crash(experiment=experiment_name,
-                                 fuzzer=self.fuzzer,
-                                 benchmark=self.benchmark,
-                                 crash_key=crash_key,
-                                 crash_testcase=crash.crash_testcase,
-                                 crash_type=crash.crash_type,
-                                 crash_address=crash.crash_address,
-                                 crash_state=crash.crash_state,
-                                 crash_stacktrace=crash.crash_stacktrace,
-                                 crash_time=crash_time)
-                ])
-            except Exception:  # pylint: disable=broad-except
-                # Can happen due to race condition with db updates.
-                logs.error('Failed to store crash.')
-
-        logs.info('Storing crashes in metadata file.')
-        trial_crashes_dir = posixpath.join(self.trial_dir, 'crashes')
-        crash_metadata_name = (
-            experiment_utils.get_crash_metadata_filename(cycle))
-        crash_metadata_local_path = os.path.join(
-            os.path.dirname(self.crashes_dir), crash_metadata_name)
-        crash_metadata_filestore_path = exp_path.filestore(
-            posixpath.join(trial_crashes_dir, crash_metadata_name))
-        with open(crash_metadata_local_path, 'w') as file_handle:
-            file_handle.write(json.dumps(crashes, indent=2, sort_keys=True))
-        filestore_utils.cp(crash_metadata_local_path,
-                           crash_metadata_filestore_path)
-        os.remove(crash_metadata_local_path)
-
     def save_crash_files(self, cycle):
         """Save crashes in per-cycle crash archive."""
         crashes_archive_name = experiment_utils.get_crashes_archive_name(cycle)
@@ -570,7 +520,9 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         crash_metadata = run_crashes.do_crashes_run(app_binary,
                                                     self.crashes_dir)
 
-        self.save_crash_metadata(crash_metadata, cycle)
+        # TODO(aarya): Process crashes and store in database.
+        logs.info('Crashes: %s', crash_metadata)
+
         self.save_crash_files(cycle)
 
     def update_measured_files(self):

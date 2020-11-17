@@ -21,14 +21,9 @@ from clusterfuzz import stacktraces
 from common import logs
 from common import new_process
 from experiment.measurer import sanitizer
+from experiment.measurer import constants
 
 logger = logs.Logger('run_crashes')
-
-# Memory limit for libfuzzer crash.
-RSS_LIMIT_MB = 2048
-
-# Per-unit processing timeout for libfuzzer crash.
-UNIT_TIMEOUT = 10
 
 Crash = collections.namedtuple('Crash', [
     'crash_testcase', 'crash_type', 'crash_address', 'crash_state',
@@ -43,8 +38,8 @@ def process_crash(app_binary, crash_testcase_path, crashes_dir):
     sanitizer.set_sanitizer_options(env)
     command = [
         app_binary,
-        '-timeout=%d' % UNIT_TIMEOUT,
-        '-rss_limit_mb=%d' % RSS_LIMIT_MB, crash_testcase_path
+        '-timeout=%d' % constants.UNIT_TIMEOUT,
+        '-rss_limit_mb=%d' % constants.RSS_LIMIT_MB, crash_testcase_path
     ]
     app_binary_dir = os.path.dirname(app_binary)
     result = new_process.execute(command,
@@ -52,7 +47,7 @@ def process_crash(app_binary, crash_testcase_path, crashes_dir):
                                  cwd=app_binary_dir,
                                  expect_zero=False,
                                  kill_children=True,
-                                 timeout=UNIT_TIMEOUT + 5)
+                                 timeout=constants.UNIT_TIMEOUT + 5)
     if not result.output:
         # Hang happened, no crash. Bail out.
         return None
