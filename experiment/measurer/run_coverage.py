@@ -21,13 +21,18 @@ from typing import List
 from common import experiment_utils
 from common import logs
 from common import new_process
-from experiment.measurer import constants
 from experiment.measurer import sanitizer
 
 logger = logs.Logger('run_coverage')
 
 # Time buffer for libfuzzer merge to gracefully exit.
 EXIT_BUFFER = 15
+
+# Memory limit for libfuzzer merge.
+RSS_LIMIT_MB = 2048
+
+# Per-unit processing timeout for libfuzzer merge.
+UNIT_TIMEOUT = 10
 
 # Max time to spend on libfuzzer merge.
 MAX_TOTAL_TIME = experiment_utils.get_snapshot_seconds()
@@ -53,8 +58,8 @@ def do_coverage_run(  # pylint: disable=too-many-locals
         command = [
             coverage_binary, '-merge=1', '-dump_coverage=1',
             '-artifact_prefix=%s/' % crashes_dir,
-            '-timeout=%d' % constants.UNIT_TIMEOUT,
-            '-rss_limit_mb=%d' % constants.RSS_LIMIT_MB,
+            '-timeout=%d' % UNIT_TIMEOUT,
+            '-rss_limit_mb=%d' % RSS_LIMIT_MB,
             '-max_total_time=%d' % (MAX_TOTAL_TIME - EXIT_BUFFER), merge_dir,
             new_units_dir
         ]

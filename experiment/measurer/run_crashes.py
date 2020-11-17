@@ -20,8 +20,8 @@ from clusterfuzz import stacktraces
 
 from common import logs
 from common import new_process
+from experiment.measurer import run_coverage
 from experiment.measurer import sanitizer
-from experiment.measurer import constants
 
 logger = logs.Logger('run_crashes')
 
@@ -38,8 +38,8 @@ def process_crash(app_binary, crash_testcase_path, crashes_dir):
     sanitizer.set_sanitizer_options(env)
     command = [
         app_binary,
-        '-timeout=%d' % constants.UNIT_TIMEOUT,
-        '-rss_limit_mb=%d' % constants.RSS_LIMIT_MB, crash_testcase_path
+        '-timeout=%d' % run_coverage.UNIT_TIMEOUT,
+        '-rss_limit_mb=%d' % run_coverage.RSS_LIMIT_MB, crash_testcase_path
     ]
     app_binary_dir = os.path.dirname(app_binary)
     result = new_process.execute(command,
@@ -47,7 +47,7 @@ def process_crash(app_binary, crash_testcase_path, crashes_dir):
                                  cwd=app_binary_dir,
                                  expect_zero=False,
                                  kill_children=True,
-                                 timeout=constants.UNIT_TIMEOUT + 5)
+                                 timeout=run_coverage.UNIT_TIMEOUT + 5)
     if not result.output:
         # Hang happened, no crash. Bail out.
         return None
