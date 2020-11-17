@@ -51,6 +51,8 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
         aflplusplus_fuzzer.build("tracepc")
     elif benchmark_name == 'ndpi_fuzz_ndpi_reader':
         aflplusplus_fuzzer.build("tracepc", "dict2file")
+    elif benchmark_name == 'openexr_openexr_exrenvmap_fuzzer':
+        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
     elif benchmark_name == 'openssl_x509':
         aflplusplus_fuzzer.build("tracepc", "dict2file")
     elif benchmark_name == 'php_php-fuzz-execute':
