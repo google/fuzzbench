@@ -44,6 +44,7 @@ from database import models
 from experiment.build import build_utils
 from experiment.measurer import coverage_utils
 from experiment.measurer import run_coverage
+from experiment.measurer import run_crashes
 from experiment import scheduler
 
 logger = logs.Logger('measurer')  # pylint: disable=invalid-name
@@ -215,8 +216,8 @@ def _query_unmeasured_trials(experiment: str):
                               started_trials_filter, nonpreempted_trials_filter)
 
 
-def _get_unmeasured_first_snapshots(experiment: str
-                                   ) -> List[SnapshotMeasureRequest]:
+def _get_unmeasured_first_snapshots(
+        experiment: str) -> List[SnapshotMeasureRequest]:
     """Returns a list of unmeasured SnapshotMeasureRequests that are the first
     snapshot for their trial. The trials are trials in |experiment|."""
     trials_without_snapshots = _query_unmeasured_trials(experiment)
@@ -247,8 +248,8 @@ def _query_measured_latest_snapshots(experiment: str):
     return (SnapshotWithTime(*snapshot) for snapshot in snapshots_query)
 
 
-def _get_unmeasured_next_snapshots(experiment: str, max_cycle: int
-                                  ) -> List[SnapshotMeasureRequest]:
+def _get_unmeasured_next_snapshots(
+        experiment: str, max_cycle: int) -> List[SnapshotMeasureRequest]:
     """Returns a list of the latest unmeasured SnapshotMeasureRequests of
     trials in |experiment| that have been measured at least once in
     |experiment|. |max_total_time| is used to determine if a trial has another
@@ -494,23 +495,35 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         extract_corpus(corpus_archive_path, unit_blacklist, self.corpus_dir)
         return True
 
-    def archive_crashes(self, cycle):
-        """Archive this cycle's crashes into filestore."""
-        if not os.listdir(self.crashes_dir):
-            logs.info('No crashes found for cycle %d.', cycle)
-            return
-
-        logs.info('Archiving crashes for cycle %d.', cycle)
+    def save_crash_files(self, cycle):
+        """Save crashes in per-cycle crash archive."""
         crashes_archive_name = experiment_utils.get_crashes_archive_name(cycle)
         archive_path = os.path.join(os.path.dirname(self.crashes_dir),
                                     crashes_archive_name)
         with tarfile.open(archive_path, 'w:gz') as tar:
             tar.add(self.crashes_dir,
                     arcname=os.path.basename(self.crashes_dir))
+        trial_crashes_dir = posixpath.join(self.trial_dir, 'crashes')
         archive_filestore_path = exp_path.filestore(
-            posixpath.join(self.trial_dir, 'crashes', crashes_archive_name))
+            posixpath.join(trial_crashes_dir, crashes_archive_name))
         filestore_utils.cp(archive_path, archive_filestore_path)
         os.remove(archive_path)
+
+    def process_crashes(self, cycle):
+        """Process and store crashes."""
+        if not os.listdir(self.crashes_dir):
+            logs.info('No crashes found for cycle %d.', cycle)
+            return
+
+        logs.info('Processing crashes for cycle %d.', cycle)
+        app_binary = coverage_utils.get_coverage_binary(self.benchmark)
+        crash_metadata = run_crashes.do_crashes_run(app_binary,
+                                                    self.crashes_dir)
+
+        # TODO(aarya): Process crashes and store in database.
+        logs.info('Crashes: %s', crash_metadata)
+
+        self.save_crash_files(cycle)
 
     def update_measured_files(self):
         """Updates the measured-files.txt file for this trial with
@@ -596,7 +609,7 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
 
     measuring_start_time = time.time()
     snapshot_logger.info('Measuring cycle: %d.', cycle)
-    this_time = cycle * experiment_utils.get_snapshot_seconds()
+    this_time = experiment_utils.get_cycle_time(cycle)
     if snapshot_measurer.is_cycle_unchanged(cycle):
         snapshot_logger.info('Cycle: %d is unchanged.', cycle)
         regions_covered = snapshot_measurer.get_current_coverage()
@@ -644,7 +657,8 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     snapshot_measurer.update_measured_files()
 
     # Archive crashes directory.
-    snapshot_measurer.archive_crashes(cycle)
+    snapshot_measurer.process_crashes(cycle)
+
     measuring_time = round(time.time() - measuring_start_time, 2)
     snapshot_logger.info('Measured cycle: %d in %f seconds.', cycle,
                          measuring_time)
