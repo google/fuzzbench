@@ -20,7 +20,11 @@
 
 void ignore (void * ctx, const char * msg, ...) {}
 
+#ifdef KIRENENKO
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+#else
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+#endif
   xmlSetGenericErrorFunc(NULL, &ignore);
   xmlDocPtr doc;
   if (doc = xmlReadMemory((const char *)(data), size,

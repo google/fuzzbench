@@ -15,9 +15,7 @@
 #
 ################################################################################
 
-if [ ! -d bld ]; then
-    mkdir bld
-fi
+mkdir -p bld
 cd bld
 
 export ASAN_OPTIONS=detect_leaks=0
@@ -36,11 +34,18 @@ make clean
 make -j$(nproc)
 make sqlite3.c
 
+
 $CC $CFLAGS -I. -c \
     $SRC/sqlite3/test/ossfuzz.c -o $SRC/sqlite3/test/ossfuzz.o
 
+if [[ -z "${KIRENENKO_FUZZER}" ]]; then
+$CXX $CXXFLAGS \
+    $SRC/sqlite3/test/ossfuzz.o -o $OUT/ossfuzz \
+    $LIB_FUZZING_ENGINE ./sqlite3.o
+else
 $CC $CFLAGS \
     $SRC/sqlite3/test/ossfuzz.o -o $OUT/$FUZZ_TARGET \
     $LIB_FUZZING_ENGINE ./sqlite3.o
+fi
 
 cp $SRC/*.dict $SRC/*.zip $OUT/

@@ -20,6 +20,11 @@ autoreconf -fiv
 make clean
 make -j $(nproc)
 
-$CC $CFLAGS $SRC/libjpeg_turbo_fuzzer.c -I . \
-    .libs/libturbojpeg.a $FUZZER_LIB -o $OUT/$FUZZ_TARGET
+if [[ -z "${KIRENENKO_FUZZER}" ]]; then
+    $CXX $CXXFLAGS -std=c++11 $SRC/libjpeg_turbo_fuzzer.c -I . \
+        .libs/libturbojpeg.a $FUZZER_LIB -o $OUT/libjpeg_turbo_fuzzer
+else
+    $CC $CFLAGS -DKIRENENKO $SRC/libjpeg_turbo_fuzzer.c -I . \
+        .libs/libturbojpeg.a $FUZZER_LIB -o $OUT/$FUZZ_TARGET
+fi
 cp -r /opt/seeds $OUT/

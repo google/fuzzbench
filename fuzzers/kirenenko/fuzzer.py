@@ -41,6 +41,7 @@ def build():
     build_afl()
 
     # build Kirenenko
+    os.environ['KIRENENKO_FUZZER'] = "ok"
     os.environ['CC'] = '/Kirenenko/bin/ko-clang'
     os.environ['CXX'] = '/Kirenenko/bin/ko-clang'
     os.environ['KO_CC'] = 'clang-6.0'

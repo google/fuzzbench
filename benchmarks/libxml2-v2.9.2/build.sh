@@ -24,5 +24,11 @@ git checkout -f v2.9.2
 make clean
 make -j $(nproc)
 
-$CC $CFLAGS  $SRC/target.c -I include .libs/libxml2.a \
-    $FUZZER_LIB -o $OUT/$FUZZ_TARGET
+if [[ -z "${KIRENENKO_FUZZER}" ]]; then
+    $CXX $CXXFLAGS -std=c++11 $SRC/target.c -I include \
+        .libs/libxml2.a $FUZZER_LIB -o $OUT/xml
+else
+    $CC $CFLAGS -DKIRENENKO $SRC/target.c -I include \
+        .libs/libxml2.a $FUZZER_LIB -o $OUT/$FUZZ_TARGET
+fi
+

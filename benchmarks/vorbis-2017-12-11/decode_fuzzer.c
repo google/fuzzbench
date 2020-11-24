@@ -33,8 +33,11 @@ size_t read_func(void *ptr, size_t size1, size_t size2, void *datasource) {
   return len;
 }
 
-
+#ifdef KIRENENKO
 int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
+#else
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
+#endif
   ov_callbacks memory_callbacks = {0};
   memory_callbacks.read_func = read_func;
   struct vorbis_data data_st;

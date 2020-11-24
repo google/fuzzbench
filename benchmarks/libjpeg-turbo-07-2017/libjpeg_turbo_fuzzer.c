@@ -19,8 +19,11 @@
 
 #include <turbojpeg.h>
 
-
+#ifdef KIRENENKO
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+#else
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+#endif
     tjhandle jpegDecompressor = tjInitDecompress();
 
     int width, height, subsamp, colorspace;

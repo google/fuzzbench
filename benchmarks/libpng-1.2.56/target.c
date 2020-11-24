@@ -39,7 +39,11 @@ static const int kPngHeaderSize = 8;
 
 // Fuzzing entry point. Roughly follows the libpng book example:
 // http://www.libpng.org/pub/png/book/chapter13.html
+#ifdef KIRENENKO
 int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
+#else
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
+#endif
   if (size < kPngHeaderSize) {
     return 0;
   }
