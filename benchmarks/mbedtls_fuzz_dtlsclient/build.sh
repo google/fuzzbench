@@ -25,7 +25,7 @@ cmake ..
 # build including fuzzers
 make -j$(nproc) all
 if [[ -z "${KIRENENKO_FUZZER}" ]]; then
-    cp programs/fuzz/fuzz_dtlsclient $OUT/
+    cp programs/fuzz/fuzz_* $OUT/
 else
     cp programs/fuzz/fuzz_dtlsclient $OUT/$FUZZ_TARGET
 fi
