@@ -7,3 +7,4 @@ unsupported_fuzzers:
   - aflplusplus_qemu
   - klee
   - weizz_qemu
+  - kirenenko

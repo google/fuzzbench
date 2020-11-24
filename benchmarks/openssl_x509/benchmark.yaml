@@ -18,3 +18,4 @@ fuzz_target: x509
 project: openssl
 unsupported_fuzzers:
   - klee
+  - kirenenko

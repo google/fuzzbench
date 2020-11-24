@@ -16,3 +16,4 @@ fuzz_target: hb-shape-fuzzer
 project: harfbuzz
 unsupported_fuzzers:
   - klee
+  - kirenenko
