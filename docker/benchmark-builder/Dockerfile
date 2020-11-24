@@ -27,9 +27,9 @@ ENV BENCHMARK $benchmark
 
 # Copy latest python3 from base-image into local.
 COPY --from=base-image /usr/local/bin/python3* /usr/local/bin/
-COPY --from=base-image /usr/local/lib/python3.7 /usr/local/lib/python3.7
-COPY --from=base-image /usr/local/include/python3.7m /usr/local/include/python3.7m
-COPY --from=base-image /usr/local/lib/python3.7/site-packages /usr/local/lib/python3.7/site-packages
+COPY --from=base-image /usr/local/lib/python3.8 /usr/local/lib/python3.8
+COPY --from=base-image /usr/local/include/python3.8 /usr/local/include/python3.8
+COPY --from=base-image /usr/local/lib/python3.8/site-packages /usr/local/lib/python3.8/site-packages
 
 # Copy the entire fuzzers directory tree to allow for module dependencies.
 COPY fuzzers $SRC/fuzzers

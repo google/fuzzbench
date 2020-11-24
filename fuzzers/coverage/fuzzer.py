@@ -20,7 +20,9 @@ from fuzzers import utils
 
 def build():
     """Build benchmark."""
-    cflags = ['-fprofile-instr-generate', '-fcoverage-mapping']
+    cflags = [
+        '-fprofile-instr-generate', '-fcoverage-mapping', '-gline-tables-only'
+    ]
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 

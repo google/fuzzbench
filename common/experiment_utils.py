@@ -29,6 +29,11 @@ def get_snapshot_seconds():
     return environment.get('SNAPSHOT_PERIOD', DEFAULT_SNAPSHOT_SECONDS)
 
 
+def get_cycle_time(cycle):
+    """Return time elapsed for a cycle."""
+    return cycle * get_snapshot_seconds()
+
+
 def get_work_dir():
     """Returns work directory."""
     return os.environ['WORK']
@@ -88,8 +93,13 @@ def get_stats_filename(cycle: int) -> str:
     return get_cycle_filename('stats', cycle) + '.json'
 
 
+def get_crash_metadata_filename(cycle: int) -> str:
+    """Returns a crash metadata name given a cycle."""
+    return get_cycle_filename('crashes', cycle) + '.json'
+
+
 def get_crashes_archive_name(cycle: int) -> str:
-    """Return as crashes archive name given a cycle."""
+    """Returns a crashes archive name given a cycle."""
     return get_cycle_filename('crashes', cycle) + '.tar.gz'
 
 

@@ -63,6 +63,7 @@ RUN git clone https://github.com/klee/klee-uclibc.git /klee-uclibc && \
 # When we use it, be sure to also use klee-uclibc from https://github.com/lmrs2/klee-uclibc.git.
 RUN git clone https://github.com/lmrs2/klee.git /klee && \
     cd /klee && \
+    git checkout 3810917841c1cb58587719c1d3d47181a2401324 && \
     wget -O tools/ktest-tool/ktest-tool https://raw.githubusercontent.com/lmrs2/klee/debug/tools/ktest-tool/ktest-tool
 
 # The libcxx build script in the KLEE repo depends on wllvm:

@@ -51,8 +51,12 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
         aflplusplus_fuzzer.build("tracepc")
     elif benchmark_name == 'ndpi_fuzz_ndpi_reader':
         aflplusplus_fuzzer.build("tracepc", "dict2file")
+    elif benchmark_name == 'openexr_openexr_exrenvmap_fuzzer':
+        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
     elif benchmark_name == 'openssl_x509':
         aflplusplus_fuzzer.build("tracepc", "dict2file")
+    elif benchmark_name == 'php_php-fuzz-execute':
+        aflplusplus_fuzzer.build("classic", "ctx", "cmplog")
     elif benchmark_name == 'php_php-fuzz-parser':
         aflplusplus_fuzzer.build("classic", "ctx", "cmplog")
     elif benchmark_name == 'proj4-2017-08-14':
@@ -83,20 +87,29 @@ def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-man
     run_options = []
 
     if benchmark_name == 'bloaty_fuzz_target':
-        run_options = ['-Z']
+        run_options = ['-Z', '-L', '0']
         os.environ['AFL_TESTCACHE_SIZE'] = '50'
     elif benchmark_name == 'curl_curl_fuzzer_http':
         os.environ['AFL_TESTCACHE_SIZE'] = '50'
+        run_options = ['-L', '-1']
+    elif benchmark_name == 'lcms-2017-03-21':
+        run_options = ['-L', '0']
     elif benchmark_name == 'libjpeg-turbo-07-2017':
         os.environ['AFL_TESTCACHE_SIZE'] = '50'
     elif benchmark_name == 'libxslt_xpath':
         os.environ['AFL_TESTCACHE_SIZE'] = '50'
+        run_options = ['-L', '-1']
+    elif benchmark_name == 'mbedtls_fuzz_dtlsclient':
+        run_options = ['-L', '-1']
+    elif benchmark_name == 'openssl_x509':
+        run_options = ['-L', '0']
     elif benchmark_name == 'proj4-2017-08-14':
         os.environ['AFL_TESTCACHE_SIZE'] = '50'
     elif benchmark_name == 're2-2014-12-09':
         os.environ['AFL_TESTCACHE_SIZE'] = '50'
     elif benchmark_name == 'sqlite3_ossfuzz':
         os.environ['AFL_TESTCACHE_SIZE'] = '500'
+        run_options = ['-L', '0']
     elif benchmark_name == 'woff2-2016-05-06':
         os.environ['AFL_TESTCACHE_SIZE'] = '50'
     elif benchmark_name == 'zlib_zlib_uncompress_fuzzer':
