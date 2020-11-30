@@ -107,8 +107,6 @@ def run_afl_fuzz(input_corpus,
         # Use no memory limit as ASAN doesn't play nicely with one.
         '-m',
         'none',
-        '-t',
-        '1000+',  # Use same default 1 sec timeout, but add '+' to skip hangs.
     ]
     # Use '-d' to skip deterministic mode, as long as it it compatible with
     # additional flags.
