@@ -71,3 +71,24 @@ class Snapshot(Base):
     trial = sqlalchemy.orm.relationship('Trial', back_populates='snapshots')
     edges_covered = Column(Integer, nullable=False)
     fuzzer_stats = Column(JSON, nullable=True)
+    crashes = sqlalchemy.orm.relationship(
+        'Crash',
+        backref='snapshot',
+        primaryjoin=
+        'and_(Snapshot.time==Crash.time, Snapshot.trial_id==Crash.trial_id)')
+
+
+class Crash(Base):
+    """Represents crashes found in experiments."""
+    __tablename__ = 'crash'
+
+    time = Column(Integer, ForeignKey('snapshot.time'), primary_key=True)
+    trial_id = Column(Integer,
+                      ForeignKey('snapshot.trial_id'),
+                      primary_key=True)
+    crash_key = Column(String, nullable=False, primary_key=True)
+    crash_type = Column(String, nullable=False)
+    crash_address = Column(String, nullable=False)
+    crash_state = Column(String, nullable=False)
+    crash_stacktrace = Column(String, nullable=False)
+    crash_testcase = Column(String, nullable=False)

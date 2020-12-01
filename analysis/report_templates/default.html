@@ -202,7 +202,13 @@
                       around the mean coverage.
                 </div>
             </div>
-
+            <div class="row">
+                <div class="col s12">
+                    <h5 class="center-align">Unique bugs found over time</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.bugs_plot }}">
+                </div>
+            </div>
 
             {% if benchmark.fuzzers_with_not_enough_samples and not in_progress %}
             <div class="card-panel deep-orange lighten-3">

@@ -26,8 +26,15 @@ def validate_data(experiment_df):
         raise EmptyDataError('Empty experiment data.')
 
     expected_columns = {
-        'experiment', 'benchmark', 'fuzzer', 'trial_id', 'time_started',
-        'time_ended', 'time', 'edges_covered'
+        'experiment',
+        'benchmark',
+        'fuzzer',
+        'trial_id',
+        'time_started',
+        'time_ended',
+        'time',
+        'edges_covered',
+        'crash_key',
     }
     missing_columns = expected_columns.difference(experiment_df.columns)
     if missing_columns:
@@ -38,7 +45,7 @@ def validate_data(experiment_df):
 def drop_uninteresting_columns(experiment_df):
     """Returns table with only interesting columns."""
     return experiment_df[[
-        'benchmark', 'fuzzer', 'trial_id', 'time', 'edges_covered',
+        'benchmark', 'fuzzer', 'trial_id', 'time', 'edges_covered', 'crash_key',
         'experiment', 'experiment_filestore'
     ]]
 
@@ -312,3 +319,13 @@ def experiment_level_ranking(experiment_snapshots_df,
     pivot_table = experiment_pivot_table(experiment_snapshots_df,
                                          benchmark_level_ranking_function)
     return experiment_level_ranking_function(pivot_table)
+
+
+def get_bugs_snaphot(benchmark_df):
+    """Return a dataframe with cumulative unique bug growth count."""
+    bugs_df = benchmark_df[['fuzzer', 'time']].drop_duplicates()
+    bugs_df['bugs'] = bugs_df.apply(lambda x: benchmark_df[
+        (benchmark_df['fuzzer'] == x['fuzzer']) &
+        (benchmark_df['time'] <= x['time'])]['crash_key'].nunique(),
+                                    axis=1)
+    return bugs_df
