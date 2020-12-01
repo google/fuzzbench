@@ -321,11 +321,11 @@ def experiment_level_ranking(experiment_snapshots_df,
     return experiment_level_ranking_function(pivot_table)
 
 
-def get_bugs_snaphot(benchmark_df):
+def get_crash_snaphot(benchmark_df):
     """Return a dataframe with cumulative unique bug growth count."""
-    bugs_df = benchmark_df[['fuzzer', 'time']].drop_duplicates()
-    bugs_df['bugs'] = bugs_df.apply(lambda x: benchmark_df[
+    crash_df = benchmark_df[['fuzzer', 'time']].drop_duplicates()
+    crash_df['crashes'] = crash_df.apply(lambda x: benchmark_df[
         (benchmark_df['fuzzer'] == x['fuzzer']) &
         (benchmark_df['time'] <= x['time'])]['crash_key'].nunique(),
-                                    axis=1)
-    return bugs_df
+                                         axis=1)
+    return crash_df

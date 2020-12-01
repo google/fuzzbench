@@ -18,6 +18,7 @@ from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKeyConstraint
 from sqlalchemy import Integer
 from sqlalchemy import JSON
 from sqlalchemy import String
@@ -82,13 +83,14 @@ class Crash(Base):
     """Represents crashes found in experiments."""
     __tablename__ = 'crash'
 
-    time = Column(Integer, ForeignKey('snapshot.time'), primary_key=True)
-    trial_id = Column(Integer,
-                      ForeignKey('snapshot.trial_id'),
-                      primary_key=True)
+    time = Column(Integer, nullable=False, primary_key=True)
+    trial_id = Column(Integer, nullable=False, primary_key=True)
     crash_key = Column(String, nullable=False, primary_key=True)
     crash_type = Column(String, nullable=False)
     crash_address = Column(String, nullable=False)
     crash_state = Column(String, nullable=False)
     crash_stacktrace = Column(String, nullable=False)
     crash_testcase = Column(String, nullable=False)
+
+    __table_args__ = (ForeignKeyConstraint(
+        [time, trial_id], ['snapshot.time', 'snapshot.trial_id']),)

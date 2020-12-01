@@ -432,19 +432,19 @@ class Plotter:
                                   image_path,
                                   wide=True)
 
-    def bugs_plot(self, benchmark_df, axes=None):
-        """Draws bugs plot."""
+    def crash_plot(self, benchmark_df, axes=None):
+        """Draws crash plot."""
         benchmark_names = benchmark_df.benchmark.unique()
         assert len(benchmark_names) == 1, 'Not a single benchmark data!'
 
         benchmark_snapshot_df = data_utils.get_benchmark_snapshot(benchmark_df)
         snapshot_time = benchmark_snapshot_df.time.unique()[0]
-        bugs_df = data_utils.get_bugs_snaphot(benchmark_df)
+        crash_df = data_utils.get_crash_snaphot(benchmark_df)
 
-        axes = sns.lineplot(y='bugs',
+        axes = sns.lineplot(y='crashes',
                             x='time',
                             hue='fuzzer',
-                            data=bugs_df[bugs_df.time <= snapshot_time],
+                            data=crash_df[crash_df.time <= snapshot_time],
                             palette=self._fuzzer_colors,
                             ax=axes)
 
@@ -459,7 +459,7 @@ class Plotter:
                     loc='upper left',
                     frameon=False)
 
-        axes.set(ylabel='Unique bugs')
+        axes.set(ylabel='Unique crashes')
         axes.set(xlabel='Time (hour:minute)')
 
         ticks = np.arange(
@@ -471,6 +471,9 @@ class Plotter:
 
         sns.despine(ax=axes, trim=True)
 
-    def write_bugs_plot(self, benchmark_df, image_path):
-        """Writes violin plot."""
-        self._write_plot_to_image(self.bugs_plot, benchmark_df, image_path)
+    def write_crash_plot(self, benchmark_df, image_path):
+        """Writes crash plot."""
+        self._write_plot_to_image(self.crash_plot,
+                                  benchmark_df,
+                                  image_path,
+                                  wide=True)

@@ -324,9 +324,9 @@ class BenchmarkResults:
         return plot_filename
 
     @property
-    def bugs_plot(self):
-        """Bugs plot."""
-        plot_filename = self._prefix_with_benchmark('bugs.svg')
-        self._plotter.write_bugs_plot(self._benchmark_df,
-                                      self._get_full_path(plot_filename))
+    def crash_plot(self):
+        """Crash plot."""
+        plot_filename = self._prefix_with_benchmark('crash_plot.svg')
+        self._plotter.write_crash_plot(self._benchmark_df,
+                                       self._get_full_path(plot_filename))
         return plot_filename
