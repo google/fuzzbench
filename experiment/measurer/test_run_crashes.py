@@ -51,3 +51,11 @@ class TestIntegrationRunCoverage:
         assert actual_crash.crash_state == 'fuzz_target.c\n'
         assert ('ERROR: AddressSanitizer: ABRT on unknown address'
                 in actual_crash.crash_stacktrace)
+
+
+# pylint: disable=protected-access
+def test_filter_crash_type():
+    """Tests _filter_crash_type."""
+    assert (run_crashes._filter_crash_type('Heap-buffer-overflow\nREAD 4') ==
+            'Heap-buffer-overflow\nREAD')
+    assert run_crashes._filter_crash_type('Timeout') == 'Timeout'
