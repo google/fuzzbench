@@ -32,7 +32,7 @@ Crash = collections.namedtuple('Crash', [
 ])
 
 SIZE_REGEX = re.compile(r'\s([0-9]+|{\*})$', re.DOTALL)
-TEMPLATE_REGEX = re.compile(r'<[^>]+>')
+CPLUSPLUS_TEMPLATE_REGEX = re.compile(r'(<[^>]+>|<[^\n]+(?=\n))')
 
 
 def _filter_crash_type(crash_type):
@@ -42,7 +42,7 @@ def _filter_crash_type(crash_type):
 
 def _filter_crash_state(crash_state):
     """Filters crash state to remove simple templates e.g. <int>."""
-    return TEMPLATE_REGEX.sub('', crash_state)
+    return CPLUSPLUS_TEMPLATE_REGEX.sub('', crash_state)
 
 
 def process_crash(app_binary, crash_testcase_path, crashes_dir):

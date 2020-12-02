@@ -72,4 +72,4 @@ def test_filter_crash_state():
         'parquet::DictDecoderImpl<parquet::PhysicalType<\n') ==
             'Segv on unknown address:int* std::__1::fill_n\n'
             'int arrow::util::RleDecoder::GetBatchWithDict\n'
-            'parquet::DictDecoderImpl<parquet::PhysicalType<\n')
+            'parquet::DictDecoderImpl\n')
