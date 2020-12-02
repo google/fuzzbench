@@ -30,7 +30,7 @@ Crash = collections.namedtuple('Crash', [
     'crash_testcase', 'crash_type', 'crash_address', 'crash_state',
     'crash_stacktrace'
 ])
-NUMBER_REGEX = re.compile(r'\s[0-9]+', re.DOTALL)
+NUMBER_REGEX = re.compile(r'\s([0-9]+|{\*})', re.DOTALL)
 
 
 def _filter_crash_type(crash_type):

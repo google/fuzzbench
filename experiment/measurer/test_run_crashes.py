@@ -58,4 +58,6 @@ def test_filter_crash_type():
     """Tests _filter_crash_type."""
     assert (run_crashes._filter_crash_type('Heap-buffer-overflow\nREAD 4') ==
             'Heap-buffer-overflow\nREAD')
+    assert (run_crashes._filter_crash_type('Heap-buffer-overflow\nWRITE {*}') ==
+            'Heap-buffer-overflow\nWRITE')
     assert run_crashes._filter_crash_type('Timeout') == 'Timeout'
