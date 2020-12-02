@@ -445,6 +445,7 @@ class Plotter:
                             x='time',
                             hue='fuzzer',
                             data=crash_df[crash_df.time <= snapshot_time],
+                            ci=None if self._quick else 95,
                             palette=self._fuzzer_colors,
                             ax=axes)
 
