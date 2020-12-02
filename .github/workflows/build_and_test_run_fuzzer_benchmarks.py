@@ -62,6 +62,7 @@ BUG_BENCHMARKS = {
     'openexr_openexr_exrenvmap_fuzzer',
     'openh264_decoder_fuzzer',
     'php_php-fuzz-execute',
+    'php_php-fuzz-parser-2020-07-25',
     'stb_stbi_read_fuzzer',
 }
 

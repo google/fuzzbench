@@ -59,6 +59,8 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
         aflplusplus_fuzzer.build("classic", "ctx", "cmplog")
     elif benchmark_name == 'php_php-fuzz-parser':
         aflplusplus_fuzzer.build("classic", "ctx", "cmplog")
+    elif benchmark_name == 'php_php-fuzz-parser-2020-07-25':
+        aflplusplus_fuzzer.build("classic", "ctx", "cmplog")
     elif benchmark_name == 'proj4-2017-08-14':
         aflplusplus_fuzzer.build("tracepc", "cmplog")
     elif benchmark_name == 're2-2014-12-09':
