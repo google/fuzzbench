@@ -18,6 +18,7 @@ from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKeyConstraint
 from sqlalchemy import Integer
 from sqlalchemy import JSON
 from sqlalchemy import String
@@ -71,3 +72,25 @@ class Snapshot(Base):
     trial = sqlalchemy.orm.relationship('Trial', back_populates='snapshots')
     edges_covered = Column(Integer, nullable=False)
     fuzzer_stats = Column(JSON, nullable=True)
+    crashes = sqlalchemy.orm.relationship(
+        'Crash',
+        backref='snapshot',
+        primaryjoin=
+        'and_(Snapshot.time==Crash.time, Snapshot.trial_id==Crash.trial_id)')
+
+
+class Crash(Base):
+    """Represents crashes found in experiments."""
+    __tablename__ = 'crash'
+
+    time = Column(Integer, nullable=False, primary_key=True)
+    trial_id = Column(Integer, nullable=False, primary_key=True)
+    crash_key = Column(String, nullable=False, primary_key=True)
+    crash_type = Column(String, nullable=False)
+    crash_address = Column(String, nullable=False)
+    crash_state = Column(String, nullable=False)
+    crash_stacktrace = Column(String, nullable=False)
+    crash_testcase = Column(String, nullable=False)
+
+    __table_args__ = (ForeignKeyConstraint(
+        [time, trial_id], ['snapshot.time', 'snapshot.trial_id']),)

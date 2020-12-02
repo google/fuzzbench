@@ -19,6 +19,7 @@ import functools
 from analysis import data_utils
 from analysis import coverage_data_utils
 from analysis import stat_tests
+from common import benchmark_config
 
 
 # pylint: disable=too-many-public-methods, too-many-arguments
@@ -322,3 +323,16 @@ class BenchmarkResults:
             self.pairwise_unique_coverage_table,
             self._get_full_path(plot_filename))
         return plot_filename
+
+    @property
+    def crash_plot(self):
+        """Crash plot."""
+        plot_filename = self._prefix_with_benchmark('crash_plot.svg')
+        self._plotter.write_crash_plot(self._benchmark_df,
+                                       self._get_full_path(plot_filename))
+        return plot_filename
+
+    @property
+    def type(self):
+        """Type of benchmark."""
+        return benchmark_config.get_config(self.name).get('type')

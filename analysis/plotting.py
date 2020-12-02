@@ -431,3 +431,49 @@ class Plotter:
                                   pairwise_unique_coverage_table,
                                   image_path,
                                   wide=True)
+
+    def crash_plot(self, benchmark_df, axes=None):
+        """Draws crash plot."""
+        benchmark_names = benchmark_df.benchmark.unique()
+        assert len(benchmark_names) == 1, 'Not a single benchmark data!'
+
+        benchmark_snapshot_df = data_utils.get_benchmark_snapshot(benchmark_df)
+        snapshot_time = benchmark_snapshot_df.time.unique()[0]
+        crash_df = data_utils.get_crash_snaphot(benchmark_df)
+
+        axes = sns.lineplot(y='crashes',
+                            x='time',
+                            hue='fuzzer',
+                            data=crash_df[crash_df.time <= snapshot_time],
+                            palette=self._fuzzer_colors,
+                            ax=axes)
+
+        axes.set_title(_formatted_title(benchmark_snapshot_df))
+
+        # Indicate the snapshot time with a big red vertical line.
+        axes.axvline(x=snapshot_time, color='r')
+
+        # Move legend outside of the plot.
+        axes.legend(bbox_to_anchor=(1.00, 1),
+                    borderaxespad=0,
+                    loc='upper left',
+                    frameon=False)
+
+        axes.set(ylabel='Unique crashes')
+        axes.set(xlabel='Time (hour:minute)')
+
+        ticks = np.arange(
+            experiment_utils.DEFAULT_SNAPSHOT_SECONDS,
+            snapshot_time + 1,  # Include tick at end time.
+            snapshot_time / _DEFAULT_TICKS_COUNT)
+        axes.set_xticks(ticks)
+        axes.set_xticklabels([_formatted_hour_min(t) for t in ticks])
+
+        sns.despine(ax=axes, trim=True)
+
+    def write_crash_plot(self, benchmark_df, image_path):
+        """Writes crash plot."""
+        self._write_plot_to_image(self.crash_plot,
+                                  benchmark_df,
+                                  image_path,
+                                  wide=True)

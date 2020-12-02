@@ -168,6 +168,18 @@
 
             <h2 class="green-text text-darken-3">{{ benchmark.name }} summary</h2>
 
+            {% if benchmark.type == 'bug' %}
+
+            <div class="row">
+                <div class="col s12">
+                    <h5 class="center-align">Unique crashes found over time</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.crash_plot }}">
+                </div>
+            </div>
+
+            {% endif %}
+
             <div class="row">
                 <div class="col s6">
                     <h5 class="center-align">Ranking by median reached coverage</h5>
@@ -202,7 +214,6 @@
                       around the mean coverage.
                 </div>
             </div>
-
 
             {% if benchmark.fuzzers_with_not_enough_samples and not in_progress %}
             <div class="card-panel deep-orange lighten-3">

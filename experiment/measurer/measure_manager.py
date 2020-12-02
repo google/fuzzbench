@@ -150,7 +150,7 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  
         if not snapshots:
             return
 
-        db_utils.bulk_save(snapshots)
+        db_utils.add_all(snapshots)
         snapshots.clear()
         nonlocal snapshots_measured
         snapshots_measured = True
@@ -513,17 +513,27 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         """Process and store crashes."""
         if not os.listdir(self.crashes_dir):
             logs.info('No crashes found for cycle %d.', cycle)
-            return
+            return []
+
+        logs.info('Saving crash files crashes for cycle %d.', cycle)
+        self.save_crash_files(cycle)
 
         logs.info('Processing crashes for cycle %d.', cycle)
         app_binary = coverage_utils.get_coverage_binary(self.benchmark)
         crash_metadata = run_crashes.do_crashes_run(app_binary,
                                                     self.crashes_dir)
-
-        # TODO(aarya): Process crashes and store in database.
-        logs.info('Crashes: %s', crash_metadata)
-
-        self.save_crash_files(cycle)
+        logs.info('Crash metadata: %s', crash_metadata)
+        crashes = []
+        for crash_key in crash_metadata:
+            crash = crash_metadata[crash_key]
+            crashes.append(
+                models.Crash(crash_key=crash_key,
+                             crash_testcase=crash.crash_testcase,
+                             crash_type=crash.crash_type,
+                             crash_address=crash.crash_address,
+                             crash_state=crash.crash_state,
+                             crash_stacktrace=crash.crash_stacktrace))
+        return crashes
 
     def update_measured_files(self):
         """Updates the measured-files.txt file for this trial with
@@ -593,8 +603,9 @@ def measure_trial_coverage(  # pylint: disable=invalid-name
     logger.debug('Done measuring trial: %d.', measure_req.trial_id)
 
 
-def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
-                              cycle: int) -> models.Snapshot:
+def measure_snapshot_coverage(  # pylint: disable=too-many-locals
+        fuzzer: str, benchmark: str, trial_num: int,
+        cycle: int) -> models.Snapshot:
     """Measure coverage of the snapshot for |cycle| for |trial_num| of |fuzzer|
     and |benchmark|."""
     snapshot_logger = logs.Logger('measurer',
@@ -617,7 +628,8 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
         return models.Snapshot(time=this_time,
                                trial_id=trial_num,
                                edges_covered=regions_covered,
-                               fuzzer_stats=fuzzer_stats_data)
+                               fuzzer_stats=fuzzer_stats_data,
+                               crashes=[])
 
     corpus_archive_dst = os.path.join(
         snapshot_measurer.trial_dir, 'corpus',
@@ -645,19 +657,20 @@ def measure_snapshot_coverage(fuzzer: str, benchmark: str, trial_num: int,
     # Generate profdata and transform it into json form.
     snapshot_measurer.generate_coverage_information(cycle)
 
+    # Run crashes again, parse stacktraces and generate crash signatures.
+    crashes = snapshot_measurer.process_crashes(cycle)
+
     # Get the coverage of the new corpus units.
     regions_covered = snapshot_measurer.get_current_coverage()
     fuzzer_stats_data = snapshot_measurer.get_fuzzer_stats(cycle)
     snapshot = models.Snapshot(time=this_time,
                                trial_id=trial_num,
                                edges_covered=regions_covered,
-                               fuzzer_stats=fuzzer_stats_data)
+                               fuzzer_stats=fuzzer_stats_data,
+                               crashes=crashes)
 
     # Record the new corpus files.
     snapshot_measurer.update_measured_files()
-
-    # Archive crashes directory.
-    snapshot_measurer.process_crashes(cycle)
 
     measuring_time = round(time.time() - measuring_start_time, 2)
     snapshot_logger.info('Measured cycle: %d in %f seconds.', cycle,
