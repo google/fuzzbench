@@ -30,12 +30,12 @@ Crash = collections.namedtuple('Crash', [
     'crash_testcase', 'crash_type', 'crash_address', 'crash_state',
     'crash_stacktrace'
 ])
-NUMBER_REGEX = re.compile(r'\s([0-9]+|{\*})', re.DOTALL)
+SIZE_REGEX = re.compile(r'\s([0-9]+|{\*})$', re.DOTALL)
 
 
 def _filter_crash_type(crash_type):
-    """Filters crash type to remove numbers."""
-    return NUMBER_REGEX.sub('', crash_type)
+    """Filters crash type to remove size numbers."""
+    return SIZE_REGEX.sub('', crash_type)
 
 
 def process_crash(app_binary, crash_testcase_path, crashes_dir):
