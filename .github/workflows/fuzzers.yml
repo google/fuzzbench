@@ -38,6 +38,7 @@ jobs:
           - eclipser
           - afl_qemu
           - aflplusplus_qemu
+          - aflplusplus_some
           - honggfuzz_qemu
           - weizz_qemu
           # Temporary variants.
