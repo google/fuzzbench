@@ -432,7 +432,7 @@ class Plotter:
                                   image_path,
                                   wide=True)
 
-    def crash_plot(self, benchmark_df, axes=None):
+    def crash_plot(self, benchmark_df, axes=None, logscale=False):
         """Draws crash plot."""
         benchmark_names = benchmark_df.benchmark.unique()
         assert len(benchmark_names) == 1, 'Not a single benchmark data!'
@@ -463,18 +463,32 @@ class Plotter:
         axes.set(ylabel='Unique crashes')
         axes.set(xlabel='Time (hour:minute)')
 
-        ticks = np.arange(
-            experiment_utils.DEFAULT_SNAPSHOT_SECONDS,
-            snapshot_time + 1,  # Include tick at end time.
-            snapshot_time / _DEFAULT_TICKS_COUNT)
+        if self._logscale or logscale:
+            axes.set_xscale('log')
+            ticks = np.logspace(
+                # Start from the time of the first measurement.
+                np.log10(experiment_utils.DEFAULT_SNAPSHOT_SECONDS),
+                np.log10(snapshot_time + 1),  # Include tick at end time.
+                _DEFAULT_TICKS_COUNT)
+        else:
+            ticks = np.arange(
+                experiment_utils.DEFAULT_SNAPSHOT_SECONDS,
+                snapshot_time + 1,  # Include tick at end time.
+                snapshot_time / _DEFAULT_TICKS_COUNT)
+
         axes.set_xticks(ticks)
         axes.set_xticklabels([_formatted_hour_min(t) for t in ticks])
 
         sns.despine(ax=axes, trim=True)
 
-    def write_crash_plot(self, benchmark_df, image_path):
+    def write_crash_plot(self,
+                         benchmark_df,
+                         image_path,
+                         wide=False,
+                         logscale=False):
         """Writes crash plot."""
         self._write_plot_to_image(self.crash_plot,
                                   benchmark_df,
                                   image_path,
-                                  wide=True)
+                                  wide=wide,
+                                  logscale=logscale)
