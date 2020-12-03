@@ -17,12 +17,23 @@
 #
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
-
-- experiment: 2020-12-03
+- experiment: 2020-12-04
   description: "AFL++ 2.68c qemu mode"
   fuzzers:
     - aflplusplus_268c_qemu
     - aflplusplus_qemu
+    
+- experiment: 2020-12-03
+  description: "AFL++ some fast variants"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_fast_v2
+    - aflplusplus_fast_v2_add
+    - aflplusplus_fast_v2_depth
+    - aflplusplus_fast_v2_cutoff
+    - aflplusplus_fast_v2_lessperf
+    - aflplusplus_fast_v2_moreperf
+    - aflplusplus_fast_v2_fuzzlevel
 
 - experiment: 2020-11-08
   description: "AFL++ seed selection test + introspection"

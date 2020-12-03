@@ -15,6 +15,7 @@
 
 import collections
 import os
+import re
 
 from clusterfuzz import stacktraces
 
@@ -29,6 +30,19 @@ Crash = collections.namedtuple('Crash', [
     'crash_testcase', 'crash_type', 'crash_address', 'crash_state',
     'crash_stacktrace'
 ])
+
+SIZE_REGEX = re.compile(r'\s([0-9]+|{\*})$', re.DOTALL)
+CPLUSPLUS_TEMPLATE_REGEX = re.compile(r'(<[^>]+>|<[^\n]+(?=\n))')
+
+
+def _filter_crash_type(crash_type):
+    """Filters crash type to remove size numbers."""
+    return SIZE_REGEX.sub('', crash_type)
+
+
+def _filter_crash_state(crash_state):
+    """Filters crash state to remove simple templates e.g. <int>."""
+    return CPLUSPLUS_TEMPLATE_REGEX.sub('', crash_state)
 
 
 def process_crash(app_binary, crash_testcase_path, crashes_dir):
@@ -65,9 +79,9 @@ def process_crash(app_binary, crash_testcase_path, crashes_dir):
 
     return Crash(crash_testcase=os.path.relpath(crash_testcase_path,
                                                 crashes_dir),
-                 crash_type=crash_result.crash_type,
+                 crash_type=_filter_crash_type(crash_result.crash_type),
                  crash_address=crash_result.crash_address,
-                 crash_state=crash_result.crash_state,
+                 crash_state=_filter_crash_state(crash_result.crash_state),
                  crash_stacktrace=crash_result.crash_stacktrace)
 
 

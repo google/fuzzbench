@@ -85,12 +85,24 @@ class Plotter:
         '#17becf',
     ]
 
+    # We need a manually specified marker list due to:
+    # https://github.com/mwaskom/seaborn/issues/1513
+    # We specify 20 markers for the 20 colors above.
+    _MARKER_PALETTE = [
+        'o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P',
+        'X', ',', '+', 'x', '|', '_'
+    ]
+
     def __init__(self, fuzzers, quick=False, logscale=False):
         """Instantiates plotter with list of |fuzzers|. If |quick| is True,
         creates plots faster but, with less detail.
         """
         self._fuzzer_colors = {
             fuzzer: self._COLOR_PALETTE[idx % len(self._COLOR_PALETTE)]
+            for idx, fuzzer in enumerate(sorted(fuzzers))
+        }
+        self._fuzzer_markers = {
+            fuzzer: self._MARKER_PALETTE[idx % len(self._MARKER_PALETTE)]
             for idx, fuzzer in enumerate(sorted(fuzzers))
         }
 
@@ -118,8 +130,12 @@ class Plotter:
         finally:
             plt.close(fig)
 
-    def coverage_growth_plot(self, benchmark_df, axes=None, logscale=False):
-        """Draws coverage growth plot on given |axes|.
+    def coverage_growth_plot(self,
+                             benchmark_df,
+                             axes=None,
+                             logscale=False,
+                             bugs=False):
+        """Draws edge (or bug) coverage growth plot on given |axes|.
 
         The fuzzer labels will be in the order of their mean coverage at the
         snapshot time (typically, the end of experiment).
@@ -127,19 +143,24 @@ class Plotter:
         benchmark_names = benchmark_df.benchmark.unique()
         assert len(benchmark_names) == 1, 'Not a single benchmark data!'
 
+        column_of_interest = 'bugs_covered' if bugs else 'edges_covered'
+
         benchmark_snapshot_df = data_utils.get_benchmark_snapshot(benchmark_df)
         snapshot_time = benchmark_snapshot_df.time.unique()[0]
         fuzzer_order = data_utils.benchmark_rank_by_mean(
-            benchmark_snapshot_df).index
+            benchmark_snapshot_df, key=column_of_interest).index
 
         axes = sns.lineplot(
-            y='edges_covered',
+            y=column_of_interest,
             x='time',
             hue='fuzzer',
             hue_order=fuzzer_order,
             data=benchmark_df[benchmark_df.time <= snapshot_time],
             ci=None if self._quick else 95,
             palette=self._fuzzer_colors,
+            style='fuzzer',
+            dashes=False,
+            markers=self._fuzzer_markers,
             ax=axes)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
@@ -153,7 +174,7 @@ class Plotter:
                     loc='upper left',
                     frameon=False)
 
-        axes.set(ylabel='Edge coverage')
+        axes.set(ylabel='Bugs coverage' if bugs else 'Edge coverage')
         axes.set(xlabel='Time (hour:minute)')
 
         if self._logscale or logscale:
@@ -174,17 +195,20 @@ class Plotter:
 
         sns.despine(ax=axes, trim=True)
 
-    def write_coverage_growth_plot(self,
-                                   benchmark_df,
-                                   image_path,
-                                   wide=False,
-                                   logscale=False):
+    def write_coverage_growth_plot(  # pylint: disable=too-many-arguments
+            self,
+            benchmark_df,
+            image_path,
+            wide=False,
+            logscale=False,
+            bugs=False):
         """Writes coverage growth plot."""
         self._write_plot_to_image(self.coverage_growth_plot,
                                   benchmark_df,
                                   image_path,
                                   wide=wide,
-                                  logscale=logscale)
+                                  logscale=logscale,
+                                  bugs=bugs)
 
     def violin_plot(self, benchmark_snapshot_df, axes=None):
         """Draws violin plot.
@@ -429,51 +453,5 @@ class Plotter:
         """Writes pairwise unique coverage heatmap plot."""
         self._write_plot_to_image(self.pairwise_unique_coverage_heatmap_plot,
                                   pairwise_unique_coverage_table,
-                                  image_path,
-                                  wide=True)
-
-    def crash_plot(self, benchmark_df, axes=None):
-        """Draws crash plot."""
-        benchmark_names = benchmark_df.benchmark.unique()
-        assert len(benchmark_names) == 1, 'Not a single benchmark data!'
-
-        benchmark_snapshot_df = data_utils.get_benchmark_snapshot(benchmark_df)
-        snapshot_time = benchmark_snapshot_df.time.unique()[0]
-        crash_df = data_utils.get_crash_snaphot(benchmark_df)
-
-        axes = sns.lineplot(y='crashes',
-                            x='time',
-                            hue='fuzzer',
-                            data=crash_df[crash_df.time <= snapshot_time],
-                            palette=self._fuzzer_colors,
-                            ax=axes)
-
-        axes.set_title(_formatted_title(benchmark_snapshot_df))
-
-        # Indicate the snapshot time with a big red vertical line.
-        axes.axvline(x=snapshot_time, color='r')
-
-        # Move legend outside of the plot.
-        axes.legend(bbox_to_anchor=(1.00, 1),
-                    borderaxespad=0,
-                    loc='upper left',
-                    frameon=False)
-
-        axes.set(ylabel='Unique crashes')
-        axes.set(xlabel='Time (hour:minute)')
-
-        ticks = np.arange(
-            experiment_utils.DEFAULT_SNAPSHOT_SECONDS,
-            snapshot_time + 1,  # Include tick at end time.
-            snapshot_time / _DEFAULT_TICKS_COUNT)
-        axes.set_xticks(ticks)
-        axes.set_xticklabels([_formatted_hour_min(t) for t in ticks])
-
-        sns.despine(ax=axes, trim=True)
-
-    def write_crash_plot(self, benchmark_df, image_path):
-        """Writes crash plot."""
-        self._write_plot_to_image(self.crash_plot,
-                                  benchmark_df,
                                   image_path,
                                   wide=True)

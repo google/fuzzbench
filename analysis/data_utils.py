@@ -106,6 +106,18 @@ def filter_max_time(experiment_df, max_time):
     return experiment_df[experiment_df['time'] <= max_time]
 
 
+def add_bugs_covered_column(benchmark_df):
+    """Return a modified benchmark df in which the |crash_key| column is
+    replaced with a |bugs_covered| column."""
+    new_df = benchmark_df.drop(columns='crash_key').drop_duplicates()
+    new_df['bugs_covered'] = new_df.apply(lambda x: benchmark_df[
+        (benchmark_df['trial_id'] == x['trial_id']) &
+        (benchmark_df['fuzzer'] == x['fuzzer']) &
+        (benchmark_df['time'] <= x['time'])]['crash_key'].nunique(),
+                                          axis=1)
+    return new_df
+
+
 # Creating "snapshots" (see README.md for definition).
 
 _MIN_FRACTION_OF_ALIVE_TRIALS_AT_SNAPSHOT = 0.5
@@ -191,30 +203,30 @@ def experiment_summary(experiment_snapshots_df):
 # Per-benchmark fuzzer ranking options.
 
 
-def benchmark_rank_by_mean(benchmark_snapshot_df):
+def benchmark_rank_by_mean(benchmark_snapshot_df, key='edges_covered'):
     """Returns ranking of fuzzers based on mean coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
-    means = benchmark_snapshot_df.groupby('fuzzer')['edges_covered'].mean()
+    means = benchmark_snapshot_df.groupby('fuzzer')[key].mean()
     means.rename('mean cov', inplace=True)
     return means.sort_values(ascending=False)
 
 
-def benchmark_rank_by_median(benchmark_snapshot_df):
+def benchmark_rank_by_median(benchmark_snapshot_df, key='edges_covered'):
     """Returns ranking of fuzzers based on median coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
-    medians = benchmark_snapshot_df.groupby('fuzzer')['edges_covered'].median()
+    medians = benchmark_snapshot_df.groupby('fuzzer')[key].median()
     medians.rename('median cov', inplace=True)
     return medians.sort_values(ascending=False)
 
 
-def benchmark_rank_by_average_rank(benchmark_snapshot_df):
+def benchmark_rank_by_average_rank(benchmark_snapshot_df, key='edges_covered'):
     """Ranks all coverage measurements in the snapshot across fuzzers.
 
     Returns the average rank by fuzzer.
     """
     # Make a copy of the dataframe view, because we want to add a new column.
-    measurements = benchmark_snapshot_df[['fuzzer', 'edges_covered']].copy()
-    measurements['rank'] = measurements['edges_covered'].rank()
+    measurements = benchmark_snapshot_df[['fuzzer', key]].copy()
+    measurements['rank'] = measurements[key].rank()
     avg_rank = measurements.groupby('fuzzer').mean()
     avg_rank.rename(columns={'rank': 'avg rank'}, inplace=True)
     avg_rank.sort_values('avg rank', ascending=False, inplace=True)
@@ -319,13 +331,3 @@ def experiment_level_ranking(experiment_snapshots_df,
     pivot_table = experiment_pivot_table(experiment_snapshots_df,
                                          benchmark_level_ranking_function)
     return experiment_level_ranking_function(pivot_table)
-
-
-def get_crash_snaphot(benchmark_df):
-    """Return a dataframe with cumulative unique bug growth count."""
-    crash_df = benchmark_df[['fuzzer', 'time']].drop_duplicates()
-    crash_df['crashes'] = crash_df.apply(lambda x: benchmark_df[
-        (benchmark_df['fuzzer'] == x['fuzzer']) &
-        (benchmark_df['time'] <= x['time'])]['crash_key'].nunique(),
-                                         axis=1)
-    return crash_df
