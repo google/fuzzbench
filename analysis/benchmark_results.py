@@ -327,10 +327,12 @@ class BenchmarkResults:
     def _crash_plot(self, filename, logscale=False):
         """Crash plot."""
         plot_filename = self._prefix_with_benchmark(filename)
-        self._plotter.write_crash_plot(self._benchmark_df,
-                                       self._get_full_path(plot_filename),
-                                       wide=True,
-                                       logscale=logscale)
+        self._plotter.write_coverage_growth_plot(
+            data_utils.add_bugs_covered_column(self._benchmark_df),
+            self._get_full_path(plot_filename),
+            wide=True,
+            logscale=logscale,
+            bugs=True)
         return plot_filename
 
     @property
