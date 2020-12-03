@@ -85,12 +85,24 @@ class Plotter:
         '#17becf',
     ]
 
+    # We need a manually specified marker list due to:
+    # https://github.com/mwaskom/seaborn/issues/1513
+    # We specify 20 markers for the 20 colors above.
+    _MARKER_PALETTE = [
+        'o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P',
+        'X', ',', '+', 'x', '|', '_'
+    ]
+
     def __init__(self, fuzzers, quick=False, logscale=False):
         """Instantiates plotter with list of |fuzzers|. If |quick| is True,
         creates plots faster but, with less detail.
         """
         self._fuzzer_colors = {
             fuzzer: self._COLOR_PALETTE[idx % len(self._COLOR_PALETTE)]
+            for idx, fuzzer in enumerate(sorted(fuzzers))
+        }
+        self._fuzzer_markers = {
+            fuzzer: self._MARKER_PALETTE[idx % len(self._MARKER_PALETTE)]
             for idx, fuzzer in enumerate(sorted(fuzzers))
         }
 
@@ -146,6 +158,9 @@ class Plotter:
             data=benchmark_df[benchmark_df.time <= snapshot_time],
             ci=None if self._quick else 95,
             palette=self._fuzzer_colors,
+            style='fuzzer',
+            dashes=False,
+            markers=self._fuzzer_markers,
             ax=axes)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
