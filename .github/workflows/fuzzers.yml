@@ -57,6 +57,7 @@ jobs:
           - aflplusplus_fast_branches_v2
           - aflplusplus_cmplog
           - aflplusplus_dict2file
+          - aflplusplus_268c_qemu
 
         benchmark_type:
           - oss-fuzz
