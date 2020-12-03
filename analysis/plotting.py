@@ -131,13 +131,15 @@ class Plotter:
         benchmark_names = benchmark_df.benchmark.unique()
         assert len(benchmark_names) == 1, 'Not a single benchmark data!'
 
+        column_of_interest = 'bugs_covered' if bugs else 'edges_covered'
+
         benchmark_snapshot_df = data_utils.get_benchmark_snapshot(benchmark_df)
         snapshot_time = benchmark_snapshot_df.time.unique()[0]
         fuzzer_order = data_utils.benchmark_rank_by_mean(
-            benchmark_snapshot_df).index
+            benchmark_snapshot_df, key=column_of_interest).index
 
         axes = sns.lineplot(
-            y='bugs_covered' if bugs else 'edges_covered',
+            y=column_of_interest,
             x='time',
             hue='fuzzer',
             hue_order=fuzzer_order,
