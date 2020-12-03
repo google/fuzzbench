@@ -106,6 +106,18 @@ def filter_max_time(experiment_df, max_time):
     return experiment_df[experiment_df['time'] <= max_time]
 
 
+def add_bugs_covered_column(benchmark_df):
+    """Return a modified benchmark df in which the |crash_key| column is
+    replaced with a |bugs_covered| column."""
+    new_df = benchmark_df.drop(columns='crash_key').drop_duplicates()
+    new_df['bugs_covered'] = new_df.apply(lambda x: benchmark_df[
+        (benchmark_df['trial_id'] == x['trial_id']) &
+        (benchmark_df['fuzzer'] == x['fuzzer']) &
+        (benchmark_df['time'] <= x['time'])]['crash_key'].nunique(),
+                                          axis=1)
+    return new_df
+
+
 # Creating "snapshots" (see README.md for definition).
 
 _MIN_FRACTION_OF_ALIVE_TRIALS_AT_SNAPSHOT = 0.5
@@ -319,14 +331,3 @@ def experiment_level_ranking(experiment_snapshots_df,
     pivot_table = experiment_pivot_table(experiment_snapshots_df,
                                          benchmark_level_ranking_function)
     return experiment_level_ranking_function(pivot_table)
-
-
-def get_crash_snaphot(benchmark_df):
-    """Return a dataframe with cumulative unique bug growth count."""
-    crash_df = benchmark_df[['fuzzer', 'time', 'trial_id']].drop_duplicates()
-    crash_df['crashes'] = crash_df.apply(lambda x: benchmark_df[
-        (benchmark_df['fuzzer'] == x['fuzzer']) &
-        (benchmark_df['trial_id'] == x['trial_id']) &
-        (benchmark_df['time'] <= x['time'])]['crash_key'].nunique(),
-                                         axis=1)
-    return crash_df
