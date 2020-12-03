@@ -45,11 +45,11 @@ index c78df8b..e44a8dc 100644
 +  if (hits == 0) hits = 1;
 +  //if (hits > avg_log_hits && !q->favored) return 0.0;
 +
-+  double weight = 0.0;
-+  weight += avg_exec_us / q->exec_us;
-+  weight += log(q->bitmap_size) / avg_bitmap_size;
-+  weight += log(q->depth) / avg_log_depth;
-+  weight += 1.0 / log10(hits);
++  double weight = 1.0;
++  weight *= avg_exec_us / q->exec_us;
++  weight *= log(q->bitmap_size) / avg_bitmap_size;
++  weight *= log(q->depth) / avg_log_depth;
++  weight *= 1.0 / log10(hits);
 +  //weight += 1.0 / q->fuzz_level;
 +
 +  if (q->favored) weight *= 5;
