@@ -77,6 +77,10 @@ def process_crash(app_binary, crash_testcase_path, crashes_dir):
         # No crash occurred. Bail out.
         return None
 
+    if crash_result.crash_type in ('Timeout', 'Out-of-memory'):
+        # Uninteresting crash types for fuzzer efficacy. Bail out.
+        return None
+
     return Crash(crash_testcase=os.path.relpath(crash_testcase_path,
                                                 crashes_dir),
                  crash_type=_filter_crash_type(crash_result.crash_type),
