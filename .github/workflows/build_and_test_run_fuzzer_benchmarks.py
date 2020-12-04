@@ -69,7 +69,9 @@ BUG_BENCHMARKS = {
 
 def get_make_target(fuzzer, benchmark):
     """Return test target for a fuzzer and benchmark."""
-    return 'test-run-%s-%s' % (fuzzer, benchmark)
+    if fuzzer == 'coverage':
+        return f'build-coverage-{benchmark}'
+    return f'test-run-{fuzzer}-{benchmark}'
 
 
 def delete_docker_images():
