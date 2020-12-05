@@ -156,7 +156,7 @@ class Plotter:
             hue='fuzzer',
             hue_order=fuzzer_order,
             data=benchmark_df[benchmark_df.time <= snapshot_time],
-            ci=None if self._quick else 95,
+            ci=None if bugs or self._quick else 95,
             palette=self._fuzzer_colors,
             style='fuzzer',
             dashes=False,
