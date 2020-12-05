@@ -324,8 +324,8 @@ class BenchmarkResults:
             self._get_full_path(plot_filename))
         return plot_filename
 
-    def _crash_plot(self, filename, logscale=False):
-        """Crash plot."""
+    def _bug_coverage_growth_plot(self, filename, logscale=False):
+        """Bug coverage growth plot."""
         plot_filename = self._prefix_with_benchmark(filename)
         self._plotter.write_coverage_growth_plot(
             data_utils.add_bugs_covered_column(self._benchmark_df),
@@ -336,14 +336,15 @@ class BenchmarkResults:
         return plot_filename
 
     @property
-    def crash_plot(self):
-        """Crash plot (linear scale)."""
-        return self._crash_plot('crash_plot.svg')
+    def bug_coverage_growth_plot(self):
+        """Bug coverage growth plot (linear scale)."""
+        return self._bug_coverage_growth_plot('bug_coverage_growth_plot.svg')
 
     @property
-    def crash_plot_logscale(self):
-        """Crash plot (logscale)."""
-        return self._crash_plot('crash_plot_logscale.svg', logscale=True)
+    def bug_coverage_growth_plot_logscale(self):
+        """Bug coverage growth plot (logscale)."""
+        return self._bug_coverage_growth_plot(
+            'bug_coverage_growth_plot_logscale.svg', logscale=True)
 
     @property
     def type(self):
