@@ -1,5 +1,5 @@
 diff --git a/include/afl-fuzz.h b/include/afl-fuzz.h
-index e59d5f9..fb9bead 100644
+index 85b3179..799fa28 100644
 --- a/include/afl-fuzz.h
 +++ b/include/afl-fuzz.h
 @@ -167,7 +167,8 @@ struct queue_entry {
@@ -13,10 +13,10 @@ index e59d5f9..fb9bead 100644
    u8 *testcase_buf;                     /* The testcase buffer, if loaded.  */
  
 diff --git a/src/afl-fuzz-one.c b/src/afl-fuzz-one.c
-index 91bbced..d711611 100644
+index 1e63abc..8ed3d3f 100644
 --- a/src/afl-fuzz-one.c
 +++ b/src/afl-fuzz-one.c
-@@ -445,8 +445,10 @@ u8 fuzz_one_original(afl_state_t *afl) {
+@@ -447,8 +447,10 @@ u8 fuzz_one_original(afl_state_t *afl) {
  
    if (unlikely(afl->not_on_tty)) {
  
@@ -30,7 +30,7 @@ index 91bbced..d711611 100644
  
    }
 diff --git a/src/afl-fuzz-queue.c b/src/afl-fuzz-queue.c
-index c78df8b..515305f 100644
+index c78df8b..2433ff3 100644
 --- a/src/afl-fuzz-queue.c
 +++ b/src/afl-fuzz-queue.c
 @@ -42,6 +42,21 @@ inline u32 select_next_queue_entry(afl_state_t *afl) {
@@ -62,7 +62,7 @@ index c78df8b..515305f 100644
 -  double sum = 0;
 -
 +  double avg_exec_us = 0.0;
-+  double avg_bitmap_size = 0.0;
++  double avg_bitmap_size = 0.0; 
    for (i = 0; i < n; i++) {
  
      struct queue_entry *q = afl->queue_buf[i];

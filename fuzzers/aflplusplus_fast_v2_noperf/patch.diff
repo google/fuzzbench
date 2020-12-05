@@ -1,5 +1,5 @@
 diff --git a/include/afl-fuzz.h b/include/afl-fuzz.h
-index 85b3179..799fa28 100644
+index e59d5f9..fb9bead 100644
 --- a/include/afl-fuzz.h
 +++ b/include/afl-fuzz.h
 @@ -167,7 +167,8 @@ struct queue_entry {
@@ -13,10 +13,10 @@ index 85b3179..799fa28 100644
    u8 *testcase_buf;                     /* The testcase buffer, if loaded.  */
  
 diff --git a/src/afl-fuzz-one.c b/src/afl-fuzz-one.c
-index 1e63abc..8ed3d3f 100644
+index 91bbced..d711611 100644
 --- a/src/afl-fuzz-one.c
 +++ b/src/afl-fuzz-one.c
-@@ -447,8 +447,10 @@ u8 fuzz_one_original(afl_state_t *afl) {
+@@ -445,8 +445,10 @@ u8 fuzz_one_original(afl_state_t *afl) {
  
    if (unlikely(afl->not_on_tty)) {
  
@@ -30,7 +30,7 @@ index 1e63abc..8ed3d3f 100644
  
    }
 diff --git a/src/afl-fuzz-queue.c b/src/afl-fuzz-queue.c
-index c78df8b..a50e25b 100644
+index c78df8b..515305f 100644
 --- a/src/afl-fuzz-queue.c
 +++ b/src/afl-fuzz-queue.c
 @@ -42,6 +42,21 @@ inline u32 select_next_queue_entry(afl_state_t *afl) {
@@ -43,9 +43,9 @@ index c78df8b..a50e25b 100644
 +  if (hits == 0) hits = 1;
 +
 +  double weight = 1.0;
-+  weight += avg_exec_us / q->exec_us;
-+  weight += log(q->bitmap_size) / avg_bitmap_size;
-+  weight += 1 / (log10(hits) + 1);
++  weight *= avg_exec_us / q->exec_us;
++  weight *= log(q->bitmap_size) / avg_bitmap_size;
++  weight /= log10(hits) + 1;
 +
 +  if (q->favored) weight *= 5;
 +
@@ -98,7 +98,7 @@ index c78df8b..a50e25b 100644
    int nS = 0, nL = 0, s;
    for (s = (s32)n - 1; s >= 0; --s) {
  
-@@ -715,153 +740,6 @@ u32 calculate_score(afl_state_t *afl, struct queue_entry *q) {
+@@ -715,151 +740,11 @@ u32 calculate_score(afl_state_t *afl, struct queue_entry *q) {
  
    }
  
@@ -237,18 +237,16 @@ index c78df8b..a50e25b 100644
 -
 -  }
 -
--  // MOpt mode
--  if (afl->limit_time_sig != 0 && afl->max_depth - q->depth < 3) {
--
--    perf_score *= 2;
--
+   // MOpt mode
+   if (afl->limit_time_sig != 0 && afl->max_depth - q->depth < 3) {
+ 
+     perf_score *= 2;
+ 
 -  } else if (afl->schedule != COE && perf_score < 1) {
 -
 -    // Add a lower bound to AFLFast's energy assignment strategies
 -    perf_score = 1;
 -
--  }
--
-   /* Make sure that we don't go over limit. */
+   }
  
-   if (perf_score > afl->havoc_max_mult * 100) {
+   /* Make sure that we don't go over limit. */
