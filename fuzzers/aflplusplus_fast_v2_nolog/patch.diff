@@ -44,7 +44,7 @@ index c78df8b..2433ff3 100644
 +
 +  double weight = 1.0;
 +  weight *= avg_exec_us / q->exec_us;
-+  weight *= log(q->bitmap_size) / avg_bitmap_size;
++  weight *= q->bitmap_size / avg_bitmap_size;
 +  weight /= log10(hits) + 1;
 +
 +  if (q->favored) weight *= 5;
@@ -71,7 +71,7 @@ index c78df8b..2433ff3 100644
 -
 -    sum += q->perf_score;
 +    avg_exec_us += q->exec_us;
-+    avg_bitmap_size += log(q->bitmap_size);
++    avg_bitmap_size += q->bitmap_size;
  
    }
 +  avg_exec_us /= afl->queued_paths;

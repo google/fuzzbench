@@ -30,27 +30,22 @@ index 1e63abc..8ed3d3f 100644
  
    }
 diff --git a/src/afl-fuzz-queue.c b/src/afl-fuzz-queue.c
-index c78df8b..f81a47e 100644
+index c78df8b..2433ff3 100644
 --- a/src/afl-fuzz-queue.c
 +++ b/src/afl-fuzz-queue.c
-@@ -42,6 +42,26 @@ inline u32 select_next_queue_entry(afl_state_t *afl) {
+@@ -42,6 +42,21 @@ inline u32 select_next_queue_entry(afl_state_t *afl) {
  
  }
  
-+double compute_weight(afl_state_t *afl, struct queue_entry *q,
-+                      double avg_exec_us, double avg_bitmap_size,
-+                      double avg_log_hits, double avg_log_depth) {
++double compute_weight(afl_state_t *afl, struct queue_entry *q, double avg_exec_us, double avg_bitmap_size) {
 +
 +  u32 hits = afl->n_fuzz[q->n_fuzz_entry];
 +  if (hits == 0) hits = 1;
-+  //if (hits > avg_log_hits && !q->favored) return 0.0;
 +
 +  double weight = 1.0;
 +  weight *= avg_exec_us / q->exec_us;
 +  weight *= log(q->bitmap_size) / avg_bitmap_size;
-+  weight *= log(q->depth) / avg_log_depth;
-+  weight *= 1.0 / log10(hits);
-+  //weight += 1.0 / q->fuzz_level;
++  weight /= log10(hits) + 1;
 +
 +  if (q->favored) weight *= 5;
 +
@@ -60,16 +55,14 @@ index c78df8b..f81a47e 100644
  /* create the alias table that allows weighted random selection - expensive */
  
  void create_alias_table(afl_state_t *afl) {
-@@ -60,25 +80,42 @@ void create_alias_table(afl_state_t *afl) {
+@@ -60,25 +75,35 @@ void create_alias_table(afl_state_t *afl) {
    memset((void *)afl->alias_table, 0, n * sizeof(u32));
    memset((void *)afl->alias_probability, 0, n * sizeof(double));
  
 -  double sum = 0;
 -
 +  double avg_exec_us = 0.0;
-+  double avg_bitmap_size = 0.0;
-+  double avg_log_hits = 0.0;
-+  double avg_log_depth = 0.0;
++  double avg_bitmap_size = 0.0; 
    for (i = 0; i < n; i++) {
  
      struct queue_entry *q = afl->queue_buf[i];
@@ -79,14 +72,10 @@ index c78df8b..f81a47e 100644
 -    sum += q->perf_score;
 +    avg_exec_us += q->exec_us;
 +    avg_bitmap_size += log(q->bitmap_size);
-+    avg_log_hits += log10(afl->n_fuzz[q->n_fuzz_entry]);
-+    avg_log_depth += log(q->depth);
  
    }
 +  avg_exec_us /= afl->queued_paths;
 +  avg_bitmap_size /= afl->queued_paths;
-+  avg_log_hits /= afl->queued_paths;
-+  avg_log_depth /= afl->queued_paths;
  
 +  double sum = 0;
    for (i = 0; i < n; i++) {
@@ -95,8 +84,7 @@ index c78df8b..f81a47e 100644
 -    P[i] = (q->perf_score * n) / sum;
 +
 +    if (!q->disabled) {
-+      q->weight = compute_weight(afl, q, avg_exec_us, avg_bitmap_size,
-+                                 avg_log_hits, avg_log_depth);
++      q->weight = compute_weight(afl, q, avg_exec_us, avg_bitmap_size);
 +      q->perf_score = calculate_score(afl, q);
 +    }
 +
@@ -110,7 +98,7 @@ index c78df8b..f81a47e 100644
    int nS = 0, nL = 0, s;
    for (s = (s32)n - 1; s >= 0; --s) {
  
-@@ -715,153 +752,6 @@ u32 calculate_score(afl_state_t *afl, struct queue_entry *q) {
+@@ -715,153 +740,6 @@ u32 calculate_score(afl_state_t *afl, struct queue_entry *q) {
  
    }
  

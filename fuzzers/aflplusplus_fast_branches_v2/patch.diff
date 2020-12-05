@@ -1,5 +1,5 @@
 diff --git a/include/afl-fuzz.h b/include/afl-fuzz.h
-index 85b3179..c62767f 100644
+index e59d5f9..99cc3e5 100644
 --- a/include/afl-fuzz.h
 +++ b/include/afl-fuzz.h
 @@ -150,6 +150,7 @@ struct queue_entry {
@@ -20,7 +20,7 @@ index 85b3179..c62767f 100644
  
    u8 *testcase_buf;                     /* The testcase buffer, if loaded.  */
  
-@@ -499,7 +501,8 @@ typedef struct afl_state {
+@@ -500,7 +502,8 @@ typedef struct afl_state {
  
    u8 *virgin_bits,                      /* Regions yet untouched by fuzzing */
        *virgin_tmout,                    /* Bits we haven't seen in tmouts   */
@@ -30,16 +30,7 @@ index 85b3179..c62767f 100644
  
    double *alias_probability;            /* alias weighted probabilities     */
    u32 *   alias_table;                /* alias weighted random lookup table */
-@@ -508,7 +511,7 @@ typedef struct afl_state {
-   u8 *var_bytes;                        /* Bytes that appear to be variable */
- 
- #define N_FUZZ_SIZE (1 << 21)
--  u32 *n_fuzz;
-+  u8 *n_fuzz;
- 
-   volatile u8 stop_soon,                /* Ctrl-C pressed?                  */
-       clear_screen;                     /* Window resized?                  */
-@@ -522,6 +525,7 @@ typedef struct afl_state {
+@@ -523,6 +526,7 @@ typedef struct afl_state {
        queued_with_cov,                  /* Paths with new coverage bytes    */
        pending_not_fuzzed,               /* Queued but not done yet          */
        pending_favored,                  /* Pending favored paths            */
@@ -48,7 +39,7 @@ index 85b3179..c62767f 100644
        cur_depth,                        /* Current path depth               */
        max_depth,                        /* Max path depth                   */
 diff --git a/src/afl-fuzz-bitmap.c b/src/afl-fuzz-bitmap.c
-index 2653b9f..8d216cb 100644
+index 735420c..77011c5 100644
 --- a/src/afl-fuzz-bitmap.c
 +++ b/src/afl-fuzz-bitmap.c
 @@ -63,6 +63,7 @@ u8 __attribute__((hot)) has_new_bits(afl_state_t *afl, u8 *virgin_map) {
@@ -63,23 +54,18 @@ index 2653b9f..8d216cb 100644
  
    u32 *current = (u32 *)afl->fsrv.trace_bits;
    u32 *virgin = (u32 *)virgin_map;
-+  u32 *hits = (u64*)afl->branch_hit_counts;
++  u32 *hits = (u32*)afl->branch_hit_counts;
  
    u32 i = (afl->fsrv.map_size >> 2);
  
-@@ -86,12 +88,23 @@ u8 __attribute__((hot)) has_new_bits(afl_state_t *afl, u8 *virgin_map) {
+@@ -86,11 +88,20 @@ u8 __attribute__((hot)) has_new_bits(afl_state_t *afl, u8 *virgin_map) {
         almost always be the case. */
  
      // the (*current) is unnecessary but speeds up the overall comparison
 -    if (unlikely(*current) && unlikely(*current & *virgin)) {
 +    if (unlikely(*current)) {
- 
--      if (likely(ret < 2)) {
-+      u8 *cur = (u8 *)current;
-+      u8* hit = (u8*)hits;
- 
--        u8 *cur = (u8 *)current;
--        u8 *vir = (u8 *)virgin;
++      u8 *cur = (u8*) current;
++      u8 *hit = (u8*) hits;
 +#ifdef WORD_SIZE_64
 +      for (int i = 0; i < 8; i++)
 +#else
@@ -88,80 +74,112 @@ index 2653b9f..8d216cb 100644
 +        if (cur[i] && hit[i] < 0xFF) hit[i]++;
 +
 +      if (unlikely(*current & *virgin)) {
-+
-+        if (likely(ret < 2)) {
-+
-+          u8* vir = (u8*)virgin;
+ 
+       if (likely(ret < 2)) {
+ 
+-        u8 *cur = (u8 *)current;
+         u8 *vir = (u8 *)virgin;
  
          /* Looks like we have not found any new bytes yet; see if any non-zero
-            bytes in current[] are pristine in virgin[]. */
-@@ -129,8 +142,11 @@ u8 __attribute__((hot)) has_new_bits(afl_state_t *afl, u8 *virgin_map) {
+@@ -128,9 +139,11 @@ u8 __attribute__((hot)) has_new_bits(afl_state_t *afl, u8 *virgin_map) {
+       *virgin &= ~*current;
  
      }
- 
 +    }
-+
+ 
      ++current;
      ++virgin;
 +    ++hits;
  
    }
  
-@@ -556,7 +572,7 @@ save_if_interesting(afl_state_t *afl, void *mem, u32 len, u8 fault) {
-     cksum = hash64(afl->fsrv.trace_bits, afl->fsrv.map_size, HASH_CONST);
+diff --git a/src/afl-fuzz-one.c b/src/afl-fuzz-one.c
+index 91bbced..d711611 100644
+--- a/src/afl-fuzz-one.c
++++ b/src/afl-fuzz-one.c
+@@ -445,8 +445,10 @@ u8 fuzz_one_original(afl_state_t *afl) {
  
-     /* Saturated increment */
--    if (afl->n_fuzz[cksum % N_FUZZ_SIZE] < 0xFFFFFFFF)
-+    if (afl->n_fuzz[cksum % N_FUZZ_SIZE] < 0xFF)
-       afl->n_fuzz[cksum % N_FUZZ_SIZE]++;
+   if (unlikely(afl->not_on_tty)) {
+ 
+-    ACTF("Fuzzing test case #%u (%u total, %llu uniq crashes found)...",
+-         afl->current_entry, afl->queued_paths, afl->unique_crashes);
++    ACTF("Fuzzing test case #%u (%u total, %llu uniq crashes found, perf_score=%0.0f, exec_us=%llu, hits=%u, map=%u)...",
++         afl->current_entry, afl->queued_paths, afl->unique_crashes,
++         afl->queue_cur->perf_score, afl->queue_cur->exec_us,
++         afl->n_fuzz[afl->queue_cur->n_fuzz_entry], afl->queue_cur->bitmap_size);
+     fflush(stdout);
  
    }
 diff --git a/src/afl-fuzz-queue.c b/src/afl-fuzz-queue.c
-index d107dbc..15e5910 100644
+index c78df8b..c9f4c10 100644
 --- a/src/afl-fuzz-queue.c
 +++ b/src/afl-fuzz-queue.c
-@@ -42,6 +42,19 @@ inline u32 select_next_queue_entry(afl_state_t *afl) {
+@@ -42,6 +42,21 @@ inline u32 select_next_queue_entry(afl_state_t *afl) {
  
  }
  
-+u32 compute_weight(afl_state_t *afl, struct queue_entry *q, u32 queue_index) {
++double compute_weight(afl_state_t *afl, struct queue_entry *q, double avg_exec_us, double avg_bitmap_size) {
 +
-+  u8 hits = afl->n_fuzz[q->n_fuzz_entry];
++  u32 hits = afl->n_fuzz[q->n_fuzz_entry];
 +  if (hits == 0) hits = 1;
 +
-+  u32 weight = 1024.0 / hits;
-+  if (q->favored) weight *= 20;
-+  if (q->champion) weight *= 4;
-+  weight /= (q->fuzz_level + 1.0);
++  double weight = 1.0;
++  weight *= avg_exec_us / q->exec_us;
++  weight *= log(q->bitmap_size) / avg_bitmap_size;
++  weight /= log10(hits) + 1;
 +
-+  return weight > 1 ? weight : 1;
++  if (q->favored) weight *= 5;
++
++  return weight;
 +}
 +
  /* create the alias table that allows weighted random selection - expensive */
  
  void create_alias_table(afl_state_t *afl) {
-@@ -66,7 +79,10 @@ void create_alias_table(afl_state_t *afl) {
+@@ -60,25 +75,35 @@ void create_alias_table(afl_state_t *afl) {
+   memset((void *)afl->alias_table, 0, n * sizeof(u32));
+   memset((void *)afl->alias_probability, 0, n * sizeof(double));
+ 
+-  double sum = 0;
+-
++  double avg_exec_us = 0.0;
++  double avg_bitmap_size = 0.0;
+   for (i = 0; i < n; i++) {
  
      struct queue_entry *q = afl->queue_buf[i];
- 
+-
 -    if (!q->disabled) { q->perf_score = calculate_score(afl, q); }
-+    if (!q->disabled) { 
-+      q->weight = compute_weight(afl, q, i); 
-+      q->perf_score = calculate_score(afl, q);
-+    }
+-
+-    sum += q->perf_score;
++    avg_exec_us += q->exec_us;
++    avg_bitmap_size += log(q->bitmap_size);
  
-     sum += q->perf_score;
+   }
++  avg_exec_us /= afl->queued_paths;
++  avg_bitmap_size /= afl->queued_paths;
  
-@@ -75,7 +91,7 @@ void create_alias_table(afl_state_t *afl) {
++  double sum = 0;
    for (i = 0; i < n; i++) {
  
      struct queue_entry *q = afl->queue_buf[i];
 -    P[i] = (q->perf_score * n) / sum;
-+    P[i] = (q->weight * n) / sum;
++
++    if (!q->disabled) {
++      q->weight = compute_weight(afl, q, avg_exec_us, avg_bitmap_size);
++      q->perf_score = calculate_score(afl, q);
++    }
++
++    sum += q->weight;
  
    }
  
-@@ -538,12 +554,14 @@ void cull_queue(afl_state_t *afl) {
++  for (i = 0; i < n; i++)
++    P[i] = (afl->queue_buf[i]->weight * n) / sum;
++
+   int nS = 0, nL = 0, s;
+   for (s = (s32)n - 1; s >= 0; --s) {
+ 
+@@ -538,12 +563,14 @@ void cull_queue(afl_state_t *afl) {
  
    afl->queued_favored = 0;
    afl->pending_favored = 0;
@@ -176,7 +194,7 @@ index d107dbc..15e5910 100644
      q = q->next;
  
    }
-@@ -579,6 +597,13 @@ void cull_queue(afl_state_t *afl) {
+@@ -579,6 +606,13 @@ void cull_queue(afl_state_t *afl) {
  
        }
  
@@ -190,47 +208,163 @@ index d107dbc..15e5910 100644
      }
  
    }
-@@ -767,28 +792,28 @@ u32 calculate_score(afl_state_t *afl, struct queue_entry *q) {
-       // Don't modify unfuzzed seeds
-       if (q->fuzz_level == 0) break;
+@@ -715,151 +749,11 @@ u32 calculate_score(afl_state_t *afl, struct queue_entry *q) {
  
+   }
+ 
+-  u32         n_paths;
+-  double      factor = 1.0;
+-  long double fuzz_mu;
+-
+-  switch (afl->schedule) {
+-
+-    case EXPLORE:
+-      break;
+-
+-    case SEEK:
+-      break;
+-
+-    case EXPLOIT:
+-      factor = MAX_FACTOR;
+-      break;
+-
+-    case COE:
+-      fuzz_mu = 0.0;
+-      n_paths = 0;
+-
+-      // Don't modify perf_score for unfuzzed seeds
+-      if (q->fuzz_level == 0) break;
+-
+-      struct queue_entry *queue_it = afl->queue;
+-      while (queue_it) {
+-
+-        fuzz_mu += log2(afl->n_fuzz[q->n_fuzz_entry]);
+-        n_paths++;
+-
+-        queue_it = queue_it->next;
+-
+-      }
+-
+-      if (unlikely(!n_paths)) { FATAL("Queue state corrupt"); }
+-
+-      fuzz_mu = fuzz_mu / n_paths;
+-
+-      if (log2(afl->n_fuzz[q->n_fuzz_entry]) > fuzz_mu) {
+-
+-        /* Never skip favourites */
+-        if (!q->favored) factor = 0;
+-
+-        break;
+-
+-      }
+-
+-    // Fall through
+-    case FAST:
+-
+-      // Don't modify unfuzzed seeds
+-      if (q->fuzz_level == 0) break;
+-
 -      switch ((u32)log2(afl->n_fuzz[q->n_fuzz_entry])) {
-+      switch (afl->n_fuzz[q->n_fuzz_entry]) {
- 
+-
 -        case 0 ... 1:
-+        case 0 ... 3:
-           factor = 4;
-           break;
- 
+-          factor = 4;
+-          break;
+-
 -        case 2 ... 3:
-+        case 4 ... 15:
-           factor = 3;
-           break;
- 
+-          factor = 3;
+-          break;
+-
 -        case 4:
-+        case 16 ... 31:
-           factor = 2;
-           break;
- 
+-          factor = 2;
+-          break;
+-
 -        case 5:
-+        case 32 ... 63:
-           break;
- 
+-          break;
+-
 -        case 6:
-+        case 64 ... 127:
-           if (!q->favored) factor = 0.8;
-           break;
- 
+-          if (!q->favored) factor = 0.8;
+-          break;
+-
 -        case 7:
-+        case 128 ... 254:
-           if (!q->favored) factor = 0.6;
-           break;
+-          if (!q->favored) factor = 0.6;
+-          break;
+-
+-        default:
+-          if (!q->favored) factor = 0.4;
+-          break;
+-
+-      }
+-
+-      if (q->favored) factor *= 1.15;
+-
+-      break;
+-
+-    case LIN:
+-      factor = q->fuzz_level / (afl->n_fuzz[q->n_fuzz_entry] + 1);
+-      break;
+-
+-    case QUAD:
+-      factor =
+-          q->fuzz_level * q->fuzz_level / (afl->n_fuzz[q->n_fuzz_entry] + 1);
+-      break;
+-
+-    case MMOPT:
+-      /* -- this was a more complex setup, which is good, but competed with
+-         -- rare. the simpler algo however is good when rare is not.
+-        // the newer the entry, the higher the pref_score
+-        perf_score *= (1 + (double)((double)q->depth /
+-        (double)afl->queued_paths));
+-        // with special focus on the last 8 entries
+-        if (afl->max_depth - q->depth < 8) perf_score *= (1 + ((8 -
+-        (afl->max_depth - q->depth)) / 5));
+-      */
+-      // put focus on the last 5 entries
+-      if (afl->max_depth - q->depth < 5) { perf_score *= 2; }
+-
+-      break;
+-
+-    case RARE:
+-
+-      // increase the score for every bitmap byte for which this entry
+-      // is the top contender
+-      perf_score += (q->tc_ref * 10);
+-      // the more often fuzz result paths are equal to this queue entry,
+-      // reduce its value
+-      perf_score *= (1 - (double)((double)afl->n_fuzz[q->n_fuzz_entry] /
+-                                  (double)afl->fsrv.total_execs));
+-
+-      break;
+-
+-    default:
+-      PFATAL("Unknown Power Schedule");
+-
+-  }
+-
+-  if (unlikely(afl->schedule >= EXPLOIT && afl->schedule <= QUAD)) {
+-
+-    if (factor > MAX_FACTOR) { factor = MAX_FACTOR; }
+-    perf_score *= factor / POWER_BETA;
+-
+-  }
+-
+   // MOpt mode
+   if (afl->limit_time_sig != 0 && afl->max_depth - q->depth < 3) {
  
+     perf_score *= 2;
+ 
+-  } else if (afl->schedule != COE && perf_score < 1) {
+-
+-    // Add a lower bound to AFLFast's energy assignment strategies
+-    perf_score = 1;
+-
+   }
+ 
+   /* Make sure that we don't go over limit. */
 diff --git a/src/afl-fuzz-state.c b/src/afl-fuzz-state.c
-index 3ce16ca..d56d2b5 100644
+index 61bd06b..59bc838 100644
 --- a/src/afl-fuzz-state.c
 +++ b/src/afl-fuzz-state.c
-@@ -113,6 +113,7 @@ void afl_state_init(afl_state_t *afl, uint32_t map_size) {
+@@ -115,6 +115,7 @@ void afl_state_init(afl_state_t *afl, uint32_t map_size) {
    afl->virgin_bits = ck_alloc(map_size);
    afl->virgin_tmout = ck_alloc(map_size);
    afl->virgin_crash = ck_alloc(map_size);
@@ -238,7 +372,7 @@ index 3ce16ca..d56d2b5 100644
    afl->var_bytes = ck_alloc(map_size);
    afl->top_rated = ck_alloc(map_size * sizeof(void *));
    afl->clean_trace = ck_alloc(map_size);
-@@ -473,6 +474,7 @@ void afl_state_deinit(afl_state_t *afl) {
+@@ -475,6 +476,7 @@ void afl_state_deinit(afl_state_t *afl) {
    ck_free(afl->virgin_bits);
    ck_free(afl->virgin_tmout);
    ck_free(afl->virgin_crash);
@@ -247,19 +381,10 @@ index 3ce16ca..d56d2b5 100644
    ck_free(afl->top_rated);
    ck_free(afl->clean_trace);
 diff --git a/src/afl-fuzz.c b/src/afl-fuzz.c
-index 22e6d57..fe5ca73 100644
+index 269ce1b..c72fea5 100644
 --- a/src/afl-fuzz.c
 +++ b/src/afl-fuzz.c
-@@ -966,7 +966,7 @@ int main(int argc, char **argv_orig, char **envp) {
-   /* Dynamically allocate memory for AFLFast schedules */
-   if (afl->schedule >= FAST && afl->schedule <= RARE) {
- 
--    afl->n_fuzz = ck_alloc(N_FUZZ_SIZE * sizeof(u32));
-+    afl->n_fuzz = ck_alloc(N_FUZZ_SIZE * sizeof(u8));
- 
-   }
- 
-@@ -1182,6 +1182,7 @@ int main(int argc, char **argv_orig, char **envp) {
+@@ -1206,6 +1206,7 @@ int main(int argc, char **argv_orig, char **envp) {
    if (!afl->in_bitmap) { memset(afl->virgin_bits, 255, afl->fsrv.map_size); }
    memset(afl->virgin_tmout, 255, afl->fsrv.map_size);
    memset(afl->virgin_crash, 255, afl->fsrv.map_size);
