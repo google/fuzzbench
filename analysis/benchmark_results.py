@@ -328,7 +328,7 @@ class BenchmarkResults:
         """Bug coverage growth plot."""
         plot_filename = self._prefix_with_benchmark(filename)
         self._plotter.write_coverage_growth_plot(
-            data_utils.add_bugs_covered_column(self._benchmark_df),
+            self._benchmark_df,
             self._get_full_path(plot_filename),
             wide=True,
             logscale=logscale,
