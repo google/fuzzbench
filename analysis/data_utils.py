@@ -112,7 +112,7 @@ def add_bugs_covered_column(experiment_df):
     grouping1 = ['fuzzer', 'benchmark', 'trial_id', 'crash_key']
     grouping2 = ['fuzzer', 'benchmark', 'trial_id']
     grouping3 = ['fuzzer', 'benchmark', 'trial_id', 'time']
-    df = experiment_df
+    df = experiment_df.sort_values(grouping3)
     df['firsts'] = ~df.duplicated(subset=grouping1) & ~df.crash_key.isna()
     df['bugs_cumsum'] = df.groupby(grouping2)['firsts'].transform('cumsum')
     df['bugs_covered'] = df.groupby(grouping3)['bugs_cumsum'].transform('max')
