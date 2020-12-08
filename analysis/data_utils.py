@@ -106,15 +106,18 @@ def filter_max_time(experiment_df, max_time):
     return experiment_df[experiment_df['time'] <= max_time]
 
 
-def add_bugs_covered_column(benchmark_df):
-    """Return a modified benchmark df in which the |crash_key| column is
-    replaced with a |bugs_covered| column."""
-    new_df = benchmark_df.drop(columns='crash_key').drop_duplicates()
-    new_df['bugs_covered'] = new_df.apply(lambda x: benchmark_df[
-        (benchmark_df['trial_id'] == x['trial_id']) &
-        (benchmark_df['fuzzer'] == x['fuzzer']) &
-        (benchmark_df['time'] <= x['time'])]['crash_key'].nunique(),
-                                          axis=1)
+def add_bugs_covered_column(experiment_df):
+    """Return a modified experiment df in which adds a |bugs_covered| column,
+    a cumulative count of bugs covered over time."""
+    grouping1 = ['fuzzer', 'benchmark', 'trial_id', 'crash_key']
+    grouping2 = ['fuzzer', 'benchmark', 'trial_id']
+    grouping3 = ['fuzzer', 'benchmark', 'trial_id', 'time']
+    df = experiment_df.sort_values(grouping3)
+    df['firsts'] = ~df.duplicated(subset=grouping1) & ~df.crash_key.isna()
+    df['bugs_cumsum'] = df.groupby(grouping2)['firsts'].transform('cumsum')
+    df['bugs_covered'] = (
+        df.groupby(grouping3)['bugs_cumsum'].transform('max').astype(int))
+    new_df = df.drop(columns=['bugs_cumsum', 'firsts'])
     return new_df
 
 

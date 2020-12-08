@@ -178,10 +178,16 @@ def generate_report(experiment_names,
         experiment_df = data_utils.clobber_experiments_data(
             experiment_df, experiment_names)
 
+    # Add |bugs_covered| column prior to export.
+    experiment_df = data_utils.add_bugs_covered_column(experiment_df)
+
     # Save the filtered raw data along with the report if not using cached data
     # or if the data does not exist.
     if not from_cached_data or not os.path.exists(data_path):
         experiment_df.to_csv(data_path)
+
+    # Remove duplicate rows where only the |crash_key| column changes.
+    experiment_df = experiment_df.drop(columns='crash_key').drop_duplicates()
 
     # Load the coverage json summary file.
     coverage_dict = {}

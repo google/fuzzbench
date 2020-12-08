@@ -15,11 +15,21 @@
 # pylint: disable=missing-function-docstring
 """Tests for data_utils.py"""
 
+import numpy as np
 import pandas as pd
 import pandas.testing as pd_test
 import pytest
 
 from analysis import data_utils
+
+
+def random_crash_key():
+    crashes = [
+        'Stack-buffer-overflow', 'Heap-buffer-overflow', 'Heap-use-after-free',
+        'Bad-cast', 'Integer-overflow', 'Null-dereference READ', None
+    ]
+    probabilities = (0.01, 0.02, 0.03, 0.07, 0.02, 0.05, 0.8)
+    return np.random.choice(crashes, p=probabilities)
 
 
 def create_trial_data(  # pylint: disable=too-many-arguments
@@ -35,7 +45,7 @@ def create_trial_data(  # pylint: disable=too-many-arguments
         'time_ended': None,
         'time': t,
         'edges_covered': reached_coverage,
-        'crash_key': None,
+        'crash_key': random_crash_key(),
         'experiment_filestore': experiment_filestore
     } for t in range(cycles)])
 
@@ -127,6 +137,13 @@ def test_filter_benchmarks():
                                                benchmarks_to_keep)
 
     assert filtered_df.benchmark.unique() == benchmarks_to_keep
+
+
+def test_add_bugs_covered_columns():
+    experiment_df = create_experiment_data()
+    experiment_df = data_utils.add_bugs_covered_column(experiment_df)
+
+    assert 'bugs_covered' in experiment_df.columns
 
 
 def test_label_fuzzers_by_experiment():
