@@ -522,7 +522,6 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         app_binary = coverage_utils.get_coverage_binary(self.benchmark)
         crash_metadata = run_crashes.do_crashes_run(app_binary,
                                                     self.crashes_dir)
-        logs.info('Crash metadata: %s', crash_metadata)
         crashes = []
         for crash_key in crash_metadata:
             crash = crash_metadata[crash_key]

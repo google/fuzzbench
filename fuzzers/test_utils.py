@@ -95,9 +95,17 @@ def test_initialize_env_in_environment_with_sanitizer(fs, environ):
     fs.create_file('/benchmark.yaml', contents='fuzz_target: fuzzer\ntype: bug')
     utils.initialize_env()
     assert os.getenv('FUZZ_TARGET') == 'fuzzer'
-    assert os.getenv('CFLAGS') == '-fsanitize=address,undefined -O3'
+    assert os.getenv('CFLAGS') == (
+        '-fsanitize=address -fsanitize=array-bounds,bool,builtin,enum,'
+        'float-divide-by-zero,function,integer-divide-by-zero,null,object-size,'
+        'return,returns-nonnull-attribute,shift,signed-integer-overflow,'
+        'unsigned-integer-overflow,unreachable,vla-bound,vptr -O3')
     assert os.getenv('CXXFLAGS') == (
-        '-fsanitize=address,undefined -stdlib=libc++ -O3')
+        '-fsanitize=address -fsanitize=array-bounds,bool,builtin,enum,'
+        'float-divide-by-zero,function,integer-divide-by-zero,null,object-size,'
+        'return,returns-nonnull-attribute,shift,signed-integer-overflow,'
+        'unsigned-integer-overflow,unreachable,vla-bound,vptr -stdlib=libc++ '
+        '-O3')
 
 
 def test_initialize_env_in_var_without_sanitizer(fs):
@@ -119,6 +127,14 @@ def test_initialize_env_in_var_with_sanitizer(fs):
     env = {}
     utils.initialize_env(env)
     assert env.get('FUZZ_TARGET') == 'fuzzer'
-    assert env.get('CFLAGS') == '-fsanitize=address,undefined -O3'
+    assert env.get('CFLAGS') == (
+        '-fsanitize=address -fsanitize=array-bounds,bool,builtin,enum,'
+        'float-divide-by-zero,function,integer-divide-by-zero,null,object-size,'
+        'return,returns-nonnull-attribute,shift,signed-integer-overflow,'
+        'unsigned-integer-overflow,unreachable,vla-bound,vptr -O3')
     assert env.get('CXXFLAGS') == (
-        '-fsanitize=address,undefined -stdlib=libc++ -O3')
+        '-fsanitize=address -fsanitize=array-bounds,bool,builtin,enum,'
+        'float-divide-by-zero,function,integer-divide-by-zero,null,object-size,'
+        'return,returns-nonnull-attribute,shift,signed-integer-overflow,'
+        'unsigned-integer-overflow,unreachable,vla-bound,vptr -stdlib=libc++ '
+        '-O3')
