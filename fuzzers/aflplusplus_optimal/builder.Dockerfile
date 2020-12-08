@@ -36,10 +36,10 @@ RUN apt-get update && \
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 82d1c3e18dd1b90fa15f7c056f94dc1a06ee345d && \
+    git checkout da6cddab904e363775f157ceafa932f3cdaf6121 && \
     unset CFLAGS && unset CXXFLAGS && export LLVM_CONFIG=llvm-config-11 && \
     export REAL_CC=gcc-9 && export REAL_CXX=g++-9 && \
     AFL_NO_X86=1 CC=gcc-9 PYTHON_INCLUDE=/ make && make install && \
-    make -C examples/aflpp_driver && \
-    cp examples/aflpp_driver/libAFLDriver.a / && \
+    make -C utils/aflpp_driver && \
+    cp utils/aflpp_driver/libAFLDriver.a / && \
     cp -va `llvm-config-11 --libdir`/libc++* /afl/
