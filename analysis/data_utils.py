@@ -45,8 +45,8 @@ def validate_data(experiment_df):
 def drop_uninteresting_columns(experiment_df):
     """Returns table with only interesting columns."""
     return experiment_df[[
-        'benchmark', 'fuzzer', 'trial_id', 'time', 'edges_covered', 'crash_key',
-        'experiment', 'experiment_filestore'
+        'benchmark', 'fuzzer', 'trial_id', 'time', 'edges_covered',
+        'bugs_covered', 'experiment', 'experiment_filestore'
     ]]
 
 
