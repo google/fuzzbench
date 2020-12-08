@@ -40,6 +40,6 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     unset CFLAGS && unset CXXFLAGS && export LLVM_CONFIG=llvm-config-11 && \
     export REAL_CC=gcc-9 && export REAL_CXX=g++-9 && \
     AFL_NO_X86=1 CC=gcc-9 PYTHON_INCLUDE=/ make && make install && \
-    make -C examples/aflpp_driver && \
-    cp examples/aflpp_driver/libAFLDriver.a / && \
+    make -C utils/aflpp_driver && \
+    cp utils/aflpp_driver/libAFLDriver.a / && \
     cp -va `llvm-config-11 --libdir`/libc++* /afl/
