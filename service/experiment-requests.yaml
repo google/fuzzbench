@@ -17,6 +17,19 @@
 #
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
+
+- experiment: 2020-12-08
+  description: "test afl++ schedule changes"
+  fuzzers:
+    - aflplusplus_explore
+    - aflplusplus_exploit
+    - aflplusplus_explore_weight
+    - aflplusplus_exploit_weight
+    - aflplusplus_fast_old
+    - aflplusplus_coe_old
+    - aflplusplus_fast_new
+    - aflplusplus_coe_new
+
 - experiment: 2020-12-05
   description: "AFL++ schedules"
   fuzzers:
@@ -27,7 +40,6 @@
     - aflplusplus_fast_v2_nolog
     - aflplusplus_coe_v2_cutoff
     - aflplusplus_coe_v2
-
 
 - experiment: 2020-12-04
   description: "AFL++ 2.68c qemu mode"
