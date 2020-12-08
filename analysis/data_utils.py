@@ -44,9 +44,12 @@ def validate_data(experiment_df):
 
 def drop_uninteresting_columns(experiment_df):
     """Returns table with only interesting columns."""
+    # Remove duplicate rows where only the |crash_key| column changes.
+    experiment_df = experiment_df.drop(columns='crash_key').drop_duplicates()
+
     return experiment_df[[
-        'benchmark', 'fuzzer', 'trial_id', 'time', 'edges_covered', 'crash_key',
-        'experiment', 'experiment_filestore'
+        'benchmark', 'fuzzer', 'trial_id', 'time', 'edges_covered',
+        'bugs_covered', 'experiment', 'experiment_filestore'
     ]]
 
 

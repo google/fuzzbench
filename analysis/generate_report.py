@@ -186,9 +186,6 @@ def generate_report(experiment_names,
     if not from_cached_data or not os.path.exists(data_path):
         experiment_df.to_csv(data_path)
 
-    # Remove duplicate rows where only the |crash_key| column changes.
-    experiment_df = experiment_df.drop(columns='crash_key').drop_duplicates()
-
     # Load the coverage json summary file.
     coverage_dict = {}
     if coverage_report:
