@@ -18,6 +18,16 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-12-09
+  description: "test afl++ schedule changes, 2nd"
+  fuzzers:
+    - aflplusplus_explore
+    - aflplusplus_exploit
+    - aflplusplus_explore_weight
+    - aflplusplus_exploit_weight
+    - aflplusplus_fast_new
+    - aflplusplus_coe_new
+
 - experiment: 2020-12-08
   description: "test afl++ schedule changes"
   fuzzers:
