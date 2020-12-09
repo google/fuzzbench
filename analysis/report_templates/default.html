@@ -153,7 +153,7 @@
             <ul class="collapsible">
                 <li>
                     <div class="collapsible-header">
-                        Median coverages on each benchmark
+                        Median code coverages on each benchmark
                     </div>
                     <div class="collapsible-body">
                         {{ experiment.summary_table.to_html() }}
@@ -168,27 +168,61 @@
 
             <h2 class="green-text text-darken-3">{{ benchmark.name }} summary</h2>
 
+            {% if benchmark.type == 'bug' %}
+
+            <div class="row">
+               <div class="col s12">
+                    <ul class="tabs">
+                      <li class="tab col s6"><a href="#{{ benchmark.name }}_bugs_normal" class="green-text text-darken-3">Bug coverage (linear)</a></li>
+                      <li class="tab col s6"><a href="#{{ benchmark.name }}_bugs_logscale" class="green-text text-darken-3">Bug coverage (log)</a></li>
+                    </ul>
+                </div>
+                <div id="{{ benchmark.name }}_bugs_normal" class="col s12">
+                    <h5 class="center-align">Mean bug coverage growth over time</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.bug_coverage_growth_plot }}">
+                </div>
+                <div id="{{ benchmark.name }}_bugs_logscale" class="col s12">
+                    <h5 class="center-align">Mean bug coverage growth over time</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.bug_coverage_growth_plot_logscale }}">
+                </div>
+            </div>
+
+            {% endif %}
+
             <div class="row">
                 <div class="col s6">
-                    <h5 class="center-align">Ranking by median reached coverage</h5>
+                    <h5 class="center-align">Ranking by median reached code coverage</h5>
                     <img class="responsive-img materialboxed"
                          src="{{ benchmark.ranking_plot }}">
                 </div>
                 <div class="col s6">
-                    <h5 class="center-align">Reached coverage distribution</h5>
+                    <h5 class="center-align">Reached code coverage distribution</h5>
                     <img class="responsive-img materialboxed"
                          src="{{ benchmark.violin_plot }}">
                 </div>
             </div>
             <div class="row">
                 <div class="col s12">
-                    <h5 class="center-align">Mean coverage growth over time</h5>
+                    <ul class="tabs">
+                      <li class="tab col s6"><a href="#{{ benchmark.name }}_code_normal" class="green-text text-darken-3">Code coverage (linear)</a></li>
+                      <li class="tab col s6"><a href="#{{ benchmark.name }}_code_logscale" class="green-text text-darken-3">Code coverage (log)</a></li>
+                    </ul>
+                </div>
+                <div id="{{ benchmark.name }}_code_normal" class="col s12">
+                    <h5 class="center-align">Mean code coverage growth over time</h5>
                     <img class="responsive-img materialboxed"
                          src="{{ benchmark.coverage_growth_plot }}">
-                    <div class="center-align">
-                        * The error bands show the 95% confidence interval
-                          around the mean coverage.
-                    </div>
+                </div>
+                <div id="{{ benchmark.name }}_code_logscale" class="col s12">
+                    <h5 class="center-align">Mean code coverage growth over time</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.coverage_growth_plot_logscale }}">
+                </div>
+                <div class="center-align">
+                    * The error bands show the 95% confidence interval
+                      around the mean code coverage.
                 </div>
             </div>
 
@@ -217,7 +251,7 @@
                     </div>
                     <div class="collapsible-body">
 
-                        <h5 class="center-align">Coverage sample statistics</h5>
+                        <h5 class="center-align">Code coverage sample statistics</h5>
                         {{ benchmark.summary_table.to_html() }}
                         <br>
 
@@ -242,27 +276,27 @@
             <ul class="collapsible">
                 <li>
                     <div class="collapsible-header">
-                        Unique coverage plots
+                        Unique code coverage plots
                     </div>
                     <div class="collapsible-body">
 
                         <div class="row">
                             <div class="col s6 offset-s3">
-                                <h5 class="center-align">Ranking by unique regions covered</h4>
+                                <h5 class="center-align">Ranking by unique code regions covered</h4>
                                     <img class="responsive-img materialboxed"
                                          src="{{ benchmark.unique_coverage_ranking_plot }}">
-                                    Each bar shows the total number of regions found by a given fuzzer.
-                                    The colored area shows the number of unique regions
+                                    Each bar shows the total number of code regions found by a given fuzzer.
+                                    The colored area shows the number of unique code regions
                                     (i.e., regions that were not covered by any other fuzzers).
                             </div>
                         </div> <!-- row -->
 
                         <div class="row">
                             <div class="col s6 offset-s3">
-                                <h5 class="center-align">Pairwise unique coverage</h4>
+                                <h5 class="center-align">Pairwise unique code coverage</h4>
                                     <img class="responsive-img materialboxed"
                                          src="{{ benchmark.pairwise_unique_coverage_plot }}">
-                                    Each cell represents the number of regions covered by the fuzzer
+                                    Each cell represents the number of code regions covered by the fuzzer
                                     of the column but not by the fuzzer of the row
                             </div>
                         </div> <!-- row -->
@@ -274,7 +308,7 @@
             <ul class="collapsible">
                 <li>
                     <div class="collapsible-header">
-                        Coverage reports for each fuzzer on this benchmark
+                        Code coverage reports for each fuzzer on this benchmark
                     </div>
                     <div class="collapsible-body">
                         <div class="collection">
@@ -336,6 +370,10 @@
          var scrollspy_elems = document.querySelectorAll('.scrollspy');
          var scrollspy_options = {scrollOffset: 0};
          M.ScrollSpy.init(scrollspy_elems, scrollspy_options);
+
+         var tabs_elems = document.querySelectorAll('.tabs');
+         var tabs_options = {duration: 500};
+         var instance = M.Tabs.init(tabs_elems, tabs_options);
      });
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.2.2/anchor.min.js"></script>

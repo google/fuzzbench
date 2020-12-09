@@ -115,7 +115,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # cases. Prevent these failures by using AFL_QUIET to stop afl-clang-fast
     # from writing AFL specific messages to stderr.
     os.environ['AFL_QUIET'] = '1'
-    os.environ['AFL_MAP_SIZE'] = '900000'
+    os.environ['AFL_MAP_SIZE'] = '1048576'
 
     src = os.getenv('SRC')
     work = os.getenv('WORK')
@@ -168,7 +168,7 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):
 
     flags = list(flags)
     if not flags or not flags[0] == '-Q' and '-p' not in flags:
-        flags += ['-p', 'coe']
+        flags += ['-p', 'fast']
     if os.path.exists(cmplog_target_binary):
         flags += ['-c', cmplog_target_binary]
     if os.path.exists('./afl++.dict'):

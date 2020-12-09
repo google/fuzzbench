@@ -17,6 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         fuzzer:
+          - coverage
           - afl
           - aflcc
           - aflfast
@@ -43,22 +44,28 @@ jobs:
           - libfuzzer_magicbytes
           - entropic_magicbytes
           - aflplusplus_lightweizz
-          - aflplusplus_explore
           - aflplusplus_268c
-          - aflplusplus_havoc
-          - aflplusplus_libfuzzer
-          - aflplusplus_honggfuzz
-          - aflplusplus_mopt
-          - aflplusplus_mopt_both
-          - aflplusplus_noextrasplice
+          - aflplusplus_268c_qemu
+          - aflplusplus_introspection
           - afl_fast
           - afl_fast_v2
           - aflplusplus_fast_v1
           - aflplusplus_fast_v2
-          - aflplusplus_fast_v1_time
-          - aflplusplus_fast_v2_time
-          - aflplusplus_fast_branches_v2
+          - aflplusplus_fast_v2_nolog
+          - aflplusplus_fast_v2_noperf
+          - aflplusplus_fast_v2_branches
+          - aflplusplus_coe_v2_cutoff
+          - aflplusplus_coe_v2
           - aflplusplus_cmplog
+          - aflplusplus_dict2file
+          - aflplusplus_explore
+          - aflplusplus_exploit
+          - aflplusplus_explore_weight
+          - aflplusplus_exploit_weight
+          - aflplusplus_fast_old
+          - aflplusplus_coe_old
+          - aflplusplus_fast_new
+          - aflplusplus_coe_new
 
         benchmark_type:
           - oss-fuzz

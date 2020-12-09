@@ -3,7 +3,7 @@
 AFL++ fuzzer instance that has hand-selected settings for every benchmark
 to show the improvements that can be gained when optimizing to a target.
 
-The schedule is "coe".
+The schedule is "fast".
 
 See the fuzzer.py for the ever changing configuration :-)
 

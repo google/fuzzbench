@@ -334,6 +334,22 @@ def test_run_cov_new_units(_, mocked_execute, fs, environ):
     expected = {
         'cwd': '/work/coverage-binaries/benchmark-a',
         'env': {
+            'ASAN_OPTIONS':
+                ('alloc_dealloc_mismatch=0:allocator_may_return_null=1:'
+                 'allocator_release_to_os_interval_ms=500:'
+                 'allow_user_segv_handler=0:check_malloc_usable_size=0:'
+                 'detect_leaks=1:detect_odr_violation=0:'
+                 'detect_stack_use_after_return=1:fast_unwind_on_fatal=0:'
+                 'handle_abort=2:handle_segv=2:handle_sigbus=2:handle_sigfpe=2:'
+                 'handle_sigill=2:max_uar_stack_size_log=16:'
+                 'quarantine_size_mb=64:strict_memcmp=1:symbolize=1:'
+                 'symbolize_inline_frames=0'),
+            'UBSAN_OPTIONS':
+                ('allocator_release_to_os_interval_ms=500:handle_abort=2:'
+                 'handle_segv=2:handle_sigbus=2:handle_sigfpe=2:'
+                 'handle_sigill=2:print_stacktrace=1:'
+                 'silence_unsigned_overflow=1:symbolize=1:'
+                 'symbolize_inline_frames=0'),
             'LLVM_PROFILE_FILE':
                 ('/work/measurement-folders/'
                  'benchmark-a-fuzzer-a/trial-12/coverage/data-%m.profraw'),

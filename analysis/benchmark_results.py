@@ -19,6 +19,7 @@ import functools
 from analysis import data_utils
 from analysis import coverage_data_utils
 from analysis import stat_tests
+from common import benchmark_config
 
 
 # pylint: disable=too-many-public-methods, too-many-arguments
@@ -239,13 +240,26 @@ class BenchmarkResults:
             self._get_full_path(plot_filename))
         return plot_filename
 
+    def _coverage_growth_plot(self, filename, logscale=False):
+        """Coverage growth plot helper function"""
+        plot_filename = self._prefix_with_benchmark(filename)
+        self._plotter.write_coverage_growth_plot(
+            self._benchmark_df,
+            self._get_full_path(plot_filename),
+            wide=True,
+            logscale=logscale)
+        return plot_filename
+
     @property
     def coverage_growth_plot(self):
-        """Coverage growth plot."""
-        plot_filename = self._prefix_with_benchmark('coverage_growth.svg')
-        self._plotter.write_coverage_growth_plot(
-            self._benchmark_df, self._get_full_path(plot_filename), wide=True)
-        return plot_filename
+        """Coverage growth plot (linear scale)."""
+        return self._coverage_growth_plot('coverage_growth.svg')
+
+    @property
+    def coverage_growth_plot_logscale(self):
+        """Coverage growth plot (logscale)."""
+        return self._coverage_growth_plot('coverage_growth_logscale.svg',
+                                          logscale=True)
 
     @property
     def violin_plot(self):
@@ -309,3 +323,30 @@ class BenchmarkResults:
             self.pairwise_unique_coverage_table,
             self._get_full_path(plot_filename))
         return plot_filename
+
+    def _bug_coverage_growth_plot(self, filename, logscale=False):
+        """Bug coverage growth plot."""
+        plot_filename = self._prefix_with_benchmark(filename)
+        self._plotter.write_coverage_growth_plot(
+            self._benchmark_df,
+            self._get_full_path(plot_filename),
+            wide=True,
+            logscale=logscale,
+            bugs=True)
+        return plot_filename
+
+    @property
+    def bug_coverage_growth_plot(self):
+        """Bug coverage growth plot (linear scale)."""
+        return self._bug_coverage_growth_plot('bug_coverage_growth_plot.svg')
+
+    @property
+    def bug_coverage_growth_plot_logscale(self):
+        """Bug coverage growth plot (logscale)."""
+        return self._bug_coverage_growth_plot(
+            'bug_coverage_growth_plot_logscale.svg', logscale=True)
+
+    @property
+    def type(self):
+        """Type of benchmark."""
+        return benchmark_config.get_config(self.name).get('type')
