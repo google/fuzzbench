@@ -18,4 +18,4 @@ RUN apt-get update -y && apt-get install -y libbfd-dev libunwind-dev
 
 ENV LD_LIBRARY_PATH /out
 ENV PATH="$PATH:/out"
-ENV AFL_MAP_SIZE=524288
+ENV AFL_MAP_SIZE=1048576

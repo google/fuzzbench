@@ -27,6 +27,7 @@ RETRY_DELAY = 60
 
 # Don't build php benchmark since it fills up disk in GH actions.
 OSS_FUZZ_BENCHMARKS = {
+    'arrow_parquet-arrow-fuzz',
     'bloaty_fuzz_target',
     'curl_curl_fuzzer_http',
     'jsoncpp_jsoncpp_fuzzer',
@@ -58,15 +59,19 @@ BUG_BENCHMARKS = {
     'libhevc_hevc_dec_fuzzer',
     'matio_matio_fuzzer',
     'ndpi_fuzz_ndpi_reader',
+    'openexr_openexr_exrenvmap_fuzzer',
     'openh264_decoder_fuzzer',
+    'php_php-fuzz-execute',
+    'php_php-fuzz-parser-2020-07-25',
     'stb_stbi_read_fuzzer',
-    'wabt_wasm2wat_fuzzer',
 }
 
 
 def get_make_target(fuzzer, benchmark):
     """Return test target for a fuzzer and benchmark."""
-    return 'test-run-%s-%s' % (fuzzer, benchmark)
+    if fuzzer == 'coverage':
+        return f'build-coverage-{benchmark}'
+    return f'test-run-{fuzzer}-{benchmark}'
 
 
 def delete_docker_images():

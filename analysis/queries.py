@@ -15,7 +15,9 @@
 
 import pandas as pd
 
-from database.models import Experiment, Trial, Snapshot
+from sqlalchemy import and_
+
+from database.models import Experiment, Trial, Snapshot, Crash
 from database import utils as db_utils
 
 
@@ -23,13 +25,17 @@ def get_experiment_data(experiment_names):
     """Get measurements (such as coverage) on experiments from the database."""
 
     snapshots_query = db_utils.query(
-        Experiment.git_hash, Experiment.experiment_filestore,\
-        Trial.experiment, Trial.fuzzer, Trial.benchmark,\
-        Trial.time_started, Trial.time_ended,\
-        Snapshot.trial_id, Snapshot.time, Snapshot.edges_covered)\
+        Experiment.git_hash, Experiment.experiment_filestore,
+        Trial.experiment, Trial.fuzzer, Trial.benchmark,
+        Trial.time_started, Trial.time_ended,
+        Snapshot.trial_id, Snapshot.time, Snapshot.edges_covered,
+        Snapshot.fuzzer_stats, Crash.crash_key)\
         .select_from(Experiment)\
         .join(Trial)\
         .join(Snapshot)\
+        .join(Crash,
+              and_(Snapshot.time==Crash.time,
+                   Snapshot.trial_id == Crash.trial_id), isouter=True)\
         .filter(Experiment.name.in_(experiment_names))\
         .filter(Trial.preempted.is_(False))
 

@@ -45,6 +45,7 @@ from database import models
 from experiment.build import build_utils
 from experiment.measurer import coverage_utils
 from experiment.measurer import run_coverage
+from experiment.measurer import run_crashes
 from experiment import scheduler
 
 logger = logs.Logger('measurer')  # pylint: disable=invalid-name
@@ -165,7 +166,7 @@ def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
         if not snapshots:
             return
 
-        db_utils.bulk_save(snapshots)
+        db_utils.add_all(snapshots)
         snapshots.clear()
         nonlocal snapshots_measured
         snapshots_measured = True
@@ -532,23 +533,44 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         extract_corpus(corpus_archive_path, unit_blacklist, self.corpus_dir)
         return True
 
-    def archive_crashes(self, cycle):
-        """Archive this cycle's crashes into filestore."""
-        if not os.listdir(self.crashes_dir):
-            logs.info('No crashes found for cycle %d.', cycle)
-            return
-
-        logs.info('Archiving crashes for cycle %d.', cycle)
+    def save_crash_files(self, cycle):
+        """Save crashes in per-cycle crash archive."""
         crashes_archive_name = experiment_utils.get_crashes_archive_name(cycle)
         archive_path = os.path.join(os.path.dirname(self.crashes_dir),
                                     crashes_archive_name)
         with tarfile.open(archive_path, 'w:gz') as tar:
             tar.add(self.crashes_dir,
                     arcname=os.path.basename(self.crashes_dir))
+        trial_crashes_dir = posixpath.join(self.trial_dir, 'crashes')
         archive_filestore_path = exp_path.filestore(
-            posixpath.join(self.trial_dir, 'crashes', crashes_archive_name))
+            posixpath.join(trial_crashes_dir, crashes_archive_name))
         filestore_utils.cp(archive_path, archive_filestore_path)
         os.remove(archive_path)
+
+    def process_crashes(self, cycle):
+        """Process and store crashes."""
+        if not os.listdir(self.crashes_dir):
+            logs.info('No crashes found for cycle %d.', cycle)
+            return []
+
+        logs.info('Saving crash files crashes for cycle %d.', cycle)
+        self.save_crash_files(cycle)
+
+        logs.info('Processing crashes for cycle %d.', cycle)
+        app_binary = coverage_utils.get_coverage_binary(self.benchmark)
+        crash_metadata = run_crashes.do_crashes_run(app_binary,
+                                                    self.crashes_dir)
+        crashes = []
+        for crash_key in crash_metadata:
+            crash = crash_metadata[crash_key]
+            crashes.append(
+                models.Crash(crash_key=crash_key,
+                             crash_testcase=crash.crash_testcase,
+                             crash_type=crash.crash_type,
+                             crash_address=crash.crash_address,
+                             crash_state=crash.crash_state,
+                             crash_stacktrace=crash.crash_stacktrace))
+        return crashes
 
     def update_measured_files(self):
         """Updates the measured-files.txt file for this trial with
@@ -635,7 +657,7 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
 
     measuring_start_time = time.time()
     snapshot_logger.info('Measuring cycle: %d.', cycle)
-    this_time = cycle * experiment_utils.get_snapshot_seconds()
+    this_time = experiment_utils.get_cycle_time(cycle)
     if snapshot_measurer.is_cycle_unchanged(cycle):
         snapshot_logger.info('Cycle: %d is unchanged.', cycle)
         regions_covered = snapshot_measurer.get_current_coverage()
@@ -645,7 +667,8 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
         return models.Snapshot(time=this_time,
                                trial_id=trial_num,
                                edges_covered=regions_covered,
-                               fuzzer_stats=fuzzer_stats_data)
+                               fuzzer_stats=fuzzer_stats_data,
+                               crashes=[])
 
     corpus_archive_dst = os.path.join(
         snapshot_measurer.trial_dir, 'corpus',
@@ -673,6 +696,9 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
     # Generate profdata and transform it into json form.
     snapshot_measurer.generate_coverage_information(cycle)
 
+    # Run crashes again, parse stacktraces and generate crash signatures.
+    crashes = snapshot_measurer.process_crashes(cycle)
+
     # Get the coverage of the new corpus units.
     regions_covered = snapshot_measurer.get_current_coverage()
     snapshot_measurer.record_segment_and_function_coverage(
@@ -681,13 +707,12 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
     snapshot = models.Snapshot(time=this_time,
                                trial_id=trial_num,
                                edges_covered=regions_covered,
-                               fuzzer_stats=fuzzer_stats_data)
+                               fuzzer_stats=fuzzer_stats_data,
+                               crashes=crashes)
 
     # Record the new corpus files.
     snapshot_measurer.update_measured_files()
 
-    # Archive crashes directory.
-    snapshot_measurer.archive_crashes(cycle)
     measuring_time = round(time.time() - measuring_start_time, 2)
     snapshot_logger.info('Measured cycle: %d in %f seconds.', cycle,
                          measuring_time)
