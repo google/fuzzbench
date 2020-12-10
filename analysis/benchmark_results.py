@@ -240,14 +240,15 @@ class BenchmarkResults:
             self._get_full_path(plot_filename))
         return plot_filename
 
-    def _coverage_growth_plot(self, filename, logscale=False):
+    def _coverage_growth_plot(self, filename, bugs=False, logscale=False):
         """Coverage growth plot helper function"""
         plot_filename = self._prefix_with_benchmark(filename)
         self._plotter.write_coverage_growth_plot(
             self._benchmark_df,
             self._get_full_path(plot_filename),
             wide=True,
-            logscale=logscale)
+            logscale=logscale,
+            bugs=bugs)
         return plot_filename
 
     @property
@@ -261,13 +262,40 @@ class BenchmarkResults:
         return self._coverage_growth_plot('coverage_growth_logscale.svg',
                                           logscale=True)
 
-    @property
-    def violin_plot(self):
+    def _generic_violin_plot(self, filename, bugs=False):
         """Violin plot."""
         plot_filename = self._prefix_with_benchmark('violin.svg')
         self._plotter.write_violin_plot(self._benchmark_snapshot_df,
                                         self._get_full_path(plot_filename))
         return plot_filename
+
+    @property
+    def violin_plot(self):
+        """Region coverage violin plot."""
+        return self._generic_violin_plot('violin.svg')
+
+    @property
+    def bug_violin_plot(self):
+        """Region coverage violin plot."""
+        return self._generic_violin_plot('bug_violin.svg', bugs=True)
+
+    def _generic_box_plot(self, filename, bugs=False):
+        """Generic internal boxplot."""
+        plot_filename = self._prefix_with_benchmark(filename)
+        self._plotter.write_box_plot(self._benchmark_snapshot_df,
+                                     self._get_full_path(plot_filename),
+                                     bugs=bugs)
+        return plot_filename
+
+    @property
+    def box_plot(self):
+        """Region coverage boxplot."""
+        return self._generic_box_plot('boxplot.svg')
+
+    @property
+    def bug_box_plot(self):
+        """Bug coverage boxplot."""
+        return self._generic_box_plot('bug_boxplot.svg', bugs=True)
 
     @property
     def distribution_plot(self):
@@ -324,27 +352,17 @@ class BenchmarkResults:
             self._get_full_path(plot_filename))
         return plot_filename
 
-    def _bug_coverage_growth_plot(self, filename, logscale=False):
-        """Bug coverage growth plot."""
-        plot_filename = self._prefix_with_benchmark(filename)
-        self._plotter.write_coverage_growth_plot(
-            self._benchmark_df,
-            self._get_full_path(plot_filename),
-            wide=True,
-            logscale=logscale,
-            bugs=True)
-        return plot_filename
-
     @property
     def bug_coverage_growth_plot(self):
         """Bug coverage growth plot (linear scale)."""
-        return self._bug_coverage_growth_plot('bug_coverage_growth_plot.svg')
+        return self._coverage_growth_plot('bug_coverage_growth_plot.svg',
+                                          bugs=True)
 
     @property
     def bug_coverage_growth_plot_logscale(self):
         """Bug coverage growth plot (logscale)."""
-        return self._bug_coverage_growth_plot(
-            'bug_coverage_growth_plot_logscale.svg', logscale=True)
+        return self._coverage_growth_plot(
+            'bug_coverage_growth_plot_logscale.svg', bugs=True, logscale=True)
 
     @property
     def type(self):

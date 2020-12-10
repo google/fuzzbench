@@ -168,46 +168,36 @@
 
             <h2 class="green-text text-darken-3">{{ benchmark.name }} summary</h2>
 
-            {% if benchmark.type == 'bug' %}
-
-            <div class="row">
-               <div class="col s12">
-                    <ul class="tabs">
-                      <li class="tab col s6"><a href="#{{ benchmark.name }}_bugs_normal" class="green-text text-darken-3">Bug coverage (linear)</a></li>
-                      <li class="tab col s6"><a href="#{{ benchmark.name }}_bugs_logscale" class="green-text text-darken-3">Bug coverage (log)</a></li>
-                    </ul>
-                </div>
-                <div id="{{ benchmark.name }}_bugs_normal" class="col s12">
-                    <h5 class="center-align">Mean bug coverage growth over time</h5>
-                    <img class="responsive-img materialboxed"
-                         src="{{ benchmark.bug_coverage_growth_plot }}">
-                </div>
-                <div id="{{ benchmark.name }}_bugs_logscale" class="col s12">
-                    <h5 class="center-align">Mean bug coverage growth over time</h5>
-                    <img class="responsive-img materialboxed"
-                         src="{{ benchmark.bug_coverage_growth_plot_logscale }}">
-                </div>
-            </div>
-
-            {% endif %}
-
             <div class="row">
                 <div class="col s6">
+            {% if benchmark.type == 'bug' %}
+                    <h5 class="center-align">Discovered bug coverage distribution</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.bug_box_plot }}">
+            {% else %}
                     <h5 class="center-align">Ranking by median reached code coverage</h5>
                     <img class="responsive-img materialboxed"
                          src="{{ benchmark.ranking_plot }}">
+            {% endif %}
                 </div>
                 <div class="col s6">
                     <h5 class="center-align">Reached code coverage distribution</h5>
                     <img class="responsive-img materialboxed"
-                         src="{{ benchmark.violin_plot }}">
+                         src="{{ benchmark.box_plot }}">
                 </div>
             </div>
             <div class="row">
                 <div class="col s12">
                     <ul class="tabs">
+            {% if benchmark.type == 'bug' %}
+                      <li class="tab col s3"><a href="#{{ benchmark.name }}_code_normal" class="green-text text-darken-3">Code coverage (linear)</a></li>
+                      <li class="tab col s3"><a href="#{{ benchmark.name }}_code_logscale" class="green-text text-darken-3">Code coverage (log)</a></li>
+                      <li class="tab col s3"><a href="#{{ benchmark.name }}_bugs_normal" class="green-text text-darken-3">Bug coverage (linear)</a></li>
+                      <li class="tab col s3"><a href="#{{ benchmark.name }}_bugs_logscale" class="green-text text-darken-3">Bug coverage (log)</a></li>
+            {% else %}
                       <li class="tab col s6"><a href="#{{ benchmark.name }}_code_normal" class="green-text text-darken-3">Code coverage (linear)</a></li>
                       <li class="tab col s6"><a href="#{{ benchmark.name }}_code_logscale" class="green-text text-darken-3">Code coverage (log)</a></li>
+            {% endif %}
                     </ul>
                 </div>
                 <div id="{{ benchmark.name }}_code_normal" class="col s12">
@@ -220,6 +210,18 @@
                     <img class="responsive-img materialboxed"
                          src="{{ benchmark.coverage_growth_plot_logscale }}">
                 </div>
+            {% if benchmark.type == 'bug' %}
+                <div id="{{ benchmark.name }}_bugs_normal" class="col s12">
+                    <h5 class="center-align">Mean bug coverage growth over time</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.bug_coverage_growth_plot }}">
+                </div>
+                <div id="{{ benchmark.name }}_bugs_logscale" class="col s12">
+                    <h5 class="center-align">Mean bug coverage growth over time</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.bug_coverage_growth_plot_logscale }}">
+                </div>
+            {% endif %}
                 <div class="center-align">
                     * The error bands show the 95% confidence interval
                       around the mean code coverage.

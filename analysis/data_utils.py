@@ -44,13 +44,15 @@ def validate_data(experiment_df):
 
 def drop_uninteresting_columns(experiment_df):
     """Returns table with only interesting columns."""
-    # Remove duplicate rows where only the |crash_key| column changes.
-    experiment_df = experiment_df.drop(columns='crash_key').drop_duplicates()
-
-    return experiment_df[[
+    columns_to_keep = [
         'benchmark', 'fuzzer', 'trial_id', 'time', 'edges_covered',
         'bugs_covered', 'experiment', 'experiment_filestore'
-    ]]
+    ]
+    # Remove extra columns
+    experiment_df = experiment_df[columns_to_keep]
+
+    # Remove duplicate rows (crash_key) and re-index
+    return experiment_df.drop_duplicates(ignore_index=True)
 
 
 def clobber_experiments_data(df, experiments):
@@ -187,12 +189,12 @@ def get_experiment_snapshots(experiment_df):
 # Summary tables containing statistics on the samples.
 
 
-def benchmark_summary(benchmark_snapshot_df):
+def benchmark_summary(benchmark_snapshot_df, key='edges_covered'):
     """Creates summary table for a benchmark snapshot with columns:
     |fuzzer|time||count|mean|std|min|25%|median|75%|max|
     """
     groups = benchmark_snapshot_df.groupby(['fuzzer', 'time'])
-    summary = groups['edges_covered'].describe()
+    summary = groups[key].describe()
     summary.rename(columns={'50%': 'median'}, inplace=True)
     return summary.sort_values(('median'), ascending=False)
 
