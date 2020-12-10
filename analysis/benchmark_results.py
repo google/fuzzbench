@@ -264,9 +264,10 @@ class BenchmarkResults:
 
     def _generic_violin_plot(self, filename, bugs=False):
         """Violin plot."""
-        plot_filename = self._prefix_with_benchmark('violin.svg')
+        plot_filename = self._prefix_with_benchmark(filename)
         self._plotter.write_violin_plot(self._benchmark_snapshot_df,
-                                        self._get_full_path(plot_filename))
+                                        self._get_full_path(plot_filename),
+                                        bugs=bugs)
         return plot_filename
 
     @property
