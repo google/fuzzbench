@@ -46,6 +46,8 @@ jobs:
           - aflplusplus_lightweizz
           - aflplusplus_268c
           - aflplusplus_268c_qemu
+          - aflplusplus_300c
+          - aflplusplus_300c_qemu
           - aflplusplus_introspection
           - afl_fast
           - afl_fast_v2
@@ -58,14 +60,6 @@ jobs:
           - aflplusplus_coe_v2
           - aflplusplus_cmplog
           - aflplusplus_dict2file
-          - aflplusplus_explore
-          - aflplusplus_exploit
-          - aflplusplus_explore_weight
-          - aflplusplus_exploit_weight
-          - aflplusplus_fast_old
-          - aflplusplus_coe_old
-          - aflplusplus_fast_new
-          - aflplusplus_coe_new
 
         benchmark_type:
           - oss-fuzz
