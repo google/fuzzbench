@@ -37,7 +37,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     print('[fuzz] afl_qemu_driver_stdin_input() address =', target_func)
 
     # Fuzzer option for qemu_mode.
-    flags = ['-Q']
+    flags = ['-Q', '-p', 'fast']
 
     os.environ['AFL_COMPCOV_LEVEL'] = '3'  # Complete compcov including floats
     os.environ['AFL_QEMU_PERSISTENT_ADDR'] = target_func
