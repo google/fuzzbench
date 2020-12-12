@@ -234,7 +234,7 @@ class Plotter:
         column_of_interest = 'bugs_covered' if bugs else 'edges_covered'
 
         fuzzer_order = data_utils.benchmark_rank_by_median(
-            benchmark_snapshot_df).index
+            benchmark_snapshot_df, key=column_of_interest).index
 
         mean_props = {
             'markersize': '10',
@@ -294,7 +294,7 @@ class Plotter:
         column_of_interest = 'bugs_covered' if bugs else 'edges_covered'
 
         fuzzers_in_order = data_utils.benchmark_rank_by_median(
-            benchmark_snapshot_df).index
+            benchmark_snapshot_df, key=column_of_interest).index
         for fuzzer in fuzzers_in_order:
             measurements_for_fuzzer = benchmark_snapshot_df[
                 benchmark_snapshot_df.fuzzer == fuzzer]
@@ -328,7 +328,7 @@ class Plotter:
         column_of_interest = 'bugs_covered' if bugs else 'edges_covered'
 
         fuzzer_order = data_utils.benchmark_rank_by_median(
-            benchmark_snapshot_df).index
+            benchmark_snapshot_df, key=column_of_interest).index
 
         axes = sns.barplot(y=column_of_interest,
                            x='fuzzer',
