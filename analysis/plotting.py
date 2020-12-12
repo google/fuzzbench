@@ -131,7 +131,7 @@ class Plotter:
             plt.close(fig)
 
     def _common_datafame_checks(self, benchmark_df, snapshot=False):
-        """assertions common to several plotting functions"""
+        """Assertions common to several plotting functions."""
         benchmark_names = benchmark_df.benchmark.unique()
         assert len(benchmark_names) == 1, 'Not a single benchmark data!'
         if snapshot:
@@ -181,7 +181,7 @@ class Plotter:
                     loc='upper left',
                     frameon=False)
 
-        axes.set(ylabel='Bug coverage' if bugs else 'Region coverage')
+        axes.set(ylabel='Bug coverage' if bugs else 'Code region coverage')
         axes.set(xlabel='Time (hour:minute)')
 
         if self._logscale or logscale:
@@ -217,10 +217,17 @@ class Plotter:
                                   logscale=logscale,
                                   bugs=bugs)
 
-    def violin_plot(self, benchmark_snapshot_df, axes=None, bugs=False):
-        """Draws violin plot.
+    def box_or_violin_plot(self,
+                           benchmark_snapshot_df,
+                           axes=None,
+                           bugs=False,
+                           violin=False):
+        """Draws a box or violin plot based on parameter.
 
         The fuzzer labels will be in the order of their median coverage.
+        With boxplot the median/min/max/etc is more visible than on the violin,
+        especially with distributions with high variance. It does not have
+        however violinplot's kernel density estimation.
         """
         self._common_datafame_checks(benchmark_snapshot_df, snapshot=True)
 
@@ -228,45 +235,6 @@ class Plotter:
 
         fuzzer_order = data_utils.benchmark_rank_by_median(
             benchmark_snapshot_df).index
-
-        # Another options is to use |boxplot| instead of |violinplot|. With
-        # boxplot the median/min/max/etc is more visible than on the violin,
-        # especially with distributions with high variance. It does not have
-        # however violinplot's kernel density estimation.
-
-        sns.violinplot(y=column_of_interest,
-                       x='fuzzer',
-                       data=benchmark_snapshot_df,
-                       order=fuzzer_order,
-                       palette=self._fuzzer_colors,
-                       ax=axes)
-
-        axes.set_title(_formatted_title(benchmark_snapshot_df))
-        ylabel = 'Reached {} coverage'.format('bug' if bugs else 'region')
-        axes.set(ylabel=ylabel)
-        axes.set(xlabel='Fuzzer (highest median coverage on the left)')
-        axes.set_xticklabels(axes.get_xticklabels(),
-                             rotation=_DEFAULT_LABEL_ROTATION,
-                             horizontalalignment='right')
-
-        sns.despine(ax=axes, trim=True)
-
-    def write_violin_plot(self, benchmark_snapshot_df, image_path):
-        """Writes violin plot."""
-        self._write_plot_to_image(self.violin_plot, benchmark_snapshot_df,
-                                  image_path)
-
-    def box_plot(self, benchmark_snapshot_df, axes=None, bugs=False):
-        """Draws box plot.
-
-        The fuzzer labels will be in the order of their median coverage.
-        """
-        self._common_datafame_checks(benchmark_snapshot_df, snapshot=True)
-
-        column_of_interest = 'bugs_covered' if bugs else 'edges_covered'
-
-        fuzzer_order = data_utils.benchmark_rank_by_median(
-            benchmark_snapshot_df, key=column_of_interest).index
 
         mean_props = {
             'markersize': '10',
@@ -280,12 +248,16 @@ class Plotter:
                            order=fuzzer_order,
                            ax=axes)
 
-        sns.boxplot(**common_args,
-                    palette=self._fuzzer_colors,
-                    showmeans=True,
-                    meanprops=mean_props)
+        if violin:
+            sns.violinplot(**common_args, palette=self._fuzzer_colors)
 
-        sns.stripplot(**common_args, size=3, color="black", alpha=0.6)
+        else:
+            sns.boxplot(**common_args,
+                        palette=self._fuzzer_colors,
+                        showmeans=True,
+                        meanprops=mean_props)
+
+            sns.stripplot(**common_args, size=3, color="black", alpha=0.6)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
         ylabel = 'Reached {} coverage'.format('bug' if bugs else 'region')
@@ -297,9 +269,17 @@ class Plotter:
 
         sns.despine(ax=axes, trim=True)
 
+    def write_violin_plot(self, benchmark_snapshot_df, image_path, bugs=False):
+        """Writes violin plot."""
+        self._write_plot_to_image(self.box_or_violin_plot,
+                                  benchmark_snapshot_df,
+                                  image_path,
+                                  bugs=bugs,
+                                  violin=True)
+
     def write_box_plot(self, benchmark_snapshot_df, image_path, bugs=False):
         """Writes box plot."""
-        self._write_plot_to_image(self.box_plot,
+        self._write_plot_to_image(self.box_or_violin_plot,
                                   benchmark_snapshot_df,
                                   image_path,
                                   bugs=bugs)
@@ -327,7 +307,7 @@ class Plotter:
         axes.set_title(_formatted_title(benchmark_snapshot_df))
         axes.legend(loc='upper right', frameon=False)
 
-        axes.set(xlabel='Bug coverage' if bugs else 'Region coverage')
+        axes.set(xlabel='Bug coverage' if bugs else 'Code region coverage')
         axes.set(ylabel='Density')
         axes.set_xticklabels(axes.get_xticklabels(),
                              rotation=_DEFAULT_LABEL_ROTATION,

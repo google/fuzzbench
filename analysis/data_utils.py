@@ -48,10 +48,10 @@ def drop_uninteresting_columns(experiment_df):
         'benchmark', 'fuzzer', 'trial_id', 'time', 'edges_covered',
         'bugs_covered', 'experiment', 'experiment_filestore'
     ]
-    # Remove extra columns
+    # Remove extra columns, keep interesting ones.
     experiment_df = experiment_df[columns_to_keep]
 
-    # Remove duplicate rows (crash_key) and re-index
+    # Remove duplicate rows (crash_key) and re-index.
     return experiment_df.drop_duplicates(ignore_index=True)
 
 

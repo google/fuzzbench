@@ -190,10 +190,10 @@
                 <div class="col s12">
                     <ul class="tabs">
             {% if benchmark.type == 'bug' %}
-                      <li class="tab col s3"><a href="#{{ benchmark.name }}_code_normal" class="green-text text-darken-3">Code coverage (linear)</a></li>
-                      <li class="tab col s3"><a href="#{{ benchmark.name }}_code_logscale" class="green-text text-darken-3">Code coverage (log)</a></li>
                       <li class="tab col s3"><a href="#{{ benchmark.name }}_bugs_normal" class="green-text text-darken-3">Bug coverage (linear)</a></li>
                       <li class="tab col s3"><a href="#{{ benchmark.name }}_bugs_logscale" class="green-text text-darken-3">Bug coverage (log)</a></li>
+                      <li class="tab col s3"><a href="#{{ benchmark.name }}_code_normal" class="green-text text-darken-3">Code coverage (linear)</a></li>
+                      <li class="tab col s3"><a href="#{{ benchmark.name }}_code_logscale" class="green-text text-darken-3">Code coverage (log)</a></li>
             {% else %}
                       <li class="tab col s6"><a href="#{{ benchmark.name }}_code_normal" class="green-text text-darken-3">Code coverage (linear)</a></li>
                       <li class="tab col s6"><a href="#{{ benchmark.name }}_code_logscale" class="green-text text-darken-3">Code coverage (log)</a></li>
