@@ -246,10 +246,40 @@
             </div>
             {% endif %}
 
+            {% if benchmark.type == 'bug' %}
             <ul class="collapsible">
                 <li>
                     <div class="collapsible-header">
-                        Sample statistics and statistical significance
+                        Sample statistics and statistical significance (bugs covered)
+                    </div>
+                    <div class="collapsible-body">
+
+                        <h5 class="center-align">Bug coverage sample statistics</h5>
+                        {{ benchmark.bug_summary_table.to_html() }}
+                        <br>
+
+                        <div class="row">
+                            <div class="col s6 offset-s3">
+                                <h5 class="center-align">Mann-Whitney U test</h4>
+                                    <img class="responsive-img materialboxed"
+                                         src="{{ benchmark.mann_whitney_plot }}">
+                                    The table summarizes the p values of
+                                    pairwise Mann-Whitney U tests.
+                                    Green cells indicate that the reached
+                                    coverage distribution of a given fuzzer pair
+                                    is significantly different.
+                            </div>
+                        </div> <!-- row -->
+
+                    </div>
+                </li>
+            </ul>
+            {% endif %}
+
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Sample statistics and statistical significance (code coverage)
                     </div>
                     <div class="collapsible-body">
 

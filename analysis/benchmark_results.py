@@ -121,6 +121,12 @@ class BenchmarkResults:
         return data_utils.benchmark_summary(self._benchmark_snapshot_df)
 
     @property
+    def bug_summary_table(self):
+        """Statistical summary table."""
+        return data_utils.benchmark_summary(self._benchmark_snapshot_df,
+                                            key='bugs_covered')
+
+    @property
     def rank_by_mean(self):
         """Fuzzer ranking by mean coverage."""
         return data_utils.benchmark_rank_by_mean(self._benchmark_snapshot_df)
