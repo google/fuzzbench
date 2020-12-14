@@ -251,7 +251,7 @@ class TrialCoverage:  # pylint: disable=too-many-instance-attributes
 def generate_json_summary(coverage_binary,
                           profdata_file,
                           output_file,
-                          summary_only=True):
+                          summary_only=False):
     """Generates the json summary file from |coverage_binary|
     and |profdata_file|."""
     command = [
