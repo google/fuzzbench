@@ -380,7 +380,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         self.UNIT_BLACKLIST[self.benchmark] = (
             self.UNIT_BLACKLIST[self.benchmark].union(set(crashing_units)))
 
-    def generate_summary(self, cycle: int, summary_only=True):
+    def generate_summary(self, cycle: int, summary_only=False):
         """Transforms the .profdata file into json form."""
         coverage_binary = coverage_utils.get_coverage_binary(self.benchmark)
         result = coverage_utils.generate_json_summary(coverage_binary,
