@@ -18,6 +18,7 @@ from experiment.measurer import experiment_coverage_utils as exp_cov_utils
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
 
+
 def get_test_data_path(*subpaths):
     """Returns the path of |subpaths| relative to TEST_DATA_PATH."""
     return os.path.join(TEST_DATA_PATH, *subpaths)
