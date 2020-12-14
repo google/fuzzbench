@@ -25,7 +25,8 @@ from common import new_process
 from database import models
 from database import utils as db_utils
 from experiment.build import build_utils
-from experiment.measurer import measure_manager, coverage_utils
+from experiment.measurer import measure_manager, experiment_coverage_utils as \
+    exp_cov_utils
 from test_libs import utils as test_utils
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -199,7 +200,7 @@ def test_measure_all_trials_not_ready(mocked_rsync, mocked_ls, mocked_manager,
     assert measure_manager.measure_all_trials(
         experiment_utils.get_experiment_name(), MAX_TOTAL_TIME,
         test_utils.MockPool(), mocked_manager, queue.Queue(),
-        coverage_utils.DataFrameContainer())
+        exp_cov_utils.DataFrameContainer())
     assert not mocked_rsync.called
 
 
@@ -218,7 +219,7 @@ def test_measure_all_trials_no_more(mocked_directories_have_same_files,
     mock_pool = test_utils.MockPool()
     assert not measure_manager.measure_all_trials(
         experiment_utils.get_experiment_name(), MAX_TOTAL_TIME, mock_pool,
-        mocked_manager, queue.Queue(), coverage_utils.DataFrameContainer())
+        mocked_manager, queue.Queue(), exp_cov_utils.DataFrameContainer())
 
 
 def test_is_cycle_unchanged_doesnt_exist(experiment):
@@ -448,7 +449,7 @@ def test_measure_loop_end(_, __, ___, ____, _____, ______, experiment_config,
     this test, there is nothing left to measure on the first call."""
 
     measure_manager.measure_loop(experiment_config, 100,
-                                 coverage_utils.DataFrameContainer())
+                                 exp_cov_utils.DataFrameContainer())
     # If everything went well, we should get to this point without any
     # exceptions.
 
@@ -480,7 +481,7 @@ def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___,
 
     mocked_measure_all_trials.side_effect = mock_measure_all_trials
     measure_manager.measure_loop(experiment_config, 100,
-                                 coverage_utils.DataFrameContainer())
+                                 exp_cov_utils.DataFrameContainer())
     assert call_count == loop_iterations
 
 
