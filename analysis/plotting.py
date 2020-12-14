@@ -130,6 +130,13 @@ class Plotter:
         finally:
             plt.close(fig)
 
+    def _common_datafame_checks(self, benchmark_df, snapshot=False):
+        """Assertions common to several plotting functions."""
+        benchmark_names = benchmark_df.benchmark.unique()
+        assert len(benchmark_names) == 1, 'Not a single benchmark data!'
+        if snapshot:
+            assert benchmark_df.time.nunique() == 1, 'Not a snapshot!'
+
     def coverage_growth_plot(self,
                              benchmark_df,
                              axes=None,
@@ -140,8 +147,7 @@ class Plotter:
         The fuzzer labels will be in the order of their mean coverage at the
         snapshot time (typically, the end of experiment).
         """
-        benchmark_names = benchmark_df.benchmark.unique()
-        assert len(benchmark_names) == 1, 'Not a single benchmark data!'
+        self._common_datafame_checks(benchmark_df)
 
         column_of_interest = 'bugs_covered' if bugs else 'edges_covered'
 
@@ -157,6 +163,7 @@ class Plotter:
             hue_order=fuzzer_order,
             data=benchmark_df[benchmark_df.time <= snapshot_time],
             ci=None if bugs or self._quick else 95,
+            estimator=np.median,
             palette=self._fuzzer_colors,
             style='fuzzer',
             dashes=False,
@@ -174,7 +181,7 @@ class Plotter:
                     loc='upper left',
                     frameon=False)
 
-        axes.set(ylabel='Bugs coverage' if bugs else 'Edge coverage')
+        axes.set(ylabel='Bug coverage' if bugs else 'Code region coverage')
         axes.set(xlabel='Time (hour:minute)')
 
         if self._logscale or logscale:
@@ -210,32 +217,51 @@ class Plotter:
                                   logscale=logscale,
                                   bugs=bugs)
 
-    def violin_plot(self, benchmark_snapshot_df, axes=None):
-        """Draws violin plot.
+    def box_or_violin_plot(self,
+                           benchmark_snapshot_df,
+                           axes=None,
+                           bugs=False,
+                           violin=False):
+        """Draws a box or violin plot based on parameter.
 
         The fuzzer labels will be in the order of their median coverage.
+        With boxplot the median/min/max/etc is more visible than on the violin,
+        especially with distributions with high variance. It does not have
+        however violinplot's kernel density estimation.
         """
-        benchmark_names = benchmark_snapshot_df.benchmark.unique()
-        assert len(benchmark_names) == 1, 'Not a single benchmark data!'
-        assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
+        self._common_datafame_checks(benchmark_snapshot_df, snapshot=True)
+
+        column_of_interest = 'bugs_covered' if bugs else 'edges_covered'
 
         fuzzer_order = data_utils.benchmark_rank_by_median(
-            benchmark_snapshot_df).index
+            benchmark_snapshot_df, key=column_of_interest).index
 
-        # Another options is to use |boxplot| instead of |violinplot|. With
-        # boxplot the median/min/max/etc is more visible than on the violin,
-        # especially with distributions with high variance. It does not have
-        # however violinplot's kernel density estimation.
+        mean_props = {
+            'markersize': '10',
+            'markeredgecolor': 'black',
+            'markerfacecolor': 'white'
+        }
 
-        sns.violinplot(y='edges_covered',
-                       x='fuzzer',
-                       data=benchmark_snapshot_df,
-                       order=fuzzer_order,
-                       palette=self._fuzzer_colors,
-                       ax=axes)
+        common_args = dict(y=column_of_interest,
+                           x='fuzzer',
+                           data=benchmark_snapshot_df,
+                           order=fuzzer_order,
+                           ax=axes)
+
+        if violin:
+            sns.violinplot(**common_args, palette=self._fuzzer_colors)
+
+        else:
+            sns.boxplot(**common_args,
+                        palette=self._fuzzer_colors,
+                        showmeans=True,
+                        meanprops=mean_props)
+
+            sns.stripplot(**common_args, size=3, color="black", alpha=0.6)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
-        axes.set(ylabel='Reached region coverage')
+        ylabel = 'Reached {} coverage'.format('bug' if bugs else 'region')
+        axes.set(ylabel=ylabel)
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
         axes.set_xticklabels(axes.get_xticklabels(),
                              rotation=_DEFAULT_LABEL_ROTATION,
@@ -243,26 +269,36 @@ class Plotter:
 
         sns.despine(ax=axes, trim=True)
 
-    def write_violin_plot(self, benchmark_snapshot_df, image_path):
+    def write_violin_plot(self, benchmark_snapshot_df, image_path, bugs=False):
         """Writes violin plot."""
-        self._write_plot_to_image(self.violin_plot, benchmark_snapshot_df,
-                                  image_path)
+        self._write_plot_to_image(self.box_or_violin_plot,
+                                  benchmark_snapshot_df,
+                                  image_path,
+                                  bugs=bugs,
+                                  violin=True)
 
-    def distribution_plot(self, benchmark_snapshot_df, axes=None):
+    def write_box_plot(self, benchmark_snapshot_df, image_path, bugs=False):
+        """Writes box plot."""
+        self._write_plot_to_image(self.box_or_violin_plot,
+                                  benchmark_snapshot_df,
+                                  image_path,
+                                  bugs=bugs)
+
+    def distribution_plot(self, benchmark_snapshot_df, axes=None, bugs=False):
         """Draws distribution plot.
 
         The fuzzer labels will be in the order of their median coverage.
         """
-        benchmark_names = benchmark_snapshot_df.benchmark.unique()
-        assert len(benchmark_names) == 1, 'Not a single benchmark data!'
-        assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
+        self._common_datafame_checks(benchmark_snapshot_df, snapshot=True)
+
+        column_of_interest = 'bugs_covered' if bugs else 'edges_covered'
 
         fuzzers_in_order = data_utils.benchmark_rank_by_median(
-            benchmark_snapshot_df).index
+            benchmark_snapshot_df, key=column_of_interest).index
         for fuzzer in fuzzers_in_order:
             measurements_for_fuzzer = benchmark_snapshot_df[
                 benchmark_snapshot_df.fuzzer == fuzzer]
-            sns.distplot(measurements_for_fuzzer['edges_covered'],
+            sns.distplot(measurements_for_fuzzer[column_of_interest],
                          hist=False,
                          label=fuzzer,
                          color=self._fuzzer_colors[fuzzer],
@@ -271,7 +307,7 @@ class Plotter:
         axes.set_title(_formatted_title(benchmark_snapshot_df))
         axes.legend(loc='upper right', frameon=False)
 
-        axes.set(xlabel='Edge coverage')
+        axes.set(xlabel='Bug coverage' if bugs else 'Code region coverage')
         axes.set(ylabel='Density')
         axes.set_xticklabels(axes.get_xticklabels(),
                              rotation=_DEFAULT_LABEL_ROTATION,
@@ -282,19 +318,19 @@ class Plotter:
         self._write_plot_to_image(self.distribution_plot, benchmark_snapshot_df,
                                   image_path)
 
-    def ranking_plot(self, benchmark_snapshot_df, axes=None):
+    def ranking_plot(self, benchmark_snapshot_df, axes=None, bugs=False):
         """Draws ranking plot.
 
         The fuzzer labels will be in the order of their median coverage.
         """
-        benchmark_names = benchmark_snapshot_df.benchmark.unique()
-        assert len(benchmark_names) == 1, 'Not a single benchmark data!'
-        assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
+        self._common_datafame_checks(benchmark_snapshot_df, snapshot=True)
+
+        column_of_interest = 'bugs_covered' if bugs else 'edges_covered'
 
         fuzzer_order = data_utils.benchmark_rank_by_median(
-            benchmark_snapshot_df).index
+            benchmark_snapshot_df, key=column_of_interest).index
 
-        axes = sns.barplot(y='edges_covered',
+        axes = sns.barplot(y=column_of_interest,
                            x='fuzzer',
                            data=benchmark_snapshot_df,
                            order=fuzzer_order,
@@ -303,7 +339,8 @@ class Plotter:
                            ax=axes)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
-        axes.set(ylabel='Reached region coverage')
+        ylabel = 'Reached {} coverage'.format('bug' if bugs else 'region')
+        axes.set(ylabel=ylabel)
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
         axes.set_xticklabels(axes.get_xticklabels(),
                              rotation=_DEFAULT_LABEL_ROTATION,
