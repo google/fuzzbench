@@ -152,9 +152,10 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
     snapshot_measurer.generate_summary(CYCLE)
 
     expected = [
-        'llvm-cov', 'export', '-format=text',
+        'llvm-cov', 'export', '-format=text', '-num-threads=1',
+        '-region-coverage-gt=0', '-skip-expansions',
         '/work/coverage-binaries/benchmark-a/fuzz-target',
-        '-instr-profile=/reports/data.profdata', '-summary-only'
+        '-instr-profile=/reports/data.profdata'
     ]
 
     assert (len(mocked_execute.call_args_list)) == 1
