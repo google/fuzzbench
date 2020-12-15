@@ -6,6 +6,7 @@ type: bug
 unsupported_fuzzers:
   - aflcc
   - afl_qemu
+  - aflplusplus_optimal
   - aflplusplus_qemu
   - honggfuzz_qemu
   - klee
