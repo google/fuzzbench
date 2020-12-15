@@ -89,33 +89,38 @@ def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-man
     run_options = []
 
     if benchmark_name == 'bloaty_fuzz_target':
-        run_options = ['-Z', '-L', '0']
+        run_options = ['-Z', '-L', '0', '-p', 'coe']
         os.environ['AFL_TESTCACHE_SIZE'] = '50'
     elif benchmark_name == 'curl_curl_fuzzer_http':
         os.environ['AFL_TESTCACHE_SIZE'] = '50'
-        run_options = ['-L', '-1']
+        run_options = ['-L', '-1', '-p', 'coe']
     elif benchmark_name == 'lcms-2017-03-21':
-        run_options = ['-L', '0']
+        run_options = ['-L', '0', '-p', 'exploit']
     elif benchmark_name == 'libjpeg-turbo-07-2017':
         os.environ['AFL_TESTCACHE_SIZE'] = '50'
+    elif benchmark_name == 'libxml2-v2.9.2':
+        run_options = ['-p', 'coe']
     elif benchmark_name == 'libxslt_xpath':
         os.environ['AFL_TESTCACHE_SIZE'] = '50'
         run_options = ['-L', '-1']
     elif benchmark_name == 'mbedtls_fuzz_dtlsclient':
         run_options = ['-L', '-1']
     elif benchmark_name == 'openssl_x509':
-        run_options = ['-L', '0']
+        run_options = ['-L', '0', '-p', 'exploit']
     elif benchmark_name == 'proj4-2017-08-14':
         os.environ['AFL_TESTCACHE_SIZE'] = '50'
     elif benchmark_name == 're2-2014-12-09':
         os.environ['AFL_TESTCACHE_SIZE'] = '50'
     elif benchmark_name == 'sqlite3_ossfuzz':
         os.environ['AFL_TESTCACHE_SIZE'] = '500'
-        run_options = ['-L', '0']
+        run_options = ['-L', '0', '-p', 'explore']
+    elif benchmark_name == 'vorbis-2017-12-11':
+        run_options = ['-p', 'exploit']
     elif benchmark_name == 'woff2-2016-05-06':
         os.environ['AFL_TESTCACHE_SIZE'] = '50'
     elif benchmark_name == 'zlib_zlib_uncompress_fuzzer':
         os.environ['AFL_TESTCACHE_SIZE'] = '50'
+        run_options = ['-p', 'exploit']
     else:
         os.environ['AFL_TESTCACHE_SIZE'] = '2'
 
