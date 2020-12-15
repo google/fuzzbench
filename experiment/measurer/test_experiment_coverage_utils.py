@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions andsss
 # limitations under the License.
-"""Tests for coverage_utils.py"""
+"""Tests for experiment_coverage_utils.py"""
 import os
 
-from experiment.measurer import coverage_utils
+from experiment.measurer import experiment_coverage_utils as exp_cov_utils
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
 
@@ -24,11 +24,21 @@ def get_test_data_path(*subpaths):
     return os.path.join(TEST_DATA_PATH, *subpaths)
 
 
-def test_extract_covered_regions_from_summary_json(fs):
+def test_extract_segments_and_functions_from_summary_json(fs):
     """Tests that extract_covered_regions_from_summary_json returns the covered
-    regions from summary json file."""
+    segments and functions from summary json file."""
+    num_functions_in_cov_summary = 3  # For testing.
+    num_covered_segments_in_cov_summary = 16  # For testing.
+    benchmark = 'freetype2'  # For testing.
+    fuzzer = 'afl'  # For testing.
+    trial_id = 2  # For testing.
+    timestamp = 900  # For testing.
     summary_json_file = get_test_data_path('cov_summary.json')
     fs.add_real_file(summary_json_file, read_only=False)
-    covered_regions = coverage_utils.extract_covered_regions_from_summary_json(
-        summary_json_file)
-    assert len(covered_regions) == 15
+
+    df_container = (
+        exp_cov_utils.extract_segments_and_functions_from_summary_json(
+            summary_json_file, benchmark, fuzzer, trial_id, timestamp))
+
+    assert len(df_container.segment_df) == num_covered_segments_in_cov_summary
+    assert len(df_container.function_df) == num_functions_in_cov_summary
