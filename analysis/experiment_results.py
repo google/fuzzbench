@@ -114,6 +114,22 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
 
     @property
     @functools.lru_cache()
+    def type(self):
+        """Returns the type of the experiment i.e., 'code' or 'bug', indicating
+        whether the experiments involved code coverage benchmarks or bug
+        coverage benchmarks.
+
+        Raises ValueError if the benchmark types are mixed.
+        """
+        if all([b.type == 'bug' for b in self.benchmarks]):
+            return 'bug'
+        if all([b.type == 'code' for b in self.benchmarks]):
+            return 'code'
+        raise ValueError(
+            'Cannot mix bug benchmarks with code coverage benchmarks.')
+
+    @property
+    @functools.lru_cache()
     def summary_table(self):
         """A pivot table of medians for each fuzzer on each benchmark."""
         return data_utils.experiment_pivot_table(
