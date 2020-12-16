@@ -82,6 +82,12 @@ class BenchmarkResults:
         return benchmark_type
 
     @property
+    def _relevant_column(self):
+        """Returns the name of the column that will be used as the basis of
+        the analysis (e.g., 'edges_covered', or 'bugs_covered')."""
+        return 'edges_covered' if self.type == 'code' else 'bugs_covered'
+
+    @property
     @functools.lru_cache()
     # TODO(lszekeres): With python3.8+, replace above two decorators with:
     # @functools.cached_property
@@ -165,13 +171,14 @@ class BenchmarkResults:
     def rank_by_stat_test_wins(self):
         """Fuzzer ranking by then number of pairwise statistical test wins."""
         return data_utils.benchmark_rank_by_stat_test_wins(
-            self._benchmark_snapshot_df)
+            self._benchmark_snapshot_df, key=self._relevant_column)
 
     @property
     @functools.lru_cache()
     def mann_whitney_p_values(self):
         """Mann Whitney U test result."""
-        return stat_tests.two_sided_u_test(self._benchmark_snapshot_df)
+        return stat_tests.two_sided_u_test(self._benchmark_snapshot_df,
+                                           key=self._relevant_column)
 
     @property
     def mann_whitney_plot(self):
@@ -184,13 +191,15 @@ class BenchmarkResults:
     @property
     def anova_p_value(self):
         """ANOVA test result."""
-        return stat_tests.anova_test(self._benchmark_snapshot_df)
+        return stat_tests.anova_test(self._benchmark_snapshot_df,
+                                     key=self._relevant_column)
 
     @property
     @functools.lru_cache()
     def anova_posthoc_p_values(self):
         """ANOVA posthoc test results."""
-        return stat_tests.anova_posthoc_tests(self._benchmark_snapshot_df)
+        return stat_tests.anova_posthoc_tests(self._benchmark_snapshot_df,
+                                              key=self._relevant_column)
 
     @property
     def anova_student_plot(self):
@@ -211,13 +220,15 @@ class BenchmarkResults:
     @property
     def kruskal_p_value(self):
         """Kruskal test result."""
-        return stat_tests.kruskal_test(self._benchmark_snapshot_df)
+        return stat_tests.kruskal_test(self._benchmark_snapshot_df,
+                                       key=self._relevant_column)
 
     @property
     @functools.lru_cache()
     def kruskal_posthoc_p_values(self):
         """Kruskal posthoc test results."""
-        return stat_tests.kruskal_posthoc_tests(self._benchmark_snapshot_df)
+        return stat_tests.kruskal_posthoc_tests(self._benchmark_snapshot_df,
+                                                key=self._relevant_column)
 
     @property
     def kruskal_conover_plot(self):
