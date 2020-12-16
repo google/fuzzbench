@@ -64,6 +64,25 @@ class BenchmarkResults:
 
     @property
     @functools.lru_cache()
+    def type(self):
+        """Returns the type of the benchmark, which can be 'code' or 'bug',
+        depending whether its for measuring code coverage only, or bug coverage
+        as well.
+
+        Raises ValueError in case of invalid benchmark type in the config.
+        """
+        try:
+            benchmark_type = benchmark_config.get_config(self.name).get('type')
+        except Exception:  # pylint: disable=broad-except
+            return 'code'
+        if not benchmark_type:
+            return 'code'
+        if benchmark_type not in ['code', 'bug']:
+            raise ValueError('Invalid benchmark type: ' + benchmark_type)
+        return benchmark_type
+
+    @property
+    @functools.lru_cache()
     # TODO(lszekeres): With python3.8+, replace above two decorators with:
     # @functools.cached_property
     def _benchmark_df(self):
@@ -370,8 +389,3 @@ class BenchmarkResults:
         """Bug coverage growth plot (logscale)."""
         return self._coverage_growth_plot(
             'bug_coverage_growth_plot_logscale.svg', bugs=True, logscale=True)
-
-    @property
-    def type(self):
-        """Type of benchmark."""
-        return benchmark_config.get_config(self.name).get('type')
