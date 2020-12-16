@@ -1,11 +1,8 @@
 # aflplusplus
 
-AFL++ fuzzer instance that has the following config active for all benchmarks:
-  - PCGUARD instrumentation 
-  - cmplog feature
-  - dict2file feature
-  - "fast" power schedule
-  - persistent mode + shared memory test cases
+temporary variant
+
+See the fuzzer.py for the ever changing configuration :-)
 
 Repository: [https://github.com/AFLplusplus/AFLplusplus/](https://github.com/AFLplusplus/AFLplusplus/)
 

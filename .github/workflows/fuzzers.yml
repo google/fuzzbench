@@ -44,10 +44,6 @@ jobs:
           - libfuzzer_magicbytes
           - entropic_magicbytes
           - aflplusplus_lightweizz
-          - aflplusplus_268c
-          - aflplusplus_268c_qemu
-          - aflplusplus_300c
-          - aflplusplus_300c_qemu
           - aflplusplus_introspection
           - afl_fast
           - afl_fast_v2
@@ -60,6 +56,8 @@ jobs:
           - aflplusplus_coe_v2
           - aflplusplus_cmplog
           - aflplusplus_dict2file
+          - aflplusplus_bug_laf
+          - aflplusplus_bug_dict
 
         benchmark_type:
           - oss-fuzz

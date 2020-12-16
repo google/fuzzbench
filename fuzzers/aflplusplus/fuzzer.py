@@ -30,6 +30,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration.
+
     build_modes = list(args)
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
@@ -39,6 +40,11 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # If nothing was set this is the default:
     if not build_modes:
         build_modes = ['tracepc', 'cmplog', 'dict2file']
+
+    # For bug type benchmarks we have to instrument via native clang pcguard :(
+    build_flags = os.environ['CFLAGS']
+    if build_flags.find('array-bounds'):
+        build_modes[0] = 'native'
 
     # Instrumentation coverage modes:
     if 'lto' in build_modes:
@@ -66,6 +72,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['AFL_LLVM_USE_TRACE_PC'] = '1'
     elif 'classic' in build_modes:
         os.environ['AFL_LLVM_INSTRUMENT'] = 'CLASSIC'
+    elif 'native' in build_modes:
+        os.environ['AFL_LLVM_INSTRUMENT'] = 'LLVMNATIVE'
 
     # Instrumentation coverage options:
     # Do not use a fixed map location (LTO only)
@@ -75,7 +83,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'fixed' in build_modes:
         os.environ['AFL_LLVM_MAP_ADDR'] = '0x10000'
     # generate an extra dictionary
-    if 'dict2file' in build_modes:
+    if 'dict2file' in build_modes or 'native' in build_modes:
         os.environ['AFL_LLVM_DICT2FILE'] = build_directory + '/afl++.dict'
     # Enable context sentitivity for LLVM mode (non LTO only)
     if 'ctx' in build_modes:

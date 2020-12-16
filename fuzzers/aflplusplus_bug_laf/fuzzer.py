@@ -25,12 +25,12 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
-    aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
+    aflplusplus_fuzzer.build("tracepc", "laf", "dict2file")
 
 
-def fuzz(input_corpus, output_corpus, target_binary):
+def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-many-branches,too-many-statements
     """Run fuzzer."""
-    run_options = ['-p', 'explore']
+    run_options = []
 
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
