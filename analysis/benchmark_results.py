@@ -178,13 +178,28 @@ class BenchmarkResults:
     def mann_whitney_p_values(self):
         """Mann Whitney U test result."""
         return stat_tests.two_sided_u_test(self._benchmark_snapshot_df,
-                                           key=self._relevant_column)
+                                           key='edges_covered')
+
+    @property
+    @functools.lru_cache()
+    def bug_mann_whitney_p_values(self):
+        """Mann Whitney U test result based on bugs covered."""
+        return stat_tests.two_sided_u_test(self._benchmark_snapshot_df,
+                                           key='bugs_covered')
 
     @property
     def mann_whitney_plot(self):
         """Mann Whitney U test plot."""
         plot_filename = self._prefix_with_benchmark('mann_whitney_plot.svg')
         self._plotter.write_heatmap_plot(self.mann_whitney_p_values,
+                                         self._get_full_path(plot_filename))
+        return plot_filename
+
+    @property
+    def bug_mann_whitney_plot(self):
+        """Mann Whitney U test plot based on bugs covered."""
+        plot_filename = self._prefix_with_benchmark('bug_mann_whitney_plot.svg')
+        self._plotter.write_heatmap_plot(self.bug_mann_whitney_p_values,
                                          self._get_full_path(plot_filename))
         return plot_filename
 
