@@ -139,7 +139,9 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
     def summary_table(self):
         """A pivot table of medians for each fuzzer on each benchmark."""
         return data_utils.experiment_pivot_table(
-            self._experiment_snapshots_df, data_utils.benchmark_rank_by_median)
+            self._experiment_snapshots_df,
+            functools.partial(data_utils.benchmark_rank_by_median,
+                              key=self._relevant_column))
 
     @property
     def rank_by_unique_coverage_average_normalized_score(self):
