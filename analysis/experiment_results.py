@@ -201,10 +201,8 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
     def rank_by_stat_test_wins_and_average_rank(self):
         """Rank fuzzers using statistical test wins per benchmark and average
         rank across benchmarks."""
-        return data_utils.experiment_level_ranking(
-            self._experiment_snapshots_df,
-            data_utils.benchmark_rank_by_stat_test_wins,
-            data_utils.experiment_rank_by_average_rank)
+        return self._ranking(data_utils.benchmark_rank_by_stat_test_wins,
+                             data_utils.experiment_rank_by_num_firsts)
 
     @property
     def friedman_p_value(self):
