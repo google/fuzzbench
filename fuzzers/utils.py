@@ -36,8 +36,7 @@ SANITIZER_FLAGS = [
     # See https://github.com/google/oss-fuzz/blob/master/infra/base-images/base-builder/Dockerfile#L94
     '-fsanitize=array-bounds,bool,builtin,enum,float-divide-by-zero,function,'
     'integer-divide-by-zero,null,object-size,return,returns-nonnull-attribute,'
-    'shift,signed-integer-overflow,unsigned-integer-overflow,unreachable,'
-    'vla-bound,vptr',
+    'shift,signed-integer-overflow,unreachable,vla-bound,vptr',
 ]
 
 # Use these flags when compiling benchmark code without a sanitizer (e.g. when
