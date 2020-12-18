@@ -84,6 +84,9 @@ def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-man
     """Run fuzzer."""
     benchmark_name = os.environ['BENCHMARK']
 
+#    print(os.environ)
+#    os._exit(1)
+
     run_options = []
 
     if benchmark_name == 'bloaty_fuzz_target':
