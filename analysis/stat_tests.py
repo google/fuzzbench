@@ -22,6 +22,7 @@ SIGNIFICANCE_THRESHOLD = 0.05
 
 
 def _create_p_value_table(benchmark_snapshot_df,
+                          key,
                           statistical_test,
                           alternative="two-sided"):
     """Given a benchmark snapshot data frame and a statistical test function,
@@ -40,7 +41,7 @@ def _create_p_value_table(benchmark_snapshot_df,
                                 alternative=alternative).pvalue
 
     groups = benchmark_snapshot_df.groupby('fuzzer')
-    samples = groups['edges_covered'].apply(list)
+    samples = groups[key].apply(list)
     fuzzers = samples.index
 
     data = []
@@ -62,47 +63,51 @@ def _create_p_value_table(benchmark_snapshot_df,
     return p_values
 
 
-def one_sided_u_test(benchmark_snapshot_df):
+def one_sided_u_test(benchmark_snapshot_df, key):
     """Returns p-value table for one-tailed Mann-Whitney U test."""
     return _create_p_value_table(benchmark_snapshot_df,
+                                 key,
                                  ss.mannwhitneyu,
                                  alternative='greater')
 
 
-def two_sided_u_test(benchmark_snapshot_df):
+def two_sided_u_test(benchmark_snapshot_df, key):
     """Returns p-value table for two-tailed Mann-Whitney U test."""
     return _create_p_value_table(benchmark_snapshot_df,
+                                 key,
                                  ss.mannwhitneyu,
                                  alternative='two-sided')
 
 
-def one_sided_wilcoxon_test(benchmark_snapshot_df):
+def one_sided_wilcoxon_test(benchmark_snapshot_df, key):
     """Returns p-value table for one-tailed Wilcoxon signed-rank test."""
     return _create_p_value_table(benchmark_snapshot_df,
+                                 key,
                                  ss.wilcoxon,
                                  alternative='greater')
 
 
-def two_sided_wilcoxon_test(benchmark_snapshot_df):
+def two_sided_wilcoxon_test(benchmark_snapshot_df, key):
     """Returns p-value table for two-tailed Wilcoxon signed-rank test."""
     return _create_p_value_table(benchmark_snapshot_df,
+                                 key,
                                  ss.wilcoxon,
                                  alternative='two-sided')
 
 
-def anova_test(benchmark_snapshot_df):
+def anova_test(benchmark_snapshot_df, key):
     """Returns p-value for ANOVA test.
 
     Results should only considered when we can assume normal distributions.
     """
     groups = benchmark_snapshot_df.groupby('fuzzer')
-    sample_groups = groups['edges_covered'].apply(list).values
+    sample_groups = groups[key].apply(list).values
 
     _, p_value = ss.f_oneway(*sample_groups)
     return p_value
 
 
-def anova_posthoc_tests(benchmark_snapshot_df):
+def anova_posthoc_tests(benchmark_snapshot_df, key):
     """Returns p-value tables for various ANOVA posthoc tests.
 
     Results should considered only if ANOVA test rejects null hypothesis.
@@ -110,7 +115,7 @@ def anova_posthoc_tests(benchmark_snapshot_df):
     common_args = {
         'a': benchmark_snapshot_df,
         'group_col': 'fuzzer',
-        'val_col': 'edges_covered',
+        'val_col': key,
         'sort': True
     }
     p_adjust = 'holm'
@@ -123,16 +128,16 @@ def anova_posthoc_tests(benchmark_snapshot_df):
     return posthoc_tests
 
 
-def kruskal_test(benchmark_snapshot_df):
+def kruskal_test(benchmark_snapshot_df, key):
     """Returns p-value for Kruskal test."""
     groups = benchmark_snapshot_df.groupby('fuzzer')
-    sample_groups = groups['edges_covered'].apply(list).values
+    sample_groups = groups[key].apply(list).values
 
     _, p_value = ss.kruskal(*sample_groups)
     return p_value
 
 
-def kruskal_posthoc_tests(benchmark_snapshot_df):
+def kruskal_posthoc_tests(benchmark_snapshot_df, key):
     """Returns p-value tables for various Kruskal posthoc tests.
 
     Results should considered only if Kruskal test rejects null hypothesis.
@@ -140,7 +145,7 @@ def kruskal_posthoc_tests(benchmark_snapshot_df):
     common_args = {
         'a': benchmark_snapshot_df,
         'group_col': 'fuzzer',
-        'val_col': 'edges_covered',
+        'val_col': key,
         'sort': True
     }
     p_adjust = 'holm'

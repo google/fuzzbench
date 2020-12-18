@@ -241,12 +241,13 @@ def benchmark_rank_by_average_rank(benchmark_snapshot_df, key='edges_covered'):
     return avg_rank['avg rank']
 
 
-def benchmark_rank_by_stat_test_wins(benchmark_snapshot_df):
+def benchmark_rank_by_stat_test_wins(benchmark_snapshot_df,
+                                     key='edges_covered'):
     """Carries out one-tailed statistical tests for each fuzzer pair.
 
     Returns ranking according to the number of statistical test wins.
     """
-    p_values = stat_tests.one_sided_u_test(benchmark_snapshot_df)
+    p_values = stat_tests.one_sided_u_test(benchmark_snapshot_df, key=key)
 
     # Turn "significant" p-values into 1-s.
     better_than = p_values.applymap(
@@ -259,10 +260,10 @@ def benchmark_rank_by_stat_test_wins(benchmark_snapshot_df):
     return score
 
 
-def create_better_than_table(benchmark_snapshot_df):
+def create_better_than_table(benchmark_snapshot_df, key='edges_covered'):
     """Creates table showing whether fuzzer in row is statistically
     significantly better than the fuzzer in the column."""
-    p_values = stat_tests.one_sided_u_test(benchmark_snapshot_df)
+    p_values = stat_tests.one_sided_u_test(benchmark_snapshot_df, key=key)
 
     # Turn "significant" p-values into 1-s.
     better_than = p_values.applymap(
