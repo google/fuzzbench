@@ -26,8 +26,8 @@ RUN apt-get update && \
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 79c98731c9864d457df06cfb4e1c15137e0cf832 && \
+    git checkout 2748d5c9629897b571d4f7eb145ff715808b218f && \
     unset CFLAGS && unset CXXFLAGS && export CC=clang && \
-    AFL_NO_X86=1 PYTHON_INCLUDE=/ make INTROSPECTION=1 && make install && \
+    AFL_NO_X86=1 PYTHON_INCLUDE=/ make && make install && \
     make -C utils/aflpp_driver && \
     cp utils/aflpp_driver/libAFLDriver.a /

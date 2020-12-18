@@ -18,6 +18,20 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-12-18
+  description: "benchmark romu and skim"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_bug_laf
+    - aflplusplus_bug_dict
+    - aflplusplus_skim_romu_fixed
+    - aflplusplus_skim_romu
+    - aflplusplus_romu_fixed
+    - aflplusplus_romu
+    - aflplusplus_skim_fixed
+    - aflplusplus_skim
+
 - experiment: 2020-12-11
   description: "release comparison: afl++ 2.68c vs 3.00c"
   fuzzers:
