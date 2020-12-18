@@ -20,6 +20,7 @@
 
 - experiment: 2020-12-18
   description: "benchmark romu and skim"
+  fuzzers:
     - aflplusplus
     - aflplusplus_optimal
     - aflplusplus_bug_laf
