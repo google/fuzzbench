@@ -26,6 +26,7 @@ import yaml
 # Keep all fuzzers at same optimization level until fuzzer explicitly needs or
 # specifies it.
 DEFAULT_OPTIMIZATION_LEVEL = '-O3'
+BUGS_OPTIMIZATION_LEVEL = '-O1'
 
 LIBCPLUSPLUS_FLAG = '-stdlib=libc++'
 
@@ -36,8 +37,7 @@ SANITIZER_FLAGS = [
     # See https://github.com/google/oss-fuzz/blob/master/infra/base-images/base-builder/Dockerfile#L94
     '-fsanitize=array-bounds,bool,builtin,enum,float-divide-by-zero,function,'
     'integer-divide-by-zero,null,object-size,return,returns-nonnull-attribute,'
-    'shift,signed-integer-overflow,unsigned-integer-overflow,unreachable,'
-    'vla-bound,vptr',
+    'shift,signed-integer-overflow,unreachable,vla-bound,vptr',
 ]
 
 # Use these flags when compiling benchmark code without a sanitizer (e.g. when
@@ -181,11 +181,11 @@ def set_compilation_flags(env=None):
 
     if get_config_value('type') == 'bug':
         append_flags('CFLAGS',
-                     SANITIZER_FLAGS + [DEFAULT_OPTIMIZATION_LEVEL],
+                     SANITIZER_FLAGS + [BUGS_OPTIMIZATION_LEVEL],
                      env=env)
         append_flags('CXXFLAGS',
                      SANITIZER_FLAGS +
-                     [LIBCPLUSPLUS_FLAG, DEFAULT_OPTIMIZATION_LEVEL],
+                     [LIBCPLUSPLUS_FLAG, BUGS_OPTIMIZATION_LEVEL],
                      env=env)
     else:
         append_flags('CFLAGS',
