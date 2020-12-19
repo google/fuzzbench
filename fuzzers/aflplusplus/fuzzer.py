@@ -35,6 +35,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
 
+    # Dummy comment.
     build_directory = os.environ['OUT']
 
     # If nothing was set this is the default:
@@ -43,7 +44,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     # For bug type benchmarks we have to instrument via native clang pcguard :(
     build_flags = os.environ['CFLAGS']
-    if build_flags.find('array-bounds'):
+    if build_flags.find('array-bounds') and 'qemu' not in build_modes:
         build_modes[0] = 'native'
 
     # Instrumentation coverage modes:
@@ -127,6 +128,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     src = os.getenv('SRC')
     work = os.getenv('WORK')
+
     with utils.restore_directory(src), utils.restore_directory(work):
         # Restore SRC to its initial state so we can build again without any
         # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
