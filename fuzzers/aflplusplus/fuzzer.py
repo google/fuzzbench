@@ -35,6 +35,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
 
+    # Dummy comment.
     build_directory = os.environ['OUT']
 
     # If nothing was set this is the default:
