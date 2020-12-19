@@ -128,7 +128,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     src = os.getenv('SRC')
     work = os.getenv('WORK')
-    
+
     with utils.restore_directory(src), utils.restore_directory(work):
         # Restore SRC to its initial state so we can build again without any
         # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
