@@ -413,18 +413,18 @@ class Plotter:
         if values.shape[0] > 11 and args.get('annot'):
             args['annot'] = False
 
-        ax = sns.heatmap(values, ax=axes, **args)
-        ax.set_ylabel("")
-        ax.set_xlabel("")
+        axis = sns.heatmap(values, ax=axes, **args)
+        axis.set_ylabel("")
+        axis.set_xlabel("")
         label_args = {'rotation': 0, 'horizontalalignment': 'right'}
-        ax.set_yticklabels(ax.get_yticklabels(), **label_args)
+        axis.set_yticklabels(axis.get_yticklabels(), **label_args)
         label_args = {'rotation': 270, 'horizontalalignment': 'right'}
-        ax.set_xticklabels(ax.get_xticklabels(), **label_args)
+        axis.set_xticklabels(axis.get_xticklabels(), **label_args)
 
-        cbar_ax = ax.collections[0].colorbar
+        cbar_ax = axis.collections[0].colorbar
         cbar_ax.outline.set_linewidth(1)
         cbar_ax.outline.set_edgecolor('0.5')
-        return ax
+        return axis
 
     def a12_heatmap_plot(self, a12_values, axes=None):
         """Draws heatmap plot for visualizing effect size results.
@@ -449,8 +449,7 @@ class Plotter:
             'annot': True,
             'fmt': ".2f"
         }
-        ax = self._heatmap_plot(a12_values, axes, heatmap_args)
-        return ax
+        return self._heatmap_plot(a12_values, axes, heatmap_args)
 
     def write_a12_heatmap_plot(self, a12_values, image_path):
         """Writes A12 heatmap plot."""

@@ -13,6 +13,8 @@
 # limitations under the License.
 """Statistical tests."""
 
+from collections import namedtuple
+
 import numpy as np
 import pandas as pd
 import scikit_posthocs as sp
@@ -186,18 +188,15 @@ def friedman_posthoc_tests(experiment_pivot_df):
     return posthoc_tests
 
 
-class Result:
-    """Anonymous class, like a namedtuple, but more flexible"""
-
-    def __init__(self, **kwds):
-        self.__dict__.update(kwds)
+VarghaDelaneyResult = namedtuple("VarghaDelanyResult", "a12")
 
 
 def a12(measurements_x, measurements_y, alternative=None):
     """Returns Vargha-Delaney A12 measure effect size for two distributions
 
     A. Vargha and H. D. Delaney.
-    A critique and improvement of the CL common language effect size statistics of McGraw and Wong.
+    A critique and improvement of the CL common language effect size statistics
+    of McGraw and Wong.
     Journal of Educational and Behavioral Statistics, 25(2):101-132, 2000
 
     The Vargha and Delaney A12 statistic is a non-parametric effect size
@@ -215,24 +214,24 @@ def a12(measurements_x, measurements_y, alternative=None):
     fuzzer 1 (F2) and fuzzer 2 (F2), the A12 measures the probability that
     running fuzzer 1 will yield a higher metric than running fuzzer 2."""
 
-    x = np.asarray(measurements_x)
-    y = np.asarray(measurements_y)
-    n1, n2 = x.size, y.size
-    ranked = ss.rankdata(np.concatenate((x, y)))
-    rank_x = ranked[0:n1]  # get the x-ranks
+    x_array = np.asarray(measurements_x)
+    y_array = np.asarray(measurements_y)
+    x_size, y_size = x_array.size, y_array.size
+    ranked = ss.rankdata(np.concatenate((x_array, y_array)))
+    rank_x = ranked[0:x_size]  # get the x-ranks
 
     # Compute the A12 measure
-    R1 = rank_x.sum()
+    rank_x_sum = rank_x.sum()
     # A = (R1/n1 - (n1+1)/2)/n2 # formula (14) in Vargha and Delaney, 2000
-    A = (2 * R1 - n1 * (n1 + 1)) / (
-        2 * n2 * n1)  # equivalent formula to avoid accuracy errors
-    return Result(a12=A)
+    a12_measure = (2 * rank_x_sum - x_size * (x_size + 1)) / (
+        2 * y_size * x_size)  # equivalent formula to avoid accuracy errors
+    return VarghaDelaneyResult(a12=a12_measure)
 
 
-def benchmark_a12(benchmark_snapshot_df, f1, f2, key='edges_covered'):
+def benchmark_a12(benchmark_snapshot_df, f1_name, f2_name, key='edges_covered'):
     """Compute Vargha-Delaney A measure given a benchmark snapshot and the names
     of two fuzzers to compare."""
     df = benchmark_snapshot_df
-    f1_metric = df[df.fuzzer == f1][key]
-    f2_metric = df[df.fuzzer == f2][key]
+    f1_metric = df[df.fuzzer == f1_name][key]
+    f2_metric = df[df.fuzzer == f2_name][key]
     return a12(f1_metric, f2_metric).a12
