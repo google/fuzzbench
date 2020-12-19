@@ -405,6 +405,57 @@ class Plotter:
                                   image_path,
                                   symmetric=symmetric)
 
+    @staticmethod
+    def _heatmap_plot(values, axes, args):
+        """Custom heatmap plot which mimics SciPy's sign_plot."""
+        args.update({'linewidths': 0.5, 'linecolor': '0.5', 'square': True})
+        # Annotate with values if less than 12 fuzzers.
+        if values.shape[0] > 11 and args.get('annot'):
+            args['annot'] = False
+
+        ax = sns.heatmap(values, ax=axes, **args)
+        ax.set_ylabel("")
+        ax.set_xlabel("")
+        label_args = {'rotation': 0, 'horizontalalignment': 'right'}
+        ax.set_yticklabels(ax.get_yticklabels(), **label_args)
+        label_args = {'rotation': 270, 'horizontalalignment': 'right'}
+        ax.set_xticklabels(ax.get_xticklabels(), **label_args)
+
+        cbar_ax = ax.collections[0].colorbar
+        cbar_ax.outline.set_linewidth(1)
+        cbar_ax.outline.set_edgecolor('0.5')
+        return ax
+
+    def a12_heatmap_plot(self, a12_values, axes=None):
+        """Draws heatmap plot for visualizing effect size results.
+        """
+
+        palette_args = {
+            'h_neg': 12,
+            'h_pos': 128,
+            's': 99,
+            'l': 47,
+            'sep': 20,
+            'as_cmap': True
+        }
+
+        rdgn = sns.diverging_palette(**palette_args)
+
+        heatmap_args = {
+            'cmap': rdgn,
+            'vmin': 0.0,
+            'vmax': 1.0,
+            'square': True,
+            'annot': True,
+            'fmt': ".2f"
+        }
+        ax = self._heatmap_plot(a12_values, axes, heatmap_args)
+        return ax
+
+    def write_a12_heatmap_plot(self, a12_values, image_path):
+        """Writes A12 heatmap plot."""
+        self._write_plot_to_image(self.a12_heatmap_plot, a12_values, image_path)
+
     def write_critical_difference_plot(self, average_ranks, num_of_benchmarks,
                                        image_path):
         """Writes critical difference diagram."""

@@ -21,10 +21,11 @@ import scipy.stats as ss
 SIGNIFICANCE_THRESHOLD = 0.05
 
 
-def _create_p_value_table(benchmark_snapshot_df,
-                          key,
-                          statistical_test,
-                          alternative="two-sided"):
+def _create_pairwise_table(benchmark_snapshot_df,
+                           key,
+                           statistical_test,
+                           alternative="two-sided",
+                           statistic='pvalue'):
     """Given a benchmark snapshot data frame and a statistical test function,
     returns a p-value table. The |alternative| parameter defines the alternative
     hypothesis to be tested. Use "two-sided" for two-tailed (default), and
@@ -38,7 +39,7 @@ def _create_p_value_table(benchmark_snapshot_df,
     def test_pair(measurements_x, measurements_y):
         return statistical_test(measurements_x,
                                 measurements_y,
-                                alternative=alternative).pvalue
+                                alternative=alternative)
 
     groups = benchmark_snapshot_df.groupby('fuzzer')
     samples = groups[key].apply(list)
@@ -48,15 +49,11 @@ def _create_p_value_table(benchmark_snapshot_df,
     for f_i in fuzzers:
         row = []
         for f_j in fuzzers:
-            if f_i == f_j:
-                # TODO(lszekeres): With Pandas 1.0.0+, switch to:
-                # p_value = pd.NA
-                p_value = np.nan
-            elif set(samples[f_i]) == set(samples[f_j]):
-                p_value = np.nan
-            else:
-                p_value = test_pair(samples[f_i], samples[f_j])
-            row.append(p_value)
+            value = np.nan
+            if f_i != f_j and set(samples[f_i]) != set(samples[f_j]):
+                res = test_pair(samples[f_i], samples[f_j])
+                value = getattr(res, statistic, np.nan)
+            row.append(value)
         data.append(row)
 
     p_values = pd.DataFrame(data, index=fuzzers, columns=fuzzers)
@@ -65,34 +62,42 @@ def _create_p_value_table(benchmark_snapshot_df,
 
 def one_sided_u_test(benchmark_snapshot_df, key):
     """Returns p-value table for one-tailed Mann-Whitney U test."""
-    return _create_p_value_table(benchmark_snapshot_df,
-                                 key,
-                                 ss.mannwhitneyu,
-                                 alternative='greater')
+    return _create_pairwise_table(benchmark_snapshot_df,
+                                  key,
+                                  ss.mannwhitneyu,
+                                  alternative='greater')
 
 
 def two_sided_u_test(benchmark_snapshot_df, key):
     """Returns p-value table for two-tailed Mann-Whitney U test."""
-    return _create_p_value_table(benchmark_snapshot_df,
-                                 key,
-                                 ss.mannwhitneyu,
-                                 alternative='two-sided')
+    return _create_pairwise_table(benchmark_snapshot_df,
+                                  key,
+                                  ss.mannwhitneyu,
+                                  alternative='two-sided')
 
 
 def one_sided_wilcoxon_test(benchmark_snapshot_df, key):
     """Returns p-value table for one-tailed Wilcoxon signed-rank test."""
-    return _create_p_value_table(benchmark_snapshot_df,
-                                 key,
-                                 ss.wilcoxon,
-                                 alternative='greater')
+    return _create_pairwise_table(benchmark_snapshot_df,
+                                  key,
+                                  ss.wilcoxon,
+                                  alternative='greater')
 
 
 def two_sided_wilcoxon_test(benchmark_snapshot_df, key):
     """Returns p-value table for two-tailed Wilcoxon signed-rank test."""
-    return _create_p_value_table(benchmark_snapshot_df,
-                                 key,
-                                 ss.wilcoxon,
-                                 alternative='two-sided')
+    return _create_pairwise_table(benchmark_snapshot_df,
+                                  key,
+                                  ss.wilcoxon,
+                                  alternative='two-sided')
+
+
+def a_measure_test(benchmark_snapshot_df, key='edges_covered'):
+    """Returns a Vargha-Delaney A measure table."""
+    return _create_pairwise_table(benchmark_snapshot_df,
+                                  key,
+                                  a12,
+                                  statistic='a12')
 
 
 def anova_test(benchmark_snapshot_df, key):
@@ -179,3 +184,55 @@ def friedman_posthoc_tests(experiment_pivot_df):
     posthoc_tests['conover'] = sp.posthoc_conover_friedman(experiment_pivot_df)
     posthoc_tests['nemenyi'] = sp.posthoc_nemenyi_friedman(experiment_pivot_df)
     return posthoc_tests
+
+
+class Result:
+    """Anonymous class, like a namedtuple, but more flexible"""
+
+    def __init__(self, **kwds):
+        self.__dict__.update(kwds)
+
+
+def a12(measurements_x, measurements_y, alternative=None):
+    """Returns Vargha-Delaney A12 measure effect size for two distributions
+
+    A. Vargha and H. D. Delaney.
+    A critique and improvement of the CL common language effect size statistics of McGraw and Wong.
+    Journal of Educational and Behavioral Statistics, 25(2):101-132, 2000
+
+    The Vargha and Delaney A12 statistic is a non-parametric effect size
+    measure.
+
+    The formula to compute A has been transformed to minimize accuracy errors
+    See: http://mtorchiano.wordpress.com/2014/05/19/effect-size-of-r-precision/
+
+    Significant levels from original paper:
+      Large   is > 0.714
+      Mediumm is > 0.638
+      Small   is > 0.556
+
+    Given observations of a metric (edges_covered or bugs_covered) for
+    fuzzer 1 (F2) and fuzzer 2 (F2), the A12 measures the probability that
+    running fuzzer 1 will yield a higher metric than running fuzzer 2."""
+
+    x = np.asarray(measurements_x)
+    y = np.asarray(measurements_y)
+    n1, n2 = x.size, y.size
+    ranked = ss.rankdata(np.concatenate((x, y)))
+    rank_x = ranked[0:n1]  # get the x-ranks
+
+    # Compute the A12 measure
+    R1 = rank_x.sum()
+    # A = (R1/n1 - (n1+1)/2)/n2 # formula (14) in Vargha and Delaney, 2000
+    A = (2 * R1 - n1 * (n1 + 1)) / (
+        2 * n2 * n1)  # equivalent formula to avoid accuracy errors
+    return Result(a12=A)
+
+
+def benchmark_a12(benchmark_snapshot_df, f1, f2, key='edges_covered'):
+    """Compute Vargha-Delaney A measure given a benchmark snapshot and the names
+    of two fuzzers to compare."""
+    df = benchmark_snapshot_df
+    f1_metric = df[df.fuzzer == f1][key]
+    f2_metric = df[df.fuzzer == f2][key]
+    return a12(f1_metric, f2_metric).a12
