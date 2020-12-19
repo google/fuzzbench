@@ -41,7 +41,6 @@ ADDITIONAL_ASAN_OPTIONS = {
 ADDITIONAL_UBSAN_OPTIONS = {
     'allocator_release_to_os_interval_ms': 500,
     'print_stacktrace': 1,
-    'silence_unsigned_overflow': 1,
 }
 
 
@@ -52,13 +51,22 @@ def _join_memory_tool_options(options):
         '%s=%s' % (key, str(value)) for key, value in sorted(options.items()))
 
 
-def set_sanitizer_options(env):
+def set_sanitizer_options(env, is_fuzz_run=False):
     """Sets sanitizer options in |env|."""
+    sanitizer_options_filtered = dict(SANITIZER_OPTIONS)
+    additional_ubsan_options_filtered = dict(ADDITIONAL_UBSAN_OPTIONS)
+    if is_fuzz_run:
+        # This is needed for fuzzing speed, also a requirement for AFL.
+        sanitizer_options_filtered['symbolize'] = 0
+        sanitizer_options_filtered['abort_on_error'] = 1
+
+        additional_ubsan_options_filtered['print_stacktrace'] = 0
+
     env['ASAN_OPTIONS'] = _join_memory_tool_options({
-        **SANITIZER_OPTIONS,
+        **sanitizer_options_filtered,
         **ADDITIONAL_ASAN_OPTIONS
     })
     env['UBSAN_OPTIONS'] = _join_memory_tool_options({
-        **SANITIZER_OPTIONS,
-        **ADDITIONAL_UBSAN_OPTIONS
+        **sanitizer_options_filtered,
+        **additional_ubsan_options_filtered
     })
