@@ -32,10 +32,10 @@ class DataFrameContainer:  # pylint: disable=too-many-instance-attributes
         """Constructor"""
         self.segment_entries = []
         self.function_entries = []
-        self.fuzzer_names = dict()
-        self.benchmark_names = dict()
-        self.function_names = dict()
-        self.file_names = dict()
+        self.fuzzer_names = {}
+        self.benchmark_names = {}
+        self.function_names = {}
+        self.file_names = {}
 
         # Will be initialized upon done_adding_entries().
         self.segment_df = None
