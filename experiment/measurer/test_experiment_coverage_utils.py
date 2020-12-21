@@ -27,12 +27,12 @@ def get_test_data_path(*subpaths):
 def test_extract_segments_and_functions_from_summary_json(fs):
     """Tests that extract_covered_regions_from_summary_json returns the covered
     segments and functions from summary json file."""
-    num_functions_in_cov_summary = 3  # For testing.
-    num_covered_segments_in_cov_summary = 16  # For testing.
-    benchmark = 'freetype2'  # For testing.
-    fuzzer = 'afl'  # For testing.
-    trial_id = 2  # For testing.
-    timestamp = 900  # For testing.
+    num_functions_in_cov_summary = 3
+    num_covered_segments_in_cov_summary = 16
+    benchmark = 'freetype2'
+    fuzzer = 'afl'
+    trial_id = 2
+    timestamp = 900
     summary_json_file = get_test_data_path('cov_summary.json')
     fs.add_real_file(summary_json_file, read_only=False)
 
