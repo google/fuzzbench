@@ -51,9 +51,9 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'lto' in build_modes:
         os.environ['CC'] = '/afl/afl-clang-lto'
         os.environ['CXX'] = '/afl/afl-clang-lto++'
-        os.environ['RANLIB'] = 'llvm-ranlib-11'
-        os.environ['AR'] = 'llvm-ar-11'
-        os.environ['AS'] = 'llvm-as-11'
+        os.environ['RANLIB'] = 'llvm-ranlib-12'
+        os.environ['AR'] = 'llvm-ar-12'
+        os.environ['AS'] = 'llvm-as-12'
     elif 'qemu' in build_modes:
         os.environ['CC'] = 'clang'
         os.environ['CXX'] = 'clang++'
