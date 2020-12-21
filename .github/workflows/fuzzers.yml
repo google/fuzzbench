@@ -57,12 +57,6 @@ jobs:
           - aflplusplus_dict2file
           - aflplusplus_bug_laf
           - aflplusplus_bug_dict
-          - aflplusplus_skim_romu_fixed
-          - aflplusplus_skim_romu
-          - aflplusplus_romu_fixed
-          - aflplusplus_romu
-          - aflplusplus_skim_fixed
-          - aflplusplus_skim
 
         benchmark_type:
           - oss-fuzz

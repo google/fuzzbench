@@ -44,7 +44,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     # For bug type benchmarks we have to instrument via native clang pcguard :(
     build_flags = os.environ['CFLAGS']
-    if build_flags.find('array-bounds') and 'qemu' not in build_modes:
+    if build_flags.find('array-bounds') != -1 and 'qemu' not in build_modes:
         build_modes[0] = 'native'
 
     # Instrumentation coverage modes:
