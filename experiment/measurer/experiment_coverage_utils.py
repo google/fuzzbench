@@ -42,9 +42,8 @@ class DataFrameContainer:  # pylint: disable=too-many-instance-attributes
         self.function_df = None
         self.name_df = None
 
-    def add_function_entry(self, benchmark, fuzzer, trial_id, function,
-                           function_hits, time):
-        # pylint: disable=too-many-arguments
+    def add_function_entry(  # pylint: disable=too-many-arguments
+            self, benchmark, fuzzer, trial_id, function, function_hits, time):
         """Adds an entry to the function_df."""
         fuzzer_id = self.name_to_id(fuzzer)
         benchmark_id = self.name_to_id(benchmark)
@@ -58,9 +57,8 @@ class DataFrameContainer:  # pylint: disable=too-many-instance-attributes
         ]
         self.function_entries.append(function_entry)
 
-    def add_segment_entry(self, benchmark, fuzzer, trial_id, file_name, line,
-                          column, time):
-        # pylint: disable=too-many-arguments
+    def add_segment_entry(  # pylint: disable=too-many-arguments
+            self, benchmark, fuzzer, trial_id, file_name, line, column, time):
         """Adds an entry to the segment_df."""
         fuzzer_id = self.name_to_id(fuzzer)
         benchmark_id = self.name_to_id(benchmark)
@@ -156,22 +154,22 @@ def extract_segments_and_functions_from_summary_json(  # pylint: disable=too-man
     """Return a trial-specific data frame container with segment and function
      coverage information given a trial-specific coverage summary json file."""
 
-    process_specific_df_container = DataFrameContainer()
+    trial_df_container = DataFrameContainer()
 
     try:
         coverage_info = coverage_utils.get_coverage_infomation(
             summary_json_file)
         # Extract coverage information for functions.
         for function_data in coverage_info['data'][0]['functions']:
-            process_specific_df_container.add_function_entry(
-                benchmark, fuzzer, trial_id, function_data['name'],
-                function_data['count'], time)
+            trial_df_container.add_function_entry(benchmark, fuzzer, trial_id,
+                                                  function_data['name'],
+                                                  function_data['count'], time)
 
         # Extract coverage information for segments.
         for file in coverage_info['data'][0]['files']:
             for segment in file['segments']:
                 if segment[2] != 0:  # Segment hits.
-                    process_specific_df_container.add_segment_entry(
+                    trial_df_container.add_segment_entry(
                         benchmark,
                         fuzzer,
                         trial_id,
@@ -185,5 +183,5 @@ def extract_segments_and_functions_from_summary_json(  # pylint: disable=too-man
             'Failed when extracting trial-specific segment and function '
             'information from coverage summary')
 
-    process_specific_df_container.done_adding_entries()
-    return process_specific_df_container
+    trial_df_container.done_adding_entries()
+    return trial_df_container
