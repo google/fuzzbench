@@ -5,6 +5,7 @@
 #     - aflplusplus
 #     - libfuzzer
 #   description: "Explain the intent of the experiment"
+#   # type: bug  # Set to use bug based benchmarks, otherwise coverage (default).
 #   # oss-fuzz-corpus: true  # Set to use latest saturated corpora from OSS-Fuzz.
 #
 # The name of the experiment must begin with a date using this format:
@@ -17,6 +18,15 @@
 #
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
+
+- experiment: 2020-12-22-bug
+  description: "afl++ bugs benchmarking"
+  type: bug
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_bug_laf
+    - aflplusplus_bug_dict
 
 - experiment: 2020-12-18
   description: "benchmark romu and skim"
