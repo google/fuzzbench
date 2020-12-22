@@ -15,7 +15,7 @@
 ARG parent_image
 FROM $parent_image
 
-# Install wget to download afl_driver.cpp. Install libstdc++ to use llvm_mode.
+# Install the necessary packages.
 RUN apt-get update && \
     apt-get install -y wget libstdc++-5-dev libtool-bin automake flex bison \
                        libglib2.0-dev libpixman-1-dev python3-setuptools unzip
@@ -24,14 +24,16 @@ RUN apt-get update && \
 RUN cd / && wget https://github.com/ninja-build/ninja/releases/download/v1.10.1/ninja-linux.zip && \
     unzip ninja-linux.zip && chmod 755 ninja && mv ninja /usr/local/bin
 
+# Download afl++
+RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
+    cd /afl && git checkout e8374e3deb7415a1e453bdba4a2371febc2414a0
+    
 # Build afl++ without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
-RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && git checkout 79c98731c9864d457df06cfb4e1c15137e0cf832 && \
+RUN cd /afl && \
     unset CFLAGS && unset CXXFLAGS && \
     AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
     cd qemu_mode && ./build_qemu_support.sh && cd .. && \
     make -C utils/aflpp_driver && \
     cp utils/aflpp_driver/libAFLQemuDriver.a /libAFLDriver.a && \
     cp utils/aflpp_driver/aflpp_qemu_driver_hook.so /
-

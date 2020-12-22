@@ -42,9 +42,9 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'libpcap_fuzz_both':
         aflplusplus_fuzzer.build("tracepc", "dict2file")
     elif benchmark_name == 'libpng-1.2.56':
-        aflplusplus_fuzzer.build("lto", "laf", "fixed")
+        aflplusplus_fuzzer.build("lto", "laf")
     elif benchmark_name == 'libxml2-v2.9.2':
-        aflplusplus_fuzzer.build("lto", "fixed")
+        aflplusplus_fuzzer.build("lto")
     elif benchmark_name == 'libxslt_xpath':
         aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
     elif benchmark_name == 'mbedtls_fuzz_dtlsclient':
@@ -74,7 +74,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'zlib_zlib_uncompress_fuzzer':
         aflplusplus_fuzzer.build("tracepc", "cmplog")
     else:
-        aflplusplus_fuzzer.build("lto", "cmplog", "fixed")
+        aflplusplus_fuzzer.build("lto", "cmplog")
 
     for copy_file in glob.glob("/afl/libc*"):
         shutil.copy(copy_file, os.environ['OUT'])
