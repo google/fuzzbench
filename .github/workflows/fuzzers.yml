@@ -55,8 +55,6 @@ jobs:
           - aflplusplus_coe_v2
           - aflplusplus_cmplog
           - aflplusplus_dict2file
-          - aflplusplus_bug_laf
-          - aflplusplus_bug_dict
 
         benchmark_type:
           - oss-fuzz
