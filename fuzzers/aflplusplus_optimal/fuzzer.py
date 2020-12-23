@@ -77,7 +77,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
         build_flags = os.environ['CFLAGS']
         if build_flags.find('array-bounds') != -1:
             aflplusplus_fuzzer.build("tracepc", "laf", "dict2file")
-        else
+        else:
             aflplusplus_fuzzer.build("lto", "cmplog")
 
     for copy_file in glob.glob("/afl/libc*"):
