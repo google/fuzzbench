@@ -74,7 +74,11 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'zlib_zlib_uncompress_fuzzer':
         aflplusplus_fuzzer.build("tracepc", "cmplog")
     else:
-        aflplusplus_fuzzer.build("lto", "cmplog")
+        build_flags = os.environ['CFLAGS']
+        if build_flags.find('array-bounds') != -1:
+            aflplusplus_fuzzer.build("tracepc", "laf", "dict2file")
+        else
+            aflplusplus_fuzzer.build("lto", "cmplog")
 
     for copy_file in glob.glob("/afl/libc*"):
         shutil.copy(copy_file, os.environ['OUT'])
