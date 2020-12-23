@@ -54,12 +54,11 @@ def _create_pairwise_table(benchmark_snapshot_df,
             value = np.nan
             if f_i != f_j and set(samples[f_i]) != set(samples[f_j]):
                 res = test_pair(samples[f_i], samples[f_j])
-                value = getattr(res, statistic, np.nan)
+                value = getattr(res, statistic)
             row.append(value)
         data.append(row)
 
-    p_values = pd.DataFrame(data, index=fuzzers, columns=fuzzers)
-    return p_values
+    return pd.DataFrame(data, index=fuzzers, columns=fuzzers)
 
 
 def one_sided_u_test(benchmark_snapshot_df, key):
@@ -94,8 +93,8 @@ def two_sided_wilcoxon_test(benchmark_snapshot_df, key):
                                   alternative='two-sided')
 
 
-def a_measure_test(benchmark_snapshot_df, key='edges_covered'):
-    """Returns a Vargha-Delaney A measure table."""
+def a12_measure_test(benchmark_snapshot_df, key='edges_covered'):
+    """Returns a Vargha-Delaney A12 measure table."""
     return _create_pairwise_table(benchmark_snapshot_df,
                                   key,
                                   a12,
@@ -192,7 +191,7 @@ VarghaDelaneyResult = namedtuple("VarghaDelanyResult", "a12")
 
 
 def a12(measurements_x, measurements_y, alternative=None):
-    """Returns Vargha-Delaney A12 measure effect size for two distributions
+    """Returns Vargha-Delaney A12 measure effect size for two distributions.
 
     A. Vargha and H. D. Delaney.
     A critique and improvement of the CL common language effect size statistics
@@ -202,17 +201,16 @@ def a12(measurements_x, measurements_y, alternative=None):
     The Vargha and Delaney A12 statistic is a non-parametric effect size
     measure.
 
-    The formula to compute A has been transformed to minimize accuracy errors
-    See: http://mtorchiano.wordpress.com/2014/05/19/effect-size-of-r-precision/
+    Given observations of a metric (edges_covered or bugs_covered) for
+    fuzzer 1 (F2) and fuzzer 2 (F2), the A12 measures the probability that
+    running F1 will yield a higher metric than running F2.
 
     Significant levels from original paper:
       Large   is > 0.714
       Mediumm is > 0.638
       Small   is > 0.556
-
-    Given observations of a metric (edges_covered or bugs_covered) for
-    fuzzer 1 (F2) and fuzzer 2 (F2), the A12 measures the probability that
-    running fuzzer 1 will yield a higher metric than running fuzzer 2."""
+    """
+    del alternative  # unused
 
     x_array = np.asarray(measurements_x)
     y_array = np.asarray(measurements_y)
@@ -220,9 +218,11 @@ def a12(measurements_x, measurements_y, alternative=None):
     ranked = ss.rankdata(np.concatenate((x_array, y_array)))
     rank_x = ranked[0:x_size]  # get the x-ranks
 
-    # Compute the A12 measure
     rank_x_sum = rank_x.sum()
     # A = (R1/n1 - (n1+1)/2)/n2 # formula (14) in Vargha and Delaney, 2000
+    # The formula to compute A has been transformed to minimize accuracy errors.
+    # See: http://mtorchiano.wordpress.com/2014/05/19/effect-size-of-r-precision/
+
     a12_measure = (2 * rank_x_sum - x_size * (x_size + 1)) / (
         2 * y_size * x_size)  # equivalent formula to avoid accuracy errors
     return VarghaDelaneyResult(a12=a12_measure)

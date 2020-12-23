@@ -191,14 +191,14 @@ class BenchmarkResults:
     @functools.lru_cache()
     def vargha_delaney_a12_values(self):
         """Vargha Delaney A12 mesaure results (code coverage)."""
-        return stat_tests.a_measure_test(self._benchmark_snapshot_df)
+        return stat_tests.a12_measure_test(self._benchmark_snapshot_df)
 
     @property
     @functools.lru_cache()
     def bug_vargha_delaney_a12_values(self):
         """Vargha Delaney A12 mesaure results (bug coverage)."""
-        return stat_tests.a_measure_test(self._benchmark_snapshot_df,
-                                         key='bugs_covered')
+        return stat_tests.a12_measure_test(self._benchmark_snapshot_df,
+                                           key='bugs_covered')
 
     def _mann_whitney_plot(self, filename, p_values):
         """Generic Mann Whitney U test plot."""
