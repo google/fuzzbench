@@ -13,8 +13,6 @@
 # limitations under the License.
 """Statistical tests."""
 
-from collections import namedtuple
-
 import numpy as np
 import pandas as pd
 import scikit_posthocs as sp
@@ -23,11 +21,7 @@ import scipy.stats as ss
 SIGNIFICANCE_THRESHOLD = 0.05
 
 
-def _create_pairwise_table(benchmark_snapshot_df,
-                           key,
-                           statistical_test,
-                           alternative="two-sided",
-                           statistic='pvalue'):
+def _create_pairwise_table(benchmark_snapshot_df, key, statistical_test):
     """Given a benchmark snapshot data frame and a statistical test function,
     returns a p-value table. The |alternative| parameter defines the alternative
     hypothesis to be tested. Use "two-sided" for two-tailed (default), and
@@ -37,11 +31,6 @@ def _create_pairwise_table(benchmark_snapshot_df,
     fuzzer, and each cell contains the resulting p-value of the pairwise
     statistical test of the fuzzer in the row and column of the cell.
     """
-
-    def test_pair(measurements_x, measurements_y):
-        return statistical_test(measurements_x,
-                                measurements_y,
-                                alternative=alternative)
 
     groups = benchmark_snapshot_df.groupby('fuzzer')
     samples = groups[key].apply(list)
@@ -53,8 +42,7 @@ def _create_pairwise_table(benchmark_snapshot_df,
         for f_j in fuzzers:
             value = np.nan
             if f_i != f_j and set(samples[f_i]) != set(samples[f_j]):
-                res = test_pair(samples[f_i], samples[f_j])
-                value = getattr(res, statistic)
+                value = statistical_test(samples[f_i], samples[f_j])
             row.append(value)
         data.append(row)
 
@@ -63,42 +51,35 @@ def _create_pairwise_table(benchmark_snapshot_df,
 
 def one_sided_u_test(benchmark_snapshot_df, key):
     """Returns p-value table for one-tailed Mann-Whitney U test."""
-    return _create_pairwise_table(benchmark_snapshot_df,
-                                  key,
-                                  ss.mannwhitneyu,
-                                  alternative='greater')
+    return _create_pairwise_table(
+        benchmark_snapshot_df, key,
+        lambda xs, ys: ss.mannwhitneyu(xs, ys, alternative='greater').pvalue)
 
 
 def two_sided_u_test(benchmark_snapshot_df, key):
     """Returns p-value table for two-tailed Mann-Whitney U test."""
-    return _create_pairwise_table(benchmark_snapshot_df,
-                                  key,
-                                  ss.mannwhitneyu,
-                                  alternative='two-sided')
+    return _create_pairwise_table(
+        benchmark_snapshot_df, key,
+        lambda xs, ys: ss.mannwhitneyu(xs, ys, alternative='two-sided').pvalue)
 
 
 def one_sided_wilcoxon_test(benchmark_snapshot_df, key):
     """Returns p-value table for one-tailed Wilcoxon signed-rank test."""
-    return _create_pairwise_table(benchmark_snapshot_df,
-                                  key,
-                                  ss.wilcoxon,
-                                  alternative='greater')
+    return _create_pairwise_table(
+        benchmark_snapshot_df, key,
+        lambda xs, ys: ss.wilcoxon(xs, ys, alternative='greater').pvalue)
 
 
 def two_sided_wilcoxon_test(benchmark_snapshot_df, key):
     """Returns p-value table for two-tailed Wilcoxon signed-rank test."""
-    return _create_pairwise_table(benchmark_snapshot_df,
-                                  key,
-                                  ss.wilcoxon,
-                                  alternative='two-sided')
+    return _create_pairwise_table(
+        benchmark_snapshot_df, key,
+        lambda xs, ys: ss.wilcoxon(xs, ys, alternative='two-sided').pvalue)
 
 
 def a12_measure_test(benchmark_snapshot_df, key='edges_covered'):
     """Returns a Vargha-Delaney A12 measure table."""
-    return _create_pairwise_table(benchmark_snapshot_df,
-                                  key,
-                                  a12,
-                                  statistic='a12')
+    return _create_pairwise_table(benchmark_snapshot_df, key, a12)
 
 
 def anova_test(benchmark_snapshot_df, key):
@@ -187,9 +168,6 @@ def friedman_posthoc_tests(experiment_pivot_df):
     return posthoc_tests
 
 
-VarghaDelaneyResult = namedtuple("VarghaDelanyResult", "a12")
-
-
 def a12(measurements_x, measurements_y, alternative=None):
     """Returns Vargha-Delaney A12 measure effect size for two distributions.
 
@@ -225,7 +203,7 @@ def a12(measurements_x, measurements_y, alternative=None):
 
     a12_measure = (2 * rank_x_sum - x_size * (x_size + 1)) / (
         2 * y_size * x_size)  # equivalent formula to avoid accuracy errors
-    return VarghaDelaneyResult(a12=a12_measure)
+    return a12_measure
 
 
 def benchmark_a12(benchmark_snapshot_df, f1_name, f2_name, key='edges_covered'):
@@ -234,4 +212,4 @@ def benchmark_a12(benchmark_snapshot_df, f1_name, f2_name, key='edges_covered'):
     df = benchmark_snapshot_df
     f1_metric = df[df.fuzzer == f1_name][key]
     f2_metric = df[df.fuzzer == f2_name][key]
-    return a12(f1_metric, f2_metric).a12
+    return a12(f1_metric, f2_metric)

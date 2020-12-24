@@ -28,7 +28,7 @@ def test_a12_paper():
     y_values = [1, 1, 1, 2, 2, 2, 2, 2, 2, 3]
 
     result = stat_tests.a12(x_values, y_values)
-    assert result.a12 == pytest.approx(0.66, 0.0001)
+    assert result == pytest.approx(0.66, 0.0001)
 
 
 def test_a12_equal():
@@ -39,4 +39,4 @@ def test_a12_equal():
     y_values = [1, 2, 2, 2, 2, 2, 2, 2, 2, 3]
 
     result = stat_tests.a12(x_values, y_values)
-    assert result.a12 == pytest.approx(0.5, 0.0001)
+    assert result == pytest.approx(0.5, 0.0001)
