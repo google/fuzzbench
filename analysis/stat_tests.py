@@ -168,7 +168,7 @@ def friedman_posthoc_tests(experiment_pivot_df):
     return posthoc_tests
 
 
-def a12(measurements_x, measurements_y, alternative=None):
+def a12(measurements_x, measurements_y):
     """Returns Vargha-Delaney A12 measure effect size for two distributions.
 
     A. Vargha and H. D. Delaney.
@@ -188,7 +188,6 @@ def a12(measurements_x, measurements_y, alternative=None):
       Mediumm is > 0.638
       Small   is > 0.556
     """
-    del alternative  # unused
 
     x_array = np.asarray(measurements_x)
     y_array = np.asarray(measurements_y)
