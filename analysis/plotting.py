@@ -14,9 +14,9 @@
 """Plotting functions."""
 
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 import numpy as np
 import Orange
-import scikit_posthocs as sp
 import seaborn as sns
 
 from analysis import data_utils
@@ -378,32 +378,102 @@ class Plotter:
         self._write_plot_to_image(self.better_than_plot, better_than_table,
                                   image_path)
 
-    def heatmap_plot(self, p_values, axes=None, symmetric=False):
+    @staticmethod
+    def _generic_heatmap_plot(values, axes, args, shrink_cbar=0.2):
+        """Custom heatmap plot which mimics SciPy's sign_plot."""
+        args.update({'linewidths': 0.5, 'linecolor': '0.5', 'square': True})
+        # Annotate with values if less than 12 fuzzers.
+        if values.shape[0] > 11 and args.get('annot'):
+            args['annot'] = False
+
+        axis = sns.heatmap(values, ax=axes, **args)
+        axis.set_ylabel("")
+        axis.set_xlabel("")
+        label_args = {'rotation': 0, 'horizontalalignment': 'right'}
+        axis.set_yticklabels(axis.get_yticklabels(), **label_args)
+        label_args = {'rotation': 270, 'horizontalalignment': 'right'}
+        axis.set_xticklabels(axis.get_xticklabels(), **label_args)
+
+        cbar_ax = axis.collections[0].colorbar
+        cbar_ax.outline.set_linewidth(1)
+        cbar_ax.outline.set_edgecolor('0.5')
+
+        pos_bbox = cbar_ax.ax.get_position()
+        pos_bbox.y0 += shrink_cbar
+        pos_bbox.y1 -= shrink_cbar
+        cbar_ax.ax.set_position(pos_bbox)
+        return axis
+
+    def _pvalue_heatmap_plot(self, p_values, axes=None, symmetric=False):
         """Draws heatmap plot for visualizing statistical test results.
 
         If |symmetric| is enabled, it masks out the upper triangle of the
         p-value table (as it is redundant with the lower triangle).
         """
+        cmap_colors = ['#005a32', '#238b45', '#a1d99b', '#fbd7d4']
+        cmap = colors.ListedColormap(cmap_colors)
+
+        boundaries = [0, 0.001, 0.01, 0.05, 1]
+        norm = colors.BoundaryNorm(boundaries, cmap.N)
+
         if symmetric:
             mask = np.zeros_like(p_values)
             mask[np.triu_indices_from(p_values)] = True
 
         heatmap_args = {
-            'linewidths': 0.5,
-            'linecolor': '0.5',
-            'clip_on': False,
-            'square': True,
-            'cbar_ax_bbox': [0.85, 0.35, 0.04, 0.3],
-            'mask': mask if symmetric else None
+            'cmap': cmap,
+            'mask': mask if symmetric else None,
+            'fmt': ".3f",
+            'norm': norm
         }
-        sp.sign_plot(p_values, ax=axes, **heatmap_args)
+
+        axis = self._generic_heatmap_plot(p_values, axes, heatmap_args)
+
+        cbar_ax = axis.collections[0].colorbar
+        cbar_ax.set_ticklabels(['p < 0.001', 'p < 0.01', 'p < 0.05', 'NS'])
+        cbar_ax.set_ticks([0.0005, 0.005, 0.03, 0.5])
+        cbar_ax.ax.tick_params(size=0)
+        return axis
 
     def write_heatmap_plot(self, p_values, image_path, symmetric=False):
         """Writes heatmap plot."""
-        self._write_plot_to_image(self.heatmap_plot,
+        self._write_plot_to_image(self._pvalue_heatmap_plot,
                                   p_values,
                                   image_path,
                                   symmetric=symmetric)
+
+    def _a12_heatmap_plot(self, a12_values, axes=None):
+        """Draws heatmap plot for visualizing effect size results.
+        """
+
+        palette_args = {
+            'h_neg': 12,
+            'h_pos': 128,
+            's': 99,
+            'l': 47,
+            'sep': 20,
+            'as_cmap': True
+        }
+
+        rdgn = sns.diverging_palette(**palette_args)
+
+        heatmap_args = {
+            'cmap': rdgn,
+            'vmin': 0.0,
+            'vmax': 1.0,
+            'square': True,
+            'annot': True,
+            'fmt': ".2f"
+        }
+        return self._generic_heatmap_plot(a12_values,
+                                          axes,
+                                          heatmap_args,
+                                          shrink_cbar=0.1)
+
+    def write_a12_heatmap_plot(self, a12_values, image_path):
+        """Writes A12 heatmap plot."""
+        self._write_plot_to_image(self._a12_heatmap_plot, a12_values,
+                                  image_path)
 
     def write_critical_difference_plot(self, average_ranks, num_of_benchmarks,
                                        image_path):
