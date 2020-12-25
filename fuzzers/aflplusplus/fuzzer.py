@@ -69,6 +69,9 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['CC'] = '/afl/afl-clang-fast'
         os.environ['CXX'] = '/afl/afl-clang-fast++'
 
+    print('AFL++ build: ')
+    print(build_modes)
+
     if 'tracepc' in build_modes or 'pcguard' in build_modes:
         os.environ['AFL_LLVM_USE_TRACE_PC'] = '1'
     elif 'classic' in build_modes:
