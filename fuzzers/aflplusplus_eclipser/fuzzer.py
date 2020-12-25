@@ -102,6 +102,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
     target_binary_name = os.path.basename(target_binary)
     uninstrumented_target_binary = os.path.join(
         uninstrumented_target_binary_directory, target_binary_name)
+    if not os.path.isdir(input_corpus):
+        raise Exception("invalid input directory")
 
     afl_args = (input_corpus, output_corpus, target_binary)
     eclipser_args = (input_corpus, output_corpus, uninstrumented_target_binary)
