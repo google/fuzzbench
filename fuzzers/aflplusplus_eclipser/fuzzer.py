@@ -32,8 +32,8 @@ def build():
 
     # Backup the environment.
     orig_env = os.environ.copy()
-    src = os.getenv('SRC')
-    work = os.getenv('WORK')
+    #src = os.getenv('SRC')
+    #work = os.getenv('WORK')
     build_directory = os.getenv('OUT')
     fuzz_target = os.getenv('FUZZ_TARGET')
 
@@ -86,8 +86,10 @@ def eclipser(input_corpus, output_corpus, target_binary):
 def afl_worker(input_corpus, output_corpus, target_binary):
     """Run AFL worker instance."""
     print('[afl_worker] Run AFL worker')
-    aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, target_binary,
-        flags=(['-S', 'afl-worker', '-x', 'afl++.dict']))
+    aflplusplus_fuzzer.fuzz(input_corpus,
+                            output_corpus,
+                            target_binary,
+                            flags=(['-S', 'afl-worker', '-x', 'afl++.dict']))
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
