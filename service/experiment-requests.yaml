@@ -19,6 +19,16 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-12-25
+  description: "best of current state"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - entropic
+    - honggfuzz
+    - eclipser
+    - afl
+
 - experiment: 2020-12-23
   description: "best of current state"
   fuzzers:
