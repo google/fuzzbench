@@ -57,23 +57,25 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     elif 'qemu' in build_modes:
         os.environ['CC'] = 'clang'
         os.environ['CXX'] = 'clang++'
-        os.environ['CFLAGS'] = ' '.join(utils.NO_SANITIZER_COMPAT_CFLAGS)
-        cxxflags = [utils.LIBCPLUSPLUS_FLAG] + utils.NO_SANITIZER_COMPAT_CFLAGS
-        os.environ['CXXFLAGS'] = ' '.join(cxxflags)
     elif 'gcc' in build_modes:
         os.environ['CC'] = 'afl-gcc-fast'
         os.environ['CXX'] = 'afl-g++-fast'
     elif 'symcc' in build_modes:
-        os.environ['CC'] = '/symcc_build/symcc'
-        os.environ['CXX'] = '/symcc_build/sym++'
+        os.environ['CC'] = '/symcc/build/symcc'
+        os.environ['CXX'] = '/symcc/build/sym++'
         os.environ['SYMCC_OUTPUT_DIR'] = '/tmp'
-        os.environ['SYMCC_LIBCXX_PATH'] = '/libcxx_symcc_install'
+        #os.environ['SYMCC_LIBCXX_PATH'] = '/libcxx_symcc_install'
     else:
         os.environ['CC'] = '/afl/afl-clang-fast'
         os.environ['CXX'] = '/afl/afl-clang-fast++'
 
     print('AFL++ build: ')
     print(build_modes)
+
+    if 'qemu' in build_modes or 'symcc' in build_modes:
+        os.environ['CFLAGS'] = ' '.join(utils.NO_SANITIZER_COMPAT_CFLAGS)
+        cxxflags = [utils.LIBCPLUSPLUS_FLAG] + utils.NO_SANITIZER_COMPAT_CFLAGS
+        os.environ['CXXFLAGS'] = ' '.join(cxxflags)
 
     if 'tracepc' in build_modes or 'pcguard' in build_modes:
         os.environ['AFL_LLVM_USE_TRACE_PC'] = '1'

@@ -43,6 +43,8 @@ def build():
     os.mkdir(eclipser_dir)
     fuzz_binary = build_directory + '/' + fuzz_target
     shutil.copy(fuzz_binary, eclipser_dir)
+    if os.path.isdir(build_directory + '/seeds'):
+        shutil.rmtree(build_directory + '/seeds')
 
     # Second, build an instrumented binary for AFL++.
     os.environ = orig_env
