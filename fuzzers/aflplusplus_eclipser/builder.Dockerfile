@@ -33,3 +33,10 @@ RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
     PYTHON_INCLUDE=/ make && make install && \
     make -C utils/aflpp_driver && \
     cp utils/aflpp_driver/libAFLDriver.a /
+
+# Eclipser special
+RUN cd / && \
+    wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/standalone/StandaloneFuzzTargetMain.c -O /StandaloneFuzzTargetMain.c && \
+    clang -O2 -c /StandaloneFuzzTargetMain.c && \
+    ar rc /libStandaloneFuzzTarget.a StandaloneFuzzTargetMain.o && \
+    rm /StandaloneFuzzTargetMain.c

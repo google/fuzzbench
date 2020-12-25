@@ -61,13 +61,21 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['CC'] = 'afl-gcc-fast'
         os.environ['CXX'] = 'afl-g++-fast'
     elif 'symcc' in build_modes:
-        os.environ['CC'] = '/symcc_build/symcc'
-        os.environ['CXX'] = '/symcc_build/sym++'
+        os.environ['CC'] = '/symcc/build/symcc'
+        os.environ['CXX'] = '/symcc/build/sym++'
         os.environ['SYMCC_OUTPUT_DIR'] = '/tmp'
-        os.environ['SYMCC_LIBCXX_PATH'] = '/libcxx_symcc_install'
+        #os.environ['SYMCC_LIBCXX_PATH'] = '/libcxx_symcc_install'
     else:
         os.environ['CC'] = '/afl/afl-clang-fast'
         os.environ['CXX'] = '/afl/afl-clang-fast++'
+
+    print('AFL++ build: ')
+    print(build_modes)
+
+    if 'qemu' in build_modes or 'symcc' in build_modes:
+        os.environ['CFLAGS'] = ' '.join(utils.NO_SANITIZER_COMPAT_CFLAGS)
+        cxxflags = [utils.LIBCPLUSPLUS_FLAG] + utils.NO_SANITIZER_COMPAT_CFLAGS
+        os.environ['CXXFLAGS'] = ' '.join(cxxflags)
 
     if 'tracepc' in build_modes or 'pcguard' in build_modes:
         os.environ['AFL_LLVM_USE_TRACE_PC'] = '1'
@@ -116,7 +124,10 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         if 'autodict' not in build_modes:
             os.environ['AFL_LLVM_LAF_TRANSFORM_COMPARES'] = '1'
 
-    os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
+    if 'eclipser' in build_modes:
+        os.environ['FUZZER_LIB'] = '/libStandaloneFuzzTarget.a'
+    else:
+        os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
 
     # Some benchmarks like lcms
     # (see: https://github.com/mm2/Little-CMS/commit/ab1093539b4287c233aca6a3cf53b234faceb792#diff-f0e6d05e72548974e852e8e55dffc4ccR212)
