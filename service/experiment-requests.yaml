@@ -28,6 +28,7 @@
     - honggfuzz
     - eclipser
     - afl
+    - aflplusplus_eclipser
 
 - experiment: 2020-12-23
   description: "best of current state"

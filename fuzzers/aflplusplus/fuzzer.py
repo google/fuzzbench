@@ -57,6 +57,9 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     elif 'qemu' in build_modes:
         os.environ['CC'] = 'clang'
         os.environ['CXX'] = 'clang++'
+        os.environ['CFLAGS'] = ' '.join(utils.NO_SANITIZER_COMPAT_CFLAGS)
+        cxxflags = [utils.LIBCPLUSPLUS_FLAG] + utils.NO_SANITIZER_COMPAT_CFLAGS
+        os.environ['CXXFLAGS'] = ' '.join(cxxflags)
     elif 'gcc' in build_modes:
         os.environ['CC'] = 'afl-gcc-fast'
         os.environ['CXX'] = 'afl-g++-fast'
@@ -119,7 +122,10 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         if 'autodict' not in build_modes:
             os.environ['AFL_LLVM_LAF_TRANSFORM_COMPARES'] = '1'
 
-    os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
+    if 'eclipser' in build_modes:
+        os.environ['FUZZER_LIB'] = '/libStandaloneFuzzTarget.a'
+    else:
+        os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
 
     # Some benchmarks like lcms
     # (see: https://github.com/mm2/Little-CMS/commit/ab1093539b4287c233aca6a3cf53b234faceb792#diff-f0e6d05e72548974e852e8e55dffc4ccR212)
