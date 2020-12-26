@@ -29,7 +29,7 @@ def get_uninstrumented_outdir(target_directory):
 
 def build():
     """Build benchmark."""
-
+    build_directory = os.getenv('OUT')
     aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
     shutil.copy('/afl/afl-fuzz', build_directory)
 
