@@ -14,9 +14,8 @@
 """Integration code for Eclipser fuzzer. Note that starting from v2.0, Eclipser
 relies on AFL to perform random-based fuzzing."""
 
-import shutil
-import subprocess
 import os
+import shutil
 import threading
 
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
@@ -49,30 +48,19 @@ def afl_worker2(input_corpus, output_corpus, target_binary):
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
-                            flags=(['-S', 'afl-worker2', '-x', 'afl++.dict']))
+                            flags=(['-S', 'afl-worker2']), skip=True)
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
 
-    # Calculate uninstrumented binary path from the instrumented target binary.
-    target_binary_directory = os.path.dirname(target_binary)
-    uninstrumented_target_binary_directory = (
-        get_uninstrumented_outdir(target_binary_directory))
-    target_binary_name = os.path.basename(target_binary)
-    uninstrumented_target_binary = os.path.join(
-        uninstrumented_target_binary_directory, target_binary_name)
     if not os.path.isdir(input_corpus):
         raise Exception("invalid input directory")
-
     afl_args = (input_corpus, output_corpus, target_binary)
-    eclipser_args = (input_corpus, output_corpus, uninstrumented_target_binary)
-    # Do not launch AFL master instance for now, to reduce memory usage and
-    # align with the vanilla AFL.
-    print('[fuzz] Running AFL worker')
+    print('[fuzz] Running AFL worker 1')
     afl_worker_thread = threading.Thread(target=afl_worker1, args=afl_args)
     afl_worker_thread.start()
-    print('[fuzz] Running Eclipser')
+    print('[fuzz] Running AFL workser 2')
     eclipser_thread = threading.Thread(target=afl_worker2, args=afl_args)
     eclipser_thread.start()
     print('[fuzz] Now waiting for threads to finish...')

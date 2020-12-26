@@ -172,7 +172,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         shutil.copy('/aflpp_qemu_driver_hook.so', build_directory)
 
 
-def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):
+def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
     """Run fuzzer."""
     # Calculate CmpLog binary path from the instrumented target binary.
     target_binary_directory = os.path.dirname(target_binary)
@@ -188,14 +188,15 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):
     # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
     flags = list(flags)
-    if not flags or not flags[0] == '-Q' and '-p' not in flags:
-        flags += ['-p', 'fast']
-    if os.path.exists(cmplog_target_binary):
-        flags += ['-c', cmplog_target_binary]
-    if os.path.exists('./afl++.dict'):
-        flags += ['-x', './afl++.dict']
-    if 'ADDITIONAL_ARGS' in os.environ:
-        flags += os.environ['ADDITIONAL_ARGS'].split(' ')
+    if not skip:
+        if not flags or not flags[0] == '-Q' and '-p' not in flags:
+            flags += ['-p', 'fast']
+        if os.path.exists(cmplog_target_binary):
+            flags += ['-c', cmplog_target_binary]
+        if os.path.exists('./afl++.dict'):
+            flags += ['-x', './afl++.dict']
+        if 'ADDITIONAL_ARGS' in os.environ:
+            flags += os.environ['ADDITIONAL_ARGS'].split(' ')
 
     afl_fuzzer.run_afl_fuzz(input_corpus,
                             output_corpus,
