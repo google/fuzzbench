@@ -48,7 +48,8 @@ def afl_worker2(input_corpus, output_corpus, target_binary):
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
-                            flags=(['-S', 'afl-worker2']), skip=True)
+                            flags=(['-S', 'afl-worker2']),
+                            skip=True)
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
