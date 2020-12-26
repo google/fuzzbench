@@ -30,62 +30,11 @@ def get_uninstrumented_outdir(target_directory):
 def build():
     """Build benchmark."""
 
-    # Backup the environment.
-    orig_env = os.environ.copy()
-    #src = os.getenv('SRC')
-    #work = os.getenv('WORK')
-    build_directory = os.getenv('OUT')
-    fuzz_target = os.getenv('FUZZ_TARGET')
-
-    # First, build an uninstrumented binary for Eclipser.
-    aflplusplus_fuzzer.build("qemu", "eclipser")
-    eclipser_dir = get_uninstrumented_outdir(build_directory)
-    os.mkdir(eclipser_dir)
-    fuzz_binary = build_directory + '/' + fuzz_target
-    shutil.copy(fuzz_binary, eclipser_dir)
-    if os.path.isdir(build_directory + '/seeds'):
-        shutil.rmtree(build_directory + '/seeds')
-
-    # Second, build an instrumented binary for AFL++.
-    os.environ = orig_env
-    aflplusplus_fuzzer.build("tracepc", "dict2file")
-    print('[build] Copying afl-fuzz to $OUT directory')
-
-    # Copy afl-fuzz
+    aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
     shutil.copy('/afl/afl-fuzz', build_directory)
 
 
-def eclipser(input_corpus, output_corpus, target_binary):
-    """Run Eclipser."""
-    # We will use output_corpus as a directory where AFL and Eclipser sync their
-    # test cases with each other. For Eclipser, we should explicitly specify an
-    # output directory under this sync directory.
-    eclipser_out = os.path.join(output_corpus, "eclipser_output")
-    command = [
-        'dotnet',
-        '/Eclipser/build/Eclipser.dll',
-        '-p',
-        target_binary,
-        '-s',
-        output_corpus,
-        '-o',
-        eclipser_out,
-        '--arg',  # Specifies the command-line of the program.
-        'foo',
-        '-f',  # Specifies the path of file input to fuzz.
-        'foo',
-        '-v',  # Controls the verbosity.
-        '2',
-        '--exectimeout',
-        '5000',
-    ]
-    if os.listdir(input_corpus):  # Specify inputs only if any seed exists.
-        command += ['-i', input_corpus]
-    print('[eclipser] Run Eclipser with command: ' + ' '.join(command))
-    subprocess.Popen(command)
-
-
-def afl_worker(input_corpus, output_corpus, target_binary):
+def afl_worker1(input_corpus, output_corpus, target_binary):
     """Run AFL worker instance."""
     print('[afl_worker] Run AFL worker')
     aflplusplus_fuzzer.fuzz(input_corpus,
@@ -94,7 +43,7 @@ def afl_worker(input_corpus, output_corpus, target_binary):
                             flags=(['-S', 'afl-worker1', '-x', 'afl++.dict']))
 
 
-def afl_worker(input_corpus, output_corpus, target_binary):
+def afl_worker2(input_corpus, output_corpus, target_binary):
     """Run AFL worker instance."""
     print('[afl_worker] Run AFL worker')
     aflplusplus_fuzzer.fuzz(input_corpus,
@@ -121,7 +70,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # Do not launch AFL master instance for now, to reduce memory usage and
     # align with the vanilla AFL.
     print('[fuzz] Running AFL worker')
-    afl_worker_thread = threading.Thread(target=afl_worker, args=afl_args)
+    afl_worker_thread = threading.Thread(target=afl_worker1, args=afl_args)
     afl_worker_thread.start()
     print('[fuzz] Running Eclipser')
     eclipser_thread = threading.Thread(target=afl_worker2, args=afl_args)
