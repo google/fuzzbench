@@ -56,7 +56,6 @@ jobs:
           - aflplusplus_cmplog
           - aflplusplus_dict2file
           - aflplusplus_eclipser
-          - aflplusplus_double
 
         benchmark_type:
           - oss-fuzz
