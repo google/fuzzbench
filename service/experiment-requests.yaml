@@ -24,6 +24,7 @@
   type: bug
   fuzzers:
     - aflplusplus_introspection
+    - aflplusplus_introspection2
 
 - experiment: 2020-12-28
   description: "afl++ introspection"
@@ -31,6 +32,7 @@
     - aflplusplus
     - aflplusplus_optimal
     - aflplusplus_introspection
+    - aflplusplus_introspection2
 
 - experiment: 2020-12-26
   description: "compare aflplusplus_eclipser vs aflplusplus_double"
