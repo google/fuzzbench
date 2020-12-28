@@ -57,6 +57,7 @@ jobs:
           - aflplusplus_dict2file
           - aflplusplus_eclipser
           - aflplusplus_introspection2
+          - aflplusplus_schedule
 
         benchmark_type:
           - oss-fuzz

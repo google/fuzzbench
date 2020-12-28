@@ -30,6 +30,7 @@
   description: "afl++ introspection"
   fuzzers:
     - aflplusplus
+    - aflplusplus_schedule
     - aflplusplus_optimal
     - aflplusplus_introspection
     - aflplusplus_introspection2
