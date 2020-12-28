@@ -19,6 +19,22 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2020-12-28-bug
+  description: "afl++ introspection bug"
+  type: bug
+  fuzzers:
+    - aflplusplus_introspection
+    - aflplusplus_introspection2
+
+- experiment: 2020-12-28
+  description: "afl++ introspection"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_schedule
+    - aflplusplus_optimal
+    - aflplusplus_introspection
+    - aflplusplus_introspection2
+
 - experiment: 2020-12-26
   description: "compare aflplusplus_eclipser vs aflplusplus_double"
   fuzzers:
