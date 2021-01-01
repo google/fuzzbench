@@ -22,6 +22,7 @@ jobs:
           - aflfast
           - aflplusplus
           - aflplusplus_optimal
+          - aflplusplus_eclipser
           - aflsmart
           - entropic
           - fairfuzz
@@ -55,9 +56,9 @@ jobs:
           - aflplusplus_coe_v2
           - aflplusplus_cmplog
           - aflplusplus_dict2file
-          - aflplusplus_eclipser
           - aflplusplus_introspection2
           - aflplusplus_schedule
+          - aflplusplus_schedule_explore
 
         benchmark_type:
           - oss-fuzz
