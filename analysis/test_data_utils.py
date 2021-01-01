@@ -35,6 +35,8 @@ def create_trial_data(  # pylint: disable=too-many-arguments
         'time_ended': None,
         'time': t,
         'edges_covered': reached_coverage,
+        'bugs_covered': 0,
+        'crash_key': None,
         'experiment_filestore': experiment_filestore
     } for t in range(cycles)])
 

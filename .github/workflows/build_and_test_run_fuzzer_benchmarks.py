@@ -62,13 +62,16 @@ BUG_BENCHMARKS = {
     'openexr_openexr_exrenvmap_fuzzer',
     'openh264_decoder_fuzzer',
     'php_php-fuzz-execute',
+    'php_php-fuzz-parser-2020-07-25',
     'stb_stbi_read_fuzzer',
 }
 
 
 def get_make_target(fuzzer, benchmark):
     """Return test target for a fuzzer and benchmark."""
-    return 'test-run-%s-%s' % (fuzzer, benchmark)
+    if fuzzer == 'coverage':
+        return f'build-coverage-{benchmark}'
+    return f'test-run-{fuzzer}-{benchmark}'
 
 
 def delete_docker_images():

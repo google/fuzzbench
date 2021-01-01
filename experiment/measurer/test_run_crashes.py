@@ -51,3 +51,25 @@ class TestIntegrationRunCoverage:
         assert actual_crash.crash_state == 'fuzz_target.c\n'
         assert ('ERROR: AddressSanitizer: ABRT on unknown address'
                 in actual_crash.crash_stacktrace)
+
+
+# pylint: disable=protected-access
+def test_filter_crash_type():
+    """Tests _filter_crash_type."""
+    assert (run_crashes._filter_crash_type('Heap-buffer-overflow\nREAD 4') ==
+            'Heap-buffer-overflow\nREAD')
+    assert (run_crashes._filter_crash_type('Heap-buffer-overflow\nWRITE {*}') ==
+            'Heap-buffer-overflow\nWRITE')
+    assert run_crashes._filter_crash_type('Timeout') == 'Timeout'
+
+
+# pylint: disable=protected-access
+def test_filter_crash_state():
+    """Tests _filter_crash_state."""
+    assert (run_crashes._filter_crash_state(
+        'Segv on unknown address:int* std::__1::fill_n<int*, long, int>\n'
+        'int arrow::util::RleDecoder::GetBatchWithDict<int>\n'
+        'parquet::DictDecoderImpl<parquet::PhysicalType<\n') ==
+            'Segv on unknown address:int* std::__1::fill_n\n'
+            'int arrow::util::RleDecoder::GetBatchWithDict\n'
+            'parquet::DictDecoderImpl\n')

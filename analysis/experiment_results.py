@@ -114,70 +114,95 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
 
     @property
     @functools.lru_cache()
+    def type(self):
+        """Returns the type of the experiment i.e., 'code' or 'bug', indicating
+        whether the experiments involved code coverage benchmarks or bug
+        coverage benchmarks.
+
+        Raises ValueError if the benchmark types are mixed.
+        """
+        if all([b.type == 'bug' for b in self.benchmarks]):
+            return 'bug'
+        if all([b.type == 'code' for b in self.benchmarks]):
+            return 'code'
+        raise ValueError(
+            'Cannot mix bug benchmarks with code coverage benchmarks.')
+
+    @property
+    def _relevant_column(self):
+        """Returns the name of the column that will be used as the basis of
+        the analysis (e.g., 'edges_covered', or 'bugs_covered')."""
+        return 'edges_covered' if self.type == 'code' else 'bugs_covered'
+
+    @property
+    @functools.lru_cache()
     def summary_table(self):
         """A pivot table of medians for each fuzzer on each benchmark."""
         return data_utils.experiment_pivot_table(
-            self._experiment_snapshots_df, data_utils.benchmark_rank_by_median)
+            self._experiment_snapshots_df,
+            functools.partial(data_utils.benchmark_rank_by_median,
+                              key=self._relevant_column))
 
     @property
     def rank_by_unique_coverage_average_normalized_score(self):
-        """Rank fuzzers using average normalized score on unique coverage across
-        benchmarks."""
+        """Rank fuzzers using average normalized score on unique code coverage
+        across benchmarks."""
         benchmarks_unique_coverage_list = [
             benchmark.unique_region_cov_df for benchmark in self.benchmarks
         ]
         return coverage_data_utils.rank_by_average_normalized_score(
             benchmarks_unique_coverage_list)
 
+    def _ranking(self, benchmark_level_ranking_function,
+                 experiment_level_ranking_function):
+        return data_utils.experiment_level_ranking(
+            self._experiment_snapshots_df,
+            functools.partial(benchmark_level_ranking_function,
+                              key=self._relevant_column),
+            experiment_level_ranking_function)
+
     @property
     def rank_by_average_rank_and_average_rank(self):
         """Rank fuzzers using average rank per benchmark and average rank
         across benchmarks."""
-        return data_utils.experiment_level_ranking(
-            self._experiment_snapshots_df,
-            data_utils.benchmark_rank_by_average_rank,
-            data_utils.experiment_rank_by_average_rank)
+        return self._ranking(data_utils.benchmark_rank_by_average_rank,
+                             data_utils.experiment_rank_by_average_rank)
 
     @property
     def rank_by_mean_and_average_rank(self):
         """Rank fuzzers using mean coverage per benchmark and average rank
         across benchmarks."""
-        return data_utils.experiment_level_ranking(
-            self._experiment_snapshots_df, data_utils.benchmark_rank_by_mean,
-            data_utils.experiment_rank_by_average_rank)
+        return self._ranking(data_utils.benchmark_rank_by_mean,
+                             data_utils.experiment_rank_by_average_rank)
 
     @property
     def rank_by_median_and_average_rank(self):
         """Rank fuzzers using median coverage per benchmark and average rank
         across benchmarks."""
-        return data_utils.experiment_level_ranking(
-            self._experiment_snapshots_df, data_utils.benchmark_rank_by_median,
-            data_utils.experiment_rank_by_average_rank)
+        return self._ranking(data_utils.benchmark_rank_by_median,
+                             data_utils.experiment_rank_by_average_rank)
 
     @property
     def rank_by_median_and_average_normalized_score(self):
         """Rank fuzzers using median coverage per benchmark and average
         normalized score across benchmarks."""
-        return data_utils.experiment_level_ranking(
-            self._experiment_snapshots_df, data_utils.benchmark_rank_by_median,
+        return self._ranking(
+            data_utils.benchmark_rank_by_median,
             data_utils.experiment_rank_by_average_normalized_score)
 
     @property
     def rank_by_median_and_number_of_firsts(self):
         """Rank fuzzers using median coverage per benchmark and number of first
         places across benchmarks."""
-        return data_utils.experiment_level_ranking(
-            self._experiment_snapshots_df, data_utils.benchmark_rank_by_median,
-            data_utils.experiment_rank_by_num_firsts)
+        return self._ranking(data_utils.benchmark_rank_by_median,
+                             data_utils.experiment_rank_by_num_firsts)
 
     @property
     def rank_by_stat_test_wins_and_average_rank(self):
         """Rank fuzzers using statistical test wins per benchmark and average
         rank across benchmarks."""
-        return data_utils.experiment_level_ranking(
-            self._experiment_snapshots_df,
-            data_utils.benchmark_rank_by_stat_test_wins,
-            data_utils.experiment_rank_by_average_rank)
+        return self._ranking(data_utils.benchmark_rank_by_stat_test_wins,
+                             data_utils.experiment_rank_by_num_firsts)
 
     @property
     def friedman_p_value(self):

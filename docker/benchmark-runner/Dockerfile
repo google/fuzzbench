@@ -59,6 +59,8 @@ ENV ROOT_DIR=/src
 # Copy over all the build artifacts (without * to preserve directory structure).
 # This also copies seed and dictionary files if they are available.
 COPY --from=builder /out/ ./
+# Copy the benchmarks directory.
+COPY benchmarks $ROOT_DIR/benchmarks
 # Copy the fuzzers directory.
 COPY fuzzers $ROOT_DIR/fuzzers
 # Create empty __init__.py to allow python deps to work.

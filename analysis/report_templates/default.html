@@ -80,11 +80,11 @@
             We show two different aggregate (cross-benchmark) rankings of fuzzers.
             The first is based on the average of per-benchmarks scores, where
             the score represents the percentage of the highest reached median
-            coverage on a given benchmark (higher value is better).
+            {{ experiment.type }}-coverage on a given benchmark (higher value is better).
 
             The second ranking shows the average rank of fuzzers, after we rank
-            them on each benchmark according to their median reached covereges
-            (lower value is better).
+            them on each benchmark according to their median reached
+            {{ experiment.type }}-covereges (lower value is better).
 
             <div class="row">
                 <div class="col s5 offset-s1">
@@ -153,7 +153,7 @@
             <ul class="collapsible">
                 <li>
                     <div class="collapsible-header">
-                        Median coverages on each benchmark
+                        Median {{ experiment.type }}-coverages on each benchmark
                     </div>
                     <div class="collapsible-body">
                         {{ experiment.summary_table.to_html() }}
@@ -170,39 +170,63 @@
 
             <div class="row">
                 <div class="col s6">
-                    <h5 class="center-align">Ranking by median reached coverage</h5>
+            {% if benchmark.type == 'bug' %}
+                    <h5 class="center-align">Discovered bug coverage distribution</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.bug_box_plot }}">
+            {% else %}
+                    <h5 class="center-align">Ranking by median reached code coverage</h5>
                     <img class="responsive-img materialboxed"
                          src="{{ benchmark.ranking_plot }}">
+            {% endif %}
                 </div>
                 <div class="col s6">
-                    <h5 class="center-align">Reached coverage distribution</h5>
+                    <h5 class="center-align">Reached code coverage distribution</h5>
                     <img class="responsive-img materialboxed"
-                         src="{{ benchmark.violin_plot }}">
+                         src="{{ benchmark.box_plot }}">
                 </div>
             </div>
             <div class="row">
                 <div class="col s12">
                     <ul class="tabs">
-                      <li class="tab col s6"><a href="#{{ benchmark.name }}_region_normal" class="green-text text-darken-3">Region coverage (linear)</a></li>
-                      <li class="tab col s6"><a href="#{{ benchmark.name }}_region_logscale" class="green-text text-darken-3">Region coverage (log)</a></li>
+            {% if benchmark.type == 'bug' %}
+                      <li class="tab col s3"><a href="#{{ benchmark.name }}_bugs_normal" class="green-text text-darken-3">Bug coverage (linear)</a></li>
+                      <li class="tab col s3"><a href="#{{ benchmark.name }}_bugs_logscale" class="green-text text-darken-3">Bug coverage (log)</a></li>
+                      <li class="tab col s3"><a href="#{{ benchmark.name }}_code_normal" class="green-text text-darken-3">Code coverage (linear)</a></li>
+                      <li class="tab col s3"><a href="#{{ benchmark.name }}_code_logscale" class="green-text text-darken-3">Code coverage (log)</a></li>
+            {% else %}
+                      <li class="tab col s6"><a href="#{{ benchmark.name }}_code_normal" class="green-text text-darken-3">Code coverage (linear)</a></li>
+                      <li class="tab col s6"><a href="#{{ benchmark.name }}_code_logscale" class="green-text text-darken-3">Code coverage (log)</a></li>
+            {% endif %}
                     </ul>
                 </div>
-                <div id="{{ benchmark.name }}_region_normal" class="col s12">
-                    <h5 class="center-align">Mean coverage growth over time</h5>
+                <div id="{{ benchmark.name }}_code_normal" class="col s12">
+                    <h5 class="center-align">Mean code coverage growth over time</h5>
                     <img class="responsive-img materialboxed"
                          src="{{ benchmark.coverage_growth_plot }}">
                 </div>
-                <div id="{{ benchmark.name }}_region_logscale" class="col s12">
-                    <h5 class="center-align">Mean coverage growth over time</h5>
+                <div id="{{ benchmark.name }}_code_logscale" class="col s12">
+                    <h5 class="center-align">Mean code coverage growth over time</h5>
                     <img class="responsive-img materialboxed"
                          src="{{ benchmark.coverage_growth_plot_logscale }}">
                 </div>
+            {% if benchmark.type == 'bug' %}
+                <div id="{{ benchmark.name }}_bugs_normal" class="col s12">
+                    <h5 class="center-align">Mean bug coverage growth over time</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.bug_coverage_growth_plot }}">
+                </div>
+                <div id="{{ benchmark.name }}_bugs_logscale" class="col s12">
+                    <h5 class="center-align">Mean bug coverage growth over time</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.bug_coverage_growth_plot_logscale }}">
+                </div>
+            {% endif %}
                 <div class="center-align">
                     * The error bands show the 95% confidence interval
-                      around the mean coverage.
+                      around the mean code coverage.
                 </div>
             </div>
-
 
             {% if benchmark.fuzzers_with_not_enough_samples and not in_progress %}
             <div class="card-panel deep-orange lighten-3">
@@ -222,14 +246,44 @@
             </div>
             {% endif %}
 
+            {% if benchmark.type == 'bug' %}
             <ul class="collapsible">
                 <li>
                     <div class="collapsible-header">
-                        Sample statistics and statistical significance
+                        Sample statistics and statistical significance (bugs covered)
                     </div>
                     <div class="collapsible-body">
 
-                        <h5 class="center-align">Coverage sample statistics</h5>
+                        <h5 class="center-align">Bug coverage sample statistics</h5>
+                        {{ benchmark.bug_summary_table.to_html() }}
+                        <br>
+
+                        <div class="row">
+                            <div class="col s6 offset-s3">
+                                <h5 class="center-align">Mann-Whitney U test</h4>
+                                    <img class="responsive-img materialboxed"
+                                         src="{{ benchmark.bug_mann_whitney_plot }}">
+                                    The table summarizes the p values of
+                                    pairwise Mann-Whitney U tests.
+                                    Green cells indicate that the reached
+                                    coverage distribution of a given fuzzer pair
+                                    is significantly different.
+                            </div>
+                        </div> <!-- row -->
+
+                    </div>
+                </li>
+            </ul>
+            {% endif %}
+
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Sample statistics and statistical significance (code coverage)
+                    </div>
+                    <div class="collapsible-body">
+
+                        <h5 class="center-align">Code coverage sample statistics</h5>
                         {{ benchmark.summary_table.to_html() }}
                         <br>
 
@@ -254,27 +308,27 @@
             <ul class="collapsible">
                 <li>
                     <div class="collapsible-header">
-                        Unique coverage plots
+                        Unique code coverage plots
                     </div>
                     <div class="collapsible-body">
 
                         <div class="row">
                             <div class="col s6 offset-s3">
-                                <h5 class="center-align">Ranking by unique regions covered</h4>
+                                <h5 class="center-align">Ranking by unique code regions covered</h4>
                                     <img class="responsive-img materialboxed"
                                          src="{{ benchmark.unique_coverage_ranking_plot }}">
-                                    Each bar shows the total number of regions found by a given fuzzer.
-                                    The colored area shows the number of unique regions
+                                    Each bar shows the total number of code regions found by a given fuzzer.
+                                    The colored area shows the number of unique code regions
                                     (i.e., regions that were not covered by any other fuzzers).
                             </div>
                         </div> <!-- row -->
 
                         <div class="row">
                             <div class="col s6 offset-s3">
-                                <h5 class="center-align">Pairwise unique coverage</h4>
+                                <h5 class="center-align">Pairwise unique code coverage</h4>
                                     <img class="responsive-img materialboxed"
                                          src="{{ benchmark.pairwise_unique_coverage_plot }}">
-                                    Each cell represents the number of regions covered by the fuzzer
+                                    Each cell represents the number of code regions covered by the fuzzer
                                     of the column but not by the fuzzer of the row
                             </div>
                         </div> <!-- row -->
@@ -286,7 +340,7 @@
             <ul class="collapsible">
                 <li>
                     <div class="collapsible-header">
-                        Coverage reports for each fuzzer on this benchmark
+                        Code coverage reports for each fuzzer on this benchmark
                     </div>
                     <div class="collapsible-body">
                         <div class="collection">
