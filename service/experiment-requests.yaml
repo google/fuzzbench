@@ -19,6 +19,13 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-01-01
+  description: "afl++ schedule weighting"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_schedule
+    - aflplusplus_schedule_explore
+
 - experiment: 2020-12-29-bug
   description: "afl++ introspection bug"
   type: bug
