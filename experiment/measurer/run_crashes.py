@@ -47,6 +47,14 @@ def _filter_crash_state(crash_state):
 
 def process_crash(app_binary, crash_testcase_path, crashes_dir):
     """Returns the crashing unit in coverage_binary_output."""
+    crash_filename = os.path.basename(crash_testcase_path)
+    if (crash_filename.startswith('oom-') or
+            crash_filename.startswith('timeout-')):
+        # Don't spend time processing ooms and timeouts as these are
+        # uninteresting crashes anyway. These are also excluded below, but don't
+        # process them in the first place based on filename.
+        return None
+
     # Run the crash with sanitizer options set in environment.
     env = os.environ.copy()
     sanitizer.set_sanitizer_options(env)

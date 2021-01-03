@@ -31,11 +31,11 @@ import queue
 from sqlalchemy import func
 from sqlalchemy import orm
 
+from common import benchmark_config
 from common import experiment_utils
 from common import experiment_path as exp_path
 from common import filesystem
 from common import fuzzer_stats
-
 from common import filestore_utils
 from common import logs
 from common import utils
@@ -355,6 +355,9 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         self.cov_summary_file = os.path.join(self.report_dir,
                                              'cov_summary.json')
 
+        self.is_bug_benchmark = (
+            benchmark_config.get_config(benchmark).get('type') == 'bug')
+
     def get_profraw_files(self):
         """Return generated profraw files."""
         return [
@@ -511,6 +514,9 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
 
     def process_crashes(self, cycle):
         """Process and store crashes."""
+        if not self.is_bug_benchmark:
+            return []
+
         if not os.listdir(self.crashes_dir):
             logs.info('No crashes found for cycle %d.', cycle)
             return []
