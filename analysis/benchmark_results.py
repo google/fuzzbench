@@ -188,20 +188,55 @@ class BenchmarkResults:
                                            key='bugs_covered')
 
     @property
-    def mann_whitney_plot(self):
-        """Mann Whitney U test plot."""
-        plot_filename = self._prefix_with_benchmark('mann_whitney_plot.svg')
-        self._plotter.write_heatmap_plot(self.mann_whitney_p_values,
+    @functools.lru_cache()
+    def vargha_delaney_a12_values(self):
+        """Vargha Delaney A12 mesaure results (code coverage)."""
+        return stat_tests.a12_measure_test(self._benchmark_snapshot_df)
+
+    @property
+    @functools.lru_cache()
+    def bug_vargha_delaney_a12_values(self):
+        """Vargha Delaney A12 mesaure results (bug coverage)."""
+        return stat_tests.a12_measure_test(self._benchmark_snapshot_df,
+                                           key='bugs_covered')
+
+    def _mann_whitney_plot(self, filename, p_values):
+        """Generic Mann Whitney U test plot."""
+        plot_filename = self._prefix_with_benchmark(filename)
+        self._plotter.write_heatmap_plot(p_values,
                                          self._get_full_path(plot_filename))
         return plot_filename
 
     @property
+    def mann_whitney_plot(self):
+        """Mann Whitney U test plot (code coverage)."""
+        return self._mann_whitney_plot('mann_whitney_plot.svg',
+                                       self.mann_whitney_p_values)
+
+    @property
     def bug_mann_whitney_plot(self):
-        """Mann Whitney U test plot based on bugs covered."""
-        plot_filename = self._prefix_with_benchmark('bug_mann_whitney_plot.svg')
-        self._plotter.write_heatmap_plot(self.bug_mann_whitney_p_values,
-                                         self._get_full_path(plot_filename))
+        """Mann Whitney U test plot (bug coverage)."""
+        return self._mann_whitney_plot('bug_mann_whitney_plot.svg',
+                                       self.bug_mann_whitney_p_values)
+
+    def _vargha_delaney_plot(self, filename, a12_values):
+        """Generic Vargha Delany A12 measure plot."""
+        plot_filename = self._prefix_with_benchmark(filename)
+        self._plotter.write_a12_heatmap_plot(a12_values,
+                                             self._get_full_path(plot_filename))
         return plot_filename
+
+    @property
+    def vargha_delaney_plot(self):
+        """Vargha Delany A12 measure plot (code coverage)."""
+        return self._vargha_delaney_plot('varga_delaney_a12_plot.svg',
+                                         self.vargha_delaney_a12_values)
+
+    @property
+    def bug_vargha_delaney_plot(self):
+        """Vargha Delany A12 measure plot (bug coverage)."""
+        return self._vargha_delaney_plot('bug_varga_delaney_a12_plot.svg',
+                                         self.bug_vargha_delaney_a12_values)
 
     @property
     def anova_p_value(self):
