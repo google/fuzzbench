@@ -106,5 +106,5 @@ jobs:
 
     - name: Build and test benchmarks
       run: |
-        ulimit -n 1000000
+        ulimit -a
         PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/build_and_test_run_fuzzer_benchmarks.py ${{ matrix.benchmark_type }} ${{ matrix.fuzzer }}
