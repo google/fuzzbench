@@ -29,7 +29,6 @@ def get_uninstrumented_outdir(target_directory):
 
 def build():
     """Build benchmark."""
-
     # Backup the environment.
     orig_env = os.environ.copy()
     #src = os.getenv('SRC')
