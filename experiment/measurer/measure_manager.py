@@ -355,9 +355,6 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         self.cov_summary_file = os.path.join(self.report_dir,
                                              'cov_summary.json')
 
-        self.is_bug_benchmark = (
-            benchmark_config.get_config(benchmark).get('type') == 'bug')
-
     def get_profraw_files(self):
         """Return generated profraw files."""
         return [
@@ -514,7 +511,9 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
 
     def process_crashes(self, cycle):
         """Process and store crashes."""
-        if not self.is_bug_benchmark:
+        benchmark_type = benchmark_config.get_config(self.benchmark).get('type')
+        is_bug_benchmark = benchmark_type == 'bug'
+        if not is_bug_benchmark:
             return []
 
         if not os.listdir(self.crashes_dir):
