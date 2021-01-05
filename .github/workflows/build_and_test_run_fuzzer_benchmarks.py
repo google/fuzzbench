@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Script for building and briefly running fuzzer,benchmark pairs in CI."""
+import gc
 import sys
 import subprocess
 
@@ -117,6 +118,9 @@ def make_builds(benchmarks, fuzzer):
 
         # Delete docker images so disk doesn't fill up.
         delete_docker_images()
+
+        # Free up memory.
+        gc.collect()
 
     return True
 
