@@ -59,6 +59,8 @@ jobs:
           - aflplusplus_introspection2
           - aflplusplus_schedule
           - aflplusplus_schedule_explore
+          - aflplusplus_cmplog_variant
+          - aflplusplus_cmplog_new
 
         benchmark_type:
           - oss-fuzz
