@@ -100,6 +100,11 @@ jobs:
           ${{ runner.os }}-pip-
           ${{ runner.os }}-
 
+    - name: Increase file limits
+      run: |
+        echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
+        sudo sysctl -p
+
     - name: Install dependencies
       run: |
         make install-dependencies
