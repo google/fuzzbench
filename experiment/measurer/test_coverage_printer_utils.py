@@ -15,6 +15,7 @@
 import os
 
 from experiment.measurer import coverage_printer_utils
+
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
 
 # Expected Constants.
