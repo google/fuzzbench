@@ -9,7 +9,7 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions andsss
+# See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for coverage_printer_utils.py"""
 import os
@@ -77,11 +77,14 @@ def test_extract_segments_and_functions_from_summary_json_for_segments(fs):
     benchmark_ids = df_container.segment_df['benchmark'].unique()
     file_ids = df_container.segment_df['file'].unique()
 
+    # Assert Length is result is as expected.
     assert len(df_container.segment_df) == NUM_COVERED_SEGMENTS_IN_COV_SUMMARY
 
+    # Assert integrity for fuzzer and benchmark ids.
     assert_integrity_for_fuzzer_ids(df_container, fuzzer_ids)
     assert_integrity_for_benchmark_ids(df_container, benchmark_ids)
 
+    # Assert integrity for file ids.
     for file_id in file_ids:
         # check all file names in the dat frame are already known.
         assert (df_container.name_df[df_container.name_df['id'] == file_id]
@@ -108,12 +111,15 @@ def test_extract_segments_and_functions_from_summary_json_for_functions(fs):
     benchmark_ids = df_container.function_df['benchmark'].unique()
     function_ids = df_container.function_df['function'].unique()
 
+    # Assert Length is result is as expected.
     assert len(df_container.segment_df) == NUM_COVERED_SEGMENTS_IN_COV_SUMMARY
     assert len(df_container.function_df) == NUM_FUNCTION_IN_COV_SUMMARY
 
+    # Assert integrity for fuzzer and benchmark ids.
     assert_integrity_for_fuzzer_ids(df_container, fuzzer_ids)
     assert_integrity_for_benchmark_ids(df_container, benchmark_ids)
 
+    # Assert integrity for function ids.
     for function_id in function_ids:
         # check all function names in the data frames are already known.
         assert (set(
@@ -132,7 +138,7 @@ def assert_integrity_for_fuzzer_ids(df_container, fuzzer_ids):
         # Check if type recorded for the ID id is "fuzzer".
         assert (df_container.name_df[df_container.name_df['id'] == fuzzer_id]
                 ['type'].item() == "fuzzer")
-        # Check if fuzzer ids match in "function" data frame and "name" data
+        # Check if fuzzer ids match in the given data frame and "name" data
         # frame.
         assert (fuzzer_id == df_container.name_df[df_container.name_df['name']
                                                   == FUZZER]['id'].item())
@@ -145,7 +151,7 @@ def assert_integrity_for_benchmark_ids(df_container, benchmark_ids):
         # Check if type recorded for the ID id is "benchmark".
         assert (df_container.name_df[df_container.name_df['id'] == benchmark_id]
                 ['type'].item() == "benchmark")
-        # Check if benchmark ids match in "function" data frame and "name" data
+        # Check if benchmark ids match in the given data frame and "name" data
         # frame.
         assert (benchmark_id == df_container.name_df[
             df_container.name_df['name'] == BENCHMARK]['id'].item())
