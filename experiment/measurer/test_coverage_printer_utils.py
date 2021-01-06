@@ -46,26 +46,18 @@ def test_data_frame_container_remove_redundant_duplicates(fs):
         coverage_printer_utils.extract_segments_and_functions_from_summary_json(
             summary_json_file, BENCHMARK, FUZZER, TRIAL_ID, TIMESTAMP))
 
-    # Drop duplicates using remove_redundant_duplicates().
-    df_container.remove_redundant_duplicates()
-
-    # length of data frame after calling remove_redundant_duplicates().
-    df_length = len(df_container.segment_df)
-
-    # Force dropping of duplicates again.
-    df_after_drop = df_container.segment_df.drop_duplicates(
+    # Check whether the length of the segment data frame is the same if we
+    # request pandas to drop all duplicates with the same time stamp
+    deduplicated = df_container.segment_df.drop_duplicates(
         subset=df_container.segment_df.columns.difference(['time']))
-
-    # Data frame length after for drop.
-    df_length_after_drop = len(df_after_drop)
-
-    # assert length didn't change.
-    assert (df_length - df_length_after_drop) == 0
+    old_length = len(df_container.segment_df)
+    assert old_length == len(deduplicated)
 
 
 def test_extract_segments_and_functions_from_summary_json_for_segments(fs):
-    """Tests that extract_covered_regions_from_summary_json returns the covered
-    segments and functions from summary json file."""
+    """Tests that segments and functions from summary json properly extracts the
+     information and also test for integrity of fuzzer, benchmark and function
+     ids in segment_df for a given summary json file."""
 
     summary_json_file = get_test_data_path(SUMMARY_JSON_FILE)
     fs.add_real_file(summary_json_file, read_only=False)
@@ -82,24 +74,23 @@ def test_extract_segments_and_functions_from_summary_json_for_segments(fs):
     assert len(df_container.segment_df) == NUM_COVERED_SEGMENTS_IN_COV_SUMMARY
 
     # Assert integrity for fuzzer and benchmark ids.
-    assert_integrity_for_fuzzer_ids(df_container, fuzzer_ids)
-    assert_integrity_for_benchmark_ids(df_container, benchmark_ids)
+    for fuzzer_id in fuzzer_ids:
+        integrity_check_helper(df_container, fuzzer_id, "fuzzer", FUZZER)
+
+    # Assert integrity for fuzzer ids.
+    for benchmark_id in benchmark_ids:
+        integrity_check_helper(df_container, benchmark_id, "benchmark",
+                               BENCHMARK)
 
     # Assert integrity for file ids.
     for file_id in file_ids:
-        # check all file names in the dat frame are already known.
-        assert (df_container.name_df[df_container.name_df['id'] == file_id]
-                ['type'].item() == "file")
-        # Check if file ids exactly match in "segment" data frame and "name"
-        # data frame.
-        assert (file_id == df_container.name_df[df_container.name_df['name'] ==
-                                                FILE_NAME]['id'].item())
+        integrity_check_helper(df_container, file_id, "file", FILE_NAME)
 
 
 def test_extract_segments_and_functions_from_summary_json_for_functions(fs):
     """Tests that segments and functions from summary json properly extracts the
      information and also test for integrity of fuzzer, benchmark and function
-     ids in function_df."""
+     ids in function_df for a given summary json file.."""
 
     summary_json_file = get_test_data_path(SUMMARY_JSON_FILE)
     fs.add_real_file(summary_json_file, read_only=False)
@@ -116,43 +107,38 @@ def test_extract_segments_and_functions_from_summary_json_for_functions(fs):
     assert len(df_container.segment_df) == NUM_COVERED_SEGMENTS_IN_COV_SUMMARY
     assert len(df_container.function_df) == NUM_FUNCTION_IN_COV_SUMMARY
 
-    # Assert integrity for fuzzer and benchmark ids.
-    assert_integrity_for_fuzzer_ids(df_container, fuzzer_ids)
-    assert_integrity_for_benchmark_ids(df_container, benchmark_ids)
+    # Assert integrity for fuzzer ids.
+    for fuzzer_id in fuzzer_ids:
+        integrity_check_helper(df_container, fuzzer_id, "fuzzer", FUZZER)
+
+    # Assert integrity for benchmark ids.
+    for benchmark_id in benchmark_ids:
+        integrity_check_helper(df_container, benchmark_id, "benchmark",
+                               BENCHMARK)
 
     # Assert integrity for function ids.
     for function_id in function_ids:
-        # check all function names in the data frames are already known.
-        assert (set(
-            df_container.name_df[df_container.name_df['id'] == function_id]
-            ['name'].unique()).issubset(FUNCTION_NAMES))
+        integrity_check_helper(df_container, function_id, "function",
+                               FUNCTION_NAMES)
+
+
+def integrity_check_helper(df_container, _id, _type, name):
+    """Helper function to check the integrity of resulting df_container after
+    recording segment and function information for the given id, type and
+    name."""
+
+    if _type == "function":
+        assert (set(df_container.name_df[df_container.name_df['id'] == _id]
+                    ['name'].unique()).issubset(name))
         # Check if function ids match in "function" data frame and "name" data
         # frame.
-        assert (df_container.name_df[df_container.name_df['id'] == function_id]
-                ['type'].item() == "function")
+        assert (df_container.name_df[df_container.name_df['id'] == _id]
+                ['type'].item() == _type)
+    else:
+        # Check whether the given id has the expected type.
+        assert (df_container.name_df[df_container.name_df['id'] == _id]
+                ['type'].item() == _type)
 
-
-def assert_integrity_for_fuzzer_ids(df_container, fuzzer_ids):
-    """Helper function to test the integrity of given fuzzer ids for the given
-    experiment specific df container"""
-    for fuzzer_id in fuzzer_ids:
-        # Check if type recorded for the ID id is "fuzzer".
-        assert (df_container.name_df[df_container.name_df['id'] == fuzzer_id]
-                ['type'].item() == "fuzzer")
-        # Check if fuzzer ids match in the given data frame and "name" data
-        # frame.
-        assert (fuzzer_id == df_container.name_df[df_container.name_df['name']
-                                                  == FUZZER]['id'].item())
-
-
-def assert_integrity_for_benchmark_ids(df_container, benchmark_ids):
-    """Helper function to test the integrity of given benchmark ids for the
-    given experiment specific df container"""
-    for benchmark_id in benchmark_ids:
-        # Check if type recorded for the ID id is "benchmark".
-        assert (df_container.name_df[df_container.name_df['id'] == benchmark_id]
-                ['type'].item() == "benchmark")
-        # Check if benchmark ids match in the given data frame and "name" data
-        # frame.
-        assert (benchmark_id == df_container.name_df[
-            df_container.name_df['name'] == BENCHMARK]['id'].item())
+        # Check whether the given name resolves to the expected id.
+        assert (_id == df_container.name_df[df_container.name_df['name'] ==
+                                            name]['id'].item())
