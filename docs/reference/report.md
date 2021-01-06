@@ -64,12 +64,23 @@ The table under the plots show a statistical summary of reached coverage samples
 for each fuzzer. This includes the number of trials, mean, median, standard
 deviation.
 
-Under the table we show a graphical summary pairwise statistical tests. The
-default report uses pairwise two-tailed [Mann-Whitney U
-tests](https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test), recommended
-by [Arcuri et al.](https://dl.acm.org/doi/10.1145/1985793.1985795). Green cells
-in the plot indicate that the reached coverage distribution of a given fuzzer
-pair is statistically significantly different from each other (α=0.05).
+Under the table we show a graphical summary of pairwise statistical tests. 
+
+The default report includes pairwise tests of [effect size](https://en.wikipedia.org/wiki/Effect_size)
+and [null hypothesis significance](https://en.wikipedia.org/wiki/Statistical_hypothesis_testing#Null_hypothesis_statistical_significance_testing).
+The effect size is determined using the [Vargha-Delaney A12 measure](https://www.jstor.org/stable/1165329?seq=1)
+and the null hypothesis is rejected with the two-tailed [Mann-Whitney U
+test](https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test).  
+Both methods are recommended by [Arcuri et al.](https://dl.acm.org/doi/10.1145/1985793.1985795). 
+
+- Green cells in the Vargha-Delaney A12 measure plot indicate the probability 
+  that the fuzzer in the row wil outperform the fuzzer in the column.
+  An A12 value of `0.50` indicates there is no difference between the two 
+  fuzzers being compared, and a value of `1.0` indicates a 100% probability 
+  that the fuzzer in the row will outperform the fuzzer in the column.
+- Green cells in the Mann-Whitney U plot indicate that the reached coverage 
+  (or bugs covered) distribution of a given fuzzer pair is statistically 
+  significantly different from each other (α=0.05).
 
 See how to create your own reports under [Custom analysis and
 reports]({{site.baseurl}}/developing-fuzzbench/custom_analysis_and_reports).
