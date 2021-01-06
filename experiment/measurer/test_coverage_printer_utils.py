@@ -70,7 +70,7 @@ def test_extract_segments_and_functions_from_summary_json_for_segments(fs):
     benchmark_ids = df_container.segment_df['benchmark'].unique()
     file_ids = df_container.segment_df['file'].unique()
 
-    # Assert Length is result is as expected.
+    # Assert length of resulting data frame is as expected.
     assert len(df_container.segment_df) == NUM_COVERED_SEGMENTS_IN_COV_SUMMARY
 
     # Assert integrity for fuzzer and benchmark ids.
@@ -103,8 +103,7 @@ def test_extract_segments_and_functions_from_summary_json_for_functions(fs):
     benchmark_ids = df_container.function_df['benchmark'].unique()
     function_ids = df_container.function_df['function'].unique()
 
-    # Assert Length is result is as expected.
-    assert len(df_container.segment_df) == NUM_COVERED_SEGMENTS_IN_COV_SUMMARY
+    # Assert length of resulting data frame is as expected.
     assert len(df_container.function_df) == NUM_FUNCTION_IN_COV_SUMMARY
 
     # Assert integrity for fuzzer ids.
