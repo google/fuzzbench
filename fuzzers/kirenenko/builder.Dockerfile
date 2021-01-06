@@ -39,7 +39,7 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
 
 RUN git clone https://github.com/Z3Prover/z3.git /z3 && \
 		cd /z3 && git checkout z3-4.8.7 && mkdir -p build && cd build && \
-		cmake .. && make -j && make install
+		cmake .. && make && make install
 RUN ldconfig
 
 RUN wget https://download.redis.io/releases/redis-6.0.8.tar.gz?_ga=2.106808267.950746773.1603437795-213833146.1603437795 -O /redis-6.0.8.tar.gz
@@ -47,7 +47,7 @@ RUN tar xvf /redis-6.0.8.tar.gz -C /
 RUN cd /redis-6.0.8 && make && make install
 
 RUN git clone https://github.com/redis/hiredis.git /hiredis
-RUN cd /hiredis && make -j && make install
+RUN cd /hiredis && make && make install
 
 RUN ldconfig
 
