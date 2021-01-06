@@ -126,18 +126,15 @@ def integrity_check_helper(df_container, _id, _type, name):
     recording segment and function information for the given id, type and
     name."""
 
+    # Check whether the given id has the expected type.
+    assert (df_container.name_df[df_container.name_df['id'] == _id]
+            ['type'].item() == _type)
+
     if _type == "function":
+        # check if all function names for each fucntion id is already known.
         assert (set(df_container.name_df[df_container.name_df['id'] == _id]
                     ['name'].unique()).issubset(name))
-        # Check if function ids match in "function" data frame and "name" data
-        # frame.
-        assert (df_container.name_df[df_container.name_df['id'] == _id]
-                ['type'].item() == _type)
     else:
-        # Check whether the given id has the expected type.
-        assert (df_container.name_df[df_container.name_df['id'] == _id]
-                ['type'].item() == _type)
-
         # Check whether the given name resolves to the expected id.
         assert (_id == df_container.name_df[df_container.name_df['name'] ==
                                             name]['id'].item())
