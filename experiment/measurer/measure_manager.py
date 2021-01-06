@@ -43,7 +43,7 @@ from common import utils
 from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
-from experiment.measurer import experiment_coverage_utils
+from experiment.measurer import coverage_printer_utils
 from experiment.measurer import coverage_utils
 from experiment.measurer import run_coverage
 from experiment.measurer import run_crashes
@@ -74,7 +74,7 @@ def measure_main(experiment_config):
 
     # Create data frame container for segment and function coverage info.
     experiment_specific_df_container = (
-        experiment_coverage_utils.DataFrameContainer())
+        coverage_printer_utils.DataFrameContainer())
 
     # Start the measure loop first.
     experiment = experiment_config['experiment']
@@ -450,7 +450,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         """Returns a process specific data frame with current segment and
         function coverage"""
         process_specific_df_containers.append(
-            experiment_coverage_utils.
+            coverage_printer_utils.
             extract_segments_and_functions_from_summary_json(
                 self.cov_summary_file, self.benchmark, self.fuzzer,
                 self.trial_num, time_stamp))
@@ -770,7 +770,7 @@ def main():
 
     try:
         measure_loop(experiment_name, int(sys.argv[1]),
-                     experiment_coverage_utils.DataFrameContainer())
+                     coverage_printer_utils.DataFrameContainer())
     except Exception as error:
         logs.error('Error conducting experiment.')
         raise error
