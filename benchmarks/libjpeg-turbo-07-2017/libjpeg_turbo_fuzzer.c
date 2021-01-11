@@ -15,12 +15,15 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include <memory>
+#include <memory.h>
 
 #include <turbojpeg.h>
 
-
+#ifdef KIRENENKO
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+#else
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+#endif
     tjhandle jpegDecompressor = tjInitDecompress();
 
     int width, height, subsamp, colorspace;
@@ -35,11 +38,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
         return 0;
     }
 
-    std::unique_ptr<unsigned char[]> buf(new unsigned char[width * height * 3]);
+	unsigned char* buf = (unsigned char *)malloc(width*height*3);
     tjDecompress2(
-        jpegDecompressor, data, size, buf.get(), width, 0, height, TJPF_RGB, 0);
+        jpegDecompressor, data, size, buf, width, 0, height, TJPF_RGB, 0);
 
     tjDestroy(jpegDecompressor);
+    free(buf);
 
     return 0;
 }

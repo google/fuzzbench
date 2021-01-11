@@ -30,6 +30,7 @@ jobs:
           - honggfuzz
           - lafintel
           - klee
+          - kirenenko
           - libfuzzer
           - libaflfuzzer
           - manul

@@ -26,8 +26,7 @@ RUN apt-get update && \
 
 RUN git clone https://github.com/xiph/ogg.git
 RUN git clone https://github.com/xiph/vorbis.git
-RUN wget -qO $SRC/decode_fuzzer.cc \
-    https://raw.githubusercontent.com/google/oss-fuzz/688aadaf44499ddada755562109e5ca5eb3c5662/projects/vorbis/decode_fuzzer.cc
 
 COPY build.sh $SRC/
+COPY decode_fuzzer.c $SRC/
 ADD seeds /opt/seeds

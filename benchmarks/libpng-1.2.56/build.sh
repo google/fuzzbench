@@ -17,8 +17,14 @@ tar xf libpng-1.2.56.tar.gz
 
 cd libpng-1.2.56
 ./configure
+make clean
 make -j $(nproc)
 
-$CXX $CXXFLAGS -std=c++11 $SRC/target.cc .libs/libpng12.a $FUZZER_LIB -I . -lz \
-    -o $OUT/libpng_read_fuzzer
+if [[ -z "${KIRENENKO_FUZZER}" ]]; then
+    $CXX $CXXFLAGS -std=c++11 $SRC/target.c .libs/libpng12.a $FUZZER_LIB -I . -lz \
+        -o $OUT/libpng_read_fuzzer
+else
+    $CC $CFLAGS -DKIRENENKO $SRC/target.c .libs/libpng12.a $FUZZER_LIB -I . -lz \
+        -o $OUT/$FUZZ_TARGET
+fi
 cp -r /opt/seeds $OUT/

@@ -16,3 +16,4 @@ fuzz_target: ip6-send-fuzzer
 project: openthread
 unsupported_fuzzers:
   - klee
+  - kirenenko

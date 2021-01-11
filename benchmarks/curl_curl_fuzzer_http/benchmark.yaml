@@ -18,3 +18,4 @@ fuzz_target: curl_fuzzer_http
 project: curl
 unsupported_fuzzers:
   - klee
+  - kirenenko

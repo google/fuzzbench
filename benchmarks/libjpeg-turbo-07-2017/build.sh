@@ -16,9 +16,15 @@
 cd libjpeg-turbo
 git checkout b0971e47d76fdb81270e93bbf11ff5558073350d
 autoreconf -fiv
-./configure
+./configure --disable-shared
+make clean
 make -j $(nproc)
 
-$CXX $CXXFLAGS -std=c++11 $SRC/libjpeg_turbo_fuzzer.cc -I . \
-    .libs/libturbojpeg.a $FUZZER_LIB -o $OUT/libjpeg_turbo_fuzzer
+if [[ -z "${KIRENENKO_FUZZER}" ]]; then
+    $CXX $CXXFLAGS -std=c++11 $SRC/libjpeg_turbo_fuzzer.c -I . \
+        .libs/libturbojpeg.a $FUZZER_LIB -o $OUT/libjpeg_turbo_fuzzer
+else
+    $CC $CFLAGS -DKIRENENKO $SRC/libjpeg_turbo_fuzzer.c -I . \
+        .libs/libturbojpeg.a $FUZZER_LIB -o $OUT/$FUZZ_TARGET
+fi
 cp -r /opt/seeds $OUT/

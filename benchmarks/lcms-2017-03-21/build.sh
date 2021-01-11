@@ -17,8 +17,15 @@ cd Little-CMS
 git checkout f9d75ccef0b54c9f4167d95088d4727985133c52
 ./autogen.sh
 ./configure
+make clean
 make -j $(nproc)
 
-$CXX $CXXFLAGS $SRC/cms_transform_fuzzer.cc -I include/ src/.libs/liblcms2.a \
-    $FUZZER_LIB -o $OUT/cms_transform_fuzzer
+if [[ -z "${KIRENENKO_FUZZER}" ]]; then
+    $CXX $CXXFLAGS -std=c++11 $SRC/cms_transform_fuzzer.c -I include/ src/.libs/liblcms2.a \
+        $FUZZER_LIB -o $OUT/cms_transform_fuzzer
+else
+    $CC $CFLAGS -DKIRENENKO $SRC/cms_transform_fuzzer.c -I include/ src/.libs/liblcms2.a \
+        $FUZZER_LIB -o $OUT/$FUZZ_TARGET
+fi
+
 cp -r /opt/seeds $OUT/

@@ -19,3 +19,4 @@ project: php
 unsupported_fuzzers:
   - aflcc
   - klee
+  - kirenenko
