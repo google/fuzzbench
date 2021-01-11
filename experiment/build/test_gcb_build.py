@@ -22,6 +22,7 @@ from experiment.build import gcb_build
 
 # pylint: disable=protected-access
 
+
 @mock.patch('common.new_process.execute', subprocess.CalledProcessError(1, []))
 @mock.patch('experiment.build.build_utils.store_build_logs')
 def test_build_error(mocked_store_build_logs, _):
