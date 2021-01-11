@@ -19,4 +19,3 @@ project: systemd
 unsupported_fuzzers:
   - aflcc
   - klee
-  - kirenenko

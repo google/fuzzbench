@@ -14,5 +14,3 @@
 
 fuzz_target: fuzzer
 project: re2
-unsupported_fuzzers:
-  - kirenenko
