@@ -13,6 +13,7 @@
 # limitations under the License.
 """Module for building things on Google Cloud Build for use in trials."""
 
+import subprocess
 import tempfile
 from typing import Dict
 
@@ -100,8 +101,12 @@ def _build(
         result = new_process.execute(command,
                                      write_to_stdout=False,
                                      kill_children=True,
-                                     timeout=timeout_seconds)
+                                     timeout=timeout_seconds,
+                                     expect_zero=False)
+        # TODO(metzman): Refactor code so that local_build stores logs as well.
         build_utils.store_build_logs(config_name, result)
+        if result.retcode != 0:
+            raise subprocess.CalledProcessError(result.retcode, command)
     return result
 
 
