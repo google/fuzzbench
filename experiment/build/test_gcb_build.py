@@ -31,7 +31,6 @@ FAIL_RESULT = new_process.ProcessResult(1, '', False)
 def test_build_error(mocked_store_build_logs, _):
     """Tests that on error, _build raises subprocess.CalledProcessError and
     calls store_build_logs."""
-    expected_result = None
     config_name = 'config'
     with pytest.raises(subprocess.CalledProcessError):
         gcb_build._build({}, config_name)
