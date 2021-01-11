@@ -18,18 +18,34 @@ from unittest import mock
 
 import pytest
 
+from common import new_process
 from experiment.build import gcb_build
 
 # pylint: disable=protected-access
 
+FAIL_RESULT = new_process.ProcessResult(1, '', False)
 
-@mock.patch('common.new_process.execute', subprocess.CalledProcessError(1, []))
+
+@mock.patch('common.new_process.execute', return_value=FAIL_RESULT)
 @mock.patch('experiment.build.build_utils.store_build_logs')
-def test_build_error(mocked_store_build_logs):
+def test_build_error(mocked_store_build_logs, _):
     """Tests that on error, _build raises subprocess.CalledProcessError and
     calls store_build_logs."""
     expected_result = None
     config_name = 'config'
     with pytest.raises(subprocess.CalledProcessError):
         gcb_build._build({}, config_name)
-        mocked_store_build_logs.assertCalledWith(config_name, expected_result)
+        mocked_store_build_logs.assert_called_with(config_name, expected_result)
+
+
+SUCCESS_RESULT = new_process.ProcessResult(0, '', False)
+
+
+@mock.patch('common.new_process.execute', return_value=SUCCESS_RESULT)
+@mock.patch('experiment.build.build_utils.store_build_logs')
+def test_build_success_store_logs(mocked_store_build_logs, _):
+    """Tests that on success _buiild stores build logs."""
+    expected_result = None
+    config_name = 'config'
+    gcb_build._build({}, config_name)
+    mocked_store_build_logs.assert_called_with(config_name, SUCCESS_RESULT)
