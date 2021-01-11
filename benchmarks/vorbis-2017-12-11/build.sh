@@ -38,13 +38,7 @@ make -j $(nproc)
 make install
 cd ..
 
-if [[ -z "${KIRENENKO_FUZZER}" ]]; then
-    $CXX $CXXFLAGS -std=c++11 decode_fuzzer.c \
-        -o $OUT/decode_fuzzer -L"$INSTALL_DIR/lib" -I"$INSTALL_DIR/include" \
-        $FUZZER_LIB -lvorbisfile -lvorbis -logg
-else
-    $CC $CFLAGS -DKIRENENKO decode_fuzzer.c \
-        -o $OUT/$FUZZ_TARGET -L"$INSTALL_DIR/lib" -I"$INSTALL_DIR/include" \
-        $FUZZER_LIB -lvorbisfile -lvorbis -logg
-fi
+$CXX $CXXFLAGS -std=c++11 decode_fuzzer.cc \
+    -o $OUT/decode_fuzzer -L"$INSTALL_DIR/lib" -I"$INSTALL_DIR/include" \
+    $FUZZER_LIB -lvorbisfile -lvorbis -logg
 cp -r /opt/seeds $OUT/

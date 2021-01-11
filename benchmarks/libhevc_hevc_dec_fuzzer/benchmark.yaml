@@ -10,5 +10,4 @@ unsupported_fuzzers:
   - honggfuzz_qemu
   - klee
   - weizz_qemu
-  - kirenenko
 

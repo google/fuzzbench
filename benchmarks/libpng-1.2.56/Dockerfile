@@ -31,5 +31,4 @@ RUN wget \
 RUN wget -qO $OUT/fuzz-target.dict \
     https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/png.dict
 ADD seeds /opt/seeds
-COPY target.c $SRC/
 COPY * $SRC/
