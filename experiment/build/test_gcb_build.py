@@ -35,7 +35,7 @@ def test_build_error(mocked_store_build_logs, _):
     config_name = 'config'
     with pytest.raises(subprocess.CalledProcessError):
         gcb_build._build({}, config_name)
-        mocked_store_build_logs.assert_called_with(config_name, expected_result)
+    mocked_store_build_logs.assert_called_with(config_name, FAIL_RESULT)
 
 
 SUCCESS_RESULT = new_process.ProcessResult(0, '', False)
@@ -45,7 +45,6 @@ SUCCESS_RESULT = new_process.ProcessResult(0, '', False)
 @mock.patch('experiment.build.build_utils.store_build_logs')
 def test_build_success_store_logs(mocked_store_build_logs, _):
     """Tests that on success _buiild stores build logs."""
-    expected_result = None
     config_name = 'config'
     gcb_build._build({}, config_name)
     mocked_store_build_logs.assert_called_with(config_name, SUCCESS_RESULT)
