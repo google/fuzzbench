@@ -23,8 +23,9 @@ import re
 import sys
 from typing import Optional
 
-from common import logs
+from common import benchmark_utils
 from common import fuzzer_utils
+from common import logs
 from common import utils
 from common import yaml_utils
 from database import models
@@ -247,7 +248,7 @@ def run_requested_experiment(dry_run):
     fuzzers = requested_experiment['fuzzers']
 
     benchmark_type = requested_experiment.get('type')
-    if benchmark_type == 'bug':
+    if benchmark_type == benchmark_utils.BenchmarkType.BUG.value:
         benchmarks = BUG_BENCHMARKS
     else:
         benchmarks = CODE_BENCHMARKS

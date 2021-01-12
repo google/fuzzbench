@@ -19,7 +19,7 @@ import functools
 from analysis import data_utils
 from analysis import coverage_data_utils
 from analysis import stat_tests
-from common import benchmark_config
+from common import benchmark_utils
 
 
 # pylint: disable=too-many-public-methods, too-many-arguments
@@ -71,15 +71,7 @@ class BenchmarkResults:
 
         Raises ValueError in case of invalid benchmark type in the config.
         """
-        try:
-            benchmark_type = benchmark_config.get_config(self.name).get('type')
-        except Exception:  # pylint: disable=broad-except
-            return 'code'
-        if not benchmark_type:
-            return 'code'
-        if benchmark_type not in ['code', 'bug']:
-            raise ValueError('Invalid benchmark type: ' + benchmark_type)
-        return benchmark_type
+        return benchmark_utils.get_type(self.name)
 
     @property
     def _relevant_column(self):

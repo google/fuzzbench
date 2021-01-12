@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for benchmark_utils.py"""
+from unittest import mock
+
 import pytest
 
 from common import benchmark_utils
@@ -56,3 +58,26 @@ def test_validate_name_invalid(benchmark_name):
 def test_validate_name_valid(benchmark_name):
     """Tests that validate_name returns True for a valid benchmark name."""
     assert benchmark_utils.validate_name(benchmark_name)
+
+
+@mock.patch('common.benchmark_utils.get_type', return_value='other-type')
+def test_validate_type_invalid(_):
+    """Tests that validate_type returns False for an invalid type."""
+    assert not benchmark_utils.validate_type('benchmark')
+
+
+@pytest.mark.parametrize(('benchmark_type',), [
+    ('code',),
+    ('bug',),
+])
+def test_validate_type_valid(benchmark_type):
+    """Tests that validate_type returns True for an valid type."""
+    with mock.patch('common.benchmark_utils.get_type',
+                    return_value=benchmark_type):
+        assert benchmark_utils.validate_type('benchmark')
+
+
+@mock.patch('common.benchmark_config.get_config', return_value={})
+def test_get_default_type(_):
+    """Tests that get_type returns the correct default value."""
+    assert benchmark_utils.get_type('benchmark') == 'code'

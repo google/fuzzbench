@@ -151,10 +151,23 @@ def get_directories(parent_dir):
 
 def validate_benchmarks(benchmarks: List[str]):
     """Parses and validates list of benchmarks."""
+    benchmark_types = set()
     for benchmark in set(benchmarks):
         if benchmarks.count(benchmark) > 1:
             raise Exception('Benchmark "%s" is included more than once.' %
                             benchmark)
+        # Validate benchmarks here. It's possible someone might run an
+        # experiment without going through presubmit. Better to catch an invalid
+        # benchmark than see it in production.
+        if not benchmark_utils.validate(benchmark):
+            raise Exception('Benchmark "%s" is invalid.' % benchmark)
+
+        benchmark_types.add(benchmark_utils.get_type(benchmark))
+
+    if (benchmark_utils.BenchmarkType.CODE.value in benchmark_types and
+            benchmark_utils.BenchmarkType.BUG.value in benchmark_types):
+        raise Exception(
+            'Cannot mix bug benchmarks with code coverage benchmarks.')
 
 
 def validate_fuzzer(fuzzer: str):
