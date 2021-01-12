@@ -186,7 +186,7 @@ def set_up_experiment_config_file(config):
         yaml.dump(config, experiment_config_file, default_flow_style=False)
 
 
-def check_no_local_changes():
+def check_no_uncommitted_changes():
     """Make sure that there are no uncommitted changes."""
     assert not subprocess.check_output(
         ['git', 'diff'],
@@ -208,9 +208,11 @@ def start_experiment(  # pylint: disable=too-many-arguments
         description: str = None,
         no_seeds=False,
         no_dictionaries=False,
-        oss_fuzz_corpus=False):
+        oss_fuzz_corpus=False,
+        allow_uncommitted_changes=False):
     """Start a fuzzer benchmarking experiment."""
-    check_no_local_changes()
+    if not allow_uncommitted_changes:
+        check_no_uncommitted_changes()
 
     validate_experiment_name(experiment_name)
     validate_benchmarks(benchmarks)
@@ -499,6 +501,12 @@ def main():
                         required=False,
                         default=False,
                         action='store_true')
+        parser.add_argument('-a',
+                        '--allow-uncommitted-changes',
+                        help='Skip check that no uncommited changes made.',
+                        required=False,
+                        default=False,
+                        action='store_true')
     parser.add_argument(
         '-o',
         '--oss-fuzz-corpus',
@@ -516,7 +524,8 @@ def main():
                      description=args.description,
                      no_seeds=args.no_seeds,
                      no_dictionaries=args.no_dictionaries,
-                     oss_fuzz_corpus=args.oss_fuzz_corpus)
+                     oss_fuzz_corpus=args.oss_fuzz_corpus,
+                     allow_uncommitted_changes=args.allow_uncommitted_changes)
     return 0
 
 
