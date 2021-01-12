@@ -19,16 +19,9 @@ cd libxml2
 # don't even want.
 git checkout -f v2.9.2
 ./autogen.sh
-./configure --without-python --with-threads=no \
+CCLD="$CXX $CXXFLAGS" ./configure --without-python --with-threads=no \
     --with-zlib=no --with-lzma=no
-make clean
 make -j $(nproc)
 
-if [[ -z "${KIRENENKO_FUZZER}" ]]; then
-    $CXX $CXXFLAGS -std=c++11 $SRC/target.c -I include \
-        .libs/libxml2.a $FUZZER_LIB -o $OUT/xml
-else
-    $CC $CFLAGS -DKIRENENKO $SRC/target.c -I include \
-        .libs/libxml2.a $FUZZER_LIB -o $OUT/$FUZZ_TARGET
-fi
-
+$CXX $CXXFLAGS -std=c++11 $SRC/target.cc -I include .libs/libxml2.a \
+    $FUZZER_LIB -o $OUT/xml

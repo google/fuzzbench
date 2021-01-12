@@ -14,5 +14,3 @@
 
 fuzz_target: standard_fuzzer
 project: proj4
-unsupported_fuzzers:
-  - kirenenko
