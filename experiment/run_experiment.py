@@ -316,13 +316,11 @@ class BaseDispatcher:
         raise NotImplementedError
 
 
-class LocalDispatcher:
+class LocalDispatcher(BaseDispatcher):
     """Class representing the local dispatcher."""
 
     def __init__(self, config: Dict):
-        self.config = config
-        self.instance_name = experiment_utils.get_dispatcher_instance_name(
-            config['experiment'])
+        super().__init__(config)
         self.process = None
 
     def start(self):
@@ -501,7 +499,7 @@ def main():
                         required=False,
                         default=False,
                         action='store_true')
-        parser.add_argument('-a',
+    parser.add_argument('-a',
                         '--allow-uncommitted-changes',
                         help='Skip check that no uncommited changes made.',
                         required=False,

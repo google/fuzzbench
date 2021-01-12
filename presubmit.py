@@ -68,6 +68,10 @@ _IGNORE_DIRECTORIES = [
 
 BASE_PYTEST_COMMAND = ['python3', '-m', 'pytest', '-vv']
 
+NON_DEFAULT_CHECKS = {
+    'test_changed_integrations',
+}
+
 
 def get_containing_subdir(path: Path, parent_path: Path) -> Optional[str]:
     """Return the subdirectory of |parent_path| that contains |path|.
@@ -350,33 +354,38 @@ def filter_ignored_files(paths: List[Path]) -> List[Path]:
     return [path for path in paths if not is_path_ignored(path)]
 
 
-def do_tests() -> bool:
-    """Run all unittests."""
+def pytest(_) -> bool:
+    """Run all unittests using pytest."""
     returncode = subprocess.run(BASE_PYTEST_COMMAND, check=False).returncode
     return returncode == 0
 
 
-def do_checks(file_paths: List[Path]) -> bool:
-    """Return False if any presubmit check fails."""
-    success = True
-
+def validate_fuzzers_and_benchmarks(file_paths: List[Path]):
+    """Validate fuzzers and benchmarks."""
     fuzzer_and_benchmark_validator = FuzzerAndBenchmarkValidator()
     path_valid_statuses = [
         fuzzer_and_benchmark_validator.validate(path) for path in file_paths
     ]
-    if not all(path_valid_statuses):
-        success = False
+    return all(path_valid_statuses)
 
-    checks = [license_check, yapf, lint, pytype, validate_experiment_requests]
-    for check in checks:
+
+def do_default_checks(file_paths: List[Path], checks) -> bool:
+    """Do default presubmit checks and return False if any presubmit check
+    fails."""
+    failed_checks = []
+    for check_name, check in checks.items():
+        if check_name in NON_DEFAULT_CHECKS:
+            continue
+
         if not check(file_paths):
-            print('ERROR: %s failed, see errors above.' % check.__name__)
-            success = False
+            print('ERROR: %s failed, see errors above.' % check_name)
+            failed_checks.append(check_name)
 
-    if not do_tests():
-        success = False
+    if failed_checks:
+        print('Failed checks: %s' % ' '.join(failed_checks))
+        return False
 
-    return success
+    return True
 
 
 def bool_to_returncode(success: bool) -> int:
@@ -397,6 +406,8 @@ def main() -> int:
         'format': yapf,
         'lint': lint,
         'typecheck': pytype,
+        'test': pytest,
+        'validate_fuzzers_and_benchmarks': validate_fuzzers_and_benchmarks,
         'validate_experiment_requests': validate_experiment_requests,
         'test_changed_integrations': test_changed_integrations
     }
@@ -404,7 +415,7 @@ def main() -> int:
         'command',
         choices=command_check_mapping.keys(),
         nargs='?',
-        help='The presubmit check to run. Defaults to all of them')
+        help='The presubmit check to run. Defaults to most of them.')
     parser.add_argument('--all-files',
                         action='store_true',
                         help='Run presubmit check(s) on all files',
@@ -431,7 +442,8 @@ def main() -> int:
                ' '.join(str(path) for path in relevant_files))
 
     if not args.command:
-        success = do_checks(relevant_files)
+        # Do default checks.
+        success = do_default_checks(relevant_files, command_check_mapping)
         return bool_to_returncode(success)
 
     check = command_check_mapping[args.command]
