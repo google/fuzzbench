@@ -34,7 +34,9 @@ class BenchmarkType(str, enum.Enum):
     BUG = 'bug'
 
 
+# pytype: disable=missing-parameter
 BENCHMARK_TYPE_STRS = {benchmark_type.value for benchmark_type in BenchmarkType}
+# pytype: enable=missing-parameter
 
 
 def get_fuzz_target(benchmark):
