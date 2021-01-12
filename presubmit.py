@@ -373,7 +373,7 @@ def do_default_checks(file_paths: List[Path], checks) -> bool:
     """Do default presubmit checks and return False if any presubmit check
     fails."""
     failed_checks = []
-    for check_name, check in checks.items():
+    for check_name, check in checks:
         if check_name in NON_DEFAULT_CHECKS:
             continue
 
