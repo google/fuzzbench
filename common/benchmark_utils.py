@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Code for dealing with benchmarks."""
+import enum
 import os
 import re
 
@@ -27,6 +28,17 @@ VALID_BENCHMARK_REGEX = re.compile(r'^[a-z0-9\._\-]+$')
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 
 
+class BenchmarkType(str, enum.Enum):
+    """Benchmark type."""
+    CODE = 'code'
+    BUG = 'bug'
+
+
+# pytype: disable=missing-parameter
+BENCHMARK_TYPE_STRS = {benchmark_type.value for benchmark_type in BenchmarkType}
+# pytype: enable=missing-parameter
+
+
 def get_fuzz_target(benchmark):
     """Returns the fuzz target of |benchmark|"""
     return benchmark_config.get_config(benchmark)['fuzz_target']
@@ -35,6 +47,12 @@ def get_fuzz_target(benchmark):
 def get_project(benchmark):
     """Returns the project of |benchmark|"""
     return benchmark_config.get_config(benchmark)['project']
+
+
+def get_type(benchmark):
+    """Returns the type of |benchmark|"""
+    return benchmark_config.get_config(benchmark).get('type',
+                                                      BenchmarkType.CODE.value)
 
 
 def get_runner_image_url(experiment, benchmark, fuzzer, docker_registry):
@@ -64,6 +82,16 @@ def validate_name(benchmark):
     return True
 
 
+def validate_type(benchmark):
+    """Returns True if |benchmark| has a valid type."""
+    benchmark_type = get_type(benchmark)
+    if benchmark_type not in BENCHMARK_TYPE_STRS:
+        logs.error('%s has an invalid benchmark type %s, must be one of %s',
+                   benchmark, benchmark_type, BENCHMARK_TYPE_STRS)
+        return False
+    return True
+
+
 def validate(benchmark):
     """Returns True if |benchmark| is a valid fuzzbench benchmark."""
     if not validate_name(benchmark):
@@ -73,6 +101,7 @@ def validate(benchmark):
         logs.error('%s must have a benchmark.yaml.', benchmark)
         return False
 
+    # Validate config file can be parsed.
     try:
         get_fuzz_target(benchmark)
     except yaml.parser.ParserError:
@@ -84,7 +113,8 @@ def validate(benchmark):
                    benchmark)
         return False
 
-    return True
+    # Validate type.
+    return validate_type(benchmark)
 
 
 def get_all_benchmarks():

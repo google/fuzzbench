@@ -25,9 +25,8 @@ def mock_popen_ctx_mgr(*args, **kwargs):
         yield mocked_popen
 
 
-def create_mock_popen(output=bytes('', 'utf-8'),
-                      err=bytes('', 'utf-8'),
-                      returncode=0):
+def create_mock_popen(
+        output=bytes('', 'utf-8'), err=bytes('', 'utf-8'), returncode=0):
     """Creates a mock subprocess.Popen."""
 
     class MockPopen:
