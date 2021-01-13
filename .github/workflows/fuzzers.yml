@@ -63,6 +63,7 @@ jobs:
           - aflplusplus_cmplog_variant2
           - aflplusplus_cmplog_variant3
           - aflplusplus_cmplog_new
+          - aflplusplus_notrim
 
         benchmark_type:
           - oss-fuzz

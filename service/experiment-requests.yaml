@@ -19,6 +19,16 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-01-13-aflpp
+  description: "afl++ cmplog + schedule weighting"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_notrim
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_variant
+    - aflplusplus_cmplog_variant2
+    - aflplusplus_cmplog_variant3
+
 - experiment: 2021-01-11-aflpp
   description: "afl++ cmplog + schedule weighting"
   fuzzers:
