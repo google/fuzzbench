@@ -28,6 +28,7 @@
     - aflplusplus_cmplog_variant
     - aflplusplus_cmplog_variant2
     - aflplusplus_cmplog_variant3
+    - aflplusplus_cmplog_variant2_comb
 
 - experiment: 2021-01-11-aflpp
   description: "afl++ cmplog + schedule weighting"
