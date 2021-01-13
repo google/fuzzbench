@@ -85,7 +85,6 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
 def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-many-branches,too-many-statements
     """Run fuzzer."""
     benchmark_name = os.environ['BENCHMARK']
-
     run_options = []
 
     if benchmark_name == 'bloaty_fuzz_target':

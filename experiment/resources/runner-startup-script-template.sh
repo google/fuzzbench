@@ -35,7 +35,7 @@ do
 done{% endif %}
 
 docker run \
---privileged --cpus=1 --rm \
+--privileged --cpus=1 --memory=3.5g --memory-swap=10g --rm \
 -e INSTANCE_NAME={{instance_name}} \
 -e FUZZER={{fuzzer}} \
 -e BENCHMARK={{benchmark}} \

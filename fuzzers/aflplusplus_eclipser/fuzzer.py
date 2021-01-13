@@ -29,7 +29,6 @@ def get_uninstrumented_outdir(target_directory):
 
 def build():
     """Build benchmark."""
-
     # Backup the environment.
     orig_env = os.environ.copy()
     #src = os.getenv('SRC')
@@ -96,7 +95,6 @@ def afl_worker(input_corpus, output_corpus, target_binary):
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-
     # Calculate uninstrumented binary path from the instrumented target binary.
     target_binary_directory = os.path.dirname(target_binary)
     uninstrumented_target_binary_directory = (
