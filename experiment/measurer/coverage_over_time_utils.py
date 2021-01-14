@@ -11,12 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Utility DataFrameContainer class and functions for report generation on
+"""Utility DetailedCoverageData class and functions for report generation on
 segment and function coverage for the entire experiment
 (all Fuzzer-benchmark-trial combinations)."""
 
 import os
 import hashlib
+
 import pandas as pd
 
 from common import experiment_path as exp_path
@@ -24,7 +25,7 @@ from common import filestore_utils
 from experiment.measurer import coverage_utils
 
 
-class DataFrameContainer:  # pylint: disable=too-many-instance-attributes
+class DetailedCoverageData:  # pylint: disable=too-many-instance-attributes
     """Maintains segment and function coverage information, and writes this
     information to CSV files."""
 
@@ -82,35 +83,35 @@ class DataFrameContainer:  # pylint: disable=too-many-instance-attributes
 
         self.segment_df = pd.DataFrame(self.segment_entries,
                                        columns=[
-                                           "benchmark", "fuzzer", "trial",
-                                           "time", "file", "line", "column"
+                                           'benchmark', 'fuzzer', 'trial',
+                                           'time', 'file', 'line', 'column'
                                        ])
         self.function_df = pd.DataFrame(self.function_entries,
                                         columns=[
-                                            "benchmark", "fuzzer", "trial",
-                                            "time", "function", "hits"
+                                            'benchmark', 'fuzzer', 'trial',
+                                            'time', 'function', 'hits'
                                         ])
 
         name_entries = []
         for name in self.benchmark_names:
-            name_entries.append([self.benchmark_names[name], name, "benchmark"])
+            name_entries.append([self.benchmark_names[name], name, 'benchmark'])
         for name in self.fuzzer_names:
-            name_entries.append([self.fuzzer_names[name], name, "fuzzer"])
+            name_entries.append([self.fuzzer_names[name], name, 'fuzzer'])
         for name in self.function_names:
-            name_entries.append([self.function_names[name], name, "function"])
+            name_entries.append([self.function_names[name], name, 'function'])
         for name in self.file_names:
-            name_entries.append([self.file_names[name], name, "file"])
+            name_entries.append([self.file_names[name], name, 'file'])
         self.name_df = pd.DataFrame(name_entries,
-                                    columns=["id", "name", "type"])
+                                    columns=['id', 'name', 'type'])
 
     def name_to_id(self, name):  # pylint: disable=no-self-use
         """Generates a hash for the name. This is to save disk storage"""
         return hashlib.md5(name.encode()).hexdigest()[:7]
 
-    def remove_redundant_duplicates(self):
+    def remove_redundant_entries(self):
         """Removes redundant entries in segment_df. Before calling this
-        function, for each time stamp, segment_df contains all segments that are
-        covered in this time stamp. After calling this function, for each time
+        method, for each time stamp, segment_df contains all segments that are
+        covered in this time stamp. After calling this method, for each time
         stamp, segment_df only contains segments that have been covered since
         the previous time stamp. This significantly reduces the size of the
         resulting CSV file."""
@@ -119,8 +120,8 @@ class DataFrameContainer:  # pylint: disable=too-many-instance-attributes
             self.segment_df = self.segment_df.sort_values(by=['time'])
             self.segment_df = self.segment_df.drop_duplicates(
                 subset=self.segment_df.columns.difference(['time']),
-                keep="first")
-            self.name_df = self.name_df.drop_duplicates(keep="first")
+                keep='first')
+            self.name_df = self.name_df.drop_duplicates(keep='first')
 
         except (ValueError, KeyError, IndexError):
             coverage_utils.logger.error(
@@ -133,11 +134,11 @@ class DataFrameContainer:  # pylint: disable=too-many-instance-attributes
         resolved in 'names.csv'."""
 
         # Clean and prune experiment-specific data frames.
-        self.remove_redundant_duplicates()
+        self.remove_redundant_entries()
 
-        # Write CSV files to file store.
+        # Write CSV files to filestore.
         def csv_filestore_helper(file_name, df):
-            """Helper function for storing csv files in filestore."""
+            """Helper method for storing csv files in filestore."""
             src = os.path.join(coverage_utils.get_coverage_info_dir(), 'data',
                                file_name)
             dst = exp_path.filestore(src)
@@ -154,22 +155,22 @@ def extract_segments_and_functions_from_summary_json(  # pylint: disable=too-man
     """Return a trial-specific data frame container with segment and function
      coverage information given a trial-specific coverage summary json file."""
 
-    trial_df_container = DataFrameContainer()
+    trial_coverage_df_container = DetailedCoverageData()
 
     try:
         coverage_info = coverage_utils.get_coverage_infomation(
             summary_json_file)
         # Extract coverage information for functions.
         for function_data in coverage_info['data'][0]['functions']:
-            trial_df_container.add_function_entry(benchmark, fuzzer, trial_id,
-                                                  function_data['name'],
-                                                  function_data['count'], time)
+            trial_coverage_df_container.add_function_entry(
+                benchmark, fuzzer, trial_id, function_data['name'],
+                function_data['count'], time)
 
         # Extract coverage information for segments.
         for file in coverage_info['data'][0]['files']:
             for segment in file['segments']:
                 if segment[2] != 0:  # Segment hits.
-                    trial_df_container.add_segment_entry(
+                    trial_coverage_df_container.add_segment_entry(
                         benchmark,
                         fuzzer,
                         trial_id,
@@ -181,7 +182,7 @@ def extract_segments_and_functions_from_summary_json(  # pylint: disable=too-man
     except (ValueError, KeyError, IndexError):
         coverage_utils.logger.error(
             'Failed when extracting trial-specific segment and function '
-            'information from coverage summary')
+            'information from coverage summary.')
 
-    trial_df_container.done_adding_entries()
-    return trial_df_container
+    trial_coverage_df_container.done_adding_entries()
+    return trial_coverage_df_container
