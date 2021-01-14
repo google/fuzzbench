@@ -74,13 +74,13 @@ def measure_main(experiment_config):
     logger.info('Start measuring.')
 
     # Create data frame container for segment and function coverage info.
-    experiment_specific_df_container = (
+    experiment_coverage_data_container = (
         coverage_over_time_utils.DetailedCoverageData())
 
     # Start the measure loop first.
     experiment = experiment_config['experiment']
     max_total_time = experiment_config['max_total_time']
-    measure_loop(experiment, max_total_time, experiment_specific_df_container)
+    measure_loop(experiment, max_total_time, experiment_coverage_data_container)
 
     # Clean up resources.
     gc.collect()
@@ -89,13 +89,13 @@ def measure_main(experiment_config):
     coverage_utils.generate_coverage_reports(experiment_config)
 
     # Generate segment and function coverage CSV files.
-    experiment_specific_df_container.generate_csv_files()
+    experiment_coverage_data_container.generate_csv_files()
 
     logger.info('Finished measuring.')
 
 
 def measure_loop(experiment: str, max_total_time: int,
-                 experiment_specific_df_container):
+                 experiment_coverage_data_container):
     """Continuously measure trials for |experiment|."""
     logger.info('Start measure_loop.')
 
@@ -112,7 +112,7 @@ def measure_loop(experiment: str, max_total_time: int,
 
                 if not measure_all_trials(experiment, max_total_time, pool,
                                           manager, q,
-                                          experiment_specific_df_container):
+                                          experiment_coverage_data_container):
                     # We didn't measure any trials.
                     if all_trials_ended:
                         # There are no trials producing snapshots to measure.
@@ -129,7 +129,7 @@ def measure_loop(experiment: str, max_total_time: int,
 
 def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
         experiment: str, max_total_time: int, pool, manager, q,
-        experiment_specific_df_container) -> bool:  # pylint: disable=invalid-name
+        experiment_coverage_data_container) -> bool:  # pylint: disable=invalid-name
     """Get coverage data (with coverage runs) for all active trials. Note that
     this should not be called unless multiprocessing.set_start_method('spawn')
     was called first. Otherwise it will use fork which breaks logging."""
@@ -147,7 +147,7 @@ def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
 
     trial_coverage_data_containers = (
         manager.list(  # pytype: disable=attribute-error
-            [experiment_specific_df_container]))
+            [experiment_coverage_data_container]))
 
     measure_trial_coverage_args = [
         (unmeasured_snapshot, max_cycle, q, trial_coverage_data_containers)
@@ -200,16 +200,16 @@ def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
     save_snapshots()
 
     # Concatenate all trial-coverage specific data frames and remove duplicates.
-    experiment_specific_df_container.segment_df = pd.concat(
+    experiment_coverage_data_container.segment_df = pd.concat(
         [df.segment_df for df in trial_coverage_data_containers],
         ignore_index=True)
-    experiment_specific_df_container.function_df = pd.concat(
+    experiment_coverage_data_container.function_df = pd.concat(
         [df.function_df for df in trial_coverage_data_containers],
         ignore_index=True)
-    experiment_specific_df_container.name_df = pd.concat(
+    experiment_coverage_data_container.name_df = pd.concat(
         [df.name_df for df in trial_coverage_data_containers],
         ignore_index=True)
-    experiment_specific_df_container.remove_redundant_duplicates()
+    experiment_coverage_data_container.remove_redundant_duplicates()
 
     logger.info('Done measuring all trials.')
     return snapshots_measured

@@ -38,7 +38,8 @@ class DetailedCoverageData:  # pylint: disable=too-many-instance-attributes
         self.function_names = {}
         self.file_names = {}
 
-        # Will be initialized upon done_adding_entries().
+        # Will be initialized upon
+        # generate_data_frames_after_adding_all_entries().
         self.segment_df = None
         self.function_df = None
         self.name_df = None
@@ -73,7 +74,7 @@ class DetailedCoverageData:  # pylint: disable=too-many-instance-attributes
         ]
         self.segment_entries.append(segment_entry)
 
-    def done_adding_entries(self):
+    def generate_data_frames_after_adding_all_entries(self):
         """Generates the data frames from the individual entries."""
 
         if len(self.segment_entries) == 0:
@@ -184,5 +185,5 @@ def extract_segments_and_functions_from_summary_json(  # pylint: disable=too-man
             'Failed when extracting trial-specific segment and function '
             'information from coverage summary.')
 
-    trial_coverage_df_container.done_adding_entries()
+    trial_coverage_df_container.generate_data_frames_after_adding_all_entries()
     return trial_coverage_df_container
