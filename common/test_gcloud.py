@@ -57,7 +57,7 @@ def _get_expected_create_runner_command(is_preemptible):
         '--zone=zone-a',
         '--scopes=cloud-platform',
         '--no-address',
-        '--machine-type=n1-standard-1',
+        '--machine-type=e2-standard-2',
         '--boot-disk-size=30GB',
     ]
     if is_preemptible:
@@ -164,7 +164,7 @@ def test_create_instance_template(mocked_execute):
         'create-with-container', template_name, '--no-address',
         '--image-family=cos-stable', '--image-project=cos-cloud',
         '--region=zone-a', '--scopes=cloud-platform',
-        '--machine-type=n1-standard-1', '--boot-disk-size=50GB',
+        '--machine-type=e2-standard-2', '--boot-disk-size=50GB',
         '--preemptible', '--container-image', docker_image, '--container-env',
         'ENV_VAR=value'
     ]
