@@ -160,6 +160,9 @@ optimized for doing so.
 * [Enable Cloud SQL Admin API](https://console.cloud.google.com/apis/library/sqladmin.googleapis.com)
 so that FuzzBench can connect to the database.
 
+* [Enable Secret Manager API](https://console.cloud.google.com/apis/library/secretmanager.googleapis.com)
+so that FuzzBench can store service account keys.
+
 ## Configure networking
 
 * Go to the networking page for the network you want to run your experiment in.

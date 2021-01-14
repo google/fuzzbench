@@ -16,8 +16,6 @@ import posixpath
 
 from google.cloud import secretmanager
 
-# !!! Document enabling it: https://pantheon.corp.google.com/apis/library/secretmanager.googleapis.com?project=fuzzbench
-
 
 def get_secret_manager_client():
     """Returns the secretmanager client."""

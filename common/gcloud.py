@@ -146,6 +146,6 @@ def delete_instance_template(template_name: str):
 
 
 def get_account():
-    """Get the email address of the current account being used."""
+    """Returns the email address of the current account being used."""
     return new_process.execute(['gcloud', 'config', 'get-value',
                                 'account']).output.strip()
