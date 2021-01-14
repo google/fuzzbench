@@ -27,6 +27,7 @@ import tarfile
 import time
 from typing import List, Set
 import queue
+
 import pandas as pd
 
 from sqlalchemy import func
@@ -43,7 +44,7 @@ from common import utils
 from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
-from experiment.measurer import coverage_printer_utils
+from experiment.measurer import coverage_over_time_utils
 from experiment.measurer import coverage_utils
 from experiment.measurer import run_coverage
 from experiment.measurer import run_crashes
@@ -74,7 +75,7 @@ def measure_main(experiment_config):
 
     # Create data frame container for segment and function coverage info.
     experiment_specific_df_container = (
-        coverage_printer_utils.DataFrameContainer())
+        coverage_over_time_utils.DetailedCoverageData())
 
     # Start the measure loop first.
     experiment = experiment_config['experiment']
@@ -144,12 +145,12 @@ def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
     if not unmeasured_snapshots:
         return False
 
-    process_specific_df_containers = (
+    trial_coverage_data_containers = (
         manager.list(  # pytype: disable=attribute-error
             [experiment_specific_df_container]))
 
     measure_trial_coverage_args = [
-        (unmeasured_snapshot, max_cycle, q, process_specific_df_containers)
+        (unmeasured_snapshot, max_cycle, q, trial_coverage_data_containers)
         for unmeasured_snapshot in unmeasured_snapshots
     ]
 
@@ -198,15 +199,15 @@ def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
     # If we have any snapshots left save them now.
     save_snapshots()
 
-    # Concatenate all process-specific data frames and remove duplicates.
+    # Concatenate all trial-coverage specific data frames and remove duplicates.
     experiment_specific_df_container.segment_df = pd.concat(
-        [df.segment_df for df in process_specific_df_containers],
+        [df.segment_df for df in trial_coverage_data_containers],
         ignore_index=True)
     experiment_specific_df_container.function_df = pd.concat(
-        [df.function_df for df in process_specific_df_containers],
+        [df.function_df for df in trial_coverage_data_containers],
         ignore_index=True)
     experiment_specific_df_container.name_df = pd.concat(
-        [df.name_df for df in process_specific_df_containers],
+        [df.name_df for df in trial_coverage_data_containers],
         ignore_index=True)
     experiment_specific_df_container.remove_redundant_duplicates()
 
@@ -445,12 +446,12 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             return 0
 
     def record_segment_and_function_coverage(self,
-                                             process_specific_df_containers,
+                                             trial_coverage_data_containers,
                                              time_stamp):
-        """Returns a process specific data frame with current segment and
+        """Returns a trial specific data frame with current segment and
         function coverage"""
-        process_specific_df_containers.append(
-            coverage_printer_utils.
+        trial_coverage_data_containers.append(
+            coverage_over_time_utils.
             extract_segments_and_functions_from_summary_json(
                 self.cov_summary_file, self.benchmark, self.fuzzer,
                 self.trial_num, time_stamp))
@@ -617,7 +618,7 @@ def get_fuzzer_stats(stats_filestore_path):
 
 def measure_trial_coverage(  # pylint: disable=invalid-name,too-many-arguments
         measure_req, max_cycle: int, q: multiprocessing.Queue,
-        process_specific_df_containers) -> models.Snapshot:
+        trial_coverage_data_containers) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
@@ -628,7 +629,7 @@ def measure_trial_coverage(  # pylint: disable=invalid-name,too-many-arguments
         try:
             snapshot = measure_snapshot_coverage(
                 measure_req.fuzzer, measure_req.benchmark, measure_req.trial_id,
-                cycle, process_specific_df_containers)
+                cycle, trial_coverage_data_containers)
             if not snapshot:
                 break
             q.put(snapshot)
@@ -645,7 +646,7 @@ def measure_trial_coverage(  # pylint: disable=invalid-name,too-many-arguments
 
 def measure_snapshot_coverage(  # pylint: disable=too-many-locals
         fuzzer: str, benchmark: str, trial_num: int, cycle: int,
-        process_specific_df_containers) -> models.Snapshot:
+        trial_coverage_data_containers) -> models.Snapshot:
     """Measure coverage of the snapshot for |cycle| for |trial_num| of |fuzzer|
     and |benchmark|."""
     snapshot_logger = logs.Logger('measurer',
@@ -665,7 +666,7 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
         snapshot_logger.info('Cycle: %d is unchanged.', cycle)
         regions_covered = snapshot_measurer.get_current_coverage()
         snapshot_measurer.record_segment_and_function_coverage(
-            process_specific_df_containers, this_time)
+            trial_coverage_data_containers, this_time)
         fuzzer_stats_data = snapshot_measurer.get_fuzzer_stats(cycle)
         return models.Snapshot(time=this_time,
                                trial_id=trial_num,
@@ -705,7 +706,7 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
     # Get the coverage of the new corpus units.
     regions_covered = snapshot_measurer.get_current_coverage()
     snapshot_measurer.record_segment_and_function_coverage(
-        process_specific_df_containers, this_time)
+        trial_coverage_data_containers, this_time)
     fuzzer_stats_data = snapshot_measurer.get_fuzzer_stats(cycle)
     snapshot = models.Snapshot(time=this_time,
                                trial_id=trial_num,
@@ -770,7 +771,7 @@ def main():
 
     try:
         measure_loop(experiment_name, int(sys.argv[1]),
-                     coverage_printer_utils.DataFrameContainer())
+                     coverage_over_time_utils.DetailedCoverageData())
     except Exception as error:
         logs.error('Error conducting experiment.')
         raise error

@@ -26,7 +26,7 @@ from database import models
 from database import utils as db_utils
 from experiment.build import build_utils
 from experiment.measurer import measure_manager
-from experiment.measurer import coverage_printer_utils
+from experiment.measurer import coverage_over_time_utils
 from test_libs import utils as test_utils
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -171,7 +171,7 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
 @mock.patch('multiprocessing.list')
 @mock.patch('experiment.measurer.measure_manager.measure_snapshot_coverage')
 def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
-                                _, __, mocked_process_specific_df_containers):
+                                _, __, mocked_trial_coverage_data_containers):
     """Tests that measure_trial_coverage works as expected."""
     min_cycle = 1
     max_cycle = 10
@@ -180,11 +180,11 @@ def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
 
     measure_manager.measure_trial_coverage(
         measure_request, max_cycle, mocked_queue(),
-        mocked_process_specific_df_containers)
+        mocked_trial_coverage_data_containers)
 
     expected_calls = [
         mock.call(FUZZER, BENCHMARK, TRIAL_NUM, cycle,
-                  mocked_process_specific_df_containers)
+                  mocked_trial_coverage_data_containers)
         for cycle in range(min_cycle, max_cycle + 1)
     ]
     assert mocked_measure_snapshot_coverage.call_args_list == expected_calls
@@ -200,7 +200,7 @@ def test_measure_all_trials_not_ready(mocked_rsync, mocked_ls, mocked_manager,
     assert measure_manager.measure_all_trials(
         experiment_utils.get_experiment_name(), MAX_TOTAL_TIME,
         test_utils.MockPool(), mocked_manager, queue.Queue(),
-        coverage_printer_utils.DataFrameContainer())
+        coverage_over_time_utils.DetailedCoverageData())
     assert not mocked_rsync.called
 
 
@@ -220,7 +220,7 @@ def test_measure_all_trials_no_more(mocked_directories_have_same_files,
     assert not measure_manager.measure_all_trials(
         experiment_utils.get_experiment_name(), MAX_TOTAL_TIME, mock_pool,
         mocked_manager, queue.Queue(),
-        coverage_printer_utils.DataFrameContainer())
+        coverage_over_time_utils.DetailedCoverageData())
 
 
 def test_is_cycle_unchanged_doesnt_exist(experiment):
@@ -465,8 +465,8 @@ def test_measure_loop_end(_, __, ___, ____, _____, ______, experiment_config,
     """Tests that measure_loop stops when there is nothing left to measure. In
     this test, there is nothing left to measure on the first call."""
 
-    measure_manager.measure_loop(experiment_config, 100,
-                                 coverage_printer_utils.DataFrameContainer())
+    measure_manager.measure_loop(
+        experiment_config, 100, coverage_over_time_utils.DetailedCoverageData())
     # If everything went well, we should get to this point without any
     # exceptions.
 
@@ -497,8 +497,8 @@ def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___,
         return True
 
     mocked_measure_all_trials.side_effect = mock_measure_all_trials
-    measure_manager.measure_loop(experiment_config, 100,
-                                 coverage_printer_utils.DataFrameContainer())
+    measure_manager.measure_loop(
+        experiment_config, 100, coverage_over_time_utils.DetailedCoverageData())
     assert call_count == loop_iterations
 
 
