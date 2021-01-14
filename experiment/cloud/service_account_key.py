@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Utilities for dealing with service account keys."""
+"""Script for getting a service account key for use in an experiment."""
 import sys
 import base64
 import json
