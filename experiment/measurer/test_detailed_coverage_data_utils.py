@@ -36,7 +36,7 @@ def get_test_data_path(*subpaths):
 
 
 def test_data_frame_container_remove_redundant_entries(fs):
-    """Tests that remove_redundant_duplicates removes all duplicates entries in
+    """Tests that remove_redundant_entries removes all duplicates entries in
     name_df and segment_df."""
 
     summary_json_file = get_test_data_path(SUMMARY_JSON_FILE)
