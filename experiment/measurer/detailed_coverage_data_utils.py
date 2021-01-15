@@ -38,8 +38,7 @@ class DetailedCoverageData:  # pylint: disable=too-many-instance-attributes
         self.function_names = {}
         self.file_names = {}
 
-        # Will be initialized upon
-        # generate_data_frames_after_adding_all_entries().
+        # Set by generate_data_frames_after_adding_all_entries().
         self.segment_df = None
         self.function_df = None
         self.name_df = None
@@ -156,14 +155,14 @@ def extract_segments_and_functions_from_summary_json(  # pylint: disable=too-man
     """Return a trial-specific data frame container with segment and function
      coverage information given a trial-specific coverage summary json file."""
 
-    trial_coverage_df_container = DetailedCoverageData()
+    trial_specific_coverage_data = DetailedCoverageData()
 
     try:
         coverage_info = coverage_utils.get_coverage_infomation(
             summary_json_file)
         # Extract coverage information for functions.
         for function_data in coverage_info['data'][0]['functions']:
-            trial_coverage_df_container.add_function_entry(
+            trial_specific_coverage_data.add_function_entry(
                 benchmark, fuzzer, trial_id, function_data['name'],
                 function_data['count'], time)
 
@@ -171,7 +170,7 @@ def extract_segments_and_functions_from_summary_json(  # pylint: disable=too-man
         for file in coverage_info['data'][0]['files']:
             for segment in file['segments']:
                 if segment[2] != 0:  # Segment hits.
-                    trial_coverage_df_container.add_segment_entry(
+                    trial_specific_coverage_data.add_segment_entry(
                         benchmark,
                         fuzzer,
                         trial_id,
@@ -185,5 +184,5 @@ def extract_segments_and_functions_from_summary_json(  # pylint: disable=too-man
             'Failed when extracting trial-specific segment and function '
             'information from coverage summary.')
 
-    trial_coverage_df_container.generate_data_frames_after_adding_all_entries()
-    return trial_coverage_df_container
+    trial_specific_coverage_data.generate_data_frames_after_adding_all_entries()
+    return trial_specific_coverage_data

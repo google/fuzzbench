@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for coverage_over_time_utils.py"""
+"""Tests for detailed_coverage_data_utils.py"""
 import os
 
-from experiment.measurer import coverage_over_time_utils
+from experiment.measurer import detailed_coverage_data_utils
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
 
@@ -42,16 +42,17 @@ def test_data_frame_container_remove_redundant_duplicates(fs):
     summary_json_file = get_test_data_path(SUMMARY_JSON_FILE)
     fs.add_real_file(summary_json_file, read_only=False)
 
-    df_container = (coverage_over_time_utils.
-                    extract_segments_and_functions_from_summary_json(
-                        summary_json_file, BENCHMARK, FUZZER, TRIAL_ID,
-                        TIMESTAMP))
+    trial_specific_coverage_data = (
+        detailed_coverage_data_utils.
+        extract_segments_and_functions_from_summary_json(
+            summary_json_file, BENCHMARK, FUZZER, TRIAL_ID, TIMESTAMP))
 
     # Check whether the length of the segment data frame is the same if we
     # request pandas to drop all duplicates with the same time stamp
-    deduplicated = df_container.segment_df.drop_duplicates(
-        subset=df_container.segment_df.columns.difference(['time']))
-    old_length = len(df_container.segment_df)
+    deduplicated = trial_specific_coverage_data.segment_df.drop_duplicates(
+        subset=trial_specific_coverage_data.segment_df.columns.difference(
+            ['time']))
+    old_length = len(trial_specific_coverage_data.segment_df)
     assert old_length == len(deduplicated)
 
 
@@ -63,30 +64,34 @@ def test_extract_segments_and_functions_from_summary_json_for_segments(fs):
     summary_json_file = get_test_data_path(SUMMARY_JSON_FILE)
     fs.add_real_file(summary_json_file, read_only=False)
 
-    df_container = (coverage_over_time_utils.
-                    extract_segments_and_functions_from_summary_json(
-                        summary_json_file, BENCHMARK, FUZZER, TRIAL_ID,
-                        TIMESTAMP))
+    trial_specific_coverage_data = (
+        detailed_coverage_data_utils.
+        extract_segments_and_functions_from_summary_json(
+            summary_json_file, BENCHMARK, FUZZER, TRIAL_ID, TIMESTAMP))
 
-    fuzzer_ids = df_container.segment_df['fuzzer'].unique()
-    benchmark_ids = df_container.segment_df['benchmark'].unique()
-    file_ids = df_container.segment_df['file'].unique()
+    fuzzer_ids = trial_specific_coverage_data.segment_df['fuzzer'].unique()
+    benchmark_ids = trial_specific_coverage_data.function_df[
+        'benchmark'].unique()
+    file_ids = trial_specific_coverage_data.segment_df['file'].unique()
 
     # Assert length of resulting data frame is as expected.
-    assert len(df_container.segment_df) == NUM_COVERED_SEGMENTS_IN_COV_SUMMARY
+    assert len(trial_specific_coverage_data.segment_df
+              ) == NUM_COVERED_SEGMENTS_IN_COV_SUMMARY
 
-    # Assert integrity for fuzzer benchmark ids, type and name.
+    # Assert integrity for fuzzer ids, types and names.
     for fuzzer_id in fuzzer_ids:
-        integrity_check_helper(df_container, fuzzer_id, 'fuzzer', FUZZER)
+        integrity_check_helper(trial_specific_coverage_data, fuzzer_id,
+                               'fuzzer', FUZZER)
 
-    # Assert integrity for benchmark ids, type and name.
+    # Assert integrity for benchmark ids, types and names.
     for benchmark_id in benchmark_ids:
-        integrity_check_helper(df_container, benchmark_id, 'benchmark',
-                               BENCHMARK)
+        integrity_check_helper(trial_specific_coverage_data, benchmark_id,
+                               'benchmark', BENCHMARK)
 
     # Assert integrity for file ids.
     for file_id in file_ids:
-        integrity_check_helper(df_container, file_id, 'file', FILE_NAME)
+        integrity_check_helper(trial_specific_coverage_data, file_id, 'file',
+                               FILE_NAME)
 
 
 def test_extract_segments_and_functions_from_summary_json_for_functions(fs):
@@ -97,47 +102,53 @@ def test_extract_segments_and_functions_from_summary_json_for_functions(fs):
     summary_json_file = get_test_data_path(SUMMARY_JSON_FILE)
     fs.add_real_file(summary_json_file, read_only=False)
 
-    df_container = (coverage_over_time_utils.
-                    extract_segments_and_functions_from_summary_json(
-                        summary_json_file, BENCHMARK, FUZZER, TRIAL_ID,
-                        TIMESTAMP))
+    trial_specific_coverage_data = (
+        detailed_coverage_data_utils.
+        extract_segments_and_functions_from_summary_json(
+            summary_json_file, BENCHMARK, FUZZER, TRIAL_ID, TIMESTAMP))
 
-    fuzzer_ids = df_container.function_df['fuzzer'].unique()
-    benchmark_ids = df_container.function_df['benchmark'].unique()
-    function_ids = df_container.function_df['function'].unique()
+    fuzzer_ids = trial_specific_coverage_data.function_df['fuzzer'].unique()
+    benchmark_ids = trial_specific_coverage_data.function_df[
+        'benchmark'].unique()
+    function_ids = trial_specific_coverage_data.function_df['function'].unique()
 
     # Assert length of resulting data frame is as expected.
-    assert len(df_container.function_df) == NUM_FUNCTION_IN_COV_SUMMARY
+    assert len(
+        trial_specific_coverage_data.function_df) == NUM_FUNCTION_IN_COV_SUMMARY
 
-    # Assert integrity for fuzzer ids.
+    # Assert integrity for fuzzer ids, types and names.
     for fuzzer_id in fuzzer_ids:
-        integrity_check_helper(df_container, fuzzer_id, 'fuzzer', FUZZER)
+        integrity_check_helper(trial_specific_coverage_data, fuzzer_id,
+                               'fuzzer', FUZZER)
 
-    # Assert integrity for benchmark ids.
+    # Assert integrity for benchmark ids, types and names.
     for benchmark_id in benchmark_ids:
-        integrity_check_helper(df_container, benchmark_id, 'benchmark',
-                               BENCHMARK)
+        integrity_check_helper(trial_specific_coverage_data, benchmark_id,
+                               'benchmark', BENCHMARK)
 
     # Assert integrity for function ids.
     for function_id in function_ids:
-        integrity_check_helper(df_container, function_id, 'function',
-                               FUNCTION_NAMES)
+        integrity_check_helper(trial_specific_coverage_data, function_id,
+                               'function', FUNCTION_NAMES)
 
 
-def integrity_check_helper(df_container, _id, _type, name):
-    """Helper function to check the integrity of resulting df_container after
+def integrity_check_helper(trial_specific_coverage_data, _id, _type, name):
+    """Helper function to check the integrity of resulting
+    trial_specific_coverage_data after
     recording segment and function information for the given id, type and
     name."""
 
     # Check whether the given id has the expected type.
-    assert (df_container.name_df[df_container.name_df['id'] == _id]
-            ['type'].item() == _type)
+    assert (trial_specific_coverage_data.name_df[
+        trial_specific_coverage_data.name_df['id'] == _id]['type'].item() ==
+            _type)
 
     if _type == 'function':
         # check if all function names for each function id is already known.
-        assert (set(df_container.name_df[df_container.name_df['id'] == _id]
+        assert (set(trial_specific_coverage_data.name_df[
+            trial_specific_coverage_data.name_df['id'] == _id]
                     ['name'].unique()).issubset(name))
     else:
         # Check whether the given name resolves to the expected id.
-        assert (_id == df_container.name_df[df_container.name_df['name'] ==
-                                            name]['id'].item())
+        assert (_id == trial_specific_coverage_data.name_df[
+            trial_specific_coverage_data.name_df['name'] == name]['id'].item())
