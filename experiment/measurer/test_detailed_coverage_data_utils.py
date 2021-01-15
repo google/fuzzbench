@@ -35,7 +35,7 @@ def get_test_data_path(*subpaths):
     return os.path.join(TEST_DATA_PATH, *subpaths)
 
 
-def test_data_frame_container_remove_redundant_duplicates(fs):
+def test_data_frame_container_remove_redundant_entries(fs):
     """Tests that remove_redundant_duplicates removes all duplicates entries in
     name_df and segment_df."""
 
