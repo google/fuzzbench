@@ -22,8 +22,8 @@ def get_secret_manager_client():
     return secretmanager.SecretManagerServiceClient()
 
 
-def get_parent(project):
-    """Creates the parent resource."""
+def get_parent_resource(project):
+    """Returns the parent resource."""
     return f'projects/{project}'
 
 
@@ -31,7 +31,7 @@ def _create_secret(client, secret_id, project):
     """Creates and returns a secret (identified by |secret_id| for |project|)
     using |client."""
     client = get_secret_manager_client()
-    parent = get_parent(project)
+    parent = get_parent_resource(project)
     return client.create_secret(
         request={
             'parent': parent,
@@ -59,7 +59,7 @@ def save(secret_id, value, project):
 def get(secret_id, project):
     """Returns the value of the secret identified by |secret_id| in
     |project|."""
-    parent = get_parent(project)
+    parent = get_parent_resource(project)
     name = posixpath.join(parent, 'secrets', secret_id, 'versions', '1')
     client = get_secret_manager_client()
     response = client.access_secret_version(request={'name': name})
