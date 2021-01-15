@@ -70,7 +70,7 @@ def test_extract_segments_and_functions_from_summary_json_for_segments(fs):
             summary_json_file, BENCHMARK, FUZZER, TRIAL_ID, TIMESTAMP))
 
     fuzzer_ids = trial_specific_coverage_data.segment_df['fuzzer'].unique()
-    benchmark_ids = trial_specific_coverage_data.segment_df[
+    benchmark_ids = trial_specific_coverage_data.function_df[
         'benchmark'].unique()
     file_ids = trial_specific_coverage_data.segment_df['file'].unique()
 
