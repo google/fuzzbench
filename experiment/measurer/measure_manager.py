@@ -44,7 +44,7 @@ from common import utils
 from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
-from experiment.measurer import coverage_over_time_utils
+from experiment.measurer import detailed_coverage_data_utils
 from experiment.measurer import coverage_utils
 from experiment.measurer import run_coverage
 from experiment import scheduler
@@ -73,13 +73,13 @@ def measure_main(experiment_config):
     logger.info('Start measuring.')
 
     # Create data frame container for segment and function coverage info.
-    experiment_coverage_data_container = (
-        coverage_over_time_utils.DetailedCoverageData())
+    detailed_coverage_data = (
+        detailed_coverage_data_utils.DetailedCoverageData())
 
     # Start the measure loop first.
     experiment = experiment_config['experiment']
     max_total_time = experiment_config['max_total_time']
-    measure_loop(experiment, max_total_time, experiment_coverage_data_container)
+    measure_loop(experiment, max_total_time, detailed_coverage_data)
 
     # Clean up resources.
     gc.collect()
@@ -88,13 +88,12 @@ def measure_main(experiment_config):
     coverage_utils.generate_coverage_reports(experiment_config)
 
     # Generate segment and function coverage CSV files.
-    experiment_coverage_data_container.generate_csv_files()
+    detailed_coverage_data.generate_csv_files()
 
     logger.info('Finished measuring.')
 
 
-def measure_loop(experiment: str, max_total_time: int,
-                 experiment_coverage_data_container):
+def measure_loop(experiment: str, max_total_time: int, detailed_coverage_data):
     """Continuously measure trials for |experiment|."""
     logger.info('Start measure_loop.')
 
@@ -110,8 +109,7 @@ def measure_loop(experiment: str, max_total_time: int,
                 all_trials_ended = scheduler.all_trials_ended(experiment)
 
                 if not measure_all_trials(experiment, max_total_time, pool,
-                                          manager, q,
-                                          experiment_coverage_data_container):
+                                          manager, q, detailed_coverage_data):
                     # We didn't measure any trials.
                     if all_trials_ended:
                         # There are no trials producing snapshots to measure.
@@ -128,7 +126,7 @@ def measure_loop(experiment: str, max_total_time: int,
 
 def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
         experiment: str, max_total_time: int, pool, manager, q,
-        experiment_coverage_data_container) -> bool:  # pylint: disable=invalid-name
+        detailed_coverage_data) -> bool:  # pylint: disable=invalid-name
     """Get coverage data (with coverage runs) for all active trials. Note that
     this should not be called unless multiprocessing.set_start_method('spawn')
     was called first. Otherwise it will use fork which breaks logging."""
@@ -144,12 +142,13 @@ def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
     if not unmeasured_snapshots:
         return False
 
-    trial_coverage_data_containers = (
-        manager.list(  # pytype: disable=attribute-error
-            [experiment_coverage_data_container]))
+    # Multiprocessing list to store all trial-specific detailed_coverage_data.
+    trail_specific_coverage_data_list = (
+        manager.list(  # pytype:disable=attribute-error
+            [detailed_coverage_data]))
 
     measure_trial_coverage_args = [
-        (unmeasured_snapshot, max_cycle, q, trial_coverage_data_containers)
+        (unmeasured_snapshot, max_cycle, q, trail_specific_coverage_data_list)
         for unmeasured_snapshot in unmeasured_snapshots
     ]
 
@@ -198,17 +197,17 @@ def measure_all_trials(  # pylint: disable=too-many-arguments,too-many-locals
     # If we have any snapshots left save them now.
     save_snapshots()
 
-    # Concatenate all trial-coverage specific data frames and remove duplicates.
-    experiment_coverage_data_container.segment_df = pd.concat(
-        [df.segment_df for df in trial_coverage_data_containers],
+    # Concatenate all trial-specific data frames and remove duplicates.
+    detailed_coverage_data.segment_df = pd.concat(
+        [df.segment_df for df in trail_specific_coverage_data_list],
         ignore_index=True)
-    experiment_coverage_data_container.function_df = pd.concat(
-        [df.function_df for df in trial_coverage_data_containers],
+    detailed_coverage_data.function_df = pd.concat(
+        [df.function_df for df in trail_specific_coverage_data_list],
         ignore_index=True)
-    experiment_coverage_data_container.name_df = pd.concat(
-        [df.name_df for df in trial_coverage_data_containers],
+    detailed_coverage_data.name_df = pd.concat(
+        [df.name_df for df in trail_specific_coverage_data_list],
         ignore_index=True)
-    experiment_coverage_data_container.remove_redundant_duplicates()
+    detailed_coverage_data.remove_redundant_duplicates()
 
     logger.info('Done measuring all trials.')
     return snapshots_measured
@@ -445,12 +444,12 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             return 0
 
     def record_segment_and_function_coverage(self,
-                                             trial_coverage_data_containers,
+                                             trail_specific_coverage_data_list,
                                              time_stamp):
         """Returns a trial specific data frame with current segment and
         function coverage"""
-        trial_coverage_data_containers.append(
-            coverage_over_time_utils.
+        trail_specific_coverage_data_list.append(
+            detailed_coverage_data_utils.
             extract_segments_and_functions_from_summary_json(
                 self.cov_summary_file, self.benchmark, self.fuzzer,
                 self.trial_num, time_stamp))
@@ -596,7 +595,7 @@ def get_fuzzer_stats(stats_filestore_path):
 
 def measure_trial_coverage(  # pylint: disable=invalid-name,too-many-arguments
         measure_req, max_cycle: int, q: multiprocessing.Queue,
-        trial_coverage_data_containers) -> models.Snapshot:
+        trail_specific_coverage_data_list) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
@@ -607,7 +606,7 @@ def measure_trial_coverage(  # pylint: disable=invalid-name,too-many-arguments
         try:
             snapshot = measure_snapshot_coverage(
                 measure_req.fuzzer, measure_req.benchmark, measure_req.trial_id,
-                cycle, trial_coverage_data_containers)
+                cycle, trail_specific_coverage_data_list)
             if not snapshot:
                 break
             q.put(snapshot)
@@ -624,7 +623,7 @@ def measure_trial_coverage(  # pylint: disable=invalid-name,too-many-arguments
 
 def measure_snapshot_coverage(  # pylint: disable=too-many-locals
         fuzzer: str, benchmark: str, trial_num: int, cycle: int,
-        trial_coverage_data_containers) -> models.Snapshot:
+        trail_specific_coverage_data_list) -> models.Snapshot:
     """Measure coverage of the snapshot for |cycle| for |trial_num| of |fuzzer|
     and |benchmark|."""
     snapshot_logger = logs.Logger('measurer',
@@ -644,7 +643,7 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
         snapshot_logger.info('Cycle: %d is unchanged.', cycle)
         regions_covered = snapshot_measurer.get_current_coverage()
         snapshot_measurer.record_segment_and_function_coverage(
-            trial_coverage_data_containers, this_time)
+            trail_specific_coverage_data_list, this_time)
         fuzzer_stats_data = snapshot_measurer.get_fuzzer_stats(cycle)
         return models.Snapshot(time=this_time,
                                trial_id=trial_num,
@@ -680,7 +679,7 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
     # Get the coverage of the new corpus units.
     regions_covered = snapshot_measurer.get_current_coverage()
     snapshot_measurer.record_segment_and_function_coverage(
-        trial_coverage_data_containers, this_time)
+        trail_specific_coverage_data_list, this_time)
     fuzzer_stats_data = snapshot_measurer.get_fuzzer_stats(cycle)
     snapshot = models.Snapshot(time=this_time,
                                trial_id=trial_num,
@@ -746,7 +745,7 @@ def main():
 
     try:
         measure_loop(experiment_name, int(sys.argv[1]),
-                     coverage_over_time_utils.DetailedCoverageData())
+                     detailed_coverage_data_utils.DetailedCoverageData())
     except Exception as error:
         logs.error('Error conducting experiment.')
         raise error
