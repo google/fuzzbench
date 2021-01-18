@@ -27,8 +27,12 @@ DISPATCHER_BOOT_DISK_SIZE = '4TB'
 DISPATCHER_BOOT_DISK_TYPE = 'pd-ssd'
 
 # Constants for runner specs.
-RUNNER_MACHINE_TYPE = 'n1-standard-1'
+RUNNER_MACHINE_TYPE = 'e2-standard-2'
 RUNNER_BOOT_DISK_SIZE = '30GB'
+
+# Constants for measurer worker specs.
+MEASURER_WORKER_MACHINE_TYPE = 'e2-standard-2'
+MEASURER_WORKER_BOOT_DISK_SIZE = '50GB'
 
 # Number of instances to process at once.
 INSTANCE_BATCH_SIZE = 100
@@ -126,8 +130,9 @@ def create_instance_template(template_name, docker_image, env, project, zone):
         'create-with-container', template_name, '--no-address',
         '--image-family=cos-stable', '--image-project=cos-cloud',
         '--region=%s' % zone, '--scopes=cloud-platform',
-        '--machine-type=n1-standard-1', '--boot-disk-size=50GB',
-        '--preemptible', '--container-image', docker_image
+        '--machine-type=%s' % MEASURER_WORKER_MACHINE_TYPE,
+        '--boot-disk-size=%s' % MEASURER_WORKER_BOOT_DISK_SIZE, '--preemptible',
+        '--container-image', docker_image
     ]
     for item in env.items():
         command.extend(['--container-env', '%s=%s' % item])
