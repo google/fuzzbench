@@ -54,17 +54,16 @@ jobs:
           - aflplusplus_fast_v2_branches
           - aflplusplus_coe_v2_cutoff
           - aflplusplus_coe_v2
-          - aflplusplus_cmplog
           - aflplusplus_dict2file
           - aflplusplus_introspection2
-          - aflplusplus_schedule
-          - aflplusplus_schedule_explore
-          - aflplusplus_cmplog_variant
-          - aflplusplus_cmplog_variant2
-          - aflplusplus_cmplog_variant3
-          - aflplusplus_cmplog_new
           - aflplusplus_notrim
-          - aflplusplus_cmplog_variant2_comb
+          - aflplusplus_cmplog_stable
+          - aflplusplus_cmplog_dev
+          - aflplusplus_cmplog_v1
+          - aflplusplus_cmplog_v2
+          - aflplusplus_cmplog_v3
+          - aflplusplus_cmplog_v2_comb
+          - aflplusplus_cmplog_v2_arith
 
         benchmark_type:
           - oss-fuzz
