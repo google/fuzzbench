@@ -28,15 +28,9 @@ tar -xvzf ${WORK}/src.tar.gz -C ${WORK}/src
 
 # Set up credentials locally as cloud metadata service does not scale.
 credentials_file=${WORK}/creds.json
-iam_account=`gcloud config get-value account`
-gcloud iam service-accounts keys create ${credentials_file} \
-    --iam-account=${iam_account}
+PYTHONPATH=${WORK}/src python3 \
+  ${WORK}/src/experiment/cloud/service_account_key.py $credentials_file $CLOUD_PROJECT
 
 # Start dispatcher.
 PYTHONPATH=${WORK}/src GOOGLE_APPLICATION_CREDENTIALS=${credentials_file} \
     python3 "${WORK}/src/experiment/dispatcher.py"
-
-# Revoke created credentials.
-key_id=$(cat "${credentials_file}" | jq -r ".private_key_id")
-gcloud iam service-accounts keys delete ${key_id} -q \
-    --iam-account=${iam_account}
