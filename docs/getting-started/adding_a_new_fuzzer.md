@@ -283,6 +283,18 @@ make build-$FUZZER_NAME-all
 * Run `make clear-cache` to clear docker containers' caches. Next time you build
   a project, the container will be built from scratch.
 
+## Blocklisting benchmarks
+
+You should make sure that your fuzzer builds and runs successfully against all
+benchmarks integrated in FuzzBench. This can be done locally using the
+`make test-run-$FUZZER_NAME-$BENCHMARK_NAME` command OR you can upload the
+fuzzer pull request and wait for the CI results.
+
+There can be unavoidable cases where your fuzzer cannot work with a particular
+benchmark. In those cases, you can add your fuzzer to the `unsupported_fuzzers`
+attribute of the benchmark's `benchmark.yaml` file. Check out an example
+[here](https://github.com/google/fuzzbench/blob/bd281252287ed8bdf6eef31fbd7ea268c1b17cc9/benchmarks/bloaty_fuzz_target/benchmark.yaml#L19).
+
 ## Requesting an experiment
 
 The FuzzBench service automatically runs experiments that are requested by users

@@ -14,9 +14,9 @@
 """Plotting functions."""
 
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 import numpy as np
 import Orange
-import scikit_posthocs as sp
 import seaborn as sns
 
 from analysis import data_utils
@@ -85,12 +85,24 @@ class Plotter:
         '#17becf',
     ]
 
+    # We need a manually specified marker list due to:
+    # https://github.com/mwaskom/seaborn/issues/1513
+    # We specify 20 markers for the 20 colors above.
+    _MARKER_PALETTE = [
+        'o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P',
+        'X', ',', '+', 'x', '|', '_'
+    ]
+
     def __init__(self, fuzzers, quick=False, logscale=False):
         """Instantiates plotter with list of |fuzzers|. If |quick| is True,
         creates plots faster but, with less detail.
         """
         self._fuzzer_colors = {
             fuzzer: self._COLOR_PALETTE[idx % len(self._COLOR_PALETTE)]
+            for idx, fuzzer in enumerate(sorted(fuzzers))
+        }
+        self._fuzzer_markers = {
+            fuzzer: self._MARKER_PALETTE[idx % len(self._MARKER_PALETTE)]
             for idx, fuzzer in enumerate(sorted(fuzzers))
         }
 
@@ -118,28 +130,44 @@ class Plotter:
         finally:
             plt.close(fig)
 
-    def coverage_growth_plot(self, benchmark_df, axes=None):
-        """Draws coverage growth plot on given |axes|.
+    def _common_datafame_checks(self, benchmark_df, snapshot=False):
+        """Assertions common to several plotting functions."""
+        benchmark_names = benchmark_df.benchmark.unique()
+        assert len(benchmark_names) == 1, 'Not a single benchmark data!'
+        if snapshot:
+            assert benchmark_df.time.nunique() == 1, 'Not a snapshot!'
+
+    def coverage_growth_plot(self,
+                             benchmark_df,
+                             axes=None,
+                             logscale=False,
+                             bugs=False):
+        """Draws edge (or bug) coverage growth plot on given |axes|.
 
         The fuzzer labels will be in the order of their mean coverage at the
         snapshot time (typically, the end of experiment).
         """
-        benchmark_names = benchmark_df.benchmark.unique()
-        assert len(benchmark_names) == 1, 'Not a single benchmark data!'
+        self._common_datafame_checks(benchmark_df)
+
+        column_of_interest = 'bugs_covered' if bugs else 'edges_covered'
 
         benchmark_snapshot_df = data_utils.get_benchmark_snapshot(benchmark_df)
         snapshot_time = benchmark_snapshot_df.time.unique()[0]
         fuzzer_order = data_utils.benchmark_rank_by_mean(
-            benchmark_snapshot_df).index
+            benchmark_snapshot_df, key=column_of_interest).index
 
         axes = sns.lineplot(
-            y='edges_covered',
+            y=column_of_interest,
             x='time',
             hue='fuzzer',
             hue_order=fuzzer_order,
             data=benchmark_df[benchmark_df.time <= snapshot_time],
-            ci=None if self._quick else 95,
+            ci=None if bugs or self._quick else 95,
+            estimator=np.median,
             palette=self._fuzzer_colors,
+            style='fuzzer',
+            dashes=False,
+            markers=self._fuzzer_markers,
             ax=axes)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
@@ -153,10 +181,10 @@ class Plotter:
                     loc='upper left',
                     frameon=False)
 
-        axes.set(ylabel='Edge coverage')
+        axes.set(ylabel='Bug coverage' if bugs else 'Code region coverage')
         axes.set(xlabel='Time (hour:minute)')
 
-        if self._logscale:
+        if self._logscale or logscale:
             axes.set_xscale('log')
             ticks = np.logspace(
                 # Start from the time of the first measurement.
@@ -174,39 +202,66 @@ class Plotter:
 
         sns.despine(ax=axes, trim=True)
 
-    def write_coverage_growth_plot(self, benchmark_df, image_path, wide=False):
+    def write_coverage_growth_plot(  # pylint: disable=too-many-arguments
+            self,
+            benchmark_df,
+            image_path,
+            wide=False,
+            logscale=False,
+            bugs=False):
         """Writes coverage growth plot."""
         self._write_plot_to_image(self.coverage_growth_plot,
                                   benchmark_df,
                                   image_path,
-                                  wide=wide)
+                                  wide=wide,
+                                  logscale=logscale,
+                                  bugs=bugs)
 
-    def violin_plot(self, benchmark_snapshot_df, axes=None):
-        """Draws violin plot.
+    def box_or_violin_plot(self,
+                           benchmark_snapshot_df,
+                           axes=None,
+                           bugs=False,
+                           violin=False):
+        """Draws a box or violin plot based on parameter.
 
         The fuzzer labels will be in the order of their median coverage.
+        With boxplot the median/min/max/etc is more visible than on the violin,
+        especially with distributions with high variance. It does not have
+        however violinplot's kernel density estimation.
         """
-        benchmark_names = benchmark_snapshot_df.benchmark.unique()
-        assert len(benchmark_names) == 1, 'Not a single benchmark data!'
-        assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
+        self._common_datafame_checks(benchmark_snapshot_df, snapshot=True)
+
+        column_of_interest = 'bugs_covered' if bugs else 'edges_covered'
 
         fuzzer_order = data_utils.benchmark_rank_by_median(
-            benchmark_snapshot_df).index
+            benchmark_snapshot_df, key=column_of_interest).index
 
-        # Another options is to use |boxplot| instead of |violinplot|. With
-        # boxplot the median/min/max/etc is more visible than on the violin,
-        # especially with distributions with high variance. It does not have
-        # however violinplot's kernel density estimation.
+        mean_props = {
+            'markersize': '10',
+            'markeredgecolor': 'black',
+            'markerfacecolor': 'white'
+        }
 
-        sns.violinplot(y='edges_covered',
-                       x='fuzzer',
-                       data=benchmark_snapshot_df,
-                       order=fuzzer_order,
-                       palette=self._fuzzer_colors,
-                       ax=axes)
+        common_args = dict(y=column_of_interest,
+                           x='fuzzer',
+                           data=benchmark_snapshot_df,
+                           order=fuzzer_order,
+                           ax=axes)
+
+        if violin:
+            sns.violinplot(**common_args, palette=self._fuzzer_colors)
+
+        else:
+            sns.boxplot(**common_args,
+                        palette=self._fuzzer_colors,
+                        showmeans=True,
+                        meanprops=mean_props)
+
+            sns.stripplot(**common_args, size=3, color="black", alpha=0.6)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
-        axes.set(ylabel='Reached region coverage')
+        ylabel = 'Reached {} coverage'.format('bug' if bugs else 'region')
+        axes.set(ylabel=ylabel)
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
         axes.set_xticklabels(axes.get_xticklabels(),
                              rotation=_DEFAULT_LABEL_ROTATION,
@@ -214,26 +269,36 @@ class Plotter:
 
         sns.despine(ax=axes, trim=True)
 
-    def write_violin_plot(self, benchmark_snapshot_df, image_path):
+    def write_violin_plot(self, benchmark_snapshot_df, image_path, bugs=False):
         """Writes violin plot."""
-        self._write_plot_to_image(self.violin_plot, benchmark_snapshot_df,
-                                  image_path)
+        self._write_plot_to_image(self.box_or_violin_plot,
+                                  benchmark_snapshot_df,
+                                  image_path,
+                                  bugs=bugs,
+                                  violin=True)
 
-    def distribution_plot(self, benchmark_snapshot_df, axes=None):
+    def write_box_plot(self, benchmark_snapshot_df, image_path, bugs=False):
+        """Writes box plot."""
+        self._write_plot_to_image(self.box_or_violin_plot,
+                                  benchmark_snapshot_df,
+                                  image_path,
+                                  bugs=bugs)
+
+    def distribution_plot(self, benchmark_snapshot_df, axes=None, bugs=False):
         """Draws distribution plot.
 
         The fuzzer labels will be in the order of their median coverage.
         """
-        benchmark_names = benchmark_snapshot_df.benchmark.unique()
-        assert len(benchmark_names) == 1, 'Not a single benchmark data!'
-        assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
+        self._common_datafame_checks(benchmark_snapshot_df, snapshot=True)
+
+        column_of_interest = 'bugs_covered' if bugs else 'edges_covered'
 
         fuzzers_in_order = data_utils.benchmark_rank_by_median(
-            benchmark_snapshot_df).index
+            benchmark_snapshot_df, key=column_of_interest).index
         for fuzzer in fuzzers_in_order:
             measurements_for_fuzzer = benchmark_snapshot_df[
                 benchmark_snapshot_df.fuzzer == fuzzer]
-            sns.distplot(measurements_for_fuzzer['edges_covered'],
+            sns.distplot(measurements_for_fuzzer[column_of_interest],
                          hist=False,
                          label=fuzzer,
                          color=self._fuzzer_colors[fuzzer],
@@ -242,7 +307,7 @@ class Plotter:
         axes.set_title(_formatted_title(benchmark_snapshot_df))
         axes.legend(loc='upper right', frameon=False)
 
-        axes.set(xlabel='Edge coverage')
+        axes.set(xlabel='Bug coverage' if bugs else 'Code region coverage')
         axes.set(ylabel='Density')
         axes.set_xticklabels(axes.get_xticklabels(),
                              rotation=_DEFAULT_LABEL_ROTATION,
@@ -253,19 +318,19 @@ class Plotter:
         self._write_plot_to_image(self.distribution_plot, benchmark_snapshot_df,
                                   image_path)
 
-    def ranking_plot(self, benchmark_snapshot_df, axes=None):
+    def ranking_plot(self, benchmark_snapshot_df, axes=None, bugs=False):
         """Draws ranking plot.
 
         The fuzzer labels will be in the order of their median coverage.
         """
-        benchmark_names = benchmark_snapshot_df.benchmark.unique()
-        assert len(benchmark_names) == 1, 'Not a single benchmark data!'
-        assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
+        self._common_datafame_checks(benchmark_snapshot_df, snapshot=True)
+
+        column_of_interest = 'bugs_covered' if bugs else 'edges_covered'
 
         fuzzer_order = data_utils.benchmark_rank_by_median(
-            benchmark_snapshot_df).index
+            benchmark_snapshot_df, key=column_of_interest).index
 
-        axes = sns.barplot(y='edges_covered',
+        axes = sns.barplot(y=column_of_interest,
                            x='fuzzer',
                            data=benchmark_snapshot_df,
                            order=fuzzer_order,
@@ -274,7 +339,8 @@ class Plotter:
                            ax=axes)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
-        axes.set(ylabel='Reached region coverage')
+        ylabel = 'Reached {} coverage'.format('bug' if bugs else 'region')
+        axes.set(ylabel=ylabel)
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
         axes.set_xticklabels(axes.get_xticklabels(),
                              rotation=_DEFAULT_LABEL_ROTATION,
@@ -312,32 +378,102 @@ class Plotter:
         self._write_plot_to_image(self.better_than_plot, better_than_table,
                                   image_path)
 
-    def heatmap_plot(self, p_values, axes=None, symmetric=False):
+    @staticmethod
+    def _generic_heatmap_plot(values, axes, args, shrink_cbar=0.2):
+        """Custom heatmap plot which mimics SciPy's sign_plot."""
+        args.update({'linewidths': 0.5, 'linecolor': '0.5', 'square': True})
+        # Annotate with values if less than 12 fuzzers.
+        if values.shape[0] > 11 and args.get('annot'):
+            args['annot'] = False
+
+        axis = sns.heatmap(values, ax=axes, **args)
+        axis.set_ylabel("")
+        axis.set_xlabel("")
+        label_args = {'rotation': 0, 'horizontalalignment': 'right'}
+        axis.set_yticklabels(axis.get_yticklabels(), **label_args)
+        label_args = {'rotation': 270, 'horizontalalignment': 'right'}
+        axis.set_xticklabels(axis.get_xticklabels(), **label_args)
+
+        cbar_ax = axis.collections[0].colorbar
+        cbar_ax.outline.set_linewidth(1)
+        cbar_ax.outline.set_edgecolor('0.5')
+
+        pos_bbox = cbar_ax.ax.get_position()
+        pos_bbox.y0 += shrink_cbar
+        pos_bbox.y1 -= shrink_cbar
+        cbar_ax.ax.set_position(pos_bbox)
+        return axis
+
+    def _pvalue_heatmap_plot(self, p_values, axes=None, symmetric=False):
         """Draws heatmap plot for visualizing statistical test results.
 
         If |symmetric| is enabled, it masks out the upper triangle of the
         p-value table (as it is redundant with the lower triangle).
         """
+        cmap_colors = ['#005a32', '#238b45', '#a1d99b', '#fbd7d4']
+        cmap = colors.ListedColormap(cmap_colors)
+
+        boundaries = [0, 0.001, 0.01, 0.05, 1]
+        norm = colors.BoundaryNorm(boundaries, cmap.N)
+
         if symmetric:
             mask = np.zeros_like(p_values)
             mask[np.triu_indices_from(p_values)] = True
 
         heatmap_args = {
-            'linewidths': 0.5,
-            'linecolor': '0.5',
-            'clip_on': False,
-            'square': True,
-            'cbar_ax_bbox': [0.85, 0.35, 0.04, 0.3],
-            'mask': mask if symmetric else None
+            'cmap': cmap,
+            'mask': mask if symmetric else None,
+            'fmt': ".3f",
+            'norm': norm
         }
-        sp.sign_plot(p_values, ax=axes, **heatmap_args)
+
+        axis = self._generic_heatmap_plot(p_values, axes, heatmap_args)
+
+        cbar_ax = axis.collections[0].colorbar
+        cbar_ax.set_ticklabels(['p < 0.001', 'p < 0.01', 'p < 0.05', 'NS'])
+        cbar_ax.set_ticks([0.0005, 0.005, 0.03, 0.5])
+        cbar_ax.ax.tick_params(size=0)
+        return axis
 
     def write_heatmap_plot(self, p_values, image_path, symmetric=False):
         """Writes heatmap plot."""
-        self._write_plot_to_image(self.heatmap_plot,
+        self._write_plot_to_image(self._pvalue_heatmap_plot,
                                   p_values,
                                   image_path,
                                   symmetric=symmetric)
+
+    def _a12_heatmap_plot(self, a12_values, axes=None):
+        """Draws heatmap plot for visualizing effect size results.
+        """
+
+        palette_args = {
+            'h_neg': 12,
+            'h_pos': 128,
+            's': 99,
+            'l': 47,
+            'sep': 20,
+            'as_cmap': True
+        }
+
+        rdgn = sns.diverging_palette(**palette_args)
+
+        heatmap_args = {
+            'cmap': rdgn,
+            'vmin': 0.0,
+            'vmax': 1.0,
+            'square': True,
+            'annot': True,
+            'fmt': ".2f"
+        }
+        return self._generic_heatmap_plot(a12_values,
+                                          axes,
+                                          heatmap_args,
+                                          shrink_cbar=0.1)
+
+    def write_a12_heatmap_plot(self, a12_values, image_path):
+        """Writes A12 heatmap plot."""
+        self._write_plot_to_image(self._a12_heatmap_plot, a12_values,
+                                  image_path)
 
     def write_critical_difference_plot(self, average_ranks, num_of_benchmarks,
                                        image_path):

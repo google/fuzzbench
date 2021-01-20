@@ -19,6 +19,7 @@ import functools
 from analysis import data_utils
 from analysis import coverage_data_utils
 from analysis import stat_tests
+from common import benchmark_utils
 
 
 # pylint: disable=too-many-public-methods, too-many-arguments
@@ -60,6 +61,23 @@ class BenchmarkResults:
         if filestore_path.startswith(gcs_prefix):
             filestore_path = filestore_path.replace(gcs_prefix, gcs_http_prefix)
         return filestore_path
+
+    @property
+    @functools.lru_cache()
+    def type(self):
+        """Returns the type of the benchmark, which can be 'code' or 'bug',
+        depending whether its for measuring code coverage only, or bug coverage
+        as well.
+
+        Raises ValueError in case of invalid benchmark type in the config.
+        """
+        return benchmark_utils.get_type(self.name)
+
+    @property
+    def _relevant_column(self):
+        """Returns the name of the column that will be used as the basis of
+        the analysis (e.g., 'edges_covered', or 'bugs_covered')."""
+        return 'edges_covered' if self.type == 'code' else 'bugs_covered'
 
     @property
     @functools.lru_cache()
@@ -120,6 +138,12 @@ class BenchmarkResults:
         return data_utils.benchmark_summary(self._benchmark_snapshot_df)
 
     @property
+    def bug_summary_table(self):
+        """Statistical summary table."""
+        return data_utils.benchmark_summary(self._benchmark_snapshot_df,
+                                            key='bugs_covered')
+
+    @property
     def rank_by_mean(self):
         """Fuzzer ranking by mean coverage."""
         return data_utils.benchmark_rank_by_mean(self._benchmark_snapshot_df)
@@ -139,32 +163,85 @@ class BenchmarkResults:
     def rank_by_stat_test_wins(self):
         """Fuzzer ranking by then number of pairwise statistical test wins."""
         return data_utils.benchmark_rank_by_stat_test_wins(
-            self._benchmark_snapshot_df)
+            self._benchmark_snapshot_df, key=self._relevant_column)
 
     @property
     @functools.lru_cache()
     def mann_whitney_p_values(self):
         """Mann Whitney U test result."""
-        return stat_tests.two_sided_u_test(self._benchmark_snapshot_df)
+        return stat_tests.two_sided_u_test(self._benchmark_snapshot_df,
+                                           key='edges_covered')
 
     @property
-    def mann_whitney_plot(self):
-        """Mann Whitney U test plot."""
-        plot_filename = self._prefix_with_benchmark('mann_whitney_plot.svg')
-        self._plotter.write_heatmap_plot(self.mann_whitney_p_values,
+    @functools.lru_cache()
+    def bug_mann_whitney_p_values(self):
+        """Mann Whitney U test result based on bugs covered."""
+        return stat_tests.two_sided_u_test(self._benchmark_snapshot_df,
+                                           key='bugs_covered')
+
+    @property
+    @functools.lru_cache()
+    def vargha_delaney_a12_values(self):
+        """Vargha Delaney A12 mesaure results (code coverage)."""
+        return stat_tests.a12_measure_test(self._benchmark_snapshot_df)
+
+    @property
+    @functools.lru_cache()
+    def bug_vargha_delaney_a12_values(self):
+        """Vargha Delaney A12 mesaure results (bug coverage)."""
+        return stat_tests.a12_measure_test(self._benchmark_snapshot_df,
+                                           key='bugs_covered')
+
+    def _mann_whitney_plot(self, filename, p_values):
+        """Generic Mann Whitney U test plot."""
+        plot_filename = self._prefix_with_benchmark(filename)
+        self._plotter.write_heatmap_plot(p_values,
                                          self._get_full_path(plot_filename))
         return plot_filename
 
     @property
+    def mann_whitney_plot(self):
+        """Mann Whitney U test plot (code coverage)."""
+        return self._mann_whitney_plot('mann_whitney_plot.svg',
+                                       self.mann_whitney_p_values)
+
+    @property
+    def bug_mann_whitney_plot(self):
+        """Mann Whitney U test plot (bug coverage)."""
+        return self._mann_whitney_plot('bug_mann_whitney_plot.svg',
+                                       self.bug_mann_whitney_p_values)
+
+    def _vargha_delaney_plot(self, filename, a12_values):
+        """Generic Vargha Delany A12 measure plot."""
+        plot_filename = self._prefix_with_benchmark(filename)
+        self._plotter.write_a12_heatmap_plot(a12_values,
+                                             self._get_full_path(plot_filename))
+        return plot_filename
+
+    @property
+    def vargha_delaney_plot(self):
+        """Vargha Delany A12 measure plot (code coverage)."""
+        return self._vargha_delaney_plot('varga_delaney_a12_plot.svg',
+                                         self.vargha_delaney_a12_values)
+
+    @property
+    def bug_vargha_delaney_plot(self):
+        """Vargha Delany A12 measure plot (bug coverage)."""
+        return self._vargha_delaney_plot('bug_varga_delaney_a12_plot.svg',
+                                         self.bug_vargha_delaney_a12_values)
+
+    @property
     def anova_p_value(self):
         """ANOVA test result."""
-        return stat_tests.anova_test(self._benchmark_snapshot_df)
+        return stat_tests.anova_test(self._benchmark_snapshot_df,
+                                     key=self._relevant_column)
 
     @property
     @functools.lru_cache()
     def anova_posthoc_p_values(self):
         """ANOVA posthoc test results."""
-        return stat_tests.anova_posthoc_tests(self._benchmark_snapshot_df)
+        return stat_tests.anova_posthoc_tests(self._benchmark_snapshot_df,
+                                              key=self._relevant_column)
 
     @property
     def anova_student_plot(self):
@@ -185,13 +262,15 @@ class BenchmarkResults:
     @property
     def kruskal_p_value(self):
         """Kruskal test result."""
-        return stat_tests.kruskal_test(self._benchmark_snapshot_df)
+        return stat_tests.kruskal_test(self._benchmark_snapshot_df,
+                                       key=self._relevant_column)
 
     @property
     @functools.lru_cache()
     def kruskal_posthoc_p_values(self):
         """Kruskal posthoc test results."""
-        return stat_tests.kruskal_posthoc_tests(self._benchmark_snapshot_df)
+        return stat_tests.kruskal_posthoc_tests(self._benchmark_snapshot_df,
+                                                key=self._relevant_column)
 
     @property
     def kruskal_conover_plot(self):
@@ -239,21 +318,63 @@ class BenchmarkResults:
             self._get_full_path(plot_filename))
         return plot_filename
 
+    def _coverage_growth_plot(self, filename, bugs=False, logscale=False):
+        """Coverage growth plot helper function"""
+        plot_filename = self._prefix_with_benchmark(filename)
+        self._plotter.write_coverage_growth_plot(
+            self._benchmark_df,
+            self._get_full_path(plot_filename),
+            wide=True,
+            logscale=logscale,
+            bugs=bugs)
+        return plot_filename
+
     @property
     def coverage_growth_plot(self):
-        """Coverage growth plot."""
-        plot_filename = self._prefix_with_benchmark('coverage_growth.svg')
-        self._plotter.write_coverage_growth_plot(
-            self._benchmark_df, self._get_full_path(plot_filename), wide=True)
+        """Coverage growth plot (linear scale)."""
+        return self._coverage_growth_plot('coverage_growth.svg')
+
+    @property
+    def coverage_growth_plot_logscale(self):
+        """Coverage growth plot (logscale)."""
+        return self._coverage_growth_plot('coverage_growth_logscale.svg',
+                                          logscale=True)
+
+    def _generic_violin_plot(self, filename, bugs=False):
+        """Violin plot."""
+        plot_filename = self._prefix_with_benchmark(filename)
+        self._plotter.write_violin_plot(self._benchmark_snapshot_df,
+                                        self._get_full_path(plot_filename),
+                                        bugs=bugs)
         return plot_filename
 
     @property
     def violin_plot(self):
-        """Violin plot."""
-        plot_filename = self._prefix_with_benchmark('violin.svg')
-        self._plotter.write_violin_plot(self._benchmark_snapshot_df,
-                                        self._get_full_path(plot_filename))
+        """Region coverage violin plot."""
+        return self._generic_violin_plot('violin.svg')
+
+    @property
+    def bug_violin_plot(self):
+        """Region coverage violin plot."""
+        return self._generic_violin_plot('bug_violin.svg', bugs=True)
+
+    def _generic_box_plot(self, filename, bugs=False):
+        """Generic internal boxplot."""
+        plot_filename = self._prefix_with_benchmark(filename)
+        self._plotter.write_box_plot(self._benchmark_snapshot_df,
+                                     self._get_full_path(plot_filename),
+                                     bugs=bugs)
         return plot_filename
+
+    @property
+    def box_plot(self):
+        """Region coverage boxplot."""
+        return self._generic_box_plot('boxplot.svg')
+
+    @property
+    def bug_box_plot(self):
+        """Bug coverage boxplot."""
+        return self._generic_box_plot('bug_boxplot.svg', bugs=True)
 
     @property
     def distribution_plot(self):
@@ -309,3 +430,15 @@ class BenchmarkResults:
             self.pairwise_unique_coverage_table,
             self._get_full_path(plot_filename))
         return plot_filename
+
+    @property
+    def bug_coverage_growth_plot(self):
+        """Bug coverage growth plot (linear scale)."""
+        return self._coverage_growth_plot('bug_coverage_growth_plot.svg',
+                                          bugs=True)
+
+    @property
+    def bug_coverage_growth_plot_logscale(self):
+        """Bug coverage growth plot (logscale)."""
+        return self._coverage_growth_plot(
+            'bug_coverage_growth_plot_logscale.svg', bugs=True, logscale=True)

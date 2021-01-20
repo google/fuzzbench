@@ -48,7 +48,7 @@ SHELL := /bin/bash
 VENV_ACTIVATE := .venv/bin/activate
 
 ${VENV_ACTIVATE}: requirements.txt
-	python3.7 -m venv .venv || python3 -m venv .venv
+	python3.8 -m venv .venv || python3 -m venv .venv
 	source ${VENV_ACTIVATE} && python3 -m pip install -r requirements.txt
 
 install-dependencies: ${VENV_ACTIVATE}
@@ -58,6 +58,9 @@ docker/generated.mk: docker/generate_makefile.py docker/image_types.yaml fuzzers
 
 presubmit: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py
+
+test: install-dependencies
+	source ${VENV_ACTIVATE} && python3 presubmit.py test
 
 format: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py format

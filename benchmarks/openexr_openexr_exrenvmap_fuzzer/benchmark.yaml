@@ -1,0 +1,13 @@
+commit: 42d899ad9e8431fc2f87e357f4fb0ff01a4fe378
+commit_date: 2020-07-29 20:51:00+00:00
+fuzz_target: openexr_exrenvmap_fuzzer
+project: openexr
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - honggfuzz_qemu
+  - klee
+  - lafintel
+  - weizz_qemu

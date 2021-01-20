@@ -23,8 +23,9 @@ import re
 import sys
 from typing import Optional
 
-from common import logs
+from common import benchmark_utils
 from common import fuzzer_utils
+from common import logs
 from common import utils
 from common import yaml_utils
 from database import models
@@ -47,7 +48,7 @@ EXPERIMENT_NAME_REGEX = re.compile(r'^\d{4}-\d{2}-\d{2}.*')
 
 # TODO(metzman): Stop hardcoding benchmarks and support marking benchmarks as
 # disabled using a config file in each benchmark.
-BENCHMARKS = [
+CODE_BENCHMARKS = [
     # OSS-Fuzz benchmarks.
     'bloaty_fuzz_target',
     'curl_curl_fuzzer_http',
@@ -56,6 +57,7 @@ BENCHMARKS = [
     'libxslt_xpath',
     'mbedtls_fuzz_dtlsclient',
     'openssl_x509',
+
     # Temporarily disabled due to out-of-memory issues with clang coverage.
     # 'php_php-fuzz-parser',
     'sqlite3_ossfuzz',
@@ -74,6 +76,20 @@ BENCHMARKS = [
     're2-2014-12-09',
     'vorbis-2017-12-11',
     'woff2-2016-05-06',
+]
+BUG_BENCHMARKS = [
+    'arrow_parquet-arrow-fuzz',
+    'harfbuzz_hb-subset-fuzzer',
+    'libhevc_hevc_dec_fuzzer',
+    'matio_matio_fuzzer',
+
+    # Temporarily disabled since it is extremely crashy.
+    # 'ndpi_fuzz_ndpi_reader',
+    'openexr_openexr_exrenvmap_fuzzer',
+    'openh264_decoder_fuzzer',
+    'php_php-fuzz-execute',
+    'php_php-fuzz-parser-2020-07-25',
+    'stb_stbi_read_fuzzer',
 ]
 
 
@@ -231,19 +247,27 @@ def run_requested_experiment(dry_run):
         return None
     fuzzers = requested_experiment['fuzzers']
 
+    benchmark_type = requested_experiment.get('type')
+    if benchmark_type == benchmark_utils.BenchmarkType.BUG.value:
+        benchmarks = BUG_BENCHMARKS
+    else:
+        benchmarks = CODE_BENCHMARKS
+
     logs.info('Running experiment: %s with fuzzers: %s.', experiment_name,
               ' '.join(fuzzers))
     description = _get_description(requested_experiment)
     oss_fuzz_corpus = _use_oss_fuzz_corpus(requested_experiment)
-    return _run_experiment(experiment_name, fuzzers, description,
+    return _run_experiment(experiment_name, fuzzers, benchmarks, description,
                            oss_fuzz_corpus, dry_run)
 
 
-def _run_experiment(experiment_name,
-                    fuzzers,
-                    description,
-                    oss_fuzz_corpus,
-                    dry_run=False):
+def _run_experiment(  # pylint: disable=too-many-arguments
+        experiment_name,
+        fuzzers,
+        benchmarks,
+        description,
+        oss_fuzz_corpus,
+        dry_run=False):
     """Run an experiment named |experiment_name| on |fuzzer_configs| and shut it
     down once it terminates."""
     logs.info('Starting experiment: %s.', experiment_name)
@@ -252,7 +276,7 @@ def _run_experiment(experiment_name,
         return
     run_experiment.start_experiment(experiment_name,
                                     EXPERIMENT_CONFIG_FILE,
-                                    BENCHMARKS,
+                                    benchmarks,
                                     fuzzers,
                                     description=description,
                                     oss_fuzz_corpus=oss_fuzz_corpus)

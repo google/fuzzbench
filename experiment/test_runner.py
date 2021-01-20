@@ -20,6 +20,7 @@ from unittest import mock
 
 import pytest
 
+from common import benchmark_config
 from common import filestore_utils
 from common import new_process
 from experiment import runner
@@ -41,6 +42,8 @@ def test_run_fuzzer_log_file(mocked_communicate, fs, environ):
     os.environ['FUZZ_TARGET'] = '/out/fuzz-target'
     os.environ['RUNNER_NICENESS'] = '-5'
     os.environ['FUZZER'] = 'afl'
+    os.environ['BENCHMARK'] = 'freetype2-2017'
+    fs.add_real_directory(benchmark_config.BENCHMARKS_DIR)
     fs.create_file('/out/fuzz-target')
 
     with test_utils.mock_popen_ctx_mgr() as mocked_popen:

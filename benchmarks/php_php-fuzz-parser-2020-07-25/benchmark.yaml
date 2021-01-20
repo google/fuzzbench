@@ -1,0 +1,13 @@
+commit: 8664ff7ae174c610769c36a712eeea80cc3ad933
+commit_date: 2020-07-25 01:16:00+00:00
+fuzz_target: php-fuzz-parser
+project: php
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - honggfuzz_qemu
+  - klee
+  - lafintel
+  - weizz_qemu

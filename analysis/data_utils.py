@@ -26,8 +26,15 @@ def validate_data(experiment_df):
         raise EmptyDataError('Empty experiment data.')
 
     expected_columns = {
-        'experiment', 'benchmark', 'fuzzer', 'trial_id', 'time_started',
-        'time_ended', 'time', 'edges_covered'
+        'experiment',
+        'benchmark',
+        'fuzzer',
+        'trial_id',
+        'time_started',
+        'time_ended',
+        'time',
+        'edges_covered',
+        'crash_key',
     }
     missing_columns = expected_columns.difference(experiment_df.columns)
     if missing_columns:
@@ -37,10 +44,15 @@ def validate_data(experiment_df):
 
 def drop_uninteresting_columns(experiment_df):
     """Returns table with only interesting columns."""
-    return experiment_df[[
+    columns_to_keep = [
         'benchmark', 'fuzzer', 'trial_id', 'time', 'edges_covered',
-        'experiment', 'experiment_filestore'
-    ]]
+        'bugs_covered', 'experiment', 'experiment_filestore'
+    ]
+    # Remove extra columns, keep interesting ones.
+    experiment_df = experiment_df[columns_to_keep]
+
+    # Remove duplicate rows (crash_key) and re-index.
+    return experiment_df.drop_duplicates(ignore_index=True)
 
 
 def clobber_experiments_data(df, experiments):
@@ -97,6 +109,21 @@ def filter_max_time(experiment_df, max_time):
     """Returns table with snapshots that have time less than or equal to
     |max_time|."""
     return experiment_df[experiment_df['time'] <= max_time]
+
+
+def add_bugs_covered_column(experiment_df):
+    """Return a modified experiment df in which adds a |bugs_covered| column,
+    a cumulative count of bugs covered over time."""
+    grouping1 = ['fuzzer', 'benchmark', 'trial_id', 'crash_key']
+    grouping2 = ['fuzzer', 'benchmark', 'trial_id']
+    grouping3 = ['fuzzer', 'benchmark', 'trial_id', 'time']
+    df = experiment_df.sort_values(grouping3)
+    df['firsts'] = ~df.duplicated(subset=grouping1) & ~df.crash_key.isna()
+    df['bugs_cumsum'] = df.groupby(grouping2)['firsts'].transform('cumsum')
+    df['bugs_covered'] = (
+        df.groupby(grouping3)['bugs_cumsum'].transform('max').astype(int))
+    new_df = df.drop(columns=['bugs_cumsum', 'firsts'])
+    return new_df
 
 
 # Creating "snapshots" (see README.md for definition).
@@ -162,12 +189,12 @@ def get_experiment_snapshots(experiment_df):
 # Summary tables containing statistics on the samples.
 
 
-def benchmark_summary(benchmark_snapshot_df):
+def benchmark_summary(benchmark_snapshot_df, key='edges_covered'):
     """Creates summary table for a benchmark snapshot with columns:
     |fuzzer|time||count|mean|std|min|25%|median|75%|max|
     """
     groups = benchmark_snapshot_df.groupby(['fuzzer', 'time'])
-    summary = groups['edges_covered'].describe()
+    summary = groups[key].describe()
     summary.rename(columns={'50%': 'median'}, inplace=True)
     return summary.sort_values(('median'), ascending=False)
 
@@ -184,42 +211,43 @@ def experiment_summary(experiment_snapshots_df):
 # Per-benchmark fuzzer ranking options.
 
 
-def benchmark_rank_by_mean(benchmark_snapshot_df):
+def benchmark_rank_by_mean(benchmark_snapshot_df, key='edges_covered'):
     """Returns ranking of fuzzers based on mean coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
-    means = benchmark_snapshot_df.groupby('fuzzer')['edges_covered'].mean()
+    means = benchmark_snapshot_df.groupby('fuzzer')[key].mean()
     means.rename('mean cov', inplace=True)
     return means.sort_values(ascending=False)
 
 
-def benchmark_rank_by_median(benchmark_snapshot_df):
+def benchmark_rank_by_median(benchmark_snapshot_df, key='edges_covered'):
     """Returns ranking of fuzzers based on median coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
-    medians = benchmark_snapshot_df.groupby('fuzzer')['edges_covered'].median()
+    medians = benchmark_snapshot_df.groupby('fuzzer')[key].median()
     medians.rename('median cov', inplace=True)
     return medians.sort_values(ascending=False)
 
 
-def benchmark_rank_by_average_rank(benchmark_snapshot_df):
+def benchmark_rank_by_average_rank(benchmark_snapshot_df, key='edges_covered'):
     """Ranks all coverage measurements in the snapshot across fuzzers.
 
     Returns the average rank by fuzzer.
     """
     # Make a copy of the dataframe view, because we want to add a new column.
-    measurements = benchmark_snapshot_df[['fuzzer', 'edges_covered']].copy()
-    measurements['rank'] = measurements['edges_covered'].rank()
+    measurements = benchmark_snapshot_df[['fuzzer', key]].copy()
+    measurements['rank'] = measurements[key].rank()
     avg_rank = measurements.groupby('fuzzer').mean()
     avg_rank.rename(columns={'rank': 'avg rank'}, inplace=True)
     avg_rank.sort_values('avg rank', ascending=False, inplace=True)
     return avg_rank['avg rank']
 
 
-def benchmark_rank_by_stat_test_wins(benchmark_snapshot_df):
+def benchmark_rank_by_stat_test_wins(benchmark_snapshot_df,
+                                     key='edges_covered'):
     """Carries out one-tailed statistical tests for each fuzzer pair.
 
     Returns ranking according to the number of statistical test wins.
     """
-    p_values = stat_tests.one_sided_u_test(benchmark_snapshot_df)
+    p_values = stat_tests.one_sided_u_test(benchmark_snapshot_df, key=key)
 
     # Turn "significant" p-values into 1-s.
     better_than = p_values.applymap(
@@ -232,10 +260,10 @@ def benchmark_rank_by_stat_test_wins(benchmark_snapshot_df):
     return score
 
 
-def create_better_than_table(benchmark_snapshot_df):
+def create_better_than_table(benchmark_snapshot_df, key='edges_covered'):
     """Creates table showing whether fuzzer in row is statistically
     significantly better than the fuzzer in the column."""
-    p_values = stat_tests.one_sided_u_test(benchmark_snapshot_df)
+    p_values = stat_tests.one_sided_u_test(benchmark_snapshot_df, key=key)
 
     # Turn "significant" p-values into 1-s.
     better_than = p_values.applymap(

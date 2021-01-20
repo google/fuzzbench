@@ -26,11 +26,19 @@ import yaml
 # Keep all fuzzers at same optimization level until fuzzer explicitly needs or
 # specifies it.
 DEFAULT_OPTIMIZATION_LEVEL = '-O3'
+BUGS_OPTIMIZATION_LEVEL = '-O1'
 
 LIBCPLUSPLUS_FLAG = '-stdlib=libc++'
 
 # Flags to use when using sanitizer for bug based benchmarking.
-SANITIZER_FLAGS = ['-fsanitize=address,undefined']
+SANITIZER_FLAGS = [
+    '-fsanitize=address',
+    # Matches UBSan features enabled in OSS-Fuzz.
+    # See https://github.com/google/oss-fuzz/blob/master/infra/base-images/base-builder/Dockerfile#L94
+    '-fsanitize=array-bounds,bool,builtin,enum,float-divide-by-zero,function,'
+    'integer-divide-by-zero,null,object-size,return,returns-nonnull-attribute,'
+    'shift,signed-integer-overflow,unreachable,vla-bound,vptr',
+]
 
 # Use these flags when compiling benchmark code without a sanitizer (e.g. when
 # using eclipser). This is necessary because many OSS-Fuzz targets cannot
@@ -139,9 +147,9 @@ def get_dictionary_path(target_binary):
     with open(options_file_path, 'r') as file_handle:
         try:
             config.read_file(file_handle)
-        except configparser.Error:
+        except configparser.Error as error:
             raise Exception('Failed to parse fuzzer options file: ' +
-                            options_file_path)
+                            options_file_path) from error
 
     for section in config.sections():
         for key, value in config.items(section):
@@ -173,11 +181,11 @@ def set_compilation_flags(env=None):
 
     if get_config_value('type') == 'bug':
         append_flags('CFLAGS',
-                     SANITIZER_FLAGS + [DEFAULT_OPTIMIZATION_LEVEL],
+                     SANITIZER_FLAGS + [BUGS_OPTIMIZATION_LEVEL],
                      env=env)
         append_flags('CXXFLAGS',
                      SANITIZER_FLAGS +
-                     [LIBCPLUSPLUS_FLAG, DEFAULT_OPTIMIZATION_LEVEL],
+                     [LIBCPLUSPLUS_FLAG, BUGS_OPTIMIZATION_LEVEL],
                      env=env)
     else:
         append_flags('CFLAGS',

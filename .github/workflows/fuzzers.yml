@@ -22,6 +22,7 @@ jobs:
           - aflfast
           - aflplusplus
           - aflplusplus_optimal
+          - aflplusplus_eclipser
           - aflsmart
           - entropic
           - fairfuzz
@@ -43,18 +44,26 @@ jobs:
           - libfuzzer_magicbytes
           - entropic_magicbytes
           - aflplusplus_lightweizz
-          - aflplusplus_explore
-          - aflplusplus_268c
+          - aflplusplus_introspection
           - afl_fast
           - afl_fast_v2
-          - afl_fast_branches_v2
-          - afl_nohandicap_spliceless2
-          - aflplusplus_coe_lessmem
-          - aflplusplus_fast_lessmem
           - aflplusplus_fast_v1
           - aflplusplus_fast_v2
-          - aflplusplus_fast_v2_late
-          - aflplusplus_fast_branches_v2
+          - aflplusplus_fast_v2_nolog
+          - aflplusplus_fast_v2_noperf
+          - aflplusplus_fast_v2_branches
+          - aflplusplus_coe_v2_cutoff
+          - aflplusplus_coe_v2
+          - aflplusplus_dict2file
+          - aflplusplus_introspection2
+          - aflplusplus_notrim
+          - aflplusplus_cmplog_stable
+          - aflplusplus_cmplog_dev
+          - aflplusplus_cmplog_v1
+          - aflplusplus_cmplog_v2
+          - aflplusplus_cmplog_v3
+          - aflplusplus_cmplog_v2_comb
+          - aflplusplus_cmplog_v2_arith
 
         benchmark_type:
           - oss-fuzz
@@ -78,7 +87,7 @@ jobs:
     - name: Setup Python environment
       uses: actions/setup-python@v2
       with:
-        python-version: 3.7
+        python-version: 3.8
 
     # Copied from:
     # https://docs.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions
