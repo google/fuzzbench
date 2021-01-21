@@ -191,6 +191,8 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
     if not skip:
         if not flags or not flags[0] == '-Q' and '-p' not in flags:
             flags += ['-p', 'fast']
+        if not flags or not '-l' in flags:
+            flags += ['-l', '2']
         if os.path.exists(cmplog_target_binary):
             flags += ['-c', cmplog_target_binary]
         if os.path.exists('./afl++.dict'):
