@@ -25,8 +25,8 @@ RUN apt-get update && \
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
     git checkout 3903dac1f5c0ce40965d40c956d79e46463654ea && \
-    sed -i 's/^..#define CMPLOG_/#define CMPLOG_/' src/afl-fuzz-redqueen.c \
-    sed -i 's/^..#define COMBINE/#define COMBINE/' src/afl-fuzz-redqueen.c
+    sed -i 's/15000/1/' src/afl-fuzz-one.c \
+    sed -i 's/^..#define CMPLOG_/#define CMPLOG_/' src/afl-fuzz-redqueen.c
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
