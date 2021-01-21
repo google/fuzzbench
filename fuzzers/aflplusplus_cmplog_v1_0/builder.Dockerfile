@@ -15,22 +15,23 @@
 ARG parent_image
 FROM $parent_image
 
-# Install wget to download afl_driver.cpp. Install libstdc++ to use llvm_mode.
+# Install libstdc++ to use llvm_mode.
 RUN apt-get update && \
     apt-get install -y wget libstdc++-5-dev libtool-bin automake flex bison \
                        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
                        apt-utils apt-transport-https ca-certificates
 
-ADD patch.diff /
-
-# Download and compile afl++ (v2.62d).
-# Build without Python support as we don't need it.
-# Set AFL_NO_X86 to skip flaky tests.
+# Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 82d1c3e18dd1b90fa15f7c056f94dc1a06ee345d && \
-    git apply /patch.diff && \
-    unset CFLAGS && unset CXXFLAGS && export CC=clang && \
-    AFL_NO_X86=1 PYTHON_INCLUDE=/ make && make install && \
-    make -C examples/aflpp_driver && \
-    cp examples/aflpp_driver/libAFLDriver.a /
+    git checkout 3903dac1f5c0ce40965d40c956d79e46463654ea && \
+    sed -i 's/15000/1/' src/afl-fuzz-one.c && \
+    sed -i 's/^..#define CMPLOG_/#define CMPLOG_/' src/afl-fuzz-redqueen.c
+
+# Build without Python support as we don't need it.
+# Set AFL_NO_X86 to skip flaky tests.
+RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
+    export CC=clang && export AFL_NO_X86=1 && \
+    PYTHON_INCLUDE=/ make && make install && \
+    make -C utils/aflpp_driver && \
+    cp utils/aflpp_driver/libAFLDriver.a /
