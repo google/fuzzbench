@@ -31,7 +31,6 @@ jobs:
           - lafintel
           - klee
           - libfuzzer
-          - libaflfuzzer
           - manul
           - mopt
           # Binary-only (greybox) fuzzers.
@@ -47,13 +46,6 @@ jobs:
           - aflplusplus_introspection
           - afl_fast
           - afl_fast_v2
-          - aflplusplus_fast_v1
-          - aflplusplus_fast_v2
-          - aflplusplus_fast_v2_nolog
-          - aflplusplus_fast_v2_noperf
-          - aflplusplus_fast_v2_branches
-          - aflplusplus_coe_v2_cutoff
-          - aflplusplus_coe_v2
           - aflplusplus_dict2file
           - aflplusplus_introspection2
           - aflplusplus_notrim
