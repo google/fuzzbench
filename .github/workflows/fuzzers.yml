@@ -31,7 +31,6 @@ jobs:
           - lafintel
           - klee
           - libfuzzer
-          - libaflfuzzer
           - manul
           - mopt
           # Binary-only (greybox) fuzzers.
