@@ -70,7 +70,7 @@ def rsync(  # pylint: disable=too-many-arguments
         gsutil_options=None,  # pylint: disable=unused-argument
         options=None,
         parallel=False):  # pylint: disable=unused-argument
-    """Does local_filestore rsync from |source| to |destination| using sane
+    """Does local_filestore rsync from |source| to |destination| using useful
     defaults that can be overriden."""
     # Add check to behave like `gsutil.rsync`.
     assert os.path.isdir(source), 'filestore_utils.rsync: source should be dir.'

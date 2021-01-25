@@ -71,9 +71,9 @@ def rsync(  # pylint: disable=too-many-arguments
         gsutil_options=None,
         options=None,
         parallel=False):
-    """Does gsutil rsync from |source| to |destination| using sane defaults that
-    can be overriden. Prepends any |gsutil_options| before the rsync subcommand
-    if provided."""
+    """Does gsutil rsync from |source| to |destination| using useful defaults
+    that can be overriden. Prepends any |gsutil_options| before the rsync
+    subcommand if provided."""
     command = [] if gsutil_options is None else gsutil_options
     command.append('rsync')
     if delete:

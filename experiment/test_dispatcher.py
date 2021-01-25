@@ -138,8 +138,8 @@ def test_build_images_for_trials_benchmark_fail(_, dispatcher_experiment):
                     return_value=[successful_benchmark]):
         with mock.patch('experiment.build.builder.build_all_fuzzer_benchmarks',
                         side_effect=mocked_build_all_fuzzer_benchmarks):
-            # Sanity check this test so that we know we are actually testing
-            # behavior when benchmarks fail.
+            # Check this test so that we know we are actually testing behavior
+            # when benchmarks fail.
             assert len(set(dispatcher_experiment.benchmarks)) > 1
             trials = dispatcher.build_images_for_trials(
                 dispatcher_experiment.fuzzers, dispatcher_experiment.benchmarks,

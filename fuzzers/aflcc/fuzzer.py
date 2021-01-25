@@ -295,7 +295,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
         target=run_fuzzer,
         args=(input_corpus, output_corpus,
               '{target}-original'.format(target=target_binary),
-              ['-S', 'slave-original']))
+              ['-S', 'secondary-original']))
     afl_fuzz_thread1.start()
 
     print('[run_fuzzer] Running AFL for normalized and optimized dictionary')
@@ -303,12 +303,12 @@ def fuzz(input_corpus, output_corpus, target_binary):
         target=run_fuzzer,
         args=(input_corpus, output_corpus,
               '{target}-normalized-none-nopt'.format(target=target_binary),
-              ['-S', 'slave-normalized-nopt']))
+              ['-S', 'secondary-normalized-nopt']))
     afl_fuzz_thread2.start()
 
     print('[run_fuzzer] Running AFL for FBSP and optimized dictionary')
     run_fuzzer(input_corpus,
                output_corpus,
                '{target}-no-collision-all-opt'.format(target=target_binary),
-               ['-S', 'slave-no-collision-all-opt'],
+               ['-S', 'secondary-no-collision-all-opt'],
                hide_output=False)

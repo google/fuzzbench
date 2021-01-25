@@ -30,26 +30,26 @@ COVERAGE_TOOLS = {'coverage', 'coverage_source_based'}
 
 
 def get_regular_benchmarks():
-    """Get all non-blacklisted, non-OSS-Fuzz benchmarks."""
-    return get_benchmarks_or_fuzzers('benchmarks', 'build.sh', blacklist=set())
+    """Get all non-blocklisted, non-OSS-Fuzz benchmarks."""
+    return get_benchmarks_or_fuzzers('benchmarks', 'build.sh', blocklist=set())
 
 
 def get_oss_fuzz_benchmarks():
-    """Get all non-blacklisted OSS-Fuzz benchmarks."""
+    """Get all non-blocklisted OSS-Fuzz benchmarks."""
     return get_benchmarks_or_fuzzers('benchmarks',
                                      'benchmark.yaml',
-                                     blacklist=set())
+                                     blocklist=set())
 
 
 def get_fuzzers():
-    """Get all non-blacklisted fuzzers."""
+    """Get all non-blocklisted fuzzers."""
     return get_benchmarks_or_fuzzers('fuzzers', 'fuzzer.py', COVERAGE_TOOLS)
 
 
 def get_benchmarks_or_fuzzers(benchmarks_or_fuzzers_directory, filename,
-                              blacklist):
+                              blocklist):
     """Get all fuzzers or benchmarks from |benchmarks_or_fuzzers_directory| that
-    are not in |blacklist|. Assume something is a fuzzer or benchmark if it is a
+    are not in |blocklist|. Assume something is a fuzzer or benchmark if it is a
     directory and
     |benchmarks_or_fuzzers_directory|/$FUZZER_OR_BENCHMARK_NAME/|filename|
     exists."""
@@ -57,13 +57,14 @@ def get_benchmarks_or_fuzzers(benchmarks_or_fuzzers_directory, filename,
                                          benchmarks_or_fuzzers_directory)
     return [
         directory for directory in os.listdir(parent_directory_path)
-        if (directory not in blacklist and os.path.exists(
+        if (directory not in blocklist and os.path.exists(
             os.path.join(parent_directory_path, directory, filename)))
     ]
 
 
 @pytest.mark.skipif(sys.version_info.minor > 7,
-                    reason='Test can hang on versions greater than 3.7')
+                    reason='Test can stop responding on versions greater than '
+                    '3.7')
 @mock.patch('experiment.build.builder.build_measurer')
 @mock.patch('time.sleep')
 @pytest.mark.parametrize('build_measurer_return_value', [True, False])
