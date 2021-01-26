@@ -49,16 +49,15 @@ jobs:
           - aflplusplus_dict2file
           - aflplusplus_introspection2
           - aflplusplus_notrim
-          - aflplusplus_cmplog_v1
-          - aflplusplus_cmplog_v2
-          - aflplusplus_cmplog_v3
-          - aflplusplus_cmplog_v2_comb
-          - aflplusplus_cmplog_v2_arith
-          - aflplusplus_cmplog_v1_0
-          - aflplusplus_cmplog_v1_5
-          - aflplusplus_cmplog_v1_2
-          - aflplusplus_cmplog_v2_transform
-          - aflplusplus_cmplog_v2_transform2
+          - aflplusplus_cmplog
+          - aflplusplus_cmplog12_1
+          - aflplusplus_cmplog12_2
+          - aflplusplus_cmplog123_1
+          - aflplusplus_cmplog123_2
+          - aflplusplus_cmplog123_transform_1
+          - aflplusplus_cmplog123_transform_2
+          - aflplusplus_cmplog12_transform_1
+          - aflplusplus_cmplog12_transform_2
 
         benchmark_type:
           - oss-fuzz
