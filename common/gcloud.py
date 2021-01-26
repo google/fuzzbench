@@ -86,7 +86,13 @@ def create_instance(instance_name: str,
         command.extend(
             ['--metadata-from-file', 'startup-script=' + startup_script])
 
-    return new_process.execute(command, expect_zero=False, **kwargs)[0] == 0
+    result = new_process.execute(command, expect_zero=False, **kwargs)
+    if result.retcode == 0:
+        return True
+
+    logging.info('Failed to create instance. Command: %s failed. Output: %s',
+                 command, result.output)
+    return False
 
 
 def delete_instances(instance_names: List[str], zone: str, **kwargs) -> bool:
