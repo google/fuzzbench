@@ -19,6 +19,7 @@ import subprocess
 from typing import List
 
 from common import experiment_utils
+from common import logs
 from common import new_process
 
 # Constants for dispatcher specs.
@@ -90,8 +91,8 @@ def create_instance(instance_name: str,
     if result.retcode == 0:
         return True
 
-    logging.info('Failed to create instance. Command: %s failed. Output: %s',
-                 command, result.output)
+    logs.info('Failed to create instance. Command: %s failed. Output: %s',
+              command, result.output)
     return False
 
 
