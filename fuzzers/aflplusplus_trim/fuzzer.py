@@ -34,8 +34,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     run_options = ['-p', 'fast']
 
-    os.environ['AFL_DISABLE_TRIM'] = "1"
-
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
