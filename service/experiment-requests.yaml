@@ -19,6 +19,19 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-01-27-aflpp-afl
+  description: "plain afl++ vs afl"
+  fuzzers:
+    - aflplusplus_trim
+    - afl
+
+- experiment: 2021-01-27-aflpp-bug
+  description: "afl++ trim vs notrim bug"
+  type: bug
+  fuzzers:
+    - aflplusplus_trim
+    - aflplusplus_notrim
+
 - experiment: 2021-01-25-aflpp
   description: "afl++ cmplog"
   fuzzers:
