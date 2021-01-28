@@ -48,8 +48,11 @@ def build():
 
     # SymQEMU requires an uninstrumented build as well.
     new_env = os.environ.copy()
-    utils.set_no_sanitizer_compilation_flags(new_env)
-    utils.set_default_optimization_flag(new_env)
+    cflags = utils.NO_SANITIZER_COMPAT_CFLAGS[:]
+    cflags.append(utils.DEFAULT_OPTIMIZATION_LEVEL)
+    os.environ['CFLAGS'] = ' '.join(cflags)
+    cxxflags = cflags.append(utils.LIBCPLUSPLUS_FLAG)
+    os.environ['CXXFLAGS'] = ' '.join(cxxflags)
 
     # For uninstrumented build, set the OUT and FUZZ_TARGET environment
     # variable to point to the new uninstrumented build directory.
