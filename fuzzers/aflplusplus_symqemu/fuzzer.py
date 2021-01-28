@@ -56,7 +56,7 @@ def build():
     shutil.copy('/afl/afl-fuzz', build_directory)
 
 
-def symqemu(input_corpus, output_corpus, target_binary):
+def symqemu(output_corpus, target_binary):
     """Run symqemu."""
     # We will use output_corpus as a directory where AFL and symqemu sync their
     # test cases with each other. For symqemu, we should explicitly specify an
@@ -106,7 +106,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     print('[fuzz] Running AFL worker')
     afl_worker_thread = threading.Thread(target=afl_worker, args=afl_args)
     afl_worker_thread.start()
-    symqemu_args = (input_corpus, output_corpus, uninstrumented_target_binary)
+    symqemu_args = (output_corpus, uninstrumented_target_binary)
     # ensure afl++ is running before we start symqemu
     time.sleep(60)
     print('[fuzz] Running symqemu')
