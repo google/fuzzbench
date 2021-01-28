@@ -301,13 +301,7 @@ def test_run_cov_new_units(_, mocked_execute, fs, environ):
     snapshot_measurer = measure_manager.SnapshotMeasurer(
         FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER)
     snapshot_measurer.initialize_measurement_dirs()
-    shared_units = ['shared1', 'shared2']
-    # !!! Fix
-    fs.create_file(snapshot_measurer.measured_files_path,
-                   contents='\n'.join(shared_units))
-    for unit in shared_units:
-        fs.create_file(os.path.join(snapshot_measurer.corpus_dir, unit))
-
+    # TODO(metzman): Test that already measured files are not remeasured.
     new_units = ['new1', 'new2']
     for unit in new_units:
         fs.create_file(os.path.join(snapshot_measurer.corpus_dir, unit))
