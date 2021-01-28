@@ -108,7 +108,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     afl_worker_thread.start()
     symqemu_args = (input_corpus, output_corpus, uninstrumented_target_binary)
     # ensure afl++ is running before we start symqemu
-    time.sleep(10)
+    time.sleep(60)
     print('[fuzz] Running symqemu')
     symqemu_thread = threading.Thread(target=symqemu, args=symqemu_args)
     symqemu_thread.start()
