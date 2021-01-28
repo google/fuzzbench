@@ -22,8 +22,8 @@ import os
 import pathlib
 import posixpath
 import sys
-import tempfile
 import tarfile
+import tempfile
 import time
 from typing import List, Set
 import queue
@@ -38,16 +38,16 @@ from common import filesystem
 from common import fuzzer_stats
 from common import filestore_utils
 from common import logs
-from common import utils
 from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
 from experiment.measurer import coverage_utils
+from experiment.measurer import measure_worker
 from experiment.measurer import run_coverage
 from experiment.measurer import run_crashes
 from experiment import scheduler
 
-logger = logs.Logger('measurer')  # pylint: disable=invalid-name
+logger = logs.Logger('measure_manager')  # pylint: disable=invalid-name
 
 SnapshotMeasureRequest = collections.namedtuple(
     'SnapshotMeasureRequest', ['fuzzer', 'benchmark', 'trial_id', 'cycle'])
@@ -288,36 +288,6 @@ def get_unmeasured_snapshots(experiment: str,
     return unmeasured_first_snapshots + unmeasured_latest_snapshots
 
 
-def extract_corpus(corpus_archive: str, sha_blacklist: Set[str],
-                   output_directory: str):
-    """Extract a corpus from |corpus_archive| to |output_directory|."""
-    pathlib.Path(output_directory).mkdir(exist_ok=True)
-    tar = tarfile.open(corpus_archive, 'r:gz')
-    for member in tar.getmembers():
-
-        if not member.isfile():
-            # We don't care about directory structure. So skip if not a file.
-            continue
-
-        member_file_handle = tar.extractfile(member)
-        if not member_file_handle:
-            logger.info('Failed to get handle to %s', member)
-            continue
-
-        member_contents = member_file_handle.read()
-        filename = utils.string_hash(member_contents)
-        if filename in sha_blacklist:
-            continue
-
-        file_path = os.path.join(output_directory, filename)
-
-        if os.path.exists(file_path):
-            # Don't write out duplicates in the archive.
-            continue
-
-        filesystem.write(file_path, member_contents, 'wb')
-
-
 class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-many-instance-attributes
     """Class used for storing details needed to measure coverage of a particular
     trial."""
@@ -335,10 +305,6 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         self.trial_dir = os.path.join(self.work_dir, 'experiment-folders',
                                       self.benchmark_fuzzer_trial_dir)
 
-        # Stores the files that have already been measured for a trial.
-        self.measured_files_path = os.path.join(self.report_dir,
-                                                'measured-files.txt')
-
         # Used by the runner to signal that there won't be a corpus archive for
         # a cycle because the corpus hasn't changed since the last cycle.
         self.unchanged_cycles_path = os.path.join(self.trial_dir, 'results',
@@ -354,6 +320,8 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         # Store the coverage information in json form.
         self.cov_summary_file = os.path.join(self.report_dir,
                                              'cov_summary.json')
+
+        self.state_dir = os.path.join(self.measurement_dir, 'state')
 
     def get_profraw_files(self):
         """Return generated profraw files."""
@@ -482,20 +450,21 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         unchanged_cycles = get_unchanged_cycles()
         return cycle in unchanged_cycles
 
-    def extract_corpus(self, corpus_archive_path) -> bool:
+    def extract_corpus(self, corpus_archive_path, cycle) -> bool:
         """Extract the corpus archive for this cycle if it exists."""
         if not os.path.exists(corpus_archive_path):
             self.logger.warning('Corpus not found: %s.', corpus_archive_path)
             return False
 
-        already_measured_units = self.get_measured_files()
+        already_measured_units = self.get_prev_measured_files(cycle)
         crash_blacklist = self.UNIT_BLACKLIST[self.benchmark]
         unit_blacklist = already_measured_units.union(crash_blacklist)
 
-        extract_corpus(corpus_archive_path, unit_blacklist, self.corpus_dir)
+        measure_worker.extract_corpus(corpus_archive_path, unit_blacklist,
+                                      self.corpus_dir)
         return True
 
-    def save_crash_files(self, cycle):
+    def archive_crashes(self, cycle):
         """Save crashes in per-cycle crash archive."""
         crashes_archive_name = experiment_utils.get_crashes_archive_name(cycle)
         archive_path = os.path.join(os.path.dirname(self.crashes_dir),
@@ -521,7 +490,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             return []
 
         logs.info('Saving crash files crashes for cycle %d.', cycle)
-        self.save_crash_files(cycle)
+        self.archive_crashes(cycle)
 
         logs.info('Processing crashes for cycle %d.', cycle)
         app_binary = coverage_utils.get_coverage_binary(self.benchmark)
@@ -539,20 +508,28 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
                              crash_stacktrace=crash.crash_stacktrace))
         return crashes
 
-    def update_measured_files(self):
-        """Updates the measured-files.txt file for this trial with
-        files measured in this snapshot."""
+    def save_measured_files_state(self, cycle):
+        """Saves the measured-files StateFile for this cycle with files
+        measured in this cycle and previous ones."""
         current_files = set(os.listdir(self.corpus_dir))
-        already_measured = self.get_measured_files()
-        filesystem.write(self.measured_files_path,
-                         '\n'.join(current_files.union(already_measured)))
+        previous_files = self.get_prev_measured_files(cycle)
+        all_files = current_files.union(previous_files)
 
-    def get_measured_files(self):
-        """Returns a the set of files that have been measured for this
-        snapshot's trials."""
-        if not os.path.exists(self.measured_files_path):
-            return set()
-        return set(filesystem.read(self.measured_files_path).splitlines())
+        measured_files_state = self.get_measured_files_state(cycle)
+        measured_files_state.set_current(list(all_files))
+
+        return all_files
+
+    def get_prev_measured_files(self, cycle) -> Set[str]:
+        """Returns the set of files measured in the previous cycle or an empty
+        list if this is the first cycle."""
+        measured_files_state = self.get_measured_files_state(cycle)
+        return set(measured_files_state.get_previous())
+
+    def get_measured_files_state(self, cycle):
+        """Returns the StateFile for measured-files of this cycle."""
+        return measure_worker.StateFile(
+            measure_worker.MEASURED_FILES_STATE_NAME, self.state_dir, cycle)
 
     def get_fuzzer_stats(self, cycle):
         """Get the fuzzer stats for |cycle|."""
@@ -564,6 +541,11 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         except (ValueError, json.decoder.JSONDecodeError):
             logger.error('Stats are invalid.')
             return None
+
+    def save_state(self, cycle):
+        """Save state for |cycle|."""
+        self.save_measured_files_state(cycle)
+        # TODO(metzman): Save edges/regions state.
 
 
 def get_fuzzer_stats(stats_filestore_path):
@@ -651,7 +633,7 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
         return None
 
     snapshot_measurer.initialize_measurement_dirs()
-    snapshot_measurer.extract_corpus(corpus_archive_dst)
+    snapshot_measurer.extract_corpus(corpus_archive_dst, cycle)
     # Don't keep corpus archives around longer than they need to be.
     os.remove(corpus_archive_dst)
 
@@ -672,9 +654,6 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
                                edges_covered=regions_covered,
                                fuzzer_stats=fuzzer_stats_data,
                                crashes=crashes)
-
-    # Record the new corpus files.
-    snapshot_measurer.update_measured_files()
 
     measuring_time = round(time.time() - measuring_start_time, 2)
     snapshot_logger.info('Measured cycle: %d in %f seconds.', cycle,
