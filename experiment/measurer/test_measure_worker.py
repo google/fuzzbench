@@ -14,34 +14,12 @@
 """Tests for measure_manager.py."""
 
 import os
-import shutil
-from unittest import mock
-import queue
 
 import pytest
 
-from common import experiment_utils
-from common import new_process
-from database import models
-from database import utils as db_utils
-from experiment.build import build_utils
-from experiment.measurer import measure_manager
-from test_libs import utils as test_utils
+from experiment.measurer import measure_worker
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
-
-# Arbitrary values to use in tests.
-FUZZER = 'fuzzer-a'
-BENCHMARK = 'benchmark-a'
-TRIAL_NUM = 12
-FUZZERS = ['fuzzer-a', 'fuzzer-b']
-BENCHMARKS = ['benchmark-1', 'benchmark-2']
-NUM_TRIALS = 4
-MAX_TOTAL_TIME = 100
-GIT_HASH = 'FAKE-GIT-HASH'
-CYCLE = 1
-
-SNAPSHOT_LOGGER = measure_manager.logger
 
 # pylint: disable=unused-argument,invalid-name,redefined-outer-name,protected-access
 
@@ -49,16 +27,6 @@ SNAPSHOT_LOGGER = measure_manager.logger
 def get_test_data_path(*subpaths):
     """Returns the path of |subpaths| relative to TEST_DATA_PATH."""
     return os.path.join(TEST_DATA_PATH, *subpaths)
-
-
-@pytest.fixture
-def db_experiment(experiment_config, db):
-    """A fixture that populates the database with an experiment entity with the
-    name specified in the experiment_config fixture."""
-    experiment = models.Experiment(name=experiment_config['experiment'])
-    db_utils.add_all([experiment])
-    # yield so that the experiment exists until the using function exits.
-    yield
 
 
 @pytest.mark.parametrize('archive_name',
