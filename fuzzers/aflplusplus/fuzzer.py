@@ -198,7 +198,7 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
             flags += ['-c', cmplog_target_binary]
         if os.path.exists('./afl++.dict'):
             flags += ['-x', './afl++.dict']
-        os.environ['AFL_DISABLE_TRIM'] = 1
+        os.environ['AFL_DISABLE_TRIM'] = '1'
         if 'ADDITIONAL_ARGS' in os.environ:
             flags += os.environ['ADDITIONAL_ARGS'].split(' ')
 
