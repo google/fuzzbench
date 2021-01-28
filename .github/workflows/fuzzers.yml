@@ -48,6 +48,7 @@ jobs:
           - afl_fast_v2
           - aflplusplus_dict2file
           - aflplusplus_introspection2
+          - aflplusplus_trim
           - aflplusplus_notrim
           - aflplusplus_cmplog
           - aflplusplus_cmplog12_1

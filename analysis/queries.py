@@ -34,7 +34,7 @@ def get_experiment_data(experiment_names):
         .join(Trial)\
         .join(Snapshot)\
         .join(Crash,
-              and_(Snapshot.time==Crash.time,
+              and_(Snapshot.time == Crash.time,
                    Snapshot.trial_id == Crash.trial_id), isouter=True)\
         .filter(Experiment.name.in_(experiment_names))\
         .filter(Trial.preempted.is_(False))

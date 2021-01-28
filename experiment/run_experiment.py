@@ -339,7 +339,6 @@ class LocalDispatcher(BaseDispatcher):
     def start(self):
         """Start the experiment on the dispatcher."""
         container_name = 'dispatcher-container'
-        logs.info('Started dispatcher with container name: %s', container_name)
         experiment_filestore_path = os.path.abspath(
             self.config['experiment_filestore'])
         filesystem.create_directory(experiment_filestore_path)
@@ -406,6 +405,7 @@ class LocalDispatcher(BaseDispatcher):
             '${WORK}/src/experiment/dispatcher.py || '
             '/bin/bash'  # Open shell if experiment fails.
         ]
+        logs.info('Starting dispatcher with container name: %s', container_name)
         return new_process.execute(command, write_to_stdout=True)
 
 
@@ -414,15 +414,16 @@ class GoogleCloudDispatcher(BaseDispatcher):
 
     def start(self):
         """Start the experiment on the dispatcher."""
-        logs.info('Started dispatcher with instance name: %s',
-                  self.instance_name)
         with tempfile.NamedTemporaryFile(dir=os.getcwd(),
                                          mode='w') as startup_script:
             self.write_startup_script(startup_script)
-            gcloud.create_instance(self.instance_name,
-                                   gcloud.InstanceType.DISPATCHER,
-                                   self.config,
-                                   startup_script=startup_script.name)
+            if not gcloud.create_instance(self.instance_name,
+                                          gcloud.InstanceType.DISPATCHER,
+                                          self.config,
+                                          startup_script=startup_script.name):
+                raise Exception('Failed to create dispatcher.')
+            logs.info('Started dispatcher with instance name: %s',
+                      self.instance_name)
 
     def _render_startup_script(self):
         """Renders the startup script template and returns the result as a
