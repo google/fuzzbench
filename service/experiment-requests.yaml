@@ -22,8 +22,8 @@
 - experiment: 2021-01-28-sym
   description: "eclipser vs symcc vs cmplog vs plain"
   fuzzers:
-    - aflplusplus_eclipers
-    - aflplusplus_symcc
+    - aflplusplus_eclipser
+    - aflplusplus_symqemu
     - aflplusplus_cmplog_double
     - aflplusplus_double
 
