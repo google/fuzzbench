@@ -15,10 +15,6 @@
 ARG parent_image
 FROM $parent_image
 
-RUN mkdir /symqemu /symcc
-RUN git clone https://github.com/eurecom-s3/symcc --depth 1 /symcc/src
-RUN git clone https://github.com/eurecom-s3/symcc --depth 1 /symqemu/src/
-
 # Download and compile AFL v2.56b.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/google/AFL.git /afl && \
@@ -71,6 +67,10 @@ RUN mkdir /llvm && \
   cd /llvm && \
   rm -rf src build
 
+RUN git clone https://github.com/eurecom-s3/symcc --depth 1 /symcc/src && \
+    cd /symcc/src && \
+    git submodule init && \
+    git submodule update
 
 RUN mkdir /symcc/build && \
     cd /symcc/build && \
@@ -84,6 +84,7 @@ RUN mkdir /symcc/build && \
     cd /symcc/src && \
     cargo install --path util/symcc_fuzzing_helper
 
+RUN git clone https://github.com/eurecom-s3/symqemu --depth 1 /symqemu/src
 RUN mkdir /symqemu/build && \
     cd /symqemu/build && \
     ../src/configure                                              \
@@ -98,7 +99,7 @@ RUN mkdir /symqemu/build && \
       --enable-capstone=git                                       \
       --disable-werror                                            \
       --symcc-source=/symcc/src                                   \
-      --symcc-build=/symcc/build && \
+      --symcc-build=/symcc/build  && \
     make && \
     cd /symqemu && \
     rm -rf src
