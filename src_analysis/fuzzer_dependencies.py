@@ -13,8 +13,8 @@
 # limitations under the License.
 """Module for finding dependencies of fuzzers, and fuzzers that are
 dependent on given files.
-This module assumes that a fuzzer module's imports are done in a sane,
-normal way. It will not work on non-toplevel imports.
+This module assumes that a fuzzer module's imports are done in a normal way. It
+will not work on non-toplevel imports.
 The following style of imports are supported:
 1. from fuzzers.afl import fuzzer
 2. from fuzzers.afl import fuzzer as afl_fuzzer
@@ -116,9 +116,9 @@ def _get_python_dependencies(module: types.ModuleType,
     module_path = inspect.getfile(module)
 
     # Just get the dependencies from the cache if we have them.
-    # This would break on modules doing crazy things like writing Python files
-    # and then importing them, code review should prevent that from landing
-    # though.
+    # This would break on modules doing abnormal things like writing Python
+    # files and then importing them, code review should prevent that from
+    # landing though.
     if module_path in PY_DEPENDENCIES_CACHE:
         return PY_DEPENDENCIES_CACHE[module_path]
 
