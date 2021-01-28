@@ -2,6 +2,7 @@
 
 AFL++ fuzzer instance that uses Eclipser 2.0
   - PCGUARD instrumentation 
+  - dict2file feature
   - "fast" power schedule
   - persistent mode + shared memory test cases
 

@@ -59,6 +59,9 @@ jobs:
           - aflplusplus_cmplog123_transform_2
           - aflplusplus_cmplog12_transform_1
           - aflplusplus_cmplog12_transform_2
+          - aflplusplus_cmplog_double
+          - aflplusplus_double
+          - aflplusplus_symcc
 
         benchmark_type:
           - oss-fuzz

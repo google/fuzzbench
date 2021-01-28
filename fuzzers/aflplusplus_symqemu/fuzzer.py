@@ -11,13 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for Eclipser fuzzer. Note that starting from v2.0, Eclipser
+"""Integration code for symqemu fuzzer. Note that symqemu
 relies on AFL to perform random-based fuzzing."""
 
 import shutil
 import subprocess
 import os
 import threading
+import time
 
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
@@ -37,12 +38,12 @@ def build():
     build_directory = os.getenv('OUT')
     fuzz_target = os.getenv('FUZZ_TARGET')
 
-    # First, build an uninstrumented binary for Eclipser.
+    # First, build an uninstrumented binary for symqemu.
     aflplusplus_fuzzer.build("qemu", "eclipser")
-    eclipser_dir = get_uninstrumented_outdir(build_directory)
-    os.mkdir(eclipser_dir)
+    symqemu_dir = get_uninstrumented_outdir(build_directory)
+    os.mkdir(symqemu_dir)
     fuzz_binary = build_directory + '/' + fuzz_target
-    shutil.copy(fuzz_binary, eclipser_dir)
+    shutil.copy(fuzz_binary, symqemu_dir)
     if os.path.isdir(build_directory + '/seeds'):
         shutil.rmtree(build_directory + '/seeds')
 
@@ -55,33 +56,27 @@ def build():
     shutil.copy('/afl/afl-fuzz', build_directory)
 
 
-def eclipser(input_corpus, output_corpus, target_binary):
-    """Run Eclipser."""
-    # We will use output_corpus as a directory where AFL and Eclipser sync their
-    # test cases with each other. For Eclipser, we should explicitly specify an
+def symqemu(input_corpus, output_corpus, target_binary):
+    """Run symqemu."""
+    # We will use output_corpus as a directory where AFL and symqemu sync their
+    # test cases with each other. For symqemu, we should explicitly specify an
     # output directory under this sync directory.
-    eclipser_out = os.path.join(output_corpus, "eclipser_output")
     command = [
-        'dotnet',
-        '/Eclipser/build/Eclipser.dll',
-        '-p',
-        target_binary,
-        '-s',
-        output_corpus,
+        '/symcc/symcc_fuzzing_helper',
+        '-Q',
         '-o',
-        eclipser_out,
-        '--arg',  # Specifies the command-line of the program.
-        'foo',
-        '-f',  # Specifies the path of file input to fuzz.
-        'foo',
-        '-v',  # Controls the verbosity.
-        '2',
-        '--exectimeout',
-        '5000',
+        output_corpus,
+        '-a',
+        'afl-worker',
+        '-n',
+        'symqemu',
+        '-S',
+        '0',
+        '--',
+        '/symcc/symqemu-x86_64',
+        target_binary,
     ]
-    if os.listdir(input_corpus):  # Specify inputs only if any seed exists.
-        command += ['-i', input_corpus]
-    print('[eclipser] Run Eclipser with command: ' + ' '.join(command))
+    print('[symqemu] Run symqemu with command: ' + ' '.join(command))
     subprocess.Popen(command)
 
 
@@ -108,15 +103,15 @@ def fuzz(input_corpus, output_corpus, target_binary):
         raise Exception("invalid input directory")
 
     afl_args = (input_corpus, output_corpus, target_binary)
-    eclipser_args = (input_corpus, output_corpus, uninstrumented_target_binary)
-    # Do not launch AFL master instance for now, to reduce memory usage and
-    # align with the vanilla AFL.
     print('[fuzz] Running AFL worker')
     afl_worker_thread = threading.Thread(target=afl_worker, args=afl_args)
     afl_worker_thread.start()
-    print('[fuzz] Running Eclipser')
-    eclipser_thread = threading.Thread(target=eclipser, args=eclipser_args)
-    eclipser_thread.start()
+    symqemu_args = (input_corpus, output_corpus, uninstrumented_target_binary)
+    # ensure afl++ is running before we start symqemu
+    time.sleep(10)
+    print('[fuzz] Running symqemu')
+    symqemu_thread = threading.Thread(target=symqemu, args=symqemu_args)
+    symqemu_thread.start()
     print('[fuzz] Now waiting for threads to finish...')
     afl_worker_thread.join()
-    eclipser_thread.join()
+    symqemu_thread.join()
