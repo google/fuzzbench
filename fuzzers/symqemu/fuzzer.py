@@ -135,12 +135,13 @@ def fuzz(input_corpus, output_corpus, target_binary):
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
 
     print('[run_fuzzer] Running AFL for SymQEMU')
-    afl_fuzz_thread = threading.Thread(target=run_afl_fuzz,
+    additional_flags = ['-S', 'afl']
+    afl_fuzz_thread = threading.Thread(target=afl_fuzzer.run_afl_fuzz,
                                        args=(input_corpus, output_corpus,
-                                             target_binary))
+                                             target_binary, additional_flags))
     afl_fuzz_thread.start()
 
-    # Wait till AFL initializes (i.e. fuzzer_stats file exists) before
+    # Wait until AFL initializes (i.e. fuzzer_stats file exists) before
     # launching SymQEMU.
     print('[run_fuzzer] Waiting for AFL to finish initialization')
     afl_stats_file = os.path.join(output_corpus, 'afl', 'fuzzer_stats')

@@ -52,20 +52,20 @@ RUN git clone -b z3-4.8.7 https://github.com/Z3Prover/z3.git /z3_src && \
 # libstdc++ and thus won't work with our libc++ build. We compile a new version
 # that uses libc++.
 RUN mkdir /llvm && \
-  git clone -b llvmorg-10.0.0 --depth 1 https://github.com/llvm/llvm-project.git /llvm/src && \
-  mkdir /llvm/build && \
-  cd /llvm/build && \
-  cmake -G Ninja \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/llvm/install \
-    -DLLVM_TARGETS_TO_BUILD=$(llvm-config --targets-built) \
-    -DLLVM_ENABLE_LIBCXX=ON \
-    -DLLVM_DISTRIBUTION_COMPONENTS="LLVMDemangle;LLVMSupport;llvm-config;llvm-headers;cmake-exports" \
-    ../src/llvm && \
-  ninja distribution && \
-  ninja install-distribution && \
-  cd /llvm && \
-  rm -rf src build
+    git clone -b llvmorg-10.0.0 --depth 1 https://github.com/llvm/llvm-project.git /llvm/src && \
+    mkdir /llvm/build && \
+    cd /llvm/build && \
+    cmake -G Ninja \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=/llvm/install \
+      -DLLVM_TARGETS_TO_BUILD=$(llvm-config --targets-built) \
+      -DLLVM_ENABLE_LIBCXX=ON \
+      -DLLVM_DISTRIBUTION_COMPONENTS="LLVMDemangle;LLVMSupport;llvm-config;llvm-headers;cmake-exports" \
+      ../src/llvm && \
+    ninja distribution && \
+    ninja install-distribution && \
+    cd /llvm && \
+    rm -rf src build
 
 RUN git clone https://github.com/eurecom-s3/symcc --depth 1 /symcc/src && \
     cd /symcc/src && \
