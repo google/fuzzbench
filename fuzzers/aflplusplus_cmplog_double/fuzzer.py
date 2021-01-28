@@ -21,11 +21,6 @@ import threading
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
-def get_uninstrumented_outdir(target_directory):
-    """Return path to uninstrumented target directory."""
-    return os.path.join(target_directory, 'uninstrumented')
-
-
 def build():
     """Build benchmark."""
     build_directory = os.getenv('OUT')
@@ -35,7 +30,7 @@ def build():
 
 def afl_worker1(input_corpus, output_corpus, target_binary):
     """Run AFL worker instance."""
-    print('[afl_worker] Run AFL worker')
+    print('[afl_worker] Run AFL worker1')
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
@@ -44,7 +39,7 @@ def afl_worker1(input_corpus, output_corpus, target_binary):
 
 def afl_worker2(input_corpus, output_corpus, target_binary):
     """Run AFL worker instance."""
-    print('[afl_worker] Run AFL worker')
+    print('[afl_worker] Run AFL worker2')
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
