@@ -14,7 +14,6 @@
 
 FROM gcr.io/fuzzbench/base-image
 
-
 RUN apt-get update && \
     apt-get install wget -y && \
     apt-get install python-pip -y && \
@@ -22,4 +21,3 @@ RUN apt-get update && \
     python -m pip install --upgrade pip==20.3 && \
     python -m pip install tensorflow==1.8.0 && \
     python -m pip install keras==2.2.3
-    

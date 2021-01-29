@@ -17,7 +17,6 @@ import os
 import shutil
 import subprocess
 import time
-import signal
 import threading
 
 from fuzzers import utils
@@ -29,9 +28,6 @@ WARMUP = 60 * 60
 def prepare_build_environment():
     """Set environment variables used to build targets for AFL-based
     fuzzers."""
-    # Setting custom flags not recommended 
-    # cflags = ['-O2', '-fno-omit-frame-pointer','-fsanitize-coverage=trace-pc-guard', '-fsanitize=address']
-    # utils.append_flags('CFLAGS', cflags)
     utils.set_compilation_flags()
     os.environ['CC'] = '/afl/afl-clang'
     os.environ['CXX'] = '/afl/afl-clang++'
@@ -54,10 +50,16 @@ def build():
     shutil.copy('/neuzz/neuzz', output_directory)
     shutil.copy('/neuzz/nn.py', output_directory)
 
-def kill_afl(output_stream = subprocess.DEVNULL):
+
+def kill_afl(output_stream=subprocess.DEVNULL):
+    """kill afl-fuzz process."""
     print("Warmed up!")
-    # Can't avoid this because 'run_afl_fuzz' doesn't return a handle to 'afl-fuzz' process so that we can kill it with subprocess.terminate()
-    subprocess.call(["pkill", "-f", "afl-fuzz"],stdout=output_stream,stderr = output_stream)
+    # Can't avoid this because 'run_afl_fuzz' doesn't return a handle to
+    # 'afl-fuzz' process so that we can kill it with subprocess.terminate()
+    subprocess.call(["pkill", "-f", "afl-fuzz"],
+                    stdout=output_stream,
+                    stderr=output_stream)
+
 
 def run_neuzz(input_corpus,
               output_corpus,
@@ -67,15 +69,16 @@ def run_neuzz(input_corpus,
     """Run neuzz"""
     # Spawn the afl fuzzing process for warmup
     output_stream = subprocess.DEVNULL if hide_output else None
-    threading.Timer(20,kill_afl,[output_stream]).start()
-    afl.run_afl_fuzz(input_corpus, output_corpus,target_binary,additional_flags,hide_output)
-
+    threading.Timer(20, kill_afl, [output_stream]).start()
+    afl.run_afl_fuzz(input_corpus, output_corpus, target_binary,
+                     additional_flags, hide_output)
+    # After warming up, copy the 'queue' to use for neuzz input
     print("[run_neuzz] Warmed up!")
     command = [
         "cp", "-RT", f"{output_corpus}/queue/", f"{input_corpus}_neuzzin/"
     ]
     print('[run_neuzz] Running command: ' + ' '.join(command))
-    
+
     subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
 
     afl_output_dir = os.path.join(output_corpus, 'queue')
@@ -83,6 +86,7 @@ def run_neuzz(input_corpus,
     # Treat afl's queue folder as the input for Neuzz.
     os.rename(afl_output_dir, neuzz_input_dir)
 
+    # Spinning up the neural network
     command = [
         "python2", "./nn.py", '--output-folder', afl_output_dir, target_binary
     ]
@@ -90,6 +94,7 @@ def run_neuzz(input_corpus,
     subprocess.Popen(command, stdout=output_stream, stderr=output_stream)
     time.sleep(40)
     target_rel_path = os.path.relpath(target_binary, os.getcwd())
+    # Spinning up neuzz
     command = [
         "./neuzz", "-m", "none", "-i", neuzz_input_dir, "-o", afl_output_dir,
         target_rel_path, "@@"

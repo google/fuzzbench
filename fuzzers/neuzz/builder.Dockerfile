@@ -1,4 +1,4 @@
-  
+
 # Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,4 +38,4 @@ RUN apt-get update && \
     clang -Wno-pointer-sign -c /afl/llvm_mode/afl-llvm-rt.o.c -I/afl && \
     clang++ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp && \
     ar r /libNeuzz.a *.o
-    
+
