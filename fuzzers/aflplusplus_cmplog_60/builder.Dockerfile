@@ -24,7 +24,7 @@ RUN apt-get update && \
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 40f609c7354ffa75dea16401d6c22a4eac510910 \
+    git checkout 40f609c7354ffa75dea16401d6c22a4eac510910 && \
     sed -i 's/15000/60000/' src/afl-fuzz-one.c
 
 # Build without Python support as we don't need it.
