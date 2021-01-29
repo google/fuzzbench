@@ -53,6 +53,7 @@ jobs:
           - aflplusplus_cmplog_300
           - aflplusplus_cmplog_select
           - aflplusplus_cmplog_arith
+          - aflplusplus_cmplog_lowfail
 
         benchmark_type:
           - oss-fuzz
