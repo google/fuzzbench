@@ -49,17 +49,12 @@ jobs:
           - afl_fast_v2
           - aflplusplus_dict2file
           - aflplusplus_introspection2
-          - aflplusplus_trim
-          - aflplusplus_notrim
           - aflplusplus_cmplog
-          - aflplusplus_cmplog12_1
-          - aflplusplus_cmplog12_2
-          - aflplusplus_cmplog123_1
-          - aflplusplus_cmplog123_2
-          - aflplusplus_cmplog123_transform_1
-          - aflplusplus_cmplog123_transform_2
-          - aflplusplus_cmplog12_transform_1
-          - aflplusplus_cmplog12_transform_2
+          - aflplusplus_cmplog_60
+          - aflplusplus_cmplog_300
+          - aflplusplus_cmplog_select
+          - aflplusplus_cmplog_arith
+          - aflplusplus_cmplog_lowfail
 
         benchmark_type:
           - oss-fuzz
