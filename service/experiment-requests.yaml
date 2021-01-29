@@ -20,6 +20,15 @@
 # Please add new experiment requests towards the top of this file.
 
 - experiment: 2021-01-27-aflpp-afl
+  description: "cmplog variants"
+  fuzzers:
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_60
+    - aflplusplus_cmplog_300
+    - aflplusplus_cmplog_select
+    - aflplusplus_cmplog_arith
+
+- experiment: 2021-01-27-aflpp-afl
   description: "plain afl++ vs afl"
   fuzzers:
     - aflplusplus_trim
