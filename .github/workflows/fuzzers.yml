@@ -33,6 +33,7 @@ jobs:
           - libfuzzer
           - manul
           - mopt
+          - neuzz
           # Binary-only (greybox) fuzzers.
           - eclipser
           - afl_qemu
