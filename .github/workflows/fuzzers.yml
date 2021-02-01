@@ -50,11 +50,10 @@ jobs:
           - aflplusplus_dict2file
           - aflplusplus_introspection2
           - aflplusplus_cmplog
-          - aflplusplus_cmplog_60
-          - aflplusplus_cmplog_300
-          - aflplusplus_cmplog_select
-          - aflplusplus_cmplog_arith
-          - aflplusplus_cmplog_lowfail
+          - aflplusplus_cmplog_1
+          - aflplusplus_cmplog_old
+          - aflplusplus_cmplog_max4k
+          - aflplusplus_cmplog_transform
 
         benchmark_type:
           - oss-fuzz
