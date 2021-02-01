@@ -13,4 +13,4 @@ fuzzers:
     - lafintel
     - libfuzzer
     - mopt
-
+    - neuzz
