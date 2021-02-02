@@ -25,6 +25,9 @@
 
 #include <magic.h>
 
+#define likely(x)       __builtin_expect(!!(x), 1)
+#define unlikely(x)     __builtin_expect(!!(x), 0)
+
 struct Environment {
   Environment(std::string data_dir) {
     magic = magic_open(MAGIC_NONE);
