@@ -28,6 +28,7 @@
     - aflplusplus_cmplog_old
     - aflplusplus_cmplog_max4k
     - aflplusplus_cmplog_transform
+    - aflplusplus_v300c
 
 - experiment: 2021-01-30-aflpp-afl
   description: "cmplog variants"
