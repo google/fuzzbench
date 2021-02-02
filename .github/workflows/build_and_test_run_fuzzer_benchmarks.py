@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Script for building and briefly running fuzzer,benchmark pairs in CI."""
+import os
 import sys
 import subprocess
 
@@ -112,8 +113,13 @@ def make_builds(benchmarks, fuzzer):
                                     key=lambda pair: pair[1])
     print('Building fuzzer-benchmark pairs: {}'.format(fuzzer_benchmark_pairs))
     for _, benchmark in fuzzer_benchmark_pairs:
-        print(subprocess.check_output('top -o %MEM -n 1 -c',shell=True))
-        print(subprocess.check_output('df -h',shell=True))
+        env_copy = os.environ.copy()
+        env_copy['TERM'] = 'dumb'
+        print(
+            subprocess.check_output('top -o %MEM -n 1 -c',
+                                    shell=True,
+                                    env=env_copy))
+        print(subprocess.check_output('df -h', shell=True, env=env_copy))
 
         make_target = get_make_target(fuzzer, benchmark)
         make_command = ['make', 'RUNNING_ON_CI=yes', '-j', make_target]
