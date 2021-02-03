@@ -129,6 +129,7 @@ def make_builds(benchmarks, fuzzer):
         for line in output.splitlines():
             print(line)
 
+
         make_target = get_make_target(fuzzer, benchmark)
         make_command = ['make', 'RUNNING_ON_CI=yes', '-j', make_target]
         run_command(make_command)
