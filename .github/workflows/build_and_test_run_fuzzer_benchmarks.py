@@ -55,6 +55,7 @@ STANDARD_BENCHMARKS = {
 }
 
 BUG_BENCHMARKS = {
+    'file_magic_fuzzer',
     'harfbuzz_hb-subset-fuzzer',
     'libhevc_hevc_dec_fuzzer',
     'matio_matio_fuzzer',
