@@ -100,4 +100,4 @@ jobs:
 
     - name: Build Benchmarks
       run: |
-        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/build_and_test_run_fuzzer_benchmarks.py ${{ matrix.benchmark_type }} ${{ matrix.fuzzer }}
+        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 -u .github/workflows/build_and_test_run_fuzzer_benchmarks.py ${{ matrix.benchmark_type }} ${{ matrix.fuzzer }}
