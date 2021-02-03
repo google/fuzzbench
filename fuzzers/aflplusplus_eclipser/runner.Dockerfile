@@ -44,7 +44,7 @@ RUN git clone https://github.com/SoftSec-KAIST/Eclipser.git /Eclipser && \
     git checkout 310220649a4d790f8bc858ef85873399bba79a8c && \
     make
 
-ENV AFL_MAP_SIZE=2222222
+#ENV AFL_MAP_SIZE=2222222
 ENV PATH="$PATH:/out"
 ENV AFL_SKIP_CPUFREQ=1
 ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
