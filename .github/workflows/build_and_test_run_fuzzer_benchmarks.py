@@ -86,7 +86,7 @@ def stop_docker_containers():
         'kill',
     ] + container_ids, check=False)
 
-    subprocess.run(['sudo', 'pkill', '-9', 'dockerd'],
+    subprocess.run(['sudo', 'service', 'docker', 'restart'],
                    stdout=subprocess.PIPE,
                    check=True)
 
