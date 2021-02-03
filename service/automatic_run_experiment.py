@@ -78,8 +78,8 @@ CODE_BENCHMARKS = [
     'woff2-2016-05-06',
 ]
 BUG_BENCHMARKS = [
-    'file_magic_fuzzer',
     'arrow_parquet-arrow-fuzz',
+    'file_magic_fuzzer',
     'harfbuzz_hb-subset-fuzzer',
     'libhevc_hevc_dec_fuzzer',
     'matio_matio_fuzzer',
