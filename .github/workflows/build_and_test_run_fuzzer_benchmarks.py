@@ -86,6 +86,10 @@ def stop_docker_containers():
         'kill',
     ] + container_ids, check=False)
 
+    subprocess.run(['sudo', 'pkill', '-9', 'dockerd'],
+                   stdout=subprocess.PIPE,
+                   check=True)
+
 
 def delete_docker_images():
     """Delete docker images."""
@@ -128,7 +132,6 @@ def make_builds(benchmarks, fuzzer):
                                          shell=True)
         for line in output.splitlines():
             print(line)
-
 
         make_target = get_make_target(fuzzer, benchmark)
         make_command = ['make', 'RUNNING_ON_CI=yes', '-j', make_target]
