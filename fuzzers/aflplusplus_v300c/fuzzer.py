@@ -38,4 +38,5 @@ def fuzz(input_corpus, output_corpus, target_binary):
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
-                            flags=(run_options), skip=True)
+                            flags=(run_options),
+                            skip=True)
