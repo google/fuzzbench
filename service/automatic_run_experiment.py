@@ -79,6 +79,7 @@ CODE_BENCHMARKS = [
 ]
 BUG_BENCHMARKS = [
     'arrow_parquet-arrow-fuzz',
+    'file_magic_fuzzer',
     'harfbuzz_hb-subset-fuzzer',
     'libhevc_hevc_dec_fuzzer',
     'matio_matio_fuzzer',
