@@ -14,3 +14,5 @@
 
 fuzz_target: ftfuzzer
 project: freetype2
+unsupported_fuzzers:
+  - aflplusplus_optimal

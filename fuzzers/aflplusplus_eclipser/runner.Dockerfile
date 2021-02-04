@@ -42,7 +42,7 @@ RUN wget -q https://storage.googleapis.com/fuzzbench-files/packages-microsoft-pr
 RUN git clone https://github.com/SoftSec-KAIST/Eclipser.git /Eclipser && \
     cd /Eclipser && \
     git checkout 310220649a4d790f8bc858ef85873399bba79a8c && \
-    make
+    make -j$(nproc)
 
 #ENV AFL_MAP_SIZE=2222222
 ENV PATH="$PATH:/out"
