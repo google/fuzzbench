@@ -15,6 +15,7 @@
 """Script for building and briefly running fuzzer,benchmark pairs in CI."""
 import sys
 import subprocess
+import time
 
 from common import retry
 from experiment.build import builder
@@ -81,14 +82,16 @@ def stop_docker_containers():
                             stdout=subprocess.PIPE,
                             check=True)
     container_ids = result.stdout.splitlines()
-    subprocess.run([
-        'docker',
-        'kill',
-    ] + container_ids, check=False)
+    if container_ids:
+        subprocess.run([
+            'docker',
+            'kill',
+        ] + container_ids, check=False)
 
     subprocess.run(['sudo', 'service', 'docker', 'restart'],
                    stdout=subprocess.PIPE,
                    check=True)
+    time.sleep(5)
 
 
 def delete_docker_images():
@@ -100,13 +103,15 @@ def delete_docker_images():
                             stdout=subprocess.PIPE,
                             check=True)
     container_ids = result.stdout.splitlines()
-    subprocess.run(['docker', 'rm', '-f'] + container_ids, check=False)
+    if container_ids:
+        subprocess.run(['docker', 'rm', '-f'] + container_ids, check=False)
 
     result = subprocess.run(['docker', 'images', '-a', '-q'],
                             stdout=subprocess.PIPE,
                             check=True)
     image_ids = result.stdout.splitlines()
-    subprocess.run(['docker', 'rmi', '-f'] + image_ids, check=False)
+    if image_ids:
+        subprocess.run(['docker', 'rmi', '-f'] + image_ids, check=False)
 
     # Needed for BUILDKIT to clear build cache & avoid insufficient disk space.
     subprocess.run(['docker', 'builder', 'prune', '-f'], check=False)
