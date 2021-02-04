@@ -4,11 +4,11 @@ fuzz_target: hevc_dec_fuzzer
 project: libhevc
 type: bug
 unsupported_fuzzers:
-  - afl_qemu
   - aflcc
-  - aflplusplus_optimal
+  - afl_qemu
   - aflplusplus_qemu
   - honggfuzz_qemu
   - klee
   - lafintel
   - weizz_qemu
+
