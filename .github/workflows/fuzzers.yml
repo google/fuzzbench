@@ -55,6 +55,7 @@ jobs:
           - aflplusplus_cmplog_max4k
           - aflplusplus_cmplog_transform
           - aflplusplus_v300c
+          - aflplusplus_asan
 
         benchmark_type:
           - oss-fuzz
