@@ -24,7 +24,7 @@ RUN apt-get update && \
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout ec737f3368e678cbee3a916d4ef6fb683ebfa1f0 && \
+    git checkout 3533df945352dac2de56c69cb937b006260c6b7d && \
     sed -i 's/\/\/ #define CMPLOG_TRANSFORM/#define CMPLOG_TRANSFORM/' include/config.h && \
     sed -i 's/CMPLOG_TRANSFORM_BASE64/CMPLOG_XXX/' include/config.h
 
