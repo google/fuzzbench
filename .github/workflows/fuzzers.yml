@@ -50,6 +50,7 @@ jobs:
           - aflplusplus_dict2file
           - aflplusplus_introspection2
           - aflplusplus_asan
+          - aflplusplus_asan2
           - aflplusplus_cmplog
           - aflplusplus_cmplog_1
           - aflplusplus_cmplog_old
