@@ -183,7 +183,7 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
                                         target_binary_name)
 
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
-    # decomment this to enable libdislocator
+    # decomment this to enable libdislocator.
     # os.environ['AFL_ALIGNED_ALLOC'] = '1' # align malloc to max_align_t
     # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 

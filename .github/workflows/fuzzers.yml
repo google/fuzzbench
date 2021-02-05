@@ -49,13 +49,13 @@ jobs:
           - afl_fast_v2
           - aflplusplus_dict2file
           - aflplusplus_introspection2
+          - aflplusplus_asan
           - aflplusplus_cmplog
           - aflplusplus_cmplog_1
           - aflplusplus_cmplog_old
           - aflplusplus_cmplog_max4k
           - aflplusplus_cmplog_transform
           - aflplusplus_v300c
-          - aflplusplus_asan
 
         benchmark_type:
           - oss-fuzz
