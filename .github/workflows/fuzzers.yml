@@ -26,12 +26,10 @@ jobs:
           - aflsmart
           - entropic
           - fairfuzz
-          - fastcgs_lm
           - honggfuzz
           - lafintel
           - klee
           - libfuzzer
-          - manul
           - mopt
           - neuzz
           # Binary-only (greybox) fuzzers.
@@ -41,12 +39,8 @@ jobs:
           - honggfuzz_qemu
           - weizz_qemu
           # Temporary variants.
-          - libfuzzer_magicbytes
-          - entropic_magicbytes
           - aflplusplus_lightweizz
           - aflplusplus_introspection
-          - afl_fast
-          - afl_fast_v2
           - aflplusplus_dict2file
           - aflplusplus_introspection2
           - aflplusplus_cmplog
