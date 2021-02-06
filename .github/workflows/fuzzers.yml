@@ -21,8 +21,9 @@ jobs:
           - aflcc
           - aflfast
           - aflplusplus
-          - aflplusplus_optimal
-          - aflplusplus_eclipser
+          # Disabled due to segfaults. See https://github.com/google/fuzzbench/issues/1073.
+          # - aflplusplus_optimal
+          # - aflplusplus_eclipser
           - aflsmart
           - entropic
           - fairfuzz
