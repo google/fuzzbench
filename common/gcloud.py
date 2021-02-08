@@ -19,6 +19,7 @@ import subprocess
 from typing import List
 
 from common import experiment_utils
+from common import logs
 from common import new_process
 
 # Constants for dispatcher specs.
@@ -27,8 +28,12 @@ DISPATCHER_BOOT_DISK_SIZE = '4TB'
 DISPATCHER_BOOT_DISK_TYPE = 'pd-ssd'
 
 # Constants for runner specs.
-RUNNER_MACHINE_TYPE = 'n1-standard-1'
+RUNNER_MACHINE_TYPE = 'e2-standard-2'
 RUNNER_BOOT_DISK_SIZE = '30GB'
+
+# Constants for measurer worker specs.
+MEASURER_WORKER_MACHINE_TYPE = 'e2-standard-2'
+MEASURER_WORKER_BOOT_DISK_SIZE = '50GB'
 
 # Number of instances to process at once.
 INSTANCE_BATCH_SIZE = 100
@@ -82,7 +87,13 @@ def create_instance(instance_name: str,
         command.extend(
             ['--metadata-from-file', 'startup-script=' + startup_script])
 
-    return new_process.execute(command, expect_zero=False, **kwargs)[0] == 0
+    result = new_process.execute(command, expect_zero=False, **kwargs)
+    if result.retcode == 0:
+        return True
+
+    logs.info('Failed to create instance. Command: %s failed. Output: %s',
+              command, result.output)
+    return False
 
 
 def delete_instances(instance_names: List[str], zone: str, **kwargs) -> bool:
@@ -126,8 +137,9 @@ def create_instance_template(template_name, docker_image, env, project, zone):
         'create-with-container', template_name, '--no-address',
         '--image-family=cos-stable', '--image-project=cos-cloud',
         '--region=%s' % zone, '--scopes=cloud-platform',
-        '--machine-type=n1-standard-1', '--boot-disk-size=50GB',
-        '--preemptible', '--container-image', docker_image
+        '--machine-type=%s' % MEASURER_WORKER_MACHINE_TYPE,
+        '--boot-disk-size=%s' % MEASURER_WORKER_BOOT_DISK_SIZE, '--preemptible',
+        '--container-image', docker_image
     ]
     for item in env.items():
         command.extend(['--container-env', '%s=%s' % item])
@@ -143,3 +155,9 @@ def delete_instance_template(template_name: str):
         'gcloud', 'compute', 'instance-templates', 'delete', template_name
     ]
     return new_process.execute(command)
+
+
+def get_account():
+    """Returns the email address of the current account being used."""
+    return new_process.execute(['gcloud', 'config', 'get-value',
+                                'account']).output.strip()

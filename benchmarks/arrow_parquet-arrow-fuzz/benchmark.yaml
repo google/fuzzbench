@@ -6,9 +6,9 @@ type: bug
 unsupported_fuzzers:
   - aflcc
   - afl_qemu
-  - aflplusplus_optimal
   - aflplusplus_qemu
   - lafintel
   - honggfuzz_qemu
   - klee
   - weizz_qemu
+  - neuzz

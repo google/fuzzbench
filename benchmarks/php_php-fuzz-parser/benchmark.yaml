@@ -18,6 +18,4 @@ fuzz_target: php-fuzz-parser
 project: php
 unsupported_fuzzers:
   - aflcc
-  - aflplusplus
-  - aflplusplus_optimal
   - klee

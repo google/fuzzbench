@@ -59,6 +59,9 @@ docker/generated.mk: docker/generate_makefile.py docker/image_types.yaml fuzzers
 presubmit: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py
 
+test: install-dependencies
+	source ${VENV_ACTIVATE} && python3 presubmit.py test
+
 format: install-dependencies
 	source ${VENV_ACTIVATE} && python3 presubmit.py format
 
