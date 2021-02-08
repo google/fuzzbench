@@ -4,7 +4,6 @@ fuzzers:
     - afl
     - aflfast
     - aflplusplus
-    - aflplusplus_optimal
     - aflsmart
     - entropic
     - eclipser
@@ -13,4 +12,3 @@ fuzzers:
     - lafintel
     - libfuzzer
     - mopt
-    - neuzz
