@@ -17,6 +17,10 @@
 
 cd $WORK/
 
+# /work/OpenEXR/libOpenexrUtils.a contains duplicated symbols,
+# so instruct the linker not to complain about it.
+export CXXFLAGS="$CXXFLAGS -Wl,-z,muldefs"
+
 CMAKE_SETTINGS=(
   "-D BUILD_SHARED_LIBS=OFF"         # Build static libraries only
   "-D PYILMBASE_ENABLE=OFF"          # Don't build Python support

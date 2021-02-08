@@ -99,13 +99,13 @@ def test_initialize_env_in_environment_with_sanitizer(fs, environ):
         '-fsanitize=address -fsanitize=array-bounds,bool,builtin,enum,'
         'float-divide-by-zero,function,integer-divide-by-zero,null,object-size,'
         'return,returns-nonnull-attribute,shift,signed-integer-overflow,'
-        'unsigned-integer-overflow,unreachable,vla-bound,vptr -O3')
+        'unreachable,vla-bound,vptr -O1')
     assert os.getenv('CXXFLAGS') == (
         '-fsanitize=address -fsanitize=array-bounds,bool,builtin,enum,'
         'float-divide-by-zero,function,integer-divide-by-zero,null,object-size,'
         'return,returns-nonnull-attribute,shift,signed-integer-overflow,'
-        'unsigned-integer-overflow,unreachable,vla-bound,vptr -stdlib=libc++ '
-        '-O3')
+        'unreachable,vla-bound,vptr -stdlib=libc++ '
+        '-O1')
 
 
 def test_initialize_env_in_var_without_sanitizer(fs):
@@ -131,10 +131,10 @@ def test_initialize_env_in_var_with_sanitizer(fs):
         '-fsanitize=address -fsanitize=array-bounds,bool,builtin,enum,'
         'float-divide-by-zero,function,integer-divide-by-zero,null,object-size,'
         'return,returns-nonnull-attribute,shift,signed-integer-overflow,'
-        'unsigned-integer-overflow,unreachable,vla-bound,vptr -O3')
+        'unreachable,vla-bound,vptr -O1')
     assert env.get('CXXFLAGS') == (
         '-fsanitize=address -fsanitize=array-bounds,bool,builtin,enum,'
         'float-divide-by-zero,function,integer-divide-by-zero,null,object-size,'
         'return,returns-nonnull-attribute,shift,signed-integer-overflow,'
-        'unsigned-integer-overflow,unreachable,vla-bound,vptr -stdlib=libc++ '
-        '-O3')
+        'unreachable,vla-bound,vptr -stdlib=libc++ '
+        '-O1')

@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions andsss
 # limitations under the License.
 """Tests for experiment_results.py"""
+from unittest import mock
 
 from analysis import experiment_results
 from analysis import test_data_utils
 
 
-def test_linkify_fuzzer_names_in_ranking():
+@mock.patch('common.benchmark_config.get_config', return_value={})
+def test_linkify_fuzzer_names_in_ranking(_):
     """Tests turning fuzzer names into links."""
     experiment_df = test_data_utils.create_experiment_data()
     results = experiment_results.ExperimentResults(experiment_df,

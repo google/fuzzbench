@@ -68,6 +68,10 @@ _IGNORE_DIRECTORIES = [
 
 BASE_PYTEST_COMMAND = ['python3', '-m', 'pytest', '-vv']
 
+NON_DEFAULT_CHECKS = {
+    'test_changed_integrations',
+}
+
 
 def get_containing_subdir(path: Path, parent_path: Path) -> Optional[str]:
     """Return the subdirectory of |parent_path| that contains |path|.
@@ -125,7 +129,7 @@ class FuzzerAndBenchmarkValidator:
             # We know this is invalid and have already complained about it.
             return False
 
-        if not is_fuzzer_tested_in_ci(fuzzer):
+        if fuzzer != 'coverage' and not is_fuzzer_tested_in_ci(fuzzer):
             self.invalid_fuzzers.add(fuzzer)
             return False
 
@@ -350,33 +354,38 @@ def filter_ignored_files(paths: List[Path]) -> List[Path]:
     return [path for path in paths if not is_path_ignored(path)]
 
 
-def do_tests() -> bool:
-    """Run all unittests."""
+def pytest(_) -> bool:
+    """Run all unittests using pytest."""
     returncode = subprocess.run(BASE_PYTEST_COMMAND, check=False).returncode
     return returncode == 0
 
 
-def do_checks(file_paths: List[Path]) -> bool:
-    """Return False if any presubmit check fails."""
-    success = True
-
+def validate_fuzzers_and_benchmarks(file_paths: List[Path]):
+    """Validate fuzzers and benchmarks."""
     fuzzer_and_benchmark_validator = FuzzerAndBenchmarkValidator()
     path_valid_statuses = [
         fuzzer_and_benchmark_validator.validate(path) for path in file_paths
     ]
-    if not all(path_valid_statuses):
-        success = False
+    return all(path_valid_statuses)
 
-    checks = [license_check, yapf, lint, pytype, validate_experiment_requests]
-    for check in checks:
+
+def do_default_checks(file_paths: List[Path], checks) -> bool:
+    """Do default presubmit checks and return False if any presubmit check
+    fails."""
+    failed_checks = []
+    for check_name, check in checks:
+        if check_name in NON_DEFAULT_CHECKS:
+            continue
+
         if not check(file_paths):
-            print('ERROR: %s failed, see errors above.' % check.__name__)
-            success = False
+            print('ERROR: %s failed, see errors above.' % check_name)
+            failed_checks.append(check_name)
 
-    if not do_tests():
-        success = False
+    if failed_checks:
+        print('Failed checks: %s' % ' '.join(failed_checks))
+        return False
 
-    return success
+    return True
 
 
 def bool_to_returncode(success: bool) -> int:
@@ -389,58 +398,89 @@ def bool_to_returncode(success: bool) -> int:
     return 1
 
 
-def main() -> int:
-    """Check that this branch conforms to the standards of fuzzbench."""
+def get_args(command_check_mapping):
+    """Get arguments passed to program."""
     parser = argparse.ArgumentParser(
         description='Presubmit script for fuzzbench.')
-    command_check_mapping = {
-        'format': yapf,
-        'lint': lint,
-        'typecheck': pytype,
-        'validate_experiment_requests': validate_experiment_requests,
-        'test_changed_integrations': test_changed_integrations
-    }
     parser.add_argument(
         'command',
-        choices=command_check_mapping.keys(),
+        choices=dict(command_check_mapping).keys(),
         nargs='?',
-        help='The presubmit check to run. Defaults to all of them')
+        help='The presubmit check to run. Defaults to most of them.')
     parser.add_argument('--all-files',
                         action='store_true',
                         help='Run presubmit check(s) on all files',
                         default=False)
     parser.add_argument('-v', '--verbose', action='store_true', default=False)
 
-    args = parser.parse_args()
+    return parser.parse_args()
 
-    os.chdir(_SRC_ROOT)
 
-    if not args.verbose:
+def initialize_logs(verbose: bool):
+    """Initialize logging."""
+    if not verbose:
         logs.initialize()
     else:
         logs.initialize(log_level=logging.DEBUG)
 
-    if not args.all_files:
+
+def get_relevant_files(all_files: bool) -> List[Path]:
+    """Get the files that should be checked."""
+    if not all_files:
         relevant_files = [Path(path) for path in diff_utils.get_changed_files()]
     else:
         relevant_files = get_all_files()
 
-    relevant_files = filter_ignored_files(relevant_files)
+    return filter_ignored_files(relevant_files)
 
-    logs.debug('Running presubmit check(s) on: %s',
-               ' '.join(str(path) for path in relevant_files))
 
-    if not args.command:
-        success = do_checks(relevant_files)
-        return bool_to_returncode(success)
-
-    check = command_check_mapping[args.command]
-    if args.command == 'format':
+def do_single_check(command: str, relevant_files: List[Path],
+                    command_check_mapping) -> bool:
+    """Do a single check requested by a command."""
+    check = dict(command_check_mapping)[command]
+    if command == 'format':
         success = check(relevant_files, False)
     else:
         success = check(relevant_files)
     if not success:
         print('ERROR: %s failed, see errors above.' % check.__name__)
+
+    return success
+
+
+def main() -> int:
+    """Check that this branch conforms to the standards of fuzzbench."""
+
+    # Use list of tuples so order is preserved.
+    command_check_mapping = [
+        ('licensecheck', license_check),
+        ('format', yapf),
+        ('lint', lint),
+        ('typecheck', pytype),
+        ('test', pytest),
+        ('validate_fuzzers_and_benchmarks', validate_fuzzers_and_benchmarks),
+        ('validate_experiment_requests', validate_experiment_requests),
+        ('test_changed_integrations', test_changed_integrations),
+    ]
+
+    args = get_args(command_check_mapping)
+
+    os.chdir(_SRC_ROOT)
+
+    initialize_logs(args.verbose)
+
+    relevant_files = get_relevant_files(args.all_files)
+
+    logs.debug('Running presubmit check(s) on: %s',
+               ' '.join(str(path) for path in relevant_files))
+
+    if not args.command:
+        # Do default checks.
+        success = do_default_checks(relevant_files, command_check_mapping)
+        return bool_to_returncode(success)
+
+    success = do_single_check(args.command, relevant_files,
+                              command_check_mapping)
     return bool_to_returncode(success)
 
 

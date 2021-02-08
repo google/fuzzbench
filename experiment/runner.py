@@ -28,6 +28,7 @@ import threading
 import time
 import zipfile
 
+from common import benchmark_config
 from common import environment
 from common import experiment_utils
 from common import filesystem
@@ -37,6 +38,7 @@ from common import fuzzer_stats
 from common import logs
 from common import new_process
 from common import retry
+from common import sanitizer
 from common import utils
 
 NUM_RETRIES = 3
@@ -178,6 +180,14 @@ def run_fuzzer(max_total_time, log_filename):
 
     runner_niceness = environment.get('RUNNER_NICENESS', 0)
 
+    # Set sanitizer options environment variables if this is a bug based
+    # benchmark.
+    env = None
+    benchmark = environment.get('BENCHMARK')
+    if benchmark_config.get_config(benchmark).get('type') == 'bug':
+        env = os.environ.copy()
+        sanitizer.set_sanitizer_options(env, is_fuzz_run=True)
+
     try:
         # Because the runner is launched at a higher priority,
         # set it back to the default(0) for fuzzing processes.
@@ -199,13 +209,15 @@ def run_fuzzer(max_total_time, log_filename):
             new_process.execute(command,
                                 timeout=max_total_time,
                                 write_to_stdout=True,
-                                kill_children=True)
+                                kill_children=True,
+                                env=env)
         else:
             with open(log_filename, 'wb') as log_file:
                 new_process.execute(command,
                                     timeout=max_total_time,
                                     output_file=log_file,
-                                    kill_children=True)
+                                    kill_children=True,
+                                    env=env)
     except subprocess.CalledProcessError:
         global fuzzer_errored_out  # pylint:disable=invalid-name
         fuzzer_errored_out = True

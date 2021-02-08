@@ -350,8 +350,7 @@ def test_run_cov_new_units(_, mocked_execute, fs, environ):
                 ('allocator_release_to_os_interval_ms=500:handle_abort=2:'
                  'handle_segv=2:handle_sigbus=2:handle_sigfpe=2:'
                  'handle_sigill=2:print_stacktrace=1:'
-                 'silence_unsigned_overflow=1:symbolize=1:'
-                 'symbolize_inline_frames=0'),
+                 'symbolize=1:symbolize_inline_frames=0'),
             'LLVM_PROFILE_FILE':
                 ('/work/measurement-folders/'
                  'benchmark-a-fuzzer-a/trial-12/coverage/data-%m.profraw'),

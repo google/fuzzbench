@@ -9,5 +9,6 @@ unsupported_fuzzers:
   - aflplusplus_qemu
   - honggfuzz_qemu
   - klee
+  - lafintel
   - weizz_qemu
 

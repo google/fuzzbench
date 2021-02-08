@@ -80,11 +80,11 @@
             We show two different aggregate (cross-benchmark) rankings of fuzzers.
             The first is based on the average of per-benchmarks scores, where
             the score represents the percentage of the highest reached median
-            coverage on a given benchmark (higher value is better).
+            {{ experiment.type }}-coverage on a given benchmark (higher value is better).
 
             The second ranking shows the average rank of fuzzers, after we rank
-            them on each benchmark according to their median reached covereges
-            (lower value is better).
+            them on each benchmark according to their median reached
+            {{ experiment.type }}-covereges (lower value is better).
 
             <div class="row">
                 <div class="col s5 offset-s1">
@@ -153,7 +153,7 @@
             <ul class="collapsible">
                 <li>
                     <div class="collapsible-header">
-                        Median code coverages on each benchmark
+                        Median {{ experiment.type }}-coverages on each benchmark
                     </div>
                     <div class="collapsible-body">
                         {{ experiment.summary_table.to_html() }}
@@ -259,10 +259,20 @@
                         <br>
 
                         <div class="row">
-                            <div class="col s6 offset-s3">
+                            <div class="col s6">
+                                <h5 class="center-align">Vargha-Delaney A12 measure</h4>
+                                    <img class="responsive-img materialboxed"
+                                         src="{{ benchmark.bug_vargha_delaney_plot }}">
+                                    The table summarizes the A12 values from the
+                                    pairwise Vargha-Delaney A measure of effect size.
+                                    Green cells indicate the probability the fuzzer in the
+                                    row will outperform the fuzzer in the column.
+                            </div>
+
+                            <div class="col s6">
                                 <h5 class="center-align">Mann-Whitney U test</h4>
                                     <img class="responsive-img materialboxed"
-                                         src="{{ benchmark.mann_whitney_plot }}">
+                                         src="{{ benchmark.bug_mann_whitney_plot }}">
                                     The table summarizes the p values of
                                     pairwise Mann-Whitney U tests.
                                     Green cells indicate that the reached
@@ -288,7 +298,17 @@
                         <br>
 
                         <div class="row">
-                            <div class="col s6 offset-s3">
+                            <div class="col s6">
+                                <h5 class="center-align">Vargha-Delaney A12 measure</h4>
+                                    <img class="responsive-img materialboxed"
+                                         src="{{ benchmark.vargha_delaney_plot }}">
+                                    The table summarizes the A12 values from the
+                                    pairwise Vargha-Delaney A measure of effect size.
+                                    Green cells indicate the probability the fuzzer in the
+                                    row will outperform the fuzzer in the column.
+                            </div>
+
+                            <div class="col s6">
                                 <h5 class="center-align">Mann-Whitney U test</h4>
                                     <img class="responsive-img materialboxed"
                                          src="{{ benchmark.mann_whitney_plot }}">

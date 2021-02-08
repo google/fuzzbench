@@ -151,10 +151,23 @@ def get_directories(parent_dir):
 
 def validate_benchmarks(benchmarks: List[str]):
     """Parses and validates list of benchmarks."""
+    benchmark_types = set()
     for benchmark in set(benchmarks):
         if benchmarks.count(benchmark) > 1:
             raise Exception('Benchmark "%s" is included more than once.' %
                             benchmark)
+        # Validate benchmarks here. It's possible someone might run an
+        # experiment without going through presubmit. Better to catch an invalid
+        # benchmark than see it in production.
+        if not benchmark_utils.validate(benchmark):
+            raise Exception('Benchmark "%s" is invalid.' % benchmark)
+
+        benchmark_types.add(benchmark_utils.get_type(benchmark))
+
+    if (benchmark_utils.BenchmarkType.CODE.value in benchmark_types and
+            benchmark_utils.BenchmarkType.BUG.value in benchmark_types):
+        raise Exception(
+            'Cannot mix bug benchmarks with code coverage benchmarks.')
 
 
 def validate_fuzzer(fuzzer: str):
@@ -186,7 +199,7 @@ def set_up_experiment_config_file(config):
         yaml.dump(config, experiment_config_file, default_flow_style=False)
 
 
-def check_no_local_changes():
+def check_no_uncommitted_changes():
     """Make sure that there are no uncommitted changes."""
     assert not subprocess.check_output(
         ['git', 'diff'],
@@ -208,9 +221,11 @@ def start_experiment(  # pylint: disable=too-many-arguments
         description: str = None,
         no_seeds=False,
         no_dictionaries=False,
-        oss_fuzz_corpus=False):
+        oss_fuzz_corpus=False,
+        allow_uncommitted_changes=False):
     """Start a fuzzer benchmarking experiment."""
-    check_no_local_changes()
+    if not allow_uncommitted_changes:
+        check_no_uncommitted_changes()
 
     validate_experiment_name(experiment_name)
     validate_benchmarks(benchmarks)
@@ -314,19 +329,16 @@ class BaseDispatcher:
         raise NotImplementedError
 
 
-class LocalDispatcher:
+class LocalDispatcher(BaseDispatcher):
     """Class representing the local dispatcher."""
 
     def __init__(self, config: Dict):
-        self.config = config
-        self.instance_name = experiment_utils.get_dispatcher_instance_name(
-            config['experiment'])
+        super().__init__(config)
         self.process = None
 
     def start(self):
         """Start the experiment on the dispatcher."""
         container_name = 'dispatcher-container'
-        logs.info('Started dispatcher with container name: %s', container_name)
         experiment_filestore_path = os.path.abspath(
             self.config['experiment_filestore'])
         filesystem.create_directory(experiment_filestore_path)
@@ -393,6 +405,7 @@ class LocalDispatcher:
             '${WORK}/src/experiment/dispatcher.py || '
             '/bin/bash'  # Open shell if experiment fails.
         ]
+        logs.info('Starting dispatcher with container name: %s', container_name)
         return new_process.execute(command, write_to_stdout=True)
 
 
@@ -401,15 +414,16 @@ class GoogleCloudDispatcher(BaseDispatcher):
 
     def start(self):
         """Start the experiment on the dispatcher."""
-        logs.info('Started dispatcher with instance name: %s',
-                  self.instance_name)
         with tempfile.NamedTemporaryFile(dir=os.getcwd(),
                                          mode='w') as startup_script:
             self.write_startup_script(startup_script)
-            gcloud.create_instance(self.instance_name,
-                                   gcloud.InstanceType.DISPATCHER,
-                                   self.config,
-                                   startup_script=startup_script.name)
+            if not gcloud.create_instance(self.instance_name,
+                                          gcloud.InstanceType.DISPATCHER,
+                                          self.config,
+                                          startup_script=startup_script.name):
+                raise Exception('Failed to create dispatcher.')
+            logs.info('Started dispatcher with instance name: %s',
+                      self.instance_name)
 
     def _render_startup_script(self):
         """Renders the startup script template and returns the result as a
@@ -499,6 +513,12 @@ def main():
                         required=False,
                         default=False,
                         action='store_true')
+    parser.add_argument('-a',
+                        '--allow-uncommitted-changes',
+                        help='Skip check that no uncommited changes made.',
+                        required=False,
+                        default=False,
+                        action='store_true')
     parser.add_argument(
         '-o',
         '--oss-fuzz-corpus',
@@ -516,7 +536,8 @@ def main():
                      description=args.description,
                      no_seeds=args.no_seeds,
                      no_dictionaries=args.no_dictionaries,
-                     oss_fuzz_corpus=args.oss_fuzz_corpus)
+                     oss_fuzz_corpus=args.oss_fuzz_corpus,
+                     allow_uncommitted_changes=args.allow_uncommitted_changes)
     return 0
 
 

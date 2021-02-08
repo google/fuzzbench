@@ -19,7 +19,7 @@ import functools
 from analysis import data_utils
 from analysis import coverage_data_utils
 from analysis import stat_tests
-from common import benchmark_config
+from common import benchmark_utils
 
 
 # pylint: disable=too-many-public-methods, too-many-arguments
@@ -61,6 +61,23 @@ class BenchmarkResults:
         if filestore_path.startswith(gcs_prefix):
             filestore_path = filestore_path.replace(gcs_prefix, gcs_http_prefix)
         return filestore_path
+
+    @property
+    @functools.lru_cache()
+    def type(self):
+        """Returns the type of the benchmark, which can be 'code' or 'bug',
+        depending whether its for measuring code coverage only, or bug coverage
+        as well.
+
+        Raises ValueError in case of invalid benchmark type in the config.
+        """
+        return benchmark_utils.get_type(self.name)
+
+    @property
+    def _relevant_column(self):
+        """Returns the name of the column that will be used as the basis of
+        the analysis (e.g., 'edges_covered', or 'bugs_covered')."""
+        return 'edges_covered' if self.type == 'code' else 'bugs_covered'
 
     @property
     @functools.lru_cache()
@@ -146,32 +163,85 @@ class BenchmarkResults:
     def rank_by_stat_test_wins(self):
         """Fuzzer ranking by then number of pairwise statistical test wins."""
         return data_utils.benchmark_rank_by_stat_test_wins(
-            self._benchmark_snapshot_df)
+            self._benchmark_snapshot_df, key=self._relevant_column)
 
     @property
     @functools.lru_cache()
     def mann_whitney_p_values(self):
         """Mann Whitney U test result."""
-        return stat_tests.two_sided_u_test(self._benchmark_snapshot_df)
+        return stat_tests.two_sided_u_test(self._benchmark_snapshot_df,
+                                           key='edges_covered')
 
     @property
-    def mann_whitney_plot(self):
-        """Mann Whitney U test plot."""
-        plot_filename = self._prefix_with_benchmark('mann_whitney_plot.svg')
-        self._plotter.write_heatmap_plot(self.mann_whitney_p_values,
+    @functools.lru_cache()
+    def bug_mann_whitney_p_values(self):
+        """Mann Whitney U test result based on bugs covered."""
+        return stat_tests.two_sided_u_test(self._benchmark_snapshot_df,
+                                           key='bugs_covered')
+
+    @property
+    @functools.lru_cache()
+    def vargha_delaney_a12_values(self):
+        """Vargha Delaney A12 mesaure results (code coverage)."""
+        return stat_tests.a12_measure_test(self._benchmark_snapshot_df)
+
+    @property
+    @functools.lru_cache()
+    def bug_vargha_delaney_a12_values(self):
+        """Vargha Delaney A12 mesaure results (bug coverage)."""
+        return stat_tests.a12_measure_test(self._benchmark_snapshot_df,
+                                           key='bugs_covered')
+
+    def _mann_whitney_plot(self, filename, p_values):
+        """Generic Mann Whitney U test plot."""
+        plot_filename = self._prefix_with_benchmark(filename)
+        self._plotter.write_heatmap_plot(p_values,
                                          self._get_full_path(plot_filename))
         return plot_filename
 
     @property
+    def mann_whitney_plot(self):
+        """Mann Whitney U test plot (code coverage)."""
+        return self._mann_whitney_plot('mann_whitney_plot.svg',
+                                       self.mann_whitney_p_values)
+
+    @property
+    def bug_mann_whitney_plot(self):
+        """Mann Whitney U test plot (bug coverage)."""
+        return self._mann_whitney_plot('bug_mann_whitney_plot.svg',
+                                       self.bug_mann_whitney_p_values)
+
+    def _vargha_delaney_plot(self, filename, a12_values):
+        """Generic Vargha Delany A12 measure plot."""
+        plot_filename = self._prefix_with_benchmark(filename)
+        self._plotter.write_a12_heatmap_plot(a12_values,
+                                             self._get_full_path(plot_filename))
+        return plot_filename
+
+    @property
+    def vargha_delaney_plot(self):
+        """Vargha Delany A12 measure plot (code coverage)."""
+        return self._vargha_delaney_plot('varga_delaney_a12_plot.svg',
+                                         self.vargha_delaney_a12_values)
+
+    @property
+    def bug_vargha_delaney_plot(self):
+        """Vargha Delany A12 measure plot (bug coverage)."""
+        return self._vargha_delaney_plot('bug_varga_delaney_a12_plot.svg',
+                                         self.bug_vargha_delaney_a12_values)
+
+    @property
     def anova_p_value(self):
         """ANOVA test result."""
-        return stat_tests.anova_test(self._benchmark_snapshot_df)
+        return stat_tests.anova_test(self._benchmark_snapshot_df,
+                                     key=self._relevant_column)
 
     @property
     @functools.lru_cache()
     def anova_posthoc_p_values(self):
         """ANOVA posthoc test results."""
-        return stat_tests.anova_posthoc_tests(self._benchmark_snapshot_df)
+        return stat_tests.anova_posthoc_tests(self._benchmark_snapshot_df,
+                                              key=self._relevant_column)
 
     @property
     def anova_student_plot(self):
@@ -192,13 +262,15 @@ class BenchmarkResults:
     @property
     def kruskal_p_value(self):
         """Kruskal test result."""
-        return stat_tests.kruskal_test(self._benchmark_snapshot_df)
+        return stat_tests.kruskal_test(self._benchmark_snapshot_df,
+                                       key=self._relevant_column)
 
     @property
     @functools.lru_cache()
     def kruskal_posthoc_p_values(self):
         """Kruskal posthoc test results."""
-        return stat_tests.kruskal_posthoc_tests(self._benchmark_snapshot_df)
+        return stat_tests.kruskal_posthoc_tests(self._benchmark_snapshot_df,
+                                                key=self._relevant_column)
 
     @property
     def kruskal_conover_plot(self):
@@ -370,8 +442,3 @@ class BenchmarkResults:
         """Bug coverage growth plot (logscale)."""
         return self._coverage_growth_plot(
             'bug_coverage_growth_plot_logscale.svg', bugs=True, logscale=True)
-
-    @property
-    def type(self):
-        """Type of benchmark."""
-        return benchmark_config.get_config(self.name).get('type')
