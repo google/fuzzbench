@@ -18,7 +18,7 @@ FROM $parent_image
 # Install llvm 12 and gcc 10
 RUN apt-get update && \
     apt-get install -y wget libstdc++-5-dev libexpat1-dev && \
-    apt-get install -y apt-utils apt-transport-https ca-certificates && \
+    apt-get install -y apt-utils apt-transport-https ca-certificates
 
 # Download afl++
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
