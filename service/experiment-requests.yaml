@@ -19,6 +19,17 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-02-09-aflpp
+  description: "cmplog variants"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_1
+    - aflplusplus_cmplog_max4k
+    - aflplusplus_cmplog_transform
+    - aflplusplus_cmplog_old
+    - aflplusplus_v300c
+
 - experiment: 2021-02-04-aflpp
   description: "cmplog variants + auto map size"
   fuzzers:

@@ -91,7 +91,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # Use a fixed map location (LTO only)
     if 'fixed' in build_modes:
         os.environ['AFL_LLVM_MAP_ADDR'] = '0x10000'
-    # generate an extra dictionary
+    # Generate an extra dictionary.
     if 'dict2file' in build_modes or 'native' in build_modes:
         os.environ['AFL_LLVM_DICT2FILE'] = build_directory + '/afl++.dict'
     # Enable context sentitivity for LLVM mode (non LTO only)
@@ -183,7 +183,7 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
                                         target_binary_name)
 
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
-    # decomment this to enable libdislocator
+    # decomment this to enable libdislocator.
     # os.environ['AFL_ALIGNED_ALLOC'] = '1' # align malloc to max_align_t
     # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
