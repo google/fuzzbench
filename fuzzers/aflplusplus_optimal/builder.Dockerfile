@@ -19,29 +19,17 @@ FROM $parent_image
 RUN apt-get update && \
     apt-get install -y wget libstdc++-5-dev libexpat1-dev && \
     apt-get install -y apt-utils apt-transport-https ca-certificates && \
-    echo deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-12 main >> /etc/apt/sources.list && \
-    echo deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu xenial main >> /etc/apt/sources.list && \
-    wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && \
-    apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 1E9377A2BA9EF27F && \
-    apt-get update && \
-    apt-get install -y clang-12 clangd-12 clang-tools-12 libc++1-12 libc++-12-dev \
-      libc++abi1-12 libc++abi-12-dev libclang1-12 libclang-12-dev libclang-common-12-dev \
-      libclang-cpp12 libclang-cpp12-dev liblld-12 liblld-12-dev liblldb-12 \
-      liblldb-12-dev libllvm12 libomp-12-dev libomp5-12 lld-12 lldb-12 \
-      llvm-12 llvm-12-dev llvm-12-runtime llvm-12-tools && \
-    apt-get install -y gcc-9 g++-9
 
 # Download afl++
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 19d8f00963a2eb3526fc442c0b1685c166b68410
+    git checkout 17cbb03ba7d4fc0eb3b3b47911c58e25b567e89b \
+    sed -i 's|^#define CMPLOG_SOLVE|// #define CMPLOG_SOLVE|' include/config.h
     
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
-RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
-    export LLVM_CONFIG=llvm-config-12 && export AFL_NO_X86=1 && \
-    export REAL_CC=gcc-9 && export REAL_CXX=g++-9 && \
-    CC=gcc-9 PYTHON_INCLUDE=/ make && make install && \
+RUN cd /afl && unset CFLAGS && unset CXXFLAGS && export AFL_NO_X86=1 && \
+    CC=clang PYTHON_INCLUDE=/ make && make install && \
     make -C utils/aflpp_driver && \
     cp utils/aflpp_driver/libAFLDriver.a / && \
-    cp -va `llvm-config-12 --libdir`/libc++* /afl/
+    cp -va `llvm-config --libdir`/libc++* /afl/

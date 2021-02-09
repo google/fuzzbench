@@ -24,9 +24,7 @@ RUN apt-get update && \
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 19d8f00963a2eb3526fc442c0b1685c166b68410 && \
-    sed -i 's/\/\/ #define CMPLOG_TRANSFORM/#define CMPLOG_TRANSFORM/' include/config.h && \
-    sed -i 's/CMPLOG_TRANSFORM_BASE64/CMPLOG_XXX/' include/config.h
+    git checkout 17cbb03ba7d4fc0eb3b3b47911c58e25b567e89b
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
