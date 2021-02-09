@@ -38,14 +38,14 @@ def redis_connection():
     return redis.Redis(host='queue-server')
 
 
-# pylint: disable=no-self-use
+# pylint: disable=no-self-use,redefined-outer-name
 @pytest.mark.skipif('E2E_INTEGRATION_TEST' not in os.environ,
                     reason='Not running end-to-end test.')
 @pytest.mark.usefixtures('redis_connection', 'experiment_config')
 class TestEndToEndRunResults:
     """Checks the result of a test experiment run."""
 
-    def test_jobs_dependency(self, experiment_config, redis_connection):  # pylint: disable=redefined-outer-name
+    def test_jobs_dependency(self, experiment_config, redis_connection):
         """Tests that jobs dependency preserves during working."""
         all_images = docker_images.get_images_to_build(
             experiment_config['fuzzers'], experiment_config['benchmarks'])
@@ -58,10 +58,8 @@ class TestEndToEndRunResults:
                 for dep in image['depends_on']:
                     assert jobs[dep].ended_at <= jobs[name].started_at
 
-    def test_all_jobs_finished_successfully(
-        self,
-        experiment_config,  # pylint: disable=redefined-outer-name
-        redis_connection):  # pylint: disable=redefined-outer-name
+    def test_all_jobs_finished_successfully(self, experiment_config,
+                                            redis_connection):
         """Tests all jobs finished successully."""
         all_images = docker_images.get_images_to_build(
             experiment_config['fuzzers'], experiment_config['benchmarks'])

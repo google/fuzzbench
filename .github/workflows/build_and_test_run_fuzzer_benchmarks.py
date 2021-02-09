@@ -15,6 +15,7 @@
 """Script for building and briefly running fuzzer,benchmark pairs in CI."""
 import sys
 import subprocess
+import time
 
 from common import retry
 from experiment.build import builder
@@ -75,6 +76,25 @@ def get_make_target(fuzzer, benchmark):
     return f'test-run-{fuzzer}-{benchmark}'
 
 
+def stop_docker_containers():
+    """Stop running docker containers."""
+    result = subprocess.run(['docker', 'ps', '-q'],
+                            stdout=subprocess.PIPE,
+                            check=True)
+    container_ids = result.stdout.splitlines()
+    if container_ids:
+        subprocess.run([
+            'docker',
+            'kill',
+        ] + container_ids, check=False)
+
+    # To avoid dockerd process growing in size.
+    subprocess.run(['sudo', 'service', 'docker', 'restart'],
+                   stdout=subprocess.PIPE,
+                   check=True)
+    time.sleep(5)
+
+
 def delete_docker_images():
     """Delete docker images."""
     # TODO(metzman): Don't delete base-runner/base-builder so it
@@ -84,13 +104,15 @@ def delete_docker_images():
                             stdout=subprocess.PIPE,
                             check=True)
     container_ids = result.stdout.splitlines()
-    subprocess.run(['docker', 'rm', '-f'] + container_ids, check=False)
+    if container_ids:
+        subprocess.run(['docker', 'rm', '-f'] + container_ids, check=False)
 
     result = subprocess.run(['docker', 'images', '-a', '-q'],
                             stdout=subprocess.PIPE,
                             check=True)
     image_ids = result.stdout.splitlines()
-    subprocess.run(['docker', 'rmi', '-f'] + image_ids, check=False)
+    if image_ids:
+        subprocess.run(['docker', 'rmi', '-f'] + image_ids, check=False)
 
     # Needed for BUILDKIT to clear build cache & avoid insufficient disk space.
     subprocess.run(['docker', 'builder', 'prune', '-f'], check=False)
@@ -115,6 +137,9 @@ def make_builds(benchmarks, fuzzer):
         make_target = get_make_target(fuzzer, benchmark)
         make_command = ['make', 'RUNNING_ON_CI=yes', '-j', make_target]
         run_command(make_command)
+
+        # Stop any left over docker container processes.
+        stop_docker_containers()
 
         # Delete docker images so disk doesn't fill up.
         delete_docker_images()
