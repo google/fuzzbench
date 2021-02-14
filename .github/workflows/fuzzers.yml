@@ -46,6 +46,7 @@ jobs:
           - aflplusplus_introspection2
           - aflplusplus_asan
           - aflplusplus_asan2
+          - aflplusplus_citest
           - aflplusplus_cmplog
 
         benchmark_type:
