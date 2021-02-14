@@ -1,0 +1,5 @@
+commit: 99a864a1f7a9cb59865f803770d7d62fb47cad69
+commit_date: 2019-09-25 13:27:45+00:00
+fuzz_target: libxml2_xml_reader_for_file_fuzzer
+project: libxml2
+type: bug

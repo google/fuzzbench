@@ -1,0 +1,5 @@
+commit: dd0efc8aee586eb3370025677f6ec9dee1da4729
+commit_date: 2020-08-19 20:10:49+00:00
+fuzz_target: set_eval_fuzzer
+project: muparser
+type: bug

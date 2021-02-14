@@ -1,0 +1,5 @@
+commit: 9ad7ea44ec9644c618c2e82be5960d868e48745d
+commit_date: 2019-04-19 00:29:32+00:00
+fuzz_target: stream_decompress
+project: zstd
+type: bug

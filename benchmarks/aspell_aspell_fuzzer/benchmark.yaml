@@ -1,0 +1,5 @@
+commit: b503ec3e3e134dbc28bf129c012e5d6245a39472
+commit_date: 2019-08-05 23:54:02+00:00
+fuzz_target: aspell_fuzzer
+project: aspell
+type: bug
