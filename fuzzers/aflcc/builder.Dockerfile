@@ -60,7 +60,7 @@ RUN cd /afl && \
 ENV CC=/afl/aflc-gclang
 ENV CXX=/afl/aflc-gclang++
 COPY aflcc_mock.c /aflcc_mock.c
-RUN wget https://raw.githubusercontent.com/llvm/llvm-project/master/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
+RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
     sed -i -e '/decide_deferred_forkserver/,+8d' /afl/afl_driver.cpp && \
     $CXX -I/usr/local/include/c++/v1/ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp -o /afl/afl_driver.o && \
     ar r /libAFL.a /afl/afl_driver.o && \
