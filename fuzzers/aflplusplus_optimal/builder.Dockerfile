@@ -29,7 +29,7 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /afl && unset CFLAGS && unset CXXFLAGS && export AFL_NO_X86=1 && \
-    CC=clang PYTHON_INCLUDE=/ make && make install && \
+    CC=clang SOURCE_DATE_EPOCH=123 PYTHON_INCLUDE=/ make && make install && \
     make -C utils/aflpp_driver && \
     cp utils/aflpp_driver/libAFLDriver.a / && \
     cp -va `llvm-config --libdir`/libc++* /afl/

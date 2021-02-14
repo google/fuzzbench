@@ -32,7 +32,7 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /afl && \
     unset CFLAGS && unset CXXFLAGS && \
-    AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
+    AFL_NO_X86=1 CC=clang SOURCE_DATE_EPOCH=123 PYTHON_INCLUDE=/ make && \
     cd qemu_mode && ./build_qemu_support.sh && cd .. && \
     make -C utils/aflpp_driver && \
     cp utils/aflpp_driver/libAFLQemuDriver.a /libAFLDriver.a && \

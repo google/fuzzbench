@@ -31,6 +31,6 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
     export CC=clang && export AFL_NO_X86=1 && \
-    PYTHON_INCLUDE=/ make && make install && \
+    SOURCE_DATE_EPOCH=123 PYTHON_INCLUDE=/ make && make install && \
     make -C utils/aflpp_driver && \
     cp utils/aflpp_driver/libAFLDriver.a /
