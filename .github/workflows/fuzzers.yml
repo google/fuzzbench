@@ -42,11 +42,8 @@ jobs:
           - weizz_qemu
           # Temporary variants.
           - aflplusplus_introspection
-          - aflplusplus_dict2file
           - aflplusplus_introspection2
-          - aflplusplus_asan
-          - aflplusplus_asan2
-          - aflplusplus_citest
+          - aflplusplus_dict2file
           - aflplusplus_cmplog
 
         benchmark_type:
