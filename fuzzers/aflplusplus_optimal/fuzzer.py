@@ -35,6 +35,8 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
         aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
     elif benchmark_name == 'curl_curl_fuzzer_http':
         aflplusplus_fuzzer.build("tracepc", "cmplog")
+    elif benchmark_name == 'jsoncpp_jsoncpp_fuzzer':
+        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
     elif benchmark_name == 'lcms-2017-03-21':
         aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
     elif benchmark_name == 'libjpeg-turbo-07-2017':
