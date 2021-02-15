@@ -18,3 +18,4 @@ fuzz_target: jsoncpp_fuzzer
 project: jsoncpp
 unsupported_fuzzers:
   - klee
+  - aflplusplus_optimal
