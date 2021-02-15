@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:8e56964113db5e06130b8bc5b94becb5d90a88e90c9b593f2ea24f33b0a467d0
+FROM gcr.io/oss-fuzz-base/base-builder
 RUN apt-get update && apt-get install -y build-essential make curl wget
 
 # Install latest cmake.

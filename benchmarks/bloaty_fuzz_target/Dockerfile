@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:12125f1ecb9e4905a19c35700a3402c1eba43c82ea2d227f01c28833d75e3574
+FROM gcr.io/oss-fuzz-base/base-builder
 RUN apt-get update && apt-get install -y cmake ninja-build g++
 RUN git clone --depth 1 https://github.com/google/bloaty.git bloaty
 WORKDIR bloaty

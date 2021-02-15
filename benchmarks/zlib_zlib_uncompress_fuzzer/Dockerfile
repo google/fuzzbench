@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:84df55d087d82b65e3a594c01248d59f49d513d4d7362014b417e640317b11f4
+FROM gcr.io/oss-fuzz-base/base-builder
 RUN apt-get update && apt-get install -y make autoconf automake libtool
 RUN git clone --depth 1 -b develop https://github.com/madler/zlib.git
 WORKDIR zlib
