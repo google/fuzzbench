@@ -42,7 +42,7 @@ def get_arg_parser():
     parser.add_argument(
         '-t',
         '--report-type',
-        choices=['default', 'experimental'],
+        choices=['default', 'experimental', 'fuzzer'],
         default='default',
         help='Type of the report (which template to use). Default: default.')
     parser.add_argument(
@@ -166,6 +166,7 @@ def generate_report(experiment_names,
         experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks)
 
     if fuzzers is not None:
+        print(fuzzers)
         experiment_df = data_utils.filter_fuzzers(experiment_df, fuzzers)
 
     if label_by_experiment:

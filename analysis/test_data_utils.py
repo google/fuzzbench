@@ -352,3 +352,31 @@ def test_experiment_rank_by_average_normalized_score():
                                 expected_ranking,
                                 check_names=False,
                                 check_less_precise=True)
+
+
+def test_fuzzer_summary():
+    experiment_df = create_experiment_data()
+    snapshots_df = data_utils.get_experiment_snapshots(experiment_df)
+    summary = data_utils.fuzzer_summary(snapshots_df)
+
+    match_cols = [
+        'benchmark', 'fuzzer', 'mean', 'mean_%', 'median', 'median_%', 'f_max',
+        'max_%', 'rank', 'N', 'max'
+    ]
+
+    expected_summary = pd.DataFrame(
+        {
+            'benchmark': ['libpng', 'libpng', 'libxml', 'libxml'],
+            'fuzzer': ['afl', 'libfuzzer', 'libfuzzer', 'afl'],
+            'mean': [150, 250, 700, 1100],
+            'mean_%': [0.6, 1.0, 7.0 / 11, 1.0],
+            'median': [150, 250, 700, 1100],
+            'median_%': [0.6, 1.0, 7.0 / 11, 1.0],
+            'f_max': [200, 300, 800, 1200],
+            'max_%': [2.0 / 3, 1.0, 2.0 / 3, 1.0],
+            'rank': [2.0, 1.0, 2.0, 1.0],
+            'N': [1, 1, 1, 1],
+            'max': [300, 300, 1200, 1200],
+        },
+        index=[0, 1, 3, 2])
+    assert summary[match_cols].equals(expected_summary)

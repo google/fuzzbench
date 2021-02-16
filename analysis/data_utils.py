@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utility functions for data (frame) transformations."""
+import pandas as pd
 from analysis import stat_tests
 from common import environment
 
@@ -34,7 +35,6 @@ def validate_data(experiment_df):
         'time_ended',
         'time',
         'edges_covered',
-        'crash_key',
     }
     missing_columns = expected_columns.difference(experiment_df.columns)
     if missing_columns:
@@ -114,6 +114,9 @@ def filter_max_time(experiment_df, max_time):
 def add_bugs_covered_column(experiment_df):
     """Return a modified experiment df in which adds a |bugs_covered| column,
     a cumulative count of bugs covered over time."""
+    if 'crash_key' not in experiment_df:
+        experiment_df['bugs_covered'] = 0
+        return experiment_df
     grouping1 = ['fuzzer', 'benchmark', 'trial_id', 'crash_key']
     grouping2 = ['fuzzer', 'benchmark', 'trial_id']
     grouping3 = ['fuzzer', 'benchmark', 'trial_id', 'time']
@@ -208,6 +211,34 @@ def experiment_summary(experiment_snapshots_df):
     return summaries
 
 
+def fuzzer_summary(experiment_snapshot_df, key='edges_covered'):
+    """Create fuzzer summary statistics table."""
+    df = experiment_snapshot_df
+    agg_funcs = {
+        'mean': pd.NamedAgg(column=key, aggfunc='mean'),
+        'median': pd.NamedAgg(column=key, aggfunc='median'),
+        'f_max': pd.NamedAgg(column=key, aggfunc='max'),
+        'max': pd.NamedAgg(column='max', aggfunc='max'),
+    }
+
+    df['max'] = df.groupby('benchmark')[key].transform('max')
+    table = df.groupby(['benchmark', 'fuzzer']).agg(**agg_funcs).reset_index()
+    benchmark_groups = table.groupby('benchmark')
+    table['median_%'] = table['median'] / benchmark_groups['median'].transform(
+        'max')
+    table['mean_%'] = table['mean'] / benchmark_groups['mean'].transform('max')
+    table['max_%'] = table['f_max'] / table['max']
+    sort_order = ['benchmark', 'median', 'f_max']
+    table = table.sort_values(by=sort_order, ascending=True)
+
+    groups = table.groupby('benchmark')
+    table['rank'] = groups['median'].rank(method='max', ascending=False)
+    table['N'] = table.groupby(['benchmark', 'rank'])['rank'].transform('count')
+    table['next'] = groups['fuzzer'].shift()
+    table['max_all'] = groups['median'].max()
+    return table
+
+
 # Per-benchmark fuzzer ranking options.
 
 
@@ -224,6 +255,14 @@ def benchmark_rank_by_median(benchmark_snapshot_df, key='edges_covered'):
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
     medians = benchmark_snapshot_df.groupby('fuzzer')[key].median()
     medians.rename('median cov', inplace=True)
+    return medians.sort_values(ascending=False)
+
+
+def benchmark_rank_by_percent(benchmark_snapshot_df, key='edges_covered'):
+    """Returns ranking of fuzzers based on median (normalized/%) coverage."""
+    assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
+    max_key = "{}_pct_max".format(key)
+    medians = benchmark_snapshot_df.groupby('fuzzer')[max_key].median()
     return medians.sort_values(ascending=False)
 
 
@@ -340,3 +379,48 @@ def experiment_level_ranking(experiment_snapshots_df,
     pivot_table = experiment_pivot_table(experiment_snapshots_df,
                                          benchmark_level_ranking_function)
     return experiment_level_ranking_function(pivot_table)
+
+
+def add_relative_columns(experiment_df):
+    """Adds relative performance metric columns to experiment snapshot
+    dataframe.
+    <key>_pct_max = trial <key> / experiment max <key>
+    <key>_pct_fmax = trial <key> / fuzzer max <key>
+    """
+    df = experiment_df
+    for key in ['edges_covered', 'bugs_covered']:
+        if key not in df.columns:
+            continue
+        new_col = "{}_pct_max".format(key)
+        df[new_col] = df[key] / df.groupby('benchmark')[key].transform(
+            'max') * 100.0
+
+        new_col = "{}_pct_fmax".format(key)
+        df[new_col] = df[key] / df.groupby(['benchmark', 'fuzzer'
+                                           ])[key].transform('max') * 100
+    return df
+
+
+def experiment_add_rank_column(experiment_snapshots_df, key='edges_covered'):
+    """Adds column rank per trial column.
+    rank = trial rank based on <key>
+    """
+    df = experiment_snapshots_df
+    df = df.sort_values(['benchmark', key], ascending=True)
+    df['rank'] = df.groupby('benchmark')[key].rank(
+        method='average', ascending=True, pct=True) * 100.0
+    return df
+
+
+def experiment_fuzzer_ranks(experiment_snapshot_df,
+                            key='edges_covered',
+                            aggregate_func='median'):
+    """Returns a multi-index dataframe of ranking per benchmark, per fuzzer
+    based one the provided aggregate function and key.
+    """
+    ranks = experiment_snapshot_df
+    ranks = ranks.groupby(['benchmark',
+                           'fuzzer']).aggregate({key: aggregate_func})
+    ranks = ranks.groupby('benchmark')[key].rank(method='average',
+                                                 ascending=False)
+    return ranks

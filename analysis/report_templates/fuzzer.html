@@ -1,0 +1,172 @@
+<!--
+     Copyright 2020 Google LLC
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>
+            FuzzBench: {{ experiment.name }} report
+            {% if in_progress %}
+            (running)
+            {% endif %}
+        </title>
+
+        <!-- Import Materialize CSS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+        <!-- Import Google Material Icon Font -->
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    </head>
+<body>
+    <div class="container"><div class="row"><div class="col s12 m10 l10">
+
+        <h1 class="center-align brown-text text-darken-3">
+            FuzzBench: {{ experiment.name }} report
+        </h1>
+        {% if in_progress %}
+        <h5 class="center-align brown-text text-darken-4">
+            (experiment incomplete/still running...)
+        </h5>
+        {% endif %}
+
+        <div class="card-panel amber lighten-5">
+            <div class="row">
+                <div class="col s4 m2 center-align">
+                    <i class="medium material-icons">warning</i>
+                </div>
+                <div class="col s8 m10">
+                    <span class="black-text">
+                        Please consider this as a preliminary report to
+                        demonstrate the capabilities of FuzzBench. While we have
+                        tried our best, we have not confirmed that we configured
+                        everything correctly. We are hoping to work together
+                        with the community to validate results and improve the
+                        set of fuzzers, benchmarks, and their configurations in
+                        the future.
+                        See <a href="https://google.github.io/fuzzbench/faq">FAQ</a>
+                        for more details.
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div id="summary" class="section scrollspy">
+            <h2 class="green-text text-darken-3">experiment summary</h2>
+
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Median {{ experiment.type }}-coverages on each benchmark
+                    </div>
+                    <div class="collapsible-body">
+                        {{ experiment.percent_summary_table.render() }}
+                    </div>
+                </li>
+            </ul>
+        </div> <!-- id="summary" -->
+
+        {% for fuzzer in experiment.fuzzers %}
+        <div id="{{ fuzzer.name }}" class="section scrollspy">
+
+            <h2 class="green-text text-darken-3">{{ fuzzer.name }} summary ({{ fuzzer.ntrials }} trials)</h2>
+
+            <div class="row">
+                <div class="col s12">
+                    <ul class="tabs">
+                      <li class="tab col s3"><a href="#{{ fuzzer.name }}_ranks" class="green-text text-darken-3">Trial Ranks</a></li>
+                      <li class="tab col s3"><a href="#{{ fuzzer.name }}_experiment_max" class="green-text text-darken-3">Trial Percent of Max</a></li>
+                      <li class="tab col s3"><a href="#{{ fuzzer.name }}_fuzzer_max" class="green-text text-darken-3">Fuzzer Consistency</a></li>
+                      <li class="tab col s3"><a href="#{{ fuzzer.name }}_coverage" class="green-text text-darken-3">Code Coverage</a></li>
+                    </ul>
+                </div>
+                <div id="{{ fuzzer.name }}_ranks" class="col s12">
+                    <h5 class="center-align">Trial Ranking Distribution</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ fuzzer.average_rank_plot }}">
+                </div>
+                <div id="{{ fuzzer.name }}_experiment_max" class="col s12">
+                    <h5 class="center-align">Trial Relative Distribution (all)</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ fuzzer.experiment_relative_max_plot }}">
+                </div>
+                <div id="{{ fuzzer.name }}_fuzzer_max" class="col s12">
+                    <h5 class="center-align">Trial Relative Distribution (fuzzer)</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ fuzzer.fuzzer_relative_max_plot }}">
+                </div>
+                <div id="{{ fuzzer.name }}_coverage" class="col s12">
+                    <h5 class="center-align">Median code coverage growth over time (normalized)</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ fuzzer.fuzzer_coverage_growth_plot_logscale }}">
+                </div>
+                <div class="center-align">
+                    * White triangles depict the mean.
+                </div>
+            </div>
+
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Sample statistics and statistical significance (code coverage)
+                    </div>
+                    <div class="collapsible-body">
+
+                        <h5 class="center-align">Code coverage sample statistics</h5>
+                        {{ fuzzer.summary_table.render() }}
+                        <br>
+
+                    </div>
+                </li>
+            </ul>
+        </div> <!-- id="{{ fuzzer.name }}" -->
+        {% endfor %}
+
+    </div> <!-- class="col" -->
+
+    <div class="col hide-on-med-and-down l2">
+        <ul class="section table-of-contents">
+            <li><a href="#summary">experiment summary</a></li>
+            {% for fuzzer in experiment.fuzzers %}
+            <li><a href="#{{ fuzzer.name }}">{{ fuzzer.name }}</a></li>
+            {% endfor %}
+            <li><a href="#data">experiment data</a></li>
+        </ul>
+    </div>
+
+    </div> <!-- class="row" -->
+    </div> <!-- class="container" -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+     M.AutoInit();
+     document.addEventListener('DOMContentLoaded', function() {
+         var toc = document.querySelectorAll('.table-of-contents');
+         M.Pushpin.init(toc);
+
+         var scrollspy_elems = document.querySelectorAll('.scrollspy');
+         var scrollspy_options = {scrollOffset: 0};
+         M.ScrollSpy.init(scrollspy_elems, scrollspy_options);
+
+         var tabs_elems = document.querySelectorAll('.tabs');
+         var tabs_options = {duration: 500};
+         var instance = M.Tabs.init(tabs_elems, tabs_options);
+     });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.2.2/anchor.min.js"></script>
+    <script>
+     anchors.add();
+    </script>
+</body>
+</html>
