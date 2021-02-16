@@ -17,6 +17,7 @@ import sys
 import subprocess
 import time
 
+from common import benchmark_utils
 from common import retry
 from experiment.build import builder
 from src_analysis import change_utils
@@ -25,48 +26,6 @@ from src_analysis import diff_utils
 ALWAYS_BUILD_FUZZER = 'afl'
 NUM_RETRIES = 2
 RETRY_DELAY = 60
-
-# Don't build php benchmark since it fills up disk in GH actions.
-OSS_FUZZ_BENCHMARKS = {
-    'arrow_parquet-arrow-fuzz',
-    'bloaty_fuzz_target',
-    'curl_curl_fuzzer_http',
-    'jsoncpp_jsoncpp_fuzzer',
-    'libpcap_fuzz_both',
-    'libxslt_xpath',
-    'mbedtls_fuzz_dtlsclient',
-    'openssl_x509',
-    'sqlite3_ossfuzz',
-    'systemd_fuzz-link-parser',
-    'zlib_zlib_uncompress_fuzzer',
-}
-
-STANDARD_BENCHMARKS = {
-    'freetype2-2017',
-    'harfbuzz-1.3.2',
-    'lcms-2017-03-21',
-    'libjpeg-turbo-07-2017',
-    'libpng-1.2.56',
-    'libxml2-v2.9.2',
-    'openthread-2019-12-23',
-    'proj4-2017-08-14',
-    're2-2014-12-09',
-    'vorbis-2017-12-11',
-    'woff2-2016-05-06',
-}
-
-BUG_BENCHMARKS = {
-    'file_magic_fuzzer',
-    'harfbuzz_hb-subset-fuzzer',
-    'libhevc_hevc_dec_fuzzer',
-    'matio_matio_fuzzer',
-    'ndpi_fuzz_ndpi_reader',
-    'openexr_openexr_exrenvmap_fuzzer',
-    'openh264_decoder_fuzzer',
-    'php_php-fuzz-execute',
-    'php_php-fuzz-parser-2020-07-25',
-    'stb_stbi_read_fuzzer',
-}
 
 
 def get_make_target(fuzzer, benchmark):
@@ -150,11 +109,11 @@ def make_builds(benchmarks, fuzzer):
 def do_build(build_type, fuzzer, always_build):
     """Build fuzzer,benchmark pairs for CI."""
     if build_type == 'oss-fuzz':
-        benchmarks = OSS_FUZZ_BENCHMARKS
+        benchmarks = benchmark_utils.get_oss_fuzz_coverage_benchmarks()
     elif build_type == 'standard':
-        benchmarks = STANDARD_BENCHMARKS
+        benchmarks = benchmark_utils.get_standard_coverage_benchmarks()
     elif build_type == 'bug':
-        benchmarks = BUG_BENCHMARKS
+        benchmarks = benchmark_utils.get_bug_benchmarks()
     else:
         raise Exception('Invalid build_type: %s' % build_type)
 
@@ -170,8 +129,8 @@ def do_build(build_type, fuzzer, always_build):
         return make_builds(benchmarks, fuzzer)
 
     # Otherwise, only build benchmarks that have changed.
-    changed_benchmarks = set(change_utils.get_changed_benchmarks(changed_files))
-    benchmarks = benchmarks.intersection(changed_benchmarks)
+    changed_benchmarks = change_utils.get_changed_benchmarks(changed_files)
+    benchmarks = set(benchmarks).intersection(changed_benchmarks)
     return make_builds(benchmarks, fuzzer)
 
 
