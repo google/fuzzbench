@@ -16,11 +16,11 @@
 
 FROM gcr.io/oss-fuzz-base/base-builder
 
-RUN apt-get update &&\
-    apt-get install -y gperf m4 gettext python3-pip \
-        libcap-dev libmount-dev libkmod-dev \
-        pkg-config wget &&\
-    pip3 install meson ninja
+RUN apt-get update && \
+    apt-get install -y \
+        gperf m4 gettext libcap-dev libmount-dev libkmod-dev \
+        pkg-config wget && \
+    pip3 install meson==0.55.3 ninja==1.10.0
 RUN git clone https://github.com/systemd/systemd systemd
 WORKDIR systemd
 COPY build.sh $SRC/
