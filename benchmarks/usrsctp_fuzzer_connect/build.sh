@@ -19,12 +19,10 @@ cmake -Dsctp_build_programs=0 -Dsctp_debug=0 -Dsctp_invariants=1 -DCMAKE_BUILD_T
 make -j$(nproc)
 cd fuzzer
 
-TARGETS="fuzzer_connect fuzzer_listen"
-
-for target in $TARGETS; do
-        $CC $CFLAGS -DFUZZING_STAGE=0 -I . -I ../usrsctplib/ -c ${target}.c -o $OUT/${target}.o
-        $CXX $CXXFLAGS -o $OUT/${target} $OUT/${target}.o $LIB_FUZZING_ENGINE ../usrsctplib/libusrsctp.a
-        rm -f $OUT/${target}.o
+for target in "fuzzer_connect"; do
+  $CC $CFLAGS -DFUZZING_STAGE=0 -I . -I ../usrsctplib/ -c ${target}.c -o $OUT/${target}.o
+  $CXX $CXXFLAGS -o $OUT/${target} $OUT/${target}.o $LIB_FUZZING_ENGINE ../usrsctplib/libusrsctp.a
+  rm -f $OUT/${target}.o
 done
 
 zip -jr fuzzer_connect_seed_corpus.zip CORPUS_CONNECT/
