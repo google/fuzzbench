@@ -3,3 +3,11 @@ commit_date: 2019-09-25 13:27:45+00:00
 fuzz_target: libxml2_xml_reader_for_file_fuzzer
 project: libxml2
 type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - honggfuzz_qemu
+  - klee
+  - lafintel
+  - weizz_qemu
