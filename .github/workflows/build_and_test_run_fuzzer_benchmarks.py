@@ -130,7 +130,7 @@ def do_build(build_type, fuzzer, always_build):
 
     # Otherwise, only build benchmarks that have changed.
     changed_benchmarks = change_utils.get_changed_benchmarks(changed_files)
-    benchmarks = set(benchmarks).intersection(set(changed_benchmarks))
+    benchmarks = set(benchmarks).intersection(changed_benchmarks)
     return make_builds(benchmarks, fuzzer)
 
 
