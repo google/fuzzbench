@@ -66,7 +66,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     elif benchmark_name == 'sqlite3_ossfuzz':
         aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
     elif benchmark_name == 'systemd_fuzz-link-parser':
-        aflplusplus_fuzzer.build("lto", "cmplog")
+        aflplusplus_fuzzer.build("tracepc", "cmplog")
     elif benchmark_name == 'vorbis-2017-12-11':
         aflplusplus_fuzzer.build("tracepc", "laf")
     elif benchmark_name == 'woff2-2016-05-06':
