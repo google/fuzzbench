@@ -90,7 +90,7 @@
                 <div class="col s5 offset-s1">
                     <h5 class="center-align">By avg. score</h5>
                     {{ experiment.linkify_names(
-                        /experiment.rank_by_median_and_average_normalized_score.round(2).to_frame()
+                        experiment.rank_by_median_and_average_normalized_score.round(2).to_frame()
                        ).to_html(escape=False)
                     }}
                 </div>
