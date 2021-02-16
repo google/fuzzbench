@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:270e52ac2c38de7d7d678ab488252c81652a161b378fc9fc9f3df6c79e475afa
+FROM gcr.io/oss-fuzz-base/base-builder
 MAINTAINER harish.mahendrakar@ittiam.com
 RUN apt-get update && apt-get install -y wget cmake
 RUN git clone https://android.googlesource.com/platform/external/libhevc

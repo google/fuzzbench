@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:02b6f53c6220b84cfb671dfc65bb8f1e224e8a5c56940e358f0fbcbd74b44734
+FROM gcr.io/oss-fuzz-base/base-builder
 RUN apt-get update &&\
     apt-get install -y gperf m4 gettext python3-pip \
         libcap-dev libmount-dev libkmod-dev \

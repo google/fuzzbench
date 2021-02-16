@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:b9f4c6bf872a08e67cc36fdd9431d4fcac45d575830facb30f5271b26d2e2a28
+FROM gcr.io/oss-fuzz-base/base-builder
 
 # Note that we don't use the system libxml2 but a custom instrumented build.
 # libgcrypt is required for the crypto extensions of libexslt.

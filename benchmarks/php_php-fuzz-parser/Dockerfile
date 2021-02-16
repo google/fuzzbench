@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:59fdabfe72127e145d8a387b68e883121bddd7cf391d600edb97ecbdacbc9ff8
+FROM gcr.io/oss-fuzz-base/base-builder
 RUN apt-get update && \
     apt-get install -y autoconf automake libtool bison re2c pkg-config
 
