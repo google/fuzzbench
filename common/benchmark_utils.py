@@ -55,6 +55,11 @@ def get_type(benchmark):
                                                       BenchmarkType.CODE.value)
 
 
+def is_oss_fuzz_benchmark(benchmark):
+    """Returns if benchmark is a OSS-Fuzz benchmark."""
+    return bool(benchmark_config.get_config(benchmark).get('commit_date'))
+
+
 def get_runner_image_url(experiment, benchmark, fuzzer, docker_registry):
     """Get the URL of the docker runner image for fuzzing the benchmark with
     fuzzer."""
@@ -124,4 +129,30 @@ def get_all_benchmarks():
         benchmark_path = os.path.join(BENCHMARKS_DIR, benchmark)
         if os.path.isfile(os.path.join(benchmark_path, 'benchmark.yaml')):
             all_benchmarks.append(benchmark)
-    return all_benchmarks
+    return sorted(all_benchmarks)
+
+
+def get_oss_fuzz_coverage_benchmarks():
+    """Return the list of OSS-Fuzz coverage benchmarks."""
+    return [
+        benchmark for benchmark in get_all_benchmarks()
+        if is_oss_fuzz_benchmark(benchmark) and
+        get_type(benchmark) == BenchmarkType.CODE.value
+    ]
+
+
+def get_standard_coverage_benchmarks():
+    """Return the list of standard coverage benchmarks."""
+    return [
+        benchmark for benchmark in get_all_benchmarks()
+        if not is_oss_fuzz_benchmark(benchmark) and
+        get_type(benchmark) == BenchmarkType.CODE.value
+    ]
+
+
+def get_bug_benchmarks():
+    """Return the list of standard coverage benchmarks."""
+    return [
+        benchmark for benchmark in get_all_benchmarks()
+        if get_type(benchmark) == BenchmarkType.BUG.value
+    ]
