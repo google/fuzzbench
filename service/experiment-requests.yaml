@@ -19,6 +19,17 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-02-17-aflpp
+  description: "make optimal optimal again"
+  fuzzers:
+    - aflplusplus_plain
+    - aflplusplus_lto
+    - aflplusplus_lto_2mb
+    - aflplusplus_lto_500mb
+    - aflplusplus_lto_cmplog
+    - aflplusplus_lto_laf
+    - aflplusplus_lto_mopt
+
 - experiment: 2021-02-09-aflpp
   description: "cmplog variants"
   fuzzers:
