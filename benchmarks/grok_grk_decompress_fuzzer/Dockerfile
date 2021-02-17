@@ -15,7 +15,6 @@
 ################################################################################
 
 FROM gcr.io/oss-fuzz-base/base-builder
-RUN apt-get update && apt-get install -y wget
 
 RUN git clone https://github.com/GrokImageCompression/grok.git grok
 RUN git clone https://github.com/GrokImageCompression/grok-test-data.git grok/data

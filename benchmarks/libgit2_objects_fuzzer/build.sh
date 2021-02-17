@@ -28,7 +28,7 @@ cmake .. -DCMAKE_INSTALL_PREFIX="$WORK" \
 make -j$(nproc)
 make install
 
-for fuzzer in ../fuzzers/*_fuzzer.c
+for fuzzer in "../fuzzers/objects_fuzzer.c"
 do
     fuzzer_name=$(basename "${fuzzer%.c}")
 

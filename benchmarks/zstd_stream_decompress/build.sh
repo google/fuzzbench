@@ -23,7 +23,7 @@ make -j seedcorpora
 # Build all of the fuzzers
 ./fuzz.py build all
 
-for target in $(./fuzz.py list); do
+for target in "stream_decompress"; do
     cp "$target" "$OUT"
 
     options=default.options
