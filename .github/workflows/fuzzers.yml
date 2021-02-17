@@ -43,6 +43,13 @@ jobs:
           - aflplusplus_introspection2
           - aflplusplus_dict2file
           - aflplusplus_cmplog
+          - aflplusplus_plain
+          - aflplusplus_lto
+          - aflplusplus_lto_2mb
+          - aflplusplus_lto_500mb
+          - aflplusplus_lto_cmplog
+          - aflplusplus_lto_laf
+          - aflplusplus_lto_mopt
 
         benchmark_type:
           - oss-fuzz
