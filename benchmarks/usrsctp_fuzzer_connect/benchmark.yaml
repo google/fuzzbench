@@ -1,0 +1,13 @@
+commit: e08eacffd438cb0760c926fbe60ccda011f6ce70
+commit_date: 2019-10-06 10:51:51+00:00
+fuzz_target: fuzzer_connect
+project: usrsctp
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - honggfuzz_qemu
+  - klee
+  - lafintel
+  - weizz_qemu

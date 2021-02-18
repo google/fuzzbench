@@ -1,0 +1,13 @@
+commit: 20cb30b6b8e269d2ce3474523562b2739a8efea2
+commit_date: 2018-11-13 12:40:17+00:00
+fuzz_target: objects_fuzzer
+project: libgit2
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - honggfuzz_qemu
+  - klee
+  - lafintel
+  - weizz_qemu
