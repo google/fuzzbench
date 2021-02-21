@@ -32,6 +32,7 @@
     - aflplusplus_cmplog_fail64
     - aflplusplus_cmplog_fail128
     - aflplusplus_cmplog_8k
+    - aflplusplus_u16
 
 - experiment: 2021-02-17-aflpp
   description: "make optimal optimal again"
