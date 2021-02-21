@@ -28,6 +28,21 @@
     - afl_buf
     - weizz_qemu
 
+- experiment: 2021-02-21-aflpp
+  description: "make optimal optimal again"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_explore
+    - aflplusplus_coe
+    - aflplusplus_arith
+    - aflplusplus_cmplog_per10
+    - aflplusplus_cmplog_per30
+    - aflplusplus_cmplog_fail64
+    - aflplusplus_cmplog_fail128
+    - aflplusplus_cmplog_8k
+    - aflplusplus_u16
+
 - experiment: 2021-02-17-aflpp
   description: "make optimal optimal again"
   fuzzers:
