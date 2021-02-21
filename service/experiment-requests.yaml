@@ -25,6 +25,7 @@
   fuzzers:
     - afl
     - aflplusplus
+    - aflplusplus_optimal
     - afl_buf
     - weizz_qemu
 
