@@ -39,6 +39,7 @@ jobs:
           - honggfuzz_qemu
           - weizz_qemu
           # Temporary variants.
+          - afl_buf
           - aflplusplus_introspection
           - aflplusplus_introspection2
           - aflplusplus_dict2file
