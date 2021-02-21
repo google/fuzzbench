@@ -32,51 +32,31 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     benchmark_name = os.environ['BENCHMARK']
 
     if benchmark_name == 'bloaty_fuzz_target':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
-    elif benchmark_name == 'curl_curl_fuzzer_http':
-        aflplusplus_fuzzer.build("tracepc", "cmplog")
-    elif benchmark_name == 'jsoncpp_jsoncpp_fuzzer':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
-    elif benchmark_name == 'lcms-2017-03-21':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
-    elif benchmark_name == 'libjpeg-turbo-07-2017':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
-    elif benchmark_name == 'libpcap_fuzz_both':
-        aflplusplus_fuzzer.build("tracepc", "dict2file")
-    elif benchmark_name == 'libpng-1.2.56':
-        aflplusplus_fuzzer.build("lto", "laf")
-    elif benchmark_name == 'libxml2-v2.9.2':
         aflplusplus_fuzzer.build("lto")
-    elif benchmark_name == 'libxslt_xpath':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
-    elif benchmark_name == 'mbedtls_fuzz_dtlsclient':
-        aflplusplus_fuzzer.build("tracepc")
-    elif benchmark_name == 'ndpi_fuzz_ndpi_reader':
+    elif benchmark_name == 'curl_curl_fuzzer_http':
+        aflplusplus_fuzzer.build("lto")
+    elif benchmark_name == 'harfbuzz-1.3.2':
+        aflplusplus_fuzzer.build("lto", "laf")
+    elif benchmark_name == 'jsoncpp_jsoncpp_fuzzer':
+        aflplusplus_fuzzer.build("lto", "laf")
+    elif benchmark_name == 'libjpeg-turbo-07-2017':
         aflplusplus_fuzzer.build("tracepc", "dict2file")
-    elif benchmark_name == 'openexr_openexr_exrenvmap_fuzzer':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
+    elif benchmark_name == 'libxslt_xpath':
+        aflplusplus_fuzzer.build("lto")
     elif benchmark_name == 'openssl_x509':
         aflplusplus_fuzzer.build("tracepc", "dict2file")
     elif benchmark_name == 'php_php-fuzz-parser':
         aflplusplus_fuzzer.build("native", "cmplog", "dict2file")
-    elif benchmark_name == 'proj4-2017-08-14':
-        aflplusplus_fuzzer.build("tracepc", "cmplog")
-    elif benchmark_name == 're2-2014-12-09':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
-    elif benchmark_name == 'sqlite3_ossfuzz':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
     elif benchmark_name == 'systemd_fuzz-link-parser':
-        aflplusplus_fuzzer.build("tracepc", "cmplog")
+        aflplusplus_fuzzer.build("tracepc", "dict2file")
     elif benchmark_name == 'vorbis-2017-12-11':
-        aflplusplus_fuzzer.build("tracepc", "laf")
-    elif benchmark_name == 'woff2-2016-05-06':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
+        aflplusplus_fuzzer.build("lto", "laf")
     elif benchmark_name == 'zlib_zlib_uncompress_fuzzer':
-        aflplusplus_fuzzer.build("tracepc", "cmplog")
+        aflplusplus_fuzzer.build("tracepc", "dict2file")
     else:
         build_flags = os.environ['CFLAGS']
         if build_flags.find('array-bounds') != -1:
-            aflplusplus_fuzzer.build("tracepc", "laf", "dict2file")
+            aflplusplus_fuzzer.build("tracepc", "dict2file")
         else:
             aflplusplus_fuzzer.build("lto", "cmplog")
 
@@ -91,38 +71,39 @@ def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-man
     run_options = []
 
     if benchmark_name == 'bloaty_fuzz_target':
-        run_options = ['-Z', '-L', '0', '-p', 'coe']
-        os.environ['AFL_TESTCACHE_SIZE'] = '50'
+        run_options = ['-L', '0']
+        os.environ['AFL_TESTCACHE_SIZE'] = '2'
     elif benchmark_name == 'curl_curl_fuzzer_http':
-        os.environ['AFL_TESTCACHE_SIZE'] = '50'
-        run_options = ['-L', '-1', '-p', 'coe']
-    elif benchmark_name == 'lcms-2017-03-21':
-        run_options = ['-L', '0', '-p', 'exploit']
-    elif benchmark_name == 'libjpeg-turbo-07-2017':
-        os.environ['AFL_TESTCACHE_SIZE'] = '50'
-    elif benchmark_name == 'libxml2-v2.9.2':
-        run_options = ['-p', 'coe']
-    elif benchmark_name == 'libxslt_xpath':
-        os.environ['AFL_TESTCACHE_SIZE'] = '50'
-        run_options = ['-L', '-1']
-    elif benchmark_name == 'mbedtls_fuzz_dtlsclient':
         run_options = ['-L', '-1']
     elif benchmark_name == 'openssl_x509':
-        run_options = ['-L', '0', '-p', 'exploit']
-    elif benchmark_name == 'proj4-2017-08-14':
+        run_options = ['-L', '0']
+    elif benchmark_name == 'harfbuzz-1.3.2':
+        os.environ['AFL_TESTCACHE_SIZE'] = '500'
+    elif benchmark_name == 'libjpeg-turbo-07-2017':
         os.environ['AFL_TESTCACHE_SIZE'] = '50'
+    elif benchmark_name == 'libpcap_fuzz_both':
+        os.environ['AFL_TESTCACHE_SIZE'] = '50'
+        run_options = ['-l', '2AT']
+    elif benchmark_name == 'libxml2-v2.9.2':
+        os.environ['AFL_TESTCACHE_SIZE'] = '500'
+        run_options = ['-l', '2AT']
+    elif benchmark_name == 'libxslt_xpath':
+        os.environ['AFL_TESTCACHE_SIZE'] = '50'
+        run_options = ['-l', '2AT']
+    elif benchmark_name == 'mbedtls_fuzz_dtlsclient':
+        os.environ['AFL_TESTCACHE_SIZE'] = '50'
+    elif benchmark_name == 'openssl_x509':
+        os.environ['AFL_TESTCACHE_SIZE'] = '500'
+        run_options = ['-l', '2AT']
     elif benchmark_name == 're2-2014-12-09':
-        os.environ['AFL_TESTCACHE_SIZE'] = '50'
+        os.environ['AFL_TESTCACHE_SIZE'] = '2'
+        run_options = ['-l', '2AT']
     elif benchmark_name == 'sqlite3_ossfuzz':
         os.environ['AFL_TESTCACHE_SIZE'] = '500'
-        run_options = ['-L', '0', '-p', 'explore']
     elif benchmark_name == 'vorbis-2017-12-11':
-        run_options = ['-p', 'exploit']
+        os.environ['AFL_TESTCACHE_SIZE'] = '50'
     elif benchmark_name == 'woff2-2016-05-06':
         os.environ['AFL_TESTCACHE_SIZE'] = '50'
-    elif benchmark_name == 'zlib_zlib_uncompress_fuzzer':
-        os.environ['AFL_TESTCACHE_SIZE'] = '50'
-        run_options = ['-p', 'exploit']
     else:
         os.environ['AFL_TESTCACHE_SIZE'] = '2'
 

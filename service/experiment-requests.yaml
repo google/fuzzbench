@@ -19,6 +19,20 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-02-21-aflpp
+  description: "make optimal optimal again"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_explore
+    - aflplusplus_coe
+    - aflplusplus_arith
+    - aflplusplus_cmplog_per10
+    - aflplusplus_cmplog_per30
+    - aflplusplus_cmplog_fail64
+    - aflplusplus_cmplog_fail128
+    - aflplusplus_cmplog_8k
+
 - experiment: 2021-02-17-aflpp
   description: "make optimal optimal again"
   fuzzers:
