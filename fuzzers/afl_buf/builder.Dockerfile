@@ -59,7 +59,7 @@ RUN update-alternatives \
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/andreafioraldi/FuzzFactory /afl && \
     cd /afl && \
-    git checkout 774d0705e8c6498109bf3404df3e028a402e1fd1 && \
+    git checkout 0531e838dba017885ec356cc1063368766319c13 && \
     AFL_NO_X86=1 make
 
 RUN cd /afl && make llvm-domains LLVM_CONFIG=llvm-config-10 CXXFLAGS=-std=c++14
