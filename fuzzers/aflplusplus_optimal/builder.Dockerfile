@@ -15,16 +15,14 @@
 ARG parent_image
 FROM $parent_image
 
-# Install llvm 12 and gcc 10
 RUN apt-get update && \
-    apt-get install -y wget libstdc++-5-dev libexpat1-dev && \
-    apt-get install -y apt-utils apt-transport-https ca-certificates
+    apt-get install -y wget libstdc++-5-dev libexpat1-dev \
+                       apt-utils apt-transport-https ca-certificates
 
 # Download afl++
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 5dd35f5281afec0955c08fe9f99e3c83222b7764 && \
-    sed -i 's|^#define CMPLOG_SOLVE|// #define CMPLOG_SOLVE|' include/config.h
+    git checkout a252943236b12c080248747bee06c9c5084b871e
     
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
