@@ -53,14 +53,15 @@ RUN update-alternatives \
       --slave   /usr/bin/clang++               clang++                /usr/bin/clang++-10 \
       --slave   /usr/bin/clang-cpp             clang-cpp              /usr/bin/clang-cpp-10
 
-RUN wget https://andreafioraldi.github.io/assets/dupfunc_ctx.tar.gz -O /dupfunc_ctx.tar.gz && \
+RUN wget https://andreafioraldi.github.io/assets/dupfunc_ctx.tar.gz && \
     mkdir -p /dupfunc_ctx && \
-    tar xvf /dupfunc_ctx.tar.gz -C /dupfunc_ctx && \
-    rm /dupfunc_ctx.tar.gz
+    tar xvf dupfunc_ctx.tar.gz -C /dupfunc_ctx
 
-RUN cd /dupfunc_ctx && LLVM_CONFIG=llvm-config-10 ./install_svf.sh
+RUN cd /dupfunc_ctx && unset CFLAGS && unset CXXFLAGS && \
+    LLVM_CONFIG=llvm-config-10 ./install_svf.sh
 
-RUN cd /dupfunc_ctx/passes && make LLVM_CONFIG=llvm-config-10
+RUN cd /dupfunc_ctx/passes && unset CFLAGS && unset CXXFLAGS && \
+    make LLVM_CONFIG=llvm-config-10
 
 ENV PASSES_DIR /dupfunc_ctx/bin
 ENV GOPATH /go
@@ -86,3 +87,9 @@ RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
 
 RUN echo "void abort(void); __attribute__((weak)) int main() { abort(); }" > /empty.c  && \
     clang -c /empty.c && ar r /empty.a empty.o
+
+RUN wget https://andreafioraldi.github.io/assets/wrap_gclang.py && \
+    cp wrap_gclang.py / && \
+    chmod +x /wrap_gclang.py && \
+    ln -s /wrap_gclang.py /usr/bin/wrap-gclang && \
+    ln -s /wrap_gclang.py /usr/bin/wrap-gclang++ 
