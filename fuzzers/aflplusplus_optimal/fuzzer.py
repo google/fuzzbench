@@ -35,18 +35,22 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
         aflplusplus_fuzzer.build("lto")
     elif benchmark_name == 'curl_curl_fuzzer_http':
         aflplusplus_fuzzer.build("lto")
+    elif benchmark_name == 'freetype2-2017':
+        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
     elif benchmark_name == 'harfbuzz-1.3.2':
-        aflplusplus_fuzzer.build("lto", "laf")
+        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
     elif benchmark_name == 'jsoncpp_jsoncpp_fuzzer':
         aflplusplus_fuzzer.build("lto", "laf")
     elif benchmark_name == 'libjpeg-turbo-07-2017':
-        aflplusplus_fuzzer.build("tracepc", "dict2file")
+        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
     elif benchmark_name == 'libxslt_xpath':
         aflplusplus_fuzzer.build("lto")
     elif benchmark_name == 'openssl_x509':
         aflplusplus_fuzzer.build("tracepc", "dict2file")
     elif benchmark_name == 'php_php-fuzz-parser':
-        aflplusplus_fuzzer.build("native", "cmplog", "dict2file")
+        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
+    elif benchmark_name == 'proj4-2017-08-14':
+        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
     elif benchmark_name == 'sqlite3_ossfuzz':
         aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
     elif benchmark_name == 'systemd_fuzz-link-parser':
