@@ -24,8 +24,8 @@ RUN apt-get update && \
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout a252943236b12c080248747bee06c9c5084b871e && \
-    sed -i 's|CMPLOG_CORPUS_PERCENT .*|CMPLOG_CORPUS_PERCENT 30|' include/config.h
+    git checkout 564f4915665c8a68a97d71b7db812606ddec8c5b && \
+    sed -i 's|CMPLOG_FAIL_MAX .*|CMPLOG_FAIL_MAX 192|' include/config.h
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
