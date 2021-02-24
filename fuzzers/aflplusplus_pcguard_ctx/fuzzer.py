@@ -15,7 +15,6 @@
 """Integration code for AFLplusplus fuzzer."""
 
 import os
-import json
 import shutil
 
 from fuzzers.afl import fuzzer as afl_fuzzer
@@ -27,57 +26,11 @@ def get_cmplog_build_directory(target_directory):
     return os.path.join(target_directory, 'cmplog')
 
 
-def build_bitcode():
-    """Build the bitcode file with gllvm."""
-    os.environ['CC'] = 'wrap-gclang'
-    os.environ['CXX'] = 'wrap-gclang++'
-    os.environ['LLVM_BITCODE_GENERATION_FLAGS'] = '-flto'
-    
-    src = os.getenv('SRC')
-    work = os.getenv('WORK')
-
-    utils.build_benchmark()
-
-    fuzz_target = os.getenv('FUZZ_TARGET')
-    os.environ['BC_TARGET'] = fuzz_target + '.original.bc'
-
-    assert(os.system('cd $OUT && get-bc -b -o "$BC_TARGET" "$FUZZ_TARGET"') == 0)
-    assert(os.system('cd $OUT && cp "$FUZZ_TARGET" "$FUZZ_TARGET.original"') == 0)
-    assert(os.system('cd $OUT && rm "$FUZZ_TARGET"') == 0)
-
-
-def apply_funcdup_passes():
-    """Apply passes."""
-    assert(os.system('''cd $OUT && \
-           opt-10 -internalize -internalize-public-api-list=LLVMFuzzerTestOneInput \
-           -globaldce -o "$FUZZ_TARGET.internalized.bc" "$BC_TARGET"''') == 0)
-    assert(os.system('''cd $OUT && \
-           opt-10 -load=$PASSES_DIR/icp.so -icp -icp-fallback -icp-type \
-           -icp-type-opaque-ptrs=0 -icp-alias -stat=0 -ander -modelConsts \
-           -o "$FUZZ_TARGET.icp.bc" "$FUZZ_TARGET.internalized.bc"''') == 0)
-    os.environ['BC_TARGET'] = os.getenv('FUZZ_TARGET') + '.icp.bc'
-    return
-    assert(os.system('''cd $OUT && \
-           opt-10 -load=$PASSES_DIR/set-norecurse-ext.so -set-norecurse-ext \
-           -functionattrs -rpo-functionattrs -load=$PASSES_DIR/cgc.so -cgc \
-           -cgc-funcs=\'LLVMFuzzerTestOneInput\' -cgc-clone-prefix=\'\' \
-           -cgc-icalls=0 -cgc-unique -internalize \
-           -internalize-public-api-list=LLVMFuzzerTestOneInput -globaldce \
-           -o "$FUZZ_TARGET.cgc.bc" "$FUZZ_TARGET.icp.bc"''') == 0)
-
-    os.environ['BC_TARGET'] = os.getenv('FUZZ_TARGET') + '.cgc.bc'
-
-
 def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration.
-
-    os.environ['FUZZER_LIB'] = '/empty.a'
-
-    build_bitcode()
-    apply_funcdup_passes()
-
+    
     build_modes = list(args)
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
@@ -87,7 +40,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     # If nothing was set this is the default:
     if not build_modes:
-        # build_modes = ['tracepc', 'cmplog', 'dict2file']
+        #build_modes = ['tracepc', 'cmplog', 'dict2file']
         build_modes = ['pcguard', 'dict2file']
 
     # For bug type benchmarks we have to instrument via native clang pcguard :(
@@ -194,42 +147,48 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     os.environ['AFL_QUIET'] = '1'
     os.environ['AFL_MAP_SIZE'] = '2621440'
     
-    fuzz_target = os.getenv('FUZZ_TARGET')
-    bc_target = os.getenv('BC_TARGET')
-    link_args = []
-    with open(os.path.join(build_directory, fuzz_target + '.link_bc.json')) as j:
-        link_d = json.load(j)
-        link_args = link_d['stripped']
-        link_args[link_args.index(link_d['name'] + '.bc')] = bc_target
-    
-    print('Linking:', 'cd $OUT && $CXX %s $FUZZER_LIB' % ' '.join(link_args))
-    assert(os.system('cd $OUT && $CXX %s $FUZZER_LIB' % ' '.join(link_args)) == 0)
+    os.environ['REAL_CC_PATH'] = os.environ['CC']
+    os.environ['REAL_CXX_PATH'] = os.environ['CXX']
+    os.environ['CC'] = 'wrap-gclang'
+    os.environ['CXX'] = 'wrap-gclang++'
+    os.environ['LD'] = 'wrap-gclang++'
+    os.environ['RANLIB'] = 'llvm-ranlib'
+    os.environ['AR'] = 'llvm-ar'
+    os.environ['AS'] = 'llvm-as'
+    os.environ['LLVM_BITCODE_GENERATION_FLAGS'] = '-flto'
+
+    src = os.getenv('SRC')
+    work = os.getenv('WORK')
+
+    with utils.restore_directory(src), utils.restore_directory(work):
+        # Restore SRC to its initial state so we can build again without any
+        # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
+        # twice in the same directory without this.
+        utils.build_benchmark()
+        
+        os.system('cd $OUT && llvm-dis-10 $FUZZ_TARGET.bc')
 
     if 'cmplog' in build_modes and 'qemu' not in build_modes:
 
         # CmpLog requires an build with different instrumentation.
-        old_env = os.environ.copy()
-        os.environ['AFL_LLVM_CMPLOG'] = '1'
+        new_env = os.environ.copy()
+        new_env['AFL_LLVM_CMPLOG'] = '1'
 
         # For CmpLog build, set the OUT and FUZZ_TARGET environment
         # variable to point to the new CmpLog build directory.
-        # TODO fix this for gllvm
         cmplog_build_directory = get_cmplog_build_directory(build_directory)
         os.mkdir(cmplog_build_directory)
-        os.environ['OUT'] = cmplog_build_directory
+        new_env['OUT'] = cmplog_build_directory
         fuzz_target = os.getenv('FUZZ_TARGET')
         if fuzz_target:
-            os.environ['FUZZ_TARGET'] = os.path.join(
-                cmplog_build_directory, os.path.basename(fuzz_target))
+            new_env['FUZZ_TARGET'] = os.path.join(cmplog_build_directory,
+                                                  os.path.basename(fuzz_target))
 
         print('Re-building benchmark for CmpLog fuzzing target')
-        assert(os.system('cd $OUT && $CXX $BC_TARGET $FUZZER_LIB -o $FUZZ_TARGET') == 0)
-
-        os.environ.pop('AFL_LLVM_CMPLOG')
-        os.environ['OUT'] = old_env['OUT']
-        os.environ['FUZZ_TARGET'] = old_env['FUZZ_TARGET']
+        utils.build_benchmark(env=new_env)
 
     shutil.copy('/afl/afl-fuzz', build_directory)
+    shutil.copy('/afl/afl-showmap', build_directory)
     if os.path.exists('/afl/afl-qemu-trace'):
         shutil.copy('/afl/afl-qemu-trace', build_directory)
     if os.path.exists('/aflpp_qemu_driver_hook.so'):

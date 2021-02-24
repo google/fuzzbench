@@ -53,23 +53,16 @@ RUN update-alternatives \
       --slave   /usr/bin/clang++               clang++                /usr/bin/clang++-10 \
       --slave   /usr/bin/clang-cpp             clang-cpp              /usr/bin/clang-cpp-10
 
-RUN wget https://andreafioraldi.github.io/assets/dupfunc_ctx.tar.gz && \
-    mkdir -p /dupfunc_ctx && \
-    tar xvf dupfunc_ctx.tar.gz -C /dupfunc_ctx
+RUN mkdir -p /dupfunc_ctx && cd /dupfunc_ctx && \
+    wget https://andreafioraldi.github.io/assets/dupfunc_ctx.tar.gz && \
+    tar xvf dupfunc_ctx.tar.gz && unset CFLAGS && unset CXXFLAGS && \
+    LLVM_CONFIG=llvm-config-10 ./build.sh && rm dupfunc_ctx.tar.gz
 
-RUN cd /dupfunc_ctx && unset CFLAGS && unset CXXFLAGS && \
-    LLVM_CONFIG=llvm-config-10 ./install_svf.sh
-
-RUN cd /dupfunc_ctx/passes && unset CFLAGS && unset CXXFLAGS && \
-    make LLVM_CONFIG=llvm-config-10
-
-ENV PASSES_DIR /dupfunc_ctx/bin
 ENV GOPATH /go
+ENV PATH="/go/bin:/dupfunc_ctx/bin/:${PATH}"
+ENV LLVM_COMPILER_PATH=/usr/lib/llvm-10/bin
 
 RUN mkdir /go && go get github.com/SRI-CSL/gllvm/cmd/...
-
-ENV PATH="/go/bin:${PATH}"
-ENV LLVM_COMPILER_PATH=/usr/lib/llvm-10/bin
 
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
@@ -81,15 +74,7 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
     export CC=clang && export AFL_NO_X86=1 && \
-    PYTHON_INCLUDE=/ make LLVM_CONFIG=llvm-config-10 && make install && \
-    make -C utils/aflpp_driver && \
-    cp utils/aflpp_driver/libAFLDriver.a /
+    PYTHON_INCLUDE=/ make LLVM_CONFIG=llvm-config-10 && make install
 
-RUN echo "void abort(void); __attribute__((weak)) int main() { abort(); }" > /empty.c  && \
-    clang -c /empty.c && ar r /empty.a empty.o
-
-RUN wget https://andreafioraldi.github.io/assets/wrap_gclang.py && \
-    cp wrap_gclang.py / && \
-    chmod +x /wrap_gclang.py && \
-    ln -s /wrap_gclang.py /usr/bin/wrap-gclang && \
-    ln -s /wrap_gclang.py /usr/bin/wrap-gclang++ 
+RUN cd / && gclang -I /afl/include -c /afl/utils/aflpp_driver/aflpp_driver.c && \
+    ar ru libAFLDriver.a aflpp_driver.o
