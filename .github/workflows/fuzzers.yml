@@ -43,17 +43,18 @@ jobs:
           - aflplusplus_classic_ctx
           - aflplusplus_pcguard
           - aflplusplus_pcguard_ctx
+          - afl_buf
           - aflplusplus_introspection
           - aflplusplus_introspection2
           - aflplusplus_dict2file
           - aflplusplus_cmplog
-          - aflplusplus_plain
-          - aflplusplus_lto
-          - aflplusplus_lto_2mb
-          - aflplusplus_lto_500mb
-          - aflplusplus_lto_cmplog
-          - aflplusplus_lto_laf
-          - aflplusplus_lto_mopt
+          - aflplusplus_cmplog_per5
+          - aflplusplus_cmplog_per15
+          - aflplusplus_cmplog_fail192
+          - aflplusplus_cmplog_fail256
+          - aflplusplus_cmplog_24k
+          - aflplusplus_weak
+          - aflplusplus_flcnt
 
         benchmark_type:
           - oss-fuzz
