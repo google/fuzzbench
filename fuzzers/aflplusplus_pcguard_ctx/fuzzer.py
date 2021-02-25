@@ -30,7 +30,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration.
-    
     build_modes = list(args)
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
@@ -146,7 +145,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # from writing AFL specific messages to stderr.
     os.environ['AFL_QUIET'] = '1'
     os.environ['AFL_MAP_SIZE'] = '2621440'
-    
+
     os.environ['REAL_CC_PATH'] = os.environ['CC']
     os.environ['REAL_CXX_PATH'] = os.environ['CXX']
     os.environ['CC'] = 'wrap-gclang'
@@ -165,7 +164,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
         # twice in the same directory without this.
         utils.build_benchmark()
-        
+
         os.system('cd $OUT && llvm-dis-10 $FUZZ_TARGET.bc')
 
     if 'cmplog' in build_modes and 'qemu' not in build_modes:
