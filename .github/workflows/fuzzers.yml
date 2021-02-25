@@ -43,7 +43,6 @@ jobs:
           - aflplusplus_classic_ctx
           - aflplusplus_pcguard
           - aflplusplus_pcguard_ctx
-          - afl_buf
           - aflplusplus_introspection
           - aflplusplus_introspection2
           - aflplusplus_dict2file
