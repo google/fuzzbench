@@ -19,6 +19,14 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-02-25-aflpp-ctx
+  description: "test afl++ collision free ctx sensitive"
+  fuzzers:
+    - aflplusplus_pcguard
+    - aflplusplus_pcguard_ctx
+    - aflplusplus_classic
+    - aflplusplus_classic_ctx
+
 - experiment: 2021-02-17-aflpp
   description: "make optimal optimal again"
   fuzzers:

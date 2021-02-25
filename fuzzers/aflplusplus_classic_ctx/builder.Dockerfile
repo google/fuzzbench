@@ -63,6 +63,8 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
     export CC=clang && export AFL_NO_X86=1 && \
-    PYTHON_INCLUDE=/ make LLVM_CONFIG=llvm-config-10 && make install && \
-    make -C utils/aflpp_driver && \
-    cp utils/aflpp_driver/libAFLDriver.a /
+    PYTHON_INCLUDE=/ make LLVM_CONFIG=llvm-config-10 && make install
+
+RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl_driver.cpp && \
+    cd / && clang++-10 -stdlib=libc++ -std=c++11 -O2 -c /afl_driver.cpp && \
+    ar r /libAFLDriver.a afl_driver.o

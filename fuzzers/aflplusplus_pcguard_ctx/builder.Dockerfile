@@ -55,8 +55,8 @@ RUN update-alternatives \
 
 RUN mkdir -p /dupfunc_ctx && cd /dupfunc_ctx && \
     wget https://andreafioraldi.github.io/assets/dupfunc_ctx.tar.gz && \
-    tar xvf dupfunc_ctx.tar.gz && unset CFLAGS && unset CXXFLAGS && \
-    LLVM_CONFIG=llvm-config-10 ./build.sh && rm dupfunc_ctx.tar.gz
+    tar xvf dupfunc_ctx.tar.gz && rm dupfunc_ctx.tar.gz && \
+    unset CFLAGS && unset CXXFLAGS && LLVM_CONFIG=llvm-config-10 ./build.sh
 
 ENV GOPATH /go
 ENV PATH="/go/bin:/dupfunc_ctx/bin/:${PATH}"
@@ -76,5 +76,9 @@ RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
     export CC=clang && export AFL_NO_X86=1 && \
     PYTHON_INCLUDE=/ make LLVM_CONFIG=llvm-config-10 && make install
 
-RUN cd / && gclang -I /afl/include -c /afl/utils/aflpp_driver/aflpp_driver.c && \
-    ar ru libAFLDriver.a aflpp_driver.o
+# RUN cd / && gclang -I /afl/include -c /afl/utils/aflpp_driver/aflpp_driver.c && \
+#     ar ru libAFLDriver.a aflpp_driver.o
+
+RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl_driver.cpp && \
+    cd / && gclang++ -stdlib=libc++ -std=c++11 -O2 -c /afl_driver.cpp && \
+    ar r /libAFLDriver.a afl_driver.o
