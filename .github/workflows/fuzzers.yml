@@ -47,7 +47,7 @@ jobs:
           - aflplusplus_cmplog_introspection
           - aflplusplus_cmplog_12k
           - aflplusplus_cmplog_fail96
-          - aflplusplus_flctl
+          - aflplusplus_flcnt
           - aflplusplus_optimal_flcnt
 
         benchmark_type:
