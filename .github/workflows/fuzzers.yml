@@ -49,8 +49,7 @@ jobs:
           - aflplusplus_cmplog_fail192
           - aflplusplus_cmplog_fail256
           - aflplusplus_cmplog_24k
-          - aflplusplus_weak
-          - aflplusplus_flcnt
+          - aflplusplus_cmplog_introspection
 
         benchmark_type:
           - oss-fuzz
