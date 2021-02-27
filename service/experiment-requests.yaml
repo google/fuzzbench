@@ -23,11 +23,25 @@
   description: "afl++ cmplog introspection bug"
   type: bug
   fuzzers:
+    - aflplusplus_introspection
+    - aflplusplus_introspection2
     - aflplusplus_cmplog_introspection
+    - aflplusplus_optimal_flcnt
+    - aflplusplus_flcnt
+    - aflplusplus_optimal
+    - aflplusplus
 
 - experiment: 2021-02-27-aflpp
   description: "afl++ cmplog introspection"
   fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_flcnt
+    - aflplusplus_optimal_flcnt
+    - aflplusplus_cmplog_fail96
+    - aflplusplus_cmplog_12k
+    - aflplusplus_introspection
+    - aflplusplus_introspection2
     - aflplusplus_cmplog_introspection
 
 - experiment: 2021-02-26-aflpp-bug
