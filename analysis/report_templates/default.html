@@ -153,14 +153,21 @@
             <ul class="collapsible">
                 <li>
                     <div class="collapsible-header">
-                        Median {{ experiment.type }}-coverages on each benchmark
+                        Median relative {{ experiment.type }}-coverages on each benchmark
                     </div>
                     <div class="collapsible-body">
-                        {{ experiment.summary_table.to_html() }}
+                        {{ experiment.percent_summary_table.render() }}
+                      <ul>
+                          <li> Fuzzers are sorted by "FuzzerMean" (average median relative coverage), highest on the left.</li>
+                          <li> Green background = highest relative median coverage.</li>
+                          <li> Blue gradient background = greater than 95% relative median coverage.</li>
+                          <li> *note: <code>relative_coverage  = trial_coverage / experiment_max_coverage</code></li>
+                      </ul>
                     </div>
                 </li>
             </ul>
-        </div> <!-- id="experiment" -->
+
+        </div> <!-- id="summary" -->
 
         {% for benchmark in experiment.benchmarks %}
 
