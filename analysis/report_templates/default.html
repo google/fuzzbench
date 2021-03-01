@@ -153,10 +153,10 @@
             <ul class="collapsible">
                 <li>
                     <div class="collapsible-header">
-                        Median relative {{ experiment.type }}-coverages on each benchmark
+                        Median relative code-coverages on each benchmark
                     </div>
                     <div class="collapsible-body">
-                        {{ experiment.percent_summary_table.render() }}
+                        {{ experiment.relative_code_summary_table.render() }}
                       <ul>
                           <li> Fuzzers are sorted by "FuzzerMean" (average median relative coverage), highest on the left.</li>
                           <li> Green background = highest relative median coverage.</li>
@@ -166,6 +166,41 @@
                     </div>
                 </li>
             </ul>
+
+            {% if experiment.type == 'bug' %}
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Median relative bug-coverages on each benchmark
+                    </div>
+                    <div class="collapsible-body">
+                        {{ experiment.relative_bug_summary_table.render() }}
+                      <ul>
+                          <li> Fuzzers are sorted by "FuzzerMean" (average median relative coverage), highest on the left.</li>
+                          <li> Green background = highest relative median coverage.</li>
+                          <li> Blue gradient background = greater than 95% relative median coverage.</li>
+                          <li> *note: <code>relative_coverage  = trial_coverage / experiment_max_coverage</code></li>
+                      </ul>
+                    </div>
+                </li>
+            </ul>
+
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Total unique bugs found on each benchmark
+                    </div>
+                    <div class="collapsible-body">
+                        {{ experiment.found_bugs_summary_table.render() }}
+                      <ul>
+                          <li> Fuzzers are sorted by "FuzzerSum", highest on the left.</li>
+                          <li> Green background = most unique bugs found.</li>
+                          <li> <strong>*note</strong>: This table represents unique bugs found across all trials.</li>
+                      </ul>
+                    </div>
+                </li>
+            </ul>
+            {% endif %}
 
         </div> <!-- id="summary" -->
 

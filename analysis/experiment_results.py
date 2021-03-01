@@ -58,6 +58,9 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
         # Latest trial end time.
         self.ended = experiment_df.time_ended.dropna().max()
 
+        # Keep a full version of the dataframe (to count unique bugs)
+        self._full_experiment_df = experiment_df
+
         # Keep data frame without non-interesting columns.
         experiment_df = data_utils.drop_uninteresting_columns(experiment_df)
 
@@ -71,6 +74,18 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
 
         # Dictionary to store the full coverage data.
         self._coverage_dict = coverage_dict
+
+        # Summary table style
+        self._summary_table_style = [
+            dict(selector='td, th',
+                 props=[('width', '25px'), ('padding', '7px 5px')]),
+            dict(selector='th.col_heading',
+                 props=[('max-width', '25px'), ('overflow', 'visible'),
+                        ('transform-origin', 'bottom left'),
+                        ('transform', 'translateX(20px) rotate(-45deg)')])
+        ]
+
+        print(self.found_bugs_summary_table)
 
     def _get_full_path(self, filename):
         return os.path.join(self._output_directory, filename)
@@ -146,28 +161,16 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
             functools.partial(data_utils.benchmark_rank_by_median,
                               key=self._relevant_column))
 
-    @property
-    @functools.lru_cache()
-    def percent_summary_table(self):
+    def _relative_summary_table(self, key_column='edges_covered'):
         """A pivot table of medians ( % of experiment max per benchmark )
         for each fuzzer on each benchmark."""
         pivot = data_utils.experiment_pivot_table(
             self._experiment_snapshots_df,
             functools.partial(data_utils.benchmark_rank_by_percent,
-                              key=self._relevant_column))
+                              key=key_column))
 
         # Remove names
         pivot = pivot.rename_axis(index=None, columns=None)
-
-        # Rotated header text
-        table_styles = [
-            dict(selector='td, th',
-                 props=[('width', '25px'), ('padding', '7px 5px')]),
-            dict(selector='th.col_heading',
-                 props=[('max-width', '25px'), ('overflow', 'visible'),
-                        ('transform-origin', 'bottom left'),
-                        ('transform', 'translateX(20px) rotate(-45deg)')])
-        ]
 
         # Add rows for Median and Mean values
         nrows, _ = pivot.shape
@@ -181,7 +184,54 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
                 .background_gradient(axis=1, cmap=whbl, vmin=95, vmax=100)\
                 .highlight_max(axis=1, color='lightgreen')\
                 .format("{:.2f}")\
-                .set_table_styles(table_styles)
+                .set_table_styles(self._summary_table_style)
+        return pivot
+
+    @property
+    @functools.lru_cache()
+    def relative_code_summary_table(self):
+        """Summary table of median relative code coverage."""
+        return self._relative_summary_table()
+
+    @property
+    @functools.lru_cache()
+    def relative_bug_summary_table(self):
+        """Summary table of median relative bug coverage."""
+        return self._relative_summary_table(key_column='bugs_covered')
+
+    @property
+    def found_bugs_summary_table(self):
+        """A pivot table of total found bugs by each fuzzer on each
+        bug benchmark."""
+        grouping = ['benchmark', 'fuzzer']
+        groups = self._full_experiment_df.groupby(grouping).crash_key.nunique()
+        groups = groups.reset_index()
+        pivot = groups.pivot(index='benchmark',
+                             columns='fuzzer',
+                             values="crash_key")
+        # save fuzzer names
+        fuzzer_names = pivot.columns
+        pivot['Total'] = self._full_experiment_df.groupby(
+            'benchmark').crash_key.nunique()
+        pivot = pivot.rename_axis(index=None, columns=None)
+
+        # Add row for sum of all bugs found
+        nrows, _ = pivot.shape
+        pivot.loc['FuzzerSum'] = pivot.iloc[0:nrows].sum()
+
+        # highlight max (skip all zeros)
+        def highlight_max(row):
+            if row.sum() == 0:
+                return ['' for v in row]
+            row_max = row.max()
+            is_max = row == row_max
+            return ['background-color: lightgreen' if v else '' for v in is_max]
+
+        # Sort fuzzers left to right by FuzzerSum
+        pivot = pivot.sort_values(by='FuzzerSum', axis=1, ascending=False)
+        pivot = pivot.style\
+                .apply(highlight_max, axis=1, subset=fuzzer_names)\
+                .set_table_styles(self._summary_table_style)
         return pivot
 
     @property
