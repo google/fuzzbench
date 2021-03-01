@@ -31,7 +31,7 @@
     - aflplusplus_optimal
     - aflplusplus
 
-- experiment: 2021-02-28-aflpp
+- experiment: 2021-02-29-aflpp
   description: "afl++ cmplog introspection"
   fuzzers:
     - aflplusplus
