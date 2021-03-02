@@ -26,7 +26,6 @@ from common import filestore_utils
 from common import filesystem
 from common import utils
 
-
 MEASURED_FILES_STATE_NAME = 'measured-files'
 
 logger = logs.Logger('measure_worker')  # pylint: disable=invalid-name
@@ -75,8 +74,8 @@ class StateFile:
 
     def _get_bucket_cycle_state_file_path(self, cycle: int) -> str:
         """Get the state file path in the bucket."""
-        state_file_name = experiment_utils.get_cycle_filename(
-            self.name, cycle) + '.json'
+        state_file_name = experiment_utils.get_cycle_filename(self.name,
+                                                              cycle) + '.json'
         state_file_path = os.path.join(self.state_dir, state_file_name)
         return exp_path.filestore(pathlib.Path(state_file_path))
 
