@@ -26,13 +26,12 @@ jobs:
           - aflsmart
           - entropic
           - fairfuzz
-          - fastcgs_lm
           - honggfuzz
           - lafintel
           - klee
           - libfuzzer
-          - manul
           - mopt
+          - neuzz
           # Binary-only (greybox) fuzzers.
           - eclipser
           - afl_qemu
@@ -40,25 +39,16 @@ jobs:
           - honggfuzz_qemu
           - weizz_qemu
           # Temporary variants.
-          - libfuzzer_magicbytes
-          - entropic_magicbytes
-          - aflplusplus_lightweizz
+          - afl_buf
           - aflplusplus_introspection
-          - afl_fast
-          - afl_fast_v2
-          - aflplusplus_dict2file
           - aflplusplus_introspection2
-          - aflplusplus_trim
-          - aflplusplus_notrim
+          - aflplusplus_dict2file
           - aflplusplus_cmplog
-          - aflplusplus_cmplog12_1
-          - aflplusplus_cmplog12_2
-          - aflplusplus_cmplog123_1
-          - aflplusplus_cmplog123_2
-          - aflplusplus_cmplog123_transform_1
-          - aflplusplus_cmplog123_transform_2
-          - aflplusplus_cmplog12_transform_1
-          - aflplusplus_cmplog12_transform_2
+          - aflplusplus_cmplog_introspection
+          - aflplusplus_cmplog_12k
+          - aflplusplus_cmplog_fail96
+          - aflplusplus_flcnt
+          - aflplusplus_optimal_flcnt
 
         benchmark_type:
           - oss-fuzz

@@ -19,6 +19,156 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-02-29-aflpp-bug
+  description: "afl++ cmplog introspection bug"
+  type: bug
+  fuzzers:
+    - aflplusplus_introspection
+    - aflplusplus_introspection2
+    - aflplusplus_cmplog_introspection
+    - aflplusplus_optimal_flcnt
+    - aflplusplus_flcnt
+    - aflplusplus_optimal
+    - aflplusplus
+
+- experiment: 2021-02-29-aflpp
+  description: "afl++ cmplog introspection"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_flcnt
+    - aflplusplus_optimal_flcnt
+    - aflplusplus_cmplog_fail96
+    - aflplusplus_cmplog_12k
+    - aflplusplus_introspection
+    - aflplusplus_introspection2
+    - aflplusplus_cmplog_introspection
+
+- experiment: 2021-02-26-aflpp-bug
+  description: "optimal test + cmplog variants bug"
+  type: bug
+  fuzzers:
+    - aflplusplus_introspection
+    - aflplusplus_introspection2
+    - aflplusplus_cmplog_introspection
+    - aflplusplus_optimal_flcnt
+    - aflplusplus_flcnt
+    - aflplusplus_optimal
+    - aflplusplus
+
+- experiment: 2021-02-26-aflpp
+  description: "optimal test + cmplog variants"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_flcnt
+    - aflplusplus_optimal_flcnt
+    - aflplusplus_cmplog_fail96
+    - aflplusplus_cmplog_12k
+    - aflplusplus_introspection
+    - aflplusplus_introspection2
+    - aflplusplus_cmplog_introspection
+
+- experiment: 2021-02-24-aflpp-bug
+  description: "test the buffer boundaries feedback (afl_buf)"
+  type: bug
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_flcnt
+
+- experiment: 2021-02-24-aflpp
+  description: "optimal test + cmplog variants"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_cmplog_per5
+    - aflplusplus_cmplog_per15
+    - aflplusplus_cmplog_fail192
+    - aflplusplus_cmplog_fail256
+    - aflplusplus_cmplog_24k
+    - aflplusplus_weak
+    - aflplusplus_flcnt
+
+- experiment: 2021-02-22-afl-buf
+  description: "test the buffer boundaries feedback (afl_buf)"
+  type: bug
+  fuzzers:
+    - afl
+    - aflplusplus
+    - aflplusplus_optimal
+    - afl_buf
+    - weizz_qemu
+
+- experiment: 2021-02-22-aflpp
+  description: "optimal test + cmplog variants"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_explore
+    - aflplusplus_coe
+    - aflplusplus_arith
+    - aflplusplus_cmplog_per10
+    - aflplusplus_cmplog_per30
+    - aflplusplus_cmplog_fail64
+    - aflplusplus_cmplog_fail128
+    - aflplusplus_cmplog_8k
+    - aflplusplus_u16
+
+- experiment: 2021-02-17-aflpp
+  description: "make optimal optimal again"
+  fuzzers:
+    - aflplusplus_plain
+    - aflplusplus_lto
+    - aflplusplus_lto_2mb
+    - aflplusplus_lto_500mb
+    - aflplusplus_lto_cmplog
+    - aflplusplus_lto_laf
+    - aflplusplus_lto_mopt
+
+- experiment: 2021-02-09-aflpp
+  description: "cmplog variants"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_1
+    - aflplusplus_cmplog_max4k
+    - aflplusplus_cmplog_transform
+    - aflplusplus_cmplog_old
+    - aflplusplus_v300c
+
+- experiment: 2021-02-04-aflpp
+  description: "cmplog variants + auto map size"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_1
+    - aflplusplus_cmplog_old
+    - aflplusplus_cmplog_max4k
+    - aflplusplus_cmplog_transform
+    - aflplusplus_v300c
+
+- experiment: 2021-02-01-aflpp
+  description: "cmplog variants + auto map size"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_1
+    - aflplusplus_cmplog_old
+    - aflplusplus_cmplog_max4k
+    - aflplusplus_cmplog_transform
+    - aflplusplus_v300c
+
+- experiment: 2021-01-30-aflpp-afl
+  description: "cmplog variants"
+  fuzzers:
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_60
+    - aflplusplus_cmplog_300
+    - aflplusplus_cmplog_select
+    - aflplusplus_cmplog_arith
+    - aflplusplus_cmplog_lowfail
+
 - experiment: 2021-01-27-aflpp-afl
   description: "plain afl++ vs afl"
   fuzzers:

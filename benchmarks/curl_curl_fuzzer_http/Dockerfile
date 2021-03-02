@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:aea783f76a46298085620e73d9943fad84c912e38b8a1a482177ae84360152ec
+FROM gcr.io/oss-fuzz-base/base-builder
 
 # Curl will be checked out to the commit hash specified in benchmark.yaml.
 RUN git clone --depth 1 https://github.com/curl/curl.git /src/curl

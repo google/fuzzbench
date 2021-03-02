@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:c18f9615c9824b61ce982e0bac4b157b2eff5b9240cc6310a4815a826bb804e3
+FROM gcr.io/oss-fuzz-base/base-builder
 RUN apt-get update && apt-get install -y make cmake flex bison
 RUN git clone --depth 1 https://github.com/the-tcpdump-group/libpcap.git libpcap
 # for corpus as wireshark

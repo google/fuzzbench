@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG parent_image=gcr.io/fuzzbench/base-builder
+ARG parent_image
 FROM $parent_image
 
 # Install Clang/LLVM 6.0.
@@ -24,8 +24,7 @@ RUN apt-get update -y && \
 # Install KLEE dependencies.
 RUN apt-get install -y \
     cmake-data build-essential curl libcap-dev \
-    git cmake libncurses5-dev python-minimal \
-    python-pip unzip libtcmalloc-minimal4 \
+    git cmake libncurses5-dev unzip libtcmalloc-minimal4 \
     libgoogle-perftools-dev bison flex libboost-all-dev \
     perl zlib1g-dev libsqlite3-dev doxygen
 
@@ -55,7 +54,6 @@ RUN git clone https://github.com/klee/klee-uclibc.git /klee-uclibc && \
     ./configure --make-llvm-lib --with-llvm-config=`which llvm-config-6.0` && \
     make -j`nproc` && make install
 
-
 # Install KLEE. Use my personal repo containing seed conversion scripts for now.
 # TODO: Include seed conversion scripts in fuzzbench repo.
 # Note: don't use the 'debug' branch because it has checks for non-initialized values
@@ -67,9 +65,7 @@ RUN git clone https://github.com/lmrs2/klee.git /klee && \
     wget -O tools/ktest-tool/ktest-tool https://raw.githubusercontent.com/lmrs2/klee/debug/tools/ktest-tool/ktest-tool
 
 # The libcxx build script in the KLEE repo depends on wllvm:
-# We'll upgrade pip first to avoid a build error with the old version of pip.
-RUN pip install --upgrade pip
-RUN pip install wllvm
+RUN pip3 install wllvm
 
 # Before building KLEE, build libcxx.
 RUN cd /klee && \
@@ -105,4 +101,3 @@ RUN $CXX -stdlib=libc++ -std=c++11 -O2 -c /klee_driver.cpp -o /klee_driver.o && 
     ar r /libAFL.a /klee_driver.o && \
     $LLVM_CC_NAME -O2 -c -fPIC /klee_mock.c -o /klee_mock.o && \
     $LLVM_CC_NAME -shared -o /libKleeMock.so /klee_mock.o
-

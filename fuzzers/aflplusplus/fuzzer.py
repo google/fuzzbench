@@ -51,9 +51,18 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'lto' in build_modes:
         os.environ['CC'] = '/afl/afl-clang-lto'
         os.environ['CXX'] = '/afl/afl-clang-lto++'
-        os.environ['RANLIB'] = 'llvm-ranlib-12'
-        os.environ['AR'] = 'llvm-ar-12'
-        os.environ['AS'] = 'llvm-as-12'
+        if os.path.isfile('/usr/local/bin/llvm-ranlib-13'):
+            os.environ['RANLIB'] = 'llvm-ranlib-13'
+            os.environ['AR'] = 'llvm-ar-13'
+            os.environ['AS'] = 'llvm-as-13'
+        elif os.path.isfile('/usr/local/bin/llvm-ranlib-12'):
+            os.environ['RANLIB'] = 'llvm-ranlib-12'
+            os.environ['AR'] = 'llvm-ar-12'
+            os.environ['AS'] = 'llvm-as-12'
+        else:
+            os.environ['RANLIB'] = 'llvm-ranlib'
+            os.environ['AR'] = 'llvm-ar'
+            os.environ['AS'] = 'llvm-as'
     elif 'qemu' in build_modes:
         os.environ['CC'] = 'clang'
         os.environ['CXX'] = 'clang++'
@@ -91,7 +100,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # Use a fixed map location (LTO only)
     if 'fixed' in build_modes:
         os.environ['AFL_LLVM_MAP_ADDR'] = '0x10000'
-    # generate an extra dictionary
+    # Generate an extra dictionary.
     if 'dict2file' in build_modes or 'native' in build_modes:
         os.environ['AFL_LLVM_DICT2FILE'] = build_directory + '/afl++.dict'
     # Enable context sentitivity for LLVM mode (non LTO only)
@@ -135,7 +144,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # cases. Prevent these failures by using AFL_QUIET to stop afl-clang-fast
     # from writing AFL specific messages to stderr.
     os.environ['AFL_QUIET'] = '1'
-    os.environ['AFL_MAP_SIZE'] = '1048576'
+    os.environ['AFL_MAP_SIZE'] = '2621440'
 
     src = os.getenv('SRC')
     work = os.getenv('WORK')
@@ -183,21 +192,25 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
                                         target_binary_name)
 
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
-    # decomment this to enable libdislocator
+    # decomment this to enable libdislocator.
     # os.environ['AFL_ALIGNED_ALLOC'] = '1' # align malloc to max_align_t
     # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
     flags = list(flags)
+
+    if os.path.exists('./afl++.dict'):
+        flags += ['-x', './afl++.dict']
+    # Move the following to skip for upcoming _double tests:
+    if os.path.exists(cmplog_target_binary):
+        flags += ['-c', cmplog_target_binary]
+
     if not skip:
         if not flags or not flags[0] == '-Q' and '-p' not in flags:
             flags += ['-p', 'fast']
         if ((not flags or (not '-l' in flags and not '-R' in flags)) and
                 os.path.exists(cmplog_target_binary)):
             flags += ['-l', '2']
-        if os.path.exists(cmplog_target_binary):
-            flags += ['-c', cmplog_target_binary]
-        if os.path.exists('./afl++.dict'):
-            flags += ['-x', './afl++.dict']
+        os.environ['AFL_DISABLE_TRIM'] = "1"
         if 'ADDITIONAL_ARGS' in os.environ:
             flags += os.environ['ADDITIONAL_ARGS'].split(' ')
 

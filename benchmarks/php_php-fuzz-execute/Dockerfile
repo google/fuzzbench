@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:ccb5bcb44c8d2027a756947ae24cb48f7ce647897f57bbec50b4bcaff1367e44
+FROM gcr.io/oss-fuzz-base/base-builder
 RUN apt-get update && \
     apt-get install -y autoconf automake libtool bison re2c pkg-config
 RUN git clone --depth 1 --branch master https://github.com/php/php-src.git php-src

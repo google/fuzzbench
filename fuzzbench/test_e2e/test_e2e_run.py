@@ -38,7 +38,7 @@ def redis_connection():
     return redis.Redis(host='queue-server')
 
 
-# pylint: disable=no-self-use
+# pylint: disable=no-self-use,redefined-outer-name
 @pytest.mark.skipif('E2E_INTEGRATION_TEST' not in os.environ,
                     reason='Not running end-to-end test.')
 @pytest.mark.usefixtures('redis_connection', 'experiment_config')
