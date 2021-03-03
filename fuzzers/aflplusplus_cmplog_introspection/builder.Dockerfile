@@ -24,13 +24,13 @@ RUN apt-get update && \
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout a252943236b12c080248747bee06c9c5084b871e && \
-    sed -i 's|CMPLOG_CORPUS_PERCENT .*|CMPLOG_CORPUS_PERCENT 30|' include/config.h
+    git checkout a5e9272e1ea187341d3a776d0bab934175a0d463
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
     export CC=clang && export AFL_NO_X86=1 && \
+    sed -i 's/^..#define CMPLOG_INTROSPECTION/#define CMPLOG_INTROSPECTION/g' src/afl-fuzz-redqueen.c && \
     PYTHON_INCLUDE=/ make && make install && \
     make -C utils/aflpp_driver && \
     cp utils/aflpp_driver/libAFLDriver.a /
