@@ -6,7 +6,7 @@ trials: 20
 max_total_time: 82800  # 23 hours, the default time for preemptible experiments.
 cloud_project: fuzzbench
 docker_registry: gcr.io/fuzzbench
-cloud_compute_zone: us-east4-a
+cloud_compute_zone: us-central1-c
 experiment_filestore: gs://fuzzbench-data
 report_filestore: gs://www.fuzzbench.com/reports
 cloud_sql_instance_connection_name: "fuzzbench:us-central1:postgres-experiment-db=tcp:5432"
