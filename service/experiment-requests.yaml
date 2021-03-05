@@ -19,7 +19,7 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
-- experiment: 2021-02-29-aflpp-bug
+- experiment: 2021-03-05-aflpp-bug
   description: "afl++ cmplog introspection bug"
   type: bug
   fuzzers:
@@ -31,15 +31,13 @@
     - aflplusplus_optimal
     - aflplusplus
 
-- experiment: 2021-02-28-aflpp
+- experiment: 2021-03-05-aflpp
   description: "afl++ cmplog introspection"
   fuzzers:
     - aflplusplus
     - aflplusplus_optimal
     - aflplusplus_flcnt
     - aflplusplus_optimal_flcnt
-    - aflplusplus_cmplog_fail96
-    - aflplusplus_cmplog_12k
     - aflplusplus_introspection
     - aflplusplus_introspection2
     - aflplusplus_cmplog_introspection
