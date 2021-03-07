@@ -28,6 +28,7 @@
     - aflplusplus_flcnt
     - aflplusplus_optimal
     - aflplusplus
+    - aflplusplus_havoc
 
 - experiment: 2021-03-07-aflpp
   description: "afl++ cmplog introspection"
@@ -42,6 +43,7 @@
     - aflplusplus_cmplog_12k
     - aflplusplus_cmplog_16k
     - aflplusplus_cmplog_24k
+    - aflplusplus_havoc
 
 - experiment: 2021-03-05-aflpp-bug
   description: "afl++ cmplog introspection bug"
