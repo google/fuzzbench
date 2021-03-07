@@ -24,7 +24,7 @@ RUN apt-get update && \
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout a2f40aa285faa75e78ac1ffffe8d79e2ac1a40da && \
+    git checkout 9b3d8c327d33191b181219ffce411b40bdbe8902 && \
     sed -i 's|CMPLOG_FAIL_MAX .*|CMPLOG_FAIL_MAX 96|' include/config.h
 
 # Build without Python support as we don't need it.
