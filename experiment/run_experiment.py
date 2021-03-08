@@ -473,10 +473,7 @@ def main():
         'more benchmarks.')
 
     all_benchmarks = benchmark_utils.get_all_benchmarks()
-    code_coverage_benchmarks = [
-        benchmark for benchmark in all_benchmarks if benchmark_utils.get_type(
-            benchmark) == benchmark_utils.BenchmarkType.CODE.value
-    ]
+    coverage_benchmarks = benchmark_utils.get_coverage_benchmarks()
     parser.add_argument('-b',
                         '--benchmarks',
                         help=('Benchmark names. '
@@ -484,7 +481,7 @@ def main():
                               'default.'),
                         nargs='+',
                         required=False,
-                        default=code_coverage_benchmarks,
+                        default=coverage_benchmarks,
                         choices=all_benchmarks)
     parser.add_argument('-c',
                         '--experiment-config',
