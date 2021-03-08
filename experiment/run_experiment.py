@@ -473,14 +473,18 @@ def main():
         'more benchmarks.')
 
     all_benchmarks = benchmark_utils.get_all_benchmarks()
-    all_fuzzers = fuzzer_utils.get_fuzzer_names()
-
+    code_coverage_benchmarks = [
+        benchmark for benchmark in all_benchmarks if benchmark_utils.get_type(
+            benchmark) == benchmark_utils.BenchmarkType.CODE.value
+    ]
     parser.add_argument('-b',
                         '--benchmarks',
-                        help='Benchmark names. All of them by default.',
+                        help=('Benchmark names. '
+                              'All code coverage benchmarks of them by '
+                              'default.'),
                         nargs='+',
                         required=False,
-                        default=all_benchmarks,
+                        default=code_coverage_benchmarks,
                         choices=all_benchmarks)
     parser.add_argument('-c',
                         '--experiment-config',
@@ -494,6 +498,9 @@ def main():
                         '--description',
                         help='Description of the experiment.',
                         required=False)
+
+    all_fuzzers = fuzzer_utils.get_fuzzer_names()
+
     parser.add_argument('-f',
                         '--fuzzers',
                         help='Fuzzers to use.',
