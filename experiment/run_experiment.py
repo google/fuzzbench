@@ -497,7 +497,6 @@ def main():
                         required=False)
 
     all_fuzzers = fuzzer_utils.get_fuzzer_names()
-
     parser.add_argument('-f',
                         '--fuzzers',
                         help='Fuzzers to use.',
