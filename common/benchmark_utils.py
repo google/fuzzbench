@@ -132,8 +132,14 @@ def get_all_benchmarks():
     return sorted(all_benchmarks)
 
 
+def get_coverage_benchmarks():
+    """Returns the list of all coverage benchmarks."""
+    return (get_oss_fuzz_coverage_benchmarks() +
+            get_standard_coverage_benchmarks())
+
+
 def get_oss_fuzz_coverage_benchmarks():
-    """Return the list of OSS-Fuzz coverage benchmarks."""
+    """Returns the list of OSS-Fuzz coverage benchmarks."""
     return [
         benchmark for benchmark in get_all_benchmarks()
         if is_oss_fuzz_benchmark(benchmark) and
@@ -142,7 +148,7 @@ def get_oss_fuzz_coverage_benchmarks():
 
 
 def get_standard_coverage_benchmarks():
-    """Return the list of standard coverage benchmarks."""
+    """Returns the list of standard coverage benchmarks."""
     return [
         benchmark for benchmark in get_all_benchmarks()
         if not is_oss_fuzz_benchmark(benchmark) and
@@ -151,7 +157,7 @@ def get_standard_coverage_benchmarks():
 
 
 def get_bug_benchmarks():
-    """Return the list of standard coverage benchmarks."""
+    """Returns the list of standard bug benchmarks."""
     return [
         benchmark for benchmark in get_all_benchmarks()
         if get_type(benchmark) == BenchmarkType.BUG.value
