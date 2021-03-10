@@ -20,11 +20,14 @@
 # But this means that the good stuff is hidden away in this benchmark
 # otherwise.
 
+import os
+
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
+    os.environ['FUNC_ONLY'] = '1'
     aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
 
 
