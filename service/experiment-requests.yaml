@@ -19,6 +19,41 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-03-10-aflpp-bug
+  description: "afl++ counter test on bugs"
+  type: bug
+  fuzzers:
+    - aflplusplus_cmplog_introspection
+    - aflplusplus_optimal_flcnt
+    - aflplusplus_flcnt
+    - aflplusplus_optimal_lcnt
+    - aflplusplus_lcnt
+    - aflplusplus_optimal_fcnt
+    - aflplusplus_fcnt
+    - aflplusplus_optimal
+    - aflplusplus
+    - aflplusplus_havoc
+
+- experiment: 2021-03-10-aflpp
+  description: "afl++ ctx + counter test"
+  fuzzers:
+    - aflplusplus_cmplog_introspection
+    - aflplusplus_optimal_flcnt
+    - aflplusplus_flcnt
+    - aflplusplus_optimal_lcnt
+    - aflplusplus_lcnt
+    - aflplusplus_optimal_fcnt
+    - aflplusplus_fcnt
+    - aflplusplus_optimal
+    - aflplusplus
+    - aflplusplus_havoc
+    - aflplusplus_classic
+    - aflplusplus_ctx
+    - aflplusplus_ctx1
+    - aflplusplus_ctx2
+    - aflplusplus_ctx3
+    - aflplusplus_ctx4
+
 - experiment: 2021-03-07-aflpp-bug
   description: "afl++ cmplog introspection bug"
   type: bug
