@@ -1,11 +1,18 @@
 name: CI
 
-on: [pull_request]
+on:
+  pull_request:
+    branches:
+    - master
 
 jobs:
   presubmit:
     runs-on: ubuntu-latest
     steps:
+    - name: Cancel previous
+      uses: styfle/cancel-workflow-action@0.8.0
+      with:
+        access_token: ${{ github.token }}
     - uses: actions/checkout@v2
     - run: |  # Needed for presubmit to work.
         git fetch origin master --unshallow
