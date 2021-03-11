@@ -131,8 +131,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['AFL_LLVM_CTX_K'] = '3'
     elif 'ctx4' in build_modes:
         os.environ['AFL_LLVM_CTX_K'] = '4'
-    elif 'ctx' in build_modes:
-        os.environ['AFL_LLVM_CTX_K'] = '1'
 
     # Only one of the following OR cmplog
     # enable laf-intel compare splitting
