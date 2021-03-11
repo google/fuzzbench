@@ -47,6 +47,12 @@
     - aflplusplus_optimal
     - aflplusplus
     - aflplusplus_havoc
+    - aflplusplus_classic
+    - aflplusplus_ctx
+    - aflplusplus_ctx1
+    - aflplusplus_ctx2
+    - aflplusplus_ctx3
+    - aflplusplus_ctx4
 
 - experiment: 2021-03-07-aflpp-bug
   description: "afl++ cmplog introspection bug"
