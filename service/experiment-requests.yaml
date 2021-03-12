@@ -34,7 +34,7 @@
     - aflplusplus
     - aflplusplus_havoc
 
-- experiment: 2021-03-11-aflpp
+- experiment: 2021-03-12-aflpp
   description: "afl++ ctx + counter test"
   fuzzers:
     - aflplusplus_cmplog_introspection
