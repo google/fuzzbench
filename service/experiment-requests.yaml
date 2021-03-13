@@ -19,7 +19,7 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
-- experiment: 2021-03-11-aflpp-bug
+- experiment: 2021-03-12-aflpp-bug
   description: "afl++ counter test on bugs"
   type: bug
   fuzzers:
