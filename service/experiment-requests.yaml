@@ -19,6 +19,30 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-05-12-aflpp-bug
+  description: "afl++ ctx on bugs"
+  type: bug
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_classic
+    - aflplusplus_ctx
+    - aflplusplus_ctx1
+    - aflplusplus_ctx2
+    - aflplusplus_ctx3
+    - aflplusplus_ctx4
+
+- experiment: 2021-05-12-aflpp
+  description: "afl++ release comparison"
+  fuzzers:
+    - aflplusplus_optimal_flcnt
+    - aflplusplus_flcnt
+    - aflplusplus_optimal
+    - aflplusplus
+    - aflplusplus_310
+    - aflplusplus_300
+    - entropic
+    - honggfuzz
+
 - experiment: 2021-03-12-aflpp-bug
   description: "afl++ counter test on bugs"
   type: bug
