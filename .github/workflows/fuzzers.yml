@@ -59,6 +59,7 @@ jobs:
           - aflplusplus_classic
           - aflplusplus_300
           - aflplusplus_310
+          - aflplusplus_311
 
         benchmark_type:
           - oss-fuzz
