@@ -1,0 +1,3 @@
++proj=geocent
++proj=pipeline +no_cut proj=airy +step
+BINARY_3D:       Ô                

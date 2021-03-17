@@ -1,0 +1,3 @@
++proj=poly
++proj=pipeline +R=2da=2	dy	dz	proj=molodenskydx	df +step +step
+BINARY_3D:ÿ                 ÿÿ    
