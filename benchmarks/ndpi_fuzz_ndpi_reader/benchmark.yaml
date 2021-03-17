@@ -1,0 +1,12 @@
+commit: 98d9f524f9ff7746d0345939fe543020f8057212
+commit_date: 2020-01-15 03:36:00+00:00
+fuzz_target: fuzz_ndpi_reader
+project: ndpi
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - honggfuzz_qemu
+  - klee
+  - weizz_qemu
