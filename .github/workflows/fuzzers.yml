@@ -39,16 +39,21 @@ jobs:
           - honggfuzz_qemu
           - weizz_qemu
           # Temporary variants.
-          - afl_buf
           - aflplusplus_introspection
           - aflplusplus_introspection2
           - aflplusplus_dict2file
           - aflplusplus_cmplog
           - aflplusplus_cmplog_introspection
-          - aflplusplus_cmplog_12k
-          - aflplusplus_cmplog_fail96
           - aflplusplus_flcnt
           - aflplusplus_optimal_flcnt
+          - aflplusplus_fcnt
+          - aflplusplus_optimal_fcnt
+          - aflplusplus_lcnt
+          - aflplusplus_optimal_lcnt
+          - aflplusplus_havoc
+          - aflplusplus_300
+          - aflplusplus_310
+          - aflplusplus_311
 
         benchmark_type:
           - oss-fuzz

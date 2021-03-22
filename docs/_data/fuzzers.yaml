@@ -14,7 +14,7 @@
 Fuzzers:
 
 - name: afl++
-  desc: AFL++: Combining incremental steps of fuzzing research.
+  desc: "AFL++: Combining incremental steps of fuzzing research."
   year: 2020
   url: https://www.usenix.org/conference/woot20/presentation/fioraldi
   dblp: conf/woot/MaierEFH20
