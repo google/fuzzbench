@@ -13,6 +13,15 @@
 
 Fuzzers:
 
+- name: afl++
+  desc: AFL++: Combining incremental steps of fuzzing research.
+  year: 2020
+  url: https://www.usenix.org/conference/woot20/presentation/fioraldi
+  dblp: conf/woot/MaierEFH20
+  repo: https://github.com/AFLplusplus/AFLplusplus
+  dir: aflplusplus
+  issue:
+
 - name: WEIZZ
   desc: Automatic Grey-box Fuzzing for Structured Binary Formats.
   year: 2020
