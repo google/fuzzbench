@@ -20,6 +20,11 @@ class EmptyDataError(ValueError):
     """An exception for when the data is empty."""
 
 
+def underline_row(row):
+    """Add thick bottom border to row."""
+    return ['border-bottom: 3px solid black' for v in row]
+
+
 def validate_data(experiment_df):
     """Checks if the experiment data is valid."""
     if experiment_df.empty:
@@ -232,7 +237,7 @@ def benchmark_rank_by_median(benchmark_snapshot_df, key='edges_covered'):
 def benchmark_rank_by_percent(benchmark_snapshot_df, key='edges_covered'):
     """Returns ranking of fuzzers based on median (normalized/%) coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
-    max_key = "{}_pct_max".format(key)
+    max_key = "{}_percent_max".format(key)
     medians = benchmark_snapshot_df.groupby('fuzzer')[max_key].median()
     return medians.sort_values(ascending=False)
 
@@ -355,18 +360,18 @@ def experiment_level_ranking(experiment_snapshots_df,
 def add_relative_columns(experiment_df):
     """Adds relative performance metric columns to experiment snapshot
     dataframe.
-    <key>_pct_max = trial <key> / experiment max <key>
-    <key>_pct_fmax = trial <key> / fuzzer max <key>
+    <key>_percent_max = trial <key> / experiment max <key>
+    <key>_percent_fmax = trial <key> / fuzzer max <key>
     """
     df = experiment_df
     for key in ['edges_covered', 'bugs_covered']:
         if key not in df.columns:
             continue
-        new_col = "{}_pct_max".format(key)
+        new_col = "{}_percent_max".format(key)
         df[new_col] = df[key] / df.groupby('benchmark')[key].transform(
             'max') * 100.0
 
-        new_col = "{}_pct_fmax".format(key)
+        new_col = "{}_percent_fmax".format(key)
         df[new_col] = df[key] / df.groupby(['benchmark', 'fuzzer'
                                            ])[key].transform('max') * 100
     return df

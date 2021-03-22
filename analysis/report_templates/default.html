@@ -156,12 +156,17 @@
                         Median relative code-coverages on each benchmark
                     </div>
                     <div class="collapsible-body">
+                        <p style="margin-bottom:3cm;">
+                      <strong>Note:</strong> The relative coverage summary table shows the median
+                      relative performance of each fuzzer to the <em>experiment maximum</em>.  Thus the 
+                      highest relative performance may not be 100%.<br>
+                      <code> trial_relative_coverage  = trial_coverage / experiment_max_coverage</code><br>
+                        </p>
                         {{ experiment.relative_code_summary_table.render() }}
                       <ul>
                           <li> Fuzzers are sorted by "FuzzerMean" (average median relative coverage), highest on the left.</li>
                           <li> Green background = highest relative median coverage.</li>
                           <li> Blue gradient background = greater than 95% relative median coverage.</li>
-                          <li> *note: <code>relative_coverage  = trial_coverage / experiment_max_coverage</code></li>
                       </ul>
                     </div>
                 </li>
@@ -174,12 +179,16 @@
                         Median relative bug-coverages on each benchmark
                     </div>
                     <div class="collapsible-body">
+                        <p style="margin-bottom:3cm;">
+                      <strong>Note:</strong> The relative coverage summary table shows the median
+                      relative performance of each fuzzer to the <em>experiment maximum</em>.  Thus the 
+                      highest relative performance may not be 100%.<br>
+                      <code> trial_relative_coverage  = trial_coverage / experiment_max_coverage</code><br>
                         {{ experiment.relative_bug_summary_table.render() }}
                       <ul>
                           <li> Fuzzers are sorted by "FuzzerMean" (average median relative coverage), highest on the left.</li>
                           <li> Green background = highest relative median coverage.</li>
                           <li> Blue gradient background = greater than 95% relative median coverage.</li>
-                          <li> *note: <code>relative_coverage  = trial_coverage / experiment_max_coverage</code></li>
                       </ul>
                     </div>
                 </li>

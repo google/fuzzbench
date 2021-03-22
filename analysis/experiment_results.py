@@ -15,6 +15,7 @@
 
 import functools
 import os
+import pandas as pd
 import seaborn as sns
 
 from analysis import benchmark_results
@@ -32,6 +33,16 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
     needed multiple times. Therefore, when used as a context of a report
     template, only the properties needed for the given report will be computed.
     """
+
+    # Summary table style
+    _SUMMARY_TABLE_STYLE = [
+        dict(selector='td, th',
+             props=[('width', '25px'), ('padding', '7px 5px')]),
+        dict(selector='th.col_heading',
+             props=[('max-width', '25px'), ('overflow', 'visible'),
+                    ('transform-origin', 'bottom left'),
+                    ('transform', 'translateX(20px) rotate(-45deg)')])
+    ]
 
     def __init__(  # pylint: disable=too-many-arguments
             self,
@@ -74,18 +85,6 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
 
         # Dictionary to store the full coverage data.
         self._coverage_dict = coverage_dict
-
-        # Summary table style
-        self._summary_table_style = [
-            dict(selector='td, th',
-                 props=[('width', '25px'), ('padding', '7px 5px')]),
-            dict(selector='th.col_heading',
-                 props=[('max-width', '25px'), ('overflow', 'visible'),
-                        ('transform-origin', 'bottom left'),
-                        ('transform', 'translateX(20px) rotate(-45deg)')])
-        ]
-
-        print(self.found_bugs_summary_table)
 
     def _get_full_path(self, filename):
         return os.path.join(self._output_directory, filename)
@@ -179,12 +178,19 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
         # Sort fuzzers left to right by FuzzerMean
         pivot = pivot.sort_values(by='FuzzerMean', axis=1, ascending=False)
 
+        # Move Median and Mean to top rows
+        row_index = pivot.index.to_list()
+        pivot = pivot.reindex(row_index[-2:] + row_index[:-2])
+        # Mean row slicer
+        idx = pd.IndexSlice['FuzzerMean', :]
+
         whbl = sns.light_palette('lightblue', n_colors=30, as_cmap=True)
         pivot = pivot.style\
                 .background_gradient(axis=1, cmap=whbl, vmin=95, vmax=100)\
                 .highlight_max(axis=1, color='lightgreen')\
                 .format("{:.2f}")\
-                .set_table_styles(self._summary_table_style)
+                .apply(data_utils.underline_row, axis=1, subset=idx)\
+                .set_table_styles(self._SUMMARY_TABLE_STYLE)
         return pivot
 
     @property
@@ -219,6 +225,12 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
         nrows, _ = pivot.shape
         pivot.loc['FuzzerSum'] = pivot.iloc[0:nrows].sum()
 
+        # Move Sum to top row
+        row_index = pivot.index.to_list()
+        pivot = pivot.reindex(row_index[-1:] + row_index[:-1])
+        # Sum row slicer
+        idx = pd.IndexSlice['FuzzerSum', :]
+
         # highlight max (skip all zeros)
         def highlight_max(row):
             if row.sum() == 0:
@@ -231,7 +243,8 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
         pivot = pivot.sort_values(by='FuzzerSum', axis=1, ascending=False)
         pivot = pivot.style\
                 .apply(highlight_max, axis=1, subset=fuzzer_names)\
-                .set_table_styles(self._summary_table_style)
+                .apply(data_utils.underline_row, axis=1, subset=idx)\
+                .set_table_styles(self._SUMMARY_TABLE_STYLE)
         return pivot
 
     @property
