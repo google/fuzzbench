@@ -43,7 +43,6 @@ jobs:
           - aflplusplus_introspection2
           - aflplusplus_dict2file
           - aflplusplus_cmplog
-          - aflplusplus_cmplog_introspection
           - aflplusplus_flcnt
           - aflplusplus_optimal_flcnt
           - aflplusplus_fcnt
