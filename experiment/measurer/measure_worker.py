@@ -27,6 +27,8 @@ from common import filesystem
 from common import utils
 
 MEASURED_FILES_STATE_NAME = 'measured-files'
+FUNCTION_COVERAGE_STATE_NAME = 'function-coverage'
+SEGMENT_COVERAGE_STATE_NAME = 'segment-coverage'
 
 logger = logs.Logger('measure_worker')  # pylint: disable=invalid-name
 
@@ -102,10 +104,10 @@ class StateFile:
 
         return self._prev_state
 
-    def set_current(self, state):
+    def set_current(self, state, overwrite=False):
         """Sets the state for this cycle in the bucket."""
         state_file_bucket_path = self._get_bucket_cycle_state_file_path(
-            self.cycle)
+            self.cycle if not overwrite else 0)
         with tempfile.NamedTemporaryFile(mode='w') as temp_file:
             temp_file.write(json.dumps(state))
             temp_file.flush()

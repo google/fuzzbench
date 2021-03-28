@@ -27,6 +27,7 @@ import tempfile
 import time
 from typing import List, Set
 import queue
+import pandas
 
 from sqlalchemy import func
 from sqlalchemy import orm
@@ -396,6 +397,82 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             self.logger.error(
                 'Coverage profdata generation failed for cycle: %d.', cycle)
 
+    def update_coverage_state(self, cycle):
+        """Update the previous trial-specific coverage data with coverage
+        information from this cycle."""
+
+        # TODO Recover time stamp from cycle (how long is a cycle?)
+        time_stamp = cycle
+
+        # Create function dataframe and load previous segment dataframe.
+        function_coverage_state_file = measure_worker.StateFile(
+            measure_worker.FUNCTION_COVERAGE_STATE_NAME, self.state_dir, cycle)
+        function_coverage = pandas.DataFrame(columns=[
+            'benchmark', 'fuzzer', 'trial', 'time', 'function', 'hits'
+        ])
+
+        segment_coverage_state_file = measure_worker.StateFile(
+            measure_worker.SEGMENT_COVERAGE_STATE_NAME, self.state_dir, cycle)
+        if not segment_coverage_state_file.get_previous():
+            segment_coverage = pandas.DataFrame(columns=[
+                'benchmark', 'fuzzer', 'trial', 'time', 'file', 'line', 'column'
+            ])
+        else:
+            segment_coverage = pandas.from_dict(
+                segment_coverage_state_file.get_previous(), orient='table')
+
+        # Extract coverage information
+        try:
+            coverage_info = coverage_utils.get_coverage_infomation(
+                self.cov_summary_file)
+            for function_data in coverage_info['data'][0]['functions']:
+                entry = pandas.Series([
+                    self.benchmark, self.fuzzer, self.trial_num,
+                    function_data['name'], function_data['count'], time_stamp
+                ],
+                                      index=function_coverage.columns)
+                function_coverage = function_coverage.append(entry,
+                                                             ignore_index=True)
+
+            for file in coverage_info['data'][0]['files']:
+                for segment in file['segments']:
+                    if segment[2] != 0:  # Segment hits.
+                        entry = pandas.Series(
+                            [
+                                self.benchmark,
+                                self.fuzzer,
+                                self.trial_num,
+                                file['filename'],
+                                segment[0],  # Segment line.
+                                segment[1],  # Segment column.
+                                time_stamp
+                            ],
+                            index=segment_coverage.columns)
+                        segment_coverage = segment_coverage.append(
+                            entry, ignore_index=True)
+
+        except (ValueError, KeyError, IndexError):
+            coverage_utils.logger.error(
+                'Failed to extract trial-specific segment and function '
+                'information from coverage summary.')
+
+        # Drop segments that have previously been discovered.
+        try:
+            segment_coverage = segment_coverage.sort_values(by=['time'])
+            segment_coverage = segment_coverage.drop_duplicates(
+                subset=segment_coverage.columns.difference(['time']),
+                keep='first')
+
+        except (ValueError, KeyError, IndexError):
+            coverage_utils.logger.error(
+                'Error occurred when removing duplicates.')
+
+        # Set coverage information state accordingly
+        function_coverage_state_file.set_current(
+            function_coverage.to_json(orient='table'), overwrite=True)
+        segment_coverage_state_file.set_current(
+            segment_coverage.to_json(orient='table'))
+
     def generate_coverage_information(self, cycle: int):
         """Generate the .profdata file and then transform it into
         json summary."""
@@ -412,6 +489,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             self.logger.error('Empty profdata file found for cycle: %d.', cycle)
             return
         self.generate_summary(cycle)
+        self.update_coverage_state(cycle)
 
     def is_cycle_unchanged(self, cycle: int) -> bool:
         """Returns True if |cycle| is unchanged according to the
