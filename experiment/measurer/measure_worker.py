@@ -81,14 +81,15 @@ class StateFile:
         state_file_path = os.path.join(self.state_dir, state_file_name)
         return exp_path.filestore(pathlib.Path(state_file_path))
 
-    def _get_previous_cycle_state(self) -> list:
+    def _get_previous_cycle_state(self, cycle_dependent=True) -> list:
         """Returns the state from the previous cycle. Returns [] if |self.cycle|
         is 1."""
         if self.cycle == 1:
             return []
 
         previous_state_file_bucket_path = (
-            self._get_bucket_cycle_state_file_path(self.cycle - 1))
+            self._get_bucket_cycle_state_file_path((
+                self.cycle - 1) if cycle_dependent else 0))
 
         result = filestore_utils.cat(previous_state_file_bucket_path,
                                      expect_zero=False)
@@ -97,10 +98,11 @@ class StateFile:
 
         return json.loads(result.output)
 
-    def get_previous(self):
+    def get_previous(self, cycle_dependent=True):
         """Returns the previous state."""
         if self._prev_state is None:
-            self._prev_state = self._get_previous_cycle_state()
+            self._prev_state = self._get_previous_cycle_state(
+                cycle_dependent=cycle_dependent)
 
         return self._prev_state
 

@@ -14,9 +14,19 @@
 """Tests for coverage_utils.py"""
 import os
 
+import pandas as pd
+
 from experiment.measurer import coverage_utils
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
+
+# Expected Constants.
+NUM_FUNCTION_IN_COV_SUMMARY = 3
+NUM_UNRECORDED_SEGMENTS_IN_COV_SUMMARY = 15
+BENCHMARK = 'benchmark_1'
+FUZZER = 'fuzzer_1'
+TIMESTAMP = 900
+TRIAL_ID = 2
 
 
 def get_test_data_path(*subpaths):
@@ -32,3 +42,30 @@ def test_extract_covered_regions_from_summary_json(fs):
     covered_regions = coverage_utils.extract_covered_regions_from_summary_json(
         summary_json_file)
     assert len(covered_regions) == 15
+
+
+def test_extract_segments_and_functions_from_summary_json_for_segments(fs):
+    """Tests that segments and functions from summary json properly extracts the
+     information and also test for integrity of fuzzer, benchmark and function
+     ids in segment_df for a given summary json file."""
+
+    summary_json_file = get_test_data_path('cov_summary.json')
+    fs.add_real_file(summary_json_file, read_only=False)
+
+    segment_coverage = pd.DataFrame(columns=[
+        'benchmark', 'fuzzer', 'trial', 'time', 'file', 'line', 'column'
+    ])
+
+    function_coverage = pd.DataFrame(
+        columns=['benchmark', 'fuzzer', 'trial', 'time', 'function', 'hits'])
+
+    recorded_segments = [[1, 16]]
+
+    segment_coverage, function_coverage = (
+        coverage_utils.extract_segments_and_functions_from_summary_json(
+            summary_json_file, BENCHMARK, FUZZER, TRIAL_ID, TIMESTAMP,
+            segment_coverage, function_coverage, recorded_segments))
+
+    # Assert length of resulting data frame is as expected.
+    assert len(segment_coverage) == NUM_UNRECORDED_SEGMENTS_IN_COV_SUMMARY
+    assert len(function_coverage) == NUM_FUNCTION_IN_COV_SUMMARY
