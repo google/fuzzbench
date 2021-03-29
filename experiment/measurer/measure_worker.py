@@ -88,8 +88,8 @@ class StateFile:
             return []
 
         previous_state_file_bucket_path = (
-            self._get_bucket_cycle_state_file_path((
-                self.cycle - 1) if cycle_dependent else 0))
+            self._get_bucket_cycle_state_file_path(  # pylint: disable-all
+                (self.cycle - 1) if cycle_dependent else 0))
 
         result = filestore_utils.cat(previous_state_file_bucket_path,
                                      expect_zero=False)
@@ -101,15 +101,14 @@ class StateFile:
     def get_previous(self, cycle_dependent=True):
         """Returns the previous state."""
         if self._prev_state is None:
-            self._prev_state = self._get_previous_cycle_state(
-                cycle_dependent=cycle_dependent)
+            self._prev_state = self._get_previous_cycle_state(cycle_dependent)
 
         return self._prev_state
 
-    def set_current(self, state, overwrite=False):
+    def set_current(self, state, cycle_dependent=True):
         """Sets the state for this cycle in the bucket."""
         state_file_bucket_path = self._get_bucket_cycle_state_file_path(
-            self.cycle if not overwrite else 0)
+            self.cycle if cycle_dependent else 0)
         with tempfile.NamedTemporaryFile(mode='w') as temp_file:
             temp_file.write(json.dumps(state))
             temp_file.flush()

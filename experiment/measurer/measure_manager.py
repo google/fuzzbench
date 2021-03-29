@@ -397,7 +397,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             self.logger.error(
                 'Coverage profdata generation failed for cycle: %d.', cycle)
 
-    def update_coverage_state(self, cycle, time_stamp):
+    def update_coverage_state(self, cycle, this_time):
         """Update the previous trial-specific coverage data with coverage
         information from this cycle."""
 
@@ -411,33 +411,37 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         segment_coverage_state_file = measure_worker.StateFile(
             measure_worker.SEGMENT_COVERAGE_STATE_NAME, self.state_dir, cycle)
 
-        if not segment_coverage_state_file.get_previous(cycle_dependent=False):
+        # Using Try and Except since "get_previous()" returns [] if there is no
+        # previous data to return which raises a ValueError while trying to load
+        # it onto a data frame with orient='table'
+        try:
+            segment_coverage = pandas.DataFrame.from_dict(
+                segment_coverage_state_file.get_previous(cycle_dependent=False),
+                orient='table')
+        except ValueError:
             segment_coverage = pandas.DataFrame(columns=[
                 'benchmark', 'fuzzer', 'trial', 'time', 'file', 'line', 'column'
             ])
-        else:
-            segment_coverage = pandas.from_dict(
-                segment_coverage_state_file.get_previous(cycle_dependent=False),
-                orient='table')
 
         # Store all the observed [line, column] (segments) in a list to help us
         # determine redundant segment entries while adding entries for this
-        # cycle
-        recorded_segments = [[
-            segment_coverage['line'][i], segment_coverage['column'][i]
-        ] for i in segment_coverage.index]
+        # cycle. (Reduces memory consumption)
+        recorded_segments = [
+            list(x) for x in zip(segment_coverage['line'].to_list(),
+                                 segment_coverage['column'].to_list())
+        ]
 
         segment_coverage, function_coverage = \
             coverage_utils.extract_segments_and_functions_from_summary_json(
                 self.cov_summary_file, self.benchmark, self.fuzzer,
-                self.trial_num, time_stamp, segment_coverage, function_coverage,
+                self.trial_num, this_time, segment_coverage, function_coverage,
                 recorded_segments)
 
         # Set coverage information state accordingly
         function_coverage_state_file.set_current(
             function_coverage.to_json(orient='table'))
         segment_coverage_state_file.set_current(
-            segment_coverage.to_json(orient='table'), overwrite=True)
+            segment_coverage.to_json(orient='table'), cycle_dependent=False)
 
     def generate_coverage_information(self, cycle: int, time_stamp):
         """Generate the .profdata file and then transform it into
