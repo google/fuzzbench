@@ -43,7 +43,6 @@ jobs:
           - aflplusplus_introspection2
           - aflplusplus_dict2file
           - aflplusplus_cmplog
-          - aflplusplus_cmplog_introspection
           - aflplusplus_flcnt
           - aflplusplus_optimal_flcnt
           - aflplusplus_fcnt
@@ -51,9 +50,14 @@ jobs:
           - aflplusplus_lcnt
           - aflplusplus_optimal_lcnt
           - aflplusplus_havoc
+          - aflplusplus_havoc2
+          - aflplusplus_havoc3
+          - aflplusplus_havoc60
+          - aflplusplus_cmplog_add
           - aflplusplus_300
           - aflplusplus_310
           - aflplusplus_311
+          - aflplusplus_312
 
         benchmark_type:
           - oss-fuzz

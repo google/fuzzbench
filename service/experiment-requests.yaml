@@ -19,6 +19,33 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-03-27-aflpp
+  description: "afl++ havoc+cmplog variants"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_312
+    - aflplusplus_311
+    - aflplusplus_310
+    - aflplusplus_havoc
+    - aflplusplus_havoc2
+    - aflplusplus_havoc3
+    - aflplusplus_havoc60
+    - aflplusplus_cmplog_add
+
+- experiment: 2021-03-23-aflpp
+  description: "afl++ release comparison"
+  fuzzers:
+    - aflplusplus_optimal_flcnt
+    - aflplusplus_flcnt
+    - aflplusplus_optimal
+    - aflplusplus_havoc
+    - aflplusplus
+    - aflplusplus_311
+    - aflplusplus_310
+    - aflplusplus_300
+    - entropic
+    - honggfuzz
+
 - experiment: 2021-03-16-aflpp
   description: "afl++ release comparison"
   fuzzers:
