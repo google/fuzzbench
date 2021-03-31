@@ -88,8 +88,8 @@ class StateFile:
             return []
 
         previous_state_file_bucket_path = (
-            self._get_bucket_cycle_state_file_path(  # pylint: disable-all
-                (self.cycle - 1) if cycle_dependent else 0))
+            self._get_bucket_cycle_state_file_path((
+                self.cycle - 1) if cycle_dependent else 0))
 
         result = filestore_utils.cat(previous_state_file_bucket_path,
                                      expect_zero=False)

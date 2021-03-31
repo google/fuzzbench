@@ -313,12 +313,11 @@ def extract_segments_and_functions_from_summary_json(
     try:
         coverage_info = get_coverage_infomation(cov_summary_file)
         for function_data in coverage_info['data'][0]['functions']:
-            entry = pandas.Series(
-                [
-                    benchmark, fuzzer, trial_num, function_data['name'],
-                    function_data['count'], this_time
-                ],
-                index=function_coverage.columns)  # pylint: disable-all
+            entry = pandas.Series([
+                benchmark, fuzzer, trial_num, function_data['name'],
+                function_data['count'], this_time
+            ],
+                                  index=function_coverage.columns)
             function_coverage = function_coverage.append(entry,
                                                          ignore_index=True)
 
