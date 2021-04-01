@@ -13,6 +13,7 @@
 # limitations under the License.
 """Tests for coverage_utils.py"""
 import os
+import pandas
 
 from experiment.measurer import coverage_utils
 
@@ -32,3 +33,38 @@ def test_extract_covered_regions_from_summary_json(fs):
     covered_regions = coverage_utils.extract_covered_regions_from_summary_json(
         summary_json_file)
     assert len(covered_regions) == 15
+
+
+def test_extract_segments_and_functions_from_summary_json(fs):
+    """Tests that segments and functions from summary json are properly
+    extracted and test for integrity of data recorded for segment and function
+    coverage."""
+
+    # Expected Constants.
+    num_function_in_cov_summary = 3
+    num_unrecorded_segment_in_cov_summary = 15
+    benchmark = 'benchmark_1'
+    fuzzer = 'fuzzer_1'
+    timestamp = 900
+    trial_num = 2
+
+    summary_json_file = get_test_data_path('cov_summary.json')
+    fs.add_real_file(summary_json_file, read_only=False)
+
+    segment_coverage = pandas.DataFrame(columns=[
+        'benchmark', 'fuzzer', 'trial', 'time', 'file', 'line', 'column'
+    ])
+
+    function_coverage = pandas.DataFrame(
+        columns=['benchmark', 'fuzzer', 'trial', 'time', 'function', 'hits'])
+
+    recorded_segments = [[1, 16]]
+
+    segment_coverage, function_coverage = (
+        coverage_utils.extract_segments_and_functions_from_summary_json(
+            summary_json_file, benchmark, fuzzer, trial_num, timestamp,
+            segment_coverage, function_coverage, recorded_segments))
+
+    # Assert length of resulting data frame is as expected.
+    assert len(segment_coverage) == num_unrecorded_segment_in_cov_summary
+    assert len(function_coverage) == num_function_in_cov_summary
