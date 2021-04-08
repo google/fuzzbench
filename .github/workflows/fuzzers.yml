@@ -63,6 +63,7 @@ jobs:
           - aflplusplus_310
           - aflplusplus_311
           - aflplusplus_312
+          - libfuzzer_vartorcw
 
         benchmark_type:
           - oss-fuzz
