@@ -192,28 +192,32 @@ def _time_to_cycle(time_in_seconds: float) -> int:
 def _query_ids_of_measured_trials(experiment: str):
     """Returns a query of the ids of trials in |experiment| that have measured
     snapshots."""
-    trials_and_snapshots_query = db_utils.query(models.Snapshot).options(
-        orm.joinedload('trial'))
-    experiment_trials_filter = models.Snapshot.trial.has(experiment=experiment,
-                                                         preempted=False)
-    experiment_trials_and_snapshots_query = trials_and_snapshots_query.filter(
-        experiment_trials_filter)
-    experiment_snapshot_trial_ids_query = (
-        experiment_trials_and_snapshots_query.with_entities(
-            models.Snapshot.trial_id))
-    return experiment_snapshot_trial_ids_query.distinct()
+    with db_utils.session_scope() as session:
+        trials_and_snapshots_query = session.query(models.Snapshot).options(
+            orm.joinedload('trial'))
+        experiment_trials_filter = models.Snapshot.trial.has(
+            experiment=experiment, preempted=False)
+        experiment_trials_and_snapshots_query = (
+            trials_and_snapshots_query.filter(experiment_trials_filter))
+        experiment_snapshot_trial_ids_query = (
+            experiment_trials_and_snapshots_query.with_entities(
+                models.Snapshot.trial_id))
+        return experiment_snapshot_trial_ids_query.distinct()
 
 
 def _query_unmeasured_trials(experiment: str):
     """Returns a query of trials in |experiment| that have not been measured."""
-    trial_query = db_utils.query(models.Trial)
     ids_of_trials_with_snapshots = _query_ids_of_measured_trials(experiment)
-    no_snapshots_filter = ~models.Trial.id.in_(ids_of_trials_with_snapshots)
-    started_trials_filter = ~models.Trial.time_started.is_(None)
-    nonpreempted_trials_filter = ~models.Trial.preempted
-    experiment_trials_filter = models.Trial.experiment == experiment
-    return trial_query.filter(experiment_trials_filter, no_snapshots_filter,
-                              started_trials_filter, nonpreempted_trials_filter)
+
+    with db_utils.session_scope() as session:
+        trial_query = session.query(models.Trial)
+        no_snapshots_filter = ~models.Trial.id.in_(ids_of_trials_with_snapshots)
+        started_trials_filter = ~models.Trial.time_started.is_(None)
+        nonpreempted_trials_filter = ~models.Trial.preempted
+        experiment_trials_filter = models.Trial.experiment == experiment
+        return trial_query.filter(experiment_trials_filter, no_snapshots_filter,
+                                  started_trials_filter,
+                                  nonpreempted_trials_filter)
 
 
 def _get_unmeasured_first_snapshots(
@@ -243,9 +247,10 @@ def _query_measured_latest_snapshots(experiment: str):
     experiment_filter = models.Snapshot.trial.has(experiment=experiment)
     group_by_columns = (models.Snapshot.trial_id, models.Trial.benchmark,
                         models.Trial.fuzzer)
-    snapshots_query = db_utils.query(*columns).join(
-        models.Trial).filter(experiment_filter).group_by(*group_by_columns)
-    return (SnapshotWithTime(*snapshot) for snapshot in snapshots_query)
+    with db_utils.session_scope() as session:
+        snapshots_query = session.query(*columns).join(
+            models.Trial).filter(experiment_filter).group_by(*group_by_columns)
+        return (SnapshotWithTime(*snapshot) for snapshot in snapshots_query)
 
 
 def _get_unmeasured_next_snapshots(
@@ -685,11 +690,12 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
 def set_up_coverage_binaries(pool, experiment):
     """Set up coverage binaries for all benchmarks in |experiment|."""
     # Use set comprehension to select distinct benchmarks.
-    benchmarks = [
-        benchmark_tuple[0]
-        for benchmark_tuple in db_utils.query(models.Trial.benchmark).distinct(
-        ).filter(models.Trial.experiment == experiment)
-    ]
+    with db_utils.session_scope() as session:
+        benchmarks = [
+            benchmark_tuple[0]
+            for benchmark_tuple in session.query(models.Trial.benchmark).
+            distinct().filter(models.Trial.experiment == experiment)
+        ]
 
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
     filesystem.create_directory(coverage_binaries_dir)
