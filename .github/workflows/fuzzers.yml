@@ -56,14 +56,11 @@ jobs:
           - aflplusplus_optimal_lcnt
           - aflplusplus_havoc
           - aflplusplus_havoc2
-          - aflplusplus_havoc3
-          - aflplusplus_havoc60
-          - aflplusplus_cmplog_add
-          - aflplusplus_300
-          - aflplusplus_310
           - aflplusplus_311
           - aflplusplus_312
           - libfuzzer_vartorcw
+          - aflplusplus_qemu_cmplog
+          - aflplusplus_qemu_plain
 
         benchmark_type:
           - oss-fuzz
