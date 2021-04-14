@@ -184,8 +184,9 @@ def run_requested_experiment(dry_run):
     requested_experiment = None
     for experiment_config in reversed(requested_experiments):
         experiment_name = _get_experiment_name(experiment_config)
-        is_new_experiment = db_utils.query(models.Experiment).filter(
-            models.Experiment.name == experiment_name).first() is None
+        with db_utils.session_scope() as session:
+            is_new_experiment = session.query(models.Experiment).filter(
+                models.Experiment.name == experiment_name).first() is None
         if is_new_experiment:
             requested_experiment = experiment_config
             break

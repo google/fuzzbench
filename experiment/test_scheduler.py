@@ -76,8 +76,9 @@ def pending_trials(db, experiment_config):
     ]
     db_utils.add_all(other_trials + our_pending_trials)
     our_trial_ids = [trial.id for trial in our_pending_trials]
-    return db_utils.query(models.Trial).filter(
-        models.Trial.id.in_(our_trial_ids))
+    with db_utils.session_scope() as session:
+        return session.query(models.Trial).filter(
+            models.Trial.id.in_(our_trial_ids))
 
 
 @pytest.mark.parametrize(
@@ -228,11 +229,12 @@ def test_schedule(_, __, mocked_datetime_now, mocked_execute, pending_trials,
     needed."""
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
     experiment = experiment_config['experiment']
-    datetimes_first_experiments_started = [
-        trial.time_started for trial in db_utils.query(models.Trial).filter(
-            models.Trial.experiment == experiment).filter(
-                models.Trial.time_started.isnot(None))
-    ]
+    with db_utils.session_scope() as session:
+        datetimes_first_experiments_started = [
+            trial.time_started for trial in session.query(models.Trial).filter(
+                models.Trial.experiment == experiment).filter(
+                    models.Trial.time_started.isnot(None))
+        ]
 
     mocked_datetime_now.return_value = (
         max(datetimes_first_experiments_started) +
@@ -241,10 +243,12 @@ def test_schedule(_, __, mocked_datetime_now, mocked_execute, pending_trials,
 
     with ThreadPool() as pool:
         scheduler.schedule(experiment_config, pool)
-    assert db_utils.query(models.Trial).filter(
-        models.Trial.time_started.in_(
-            datetimes_first_experiments_started)).all() == (db_utils.query(
-                models.Trial).filter(models.Trial.time_ended.isnot(None)).all())
+    with db_utils.session_scope() as session:
+        assert session.query(models.Trial).filter(
+            models.Trial.time_started.in_(
+                datetimes_first_experiments_started)).all() == (session.query(
+                    models.Trial).filter(
+                        models.Trial.time_ended.isnot(None)).all())
 
     assert pending_trials.filter(
         models.Trial.time_started.isnot(None)).all() == pending_trials.all()
@@ -306,8 +310,13 @@ def preempt_exp_conf(experiment_config, db):
 
 def get_trial_instance_manager(experiment_config: dict):
     """Returns an instance of TrialInstanceManager for |experiment_config|."""
-    if not db_utils.query(models.Experiment).filter(
-            models.Experiment.name == experiment_config['experiment']).first():
+    with db_utils.session_scope() as session:
+        experiment_exists = bool(
+            session.query(models.Experiment).filter(
+                models.Experiment.name ==
+                experiment_config['experiment']).first())
+
+    if not experiment_exists:
         create_experiments(experiment_config)
 
     default_num_trials = 100
