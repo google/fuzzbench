@@ -15,9 +15,9 @@
 
 import os
 import threading
+from contextlib import contextmanager
 
 import sqlalchemy
-from sqlalchemy import orm
 
 # pylint: disable=invalid-name,no-member
 engine = None
@@ -40,34 +40,11 @@ def initialize():
     global engine
     engine = sqlalchemy.create_engine(database_url)
     global session
-    Session = orm.sessionmaker(bind=engine)
+    Session = sqlalchemy.orm.sessionmaker(bind=engine)
     session = Session()
     global lock
     lock = threading.Lock()
     return engine, session
-
-
-# TODO(metzman): Use sessions as described here rather than creating them
-# globally:
-# https://docs.sqlalchemy.org/en/13/orm/session_basics.html#when-do-i-construct-a-session-when-do-i-commit-it-and-when-do-i-close-it
-def use_session(function):
-    """Initialize the database if it isn't already."""
-
-    # TODO(metzman): The use of decorators with optional closes is pretty ugly.
-    # Replace it with a class/object.
-    def locked_function(*args, **kwargs):
-        global session
-        global engine
-        global lock
-        if session is None or engine is None or lock is None:
-            initialize()
-        lock.acquire()
-        try:
-            return function(*args, **kwargs)
-        finally:
-            lock.release()
-
-    return locked_function
 
 
 def cleanup():
@@ -87,48 +64,46 @@ def cleanup():
     lock = None
 
 
-@use_session
+@contextmanager
+def session_scope():
+    """Provide a transactional scope around a series of operations."""
+    global session
+    global engine
+    global lock
+    if session is None or engine is None or lock is None:
+        initialize()
+    lock.acquire()
+    try:
+        yield session
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        lock.release()
+
+
 def add_all(entities):
     """Save all |entities| to the database connected to by session."""
-    try:
-        session.add_all(entities)
-        session.commit()
-        return
-    except Exception as e:
-        session.rollback()
-        raise e
+    with session_scope() as scoped_session:
+        scoped_session.add_all(entities)
+        scoped_session.commit()
 
 
-@use_session
 def bulk_save(entities):
     """Save all |entities| to the database connected to by session."""
-    try:
-        session.bulk_save_objects(entities)
-        session.commit()
-        return
-    except Exception as e:
-        session.rollback()
-        raise e
+    with session_scope() as scoped_session:
+        scoped_session.bulk_save_objects(entities)
+        scoped_session.commit()
 
 
-@use_session
-def query(*args, **kwargs):
-    """Returns a query on the database connected to by |session|."""
-    try:
-        return session.query(*args, **kwargs)
-    except Exception as e:
-        session.rollback()
-        raise e
-
-
-@use_session
 def get_or_create(model, **kwargs):
     """If a |model| with the conditions specified by |kwargs| exists, then it is
     retrieved from the database. If not, it is created and saved to the
     database."""
-    instance = session.query(model).filter_by(**kwargs).first()
-    if instance:
+    with session_scope() as scoped_session:
+        instance = scoped_session.query(model).filter_by(**kwargs).first()
+        if instance:
+            return instance
+        instance = model(**kwargs)
+        scoped_session.add(instance)
         return instance
-    instance = model(**kwargs)
-    session.add(instance)
-    return instance

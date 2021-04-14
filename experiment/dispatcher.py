@@ -55,8 +55,9 @@ def create_work_subdirs(subdirs: List[str]):
 def _initialize_experiment_in_db(experiment_config: dict):
     """Initializes |experiment| in the database by creating the experiment
     entity."""
-    experiment_exists = db_utils.query(models.Experiment).filter(
-        models.Experiment.name == experiment_config['experiment']).first()
+    with db_utils.session_scope() as session:
+        experiment_exists = session.query(models.Experiment).filter(
+            models.Experiment.name == experiment_config['experiment']).first()
     if experiment_exists:
         raise Exception('Experiment already exists in database.')
 
@@ -73,8 +74,9 @@ def _initialize_experiment_in_db(experiment_config: dict):
 
 def _record_experiment_time_ended(experiment_name: str):
     """Record |experiment| end time in the database."""
-    experiment = db_utils.query(models.Experiment).filter(
-        models.Experiment.name == experiment_name).one()
+    with db_utils.session_scope() as session:
+        experiment = session.query(models.Experiment).filter(
+            models.Experiment.name == experiment_name).one()
     experiment.time_ended = datetime.datetime.utcnow()
     db_utils.add_all([experiment])
 

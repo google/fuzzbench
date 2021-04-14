@@ -19,6 +19,25 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-04-08
+  description: >
+    Test modified strcmp handling that records the full string arguments in the
+    table of recent compares even if they are of different lengths and uses the
+    lengths of both arguments for more targeted mutations derived from TORCW.
+  fuzzers:
+    - libfuzzer
+    - libfuzzer_vartorcw
+
+- experiment: 2021-04-08-bug
+  description: >
+    Test modified strcmp handling that records the full string arguments in the
+    table of recent compares even if they are of different lengths and uses the
+    lengths of both arguments for more targeted mutations derived from TORCW.
+  type: bug
+  fuzzers:
+    - libfuzzer
+    - libfuzzer_vartorcw
+
 - experiment: 2021-03-31
   description: "afl++ collision free context sensitivity"
   fuzzers:
