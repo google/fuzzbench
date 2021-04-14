@@ -14,8 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:feba7413854d6d8fffbefdd8a5fa05ee95ca6e5656010058ee2b39bd4634d0ba
-MAINTAINER even.rouault@spatialys.com
+FROM gcr.io/oss-fuzz-base/base-builder
 RUN apt-get update && apt-get install -y make autoconf automake libtool g++ sqlite3 libsqlite3-dev pkg-config
 RUN git clone --depth 1 https://github.com/OSGeo/proj.4 proj.4
 WORKDIR proj.4
