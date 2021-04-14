@@ -74,13 +74,15 @@ def test_initialize_experiment_in_db(dispatcher_experiment):
     dispatcher._initialize_experiment_in_db(dispatcher_experiment.config)
     dispatcher._initialize_trials_in_db(trials)
 
-    db_experiments = db_utils.query(models.Experiment).all()
-    assert len(db_experiments) == 1
-    db_experiment = db_experiments[0]
-    assert db_experiment.name == os.environ['EXPERIMENT']
-    trials = db_utils.query(models.Trial).all()
-    fuzzer_and_benchmarks = [(trial.benchmark, trial.fuzzer) for trial in trials
-                            ]
+    with db_utils.session_scope() as session:
+        db_experiments = session.query(models.Experiment).all()
+        assert len(db_experiments) == 1
+        db_experiment = db_experiments[0]
+        assert db_experiment.name == os.environ['EXPERIMENT']
+        trials = session.query(models.Trial).all()
+        fuzzer_and_benchmarks = [
+            (trial.benchmark, trial.fuzzer) for trial in trials
+        ]
     assert fuzzer_and_benchmarks == ([('benchmark-1', 'fuzzer-a'),
                                       ('benchmark-1', 'fuzzer-b')] *
                                      4) + [('benchmark-2', 'fuzzer-a'),
