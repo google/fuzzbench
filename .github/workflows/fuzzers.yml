@@ -56,6 +56,7 @@ jobs:
           - libfuzzer_vartorcw
           - aflplusplus_qemu_cmplog
           - aflplusplus_qemu_plain
+          - aflplusplus_qemu_plaininmem
 
         benchmark_type:
           - oss-fuzz

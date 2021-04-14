@@ -30,6 +30,7 @@
     - aflplusplus_qemu_cmplog
     - aflplusplus_qemu_plain
     - aflplusplus_qemu
+    - aflplusplus_qemu_plaininmem
 
 - experiment: 2021-04-08
   description: >
