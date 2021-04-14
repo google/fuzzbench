@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:3a3163b23feb78bc7fc7e27ef42c9e70d977e4e9557667fb6b314790e22f0ccc
+FROM gcr.io/oss-fuzz-base/base-builder
 MAINTAINER jonathan@titanous.com
 RUN apt-get update && apt-get install -y make autoconf automake libtool pkg-config cmake
 RUN git clone --depth 1 https://anongit.freedesktop.org/git/poppler/poppler.git
