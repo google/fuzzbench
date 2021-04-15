@@ -19,6 +19,13 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-04-15-class-project
+  fuzzers:  
+    - aflplusplus
+    - weizz
+    - fairfuzz
+  description: "A survey for a class project"
+
 - experiment: 2021-04-14-aflpp
   description: "afl++ havoc + qemu mode variants"
   fuzzers:
