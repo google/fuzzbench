@@ -293,6 +293,8 @@ def test_benchmark_rank_by_stat_test_wins():
     ranking = data_utils.benchmark_rank_by_stat_test_wins(snapshot_df)
 
     expected_ranking = pd.Series(index=['libfuzzer', 'afl'], data=[0, 0])
+    ranking.sort_index(inplace=True)
+    expected_ranking.sort_index(inplace=True)
     assert ranking.equals(expected_ranking)
 
 
@@ -336,6 +338,8 @@ def test_experiment_rank_by_num_firsts():
         data_utils.experiment_rank_by_num_firsts)
 
     expected_ranking = pd.Series(index=['libfuzzer', 'afl'], data=[1.0, 1.0])
+    expected_ranking.sort_index(inplace=True)
+    ranking.sort_index(inplace=True)
     assert ranking.equals(expected_ranking)
 
 
