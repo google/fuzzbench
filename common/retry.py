@@ -90,6 +90,7 @@ def wrap(  # pylint: disable=too-many-arguments
                     if not handle_retry(num_try, exception=error):
                         raise
 
+
         @functools.wraps(func)
         def _generator_wrapper(*args, **kwargs):
             """Generator function wrapper."""
