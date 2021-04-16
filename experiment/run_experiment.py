@@ -223,6 +223,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
         no_dictionaries=False,
         oss_fuzz_corpus=False,
         allow_uncommitted_changes=False):
+    """Start a fuzzer benchmarking experiment."""
     if not allow_uncommitted_changes:
         check_no_uncommitted_changes()
 
@@ -242,7 +243,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
 
 
 def start_experiment_from_full_config(config):
-    """Start a fuzzer benchmarking experiment."""
+    """Start a fuzzer benchmarking experiment from a full (internal) config."""
 
     set_up_experiment_config_file(config)
 
