@@ -14,7 +14,6 @@
 """Report rendering functions."""
 
 import os
-import posixpath
 
 import jinja2
 

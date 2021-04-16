@@ -195,7 +195,7 @@ def main():
     except Exception as error:
         logs.error('Error conducting experiment.')
         raise error
-    experiment_config_file_path = os.path.join(_get_config_dir(),
+    experiment_config_file_path = os.path.join(_get_config_path(),
                                                'experiment.yaml')
 
     if experiment_utils.is_local_experiment():

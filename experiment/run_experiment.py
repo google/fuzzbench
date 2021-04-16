@@ -193,8 +193,8 @@ def set_up_experiment_config_file(config):
     """Set up the config file that will actually be used in the
     experiment (not the one given to run_experiment.py)."""
     filesystem.recreate_directory(experiment_utils.CONFIG_DIR)
-    experiment_config_filename = os.path.join(
-        experiment_utils.CONFIG_DIR, 'experiment.yaml')
+    experiment_config_filename = os.path.join(experiment_utils.CONFIG_DIR,
+                                              'experiment.yaml')
     with open(experiment_config_filename, 'w') as experiment_config_file:
         yaml.dump(config, experiment_config_file, default_flow_style=False)
 
@@ -254,7 +254,7 @@ def start_experiment_from_full_config(config):
             raise Exception('Must set POSTGRES_PASSWORD environment variable.')
         gcloud.set_default_project(config['cloud_project'])
 
-    start_dispatcher(config, CONFIG_DIR)
+    start_dispatcher(config, experiment_utils.CONFIG_DIR)
 
 
 def start_dispatcher(config: Dict, config_dir: str):
