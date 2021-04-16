@@ -388,6 +388,18 @@
             <br><br>
             The experiment was conducted using this FuzzBench commit:
             <a href="https://github.com/google/fuzzbench/commits/{{ experiment.git_hash }}">{{ experiment.git_hash }}</a>
+
+            <br><br>
+            To reproduce this experiment run the following commands in your FuzzBench repo:</a><br>
+            <code>
+            git checkout {{ experiment.git_hash }}  # Check out the right commit. <br>
+            # Download the internal config file. <br>
+            curl https://storage.googleapis.com/{{ experiment.name }}/{{ experiment_config_relative_path }} >  /tmp/experiment-config.yaml<br>
+            make install-dependencies <br>
+            # Launch the experiment using paramters from the internal config file. <br>
+            PYTHONPATH=. python experiment/reproduce_experiment.py -c /tmp/experiment-config.yaml -e &lt;new_experiment_name&gt;
+            </code>
+
             {% endif %}
 
             {% if description %}

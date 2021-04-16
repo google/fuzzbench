@@ -39,7 +39,6 @@ from common import new_process
 from common import utils
 from common import yaml_utils
 
-CONFIG_DIR = 'config'
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
 OSS_FUZZ_PROJECTS_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz',
@@ -193,8 +192,9 @@ def validate_experiment_name(experiment_name: str):
 def set_up_experiment_config_file(config):
     """Set up the config file that will actually be used in the
     experiment (not the one given to run_experiment.py)."""
-    filesystem.recreate_directory(CONFIG_DIR)
-    experiment_config_filename = os.path.join(CONFIG_DIR, 'experiment.yaml')
+    filesystem.recreate_directory(experiment_utils.CONFIG_DIR)
+    experiment_config_filename = os.path.join(
+        experiment_utils.CONFIG_DIR, 'experiment.yaml')
     with open(experiment_config_filename, 'w') as experiment_config_file:
         yaml.dump(config, experiment_config_file, default_flow_style=False)
 

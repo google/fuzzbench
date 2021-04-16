@@ -22,6 +22,9 @@ from common import experiment_path as exp_path
 DEFAULT_SNAPSHOT_SECONDS = 15 * 60  # Seconds.
 CONFIG_DIR = 'config'
 
+def get_internal_experiment_config_relative_path():
+    return os.path.join(CONFIG_DIR, 'experiment.yaml')
+
 
 def get_snapshot_seconds():
     """Returns the amount of time in seconds between snapshots of a
