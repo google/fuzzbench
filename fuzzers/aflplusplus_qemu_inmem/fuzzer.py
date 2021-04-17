@@ -29,7 +29,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # Get LLVMFuzzerTestOneInput address.
     nm_proc = subprocess.run([
         'sh', '-c',
-        'nm \'' + target_binary + '\' | grep \'T LLVMFuzzerTestOneInput\''
+        'nm \'' + target_binary + '\' | grep -i \'T LLVMFuzzerTestOneInput\''
     ],
                              stdout=subprocess.PIPE,
                              check=True)

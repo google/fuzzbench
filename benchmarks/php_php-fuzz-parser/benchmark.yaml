@@ -19,7 +19,3 @@ project: php
 unsupported_fuzzers:
   - aflcc
   - klee
-  - aflplusplus_qemu
-  - aflplusplus_qemu_cmplog
-  - aflplusplus_qemu_inmem
-  - aflplusplus_qemu_cmplog_inmem
