@@ -22,7 +22,6 @@ jobs:
           - aflfast
           - aflplusplus
           - aflplusplus_optimal
-          - aflplusplus_eclipser
           - aflsmart
           - entropic
           - fairfuzz
