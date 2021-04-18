@@ -13,26 +13,38 @@
 # limitations under the License.
 """Integration code for AFLplusplus fuzzer."""
 
-# This optimized afl++ variant should always be run together with
-# "aflplusplus" to show the difference - a default configured afl++ vs.
-# a hand-crafted optimized one. afl++ is configured not to enable the good
-# stuff by default to be as close to vanilla afl as possible.
-# But this means that the good stuff is hidden away in this benchmark
-# otherwise.
+import os
+import subprocess
 
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
-def build():  # pylint: disable=too-many-branches,too-many-statements
+def build():
     """Build benchmark."""
-    aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
+    aflplusplus_fuzzer.build('qemu')
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    run_options = ['-p', 'fast']
+    # Get LLVMFuzzerTestOneInput address.
+    nm_proc = subprocess.run([
+        'sh', '-c',
+        'nm \'' + target_binary + '\' | grep -i \'T LLVMFuzzerTestOneInput\''
+    ],
+                             stdout=subprocess.PIPE,
+                             check=True)
+    target_func = "0x" + nm_proc.stdout.split()[0].decode("utf-8")
+    print('[fuzz] LLVMFuzzerTestOneInput() address =', target_func)
 
+    # Fuzzer option for qemu_mode.
+    flags = ['-Q', '-c0']
+
+    os.environ['AFL_COMPCOV_LEVEL'] = '3'  # Complete compcov including floats
+    os.environ['AFL_QEMU_PERSISTENT_ADDR'] = target_func
+    os.environ['AFL_ENTRYPOINT'] = target_func
+    os.environ['AFL_QEMU_PERSISTENT_HOOK'] = "/out/aflpp_qemu_driver_hook.so"
+    os.environ['AFL_QEMU_PERSISTENT_CNT'] = "100000"
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
-                            flags=(run_options))
+                            flags=flags)
