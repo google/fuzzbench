@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:3ada5d4bff7d2ce476623b2caeeb63bb61a3cf986e68624e3998b7b31dc89c37
+FROM gcr.io/oss-fuzz-base/base-builder
 MAINTAINER t-beu@users.sourceforge.net
 RUN apt-get update && apt-get install -y make autoconf automake libhdf5-dev libtool zlib1g-dev
 ENV HDF5_DIR /usr/lib/x86_64-linux-gnu/hdf5/serial
