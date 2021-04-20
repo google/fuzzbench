@@ -14,8 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:d9cd0d8d9e16db401dd8d6e9dce089ea4e5bc4fba91fc1f55d4c85708dd7be63
-MAINTAINER dev@arrow.apache.org
+FROM gcr.io/oss-fuzz-base/base-builder
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update -y -q && \
