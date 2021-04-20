@@ -22,7 +22,6 @@ jobs:
           - aflfast
           - aflplusplus
           - aflplusplus_optimal
-          - aflplusplus_eclipser
           - aflsmart
           - entropic
           - fairfuzz
@@ -43,17 +42,17 @@ jobs:
           - aflplusplus_introspection2
           - aflplusplus_dict2file
           - aflplusplus_cmplog
-          - aflplusplus_cmplog_introspection
           - aflplusplus_flcnt
           - aflplusplus_optimal_flcnt
           - aflplusplus_fcnt
           - aflplusplus_optimal_fcnt
           - aflplusplus_lcnt
           - aflplusplus_optimal_lcnt
-          - aflplusplus_havoc
-          - aflplusplus_300
-          - aflplusplus_310
           - aflplusplus_311
+          - aflplusplus_312
+          - aflplusplus_qemu_cmplog
+          - aflplusplus_qemu_cmplog_inmem
+          - aflplusplus_qemu_inmem
 
         benchmark_type:
           - oss-fuzz

@@ -145,8 +145,9 @@ def end_expired_trials(experiment_config: dict):
 
 def get_experiment_trials(experiment: str):
     """Returns a query for trials in |experiment| ordered by id."""
-    return db_utils.query(models.Trial).filter(
-        models.Trial.experiment == experiment).order_by(models.Trial.id)
+    with db_utils.session_scope() as session:
+        return session.query(models.Trial).filter(
+            models.Trial.experiment == experiment).order_by(models.Trial.id)
 
 
 def get_started_trials(experiment: str):
@@ -163,10 +164,12 @@ def get_last_trial_time_started(experiment: str):
     assert get_pending_trials(experiment).first() is None
     # Don't use get_experiment_trials because it already orders the results by
     # id.
-    last_trial = db_utils.query(models.Trial).filter(
-        models.Trial.experiment == experiment, STARTED_TRIALS_FILTER).order_by(
-            models.Trial.time_started.desc()).first()
-    return last_trial.time_started
+    with db_utils.session_scope() as session:
+        last_trial = session.query(models.Trial).filter(
+            models.Trial.experiment == experiment,
+            STARTED_TRIALS_FILTER).order_by(
+                models.Trial.time_started.desc()).first()
+        return last_trial.time_started
 
 
 def any_pending_trials(experiment):
@@ -225,9 +228,11 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         self.preemptible_starts_futile = False
 
         # Filter operations happening before the experiment started.
-        self.last_preemptible_query = (db_utils.query(models.Experiment).filter(
-            models.Experiment.name == experiment_config['experiment']).one(
-            ).time_created.replace(tzinfo=datetime.timezone.utc))
+        with db_utils.session_scope() as session:
+            self.last_preemptible_query = (session.query(
+                models.Experiment).filter(
+                    models.Experiment.name == experiment_config['experiment']
+                ).one().time_created.replace(tzinfo=datetime.timezone.utc))
 
     def _get_max_time_started(self):
         """Returns the last time_started of the self._initial_trials. Returns
