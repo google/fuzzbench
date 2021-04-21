@@ -193,8 +193,8 @@ def set_up_experiment_config_file(config):
     """Set up the config file that will actually be used in the
     experiment (not the one given to run_experiment.py)."""
     filesystem.recreate_directory(experiment_utils.CONFIG_DIR)
-    experiment_config_filename = os.path.join(experiment_utils.CONFIG_DIR,
-                                              'experiment.yaml')
+    experiment_config_filename = (
+        experiment_utils.get_internal_experiment_config_relative_path())
     with open(experiment_config_filename, 'w') as experiment_config_file:
         yaml.dump(config, experiment_config_file, default_flow_style=False)
 
