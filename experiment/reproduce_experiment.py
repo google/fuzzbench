@@ -59,10 +59,10 @@ def main():
     args = parser.parse_args()
     config = yaml_utils.read(args.experiment_config)
     run_experiment.validate_experiment_name(args.experiment_name)
-    if args.experiment_name == config.experiment_name:
+    if args.experiment_name == config['experiment']:
         raise Exception('Must use a different experiment name.')
-    config.experiment_name = args.experiment_name
-    config.description = args.description
+    config['experiment'] = args.experiment_name
+    config['description'] = args.description
     validate_config(config)
     run_experiment.start_experiment_from_full_config(config)
     return 0
