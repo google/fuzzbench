@@ -22,7 +22,7 @@
 - experiment: 2021-04-22-bwhua-project
   fuzzers:  
     - aflplusplus
-    - weizz
+    - entropic
     - fairfuzz
   description: "A survey for a class project by bwhua"
 
