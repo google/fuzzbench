@@ -93,6 +93,12 @@ class Plotter:
         'X', ',', '+', 'x', '|', '_'
     ]
 
+    mean_props = {
+        'markersize': '10',
+        'markeredgecolor': 'black',
+        'markerfacecolor': 'white'
+    }
+
     def __init__(self, fuzzers, quick=False, logscale=False):
         """Instantiates plotter with list of |fuzzers|. If |quick| is True,
         creates plots faster but, with less detail.
@@ -109,21 +115,21 @@ class Plotter:
         self._quick = quick
         self._logscale = logscale
 
-    # pylint: disable=no-self-use
+    # pylint: disable=no-self-use,too-many-arguments
     def _write_plot_to_image(self,
                              plot_function,
                              data,
                              image_path,
                              wide=False,
+                             tall=False,
                              **kwargs):
         """Writes the result of |plot_function(data)| to |image_path|.
 
         If |wide|, then the image size will be twice as wide as normal.
         """
-        width = 6.4
-        height = 4.8
-        figsize = (2 * width, height) if wide else (width, height)
-        fig, axes = plt.subplots(figsize=figsize)
+        width = 2 * 6.4 if wide else 6.4
+        height = 6 if tall else 4.8
+        fig, axes = plt.subplots(figsize=(width, height))
         try:
             plot_function(data, axes=axes, **kwargs)
             fig.savefig(image_path, bbox_inches="tight")
@@ -137,11 +143,11 @@ class Plotter:
         if snapshot:
             assert benchmark_df.time.nunique() == 1, 'Not a snapshot!'
 
-    def coverage_growth_plot(self,
-                             benchmark_df,
-                             axes=None,
-                             logscale=False,
-                             bugs=False):
+    def _coverage_growth_plot(self,
+                              benchmark_df,
+                              axes=None,
+                              logscale=False,
+                              bugs=False):
         """Draws edge (or bug) coverage growth plot on given |axes|.
 
         The fuzzer labels will be in the order of their mean coverage at the
@@ -210,18 +216,18 @@ class Plotter:
             logscale=False,
             bugs=False):
         """Writes coverage growth plot."""
-        self._write_plot_to_image(self.coverage_growth_plot,
+        self._write_plot_to_image(self._coverage_growth_plot,
                                   benchmark_df,
                                   image_path,
                                   wide=wide,
                                   logscale=logscale,
                                   bugs=bugs)
 
-    def box_or_violin_plot(self,
-                           benchmark_snapshot_df,
-                           axes=None,
-                           bugs=False,
-                           violin=False):
+    def _box_or_violin_plot(self,
+                            benchmark_snapshot_df,
+                            axes=None,
+                            bugs=False,
+                            violin=False):
         """Draws a box or violin plot based on parameter.
 
         The fuzzer labels will be in the order of their median coverage.
@@ -236,12 +242,6 @@ class Plotter:
         fuzzer_order = data_utils.benchmark_rank_by_median(
             benchmark_snapshot_df, key=column_of_interest).index
 
-        mean_props = {
-            'markersize': '10',
-            'markeredgecolor': 'black',
-            'markerfacecolor': 'white'
-        }
-
         common_args = dict(y=column_of_interest,
                            x='fuzzer',
                            data=benchmark_snapshot_df,
@@ -255,7 +255,7 @@ class Plotter:
             sns.boxplot(**common_args,
                         palette=self._fuzzer_colors,
                         showmeans=True,
-                        meanprops=mean_props)
+                        meanprops=self.mean_props)
 
             sns.stripplot(**common_args, size=3, color="black", alpha=0.6)
 
@@ -271,7 +271,7 @@ class Plotter:
 
     def write_violin_plot(self, benchmark_snapshot_df, image_path, bugs=False):
         """Writes violin plot."""
-        self._write_plot_to_image(self.box_or_violin_plot,
+        self._write_plot_to_image(self._box_or_violin_plot,
                                   benchmark_snapshot_df,
                                   image_path,
                                   bugs=bugs,
@@ -279,12 +279,12 @@ class Plotter:
 
     def write_box_plot(self, benchmark_snapshot_df, image_path, bugs=False):
         """Writes box plot."""
-        self._write_plot_to_image(self.box_or_violin_plot,
+        self._write_plot_to_image(self._box_or_violin_plot,
                                   benchmark_snapshot_df,
                                   image_path,
                                   bugs=bugs)
 
-    def distribution_plot(self, benchmark_snapshot_df, axes=None, bugs=False):
+    def _distribution_plot(self, benchmark_snapshot_df, axes=None, bugs=False):
         """Draws distribution plot.
 
         The fuzzer labels will be in the order of their median coverage.
@@ -315,10 +315,10 @@ class Plotter:
 
     def write_distribution_plot(self, benchmark_snapshot_df, image_path):
         """Writes distribution plot."""
-        self._write_plot_to_image(self.distribution_plot, benchmark_snapshot_df,
-                                  image_path)
+        self._write_plot_to_image(self._distribution_plot,
+                                  benchmark_snapshot_df, image_path)
 
-    def ranking_plot(self, benchmark_snapshot_df, axes=None, bugs=False):
+    def _ranking_plot(self, benchmark_snapshot_df, axes=None, bugs=False):
         """Draws ranking plot.
 
         The fuzzer labels will be in the order of their median coverage.
@@ -350,7 +350,7 @@ class Plotter:
 
     def write_ranking_plot(self, benchmark_snapshot_df, image_path):
         """Writes ranking plot."""
-        self._write_plot_to_image(self.ranking_plot, benchmark_snapshot_df,
+        self._write_plot_to_image(self._ranking_plot, benchmark_snapshot_df,
                                   image_path)
 
     def better_than_plot(self, better_than_table, axes=None):
@@ -489,9 +489,9 @@ class Plotter:
         finally:
             plt.close(fig)
 
-    def unique_coverage_ranking_plot(self,
-                                     unique_region_cov_df_combined,
-                                     axes=None):
+    def _unique_coverage_ranking_plot(self,
+                                      unique_region_cov_df_combined,
+                                      axes=None):
         """Draws unique_coverage_ranking plot. The fuzzer labels will be in
         the order of their coverage."""
 
@@ -533,7 +533,7 @@ class Plotter:
     def write_unique_coverage_ranking_plot(self, unique_region_cov_df_combined,
                                            image_path):
         """Writes ranking plot for unique coverage."""
-        self._write_plot_to_image(self.unique_coverage_ranking_plot,
+        self._write_plot_to_image(self._unique_coverage_ranking_plot,
                                   unique_region_cov_df_combined,
                                   image_path,
                                   wide=True)
@@ -562,3 +562,207 @@ class Plotter:
                                   pairwise_unique_coverage_table,
                                   image_path,
                                   wide=True)
+
+    def _fuzzer_rank_boxplot(self,
+                             fuzzer_df,
+                             axes=None,
+                             bugs=False,
+                             ranks=None):
+        """Writes fuzzer average rank boxplot."""
+
+        common_text_args = {
+            'ha': 'left',
+            'va': 'center',
+            'size': 'small',
+            'weight': 'semibold'
+        }
+
+        title_fontdict = {'fontsize': 16, 'fontweight': 'semibold'}
+
+        avg_rank = ranks.mean()
+        print(list(fuzzer_df.columns))
+
+        order = fuzzer_df.groupby('benchmark')['rank'].median().to_frame()
+        order['bm_rank'] = order.index.map(ranks.to_dict())
+        order = order.sort_values(by=['bm_rank', 'rank'],
+                                  ascending=[True, False])
+
+        sns.boxplot(x='rank',
+                    y='benchmark',
+                    data=fuzzer_df,
+                    ax=axes,
+                    orient='horizontal',
+                    order=order.index,
+                    showmeans=True,
+                    meanprops=self.mean_props)
+        xlabel = 'Reached {} coverage (relative % rank per trial)'.format(
+            'bug' if bugs else 'region')
+        axes.set(xlabel=xlabel)
+        axes.set(ylabel=None)
+        axes.set_xlim((-5, 102))
+        axes.set_title(f"average rank = {avg_rank:.2f}",
+                       fontdict=title_fontdict)
+        for tick, label in enumerate(axes.get_yticklabels()):
+            benchmark_rank = ranks[label.get_text()]
+            axes.text(-3, tick, f"{benchmark_rank:.1f}", **common_text_args)
+        axes.text(-4, -0.7, "Rank", **common_text_args)
+        sns.despine(ax=axes, trim=True)
+
+    def write_fuzzer_rank_boxplot(  # pylint: disable=too-many-arguments
+            self,
+            fuzzer_df,
+            image_path,
+            wide=True,
+            tall=True,
+            bugs=False,
+            ranks=None):
+        """Writes fuzzer rank boxplot."""
+        self._write_plot_to_image(self._fuzzer_rank_boxplot,
+                                  fuzzer_df,
+                                  image_path,
+                                  wide=wide,
+                                  tall=tall,
+                                  ranks=ranks,
+                                  bugs=bugs)
+
+    def _fuzzer_experiment_max_boxplot(self,
+                                       fuzzer_df,
+                                       axes=None,
+                                       bugs=False,
+                                       max_type='max'):
+        """Boxplot showing relative performance to
+        experiment max performance."""
+        key = 'bugs_covered' if bugs else 'edges_covered'
+        x_data = "{}_pct_{}".format(key, max_type)
+
+        order = fuzzer_df.groupby('benchmark')[x_data].median()
+        order = order.sort_values(ascending=False)
+
+        sns.boxplot(x=x_data,
+                    y='benchmark',
+                    data=fuzzer_df,
+                    ax=axes,
+                    orient='horizontal',
+                    order=order.index,
+                    showmeans=True,
+                    meanprops=self.mean_props)
+        xlabel = 'Reached {} coverage (% of {} max)'.format(
+            'bug' if bugs else 'region',
+            'experiment' if max_type == 'max' else 'fuzzer')
+        axes.set(xlabel=xlabel)
+        axes.set_xlim((48, 102))
+        sns.despine(ax=axes, trim=True)
+
+    def write_fuzzer_experiment_max_boxplot(self,
+                                            fuzzer_df,
+                                            image_path,
+                                            wide=True,
+                                            tall=True,
+                                            bugs=False):
+        """Writes fuzzer experiment max relative boxplot"""
+        self._write_plot_to_image(self._fuzzer_experiment_max_boxplot,
+                                  fuzzer_df,
+                                  image_path,
+                                  wide=wide,
+                                  tall=tall,
+                                  bugs=bugs)
+
+    def write_fuzzer_max_boxplot(self,
+                                 fuzzer_df,
+                                 image_path,
+                                 wide=False,
+                                 tall=True,
+                                 bugs=False):
+        """Writes fuzzer max relative boxplot"""
+        self._write_plot_to_image(self._fuzzer_experiment_max_boxplot,
+                                  fuzzer_df,
+                                  image_path,
+                                  wide=wide,
+                                  tall=tall,
+                                  bugs=bugs,
+                                  max_type='fmax')
+
+    def _fuzzer_coverage_growth_plot(  # pylint: disable=too-many-locals
+            self,
+            fuzzer_df,
+            axes=None,
+            logscale=False,
+            bugs=False):
+        """Draws edge (or bug) coverage growth plot on given |axes|.
+        """
+
+        column_of_interest = 'edges_covered_pct_max'
+        if bugs:
+            column_of_interest = 'bugs_covered_pct_max'
+
+        fuzzer_snapshot_df = data_utils.get_experiment_snapshots(fuzzer_df)
+        snapshot_time = fuzzer_snapshot_df.time.unique()[0]
+
+        benchmarks = fuzzer_df.benchmark.unique()
+        shown = set(benchmarks)
+        early = fuzzer_df[fuzzer_df.time == 900]
+        # remove benchmarks where median is above 90% at 15m
+        for benchmark in benchmarks:
+            early_bm = early[early.benchmark == benchmark]
+            early_median = early_bm[column_of_interest].median()
+            if early_median > 90.0:
+                shown.remove(benchmark)
+
+        fuzzer_df = fuzzer_df[fuzzer_df.benchmark.isin(shown)]
+        fuzzer_df = fuzzer_df[fuzzer_df.time <= snapshot_time]
+
+        axes = sns.lineplot(y=column_of_interest,
+                            x='time',
+                            hue='benchmark',
+                            data=fuzzer_df,
+                            ci=None if bugs or self._quick else 95,
+                            estimator=np.median,
+                            style='benchmark',
+                            dashes=False,
+                            ax=axes)
+
+        # Indicate the snapshot time with a big red vertical line.
+        axes.axvline(x=snapshot_time, color='r')
+
+        # Move legend outside of the plot.
+        axes.legend(bbox_to_anchor=(1.00, 1),
+                    borderaxespad=0,
+                    loc='upper left',
+                    frameon=False)
+
+        ylabel = 'Bug coverage' if bugs else 'Code region coverage'
+        axes.set(ylabel=ylabel + ' (% of experiment max)')
+        axes.set(xlabel='Time (hour:minute)')
+
+        if self._logscale or logscale:
+            axes.set_xscale('log')
+            ticks = np.logspace(
+                # Start from the time of the first measurement.
+                np.log10(experiment_utils.DEFAULT_SNAPSHOT_SECONDS),
+                np.log10(snapshot_time + 1),  # Include tick at end time.
+                _DEFAULT_TICKS_COUNT)
+        else:
+            ticks = np.arange(
+                experiment_utils.DEFAULT_SNAPSHOT_SECONDS,
+                snapshot_time + 1,  # Include tick at end time.
+                snapshot_time / _DEFAULT_TICKS_COUNT)
+
+        axes.set_xticks(ticks)
+        axes.set_xticklabels([_formatted_hour_min(t) for t in ticks])
+
+        sns.despine(ax=axes, trim=True)
+
+    def write_fuzzer_coverage_growth_plot(  # pylint: disable=too-many-arguments
+            self,
+            experient_df,
+            image_path,
+            wide=False,
+            logscale=False,
+            bugs=False):
+        """Writes coverage growth plot."""
+        self._write_plot_to_image(self._fuzzer_coverage_growth_plot,
+                                  experient_df,
+                                  image_path,
+                                  wide=wide,
+                                  logscale=logscale,
+                                  bugs=bugs)
