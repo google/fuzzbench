@@ -121,9 +121,9 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
 
         Raises ValueError if the benchmark types are mixed.
         """
-        if all([b.type == 'bug' for b in self.benchmarks]):
+        if all(b.type == 'bug' for b in self.benchmarks):
             return 'bug'
-        if all([b.type == 'code' for b in self.benchmarks]):
+        if all(b.type == 'code' for b in self.benchmarks):
             return 'code'
         raise ValueError(
             'Cannot mix bug benchmarks with code coverage benchmarks.')

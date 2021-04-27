@@ -17,6 +17,7 @@ import os
 
 import jinja2
 
+from common import experiment_utils
 from common import utils
 
 
@@ -42,7 +43,10 @@ def render_report(experiment_results, template, in_progress, coverage_report,
     )
     template = environment.get_template(template)
 
+    config_path = (
+        experiment_utils.get_internal_experiment_config_relative_path())
     return template.render(experiment=experiment_results,
                            in_progress=in_progress,
                            coverage_report=coverage_report,
-                           description=description)
+                           description=description,
+                           experiment_config_relative_path=config_path)

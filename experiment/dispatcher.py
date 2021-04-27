@@ -41,9 +41,10 @@ LOOP_WAIT_SECONDS = 5 * 60
 # TODO(metzman): Convert more uses of os.path.join to exp_path.path.
 
 
-def _get_config_dir():
+def _get_config_path():
     """Return config directory."""
-    return exp_path.path(experiment_utils.CONFIG_DIR)
+    return exp_path.path(
+        experiment_utils.get_internal_experiment_config_relative_path())
 
 
 def create_work_subdirs(subdirs: List[str]):
@@ -139,8 +140,7 @@ def dispatcher_main():
     if experiment_utils.is_local_experiment():
         models.Base.metadata.create_all(db_utils.engine)
 
-    experiment_config_file_path = os.path.join(_get_config_dir(),
-                                               'experiment.yaml')
+    experiment_config_file_path = _get_config_path()
     experiment = Experiment(experiment_config_file_path)
 
     _initialize_experiment_in_db(experiment.config)
@@ -195,7 +195,7 @@ def main():
     except Exception as error:
         logs.error('Error conducting experiment.')
         raise error
-    experiment_config_file_path = os.path.join(_get_config_dir(),
+    experiment_config_file_path = os.path.join(_get_config_path(),
                                                'experiment.yaml')
 
     if experiment_utils.is_local_experiment():
