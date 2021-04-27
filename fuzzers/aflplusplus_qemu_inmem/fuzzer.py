@@ -29,12 +29,12 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # Get LLVMFuzzerTestOneInput address.
     nm_proc = subprocess.run([
         'sh', '-c',
-        'nm \'' + target_binary + '\' | grep -i \'T afl_qemu_driver_stdin\''
+        'nm \'' + target_binary + '\' | grep -i \'T LLVMFuzzerTestOneInput\''
     ],
                              stdout=subprocess.PIPE,
                              check=True)
     target_func = "0x" + nm_proc.stdout.split()[0].decode("utf-8")
-    print('[fuzz] afl_qemu_driver_stdin_input() address =', target_func)
+    print('[fuzz] LLVMFuzzerTestOneInput() address =', target_func)
 
     # Fuzzer option for qemu_mode.
     flags = ['-Q', '-c0']
@@ -42,8 +42,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
     os.environ['AFL_COMPCOV_LEVEL'] = '3'  # Complete compcov including floats
     os.environ['AFL_QEMU_PERSISTENT_ADDR'] = target_func
     os.environ['AFL_ENTRYPOINT'] = target_func
+    os.environ['AFL_QEMU_PERSISTENT_HOOK'] = "/out/aflpp_qemu_driver_hook.so"
     os.environ['AFL_QEMU_PERSISTENT_CNT'] = "100000"
-    os.environ['AFL_QEMU_DRIVER_NO_HOOK'] = "1"
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,

@@ -19,6 +19,94 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-04-22-bwhua-project
+  fuzzers:  
+    - aflplusplus
+    - entropic
+    - fairfuzz
+  description: "A survey for a class project by bwhua"
+
+- experiment: 2021-04-17-aflpp
+  description: "afl++ havoc + qemu mode variants"
+  fuzzers:
+    - honggfuzz
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_312
+    - aflplusplus_311
+    - aflplusplus_qemu_cmplog
+    - aflplusplus_qemu
+    - aflplusplus_qemu_inmem
+    - aflplusplus_qemu_cmplog_inmem
+
+- experiment: 2021-04-14-aflpp
+  description: "afl++ havoc + qemu mode variants"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_312
+    - aflplusplus_311
+    - aflplusplus_havoc
+    - aflplusplus_havoc2
+    - aflplusplus_qemu_cmplog
+    - aflplusplus_qemu_plain
+    - aflplusplus_qemu
+    - aflplusplus_qemu_plaininmem
+
+- experiment: 2021-04-08
+  description: >
+    Test modified strcmp handling that records the full string arguments in the
+    table of recent compares even if they are of different lengths and uses the
+    lengths of both arguments for more targeted mutations derived from TORCW.
+  fuzzers:
+    - libfuzzer
+    - libfuzzer_vartorcw
+
+- experiment: 2021-04-08-bug
+  description: >
+    Test modified strcmp handling that records the full string arguments in the
+    table of recent compares even if they are of different lengths and uses the
+    lengths of both arguments for more targeted mutations derived from TORCW.
+  type: bug
+  fuzzers:
+    - libfuzzer
+    - libfuzzer_vartorcw
+
+- experiment: 2021-03-31
+  description: "afl++ collision free context sensitivity"
+  fuzzers:
+    - aflplusplus_classic
+    - aflplusplus_classic_ctx
+    - aflplusplus_pcguard
+    - aflplusplus_pcguard_ctx
+    - aflplusplus_pcguard_ctx_indirects
+
+- experiment: 2021-03-27-aflpp
+  description: "afl++ havoc+cmplog variants"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_312
+    - aflplusplus_311
+    - aflplusplus_310
+    - aflplusplus_havoc
+    - aflplusplus_havoc2
+    - aflplusplus_havoc3
+    - aflplusplus_havoc60
+    - aflplusplus_cmplog_add
+
+- experiment: 2021-03-23-aflpp
+  description: "afl++ release comparison"
+  fuzzers:
+    - aflplusplus_optimal_flcnt
+    - aflplusplus_flcnt
+    - aflplusplus_optimal
+    - aflplusplus_havoc
+    - aflplusplus
+    - aflplusplus_311
+    - aflplusplus_310
+    - aflplusplus_300
+    - entropic
+    - honggfuzz
+
 - experiment: 2021-03-16-aflpp
   description: "afl++ release comparison"
   fuzzers:

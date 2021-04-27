@@ -57,7 +57,7 @@ def run_experiment(config):
         for job in jobs_list:
             print('  %s : %s\t(%s)' % (job.func_name, job.get_status(), job.id))
 
-        if all([job.result is not None for job in jobs_list]):
+        if all([job.result is not None for job in jobs_list]):  # pylint: disable=use-a-generator
             break
         time.sleep(3)
     print('All done!')

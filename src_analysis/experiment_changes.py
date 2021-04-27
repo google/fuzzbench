@@ -29,9 +29,10 @@ def get_fuzzers_changed_since_last():
 
     # Loop over experiments since some may have hashes that are not in the
     # current branch.
-    experiments = list(
-        db_utils.query(models.Experiment).order_by(
-            models.Experiment.time_created.desc()))
+    with db_utils.session_scope() as session:
+        experiments = list(
+            session.query(models.Experiment).order_by(
+                models.Experiment.time_created.desc()))
     if not experiments:
         raise Exception('No experiments found. Cannot find changed fuzzers.')
 
