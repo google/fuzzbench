@@ -50,9 +50,8 @@ jobs:
           - aflplusplus_optimal_lcnt
           - aflplusplus_311
           - aflplusplus_312
-          - aflplusplus_qemu_cmplog
-          - aflplusplus_qemu_cmplog_inmem
           - aflplusplus_qemu_inmem
+          - aflplusplus_frida
 
         benchmark_type:
           - oss-fuzz
