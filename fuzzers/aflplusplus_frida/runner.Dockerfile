@@ -14,7 +14,8 @@
 
 FROM gcr.io/fuzzbench/base-image
 
-RUN apt update -y && apt-get upgrade -y && apt-get install -y python3-pyelftools
+RUN apt update -y && apt-get upgrade -y && \
+    apt-get install -y python3-pyelftools bc
 
 # This makes interactive docker run painless:
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"

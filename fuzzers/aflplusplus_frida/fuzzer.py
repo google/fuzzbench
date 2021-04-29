@@ -29,13 +29,11 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # Get LLVMFuzzerTestOneInput address.
     nm_proc = subprocess.run([
         'sh', '-c',
-        'nm \'' + target_binary + '\' | grep -i \'T afl_qemu_driver_stdin\'' +
-        '| awk \'{print$1}\' | tr a-f A-F |' + 
-        'xargs echo "ibase=16;obase=10;555555554000 + " | bc | tr A-F a-f'
+        'get_frida_entry.sh \'' + target_binary + '\' afl_qemu_driver_stdin'
     ],
                              stdout=subprocess.PIPE,
                              check=True)
-    target_func = "0x" + nm_proc.stdout.split()[0].decode("utf-8")
+    target_func = nm_proc.stdout.split()[0].decode("utf-8")
     print('[fuzz] afl_qemu_driver_stdin_input() address =', target_func)
 
     # Fuzzer options for qemu_mode.
@@ -44,7 +42,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     os.environ['AFL_FRIDA_PERSISTENT_ADDR'] = target_func
     os.environ['AFL_ENTRYPOINT'] = target_func
     os.environ['AFL_FRIDA_PERSISTENT_CNT'] = "1000000"
-    os.environ['AFL_FRIDA_DRIVER_NO_HOOK'] = "1"
+    os.environ['AFL_QEMU_DRIVER_NO_HOOK'] = "1"
     os.environ['AFL_PATH'] = "/out"
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
