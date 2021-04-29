@@ -5,6 +5,7 @@ The following config active for all benchmarks:
   - qemu_mode with:
     - entrypoint set to afl_qemu_driver_stdin_input
     - persisten mode set to afl_qemu_driver_stdin_input
+    - cmplog
 
 Repository: [https://github.com/AFLplusplus/AFLplusplus/](https://github.com/AFLplusplus/AFLplusplus/)
 

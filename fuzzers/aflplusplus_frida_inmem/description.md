@@ -6,6 +6,7 @@ The following config active for all benchmarks:
     - entrypoint set to LLVMFuzzerTestOneInput
     - persisten mode set to LLVMFuzzerTestOneInput
     - shared memory testcases
+    - cmplog
 
 Repository: [https://github.com/AFLplusplus/AFLplusplus/](https://github.com/AFLplusplus/AFLplusplus/)
 
