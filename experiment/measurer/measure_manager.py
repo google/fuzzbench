@@ -416,8 +416,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         # it onto a data frame with orient='table'
         try:
             segment_coverage = pandas.DataFrame.from_dict(
-                segment_coverage_state_file.get_previous(cycle_dependent=False),
-                orient='table')
+                segment_coverage_state_file.get_previous(), orient='table')
         except ValueError:
             segment_coverage = pandas.DataFrame(columns=[
                 'benchmark', 'fuzzer', 'trial', 'time', 'file', 'line', 'column'
@@ -441,7 +440,8 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         function_coverage_state_file.set_current(
             function_coverage.to_json(orient='table'))
         segment_coverage_state_file.set_current(
-            segment_coverage.to_json(orient='table'), cycle_dependent=False)
+            segment_coverage.to_json(orient='table'),
+            delete_previous_state=True)
 
     def generate_coverage_information(self, cycle: int, time_stamp):
         """Generate the .profdata file and then transform it into
