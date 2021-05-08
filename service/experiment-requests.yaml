@@ -19,7 +19,7 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
-- experiment: 2021-04-29-aflpp
+- experiment: 2021-05-09-aflpp
   description: "afl++ qemu + frida variants"
   fuzzers:
     - honggfuzz
@@ -51,6 +51,8 @@
     - aflplusplus_qemu
     - aflplusplus_qemu_inmem
     - aflplusplus_qemu_cmplog_inmem
+    - afl_qemu
+    - honggfuzz_qemu
 
 - experiment: 2021-04-14-aflpp
   description: "afl++ havoc + qemu mode variants"

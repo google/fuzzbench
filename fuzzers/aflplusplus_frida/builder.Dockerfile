@@ -31,7 +31,6 @@ RUN cd /afl && \
     AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
     cd frida_mode && make && cd .. && \
     make -C utils/aflpp_driver && \
-    cp utils/aflpp_driver/libAFLQemuDriver.a /libAFLDriver.a && \
-    cp utils/aflpp_driver/aflpp_qemu_driver_hook.so /
+    cp utils/aflpp_driver/libAFLQemuDriver.a /libAFLDriver.a
 
 COPY get_frida_entry.sh /
