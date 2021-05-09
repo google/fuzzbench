@@ -39,7 +39,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # Fuzzer option for qemu_mode.
     flags = ['-Q', '-c0']
 
-    os.environ['AFL_COMPCOV_LEVEL'] = '3'  # Complete compcov including floats
     os.environ['AFL_QEMU_PERSISTENT_ADDR'] = target_func
     os.environ['AFL_ENTRYPOINT'] = target_func
     os.environ['AFL_QEMU_PERSISTENT_HOOK'] = "/out/aflpp_qemu_driver_hook.so"
