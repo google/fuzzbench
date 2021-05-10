@@ -187,6 +187,9 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         shutil.copy('/afl/afl-qemu-trace', build_directory)
     if os.path.exists('/aflpp_qemu_driver_hook.so'):
         shutil.copy('/aflpp_qemu_driver_hook.so', build_directory)
+    if os.path.exists('/get_frida_entry.sh'):
+        shutil.copy('/afl/afl-frida-trace.so', build_directory)
+        shutil.copy('/get_frida_entry.sh', build_directory)
 
 
 def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):

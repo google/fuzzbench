@@ -6,6 +6,7 @@ The following config active for all benchmarks:
     - entrypoint set to afl_qemu_driver_stdin_input
     - persisten mode set to afl_qemu_driver_stdin_input
     - cmplog
+    - in-memory shared memory test cases 
 
 Repository: [https://github.com/AFLplusplus/AFLplusplus/](https://github.com/AFLplusplus/AFLplusplus/)
 
