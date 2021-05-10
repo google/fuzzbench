@@ -14,8 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:0cc0c95936c74b96a7d9eb970ee23977b154bb0ace985e1e9b600f7dbe8bd7fd
-MAINTAINER kcwu@google.com
+FROM gcr.io/oss-fuzz-base/base-builder
 
 # Installing optional libraries can utilize more code path and/or improve
 # performance (avoid calling external programs).
