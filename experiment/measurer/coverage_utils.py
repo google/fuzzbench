@@ -203,13 +203,14 @@ def get_coverage_binary(benchmark: str) -> str:
 
 def get_trial_ids(experiment: str, fuzzer: str, benchmark: str):
     """Gets ids of all finished trials for a pair of fuzzer and benchmark."""
-    trial_ids = [
-        trial_id_tuple[0]
-        for trial_id_tuple in db_utils.query(models.Trial.id).filter(
-            models.Trial.experiment == experiment, models.Trial.fuzzer ==
-            fuzzer, models.Trial.benchmark == benchmark,
-            ~models.Trial.preempted)
-    ]
+    with db_utils.session_scope() as session:
+        trial_ids = [
+            trial_id_tuple[0]
+            for trial_id_tuple in session.query(models.Trial.id).filter(
+                models.Trial.experiment == experiment, models.Trial.fuzzer ==
+                fuzzer, models.Trial.benchmark == benchmark,
+                ~models.Trial.preempted)
+        ]
     return trial_ids
 
 
