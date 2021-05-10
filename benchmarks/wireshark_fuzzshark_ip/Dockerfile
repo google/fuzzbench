@@ -14,8 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:43fd21b0340c460891706b22a53cdba3661aaf5c1e33a9cc120e749d4596d0fc
-MAINTAINER Jakub Zawadzki <darkjames-ws@darkjames.pl>
+FROM gcr.io/oss-fuzz-base/base-builder
 
 RUN apt-get update && apt-get install -y make cmake \
                        flex bison \
