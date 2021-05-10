@@ -41,9 +41,10 @@ LOOP_WAIT_SECONDS = 5 * 60
 # TODO(metzman): Convert more uses of os.path.join to exp_path.path.
 
 
-def _get_config_dir():
+def _get_config_path():
     """Return config directory."""
-    return exp_path.path(experiment_utils.CONFIG_DIR)
+    return exp_path.path(
+        experiment_utils.get_internal_experiment_config_relative_path())
 
 
 def create_work_subdirs(subdirs: List[str]):
@@ -55,8 +56,9 @@ def create_work_subdirs(subdirs: List[str]):
 def _initialize_experiment_in_db(experiment_config: dict):
     """Initializes |experiment| in the database by creating the experiment
     entity."""
-    experiment_exists = db_utils.query(models.Experiment).filter(
-        models.Experiment.name == experiment_config['experiment']).first()
+    with db_utils.session_scope() as session:
+        experiment_exists = session.query(models.Experiment).filter(
+            models.Experiment.name == experiment_config['experiment']).first()
     if experiment_exists:
         raise Exception('Experiment already exists in database.')
 
@@ -73,8 +75,9 @@ def _initialize_experiment_in_db(experiment_config: dict):
 
 def _record_experiment_time_ended(experiment_name: str):
     """Record |experiment| end time in the database."""
-    experiment = db_utils.query(models.Experiment).filter(
-        models.Experiment.name == experiment_name).one()
+    with db_utils.session_scope() as session:
+        experiment = session.query(models.Experiment).filter(
+            models.Experiment.name == experiment_name).one()
     experiment.time_ended = datetime.datetime.utcnow()
     db_utils.add_all([experiment])
 
@@ -137,8 +140,7 @@ def dispatcher_main():
     if experiment_utils.is_local_experiment():
         models.Base.metadata.create_all(db_utils.engine)
 
-    experiment_config_file_path = os.path.join(_get_config_dir(),
-                                               'experiment.yaml')
+    experiment_config_file_path = _get_config_path()
     experiment = Experiment(experiment_config_file_path)
 
     _initialize_experiment_in_db(experiment.config)
@@ -193,7 +195,7 @@ def main():
     except Exception as error:
         logs.error('Error conducting experiment.')
         raise error
-    experiment_config_file_path = os.path.join(_get_config_dir(),
+    experiment_config_file_path = os.path.join(_get_config_path(),
                                                'experiment.yaml')
 
     if experiment_utils.is_local_experiment():

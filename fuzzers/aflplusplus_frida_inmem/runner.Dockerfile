@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,10 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit: 3516a9c8f096a71f493b90fb6b2be3ee3b0f0293
-commit_date: 2020-06-30 16:43:40+00:00
-fuzz_target: php-fuzz-parser
-project: php
-unsupported_fuzzers:
-  - aflcc
-  - klee
+FROM gcr.io/fuzzbench/base-image
+
+RUN apt update -y && apt-get upgrade -y && \
+    apt-get install -y python3-pyelftools bc
+
+# This makes interactive docker run painless:
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
+#ENV AFL_MAP_SIZE=2621440
+ENV PATH="$PATH:/out"
+ENV AFL_SKIP_CPUFREQ=1
+ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
+ENV AFL_TESTCACHE_SIZE=2
+
