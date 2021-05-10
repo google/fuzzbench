@@ -32,7 +32,7 @@
     - aflplusplus_qemu
     - aflplusplus_qemu_inmem
 
-- experiment: 2021-04-22-bwhua-project
+- experiment: 2021-04-22-bwhua
   fuzzers:  
     - aflplusplus
     - entropic
