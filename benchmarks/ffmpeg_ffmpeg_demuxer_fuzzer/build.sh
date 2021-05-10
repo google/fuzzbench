@@ -193,15 +193,6 @@ FUZZ_TARGET_SOURCE=$SRC/ffmpeg/tools/target_dec_fuzzer.c
 export TEMP_VAR_CODEC="AV_CODEC_ID_H264"
 export TEMP_VAR_CODEC_TYPE="VIDEO"
 
-# Build fuzzers for decoders.
-CONDITIONALS=`grep 'DECODER 1$' config.h | sed 's/#define CONFIG_\(.*\)_DECODER 1/\1/'`
-for c in $CONDITIONALS ; do
-  fuzzer_name=ffmpeg_AV_CODEC_ID_${c}_fuzzer
-  symbol=`echo $c | sed "s/.*/\L\0/"`
-  echo -en "[libfuzzer]\nmax_len = 1000000\n" > $OUT/${fuzzer_name}.options
-  make tools/target_dec_${symbol}_fuzzer
-  mv tools/target_dec_${symbol}_fuzzer $OUT/${fuzzer_name}
-done
 
 # Build fuzzer for demuxer
 fuzzer_name=ffmpeg_DEMUXER_fuzzer
