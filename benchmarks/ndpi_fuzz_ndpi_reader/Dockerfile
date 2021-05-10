@@ -14,8 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:83cf1d8893892d6bc471008e50c5fd078a3b8efe80c421b56334e0a28a60fa53
-MAINTAINER deri@ntop.org
+FROM gcr.io/oss-fuzz-base/base-builder
 RUN apt-get update && apt-get install -y make autoconf automake autogen pkg-config libtool flex bison
 RUN git clone --depth 1 https://github.com/ntop/nDPI.git ndpi
 ADD https://www.tcpdump.org/release/libpcap-1.9.1.tar.gz libpcap-1.9.1.tar.gz
