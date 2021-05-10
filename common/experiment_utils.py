@@ -23,6 +23,12 @@ DEFAULT_SNAPSHOT_SECONDS = 15 * 60  # Seconds.
 CONFIG_DIR = 'config'
 
 
+def get_internal_experiment_config_relative_path():
+    """Returns the path of the internal config file relative to the data
+    directory of an experiment."""
+    return os.path.join(CONFIG_DIR, 'experiment.yaml')
+
+
 def get_snapshot_seconds():
     """Returns the amount of time in seconds between snapshots of a
     fuzzer's corpus during an experiment."""
