@@ -14,8 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:e889eacfae7efe57c7ab3a56a29afcde952d857f683ca06c2699863217652d1f
-MAINTAINER mmoroz@chromium.org
+FROM gcr.io/oss-fuzz-base/base-builder
 RUN apt-get update && apt-get install -y make autoconf automake libtool \
     mercurial libpcre3-dev subversion
 RUN hg clone http://hg.nginx.org/njs
