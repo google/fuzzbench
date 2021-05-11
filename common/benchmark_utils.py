@@ -51,8 +51,11 @@ def get_project(benchmark):
 
 def get_type(benchmark):
     """Returns the type of |benchmark|"""
-    return benchmark_config.get_config(benchmark).get('type',
-                                                      BenchmarkType.CODE.value)
+    try:
+        return benchmark_config.get_config(benchmark).get('type',
+                                                          BenchmarkType.CODE.value)
+    except Exception:
+        return BenchmarkType.CODE.value
 
 
 def is_oss_fuzz_benchmark(benchmark):

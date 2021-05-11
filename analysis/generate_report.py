@@ -162,7 +162,7 @@ def generate_report(experiment_names,
 
     data_utils.validate_data(experiment_df)
 
-    if benchmarks is not None:
+    if benchmarks:
         experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks)
 
     if fuzzers is not None:
