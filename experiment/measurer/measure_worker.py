@@ -112,7 +112,7 @@ class StateFile:
             temp_file.write(json.dumps(state))
             temp_file.flush()
             filestore_utils.cp(temp_file.name, state_file_bucket_path)
-        if delete_previous_state:
+        if delete_previous_state and self.cycle > 2:
             # Delete the state file for (current_cycle - 2)th cycle.
             old_state_file_bucket_path = self._get_bucket_cycle_state_file_path(
                 self.cycle - 2)
