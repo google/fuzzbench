@@ -27,6 +27,8 @@ from common import filesystem
 from common import utils
 
 MEASURED_FILES_STATE_NAME = 'measured-files'
+FUNCTION_COVERAGE_STATE_NAME = 'function-coverage'
+SEGMENT_COVERAGE_STATE_NAME = 'segment-coverage'
 
 logger = logs.Logger('measure_worker')  # pylint: disable=invalid-name
 
@@ -102,7 +104,7 @@ class StateFile:
 
         return self._prev_state
 
-    def set_current(self, state):
+    def set_current(self, state, delete_previous_state=False):
         """Sets the state for this cycle in the bucket."""
         state_file_bucket_path = self._get_bucket_cycle_state_file_path(
             self.cycle)
@@ -110,3 +112,8 @@ class StateFile:
             temp_file.write(json.dumps(state))
             temp_file.flush()
             filestore_utils.cp(temp_file.name, state_file_bucket_path)
+        if delete_previous_state and self.cycle > 2:
+            # Delete the state file for (current_cycle - 2)th cycle.
+            old_state_file_bucket_path = self._get_bucket_cycle_state_file_path(
+                self.cycle - 2)
+            filestore_utils.rm(old_state_file_bucket_path)

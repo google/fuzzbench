@@ -27,6 +27,7 @@ import tempfile
 import time
 from typing import List, Set
 import queue
+import pandas
 
 from sqlalchemy import func
 from sqlalchemy import orm
@@ -396,7 +397,53 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             self.logger.error(
                 'Coverage profdata generation failed for cycle: %d.', cycle)
 
-    def generate_coverage_information(self, cycle: int):
+    def update_coverage_state(self, cycle, this_time):
+        """Update the previous trial-specific coverage data with coverage
+        information from this cycle."""
+
+        # Create function data frame and load previous segment data frame.
+        function_coverage_state_file = measure_worker.StateFile(
+            measure_worker.FUNCTION_COVERAGE_STATE_NAME, self.state_dir, cycle)
+        function_coverage = pandas.DataFrame(columns=[
+            'benchmark', 'fuzzer', 'trial', 'time', 'function', 'hits'
+        ])
+
+        segment_coverage_state_file = measure_worker.StateFile(
+            measure_worker.SEGMENT_COVERAGE_STATE_NAME, self.state_dir, cycle)
+
+        # Using Try and Except since "get_previous()" returns [] if there is no
+        # previous data to return which raises a ValueError while trying to load
+        # it onto a data frame with orient='table'
+        try:
+            segment_coverage = pandas.DataFrame.from_dict(
+                segment_coverage_state_file.get_previous(), orient='table')
+        except ValueError:
+            segment_coverage = pandas.DataFrame(columns=[
+                'benchmark', 'fuzzer', 'trial', 'time', 'file', 'line', 'column'
+            ])
+
+        # Store all the observed [line, column] (segments) in a list to help us
+        # determine redundant segment entries while adding entries for this
+        # cycle. (Reduces memory consumption)
+        recorded_segments = [
+            list(x) for x in zip(segment_coverage['line'].to_list(),
+                                 segment_coverage['column'].to_list())
+        ]
+
+        segment_coverage, function_coverage = \
+            coverage_utils.extract_segments_and_functions_from_summary_json(
+                self.cov_summary_file, self.benchmark, self.fuzzer,
+                self.trial_num, this_time, segment_coverage, function_coverage,
+                recorded_segments)
+
+        # Set coverage information state accordingly
+        function_coverage_state_file.set_current(
+            function_coverage.to_json(orient='table'))
+        segment_coverage_state_file.set_current(
+            segment_coverage.to_json(orient='table'),
+            delete_previous_state=True)
+
+    def generate_coverage_information(self, cycle: int, time_stamp):
         """Generate the .profdata file and then transform it into
         json summary."""
         if not self.get_profraw_files():
@@ -412,6 +459,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             self.logger.error('Empty profdata file found for cycle: %d.', cycle)
             return
         self.generate_summary(cycle)
+        self.update_coverage_state(cycle, time_stamp)
 
     def is_cycle_unchanged(self, cycle: int) -> bool:
         """Returns True if |cycle| is unchanged according to the
@@ -641,7 +689,7 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
     snapshot_measurer.run_cov_new_units()
 
     # Generate profdata and transform it into json form.
-    snapshot_measurer.generate_coverage_information(cycle)
+    snapshot_measurer.generate_coverage_information(cycle, this_time)
 
     # Run crashes again, parse stacktraces and generate crash signatures.
     crashes = snapshot_measurer.process_crashes(cycle)

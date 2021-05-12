@@ -16,6 +16,8 @@
 import os
 import json
 
+import pandas
+
 from common import experiment_path as exp_path
 from common import experiment_utils as exp_utils
 from common import new_process
@@ -293,3 +295,51 @@ def extract_covered_regions_from_summary_json(summary_json_file):
     except Exception:  # pylint: disable=broad-except
         logger.error('Coverage summary json file defective or missing.')
     return covered_regions
+
+
+def extract_segments_and_functions_from_summary_json(
+        # pylint: disable=too-many-arguments
+        cov_summary_file,
+        benchmark,
+        fuzzer,
+        trial_num,
+        this_time,
+        segment_coverage,
+        function_coverage,
+        recorded_segments):
+    """Returns a tuple of data frames with detailed segment and function
+    coverage information given a trial-specific coverage summary json file."""
+
+    try:
+        coverage_info = get_coverage_infomation(cov_summary_file)
+        for function_data in coverage_info['data'][0]['functions']:
+            entry = pandas.Series([
+                benchmark, fuzzer, trial_num, function_data['name'],
+                function_data['count'], this_time
+            ],
+                                  index=function_coverage.columns)
+            function_coverage = function_coverage.append(entry,
+                                                         ignore_index=True)
+
+        for file in coverage_info['data'][0]['files']:
+            for segment in file['segments']:
+                if [segment[0], segment[1]] not in recorded_segments:
+                    if segment[2] != 0:
+                        entry = pandas.Series(
+                            [
+                                benchmark,
+                                fuzzer,
+                                trial_num,
+                                file['filename'],
+                                segment[0],  # Segment line.
+                                segment[1],  # Segment column.
+                                this_time
+                            ],
+                            index=segment_coverage.columns)
+                        segment_coverage = segment_coverage.append(
+                            entry, ignore_index=True)
+
+    except (ValueError, KeyError, IndexError):
+        logger.error('Failed to extract trial-specific segment and function '
+                     'information from coverage summary.')
+    return segment_coverage, function_coverage
