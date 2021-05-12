@@ -10,3 +10,8 @@ unsupported_fuzzers:
   - honggfuzz_qemu
   - klee
   - weizz_qemu
+  - lafintel
+  - neuzz
+  - aflplusplus_qemu_cmplog
+  - aflplusplus_qemu_cmplog_inmem
+  - aflplusplus_qemu_inmem
