@@ -19,7 +19,7 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
-- experiment: 2021-05-13-aflpp
+- experiment: 2021-05-14-aflpp
   description: "afl++ qemu + frida variants"
   fuzzers:
     - honggfuzz_qemu
