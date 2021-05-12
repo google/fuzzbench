@@ -1,0 +1,17 @@
+commit: fb8868d25570234f0f18e8bcdb6ccb0c3b63d0f0
+commit_date: 2020-02-25 02:36:00+00:00
+fuzz_target: parquet-arrow-fuzz
+project: arrow
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - honggfuzz_qemu
+  - klee
+  - weizz_qemu
+  - lafintel
+  - neuzz
+  - aflplusplus_qemu_cmplog
+  - aflplusplus_qemu_cmplog_inmem
+  - aflplusplus_qemu_inmem
