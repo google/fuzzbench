@@ -81,15 +81,14 @@ class StateFile:
         state_file_path = os.path.join(self.state_dir, state_file_name)
         return exp_path.filestore(pathlib.Path(state_file_path))
 
-    def _get_previous_cycle_state(self, cycle_dependent=True) -> list:
+    def _get_previous_cycle_state(self) -> list:
         """Returns the state from the previous cycle. Returns [] if |self.cycle|
         is 1."""
         if self.cycle == 1:
             return []
 
         previous_state_file_bucket_path = (
-            self._get_bucket_cycle_state_file_path((
-                self.cycle - 1) if cycle_dependent else 0))
+            self._get_bucket_cycle_state_file_path(self.cycle - 1))
 
         result = filestore_utils.cat(previous_state_file_bucket_path,
                                      expect_zero=False)
@@ -98,18 +97,23 @@ class StateFile:
 
         return json.loads(result.output)
 
-    def get_previous(self, cycle_dependent=True):
+    def get_previous(self):
         """Returns the previous state."""
         if self._prev_state is None:
-            self._prev_state = self._get_previous_cycle_state(cycle_dependent)
+            self._prev_state = self._get_previous_cycle_state()
 
         return self._prev_state
 
-    def set_current(self, state, cycle_dependent=True):
+    def set_current(self, state, delete_previous_state=False):
         """Sets the state for this cycle in the bucket."""
         state_file_bucket_path = self._get_bucket_cycle_state_file_path(
-            self.cycle if cycle_dependent else 0)
+            self.cycle)
         with tempfile.NamedTemporaryFile(mode='w') as temp_file:
             temp_file.write(json.dumps(state))
             temp_file.flush()
             filestore_utils.cp(temp_file.name, state_file_bucket_path)
+        if delete_previous_state and self.cycle > 2:
+            # Delete the state file for (current_cycle - 2)th cycle.
+            old_state_file_bucket_path = self._get_bucket_cycle_state_file_path(
+                self.cycle - 2)
+            filestore_utils.rm(old_state_file_bucket_path)
