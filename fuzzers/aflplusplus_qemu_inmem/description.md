@@ -3,11 +3,10 @@
 AFL++ fuzzer instance for binary-only fuzzing with qemu_mode.
 The following config active for all benchmarks:
   - qemu_mode with:
-    - laf-intel (integers and floats)
-    - entrypoint set to LLVMFuzzerTestOneInput
-    - persisten mode set to LLVMFuzzerTestOneInput
+    - entrypoint set to afl_qemu_driver_stdin_input
+    - persisten mode set to afl_qemu_driver_stdin_input
+    - cmplog
     - in-memory shared memory test cases 
-  - "coe" power schedule
 
 Repository: [https://github.com/AFLplusplus/AFLplusplus/](https://github.com/AFLplusplus/AFLplusplus/)
 
