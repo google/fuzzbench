@@ -12,3 +12,4 @@ unsupported_fuzzers:
   - weizz_qemu
   - lafintel
   - eclipser
+  - aflplusplus_qemu_inmem
