@@ -39,7 +39,7 @@ def build():
     utils.build_benchmark()
 
     # Copy over a bunch of the artifacts
-    build_directory = os.environ['OUT']
+    build_directory = os.environ["OUT"]
     shutil.copy(
             "/symcc/build//SymRuntime-prefix/src/SymRuntime-build/libSymRuntime.so",
             build_directory)
