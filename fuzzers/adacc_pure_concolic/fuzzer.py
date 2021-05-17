@@ -31,7 +31,17 @@ def build():
     os.environ['CXX'] = "/symcc/build/sym++"
     os.environ['CFLAGS'] = ""
     os.environ['CXXFLAGS'] = ""
+
+    # This instructs SymCC to apply compilation for pure-concolic 
+    # execution (as opposed to a hybrid of concolic + fuzzing. 
+    os.environ['SYMCC_PC'] = "1"
+    
+    # Setting this environment variable instructs SymCC to use the regular
+    # libcxx. 
     os.environ['SYMCC_REGULAR_LIBCXX'] = "1"
+
+    # Instructs SymCC to consider no symbolic inputs at runtime. This is needed
+    # if, for example, some tests are run during compilation of the benchmark.
     os.environ['SYMCC_NO_SYMBOLIC_INPUT'] = "1"
     os.environ['FUZZER_LIB'] = '/libfuzzer-harness.o'
 
