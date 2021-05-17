@@ -29,8 +29,12 @@ def build():
     # Set flags to ensure compilation with SymCC
     os.environ['CC'] = "/symcc/build/symcc"
     os.environ['CXX'] = "/symcc/build/sym++"
-    os.environ['CFLAGS'] = ""
-    os.environ['CXXFLAGS'] = ""
+    #os.environ['CFLAGS'] = ""
+    #os.environ['CXXFLAGS'] = ""
+    orig_cxxflags = os.environ['CXXFLAGS']
+    new_cxxflags = orig_cxxflags.replace("-stlib=libc++", "")
+    os.environ['CXXFLAGS'] = new_cxxflags + " -g "
+    os.environ['CFLAGS'] = os.environ['CFLAGS'] + " -g "
 
     # This instructs SymCC to apply compilation for pure-concolic 
     # execution (as opposed to a hybrid of concolic + fuzzing. 
@@ -38,8 +42,8 @@ def build():
     
     # Setting this environment variable instructs SymCC to use the regular
     # libcxx. 
-    os.environ['SYMCC_REGULAR_LIBCXX'] = "1"
-
+    #os.environ['SYMCC_REGULAR_LIBCXX'] = "1"
+    os.environ['SYMCC_LIBCXX_PATH']="/libcxx_native_build"
     # Instructs SymCC to consider no symbolic inputs at runtime. This is needed
     # if, for example, some tests are run during compilation of the benchmark.
     os.environ['SYMCC_NO_SYMBOLIC_INPUT'] = "1"
@@ -59,11 +63,19 @@ def build():
     shutil.copy(
             "/symcc/util/min-concolic-exec.sh",
             build_directory)
-
+    shutil.copy("/libcxx_native_build/lib/libc++.so.1.0", build_directory)
+    shutil.copy("/libcxx_native_build/lib/libc++.so.1", build_directory)
+    shutil.copy("/libcxx_native_build/lib/libc++abi.so.1.0", build_directory)
+    shutil.copy("/libcxx_native_build/lib/libc++abi.so.1", build_directory)
+    
 
 def fuzz(input_corpus, output_corpus, target_binary):
+    # Ensure we have symbolic links to the correct libc.
+    # subprocess.check_call("ln -s libc++abi.so.1.0 libc++abi.so.1")
+    # subprocess.check_call("ln -s libc++.so.1.0 libc++.so.1")
+
     os.mkdir("wdir-1")
-    
+
     # Ensure we have a seed
     with open(os.path.join(input_corpus, "symcc-seed1"), "w+") as s1:
         s1.write("A"*100)

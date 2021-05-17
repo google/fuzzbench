@@ -29,8 +29,8 @@ RUN git clone -b z3-4.8.7 https://github.com/Z3Prover/z3.git /z3_src &&  \
     ninja install && \
     cd / && rm -rf /z3_src
 
-ENV CFLAGS=""
-ENV CXXFLAGS=""
+ENV CFLAGS="-g"
+ENV CXXFLAGS="-g"
 
 # Get and install symcc
 RUN git clone https://github.com/adalogics/adacc /symcc && \
@@ -50,8 +50,8 @@ RUN git clone https://github.com/adalogics/adacc /symcc && \
 # Build libcxx with the SymCC compiler so we can instrument 
 # C++ code.
 RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.git /llvm_source  && \
-    mkdir /libcxx_native_install \
-    && cd /libcxx_native_install \
+    mkdir /libcxx_native_install && mkdir /libcxx_native_build && \
+    cd /libcxx_native_install \
     && export SYMCC_REGULAR_LIBCXX="" && \
     cmake /llvm_source/llvm                                     \
       -G Ninja  -DLLVM_ENABLE_PROJECTS="libcxx;libcxxabi"       \
@@ -60,6 +60,7 @@ RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.g
       -DCMAKE_C_COMPILER=/symcc/build/symcc                     \
       -DCMAKE_CXX_COMPILER=/symcc/build/sym++                   \
       -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DHAVE_POSIX_REGEX=1     \
+      -DCMAKE_INSTALL_PREFIX="/libcxx_native_build" \
       -DHAVE_STEADY_CLOCK=1 && \
     ninja distribution && \
-    ninja install-distribution
+    ninja install-distribution && ls -la /libcxx_native_build 
