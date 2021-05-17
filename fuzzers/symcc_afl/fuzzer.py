@@ -62,7 +62,13 @@ def build():
     orig_cxxflags = new_env['CXXFLAGS']
     new_cxxflags = orig_cxxflags.replace("-stlib=libc++", "")
     new_env['CXXFLAGS'] = new_cxxflags
+
+    # Setting this environment variable instructs SymCC to use the regular
+    # libcxx. 
     new_env['SYMCC_REGULAR_LIBCXX'] = "1"
+
+    # Instructs SymCC to consider no symbolic inputs at runtime. This is needed
+    # if, for example, some tests are run during compilation of the benchmark.
     new_env['SYMCC_NO_SYMBOLIC_INPUT'] = "1"
     new_env['OUT'] = uninstrumented_build_directory
     new_env['FUZZER_LIB'] = '/libfuzzer-harness.o'
@@ -96,7 +102,6 @@ def build():
 
 	
 def afl_worker(afl_target, input_corpus, output_corpus, is_master):
-    afl_fuzz="./afl-fuzz"
     additional_flags = []
     if is_master:
         additional_flags += ["-M", "afl-master"]
