@@ -103,28 +103,20 @@ def fuzz(input_corpus, output_corpus, target_binary):
     target_binary_name = os.path.basename(target_binary)
     symcc_target_binary = os.path.join(symcc_workdir, target_binary_name)
 
-    # Start the two AFL fuzzers
+    # Start a master and secondary instance of AFL.
+    # We need both because of the way SymCC works.
     print('[run_fuzzer] Running AFL for SymCC')
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
-
-    # Master
-    print("Starting master. Target: {target}".format(target=target_binary))
     launch_afl_thread(input_corpus, output_corpus, target_binary,
                       ["-M", "afl-master"])
-    print("Master started.")
     time.sleep(5)
-
-    # Secondary.
-    # This is due to how the symcc helper script works.
-    print("Starting second. Target: {target}".format(target=target_binary))
     launch_afl_thread(input_corpus, output_corpus, target_binary,
                       ["-S", "afl-secondary"])
-    print("Second started")
     time.sleep(5)
 
     # Start an instance of SymCC
     # We need to ensure it uses the symbolic version of libcpp
-    print("Starting the symcc helper")
+    print("Starting the SymCC helper")
     new_environ = os.environ.copy()
     new_environ['LD_LIBRARY_PATH'] = symcc_workdir
     cmd = [
