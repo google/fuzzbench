@@ -70,18 +70,18 @@ RUN cd / && \
 #
 # Build libcxx with the SymCC compiler so we can instrument 
 ## C++ code.
-RUN cd / && \
-    git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.git ./llvm_source  && \
-    mkdir libcxx_native_install && \
-    cd libcxx_native_install && \
-    export SYMCC_REGULAR_LIBCXX="" && \
-    export SYMCC_PC=1 && \
+RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.git /llvm_source  && \
+    mkdir /libcxx_native_install && mkdir /libcxx_native_build && \
+    cd /libcxx_native_install \
+    && export SYMCC_REGULAR_LIBCXX="" && \
     cmake /llvm_source/llvm                                     \
       -G Ninja  -DLLVM_ENABLE_PROJECTS="libcxx;libcxxabi"       \
       -DLLVM_DISTRIBUTION_COMPONENTS="cxx;cxxabi;cxx-headers"   \
-      -DLLVM_TARGETS_TO_BUILD="X86" -DCMAKE_BUILD_TYPE=Release  \                
+      -DLLVM_TARGETS_TO_BUILD="X86" -DCMAKE_BUILD_TYPE=Release  \
       -DCMAKE_C_COMPILER=/symcc/build/symcc                     \
       -DCMAKE_CXX_COMPILER=/symcc/build/sym++                   \
       -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DHAVE_POSIX_REGEX=1     \
+      -DCMAKE_INSTALL_PREFIX="/libcxx_native_build" \
       -DHAVE_STEADY_CLOCK=1 && \
-    ninja -j 3 distribution 
+    ninja distribution && \
+    ninja install-distribution && ls -la /libcxx_native_build

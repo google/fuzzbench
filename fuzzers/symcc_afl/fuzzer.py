@@ -23,7 +23,7 @@ from fuzzers import utils
 from fuzzers.afl import fuzzer as afl_fuzzer
 
 
-def get_uninstrumented_build_directory(target_directory):
+def get_symcc_build_dir(target_directory):
     """Return path to uninstrumented target directory."""
     return os.path.join(target_directory, 'uninstrumented')
 
@@ -48,59 +48,40 @@ def build():
     shutil.copy("/afl/afl-showmap", build_directory)
 
     # Now progress to building the SymCC version of the code.
-    print("Building the benchmark with AFL")
-    build_directory = os.environ['OUT']
-    uninstrumented_build_directory = get_uninstrumented_build_directory(
-        build_directory)
-    os.mkdir(uninstrumented_build_directory)
-    
     print("Building the benchmark with SymCC")
     ## Set flags to ensure compilation with SymCC
     new_env = os.environ.copy()
     new_env['CC'] = "/symcc/build/symcc"
     new_env['CXX'] = "/symcc/build/sym++"
-    orig_cxxflags = new_env['CXXFLAGS']
-    new_cxxflags = orig_cxxflags.replace("-stlib=libc++", "")
-    new_env['CXXFLAGS'] = new_cxxflags
+    new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace("-stlib=libc++", "")
 
-    # Setting this environment variable instructs SymCC to use the regular
-    # libcxx. 
-    new_env['SYMCC_REGULAR_LIBCXX'] = "1"
+    # Setting this environment variable instructs SymCC to use the 
+    # libcxx library compiled with SymCC instrumentation. 
+    new_env['SYMCC_LIBCXX_PATH']="/libcxx_native_build"
 
     # Instructs SymCC to consider no symbolic inputs at runtime. This is needed
     # if, for example, some tests are run during compilation of the benchmark.
     new_env['SYMCC_NO_SYMBOLIC_INPUT'] = "1"
-    new_env['OUT'] = uninstrumented_build_directory
     new_env['FUZZER_LIB'] = '/libfuzzer-harness.o'
 
+    symcc_build_dir = get_symcc_build_dir(os.environ['OUT'])
+    new_env['OUT'] = symcc_build_dir
+    os.mkdir(symcc_build_dir)
+
     # Build benchmark
-    utils.build_benchmark(env=new_env)
     print("Building the benchmark 3")
+    utils.build_benchmark(env=new_env)
 
-    # Copy over symcc artifacts.
-    shutil.copy(
-            "/symcc/build//SymRuntime-prefix/src/SymRuntime-build/libSymRuntime.so",
-            build_directory)
-    shutil.copy(
-           "/z3/lib/libz3.so.4.8.7.0",
-           os.path.join(build_directory, "libz3.so.4.8"))
-
-    shutil.copy(
-           "/symcc/util/min-concolic-exec.sh",
-           build_directory)
-
-    if os.path.isfile("/rust/bin/symcc_fuzzing_helper"):
-        print("/rust/bin/symcc_fuzzing_helper is a file")
-        shutil.copy("/rust/bin/symcc_fuzzing_helper", build_directory)
-    else:
-        print("/rust/bin/symcc_fuzzing_helper is not a file")
-    if os.path.isfile('/root/.cargo/bin/symcc_fuzzing_helper'):
-        print("'/root/.cargo/bin/symcc_fuzzing_helper' is a file")
-        shutil.copy('/root/.cargo/bin/symcc_fuzzing_helper', build_directory)
-    else:
-        print('/root/.cargo/bin/symcc_fuzzing_helper is not a file')
-
+    # Copy over symcc artifacts and symbolic libc++.
+    shutil.copy("/symcc/build//SymRuntime-prefix/src/SymRuntime-build/libSymRuntime.so",
+                symcc_build_dir)
+    shutil.copy("/z3/lib/libz3.so.4.8.7.0",
+                os.path.join(symcc_build_dir, "libz3.so.4.8"))
+    shutil.copy("/libcxx_native_build/lib/libc++.so.1", symcc_build_dir)
+    shutil.copy("/libcxx_native_build/lib/libc++abi.so.1", symcc_build_dir)
+    shutil.copy("/rust/bin/symcc_fuzzing_helper", symcc_build_dir)
 	
+
 def afl_worker(afl_target, input_corpus, output_corpus, is_master):
     additional_flags = []
     if is_master:
@@ -113,56 +94,51 @@ def afl_worker(afl_target, input_corpus, output_corpus, is_master):
                             afl_target, 
                             additional_flags)
 
+def launch_afl_thread(input_corpus, output_corpus, target_binary, additional_flags):
+    afl_thread = threading.Thread(target=afl_fuzzer.run_afl_fuzz, 
+                                         args=(input_corpus, 
+                                               output_corpus, 
+                                               target_binary,
+                                               additional_flags)) 
+    afl_thread.start()
+    return afl_thread
+
+
 def fuzz(input_corpus, output_corpus, target_binary):
     '''
     Launches a master and a secondary instance of AFL, as well as 
     the symcc helper.
     '''
+    target_binary_dir   = os.path.dirname(target_binary)
+    symcc_workdir       = get_symcc_build_dir(target_binary_dir)
+    target_binary_name  = os.path.basename(target_binary)
+    symcc_target_binary = os.path.join(symcc_workdir, target_binary_name)
 
-    target_binary_directory = os.path.dirname(target_binary)
-    uninstrumented_target_binary_directory = (
-        get_uninstrumented_build_directory(target_binary_directory))
-    target_binary_name = os.path.basename(target_binary)
-    uninstrumented_target_binary = os.path.join(
-        uninstrumented_target_binary_directory, target_binary_name)
-
+    # Start the two AFL fuzzers
+    print('[run_fuzzer] Running AFL for SymCC')
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
 
-    print('[run_fuzzer] Running AFL for SymQEMU')
-
-    # Start a master
-    afl_fuzzer.prepare_fuzz_environment(input_corpus)
+    # Master
     print("Starting master. Target: {target}".format(target=target_binary))
-    afl_master_thread = threading.Thread(target=afl_worker, 
-                                         args=(target_binary,
-                                               input_corpus, 
-                                               output_corpus, 
-                                               True)) 
-    afl_master_thread.start()
+    launch_afl_thread(input_corpus, output_corpus, target_binary, ["-M", "afl-master"])
     print("Master started.")
-
-    # Give the master time to start
     time.sleep(5)
 
-    # Start a secondary instance. This is due to how
-    # the symcc helper script works.
+    # Secondary. 
+    # This is due to how the symcc helper script works.
     print("Starting second. Target: {target}".format(target=target_binary))
-    afl_secondary_thread = threading.Thread(target=afl_worker, 
-                                            args=(target_binary,
-                                            input_corpus, 
-                                            output_corpus, 
-                                            False)) 
-    afl_secondary_thread.start()
+    launch_afl_thread(input_corpus, output_corpus, target_binary, ["-S", "afl-secondary"])
     print("Second started")
-
-    # Give the secondary instance time to start.
     time.sleep(5)
 
     # Start an instance of SymCC
+    # We need to ensure it uses the symbolic version of libcpp
     print("Starting the symcc helper")
-    cmd = ["./symcc_fuzzing_helper",
+    new_environ = os.environ.copy()
+    new_environ['LD_LIBRARY_PATH']=symcc_workdir
+    cmd = [os.path.join(symcc_workdir, "symcc_fuzzing_helper"),
                  "-o", output_corpus,
                  "-a", "afl-secondary", 
                  "-n", "symcc", 
-                 "--", uninstrumented_target_binary, "@@"]
-    subprocess.check_call(cmd)
+                 "--", symcc_target_binary, "@@"]
+    subprocess.Popen(cmd, env=new_environ)
