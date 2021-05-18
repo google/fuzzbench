@@ -31,11 +31,11 @@ RUN apt-get update && \
     ar r /libAFL.a *.o
 
 
-# Install the packages we need
+# Install the packages we need.
 RUN apt-get install -y ninja-build flex bison python zlib1g-dev cargo 
 RUN pip3 install lit filecheck
-#
-## Install Z3 from source
+
+# Install Z3 from source.
 RUN cd / && \
     git clone -b z3-4.8.7 https://github.com/Z3Prover/z3.git /z3_src &&  \
     cd /z3_src && \
@@ -49,7 +49,7 @@ RUN cd / && \
 ENV CFLAGS=""
 ENV CXXFLAGS=""
 
-## Get and install symcc
+# Get and install symcc.
 RUN cd / && \
     git clone https://github.com/adalogics/adacc symcc && \
     cd symcc/runtime/qsym_backend && \
@@ -69,7 +69,7 @@ RUN cd / && \
     cargo install --path util/symcc_fuzzing_helper
 
 # Build libcxx with the SymCC compiler so we can instrument 
-## C++ code.
+# C++ code.
 RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.git /llvm_source  && \
     mkdir /libcxx_native_install && mkdir /libcxx_native_build && \
     cd /libcxx_native_install \

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-''' Uses the SymCC-AFL hybrid from SymCC '''
+''' Uses the SymCC-AFL hybrid from SymCC. '''
 
 import os
 import time
@@ -32,7 +32,7 @@ def build():
     """Build an AFL version and SymCC version of the benchmark"""
     build_directory = os.environ['OUT']
 
-    # First build with AFL
+    # First build with AFL.
     afl_fuzzer.build()
     os.environ['FUZZER_LIB'] = '/libAFL.a'
 
@@ -53,7 +53,7 @@ def build():
     symcc_build_dir = get_symcc_build_dir(os.environ['OUT'])
     os.mkdir(symcc_build_dir)
 
-    ## Set flags to ensure compilation with SymCC
+    # Set flags to ensure compilation with SymCC.
     new_env = os.environ.copy()
     new_env['CC'] = "/symcc/build/symcc"
     new_env['CXX'] = "/symcc/build/sym++"
@@ -69,7 +69,7 @@ def build():
     # if, for example, some tests are run during compilation of the benchmark.
     new_env['SYMCC_NO_SYMBOLIC_INPUT'] = "1"
 
-    # Build benchmark
+    # Build benchmark.
     utils.build_benchmark(env=new_env)
 
     # Copy over symcc artifacts and symbolic libc++.
@@ -85,7 +85,7 @@ def build():
 
 def launch_afl_thread(input_corpus, output_corpus, target_binary,
                       additional_flags):
-    """Simple wrapper for running AFL"""
+    """ Simple wrapper for running AFL. """
     afl_thread = threading.Thread(target=afl_fuzzer.run_afl_fuzz,
                                   args=(input_corpus, output_corpus,
                                         target_binary, additional_flags))
@@ -114,8 +114,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
                       ["-S", "afl-secondary"])
     time.sleep(5)
 
-    # Start an instance of SymCC
-    # We need to ensure it uses the symbolic version of libcpp
+    # Start an instance of SymCC.
+    # We need to ensure it uses the symbolic version of libc++.
     print("Starting the SymCC helper")
     new_environ = os.environ.copy()
     new_environ['LD_LIBRARY_PATH'] = symcc_workdir

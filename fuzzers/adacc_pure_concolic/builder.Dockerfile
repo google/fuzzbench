@@ -15,11 +15,11 @@
 ARG parent_image
 FROM $parent_image
 
-# Install the packages we need
+# Install the packages we need.
 RUN apt-get install -y ninja-build flex bison python zlib1g-dev
 RUN pip3 install lit filecheck
 
-# Install Z3 from source
+# Install Z3 from source.
 RUN git clone -b z3-4.8.7 https://github.com/Z3Prover/z3.git /z3_src &&  \
     cd /z3_src && \
     mkdir build && \
@@ -29,10 +29,10 @@ RUN git clone -b z3-4.8.7 https://github.com/Z3Prover/z3.git /z3_src &&  \
     ninja install && \
     cd / && rm -rf /z3_src
 
-ENV CFLAGS="-g"
-ENV CXXFLAGS="-g"
+ENV CFLAGS=""
+ENV CXXFLAGS=""
 
-# Get and install symcc
+# Get and install symcc.
 RUN git clone https://github.com/adalogics/adacc /symcc && \
     cd /symcc/runtime/qsym_backend && \
     git clone https://github.com/adalogics/qsym && \

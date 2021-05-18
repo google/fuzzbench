@@ -13,8 +13,9 @@
 # limitations under the License.
 """
     Uses a pure-concolic mode of SymCC. We call this
-    adacc simply because non-trivial modificaitons has been made
+    adacc simply because non-trivial modifications have been made
     to SymCC in order to make it to work for pure concolic execution.
+    Thus, this fuzzer should not be compared to SymCC academically.
 """
 
 import os
@@ -27,9 +28,9 @@ from fuzzers import utils
 def build():
     """
         Builds a version of the benchmark suited for pure
-        concolic execution
+        concolic execution.
     """
-    # Set flags to ensure compilation with SymCC
+    # Set flags to ensure compilation with SymCC.
     os.environ['CC'] = "/symcc/build/symcc"
     os.environ['CXX'] = "/symcc/build/sym++"
     os.environ['CXXFLAGS'] = os.environ['CXXFLAGS'].replace("-stlib=libc++", "")
@@ -45,10 +46,10 @@ def build():
     # if, for example, some tests are run during compilation of the benchmark.
     os.environ['SYMCC_NO_SYMBOLIC_INPUT'] = "1"
 
-    # Build benchmark
+    # Build benchmark.
     utils.build_benchmark()
 
-    # Copy over a bunch of the artifacts
+    # Copy over a bunch of the artifacts.
     build_directory = os.environ["OUT"]
     shutil.copy(
         "/symcc/build//SymRuntime-prefix/src/SymRuntime-build/libSymRuntime.so",
@@ -63,9 +64,9 @@ def build():
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
-    """Runs a pure concolic analysis"""
+    """Runs a pure concolic analysis."""
 
-    # Ensure we have a seed
+    # Ensure we have a seed.
     os.mkdir("wdir-1")
     with open(os.path.join(input_corpus, "symcc-seed1"), "w+") as init_seed:
         init_seed.write("A" * 100)
