@@ -53,6 +53,9 @@ jobs:
           - aflplusplus_qemu_cmplog
           - aflplusplus_qemu_cmplog_inmem
           - aflplusplus_qemu_inmem
+          # Conclic execution
+          - symcc_afl
+          - adacc_pure_concolic
 
         benchmark_type:
           - oss-fuzz
