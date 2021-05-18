@@ -67,7 +67,7 @@ RUN cd / && \
     ../build/symcc -c ./libfuzz-harness-proxy.c -o /libfuzzer-harness.o && \
     cd ../ && echo "[+] Installing cargo now 4" && \
     cargo install --path util/symcc_fuzzing_helper
-#
+
 # Build libcxx with the SymCC compiler so we can instrument 
 ## C++ code.
 RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.git /llvm_source  && \
@@ -84,4 +84,4 @@ RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.g
       -DCMAKE_INSTALL_PREFIX="/libcxx_native_build" \
       -DHAVE_STEADY_CLOCK=1 && \
     ninja distribution && \
-    ninja install-distribution && ls -la /libcxx_native_build
+    ninja install-distribution 
