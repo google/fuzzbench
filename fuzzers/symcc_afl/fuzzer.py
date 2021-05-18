@@ -43,17 +43,22 @@ def build():
         # twice in the same directory without this.
         utils.build_benchmark()
 
-    # Copy over AFL artifacts.
+    # Copy over AFL artifacts needed by SymCC. 
     shutil.copy("/afl/afl-fuzz", build_directory)
     shutil.copy("/afl/afl-showmap", build_directory)
 
-    # Now progress to building the SymCC version of the code.
+    # Build the SymCC-instrumented target.
     print("Building the benchmark with SymCC")
+    symcc_build_dir = get_symcc_build_dir(os.environ['OUT'])
+    os.mkdir(symcc_build_dir)
+
     ## Set flags to ensure compilation with SymCC
     new_env = os.environ.copy()
     new_env['CC'] = "/symcc/build/symcc"
     new_env['CXX'] = "/symcc/build/sym++"
     new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace("-stlib=libc++", "")
+    new_env['FUZZER_LIB'] = '/libfuzzer-harness.o'
+    new_env['OUT'] = symcc_build_dir
 
     # Setting this environment variable instructs SymCC to use the 
     # libcxx library compiled with SymCC instrumentation. 
@@ -62,14 +67,8 @@ def build():
     # Instructs SymCC to consider no symbolic inputs at runtime. This is needed
     # if, for example, some tests are run during compilation of the benchmark.
     new_env['SYMCC_NO_SYMBOLIC_INPUT'] = "1"
-    new_env['FUZZER_LIB'] = '/libfuzzer-harness.o'
-
-    symcc_build_dir = get_symcc_build_dir(os.environ['OUT'])
-    new_env['OUT'] = symcc_build_dir
-    os.mkdir(symcc_build_dir)
 
     # Build benchmark
-    print("Building the benchmark 3")
     utils.build_benchmark(env=new_env)
 
     # Copy over symcc artifacts and symbolic libc++.
