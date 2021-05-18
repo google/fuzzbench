@@ -82,18 +82,6 @@ def build():
     shutil.copy("/rust/bin/symcc_fuzzing_helper", symcc_build_dir)
 	
 
-def afl_worker(afl_target, input_corpus, output_corpus, is_master):
-    additional_flags = []
-    if is_master:
-        additional_flags += ["-M", "afl-master"]
-    else: 
-        additional_flags += ["-S", "afl-secondary"] 
-
-    afl_fuzzer.run_afl_fuzz(input_corpus, 
-                            output_corpus, 
-                            afl_target, 
-                            additional_flags)
-
 def launch_afl_thread(input_corpus, output_corpus, target_binary, additional_flags):
     afl_thread = threading.Thread(target=afl_fuzzer.run_afl_fuzz, 
                                          args=(input_corpus, 
