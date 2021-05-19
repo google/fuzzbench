@@ -20,6 +20,11 @@ class EmptyDataError(ValueError):
     """An exception for when the data is empty."""
 
 
+def underline_row(row):
+    """Add thick bottom border to row."""
+    return ['border-bottom: 3px solid black' for v in row]
+
+
 def validate_data(experiment_df):
     """Checks if the experiment data is valid."""
     if experiment_df.empty:
@@ -34,7 +39,6 @@ def validate_data(experiment_df):
         'time_ended',
         'time',
         'edges_covered',
-        'crash_key',
     }
     missing_columns = expected_columns.difference(experiment_df.columns)
     if missing_columns:
@@ -114,6 +118,9 @@ def filter_max_time(experiment_df, max_time):
 def add_bugs_covered_column(experiment_df):
     """Return a modified experiment df in which adds a |bugs_covered| column,
     a cumulative count of bugs covered over time."""
+    if 'crash_key' not in experiment_df:
+        experiment_df['bugs_covered'] = 0
+        return experiment_df
     grouping1 = ['fuzzer', 'benchmark', 'trial_id', 'crash_key']
     grouping2 = ['fuzzer', 'benchmark', 'trial_id']
     grouping3 = ['fuzzer', 'benchmark', 'trial_id', 'time']
@@ -224,6 +231,14 @@ def benchmark_rank_by_median(benchmark_snapshot_df, key='edges_covered'):
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
     medians = benchmark_snapshot_df.groupby('fuzzer')[key].median()
     medians.rename('median cov', inplace=True)
+    return medians.sort_values(ascending=False)
+
+
+def benchmark_rank_by_percent(benchmark_snapshot_df, key='edges_covered'):
+    """Returns ranking of fuzzers based on median (normalized/%) coverage."""
+    assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
+    max_key = "{}_percent_max".format(key)
+    medians = benchmark_snapshot_df.groupby('fuzzer')[max_key].median()
     return medians.sort_values(ascending=False)
 
 
@@ -340,3 +355,23 @@ def experiment_level_ranking(experiment_snapshots_df,
     pivot_table = experiment_pivot_table(experiment_snapshots_df,
                                          benchmark_level_ranking_function)
     return experiment_level_ranking_function(pivot_table)
+
+
+def add_relative_columns(experiment_df):
+    """Adds relative performance metric columns to experiment snapshot
+    dataframe.
+    <key>_percent_max = trial <key> / experiment max <key>
+    <key>_percent_fmax = trial <key> / fuzzer max <key>
+    """
+    df = experiment_df
+    for key in ['edges_covered', 'bugs_covered']:
+        if key not in df.columns:
+            continue
+        new_col = "{}_percent_max".format(key)
+        df[new_col] = df[key] / df.groupby('benchmark')[key].transform(
+            'max') * 100.0
+
+        new_col = "{}_percent_fmax".format(key)
+        df[new_col] = df[key] / df.groupby(['benchmark', 'fuzzer'
+                                           ])[key].transform('max') * 100
+    return df
