@@ -51,11 +51,11 @@ jobs:
           - aflplusplus_311
           - aflplusplus_312
           - aflplusplus_qemu_inmem
+          - aflplusplus_frida
+          - aflplusplus_frida_inmem
           # Conclic execution
           - symcc_afl
           - adacc_pure_concolic
-          - aflplusplus_frida
-          - aflplusplus_frida_inmem
 
         benchmark_type:
           - oss-fuzz
