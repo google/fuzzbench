@@ -50,12 +50,12 @@ jobs:
           - aflplusplus_optimal_lcnt
           - aflplusplus_311
           - aflplusplus_312
-          - aflplusplus_qemu_cmplog
-          - aflplusplus_qemu_cmplog_inmem
           - aflplusplus_qemu_inmem
           # Conclic execution
           - symcc_afl
           - adacc_pure_concolic
+          - aflplusplus_frida
+          - aflplusplus_frida_inmem
 
         benchmark_type:
           - oss-fuzz
