@@ -30,26 +30,25 @@ def get_symcc_build_dir(target_directory):
 
 def build():
     """Build an AFL version and SymCC version of the benchmark"""
+    print("Step 1: Building with AFL")
     build_directory = os.environ['OUT']
 
     # First build with AFL.
-    afl_fuzzer.build()
-    os.environ['FUZZER_LIB'] = '/libAFL.a'
-
     src = os.getenv('SRC')
     work = os.getenv('WORK')
     with utils.restore_directory(src), utils.restore_directory(work):
         # Restore SRC to its initial state so we can build again without any
         # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
         # twice in the same directory without this.
-        utils.build_benchmark()
+        afl_fuzzer.build()
 
+    print("Step 2: Completed AFL build")
     # Copy over AFL artifacts needed by SymCC.
     shutil.copy("/afl/afl-fuzz", build_directory)
     shutil.copy("/afl/afl-showmap", build_directory)
 
     # Build the SymCC-instrumented target.
-    print("Building the benchmark with SymCC")
+    print("Step 3: Building the benchmark with SymCC")
     symcc_build_dir = get_symcc_build_dir(os.environ['OUT'])
     os.mkdir(symcc_build_dir)
 
