@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,18 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit: b0593c086dd303af31dc1e30233149978dd613c4
-commit_date: 2020-02-10 09:22:32+00:00
-fuzz_target: x509
-project: openssl
-unsupported_fuzzers:
-  - klee
-  - aflplusplus_classic
-  - aflplusplus_classic_ctx
-  - aflplusplus_pcguard
-  - aflplusplus_pcguard_bitcode
-  - aflplusplus_pcguard_ctx
-  - aflplusplus_pcguard_ctx_bfs
-  - aflplusplus_pcguard_ctx_randomic
-  - aflplusplus_pcguard_ctx_uniform
-  - aflplusplus_pcguard_ctx_params
+FROM gcr.io/fuzzbench/base-image
+
+# This makes interactive docker runs painless:
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
+ENV AFL_MAP_SIZE=2621440
+ENV PATH="$PATH:/out"
+ENV AFL_SKIP_CPUFREQ=1
+ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
+ENV AFL_TESTCACHE_SIZE=2
