@@ -30,11 +30,22 @@ def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):
     return fuzzer + ' ' + benchmark
 
 
-def _get_filestore_from_df(df):
+def get_experiment_filestore_path(df):
+    """Returns the experiment filestore path from |df|."""
     # TODO(metzman) This should be able to handle multiple experiments.
     filestore_path = df.experiment_filestore.unique()[0]
     exp_name = df.experiment.unique()[0]
     return posixpath.join(filestore_path, exp_name)
+
+
+def get_coverage_report_filestore_path(fuzzer, benchmark, df):
+    """Returns the filestore path of the coverage report for |fuzzer| on
+    |benchmark| for |df|."""
+    df = df[df['fuzzer'] == fuzzer]
+    df = df[df['benchmark'] == benchmark]
+    experiment_filestore_path = get_experiment_filestore_path(df)
+    return posixpath.join(experiment_filestore_path, 'coverage', 'reports',
+                          benchmark, fuzzer, 'index.html')
 
 
 def get_fuzzer_benchmark_covered_regions(
@@ -43,10 +54,10 @@ def get_fuzzer_benchmark_covered_regions(
     temp_dir.
     Returns a tuple containing the fuzzer benchmark key and the regions covered
     by the fuzzer on the benchmark."""
-    fuzzer, benchmark, filestore, temp_dir = (
+    fuzzer, benchmark, filestore_path, temp_dir = (
         fuzzer_and_benchmark_and_filestore_and_temp_dir)
     fuzzer_benchmark_covered_regions = get_fuzzer_covered_regions(
-        fuzzer, benchmark, filestore, temp_dir)
+        fuzzer, benchmark, filestore_path, temp_dir)
     key = get_fuzzer_benchmark_key(fuzzer, benchmark)
     return key, fuzzer_benchmark_covered_regions
 
@@ -57,13 +68,12 @@ def get_covered_regions_dict(experiment_df, pool):
     covered_regions_dict = {}
     benchmarks = experiment_df.benchmark.unique()
     with tempfile.TemporaryDirectory() as temp_dir:
-        filestore = _get_filestore_from_df(experiment_df)
+        filestore_path = get_experiment_filestore_path(experiment_df)
         for benchmark in benchmarks:
             benchmark_df = experiment_df[experiment_df.benchmark == benchmark]
             fuzzers = benchmark_df.fuzzer.unique()
-            arguments = [
-                (fuzzer, benchmark, filestore, temp_dir) for fuzzer in fuzzers
-            ]
+            arguments = [(fuzzer, benchmark, filestore_path, temp_dir)
+                         for fuzzer in fuzzers]
             fuzzer_benchmark_covered_regions = pool.map(
                 get_fuzzer_benchmark_covered_regions, arguments)
             for fuzzer_benchmark_key, covered_regions in (

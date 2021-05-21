@@ -20,6 +20,7 @@ from analysis import data_utils
 from analysis import coverage_data_utils
 from analysis import stat_tests
 from common import benchmark_utils
+from common import filestore_utils
 
 
 # pylint: disable=too-many-public-methods, too-many-arguments
@@ -48,6 +49,17 @@ class BenchmarkResults:
 
     def _get_full_path(self, filename):
         return os.path.join(self._output_directory, filename)
+
+    def _get_experiment_filestore_path(self, fuzzer_name, benchmark_name):
+        return coverage_data_utils.get_coverage_report_filestore_path(
+            self._benchmark_df, fuzzer_name, benchmark_name)
+
+    def get_filestore_name(self, fuzzer_name, benchmark_name):
+        """Returns the filestore name of the |fuzzer_name|."""
+        filestore_path = self._get_experiment_filestore_path(
+            fuzzer_name, benchmark_name)
+
+        return filestore_utils.get_user_accessible_path(filestore_path)
 
     @property
     @functools.lru_cache()

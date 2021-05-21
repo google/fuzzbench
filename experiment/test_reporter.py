@@ -80,4 +80,5 @@ def test_output_report_filestore(experiment_fuzzers, expected_merged_fuzzers,
                 fuzzers=expected_merged_fuzzers,
                 in_progress=False,
                 merge_with_clobber_nonprivate=False,
-                coverage_report=False)
+                coverage_report=False,
+                num_processes=1)
