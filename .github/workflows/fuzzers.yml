@@ -55,7 +55,6 @@ jobs:
           - aflplusplus_frida_inmem
           # Conclic execution
           - symcc_afl
-          - adacc_pure_concolic
 
         benchmark_type:
           - oss-fuzz
