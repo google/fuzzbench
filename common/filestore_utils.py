@@ -33,10 +33,9 @@ def _using_gsutil():
 
 
 def is_filestore_path_gcs(filestore_path):
-    """Returns True if |filestore_path is a gcs URL."""
+    """Returns True if |filestore_path is a GCS URL. Assumes that GCS paths are
+    using gs:// and not http."""
     if filestore_path.startswith(GCS_GSUTIL_PREFIX):
-        return True
-    if filestore_path.startswith(GCS_HTTP_PREFIX):
         return True
     return False
 

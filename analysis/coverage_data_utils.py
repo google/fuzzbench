@@ -38,7 +38,7 @@ def get_experiment_filestore_path(df):
     return posixpath.join(filestore_path, exp_name)
 
 
-def get_coverage_report_filestore_path(fuzzer, benchmark, df):
+def get_coverage_report_filestore_path(fuzzer, benchmark, df: pd.DataFrame):
     """Returns the filestore path of the coverage report for |fuzzer| on
     |benchmark| for |df|."""
     df = df[df['fuzzer'] == fuzzer]
