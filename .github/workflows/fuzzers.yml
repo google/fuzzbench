@@ -63,6 +63,8 @@ jobs:
           - aflplusplus_pcguard_ctx_randomic
           - aflplusplus_pcguard_ctx_uniform
           - aflplusplus_pcguard_ctx_params
+          # Conclic execution
+          - symcc_afl
 
         benchmark_type:
           - oss-fuzz
