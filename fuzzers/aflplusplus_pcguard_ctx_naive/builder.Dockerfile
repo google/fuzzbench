@@ -73,7 +73,7 @@ RUN cd /SVF && unset CFLAGS && unset CXXFLAGS && wget https://pastebin.com/raw/Z
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 8929da339191152cdc69e4c99ddeaeff6d0bc777 && \
+    git checkout c7908688b5cefecf63aae484bb33e3c3d87b9da8 && \
     sed -i 's|^#define CMPLOG_SOLVE|// #define CMPLOG_SOLVE|' include/config.h
 
 # Build without Python support as we don't need it.
