@@ -129,10 +129,9 @@ def test_gsutil_parallel_on(fs, use_gsutil):  # pylint: disable=invalid-name,unu
         assert test_args_list[0][1]['parallel'] is True
 
 
-@pytest.mark.parametrize(
-    ('filestore_path', 'expected_result'), [('gs://filestore', True),
-                                            ('/filestore', False),
-                                            ('C:\\Windows\\filestore', False)])
+@pytest.mark.parametrize(('filestore_path', 'expected_result'),
+                         [('gs://filestore', True), ('/filestore', False),
+                          ('C:\\Windows\\filestore', False)])
 def test_is_filestore_path_gcs(filestore_path, expected_result):
     """Tests that is_filestore_path_gcs returns the correct result for different
     filestore paths."""
@@ -141,11 +140,12 @@ def test_is_filestore_path_gcs(filestore_path, expected_result):
 
 
 @pytest.mark.parametrize(
-    ('filestore_path', 'expected_result'), [('gs://filestore',
-                                             'https://storage.googleapis.com/filestore'),
-                                            ('/filestore', '/filestore'),
-                                            ('C:\\Windows\\filestore', 'C:\\Windows\\filestore')])
+    ('filestore_path', 'expected_result'),
+    [('gs://filestore', 'https://storage.googleapis.com/filestore'),
+     ('/filestore', '/filestore'),
+     ('C:\\Windows\\filestore', 'C:\\Windows\\filestore')])
 def test_get_user_accessible_path(filestore_path, expected_result):
-    """Tests that get_user_accessible_path returns the correct result for different
-    filestore paths."""
-    assert filestore_utils.get_user_accessible_path(filestore_path) == expected_result
+    """Tests that get_user_accessible_path returns the correct result for
+    different filestore paths."""
+    assert filestore_utils.get_user_accessible_path(
+        filestore_path) == expected_result
