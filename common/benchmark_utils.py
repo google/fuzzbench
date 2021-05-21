@@ -52,9 +52,10 @@ def get_project(benchmark):
 def get_type(benchmark):
     """Returns the type of |benchmark|"""
     try:
-        return benchmark_config.get_config(benchmark).get('type',
-                                                          BenchmarkType.CODE.value)
-    except Exception:
+        return benchmark_config.get_config(benchmark).get(
+            'type', BenchmarkType.CODE.value)
+    except Exception:  # pylint: disable=broad-except
+        # Handle old experiments where benchmarks did not have a type.
         return BenchmarkType.CODE.value
 
 

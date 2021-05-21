@@ -18,6 +18,7 @@ import json
 import os
 import posixpath
 import tempfile
+
 import pandas as pd
 
 from analysis import data_utils
@@ -29,46 +30,61 @@ def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):
     return fuzzer + ' ' + benchmark
 
 
-def get_fuzzer_filestore_path(benchmark_df, fuzzer):
-    """Gets the filestore_path for |fuzzer| in |benchmark_df|."""
-    fuzzer_df = benchmark_df[benchmark_df.fuzzer == fuzzer]
-    filestore_path = fuzzer_df.experiment_filestore.unique()[0]
-    exp_name = fuzzer_df.experiment.unique()[0]
+def _get_filestore_from_df(df):
+    # TODO(metzman) This should be able to handle multiple experiments.
+    filestore_path = df.experiment_filestore.unique()[0]
+    exp_name = df.experiment.unique()[0]
     return posixpath.join(filestore_path, exp_name)
 
 
-def get_covered_regions_dict(experiment_df):
+def get_fuzzer_benchmark_covered_regions(
+        fuzzer_and_benchmark_and_filestore_and_temp_dir):
+    """Accepts a tuple containing the fuzzer, benchmark, filestore and
+    temp_dir.
+    Returns a tuple containing the fuzzer benchmark key and the regions covered
+    by the fuzzer on the benchmark."""
+    fuzzer, benchmark, filestore, temp_dir = (
+        fuzzer_and_benchmark_and_filestore_and_temp_dir)
+    fuzzer_benchmark_covered_regions = get_fuzzer_covered_regions(
+        fuzzer, benchmark, filestore, temp_dir)
+    key = get_fuzzer_benchmark_key(fuzzer, benchmark)
+    return key, fuzzer_benchmark_covered_regions
+
+
+def get_covered_regions_dict(experiment_df, pool):
     """Combines json files for different fuzzer-benchmark pair
     in |experiment_df| and returns a dictionary of the covered regions."""
     covered_regions_dict = {}
     benchmarks = experiment_df.benchmark.unique()
-    for benchmark in benchmarks:
-        benchmark_df = experiment_df[experiment_df.benchmark == benchmark]
-        fuzzers = benchmark_df.fuzzer.unique()
-        for fuzzer in fuzzers:
-            fuzzer_covered_regions = get_fuzzer_covered_regions(
-                benchmark_df, benchmark, fuzzer)
-            key = get_fuzzer_benchmark_key(fuzzer, benchmark)
-            covered_regions_dict[key] = fuzzer_covered_regions
+    with tempfile.TemporaryDirectory() as temp_dir:
+        filestore = _get_filestore_from_df(experiment_df)
+        for benchmark in benchmarks:
+            benchmark_df = experiment_df[experiment_df.benchmark == benchmark]
+            fuzzers = benchmark_df.fuzzer.unique()
+            arguments = [
+                (fuzzer, benchmark, filestore, temp_dir) for fuzzer in fuzzers
+            ]
+            fuzzer_benchmark_covered_regions = pool.map(
+                get_fuzzer_benchmark_covered_regions, arguments)
+            for fuzzer_benchmark_key, covered_regions in (
+                    fuzzer_benchmark_covered_regions):
+                covered_regions_dict[fuzzer_benchmark_key] = covered_regions
 
     return covered_regions_dict
 
 
-def get_fuzzer_covered_regions(benchmark_df, benchmark, fuzzer):
+def get_fuzzer_covered_regions(fuzzer, benchmark, filestore, temp_dir):
     """Gets the covered regions for |fuzzer| in |benchmark_df| from the json
     file in the bucket."""
-    with tempfile.TemporaryDirectory() as temp_dir:
-        dst_file = os.path.join(temp_dir, 'tmp.json')
-        src_filestore_path = get_fuzzer_filestore_path(benchmark_df, fuzzer)
-        src_file = posixpath.join(src_filestore_path, 'coverage', 'data',
-                                  benchmark, fuzzer, 'covered_regions.json')
-        if filestore_utils.ls(src_file, must_exist=False).retcode:
-            # Error occurred, coverage file does not exit. Bail out.
-            return {}
-
-        filestore_utils.cp(src_file, dst_file)
-        with open(dst_file) as json_file:
-            return json.load(json_file)
+    # TODO(metzman): Make this handle multiple experiments.
+    dst_file = os.path.join(temp_dir,
+                            '{}-{}-coverage.json'.format(fuzzer, benchmark))
+    src_file = posixpath.join(filestore, 'coverage', 'data', benchmark, fuzzer,
+                              'covered_regions.json')
+    if filestore_utils.cp(src_file, dst_file, expect_zero=False).retcode:
+        return {}
+    with open(dst_file) as json_file:
+        return json.load(json_file)
 
 
 def get_unique_region_dict(benchmark_coverage_dict):

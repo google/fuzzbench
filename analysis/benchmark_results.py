@@ -49,19 +49,6 @@ class BenchmarkResults:
     def _get_full_path(self, filename):
         return os.path.join(self._output_directory, filename)
 
-    def _get_experiment_filestore_path(self, fuzzer_name):
-        return coverage_data_utils.get_fuzzer_filestore_path(
-            self._benchmark_df, fuzzer_name)
-
-    def get_filestore_name(self, fuzzer_name):
-        """Returns the filestore name of the |fuzzer_name|."""
-        filestore_path = self._get_experiment_filestore_path(fuzzer_name)
-        gcs_prefix = 'gs://'
-        gcs_http_prefix = 'https://storage.googleapis.com/'
-        if filestore_path.startswith(gcs_prefix):
-            filestore_path = filestore_path.replace(gcs_prefix, gcs_http_prefix)
-        return filestore_path
-
     @property
     @functools.lru_cache()
     def type(self):

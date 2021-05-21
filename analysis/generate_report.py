@@ -14,6 +14,7 @@
 """Report generator tool."""
 
 import argparse
+import multiprocessing
 import os
 import sys
 
@@ -140,7 +141,8 @@ def generate_report(experiment_names,
                     end_time=None,
                     merge_with_clobber=False,
                     merge_with_clobber_nonprivate=False,
-                    coverage_report=False):
+                    coverage_report=False,
+                    num_processes=-1):
     """Generate report helper."""
     if merge_with_clobber_nonprivate:
         experiment_names = (
@@ -188,9 +190,12 @@ def generate_report(experiment_names,
 
     # Load the coverage json summary file.
     coverage_dict = {}
+    if num_processes == -1:
+        num_processes = None
+    pool = multiprocessing.Pool(num_processes)
     if coverage_report:
         coverage_dict = coverage_data_utils.get_covered_regions_dict(
-            experiment_df)
+            experiment_df, pool)
 
     fuzzer_names = experiment_df.fuzzer.unique()
     plotter = plotting.Plotter(fuzzer_names, quick, log_scale)
