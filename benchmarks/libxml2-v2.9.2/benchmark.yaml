@@ -14,3 +14,5 @@
 
 fuzz_target: xml
 project: libxml2
+unsupported_fuzzers:
+  - symcc_afl
