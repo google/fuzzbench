@@ -198,7 +198,7 @@ def generate_report(experiment_names,
             experiment_df, pool)
 
     fuzzer_names = experiment_df.fuzzer.unique()
-    plotter = plotting.Plotter(fuzzer_names, quick, log_scale)
+    plotter = plotting.Plotter(fuzzer_names, quick, log_scale, cache=True)
     experiment_ctx = experiment_results.ExperimentResults(
         experiment_df,
         coverage_dict,
@@ -206,10 +206,14 @@ def generate_report(experiment_names,
         plotter,
         experiment_name=report_name)
 
+    # Do this so that plotter caching works.
+    plot_path = experiment_ctx.benchmarks[0].get_full_plot_path('')
+    filesystem.recreate_directory(plot_path)
+
     template = report_type + '.html'
     detailed_report = rendering.render_report(experiment_ctx, template,
                                               in_progress, coverage_report,
-                                              description)
+                                              description, pool)
 
     filesystem.write(os.path.join(report_directory, 'index.html'),
                      detailed_report)
