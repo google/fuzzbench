@@ -30,7 +30,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration.
-
     build_modes = list(args)
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
@@ -40,13 +39,11 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     # If nothing was set this is the default:
     if not build_modes:
-        build_modes = ['tracepc', 'cmplog', 'dict2file']
+        build_modes = ['pcguard', 'cmplog', 'dict2file']
 
     # For bug type benchmarks we have to instrument via native clang pcguard :(
     build_flags = os.environ['CFLAGS']
-    if build_flags.find(
-            'array-bounds'
-    ) != -1 and 'qemu' not in build_modes and 'classic' not in build_modes:
+    if build_flags.find('array-bounds') != -1 and 'qemu' not in build_modes:
         build_modes[0] = 'native'
 
     # Instrumentation coverage modes:
@@ -125,14 +122,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['AFL_LLVM_NGRAM_SIZE'] = '8'
     elif 'ngram16' in build_modes:
         os.environ['AFL_LLVM_NGRAM_SIZE'] = '16'
-    if 'ctx1' in build_modes:
-        os.environ['AFL_LLVM_CTX_K'] = '1'
-    elif 'ctx2' in build_modes:
-        os.environ['AFL_LLVM_CTX_K'] = '2'
-    elif 'ctx3' in build_modes:
-        os.environ['AFL_LLVM_CTX_K'] = '3'
-    elif 'ctx4' in build_modes:
-        os.environ['AFL_LLVM_CTX_K'] = '4'
 
     # Only one of the following OR cmplog
     # enable laf-intel compare splitting
@@ -156,6 +145,32 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     os.environ['AFL_QUIET'] = '1'
     os.environ['AFL_MAP_SIZE'] = '2621440'
 
+    new_env = os.environ.copy()
+    new_env['REAL_CC_PATH'] = os.environ['CC']
+    new_env['REAL_CXX_PATH'] = os.environ['CXX']
+    new_env['CC'] = 'wrap-gclang'
+    new_env['CXX'] = 'wrap-gclang++'
+    #os.environ['LD'] = 'wrap-gclang++'
+    new_env['RANLIB'] = 'llvm-ranlib'
+    new_env['AR'] = 'llvm-ar'
+    new_env['AS'] = 'llvm-as'
+    new_env['LLVM_BITCODE_GENERATION_FLAGS'] = '-flto'
+    new_env['WLLVM_OUTPUT_LEVEL'] = 'ERROR'
+    #os.environ['WRAP_GCLANG_DEBUG'] = '1'
+
+    if 'no_passes' in build_modes:
+        new_env['NO_PASSES'] = '1'
+    if 'no_internalize' in build_modes:
+        new_env['NO_INTERNALIZE'] = '1'
+    if 'no_internalize_1' in build_modes:
+        new_env['NO_INTERNALIZE1'] = '1'
+    if 'no_internalize_2' in build_modes:
+        new_env['NO_INTERNALIZE2'] = '1'
+    if 'no_icp' in build_modes:
+        new_env['NO_ICP'] = '1'
+    if 'no_cgc' in build_modes:
+        new_env['NO_CGC'] = '1'
+
     src = os.getenv('SRC')
     work = os.getenv('WORK')
 
@@ -163,7 +178,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         # Restore SRC to its initial state so we can build again without any
         # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
         # twice in the same directory without this.
-        utils.build_benchmark()
+        utils.build_benchmark(env=new_env)
 
     if 'cmplog' in build_modes and 'qemu' not in build_modes:
 
@@ -185,13 +200,11 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         utils.build_benchmark(env=new_env)
 
     shutil.copy('/afl/afl-fuzz', build_directory)
+    shutil.copy('/afl/afl-showmap', build_directory)
     if os.path.exists('/afl/afl-qemu-trace'):
         shutil.copy('/afl/afl-qemu-trace', build_directory)
     if os.path.exists('/aflpp_qemu_driver_hook.so'):
         shutil.copy('/aflpp_qemu_driver_hook.so', build_directory)
-    if os.path.exists('/get_frida_entry.sh'):
-        shutil.copy('/afl/afl-frida-trace.so', build_directory)
-        shutil.copy('/get_frida_entry.sh', build_directory)
 
 
 def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):

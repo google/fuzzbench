@@ -19,3 +19,13 @@ project: php
 unsupported_fuzzers:
   - aflcc
   - klee
+  - aflplusplus_classic
+  - aflplusplus_classic_ctx
+  - aflplusplus_pcguard
+  - aflplusplus_pcguard_bitcode
+  - aflplusplus_pcguard_ctx
+  - aflplusplus_pcguard_ctx_naive
+  - aflplusplus_pcguard_ctx_bfs
+  - aflplusplus_pcguard_ctx_randomic
+  - aflplusplus_pcguard_ctx_uniform
+  - aflplusplus_pcguard_ctx_params

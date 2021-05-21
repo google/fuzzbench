@@ -4,27 +4,24 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+"""Integration code for AFLplusplus fuzzer."""
 
-commit: b0593c086dd303af31dc1e30233149978dd613c4
-commit_date: 2020-02-10 09:22:32+00:00
-fuzz_target: x509
-project: openssl
-unsupported_fuzzers:
-  - klee
-  - aflplusplus_classic
-  - aflplusplus_classic_ctx
-  - aflplusplus_pcguard
-  - aflplusplus_pcguard_bitcode
-  - aflplusplus_pcguard_ctx
-  - aflplusplus_pcguard_ctx_naive
-  - aflplusplus_pcguard_ctx_bfs
-  - aflplusplus_pcguard_ctx_randomic
-  - aflplusplus_pcguard_ctx_uniform
-  - aflplusplus_pcguard_ctx_params
+from fuzzers.aflplusplus_pcguard_ctx import fuzzer as aflplusplus_fuzzer
+
+
+def build():  # pylint: disable=too-many-branches,too-many-statements
+    """Build benchmark."""
+    aflplusplus_fuzzer.build("pcguard", "cmplog", "dict2file", "no_icp")
+
+
+def fuzz(input_corpus, output_corpus, target_binary):
+    """Run fuzzer."""
+    aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
