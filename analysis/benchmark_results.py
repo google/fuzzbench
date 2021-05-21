@@ -54,7 +54,7 @@ class BenchmarkResults:
         return coverage_data_utils.get_coverage_report_filestore_path(
             self._benchmark_df, fuzzer_name, benchmark_name)
 
-    def get_filestore_name(self, fuzzer_name, benchmark_name):
+    def get_coverage_report_path(self, fuzzer_name, benchmark_name):
         """Returns the filestore name of the |fuzzer_name|."""
         filestore_path = self._get_experiment_filestore_path(
             fuzzer_name, benchmark_name)
