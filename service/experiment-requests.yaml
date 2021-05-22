@@ -18,6 +18,10 @@
 #
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
+- experiment: 2021-05-22-symccafl
+  description: "Symcc-AFL first test"
+  fuzzers:
+    - symcc_afl
 
 - experiment: 2021-05-21-cloning
   description: >
