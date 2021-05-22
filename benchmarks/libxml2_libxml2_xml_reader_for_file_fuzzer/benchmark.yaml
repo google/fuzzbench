@@ -11,3 +11,4 @@ unsupported_fuzzers:
   - klee
   - lafintel
   - weizz_qemu
+  - symcc_afl
