@@ -22,6 +22,17 @@
   description: "Symcc-AFL first test"
   fuzzers:
     - symcc_afl
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - entropic
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - lafintel
+    - libfuzzer
+    - mopt    
 
 - experiment: 2021-05-21-cloning
   description: >
