@@ -29,3 +29,4 @@ unsupported_fuzzers:
   - aflplusplus_pcguard_ctx_randomic
   - aflplusplus_pcguard_ctx_uniform
   - aflplusplus_pcguard_ctx_params
+  - symcc_afl
