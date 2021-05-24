@@ -44,7 +44,9 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     # For bug type benchmarks we have to instrument via native clang pcguard :(
     build_flags = os.environ['CFLAGS']
-    if build_flags.find('array-bounds') != -1 and 'qemu' not in build_modes:
+    if build_flags.find(
+            'array-bounds'
+    ) != -1 and 'qemu' not in build_modes and 'classic' not in build_modes:
         build_modes[0] = 'native'
 
     # Instrumentation coverage modes:
@@ -187,6 +189,9 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         shutil.copy('/afl/afl-qemu-trace', build_directory)
     if os.path.exists('/aflpp_qemu_driver_hook.so'):
         shutil.copy('/aflpp_qemu_driver_hook.so', build_directory)
+    if os.path.exists('/get_frida_entry.sh'):
+        shutil.copy('/afl/afl-frida-trace.so', build_directory)
+        shutil.copy('/get_frida_entry.sh', build_directory)
 
 
 def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):

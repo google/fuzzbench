@@ -1,0 +1,14 @@
+commit: bc4d7c46f391971f0e2c875c9b2d63c1b9152f6d
+commit_date: 2018-10-07 01:19:00+00:00
+fuzz_target: fuzzshark_ip
+project: wireshark
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - honggfuzz_qemu
+  - klee
+  - weizz_qemu
+  - lafintel
+  - eclipser

@@ -1,0 +1,17 @@
+commit: c288debe029667515656213b0ba81956c3ede26d
+commit_date: 2019-03-15 01:51:00+00:00
+fuzz_target: standard_fuzzer
+project: proj4
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - honggfuzz_qemu
+  - klee
+  - weizz_qemu
+  - lafintel
+  - aflplusplus_classic_ctx
+  - aflplusplus_pcguard_ctx
+  - aflplusplus_pcguard_ctx_indirects
+  - symcc_afl

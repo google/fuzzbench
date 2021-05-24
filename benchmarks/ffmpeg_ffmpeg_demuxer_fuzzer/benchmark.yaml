@@ -1,0 +1,16 @@
+commit: 6473a5d35c16b1e673c07f0927ec5d2e10433e79
+commit_date: 2019-06-14 01:51:00+00:00
+fuzz_target: ffmpeg_DEMUXER_fuzzer
+project: ffmpeg
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - honggfuzz_qemu
+  - klee
+  - weizz_qemu
+  - lafintel
+  - eclipser
+  - aflplusplus_qemu_inmem
+  - symcc_afl

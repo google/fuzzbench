@@ -1,0 +1,13 @@
+commit: 0f114d2d7eb1950faab02fe479864da5e5d50414
+commit_date: 2017-10-27 05:37:00+00:00
+fuzz_target: tpm2_execute_command_fuzzer
+project: tpm2
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - honggfuzz_qemu
+  - klee
+  - weizz_qemu
+  - lafintel
