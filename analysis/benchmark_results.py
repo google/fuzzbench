@@ -48,6 +48,7 @@ class BenchmarkResults:
         return self.name + '_' + filename
 
     def get_full_plot_path(self, filename):
+        """Returns the full path of the plot stored at |filename|."""
         return os.path.join(self._output_directory, 'plots', filename)
 
     def _get_experiment_filestore_path(self, fuzzer_name, benchmark_name):

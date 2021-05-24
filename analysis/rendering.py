@@ -21,63 +21,54 @@ from common import experiment_utils
 from common import utils
 
 
-def _warm_plot_cache(benchmark_and_attrs):
+def _warm_benchmark_plot_cache(benchmark_and_attrs):
+    """Warm up cache for benchmark plots by making plots. |benchmark_and_attrs|
+    is a tuple containing the benchmark and a list of attributes that when
+    accessed on the benchmark, cause plots to be created."""
     benchmark, attrs = benchmark_and_attrs
-    print('warming cache', benchmark.name, attrs)
     for attr in attrs:
         getattr(benchmark, attr)
-    return None
 
 
-def _warm_cache(experiment_results, coverage_report, num_processes=-1):
+def _warm_cache(experiment_results, coverage_report, pool):
+    """"Warm plot caches by plotting plots for each benchmark in parallel before
+    it is done sequentially in jinja."""
+    # Plotting each benchmark's plots in parallel seems to be faster than
+    # plotting each plot in parallel. I suspect this is because each call to
+    # _warm_benchmark_plot_cache requires copying a benchmark, which has some
+    # overhead.
     arguments = []
-
-    # for benchmark in experiment_results.benchmarks:
-        # if benchmark.type == 'bug':
-        #     arguments.append((benchmark, 'bug_box_plot'))
-        #     arguments.append((benchmark, 'bug_coverage_growth_plot'))
-        #     arguments.append((benchmark, 'bug_coverage_growth_plot_logscale'))
-        #     arguments.append((benchmark, 'bug_vargha_delaney_plot'))
-        #     arguments.append((benchmark, 'bug_mann_whitney_plot'))
-        # else:
-        #     arguments.append((benchmark, 'ranking_plot'))
-        #     arguments.append((benchmark, 'coverage_growth_plot'))
-        #     arguments.append((benchmark, 'coverage_growth_plot_logscale'))
-        #     arguments.append((benchmark, 'vargha_delaney_plot'))
-        #     arguments.append((benchmark, 'mann_whitney_plot'))
-        # if coverage_report:
-        #     arguments.append((benchmark, 'unique_coverage_ranking_plot'))
-        #     arguments.append((benchmark, 'pairwise_unique_coverage_plot'))
-
     for benchmark in experiment_results.benchmarks:
         attrs = []
         if benchmark.type == 'bug':
-            attrs.extend(['bug_box_plot',
-                          'bug_coverage_growth_plot',
-                          'bug_coverage_growth_plot_logscale',
-                          'bug_vargha_delaney_plot',
-                          'bug_mann_whitney_plot',])
+            attrs.extend([
+                'bug_box_plot',
+                'bug_coverage_growth_plot',
+                'bug_coverage_growth_plot_logscale',
+                'bug_vargha_delaney_plot',
+                'bug_mann_whitney_plot',
+            ])
         else:
-            attrs.extend(['ranking_plot',
-                          'coverage_growth_plot',
-                          'coverage_growth_plot_logscale',
-                          'vargha_delaney_plot',
-                          'mann_whitney_plot',])
+            attrs.extend([
+                'ranking_plot',
+                'coverage_growth_plot',
+                'coverage_growth_plot_logscale',
+                'vargha_delaney_plot',
+                'mann_whitney_plot',
+            ])
         if coverage_report:
-            attrs.extend(['unique_coverage_ranking_plot',
-                          'pairwise_unique_coverage_plot',])
+            attrs.extend([
+                'unique_coverage_ranking_plot',
+                'pairwise_unique_coverage_plot',
+            ])
         arguments.append([benchmark, attrs])
 
-    if num_processes == -1:
-        num_processes = None
-    import multiprocessing
-    pool = multiprocessing.Pool()
-    print('processes', pool._processes)
-    list(pool.map(_warm_plot_cache, arguments))
+    list(pool.map(_warm_benchmark_plot_cache, arguments))
 
 
-def render_report(experiment_results, template, in_progress, coverage_report,
-                  description, pool):
+def render_report(  # pylint:disable=too-many-arguments
+        experiment_results, template, in_progress, coverage_report, description,
+        pool):
     """Renders report with |template| using data provided by the
     |experiment_results| context.
 
@@ -91,7 +82,7 @@ def render_report(experiment_results, template, in_progress, coverage_report,
     Returns the rendered template.
     """
 
-    _warm_cache(experiment_results, coverage_report)
+    _warm_cache(experiment_results, coverage_report, pool)
     templates_dir = os.path.join(utils.ROOT_DIR, 'analysis', 'report_templates')
     environment = jinja2.Environment(
         undefined=jinja2.StrictUndefined,
