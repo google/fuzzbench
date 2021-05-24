@@ -51,6 +51,16 @@
     - aflplusplus_pcguard_ctx_uniform
     - aflplusplus_pcguard_ctx_params
 
+- experiment: 2021-05-21-aflpp
+  description: "afl++ release test"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_optimal
+    - aflplusplus_312
+    - aflplusplus_311
+    - honggfuzz
+    - entropic
+
 - experiment: 2021-05-14-aflpp
   description: "afl++ qemu + frida variants"
   fuzzers:
