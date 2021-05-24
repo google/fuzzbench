@@ -51,6 +51,9 @@ jobs:
           - aflplusplus_311
           - aflplusplus_312
           - aflplusplus_frida
+          - aflplusplus_qemu_inmem
+          - aflplusplus_frida
+          - aflplusplus_frida_inmem
 
         benchmark_type:
           - oss-fuzz
