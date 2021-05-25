@@ -14,5 +14,3 @@
 
 fuzz_target: standard_fuzzer
 project: proj4
-unsupported_fuzzers:
-  - symcc_afl
