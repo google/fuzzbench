@@ -13,4 +13,3 @@ unsupported_fuzzers:
   - lafintel
   - eclipser
   - aflplusplus_qemu_inmem
-  - symcc_afl

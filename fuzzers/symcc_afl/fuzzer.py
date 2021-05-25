@@ -60,6 +60,9 @@ def build():
     new_env['FUZZER_LIB'] = '/libfuzzer-harness.o'
     new_env['OUT'] = symcc_build_dir
 
+    new_env['CXXFLAGS'] += " -fno-sanitize=all "
+    new_env['CFLAGS'] += " -fno-sanitize=all "
+
     # Setting this environment variable instructs SymCC to use the
     # libcxx library compiled with SymCC instrumentation.
     new_env['SYMCC_LIBCXX_PATH'] = "/libcxx_native_build"
