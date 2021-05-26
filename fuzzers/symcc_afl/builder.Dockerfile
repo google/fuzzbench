@@ -33,7 +33,7 @@ RUN apt-get update && \
 
 # Install the packages we need.
 RUN apt-get install -y ninja-build flex bison python zlib1g-dev cargo 
-RUN pip3 install lit filecheck
+#RUN pip3 install lit filecheck
 
 # Install Z3 from source.
 RUN cd / && \
@@ -80,7 +80,7 @@ RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.g
       -DLLVM_TARGETS_TO_BUILD="X86" -DCMAKE_BUILD_TYPE=Release  \
       -DCMAKE_C_COMPILER=/symcc/build/symcc                     \
       -DCMAKE_CXX_COMPILER=/symcc/build/sym++                   \
-      -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DHAVE_POSIX_REGEX=1     \
+      -DHAVE_POSIX_REGEX=1     \
       -DCMAKE_INSTALL_PREFIX="/libcxx_native_build" \
       -DHAVE_STEADY_CLOCK=1 && \
     ninja distribution && \
