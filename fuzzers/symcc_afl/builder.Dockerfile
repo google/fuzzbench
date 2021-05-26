@@ -51,7 +51,7 @@ ENV CXXFLAGS=""
 
 # Get and install symcc.
 RUN cd / && \
-    git clone https://github.com/adalogics/adacc symcc && \
+    git clone https://github.com/DavidKorczynski/adacc symcc && \
     cd symcc/runtime/qsym_backend && \
     git clone https://github.com/adalogics/qsym && \
     cd qsym && \
