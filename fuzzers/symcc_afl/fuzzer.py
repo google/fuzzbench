@@ -80,8 +80,7 @@ def build():
         symcc_build_dir)
     #shutil.copy("/z3/lib/libz3.so.4.8.7.0",
     #            os.path.join(symcc_build_dir, "libz3.so.4.8"))
-    shutil.copy("/usr/lib/libz3.so",
-                os.path.join(symcc_build_dir, "libz3.so"))
+    shutil.copy("/usr/lib/libz3.so", os.path.join(symcc_build_dir, "libz3.so"))
     shutil.copy("/libcxx_native_build/lib/libc++.so.1", symcc_build_dir)
     shutil.copy("/libcxx_native_build/lib/libc++abi.so.1", symcc_build_dir)
     shutil.copy("/rust/bin/symcc_fuzzing_helper", symcc_build_dir)
