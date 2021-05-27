@@ -18,4 +18,3 @@ fuzz_target: fuzz_target
 project: bloaty
 unsupported_fuzzers:
   - klee
-  - symcc_afl
