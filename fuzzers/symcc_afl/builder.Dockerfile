@@ -35,16 +35,23 @@ RUN apt-get update && \
 RUN apt-get install -y ninja-build flex bison python zlib1g-dev cargo 
 #RUN pip3 install lit filecheck
 
+# Install Z3 from binary
+RUN wget -qO /tmp/z3x64.zip https://github.com/Z3Prover/z3/releases/download/z3-4.8.7/z3-4.8.7-x64-ubuntu-16.04.zip && \
+     unzip -jd /usr/include /tmp/z3x64.zip "*/include/*.h" && \
+     unzip -jd /usr/lib /tmp/z3x64.zip "*/bin/libz3.so" && \
+     rm -f /tmp/*.zip && \
+     ldconfig
+
 # Install Z3 from source.
-RUN cd / && \
-    git clone -b z3-4.8.7 https://github.com/Z3Prover/z3.git /z3_src &&  \
-    cd /z3_src && \
-    mkdir build && \
-    cd build && \
-    cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/z3 .. && \
-    ninja -j 3 && \
-    ninja install && \
-    cd / && rm -rf /z3_src
+#RUN cd / && \
+#    git clone -b z3-4.8.7 https://github.com/Z3Prover/z3.git /z3_src &&  \
+#    cd /z3_src && \
+#    mkdir build && \
+#    cd build && \
+#    cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/z3 .. && \
+#    ninja -j 3 && \
+#    ninja install && \
+#    cd / && rm -rf /z3_src
 
 ENV CFLAGS=""
 ENV CXXFLAGS=""
