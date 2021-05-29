@@ -242,6 +242,7 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
         # Sort fuzzers left to right by FuzzerSum
         pivot = pivot.sort_values(by='FuzzerSum', axis=1, ascending=False)
         pivot = pivot.style\
+                .format("{:.0f}")\
                 .apply(highlight_max, axis=1, subset=fuzzer_names)\
                 .apply(data_utils.underline_row, axis=1, subset=idx)\
                 .set_table_styles(self._SUMMARY_TABLE_STYLE)
