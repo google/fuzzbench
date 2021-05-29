@@ -15,4 +15,3 @@ unsupported_fuzzers:
   - aflplusplus_qemu_cmplog
   - aflplusplus_qemu_cmplog_inmem
   - aflplusplus_qemu_inmem
-  - symcc_afl
