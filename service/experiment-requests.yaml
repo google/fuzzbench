@@ -34,7 +34,7 @@
     - libfuzzer
     - mopt    
 
-- experiment: 2021-05-22-symccafl
+- experiment: 2021-05-25-symccafl
   description: "Symcc-AFL first test"
   fuzzers:
     - symcc_afl
@@ -50,7 +50,7 @@
     - libfuzzer
     - mopt    
 
-- experiment: 2021-05-21-cloning
+- experiment: 2021-05-25-cloning
   description: >
     Benchmark some variants of AFL++ that use different function cloning
     strategies at whole program level to achieve collision-free context
@@ -67,7 +67,7 @@
     - aflplusplus_pcguard_ctx_uniform
     - aflplusplus_pcguard_ctx_params
 
-- experiment: 2021-05-21-aflpp
+- experiment: 2021-05-25-aflpp
   description: "afl++ release test"
   fuzzers:
     - aflplusplus
