@@ -33,26 +33,23 @@ RUN apt-get update && \
 
 # Install the packages we need.
 RUN apt-get install -y ninja-build flex bison python zlib1g-dev cargo 
-RUN pip3 install lit filecheck
 
-# Install Z3 from source.
-RUN cd / && \
-    git clone -b z3-4.8.7 https://github.com/Z3Prover/z3.git /z3_src &&  \
-    cd /z3_src && \
-    mkdir build && \
-    cd build && \
-    cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/z3 .. && \
-    ninja -j 3 && \
-    ninja install && \
-    cd / && rm -rf /z3_src
+# Install Z3 from binary
+RUN wget -qO /tmp/z3x64.zip https://github.com/Z3Prover/z3/releases/download/z3-4.8.7/z3-4.8.7-x64-ubuntu-16.04.zip && \
+     unzip -jd /usr/include /tmp/z3x64.zip "*/include/*.h" && \
+     unzip -jd /usr/lib /tmp/z3x64.zip "*/bin/libz3.so" && \
+     rm -f /tmp/*.zip && \
+     ldconfig
 
 ENV CFLAGS=""
 ENV CXXFLAGS=""
 
 # Get and install symcc.
 RUN cd / && \
-    git clone https://github.com/adalogics/adacc symcc && \
-    cd symcc/runtime/qsym_backend && \
+    git clone https://github.com/AdaLogics/adacc symcc && \
+    cd symcc && \
+    git checkout 40c819654c77da421d7696f4c4939040f4414e95 && \
+    cd ./runtime/qsym_backend && \
     git clone https://github.com/adalogics/qsym && \
     cd qsym && \
     git checkout adalogics && \
@@ -80,7 +77,7 @@ RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.g
       -DLLVM_TARGETS_TO_BUILD="X86" -DCMAKE_BUILD_TYPE=Release  \
       -DCMAKE_C_COMPILER=/symcc/build/symcc                     \
       -DCMAKE_CXX_COMPILER=/symcc/build/sym++                   \
-      -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DHAVE_POSIX_REGEX=1     \
+      -DHAVE_POSIX_REGEX=1     \
       -DCMAKE_INSTALL_PREFIX="/libcxx_native_build" \
       -DHAVE_STEADY_CLOCK=1 && \
     ninja distribution && \

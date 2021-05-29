@@ -18,6 +18,22 @@
 #
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
+- experiment: 2021-05-29-symccafl
+  description: "Symcc-AFL test with most benchmarks"
+  fuzzers:
+    - symcc_afl
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - entropic
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - lafintel
+    - libfuzzer
+    - mopt    
+
 - experiment: 2021-05-25-symccafl
   description: "Symcc-AFL first test"
   fuzzers:
