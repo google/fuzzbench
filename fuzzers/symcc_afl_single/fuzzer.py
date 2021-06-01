@@ -16,6 +16,7 @@
 
 from fuzzers.symcc_afl import fuzzer as symcc_afl_fuzzer
 
+
 def build():
     """ Build an AFL version and SymCC version of the benchmark """
     symcc_afl_fuzzer.build()
