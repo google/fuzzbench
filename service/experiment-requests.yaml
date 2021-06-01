@@ -19,7 +19,7 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
-- experiment: 2021-06-1-symccafl-multiple
+- experiment: 2021-06-01-symccafl
   description: >
                Symcc-AFL test. The difference between this and 
                2021-05-29-symccafl is that we now have afl benchmarks
