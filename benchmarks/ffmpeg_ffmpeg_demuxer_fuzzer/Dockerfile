@@ -26,12 +26,13 @@ RUN apt-get update && apt-get install -y make autoconf automake libtool build-es
 RUN git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
 
 RUN wget https://www.alsa-project.org/files/pub/lib/alsa-lib-1.1.0.tar.bz2
-RUN git clone https://gitlab.freedesktop.org/mesa/drm.git
+RUN git clone -n https://gitlab.freedesktop.org/mesa/drm.git
 RUN cd drm; git checkout 5db0f7692d1fdf05f9f6c0c02ffa5a5f4379c1f3 
 RUN git clone --depth 1 https://github.com/mstorsjo/fdk-aac.git
 ADD https://sourceforge.net/projects/lame/files/latest/download lame.tar.gz
 RUN git clone --depth 1 git://anongit.freedesktop.org/xorg/lib/libXext
-RUN git clone --depth 1 git://anongit.freedesktop.org/git/xorg/lib/libXfixes
+RUN git clone -n git://anongit.freedesktop.org/git/xorg/lib/libXfixes
+RUN cd libXfixes; git checkout 174a94975af710247719310cfc53bd13e1f3b44d
 RUN git clone --depth 1 https://github.com/intel/libva
 RUN git clone --depth 1 -b libvdpau-1.2 git://people.freedesktop.org/~aplattner/libvdpau
 RUN git clone --depth 1 https://chromium.googlesource.com/webm/libvpx
