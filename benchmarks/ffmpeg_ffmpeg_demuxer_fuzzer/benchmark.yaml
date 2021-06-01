@@ -14,3 +14,4 @@ unsupported_fuzzers:
   - eclipser
   - aflplusplus_qemu_inmem
   - symcc_afl
+  - symcc_afl_single

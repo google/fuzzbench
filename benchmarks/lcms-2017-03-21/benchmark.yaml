@@ -16,3 +16,4 @@ fuzz_target: cms_transform_fuzzer
 project: lcms
 unsupported_fuzzers:
   - symcc_afl
+  - symcc_afl_single
