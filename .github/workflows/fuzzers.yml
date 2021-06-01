@@ -73,6 +73,7 @@ jobs:
           - aflplusplus_x_d2f
           - aflplusplus_x_eh
           - aflplusplus_x_trim
+          - afl_two_instances
 
         benchmark_type:
           - oss-fuzz
