@@ -12,4 +12,3 @@ unsupported_fuzzers:
   - weizz_qemu
   - lafintel
   - eclipser
-  - symcc_afl

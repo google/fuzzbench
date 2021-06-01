@@ -16,4 +16,3 @@ fuzz_target: libjpeg_turbo_fuzzer
 project: libjpeg-turbo
 unsupported_fuzzers:
   - aflcc
-  - symcc_afl

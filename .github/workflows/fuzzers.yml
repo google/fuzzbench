@@ -63,6 +63,16 @@ jobs:
           - aflplusplus_pcguard_ctx_params
           # Concolic execution
           - symcc_afl
+          - aflplusplus_x
+          - aflplusplus_x_c1
+          - aflplusplus_x_c1a
+          - aflplusplus_x_c1t
+          - aflplusplus_x_c2
+          - aflplusplus_x_c2a
+          - aflplusplus_x_c2t
+          - aflplusplus_x_d2f
+          - aflplusplus_x_eh
+          - aflplusplus_x_trim
 
         benchmark_type:
           - oss-fuzz
