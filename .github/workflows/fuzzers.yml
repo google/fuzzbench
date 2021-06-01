@@ -63,6 +63,7 @@ jobs:
           - aflplusplus_pcguard_ctx_params
           # Concolic execution
           - symcc_afl
+          - symcc_aflplusplus
           - aflplusplus_x
           - aflplusplus_x_c1
           - aflplusplus_x_c1a
