@@ -11,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for two AFL instances. This one is useful 
+"""Integration code for two AFL instances. This one is useful
    since some hybrid fuzzers rely on multiple processes, e.g.
    one for AFL and one for concolic execution, and thus potentially
    claim more total CPU power than a single AFL process. Examples
    of this include SymCC and Eclipser.
-   This integration is to have a fairer comparison between such 
+   This integration is to have a fairer comparison between such
    integrations."""
 
 import time
