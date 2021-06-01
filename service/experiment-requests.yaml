@@ -19,6 +19,30 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-06-1-symccafl-multiple
+  description: >
+               Symcc-AFL test. The difference between this and 
+               2021-05-29-symccafl is that we now have afl benchmarks
+               that run multiple instances of afl. This is for 
+               comparison purposes since symcc also utilises mutliple
+               processes. The goal is to try and avoid any bias due
+               to more total CPU time.
+  fuzzers:
+    - symcc_afl
+    - symcc_afl_single
+    - afl_two_instances
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - entropic
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - lafintel
+    - libfuzzer
+    - mopt    
+
 - experiment: 2021-06-02
   description: "Experiment to compare afl with honggfuzz and libfuzzer"
   fuzzers:

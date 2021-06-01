@@ -94,7 +94,7 @@ def launch_afl_thread(input_corpus, output_corpus, target_binary,
     return afl_thread
 
 
-def fuzz(input_corpus, output_corpus, target_binary):
+def fuzz(input_corpus, output_corpus, target_binary, master_only=False):
     """
     Launches a master and a secondary instance of AFL, as well as
     the symcc helper.
@@ -111,9 +111,14 @@ def fuzz(input_corpus, output_corpus, target_binary):
     launch_afl_thread(input_corpus, output_corpus, target_binary,
                       ["-M", "afl-master"])
     time.sleep(5)
-    launch_afl_thread(input_corpus, output_corpus, target_binary,
-                      ["-S", "afl-secondary"])
-    time.sleep(5)
+
+    if master_only:
+        sharing_dir = "afl-master"
+    else:
+        launch_afl_thread(input_corpus, output_corpus, target_binary,
+                          ["-S", "afl-secondary"])
+        time.sleep(5)
+        sharing_dir = "afl-secondary"
 
     # Start an instance of SymCC.
     # We need to ensure it uses the symbolic version of libc++.
@@ -123,6 +128,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
     cmd = [
         os.path.join(symcc_workdir,
                      "symcc_fuzzing_helper"), "-o", output_corpus, "-a",
-        "afl-secondary", "-n", "symcc", "--", symcc_target_binary, "@@"
+        sharing_dir, "-n", "symcc", "--", symcc_target_binary, "@@"
     ]
     subprocess.Popen(cmd, env=new_environ)
