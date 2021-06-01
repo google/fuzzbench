@@ -110,7 +110,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # Start a master and secondary instance of AFL.
     # We need both because of the way SymCC works.
     print('[run_fuzzer] Running AFL for SymCC')
-    aflplusplus_fuzzer.prepare_fuzz_environment(input_corpus)
+    afl_fuzzer.prepare_fuzz_environment(input_corpus)
     launch_afl_thread(input_corpus, output_corpus, target_binary,
                       ["-M", "afl-master"])
     time.sleep(5)
