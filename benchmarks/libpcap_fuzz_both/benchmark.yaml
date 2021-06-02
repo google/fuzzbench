@@ -19,3 +19,4 @@ project: libpcap
 unsupported_fuzzers:
   - klee
   - symcc_afl
+  - symcc_afl_single
