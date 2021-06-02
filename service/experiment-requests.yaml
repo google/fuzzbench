@@ -19,6 +19,39 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-06-02-symccafl-pp
+  description: >
+               Symcc-AFL test. The difference between this and 
+               2021-06-02-symccafl is that we now have a version of
+               symcc in combination with aflplusplus. Some bug fixing in
+               symcc has happened, which makes it less prone to crashing.
+               The bug fixing is primarily for the aflplusplus hybrid,
+               since the bugs that were fixed has not been notable
+               (maybe seen once) in the symcc-afl combination.
+               Finally, we have added an increase in the timeout
+               of how often symcc runs, switching it from every
+               5 sec to ever 20 sec. Finally, in the aflplusplus
+               hybrid there is no use of afl-showmap, which means
+               all seeds created by symcc are pushed into the afl
+               queue. This changes the symcc set up as there is no
+               filtering done on the seeds pushed to afl.
+  fuzzers:
+    - symcc_afl
+    - symcc_afl_single
+    - symcc_aflplusplus
+    - afl_two_instances
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - entropic
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - lafintel
+    - libfuzzer
+    - mopt    
+
 - experiment: 2021-06-01-symccafl
   description: >
                Symcc-AFL test. The difference between this and 
@@ -42,7 +75,6 @@
     - lafintel
     - libfuzzer
     - mopt    
-
 - experiment: 2021-06-02
   description: "Experiment to compare afl with honggfuzz and libfuzzer"
   fuzzers:
