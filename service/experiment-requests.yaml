@@ -22,7 +22,7 @@
 - experiment: 2021-06-02-symccafl-pp
   description: >
                Symcc experiment. The difference between this and 
-               2021-06-02-symccafl is that we now have a version of
+               2021-06-01-symccafl is that we now have a version of
                symcc in combination with aflplusplus. Some bug fixing in
                symcc has happened, which makes it less prone to crashing.
                The bug fixing is primarily for the aflplusplus hybrid,
