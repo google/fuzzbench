@@ -51,7 +51,7 @@ ENV CXXFLAGS=""
 RUN cd / && \
     git clone https://github.com/AdaLogics/adacc symcc && \
     cd symcc && \
-    git checkout 40c819654c77da421d7696f4c4939040f4414e95 && \
+    git checkout edda79dcb830c95ba6d303e47c698839313ef506 && \
     cd ./runtime/qsym_backend && \
     git clone https://github.com/adalogics/qsym && \
     cd qsym && \

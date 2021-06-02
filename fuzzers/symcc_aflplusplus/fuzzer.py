@@ -107,12 +107,15 @@ def fuzz(input_corpus, output_corpus, target_binary):
     target_binary_name = os.path.basename(target_binary)
     symcc_target_binary = os.path.join(symcc_workdir, target_binary_name)
 
+
+    os.environ['AFL_DISABLE_TRIM'] = "1"
+
     # Start a master and secondary instance of AFL.
     # We need both because of the way SymCC works.
     print('[run_fuzzer] Running AFL for SymCC')
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     launch_afl_thread(input_corpus, output_corpus, target_binary,
-                      ["-M", "afl-master"])
+                      ["-S", "afl"])
     time.sleep(5)
     launch_afl_thread(input_corpus, output_corpus, target_binary,
                       ["-S", "afl-secondary"])
@@ -126,6 +129,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
     cmd = [
         os.path.join(symcc_workdir,
                      "symcc_fuzzing_helper"), "-o", output_corpus, "-a",
-        "afl-secondary", "-n", "symcc", "--", symcc_target_binary, "@@"
+        "afl-secondary", "-n", "symcc", "-m", "--", symcc_target_binary, "@@"
     ]
     subprocess.Popen(cmd, env=new_environ)
