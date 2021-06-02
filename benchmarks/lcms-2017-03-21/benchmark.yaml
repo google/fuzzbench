@@ -17,3 +17,4 @@ project: lcms
 unsupported_fuzzers:
   - symcc_afl
   - symcc_afl_single
+  - symcc_aflplusplus

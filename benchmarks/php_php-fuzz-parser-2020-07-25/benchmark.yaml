@@ -23,3 +23,4 @@ unsupported_fuzzers:
   - aflplusplus_pcguard_ctx_params
   - symcc_afl
   - symcc_afl_single
+  - symcc_aflplusplus
