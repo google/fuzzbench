@@ -15,21 +15,24 @@
 ARG parent_image
 FROM $parent_image
 
-# Download and compile AFL v2.56b.
-# Set AFL_NO_X86 to skip flaky tests.
-RUN git clone https://github.com/google/AFL.git /afl && \
-    cd /afl && \
-    git checkout 82b5e359463238d790cadbe2dd494d6a4928bff3 && \
-    AFL_NO_X86=1 make
-
-## Use afl_driver.cpp from LLVM as our fuzzing library.
+# Install libstdc++ to use llvm_mode.
 RUN apt-get update && \
-    apt-get install wget -y && \
-    wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
-    clang -Wno-pointer-sign -c /afl/llvm_mode/afl-llvm-rt.o.c -I/afl && \
-    clang++ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp && \
-    ar r /libAFL.a *.o
+    apt-get install -y wget libstdc++-5-dev libtool-bin automake flex bison \
+                       libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
+                       apt-utils apt-transport-https ca-certificates
 
+# Download and compile afl++.
+RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
+    cd /afl && \
+    git checkout bb45398d0bbad0b86e311fa6effc286206ecc611
+
+# Build without Python support as we don't need it.
+# Set AFL_NO_X86 to skip flaky tests.
+RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
+    export CC=clang && export AFL_NO_X86=1 && \
+    PYTHON_INCLUDE=/ make && make install && \
+    make -C utils/aflpp_driver && \
+    cp utils/aflpp_driver/libAFLDriver.a /
 
 # Install the packages we need.
 RUN apt-get install -y ninja-build flex bison python zlib1g-dev cargo 
