@@ -53,6 +53,7 @@ jobs:
           - aflplusplus_frida
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
+          - aflplusplus_unusual_partial
           # Concolic execution
           - symcc_afl
           - symcc_aflplusplus
