@@ -11,19 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for AFLplusplus fuzzer."""
 
-import os
+FROM gcr.io/fuzzbench/base-image
 
-from fuzzers.aflplusplus_pcguard_ctx import fuzzer as aflplusplus_fuzzer
-
-
-def build():  # pylint: disable=too-many-branches,too-many-statements
-    """Build benchmark."""
-    os.environ["CGC_STRATEGY"] = "randomic"
-    aflplusplus_fuzzer.build("pcguard", "cmplog", "dict2file", "no_icp")
-
-
-def fuzz(input_corpus, output_corpus, target_binary):
-    """Run fuzzer."""
-    aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
+# This makes interactive docker runs painless:
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
+#ENV AFL_MAP_SIZE=2621440
+ENV PATH="$PATH:/out"
+ENV AFL_SKIP_CPUFREQ=1
+ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
+ENV AFL_TESTCACHE_SIZE=2

@@ -11,17 +11,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
 """Integration code for AFLplusplus fuzzer."""
 
-from fuzzers.aflplusplus_pcguard_ctx import fuzzer as aflplusplus_fuzzer
+# This optimized afl++ variant should always be run together with
+# "aflplusplus" to show the difference - a default configured afl++ vs.
+# a hand-crafted optimized one. afl++ is configured not to enable the good
+# stuff by default to be as close to vanilla afl as possible.
+# But this means that the good stuff is hidden away in this benchmark
+# otherwise.
+
+import os
+
+from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
-    aflplusplus_fuzzer.build("pcguard", "cmplog", "dict2file", "no_passes")
+    os.environ['AFL_LLVM_UNUSUAL_VALUES'] = '1'
+    aflplusplus_fuzzer.build('classic', 'dict2file')
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
+
+    os.environ['AFL_FAST_CAL'] = '1'
     aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
