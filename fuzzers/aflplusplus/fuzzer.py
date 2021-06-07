@@ -226,5 +226,3 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
                             output_corpus,
                             target_binary,
                             additional_flags=flags)
-
-                        

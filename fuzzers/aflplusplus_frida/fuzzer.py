@@ -56,4 +56,4 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     sts = os.system("cp -v *core* corpus")
     if sts == 0:
-      print('Copied cores')
+        print('Copied cores')
