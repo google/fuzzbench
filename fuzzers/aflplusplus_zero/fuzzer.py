@@ -27,7 +27,7 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
-    os.environ['AFL_LLVM_THREADSAFE_INST'] = '1'
+    os.environ['AFL_LLVM_SKIP_NEVERZERO'] = '1'
     aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
 
 

@@ -26,6 +26,7 @@
     - aflplusplus_313
     - aflplusplus_frida
     - aflplusplus_threadsafe
+    - aflplusplus_zero
     - honggfuzz
 
 - experiment: 2021-06-03-aflpp
