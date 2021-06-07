@@ -50,6 +50,7 @@ jobs:
           - aflplusplus_optimal_lcnt
           - aflplusplus_311
           - aflplusplus_312
+          - aflplusplus_313
           - aflplusplus_frida
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
@@ -69,6 +70,8 @@ jobs:
           - aflplusplus_x_eh
           - aflplusplus_x_trim
           - afl_two_instances
+          - aflplusplus_threadsafe
+          - aflplusplus_zero
 
         benchmark_type:
           - oss-fuzz
