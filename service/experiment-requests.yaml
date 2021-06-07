@@ -19,6 +19,15 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-06-07-aflpp
+  description: "test threadsafe mode and collect frida cores"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_313
+    - aflplusplus_frida
+    - aflplusplus_threadsafe
+    - honggfuzz
+
 - experiment: 2021-06-03-aflpp
   description: "Benchmark a new experimental feature for AFL++"
   type: bug

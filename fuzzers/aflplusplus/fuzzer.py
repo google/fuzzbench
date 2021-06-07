@@ -218,11 +218,6 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
         flags += ['-c', cmplog_target_binary]
 
     if not skip:
-        if not flags or not flags[0] == '-Q' and '-p' not in flags:
-            flags += ['-p', 'fast']
-        if ((not flags or (not '-l' in flags and not '-R' in flags)) and
-                os.path.exists(cmplog_target_binary)):
-            flags += ['-l', '2']
         os.environ['AFL_DISABLE_TRIM'] = "1"
         if 'ADDITIONAL_ARGS' in os.environ:
             flags += os.environ['ADDITIONAL_ARGS'].split(' ')
@@ -231,3 +226,5 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
                             output_corpus,
                             target_binary,
                             additional_flags=flags)
+
+                        
