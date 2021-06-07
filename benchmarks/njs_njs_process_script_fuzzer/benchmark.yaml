@@ -12,3 +12,5 @@ unsupported_fuzzers:
   - weizz_qemu
   - lafintel
   - symcc_afl
+  - symcc_afl_single
+  - symcc_aflplusplus
