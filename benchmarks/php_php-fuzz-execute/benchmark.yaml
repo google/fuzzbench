@@ -24,3 +24,6 @@ unsupported_fuzzers:
   - symcc_afl
   - symcc_afl_single
   - symcc_aflplusplus
+  - aflplusplus_unusual_disabled
+  - aflplusplus_unusual_partial
+  - aflplusplus_unusual_enabled
