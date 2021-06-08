@@ -40,15 +40,6 @@
     - aflplusplus_zero
     - honggfuzz
 
-- experiment: 2021-06-07-saturated
-  description: "Benchmark a new experimental feature for AFL++ (saturated)"
-  type: bug
-  oss-fuzz-corpus: true
-  fuzzers:
-    - aflplusplus_unusual_disabled
-    - aflplusplus_unusual_enabled
-    - aflplusplus_unusual_partial
-
 - experiment: 2021-06-03-aflpp
   description: "Benchmark a new experimental feature for AFL++"
   type: bug
