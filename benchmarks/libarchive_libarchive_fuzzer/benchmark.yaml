@@ -14,3 +14,5 @@ unsupported_fuzzers:
   - aflplusplus_unusual_disabled
   - aflplusplus_unusual_partial
   - aflplusplus_unusual_enabled
+  - aflplusplus_unusual_partial_early
+  - aflplusplus_unusual_enabled_early
