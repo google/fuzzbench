@@ -30,6 +30,16 @@
     - aflplusplus_unusual_enabled_early
     - aflplusplus_unusual_partial_early
 
+- experiment: 2021-06-07-aflpp
+  description: "test threadsafe mode and collect frida cores"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_313
+    - aflplusplus_frida
+    - aflplusplus_threadsafe
+    - aflplusplus_zero
+    - honggfuzz
+
 - experiment: 2021-06-07-saturated
   description: "Benchmark a new experimental feature for AFL++ (saturated)"
   type: bug
