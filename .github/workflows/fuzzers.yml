@@ -71,6 +71,7 @@ jobs:
           - aflplusplus_x_d2f
           - aflplusplus_x_eh
           - aflplusplus_x_trim
+          - aflplusplus_x_default
           - afl_two_instances
           - aflplusplus_threadsafe
           - aflplusplus_zero
