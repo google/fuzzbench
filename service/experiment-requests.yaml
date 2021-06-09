@@ -19,23 +19,23 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
-- experiment: 2021-06-09-aflpp-sat
-  description: "Benchmark AFL++ (saturated)"
-  oss-fuzz-corpus: true
-  fuzzers:
-    - aflplusplus_x
-    - aflplusplus_x_c1
-    - aflplusplus_x_c1a
-    - aflplusplus_x_c1t
-    - aflplusplus_x_c2
-    - aflplusplus_x_c2a
-    - aflplusplus_x_c2t
-    - aflplusplus_x_d2f
-    - aflplusplus_x_eh
-    - aflplusplus_x_trim
-    - aflplusplus_x_default
-    - honggfuzz
-    - aflplusplus
+# - experiment: 2021-06-09-aflpp-sat
+#   description: "Benchmark AFL++ (saturated)"
+#   oss-fuzz-corpus: true
+#   fuzzers:
+#     - aflplusplus_x
+#     - aflplusplus_x_c1
+#     - aflplusplus_x_c1a
+#     - aflplusplus_x_c1t
+#     - aflplusplus_x_c2
+#     - aflplusplus_x_c2a
+#     - aflplusplus_x_c2t
+#     - aflplusplus_x_d2f
+#     - aflplusplus_x_eh
+#     - aflplusplus_x_trim
+#     - aflplusplus_x_default
+#     - honggfuzz
+#     - aflplusplus
 
 - experiment: 2021-06-07-saturated-fix
   description: "Benchmark a new experimental feature for AFL++ (saturated)"
