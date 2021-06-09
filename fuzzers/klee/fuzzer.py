@@ -408,7 +408,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
         llvm_link_libs.append('-link-llvm-lib=./{lib_bc}/{filename}'.format(
             lib_bc=LIB_BC_DIR, filename=filename))
 
-    max_memory_mb = str(int(psutil.virtual_memory().available // 10**6 * 0.3))
+    max_memory_mb = str(int(psutil.virtual_memory().available // 10**6 * 0.9))
 
     klee_cmd = [
         klee_bin,
