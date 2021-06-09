@@ -19,8 +19,6 @@ FROM $parent_image
 RUN apt-get update && \
     apt-get install wget libstdc++-5-dev -y
 
-# Download and compile AFL v2.56b.
-# Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/Practical-Formal-Methods/AFL-public.git /afl && \
     cd /afl && \
     git checkout disable_top_rated && \
