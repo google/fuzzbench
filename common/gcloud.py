@@ -77,8 +77,10 @@ def create_instance(instance_name: str,
     else:
         command.extend([
             '--no-address',
-            '--machine-type=%s' % RUNNER_MACHINE_TYPE,
             '--boot-disk-size=%s' % RUNNER_BOOT_DISK_SIZE,
+            # Uncomment to increase RAM for KLEE.
+            # '--custom-memory=12GB',
+            # '--custom-cpu=2',
         ])
 
     if preemptible:
