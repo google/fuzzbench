@@ -19,6 +19,20 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-06-12-aflpp
+  description: "Benchmark AFL++ regressions"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_313
+    - aflplusplus_311
+    - aflplusplus_frida
+    - aflplusplus_frida_old
+    - aflplusplus_qemu
+    - aflplusplus_fcnt
+    - aflplusplus_flcnt
+    - aflplusplus_lcnt
+    - honggfuzz
+
 - experiment: 2021-06-11-aflpp-sat
   description: "Benchmark AFL++ (saturated)"
   oss-fuzz-corpus: true
