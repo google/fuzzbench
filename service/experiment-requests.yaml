@@ -19,6 +19,26 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-06-12-symccafl-pp
+  description: "Same as 2021-06-02-symccafl-pp but saturated"
+  oss-fuzz-corpus: true
+  fuzzers:
+    - symcc_afl
+    - symcc_afl_single
+    - symcc_aflplusplus
+    - afl_two_instances
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - entropic
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - lafintel
+    - libfuzzer
+    - mopt    
+
 - experiment: 2021-06-12-aflpp
   description: "Benchmark AFL++ regressions"
   fuzzers:
