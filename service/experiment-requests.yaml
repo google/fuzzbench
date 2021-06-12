@@ -23,7 +23,7 @@
   description: "Benchmark AFL++ regressions"
   fuzzers:
     - aflplusplus
-    - aflplusplus_314
+    - aflplusplus_313
     - aflplusplus_311
     - aflplusplus_frida
     - aflplusplus_frida_old
