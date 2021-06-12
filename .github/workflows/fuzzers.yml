@@ -72,9 +72,8 @@ jobs:
           - aflplusplus_x_eh
           - aflplusplus_x_trim
           - aflplusplus_x_default
+          - aflplusplus_frida_old
           - afl_two_instances
-          - aflplusplus_threadsafe
-          - aflplusplus_zero
 
         benchmark_type:
           - oss-fuzz
