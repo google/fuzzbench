@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,12 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/fuzzbench/base-image
+test -z "$1" -o -z "$2" -o '!' -e "$1" && exit 0
 
-# This makes interactive docker runs painless:
-ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
-#ENV AFL_MAP_SIZE=2621440
-ENV PATH="$PATH:/out"
-ENV AFL_SKIP_CPUFREQ=1
-ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
-ENV AFL_TESTCACHE_SIZE=2
+file "$1" | grep -q executable && {
+  nm "$1" | grep -i "T $2" | awk '{print"0x"$1}'
+  exit 0
+}
+
+nm "$1" | grep -i "T $2" | '{print$1}' | tr a-f A-F | \
+  xargs echo "ibase=16;obase=10;555555554000 + " | bc | tr A-F a-f
+exit 0
