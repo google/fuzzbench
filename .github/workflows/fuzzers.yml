@@ -37,6 +37,7 @@ jobs:
           - aflplusplus_qemu
           - honggfuzz_qemu
           - weizz_qemu
+          - libafl
           # Temporary variants.
           - aflplusplus_introspection
           - aflplusplus_introspection2

@@ -21,15 +21,14 @@ RUN apt-get update && \
                        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
                        apt-utils apt-transport-https ca-certificates
 
-# Download and compile afl++.
-RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && \
-    git checkout 35c23be9738882cefce854530fcb954c290e8f17
+# Download and compile libafl
+RUN git clone https://github.com/AFLplusplus/libafl libafl && \
+    cd libafl && \
+    git checkout 2b0dda0dc67c0098c76f0bf9e6ad282b96871591
 
-# Build without Python support as we don't need it.
-# Set AFL_NO_X86 to skip flaky tests.
-RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
-    export CC=clang && export AFL_NO_X86=1 && \
-    PYTHON_INCLUDE=/ make && make install && \
-    make -C utils/aflpp_driver && \
-    cp utils/aflpp_driver/libAFLDriver.a /
+RUN cd libafl && unset CFLAGS && unset CXXFLAGS && \
+    export CC=clang && export CXX=clang++ && \
+    cd libafl && cargo build --release && \
+    cd ../fuzzers/fuzzbench && cargo build --release
+
+RUN ar r /libAFLDriver.a
