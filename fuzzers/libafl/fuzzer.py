@@ -15,14 +15,13 @@
 """Integration code for AFLplusplus fuzzer."""
 
 import os
-import shutil
 import subprocess
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers import utils
 
 
-def build(*args):  # pylint: disable=too-many-branches,too-many-statements
+def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     afl_fuzzer.prepare_build_environment()
     os.environ['CC'] = '/libafl/fuzzers/fuzzbench/target/release/libafl_cc'
@@ -41,4 +40,3 @@ def fuzz(input_corpus, output_corpus, target_binary):
     command += ([output_corpus, input_corpus])
     print(command)
     subprocess.check_call(command, cwd=os.environ['OUT'])
-    
