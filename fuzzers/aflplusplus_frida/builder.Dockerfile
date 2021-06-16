@@ -22,7 +22,7 @@ RUN apt-get update && \
 
 # Download afl++
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && git checkout 35c23be9738882cefce854530fcb954c290e8f17
+    cd /afl && git checkout c46f8c1f70918056e95c801b1a81f11c79304b05
     
 # Build afl++ without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
