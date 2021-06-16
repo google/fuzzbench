@@ -16,6 +16,7 @@
 
 import os
 import shutil
+import subprocess
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers import utils
@@ -24,8 +25,8 @@ from fuzzers import utils
 def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     afl_fuzzer.prepare_build_environment()
-    os.environ['CC'] = '/libafl/fuzzers/fuzzbench/target/release/libafl_cc'
-    os.environ['CXX'] = '/libafl/fuzzers/fuzzbench/target/release/libafl_cxx'
+    os.environ['CC'] = '/src/libafl/fuzzers/fuzzbench/target/release/libafl_cc'
+    os.environ['CXX'] = '/src/libafl/fuzzers/fuzzbench/target/release/libafl_cxx'
     os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
     utils.build_benchmark()
 
@@ -34,9 +35,10 @@ def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     dictionary_path = utils.get_dictionary_path(target_binary)
-    command = (['./' + target_binary])
+    command = ([target_binary])
     if dictionary_path:
-        command.extend(['-x', dictionary_path])
-    command.extend= ([output_corpus, input_corpus])
+        command += (['-x', dictionary_path])
+    command += ([output_corpus, input_corpus])
+    print(command)
     subprocess.check_call(command, cwd=os.environ['OUT'])
     
