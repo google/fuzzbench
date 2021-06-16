@@ -22,11 +22,11 @@ RUN apt-get update && \
                        apt-utils apt-transport-https ca-certificates joe
 
 # Download and compile libafl
-RUN git clone https://github.com/AFLplusplus/libafl libafl && \
-    cd libafl && \
-    git checkout bc5a0217f814847f3e79164ffa01d5d2710da918
+RUN git clone https://github.com/AFLplusplus/libafl /libafl && \
+    cd /libafl && \
+    git checkout eac69cb14bd9c1d1ccc065d8ebec9da981d6eaef
 
-RUN cd libafl && unset CFLAGS && unset CXXFLAGS && \
+RUN cd /libafl && unset CFLAGS && unset CXXFLAGS && \
     export CC=clang && export CXX=clang++ && \
     cd libafl && cargo build --release && \
     cd ../fuzzers/fuzzbench && cargo build --release

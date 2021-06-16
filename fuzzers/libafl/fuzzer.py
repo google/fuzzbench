@@ -25,8 +25,8 @@ from fuzzers import utils
 def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     afl_fuzzer.prepare_build_environment()
-    os.environ['CC'] = '/src/libafl/fuzzers/fuzzbench/target/release/libafl_cc'
-    os.environ['CXX'] = '/src/libafl/fuzzers/fuzzbench/target/release/libafl_cxx'
+    os.environ['CC'] = '/libafl/fuzzers/fuzzbench/target/release/libafl_cc'
+    os.environ['CXX'] = '/libafl/fuzzers/fuzzbench/target/release/libafl_cxx'
     os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
     utils.build_benchmark()
 
