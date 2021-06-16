@@ -19,6 +19,33 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-06-12-aflpp-bug
+  description: "Benchmark libafl and cnt variants"
+  type: bug
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_fcnt
+    - aflplusplus_flcnt
+    - aflplusplus_lcnt
+    - honggfuzz
+    - entropic
+    - libafl
+
+- experiment: 2021-06-16-aflpp
+  description: "Benchmark libafl and frida regressions"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_313
+    - aflplusplus_311
+    - aflplusplus_frida
+    - aflplusplus_frida_old
+    - aflplusplus_frida_new
+    - aflplusplus_qemu
+    - honggfuzz
+    - entropic
+    - libafl
+    - afl
+
 - experiment: 2021-06-12-symccafl-pp
   description: "Same as 2021-06-02-symccafl-pp but saturated"
   oss-fuzz-corpus: true

@@ -62,18 +62,9 @@ jobs:
           - symcc_afl
           - symcc_aflplusplus
           - symcc_afl_single
-          - aflplusplus_x
-          - aflplusplus_x_c1
-          - aflplusplus_x_c1a
-          - aflplusplus_x_c1t
-          - aflplusplus_x_c2
-          - aflplusplus_x_c2a
-          - aflplusplus_x_c2t
-          - aflplusplus_x_d2f
-          - aflplusplus_x_eh
-          - aflplusplus_x_trim
           - aflplusplus_x_default
           - aflplusplus_frida_old
+          - aflplusplus_frida_new
           - afl_two_instances
 
         benchmark_type:
