@@ -65,6 +65,8 @@ jobs:
           - aflplusplus_frida_old
           - aflplusplus_frida_new
           - afl_two_instances
+          - afl_no_favored
+          - afl_random_favored
 
         benchmark_type:
           - oss-fuzz
