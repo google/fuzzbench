@@ -31,6 +31,7 @@ jobs:
           - libfuzzer
           - mopt
           - neuzz
+          - libafl
           # Binary-only (greybox) fuzzers.
           - eclipser
           - afl_qemu

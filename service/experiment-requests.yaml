@@ -19,6 +19,16 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-06-18-libafl
+  description: "Libafl experiment"
+  fuzzers:
+    - libafl
+    - aflplusplus
+    - aflplusplus_x_default
+    - entropic
+    - honggfuzz
+    - afl
+
 - experiment: 2021-06-17-favored-seeds
   description: "Evaluating experimental methods to favor seeds"
   fuzzers:
