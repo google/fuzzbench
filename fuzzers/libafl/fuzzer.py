@@ -19,6 +19,7 @@ import subprocess
 
 from fuzzers import utils
 
+
 def prepare_fuzz_environment(input_corpus):
     """Prepare to fuzz with a LibAFL-based fuzzer."""
     # Create at least one non-empty seed to start.
