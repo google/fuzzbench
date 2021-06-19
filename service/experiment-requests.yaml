@@ -25,6 +25,8 @@
     - libafl
     - aflplusplus
     - aflplusplus_x_default
+    - aflplusplus_num
+    - aflplusplus_select
     - entropic
     - honggfuzz
     - afl
