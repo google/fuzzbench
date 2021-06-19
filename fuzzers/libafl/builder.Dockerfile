@@ -24,7 +24,7 @@ RUN apt-get update && \
 # Download and compile libafl
 RUN git clone https://github.com/AFLplusplus/libafl /libafl && \
     cd /libafl && \
-    git checkout 6c926c4841fd0f528976f73e07dfd5d30831adcb
+    git checkout 148088aa30fef5b2c1d57089f22dc62850cb2487
 
 RUN cd /libafl && unset CFLAGS && unset CXXFLAGS && \
     export CC=clang && export CXX=clang++ && \
