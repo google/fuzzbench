@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit: 99fdffaa194cbfed659b0c1bfd0ace4bfcd2a245
-commit_date: 2020-02-10 16:19:52+00:00
-fuzz_target: fuzz-link-parser
-project: systemd
-unsupported_fuzzers:
-  - aflcc
-  - klee
-  - libafl
+FROM gcr.io/fuzzbench/base-image
+
+# This makes interactive docker runs painless:
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
+#ENV AFL_MAP_SIZE=2621440
+ENV PATH="$PATH:/out"
+ENV AFL_SKIP_CPUFREQ=1
+ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
+ENV AFL_TESTCACHE_SIZE=2
