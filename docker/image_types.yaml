@@ -65,6 +65,20 @@
   tag: 'builders/{fuzzer}/{benchmark}-intermediate'
   type: 'builder'
 
+'{fuzzer}-{benchmark}-builder-debug':
+  build_arg:
+    - 'debug_builder=1'
+    - 'benchmark={benchmark}'
+    - 'fuzzer={fuzzer}'
+    - 'parent_image=gcr.io/fuzzbench/builders/{fuzzer}/{benchmark}-intermediate'
+  depends_on:
+    - '{fuzzer}-{benchmark}-builder-intermediate'
+    - 'base-image'
+  dockerfile: 'docker/benchmark-builder/Dockerfile'
+  context: '.'
+  tag: 'builders/{fuzzer}/{benchmark}'
+  type: 'builder'
+
 '{fuzzer}-{benchmark}-builder':
   build_arg:
     - 'benchmark={benchmark}'

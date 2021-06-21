@@ -42,14 +42,18 @@ def _get_makefile_run_template(image):
     benchmark = image['benchmark']
     section = ''
 
-    run_types = ['run', 'debug', 'test-run']
+    run_types = ['run', 'debug', 'test-run', 'debug-builder']
     testcases_dir = os.path.join(BENCHMARK_DIR, benchmark, 'testcases')
     if os.path.exists(testcases_dir):
         run_types.append('repro-bugs')
 
     for run_type in run_types:
-        section += (
-            f'{run_type}-{fuzzer}-{benchmark}: .{fuzzer}-{benchmark}-runner\n')
+        if run_type == 'debug-builder':
+            section += f'{run_type}-{fuzzer}-{benchmark}: '
+            section += f'.{fuzzer}-{benchmark}-builder-debug\n'
+        else:
+            section += f'{run_type}-{fuzzer}-{benchmark}: '
+            section += f'.{fuzzer}-{benchmark}-runner\n'
 
         section += f'\
 \tdocker run \\\n\
@@ -68,6 +72,8 @@ def _get_makefile_run_template(image):
             section += '\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\\n'
         if run_type == 'debug':
             section += '\t--entrypoint "/bin/bash" \\\n\t-it '
+        if run_type == 'debug-builder':
+            section += '\t-e DEBUG_BUILDER=1 \\\n\t-it '
         elif run_type == 'repro-bugs':
             section += f'\t-v {testcases_dir}:/testcases \\\n\t'
             section += '--entrypoint /bin/bash '
@@ -84,7 +90,11 @@ def _get_makefile_run_template(image):
         else:
             section += '\t'
 
-        section += os.path.join(BASE_TAG, image['tag'])
+        if run_type != 'debug-builder':
+            section += os.path.join(BASE_TAG, image['tag'])
+        else:
+            section += os.path.join(
+                BASE_TAG, image['tag'].replace('runners/', 'builders/', 1))
         section += '\n\n'
     return section
 
@@ -119,7 +129,7 @@ def get_rules_for_image(name, image):
     section += '\t' + image['context'] + '\n'
     section += '\n'
 
-    # Print run, debug, test-run rules if image is a runner.
+    # Print run, debug, test-run and debug-builder rules if image is a runner.
     if 'runner' in name and not ('intermediate' in name or 'base' in name):
         section += _get_makefile_run_template(image)
     return section
