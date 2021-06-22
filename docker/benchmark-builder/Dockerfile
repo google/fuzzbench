@@ -21,9 +21,11 @@ FROM $parent_image
 
 ARG fuzzer
 ARG benchmark
+ARG debug_builder
 
 ENV FUZZER $fuzzer
 ENV BENCHMARK $benchmark
+ENV DEBUG_BUILDER $debug_builder
 
 # Copy latest python3 from base-image into local.
 COPY --from=base-image /usr/local/bin/python3* /usr/local/bin/
@@ -47,5 +49,9 @@ RUN mkdir /opt/fuzzbench/
 COPY docker/benchmark-builder/checkout_commit.py /opt/fuzzbench/
 RUN export CHECKOUT_COMMIT=$(cat /benchmark.yaml | tr -d ' ' | grep 'commit:' | cut -d ':' -f2) && \
     python3 -u /opt/fuzzbench/checkout_commit.py $CHECKOUT_COMMIT $SRC
-RUN PYTHONPATH=$SRC python3 -u -c "from fuzzers import utils; utils.initialize_env(); from fuzzers.$FUZZER import fuzzer; fuzzer.build()"
+RUN echo "#!/bin/bash\nPYTHONPATH=$SRC python3 -u -c \"from fuzzers import utils; utils.initialize_env(); from fuzzers.$FUZZER import fuzzer; fuzzer.build()\"" > /usr/bin/fuzzer_build && \
+    chmod +x /usr/bin/fuzzer_build
+RUN if [ -z "$debug_builder" ] ; then fuzzer_build; fi
 
+ENTRYPOINT echo "Run fuzzer_build to build the target" && \
+           /bin/bash

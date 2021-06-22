@@ -26,15 +26,18 @@ def test_images_to_build_list():
         'base-image', 'worker', 'dispatcher-image', 'libxml-project-builder',
         'libpng-project-builder', 'afl-libxml-builder-intermediate',
         'afl-libxml-intermediate-runner', 'afl-libxml-builder',
-        'coverage-libxml-builder', 'afl-libpng-builder',
+        'afl-libxml-builder-debug', 'coverage-libxml-builder',
+        'afl-libpng-builder', 'afl-libpng-builder-debug',
         'afl-libpng-intermediate-runner', 'afl-libpng-builder-intermediate',
         'afl-libpng-runner', 'libfuzzer-libxml-builder-intermediate',
-        'libfuzzer-libxml-builder', 'libfuzzer-libpng-builder-intermediate',
+        'libfuzzer-libxml-builder', 'libfuzzer-libxml-builder-debug',
+        'libfuzzer-libpng-builder-intermediate',
         'libfuzzer-libxml-intermediate-runner', 'libfuzzer-libxml-runner',
-        'libfuzzer-libpng-builder', 'libfuzzer-libpng-intermediate-runner',
-        'libfuzzer-libpng-runner', 'coverage-libxml-builder-intermediate',
-        'coverage-libpng-builder', 'coverage-libxml-builder-intermediate',
-        'afl-libxml-runner', 'coverage-libpng-builder-intermediate'
+        'libfuzzer-libpng-builder', 'libfuzzer-libpng-builder-debug',
+        'libfuzzer-libpng-intermediate-runner', 'libfuzzer-libpng-runner',
+        'coverage-libxml-builder-intermediate', 'coverage-libpng-builder',
+        'coverage-libxml-builder-intermediate', 'afl-libxml-runner',
+        'coverage-libpng-builder-intermediate'
     ])
 
 
