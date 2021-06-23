@@ -51,6 +51,7 @@ jobs:
           - aflplusplus_313
           - aflplusplus_frida
           - aflplusplus_num
+          - aflplusplus_select
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
           - aflplusplus_unusual_partial
