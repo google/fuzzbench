@@ -29,6 +29,8 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
 RUN cd /afl && \
     unset CFLAGS && unset CXXFLAGS && \
     AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
+    cd qemu_mode && git submodule init && \
+    git submodule update ./qemuafl && cd .. && \
     cd frida_mode && make && cd .. && \
     make -C utils/aflpp_driver && \
     cp utils/aflpp_driver/libAFLQemuDriver.a /libAFLDriver.a && \
