@@ -71,7 +71,8 @@ def _get_makefile_run_template(image):
         if run_type == 'test-run':
             section += '\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\\n'
         if run_type == 'debug-builder':
-            section += '\t-e DEBUG_BUILDER=1 \\\n\t-it '
+            section += '\t-e DEBUG_BUILDER=1 \\\n'
+            section += '\t--entrypoint "/bin/bash" \\\n\t-it '
         elif run_type == 'debug':
             section += '\t--entrypoint "/bin/bash" \\\n\t-it '
         elif run_type == 'repro-bugs':
