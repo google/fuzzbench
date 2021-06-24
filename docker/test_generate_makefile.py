@@ -117,5 +117,5 @@ def test_get_rules_for_runner_image():
 \t-e BENCHMARK=zlib \\\n\
 \t-e FUZZ_TARGET=$(zlib-fuzz-target) \\\n\
 \t-e DEBUG_BUILDER=1 \\\n\
-\t--entrypoint "/bin/bash \\\
+\t--entrypoint "/bin/bash" \\\
 \n') + '\t-it gcr.io/fuzzbench/builders/afl/zlib\n\n')
