@@ -44,17 +44,16 @@ jobs:
           - aflplusplus_dict2file
           - aflplusplus_cmplog
           - aflplusplus_flcnt
-          - aflplusplus_optimal_flcnt
           - aflplusplus_fcnt
-          - aflplusplus_optimal_fcnt
           - aflplusplus_lcnt
-          - aflplusplus_optimal_lcnt
           - aflplusplus_311
           - aflplusplus_312
           - aflplusplus_313
           - aflplusplus_frida
           - aflplusplus_num
           - aflplusplus_select
+          - aflplusplus_cmplog_old
+          - aflplusplus_cmplog_new
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
           - aflplusplus_unusual_partial
@@ -67,8 +66,6 @@ jobs:
           - symcc_aflplusplus
           - symcc_afl_single
           - aflplusplus_x_default
-          - aflplusplus_frida_old
-          - aflplusplus_frida_new
           - afl_two_instances
           - afl_no_favored
           - afl_random_favored
