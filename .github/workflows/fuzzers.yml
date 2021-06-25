@@ -60,6 +60,13 @@ jobs:
           - aflplusplus_unusual_partial_early
           - aflplusplus_unusual_enabled_early
           # Concolic execution
+          - aflplusplus_cmplog_double
+          - aflplusplus_qemu_double
+          - fuzzolic_aflplusplus_z3
+          - fuzzolic_aflplusplus_fuzzy
+          - eclipser_aflplusplus
+          - symqemu_aflplusplus
+          - symcc_aflplusplus_single
           - symcc_afl
           - symcc_aflplusplus
           - symcc_afl_single
