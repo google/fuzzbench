@@ -59,6 +59,8 @@ jobs:
           - aflplusplus_unusual_partial
           - aflplusplus_unusual_partial_early
           - aflplusplus_unusual_enabled_early
+          - aflprefix
+          - dropfuzzer
           # Concolic execution
           - aflplusplus_cmplog_double
           - aflplusplus_qemu_double
