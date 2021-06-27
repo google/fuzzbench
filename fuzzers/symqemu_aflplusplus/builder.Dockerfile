@@ -49,9 +49,9 @@ ENV CXXFLAGS=""
 
 # Get and install symcc.
 RUN cd / && \
-    git clone https://github.com/vanhauser-thc/adacc symcc && \
+    git clone https://github.com/adalogics/adacc symcc && \
     cd symcc && \
-    git checkout 72b5687a6e3d1e5e477b10e77dd0047611b6b5b9 && \
+    git checkout edda79dcb830c95ba6d303e47c698839313ef506 && \
     cd ./runtime/qsym_backend && \
     git clone https://github.com/adalogics/qsym && \
     cd qsym && \

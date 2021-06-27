@@ -113,8 +113,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
     new_environ['LD_LIBRARY_PATH'] = symcc_workdir
     cmd = [
         os.path.join(symcc_workdir,
-                     "symcc_fuzzing_helper"), "-Q", "-o", output_corpus, "-a",
-        "afl-secondary", "-n", "symqemu", "-S0", "-W", "--",
+                     "symcc_fuzzing_helper"), "-o", output_corpus, "-a",
+        "afl-secondary", "-n", "symqemu", "-m", "--",
         symqemu_target, symcc_target_binary, "@@"
     ]
     print("RUnning command: %s"%(" ".join(cmd)))
