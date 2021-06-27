@@ -25,6 +25,7 @@ def get_uninstrumented_outdir(target_directory):
     """Return path to uninstrumented target directory."""
     return os.path.join(target_directory, 'uninstrumented')
 
+
 def build():
     """Build benchmark."""
     build_directory = os.getenv('OUT')
@@ -60,7 +61,8 @@ def afl_worker2(input_corpus, output_corpus, target_binary):
                             output_corpus,
                             target_binary,
                             flags=(['-S', 'afl-worker2', '-Q', '-c0']),
-                            skip=True, no_cmplog=True)
+                            skip=True,
+                            no_cmplog=True)
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
@@ -73,6 +75,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     afl_worker_thread = threading.Thread(target=afl_worker1, args=afl_args)
     afl_worker_thread.start()
     print('[fuzz] Running AFL workser 2')
+    target_binary_directory = os.path.dirname(target_binary)
     uninstrumented_target_binary_directory = (
         get_uninstrumented_outdir(target_binary_directory))
     target_binary_name = os.path.basename(target_binary)

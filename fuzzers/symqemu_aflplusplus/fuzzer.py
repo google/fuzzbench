@@ -19,7 +19,6 @@ import shutil
 import threading
 import subprocess
 
-from fuzzers import utils
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
@@ -112,10 +111,9 @@ def fuzz(input_corpus, output_corpus, target_binary):
     new_environ = os.environ.copy()
     new_environ['LD_LIBRARY_PATH'] = symcc_workdir
     cmd = [
-        os.path.join(symcc_workdir,
-                     "symcc_fuzzing_helper"), "-o", output_corpus, "-a",
-        "afl-secondary", "-n", "symqemu", "-m", "--",
+        os.path.join(symcc_workdir, "symcc_fuzzing_helper"), "-o",
+        output_corpus, "-a", "afl-secondary", "-n", "symqemu", "-m", "--",
         symqemu_target, symcc_target_binary, "@@"
     ]
-    print("RUnning command: %s"%(" ".join(cmd)))
+    print("Running command: %s" % (" ".join(cmd)))
     subprocess.Popen(cmd, env=new_environ)

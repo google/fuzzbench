@@ -76,16 +76,17 @@ def fuzzolic(input_corpus, output_corpus, target_binary):
     # We will use output_corpus as a directory where AFL and Fuzzolic sync their
     # test cases with each other. For Fuzzolic, we should explicitly specify an
     # output directory under this sync directory.
-    fuzzolic_out = os.path.join(output_corpus, "fuzzolic_output")
+    if input_corpus:
+        fuzzolic_out = os.path.join(output_corpus, "fuzzolic_output")
     afl_out = os.path.join(output_corpus, "afl-worker")
     afl_queue = os.path.join(afl_out, "queue")
     command = [
         '/out/fuzzolic/fuzzolic/fuzzolic.py',
-        '-f', # fuzzy-sat solver
-        '-p', # optimistic solving
-        '-r', # address reasoning
-        '-l', # symbolic libc models
-        '-t', # timeout
+        '-f',  # fuzzy-sat solver
+        '-p',  # optimistic solving
+        '-r',  # address reasoning
+        '-l',  # symbolic libc models
+        '-t',  # timeout
         '90000',
         '-a',
         afl_out,
@@ -114,12 +115,12 @@ def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     #utils.create_seed_file_for_empty_corpus(input_corpus)
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
- 
+
     print('[fuzz] Running AFL worker')
     afl_args = (input_corpus, output_corpus, target_binary)
     afl_worker_thread = threading.Thread(target=afl_worker, args=afl_args)
     afl_worker_thread.start()
- 
+
     print('[fuzz] Running Fuzzolic')
     target_binary_directory = os.path.dirname(target_binary)
     uninstrumented_target_binary_directory = (
