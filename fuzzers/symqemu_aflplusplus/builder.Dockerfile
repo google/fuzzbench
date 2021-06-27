@@ -73,3 +73,24 @@ RUN cd / && \
     clang -O2 -c /StandaloneFuzzTargetMain.c && \
     ar rc /libStandaloneFuzzTarget.a StandaloneFuzzTargetMain.o && \
     rm /StandaloneFuzzTargetMain.c
+
+
+RUN git clone https://github.com/eurecom-s3/symqemu --depth 1 /symqemu/src
+RUN mkdir /symqemu/build && \
+    cd /symqemu/build && \
+    ../src/configure                                              \
+      --audio-drv-list=                                           \
+      --disable-bluez                                             \
+      --disable-sdl                                               \
+      --disable-gtk                                               \
+      --disable-vte                                               \
+      --disable-opengl                                            \
+      --disable-virglrenderer                                     \
+      --target-list=x86_64-linux-user                             \
+      --enable-capstone=git                                       \
+      --disable-werror                                            \
+      --symcc-source=/symcc/                                  \
+      --symcc-build=/symcc/build  && \
+    make && \
+    cd /symqemu && \
+    rm -rf src
