@@ -18,3 +18,5 @@ fuzz_target: fuzz_target
 project: bloaty
 unsupported_fuzzers:
   - klee
+  - fuzzolic_aflplusplus_fuzzy
+  - fuzzolic_aflplusplus_z3
