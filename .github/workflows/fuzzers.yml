@@ -50,10 +50,6 @@ jobs:
           - aflplusplus_312
           - aflplusplus_313
           - aflplusplus_frida
-          - aflplusplus_num
-          - aflplusplus_select
-          - aflplusplus_cmplog_old
-          - aflplusplus_cmplog_new
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
           - aflplusplus_unusual_partial
@@ -72,7 +68,6 @@ jobs:
           - symcc_afl
           - symcc_aflplusplus
           - symcc_afl_single
-          - aflplusplus_x_default
           - afl_two_instances
           - afl_no_favored
           - afl_random_favored

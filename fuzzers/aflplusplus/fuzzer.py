@@ -53,6 +53,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'lto' in build_modes:
         os.environ['CC'] = '/afl/afl-clang-lto'
         os.environ['CXX'] = '/afl/afl-clang-lto++'
+        os.environ['AFL_LLVM_DOCUMENT_IDS'] = build_directory + '/aflpp_edges.txt'
         if os.path.isfile('/usr/local/bin/llvm-ranlib-13'):
             os.environ['RANLIB'] = 'llvm-ranlib-13'
             os.environ['AR'] = 'llvm-ar-13'
@@ -219,6 +220,8 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False, 
 
     if not skip:
         os.environ['AFL_DISABLE_TRIM'] = "1"
+        # os.environ['AFL_FAST_CAL'] = '1'
+        os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
         if 'ADDITIONAL_ARGS' in os.environ:
             flags += os.environ['ADDITIONAL_ARGS'].split(' ')
 
