@@ -42,6 +42,10 @@ def build():
 
     aflplusplus_fuzzer.build("tracepc")
     shutil.copy('/afl/afl-fuzz', build_directory)
+    if os.path.exists('/afl/afl-qemu-trace'):
+        shutil.copy('/afl/afl-qemu-trace', build_directory)
+    if os.path.exists('/aflpp_qemu_driver_hook.so'):
+        shutil.copy('/aflpp_qemu_driver_hook.so', build_directory)
 
 
 def afl_worker1(input_corpus, output_corpus, target_binary):

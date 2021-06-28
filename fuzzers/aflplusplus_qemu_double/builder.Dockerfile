@@ -26,11 +26,15 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
     git checkout 28e6b96276066a69482fdb17b38a71ba98abd700
 
+RUN cd / && wget https://github.com/ninja-build/ninja/releases/download/v1.10.1/ninja-linux.zip && \
+    unzip ninja-linux.zip && chmod 755 ninja && mv ninja /usr/local/bin
+
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
     export CC=clang && export AFL_NO_X86=1 && \
     PYTHON_INCLUDE=/ make && make install && \
+    cd qemu_mode && ./build_qemu_support.sh && cd .. && \
     make -C utils/aflpp_driver && \
     cp utils/aflpp_driver/libAFLDriver.a /
 
