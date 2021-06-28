@@ -24,7 +24,7 @@ RUN apt-get update && \
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout fc43d786729bc5bb7a955527dc32e7b30890c61c
+    git checkout 28e6b96276066a69482fdb17b38a71ba98abd700
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
@@ -33,3 +33,10 @@ RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
     PYTHON_INCLUDE=/ make && make install && \
     make -C utils/aflpp_driver && \
     cp utils/aflpp_driver/libAFLDriver.a /
+
+# Eclipser special
+RUN cd / && \
+    wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/standalone/StandaloneFuzzTargetMain.c -O /StandaloneFuzzTargetMain.c && \
+    clang -O2 -c /StandaloneFuzzTargetMain.c && \
+    ar rc /libStandaloneFuzzTarget.a StandaloneFuzzTargetMain.o && \
+    rm /StandaloneFuzzTargetMain.c

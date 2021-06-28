@@ -53,6 +53,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'lto' in build_modes:
         os.environ['CC'] = '/afl/afl-clang-lto'
         os.environ['CXX'] = '/afl/afl-clang-lto++'
+        edge_file = build_directory + '/aflpp_edges.txt'
+        os.environ['AFL_LLVM_DOCUMENT_IDS'] = edge_file
         if os.path.isfile('/usr/local/bin/llvm-ranlib-13'):
             os.environ['RANLIB'] = 'llvm-ranlib-13'
             os.environ['AR'] = 'llvm-ar-13'
@@ -194,7 +196,13 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         shutil.copy('/get_frida_entry.sh', build_directory)
 
 
-def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
+# pylint: disable=too-many-arguments
+def fuzz(input_corpus,
+         output_corpus,
+         target_binary,
+         flags=tuple(),
+         skip=False,
+         no_cmplog=False):  # pylint: disable=too-many-arguments
     """Run fuzzer."""
     # Calculate CmpLog binary path from the instrumented target binary.
     target_binary_directory = os.path.dirname(target_binary)
@@ -213,12 +221,15 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
 
     if os.path.exists('./afl++.dict'):
         flags += ['-x', './afl++.dict']
+
     # Move the following to skip for upcoming _double tests:
-    if os.path.exists(cmplog_target_binary):
+    if os.path.exists(cmplog_target_binary) and no_cmplog is not False:
         flags += ['-c', cmplog_target_binary]
 
     if not skip:
         os.environ['AFL_DISABLE_TRIM'] = "1"
+        # os.environ['AFL_FAST_CAL'] = '1'
+        os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
         if 'ADDITIONAL_ARGS' in os.environ:
             flags += os.environ['ADDITIONAL_ARGS'].split(' ')
 
