@@ -44,22 +44,22 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /out/AFLplusplus &&
     cd /out/AFLplusplus && \
     git checkout 28e6b96276066a69482fdb17b38a71ba98abd700
 
-ENV CC=clang
-ENV CXX=clang++
-
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
-RUN cd /out/AFLplusplus && unset CFLAGS && unset CXXFLAGS && \
+RUN cd /out/AFLplusplus && \
+    unset CFLAGS && unset CXXFLAGS && \
     export AFL_NO_X86=1 && \
+    export CC=clang && export CXX=clang++ && \
     PYTHON_INCLUDE=/ make && \
     make -C utils/aflpp_driver && \
     cp utils/aflpp_driver/libAFLDriver.a / && \
     make install
 
-
 RUN cd / && git clone https://github.com/vanhauser-thc/qemu_driver && \
     cd /qemu_driver && \
     git checkout 499134f3aa34ce9c3d7f87f33b1722eec6026362 && \
+    unset CFLAGS && unset CXXFLAGS && \
+    export CC=clang && export CXX=clang++ && \
     make && \
     cp -fv libQEMU.a /libStandaloneFuzzTarget.a
 
@@ -86,29 +86,29 @@ RUN apt install -y \
         llvm-3.9 cmake libc6 libstdc++6 \
         linux-libc-dev gcc-multilib \
         apt-transport-https libtool \
-        libtool-bin wget \
+        libtool-bin wget joe \
         automake autoconf \
         bison git valgrind ninja-build \
         time python3-pip
 # dumb-init xxd libprotobuf10
 
 RUN apt clean -y
-
-ENV CFLAGS="-O3 -g -funroll-loops -Wno-error"
-ENV CXXFLAGS="-O3 -g -funroll-loops -Wno-error"
 RUN pip install --user virtualenv
 RUN python3 -m pip install --user pytest
 
 # Build QEMU tracer
-RUN cd /out/fuzzolic/tracer && ./configure --prefix=`pwd`/../build --target-list=x86_64-linux-user && make -j 
+RUN cd /out/fuzzolic/tracer && \
+    export CC=clang && export CXX=clang++ && \
+    export CFLAGS="-O3 -g -funroll-loops -Wno-error" && \
+    export CXXFLAGS="-O3 -g -funroll-loops -Wno-error" && \
+    ./configure --prefix=`pwd`/../build --target-list=x86_64-linux-user && make -j
 
 # Build custom Z3
-RUN cd /out/fuzzolic/solver/fuzzy-sat/fuzzolic-z3 && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=`pwd`/dist && make -j && make install
-
-# Set environment vars for Z3
-ENV C_INCLUDE_PATH=/out/fuzzolic/solver/fuzzy-sat/fuzzolic-z3/build/dist/include
-ENV LIBRARY_PATH=/out/fuzzolic/solver/fuzzy-sat/fuzzolic-z3/build/dist/lib
-ENV LD_LIBRARY_PATH=/out/fuzzolic/solver/fuzzy-sat/fuzzolic-z3/build/dist/lib
+RUN cd /out/fuzzolic/solver/fuzzy-sat/fuzzolic-z3 && \
+    export CC=clang && export CXX=clang++ && \
+    export CFLAGS="-O3 -g -funroll-loops -Wno-error" && \
+    export CXXFLAGS="-O3 -g -funroll-loops -Wno-error" && \
+    mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=`pwd`/dist && make -j && make install
 
 # Create fuzzy-sat-CLI folder
 RUN cd /out/fuzzolic/solver/fuzzy-sat && \
@@ -123,16 +123,50 @@ RUN cd /out/fuzzolic/solver/fuzzy-sat && \
     git submodule update
 
 # Build fuzzy-sat-CLI
-RUN cd /out/fuzzolic/solver/fuzzy-sat-cli && make -j
+RUN cd /out/fuzzolic/solver/fuzzy-sat-cli && \
+    export CC=clang && export CXX=clang++ && \
+    export CFLAGS="-O3 -g -funroll-loops -Wno-error" && \
+    export CXXFLAGS="-O3 -g -funroll-loops -Wno-error" && \
+    export C_INCLUDE_PATH=/out/fuzzolic/solver/fuzzy-sat/fuzzolic-z3/build/dist/include && \
+    export LIBRARY_PATH=/out/fuzzolic/solver/fuzzy-sat/fuzzolic-z3/build/dist/lib && \
+    export LD_LIBRARY_PATH=/out/fuzzolic/solver/fuzzy-sat/fuzzolic-z3/build/dist/lib && \
+    make -j
 
 # Build fuzzy-sat
-RUN cd /out/fuzzolic/solver/fuzzy-sat && make -j
-
-ENV CFLAGS="-O3 -g -funroll-loops -Wno-error -Wl,--allow-multiple-definition"
-ENV CXXFLAGS="-O3 -g -funroll-loops -Wno-error -Wl,--allow-multiple-definition"
+RUN cd /out/fuzzolic/solver/fuzzy-sat && \
+    export CC=clang && export CXX=clang++ && \
+    export CFLAGS="-O3 -g -funroll-loops -Wno-error" && \
+    export CXXFLAGS="-O3 -g -funroll-loops -Wno-error" && \
+    export C_INCLUDE_PATH=/out/fuzzolic/solver/fuzzy-sat/fuzzolic-z3/build/dist/include && \
+    export LIBRARY_PATH=/out/fuzzolic/solver/fuzzy-sat/fuzzolic-z3/build/dist/lib && \
+    export LD_LIBRARY_PATH=/out/fuzzolic/solver/fuzzy-sat/fuzzolic-z3/build/dist/lib && \
+    make -j
 
 # Build solver frontend
-RUN cd /out/fuzzolic/solver && cmake . && make -j
+RUN cd /out/fuzzolic/solver && \
+    export CC=clang && export CXX=clang++ && \
+    export CFLAGS="-O3 -g -funroll-loops -Wno-error -Wl,--allow-multiple-definition" && \
+    export CXXFLAGS="-O3 -g -funroll-loops -Wno-error -Wl,--allow-multiple-definition" && \
+    export C_INCLUDE_PATH=/out/fuzzolic/solver/fuzzy-sat/fuzzolic-z3/build/dist/include && \
+    export LIBRARY_PATH=/out/fuzzolic/solver/fuzzy-sat/fuzzolic-z3/build/dist/lib && \
+    export LD_LIBRARY_PATH=/out/fuzzolic/solver/fuzzy-sat/fuzzolic-z3/build/dist/lib && \
+    cmake . && make -j
 
 # Fix fuzzolic
 RUN sed -i 's/FROM_FILE/READ_FD_0/' /out/fuzzolic/fuzzolic/executor.py
+
+# Remove packages that make benchmark builds fail otherwise
+RUN apt-get remove -y -m -f \
+ binfmt-support clang-3.8 cpp-4.8 g++-5-multilib gcc-4.8-base gdbserver \
+ lib32stdc++-5-dev libbabeltrace-ctf1 libbabeltrace1 libc6-dbg \
+ libcapstone3 libclang-common-3.8-dev libclang-common-8-dev libclang1-3.8 \
+ libclang1-8 libcloog-isl4 libexpat1-dev libffi-dev libgcc-4.8-dev \
+ libibverbs1 libjbig0 libjpeg62 libllvm3.8 libllvm3.9 libllvm8 libobjc-5-dev \
+ libobjc4 libomp-8-dev libomp5-8 libprotobuf-lite9v5 libpython-all-dev \
+ libpython-dev libpython2.7 libpython2.7-dev libpython3-dev libpython3.5 \
+ libpython3.5-dev libstdc++-4.8-dev libx32stdc++-5-dev llvm-3.8 llvm-3.8-dev \
+ llvm-3.8-runtime llvm-3.9-dev llvm-3.9-runtime llvm-8-dev llvm-8-runtime \
+ llvm-runtime python-all python-all-dev python-dev python-pip-whl \
+ python-pkg-resources python-setuptools python-wheel python2.7-dev \
+ python3.5-dev qemu-user-binfmt
+RUN apt-get autoremove -y && apt-get clean -y
