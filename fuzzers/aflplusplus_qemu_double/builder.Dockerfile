@@ -38,8 +38,16 @@ RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
     make -C utils/aflpp_driver && \
     cp utils/aflpp_driver/libAFLDriver.a /
 
-RUN cd / && \
-    wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/standalone/StandaloneFuzzTargetMain.c -O /StandaloneFuzzTargetMain.c && \
-    clang -O2 -c /StandaloneFuzzTargetMain.c && \
-    ar rc /libStandaloneFuzzTarget.a StandaloneFuzzTargetMain.o && \
-    rm /StandaloneFuzzTargetMain.c
+#RUN cd / && \
+#    wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/standalone/StandaloneFuzzTargetMain.c -O /StandaloneFuzzTargetMain.c && \
+#    clang -O2 -c /StandaloneFuzzTargetMain.c && \
+#    ar rc /libStandaloneFuzzTarget.a StandaloneFuzzTargetMain.o && \
+#    rm /StandaloneFuzzTargetMain.c
+
+RUN cd / && git clone https://github.com/vanhauser-thc/qemu_driver && \
+    cd /qemu_driver && \
+    git checkout 8ad9ad589b4881552fa7ef8b7d29cd9aeb5071bd && \
+    unset CFLAGS && unset CXXFLAGS && \
+    export CC=clang && export CXX=clang++ && \
+    make && \
+    cp -fv libQEMU.a /libStandaloneFuzzTarget.a
