@@ -18,6 +18,7 @@ import shutil
 import subprocess
 import os
 import threading
+import time
 
 from fuzzers import utils
 from fuzzers.afl import fuzzer as afl_fuzzer
