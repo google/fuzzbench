@@ -44,7 +44,7 @@ def build():
         # Restore SRC to its initial state so we can build again without any
         # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
         # twice in the same directory without this.
-        aflplusplus_fuzzer.build()
+        aflplusplus_fuzzer.build("tracepc")
 
     print("Step 2: Completed AFL build")
     # Copy over AFL artifacts needed by SymCC.
