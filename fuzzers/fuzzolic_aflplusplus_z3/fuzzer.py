@@ -119,6 +119,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     afl_args = (input_corpus, output_corpus, target_binary)
     afl_worker_thread = threading.Thread(target=afl_worker, args=afl_args)
     afl_worker_thread.start()
+    time.sleep(5)
 
     print('[fuzz] Running Fuzzolic')
     target_binary_directory = os.path.dirname(target_binary)
