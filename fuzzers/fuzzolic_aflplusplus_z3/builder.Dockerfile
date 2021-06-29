@@ -30,7 +30,7 @@ RUN cd / && wget https://github.com/ninja-build/ninja/releases/download/v1.10.1/
 
 RUN git clone https://github.com/season-lab/fuzzolic /out/fuzzolic && \
     cd /out/fuzzolic && \
-    git checkout 2c5e423aa38d9cf0692e4e812ec33b9e8c6beaa0
+    git checkout f03884e59a86af812214166ad1d5bdbda92aa23a
 
 RUN cd /out/fuzzolic && \
     git submodule init && \
@@ -150,9 +150,6 @@ RUN cd /out/fuzzolic/solver && \
     export LIBRARY_PATH=/out/fuzzolic/solver/fuzzy-sat/fuzzolic-z3/build/dist/lib && \
     export LD_LIBRARY_PATH=/out/fuzzolic/solver/fuzzy-sat/fuzzolic-z3/build/dist/lib && \
     cmake . && make -j
-
-# Fix fuzzolic
-RUN sed -i 's/FROM_FILE/READ_FD_0/' /out/fuzzolic/fuzzolic/executor.py
 
 # Remove packages that make benchmark builds fail otherwise
 RUN apt-get remove -y -m -f \
