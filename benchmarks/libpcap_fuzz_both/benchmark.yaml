@@ -18,7 +18,3 @@ fuzz_target: fuzz_both
 project: libpcap
 unsupported_fuzzers:
   - klee
-  - symcc_afl
-  - symcc_afl_single
-  - symcc_aflplusplus
-  - symcc_aflplusplus_single
