@@ -44,29 +44,30 @@ jobs:
           - aflplusplus_dict2file
           - aflplusplus_cmplog
           - aflplusplus_flcnt
-          - aflplusplus_optimal_flcnt
           - aflplusplus_fcnt
-          - aflplusplus_optimal_fcnt
           - aflplusplus_lcnt
-          - aflplusplus_optimal_lcnt
           - aflplusplus_311
           - aflplusplus_312
           - aflplusplus_313
           - aflplusplus_frida
-          - aflplusplus_num
-          - aflplusplus_select
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
           - aflplusplus_unusual_partial
           - aflplusplus_unusual_partial_early
           - aflplusplus_unusual_enabled_early
+          - aflprefix
+          - dropfuzzer
           # Concolic execution
+          - aflplusplus_cmplog_double
+          - aflplusplus_qemu_double
+          - fuzzolic_aflplusplus_z3
+          - fuzzolic_aflplusplus_fuzzy
+          - eclipser_aflplusplus
+          - symqemu_aflplusplus
+          - symcc_aflplusplus_single
           - symcc_afl
           - symcc_aflplusplus
           - symcc_afl_single
-          - aflplusplus_x_default
-          - aflplusplus_frida_old
-          - aflplusplus_frida_new
           - afl_two_instances
           - afl_no_favored
           - afl_random_favored

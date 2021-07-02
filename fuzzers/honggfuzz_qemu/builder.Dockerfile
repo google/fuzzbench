@@ -41,6 +41,6 @@ RUN cd / && git clone https://github.com/google/honggfuzz.git /honggfuzz && \
 
 RUN cd / && git clone https://github.com/vanhauser-thc/qemu_driver && \
     cd /qemu_driver && \
-    git checkout 499134f3aa34ce9c3d7f87f33b1722eec6026362 && \
+    git checkout 8ad9ad589b4881552fa7ef8b7d29cd9aeb5071bd && \
     make && \
     cp -fv libQEMU.a /
