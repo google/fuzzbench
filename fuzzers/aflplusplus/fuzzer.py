@@ -26,6 +26,11 @@ def get_cmplog_build_directory(target_directory):
     return os.path.join(target_directory, 'cmplog')
 
 
+def get_uninstrumented_build_directory(target_directory):
+    """Return path to CmpLog target directory."""
+    return os.path.join(target_directory, 'uninstrumented')
+
+
 def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
@@ -73,11 +78,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     elif 'gcc' in build_modes:
         os.environ['CC'] = 'afl-gcc-fast'
         os.environ['CXX'] = 'afl-g++-fast'
-    elif 'symcc' in build_modes:
-        os.environ['CC'] = '/symcc/build/symcc'
-        os.environ['CXX'] = '/symcc/build/sym++'
-        os.environ['SYMCC_OUTPUT_DIR'] = '/tmp'
-        #os.environ['SYMCC_LIBCXX_PATH'] = '/libcxx_symcc_install'
     else:
         os.environ['CC'] = '/afl/afl-clang-fast'
         os.environ['CXX'] = '/afl/afl-clang-fast++'
@@ -181,6 +181,35 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         fuzz_target = os.getenv('FUZZ_TARGET')
         if fuzz_target:
             new_env['FUZZ_TARGET'] = os.path.join(cmplog_build_directory,
+                                                  os.path.basename(fuzz_target))
+
+        print('Re-building benchmark for CmpLog fuzzing target')
+        utils.build_benchmark(env=new_env)
+
+    if 'symcc' in build_modes:
+
+        symcc_build_directory = get_uninstrumented_build_directory(
+            build_directory)
+        os.mkdir(symcc_build_directory)
+
+        # symcc requires an build with different instrumentation.
+        new_env = os.environ.copy()
+        new_env['CC'] = '/symcc/build/symcc'
+        new_env['CXX'] = '/symcc/build/sym++'
+        new_env['SYMCC_OUTPUT_DIR'] = '/tmp'
+        new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace("-stlib=libc++", "")
+        new_env['FUZZER_LIB'] = '/libfuzzer-harness.o'
+        new_env['OUT'] = symcc_build_directory
+        new_env['SYMCC_LIBCXX_PATH'] = "/libcxx_native_build"
+        new_env['SYMCC_NO_SYMBOLIC_INPUT'] = "1"
+        new_env['SYMCC_SILENT'] = "1"
+
+        # For CmpLog build, set the OUT and FUZZ_TARGET environment
+        # variable to point to the new CmpLog build directory.
+        new_env['OUT'] = symcc_build_directory
+        fuzz_target = os.getenv('FUZZ_TARGET')
+        if fuzz_target:
+            new_env['FUZZ_TARGET'] = os.path.join(symcc_build_directory,
                                                   os.path.basename(fuzz_target))
 
         print('Re-building benchmark for CmpLog fuzzing target')

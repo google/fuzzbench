@@ -24,7 +24,7 @@ RUN apt-get update && \
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 28e6b96276066a69482fdb17b38a71ba98abd700
+    git checkout 8475cadc6307f94951e616aeea4402224d71a981
 
 RUN cd / && wget https://github.com/ninja-build/ninja/releases/download/v1.10.1/ninja-linux.zip && \
     unzip ninja-linux.zip && chmod 755 ninja && mv ninja /usr/local/bin

@@ -42,7 +42,7 @@ RUN cd /out/fuzzolic/solver/fuzzy-sat && git fetch && \
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /out/AFLplusplus && \
     cd /out/AFLplusplus && \
-    git checkout 28e6b96276066a69482fdb17b38a71ba98abd700
+    git checkout 8475cadc6307f94951e616aeea4402224d71a981
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
@@ -94,7 +94,6 @@ RUN apt install -y \
 
 RUN apt clean -y
 RUN pip install --user virtualenv
-RUN python3 -m pip install --user pytest
 
 # Build QEMU tracer
 RUN cd /out/fuzzolic/tracer && \
@@ -157,16 +156,16 @@ RUN sed -i 's/FROM_FILE/READ_FD_0/' /out/fuzzolic/fuzzolic/executor.py
 
 # Remove packages that make benchmark builds fail otherwise
 RUN apt-get remove -y -m -f \
- binfmt-support clang-3.8 cpp-4.8 g++-5-multilib gcc-4.8-base gdbserver \
- lib32stdc++-5-dev libbabeltrace-ctf1 libbabeltrace1 libc6-dbg \
- libcapstone3 libclang-common-3.8-dev libclang-common-8-dev libclang1-3.8 \
- libclang1-8 libcloog-isl4 libexpat1-dev libffi-dev libgcc-4.8-dev \
- libibverbs1 libjbig0 libjpeg62 libllvm3.8 libllvm3.9 libllvm8 libobjc-5-dev \
- libobjc4 libomp-8-dev libomp5-8 libprotobuf-lite9v5 libpython-all-dev \
- libpython-dev libpython2.7 libpython2.7-dev libpython3-dev libpython3.5 \
- libpython3.5-dev libstdc++-4.8-dev libx32stdc++-5-dev llvm-3.8 llvm-3.8-dev \
- llvm-3.8-runtime llvm-3.9-dev llvm-3.9-runtime llvm-8-dev llvm-8-runtime \
- llvm-runtime python-all python-all-dev python-dev python-pip-whl \
- python-pkg-resources python-setuptools python-wheel python2.7-dev \
- python3.5-dev qemu-user-binfmt
+    binfmt-support clang-3.8 cpp-4.8 g++-5-multilib gcc-4.8-base gdbserver \
+    lib32stdc++-5-dev libbabeltrace-ctf1 libbabeltrace1 libc6-dbg \
+    libcapstone3 libclang-common-3.8-dev libclang-common-8-dev libclang1-3.8 \
+    libclang1-8 libcloog-isl4 libexpat1-dev libffi-dev libgcc-4.8-dev \
+    libibverbs1 libjbig0 libjpeg62 libllvm3.8 libllvm3.9 libllvm8 libobjc-5-dev \
+    libobjc4 libomp-8-dev libomp5-8 libprotobuf-lite9v5 libpython-all-dev \
+    libpython-dev libpython2.7 libpython2.7-dev libpython3-dev libpython3.5 \
+    libpython3.5-dev libstdc++-4.8-dev libx32stdc++-5-dev llvm-3.8 llvm-3.8-dev \
+    llvm-3.8-runtime llvm-3.9-dev llvm-3.9-runtime llvm-8-dev llvm-8-runtime \
+    llvm-runtime python-all python-all-dev python-dev python-pip-whl \
+    python-pkg-resources python-setuptools python-wheel python2.7-dev \
+    python3.5-dev qemu-user-binfmt
 RUN apt-get autoremove -y && apt-get clean -y
