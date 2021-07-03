@@ -54,6 +54,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     if not os.path.isdir(input_corpus):
         raise Exception("invalid input directory")
     os.environ['AFL_DISABLE_TRIM'] = "1"
+    os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
     afl_args = (input_corpus, output_corpus, target_binary)
     print('[fuzz] Running AFL worker 1')
     afl_worker_thread = threading.Thread(target=afl_worker1, args=afl_args)
