@@ -34,9 +34,6 @@ def build():
     print("Step 1: Building with AFL and SymCC")
     build_directory = os.environ['OUT']
 
-    # Save the environment for use in SymCC
-    new_env = os.environ.copy()
-
     # First build with AFL.
     src = os.getenv('SRC')
     work = os.getenv('WORK')

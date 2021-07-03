@@ -188,7 +188,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     if 'symcc' in build_modes:
 
-        symcc_build_directory = get_uninstrumented_build_directory(build_directory)
+        symcc_build_directory = get_uninstrumented_build_directory(
+            build_directory)
         os.mkdir(symcc_build_directory)
 
         # symcc requires an build with different instrumentation.
