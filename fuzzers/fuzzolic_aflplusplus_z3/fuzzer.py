@@ -117,6 +117,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
 
     print('[fuzz] Running AFL worker')
+    os.environ['AFL_DISABLE_TRIM'] = "1"
     afl_args = (input_corpus, output_corpus, target_binary)
     afl_worker_thread = threading.Thread(target=afl_worker, args=afl_args)
     afl_worker_thread.start()
