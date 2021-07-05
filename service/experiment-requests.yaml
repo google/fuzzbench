@@ -19,13 +19,24 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
-- experiment: 2021-07-2-saturated
+- experiment: 2021-07-05-saturated
   description: "Benchmark a new experimental feature for AFL++ (saturated)"
   type: bug
   oss-fuzz-corpus: true
   fuzzers:
     - aflplusplus_unusual_disabled
     - aflplusplus_unusual_enabled
+
+- experiment: 2021-07-03-symbolic
+  description: "Symbolic solver benchmark."
+  fuzzers:
+    - aflplusplus_cmplog_double
+    - aflplusplus_qemu_double
+    - eclipser_aflplusplus
+    - fuzzolic_aflplusplus_z3
+    - fuzzolic_aflplusplus_fuzzy
+    - symcc_aflplusplus_single
+    - symqemu_aflplusplus
 
 - experiment: 2021-06-27-symbolic
   description: "Symbolic solver benchmark."

@@ -24,7 +24,7 @@ RUN apt-get update && \
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout bb45398d0bbad0b86e311fa6effc286206ecc611
+    git checkout 8475cadc6307f94951e616aeea4402224d71a981
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
@@ -44,14 +44,11 @@ RUN wget -qO /tmp/z3x64.zip https://github.com/Z3Prover/z3/releases/download/z3-
      rm -f /tmp/*.zip && \
      ldconfig
 
-ENV CFLAGS=""
-ENV CXXFLAGS=""
-
 # Get and install symcc.
 RUN cd / && \
-    git clone https://github.com/AdaLogics/adacc symcc && \
+    git clone https://github.com/vanhauser-thc/adacc symcc && \
     cd symcc && \
-    git checkout edda79dcb830c95ba6d303e47c698839313ef506 && \
+    git checkout 0d81ccf64c9c032953991198a2bad20ff2b02904 && \
     cd ./runtime/qsym_backend && \
     git clone https://github.com/adalogics/qsym && \
     cd qsym && \
@@ -59,6 +56,7 @@ RUN cd / && \
     cd /symcc && \
     mkdir build && \
     cd build && \
+    unset CFLAGS && unset CXXFLAGS && \
     cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DQSYM_BACKEND=ON \
           -DZ3_TRUST_SYSTEM_VERSION=ON ../ && \
     ninja -j 3 && \
@@ -74,6 +72,7 @@ RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.g
     mkdir /libcxx_native_install && mkdir /libcxx_native_build && \
     cd /libcxx_native_install \
     && export SYMCC_REGULAR_LIBCXX="" && \
+    unset CFLAGS && unset CXXFLAGS && \
     cmake /llvm_source/llvm                                     \
       -G Ninja  -DLLVM_ENABLE_PROJECTS="libcxx;libcxxabi"       \
       -DLLVM_DISTRIBUTION_COMPONENTS="cxx;cxxabi;cxx-headers"   \
@@ -85,3 +84,6 @@ RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.g
       -DHAVE_STEADY_CLOCK=1 && \
     ninja distribution && \
     ninja install-distribution 
+
+ENV SYMCC_NO_SYMBOLIC_INPUT=1
+ENV SYMCC_SILENT=1
