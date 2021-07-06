@@ -24,7 +24,7 @@ RUN apt-get update && \
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 0662c5580bd46ff37f8f76413ea114712c372d16
+    git checkout 405382cbddea8b99543c3fddcaa5738b1ed3ade3
 
 RUN cd /afl && \
     sed -i 's/^..#define CMPLOG/#define CMPLOG/' src/afl-fuzz-redqueen.c

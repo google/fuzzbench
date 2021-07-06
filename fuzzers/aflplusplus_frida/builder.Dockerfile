@@ -22,16 +22,15 @@ RUN apt-get update && \
 
 # Download afl++
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && git checkout 0662c5580bd46ff37f8f76413ea114712c372d16
+    cd /afl && git checkout 405382cbddea8b99543c3fddcaa5738b1ed3ade3
     
 # Build afl++ without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /afl && \
     unset CFLAGS && unset CXXFLAGS && \
     AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
-    cd frida_mode && make && cd .. && \
     make -C utils/aflpp_driver && \
-    cp utils/aflpp_driver/libAFLQemuDriver.a /libAFLDriver.a && \
-    cp frida_mode/build/frida_hook.so /
+    cd frida_mode && make && cd .. && \
+    cp utils/aflpp_driver/libAFLQemuDriver.a /libAFLDriver.a
 
 COPY get_frida_entry.sh /
