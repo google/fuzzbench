@@ -23,6 +23,7 @@ jobs:
           - aflplusplus
           - aflplusplus_optimal
           - aflsmart
+          - aflsmartformat
           - entropic
           - fairfuzz
           - honggfuzz
