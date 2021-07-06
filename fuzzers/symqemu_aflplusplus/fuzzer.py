@@ -109,7 +109,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     print("Starting the SymCC helper")
     new_environ = os.environ.copy()
-    new_environ['SYMCC_SOLVER_TIMEOUT'] = '90'
     new_environ['LD_LIBRARY_PATH'] = symcc_workdir
     cmd = [
         os.path.join(symcc_workdir, "symcc_fuzzing_helper"), "-o",
