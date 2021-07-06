@@ -30,7 +30,7 @@ RUN cd / && wget https://github.com/ninja-build/ninja/releases/download/v1.10.1/
 
 RUN git clone https://github.com/season-lab/fuzzolic /out/fuzzolic && \
     cd /out/fuzzolic && \
-    git checkout 2a433f90c456b19cf9aa39384540f618c6eeb1a8
+    git checkout f03884e59a86af812214166ad1d5bdbda92aa23a
 
 RUN cd /out/fuzzolic && \
     git submodule init && \
