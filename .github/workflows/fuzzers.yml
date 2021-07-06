@@ -38,6 +38,7 @@ jobs:
           - aflplusplus_qemu
           - honggfuzz_qemu
           - weizz_qemu
+          - aflplusplus_frida
           # Temporary variants.
           - aflplusplus_introspection
           - aflplusplus_introspection2
@@ -48,7 +49,9 @@ jobs:
           - aflplusplus_lcnt
           - aflplusplus_311
           - aflplusplus_313
-          - aflplusplus_frida
+          - aflplusplus_cmplog_fullskip
+          - aflplusplus_cmplog_intro
+          - aflplusplus_cmplog_2dict
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
           - aflplusplus_unusual_partial
