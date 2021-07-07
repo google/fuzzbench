@@ -19,6 +19,7 @@ import subprocess
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 
+
 def get_format():
     """Identify format used by benchmark."""
     input_model = ''
@@ -40,22 +41,24 @@ def get_format():
 
     return input_model
 
+
 def build():
     """Build format-specific fuzzer."""
     input_model = get_format()
 
     if input_model:
         print('Building {fmt}-fuzzer'.format(fmt=input_model))
-        subprocess.check_call(['/bin/bash', '-ex',
-                '/FormatFuzzer/build.sh', input_model], cwd='/FormatFuzzer')
+        subprocess.check_call(
+            ['/bin/bash', '-ex', '/FormatFuzzer/build.sh', input_model],
+            cwd='/FormatFuzzer')
 
     # Build benchmark.
     afl_fuzzer.build()
 
     # Copy Format-specific fuzzer to OUT.
     if input_model:
-        print('[post_build] Copying {fmt}-fuzzer to $OUT directory'
-              .format(fmt=input_model))
+        print('[post_build] Copying {fmt}-fuzzer to $OUT directory'.format(
+            fmt=input_model))
         shutil.copy('/FormatFuzzer/{fmt}-fuzzer'.format(fmt=input_model),
                     os.environ['OUT'])
         shutil.copy('/afl/parser.sh', os.environ['OUT'])
