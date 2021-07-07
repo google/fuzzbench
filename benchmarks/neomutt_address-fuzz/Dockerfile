@@ -1,5 +1,4 @@
-#!/bin/bash -eu
-# Copyright 2016 Google Inc.
+# Copyright 2019 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,16 +14,10 @@
 #
 ################################################################################
 
-autoreconf -fi
-./configure --enable-static --disable-shared --disable-libseccomp
-make V=1 all
-
-$CXX $CXXFLAGS -std=c++11 -Isrc/ \
-     $SRC/magic_fuzzer.cc -o $OUT/magic_fuzzer \
-     -lFuzzingEngine ./src/.libs/libmagic.a
-
-cp ./magic/magic.mgc $OUT/
-
-
-# Force a empty seed.
-# zip -j $OUT/magic_fuzzer_seed_corpus.zip ./tests/*.testfile
+FROM gcr.io/oss-fuzz-base/base-builder
+MAINTAINER joseph.bisch@gmail.com
+RUN apt-get update && apt-get install -y make autoconf automake libtool xsltproc libncursesw5-dev libtinfo5 libxml2-dev libxml2-utils libidn11-dev
+RUN git clone https://github.com/neomutt/neomutt neomutt
+WORKDIR neomutt
+COPY build.sh $SRC/
+ADD BBtargets.txt $OUT/

@@ -1,0 +1,4 @@
+commit: 1e0c957dcd7b0b1e03ff2d8bf58fdbb147ce4978
+commit_date: 2020-01-14 15:03:29+00:00
+fuzz_target: fuzz_1_fuzzer
+project: unbound

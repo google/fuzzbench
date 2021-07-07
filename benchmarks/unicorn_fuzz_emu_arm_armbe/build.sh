@@ -1,5 +1,5 @@
 #!/bin/bash -eu
-# Copyright 2016 Google Inc.
+# Copyright 2018 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,16 +15,18 @@
 #
 ################################################################################
 
-autoreconf -fi
-./configure --enable-static --disable-shared --disable-libseccomp
-make V=1 all
+cd unicorn
+./make.sh
+# we could test with make fuzz
 
-$CXX $CXXFLAGS -std=c++11 -Isrc/ \
-     $SRC/magic_fuzzer.cc -o $OUT/magic_fuzzer \
-     -lFuzzingEngine ./src/.libs/libmagic.a
+# build fuzz target
+cd tests/fuzz
+ls fuzz_*.c | cut -d_ -f2-4 | cut -d. -f1 | while read target
+do
+    $CC $CFLAGS -I../../include -c fuzz_$target.c -o fuzz_$target.o
 
-cp ./magic/magic.mgc $OUT/
+    $CXX $CXXFLAGS fuzz_$target.o -o $OUT/fuzz_$target ../../libunicorn.a $LIB_FUZZING_ENGINE
 
-
-# Force a empty seed.
-# zip -j $OUT/magic_fuzzer_seed_corpus.zip ./tests/*.testfile
+    # TODO corpuses
+    cp fuzz_emu.options $OUT/fuzz_$target.options
+done

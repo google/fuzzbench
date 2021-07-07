@@ -1,5 +1,4 @@
-#!/bin/bash -eu
-# Copyright 2016 Google Inc.
+# Copyright 2018 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,16 +14,14 @@
 #
 ################################################################################
 
-autoreconf -fi
-./configure --enable-static --disable-shared --disable-libseccomp
-make V=1 all
-
-$CXX $CXXFLAGS -std=c++11 -Isrc/ \
-     $SRC/magic_fuzzer.cc -o $OUT/magic_fuzzer \
-     -lFuzzingEngine ./src/.libs/libmagic.a
-
-cp ./magic/magic.mgc $OUT/
-
-
-# Force a empty seed.
-# zip -j $OUT/magic_fuzzer_seed_corpus.zip ./tests/*.testfile
+FROM gcr.io/oss-fuzz-base/base-builder
+MAINTAINER blp@ovn.org
+RUN apt-get update && apt-get install -y make autoconf automake \
+    libtool python python3-pip \
+    libz-dev libssl-dev libssl1.0.0 wget
+RUN pip3 install six
+RUN git clone https://github.com/openvswitch/ovs.git openvswitch
+RUN git clone --depth 1 https://github.com/openvswitch/ovs-fuzzing-corpus.git \
+    ovs-fuzzing-corpus
+WORKDIR openvswitch
+COPY build.sh $SRC/

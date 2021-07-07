@@ -1,5 +1,5 @@
 #!/bin/bash -eu
-# Copyright 2016 Google Inc.
+# Copyright 2019 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,16 +15,17 @@
 #
 ################################################################################
 
-autoreconf -fi
-./configure --enable-static --disable-shared --disable-libseccomp
-make V=1 all
+# build libpcap
+tar -xvzf libpcap-1.9.1.tar.gz
+cd libpcap-1.9.1
+./configure --disable-shared
+make -j$(nproc)
+make install
+cd ..
 
-$CXX $CXXFLAGS -std=c++11 -Isrc/ \
-     $SRC/magic_fuzzer.cc -o $OUT/magic_fuzzer \
-     -lFuzzingEngine ./src/.libs/libmagic.a
-
-cp ./magic/magic.mgc $OUT/
-
-
-# Force a empty seed.
-# zip -j $OUT/magic_fuzzer_seed_corpus.zip ./tests/*.testfile
+# build project
+cd ndpi
+sh autogen.sh
+./configure --enable-fuzztargets
+make
+ls fuzz/fuzz* | grep -v "\." | while read i; do cp $i $OUT/; done

@@ -1,0 +1,4 @@
+commit: 95ed87ce759481758d0ff2f09aab7c4f1d4f0fbc
+commit_date: 2020-11-26 20:00:01+00:00
+fuzz_target: dotnet_fuzzer
+project: yara

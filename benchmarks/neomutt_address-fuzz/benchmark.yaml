@@ -1,0 +1,4 @@
+commit: ebd3048fff6f1a60a1859fac2dedd0c962f6551b
+commit_date: 2020-06-01 23:10:29+00:00
+fuzz_target: address-fuzz
+project: neomutt

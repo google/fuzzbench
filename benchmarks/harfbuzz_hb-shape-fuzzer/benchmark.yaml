@@ -1,0 +1,4 @@
+commit: 818f109bdec9659c05f9fd9a1de1db85ece65cbe
+commit_date: 2020-04-16 20:23:39+00:00
+fuzz_target: hb-shape-fuzzer
+project: harfbuzz

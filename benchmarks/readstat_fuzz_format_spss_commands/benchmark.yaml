@@ -1,0 +1,4 @@
+commit: 54874a7ac5bbf13fdabcd023ddabdabf5f8092f4
+commit_date: 2019-05-10 20:21:18+00:00
+fuzz_target: fuzz_format_spss_commands
+project: readstat

@@ -1,5 +1,5 @@
-commit: d1ff3af7a2c6b38bdbdde7af26b59e3c50a48fff
-commit_date: 2018-10-18 23:35:42+00:00
+commit: 8305d1cc5ec466b2d50d1b6000e7b3c8c4b08853
+commit_date: 2019-02-20 02:35:27+00:00
 fuzz_target: magic_fuzzer
 project: file
 type: bug

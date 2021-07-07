@@ -1,5 +1,5 @@
 #!/bin/bash -eu
-# Copyright 2016 Google Inc.
+# Copyright 2019 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,16 +15,12 @@
 #
 ################################################################################
 
-autoreconf -fi
-./configure --enable-static --disable-shared --disable-libseccomp
-make V=1 all
+git checkout fuzzer
+./configure --fuzzing --disable-doc --disable-nls --disable-idn
+make fuzz
 
-$CXX $CXXFLAGS -std=c++11 -Isrc/ \
-     $SRC/magic_fuzzer.cc -o $OUT/magic_fuzzer \
-     -lFuzzingEngine ./src/.libs/libmagic.a
-
-cp ./magic/magic.mgc $OUT/
-
-
-# Force a empty seed.
-# zip -j $OUT/magic_fuzzer_seed_corpus.zip ./tests/*.testfile
+cd fuzz
+cp address-fuzz $OUT/
+zip -q -r $OUT/address-fuzz_seed_corpus.zip corpus_address
+cp rfc822_headers_dict.txt $OUT/address-fuzz.dict
+cp address-fuzz.options $OUT/

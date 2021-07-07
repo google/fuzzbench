@@ -32,4 +32,6 @@ for f in $fuzzers; do
 	zip -j $OUT/${fuzzer}_seed_corpus.zip fuzz/corpora/${fuzzer}/*
 done
 
+
+cp fuzz/oids.txt $OUT/asn1.dict
 cp fuzz/oids.txt $OUT/x509.dict

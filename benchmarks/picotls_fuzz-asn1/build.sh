@@ -15,16 +15,11 @@
 #
 ################################################################################
 
-autoreconf -fi
-./configure --enable-static --disable-shared --disable-libseccomp
-make V=1 all
+pushd $SRC/picotls
+cmake -DBUILD_FUZZER=ON -DOSS_FUZZ=ON .
+make
+cp ./fuzz-* $OUT/
 
-$CXX $CXXFLAGS -std=c++11 -Isrc/ \
-     $SRC/magic_fuzzer.cc -o $OUT/magic_fuzzer \
-     -lFuzzingEngine ./src/.libs/libmagic.a
-
-cp ./magic/magic.mgc $OUT/
-
-
-# Force a empty seed.
-# zip -j $OUT/magic_fuzzer_seed_corpus.zip ./tests/*.testfile
+zip -jr $OUT/fuzz-client-hello_seed_corpus.zip $SRC/picotls/fuzz/fuzz-client-hello-corpus
+zip -jr $OUT/fuzz-server-hello_seed_corpus.zip $SRC/picotls/fuzz/fuzz-server-hello-corpus
+popd

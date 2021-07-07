@@ -1,5 +1,4 @@
-#!/bin/bash -eu
-# Copyright 2016 Google Inc.
+# Copyright 2019 Evan Miller
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,16 +14,11 @@
 #
 ################################################################################
 
-autoreconf -fi
-./configure --enable-static --disable-shared --disable-libseccomp
-make V=1 all
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:644b720c4138c48258d3b6083125b4caada241540844d2a0daf94f284410f408
+MAINTAINER emmiller@gmail.com
+RUN apt-get update && apt-get install -y make autoconf automake gettext libtool zip zlib1g-dev pkg-config
 
-$CXX $CXXFLAGS -std=c++11 -Isrc/ \
-     $SRC/magic_fuzzer.cc -o $OUT/magic_fuzzer \
-     -lFuzzingEngine ./src/.libs/libmagic.a
-
-cp ./magic/magic.mgc $OUT/
-
-
-# Force a empty seed.
-# zip -j $OUT/magic_fuzzer_seed_corpus.zip ./tests/*.testfile
+RUN git clone https://github.com/WizardMac/ReadStat readstat
+WORKDIR readstat
+COPY build.sh $SRC/
+ADD BBtargets.txt $OUT/

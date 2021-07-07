@@ -1,5 +1,5 @@
 #!/bin/bash -eu
-# Copyright 2016 Google Inc.
+# Copyright 2018 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,16 +15,19 @@
 #
 ################################################################################
 
-autoreconf -fi
-./configure --enable-static --disable-shared --disable-libseccomp
-make V=1 all
+./boot.sh && ./configure && make -j$(nproc) && make oss-fuzz-targets
 
-$CXX $CXXFLAGS -std=c++11 -Isrc/ \
-     $SRC/magic_fuzzer.cc -o $OUT/magic_fuzzer \
-     -lFuzzingEngine ./src/.libs/libmagic.a
+cp $SRC/openvswitch/tests/oss-fuzz/config/*.options $OUT/
+cp $SRC/openvswitch/tests/oss-fuzz/config/*.dict $OUT/
+wget -O $OUT/json.dict https://raw.githubusercontent.com/rc0r/afl-fuzz/master/dictionaries/json.dict
 
-cp ./magic/magic.mgc $OUT/
-
-
-# Force a empty seed.
-# zip -j $OUT/magic_fuzzer_seed_corpus.zip ./tests/*.testfile
+for file in $SRC/openvswitch/tests/oss-fuzz/*_target;
+do
+       cp $file $OUT/
+       name=$(basename $file)
+       corp_name=$(basename $file _target)
+       corp_dir=$SRC/ovs-fuzzing-corpus/${corp_name}_seed_corpus
+       if [ -d ${corp_dir} ]; then
+           zip -rq $OUT/${name}_seed_corpus ${corp_dir}
+       fi
+done

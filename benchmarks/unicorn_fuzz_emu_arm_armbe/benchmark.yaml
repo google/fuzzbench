@@ -1,0 +1,4 @@
+commit: 4ca2c7f0b09be190f95e0caa90371d3ed6362402
+commit_date: 2020-03-02 01:44:53+00:00
+fuzz_target: fuzz_emu_arm_armbe
+project: unicorn

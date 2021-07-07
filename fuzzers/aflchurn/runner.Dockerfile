@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,20 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit: fb1ecf85c9f732e5827771ff243d7a70e06ce112
-commit_date: 2019-10-31 11:26:59+00:00
-fuzz_target: x509
-project: openssl
-unsupported_fuzzers:
-  - klee
-  - aflplusplus_classic
-  - aflplusplus_classic_ctx
-  - aflplusplus_pcguard
-  - aflplusplus_pcguard_bitcode
-  - aflplusplus_pcguard_ctx
-  - aflplusplus_pcguard_ctx_naive
-  - aflplusplus_pcguard_ctx_bfs
-  - aflplusplus_pcguard_ctx_randomic
-  - aflplusplus_pcguard_ctx_uniform
-  - aflplusplus_pcguard_ctx_params
-  - libafl
+FROM gcr.io/fuzzbench/base-image

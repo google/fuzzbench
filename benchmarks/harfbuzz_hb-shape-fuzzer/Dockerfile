@@ -1,4 +1,3 @@
-#!/bin/bash -eu
 # Copyright 2016 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,16 +14,10 @@
 #
 ################################################################################
 
-autoreconf -fi
-./configure --enable-static --disable-shared --disable-libseccomp
-make V=1 all
+FROM gcr.io/oss-fuzz-base/base-builder
+MAINTAINER mmoroz@chromium.org
+RUN apt-get update && apt-get install -y make autoconf automake libtool ragel pkg-config
 
-$CXX $CXXFLAGS -std=c++11 -Isrc/ \
-     $SRC/magic_fuzzer.cc -o $OUT/magic_fuzzer \
-     -lFuzzingEngine ./src/.libs/libmagic.a
-
-cp ./magic/magic.mgc $OUT/
-
-
-# Force a empty seed.
-# zip -j $OUT/magic_fuzzer_seed_corpus.zip ./tests/*.testfile
+RUN git clone https://github.com/harfbuzz/harfbuzz.git
+WORKDIR harfbuzz
+COPY build.sh $SRC/
