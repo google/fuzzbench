@@ -19,9 +19,9 @@ RUN apt-get update && \
     apt-get install -y wget libstdc++-5-dev libtool-bin automake flex bison \
                        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
                        apt-utils apt-transport-https ca-certificates \
-                       golang binutils
+                       binutils
 
-RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 10
+RUN apt install -y lsb-release wget software-properties-common && wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 10
 
 RUN update-alternatives \
       --install /usr/lib/llvm              llvm             /usr/lib/llvm-10  20 \
@@ -60,7 +60,15 @@ ENV GOPATH /go
 ENV PATH="/go/bin:/dupfunc_ctx/bin/:${PATH}"
 ENV LLVM_COMPILER_PATH=/usr/lib/llvm-10/bin
 
-RUN mkdir /go && go get github.com/SRI-CSL/gllvm/cmd/...
+# Download and install the latest stable Go.
+RUN cd /tmp && \
+    wget https://storage.googleapis.com/golang/getgo/installer_linux && \
+    chmod +x ./installer_linux && \
+    SHELL="bash" ./installer_linux && \
+    rm -rf ./installer_linux
+ENV PATH $PATH:/root/.go/bin:$GOPATH/bin
+
+RUN mkdir /go && go get github.com/SRI-CSL/gllvm/cmd/...@d01ecad84b901692e75ed05d51697b001fee40f0
 
 # Download and compile SVF.
 RUN git clone https://github.com/SVF-tools/SVF.git /SVF && \
@@ -68,16 +76,29 @@ RUN git clone https://github.com/SVF-tools/SVF.git /SVF && \
    git clone https://github.com/SVF-tools/Test-Suite.git && \
    cd Test-Suite && git checkout 72c679a49b943abb229fcb1844f68dff9cc7d522
 
-RUN cd /SVF && unset CFLAGS && unset CXXFLAGS && wget https://pastebin.com/raw/anzpb1FQ -O ../SVF-all.patch && GIT_COMMITTER_NAME='a' GIT_COMMITTER_EMAIL='a' git am -3 -k -u ../SVF-all.patch && ./build.sh debug 
 
 # Download and compile sea-dsa dependencies
 RUN apt-get install -y clang-format-10 build-essential g++ python-dev autotools-dev libicu-dev libbz2-dev
 RUN apt-get remove -y libboost1.58-dev && add-apt-repository -y ppa:mhier/libboost-latest && apt update && apt install -y libboost1.67-dev
 RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test && apt update && apt install -y g++-7
+# install cmake if too old (this is done for ffmpeg that uses an old builder)
+ENV CMAKE_VERSION 3.19.2
+RUN if dpkg --compare-versions $(cmake --version | head -n1| cut -d' ' -f 3) lt 3.10.2; then \
+    apt-get update && apt-get install -y sudo && \
+    wget https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION-Linux-x86_64.sh && \
+    chmod +x cmake-$CMAKE_VERSION-Linux-x86_64.sh && \
+    ./cmake-$CMAKE_VERSION-Linux-x86_64.sh --skip-license --prefix="/usr/local" && \
+    rm cmake-$CMAKE_VERSION-Linux-x86_64.sh && \
+    SUDO_FORCE_REMOVE=yes apt-get remove --purge -y sudo && \
+    rm -rf /usr/local/doc/cmake /usr/local/bin/cmake-gui; fi
+
+# compile SVF
+RUN cd /SVF && unset CFLAGS && unset CXXFLAGS && wget https://pastebin.com/raw/anzpb1FQ -O ../SVF-all.patch && GIT_COMMITTER_NAME='a' GIT_COMMITTER_EMAIL='a' git am -3 -k -u ../SVF-all.patch && ./build.sh debug 
+
 # Download and compile sea-dsa
 ENV PATH="${LLVM_DIR}/bin:${PATH}"
 RUN git clone https://github.com/seahorn/sea-dsa.git -b dev10 /sea-dsa && \
-    cd /sea-dsa && git checkout ca53cadf8d4675a2b1fb6400bdb0d3d894def328 && \
+    cd /sea-dsa && git checkout 594279ef14e5dc6b70322912988c98bfce7b7a10 && \
     mkdir build && cd build && \
     CFLAGS='' CXXFLAGS='' cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_INSTALL_PREFIX=run -DLLVM_DIR=$LLVM_DIR/share/llvm/cmake .. && \
     cmake --build . --target install
@@ -105,10 +126,22 @@ RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531
 
 ENV SVF_HOME=/SVF
 
-RUN pip3 install influxdb-client
+# install python3 if too old (this is done for ffmpeg that uses an old builder)
+ENV PYTHON_VERSION 3.8.6
+RUN if dpkg --compare-versions $(python3 --version | head -n1| cut -d' ' -f 2) lt 3.8; then \
+    apt-get update -y && apt-get install -y build-essential rsync curl zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev virtualenv libbz2-dev liblzma-dev libsqlite3-dev && \
+    cd /tmp/ && \
+    wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz && \
+    tar -xvf Python-$PYTHON_VERSION.tar.xz && \
+    cd Python-$PYTHON_VERSION && \
+    ./configure --enable-loadable-sqlite-extensions --enable-optimizations && \
+    make -j install && \
+    rm -r /tmp/Python-$PYTHON_VERSION.tar.xz /tmp/Python-$PYTHON_VERSION; fi
+
+RUN cd / && python3 -m pip install brotli influxdb-client
 
 # RUN git clone git@github.com:pietroborrello/AFLChen.git /dupfunc_ctx && \
-#     cd /dupfunc_ctx && git checkout 9c71c075142b29ba982199510eeb49f026480131
+#     cd /dupfunc_ctx && git checkout eaf3f05badcfb7f616fc986638142c0e3e03d7e5
 
 RUN wget https://andreafioraldi.github.io/assets/dupfunc_ctx.tar.gz && \
     mkdir /dupfunc_ctx && tar xvf dupfunc_ctx.tar.gz -C /dupfunc_ctx && \
