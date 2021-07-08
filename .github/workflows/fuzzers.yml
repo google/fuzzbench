@@ -63,6 +63,7 @@ jobs:
           - cfctx_dataflow_seadsa
           - cfctx_dataflow_svf
           - cfctx_randomic
+          - cfctx_params
           - cfctx_plain
           # Concolic execution
           - aflplusplus_cmplog_double
