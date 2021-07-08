@@ -19,6 +19,17 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-07-08-glibfuzzer
+  description: "This is an improved tool on libfuzzer-fork mode. 
+  It is a parallel fuzzer, so in the fuzzbench experment, I want each fuzzer to run 8 cores for 12 hours. 
+  The comparison object is the [libfuzzer-fork] that I added at the same time. 
+  Since the improvement part is about corpus scheduling, I disabled -entropic=0 (so the comparison effect is more obvious), 
+  but you can also add -entropic=1, that is, run [1.glibfuzzer,-entropic=0] [2.glibfuzzer,-entropic=1] [3.libfuzzer-fork,-entropic=0]
+  [4.libfuzzer-fork,-entropic=1]"
+  fuzzers:
+    - libfuzzer-fork-parallel
+    - glibfuzzer
+
 - experiment: 2021-07-03-symbolic
   description: "Symbolic solver benchmark."
   fuzzers:
