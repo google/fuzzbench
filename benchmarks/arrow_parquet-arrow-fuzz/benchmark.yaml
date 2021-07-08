@@ -15,3 +15,11 @@ unsupported_fuzzers:
   - aflplusplus_qemu_cmplog
   - aflplusplus_qemu_cmplog_inmem
   - aflplusplus_qemu_inmem
+  - aflplusplus_classic_ctx
+  - cfctx_base
+  - cfctx_bottom
+  - cfctx_dataflow_seadsa
+  - cfctx_dataflow_svf
+  - cfctx_params
+  - cfctx_plain
+  - cfctx_randomic
