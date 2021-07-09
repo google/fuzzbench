@@ -14,6 +14,7 @@
 """Report generator tool."""
 
 import argparse
+import multiprocessing
 import os
 import sys
 
@@ -140,7 +141,8 @@ def generate_report(experiment_names,
                     end_time=None,
                     merge_with_clobber=False,
                     merge_with_clobber_nonprivate=False,
-                    coverage_report=False):
+                    coverage_report=False,
+                    num_processes=-1):
     """Generate report helper."""
     if merge_with_clobber_nonprivate:
         experiment_names = (
@@ -160,9 +162,11 @@ def generate_report(experiment_names,
         experiment_df = queries.get_experiment_data(experiment_names)
         description = queries.get_experiment_description(main_experiment_name)
 
+    import pdb; pdb.set_trace()
+
     data_utils.validate_data(experiment_df)
 
-    if benchmarks is not None:
+    if benchmarks:
         experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks)
 
     if fuzzers is not None:
@@ -188,12 +192,15 @@ def generate_report(experiment_names,
 
     # Load the coverage json summary file.
     coverage_dict = {}
+    if num_processes == -1:
+        num_processes = None
+    pool = multiprocessing.Pool(num_processes)
     if coverage_report:
         coverage_dict = coverage_data_utils.get_covered_regions_dict(
-            experiment_df)
+            experiment_df, pool)
 
     fuzzer_names = experiment_df.fuzzer.unique()
-    plotter = plotting.Plotter(fuzzer_names, quick, log_scale)
+    plotter = plotting.Plotter(fuzzer_names, quick, log_scale, cache=True)
     experiment_ctx = experiment_results.ExperimentResults(
         experiment_df,
         coverage_dict,
@@ -201,10 +208,14 @@ def generate_report(experiment_names,
         plotter,
         experiment_name=report_name)
 
+    # Do this so that plotter caching works.
+    plot_path = experiment_ctx.benchmarks[0].get_full_plot_path('')
+    filesystem.recreate_directory(plot_path)
+
     template = report_type + '.html'
     detailed_report = rendering.render_report(experiment_ctx, template,
                                               in_progress, coverage_report,
-                                              description)
+                                              description, pool)
 
     filesystem.write(os.path.join(report_directory, 'index.html'),
                      detailed_report)

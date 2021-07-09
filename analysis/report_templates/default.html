@@ -173,17 +173,17 @@
             {% if benchmark.type == 'bug' %}
                     <h5 class="center-align">Discovered bug coverage distribution</h5>
                     <img class="responsive-img materialboxed"
-                         src="{{ benchmark.bug_box_plot }}">
+                         src="plots/{{ benchmark.bug_box_plot }}">
             {% else %}
                     <h5 class="center-align">Ranking by median reached code coverage</h5>
                     <img class="responsive-img materialboxed"
-                         src="{{ benchmark.ranking_plot }}">
+                         src="plots/{{ benchmark.ranking_plot }}">
             {% endif %}
                 </div>
                 <div class="col s6">
                     <h5 class="center-align">Reached code coverage distribution</h5>
                     <img class="responsive-img materialboxed"
-                         src="{{ benchmark.box_plot }}">
+                         src="plots/{{ benchmark.box_plot }}">
                 </div>
             </div>
             <div class="row">
@@ -203,23 +203,23 @@
                 <div id="{{ benchmark.name }}_code_normal" class="col s12">
                     <h5 class="center-align">Mean code coverage growth over time</h5>
                     <img class="responsive-img materialboxed"
-                         src="{{ benchmark.coverage_growth_plot }}">
+                         src="plots/{{ benchmark.coverage_growth_plot }}">
                 </div>
                 <div id="{{ benchmark.name }}_code_logscale" class="col s12">
                     <h5 class="center-align">Mean code coverage growth over time</h5>
                     <img class="responsive-img materialboxed"
-                         src="{{ benchmark.coverage_growth_plot_logscale }}">
+                         src="plots/{{ benchmark.coverage_growth_plot_logscale }}">
                 </div>
             {% if benchmark.type == 'bug' %}
                 <div id="{{ benchmark.name }}_bugs_normal" class="col s12">
                     <h5 class="center-align">Mean bug coverage growth over time</h5>
                     <img class="responsive-img materialboxed"
-                         src="{{ benchmark.bug_coverage_growth_plot }}">
+                         src="plots/{{ benchmark.bug_coverage_growth_plot }}">
                 </div>
                 <div id="{{ benchmark.name }}_bugs_logscale" class="col s12">
                     <h5 class="center-align">Mean bug coverage growth over time</h5>
                     <img class="responsive-img materialboxed"
-                         src="{{ benchmark.bug_coverage_growth_plot_logscale }}">
+                         src="plots/{{ benchmark.bug_coverage_growth_plot_logscale }}">
                 </div>
             {% endif %}
                 <div class="center-align">
@@ -262,7 +262,7 @@
                             <div class="col s6">
                                 <h5 class="center-align">Vargha-Delaney A12 measure</h4>
                                     <img class="responsive-img materialboxed"
-                                         src="{{ benchmark.bug_vargha_delaney_plot }}">
+                                         src="plots/{{ benchmark.bug_vargha_delaney_plot }}">
                                     The table summarizes the A12 values from the
                                     pairwise Vargha-Delaney A measure of effect size.
                                     Green cells indicate the probability the fuzzer in the
@@ -272,7 +272,7 @@
                             <div class="col s6">
                                 <h5 class="center-align">Mann-Whitney U test</h4>
                                     <img class="responsive-img materialboxed"
-                                         src="{{ benchmark.bug_mann_whitney_plot }}">
+                                         src="plots/{{ benchmark.bug_mann_whitney_plot }}">
                                     The table summarizes the p values of
                                     pairwise Mann-Whitney U tests.
                                     Green cells indicate that the reached
@@ -301,7 +301,7 @@
                             <div class="col s6">
                                 <h5 class="center-align">Vargha-Delaney A12 measure</h4>
                                     <img class="responsive-img materialboxed"
-                                         src="{{ benchmark.vargha_delaney_plot }}">
+                                         src="plots/{{ benchmark.vargha_delaney_plot }}">
                                     The table summarizes the A12 values from the
                                     pairwise Vargha-Delaney A measure of effect size.
                                     Green cells indicate the probability the fuzzer in the
@@ -311,7 +311,7 @@
                             <div class="col s6">
                                 <h5 class="center-align">Mann-Whitney U test</h4>
                                     <img class="responsive-img materialboxed"
-                                         src="{{ benchmark.mann_whitney_plot }}">
+                                         src="plots/{{ benchmark.mann_whitney_plot }}">
                                     The table summarizes the p values of
                                     pairwise Mann-Whitney U tests.
                                     Green cells indicate that the reached
@@ -336,7 +336,7 @@
                             <div class="col s6 offset-s3">
                                 <h5 class="center-align">Ranking by unique code regions covered</h4>
                                     <img class="responsive-img materialboxed"
-                                         src="{{ benchmark.unique_coverage_ranking_plot }}">
+                                         src="plots/{{ benchmark.unique_coverage_ranking_plot }}">
                                     Each bar shows the total number of code regions found by a given fuzzer.
                                     The colored area shows the number of unique code regions
                                     (i.e., regions that were not covered by any other fuzzers).
@@ -347,7 +347,7 @@
                             <div class="col s6 offset-s3">
                                 <h5 class="center-align">Pairwise unique code coverage</h4>
                                     <img class="responsive-img materialboxed"
-                                         src="{{ benchmark.pairwise_unique_coverage_plot }}">
+                                         src="plots/{{ benchmark.pairwise_unique_coverage_plot }}">
                                     Each cell represents the number of code regions covered by the fuzzer
                                     of the column but not by the fuzzer of the row
                             </div>
@@ -365,7 +365,7 @@
                     <div class="collapsible-body">
                         <div class="collection">
                             {% for fuzzer in benchmark.fuzzer_names %}
-                            <a href="{{ benchmark.get_filestore_name(fuzzer) }}/coverage/reports/{{ benchmark.name }}/{{ fuzzer }}/index.html" class="collection-item">{{ fuzzer }}</a>
+                            <a href="{{ benchmark.get_coverage_report_path(fuzzer, benchmark.name) }}" class="collection-item">{{ fuzzer }}</a>
                             {% endfor %}
                         </div>
                     </div>

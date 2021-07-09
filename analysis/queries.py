@@ -21,6 +21,22 @@ from database.models import Experiment, Trial, Snapshot, Crash
 from database import utils as db_utils
 
 
+import collections
+Combo = collections.namedtuple('Combo', ['combined', 'first', 'second'])
+
+combos = [
+    Combo('Main Experiment', '2021-04-23-paper', '2021-07-08-redo-paper'),
+    Combo('No Seed Experiment', '2021-04-22-ns-paper', '2021-07-10-redo-ns'),
+    Combo('OSS-Fuzz Corpora Experiment', '2021-04-21-sc-paper', '2021-07-10-redo-sc'),
+    Combo('7 Day Experiment', '2021-04-23-7d-paper', '2021-07-10-redo-7d'),
+    Combo('Reproduce Experiment 1', '2021-04-26-repro-paper', '2021-07-10-redo-repro'),
+    Combo('Reproduce Experiment 2', '2021-05-02-repro-paper', '2021-07-10-redo-repro2'),
+]
+
+REDONE_BENCHMARKS = ['lcms-2017-03-21', 'libpng-1.2.56', 'libxml2-v2.9.2', 'proj4-2017-08-14']
+FIRST_EXPERIMENTS = {combo.first for combo in combos}
+
+
 def get_experiment_data(experiment_names):
     """Get measurements (such as coverage) on experiments from the database."""
 
@@ -39,7 +55,10 @@ def get_experiment_data(experiment_names):
         .filter(Experiment.name.in_(experiment_names))\
         .filter(Trial.preempted.is_(False))
 
-    return pd.read_sql_query(snapshots_query.statement, db_utils.engine)
+    df = pd.read_sql_query(snapshots_query.statement, db_utils.engine)
+    df = df[~(df.benchmark.isin(REDONE_BENCHMARKS) &
+              df.experiment.isin(FIRST_EXPERIMENTS))]
+    return df
 
 
 def get_experiment_description(experiment_name):

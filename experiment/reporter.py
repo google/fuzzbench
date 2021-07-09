@@ -77,7 +77,8 @@ def output_report(experiment_config: dict,
             fuzzers=fuzzers,
             in_progress=in_progress,
             merge_with_clobber_nonprivate=merge_with_nonprivate,
-            coverage_report=coverage_report)
+            coverage_report=coverage_report,
+            num_processes=1)
         filestore_utils.rsync(
             str(reports_dir),
             web_filestore_path,
