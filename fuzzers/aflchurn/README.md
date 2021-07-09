@@ -1,0 +1,20 @@
+working benchmarks (2021-03-17):
+- unbound_fuzz_1_fuzzer
+- aspell_aspell_fuzzer
+- usrsctp_fuzzer_connect
+- file_magic_fuzzer
+- yara_dotnet_fuzzer
+- libxml2_libxml2_xml_reader_for_file_fuzzer
+- systemd_fuzz-varlink
+- openvswitch_odp_target
+- neomutt_address-fuzz
+- picotls_fuzz-asn1
+- readstat_fuzz_format_spss_commands
+- openssl_x509
+- libgit2_objects_fuzzer
+- libhtp_fuzz_htp
+- unicorn_fuzz_emu_arm_armbe
+- zstd_stream_decompress
+- grok_grk_decompress_fuzzer
+- ndpi_fuzz_process_packet
+- harfbuzz_hb-shape-fuzzer
