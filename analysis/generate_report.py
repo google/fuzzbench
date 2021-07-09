@@ -194,8 +194,10 @@ def generate_report(experiment_names,
         num_processes = None
     pool = multiprocessing.Pool(num_processes)
     if coverage_report:
+        logs.info('Generating coverage report info.')
         coverage_dict = coverage_data_utils.get_covered_regions_dict(
             experiment_df, pool)
+        logs.info('Finished generating coverage report info.')
 
     fuzzer_names = experiment_df.fuzzer.unique()
     plotter = plotting.Plotter(fuzzer_names, quick, log_scale, cache=True)

@@ -37,7 +37,8 @@ def get_exp_filestore_path_for_fuzzer_benchmark(df, fuzzer, benchmark):
     experiment_filestore_paths = get_exp_filestore_paths(df)
     if len(experiment_filestore_paths) != 1:
         logs.warning(
-            'Multiple cov filestores (%s) for this fuzzer (%s) benchmark (%s) pair.',
+            'Multiple cov filestores (%s) for this fuzzer (%s) benchmark (%s) '
+            'pair.',
             experiment_filestore_paths, fuzzer, benchmark)
     return experiment_filestore_paths[0]
 
@@ -75,32 +76,20 @@ def get_fuzzer_benchmark_covered_regions(fuzzer, benchmark, filestore):
 
 
 def get_covered_regions_dict(experiment_df, pool):
-    """Combines json files for different fuzzer-benchmark pair
-    in |experiment_df| and returns a dictionary of the covered regions."""
-    covered_regions_dict = {}
-    benchmarks = experiment_df.benchmark.unique()
-
-    for benchmark in benchmarks:
-        benchmark_df = experiment_df[experiment_df.benchmark == benchmark]
-        fuzzers = benchmark_df.fuzzer.unique()
-        arguments = [
-            (fuzzer, benchmark, get_exp_filestore_path_for_fuzzer_benchmark(
-                benchmark_df, fuzzer, benchmark))
-            for fuzzer in fuzzers]
-        print('yo')
-        fuzzer_benchmark_covered_regions = list(pool.starmap(
-            get_fuzzer_benchmark_covered_regions, arguments))
-        for fuzzer_benchmark_key, covered_regions in (
-            fuzzer_benchmark_covered_regions):
-            covered_regions_dict[fuzzer_benchmark_key] = covered_regions
-
-    print('cov done')
-    return covered_regions_dict
+    """Combines json files for different fuzzer-benchmark pair in
+    |experiment_df| and returns a dictionary of the covered regions."""
+    fuzzers_and_benchmarks = set(zip(
+        experiment_df.fuzzer, experiment_df.benchmark))
+    arguments = [
+        (fuzzer, benchmark, get_exp_filestore_path_for_fuzzer_benchmark(
+            experiment_df, fuzzer, benchmark))
+                 for fuzzer, benchmark in fuzzers_and_benchmarks]
+    return dict(pool.starmap(get_fuzzer_benchmark_covered_regions, arguments))
 
 
 def get_fuzzer_covered_regions(fuzzer, benchmark, filestore):
-    """Gets the covered regions for |fuzzer| in from the json
-    file in the bucket."""
+    """Gets the covered regions for |fuzzer| in from the json file in the
+    bucket."""
     src_file = posixpath.join(filestore, 'coverage', 'data', benchmark,
                               fuzzer, 'covered_regions.json')
     with tempfile.NamedTemporaryFile() as dst_file:
@@ -112,8 +101,8 @@ def get_fuzzer_covered_regions(fuzzer, benchmark, filestore):
 
 
 def get_unique_region_dict(benchmark_coverage_dict):
-    """Returns a dictionary containing the covering fuzzers for each
-    unique region, where the |threshold| defines which regions are unique."""
+    """Returns a dictionary containing the covering fuzzers for each unique
+    region, where the |threshold| defines which regions are unique."""
     region_dict = collections.defaultdict(list)
     unique_region_dict = {}
     threshold_count = 1
@@ -127,8 +116,8 @@ def get_unique_region_dict(benchmark_coverage_dict):
 
 
 def get_unique_region_cov_df(unique_region_dict, fuzzer_names):
-    """Returns a DataFrame where the two columns are fuzzers and the number
-    of unique regions covered."""
+    """Returns a DataFrame where the two columns are fuzzers and the number of
+    unique regions covered."""
     fuzzers = collections.defaultdict(int)
     for region in unique_region_dict:
         for fuzzer in unique_region_dict[region]:
@@ -142,8 +131,8 @@ def get_unique_region_cov_df(unique_region_dict, fuzzer_names):
 
 
 def get_benchmark_cov_dict(coverage_dict, benchmark):
-    """Returns a dictionary to store the covered regions of each fuzzer.
-    Uses a set of tuples to store the covered regions."""
+    """Returns a dictionary to store the covered regions of each fuzzer. Uses a
+    set of tuples to store the covered regions."""
     benchmark_cov_dict = {}
     for key_pair, covered_regions in coverage_dict.items():
         current_fuzzer, current_benchmark = key_pair.split()
@@ -156,8 +145,8 @@ def get_benchmark_cov_dict(coverage_dict, benchmark):
 
 
 def get_benchmark_aggregated_cov_df(coverage_dict, benchmark):
-    """Returns a dataframe where each row represents a fuzzer and its
-    aggregated coverage number."""
+    """Returns a dataframe where each row represents a fuzzer and its aggregated
+    coverage number."""
     dict_to_transform = {'fuzzer': [], 'aggregated_edges_covered': []}
     for key_pair, covered_regions in coverage_dict.items():
         current_fuzzer, current_benchmark = key_pair.split()
@@ -169,8 +158,8 @@ def get_benchmark_aggregated_cov_df(coverage_dict, benchmark):
 
 
 def get_pairwise_unique_coverage_table(benchmark_coverage_dict, fuzzers):
-    """Returns a table that shows the unique coverage between
-    each pair of fuzzers.
+    """Returns a table that shows the unique coverage between each pair of
+    fuzzers.
 
     The pairwise unique coverage table is a square matrix where each
     row and column represents a fuzzer, and each cell contains a number
@@ -194,8 +183,8 @@ def get_pairwise_unique_coverage_table(benchmark_coverage_dict, fuzzers):
 
 def get_unique_covered_percentage(fuzzer_row_covered_regions,
                                   fuzzer_col_covered_regions):
-    """Returns the number of regions covered by the fuzzer of the column
-    but not by the fuzzer of the row."""
+    """Returns the number of regions covered by the fuzzer of the column but not
+    by the fuzzer of the row."""
 
     unique_region_count = 0
     for region in fuzzer_col_covered_regions:
