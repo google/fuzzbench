@@ -28,3 +28,4 @@ unsupported_fuzzers:
   - fuzzolic_aflplusplus_z3
   - symqemu_aflplusplus
   - fuzzolic_aflplusplus_fuzzy
+  - fuzzolic_aflplusplus_z3dict
