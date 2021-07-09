@@ -19,6 +19,21 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-07-09-cloning
+  description: >
+    Benchmark some variants of AFL++ that use different function cloning
+    strategies at whole program level to achieve collision-free context
+    sensitivity.
+  type: bug
+  fuzzers:
+    - aflplusplus_classic_ctx
+    - cfctx_bottom
+    - cfctx_dataflow_seadsa
+    - cfctx_dataflow_svf
+    - cfctx_randomic
+    - cfctx_params
+    - cfctx_plain
+
 - experiment: 2021-07-03-symbolic
   description: "Symbolic solver benchmark."
   fuzzers:
