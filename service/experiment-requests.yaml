@@ -19,6 +19,21 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-07-09-aflpp
+  description: "afl++: frida, cmplog, symbolic"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_cmplog_double
+    - fuzzolic_aflplusplus_z3
+    - fuzzolic_aflplusplus_z3dict
+    - honggfuzz
+    - aflplusplus_313
+    - aflplusplus_cmplog_fullskip
+    - aflplusplus_cmplog_intro
+    - aflplusplus_cmplog_2dict
+    - aflplusplus_frida
+    - aflplusplus_qemu
+
 - experiment: 2021-07-05-saturated
   description: "Benchmark a new experimental feature for AFL++ (saturated)"
   type: bug

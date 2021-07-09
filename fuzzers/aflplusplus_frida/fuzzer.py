@@ -16,6 +16,7 @@
 import os
 import subprocess
 import resource
+import shutil
 
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
@@ -23,6 +24,7 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 def build():
     """Build benchmark."""
     aflplusplus_fuzzer.build('qemu')
+    shutil.copy('/afl/frida_mode/build/frida_hook.so', os.environ['OUT'])
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
@@ -43,7 +45,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     os.environ['AFL_FRIDA_PERSISTENT_ADDR'] = target_func
     os.environ['AFL_ENTRYPOINT'] = target_func
     os.environ['AFL_FRIDA_PERSISTENT_CNT'] = "1000000"
-    os.environ['AFL_FRIDA_PERSISTENT_HOOK'] = "/out/aflpp_qemu_driver_hook.so"
+    os.environ['AFL_FRIDA_PERSISTENT_HOOK'] = "/out/frida_hook.so"
     os.environ['AFL_PATH'] = "/out"
 
     resource.setrlimit(resource.RLIMIT_CORE,
