@@ -23,6 +23,7 @@ import pandas as pd
 
 from analysis import data_utils
 from common import filestore_utils
+from common import logs
 
 
 def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):
@@ -30,34 +31,45 @@ def get_fuzzer_benchmark_key(fuzzer: str, benchmark: str):
     return fuzzer + ' ' + benchmark
 
 
-def get_experiment_filestore_path(df):
+def get_exp_filestore_path_for_fuzzer_benchmark(df, fuzzer, benchmark):
+    df = df[df['fuzzer'] == fuzzer]
+    df = df[df['benchmark'] == benchmark]
+    experiment_filestore_paths = get_exp_filestore_paths(df)
+    if len(experiment_filestore_paths) != 1:
+        logs.warning(
+            'Multiple cov filestores (%s) for this fuzzer (%s) benchmark (%s) pair.',
+            experiment_filestore_paths, fuzzer, benchmark)
+    return experiment_filestore_paths[0]
+
+
+def get_exp_filestore_paths(df):
     """Returns the experiment filestore path from |df|."""
-    # TODO(metzman) This should be able to handle multiple experiments.
-    filestore_path = df.experiment_filestore.unique()[0]
-    exp_name = df.experiment.unique()[0]
-    return posixpath.join(filestore_path, exp_name)
+    # vc = experiment_df.filestore_path.value_counts()
+    # filestore_path = max(list(zip(list(vc.index), list(vc))), key=lambda x: int(x[1]))
+
+    # vc = experiment_df.experiment.value_counts()
+    # exp = max(list(zip(list(vc.index), list(vc))), key=lambda x: int(x[1]))
+
+    return list((df['experiment_filestore'] + '/' + df['experiment']).unique())
+
 
 
 def get_coverage_report_filestore_path(fuzzer, benchmark, df: pd.DataFrame):
     """Returns the filestore path of the coverage report for |fuzzer| on
     |benchmark| for |df|."""
-    df = df[df['fuzzer'] == fuzzer]
-    df = df[df['benchmark'] == benchmark]
-    experiment_filestore_path = get_experiment_filestore_path(df)
-    return posixpath.join(experiment_filestore_path, 'coverage', 'reports',
+    exp_filestore_path = get_exp_filestore_path_for_fuzzer_benchmark(
+        df, fuzzer, benchmark)
+    return posixpath.join(exp_filestore_path, 'coverage', 'reports',
                           benchmark, fuzzer, 'index.html')
 
 
-def get_fuzzer_benchmark_covered_regions(
-        fuzzer_and_benchmark_and_filestore_and_temp_dir):
+def get_fuzzer_benchmark_covered_regions(fuzzer, benchmark, filestore):
     """Accepts a tuple containing the fuzzer, benchmark, filestore and
     temp_dir.
     Returns a tuple containing the fuzzer benchmark key and the regions covered
     by the fuzzer on the benchmark."""
-    fuzzer, benchmark, filestore_path, temp_dir = (
-        fuzzer_and_benchmark_and_filestore_and_temp_dir)
     fuzzer_benchmark_covered_regions = get_fuzzer_covered_regions(
-        fuzzer, benchmark, filestore_path, temp_dir)
+        fuzzer, benchmark, filestore)
     key = get_fuzzer_benchmark_key(fuzzer, benchmark)
     return key, fuzzer_benchmark_covered_regions
 
@@ -67,34 +79,36 @@ def get_covered_regions_dict(experiment_df, pool):
     in |experiment_df| and returns a dictionary of the covered regions."""
     covered_regions_dict = {}
     benchmarks = experiment_df.benchmark.unique()
-    with tempfile.TemporaryDirectory() as temp_dir:
-        filestore_path = get_experiment_filestore_path(experiment_df)
-        for benchmark in benchmarks:
-            benchmark_df = experiment_df[experiment_df.benchmark == benchmark]
-            fuzzers = benchmark_df.fuzzer.unique()
-            arguments = [(fuzzer, benchmark, filestore_path, temp_dir)
-                         for fuzzer in fuzzers]
-            fuzzer_benchmark_covered_regions = pool.map(
-                get_fuzzer_benchmark_covered_regions, arguments)
-            for fuzzer_benchmark_key, covered_regions in (
-                    fuzzer_benchmark_covered_regions):
-                covered_regions_dict[fuzzer_benchmark_key] = covered_regions
 
+    for benchmark in benchmarks:
+        benchmark_df = experiment_df[experiment_df.benchmark == benchmark]
+        fuzzers = benchmark_df.fuzzer.unique()
+        arguments = [
+            (fuzzer, benchmark, get_exp_filestore_path_for_fuzzer_benchmark(
+                benchmark_df, fuzzer, benchmark))
+            for fuzzer in fuzzers]
+        print('yo')
+        fuzzer_benchmark_covered_regions = list(pool.starmap(
+            get_fuzzer_benchmark_covered_regions, arguments))
+        for fuzzer_benchmark_key, covered_regions in (
+            fuzzer_benchmark_covered_regions):
+            covered_regions_dict[fuzzer_benchmark_key] = covered_regions
+
+    print('cov done')
     return covered_regions_dict
 
 
-def get_fuzzer_covered_regions(fuzzer, benchmark, filestore, temp_dir):
-    """Gets the covered regions for |fuzzer| in |benchmark_df| from the json
+def get_fuzzer_covered_regions(fuzzer, benchmark, filestore):
+    """Gets the covered regions for |fuzzer| in from the json
     file in the bucket."""
-    # TODO(metzman): Make this handle multiple experiments.
-    dst_file = os.path.join(temp_dir,
-                            '{}-{}-coverage.json'.format(fuzzer, benchmark))
-    src_file = posixpath.join(filestore, 'coverage', 'data', benchmark, fuzzer,
-                              'covered_regions.json')
-    if filestore_utils.cp(src_file, dst_file, expect_zero=False).retcode:
-        return {}
-    with open(dst_file) as json_file:
-        return json.load(json_file)
+    src_file = posixpath.join(filestore, 'coverage', 'data', benchmark,
+                              fuzzer, 'covered_regions.json')
+    with tempfile.NamedTemporaryFile() as dst_file:
+        if filestore_utils.cp(
+            src_file, dst_file.name, expect_zero=False).retcode:
+            return {}
+        with open(dst_file.name) as json_file:
+            return json.load(json_file)
 
 
 def get_unique_region_dict(benchmark_coverage_dict):
