@@ -14,8 +14,6 @@
 #
 """Integration code for AFLplusplus fuzzer."""
 
-import os
-
 from fuzzers.cfctx_base import fuzzer as aflplusplus_fuzzer
 
 
