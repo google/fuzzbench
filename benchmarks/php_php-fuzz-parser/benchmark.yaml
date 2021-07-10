@@ -20,7 +20,7 @@ unsupported_fuzzers:
   - aflcc
   - klee
   - aflplusplus_classic_ctx
-  - cfctx_base
+  - cfctx_basic
   - cfctx_bottom
   - cfctx_dataflow_seadsa
   - cfctx_dataflow_svf

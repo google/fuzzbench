@@ -14,7 +14,7 @@
 #
 """Integration code for AFLplusplus fuzzer."""
 
-from fuzzers.cfctx_base import fuzzer as aflplusplus_fuzzer
+from fuzzers.cfctx_basic import fuzzer as aflplusplus_fuzzer
 
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
