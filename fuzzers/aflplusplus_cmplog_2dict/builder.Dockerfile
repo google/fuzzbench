@@ -26,9 +26,6 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
     git checkout 46e98396791289783d5a51128486c0069a4461f7
 
-RUN cd /afl && \
-    sed -i 's/^..#define CMPLOG/#define CMPLOG/' src/afl-fuzz-redqueen.c
-
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
