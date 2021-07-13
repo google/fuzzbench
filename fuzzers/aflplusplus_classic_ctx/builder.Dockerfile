@@ -19,9 +19,10 @@ FROM $parent_image
 RUN apt-get update && \
     apt-get install -y wget libstdc++-5-dev libtool-bin automake flex bison \
                        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
-                       apt-utils apt-transport-https ca-certificates
+                       apt-utils apt-transport-https ca-certificates \
+                       binutils
 
-RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 10
+RUN apt install -y lsb-release wget software-properties-common && wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 10
 
 RUN update-alternatives \
       --install /usr/lib/llvm              llvm             /usr/lib/llvm-10  20 \
