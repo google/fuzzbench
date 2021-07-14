@@ -31,6 +31,7 @@
     - aflplusplus_cmplog_fullskip
     - aflplusplus_cmplog_2dict
     - aflplusplus_frida
+    - aflplusplus_frida_better
     - aflplusplus_qemu
 
 - experiment: 2021-07-05-saturated

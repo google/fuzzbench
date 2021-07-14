@@ -63,6 +63,7 @@ jobs:
           - aflplusplus_313
           - aflplusplus_cmplog_fullskip
           - aflplusplus_cmplog_2dict
+          - aflplusplus_frida_better
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
           - aflprefix
