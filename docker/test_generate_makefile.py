@@ -103,4 +103,19 @@ def test_get_rules_for_runner_image():
 \t-e BENCHMARK=zlib \\\n\
 \t-e FUZZ_TARGET=$(zlib-fuzz-target) \\\
 \n') + '\t-e MAX_TOTAL_TIME=20 \\\n\t-e SNAPSHOT_PERIOD=10 \\\n'
-        '\tgcr.io/fuzzbench/runners/afl/zlib\n\n')
+        '\tgcr.io/fuzzbench/runners/afl/zlib'
+        '\n\n'
+        'debug-builder-afl-zlib: .afl-zlib-builder-debug\n' + ('\
+\tdocker run \\\n\
+\t--cpus=1 \\\n\
+\t--cap-add SYS_NICE \\\n\
+\t--cap-add SYS_PTRACE \\\n\
+\t-e FUZZ_OUTSIDE_EXPERIMENT=1 \\\n\
+\t-e FORCE_LOCAL=1 \\\n\
+\t-e TRIAL_ID=1 \\\n\
+\t-e FUZZER=afl \\\n\
+\t-e BENCHMARK=zlib \\\n\
+\t-e FUZZ_TARGET=$(zlib-fuzz-target) \\\n\
+\t-e DEBUG_BUILDER=1 \\\n\
+\t--entrypoint "/bin/bash" \\\
+\n') + '\t-it gcr.io/fuzzbench/builders/afl/zlib\n\n')

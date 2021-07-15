@@ -56,13 +56,8 @@ def test_build_function_errors():
     test passes, otherwise the test fails. This ensures that we can
     properly detect build failures."""
     for fuzzer_module in _get_all_fuzzer_modules():
-        with pytest.raises(Exception) as error, Patcher():
+        with pytest.raises(Exception), Patcher():
             fuzzer_module.build()
-
-        # Type error probably means module is doing something else
-        # wrong, so fail if we see one. If that is not the case than
-        # this assert should be removed.
-        assert not isinstance(error.value, TypeError)
 
 
 def test_fuzz_function_errors():

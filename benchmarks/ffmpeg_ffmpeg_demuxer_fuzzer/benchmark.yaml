@@ -12,10 +12,11 @@ unsupported_fuzzers:
   - weizz_qemu
   - lafintel
   - eclipser
+  - eclipser_aflplusplus
   - aflplusplus_qemu_inmem
   - symcc_afl
   - symcc_afl_single
   - symcc_aflplusplus
-  - aflplusplus_unusual_partial
+  - symcc_aflplusplus_single
   - aflplusplus_unusual_enabled
   - aflplusplus_unusual_disabled

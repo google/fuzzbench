@@ -26,6 +26,11 @@ def get_cmplog_build_directory(target_directory):
     return os.path.join(target_directory, 'cmplog')
 
 
+def get_uninstrumented_build_directory(target_directory):
+    """Return path to CmpLog target directory."""
+    return os.path.join(target_directory, 'uninstrumented')
+
+
 def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
@@ -53,6 +58,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'lto' in build_modes:
         os.environ['CC'] = '/afl/afl-clang-lto'
         os.environ['CXX'] = '/afl/afl-clang-lto++'
+        edge_file = build_directory + '/aflpp_edges.txt'
+        os.environ['AFL_LLVM_DOCUMENT_IDS'] = edge_file
         if os.path.isfile('/usr/local/bin/llvm-ranlib-13'):
             os.environ['RANLIB'] = 'llvm-ranlib-13'
             os.environ['AR'] = 'llvm-ar-13'
@@ -71,11 +78,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     elif 'gcc' in build_modes:
         os.environ['CC'] = 'afl-gcc-fast'
         os.environ['CXX'] = 'afl-g++-fast'
-    elif 'symcc' in build_modes:
-        os.environ['CC'] = '/symcc/build/symcc'
-        os.environ['CXX'] = '/symcc/build/sym++'
-        os.environ['SYMCC_OUTPUT_DIR'] = '/tmp'
-        #os.environ['SYMCC_LIBCXX_PATH'] = '/libcxx_symcc_install'
     else:
         os.environ['CC'] = '/afl/afl-clang-fast'
         os.environ['CXX'] = '/afl/afl-clang-fast++'
@@ -184,6 +186,35 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         print('Re-building benchmark for CmpLog fuzzing target')
         utils.build_benchmark(env=new_env)
 
+    if 'symcc' in build_modes:
+
+        symcc_build_directory = get_uninstrumented_build_directory(
+            build_directory)
+        os.mkdir(symcc_build_directory)
+
+        # symcc requires an build with different instrumentation.
+        new_env = os.environ.copy()
+        new_env['CC'] = '/symcc/build/symcc'
+        new_env['CXX'] = '/symcc/build/sym++'
+        new_env['SYMCC_OUTPUT_DIR'] = '/tmp'
+        new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace("-stlib=libc++", "")
+        new_env['FUZZER_LIB'] = '/libfuzzer-harness.o'
+        new_env['OUT'] = symcc_build_directory
+        new_env['SYMCC_LIBCXX_PATH'] = "/libcxx_native_build"
+        new_env['SYMCC_NO_SYMBOLIC_INPUT'] = "1"
+        new_env['SYMCC_SILENT'] = "1"
+
+        # For CmpLog build, set the OUT and FUZZ_TARGET environment
+        # variable to point to the new CmpLog build directory.
+        new_env['OUT'] = symcc_build_directory
+        fuzz_target = os.getenv('FUZZ_TARGET')
+        if fuzz_target:
+            new_env['FUZZ_TARGET'] = os.path.join(symcc_build_directory,
+                                                  os.path.basename(fuzz_target))
+
+        print('Re-building benchmark for CmpLog fuzzing target')
+        utils.build_benchmark(env=new_env)
+
     shutil.copy('/afl/afl-fuzz', build_directory)
     if os.path.exists('/afl/afl-qemu-trace'):
         shutil.copy('/afl/afl-qemu-trace', build_directory)
@@ -194,7 +225,13 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         shutil.copy('/get_frida_entry.sh', build_directory)
 
 
-def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
+# pylint: disable=too-many-arguments
+def fuzz(input_corpus,
+         output_corpus,
+         target_binary,
+         flags=tuple(),
+         skip=False,
+         no_cmplog=False):  # pylint: disable=too-many-arguments
     """Run fuzzer."""
     # Calculate CmpLog binary path from the instrumented target binary.
     target_binary_directory = os.path.dirname(target_binary)
@@ -213,12 +250,15 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
 
     if os.path.exists('./afl++.dict'):
         flags += ['-x', './afl++.dict']
+
     # Move the following to skip for upcoming _double tests:
-    if os.path.exists(cmplog_target_binary):
+    if os.path.exists(cmplog_target_binary) and no_cmplog is not False:
         flags += ['-c', cmplog_target_binary]
 
     if not skip:
         os.environ['AFL_DISABLE_TRIM'] = "1"
+        # os.environ['AFL_FAST_CAL'] = '1'
+        os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
         if 'ADDITIONAL_ARGS' in os.environ:
             flags += os.environ['ADDITIONAL_ARGS'].split(' ')
 
