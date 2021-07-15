@@ -19,6 +19,14 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-07-15-saturated
+  description: "Benchmark a new experimental feature for AFL++ (saturated)"
+  type: bug
+  oss-fuzz-corpus: true
+  fuzzers:
+    - aflplusplus_unusual_disabled
+    - aflplusplus_unusual_enabled
+
 - experiment: 2021-07-05-saturated
   description: "Benchmark a new experimental feature for AFL++ (saturated)"
   type: bug
