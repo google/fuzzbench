@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,17 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit: 3cf5c3feca15ab88730d6526b2f06302597926b5
-commit_date: 2020-05-25 18:51:34+00:00
-fuzz_target: fuzz_target
-project: bloaty
-unsupported_fuzzers:
-  - klee
-  - aflplusplus_cmplog_double
-  - symcc_aflplusplus_single
-  - eclipser_aflplusplus
-  - aflplusplus_qemu_double
-  - fuzzolic_aflplusplus_z3
-  - symqemu_aflplusplus
-  - fuzzolic_aflplusplus_fuzzy
-  - fuzzolic_aflplusplus_z3dict
+FROM gcr.io/fuzzbench/base-image
+
+# This makes interactive docker runs painless:
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
+#ENV AFL_MAP_SIZE=2621440
+ENV PATH="$PATH:/out"
+ENV AFL_SKIP_CPUFREQ=1
+ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
+ENV AFL_TESTCACHE_SIZE=2
