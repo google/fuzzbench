@@ -17,57 +17,8 @@ jobs:
       fail-fast: false
       matrix:
         fuzzer:
-          - afl
-          - aflcc
-          - aflfast
-          - aflplusplus
-          - aflplusplus_optimal
-          - aflsmart
-          - entropic
-          - fairfuzz
-          - honggfuzz
-          - lafintel
-          - klee
-          - libfuzzer
-          - mopt
-          - neuzz
-          - libafl
-          # Binary-only (greybox) fuzzers.
-          - eclipser
-          - afl_qemu
-          - aflplusplus_qemu
-          - honggfuzz_qemu
-          - weizz_qemu
-          # Temporary variants.
-          - aflplusplus_introspection
-          - aflplusplus_introspection2
-          - aflplusplus_dict2file
-          - aflplusplus_cmplog
-          - aflplusplus_flcnt
-          - aflplusplus_fcnt
-          - aflplusplus_lcnt
-          - aflplusplus_311
-          - aflplusplus_312
-          - aflplusplus_313
-          - aflplusplus_frida
-          - aflplusplus_unusual_enabled
-          - aflplusplus_unusual_disabled
-          - aflprefix
-          - dropfuzzer
-          # Concolic execution
-          - aflplusplus_cmplog_double
-          - aflplusplus_qemu_double
-          - fuzzolic_aflplusplus_z3
-          - fuzzolic_aflplusplus_fuzzy
-          - eclipser_aflplusplus
-          - symqemu_aflplusplus
-          - symcc_aflplusplus_single
-          - symcc_afl
-          - symcc_aflplusplus
-          - symcc_afl_single
-          - afl_two_instances
-          - afl_no_favored
-          - afl_random_favored
+          - glibfuzzer
+          - libfuzzer-fork-parallel
 
         benchmark_type:
           - oss-fuzz

@@ -3,7 +3,7 @@
 # will not work with your setup.
 
 trials: 20
-max_total_time: 43200  # 23 hours, the default time for preemptible experiments.
+max_total_time: 82800  # 23 hours, the default time for preemptible experiments.
 cloud_project: fuzzbench
 docker_registry: gcr.io/fuzzbench
 cloud_compute_zone: us-central1-a
