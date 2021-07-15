@@ -71,6 +71,25 @@ jobs:
           - afl_two_instances
           - afl_no_favored
           - afl_random_favored
+          - aflplusplus_classic_ctx
+          - cfctx_basic
+          - cfctx_bottom
+          - cfctx_dataflow_seadsa
+          - cfctx_dataflow_svf
+          - cfctx_randomic
+          - cfctx_params
+          - cfctx_plain
+          # Concolic execution
+          - aflplusplus_cmplog_double
+          - aflplusplus_qemu_double
+          - fuzzolic_aflplusplus_z3
+          - fuzzolic_aflplusplus_fuzzy
+          - eclipser_aflplusplus
+          - symqemu_aflplusplus
+          - symcc_aflplusplus_single
+          - symcc_afl
+          - symcc_aflplusplus
+          - symcc_afl_single
 
         benchmark_type:
           - oss-fuzz
