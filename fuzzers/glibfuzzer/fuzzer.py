@@ -67,7 +67,7 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
         '-ignore_ooms=1',
         '-ignore_timeouts=1',
         '-ignore_crashes=1',
-        '-entropic=0',
+        '-entropic=1',
         '-adaptive=6',
 
         # Don't use LSAN's leak detection. Other fuzzers won't be using it and
