@@ -39,6 +39,19 @@ jobs:
           - aflplusplus_qemu
           - honggfuzz_qemu
           - weizz_qemu
+          - aflplusplus_frida
+          # Concolic execution
+          - aflplusplus_cmplog_double
+          - aflplusplus_qemu_double
+          - fuzzolic_aflplusplus_z3dict
+          - fuzzolic_aflplusplus_z3
+          - fuzzolic_aflplusplus_fuzzy
+          - eclipser_aflplusplus
+          - symqemu_aflplusplus
+          - symcc_aflplusplus_single
+          - symcc_afl
+          - symcc_aflplusplus
+          - symcc_afl_single
           # Temporary variants.
           - aflplusplus_introspection
           - aflplusplus_introspection2
@@ -48,13 +61,25 @@ jobs:
           - aflplusplus_fcnt
           - aflplusplus_lcnt
           - aflplusplus_311
-          - aflplusplus_312
           - aflplusplus_313
-          - aflplusplus_frida
+          - aflplusplus_cmplog_fullskip
+          - aflplusplus_cmplog_2dict
+          - aflplusplus_frida_better
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
           - aflprefix
           - dropfuzzer
+          - afl_two_instances
+          - afl_no_favored
+          - afl_random_favored
+          - aflplusplus_classic_ctx
+          - cfctx_basic
+          - cfctx_bottom
+          - cfctx_dataflow_seadsa
+          - cfctx_dataflow_svf
+          - cfctx_randomic
+          - cfctx_params
+          - cfctx_plain
           # Concolic execution
           - aflplusplus_cmplog_double
           - aflplusplus_qemu_double
@@ -66,9 +91,6 @@ jobs:
           - symcc_afl
           - symcc_aflplusplus
           - symcc_afl_single
-          - afl_two_instances
-          - afl_no_favored
-          - afl_random_favored
 
         benchmark_type:
           - oss-fuzz

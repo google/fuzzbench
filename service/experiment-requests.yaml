@@ -19,12 +19,51 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+
 - experiment: 2021-07-07-aflsmartformat
   description: "aflsmartformat"
   fuzzers:
     - aflsmartformat
     - aflsmart
     - afl
+
+- experiment: 2021-07-09-aflpp
+  description: "afl++: frida, cmplog, symbolic"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_cmplog_double
+    - fuzzolic_aflplusplus_z3
+    - fuzzolic_aflplusplus_z3dict
+    - honggfuzz
+    - aflplusplus_313
+    - aflplusplus_cmplog_fullskip
+    - aflplusplus_cmplog_2dict
+    - aflplusplus_frida
+    - aflplusplus_frida_better
+    - aflplusplus_qemu
+    
+- experiment: 2021-07-15-saturated
+  description: "Benchmark a new experimental feature for AFL++ (saturated)"
+  type: bug
+  oss-fuzz-corpus: true
+  fuzzers:
+    - aflplusplus_unusual_disabled
+    - aflplusplus_unusual_enabled
+    
+- experiment: 2021-07-09-cloning
+  description: >
+    Benchmark some variants of AFL++ that use different function cloning
+    strategies at whole program level to achieve collision-free context
+    sensitivity.
+  type: bug
+  fuzzers:
+    - aflplusplus_classic_ctx
+    - cfctx_bottom
+    - cfctx_dataflow_seadsa
+    - cfctx_dataflow_svf
+    - cfctx_randomic
+    - cfctx_params
+    - cfctx_plain
 
 - experiment: 2021-07-05-saturated
   description: "Benchmark a new experimental feature for AFL++ (saturated)"
