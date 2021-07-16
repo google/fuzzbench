@@ -19,13 +19,19 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+
+- experiment: 2021-07-07-aflsmartformat
+  description: "aflsmartformat"
+  fuzzers:
+    - aflsmartformat
+    - aflsmart
+    - afl
 - experiment: 2021-07-08-feedback
   description: "Different feedback mechanisms"
   type: bug
   fuzzers:
     - afldd
     - aflpp_vs_dd
-    
 - experiment: 2021-07-09-aflpp
   description: "afl++: frida, cmplog, symbolic"
   fuzzers:
