@@ -26,7 +26,12 @@
     - aflsmartformat
     - aflsmart
     - afl
-
+- experiment: 2021-07-08-feedback
+  description: "Different feedback mechanisms"
+  type: bug
+  fuzzers:
+    - afldd
+    - aflpp_vs_dd
 - experiment: 2021-07-09-aflpp
   description: "afl++: frida, cmplog, symbolic"
   fuzzers:

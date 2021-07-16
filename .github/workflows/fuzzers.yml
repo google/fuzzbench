@@ -33,6 +33,8 @@ jobs:
           - mopt
           - neuzz
           - libafl
+          - afldd
+          - aflpp_vs_dd
           # Binary-only (greybox) fuzzers.
           - eclipser
           - afl_qemu
