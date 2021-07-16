@@ -21,10 +21,9 @@ RUN apt-get update && \
                        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
                        apt-utils apt-transport-https ca-certificates
 
-# Download and compile afl++.
-RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && \
-    git checkout f0e08e648609e57732a76e285e57714c6d5fd2cd
+# Download and compile afldd.
+RUN git clone https://github.com/elManto/AFLplusplus.git /afl && \
+    cd /afl
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.

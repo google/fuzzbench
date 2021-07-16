@@ -5,5 +5,15 @@ project: libxslt
 unsupported_fuzzers:
   - aflcc
   - aflplusplus_qemu
+  - aflplusplus_frida
   - klee
   - weizz_qemu
+  - libafl
+  - aflplusplus_cmplog_double
+  - symcc_aflplusplus_single
+  - eclipser_aflplusplus
+  - aflplusplus_qemu_double
+  - fuzzolic_aflplusplus_z3
+  - symqemu_aflplusplus
+  - fuzzolic_aflplusplus_fuzzy
+  - fuzzolic_aflplusplus_z3dict
