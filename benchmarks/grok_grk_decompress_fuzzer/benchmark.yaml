@@ -12,6 +12,7 @@ unsupported_fuzzers:
   - klee
   - lafintel
   - weizz_qemu
+  - cfctx_dataflow_seadsa
   - libafl
   - aflplusplus_cmplog_double
   - symcc_aflplusplus_single
