@@ -34,7 +34,7 @@ def fuzzer_and_benchmark_to_key(fuzzer: str, benchmark: str) -> str:
     return fuzzer + ' ' + benchmark
 
 
-def key_to_fuzzer_and_benchmark(key: str) -> str:
+def key_to_fuzzer_and_benchmark(key: str) -> Tuple[str, str]:
     """Returns a tuple containing the fuzzer and the benchmark represented by
     |key|."""
     return tuple(key.split(' '))
