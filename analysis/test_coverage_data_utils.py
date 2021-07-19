@@ -12,18 +12,23 @@
 # See the License for the specific language governing permissions andsss
 # limitations under the License.
 """Tests for coverage_data_utils.py"""
+from unittest import mock
 
 import pandas as pd
 import pandas.testing as pd_test
 
 from analysis import coverage_data_utils
 
+FUZZER = 'afl'
+BENCHMARK = 'libpng-1.2.56'
+EXPERIMENT_FILESTORE_PATH = 'gs://fuzzbench-data/myexperiment'
+
 
 def create_coverage_data():
     """Utility function to create test data."""
     return {
-        "afl libpng-1.2.56": [[0, 0, 1, 1], [0, 0, 2, 2], [0, 0, 3, 3]],
-        "libfuzzer libpng-1.2.56": [[0, 0, 1, 1], [0, 0, 2, 3], [0, 0, 3, 3],
+        'afl libpng-1.2.56': [[0, 0, 1, 1], [0, 0, 2, 2], [0, 0, 3, 3]],
+        'libfuzzer libpng-1.2.56': [[0, 0, 1, 1], [0, 0, 2, 3], [0, 0, 3, 3],
                                     [0, 0, 4, 4]]
     }
 
@@ -91,3 +96,91 @@ def test_get_pairwise_unique_coverage_table():
                                   index=fuzzers,
                                   columns=fuzzers)
     pd_test.assert_frame_equal(table, expected_table)
+
+
+def test_get_fuzzer_benchmark_covered_regions_filestore_path():
+    """Tests that get_fuzzer_benchmark_covered_regions_filestore_path returns
+    the correct result."""
+    assert coverage_data_utils.get_fuzzer_benchmark_covered_regions_filestore_path(
+        FUZZER, BENCHMARK,
+        EXPERIMENT_FILESTORE_PATH) == ('gs://fuzzbench-data/myexperiment/'
+                                       'coverage/data/libpng-1.2.56/afl/'
+                                       'covered_regions.json')
+
+
+def test_fuzzer_and_benchmark_to_key():
+    """Tests that fuzzer_and_benchmark_to_key returns the correct result."""
+    assert (coverage_data_utils.fuzzer_and_benchmark_to_key(
+        FUZZER, BENCHMARK) == 'afl libpng-1.2.56')
+
+
+def test_key_to_fuzzer_and_benchmark():
+    """Tests that key_to_fuzzer_and_benchmark returns the correct result."""
+    assert (coverage_data_utils.key_to_fuzzer_and_benchmark('afl libpng-1.2.56')
+            == (FUZZER, BENCHMARK))
+
+
+def test_fuzzer_benchmark_key_roundtrip():
+    """Tests that key_to_fuzzer_and_benchmark(fuzzer_and_benchmark_to_key(X, Y))
+    returns (X, Y)."""
+    assert (coverage_data_utils.key_to_fuzzer_and_benchmark(
+        coverage_data_utils.fuzzer_and_benchmark_to_key(
+            FUZZER, BENCHMARK)) == (FUZZER, BENCHMARK))
+
+
+def test_get_experiment_filestore_path_for_fuzzer_benchmark():
+    """Tests that get_experiment_filestore_path_for_fuzzer_benchmark returns the
+    right result."""
+    df = pd.DataFrame([{
+        'experiment_filestore': 'gs://fuzzbench-data',
+        'experiment': 'exp1',
+        'fuzzer': FUZZER,
+        'benchmark': BENCHMARK
+    }, {
+        'experiment_filestore': 'gs://fuzzbench-data2',
+        'experiment': 'exp2',
+        'fuzzer': 'libfuzzer',
+        'benchmark': BENCHMARK
+    }])
+    filestore_path = (
+        coverage_data_utils.get_experiment_filestore_path_for_fuzzer_benchmark(
+            FUZZER, BENCHMARK, df))
+    assert filestore_path == 'gs://fuzzbench-data/exp1'
+
+
+@mock.patch('logging.warning')
+def test_get_experiment_filestore_path_for_fuzzer_benchmark_multiple(
+        mocked_warning):
+    """Tests that get_experiment_filestore_path_for_fuzzer_benchmark returns the
+    right result when there are multiple filestores for a single pair."""
+    df = pd.DataFrame([{
+        'experiment_filestore': 'gs://fuzzbench-data',
+        'experiment': 'exp1',
+        'fuzzer': FUZZER,
+        'benchmark': BENCHMARK
+    }, {
+        'experiment_filestore': 'gs://fuzzbench-data2',
+        'experiment': 'exp2',
+        'fuzzer': FUZZER,
+        'benchmark': BENCHMARK
+    }])
+    filestore_path = (
+        coverage_data_utils.get_experiment_filestore_path_for_fuzzer_benchmark(
+            FUZZER, BENCHMARK, df))
+    assert (filestore_path == 'gs://fuzzbench-data/exp1' or
+            filestore_path == 'gs://fuzzbench-data2/exp2'
+    mocked_warning.assert_called_with()
+
+
+def test_get_experiment_filestore_paths():
+    """Tests that get_experiment_filestore_paths returns the right result."""
+    df = pd.DataFrame([{
+        'experiment_filestore': 'gs://fuzzbench-data',
+        'experiment': 'exp1'
+    }, {
+        'experiment_filestore': 'gs://fuzzbench-data2',
+        'experiment': 'exp2'
+    }])
+    assert sorted(coverage_data_utils.get_experiment_filestore_paths(df)) == [
+        'gs://fuzzbench-data/exp1', 'gs://fuzzbench-data2/exp2'
+    ]

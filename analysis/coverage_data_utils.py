@@ -34,17 +34,17 @@ def fuzzer_and_benchmark_to_key(fuzzer: str, benchmark: str) -> str:
     return fuzzer + ' ' + benchmark
 
 
-def get_fuzzer_filestore_path(df: pd.DataFrame, fuzzer: str) -> str:
-    """Gets the filestore_path for |fuzzer| in |df|."""
-    fuzzer_df = df[df.fuzzer == fuzzer]
-    filestore_path = fuzzer_df.experiment_filestore.unique()[0]
-    exp_name = fuzzer_df.experiment.unique()[0]
-    return posixpath.join(filestore_path, exp_name)
+def key_to_fuzzer_and_benchmark(key: str) -> str:
+    """Returns a tuple containing the fuzzer and the benchmark represented by
+    |key|."""
+    return tuple(key.split(' '))
 
 
-def get_experiment_filestore_path_for_fuzzer_benchmark(df: pd.Dataframe,
-                                                       fuzzer: str,
-                                                       benchmark: str) -> str:
+def get_experiment_filestore_path_for_fuzzer_benchmark(
+    fuzzer: str,
+    benchmark: str,
+    df: pd.DataFrame,
+) -> str:
     """Returns the experiment filestore path for |fuzzer| and |benchmark| in
     |df|. Returns an arbitrary filestore path if there are multiple."""
     df = df[df['fuzzer'] == fuzzer]
@@ -56,7 +56,7 @@ def get_experiment_filestore_path_for_fuzzer_benchmark(df: pd.Dataframe,
             'Multiple cov filestores (%s) for this fuzzer (%s) benchmark (%s) '
             'pair. Using first: %s.', experiment_filestore_paths, fuzzer,
             benchmark, fuzzer_benchmark_filestore_path)
-    return fuzzer_benchmark_filestore_path[0]
+    return fuzzer_benchmark_filestore_path
 
 
 def get_experiment_filestore_paths(df: pd.DataFrame) -> List[str]:
@@ -69,32 +69,31 @@ def get_coverage_report_filestore_path(fuzzer: str, benchmark: str,
     """Returns the filestore path of the coverage report for |fuzzer| on
     |benchmark| for |df|."""
     exp_filestore_path = get_experiment_filestore_path_for_fuzzer_benchmark(
-        df, fuzzer, benchmark)
+        fuzzer, benchmark, df)
     return posixpath.join(exp_filestore_path, 'coverage', 'reports', benchmark,
                           fuzzer, 'index.html')
 
 
-def get_covered_regions_dict(experiment_df: pandas.Dataframe) -> Dict:
+def get_covered_regions_dict(experiment_df: pd.DataFrame) -> Dict:
     """Combines json files for different fuzzer-benchmark pair in
     |experiment_df| and returns a dictionary of the covered regions."""
     fuzzers_and_benchmarks = set(
         zip(experiment_df.fuzzer, experiment_df.benchmark))
     arguments = [(fuzzer, benchmark,
                   get_experiment_filestore_path_for_fuzzer_benchmark(
-                      experiment_df, fuzzer, benchmark))
+                      fuzzer, benchmark, experiment_df))
                  for fuzzer, benchmark in fuzzers_and_benchmarks]
     result = itertools.starmap(get_fuzzer_benchmark_covered_regions_and_key,
                                arguments)
     return dict(result)
 
 
-def get_fuzzer_benchmark_covered_regions_filestore_path(fuzzer: str,
-                                                        benchmark: str,
-                                                        filestore: str) -> str:
+def get_fuzzer_benchmark_covered_regions_filestore_path(
+        fuzzer: str, benchmark: str, exp_filestore_path: str) -> str:
     """Returns the path to the covered regions json file in the |filestore| for
     |fuzzer| and |benchmark|."""
-    return posixpath.join(filestore, 'coverage', 'data', benchmark, fuzzer,
-                          'covered_regions.json')
+    return posixpath.join(exp_filestore_path, 'coverage', 'data', benchmark,
+                          fuzzer, 'covered_regions.json')
 
 
 def get_fuzzer_covered_regions(fuzzer: str, benchmark: str, filestore: str):
@@ -112,8 +111,8 @@ def get_fuzzer_covered_regions(fuzzer: str, benchmark: str, filestore: str):
             return json.load(json_file)
 
 
-def get_fuzzer_benchmark_covered_regions_and_key(fuzzer: str, benchmark: str,
-                                                 filestore: str):
+def get_fuzzer_benchmark_covered_regions_and_key(
+        fuzzer: str, benchmark: str, filestore: str) -> Tuple[str, Dict]:
     """Accepts |fuzzer|, |benchmark|, |filestore|.
     Returns a tuple containing the fuzzer benchmark key and the regions covered
     by the fuzzer on the benchmark."""
@@ -139,7 +138,7 @@ def get_unique_region_dict(benchmark_coverage_dict: Dict) -> Dict:
 
 
 def get_unique_region_cov_df(unique_region_dict: Dict,
-                             fuzzer_names: List[str]) -> pd.Dataframe:
+                             fuzzer_names: List[str]) -> pd.DataFrame:
     """Returns a DataFrame where the two columns are fuzzers and the number of
     unique regions covered."""
     fuzzers = collections.defaultdict(int)
@@ -152,12 +151,6 @@ def get_unique_region_cov_df(unique_region_dict: Dict,
         dict_to_transform['fuzzer'].append(fuzzer)
         dict_to_transform['unique_regions_covered'].append(covered_num)
     return pd.DataFrame(dict_to_transform)
-
-
-def key_to_fuzzer_and_benchmark(key: str) -> str:
-    """Returns a tuple containing the fuzzer and the benchmark represented by
-    |key|."""
-    return key.split(' ')
 
 
 def get_benchmark_cov_dict(coverage_dict, benchmark):
