@@ -22,6 +22,17 @@ from analysis import coverage_data_utils
 FUZZER = 'afl'
 BENCHMARK = 'libpng-1.2.56'
 EXPERIMENT_FILESTORE_PATH = 'gs://fuzzbench-data/myexperiment'
+SAMPLE_DF = pd.DataFrame([{
+    'experiment_filestore': 'gs://fuzzbench-data',
+    'experiment': 'exp1',
+    'fuzzer': FUZZER,
+    'benchmark': BENCHMARK
+}, {
+    'experiment_filestore': 'gs://fuzzbench-data2',
+    'experiment': 'exp2',
+    'fuzzer': 'libfuzzer',
+    'benchmark': BENCHMARK
+}])
 
 
 def create_coverage_data():
@@ -101,11 +112,12 @@ def test_get_pairwise_unique_coverage_table():
 def test_get_fuzzer_benchmark_covered_regions_filestore_path():
     """Tests that get_fuzzer_benchmark_covered_regions_filestore_path returns
     the correct result."""
-    assert coverage_data_utils.get_fuzzer_benchmark_covered_regions_filestore_path(
-        FUZZER, BENCHMARK,
-        EXPERIMENT_FILESTORE_PATH) == ('gs://fuzzbench-data/myexperiment/'
-                                       'coverage/data/libpng-1.2.56/afl/'
-                                       'covered_regions.json')
+    assert (
+        coverage_data_utils.get_fuzzer_benchmark_covered_regions_filestore_path(
+            FUZZER, BENCHMARK,
+            EXPERIMENT_FILESTORE_PATH) == ('gs://fuzzbench-data/myexperiment/'
+                                           'coverage/data/libpng-1.2.56/afl/'
+                                           'covered_regions.json'))
 
 
 def test_fuzzer_and_benchmark_to_key():
@@ -131,28 +143,18 @@ def test_fuzzer_benchmark_key_roundtrip():
 def test_get_experiment_filestore_path_for_fuzzer_benchmark():
     """Tests that get_experiment_filestore_path_for_fuzzer_benchmark returns the
     right result."""
-    df = pd.DataFrame([{
-        'experiment_filestore': 'gs://fuzzbench-data',
-        'experiment': 'exp1',
-        'fuzzer': FUZZER,
-        'benchmark': BENCHMARK
-    }, {
-        'experiment_filestore': 'gs://fuzzbench-data2',
-        'experiment': 'exp2',
-        'fuzzer': 'libfuzzer',
-        'benchmark': BENCHMARK
-    }])
     filestore_path = (
         coverage_data_utils.get_experiment_filestore_path_for_fuzzer_benchmark(
-            FUZZER, BENCHMARK, df))
+            FUZZER, BENCHMARK, SAMPLE_DF))
     assert filestore_path == 'gs://fuzzbench-data/exp1'
 
 
-@mock.patch('logging.warning')
+@mock.patch('analysis.coverage_data_utils.logger.warning')
 def test_get_experiment_filestore_path_for_fuzzer_benchmark_multiple(
         mocked_warning):
     """Tests that get_experiment_filestore_path_for_fuzzer_benchmark returns the
-    right result when there are multiple filestores for a single pair."""
+    right result when there are multiple filestores for a single pair and that a
+    warning is logged.."""
     df = pd.DataFrame([{
         'experiment_filestore': 'gs://fuzzbench-data',
         'experiment': 'exp1',
@@ -167,9 +169,10 @@ def test_get_experiment_filestore_path_for_fuzzer_benchmark_multiple(
     filestore_path = (
         coverage_data_utils.get_experiment_filestore_path_for_fuzzer_benchmark(
             FUZZER, BENCHMARK, df))
-    assert (filestore_path == 'gs://fuzzbench-data/exp1' or
-            filestore_path == 'gs://fuzzbench-data2/exp2'
-    mocked_warning.assert_called_with()
+    assert filestore_path in ('gs://fuzzbench-data/exp1'
+                              'gs://fuzzbench-data2/exp2')
+
+    assert mocked_warning.call_count == 1
 
 
 def test_get_experiment_filestore_paths():
@@ -184,3 +187,12 @@ def test_get_experiment_filestore_paths():
     assert sorted(coverage_data_utils.get_experiment_filestore_paths(df)) == [
         'gs://fuzzbench-data/exp1', 'gs://fuzzbench-data2/exp2'
     ]
+
+
+def test_coverage_report_filestore_path():
+    """Tests that get_coverage_report_filestore_path returns the correct
+    result."""
+    expected_cov_report_url = ('gs://fuzzbench-data/exp1/coverage/reports/'
+                               'libpng-1.2.56/afl/index.html')
+    assert coverage_data_utils.get_coverage_report_filestore_path(
+        FUZZER, BENCHMARK, SAMPLE_DF) == expected_cov_report_url
