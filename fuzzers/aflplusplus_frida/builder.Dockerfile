@@ -22,18 +22,15 @@ RUN apt-get update && \
 
 # Download afl++
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && git checkout 000b16af16bb5cb4e1ea9e4c24c693add6ae4da3
+    cd /afl && git checkout b6a9e54c60e98e5c27404253295ce06648bcbd18
     
 # Build afl++ without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /afl && \
     unset CFLAGS && unset CXXFLAGS && \
     AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
-    cd qemu_mode && git submodule init && \
-    git submodule update ./qemuafl && cd .. && \
-    cd frida_mode && make && cd .. && \
     make -C utils/aflpp_driver && \
-    cp utils/aflpp_driver/libAFLQemuDriver.a /libAFLDriver.a && \
-    cp utils/aflpp_driver/aflpp_qemu_driver_hook.so /
+    cd frida_mode && make && cd .. && \
+    cp utils/aflpp_driver/libAFLQemuDriver.a /libAFLDriver.a
 
 COPY get_frida_entry.sh /

@@ -46,9 +46,9 @@ RUN wget -qO /tmp/z3x64.zip https://github.com/Z3Prover/z3/releases/download/z3-
 
 # Get and install symcc.
 RUN cd / && \
-    git clone https://github.com/vanhauser-thc/adacc symcc && \
+    git clone https://github.com/adalogics/adacc symcc && \
     cd symcc && \
-    git checkout 0d81ccf64c9c032953991198a2bad20ff2b02904 && \
+    git checkout 70efb3ef512a12b31caedcfcd9c0890813cd797e && \
     cd ./runtime/qsym_backend && \
     git clone https://github.com/adalogics/qsym && \
     cd qsym && \

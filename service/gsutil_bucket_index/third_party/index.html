@@ -1,0 +1,375 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!-- Copyright 2015 The Chromium Authors. All rights reserved. -->
+
+<!-- Redistribution and use in source and binary forms, with or without -->
+<!-- modification, are permitted provided that the following conditions are -->
+<!-- met: -->
+
+<!--    * Redistributions of source code must retain the above copyright -->
+<!-- notice, this list of conditions and the following disclaimer. -->
+<!--    * Redistributions in binary form must reproduce the above -->
+<!-- copyright notice, this list of conditions and the following disclaimer -->
+<!-- in the documentation and/or other materials provided with the -->
+<!-- distribution. -->
+<!--    * Neither the name of Google Inc. nor the names of its -->
+<!-- contributors may be used to endorse or promote products derived from -->
+<!-- this software without specific prior written permission. -->
+
+<!-- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS -->
+<!-- "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT -->
+<!-- LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR -->
+<!-- A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT -->
+<!-- OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, -->
+<!-- SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT -->
+<!-- LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, -->
+<!-- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY -->
+<!-- THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT -->
+<!-- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE -->
+<!-- OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. -->
+
+<!-- This file was copied from https://chromium.googlesource.com/infra/infra/+/main/utils/gs_bucket_index/ -->
+<!-- It has been modified for fuzzbench. -->
+<!-- It is used to browse files in a GCS directory. This is why it is used as the -->
+<!-- homepage for FuzzBench -->
+<html>
+  <head>
+    <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js">
+    </script>
+
+    <script language="javascript">
+      // Split a string in 2 parts. The first is the leading number, if any,
+      // the second is the string following the numbers.
+      function splitNum(s) {
+        var results = new Array();
+        results[0] = 'None';
+        for (var i = 0; i < s.length; i++) {
+          var substr = s.substr(0, i+1)
+          if (isNaN(substr)) {
+            // Not a number anymore.
+            results[1] = s.substr(i)
+            break;
+          } else {
+            // This is a number. update the results.
+            results[0] = parseFloat(substr);
+          }
+        }
+        return results;
+      }
+
+      // Compare 2 strings using a custom alphanumerical algorithm.
+      // This is similar to a normal string sort, except that we sort
+      // first by leading digits, if any.
+      // For example:
+      //  100hello > 2goodbye
+      // Numbers anywhere else in the string are compared using the normal
+      // sort algorithm.
+      function alphanumCompare(a, b) {
+        var parsedA = splitNum(a);
+        var parsedB = splitNum(b);
+        var numA = parsedA[0];
+        var numB = parsedB[0];
+        var strA = parsedA[1];
+        var strB = parsedB[1];
+
+        if (! (isNaN(numA) || isNaN(numB))) {
+          // They both start with numbers.
+          cmp = (numA - numB);
+          if (cmp !== 0) {
+            return cmp;
+          }
+
+          // Identical. Fallback to string.
+          return (strA < strB) ? -1 : (strA > strB ? 1 : 0)
+        }
+
+        // If only one starts with a number, we start with that one as
+        // the lowest.
+        if (isNaN(numA) == false) return -1
+        if (isNaN(numB) == false) return 1
+
+        // They are both strings.
+        return (a < b) ? -1 : (a > b ? 1 : 0)
+      }
+
+      // Helper function to retrieve the value of a GET query parameter.
+      // Greatly inspired from http://alturl.com/8rj7a
+      function getParameter(parameterName) {
+        // Add '=' to the parameter name (i.e. parameterName=value)
+        var parameterName = parameterName + '=';
+        var queryString = window.location.search.substring(1);
+        if (queryString.length <= 0) {
+          return '';
+        }
+
+        // Find the beginning of the string
+        begin = queryString.indexOf(parameterName);
+
+        // If the parameter name is not found, skip it, otherwise return the
+        // value.
+        if (begin == -1) {
+          return '';
+        }
+
+        // Add the length (integer) to the beginning.
+        begin += parameterName.length;
+
+        // Multiple parameters are separated by the '&' sign.
+        end = queryString.indexOf ('&', begin);
+
+        if (end == -1) {
+          end = queryString.length;
+        }
+
+        // Return the string.
+        return escape(unescape(queryString.substring(begin, end)));
+      }
+
+      String.prototype.endsWith = function(suffix) {
+            return this.indexOf(suffix, this.length - suffix.length) !== -1;
+      };
+    </script>
+  </head>
+  <body>
+    <h1>
+      Index of <em id="bucket-name"></em>/<span id="bucket-prefix"></span>
+    </h1>
+
+    <table id="content-table" style="border-spacing:15px 0px;">
+      <tr>
+        <th><img class="img-blank" alt="[ICO]"></th>
+        <th>Name</th>
+        <th>Last modified</th>
+        <th>Size</th>
+      </tr>
+      <!-- Table header line -->
+      <tr>
+        <th colspan="6"><hr></th>
+      </tr>
+
+      <!-- Insert table contents here -->
+
+      <!-- Table footer line -->
+      <tr>
+        <th colspan="6"><hr></th>
+      </tr>
+    </table>
+
+    <script type="application/javascript">
+
+      var root = '/www.fuzzbench.com';
+      var bucket = root.substring(1);;
+      var prefix = getParameter('prefix') || 'reports/';
+
+      function getDisplayName(objectName) {
+        if (objectName.indexOf(prefix) == 0) {
+          objectName = objectName.substring(prefix.length);
+        }
+        if (objectName.endsWith("/")) {
+          objectName = objectName.substring(0, (objectName.length - 1));
+        }
+        return objectName;
+      }
+
+      function getMetadata(storageObject, key) {
+        // 'gsutil' uploads keys as lowercase
+        return (storageObject.metadata || {})[key.toLowerCase()]
+      }
+
+      var topTableOffset = 2;
+      var numBuckets = 0;
+      var numItems = 0;
+
+      function appendTableRow(idx, contentHTML) {
+        $("#content-table").each(function() {
+          this.insertRow(idx).innerHTML = contentHTML;
+        });
+      }
+
+      function appendTopRow(contentHTML) {
+        appendTableRow(topTableOffset, contentHTML);
+        topTableOffset++;
+      }
+
+      function appendPrefixRow(contentHTML) {
+        appendTableRow(topTableOffset + numBuckets, contentHTML);
+        numBuckets++;
+      }
+
+      function appendItemRow(contentHTML) {
+        appendTableRow(topTableOffset + numBuckets + numItems, contentHTML);
+        numItems++;
+      }
+
+      function addParentRow() {
+        var backpath = location.pathname;
+
+        // If there is more than one section delimited by '/' in the current
+        // prefix we truncate the last section and append the rest to
+        // backpath.
+        var delimiter = prefix.lastIndexOf('/');
+        if (delimiter >= 0) {
+          delimiter = prefix.substr(0, delimiter).lastIndexOf('/');
+          if (delimiter >= 0) {
+            backpath += '?prefix=';
+            backpath += escape(prefix.substr(0, delimiter+1));
+          }
+        }
+
+        appendTopRow(
+          '<td valign="top"><img src="' +
+                                 'icons/back.gif" alt="[DIR]"></td>' +
+          '<td><a href="' + backpath + '">Parent Directory</a></td>' +
+          '<td>&nbsp;</td>' +
+          '<td align="right">  - </td>' +
+          '');
+      }
+
+      function augmentPrefixes(prefixes) {
+        prefixes.sort(function(a, b){
+            return alphanumCompare(getDisplayName(a), getDisplayName(b));
+        });
+        prefixes.forEach(function(directory) {
+          var display_name = getDisplayName(directory);
+          if (display_name == 'icons') {
+            return;
+          }
+          var lnk = display_name + '/index.html';
+          this.appendPrefixRow(
+            '<td valign="top"><img src="' +
+                'icons/folder.gif" alt="[DIR]"></td>' +
+            '<td><a href="' + lnk + '">' + display_name +
+                '</a></td>' +
+            '<td align="right">-</td>' +
+            '<td align="right">-</td>' +
+            ''
+          );
+        });
+      }
+
+      function augmentItems(items) {
+        // Set up the variables.
+        var files = Array();
+        items.forEach(function(storageObject) {
+          // If this object _is_ the current prefix, skip it.
+          if(
+              (storageObject.kind !== 'storage#object') ||
+              (storageObject.name === prefix)) {
+            return;
+          }
+          files.push(storageObject);
+        });
+        files.sort(function(a, b){
+            return alphanumCompare(a.name, b.name);
+        });
+
+        files.forEach(function(storageObject) {
+          var link = storageObject['mediaLink'];
+          var filename = getDisplayName(storageObject['name']);
+          var size = parseInt(storageObject['size']) / 1024 / 1024;
+          var lastModified = storageObject['updated'].replace('T', ' ');
+          lastModified = lastModified.substr(0, lastModified.indexOf('.'));
+
+          // Remove the entries we don't want to show.
+          if (filename == '') {
+            return;
+          }
+
+          if (filename == 'index.html') {
+            prefix = getParameter('prefix') || 'reports/';
+            link = 'https://' + bucket + '/' + prefix + 'index.html';
+          }
+
+          // Display the row.
+          appendItemRow(
+            '<td valign="top"><img src="' +
+                           'icons/binary.gif" alt="[DIR]"></td>' +
+            '<td><a href="' + link + '">' + filename + '</a></td>' +
+            '<td align="right">' + lastModified + '</td>' +
+            '<td align="right">' + size.toFixed(2) + 'MB</td>' +
+            '');
+        });
+      }
+
+      function fetchAndDisplayObjects() {
+        var gsAPIBase = 'https://www.googleapis.com/storage/v1';
+        var fieldsParam = 'items(kind,mediaLink,metadata,name,size,updated),' +
+                          'kind,prefixes,nextPageToken';
+        var gsAPIListObjects = gsAPIBase + '/b/' + bucket + '/o';
+        var url = gsAPIListObjects + '?delimiter=/&prefix=' + prefix +
+                  '&fields=' + fieldsParam;
+
+        // Initial page load
+        addNextPage('')
+
+        function addNextPage(nextPageToken) {
+          var reqURL = url
+          if (nextPageToken != '') {
+            reqURL += '&pageToken=' + nextPageToken;
+          }
+
+          var http = new XMLHttpRequest();
+          http.open('GET', reqURL, true);
+          http.onreadystatechange = addNextPageHttpResponse;
+          http.send(null);
+
+          function addNextPageHttpResponse() {
+            if (http.readyState !== http.DONE) {
+              return;
+            }
+
+            // If the status isn't 200, error and stop.
+            if (http.status != 200) {
+              console.log("HTTP request failed with [" + http.status + "]");
+              return;
+            }
+
+            objectsDict = JSON.parse(http.responseText);
+            if(objectsDict.kind != 'storage#objects') {
+              console.log("JSON API did not return 'storage#objects' object");
+              return;
+            }
+
+            // Augment prefixes
+            if (objectsDict.prefixes !== undefined) {
+              augmentPrefixes(objectsDict.prefixes)
+            }
+
+            // Augment items
+            if (objectsDict.items !== undefined) {
+              augmentItems(objectsDict.items)
+            }
+
+            // Load next page
+            if(objectsDict.nextPageToken !== undefined) {
+              addNextPage(objectsDict.nextPageToken);
+            }
+          }
+        }
+      }
+
+      $( document ).ready(function() {
+        // Initialize static content
+        $('.img-blank').each(function() {
+          $(this).attr('src', 'icons/blank.gif');
+        });
+
+        $('#bucket-name').each(function() {
+          $(this).html(bucket);
+        });
+
+        $('#bucket-prefix').each(function() {
+          $(this).html(prefix);
+        });
+
+        // Add "parent" row, if we have a non-empty prefix
+        if (prefix != '') {
+          addParentRow();
+        }
+
+        // Fetch and render
+        fetchAndDisplayObjects();
+      });
+    </script>
+  </body>
+</html>
