@@ -37,10 +37,10 @@ if not experiment_utils.is_local_experiment():
 else:
     import experiment.build.local_build as buildlib
 
-# FIXME: Make this configurable for users with the default quota of 10.
+# FIXME: Use 10 as default quota.
 # Even though it says queueing happen, we end up exceeding limits on "get", so
 # be conservative. Use 30 for now since this is limit for FuzzBench service.
-MAX_CONCURRENT_BUILDS = 30
+DEFAULT_MAX_CONCURRENT_BUILDS = 30
 
 # Build fail retries and wait interval.
 NUM_BUILD_RETRIES = 3
@@ -118,12 +118,15 @@ def split_successes_and_failures(inputs: List,
     return successes, failures
 
 
-def retry_build_loop(build_func: Callable, inputs: List[Tuple]) -> List:
+def retry_build_loop(
+        build_func: Callable,
+        inputs: List[Tuple],
+        concurrent_builds: int = DEFAULT_MAX_CONCURRENT_BUILDS) -> List:
     """Calls |build_func| in parallel on |inputs|. Repeat on failures up to
     |NUM_BUILD_RETRIES| times. Returns the list of inputs that |build_func| was
     called successfully on."""
     successes = []
-    with mp_pool.ThreadPool(MAX_CONCURRENT_BUILDS) as pool:
+    with mp_pool.ThreadPool(concurrent_builds) as pool:
         for _ in range(NUM_BUILD_RETRIES):
             logs.info('Building using (%s): %s', build_func, inputs)
             results = pool.starmap(build_func, inputs)
@@ -159,8 +162,10 @@ def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
     return True
 
 
-def build_all_fuzzer_benchmarks(fuzzers: List[str],
-                                benchmarks: List[str]) -> List[str]:
+def build_all_fuzzer_benchmarks(
+        fuzzers: List[str],
+        benchmarks: List[str],
+        concurrent_builds: int = DEFAULT_MAX_CONCURRENT_BUILDS) -> List[str]:
     """Build fuzzer,benchmark images for all pairs of |fuzzers| and |benchmarks|
     in parallel. Returns a list of fuzzer,benchmark pairs that built
     successfully."""
@@ -171,7 +176,8 @@ def build_all_fuzzer_benchmarks(fuzzers: List[str],
     # TODO(metzman): Use an asynchronous unordered map variant to schedule
     # eagerly.
     successful_calls = retry_build_loop(build_fuzzer_benchmark,
-                                        build_fuzzer_benchmark_args)
+                                        build_fuzzer_benchmark_args,
+                                        concurrent_builds)
     logger.info('Done building fuzzer benchmarks.')
     return successful_calls
 
@@ -192,10 +198,19 @@ def main():
                         help='Fuzzer names.',
                         nargs='+',
                         required=True)
+
+    parser.add_argument('-cb',
+                        '--concurrent-builds',
+                        help='Max concurrent builds allowed.',
+                        type=int,
+                        default=DEFAULT_MAX_CONCURRENT_BUILDS,
+                        required=False)
+
     logs.initialize()
     args = parser.parse_args()
 
-    build_all_fuzzer_benchmarks(args.fuzzers, args.benchmarks)
+    build_all_fuzzer_benchmarks(args.fuzzers, args.benchmarks,
+                                args.concurrent_builds)
 
     return 0
 
