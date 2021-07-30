@@ -117,11 +117,12 @@ def build_images_for_trials(fuzzers: List[str],
     builder.build_base_images()
 
     # Only build fuzzers for benchmarks whose measurers built successfully.
-    benchmarks = builder.build_all_measurers(benchmarks)
     if concurrent_builds is None:
+        benchmarks = builder.build_all_measurers(benchmarks)
         build_successes = builder.build_all_fuzzer_benchmarks(
             fuzzers, benchmarks)
     else:
+        benchmarks = builder.build_all_measurers(benchmarks, concurrent_builds)
         build_successes = builder.build_all_fuzzer_benchmarks(
             fuzzers, benchmarks, concurrent_builds)
     experiment_name = experiment_utils.get_experiment_name()
@@ -150,7 +151,7 @@ def dispatcher_main():
 
     experiment_config_file_path = _get_config_path()
     experiment = Experiment(experiment_config_file_path)
-
+    
     _initialize_experiment_in_db(experiment.config)
 
     trials = build_images_for_trials(experiment.fuzzers, experiment.benchmarks,
