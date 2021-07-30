@@ -89,13 +89,16 @@ def build_measurer(benchmark: str) -> bool:
         return False
 
 
-def build_all_measurers(benchmarks: List[str], concurrent_builds: int = DEFAULT_MAX_CONCURRENT_BUILDS) -> List[str]:
+def build_all_measurers(
+        benchmarks: List[str],
+        concurrent_builds: int = DEFAULT_MAX_CONCURRENT_BUILDS) -> List[str]:
     """Build measurers for each benchmark in |benchmarks| in parallel
     Returns a list of benchmarks built successfully."""
     logger.info('Building measurers.')
     filesystem.recreate_directory(build_utils.get_coverage_binaries_dir())
     build_measurer_args = [(benchmark,) for benchmark in benchmarks]
-    successful_calls = retry_build_loop(build_measurer, build_measurer_args, concurrent_builds)
+    successful_calls = retry_build_loop(build_measurer, build_measurer_args,
+                                        concurrent_builds)
     logger.info('Done building measurers.')
     # Return list of benchmarks (like the list we were passed as an argument)
     # instead of returning a list of tuples each containing a benchmark.
@@ -118,10 +121,8 @@ def split_successes_and_failures(inputs: List,
     return successes, failures
 
 
-def retry_build_loop(
-        build_func: Callable,
-        inputs: List[Tuple],
-        concurrent_builds: int) -> List:
+def retry_build_loop(build_func: Callable, inputs: List[Tuple],
+                     concurrent_builds: int) -> List:
     """Calls |build_func| in parallel on |inputs|. Repeat on failures up to
     |NUM_BUILD_RETRIES| times. Returns the list of inputs that |build_func| was
     called successfully on."""

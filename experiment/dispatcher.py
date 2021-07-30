@@ -151,7 +151,7 @@ def dispatcher_main():
 
     experiment_config_file_path = _get_config_path()
     experiment = Experiment(experiment_config_file_path)
-    
+
     _initialize_experiment_in_db(experiment.config)
 
     trials = build_images_for_trials(experiment.fuzzers, experiment.benchmarks,
