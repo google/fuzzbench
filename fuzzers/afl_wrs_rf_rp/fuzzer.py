@@ -13,6 +13,8 @@
 # limitations under the License.
 """Integration code for FairFuzz fuzzer."""
 
+import os
+
 from fuzzers.afl import fuzzer as afl_fuzzer
 
 
@@ -23,4 +25,5 @@ def build():
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
+    os.environ['AFL_RP_PROB'] = '20'
     afl_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
