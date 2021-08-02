@@ -132,10 +132,10 @@ def test_gsutil_parallel_on(fs, use_gsutil):  # pylint: disable=invalid-name,unu
 @pytest.mark.parametrize(('filestore_path', 'expected_result'),
                          [('gs://filestore', True), ('/filestore', False),
                           ('C:\\Windows\\filestore', False)])
-def test_is_filestore_path_gcs(filestore_path, expected_result):
-    """Tests that is_filestore_path_gcs returns the correct result for different
+def test_is_gcs_filestore_path(filestore_path, expected_result):
+    """Tests that is_gcs_filestore_path returns the correct result for different
     filestore paths."""
-    assert (filestore_utils.is_filestore_path_gcs(filestore_path) ==
+    assert (filestore_utils.is_gcs_filestore_path(filestore_path) ==
             expected_result)
 
 

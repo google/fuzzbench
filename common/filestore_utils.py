@@ -29,11 +29,11 @@ def _using_gsutil():
     except KeyError:
         return True
 
-    return is_filestore_path_gcs(experiment_filestore_path)
+    return is_gcs_filestore_path(experiment_filestore_path)
 
 
-def is_filestore_path_gcs(filestore_path):
-    """Returns True if |filestore_path is a GCS URL. Assumes that GCS paths are
+def is_gcs_filestore_path(filestore_path):
+    """Returns True if |filestore_path| is a GCS URL. Assumes that GCS paths are
     using gs:// and not http."""
     return filestore_path.startswith(GCS_GSUTIL_PREFIX)
 
@@ -43,7 +43,7 @@ def get_user_facing_path(filestore_path):
     If |filestore_path| isn't a GCS URL, then it simply returns
     |filestore_path|. If it is a GCS URL, then the HTTPS version of
     |filestore_path| is returned."""
-    if not is_filestore_path_gcs(filestore_path):
+    if not is_gcs_filestore_path(filestore_path):
         return filestore_path
     return filestore_path.replace(GCS_GSUTIL_PREFIX, GCS_HTTP_PREFIX)
 

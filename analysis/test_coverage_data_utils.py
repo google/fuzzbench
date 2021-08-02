@@ -169,7 +169,7 @@ def test_get_experiment_filestore_path_for_fuzzer_benchmark_multiple(
     filestore_path = (
         coverage_data_utils.get_experiment_filestore_path_for_fuzzer_benchmark(
             FUZZER, BENCHMARK, df))
-    assert filestore_path in ('gs://fuzzbench-data/exp1'
+    assert filestore_path in ('gs://fuzzbench-data/exp1',
                               'gs://fuzzbench-data2/exp2')
 
     assert mocked_warning.call_count == 1
