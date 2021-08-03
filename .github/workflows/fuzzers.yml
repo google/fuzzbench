@@ -82,6 +82,14 @@ jobs:
           - cfctx_randomic
           - cfctx_params
           - cfctx_plain
+          - afl_no_favs
+          - afl_rf
+          - afl_rf_u
+          - afl_rf_u_wrs
+          - afl_wrs
+          - afl_wrs_rf
+          - afl_wrs_rf_rp
+          - afl_wrs_rp
           # Concolic execution
           - aflplusplus_cmplog_double
           - aflplusplus_qemu_double
