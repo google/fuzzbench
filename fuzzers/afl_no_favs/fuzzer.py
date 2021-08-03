@@ -25,8 +25,8 @@ def build():
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    os.environ['AFL_DISABLE_WRS'] ='1'
-    os.environ['AFL_DISABLE_RF'] ='1'
-    os.environ['AFL_DISABLE_FAVS'] ='1'
-    os.environ['AFL_DISABLE_RP'] ='1'
+    os.environ['AFL_DISABLE_WRS'] = '1'
+    os.environ['AFL_DISABLE_RF'] = '1'
+    os.environ['AFL_DISABLE_FAVS'] = '1'
+    os.environ['AFL_DISABLE_RP'] = '1'
     afl_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
