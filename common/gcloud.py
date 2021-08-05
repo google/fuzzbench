@@ -28,7 +28,6 @@ DISPATCHER_BOOT_DISK_SIZE = '4TB'
 DISPATCHER_BOOT_DISK_TYPE = 'pd-ssd'
 
 # Constants for runner specs.
-RUNNER_MACHINE_TYPE = 'n1-standard-1'
 RUNNER_BOOT_DISK_SIZE = '30GB'
 
 # Constants for measurer worker specs.
@@ -75,13 +74,18 @@ def create_instance(instance_name: str,
             '--boot-disk-type=%s' % DISPATCHER_BOOT_DISK_TYPE,
         ])
     else:
+        machine_type = config['runner_machine_type']
+        if machine_type is not None:
+            command.append('--machine-type=%s' % machine_type)
+        else:
+            # Do this to support KLEE experiments.
+            command.append([
+                '--custom-memory=%s' % config['runner_memory'],
+                '--custom-cpu=%s' % config['runner_num_cpu_cores']
+            ])
+
         command.extend([
             '--no-address',
-            # Uncomment these and comment out "machine-type" to increase RAM for
-            # KLEE.
-            # '--custom-memory=12GB',
-            # '--custom-cpu=2',
-            '--machine-type=%s' % RUNNER_MACHINE_TYPE,
             '--boot-disk-size=%s' % RUNNER_BOOT_DISK_SIZE,
         ])
 
