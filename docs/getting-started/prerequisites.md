@@ -37,8 +37,15 @@ Googlers can visit [go/installdocker](https://goto.google.com/installdocker).
 If you want to run `docker` without `sudo`, you can
 [create a docker group](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user).
 
+To ensure there are no problems building docker images, we recommend using a
+recent docker release. If you are using an older release, and your builds are
+failing you may need to
+[enable BuildKit](https://google.github.io/oss-fuzz/getting-started/new-project-guide/#prerequisites).
+
 **Note:** Docker images can consume significant disk space. Clean up unused
-docker images periodically.
+docker images periodically. You can do this with
+[docker-cleanup](https://gist.github.com/mikea/d23a839cba68778d94e0302e8a2c200f)
+to garbage collect unused images.
 
 ### Make
 
@@ -94,7 +101,7 @@ make format
 ### Local Support
 
 If you want to run FuzzBench [locally]({{ site.baseurl }}/running-a-local-experiment/#Running a local experiment)
-on your own machine or servers, it needs `rsync` installed:
+on your own machine or servers, they need `rsync` installed:
 ```bash
 sudo apt-get install rsync
 ```
