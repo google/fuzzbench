@@ -102,7 +102,7 @@ make format
 ### Local Support
 
 If you want to run FuzzBench [locally]({{ site.baseurl }}/running-a-local-experiment/#Running a local experiment)
-on your own machine or servers, they need `rsync` installed:
+on your own machines or servers, they need `rsync` installed:
 ```bash
 sudo apt-get install rsync
 ```
