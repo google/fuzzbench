@@ -21,9 +21,12 @@ from test_libs import utils as test_utils
 
 INSTANCE_NAME = 'instance-a'
 ZONE = 'zone-a'
-machine_type = 'my-machine-type'
-CONFIG = {'cloud_compute_zone': ZONE, 'service_account': 'blah',
-          'runner_machine_type': machine_type}
+MACHINE_TYPE = 'my-machine-type'
+CONFIG = {
+    'cloud_compute_zone': ZONE,
+    'service_account': 'blah',
+    'runner_machine_type': MACHINE_TYPE
+}
 
 
 def test_create_instance():
