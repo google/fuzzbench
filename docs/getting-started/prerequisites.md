@@ -41,6 +41,7 @@ To ensure there are no problems building docker images, we recommend using a
 recent docker release. If you are using an older release, and your builds are
 failing you may need to
 [enable BuildKit](https://google.github.io/oss-fuzz/getting-started/new-project-guide/#prerequisites).
+This step is unnecessary on recent Docker releases.
 
 **Note:** Docker images can consume significant disk space. Clean up unused
 docker images periodically. You can do this with
