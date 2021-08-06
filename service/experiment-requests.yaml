@@ -19,16 +19,78 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
-- experiment: 2021-07-08-glibfuzzer
-  description: "This is an improved tool on libfuzzer-fork mode. 
-  It is a parallel fuzzer, so in the fuzzbench experment, I want each fuzzer to run 8 cores for 12 hours. 
-  The comparison object is the [libfuzzer-fork] that I added at the same time. 
-  Since the improvement part is about corpus scheduling, I disabled -entropic=0 (so the comparison effect is more obvious), 
-  but you can also add -entropic=1, that is, run [1.glibfuzzer,-entropic=0] [2.glibfuzzer,-entropic=1] [3.libfuzzer-fork,-entropic=0]
-  [4.libfuzzer-fork,-entropic=1]"
+
+- experiment: 2021-07-30-random-params
+  description: "Evaluate various random parameters for afl"
   fuzzers:
-    - libfuzzer-fork-parallel
-    - glibfuzzer
+    - afl
+    - afl_no_favs
+    - afl_rf
+    - afl_rf_u
+    - afl_rf_u_wrs
+    - afl_wrs
+    - afl_wrs_rf
+    - afl_wrs_rf_rp
+    - afl_wrs_rp
+
+- experiment: 2021-07-30-aflpp
+  description: "afl++ cmplog"
+  fuzzers:
+    - aflplusplus
+    - honggfuzz
+    - aflplusplus_cmplog_2dict
+    - aflplusplus_cmplog_2dictl
+
+- experiment: 2021-07-07-aflsmartformat
+  description: "aflsmartformat"
+  fuzzers:
+    - aflsmartformat
+    - aflsmart
+    - afl
+- experiment: 2021-07-08-feedback
+  description: "Different feedback mechanisms"
+  type: bug
+  fuzzers:
+    - afldd
+    - aflpp_vs_dd
+- experiment: 2021-07-09-aflpp
+  description: "afl++: frida, cmplog, symbolic"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_cmplog_double
+    - fuzzolic_aflplusplus_z3
+    - fuzzolic_aflplusplus_z3dict
+    - honggfuzz
+    - aflplusplus_313
+    - aflplusplus_cmplog_fullskip
+    - aflplusplus_cmplog_2dict
+    - aflplusplus_frida
+    - aflplusplus_frida_better
+    - aflplusplus_qemu
+    
+- experiment: 2021-07-15-saturated
+  description: "Benchmark a new experimental feature for AFL++ (saturated)"
+  type: bug
+  oss-fuzz-corpus: true
+  fuzzers:
+    - aflplusplus_unusual_disabled
+    - aflplusplus_unusual_enabled
+    
+- experiment: 2021-07-09-cloning
+  description: >
+    Benchmark some variants of AFL++ that use different function cloning
+    strategies at whole program level to achieve collision-free context
+    sensitivity.
+  type: bug
+  fuzzers:
+    - aflplusplus_classic_ctx
+    - cfctx_bottom
+    - cfctx_dataflow_seadsa
+    - cfctx_dataflow_svf
+    - cfctx_randomic
+    - cfctx_params
+    - cfctx_plain
+
 - experiment: 2021-07-05-saturated
   description: "Benchmark a new experimental feature for AFL++ (saturated)"
   type: bug
