@@ -62,7 +62,7 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
         '-close_fd_mask=3',
         # Run in fork mode to allow ignoring ooms, timeouts, crashes and
         # continue fuzzing indefinitely.
-        '-fork=8',
+        '-fork=4',
         '-ignore_ooms=1',
         '-ignore_timeouts=1',
         '-ignore_crashes=1',
