@@ -20,6 +20,7 @@ from analysis import data_utils
 from analysis import coverage_data_utils
 from analysis import stat_tests
 from common import benchmark_utils
+from common import filestore_utils
 
 
 # pylint: disable=too-many-public-methods, too-many-arguments
@@ -49,18 +50,11 @@ class BenchmarkResults:
     def _get_full_path(self, filename):
         return os.path.join(self._output_directory, filename)
 
-    def _get_experiment_filestore_path(self, fuzzer_name):
-        return coverage_data_utils.get_fuzzer_filestore_path(
-            self._benchmark_df, fuzzer_name)
-
-    def get_filestore_name(self, fuzzer_name):
+    def get_coverage_report_path(self, fuzzer_name, benchmark_name):
         """Returns the filestore name of the |fuzzer_name|."""
-        filestore_path = self._get_experiment_filestore_path(fuzzer_name)
-        gcs_prefix = 'gs://'
-        gcs_http_prefix = 'https://storage.googleapis.com/'
-        if filestore_path.startswith(gcs_prefix):
-            filestore_path = filestore_path.replace(gcs_prefix, gcs_http_prefix)
-        return filestore_path
+        filestore_path = coverage_data_utils.get_coverage_report_filestore_path(
+            self._benchmark_df, fuzzer_name, benchmark_name)
+        return filestore_utils.get_user_facing_path(filestore_path)
 
     @property
     @functools.lru_cache()

@@ -23,6 +23,9 @@ unsupported_fuzzers:
   - symcc_aflplusplus_single
   - eclipser_aflplusplus
   - aflplusplus_qemu_double
+  - aflplusplus_frida
   - fuzzolic_aflplusplus_z3
   - symqemu_aflplusplus
   - fuzzolic_aflplusplus_fuzzy
+  - libafl
+  - fuzzolic_aflplusplus_z3dict

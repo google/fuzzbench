@@ -32,3 +32,5 @@ no_seeds: false
 no_dictionaries: false
 oss_fuzz_corpus: false
 description: "Test experiment"
+runner_num_cpu_cores: 1
+runner_machine_type: 'n1-standard-1'
