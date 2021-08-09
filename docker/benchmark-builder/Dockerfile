@@ -14,9 +14,6 @@
 
 ARG parent_image
 
-# Using multi-stage build to copy latest Python 3.
-FROM gcr.io/fuzzbench/base-image AS base-image
-
 FROM $parent_image
 
 ARG fuzzer
@@ -27,11 +24,14 @@ ENV FUZZER $fuzzer
 ENV BENCHMARK $benchmark
 ENV DEBUG_BUILDER $debug_builder
 
-# Copy latest python3 from base-image into local.
-COPY --from=base-image /usr/local/bin/python3* /usr/local/bin/
-COPY --from=base-image /usr/local/lib/python3.8 /usr/local/lib/python3.8
-COPY --from=base-image /usr/local/include/python3.8 /usr/local/include/python3.8
-COPY --from=base-image /usr/local/lib/python3.8/site-packages /usr/local/lib/python3.8/site-packages
+# Install python.
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y python3-dev python3-pip
+
+# Install Python dependencies.
+COPY ./requirements.txt /tmp
+RUN unset CC CXX CXXFLAGS CFLAGS LDFLAGS && pip install -r /tmp/requirements.txt
 
 # Copy the entire fuzzers directory tree to allow for module dependencies.
 COPY fuzzers $SRC/fuzzers
