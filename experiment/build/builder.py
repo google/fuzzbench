@@ -91,14 +91,15 @@ def build_measurer(benchmark: str) -> bool:
 
 def build_all_measurers(
         benchmarks: List[str],
-        concurrent_builds: int = DEFAULT_MAX_CONCURRENT_BUILDS) -> List[str]:
+        num_concurrent_builds: int = DEFAULT_MAX_CONCURRENT_BUILDS
+) -> List[str]:
     """Build measurers for each benchmark in |benchmarks| in parallel
     Returns a list of benchmarks built successfully."""
     logger.info('Building measurers.')
     filesystem.recreate_directory(build_utils.get_coverage_binaries_dir())
     build_measurer_args = [(benchmark,) for benchmark in benchmarks]
     successful_calls = retry_build_loop(build_measurer, build_measurer_args,
-                                        concurrent_builds)
+                                        num_concurrent_builds)
     logger.info('Done building measurers.')
     # Return list of benchmarks (like the list we were passed as an argument)
     # instead of returning a list of tuples each containing a benchmark.
@@ -122,13 +123,13 @@ def split_successes_and_failures(inputs: List,
 
 
 def retry_build_loop(build_func: Callable, inputs: List[Tuple],
-                     concurrent_builds: int) -> List:
+                     num_concurrent_builds: int) -> List:
     """Calls |build_func| in parallel on |inputs|. Repeat on failures up to
     |NUM_BUILD_RETRIES| times. Returns the list of inputs that |build_func| was
     called successfully on."""
     successes = []
-    logs.info('Concurrent builds: %d', concurrent_builds)
-    with mp_pool.ThreadPool(concurrent_builds) as pool:
+    logs.info('Concurrent builds: %d.', num_concurrent_builds)
+    with mp_pool.ThreadPool(num_concurrent_builds) as pool:
         for _ in range(NUM_BUILD_RETRIES):
             logs.info('Building using (%s): %s', build_func, inputs)
             results = pool.starmap(build_func, inputs)
@@ -167,7 +168,8 @@ def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
 def build_all_fuzzer_benchmarks(
         fuzzers: List[str],
         benchmarks: List[str],
-        concurrent_builds: int = DEFAULT_MAX_CONCURRENT_BUILDS) -> List[str]:
+        num_concurrent_builds: int = DEFAULT_MAX_CONCURRENT_BUILDS
+) -> List[str]:
     """Build fuzzer,benchmark images for all pairs of |fuzzers| and |benchmarks|
     in parallel. Returns a list of fuzzer,benchmark pairs that built
     successfully."""
@@ -179,7 +181,7 @@ def build_all_fuzzer_benchmarks(
     # eagerly.
     successful_calls = retry_build_loop(build_fuzzer_benchmark,
                                         build_fuzzer_benchmark_args,
-                                        concurrent_builds)
+                                        num_concurrent_builds)
     logger.info('Done building fuzzer benchmarks.')
     return successful_calls
 
@@ -201,8 +203,8 @@ def main():
                         nargs='+',
                         required=True)
 
-    parser.add_argument('-cb',
-                        '--concurrent-builds',
+    parser.add_argument('-n',
+                        '--num-concurrent-builds',
                         help='Max concurrent builds allowed.',
                         type=int,
                         default=DEFAULT_MAX_CONCURRENT_BUILDS,
@@ -212,7 +214,7 @@ def main():
     args = parser.parse_args()
 
     build_all_fuzzer_benchmarks(args.fuzzers, args.benchmarks,
-                                args.concurrent_builds)
+                                args.num_concurrent_builds)
 
     return 0
 
