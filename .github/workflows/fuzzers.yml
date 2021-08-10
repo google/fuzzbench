@@ -66,7 +66,7 @@ jobs:
           - aflplusplus_313
           - aflplusplus_cmplog_fullskip
           - aflplusplus_cmplog_2dict
-          - aflplusplus_frida_better
+          - aflplusplus_cmplog_2dictl
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
           - aflprefix
@@ -82,6 +82,14 @@ jobs:
           - cfctx_randomic
           - cfctx_params
           - cfctx_plain
+          - afl_no_favs
+          - afl_rf
+          - afl_rf_u
+          - afl_rf_u_wrs
+          - afl_wrs
+          - afl_wrs_rf
+          - afl_wrs_rf_rp
+          - afl_wrs_rp
           # Concolic execution
           - aflplusplus_cmplog_double
           - aflplusplus_qemu_double

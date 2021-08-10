@@ -33,3 +33,5 @@ no_dictionaries: false
 oss_fuzz_corpus: false
 description: "Test experiment"
 concurrent_builds: null
+runner_num_cpu_cores: 1
+runner_machine_type: 'n1-standard-1'

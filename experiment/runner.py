@@ -375,7 +375,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
                                                      self.log_file)
 
         except Exception:  # pylint: disable=broad-except
-            logs.error('Call to %d failed.', fuzzer_module_get_stats)
+            logs.error('Call to %s failed.', fuzzer_module_get_stats)
             return
 
         try:
