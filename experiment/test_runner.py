@@ -178,7 +178,7 @@ def test_record_stats_exception(mocked_log_error, trial_runner, fuzzer_module):
     stats_file = os.path.join(trial_runner.results_dir, 'stats-%d.json' % cycle)
     assert not os.path.exists(stats_file)
     mocked_log_error.assert_called_with(
-        'Call to %d failed.', FuzzerAModuleGetStatsException.get_stats)
+        'Call to %s failed.', FuzzerAModuleGetStatsException.get_stats)
 
 
 def test_trial_runner(trial_runner):

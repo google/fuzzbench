@@ -416,7 +416,7 @@
                     <div class="collapsible-body">
                         <div class="collection">
                             {% for fuzzer in benchmark.fuzzer_names %}
-                            <a href="{{ benchmark.get_filestore_name(fuzzer) }}/coverage/reports/{{ benchmark.name }}/{{ fuzzer }}/index.html" class="collection-item">{{ fuzzer }}</a>
+                            <a href="{{ benchmark.get_coverage_report(fuzzer, benchmark) }}" class="collection-item">{{ fuzzer }}</a>
                             {% endfor %}
                         </div>
                     </div>

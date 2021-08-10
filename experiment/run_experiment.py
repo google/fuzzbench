@@ -241,6 +241,13 @@ def start_experiment(  # pylint: disable=too-many-arguments
     config['oss_fuzz_corpus'] = oss_fuzz_corpus
     config['description'] = description
     config['concurrent_builds'] = concurrent_builds
+    config['runner_machine_type'] = config.get('runner_machine_type',
+                                               'n1-standard-1')
+    config['runner_num_cpu_cores'] = config.get('runner_num_cpu_cores', 1)
+    # Note this is only used if runner_machine_type is None.
+    # 12GB is just the amount that KLEE needs, use this default to make KLEE
+    # experiments easier to run.
+    config['runner_memory'] = config.get('runner_memory', '12GB')
     return start_experiment_from_full_config(config)
 
 
