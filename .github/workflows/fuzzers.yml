@@ -69,8 +69,6 @@ jobs:
           - aflprefix
           - dropfuzzer
           - afl_two_instances
-          - afl_no_favored
-          - afl_random_favored
           - aflplusplus_classic_ctx
           - cfctx_basic
           - cfctx_bottom
