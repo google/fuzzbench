@@ -15,19 +15,22 @@
 ARG parent_image
 FROM $parent_image
 
+# Install the necessary packages.
 RUN apt-get update && \
-    apt-get install -y wget libstdc++-5-dev libexpat1-dev \
-                       apt-utils apt-transport-https ca-certificates
+    apt-get install -y wget libstdc++-5-dev libtool-bin automake flex bison \
+                       libglib2.0-dev libpixman-1-dev python3-setuptools unzip
 
 # Download afl++
-RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && \
-    git checkout 6191af744002ec06661dc996a61eeb11e4a58a79
+RUN git clone https://github.com/WorksButNotTested/AFLplusplus.git /afl && \
+    cd /afl && git checkout c464ef676d5930d589a4fdc95627b8bcacf301af
     
-# Build without Python support as we don't need it.
+# Build afl++ without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
-RUN cd /afl && unset CFLAGS && unset CXXFLAGS && export AFL_NO_X86=1 && \
-    CC=clang PYTHON_INCLUDE=/ make && make install && \
+RUN cd /afl && \
+    unset CFLAGS && unset CXXFLAGS && \
+    AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
     make -C utils/aflpp_driver && \
-    cp utils/aflpp_driver/libAFLDriver.a / && \
-    cp -va `llvm-config --libdir`/libc++* /afl/
+    cd frida_mode && make && cd .. && \
+    cp utils/aflpp_driver/libAFLQemuDriver.a /libAFLDriver.a
+
+COPY get_frida_entry.sh /
