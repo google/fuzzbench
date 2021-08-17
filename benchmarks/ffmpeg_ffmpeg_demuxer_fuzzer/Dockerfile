@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:c0eeba3437a2173c6a7115cf43062b351ed48cc2b54f54f895423d6a5af1dc3e
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:1b6a6993690fa947df74ceabbf6a1f89a46d7e4277492addcd45a8525e34be5a@sha256:c0eeba3437a2173c6a7115cf43062b351ed48cc2b54f54f895423d6a5af1dc3e
 ADD bionic.list /etc/apt/sources.list.d/bionic.list
 ADD nasm_apt.pin /etc/apt/preferences
 RUN apt-get update && apt-get install -y make autoconf automake libtool build-essential \

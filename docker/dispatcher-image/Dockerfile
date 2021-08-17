@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/oss-fuzz-base/base-clang AS base-clang
+FROM gcr.io/oss-fuzz-base/base-clang@sha256:30706816922bf9c141b15ff4a5a44af8c0ec5700d4b46e0572029c15e495d45b AS base-clang
 
 FROM gcr.io/fuzzbench/base-image
 
