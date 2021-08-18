@@ -20,6 +20,12 @@
 # Please add new experiment requests towards the top of this file.
 
 
+- experiment: 2021-08-17-aflpp
+  description: "afl++ cmplog"
+  fuzzers:
+    - aflplusplus_frida_big
+    - aflplusplus_frida
+
 - experiment: 2021-07-30-random-params
   description: "Evaluate various random parameters for afl"
   fuzzers:
