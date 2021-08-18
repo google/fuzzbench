@@ -23,7 +23,6 @@ jobs:
           - aflplusplus
           - aflplusplus_optimal
           - aflsmart
-          - aflsmartformat
           - entropic
           - fairfuzz
           - honggfuzz
@@ -33,8 +32,6 @@ jobs:
           - mopt
           - neuzz
           - libafl
-          - afldd
-          - aflpp_vs_dd
           # Binary-only (greybox) fuzzers.
           - eclipser
           - afl_qemu
@@ -44,8 +41,6 @@ jobs:
           - aflplusplus_frida
           # Concolic execution
           - aflplusplus_cmplog_double
-          - aflplusplus_qemu_double
-          - fuzzolic_aflplusplus_z3dict
           - fuzzolic_aflplusplus_z3
           - fuzzolic_aflplusplus_fuzzy
           - eclipser_aflplusplus
@@ -69,6 +64,7 @@ jobs:
           - aflplusplus_cmplog_2dictl
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
+          - aflplusplus_frida_big
           - aflprefix
           - dropfuzzer
           - afl_two_instances
@@ -82,14 +78,6 @@ jobs:
           - cfctx_randomic
           - cfctx_params
           - cfctx_plain
-          - afl_no_favs
-          - afl_rf
-          - afl_rf_u
-          - afl_rf_u_wrs
-          - afl_wrs
-          - afl_wrs_rf
-          - afl_wrs_rf_rp
-          - afl_wrs_rp
           # Concolic execution
           - aflplusplus_cmplog_double
           - aflplusplus_qemu_double
