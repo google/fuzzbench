@@ -19,6 +19,46 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+
+- experiment: 2021-08-17-aflpp
+  description: "afl++ cmplog"
+  fuzzers:
+    - aflplusplus_frida_big
+    - aflplusplus_frida
+
+- experiment: 2021-07-30-random-params
+  description: "Evaluate various random parameters for afl"
+  fuzzers:
+    - afl
+    - afl_no_favs
+    - afl_rf
+    - afl_rf_u
+    - afl_rf_u_wrs
+    - afl_wrs
+    - afl_wrs_rf
+    - afl_wrs_rf_rp
+    - afl_wrs_rp
+
+- experiment: 2021-07-30-aflpp
+  description: "afl++ cmplog"
+  fuzzers:
+    - aflplusplus
+    - honggfuzz
+    - aflplusplus_cmplog_2dict
+    - aflplusplus_cmplog_2dictl
+
+- experiment: 2021-07-07-aflsmartformat
+  description: "aflsmartformat"
+  fuzzers:
+    - aflsmartformat
+    - aflsmart
+    - afl
+- experiment: 2021-07-08-feedback
+  description: "Different feedback mechanisms"
+  type: bug
+  fuzzers:
+    - afldd
+    - aflpp_vs_dd
 - experiment: 2021-07-09-aflpp
   description: "afl++: frida, cmplog, symbolic"
   fuzzers:
