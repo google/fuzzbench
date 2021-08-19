@@ -20,6 +20,12 @@ unsupported_fuzzers:
   - cfctx_params
   - cfctx_plain
   - cfctx_randomic
+  - cfctx_bottom_llc
+  - cfctx_dataflow_seadsa_llc
+  - cfctx_dataflow_svf_llc
+  - cfctx_randomic_llc
+  - cfctx_params_llc
+  - cfctx_full
   - libafl
   - aflplusplus_cmplog_double
   - symcc_aflplusplus_single
