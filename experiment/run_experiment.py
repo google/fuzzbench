@@ -222,7 +222,8 @@ def start_experiment(  # pylint: disable=too-many-arguments
         no_seeds=False,
         no_dictionaries=False,
         oss_fuzz_corpus=False,
-        allow_uncommitted_changes=False):
+        allow_uncommitted_changes=False,
+        concurrent_builds=None):
     """Start a fuzzer benchmarking experiment."""
     if not allow_uncommitted_changes:
         check_no_uncommitted_changes()
@@ -239,6 +240,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
     config['no_dictionaries'] = no_dictionaries
     config['oss_fuzz_corpus'] = oss_fuzz_corpus
     config['description'] = description
+    config['concurrent_builds'] = concurrent_builds
     config['runner_machine_type'] = config.get('runner_machine_type',
                                                'n1-standard-1')
     config['runner_num_cpu_cores'] = config.get('runner_num_cpu_cores', 1)
@@ -507,6 +509,10 @@ def main():
                         '--description',
                         help='Description of the experiment.',
                         required=False)
+    parser.add_argument('-cb',
+                        '--concurrent-builds',
+                        help='Max concurrent builds allowed.',
+                        required=False)
 
     all_fuzzers = fuzzer_utils.get_fuzzer_names()
     parser.add_argument('-f',
@@ -544,6 +550,13 @@ def main():
     args = parser.parse_args()
     fuzzers = args.fuzzers or all_fuzzers
 
+    concurrent_builds = args.concurrent_builds
+    if concurrent_builds is not None:
+        if not concurrent_builds.isdigit():
+            parser.error(
+                "The concurrent build argument must be a positive number")
+        concurrent_builds = int(concurrent_builds)
+
     start_experiment(args.experiment_name,
                      args.experiment_config,
                      args.benchmarks,
@@ -552,7 +565,8 @@ def main():
                      no_seeds=args.no_seeds,
                      no_dictionaries=args.no_dictionaries,
                      oss_fuzz_corpus=args.oss_fuzz_corpus,
-                     allow_uncommitted_changes=args.allow_uncommitted_changes)
+                     allow_uncommitted_changes=args.allow_uncommitted_changes,
+                     concurrent_builds=concurrent_builds)
     return 0
 
 
