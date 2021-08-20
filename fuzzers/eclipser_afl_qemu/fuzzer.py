@@ -21,6 +21,7 @@ import threading
 
 from fuzzers import utils
 from fuzzers.afl import fuzzer as afl_fuzzer
+from fuzzers.afl_qemu import fuzzer as afl_fuzzer_qemu
 
 
 def get_eclipser_outdir(target_directory):
@@ -30,30 +31,22 @@ def get_eclipser_outdir(target_directory):
 
 def build():
     """Build benchmark."""
-    os.environ['CC'] = 'clang'
-    os.environ['CXX'] = 'clang++'
-    os.environ['CFLAGS'] = ' '.join(utils.NO_SANITIZER_COMPAT_CFLAGS)
-    cxxflags = [utils.LIBCPLUSPLUS_FLAG] + utils.NO_SANITIZER_COMPAT_CFLAGS
-    os.environ['CXXFLAGS'] = ' '.join(cxxflags)
-    src = os.getenv('SRC')
-    work = os.getenv('WORK')
-    eclipser_outdir = get_eclipser_outdir(os.environ['OUT'])
-
     # Backup the environment.
     new_env = os.environ.copy()
 
-    # Build afl with qemu
-    os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
-    with utils.restore_directory(src), utils.restore_directory(work):
-        # Restore SRC to its initial state so we can build again without any
-        # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
-        # twice in the same directory without this.
-        utils.build_benchmark()
-    shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
-    shutil.copy('/afl/afl-qemu-trace', os.environ['OUT'])
+    # Build afl with qemu (shared build code afl/afl++)
+    afl_fuzzer_qemu.build()
 
     # Next, build a binary for Eclipser.
+    src = os.getenv('SRC')
+    work = os.getenv('WORK')
+    eclipser_outdir = get_eclipser_outdir(os.environ['OUT'])
     os.mkdir(eclipser_outdir)
+    new_env['CC'] = 'clang'
+    new_env['CXX'] = 'clang++'
+    new_env['CFLAGS'] = ' '.join(utils.NO_SANITIZER_COMPAT_CFLAGS)
+    cxxflags = [utils.LIBCPLUSPLUS_FLAG] + utils.NO_SANITIZER_COMPAT_CFLAGS
+    new_env['CXXFLAGS'] = ' '.join(cxxflags)
     new_env['OUT'] = eclipser_outdir
     new_env['FUZZER_LIB'] = '/libStandaloneFuzzTarget.a'
     new_env['FUZZ_TARGET'] = os.path.join(
