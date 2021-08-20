@@ -33,13 +33,14 @@ jobs:
           - neuzz
           - libafl
           # Binary-only (greybox) fuzzers.
-          - eclipser
+          - eclipser_afl_qemu
           - afl_qemu
           - aflplusplus_qemu
           - honggfuzz_qemu
           - weizz_qemu
           - aflplusplus_frida
           # Concolic execution
+          - eclipser
           - aflplusplus_cmplog_double
           - fuzzolic_aflplusplus_z3
           - fuzzolic_aflplusplus_fuzzy
