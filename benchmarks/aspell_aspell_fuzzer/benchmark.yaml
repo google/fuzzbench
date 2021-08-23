@@ -13,6 +13,9 @@ unsupported_fuzzers:
   - lafintel
   - weizz_qemu
   - aflplusplus_classic_ctx
+  - aflplusplus_classic_ctx_18
+  - aflplusplus_classic_ctx_20
+  - aflplusplus_classic_ctx_23
   - cfctx_basic
   - cfctx_bottom
   - cfctx_dataflow_seadsa
