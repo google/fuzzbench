@@ -45,6 +45,12 @@
     - cfctx_params_2mb
     - cfctx_params_4mb
 
+- experiment: 2021-08-19-aflpp
+  description: "afl++ frida bigmap"
+  fuzzers:
+    - aflplusplus_frida_big
+    - aflplusplus_frida
+
 - experiment: 2021-08-17-aflpp
   description: "afl++ cmplog"
   fuzzers:

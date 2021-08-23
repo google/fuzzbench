@@ -47,6 +47,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     os.environ['AFL_FRIDA_PERSISTENT_CNT'] = "1000000"
     os.environ['AFL_FRIDA_PERSISTENT_HOOK'] = "/out/frida_hook.so"
     os.environ['AFL_PATH'] = "/out"
+    os.environ['AFL_FRIDA_INST_BIGMAP'] = "1"
 
     resource.setrlimit(resource.RLIMIT_CORE,
                        (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
