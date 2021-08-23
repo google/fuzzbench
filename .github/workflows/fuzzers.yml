@@ -84,6 +84,7 @@ jobs:
           - cfctx_randomic_llc
           - cfctx_params_llc
           - cfctx_full
+          - aflplusplus_pcguard
           # Concolic execution
           - aflplusplus_cmplog_double
           - aflplusplus_qemu_double
