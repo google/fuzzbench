@@ -83,6 +83,10 @@ jobs:
           - cfctx_dataflow_svf_llc
           - cfctx_randomic_llc
           - cfctx_params_llc
+          - cfctx_params_1mb
+          - cfctx_params_2mb
+          - cfctx_params_4mb
+          - cfctx_params_512kb
           - cfctx_full
           - aflplusplus_pcguard
           # Concolic execution
