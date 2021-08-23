@@ -21,7 +21,7 @@ from fuzzers.cfctx_basic import fuzzer as aflplusplus_fuzzer
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     os.environ["CGC_STRATEGY"] = "randomic"
-    os.environ["CGC_CACHEDMAP"] = "3"
+    os.environ["CGC_MAXMAP"] = "8388608" # 8Mb
     aflplusplus_fuzzer.build("pcguard", "cmplog", "dict2file", "no_icp")
 
 
