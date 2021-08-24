@@ -65,6 +65,9 @@ jobs:
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
           - aflplusplus_frida_big
+          - aflplusplus_frida_bigbp
+          - aflplusplus_frida_bp
+          - aflplusplus_frida_plain
           - aflprefix
           - dropfuzzer
           - afl_two_instances
