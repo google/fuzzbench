@@ -57,7 +57,7 @@ RUN update-alternatives \
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 74a6044b3fba496c1255f9aedbf5b7253ae29f0e && \
+    git checkout 2e15661f184c77ac1fbb6f868c894e946cbb7f17 && \
     sed -i 's|^#define CMPLOG_SOLVE|// #define CMPLOG_SOLVE|' include/config.h && \
     sed -i 's|^#define MAP_SIZE_POW2 16|#define MAP_SIZE_POW2 18|' include/config.h
 
