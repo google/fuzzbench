@@ -48,31 +48,31 @@ SHELL := /bin/bash
 VENV_ACTIVATE := .venv/bin/activate
 
 ${VENV_ACTIVATE}: requirements.txt
-	python3.9 -m venv .venv || python3 -m venv .venv
-	source ${VENV_ACTIVATE} && python3 -m pip install --upgrade pip setuptools && python3 -m pip install -r requirements.txt
+	python3.8 -m venv .venv
+	source ${VENV_ACTIVATE} && python3.8 -m pip install --upgrade pip setuptools && python3.8 -m pip install -r requirements.txt
 
 install-dependencies: ${VENV_ACTIVATE}
 
 docker/generated.mk: docker/generate_makefile.py docker/image_types.yaml fuzzers benchmarks ${VENV_ACTIVATE}
-	source ${VENV_ACTIVATE} && PYTHONPATH=. python3 $< $@
+	source ${VENV_ACTIVATE} && PYTHONPATH=. python3.8 $< $@
 
 presubmit: install-dependencies
-	source ${VENV_ACTIVATE} && python3 presubmit.py
+	source ${VENV_ACTIVATE} && python3.8 presubmit.py
 
 test: install-dependencies
-	source ${VENV_ACTIVATE} && python3 presubmit.py test
+	source ${VENV_ACTIVATE} && python3.8 presubmit.py test
 
 format: install-dependencies
-	source ${VENV_ACTIVATE} && python3 presubmit.py format
+	source ${VENV_ACTIVATE} && python3.8 presubmit.py format
 
 licensecheck: install-dependencies
-	source ${VENV_ACTIVATE} && python3 presubmit.py licensecheck
+	source ${VENV_ACTIVATE} && python3.8 presubmit.py licensecheck
 
 lint: install-dependencies
-	source ${VENV_ACTIVATE} && python3 presubmit.py lint
+	source ${VENV_ACTIVATE} && python3.8 presubmit.py lint
 
 typecheck: install-dependencies
-	source ${VENV_ACTIVATE} && python3 presubmit.py typecheck
+	source ${VENV_ACTIVATE} && python3.8 presubmit.py typecheck
 
 install-docs-dependencies: docs/Gemfile.lock
 	cd docs && bundle install

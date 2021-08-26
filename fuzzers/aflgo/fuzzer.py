@@ -10,7 +10,7 @@ from fuzzers import utils
 def prepare_build_environment():
     """Set environment variables used to build targets for AFL-based
     fuzzers."""
-    cflags = ['-fsanitize=address','-fsanitize-address-use-after-scope']
+    cflags = ['-fsanitize=address', '-fsanitize-address-use-after-scope']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
     utils.append_flags('ASAN_OPTIONS', ['abort_on_error=1', 'symbolize=0'])
@@ -45,8 +45,9 @@ def prepare_fuzz_environment(input_corpus):
 
     # AFL needs at least one non-empty seed to start.
     utils.create_seed_file_for_empty_corpus(input_corpus)
-    
-    def run_afl_fuzz(input_corpus,
+
+
+def run_afl_fuzz(input_corpus,
                  output_corpus,
                  target_binary,
                  additional_flags=None,
@@ -89,11 +90,11 @@ def prepare_fuzz_environment(input_corpus):
     print('[run_afl_fuzz] Running command: ' + ' '.join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
     subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
-    
-    def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):
+
+
+def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):
     """Run afl-fuzz on target."""
     prepare_fuzz_environment(input_corpus)
-
 
     run_afl_fuzz(input_corpus,
                  output_corpus,
