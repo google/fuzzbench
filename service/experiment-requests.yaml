@@ -20,6 +20,14 @@
 # Please add new experiment requests towards the top of this file.
 
 
+- experiment: 2021-08-26-s2
+  description: "afl afl++ aflgo"
+  type: bug
+  fuzzers:
+    - afl
+    - aflplusplus
+    - aflgo
+
 - experiment: 2021-08-24-aflpp
   description: "afl++ frida bigmap"
   fuzzers:
