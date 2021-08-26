@@ -19,4 +19,5 @@ project: openssl
 unsupported_fuzzers:
   - klee
   - cfctx_dataflow_svf
+  - cfctx_dataflow_svf_llc
   - libafl
