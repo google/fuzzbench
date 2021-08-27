@@ -47,7 +47,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     os.environ['AFL_FRIDA_PERSISTENT_CNT'] = "1000000"
     os.environ['AFL_FRIDA_PERSISTENT_HOOK'] = "/out/frida_hook.so"
     os.environ['AFL_PATH'] = "/out"
-    os.environ['AFL_FRIDA_INST_BIGMAP'] = "1"
+    os.environ['AFL_FRIDA_INST_BIGMAP'] = "1073741824"
     os.environ['AFL_FRIDA_INST_NO_PREFETCH_BACKPATCH'] = "1"
     os.environ['AFL_FRIDA_STALKER_IC_ENTRIES'] = "2"
 
