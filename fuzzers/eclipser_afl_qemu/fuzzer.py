@@ -14,7 +14,6 @@
 """Integration code for Eclipser fuzzer. Note that starting from v2.0, Eclipser
 relies on AFL to perform random-based fuzzing."""
 
-import shutil
 import subprocess
 import os
 import threading
