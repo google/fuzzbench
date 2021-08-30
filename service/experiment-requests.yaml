@@ -19,6 +19,24 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-08-26-aflpp
+  description: "afl++ frida bigmap"
+  fuzzers:
+    - aflplusplus_frida_big
+    - aflplusplus_frida_bigbp
+    - aflplusplus_frida_bp
+    - aflplusplus_frida_plain
+    - aflplusplus_qemu
+
+- experiment: 2021-08-24-aflpp
+  description: "afl++ frida bigmap"
+  fuzzers:
+    - aflplusplus_frida_big
+    - aflplusplus_frida_bigbp
+    - aflplusplus_frida_bp
+    - aflplusplus_frida_plain
+    - aflplusplus_qemu
+
 - experiment: 2021-08-23-cloning
   description: >
     Benchmark some variants of AFL++ that use different function cloning
