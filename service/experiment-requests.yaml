@@ -19,32 +19,6 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
-- experiment: 2021-08-30-cloning
-  description: >
-    Benchmark some variants of AFL++ that use different function cloning
-    strategies at whole program level to achieve collision-free context
-    sensitivity. Use different sizes to study the impact of the afl map.
-  type: bug
-  fuzzers:
-    - aflplusplus_classic_ctx
-    - aflplusplus_classic_ctx_18
-    - aflplusplus_classic_ctx_20
-    - aflplusplus_classic_ctx_23
-    - cfctx_bottom
-    - cfctx_dataflow_seadsa
-    - cfctx_dataflow_svf
-    - cfctx_randomic
-    - cfctx_params
-    - cfctx_plain
-    - aflplusplus_pcguard
-    - cfctx_dataflow_svf_llc
-    - cfctx_dataflow_seadsa_llc
-    - cfctx_params_llc
-    - cfctx_params_512kb
-    - cfctx_params_1mb
-    - cfctx_params_2mb
-    - cfctx_params_4mb
-
 - experiment: 2021-08-26-aflpp
   description: "afl++ frida bigmap"
   fuzzers:
