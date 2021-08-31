@@ -62,6 +62,7 @@ jobs:
           - aflplusplus_cmplog_fullskip
           - aflplusplus_cmplog_2dict
           - aflplusplus_cmplog_2dictl
+          - aflplusplus_dict2file2
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
           - aflplusplus_frida_big
