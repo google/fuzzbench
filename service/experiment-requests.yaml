@@ -19,7 +19,7 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
-- experiment: 2021-08-23-cloning
+- experiment: 2021-08-31-cloning
   description: >
     Benchmark some variants of AFL++ that use different function cloning
     strategies at whole program level to achieve collision-free context
