@@ -82,7 +82,7 @@ def test_build_all_measurers(_, mocked_build_measurer,
         assert not result
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def builder_integration(experiment):
     """Fixture for builder.py integration tests that uses an experiment fixture
     and makes the number of build retries saner by default."""

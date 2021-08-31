@@ -19,7 +19,6 @@ import datetime
 from distutils import spawn
 from distutils import dir_util
 import os
-import logging
 import sys
 import subprocess
 import json
@@ -42,10 +41,10 @@ class GitRepoManager:
         self.repo_dir = repo_dir
 
     def git(self, cmd):
-        """Run a git command.
+        """Runs a git command.
 
         Args:
-          command: The git command as a list to be run.
+          cmd: The git command as a list to be run.
 
         Returns:
           new_process.ProcessResult
@@ -66,7 +65,7 @@ class BaseBuilderDockerRepo:
         self.digests.append(digest)
 
     def find_digest(self, timestamp):
-        """Find the latest image before the given timestamp."""
+        """Finds the latest image before the given timestamp."""
         index = bisect.bisect_right(self.timestamps, timestamp)
         if index > 0:
             return self.digests[index - 1]
@@ -74,11 +73,11 @@ class BaseBuilderDockerRepo:
 
 
 def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
-    """Checkout the right files from OSS-Fuzz to build the benchmark based on
-    |project| and |commit_date|. Then copy them to |benchmark_dir|."""
+    """Checks out the right files from OSS-Fuzz to build the benchmark based on
+    |project| and |commit_date|. Then copies them to |benchmark_dir|."""
     if not os.path.exists(os.path.join(OSS_FUZZ_DIR, '.git')):
         logs.error(
-            '%s is not a git repo. Try running git submodule update --init',
+            '%s is not a git repo. Try running: git submodule update --init',
             OSS_FUZZ_DIR)
         raise RuntimeError('%s is not a git repo.' % OSS_FUZZ_DIR)
     oss_fuzz_repo_manager = GitRepoManager(OSS_FUZZ_DIR)
@@ -108,10 +107,10 @@ def get_benchmark_name(project, fuzz_target, benchmark_name=None):
 
 
 def _load_base_builder_docker_repo():
-    """Get base-image digests."""
+    """Gets base-image digests. Returns the docker rep."""
     gcloud_path = spawn.find_executable('gcloud')
     if not gcloud_path:
-        logging.warning('gcloud not found in PATH.')
+        logs.warning('gcloud not found in PATH.')
         return None
 
     _, result, _ = new_process.execute([
@@ -135,7 +134,7 @@ def _load_base_builder_docker_repo():
 
 
 def _replace_base_builder_digest(dockerfile_path, digest):
-    """Replace the base-builder digest in a Dockerfile."""
+    """Replaces the base-builder digest in a Dockerfile."""
     with open(dockerfile_path) as handle:
         lines = handle.readlines()
 
@@ -151,7 +150,7 @@ def _replace_base_builder_digest(dockerfile_path, digest):
 
 
 def replace_base_builder(benchmark_dir, commit_date):
-    """Replace the parent image of the Dockerfile in |benchmark_dir|,
+    """Replaces the parent image of the Dockerfile in |benchmark_dir|,
     base-builder (latest), with a version of base-builder that is likely to
     build the project as it was on |commit_date| without issue."""
     base_builder_repo = _load_base_builder_docker_repo()
@@ -164,7 +163,7 @@ def replace_base_builder(benchmark_dir, commit_date):
 
 def create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,
                          benchmark_dir):
-    """Create the benchmark.yaml file in |benchmark_dir| based on the values
+    """Creates the benchmark.yaml file in |benchmark_dir| based on the values
     from |project|, |fuzz_target|, |commit| and |commit_date|."""
     yaml_filename = os.path.join(benchmark_dir, 'benchmark.yaml')
     config = {
@@ -190,6 +189,7 @@ def integrate_benchmark(project, fuzz_target, benchmark_name, commit,
     replace_base_builder(benchmark_dir, commit_date)
     create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,
                          benchmark_dir)
+    return benchmark_name
 
 
 def main():
@@ -215,9 +215,15 @@ def main():
         '-d',
         '--date',
         help='Date of the commit. Example: 2019-10-19T09:07:25+01:00')
+
+    logs.initialize()
     args = parser.parse_args()
-    integrate_benchmark(args.project, args.fuzz_target, args.benchmark_name,
-                        args.commit, args.date)
+    benchmark = integrate_benchmark(
+        args.project, args.fuzz_target, args.benchmark_name,
+        args.commit, args.date)
+    logs.info('Successfully integrated benchmark: %s.', benchmark)
+    logs.info('Please run "make test-run-afl-%s" to test integration.',
+              benchmark)
     return 0
 
 

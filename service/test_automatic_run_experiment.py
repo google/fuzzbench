@@ -95,17 +95,16 @@ def test_run_requested_experiment(mocked_get_requested_experiments,
         'vorbis-2017-12-11',
         'woff2-2016-05-06',
     ]
-    expected_calls = [
-        mock.call(expected_experiment_name,
-                  expected_config_file,
-                  expected_benchmarks,
-                  expected_fuzzers,
-                  description='Test experiment',
-                  oss_fuzz_corpus=True)
-    ]
+    expected_call = mock.call(expected_experiment_name,
+                              expected_config_file,
+                              expected_benchmarks,
+                              expected_fuzzers,
+                              description='Test experiment',
+                              oss_fuzz_corpus=True)
     start_experiment_call_args = mocked_start_experiment.call_args_list
     assert len(start_experiment_call_args) == 1
-    assert start_experiment_call_args == expected_calls
+    start_experiment_call_args = start_experiment_call_args[0]
+    assert start_experiment_call_args == expected_call
 
 
 @pytest.mark.parametrize(

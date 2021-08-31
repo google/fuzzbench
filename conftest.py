@@ -37,7 +37,7 @@ from database import models
 
 
 # Give this a short name since it is a fixture.
-@pytest.yield_fixture
+@pytest.fixture
 def db():  # pylint: disable=invalid-name
     """Connect to the SQLite database and create all the expected tables."""
     db_utils.initialize()
@@ -61,7 +61,7 @@ def set_sqlite_pragma(connection, _):
     cursor.close()
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def environ():
     """Patch environment."""
     # TODO(metzman): Make sure this is used by all tests that modify the
