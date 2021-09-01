@@ -19,6 +19,15 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-09-01-aflpp
+  description: "afl++ regression test"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_dict2file
+    - aflplusplus_dict2file2
+    - entropic
+    - honggfuzz
+
 - experiment: 2021-08-31-cloning
   description: >
     Benchmark some variants of AFL++ that use different function cloning
