@@ -49,8 +49,8 @@ jobs:
           #- symcc_afl
           - symcc_afl_single
           # Temporary variants.
-          #- aflplusplus_introspection
-          #- aflplusplus_introspection2
+          - aflplusplus_introspection
+          - aflplusplus_introspection2
           - aflplusplus_dict2file
           - aflplusplus_cmplog
           #- aflplusplus_flcnt
