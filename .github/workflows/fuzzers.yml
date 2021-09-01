@@ -35,40 +35,35 @@ jobs:
           # Binary-only (greybox) fuzzers.
           - eclipser
           - afl_qemu
-          - aflplusplus_qemu
           - honggfuzz_qemu
           - weizz_qemu
+          - aflplusplus_qemu
           - aflplusplus_frida
           # Concolic execution
-          - aflplusplus_cmplog_double
           - fuzzolic_aflplusplus_z3
           - fuzzolic_aflplusplus_fuzzy
           - eclipser_aflplusplus
           - symqemu_aflplusplus
+          #- symcc_aflplusplus
           - symcc_aflplusplus_single
-          - symcc_afl
-          - symcc_aflplusplus
+          #- symcc_afl
           - symcc_afl_single
           # Temporary variants.
-          - aflplusplus_introspection
-          - aflplusplus_introspection2
+          #- aflplusplus_introspection
+          #- aflplusplus_introspection2
           - aflplusplus_dict2file
           - aflplusplus_cmplog
-          - aflplusplus_flcnt
-          - aflplusplus_fcnt
-          - aflplusplus_lcnt
+          #- aflplusplus_flcnt
+          #- aflplusplus_fcnt
+          #- aflplusplus_lcnt
           - aflplusplus_311
           - aflplusplus_313
-          - aflplusplus_cmplog_fullskip
-          - aflplusplus_cmplog_2dict
-          - aflplusplus_cmplog_2dictl
+          #- aflplusplus_cmplog_fullskip
+          #- aflplusplus_cmplog_2dict
+          #- aflplusplus_cmplog_2dictl
           - aflplusplus_dict2file2
-          - aflplusplus_unusual_enabled
-          - aflplusplus_unusual_disabled
-          - aflplusplus_frida_big
-          - aflplusplus_frida_bigbp
-          - aflplusplus_frida_bp
-          - aflplusplus_frida_plain
+          #- aflplusplus_unusual_enabled
+          #- aflplusplus_unusual_disabled
           - aflprefix
           - dropfuzzer
           - afl_two_instances
@@ -96,17 +91,6 @@ jobs:
           - cfctx_params_512kb
           - cfctx_full
           - aflplusplus_pcguard
-          # Concolic execution
-          - aflplusplus_cmplog_double
-          - aflplusplus_qemu_double
-          - fuzzolic_aflplusplus_z3
-          - fuzzolic_aflplusplus_fuzzy
-          - eclipser_aflplusplus
-          - symqemu_aflplusplus
-          - symcc_aflplusplus_single
-          - symcc_afl
-          - symcc_aflplusplus
-          - symcc_afl_single
 
         benchmark_type:
           - oss-fuzz
