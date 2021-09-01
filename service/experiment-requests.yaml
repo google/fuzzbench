@@ -19,6 +19,16 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-09-01-datadependency
+  description: "Different AFL instrumentations against afldd"
+  type: bug
+  fuzzers:
+    - afldd
+    - aflpp_vs_dd
+    - aflpp_vs_dd_ctx
+    - aflpp_vs_dd_ngram2
+    - aflpp_vs_dd_ngram4
+
 - experiment: 2021-08-23-cloning
   description: >
     Benchmark some variants of AFL++ that use different function cloning
