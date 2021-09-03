@@ -26,10 +26,6 @@
   fuzzers:
     - afldd
     - aflpp_vs_dd
-    - aflpp_vs_dd_ctx
-    - aflpp_vs_dd_ngram2
-    - aflpp_vs_dd_ngram4
-
 
 - experiment: 2021-09-01-aflpp
   description: "afl++ regression test"
