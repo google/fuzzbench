@@ -34,9 +34,6 @@ jobs:
           - libafl
           - afldd
           - aflpp_vs_dd
-          - aflpp_vs_dd_ctx
-          - aflpp_vs_dd_ngram2
-          - aflpp_vs_dd_ngram4
           # Binary-only (greybox) fuzzers.
           - eclipser
           - afl_qemu
