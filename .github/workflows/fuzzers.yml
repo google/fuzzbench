@@ -74,6 +74,7 @@ jobs:
           - aflplusplus_classic_ctx
           - aflplusplus_classic_ctx_18
           - aflplusplus_classic_ctx_20
+          - aflplusplus_classic_ctx_21
           - aflplusplus_classic_ctx_23
           - cfctx_basic
           - cfctx_bottom
@@ -91,6 +92,7 @@ jobs:
           - cfctx_params_2mb
           - cfctx_params_4mb
           - cfctx_params_512kb
+          - cfctx_params_768kb
           - cfctx_full
           - aflplusplus_pcguard
 

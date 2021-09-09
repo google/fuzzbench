@@ -25,3 +25,10 @@ unsupported_fuzzers:
   - fuzzolic_aflplusplus_z3dict
   - afldd
   - aflpp_vs_dd
+  - cfctx_bottom
+  - cfctx_dataflow_seadsa
+  - cfctx_dataflow_svf
+  - cfctx_randomic
+  - cfctx_params
+  - cfctx_params_512kb
+  - cfctx_params_768kb

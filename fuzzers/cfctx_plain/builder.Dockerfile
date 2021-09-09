@@ -142,7 +142,7 @@ RUN cd / && python3 -m pip install brotli influxdb-client
 # RUN git clone git@github.com:pietroborrello/AFLChen.git /dupfunc_ctx && \
 #     cd /dupfunc_ctx && git checkout eaf3f05badcfb7f616fc986638142c0e3e03d7e5
 
-RUN wget https://andreafioraldi.github.io/assets/dupfunc_ctx.tar.gz && \
+RUN wget https://andreafioraldi.github.io/assets/dupfunc_ctx.tar.gz && echo c6e572a4c28fac091dfe6ef64bbe3739 && \
     mkdir /dupfunc_ctx && tar xvf dupfunc_ctx.tar.gz -C /dupfunc_ctx && \
     rm dupfunc_ctx.tar.gz
 
