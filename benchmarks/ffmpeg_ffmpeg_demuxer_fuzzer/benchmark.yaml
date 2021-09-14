@@ -30,11 +30,11 @@ unsupported_fuzzers:
   - symqemu_aflplusplus
   - fuzzolic_aflplusplus_fuzzy
   - fuzzolic_aflplusplus_z3dict
-  - afldd
-  - aflpp_vs_dd
   - cfctx_bottom
   - cfctx_dataflow_seadsa
   - cfctx_dataflow_svf
   - cfctx_randomic
   - cfctx_params
   - cfctx_params_512kb
+  - afldd
+  - aflpp_vs_dd
