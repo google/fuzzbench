@@ -32,6 +32,8 @@ jobs:
           - mopt
           - neuzz
           - libafl
+          - afldd
+          - aflpp_vs_dd
           # Binary-only (greybox) fuzzers.
           - eclipser
           - afl_qemu
@@ -44,26 +46,26 @@ jobs:
           - fuzzolic_aflplusplus_fuzzy
           - eclipser_aflplusplus
           - symqemu_aflplusplus
-          #- symcc_aflplusplus
+          - symcc_aflplusplus
           - symcc_aflplusplus_single
-          #- symcc_afl
+          - symcc_afl
           - symcc_afl_single
           # Temporary variants.
           - aflplusplus_introspection
           - aflplusplus_introspection2
           - aflplusplus_dict2file
           - aflplusplus_cmplog
-          #- aflplusplus_flcnt
-          #- aflplusplus_fcnt
-          #- aflplusplus_lcnt
+          - aflplusplus_flcnt
+          - aflplusplus_fcnt
+          - aflplusplus_lcnt
           - aflplusplus_311
           - aflplusplus_313
-          #- aflplusplus_cmplog_fullskip
-          #- aflplusplus_cmplog_2dict
-          #- aflplusplus_cmplog_2dictl
+          - aflplusplus_cmplog_fullskip
+          - aflplusplus_cmplog_2dict
+          - aflplusplus_cmplog_2dictl
           - aflplusplus_dict2file2
-          #- aflplusplus_unusual_enabled
-          #- aflplusplus_unusual_disabled
+          - aflplusplus_unusual_enabled
+          - aflplusplus_unusual_disabled
           - aflprefix
           - dropfuzzer
           - afl_two_instances
