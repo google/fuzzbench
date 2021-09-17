@@ -20,6 +20,15 @@
 # Please add new experiment requests towards the top of this file.
 
 
+- experiment: 2021-09-16-blackboxeffectiveness
+  description: "Compare the fuzzer effectiveness of AFL dumb mode"
+  fuzzers:
+    - afl
+    - pythia_effect_bb
+    - aflplusplus
+    - honggfuzz
+    - libfuzzer
+
 
 - experiment: 2021-09-08-cloning
   description: >
