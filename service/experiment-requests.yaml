@@ -19,6 +19,17 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+
+- experiment: 2021-09-16-blackboxeffectiveness
+  description: "Compare the fuzzer effectiveness of AFL dumb mode"
+  fuzzers:
+    - afl
+    - pythia_effect_bb
+    - aflplusplus
+    - honggfuzz
+    - libfuzzer
+
+
 - experiment: 2021-09-08-cloning
   description: >
     Benchmark some variants of AFL++ that use different function cloning
@@ -42,6 +53,14 @@
     - cfctx_params_llc
     - cfctx_params_512kb
     - cfctx_params_768kb
+    
+    
+- experiment: 2021-09-02-datadependency
+  description: "Different AFL instrumentations against afldd"
+  type: bug
+  fuzzers:
+    - afldd
+    - aflpp_vs_dd
 
 - experiment: 2021-09-01-aflpp
   description: "afl++ regression test"

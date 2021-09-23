@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,22 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit: d615abec7e0237299250c409dca23effb8dd36cc
-commit_date: 2020-02-12 06:46:17+00:00
-fuzz_target: fuzz_both
-project: libpcap
-unsupported_fuzzers:
-  - klee
-  - symcc_afl
-  - symcc_afl_single
-  - symcc_aflplusplus
-  - symcc_aflplusplus_single
-  - aflplusplus_cmplog_double
-  - eclipser_aflplusplus
-  - aflplusplus_qemu_double
-  - fuzzolic_aflplusplus_z3
-  - symqemu_aflplusplus
-  - fuzzolic_aflplusplus_fuzzy
-  - fuzzolic_aflplusplus_z3dict
-  - afldd
-  - aflpp_vs_dd
+FROM gcr.io/fuzzbench/base-image

@@ -36,3 +36,5 @@ unsupported_fuzzers:
   - cfctx_randomic
   - cfctx_params
   - cfctx_params_512kb
+  - afldd
+  - aflpp_vs_dd
