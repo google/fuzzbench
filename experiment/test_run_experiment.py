@@ -36,9 +36,9 @@ def test_validate_benchmarks_valid_benchmarks():
 
 def test_validate_benchmarks_invalid_benchmark():
     """Tests that validate_benchmarks does not validate invalid benchmarks."""
-    with pytest.raises(Exception):
+    with pytest.raises(run_experiment.ValidationError):
         run_experiment.validate_benchmarks('fake_benchmark')
-    with pytest.raises(Exception):
+    with pytest.raises(run_experiment.ValidationError):
         run_experiment.validate_benchmarks('common.sh')
 
 
@@ -164,13 +164,13 @@ def test_validate_fuzzer():
     that an invalid one is not."""
     run_experiment.validate_fuzzer('afl')
 
-    with pytest.raises(Exception) as exception:
+    with pytest.raises(run_experiment.ValidationError) as exception:
         run_experiment.validate_fuzzer('afl:')
-    assert 'may only contain' in str(exception.value)
+    assert 'is invalid' in str(exception.value)
 
-    with pytest.raises(Exception) as exception:
+    with pytest.raises(run_experiment.ValidationError) as exception:
         run_experiment.validate_fuzzer('not_exist')
-    assert 'does not exist' in str(exception.value)
+    assert 'is invalid' in str(exception.value)
 
 
 def test_validate_experiment_name_valid():
@@ -183,7 +183,7 @@ def test_validate_experiment_name_valid():
 def test_validate_experiment_name_invalid(experiment_name):
     """Tests that validate_experiment_name raises an exception when passed an
     an invalid experiment name."""
-    with pytest.raises(Exception) as exception:
+    with pytest.raises(run_experiment.ValidationError) as exception:
         run_experiment.validate_experiment_name(experiment_name)
     assert 'is invalid. Must match' in str(exception.value)
 
