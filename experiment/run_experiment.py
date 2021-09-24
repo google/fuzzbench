@@ -44,7 +44,7 @@ FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
 OSS_FUZZ_PROJECTS_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz',
                                      'projects')
 RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
-FUZZER_NAME_REGEX = re.compile(r'^[a-z0-9_]+$')
+FUZZER_NAME_REGEX = re.compile(r'^[a-z][a-z0-9_]+$')
 EXPERIMENT_CONFIG_REGEX = re.compile(r'^[a-z0-9-]{0,30}$')
 FILTER_SOURCE_REGEX = re.compile(r'('
                                  r'^\.git/|'
@@ -153,40 +153,35 @@ def validate_benchmarks(benchmarks: List[str]):
     benchmark_types = set()
     for benchmark in set(benchmarks):
         if benchmarks.count(benchmark) > 1:
-            raise Exception('Benchmark "%s" is included more than once.' %
-                            benchmark)
+            raise ValidationError('Benchmark "%s" is included more than once.' %
+                                  benchmark)
         # Validate benchmarks here. It's possible someone might run an
         # experiment without going through presubmit. Better to catch an invalid
         # benchmark than see it in production.
         if not benchmark_utils.validate(benchmark):
-            raise Exception('Benchmark "%s" is invalid.' % benchmark)
+            raise ValidationError('Benchmark "%s" is invalid.' % benchmark)
 
         benchmark_types.add(benchmark_utils.get_type(benchmark))
 
     if (benchmark_utils.BenchmarkType.CODE.value in benchmark_types and
             benchmark_utils.BenchmarkType.BUG.value in benchmark_types):
-        raise Exception(
+        raise ValidationError(
             'Cannot mix bug benchmarks with code coverage benchmarks.')
 
 
 def validate_fuzzer(fuzzer: str):
     """Parses and validates a fuzzer name."""
-    if not re.match(FUZZER_NAME_REGEX, fuzzer):
-        raise Exception(
-            'Fuzzer "%s" may only contain lowercase letters, numbers, '
-            'or underscores.' % fuzzer)
-
-    fuzzers_directories = get_directories(FUZZERS_DIR)
-    if fuzzer not in fuzzers_directories:
-        raise Exception('Fuzzer "%s" does not exist.' % fuzzer)
+    if not fuzzer_utils.validate(fuzzer):
+        raise ValidationError('Fuzzer: %s is invalid.' % fuzzer)
 
 
 def validate_experiment_name(experiment_name: str):
     """Validate |experiment_name| so that it can be used in creating
     instances."""
     if not re.match(EXPERIMENT_CONFIG_REGEX, experiment_name):
-        raise Exception('Experiment name "%s" is invalid. Must match: "%s"' %
-                        (experiment_name, EXPERIMENT_CONFIG_REGEX.pattern))
+        raise ValidationError(
+            'Experiment name "%s" is invalid. Must match: "%s"' %
+            (experiment_name, EXPERIMENT_CONFIG_REGEX.pattern))
 
 
 def set_up_experiment_config_file(config):
@@ -201,9 +196,8 @@ def set_up_experiment_config_file(config):
 
 def check_no_uncommitted_changes():
     """Make sure that there are no uncommitted changes."""
-    assert not subprocess.check_output(
-        ['git', 'diff'],
-        cwd=utils.ROOT_DIR), 'Local uncommitted changes found, exiting.'
+    if subprocess.check_output(['git', 'diff'], cwd=utils.ROOT_DIR):
+        raise ValidationError('Local uncommitted changes found, exiting.')
 
 
 def get_git_hash():
@@ -260,7 +254,8 @@ def start_experiment_from_full_config(config):
     local_experiment = config.get('local_experiment', False)
     if not local_experiment:
         if 'POSTGRES_PASSWORD' not in os.environ:
-            raise Exception('Must set POSTGRES_PASSWORD environment variable.')
+            raise ValidationError(
+                'Must set POSTGRES_PASSWORD environment variable.')
         gcloud.set_default_project(config['cloud_project'])
 
     start_dispatcher(config, experiment_utils.CONFIG_DIR)
@@ -435,7 +430,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
                                           gcloud.InstanceType.DISPATCHER,
                                           self.config,
                                           startup_script=startup_script.name):
-                raise Exception('Failed to create dispatcher.')
+                raise RuntimeError('Failed to create dispatcher.')
             logs.info('Started dispatcher with instance name: %s',
                       self.instance_name)
 
