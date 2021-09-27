@@ -25,7 +25,7 @@ DEFAULT_FUZZ_TARGET_NAME = 'fuzz-target'
 FUZZ_TARGET_SEARCH_STRING = b'LLVMFuzzerTestOneInput'
 
 # Must be a valid python module and docker tag.
-VALID_FUZZER_REGEX = re.compile(r'^[a-z0-9_]+$')
+VALID_FUZZER_REGEX = re.compile(r'^[a-z][a-z0-9_]*$')
 
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
 COVERAGE_TOOLS = {'coverage', 'coverage_source_based'}

@@ -24,7 +24,6 @@ import sys
 from typing import Optional
 
 from common import benchmark_utils
-from common import fuzzer_utils
 from common import logs
 from common import utils
 from common import yaml_utils
@@ -74,13 +73,20 @@ def _get_requested_experiments():
 
 def validate_experiment_name(experiment_name):
     """Returns True if |experiment_name| is valid."""
-    return EXPERIMENT_NAME_REGEX.match(experiment_name) is not None
+    if EXPERIMENT_NAME_REGEX.match(experiment_name) is None:
+        logger.error('Experiment name: %s is not valid.', experiment_name)
+        return False
+    try:
+        run_experiment.validate_experiment_name(experiment_name)
+        return True
+    except run_experiment.ValidationError:
+        logger.error('Experiment name: %s is not valid.', experiment_name)
+        return False
 
 
 def _validate_individual_experiment_requests(experiment_requests):
     """Returns True if all requests in |experiment_request| are valid in
     isolation. Does not account for PAUSE_SERVICE_KEYWORD or duplicates."""
-    all_fuzzers = set(fuzzer_utils.get_fuzzer_names())
     valid = True
     # Validate format.
     for request in experiment_requests:
@@ -99,24 +105,21 @@ def _validate_individual_experiment_requests(experiment_requests):
         experiment = _get_experiment_name(request)
         if not validate_experiment_name(experiment):
             valid = False
-            logger.error('Experiment name: %s is not valid.', experiment)
-            # Request isn't so malformed that we can finding other issues.
-            # if present. Don't continue.
+            # Request isn't so malformed that we can find other issues, if
+            # present.
 
-        experiment = request['experiment']
-        if not request.get('fuzzers'):
+        fuzzers = request.get('fuzzers')
+        if not fuzzers:
             logger.error('Request: %s does not specify any fuzzers.', request)
             valid = False
             continue
 
-        experiment_fuzzers = request['fuzzers']
-        for fuzzer in experiment_fuzzers:
-            if fuzzer in all_fuzzers:
-                continue
-            # Fuzzer isn't valid.
-            logger.error('Fuzzer: %s in experiment %s is not valid.', fuzzer,
-                         experiment)
-            valid = False
+        for fuzzer in fuzzers:
+            try:
+                run_experiment.validate_fuzzer(fuzzer)
+            except run_experiment.ValidationError:
+                logger.error('Fuzzer: %s is invalid.', fuzzer)
+                valid = False
 
         description = request.get('description')
         if description is not None and not isinstance(description, str):
@@ -124,7 +127,6 @@ def _validate_individual_experiment_requests(experiment_requests):
                 'Request: %s "description" attribute is not a valid string.',
                 request)
             valid = False
-            continue
 
         oss_fuzz_corpus = request.get('oss_fuzz_corpus')
         if oss_fuzz_corpus is not None and not isinstance(
@@ -133,7 +135,13 @@ def _validate_individual_experiment_requests(experiment_requests):
                 'Request: %s "oss_fuzz_corpus" attribute is not a valid bool.',
                 request)
             valid = False
-            continue
+
+        experiment_type = request.get('type',
+                                      benchmark_utils.BenchmarkType.CODE.value)
+        if experiment_type not in benchmark_utils.BENCHMARK_TYPE_STRS:
+            logger.error('Type: %s is invalid, must be one of %s',
+                         experiment_type, benchmark_utils.BENCHMARK_TYPE_STRS)
+            valid = False
 
     return valid
 
@@ -179,7 +187,7 @@ def run_requested_experiment(dry_run):
     if PAUSE_SERVICE_KEYWORD in requested_experiments:
         # Check if automated experiment service is paused.
         logs.warning('Pause service requested, not running experiment.')
-        return None
+        return
 
     requested_experiment = None
     for experiment_config in reversed(requested_experiments):
@@ -193,28 +201,27 @@ def run_requested_experiment(dry_run):
 
     if requested_experiment is None:
         logs.info('No new experiment to run. Exiting.')
-        return None
+        return
 
     experiment_name = _get_experiment_name(requested_experiment)
     if not validate_experiment_requests([requested_experiment]):
         logs.error('Requested experiment: %s in %s is not valid.',
                    requested_experiment, REQUESTED_EXPERIMENTS_PATH)
-        return None
+        return
     fuzzers = requested_experiment['fuzzers']
 
     benchmark_type = requested_experiment.get('type')
     if benchmark_type == benchmark_utils.BenchmarkType.BUG.value:
         benchmarks = benchmark_utils.get_bug_benchmarks()
     else:
-        benchmarks = (benchmark_utils.get_oss_fuzz_coverage_benchmarks() +
-                      benchmark_utils.get_standard_coverage_benchmarks())
+        benchmarks = benchmark_utils.get_coverage_benchmarks()
 
     logs.info('Running experiment: %s with fuzzers: %s.', experiment_name,
               ' '.join(fuzzers))
     description = _get_description(requested_experiment)
     oss_fuzz_corpus = _use_oss_fuzz_corpus(requested_experiment)
-    return _run_experiment(experiment_name, fuzzers, benchmarks, description,
-                           oss_fuzz_corpus, dry_run)
+    _run_experiment(experiment_name, fuzzers, benchmarks, description,
+                    oss_fuzz_corpus, dry_run)
 
 
 def _run_experiment(  # pylint: disable=too-many-arguments
@@ -251,7 +258,11 @@ def main():
                         default=False,
                         action='store_true')
     args = parser.parse_args()
-    run_requested_experiment(args.dry_run)
+    try:
+        run_requested_experiment(args.dry_run)
+    except Exception:  # pylint: disable=broad-except
+        logger.error('Error running requested experiment.')
+        return 1
     return 0
 
 

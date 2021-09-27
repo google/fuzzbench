@@ -11,20 +11,5 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for AFLplusplus fuzzer."""
 
-import os
-
-from fuzzers.cfctx_basic import fuzzer as aflplusplus_fuzzer
-
-
-def build():  # pylint: disable=too-many-branches,too-many-statements
-    """Build benchmark."""
-    os.environ["CGC_STRATEGY"] = "bottom"
-    os.environ["CGC_MAXMAP"] = "1048576"  # 1Mb
-    aflplusplus_fuzzer.build("pcguard", "cmplog", "dict2file", "no_icp")
-
-
-def fuzz(input_corpus, output_corpus, target_binary):
-    """Run fuzzer."""
-    aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
+FROM gcr.io/fuzzbench/base-image

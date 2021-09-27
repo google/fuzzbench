@@ -32,6 +32,9 @@ jobs:
           - mopt
           - neuzz
           - libafl
+          - afldd
+          - aflpp_vs_dd
+          - pythia_effect_bb
           # Binary-only (greybox) fuzzers.
           - eclipser
           - afl_qemu
@@ -44,26 +47,26 @@ jobs:
           - fuzzolic_aflplusplus_fuzzy
           - eclipser_aflplusplus
           - symqemu_aflplusplus
-          #- symcc_aflplusplus
+          - symcc_aflplusplus
           - symcc_aflplusplus_single
-          #- symcc_afl
+          - symcc_afl
           - symcc_afl_single
           # Temporary variants.
           - aflplusplus_introspection
           - aflplusplus_introspection2
           - aflplusplus_dict2file
           - aflplusplus_cmplog
-          #- aflplusplus_flcnt
-          #- aflplusplus_fcnt
-          #- aflplusplus_lcnt
+          - aflplusplus_flcnt
+          - aflplusplus_fcnt
+          - aflplusplus_lcnt
           - aflplusplus_311
           - aflplusplus_313
-          #- aflplusplus_cmplog_fullskip
-          #- aflplusplus_cmplog_2dict
-          #- aflplusplus_cmplog_2dictl
+          - aflplusplus_cmplog_fullskip
+          - aflplusplus_cmplog_2dict
+          - aflplusplus_cmplog_2dictl
           - aflplusplus_dict2file2
-          #- aflplusplus_unusual_enabled
-          #- aflplusplus_unusual_disabled
+          - aflplusplus_unusual_enabled
+          - aflplusplus_unusual_disabled
           - aflprefix
           - dropfuzzer
           - afl_two_instances
@@ -72,6 +75,7 @@ jobs:
           - aflplusplus_classic_ctx
           - aflplusplus_classic_ctx_18
           - aflplusplus_classic_ctx_20
+          - aflplusplus_classic_ctx_21
           - aflplusplus_classic_ctx_23
           - cfctx_basic
           - cfctx_bottom
@@ -89,6 +93,7 @@ jobs:
           - cfctx_params_2mb
           - cfctx_params_4mb
           - cfctx_params_512kb
+          - cfctx_params_768kb
           - cfctx_full
           - aflplusplus_pcguard
 
