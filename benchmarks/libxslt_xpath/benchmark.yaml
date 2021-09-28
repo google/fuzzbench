@@ -8,7 +8,6 @@ unsupported_fuzzers:
   - aflplusplus_frida
   - klee
   - weizz_qemu
-  - libafl
   - aflplusplus_cmplog_double
   - symcc_aflplusplus_single
   - eclipser_aflplusplus
