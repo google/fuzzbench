@@ -12,7 +12,6 @@ unsupported_fuzzers:
   - klee
   - lafintel
   - weizz_qemu
-  - libafl
   - aflplusplus_cmplog_double
   - symcc_aflplusplus_single
   - eclipser_aflplusplus

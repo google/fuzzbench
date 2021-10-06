@@ -21,7 +21,6 @@ unsupported_fuzzers:
   - symcc_aflplusplus_single
   - aflplusplus_unusual_enabled
   - aflplusplus_unusual_disabled
-  - libafl
   - aflplusplus_cmplog_double
   - symcc_aflplusplus_single
   - eclipser_aflplusplus

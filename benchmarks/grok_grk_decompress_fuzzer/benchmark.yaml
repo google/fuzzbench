@@ -14,7 +14,6 @@ unsupported_fuzzers:
   - weizz_qemu
   - cfctx_dataflow_seadsa
   - cfctx_dataflow_seadsa_llc
-  - libafl
   - aflplusplus_cmplog_double
   - symcc_aflplusplus_single
   - eclipser_aflplusplus

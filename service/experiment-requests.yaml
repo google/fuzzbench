@@ -19,6 +19,15 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-09-24-libafl
+  description: "Libafl experiment with GSOC patches"
+  fuzzers:
+    - libafl
+    - libafl_gsoc
+    - aflplusplus
+    - entropic
+    - honggfuzz
+    - afl
 
 - experiment: 2021-09-23-blackboxeffect
   description: "Compare the fuzzer effectiveness of AFL dumb mode"
