@@ -14,7 +14,6 @@ unsupported_fuzzers:
   - lafintel
   - aflplusplus_pcguard_ctx
   - aflplusplus_pcguard_ctx_indirects
-  - libafl
   - aflplusplus_cmplog_double
   - symcc_aflplusplus_single
   - eclipser_aflplusplus

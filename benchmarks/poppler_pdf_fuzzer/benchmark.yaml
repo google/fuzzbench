@@ -14,7 +14,6 @@ unsupported_fuzzers:
   - lafintel
   - eclipser
   - eclipser_aflplusplus
-  - libafl
   - aflplusplus_cmplog_double
   - symcc_aflplusplus_single
   - eclipser_aflplusplus
