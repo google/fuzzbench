@@ -19,6 +19,19 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-10-07-aflpp
+  description: "afl++ frida test"
+  fuzzers:
+    - aflplusplus
+    - entropic
+    - honggfuzz
+    - afl
+    - libafl
+    - libafl_gsoc
+    - aflplusplus_frida
+    - aflplusplus_frida_huge
+    - aflplusplus_qemu
+
 - experiment: 2021-09-24-libafl
   description: "Libafl experiment with GSOC patches"
   fuzzers:
