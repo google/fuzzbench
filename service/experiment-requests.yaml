@@ -30,7 +30,6 @@
     - libafl_gsoc
     - aflplusplus_frida
     - aflplusplus_frida_huge
-    - aflplusplus_frida_mini
     - aflplusplus_qemu
 
 - experiment: 2021-09-24-libafl
