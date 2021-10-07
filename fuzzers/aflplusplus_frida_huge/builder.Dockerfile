@@ -23,6 +23,8 @@ RUN apt-get update && \
 # Download afl++
 RUN git clone https://github.com/WorksButNotTested/AFLplusplus.git /afl && \
     cd /afl && git checkout 6cbe30c
+
+RUN sed -i 's/MAP_FIXED_NOREPLACE/MAP_FIXED/' /afl/frida_mode/src/instrument/*.c
     
 # Build afl++ without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
