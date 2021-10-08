@@ -20,6 +20,14 @@
 # Please add new experiment requests towards the top of this file.
 
 - experiment: 2021-10-07-aflpp
+  description: "afl++ cmplog test"
+  fuzzers:
+    - aflplusplus_cmplog_2dictl
+    - aflplusplus
+    - entropic
+    - honggfuzz
+
+- experiment: 2021-10-07-aflpp
   description: "afl++ frida test"
   fuzzers:
     - aflplusplus
