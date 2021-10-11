@@ -22,7 +22,7 @@
 - experiment: 2021-10-19-aflpp-rf
   description: "Benchmark afl++ random fuzzing mode"
   fuzzers:
-    - aflpp_random_base
+    - aflpp_random_default
     - aflpp_random_no_favs
     - aflpp_random_wrs
     - aflpp_random_wrs_rf

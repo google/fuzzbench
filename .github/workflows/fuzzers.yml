@@ -75,7 +75,7 @@ jobs:
           - afl_two_instances
           - afl_no_favored
           - afl_random_favored
-          - aflpp_random_base
+          - aflpp_random_default
           - aflpp_random_no_favs
           - aflpp_random_wrs
           - aflpp_random_wrs_rf
