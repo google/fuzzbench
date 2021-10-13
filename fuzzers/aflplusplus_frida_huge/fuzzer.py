@@ -16,7 +16,7 @@
 import os
 import subprocess
 import resource
-import shutil
+# import shutil
 
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
