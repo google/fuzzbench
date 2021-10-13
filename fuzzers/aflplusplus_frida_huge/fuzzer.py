@@ -48,16 +48,14 @@ def fuzz(input_corpus, output_corpus, target_binary):
     os.environ['AFL_FRIDA_PERSISTENT_HOOK'] = "/out/frida_hook.so"
     os.environ['AFL_PATH'] = "/out"
 
-    resource.setrlimit(resource.RLIMIT_CORE,
-                       (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
-
-    sts = os.system("sudo sysctl -w vm.nr_hugepages=10")
+    # resource.setrlimit(resource.RLIMIT_CORE,
+    #                    (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
 
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
                             flags=flags)
 
-    sts = os.system("cp -v *core* corpus")
-    if sts == 0:
-        print('Copied cores')
+    # sts = os.system("cp -v *core* corpus")
+    # if sts == 0:
+    #     print('Copied cores')
