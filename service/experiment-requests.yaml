@@ -19,11 +19,18 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+
 - experiment: 2021-10-15-afpp
   description: "afl++ frida test"
   fuzzers:
     - aflplusplus_frida
     - aflplusplus_frida_huge
+
+- experiment: 2021-10-14
+  description: "Compare Zafl to standard source-only and binary-only fuzzers."
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_zafl
     - aflplusplus_qemu
 
 - experiment: 2021-10-13-aflpp
