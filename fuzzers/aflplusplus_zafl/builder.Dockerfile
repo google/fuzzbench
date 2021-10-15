@@ -1,4 +1,4 @@
-# Copyright 2020 Google LLC
+# Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ RUN 	bash -c 'unset CC ; unset CXX; unset CFLAGS; unset CXXFLAGS; cd /zipr ;  \
 	rm -rf /zipr/irdb-libs /zipr/SMPStaticAnalyzer /*/.git' ; \
 	cp /zafl/libzafl/lib/*so /out
 	
-run cp /afl/afl-fuzz /out
+RUN cp /afl/afl-fuzz /out
 COPY cc.sh /cc.sh
 COPY cxx.sh /cxx.sh
 COPY zafl_bins.sh /zafl_bins.sh
@@ -83,9 +83,9 @@ RUN clang -c -fPIC /tmp/null.c -o /tmp/null.o; ar crs /out/fakeLibrary.a /tmp/nu
 ENV LD_LIBRARY_PATH=/zafl/libzafl/lib/
 
 # some benchmarks need this file which isn't copied by the default setup.
-run if [ -f /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so ] ;then  echo copying libhdf5  ; cp /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so /out    ; chmod +x /out/libhdf5.so ; ln -s /out/libhdf5.so /out/libhdf5_serial.so.10; fi
-run if [ -f /usr/lib/x86_64-linux-gnu/libsz.so.2             ] ;then  echo copying ssl      ; cp /usr/lib/x86_64-linux-gnu/libsz.so.2 /out/libsz.so       ; chmod +x /out/libsz.so   ; ln -s /out/libsz.so /out/libsz.so.2; fi
-run if [ -f /usr/lib/x86_64-linux-gnu/libaec.so.0.0.3        ] ;then  echo copying libaec   ; cp /usr/lib/x86_64-linux-gnu/libaec.so.0.0.3 /out/libaec.so ; chmod +x /out/libaec.so  ; ln -s /out/libaec.so /out/libaec.so.0; fi
-run if [ -f /usr/lib/x86_64-linux-gnu/libcares.so            ] ;then  echo copying libcares ; cp /usr/lib/x86_64-linux-gnu/libcares.so /out               ; chmod +x /out/libcares.so; ln -s /out/libcares.so /out/libcares.so.2; fi
+RUN if [ -f /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so ] ;then  echo copying libhdf5  ; cp /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so /out    ; chmod +x /out/libhdf5.so ; ln -s /out/libhdf5.so /out/libhdf5_serial.so.10; fi
+RUN if [ -f /usr/lib/x86_64-linux-gnu/libsz.so.2             ] ;then  echo copying ssl      ; cp /usr/lib/x86_64-linux-gnu/libsz.so.2 /out/libsz.so       ; chmod +x /out/libsz.so   ; ln -s /out/libsz.so /out/libsz.so.2; fi
+RUN if [ -f /usr/lib/x86_64-linux-gnu/libaec.so.0.0.3        ] ;then  echo copying libaec   ; cp /usr/lib/x86_64-linux-gnu/libaec.so.0.0.3 /out/libaec.so ; chmod +x /out/libaec.so  ; ln -s /out/libaec.so /out/libaec.so.0; fi
+RUN if [ -f /usr/lib/x86_64-linux-gnu/libcares.so            ] ;then  echo copying libcares ; cp /usr/lib/x86_64-linux-gnu/libcares.so /out               ; chmod +x /out/libcares.so; ln -s /out/libcares.so /out/libcares.so.2; fi
 
 
