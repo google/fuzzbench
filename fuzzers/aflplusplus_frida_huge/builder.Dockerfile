@@ -20,9 +20,13 @@ RUN apt-get update && \
     apt-get install -y wget libstdc++-5-dev libtool-bin automake flex bison \
                        libglib2.0-dev libpixman-1-dev python3-setuptools unzip
 
+# Install nodejs to build our own frida
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
+RUN apt-get install -y nodejs
+
 # Download afl++
 RUN git clone https://github.com/WorksButNotTested/AFLplusplus.git /afl && \
-    cd /afl && git checkout 60b3e3d0c0bfbb3ef7b95b62ae0ee27bbfc751d9
+    cd /afl && git checkout 61e1058fecc8f10018d77bfc0525b9823b6c5fff
 
 # Build afl++ without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
