@@ -24,7 +24,7 @@ RUN apt-get update && \
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 4b4244bcf6cad5fdc897edef6ea810647a54ca9f
+    git checkout 6403fa4f70ebb9c475a5debe027e210b171f478e
 
 RUN sed -i 's/DICT_ADD_STRATEGY DICT_ADD_FOUND_SAME/DICT_ADD_STRATEGY 15/' /afl/src/afl-fuzz-redqueen.c
 
