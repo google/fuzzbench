@@ -21,6 +21,7 @@ jobs:
           - aflcc
           - aflfast
           - aflplusplus
+          - aflplusplus_zafl
           - aflplusplus_optimal
           - aflsmart
           - entropic
