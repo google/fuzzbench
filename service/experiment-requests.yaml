@@ -39,6 +39,12 @@
   fuzzers:
     - aflplusplus_frida
     - aflplusplus_frida_huge
+
+- experiment: 2021-10-14
+  description: "Compare Zafl to standard source-only and binary-only fuzzers."
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_zafl
     - aflplusplus_qemu
 
 - experiment: 2021-10-13-aflpp
