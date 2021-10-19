@@ -62,7 +62,7 @@ zafl_bins() {
 		local driverName=$(basename ${driverNameWithoutLib} .so)
 		if [[ -x $driverName ]]; then
 			AFL_LLVM_LTO_DONTWRITEID=1 AFL_MAP_SIZE=65536 AFL_LLVM_MAP_ADDR=0x1000000 /afl/afl-clang-lto -DFUZZER_LIB_NAME='"'"/out/${i}"'"' -I/src/aflplusplus/include -O3 -funroll-loops -fPIC  /tmp/aflpp_driver.c -c -o /tmp/aflpp_driver.o
-			AFL_LLVM_LTO_DONTWRITEID=1 AFL_MAP_SIZE=65536 AFL_LLVM_MAP_ADDR=0x1000000 /afl/afl-clang-lto++ -I/src/aflplusplus/include -O3 -funroll-loops -fPIC  /tmp/aflpp_driver.o -o $driverName -lpthread -lm -lz -ldl
+			AFL_LLVM_LTO_DONTWRITEID=1 AFL_MAP_SIZE=65536 AFL_LLVM_MAP_ADDR=0x1000000 /afl/afl-clang-lto++ -I/src/aflplusplus/include -O3 -funroll-loops -fPIC  /tmp/aflpp_driver.o -o $driverName -ldl
 		fi
 
 	done

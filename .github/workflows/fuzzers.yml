@@ -21,6 +21,7 @@ jobs:
           - aflcc
           - aflfast
           - aflplusplus
+          - aflplusplus_tracepc
           - aflplusplus_zafl
           - aflplusplus_optimal
           - aflsmart
@@ -42,6 +43,7 @@ jobs:
           - afl_qemu
           - honggfuzz_qemu
           - weizz_qemu
+          - aflplusplus_qemu_tracepc
           - aflplusplus_qemu
           - aflplusplus_frida
           # Concolic execution
