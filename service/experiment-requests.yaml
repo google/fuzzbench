@@ -34,6 +34,15 @@
     - aflplusplus_cmplog13
     - aflplusplus_cmplog15
 
+- experiment: 2021-10-19
+  description: "Compare Zafl to standard source-only and binary-only fuzzers."
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_zafl
+    - aflplusplus_tracepc
+    - aflplusplus_qemu_tracepc
+    - aflplusplus_qemu
+
 - experiment: 2021-10-15-afpp
   description: "afl++ frida test"
   fuzzers:
