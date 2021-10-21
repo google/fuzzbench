@@ -29,6 +29,30 @@
     - aflpp_random_wrs_rf_rp
     - aflpp_random_wrs_rp
 
+- experiment: 2021-10-13-aflpp
+  description: "afl++ cmplog dict"
+  fuzzers:
+    - aflplusplus_cmplog_2dictl
+    - aflplusplus
+    - aflplusplus_cmplog0
+    - aflplusplus_cmplog1
+    - aflplusplus_cmplog3
+    - aflplusplus_cmplog5
+    - aflplusplus_cmplog7
+    - aflplusplus_cmplog9
+    - aflplusplus_cmplog11
+    - aflplusplus_cmplog13
+    - aflplusplus_cmplog15
+
+- experiment: 2021-10-19
+  description: "Compare Zafl to standard source-only and binary-only fuzzers."
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_zafl
+    - aflplusplus_tracepc
+    - aflplusplus_qemu_tracepc
+    - aflplusplus_qemu
+
 - experiment: 2021-10-15-afpp
   description: "afl++ frida test"
   fuzzers:

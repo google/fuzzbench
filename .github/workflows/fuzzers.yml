@@ -21,6 +21,7 @@ jobs:
           - aflcc
           - aflfast
           - aflplusplus
+          - aflplusplus_tracepc
           - aflplusplus_zafl
           - aflplusplus_optimal
           - aflsmart
@@ -42,6 +43,7 @@ jobs:
           - afl_qemu
           - honggfuzz_qemu
           - weizz_qemu
+          - aflplusplus_qemu_tracepc
           - aflplusplus_qemu
           - aflplusplus_frida
           # Concolic execution
@@ -64,9 +66,17 @@ jobs:
           - aflplusplus_311
           - aflplusplus_313
           - aflplusplus_cmplog_fullskip
-          - aflplusplus_cmplog_2dict
           - aflplusplus_cmplog_2dictl
-          - aflplusplus_dict2file2
+          - aflplusplus_cmplog_2dictl
+          - aflplusplus_cmplog0
+          - aflplusplus_cmplog1
+          - aflplusplus_cmplog3
+          - aflplusplus_cmplog5
+          - aflplusplus_cmplog7
+          - aflplusplus_cmplog9
+          - aflplusplus_cmplog11
+          - aflplusplus_cmplog13
+          - aflplusplus_cmplog15
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
           - aflplusplus_frida_huge
