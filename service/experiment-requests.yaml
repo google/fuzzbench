@@ -19,6 +19,13 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
+- experiment: 2021-10-22-libafl
+  description: "libaf test"
+  fuzzers:
+    - aflplusplus
+    - libafl
+    - libafl_gsoc
+
 - experiment: 2021-10-19-aflpp-rf
   description: "Benchmark afl++ random fuzzing mode"
   fuzzers:
