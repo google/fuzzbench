@@ -19,17 +19,7 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 
-- experiment: 2021-10-19-aflpp-rf
-  description: "Benchmark afl++ random fuzzing mode"
-  fuzzers:
-    - aflpp_random_default
-    - aflpp_random_no_favs
-    - aflpp_random_wrs
-    - aflpp_random_wrs_rf
-    - aflpp_random_wrs_rf_rp
-    - aflpp_random_wrs_rp
-
-- experiment: 2021-10-13-aflpp
+- experiment: 2021-10-22-aflpp
   description: "afl++ cmplog dict"
   fuzzers:
     - aflplusplus_cmplog_2dictl
@@ -43,6 +33,16 @@
     - aflplusplus_cmplog11
     - aflplusplus_cmplog13
     - aflplusplus_cmplog15
+
+- experiment: 2021-10-19-aflpp-rf
+  description: "Benchmark afl++ random fuzzing mode"
+  fuzzers:
+    - aflpp_random_default
+    - aflpp_random_no_favs
+    - aflpp_random_wrs
+    - aflpp_random_wrs_rf
+    - aflpp_random_wrs_rf_rp
+    - aflpp_random_wrs_rp
 
 - experiment: 2021-10-19
   description: "Compare Zafl to standard source-only and binary-only fuzzers."
