@@ -67,16 +67,11 @@ jobs:
           - aflplusplus_313
           - aflplusplus_cmplog_fullskip
           - aflplusplus_cmplog_2dictl
-          - aflplusplus_cmplog_2dictl
           - aflplusplus_cmplog0
           - aflplusplus_cmplog1
+          - aflplusplus_cmplog2
           - aflplusplus_cmplog3
-          - aflplusplus_cmplog5
-          - aflplusplus_cmplog7
-          - aflplusplus_cmplog9
-          - aflplusplus_cmplog11
-          - aflplusplus_cmplog13
-          - aflplusplus_cmplog15
+          - aflplusplus_cmplog4
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
           - aflplusplus_frida_huge
