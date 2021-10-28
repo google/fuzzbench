@@ -24,9 +24,9 @@ RUN apt-get update && \
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 9a11c8ac24f8b2c2dcd78aa3a27e5416a717ce4f
+    git checkout 65e63b9cf107ae914630a4fff7381cee150df5fe
 
-RUN sed -i 's/VARIANT 0/VARIANT 4/' /afl/src/afl-fuzz-redqueen.c
+RUN sed -i 's/-O3/-O2/g' /afl/src/afl-cc.c
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
