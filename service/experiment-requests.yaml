@@ -22,7 +22,10 @@
 - experiment: 2021-10-29-aflpp
   description: "afl++"
   fuzzers:
+    - aflplusplus_cmplogo0
+    - aflplusplus_cmplogo1
     - aflplusplus_cmplogo2
+    - aflplusplus_cmplogo3
     - aflplusplus
     - aflplusplus_cmplog_2dictl
     - aflplusplus_cmplog0

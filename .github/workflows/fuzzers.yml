@@ -67,7 +67,10 @@ jobs:
           - aflplusplus_313
           - aflplusplus_cmplog_fullskip
           - aflplusplus_cmplog_2dictl
+          - aflplusplus_cmplogo0
+          - aflplusplus_cmplogo1
           - aflplusplus_cmplogo2
+          - aflplusplus_cmplogo3
           - aflplusplus_cmplog0
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
