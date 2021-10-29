@@ -14,6 +14,14 @@
 
 FROM gcr.io/fuzzbench/base-image
 
+RUN apt-get install -y software-properties-common
+RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test
+RUN apt-get update -y
+RUN apt-get install -y gcc-9 g++-9 libstdc++-9-dev
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 60 \
+                         --slave /usr/bin/g++ g++ /usr/bin/g++-9
+RUN update-alternatives --config gcc
+
 # This makes interactive docker runs painless:
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
 #ENV AFL_MAP_SIZE=2621440
