@@ -52,9 +52,9 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     if build_flags.find(
             'array-bounds'
-    ) != -1 and 'qemu' not in build_modes and 'classic' not in build_modes and
-            'gcc' not in build_modes:
-        build_modes[0] = 'native'
+    ) != -1 and 'qemu' not in build_modes and 'classic' not in build_modes:
+        if 'gcc' not in build_modes:
+            build_modes[0] = 'native'
 
     # Instrumentation coverage modes:
     if 'lto' in build_modes:
