@@ -80,9 +80,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     elif 'gcc' in build_modes:
         os.environ['CC'] = 'afl-gcc-fast'
         os.environ['CXX'] = 'afl-g++-fast'
-        if build_flags.find(
-                'array-bounds'
-        ) != -1 :
+        if build_flags.find('array-bounds') != -1:
             os.environ['CFLAGS'] = '-fsanitize=address -O1'
             os.environ['CXXFLAGS'] = '-fsanitize=address -O1'
         else:
