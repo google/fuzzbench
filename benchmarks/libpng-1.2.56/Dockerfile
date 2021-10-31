@@ -25,10 +25,10 @@ RUN apt-get update && \
     wget \
     zlib1g-dev
 
-RUN wget \
+RUN wget --no-check-certificate \
     https://downloads.sourceforge.net/project/libpng/libpng12/older-releases/1.2.56/libpng-1.2.56.tar.gz
 
-RUN wget -qO $OUT/libpng_read_fuzzer.dict \
+RUN wget --no-check-certificate -qO $OUT/libpng_read_fuzzer.dict \
     https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/png.dict
 ADD seeds /opt/seeds
 COPY * $SRC/
