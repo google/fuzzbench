@@ -31,7 +31,7 @@ RUN env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommend
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 873f5a979e6245deb8ef9659152e2af034f85ce2
+    git checkout c64735df9e87f2ee15ea32208be85e481c78814b
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.

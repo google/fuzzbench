@@ -29,6 +29,21 @@
     - aflplusplus_qemu
 
 
+- experiment: 2021-11-01-aflpp
+  description: "afl++"
+  fuzzers:
+    - aflplusplus_cmplog_2dictl
+    - aflplusplus_cmplog0
+    - aflplusplus_cmplogo1
+    - aflplusplus_cmplogo2
+    - aflplusplus_cmplogo3
+    - aflplusplus_cmplog_inst
+    - aflplusplus
+    - aflplusplus_qemu
+    - aflplusplus_frida
+    - aflplusplus_frida_huge
+    - aflplusplus_frida_huge2
+
 - experiment: 2021-10-29-aflpp
   description: "afl++"
   fuzzers:

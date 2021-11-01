@@ -24,7 +24,7 @@ RUN apt-get update && \
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 4ecba7a24681da2e35ac939fe156e4a9265c37f0
+    git checkout c64735df9e87f2ee15ea32208be85e481c78814b
 
 RUN sed -i 's/-O3/-O2/g' /afl/src/afl-cc.c
 
