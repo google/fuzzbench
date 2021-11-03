@@ -21,7 +21,6 @@ jobs:
           - aflcc
           - aflfast
           - aflplusplus
-          - aflplusplus_gcc
           - aflplusplus_tracepc
           - aflplusplus_zafl
           - aflplusplus_optimal
@@ -61,16 +60,13 @@ jobs:
           - aflplusplus_introspection2
           - aflplusplus_dict2file
           - aflplusplus_cmplog
-          - aflplusplus_flcnt
-          - aflplusplus_fcnt
-          - aflplusplus_lcnt
           - aflplusplus_311
           - aflplusplus_313
-          - aflplusplus_cmplog_fullskip
           - aflplusplus_cmplog_2dictl
           - aflplusplus_cmplogo1
           - aflplusplus_cmplogo2
           - aflplusplus_cmplogo3
+          - aflplusplus_cmplogo3orig
           - aflplusplus_cmplog0
           - aflplusplus_cmplog_inst
           - aflplusplus_unusual_enabled

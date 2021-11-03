@@ -21,14 +21,6 @@ RUN apt-get update && \
                        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
                        apt-utils apt-transport-https ca-certificates
 
-RUN apt-get install -y software-properties-common
-RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test
-RUN apt-get update -y
-RUN apt-get install -y gcc-9 g++-9 gcc-9-plugin-dev libstdc++-9-dev
-RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 60 \
-                         --slave /usr/bin/g++ g++ /usr/bin/g++-9 
-RUN update-alternatives --config gcc
-
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
@@ -38,8 +30,6 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
     export CC=clang && export AFL_NO_X86=1 && \
-    export LLVM_CONFIG=do_not_build && \
     PYTHON_INCLUDE=/ make && make install && \
     make -C utils/aflpp_driver && \
     cp utils/aflpp_driver/libAFLDriver.a /
-
