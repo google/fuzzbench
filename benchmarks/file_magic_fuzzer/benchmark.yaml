@@ -7,4 +7,3 @@ unsupported_fuzzers:
   - aflcc
   - klee
   - lafintel
-  - aflplusplus_gcc

@@ -26,7 +26,7 @@ RUN apt-get install -y nodejs
 
 # Download afl++
 RUN git clone https://github.com/WorksButNotTested/AFLplusplus.git /afl && \
-    cd /afl && git checkout 2389a27ecd021648af58c971519737ad80d7c6bd
+    cd /afl && git checkout 08a35c792ab4b8e98d4c3f2c0aac3bdb2c1b995b
 
 # Build afl++ without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
