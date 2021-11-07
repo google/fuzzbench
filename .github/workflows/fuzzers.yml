@@ -21,9 +21,9 @@ jobs:
           - aflcc
           - aflfast
           - aflplusplus
+          - aflplusplus_optimal
           - aflplusplus_tracepc
           - aflplusplus_zafl
-          - aflplusplus_optimal
           - aflsmart
           - entropic
           - fairfuzz
@@ -56,23 +56,14 @@ jobs:
           - symcc_afl
           - symcc_afl_single
           # Temporary variants.
-          - aflplusplus_introspection
-          - aflplusplus_introspection2
           - aflplusplus_dict2file
           - aflplusplus_cmplog
           - aflplusplus_311
           - aflplusplus_313
-          - aflplusplus_cmplog_2dictl
-          - aflplusplus_cmplogo1
-          - aflplusplus_cmplogo2
-          - aflplusplus_cmplogo3
-          - aflplusplus_cmplogo3orig
-          - aflplusplus_cmplog0
-          - aflplusplus_cmplog_inst
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
-          - aflplusplus_frida_huge
-          - aflplusplus_frida_huge2
+          - aflplusplus_orig
+          - aflplusplus_qemu_orig
           - aflprefix
           - dropfuzzer
           - afl_two_instances
