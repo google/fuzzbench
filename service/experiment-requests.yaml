@@ -28,6 +28,8 @@
     - aflplusplus_qemu
     - aflplusplus_orig
     - aflplusplus_qemu_orig
+    - aflplusplus 314
+    - aflplusplus 313
     - entropic
     - honggfuzz
 
