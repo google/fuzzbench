@@ -17,5 +17,6 @@
 
 # Run the OSS-Fuzz script in the fuzzer project.
 pushd $SRC/aspell-fuzz
+export LDFLAGS="$LDFLAGS -ldl"
 ./ossfuzz.sh
 popd
