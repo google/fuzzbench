@@ -39,7 +39,9 @@ def build():
     utils.append_flags('CXXFLAGS', ['-fPIC', '-lpthread'])
     os.environ['FUZZER_LIB'] = '/out/fakeLibrary.a'
     utils.build_benchmark()
-    os.system('bash -x /zafl_bins.sh')
+    res = os.system('bash -x /zafl_bins.sh')
+    if res != 0:
+        os.system('rm -rf /out')
 
 
 #

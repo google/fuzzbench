@@ -25,4 +25,4 @@ $CXX $CXXFLAGS -Ilibarchive \
     $SRC/libarchive_fuzzer.cc -o $OUT/libarchive_fuzzer \
     $LIB_FUZZING_ENGINE .libs/libarchive.a \
     -Wl,-Bstatic -lbz2 -llzo2  -lxml2 -llzma -lz -lcrypto -llz4 -licuuc \
-    -licudata -Wl,-Bdynamic
+    -licudata -Wl,-Bdynamic -ldl
