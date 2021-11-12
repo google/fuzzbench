@@ -19,18 +19,25 @@ FROM $parent_image
 RUN apt-get update && \
     apt-get install -y wget libstdc++-5-dev libtool-bin automake flex bison \
                        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
-                       apt-utils apt-transport-https ca-certificates joe
+                       apt-utils apt-transport-https ca-certificates joe curl
+
+# Uninstall old Rust
+RUN rustup self uninstall -y
+
+# Install latest Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
+    sh /rustup.sh -y
 
 # Download libafl
 RUN git clone https://github.com/AFLplusplus/libafl /libafl && \
     cd /libafl && \
-    git checkout 77e0be218a8843c7af6c6d35eb4b94b4cc12b289
+    git checkout 3b30ce3c20af2d2b64bddd072615225782fcbce2
 
 # Compile libafl
 RUN cd /libafl && unset CFLAGS && unset CXXFLAGS && \
     export CC=clang && export CXX=clang++ && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
-    cd ./fuzzers/fuzzbench_gsoc && cargo build --release
+    cd ./fuzzers/fuzzbench && cargo build --release
 
 RUN wget https://gist.githubusercontent.com/andreafioraldi/e5f60d68c98b31665a274207cfd05541/raw/4da351a321f1408df566a9cf2ce7cde6eeab3904/empty_fuzzer_lib.c -O /empty_fuzzer_lib.c && \
     clang -c /empty_fuzzer_lib.c && \
