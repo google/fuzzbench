@@ -20,6 +20,15 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2021-11-09-aflpp
+  description: "afl++ binary-only"
+  fuzzers:
+    - aflplusplus_qemu
+    - aflplusplus_qemu_orig
+    - aflplusplus_frida
+    - aflplusplus_frida_orig
+    - aflplusplus_frida_preperf
+
 - experiment: 2021-11-07-aflpp
   description: "afl++"
   fuzzers:
