@@ -20,6 +20,13 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2021-11-12-libafl
+  description: "Test the fixes of the bugs discovered from the previous FuzzBench run"
+  fuzzers:
+    - libafl
+    - libafl_gsoc
+    - aflplusplus
+
 - experiment: 2021-11-09-aflpp
   description: "afl++ binary-only"
   fuzzers:
