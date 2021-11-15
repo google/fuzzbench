@@ -19,7 +19,7 @@ FROM $parent_image
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/dliyanage/pythia /afl && \
     cd /afl && \
-    git checkout 9d00d98b716f923d1b2cdd1d6d7be97ef3ac1672 && \
+    git checkout af0a01dc3146c93b5e8bb32621d3f2f4ebb2e257 && \
     AFL_NO_X86=1 make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
