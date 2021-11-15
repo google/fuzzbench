@@ -19,12 +19,19 @@ FROM $parent_image
 RUN apt-get update && \
     apt-get install -y wget libstdc++-5-dev libtool-bin automake flex bison \
                        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
-                       apt-utils apt-transport-https ca-certificates joe
+                       apt-utils apt-transport-https ca-certificates joe curl
+
+# Uninstall old Rust
+RUN rustup self uninstall -y
+
+# Install latest Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
+    sh /rustup.sh -y
 
 # Download libafl
 RUN git clone https://github.com/AFLplusplus/libafl /libafl && \
     cd /libafl && \
-    git checkout 77e0be218a8843c7af6c6d35eb4b94b4cc12b289
+    git checkout 3b30ce3c20af2d2b64bddd072615225782fcbce2
 
 # Compile libafl
 RUN cd /libafl && unset CFLAGS && unset CXXFLAGS && \
