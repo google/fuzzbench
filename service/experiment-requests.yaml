@@ -20,6 +20,12 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2021-11-16-aflbb
+  description: "Evaluate fuzzer effectiveness in blackbox mode - experiment 2"
+  fuzzers:
+    - pythia_bb
+    - afl
+
 - experiment: 2021-11-15-bug
   description: "Compare Zafl to standard source-only and binary-only fuzzers (bug)."
   type: bug
