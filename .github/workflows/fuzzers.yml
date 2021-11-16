@@ -44,7 +44,6 @@ jobs:
           - afl_qemu
           - honggfuzz_qemu
           - weizz_qemu
-          - aflplusplus_qemu_tracepc
           - aflplusplus_qemu
           - aflplusplus_frida
           # Concolic execution
@@ -62,12 +61,8 @@ jobs:
           - aflplusplus_311
           - aflplusplus_313
           - aflplusplus_314
-          - aflplusplus_frida_orig
-          - aflplusplus_frida_preperf
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
-          - aflplusplus_orig
-          - aflplusplus_qemu_orig
           - aflprefix
           - dropfuzzer
           - afl_two_instances
