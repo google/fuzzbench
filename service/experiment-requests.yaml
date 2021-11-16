@@ -20,6 +20,29 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2021-11-15-bug
+  description: "Compare Zafl to standard source-only and binary-only fuzzers (bug)."
+  type: bug
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_dict2file
+    - aflplusplus_cmplog
+    - aflplusplus_zafl
+    - aflplusplus_tracepc
+    - aflplusplus_qemu_tracepc
+    - aflplusplus_qemu
+
+- experiment: 2021-11-15-coverage
+  description: "Compare Zafl to standard source-only and binary-only fuzzers (coverage)."
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_dict2file
+    - aflplusplus_cmplog
+    - aflplusplus_zafl
+    - aflplusplus_tracepc
+    - aflplusplus_qemu_tracepc
+    - aflplusplus_qemu
+
 - experiment: 2021-11-12-libafl
   description: "Test the fixes of the bugs discovered from the previous FuzzBench run"
   fuzzers:
