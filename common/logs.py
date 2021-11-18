@@ -183,8 +183,10 @@ def error(message, *args, extras=None, logger=None):
     """Logs |message| to stackdriver logging and error reporting (including
     exception if there was one."""
 
-    @retry.wrap(NUM_RETRIES, RETRY_DELAY,
-                'common.logs.error._report_error_with_retries')
+    @retry.wrap(NUM_RETRIES,
+                RETRY_DELAY,
+                'common.logs.error._report_error_with_retries',
+                log_retries=False)
     def _report_error_with_retries(message):
         if utils.is_local():
             return
