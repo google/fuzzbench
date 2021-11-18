@@ -45,6 +45,7 @@ jobs:
           - honggfuzz_qemu
           - weizz_qemu
           - aflplusplus_qemu
+          - aflplusplus_qemu_tracepc
           - aflplusplus_frida
           # Concolic execution
           - fuzzolic_aflplusplus_z3
