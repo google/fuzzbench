@@ -20,6 +20,13 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2021-11-19-aflpp
+  description: "afl++ binary-only"
+  fuzzers:
+    - aflplusplus_qemu
+    - aflplusplus_frida
+    - aflplusplus_frida_orig
+
 - experiment: 2021-11-18-bug
   description: "Compare Zafl to standard source-only and binary-only fuzzers (bug)."
   type: bug
