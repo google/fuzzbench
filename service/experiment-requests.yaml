@@ -19,6 +19,46 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
+- experiment: 2021-11-22-aflbb
+  description: "Evaluate fuzzer effectiveness in blackbox mode - experiment 2"
+  fuzzers:
+    - pythia_bb
+    - afl
+
+- experiment: 2021-11-22-aflpp
+  description: "afl++ + libafl tests"
+  fuzzers:
+    - aflplusplus_qemu
+    - aflplusplus_frida
+    - aflplusplus_frida_orig
+    - libafl
+    - libafl_gsoc
+    - aflplusplus
+    - honggfuzz
+    - entropic
+
+- experiment: 2021-11-22-zafl-bug
+  description: "Compare Zafl to standard source-only and binary-only fuzzers (bug)."
+  type: bug
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_dict2file
+    - aflplusplus_cmplog
+    - aflplusplus_zafl
+    - aflplusplus_tracepc
+    - aflplusplus_qemu_tracepc
+    - aflplusplus_qemu
+
+- experiment: 2021-11-18-zafl-cov
+  description: "Compare Zafl to standard source-only and binary-only fuzzers (coverage)."
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_dict2file
+    - aflplusplus_cmplog
+    - aflplusplus_zafl
+    - aflplusplus_tracepc
+    - aflplusplus_qemu_tracepc
+    - aflplusplus_qemu
 
 - experiment: 2021-11-19-aflpp
   description: "afl++ + libafl tests"
