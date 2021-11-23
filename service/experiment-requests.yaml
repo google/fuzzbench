@@ -19,6 +19,12 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
+- experiment: 2021-11-22-aflbb
+  description: "Evaluate fuzzer effectiveness in blackbox mode - experiment 2"
+  fuzzers:
+    - pythia_bb
+    - afl
+
 - experiment: 2021-11-22-aflpp
   description: "afl++ + libafl tests"
   fuzzers:
