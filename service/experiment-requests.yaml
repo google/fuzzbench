@@ -19,6 +19,17 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
+- experiment: 2021-11-26-aflpp
+  description: "afl++ regression tests"
+  fuzzers:
+    - aflplusplus_r0
+    - aflplusplus_r1
+    - aflplusplus_r2
+    - aflplusplus_r3
+    - aflplusplus_r4
+    - entropic
+    - honggfuzz
+
 - experiment: 2021-11-22-aflbb
   description: "Evaluate fuzzer effectiveness in blackbox mode - experiment 2"
   fuzzers:
