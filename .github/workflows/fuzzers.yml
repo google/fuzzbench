@@ -39,7 +39,7 @@ jobs:
           - aflpp_vs_dd
           - pythia_effect_bb
           - pythia_bb
-	  - fafuzz
+          - fafuzz
           # Binary-only (greybox) fuzzers.
           - eclipser
           - afl_qemu
