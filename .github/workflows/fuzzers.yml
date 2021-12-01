@@ -63,11 +63,9 @@ jobs:
           - aflplusplus_311
           - aflplusplus_313
           - aflplusplus_314
-          - aflplusplus_r0
-          - aflplusplus_r1
-          - aflplusplus_r2
-          - aflplusplus_r3
-          - aflplusplus_r4
+          - aflplusplus_dfl
+          - aflplusplus_sat
+          - aflplusplus_more
           - aflplusplus_frida_orig
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled

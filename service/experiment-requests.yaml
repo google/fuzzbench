@@ -26,6 +26,13 @@
     - afl
     - mopt
 
+- experiment: 2021-12-01-aflpp
+  description: "afl++ enhancements"
+  fuzzers:
+    - aflplusplus_dfl
+    - aflplusplus_sat
+    - aflplusplus_more
+
 - experiment: 2021-11-26-aflpp
   description: "afl++ regression tests"
   fuzzers:
