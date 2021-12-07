@@ -41,5 +41,5 @@ steps:
   env:
     - DOCKER_BUILDKIT=1
   id: base-image
-  timeout: '3600s'
   name: docker:19.03.12
+timeout: '1800s'
