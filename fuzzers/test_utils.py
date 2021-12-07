@@ -83,9 +83,11 @@ def test_initialize_env_in_environment_without_sanitizer(fs, environ):
     utils.initialize_env()
     assert os.getenv('FUZZ_TARGET') == 'fuzzer'
     assert os.getenv('CFLAGS') == (
+        '-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION '
         '-pthread -Wl,--no-as-needed -Wl,-ldl -Wl,-lm '
         '-Wno-unused-command-line-argument -O3')
     assert os.getenv('CXXFLAGS') == (
+        '-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION '
         '-pthread -Wl,--no-as-needed -Wl,-ldl -Wl,-lm '
         '-Wno-unused-command-line-argument -stdlib=libc++ -O3')
 
@@ -96,11 +98,13 @@ def test_initialize_env_in_environment_with_sanitizer(fs, environ):
     utils.initialize_env()
     assert os.getenv('FUZZ_TARGET') == 'fuzzer'
     assert os.getenv('CFLAGS') == (
+        '-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION '
         '-fsanitize=address -fsanitize=array-bounds,bool,builtin,enum,'
         'float-divide-by-zero,function,integer-divide-by-zero,null,object-size,'
         'return,returns-nonnull-attribute,shift,signed-integer-overflow,'
         'unreachable,vla-bound,vptr -O1')
     assert os.getenv('CXXFLAGS') == (
+        '-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION '
         '-fsanitize=address -fsanitize=array-bounds,bool,builtin,enum,'
         'float-divide-by-zero,function,integer-divide-by-zero,null,object-size,'
         'return,returns-nonnull-attribute,shift,signed-integer-overflow,'
@@ -114,9 +118,11 @@ def test_initialize_env_in_var_without_sanitizer(fs):
     env = {}
     utils.initialize_env(env)
     assert env.get('FUZZ_TARGET') == 'fuzzer'
-    assert env.get('CFLAGS') == ('-pthread -Wl,--no-as-needed -Wl,-ldl -Wl,-lm '
+    assert env.get('CFLAGS') == ('-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION '
+                                 '-pthread -Wl,--no-as-needed -Wl,-ldl -Wl,-lm '
                                  '-Wno-unused-command-line-argument -O3')
     assert env.get('CXXFLAGS') == (
+        '-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION '
         '-pthread -Wl,--no-as-needed -Wl,-ldl -Wl,-lm '
         '-Wno-unused-command-line-argument -stdlib=libc++ -O3')
 
@@ -128,11 +134,13 @@ def test_initialize_env_in_var_with_sanitizer(fs):
     utils.initialize_env(env)
     assert env.get('FUZZ_TARGET') == 'fuzzer'
     assert env.get('CFLAGS') == (
+        '-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION '
         '-fsanitize=address -fsanitize=array-bounds,bool,builtin,enum,'
         'float-divide-by-zero,function,integer-divide-by-zero,null,object-size,'
         'return,returns-nonnull-attribute,shift,signed-integer-overflow,'
         'unreachable,vla-bound,vptr -O1')
     assert env.get('CXXFLAGS') == (
+        '-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION '
         '-fsanitize=address -fsanitize=array-bounds,bool,builtin,enum,'
         'float-divide-by-zero,function,integer-divide-by-zero,null,object-size,'
         'return,returns-nonnull-attribute,shift,signed-integer-overflow,'
