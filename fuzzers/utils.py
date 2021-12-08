@@ -50,6 +50,8 @@ NO_SANITIZER_COMPAT_CFLAGS = [
     '-Wno-unused-command-line-argument'
 ]
 
+FUZZING_CFLAGS = ['-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION']
+
 OSS_FUZZ_LIB_FUZZING_ENGINE_PATH = '/usr/lib/libFuzzingEngine.a'
 BENCHMARK_CONFIG_YAML_PATH = '/benchmark.yaml'
 
@@ -181,18 +183,20 @@ def set_compilation_flags(env=None):
 
     if get_config_value('type') == 'bug':
         append_flags('CFLAGS',
-                     SANITIZER_FLAGS + [BUGS_OPTIMIZATION_LEVEL],
+                     FUZZING_CFLAGS + SANITIZER_FLAGS +
+                     [BUGS_OPTIMIZATION_LEVEL],
                      env=env)
         append_flags('CXXFLAGS',
-                     SANITIZER_FLAGS +
+                     FUZZING_CFLAGS + SANITIZER_FLAGS +
                      [LIBCPLUSPLUS_FLAG, BUGS_OPTIMIZATION_LEVEL],
                      env=env)
     else:
         append_flags('CFLAGS',
-                     NO_SANITIZER_COMPAT_CFLAGS + [DEFAULT_OPTIMIZATION_LEVEL],
+                     FUZZING_CFLAGS + NO_SANITIZER_COMPAT_CFLAGS +
+                     [DEFAULT_OPTIMIZATION_LEVEL],
                      env=env)
         append_flags('CXXFLAGS',
-                     NO_SANITIZER_COMPAT_CFLAGS +
+                     FUZZING_CFLAGS + NO_SANITIZER_COMPAT_CFLAGS +
                      [LIBCPLUSPLUS_FLAG, DEFAULT_OPTIMIZATION_LEVEL],
                      env=env)
 
