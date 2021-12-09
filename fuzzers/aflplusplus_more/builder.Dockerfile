@@ -24,9 +24,9 @@ RUN apt-get update && \
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 78b0e108a6b57739ff97927f15126c784bb03773
+    git checkout caf67efab14c5255fdd0ac7fb59dfaa64e6f36f4
 
-RUN sed -i 's/MUTATE_ASCII_DICT 64/MUTATE_ASCII_DICT 128/g' /afl/src/afl-fuzz-one.c
+RUN sed -i 's/MUTATE_ASCII_DICT 64/MUTATE_ASCII_DICT 32/g' /afl/src/afl-fuzz-one.c
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
