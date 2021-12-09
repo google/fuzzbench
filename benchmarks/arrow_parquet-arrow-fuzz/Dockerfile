@@ -18,7 +18,7 @@ FROM gcr.io/oss-fuzz-base/base-builder@sha256:1b6a6993690fa947df74ceabbf6a1f89a4
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update -y -q && \
-    apt-get update -y -q && \
+    apt-get upgrade -y -q && \
     apt-get install -y -q --no-install-recommends \
         bison \
         build-essential \
