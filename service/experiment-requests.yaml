@@ -26,8 +26,8 @@
     - aflplusplus
     - aflplusplus_dfl
     - aflplusplus_more
-    - aflplusplus_aflplusplus_andrea1
-    - aflplusplus_aflplusplus_andrea2
+    - aflplusplus_andrea1
+    - aflplusplus_andrea2
 
 - experiment: 2021-12-06-fafuzzer
   description: "Evaluate fuzzer effectiveness on fafuzz and other fuzzers"
