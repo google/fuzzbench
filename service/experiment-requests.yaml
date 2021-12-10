@@ -19,6 +19,16 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
+
+- experiment: 2021-12-09-aflpp
+  description: "afl++ enhancements"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_dfl
+    - aflplusplus_more
+    - aflplusplus_andrea1
+    - aflplusplus_andrea2
+
 - experiment: 2021-12-06-fafuzzer
   description: "Evaluate fuzzer effectiveness on fafuzz and other fuzzers"
   fuzzers:
