@@ -20,6 +20,12 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2021-12-13-libafl
+  description: "libaf test"
+  fuzzers:
+    - libafl
+    - libafl_marc
+
 - experiment: 2021-12-09-aflpp
   description: "afl++ enhancements"
   fuzzers:
