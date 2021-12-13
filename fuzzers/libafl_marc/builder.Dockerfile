@@ -29,9 +29,9 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
     sh /rustup.sh -y
 
 # Download libafl
-RUN git clone https://github.com/vanhauser-thc/libafl /libafl && \
+RUN git clone https://github.com/AFLplusplus/libafl /libafl && \
     cd /libafl && \
-    git checkout 61868d4c7d8f1d7bd814c0cb7bcde3adabd16de8
+    git checkout 162f4a301845bc5979088fc16008238e054e587c
 
 # Compile libafl
 RUN cd /libafl && unset CFLAGS && unset CXXFLAGS && \
