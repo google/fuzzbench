@@ -20,6 +20,13 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2021-12-14-fafuzzer
+  description: "Evaluate fuzzer effectiveness on fafuzz and other fuzzers"
+  fuzzers:
+    - fafuzz
+    - afl_2_52_b
+    - mopt
+
 - experiment: 2021-12-13-libafl
   description: "libaf test"
   fuzzers:
