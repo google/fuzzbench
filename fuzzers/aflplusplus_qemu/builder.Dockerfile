@@ -26,7 +26,7 @@ RUN cd / && wget https://github.com/ninja-build/ninja/releases/download/v1.10.1/
 
 # Download afl++
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && git checkout caf67efab14c5255fdd0ac7fb59dfaa64e6f36f4
+    cd /afl && git checkout 52dd5d479d411460c8cf2010a89f72e269d799ea
     
 # Build afl++ without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
