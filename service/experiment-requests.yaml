@@ -27,6 +27,12 @@
     - afl_2_52_b
     - mopt
 
+- experiment: 2021-12-13-libafl
+  description: "libaf test"
+  fuzzers:
+    - libafl
+    - libafl_marc
+
 - experiment: 2021-12-09-aflpp
   description: "afl++ enhancements"
   fuzzers:
