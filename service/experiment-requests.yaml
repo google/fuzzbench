@@ -29,6 +29,8 @@
     - libafl_marc
     - libafl_gsoc
     - libafl_dfl
+    - afl
+    - afl_marc
     - entropic
     - honggfuzz
 
