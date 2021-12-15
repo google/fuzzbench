@@ -20,6 +20,18 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2021-12-15-libafl
+  description: "afl++ + libafl test"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_dfl
+    - aflplusplus_class
+    - libafl_marc
+    - libafl_gsoc
+    - libafl_dfl
+    - entropic
+    - honggfuzz
+
 - experiment: 2021-12-14-fafuzzer
   description: "Evaluate fuzzer effectiveness on fafuzz and other fuzzers"
   fuzzers:
