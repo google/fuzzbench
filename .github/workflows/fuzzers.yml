@@ -34,8 +34,6 @@ jobs:
           - mopt
           - neuzz
           - libafl
-          - libafl_gsoc
-          - libafl_marc
           - afldd
           - aflpp_vs_dd
           - pythia_effect_bb
@@ -68,6 +66,12 @@ jobs:
           - aflplusplus_frida_orig
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
+          - aflplusplus_dfl
+          - aflplusplus_class
+          - libafl_gsoc
+          - libafl_marc
+          - libafl_dfl
+          - afl_marc
           - aflprefix
           - dropfuzzer
           - afl_two_instances

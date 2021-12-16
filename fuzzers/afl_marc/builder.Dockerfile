@@ -17,9 +17,9 @@ FROM $parent_image
 
 # Download and compile AFL v2.57b.
 # Set AFL_NO_X86 to skip flaky tests.
-RUN git clone https://github.com/google/AFL.git /afl && \
+RUN git clone https://github.com/vanhauser-thc/AFL.git /afl && \
     cd /afl && \
-    git checkout 61037103ae3722c8060ff7082994836a794f978e && \
+    git checkout c04945b4c6b77d4699a9004cd58e8513754bc3d3 && \
     AFL_NO_X86=1 make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
