@@ -59,6 +59,7 @@ jobs:
           # Temporary variants.
           - afl_fitness
           - afl_fitness_only
+          - afl_edges
           - aflplusplus_dict2file
           - afl_2_52_b
           - aflplusplus_cmplog
