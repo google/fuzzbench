@@ -20,7 +20,7 @@
 # Please add new experiment requests towards the top of this file.
 #
 
-- experiment: 2021-12-15-libaflpp
+- experiment: 2021-12-25-libaflpp
   description: "afl++ + libafl test"
   fuzzers:
     - aflplusplus_optimal
