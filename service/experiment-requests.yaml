@@ -20,6 +20,21 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2021-12-17-afl-edges-bug
+  description: "afl edge coverage only eval"
+  type: bug
+  fuzzers:
+    - afl
+    - afl_edges
+
+- experiment: 2021-12-16-afl-fitness-bug
+  description: "afl fitness mode eval"
+  type: bug
+  fuzzers:
+    - afl
+    - afl_fitness
+    - afl_fitness_only
+
 - experiment: 2021-12-15-libafl
   description: "afl++ + libafl test"
   fuzzers:
