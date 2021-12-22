@@ -20,6 +20,12 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2021-12-17-afl-edges
+  description: "afl edge coverage only eval"
+  fuzzers:
+    - afl
+    - afl_edges
+
 - experiment: 2021-12-25-libaflpp
   description: "afl++ + libafl test"
   fuzzers:
