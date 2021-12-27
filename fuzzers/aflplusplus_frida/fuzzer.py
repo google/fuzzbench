@@ -51,6 +51,11 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # resource.setrlimit(resource.RLIMIT_CORE,
     #                    (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
 
+    # The systemd benchmark fails without full library instrumentation :(
+    benchmark_name = os.environ['BENCHMARK']
+    if benchmark_name == 'systemd_fuzz-link-parser':
+        os.environ['AFL_INST_LIBS'] = "1"
+
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
