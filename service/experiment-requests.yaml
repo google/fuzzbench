@@ -23,8 +23,10 @@
 - experiment: 2021-12-27-aflpp
   description: "afl++ test"
   fuzzers:
-    - aflplusplus_havoc
+    - aflplusplus_havoc1
+    - aflplusplus_havoc11
     - aflplusplus_havoc2
+    - aflplusplus_havoc22
     - aflplusplus_qemu
     - aflplusplus_frida
 

@@ -66,8 +66,10 @@ jobs:
           - aflplusplus_311
           - aflplusplus_313
           - aflplusplus_314
-          - aflplusplus_havoc
+          - aflplusplus_havoc1
           - aflplusplus_havoc2
+          - aflplusplus_havoc11
+          - aflplusplus_havoc22
           - aflplusplus_unusual_enabled
           - aflplusplus_unusual_disabled
           - aflprefix
