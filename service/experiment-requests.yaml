@@ -20,6 +20,16 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2021-12-27-aflpp
+  description: "afl++ test"
+  fuzzers:
+    - aflplusplus_havoc1
+    - aflplusplus_havoc11
+    - aflplusplus_havoc2
+    - aflplusplus_havoc22
+    - aflplusplus_qemu
+    - aflplusplus_frida
+
 - experiment: 2021-12-17-afl-edges
   description: "afl edge coverage only eval"
   fuzzers:
