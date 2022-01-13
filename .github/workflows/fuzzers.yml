@@ -34,8 +34,6 @@ jobs:
           - mopt
           - neuzz
           - libafl
-          - afldd
-          - aflpp_vs_dd
           - pythia_effect_bb
           - pythia_bb
           - fafuzz
@@ -57,9 +55,6 @@ jobs:
           - symcc_afl
           - symcc_afl_single
           # Temporary variants.
-          - afl_fitness
-          - afl_fitness_only
-          - afl_edges
           - aflplusplus_dict2file
           - afl_2_52_b
           - aflplusplus_cmplog
@@ -70,8 +65,6 @@ jobs:
           - aflplusplus_havoc2
           - aflplusplus_havoc11
           - aflplusplus_havoc22
-          - aflplusplus_unusual_enabled
-          - aflplusplus_unusual_disabled
           - aflprefix
           - dropfuzzer
           - afl_two_instances
