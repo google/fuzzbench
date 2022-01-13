@@ -37,7 +37,6 @@ unsupported_fuzzers:
   - cfctx_params_512kb
   - cfctx_params_768kb
   - cfctx_full
-  - libafl
   - aflplusplus_cmplog_double
   - symcc_aflplusplus_single
   - eclipser_aflplusplus
