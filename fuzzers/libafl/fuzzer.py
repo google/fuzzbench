@@ -42,7 +42,13 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     os.environ['CC'] = '/libafl/fuzzers/fuzzbench/target/release/libafl_cc'
     os.environ['CXX'] = '/libafl/fuzzers/fuzzbench/target/release/libafl_cxx'
-    os.environ['FUZZER_LIB'] = '/emptylib.a'
+
+    cflags = ['--libafl-no-link']
+    utils.append_flags('CFLAGS', cflags)
+    utils.append_flags('CXXFLAGS', cflags)
+
+    os.environ['FUZZER_LIB'] = '/libafl/fuzzers/fuzzbench/'\
+                               'target/release/libfuzzbench.a'
     utils.build_benchmark()
 
 
