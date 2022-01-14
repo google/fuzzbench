@@ -76,6 +76,8 @@ jobs:
           - aflpp_random_wrs_rf
           - aflpp_random_wrs_rf_rp
           - aflpp_random_wrs_rp
+          - aflplusplus_pcguard
+          - aflplusplus_classic
 
         benchmark_type:
           - oss-fuzz

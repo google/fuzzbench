@@ -25,6 +25,7 @@ unsupported_fuzzers:
   - aflplusplus_classic_ctx_21
   - aflplusplus_classic_ctx_23
   - aflplusplus_pcguard
+  - aflplusplus_classic
   - cfctx_basic
   - cfctx_bottom
   - cfctx_dataflow_seadsa
