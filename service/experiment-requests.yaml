@@ -20,6 +20,13 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-01-07-aflpp-collisions
+  description: "afl++ edge collision impact on bug finding"
+  type: bug
+  fuzzers:
+    - aflplusplus_pcguard
+    - aflplusplus_classic
+
 - experiment: 2021-12-27-aflpp
   description: "afl++ test"
   fuzzers:

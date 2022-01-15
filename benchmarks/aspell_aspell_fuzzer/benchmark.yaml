@@ -19,6 +19,7 @@ unsupported_fuzzers:
   - aflplusplus_classic_ctx_21
   - aflplusplus_classic_ctx_23
   - aflplusplus_pcguard
+  - aflplusplus_classic
   - cfctx_basic
   - cfctx_bottom
   - cfctx_dataflow_seadsa
@@ -37,7 +38,6 @@ unsupported_fuzzers:
   - cfctx_params_512kb
   - cfctx_params_768kb
   - cfctx_full
-  - libafl
   - aflplusplus_cmplog_double
   - symcc_aflplusplus_single
   - eclipser_aflplusplus

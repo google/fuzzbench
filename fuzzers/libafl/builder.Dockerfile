@@ -22,7 +22,7 @@ RUN apt-get update && \
                        apt-utils apt-transport-https ca-certificates joe curl
 
 # Uninstall old Rust
-RUN rustup self uninstall -y
+RUN if which rustup; then rustup self uninstall -y; fi
 
 # Install latest Rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
@@ -31,13 +31,14 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
 # Download libafl
 RUN git clone https://github.com/AFLplusplus/libafl /libafl && \
     cd /libafl && \
-    git checkout 785cddc1f0ea171c33f260ce3d9f02d082f6f2c5
+    git checkout ddeb8320595f34c775be891f10609f61c442c270
 
 # Compile libafl
 RUN cd /libafl && unset CFLAGS && unset CXXFLAGS && \
     export CC=clang && export CXX=clang++ && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
-    cd ./fuzzers/fuzzbench && cargo build --release
+    cd ./fuzzers/fuzzbench && \
+    PATH="$PATH:/root/.cargo/bin/" cargo build --release
 
 RUN wget https://gist.githubusercontent.com/andreafioraldi/e5f60d68c98b31665a274207cfd05541/raw/4da351a321f1408df566a9cf2ce7cde6eeab3904/empty_fuzzer_lib.c -O /empty_fuzzer_lib.c && \
     clang -c /empty_fuzzer_lib.c && \
