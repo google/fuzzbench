@@ -61,10 +61,7 @@ jobs:
           - aflplusplus_311
           - aflplusplus_313
           - aflplusplus_314
-          - aflplusplus_havoc1
-          - aflplusplus_havoc2
-          - aflplusplus_havoc11
-          - aflplusplus_havoc22
+          - aflplusplus_tmp
           - aflprefix
           - dropfuzzer
           - afl_two_instances
