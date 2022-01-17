@@ -20,6 +20,14 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-01-17-aflpp
+  description: "afl++ test new classify implementation"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_tmp
+    - aflplusplus_pcguard
+    - aflplusplus_classic
+
 - experiment: 2022-01-15-aflpp
   description: "afl++ test new classify implementation"
   type: bug
