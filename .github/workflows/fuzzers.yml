@@ -55,6 +55,7 @@ jobs:
           - symcc_afl
           - symcc_afl_single
           # Temporary variants.
+          - afl_no_culling
           - aflplusplus_dict2file
           - afl_2_52_b
           - aflplusplus_cmplog
