@@ -58,6 +58,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
     command = [target_binary]
     if dictionary_path:
         command += (['-x', dictionary_path])
-    command += ([output_corpus, input_corpus])
+    command += (['-o', output_corpus, '-i', input_corpus])
     print(command)
     subprocess.check_call(command, cwd=os.environ['OUT'])
