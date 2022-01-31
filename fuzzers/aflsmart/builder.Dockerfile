@@ -30,7 +30,8 @@ RUN dpkg --add-architecture i386 && \
 RUN apt-get update -y && \
     apt-get upgrade -y && \
     add-apt-repository --keyserver hkps://keyserver.ubuntu.com:443 ppa:ubuntu-toolchain-r/test -y && \
-    apt-get update -y && apt-get install -y \
+    apt-get update -y && \
+    apt-get install -y \
     gcc-4.4 \
     g++-4.4 \
     unzip \
