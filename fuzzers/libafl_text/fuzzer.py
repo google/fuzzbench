@@ -44,6 +44,9 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     os.environ[
         'CXX'] = '/libafl/fuzzers/fuzzbench_text/target/release/libafl_cxx'
 
+    os.environ['ASAN_OPTIONS'] = 'abort_on_error=0:allocator_may_return_null=1'
+    os.environ['UBSAN_OPTIONS'] = 'abort_on_error=0'
+
     cflags = ['--libafl']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
