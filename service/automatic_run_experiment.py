@@ -221,11 +221,12 @@ def run_requested_experiment(dry_run):
         benchmarks = valid_benchmarks
     else:
         errors = False
-        for bench in benchmarks:
-            if bench not in valid_benchmarks:
+        for benchmark in benchmarks:
+            if benchmark not in valid_benchmarks:
                 logs.error(
-                    'Requested experiment: in %s, %s is not a valid %s ' \
-                    'benchmark.', requested_experiment, bench, benchmark_type)
+                    'Requested experiment:' \
+                    ' in %s, %s is not a valid %s benchmark.',
+                    requested_experiment, benchmark, benchmark_type)
                 errors = True
         if errors:
             return
