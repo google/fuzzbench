@@ -34,9 +34,8 @@ $CXX $CXXFLAGS $OUT/${name}.o $LIB_FUZZING_ENGINE -lm \
 rm -f $OUT/${name}.o
 )
 
-# dict and config
-cp $SRC/mruby.dict $OUT
-cp $SRC/mruby_fuzzer.options $OUT
+# dict
+cp $SRC/mruby.dict $OUT/mruby_fuzzer.dict
 
 # seeds
 zip -rq $OUT/mruby_fuzzer_seed_corpus $SRC/mruby_seeds
