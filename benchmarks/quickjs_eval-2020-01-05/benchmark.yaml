@@ -1,0 +1,6 @@
+commit: 91459fb6723e29e923380cec0023af93819ae69d
+commit_date: 2020-09-06 18:47:30+00:00
+fuzz_target: fuzz_eval
+project: quickjs
+type: bug
+unsupported_fuzzers:
