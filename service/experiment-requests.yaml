@@ -21,7 +21,7 @@
 #
 
 - experiment: 2022-01-31-main-fuzzers
-  description: "Evaluate up-to-date versions of main fuzzers"
+  description: "Evaluate up-to-date versions of main fuzzers."
   fuzzers:
     - honggfuzz
     - aflplusplus
