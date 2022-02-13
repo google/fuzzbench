@@ -212,9 +212,24 @@ def run_requested_experiment(dry_run):
 
     benchmark_type = requested_experiment.get('type')
     if benchmark_type == benchmark_utils.BenchmarkType.BUG.value:
-        benchmarks = benchmark_utils.get_bug_benchmarks()
+        valid_benchmarks = benchmark_utils.get_bug_benchmarks()
     else:
-        benchmarks = benchmark_utils.get_coverage_benchmarks()
+        valid_benchmarks = benchmark_utils.get_coverage_benchmarks()
+
+    benchmarks = requested_experiment.get('benchmarks')
+    if benchmarks is None:
+        benchmarks = valid_benchmarks
+    else:
+        errors = False
+        for benchmark in benchmarks:
+            if benchmark not in valid_benchmarks:
+                logs.error(
+                    'Requested experiment:'
+                    ' in %s, %s is not a valid %s benchmark.',
+                    requested_experiment, benchmark, benchmark_type)
+                errors = True
+        if errors:
+            return
 
     logs.info('Running experiment: %s with fuzzers: %s.', experiment_name,
               ' '.join(fuzzers))
