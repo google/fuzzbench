@@ -21,7 +21,7 @@ RUN apt-get update && \
                        libglib2.0-dev libpixman-1-dev python3-setuptools unzip
 
 # Download afl++
-RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
+RUN git clone https://github.com/WorksButNotTested/AFLplusplus.git /afl && \
     cd /afl && git checkout f12da05d3534f2eb4fddfc6fc2064bbac8e1a030
     
 # Build afl++ without Python support as we don't need it.
