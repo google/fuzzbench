@@ -15,6 +15,7 @@
 """Integration code for a LibAFL-based fuzzer."""
 
 import os
+import shutil
 import subprocess
 
 from fuzzers import utils
@@ -40,9 +41,21 @@ def prepare_fuzz_environment(input_corpus):
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
-    os.environ['CC'] = '/libafl/fuzzers/fuzzbench_text/target/release/libafl_cc'
-    os.environ[
-        'CXX'] = '/libafl/fuzzers/fuzzbench_text/target/release/libafl_cxx'
+    benchmark_name = os.environ['BENCHMARK'].lower()
+    if 'php' in benchmark_name:
+        copy_file = '/libafl_fuzzbench/grammars/php_automata.json.gz'
+    elif 'ruby' in benchmark_name:
+        copy_file = '/libafl_fuzzbench/grammars/ruby_automata.json.gz'
+    elif 'js' in benchmark_name or 'javascript' in benchmark_name:
+        copy_file = '/libafl_fuzzbench/grammars/js_automata.json.gz'
+    else:
+        raise RuntimeError('Unsupported benchmark, unavailable grammar')
+    dest = os.path.join(os.environ['OUT'], 'grammar.json.gz')
+    shutil.copy(copy_file, dest)
+    os.system("gzip -d '%s'" % dest)
+
+    os.environ['CC'] = '/libafl_fuzzbench/target/release/gramatron_cc'
+    os.environ['CXX'] = '/libafl_fuzzbench/target/release/gramatron_cxx'
 
     os.environ['ASAN_OPTIONS'] = 'abort_on_error=0:allocator_may_return_null=1'
     os.environ['UBSAN_OPTIONS'] = 'abort_on_error=0'
@@ -58,10 +71,8 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     prepare_fuzz_environment(input_corpus)
-    dictionary_path = utils.get_dictionary_path(target_binary)
     command = [target_binary]
-    if dictionary_path:
-        command += (['-x', dictionary_path])
-    command += (['-o', output_corpus, '-i', input_corpus])
+    grammar = os.path.join(os.environ['OUT'], 'grammar.json')
+    command += (['-o', output_corpus, '-g', grammar])
     print(command)
     subprocess.check_call(command, cwd=os.environ['OUT'])
