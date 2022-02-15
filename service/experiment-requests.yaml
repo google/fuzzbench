@@ -32,18 +32,8 @@
     - quickjs_eval-2020-01-05
     - php_php-fuzz-execute
     - mruby-2018-05-23
-
-- experiment: 2022-01-27-libafl
-  description: "libafl text test"
-  fuzzers:
-    - libafl
-    - libafl_old
-    - libafl_text
-    - aflplusplus
-    - honggfuzz
-    - entropic
-
-- experiment: 2022-01-31-main-fuzzers
+ 
+- experiment: 2022-02-15-main-fuzzers
   description: "evaluate up-to-date version of main fuzzers"
   fuzzers:
     - honggfuzz
@@ -58,6 +48,25 @@
     - aflfast
     - fairfuzz
 
+- experiment: 2022-02-15-aflpp
+  description: "afl++ frida tests"
+  fuzzers:
+    - aflplusplus_qemu
+    - aflplusplus_frida
+    - aflplusplus_frida_sup
+    - aflplusplus_frida_inst
+    - aflplusplus_frida_cmov
+    - aflplusplus_frida_cache
+
+- experiment: 2022-01-27-libafl
+  description: "libafl text test"
+  fuzzers:
+    - libafl
+    - libafl_old
+    - libafl_text
+    - aflplusplus
+    - honggfuzz
+    - entropic
 
 - experiment: 2022-01-17-afl-culling-bug
   description: "afl without corpus culling eval"
