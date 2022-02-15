@@ -61,7 +61,6 @@ jobs:
           - afl_2_52_b
           - aflplusplus_cmplog
           - aflplusplus_311
-          - aflplusplus_313
           - aflplusplus_314
           - afl_two_instances
           - afl_no_favored
