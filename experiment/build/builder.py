@@ -26,6 +26,7 @@ from typing import Callable, List, Tuple
 
 from common import benchmark_config
 from common import experiment_utils
+from common import fuzzer_config
 from common import filesystem
 from common import utils
 from common import logs
@@ -55,17 +56,28 @@ def get_fuzzer_benchmark_pairs(fuzzers, benchmarks):
     """Return a tuple of (fuzzer, benchmark) pairs to build. Excludes
     unsupported fuzzers from each benchmark.
     """
-    fuzzer_benchmark_pairs = list(itertools.product(fuzzers, benchmarks))
+    unsupported_fuzzer_benchmark_pairs = set()
+    for fuzzer in fuzzers:
+        config = fuzzer_config.get_config('fuzzer')
+        unsupported_benchmarks = config.get('unsupported_benchmarks')
+        if unsupported_benchmarks:
+            unsupported_fuzzer_benchmark_pairs.update(
+                itertools.product([fuzzer], unsupported_benchmarks))
+        allowed_benchmarks = config.get('allowed_benchmarks')
+        if allowed_benchmarks:
+            for benchmark in benchmarks:
+                if benchmark not in allowed_benchmarks:
+                    unsupported_fuzzer_benchmark_pairs.add((fuzzer, benchmark))
 
-    unsupported_fuzzer_benchmark_pairs = []
     for benchmark in benchmarks:
         config = benchmark_config.get_config(benchmark)
         unsupported_fuzzers = config.get('unsupported_fuzzers')
         if not unsupported_fuzzers:
             continue
-        unsupported_fuzzer_benchmark_pairs += list(
+        unsupported_fuzzer_benchmark_pairs.update(
             itertools.product(unsupported_fuzzers, [benchmark]))
 
+    fuzzer_benchmark_pairs = list(itertools.product(fuzzers, benchmarks))
     return [
         i for i in fuzzer_benchmark_pairs
         if i not in unsupported_fuzzer_benchmark_pairs
