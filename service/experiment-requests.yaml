@@ -20,6 +20,17 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+
+- experiment: 2022-01-27-libafl
+  description: "libafl text test"
+  fuzzers:
+    - libafl
+    - libafl_old
+    - libafl_text
+    - aflplusplus
+    - honggfuzz
+    - entropic
+
 - experiment: 2022-01-31-main-fuzzers
   description: "evaluate up-to-date version of main fuzzers"
   fuzzers:
@@ -34,6 +45,7 @@
     - mopt
     - aflfast
     - fairfuzz
+
 
 - experiment: 2022-01-17-afl-culling-bug
   description: "afl without corpus culling eval"
