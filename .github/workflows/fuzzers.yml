@@ -61,7 +61,6 @@ jobs:
           - afl_2_52_b
           - aflplusplus_cmplog
           - aflplusplus_311
-          - aflplusplus_313
           - aflplusplus_314
           - afl_two_instances
           - afl_no_favored
@@ -74,6 +73,10 @@ jobs:
           - aflpp_random_wrs_rp
           - aflplusplus_pcguard
           - aflplusplus_classic
+          - aflplusplus_frida_sup
+          - aflplusplus_frida_inst
+          - aflplusplus_frida_cmov
+          - aflplusplus_frida_cache
 
         benchmark_type:
           - oss-fuzz
