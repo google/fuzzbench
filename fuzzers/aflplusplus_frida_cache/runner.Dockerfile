@@ -14,10 +14,14 @@
 
 FROM gcr.io/fuzzbench/base-image
 
-# This makes interactive docker runs painless:
+RUN apt update -y && apt-get upgrade -y && \
+    apt-get install -y python3-pyelftools bc
+
+# This makes interactive docker run painless:
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
-ENV AFL_MAP_SIZE=2621440
+#ENV AFL_MAP_SIZE=2621440
 ENV PATH="$PATH:/out"
 ENV AFL_SKIP_CPUFREQ=1
 ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
 ENV AFL_TESTCACHE_SIZE=2
+
