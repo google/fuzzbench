@@ -19,7 +19,8 @@ FROM $parent_image
 RUN apt-get update && \
     apt-get install -y wget libstdc++-5-dev libtool-bin automake flex bison \
                        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
-                       apt-utils apt-transport-https ca-certificates joe curl
+                       apt-utils apt-transport-https ca-certificates joe curl \
+                       python3-dev gzip
 
 # Uninstall old Rust
 RUN if which rustup; then rustup self uninstall -y; fi
