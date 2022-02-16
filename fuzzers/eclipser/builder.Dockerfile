@@ -19,7 +19,7 @@ FROM $parent_image
 # fuzzing module. Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/google/AFL.git /afl && \
     cd /afl && \
-    git checkout 82b5e359463238d790cadbe2dd494d6a4928bff3 && \
+    git checkout 8fc249d210ad49e3dd88d1409877ca64d9884690 && \
     AFL_NO_X86=1 make
 
 # Use afl_driver.cpp for AFL, and StandaloneFuzzTargetMain.c for Eclipser.

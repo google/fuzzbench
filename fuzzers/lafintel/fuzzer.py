@@ -23,6 +23,17 @@ from fuzzers.afl import fuzzer as afl_fuzzer
 
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
+    # LLVm 3.8 doesn't support -fsanitize=builtin
+    def remove_builtin(flag):
+        if flag.startswith('-fsanitize='):
+            options = flag[len('-fsanitize='):].split(',')
+            options = filter(lambda x: x != 'builtin', options)
+            return '-fsanitize=' + ','.join(options)
+        return flag
+    cflags = filter(remove_builtin, os.environ["CFLAGS"].split())
+    cxxflags = filter(remove_builtin, os.environ["CXXFLAGS"].split())
+    os.environ["CFLAGS"] = ' '.join(cflags)
+    os.environ["CXXFLAGS"] = ' '.join(cxxflags)
     # In php benchmark, there is a call to __builtin_cpu_supports("ssse3")
     # (see https://github.com/php/php-src/blob/master/Zend/zend_cpuinfo.h).
     # It is not supported by clang-3.8, so we define the MACRO below
