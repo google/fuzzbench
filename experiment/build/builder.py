@@ -58,7 +58,7 @@ def get_fuzzer_benchmark_pairs(fuzzers, benchmarks):
     """
     unsupported_fuzzer_benchmark_pairs = set()
     for fuzzer in fuzzers:
-        config = fuzzer_config.get_config('fuzzer')
+        config = fuzzer_config.get_config(fuzzer)
         unsupported_benchmarks = config.get('unsupported_benchmarks')
         if unsupported_benchmarks:
             unsupported_fuzzer_benchmark_pairs.update(
