@@ -32,8 +32,8 @@ def prepare_build_environment():
             return '-fsanitize=' + ','.join(options)
         return flag
 
-    cflags = filter(remove_builtin, os.environ["CFLAGS"].split())
-    cxxflags = filter(remove_builtin, os.environ["CXXFLAGS"].split())
+    cflags = map(remove_builtin, os.environ["CFLAGS"].split())
+    cxxflags = map(remove_builtin, os.environ["CXXFLAGS"].split())
     os.environ["CFLAGS"] = ' '.join(cflags)
     os.environ["CXXFLAGS"] = ' '.join(cxxflags)
     # In php benchmark, there is a call to __builtin_cpu_supports("ssse3")

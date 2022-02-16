@@ -60,6 +60,7 @@ def build():
     new_env['CC'] = "/symcc/build/symcc"
     new_env['CXX'] = "/symcc/build/sym++"
     new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace("-stlib=libc++", "")
+    new_env['CXXFLAGS'] += ' -ldl'
     new_env['FUZZER_LIB'] = '/libfuzzer-harness.o'
     new_env['OUT'] = symcc_build_dir
 
