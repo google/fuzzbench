@@ -23,6 +23,7 @@ from fuzzers.afl import fuzzer as afl_fuzzer
 
 def prepare_build_environment():
     """Set environment variables used to build benchmark."""
+
     # LLVm 3.8 doesn't support -fsanitize=builtin
     def remove_builtin(flag):
         if flag.startswith('-fsanitize='):
@@ -30,6 +31,7 @@ def prepare_build_environment():
             options = filter(lambda x: x != 'builtin', options)
             return '-fsanitize=' + ','.join(options)
         return flag
+
     cflags = filter(remove_builtin, os.environ["CFLAGS"].split())
     cxxflags = filter(remove_builtin, os.environ["CXXFLAGS"].split())
     os.environ["CFLAGS"] = ' '.join(cflags)
