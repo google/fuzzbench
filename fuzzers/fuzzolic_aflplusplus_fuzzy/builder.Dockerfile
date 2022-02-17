@@ -93,6 +93,7 @@ RUN apt install -y \
 # dumb-init xxd libprotobuf10
 
 RUN apt clean -y
+RUN pip install --upgrade pip
 RUN pip install --user virtualenv
 
 # Build QEMU tracer

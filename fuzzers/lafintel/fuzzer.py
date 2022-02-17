@@ -26,11 +26,12 @@ def prepare_build_environment():
 
     # LLVm 3.8 doesn't support -fsanitize=builtin
     def remove_builtin(flag):
-        s = flag.split('=')
-        if s[0].startswith('-fsanitize') or s[0].startswith('-fno-sanitize'):
-            options = s[1].split(',')
+        split = flag.split('=')
+        if split[0].startswith('-fsanitize') or split[0].startswith(
+                '-fno-sanitize'):
+            options = split[1].split(',')
             options = filter(lambda x: x != 'builtin', options)
-            return s[0] + '=' + ','.join(options)
+            return split[0] + '=' + ','.join(options)
         return flag
 
     cflags = map(remove_builtin, os.environ["CFLAGS"].split())

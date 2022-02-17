@@ -74,7 +74,6 @@ RUN cd / && \
     ar rc /libStandaloneFuzzTarget.a StandaloneFuzzTargetMain.o && \
     rm /StandaloneFuzzTargetMain.c
 
-
 RUN git clone https://github.com/eurecom-s3/symqemu --depth 1 /symqemu/src
 RUN mkdir /symqemu/build && \
     cd /symqemu/build && \
