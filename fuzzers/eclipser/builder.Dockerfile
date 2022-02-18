@@ -15,6 +15,10 @@
 ARG parent_image
 FROM $parent_image
 
+# Upgrade to avoid certs errors
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y apt-utils apt-transport-https ca-certificates
+
 # Download and compile AFL v2.56b, since Eclipser now adopts AFL as its random
 # fuzzing module. Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/google/AFL.git /afl && \
