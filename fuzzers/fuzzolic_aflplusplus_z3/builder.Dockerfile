@@ -42,7 +42,7 @@ RUN cd /out/fuzzolic/solver/fuzzy-sat && git fetch && \
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /out/AFLplusplus && \
     cd /out/AFLplusplus && \
-    git checkout 8475cadc6307f94951e616aeea4402224d71a981
+    git checkout 8fc249d210ad49e3dd88d1409877ca64d9884690
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
@@ -93,6 +93,7 @@ RUN apt install -y \
 # dumb-init xxd libprotobuf10
 
 RUN apt clean -y
+RUN python3 -m pip install --upgrade pip
 RUN pip install --user virtualenv
 
 # Build QEMU tracer

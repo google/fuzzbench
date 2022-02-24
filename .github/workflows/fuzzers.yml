@@ -54,9 +54,12 @@ jobs:
           - symcc_aflplusplus_single
           - symcc_afl
           - symcc_afl_single
+          # Grammar fuzzers
+          - nautilus
+          - gramatron
+          - token_level
+          - grimoire
           # Temporary variants.
-          - libafl_text
-          - libafl_old
           - aflplusplus_dict2file
           - afl_2_52_b
           - aflplusplus_cmplog

@@ -20,6 +20,19 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-02-15-grammar
+  description: "test grammar fuzzers"
+  type: bug
+  fuzzers:
+    - nautilus
+    - gramatron
+    - grimoire
+    - token_level
+  benchmarks:
+    - quickjs_eval-2020-01-05
+    - php_php-fuzz-execute
+    - mruby-2018-05-23
+ 
 - experiment: 2022-02-18-aflpp
   description: "afl++ frida tests"
   fuzzers:
@@ -42,7 +55,6 @@
     - mopt
     - aflfast
     - fairfuzz
-
 
 - experiment: 2022-02-15-aflpp
   description: "afl++ frida tests"
