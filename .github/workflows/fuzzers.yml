@@ -76,9 +76,6 @@ jobs:
           - aflpp_random_wrs_rp
           - aflplusplus_pcguard
           - aflplusplus_classic
-          - aflplusplus_frida_sup
-          - aflplusplus_frida_inst
-          - aflplusplus_frida_cmov
           - aflplusplus_frida_cache
 
         benchmark_type:

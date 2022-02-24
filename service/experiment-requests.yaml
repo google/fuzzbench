@@ -33,6 +33,14 @@
     - php_php-fuzz-execute
     - mruby-2018-05-23
  
+- experiment: 2022-02-18-aflpp
+  description: "afl++ frida tests"
+  fuzzers:
+    - aflplusplus_qemu
+    - aflplusplus_frida
+    - aflplusplus_frida_cache
+    - aflplusplus
+
 - experiment: 2022-02-15-main-fuzzers
   description: "evaluate up-to-date version of main fuzzers"
   fuzzers:
