@@ -77,6 +77,8 @@ jobs:
           - aflplusplus_frida_inst
           - aflplusplus_frida_cmov
           - aflplusplus_frida_cache
+          - entropic_execute_final
+          - libfuzzer_exeute_final
 
         benchmark_type:
           - oss-fuzz

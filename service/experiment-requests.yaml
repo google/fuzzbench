@@ -20,6 +20,21 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-02-24-libfuzzer-variants
+  description: "Requesting experiment on variants of libfuzzer."
+  fuzzers:    
+    - libfuzzer
+    - entropic
+    - libfuzzer_exeute_final
+    - entropic_execute_final
+    - honggfuzz
+    - aflplusplus
+    - eclipser
+    - aflsmart
+    - afl
+    - aflfast
+    - fairfuzz
+
 - experiment: 2022-02-15-main-fuzzers
   description: "evaluate up-to-date version of main fuzzers"
   fuzzers:
