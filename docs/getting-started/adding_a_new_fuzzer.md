@@ -231,6 +231,12 @@ export BENCHMARK_NAME=libpng-1.2.56
 make build-$FUZZER_NAME-$BENCHMARK_NAME
 ```
 
+* Or debug building:
+
+```shell
+make debug-builder-$FUZZER_NAME-$BENCHMARK_NAME
+```
+
 * Run the fuzzer in the docker image:
 
 ```shell
