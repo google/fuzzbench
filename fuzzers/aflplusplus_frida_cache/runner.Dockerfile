@@ -12,18 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG parent_image
-FROM $parent_image
+FROM gcr.io/fuzzbench/base-image
 
-# Download and compile AFL v2.56b.
-# Set AFL_NO_X86 to skip flaky tests.
-RUN git clone https://github.com/shao-hua-li/AFLPrefix.git /aflprefix && \
-    cd /aflprefix && \
-    AFL_NO_X86=1 make
+RUN apt update -y && apt-get upgrade -y && \
+    apt-get install -y python3-pyelftools bc
 
-# Use afl_driver.cpp from LLVM as our fuzzing library.
-RUN apt-get update && \
-    apt-get install wget -y && \
-    clang -Wno-pointer-sign -c /aflprefix/llvm_mode/afl-llvm-rt.o.c -I/aflprefix && \
-    clang++ -stdlib=libc++ -std=c++11 -O2 -c /aflprefix/afl_driver.cpp && \
-    ar r /libAFL.a *.o
+# This makes interactive docker run painless:
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
+#ENV AFL_MAP_SIZE=2621440
+ENV PATH="$PATH:/out"
+ENV AFL_SKIP_CPUFREQ=1
+ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
+ENV AFL_TESTCACHE_SIZE=2
+

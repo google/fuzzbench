@@ -43,6 +43,9 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     os.environ['CC'] = '/libafl/fuzzers/fuzzbench/target/release/libafl_cc'
     os.environ['CXX'] = '/libafl/fuzzers/fuzzbench/target/release/libafl_cxx'
 
+    os.environ['ASAN_OPTIONS'] = 'abort_on_error=0:allocator_may_return_null=1'
+    os.environ['UBSAN_OPTIONS'] = 'abort_on_error=0'
+
     cflags = ['--libafl']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
@@ -58,6 +61,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
     command = [target_binary]
     if dictionary_path:
         command += (['-x', dictionary_path])
-    command += ([output_corpus, input_corpus])
+    command += (['-o', output_corpus, '-i', input_corpus])
     print(command)
     subprocess.check_call(command, cwd=os.environ['OUT'])

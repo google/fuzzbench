@@ -12,4 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/fuzzbench/base-image
+ARG parent_image
+FROM $parent_image
+
+RUN git clone https://github.com/jiradeto/llvm-project.git /llvm-project && \
+    cd /llvm-project && \
+    git checkout fzb_entropic_skip_intermediates_random && \
+    cd compiler-rt/lib/fuzzer && \
+    (for f in *.cpp; do \
+      clang++ -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \
+    done && wait) && \
+    ar r /libEntropic.a *.o

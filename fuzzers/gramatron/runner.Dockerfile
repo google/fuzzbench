@@ -11,21 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for AFL fuzzer."""
 
-import os
+FROM gcr.io/fuzzbench/base-image
 
-from fuzzers.afl import fuzzer as afl_fuzzer
-
-
-def build():
-    """Build benchmark."""
-    afl_fuzzer.build()
-
-
-def fuzz(input_corpus, output_corpus, target_binary):
-    """Run fuzzer."""
-    afl_fuzzer.prepare_fuzz_environment(input_corpus)
-    os.environ['AFL_NO_FAVORED'] = '1'
-
-    afl_fuzzer.run_afl_fuzz(input_corpus, output_corpus, target_binary)
+# This makes interactive docker runs painless:
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
+#ENV AFL_MAP_SIZE=2621440
+ENV PATH="$PATH:/out"
+ENV AFL_SKIP_CPUFREQ=1
+ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
+ENV AFL_TESTCACHE_SIZE=2

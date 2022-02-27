@@ -1,0 +1,6 @@
+commit: 14c21793a01e4caa802e600540628fe9ae622d54
+commit_date: 2018-05-23 08:30:50+09:00
+fuzz_target: mruby_fuzzer
+project: mruby
+type: bug
+unsupported_fuzzers:

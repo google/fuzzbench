@@ -20,6 +20,77 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-02-25-libfuzzer-variants
+  description: "Requesting experiment on variants of libfuzzer."
+  fuzzers:    
+    - libfuzzer
+    - entropic
+    - libfuzzer_exeute_final
+    - entropic_execute_final
+    - honggfuzz
+    - aflplusplus
+    - eclipser
+    - aflsmart
+    - afl
+    - aflfast
+    - fairfuzz
+
+- experiment: 2022-02-15-grammar
+  description: "test grammar fuzzers"
+  type: bug
+  fuzzers:
+    - nautilus
+    - gramatron
+    - grimoire
+    - token_level
+  benchmarks:
+    - quickjs_eval-2020-01-05
+    - php_php-fuzz-execute
+    - mruby-2018-05-23
+ 
+- experiment: 2022-02-18-aflpp
+  description: "afl++ frida tests"
+  fuzzers:
+    - aflplusplus_qemu
+    - aflplusplus_frida
+    - aflplusplus_frida_cache
+    - aflplusplus
+
+- experiment: 2022-02-15-main-fuzzers
+  description: "evaluate up-to-date version of main fuzzers"
+  fuzzers:
+    - honggfuzz
+    - aflplusplus
+    - eclipser
+    - entropic
+    - libfuzzer
+    - aflsmart
+    - lafintel
+    - afl
+    - mopt
+    - aflfast
+    - fairfuzz
+
+- experiment: 2022-02-15-aflpp
+  description: "afl++ frida tests"
+  fuzzers:
+    - aflplusplus_qemu
+    - aflplusplus_frida
+    - aflplusplus_frida_sup
+    - aflplusplus_frida_inst
+    - aflplusplus_frida_cmov
+    - aflplusplus_frida_cache
+
+- experiment: 2022-01-27-libafl
+  description: "libafl text test"
+  fuzzers:
+    - libafl
+    - libafl_old
+    - libafl_text
+    - aflplusplus
+    - honggfuzz
+    - entropic
+
 - experiment: 2022-01-17-afl-culling-bug
   description: "afl without corpus culling eval"
   type: bug
