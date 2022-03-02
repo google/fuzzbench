@@ -6,8 +6,8 @@ google-cloud-logging==1.15.1
 google-cloud-secret-manager==2.4.0
 clusterfuzz==0.0.1a0
 Jinja2==2.11.3
+numpy==1.21.0
 MarkupSafe==2.0.1
-numpy==1.18.1
 Orange3==3.28.0
 pandas==1.2.4
 psycopg2-binary==2.8.4
