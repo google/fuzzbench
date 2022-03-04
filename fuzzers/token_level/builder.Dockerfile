@@ -32,7 +32,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
 # Download libafl
 RUN git clone https://github.com/AFLplusplus/libafl_fuzzbench /libafl_fuzzbench && \
     cd /libafl_fuzzbench && \
-    git checkout d271777a13b11d66b86f8f75ad593d6cfbf575af && \
+    git checkout d11aeaa3deb8728f3c741a07fa68d098b8c864e0 && \
     git submodule update --init
 
 # Compile libafl
