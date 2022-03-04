@@ -16,7 +16,7 @@
 ################################################################################
 
 # to not crash for every input...
-export CFLAGS="$CFLAGS -fno-sanitize=undefined"
+export CFLAGS="$CFLAGS -fno-sanitize=integer-divide-by-zero,float-divide-by-zero,shift,array-bounds"
 
 # build quickjs
 # Makefile should honor CC and AR
