@@ -413,7 +413,8 @@ class Plotter:
         cmap_colors = ['#005a32', '#238b45', '#a1d99b', '#fbd7d4']
         cmap = colors.ListedColormap(cmap_colors)
 
-        boundaries = [0, 0.001, 0.01, 0.05, 1]
+        # TODO(lszekeres): Add 1 back to this list.
+        boundaries = [0, 0.001, 0.01, 0.05]
         norm = colors.BoundaryNorm(boundaries, cmap.N)
 
         if symmetric:
