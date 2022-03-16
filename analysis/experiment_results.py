@@ -93,7 +93,8 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
         # Dictionary to store the full coverage data.
         self._coverage_dict = coverage_dict
 
-        self.experiment_filestore = experiment_df.experiment_filestore.iloc[0]
+        self.experiment_filestore = strip_gs_protocol(
+            experiment_df.experiment_filestore.iloc[0])
 
     def _get_full_path(self, filename):
         return os.path.join(self._output_directory, filename)
