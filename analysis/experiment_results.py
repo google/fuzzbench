@@ -25,6 +25,7 @@ from analysis import stat_tests
 
 
 def strip_gs_protocol(url):
+    """Removes the leading gs:// from |url|."""
     protocol = 'gs://'
     if not url.startswith(protocol):
         raise ValueError(f'{url} doesn\'t start with {protocol}')
