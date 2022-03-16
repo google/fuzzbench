@@ -18,9 +18,6 @@ import yaml
 
 def read(yaml_filename):
     """Reads and loads yaml file specified by |yaml_filename|."""
-    if not os.path.exists(yaml_filename):
-        raise Exception('Yaml file %s does not exist.' % yaml_filename)
-
     with open(yaml_filename) as file_handle:
         return yaml.load(file_handle, yaml.SafeLoader)
 
