@@ -36,6 +36,7 @@ done{% endif %}
 
 docker run \
 --privileged --cpus={{num_cpu_cores}} --rm \
+{% if local_experiment %}--cpuset-cpus={{cpuset}} {% endif %}\
 -e INSTANCE_NAME={{instance_name}} \
 -e FUZZER={{fuzzer}} \
 -e BENCHMARK={{benchmark}} \
