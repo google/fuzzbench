@@ -563,24 +563,27 @@ def main():
     if concurrent_builds is not None:
         if not concurrent_builds.isdigit():
             parser.error(
-                "The concurrent build argument must be a positive number")
+                'The concurrent build argument must be a positive number')
         concurrent_builds = int(concurrent_builds)
+    runners_cpus = args.runners_cpus
+    if runners_cpus is not None:
+        if not runners_cpus.isdigit():
+            parser.error('The runners cpus argument must be a positive number')
+        runners_cpus = int(runners_cpus)
     measurers_cpus = args.measurers_cpus
     if measurers_cpus is not None:
         if not measurers_cpus.isdigit():
             parser.error(
-                "The measurers cpus argument must be a positive number")
+                'The measurers cpus argument must be a positive number')
+        if runners_cpus is None:
+            parser.error(
+                'With the measurers cpus argument you need to specity the'
+                ' runners cpus argument too')
         measurers_cpus = int(measurers_cpus)
-    runners_cpus = args.runners_cpus
-    if runners_cpus is not None:
-        if not runners_cpus.isdigit():
-            parser.error("The runners cpus argument must be a positive number")
-        runners_cpus = int(runners_cpus)
     if (runners_cpus if runners_cpus else 0) + (measurers_cpus if measurers_cpus
                                                 else 0) > os.cpu_count():
-        parser.error(
-            "The sum of runners and measurers cpus is greater than the available cpu cores (%d)"
-            % os.cpu_count())
+        parser.error('The sum of runners and measurers cpus is greater than the'
+                     ' available cpu cores (%d)' % os.cpu_count())
 
     start_experiment(args.experiment_name,
                      args.experiment_config,

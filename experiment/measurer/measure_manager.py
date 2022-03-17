@@ -21,13 +21,13 @@ import json
 import os
 import pathlib
 import posixpath
-import psutil
 import sys
 import tempfile
 import tarfile
 import time
 from typing import List, Set
 import queue
+import psutil
 
 from sqlalchemy import func
 from sqlalchemy import orm
@@ -92,13 +92,15 @@ def _process_init(cores_queue):
         psutil.Process().cpu_affinity([cpu])
 
 
-def measure_loop(experiment: str, max_total_time: int, measurers_cpus,
-                 runners_cpus):
+def measure_loop(experiment: str,
+                 max_total_time: int,
+                 measurers_cpus=None,
+                 runners_cpus=None):
     """Continuously measure trials for |experiment|."""
     logger.info('Start measure_loop.')
 
     pool_args = ()
-    if measurers_cpus is not None:
+    if measurers_cpus is not None and runners_cpus is not None:
         local_experiment = experiment_utils.is_local_experiment()
         if local_experiment:
             cores_queue = multiprocessing.Queue()

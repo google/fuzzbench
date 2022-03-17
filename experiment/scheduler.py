@@ -43,6 +43,8 @@ FAIL_WAIT_SECONDS = 10 * 60
 
 logger = logs.Logger('scheduler')  # pylint: disable=invalid-name
 
+CPUSET = None
+
 RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
 
 JINJA_ENV = jinja2.Environment(
@@ -54,8 +56,6 @@ STARTED_TRIALS_FILTER = models.Trial.time_started.isnot(None)
 
 NUM_RETRIES = 3
 RETRY_WAIT_SECONDS = 3
-
-cpuset = None
 
 
 def datetime_now() -> datetime.datetime:
@@ -531,12 +531,12 @@ def schedule(experiment_config: dict, pool):
 
 
 def _process_init(cores_queue):
-    """Initialize cpuset for each pool process"""
-    global cpuset
-    cpuset = cores_queue.get()
+    """Initialize CPUSET for each pool process"""
+    global CPUSET
+    CPUSET = cores_queue.get()
 
 
-def schedule_loop(experiment_config: dict, runners_cpus):
+def schedule_loop(experiment_config: dict, runners_cpus=None):
     """Continuously run the scheduler until there is nothing left to schedule.
     Note that this should not be called unless
     multiprocessing.set_start_method('spawn') was called first. Otherwise it
@@ -688,7 +688,7 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
                                    experiment_config: dict):
     """Render the startup script using the template and the parameters
     provided and return the result."""
-    global cpuset
+    global CPUSET
     experiment = experiment_config['experiment']
     docker_image_url = benchmark_utils.get_runner_image_url(
         experiment, benchmark, fuzzer, experiment_config['docker_registry'])
@@ -713,7 +713,7 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
         'no_dictionaries': experiment_config['no_dictionaries'],
         'oss_fuzz_corpus': experiment_config['oss_fuzz_corpus'],
         'num_cpu_cores': experiment_config['runner_num_cpu_cores'],
-        'cpuset': cpuset,
+        'cpuset': CPUSET,
     }
 
     if not local_experiment:
@@ -751,11 +751,12 @@ def main():
     })
 
     if len(sys.argv) != 2:
-        print('Usage: {} <experiment_config.yaml>'.format(sys.argv[0]))
+        print('Usage: {} <experiment_config.yaml> [cpus]'.format(sys.argv[0]))
         return 1
 
     experiment_config = yaml_utils.read(sys.argv[1])
-    schedule_loop(experiment_config)
+    runners_cpus = None if len(sys.argv) < 3 else int(sys.argv[2])
+    schedule_loop(experiment_config, runners_cpus)
 
     return 0
 
