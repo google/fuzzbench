@@ -101,6 +101,8 @@ class Experiment:  # pylint: disable=too-many-instance-attributes
         self.experiment_name = self.config['experiment']
         self.git_hash = self.config['git_hash']
         self.concurrent_builds = self.config['concurrent_builds']
+        self.measurers_cpus = self.config['measurers_cpus']
+        self.runners_cpus = self.config['runners_cpus']
         self.preemptible = self.config.get('preemptible_runners')
 
 
@@ -164,11 +166,14 @@ def dispatcher_main():
 
     # Start measurer and scheduler in seperate threads/processes.
     scheduler_loop_thread = threading.Thread(target=scheduler.schedule_loop,
-                                             args=(experiment.config,))
+                                             args=(experiment.config,
+                                                   experiment.runners_cpus))
     scheduler_loop_thread.start()
 
     measurer_main_process = multiprocessing.Process(
-        target=measure_manager.measure_main, args=(experiment.config,))
+        target=measure_manager.measure_main,
+        args=(experiment.config, experiment.measurers_cpus,
+              experiment.runners_cpus))
 
     measurer_main_process.start()
 

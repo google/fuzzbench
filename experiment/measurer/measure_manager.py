@@ -21,6 +21,7 @@ import json
 import os
 import pathlib
 import posixpath
+import psutil
 import sys
 import tempfile
 import tarfile
@@ -65,7 +66,7 @@ def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
                               must_exist=False).retcode == 0
 
 
-def measure_main(experiment_config):
+def measure_main(experiment_config, measurers_cpus, runners_cpus):
     """Do the continuously measuring and the final measuring."""
     initialize_logs()
     logger.info('Start measuring.')
@@ -73,7 +74,7 @@ def measure_main(experiment_config):
     # Start the measure loop first.
     experiment = experiment_config['experiment']
     max_total_time = experiment_config['max_total_time']
-    measure_loop(experiment, max_total_time)
+    measure_loop(experiment, max_total_time, measurers_cpus, runners_cpus)
 
     # Clean up resources.
     gc.collect()
@@ -84,11 +85,31 @@ def measure_main(experiment_config):
     logger.info('Finished measuring.')
 
 
-def measure_loop(experiment: str, max_total_time: int):
+def _process_init(cores_queue):
+    """Cpu pin for each pool process"""
+    cpu = cores_queue.get()
+    if sys.platform == 'linux':
+        psutil.Process().cpu_affinity([cpu])
+
+
+def measure_loop(experiment: str, max_total_time: int, measurers_cpus,
+                 runners_cpus):
     """Continuously measure trials for |experiment|."""
     logger.info('Start measure_loop.')
 
-    with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
+    pool_args = ()
+    if measurers_cpus is not None:
+        local_experiment = experiment_utils.is_local_experiment()
+        if local_experiment:
+            cores_queue = multiprocessing.Queue()
+            for cpu in range(runners_cpus, runners_cpus + measurers_cpus):
+                cores_queue.put(cpu)
+            pool_args = (measurers_cpus, _process_init, (cores_queue,))
+        else:
+            pool_args = (measurers_cpus,)
+
+    with multiprocessing.Pool(
+            *pool_args) as pool, multiprocessing.Manager() as manager:
         set_up_coverage_binaries(pool, experiment)
         # Using Multiprocessing.Queue will fail with a complaint about
         # inheriting queue.

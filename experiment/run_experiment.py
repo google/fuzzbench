@@ -217,7 +217,9 @@ def start_experiment(  # pylint: disable=too-many-arguments
         no_dictionaries=False,
         oss_fuzz_corpus=False,
         allow_uncommitted_changes=False,
-        concurrent_builds=None):
+        concurrent_builds=None,
+        measurers_cpus=None,
+        runners_cpus=None):
     """Start a fuzzer benchmarking experiment."""
     if not allow_uncommitted_changes:
         check_no_uncommitted_changes()
@@ -235,9 +237,13 @@ def start_experiment(  # pylint: disable=too-many-arguments
     config['oss_fuzz_corpus'] = oss_fuzz_corpus
     config['description'] = description
     config['concurrent_builds'] = concurrent_builds
+    config['measurers_cpus'] = measurers_cpus
+    config['runners_cpus'] = runners_cpus
     config['runner_machine_type'] = config.get('runner_machine_type',
                                                'n1-standard-1')
     config['runner_num_cpu_cores'] = config.get('runner_num_cpu_cores', 1)
+    assert (runners_cpus is None or
+            runners_cpus >= config['runner_num_cpu_cores'])
     # Note this is only used if runner_machine_type is None.
     # 12GB is just the amount that KLEE needs, use this default to make KLEE
     # experiments easier to run.
@@ -508,6 +514,14 @@ def main():
                         '--concurrent-builds',
                         help='Max concurrent builds allowed.',
                         required=False)
+    parser.add_argument('-mc',
+                        '--measurers-cpus',
+                        help='Cpus available to the measurers.',
+                        required=False)
+    parser.add_argument('-rc',
+                        '--runners-cpus',
+                        help='Cpus available to the runners.',
+                        required=False)
 
     all_fuzzers = fuzzer_utils.get_fuzzer_names()
     parser.add_argument('-f',
@@ -551,6 +565,22 @@ def main():
             parser.error(
                 "The concurrent build argument must be a positive number")
         concurrent_builds = int(concurrent_builds)
+    measurers_cpus = args.measurers_cpus
+    if measurers_cpus is not None:
+        if not measurers_cpus.isdigit():
+            parser.error(
+                "The measurers cpus argument must be a positive number")
+        measurers_cpus = int(measurers_cpus)
+    runners_cpus = args.runners_cpus
+    if runners_cpus is not None:
+        if not runners_cpus.isdigit():
+            parser.error("The runners cpus argument must be a positive number")
+        runners_cpus = int(runners_cpus)
+    if (runners_cpus if runners_cpus else 0) + (measurers_cpus if measurers_cpus
+                                                else 0) > os.cpu_count():
+        parser.error(
+            "The sum of runners and measurers cpus is greater than the available cpu cores (%d)"
+            % os.cpu_count())
 
     start_experiment(args.experiment_name,
                      args.experiment_config,
@@ -561,7 +591,9 @@ def main():
                      no_dictionaries=args.no_dictionaries,
                      oss_fuzz_corpus=args.oss_fuzz_corpus,
                      allow_uncommitted_changes=args.allow_uncommitted_changes,
-                     concurrent_builds=concurrent_builds)
+                     concurrent_builds=concurrent_builds,
+                     measurers_cpus=measurers_cpus,
+                     runners_cpus=runners_cpus)
     return 0
 
 

@@ -531,12 +531,12 @@ def schedule(experiment_config: dict, pool):
 
 
 def _process_init(cores_queue):
-    """Initialize cpuset for each pool processe"""
+    """Initialize cpuset for each pool process"""
     global cpuset
     cpuset = cores_queue.get()
 
 
-def schedule_loop(experiment_config: dict):
+def schedule_loop(experiment_config: dict, runners_cpus):
     """Continuously run the scheduler until there is nothing left to schedule.
     Note that this should not be called unless
     multiprocessing.set_start_method('spawn') was called first. Otherwise it
@@ -547,19 +547,21 @@ def schedule_loop(experiment_config: dict):
     num_trials = len(
         get_experiment_trials(experiment_config['experiment']).all())
     local_experiment = experiment_utils.is_local_experiment()
-    if local_experiment:
-        runner_num_cpu_cores = experiment_config['runner_num_cpu_cores']
-        processes = os.cpu_count() // runner_num_cpu_cores
-        cores_queue = multiprocessing.Queue()
-        for cpu in range(0, runner_num_cpu_cores * processes,
-                         runner_num_cpu_cores):
-            cores_queue.put('%d-%d' % (cpu, cpu + runner_num_cpu_cores - 1))
-        pool_args = (processes, _process_init, (cores_queue,))
-    else:
-        pool_args = ()
-        gce.initialize()
-        trial_instance_manager = TrialInstanceManager(num_trials,
-                                                      experiment_config)
+    pool_args = ()
+    if runners_cpus is not None:
+        if local_experiment:
+            runner_num_cpu_cores = experiment_config['runner_num_cpu_cores']
+            processes = runners_cpus // runner_num_cpu_cores
+            cores_queue = multiprocessing.Queue()
+            for cpu in range(0, runner_num_cpu_cores * processes,
+                             runner_num_cpu_cores):
+                cores_queue.put('%d-%d' % (cpu, cpu + runner_num_cpu_cores - 1))
+            pool_args = (processes, _process_init, (cores_queue,))
+        else:
+            pool_args = (runners_cpus,)
+            gce.initialize()
+            trial_instance_manager = TrialInstanceManager(
+                num_trials, experiment_config)
 
     experiment = experiment_config['experiment']
     with multiprocessing.Pool(*pool_args) as pool:
@@ -709,11 +711,10 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
         'no_dictionaries': experiment_config['no_dictionaries'],
         'oss_fuzz_corpus': experiment_config['oss_fuzz_corpus'],
         'num_cpu_cores': experiment_config['runner_num_cpu_cores'],
+        'cpuset': cpuset,
     }
 
-    if local_experiment:
-        kwargs['cpuset'] = cpuset
-    else:
+    if not local_experiment:
         kwargs['cloud_compute_zone'] = experiment_config['cloud_compute_zone']
         kwargs['cloud_project'] = experiment_config['cloud_project']
 
