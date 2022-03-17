@@ -24,6 +24,14 @@ from analysis import data_utils
 from analysis import stat_tests
 
 
+def strip_gs_protocol(url):
+    """Removes the leading gs:// from |url|."""
+    protocol = 'gs://'
+    if not url.startswith(protocol):
+        raise ValueError(f'{url} doesn\'t start with {protocol}')
+    return url[len(protocol):]
+
+
 class ExperimentResults:  # pylint: disable=too-many-instance-attributes
     """Provides the main interface for getting various analysis results and
     plots about an experiment, represented by |experiment_df|.
@@ -85,6 +93,9 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
 
         # Dictionary to store the full coverage data.
         self._coverage_dict = coverage_dict
+
+        self.experiment_filestore = strip_gs_protocol(
+            experiment_df.experiment_filestore.iloc[0])
 
     def _get_full_path(self, filename):
         return os.path.join(self._output_directory, filename)
