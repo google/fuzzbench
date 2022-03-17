@@ -102,6 +102,8 @@ def measure_loop(experiment: str, max_total_time: int, measurers_cpus,
         local_experiment = experiment_utils.is_local_experiment()
         if local_experiment:
             cores_queue = multiprocessing.Queue()
+            logger.info('Scheduling measurers from core %d to %d.' %
+                        (runners_cpus, runners_cpus + measurers_cpus - 1))
             for cpu in range(runners_cpus, runners_cpus + measurers_cpus):
                 cores_queue.put(cpu)
             pool_args = (measurers_cpus, _process_init, (cores_queue,))

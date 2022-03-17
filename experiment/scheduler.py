@@ -552,6 +552,8 @@ def schedule_loop(experiment_config: dict, runners_cpus):
         if local_experiment:
             runner_num_cpu_cores = experiment_config['runner_num_cpu_cores']
             processes = runners_cpus // runner_num_cpu_cores
+            logger.info('Scheduling runners from core 0 to %d.' %
+                        (processes - 1))
             cores_queue = multiprocessing.Queue()
             for cpu in range(0, runner_num_cpu_cores * processes,
                              runner_num_cpu_cores):

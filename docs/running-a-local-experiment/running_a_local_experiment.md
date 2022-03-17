@@ -92,6 +92,12 @@ You can optionally add:
 * `--no-dictionaries` - to skip using dictionaries across all benchmarks.
 * `--oss-fuzz-corpus` - use the latest corpora from OSS-Fuzz across all
   benchmarks (where available).
+* `--concurrent-builds N` - to limit the number of concurrent builds, useful
+  when having limited memory.
+* `--runners-cpus` - to limit the number of usable CPUs by the runner containers
+  (in which fuzzers run).
+* `--measurers-cpus` - to limit the number of usable CPUs by the measurer
+  containers.
 
 ## Viewing reports
 
