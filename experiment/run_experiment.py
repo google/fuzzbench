@@ -577,7 +577,7 @@ def main():
                 'The measurers cpus argument must be a positive number')
         if runners_cpus is None:
             parser.error(
-                'With the measurers cpus argument you need to specity the'
+                'With the measurers cpus argument you need to specify the'
                 ' runners cpus argument too')
         measurers_cpus = int(measurers_cpus)
     if (runners_cpus if runners_cpus else 0) + (measurers_cpus if measurers_cpus
