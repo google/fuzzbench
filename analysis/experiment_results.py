@@ -27,9 +27,9 @@ from analysis import stat_tests
 def strip_gs_protocol(url):
     """Removes the leading gs:// from |url|."""
     protocol = 'gs://'
-    if not url.startswith(protocol):
-        raise ValueError(f'{url} doesn\'t start with {protocol}')
-    return url[len(protocol):]
+    if url.startswith(protocol):
+        return url[len(protocol):]
+    return url
 
 
 class ExperimentResults:  # pylint: disable=too-many-instance-attributes
