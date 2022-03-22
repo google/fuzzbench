@@ -83,19 +83,19 @@ def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
             OSS_FUZZ_DIR)
         raise RuntimeError('%s is not a git repo.' % OSS_FUZZ_DIR)
     oss_fuzz_repo_manager = GitRepoManager(OSS_FUZZ_DIR)
-    projects_dir = os.path.join(OSS_FUZZ_DIR, 'projects', project)
+    project_dir = os.path.join(OSS_FUZZ_DIR, 'projects', project)
     try:
         # Find an OSS-Fuzz commit that can be used to build the benchmark.
         _, oss_fuzz_commit, _ = oss_fuzz_repo_manager.git([
             'log', '--before=' + commit_date.isoformat(), '-n1', '--format=%H',
-            projects_dir
+            project_dir
         ])
         oss_fuzz_commit = oss_fuzz_commit.strip()
         if not oss_fuzz_commit:
             logs.warning('No suitable earlier OSS-Fuzz commit found.')
             return False
-        oss_fuzz_repo_manager.git(['checkout', oss_fuzz_commit, projects_dir])
-        dir_util.copy_tree(projects_dir, benchmark_dir)
+        oss_fuzz_repo_manager.git(['checkout', oss_fuzz_commit, project_dir])
+        dir_util.copy_tree(project_dir, benchmark_dir)
         os.remove(os.path.join(benchmark_dir, 'project.yaml'))
         return True
     finally:
