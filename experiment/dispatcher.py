@@ -100,9 +100,6 @@ class Experiment:  # pylint: disable=too-many-instance-attributes
         self.num_trials = self.config['trials']
         self.experiment_name = self.config['experiment']
         self.git_hash = self.config['git_hash']
-        self.concurrent_builds = self.config['concurrent_builds']
-        self.measurers_cpus = self.config['measurers_cpus']
-        self.runners_cpus = self.config['runners_cpus']
         self.preemptible = self.config.get('preemptible_runners')
 
 
@@ -159,21 +156,18 @@ def dispatcher_main():
     trials = build_images_for_trials(experiment.fuzzers, experiment.benchmarks,
                                      experiment.num_trials,
                                      experiment.preemptible,
-                                     experiment.concurrent_builds)
+                                     experiment.config['concurrent_builds'])
     _initialize_trials_in_db(trials)
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])
 
     # Start measurer and scheduler in seperate threads/processes.
     scheduler_loop_thread = threading.Thread(target=scheduler.schedule_loop,
-                                             args=(experiment.config,
-                                                   experiment.runners_cpus))
+                                             args=(experiment.config,))
     scheduler_loop_thread.start()
 
     measurer_main_process = multiprocessing.Process(
-        target=measure_manager.measure_main,
-        args=(experiment.config, experiment.measurers_cpus,
-              experiment.runners_cpus))
+        target=measure_manager.measure_main, args=(experiment.config,))
 
     measurer_main_process.start()
 

@@ -66,7 +66,7 @@ def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
                               must_exist=False).retcode == 0
 
 
-def measure_main(experiment_config, measurers_cpus, runners_cpus):
+def measure_main(experiment_config):
     """Do the continuously measuring and the final measuring."""
     initialize_logs()
     logger.info('Start measuring.')
@@ -74,6 +74,8 @@ def measure_main(experiment_config, measurers_cpus, runners_cpus):
     # Start the measure loop first.
     experiment = experiment_config['experiment']
     max_total_time = experiment_config['max_total_time']
+    measurers_cpus = experiment_config['measurers_cpus']
+    runners_cpus = experiment_config['runners_cpus']
     measure_loop(experiment, max_total_time, measurers_cpus, runners_cpus)
 
     # Clean up resources.

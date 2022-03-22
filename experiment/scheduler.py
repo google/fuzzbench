@@ -536,7 +536,7 @@ def _process_init(cores_queue):
     CPUSET = cores_queue.get()
 
 
-def schedule_loop(experiment_config: dict, runners_cpus=None):
+def schedule_loop(experiment_config: dict):
     """Continuously run the scheduler until there is nothing left to schedule.
     Note that this should not be called unless
     multiprocessing.set_start_method('spawn') was called first. Otherwise it
@@ -548,6 +548,7 @@ def schedule_loop(experiment_config: dict, runners_cpus=None):
         get_experiment_trials(experiment_config['experiment']).all())
     local_experiment = experiment_utils.is_local_experiment()
     pool_args = ()
+    runners_cpus = experiment_config['runners_cpus']
     if runners_cpus is not None:
         if local_experiment:
             runner_num_cpu_cores = experiment_config['runner_num_cpu_cores']
@@ -751,12 +752,11 @@ def main():
     })
 
     if len(sys.argv) != 2:
-        print('Usage: {} <experiment_config.yaml> [cpus]'.format(sys.argv[0]))
+        print('Usage: {} <experiment_config.yaml>'.format(sys.argv[0]))
         return 1
 
     experiment_config = yaml_utils.read(sys.argv[1])
-    runners_cpus = None if len(sys.argv) < 3 else int(sys.argv[2])
-    schedule_loop(experiment_config, runners_cpus)
+    schedule_loop(experiment_config)
 
     return 0
 
