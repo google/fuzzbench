@@ -43,6 +43,8 @@ FAIL_WAIT_SECONDS = 10 * 60
 
 logger = logs.Logger('scheduler')  # pylint: disable=invalid-name
 
+CPUSET = None
+
 RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
 
 JINJA_ENV = jinja2.Environment(
@@ -528,6 +530,12 @@ def schedule(experiment_config: dict, pool):
     return started_trials
 
 
+def _process_init(cores_queue):
+    """Initialize CPUSET for each pool process"""
+    global CPUSET
+    CPUSET = cores_queue.get()
+
+
 def schedule_loop(experiment_config: dict):
     """Continuously run the scheduler until there is nothing left to schedule.
     Note that this should not be called unless
@@ -539,12 +547,27 @@ def schedule_loop(experiment_config: dict):
     num_trials = len(
         get_experiment_trials(experiment_config['experiment']).all())
     local_experiment = experiment_utils.is_local_experiment()
-    if not local_experiment:
-        gce.initialize()
-        trial_instance_manager = TrialInstanceManager(num_trials,
-                                                      experiment_config)
+    pool_args = ()
+    runners_cpus = experiment_config['runners_cpus']
+    if runners_cpus is not None:
+        if local_experiment:
+            runner_num_cpu_cores = experiment_config['runner_num_cpu_cores']
+            processes = runners_cpus // runner_num_cpu_cores
+            logger.info('Scheduling runners from core 0 to %d.' %
+                        (processes - 1))
+            cores_queue = multiprocessing.Queue()
+            for cpu in range(0, runner_num_cpu_cores * processes,
+                             runner_num_cpu_cores):
+                cores_queue.put('%d-%d' % (cpu, cpu + runner_num_cpu_cores - 1))
+            pool_args = (processes, _process_init, (cores_queue,))
+        else:
+            pool_args = (runners_cpus,)
+            gce.initialize()
+            trial_instance_manager = TrialInstanceManager(
+                num_trials, experiment_config)
+
     experiment = experiment_config['experiment']
-    with multiprocessing.Pool() as pool:
+    with multiprocessing.Pool(*pool_args) as pool:
         handle_preempted = False
         while not all_trials_ended(experiment):
             try:
@@ -666,6 +689,7 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
                                    experiment_config: dict):
     """Render the startup script using the template and the parameters
     provided and return the result."""
+    global CPUSET
     experiment = experiment_config['experiment']
     docker_image_url = benchmark_utils.get_runner_image_url(
         experiment, benchmark, fuzzer, experiment_config['docker_registry'])
@@ -690,6 +714,7 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
         'no_dictionaries': experiment_config['no_dictionaries'],
         'oss_fuzz_corpus': experiment_config['oss_fuzz_corpus'],
         'num_cpu_cores': experiment_config['runner_num_cpu_cores'],
+        'cpuset': CPUSET,
     }
 
     if not local_experiment:
