@@ -562,9 +562,11 @@ def schedule_loop(experiment_config: dict):
             pool_args = (processes, _process_init, (cores_queue,))
         else:
             pool_args = (runners_cpus,)
-            gce.initialize()
-            trial_instance_manager = TrialInstanceManager(
-                num_trials, experiment_config)
+
+    if not local_experiment:
+        gce.initialize()
+        trial_instance_manager = TrialInstanceManager(num_trials,
+                                                      experiment_config)
 
     experiment = experiment_config['experiment']
     with multiprocessing.Pool(*pool_args) as pool:
