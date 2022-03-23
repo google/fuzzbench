@@ -21,7 +21,7 @@ RUN mkdir /clang && \
 
 RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
     cd /llvm-project/ && \
-    git checkout f5153d9e72622ac83005e8bf82c4456db6f66689 && \
+    git checkout f4037650e0c74454e12b4eabd94fec06d678505f && \
     cd compiler-rt/lib/fuzzer && \
     (for f in *.cpp; do \
       /clang/bin/clang -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \

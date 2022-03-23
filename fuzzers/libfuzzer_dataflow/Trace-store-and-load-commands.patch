@@ -1,8 +1,9 @@
-From 89cf0427a4b6195f7366a51e9e1beb92e50bb38d Mon Sep 17 00:00:00 2001
+From e7b02154a90480ed6bca8ba7203c70e7b5a27203 Mon Sep 17 00:00:00 2001
 From: Alan32Liu <donggeliu@google.com>
 Date: Wed, 23 Feb 2022 15:55:17 +1100
-Subject: [PATCH] Trace store and load commands
+Subject: [PATCH 1/2] Trace store and load commands
 
+Signed-off-by: Alan32Liu <donggeliu@google.com>
 ---
  compiler-rt/lib/fuzzer/FuzzerMain.cpp    |   2 +
  compiler-rt/lib/fuzzer/FuzzerTracePC.cpp | 108 +++++++++++++++++++++++
@@ -228,5 +229,104 @@ index af1f9d81e950..d9e82f1a92b3 100644
  }
  
 -- 
-2.35.1.574.g5d30c73bfb-goog
+2.35.1.894.gb6a874cedc-goog
+
+
+From 009c87895b13021fdcb0e28a57324621faa1a07d Mon Sep 17 00:00:00 2001
+From: Alan32Liu <donggeliu@google.com>
+Date: Wed, 23 Mar 2022 08:18:03 +1100
+Subject: [PATCH 2/2] Remove debug prints
+
+Signed-off-by: Alan32Liu <donggeliu@google.com>
+---
+ compiler-rt/lib/fuzzer/FuzzerTracePC.cpp | 33 ------------------------
+ compiler-rt/lib/fuzzer/FuzzerTracePC.h   |  1 -
+ 2 files changed, 34 deletions(-)
+
+diff --git a/compiler-rt/lib/fuzzer/FuzzerTracePC.cpp b/compiler-rt/lib/fuzzer/FuzzerTracePC.cpp
+index be01bc0c6510..c45178254383 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerTracePC.cpp
++++ b/compiler-rt/lib/fuzzer/FuzzerTracePC.cpp
+@@ -403,9 +403,7 @@ void TracePC::HandleCmp(uintptr_t PC, T Arg1, T Arg2) {
+ ATTRIBUTE_TARGET_POPCNT ALWAYS_INLINE
+ ATTRIBUTE_NO_SANITIZE_ALL
+ void TracePC::HandleDf(uintptr_t PC, uintptr_t Addr, uintptr_t MaxPC) {
+-//fuzzer::Printf("[HandleDf] Instrumented : %lu\n", Addr);
+   uintptr_t feature = PC * MaxPC + Addr;
+-//  fuzzer::Printf("[HandleDf] Feature value: %lu\n", feature);
+   DataFlowMap.AddValue(feature);
+ }
+ 
+@@ -642,14 +640,6 @@ void TraceLoad(void *Addr) {
+ 
+   uintptr_t PCOffset = PC - main_object_start_address;
+   uintptr_t LoadOffset = LoadAddr - main_object_start_address;
+-//
+-//  fuzzer::Printf("[TraceLoad] PC                       : %lu\n", PCOffset);
+-//  fuzzer::Printf("[TraceLoad] LoadAddr                 : %lu\n", LoadAddr);
+-//  fuzzer::Printf("[TraceLoad] main_object_start_address: %lu\n",
+-//    main_object_start_address);
+-//  fuzzer::Printf("[TraceLoad] PCOffset                 : %lu\n", PCOffset);
+-//  fuzzer::Printf("[TraceLoad] LoadOffset               : %lu\n", LoadOffset);
+-//  fuzzer::Printf("[TraceLoad] main_object_size         : %lu\n", main_object_size);
+ 
+   if (PCOffset >= main_object_size) return;
+   if (LoadOffset >= main_object_size) return;
+@@ -670,14 +660,6 @@ void TraceStore(void *Addr) {
+   uintptr_t StoreAddr = reinterpret_cast<uintptr_t>(Addr);
+   uintptr_t PCOffset = PC - main_object_start_address;
+   uintptr_t StoreOffset = StoreAddr - main_object_start_address;
+-//
+-//  fuzzer::Printf("[TraceStore] PC                       : %lu\n", PCOffset);
+-//  fuzzer::Printf("[TraceStore] StoreAddr                : %lu\n", StoreAddr);
+-//  fuzzer::Printf("[TraceStore] main_object_start_address: %lu\n",
+-//    main_object_start_address);
+-//  fuzzer::Printf("[TraceStore] PCOffset                 : %lu\n", PCOffset);
+-//  fuzzer::Printf("[TraceStore] StoreOffset              : %lu\n", StoreOffset);
+-//  fuzzer::Printf("[TraceStore] main_object_size         : %lu\n", main_object_size);
+ 
+   if (PCOffset >= main_object_size) return;
+   if (StoreOffset >= main_object_size) return;
+@@ -763,27 +745,12 @@ void __sanitizer_weak_hook_memmem(void *called_pc, const void *s1, size_t len1,
+ // The code assumes that the main binary is the the first one to be iterated on.
+ int dl_iterate_phdr_callback(struct dl_phdr_info *info, size_t size,
+                                     void *data) {
+-//  PrintErrorAndExitIf(main_object_start_address != kInvalidStartAddress,
+-//                      "main_object_start_address is already set");
+-//  fuzzer::Printf("[INIT] main_object_start_address: %lu\n", main_object_start_address);
+-//  fuzzer::Printf("[INIT] main_object_size         : %lu\n", main_object_size);
+   main_object_start_address = info->dlpi_addr;
+-//  fuzzer::Printf("[UPDT] main_object_start_address: %lu\n", main_object_start_address);
+   for (int j = 0; j < info->dlpi_phnum; j++) {
+     uintptr_t end_offset =
+         info->dlpi_phdr[j].p_vaddr + info->dlpi_phdr[j].p_memsz;
+     if (main_object_size < end_offset) main_object_size = end_offset;
+-//    fuzzer::Printf("[UPDT] main_object_size         : %lu\n", main_object_size);
+   }
+-//  fuzzer::Printf("[FINL] main_object_start_address: %lu\n", main_object_start_address);
+-//  fuzzer::Printf("[FINL] main_object_size         : %lu\n", main_object_size);
+-//  uintptr_t some_code_address =
+-//      reinterpret_cast<uintptr_t>(&dl_iterate_phdr_callback);
+-//  PrintErrorAndExitIf(main_object_start_address > some_code_address,
+-//                      "main_object_start_address is above the code");
+-//  PrintErrorAndExitIf(
+-//      main_object_start_address + main_object_size < some_code_address,
+-//      "main_object_start_address + main_object_size is below the code");
+   return 1;  // we need only the first header, so return 1.
+ }
+ 
+diff --git a/compiler-rt/lib/fuzzer/FuzzerTracePC.h b/compiler-rt/lib/fuzzer/FuzzerTracePC.h
+index d9e82f1a92b3..67eab7425097 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerTracePC.h
++++ b/compiler-rt/lib/fuzzer/FuzzerTracePC.h
+@@ -295,7 +295,6 @@ TracePC::CollectFeatures(Callback HandleFeature) const {
+   }
+ 
+   // Data Flow feature
+-  //TODO: Need a flag for using DataFlowMap?
+   if (UseValueProfileMask) {
+     DataFlowMap.ForEach([&](size_t Idx) {
+       HandleFeature(static_cast<uint32_t>(FirstFeature + Idx));
+-- 
+2.35.1.894.gb6a874cedc-goog
 
