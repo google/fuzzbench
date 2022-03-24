@@ -1,7 +1,7 @@
 From e7b02154a90480ed6bca8ba7203c70e7b5a27203 Mon Sep 17 00:00:00 2001
 From: Alan32Liu <donggeliu@google.com>
 Date: Wed, 23 Feb 2022 15:55:17 +1100
-Subject: [PATCH 1/2] Trace store and load commands
+Subject: [PATCH 1/3] Trace store and load commands
 
 Signed-off-by: Alan32Liu <donggeliu@google.com>
 ---
@@ -235,7 +235,7 @@ index af1f9d81e950..d9e82f1a92b3 100644
 From 009c87895b13021fdcb0e28a57324621faa1a07d Mon Sep 17 00:00:00 2001
 From: Alan32Liu <donggeliu@google.com>
 Date: Wed, 23 Mar 2022 08:18:03 +1100
-Subject: [PATCH 2/2] Remove debug prints
+Subject: [PATCH 2/3] Remove debug prints
 
 Signed-off-by: Alan32Liu <donggeliu@google.com>
 ---
@@ -327,6 +327,45 @@ index d9e82f1a92b3..67eab7425097 100644
    if (UseValueProfileMask) {
      DataFlowMap.ForEach([&](size_t Idx) {
        HandleFeature(static_cast<uint32_t>(FirstFeature + Idx));
+-- 
+2.35.1.894.gb6a874cedc-goog
+
+
+From a5e8d90b5054270936a197797924795fadfef9f5 Mon Sep 17 00:00:00 2001
+From: Alan32Liu <donggeliu@google.com>
+Date: Thu, 24 Mar 2022 16:29:12 +1100
+Subject: [PATCH 3/3] Move Initialisation to DuzzerDriver to make it more
+ generalise
+
+Signed-off-by: Alan32Liu <donggeliu@google.com>
+---
+ compiler-rt/lib/fuzzer/FuzzerDriver.cpp | 1 +
+ compiler-rt/lib/fuzzer/FuzzerMain.cpp   | 1 -
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/compiler-rt/lib/fuzzer/FuzzerDriver.cpp b/compiler-rt/lib/fuzzer/FuzzerDriver.cpp
+index 6b007f2ad45c..23299e36b5e8 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerDriver.cpp
++++ b/compiler-rt/lib/fuzzer/FuzzerDriver.cpp
+@@ -640,6 +640,7 @@ ReadCorpora(const std::vector<std::string> &CorpusDirs,
+ }
+ 
+ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
++  fuzzer::TPC.InitializeMainObjectInformation();
+   using namespace fuzzer;
+   assert(argc && argv && "Argument pointers cannot be nullptr");
+   std::string Argv0((*argv)[0]);
+diff --git a/compiler-rt/lib/fuzzer/FuzzerMain.cpp b/compiler-rt/lib/fuzzer/FuzzerMain.cpp
+index 761bb82ff602..120923992f9f 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerMain.cpp
++++ b/compiler-rt/lib/fuzzer/FuzzerMain.cpp
+@@ -18,6 +18,5 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size);
+ }  // extern "C"
+ 
+ ATTRIBUTE_INTERFACE int main(int argc, char **argv) {
+-  fuzzer::TPC.InitializeMainObjectInformation();
+   return fuzzer::FuzzerDriver(&argc, &argv, LLVMFuzzerTestOneInput);
+ }
 -- 
 2.35.1.894.gb6a874cedc-goog
 
