@@ -25,8 +25,10 @@ import time
 from typing import Callable, List, Tuple
 
 from common import benchmark_config
+from common import benchmark_utils
 from common import experiment_utils
 from common import fuzzer_config
+from common import fuzzer_utils
 from common import filesystem
 from common import utils
 from common import logs
@@ -68,6 +70,13 @@ def get_fuzzer_benchmark_pairs(fuzzers, benchmarks):
             for benchmark in benchmarks:
                 if benchmark not in allowed_benchmarks:
                     unsupported_fuzzer_benchmark_pairs.add((fuzzer, benchmark))
+
+        # Handle languages.
+        fuzzer_languages = fuzzer_utils.get_languages(fuzzer)
+        for benchmark in benchmarks:
+            benchmark_language = benchmark_utils.get_language(benchmark)
+            if benchmark_language not in fuzzer_languages:
+                unsupported_fuzzer_benchmark_pairs.add((fuzzer, benchmark))
 
     for benchmark in benchmarks:
         config = benchmark_config.get_config(benchmark)
