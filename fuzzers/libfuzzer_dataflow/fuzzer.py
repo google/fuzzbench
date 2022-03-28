@@ -24,7 +24,10 @@ def build():
     # With LibFuzzer we use -fsanitize=fuzzer-no-link for build CFLAGS and then
     # /usr/lib/libFuzzer.a as the FUZZER_LIB for the main fuzzing binary. This
     # allows us to link against a version of LibFuzzer that we specify.
-    cflags = ['-fsanitize=fuzzer-no-link', '-fsanitize-coverage=trace-loads,trace-stores', '/weak.o']
+    cflags = [
+        '-fsanitize=fuzzer-no-link',
+        '-fsanitize-coverage=trace-loads,trace-stores', '/weak.o'
+    ]
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
