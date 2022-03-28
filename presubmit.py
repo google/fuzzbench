@@ -129,7 +129,8 @@ class FuzzerAndBenchmarkValidator:
             # We know this is invalid and have already complained about it.
             return False
 
-        if fuzzer != 'coverage' and not is_fuzzer_tested_in_ci(fuzzer):
+        if (fuzzer not in {'coverage', 'sanitizer_coverage'}
+            and not is_fuzzer_tested_in_ci(fuzzer)):
             self.invalid_fuzzers.add(fuzzer)
             return False
 
