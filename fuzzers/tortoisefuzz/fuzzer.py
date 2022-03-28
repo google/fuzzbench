@@ -19,6 +19,7 @@ import shutil
 from fuzzers import utils
 from fuzzers.afl import fuzzer as afl_fuzzer
 
+
 def build():
     """Build benchmark."""
     afl_fuzzer.prepare_build_environment()
