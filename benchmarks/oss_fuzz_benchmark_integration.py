@@ -32,6 +32,8 @@ from common import yaml_utils
 
 OSS_FUZZ_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz')
 OSS_FUZZ_REPO_PATH = os.path.join(OSS_FUZZ_DIR, 'infra')
+OSS_FUZZ_IMAGE_UPGRADE_DATE = datetime.datetime(
+    year=2021, month=8, day=25, tzinfo=datetime.timezone.utc)
 
 
 class GitRepoManager:
@@ -185,6 +187,10 @@ def integrate_benchmark(project, fuzz_target, benchmark_name, commit,
     # work on arbitrary iso format strings.
     commit_date = datetime.datetime.fromisoformat(commit_date).astimezone(
         datetime.timezone.utc)
+    if commit_date >= OSS_FUZZ_IMAGE_UPGRADE_DATE:
+        raise ValueError(
+            f'Cannot integrate benchmark after {OSS_FUZZ_IMAGE_UPGRADE_DATE}. '
+            'See https://github.com/google/fuzzbench/issues/1353')
     copy_oss_fuzz_files(project, commit_date, benchmark_dir)
     replace_base_builder(benchmark_dir, commit_date)
     create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,

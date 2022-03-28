@@ -16,7 +16,7 @@
 ################################################################################
 
 # to not crash for every input...
-export CFLAGS="$CFLAGS -fno-sanitize=undefined"
+export CFLAGS="$CFLAGS -fno-sanitize=integer-divide-by-zero,float-divide-by-zero,shift,array-bounds"
 
 # build quickjs
 # Makefile should honor CC and AR
@@ -25,8 +25,13 @@ sed -i -e 's/AR=/AR?=/' Makefile
 # Makefile should not override CFLAGS
 sed -i -e 's/CFLAGS=/CFLAGS+=/' Makefile
 CONFIG_CLANG=y make libquickjs.a
+
+# seeds
 zip -r $OUT/fuzz_eval_seed_corpus.zip tests/*.js
 zip -r $OUT/fuzz_eval_seed_corpus.zip examples/*.js
+
+# dict
+cp $SRC/js.dict $OUT/fuzz_eval.dict
 
 cd ..
 FUZZ_TARGETS="fuzz_eval"

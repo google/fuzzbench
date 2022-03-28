@@ -108,6 +108,7 @@ done
 
 docker run \\
 --privileged --cpus=1 --rm \\
+\\
 -e INSTANCE_NAME=r-test-experiment-9 \\
 -e FUZZER=fuzzer-a \\
 -e BENCHMARK={benchmark} \\
@@ -124,6 +125,7 @@ docker run \\
 -e LOCAL_EXPERIMENT=False \\
 --name=runner-container \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
+--security-opt seccomp=unconfined \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
     with mock.patch('common.benchmark_utils.get_fuzz_target',
                     return_value=expected_target):
@@ -153,6 +155,7 @@ def test_create_trial_instance_local_experiment(benchmark, expected_image,
 
 docker run \\
 --privileged --cpus=1 --rm \\
+\\
 -e INSTANCE_NAME=r-test-experiment-9 \\
 -e FUZZER=fuzzer-a \\
 -e BENCHMARK={benchmark} \\
@@ -166,6 +169,7 @@ docker run \\
 -e LOCAL_EXPERIMENT=True \\
 \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
+--security-opt seccomp=unconfined \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
     _test_create_trial_instance(benchmark, expected_image, expected_target,
                                 expected_startup_script,

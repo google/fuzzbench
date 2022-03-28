@@ -22,6 +22,8 @@ static int initialized = 0;
 JSRuntime *rt;
 JSContext *ctx;
 static int nbinterrupts = 0;
+static uint8_t *buffer;
+static size_t buffer_size;
 
 // handle timeouts from infinite loops
 static int interrupt_handler(JSRuntime *rt, void *opaque)
@@ -51,17 +53,31 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
         JS_AddIntrinsicBigInt(ctx);
         JS_SetInterruptHandler(JS_GetRuntime(ctx), interrupt_handler, NULL);
         js_std_add_helpers(ctx, 0, NULL);
+        buffer = malloc(Size);
+        buffer_size = Size;
         initialized = 1;
     }
 
     if (Size > 0) {
-        //is it more efficient to malloc(Size+1) and memcpy ?
-        if (Data[Size-1] != 0) {
-            return 0;
+        const uint8_t * buf;
+        size_t buf_size;
+        if (Data[Size-1] == 0) {
+            buf = Data;
+            //the final 0 does not count (as in strlen)
+            buf_size = Size-1;
+        } else {
+            if (buffer_size < Size +1) {
+                buffer_size = Size +1;
+                buffer = realloc(buffer, buffer_size);
+            }
+            memcpy(buffer, Data, Size);
+            buffer[Size] = 0;
+            buf = buffer;
+            buf_size = Size;
         }
         nbinterrupts = 0;
-        //the final 0 does not count (as in strlen)
-        JSValue val = JS_Eval(ctx, (const char *)Data, Size-1, "<none>", JS_EVAL_TYPE_GLOBAL);
+        
+        JSValue val = JS_Eval(ctx, (const char *)buf, buf_size, "<none>", JS_EVAL_TYPE_GLOBAL);
         //TODO targets with JS_ParseJSON, JS_ReadObject
         if (!JS_IsException(val)) {
             js_std_loop(ctx);
