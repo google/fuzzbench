@@ -1,4 +1,4 @@
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,4 +32,4 @@ def get_config(fuzzer):
     config_file = get_config_file(fuzzer)
     if os.path.exists(config_file):
         return yaml_utils.read(config_file)
-    return dict()
+    return {}

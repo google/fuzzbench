@@ -162,3 +162,19 @@ def get_bug_benchmarks():
         benchmark for benchmark in get_all_benchmarks()
         if get_type(benchmark) == BenchmarkType.BUG.value
     ]
+
+
+def is_cpp(benchmark):
+    """Returns True if |benchmark| is written in C/C++."""
+    return get_language(benchmark) == 'c++'
+
+
+def exclude_non_cpp(benchmarks):
+    """Returns |benchmarks| with only benchmarks written in C/C++."""
+    return [benchmark for benchmark in benchmarks if is_cpp(benchmark)]
+
+
+def get_language(benchmark):
+    """Returns the prorgamming language the benchmark was written in."""
+    config = benchmark_config.get_config(benchmark)
+    return config.get('language', 'c++')

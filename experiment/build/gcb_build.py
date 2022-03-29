@@ -25,11 +25,6 @@ from experiment.build import build_utils
 from experiment.build import docker_images
 from experiment.build import generate_cloudbuild
 
-BUILDER_STEP_IDS = [
-    'build-fuzzer-builder',
-    'build-fuzzer-benchmark-builder',
-    'build-fuzzer-benchmark-builder-intermediate',
-]
 CONFIG_DIR = 'config'
 
 # Maximum time to wait for a GCB config to finish build.
