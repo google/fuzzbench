@@ -18,8 +18,8 @@ FROM gcr.io/oss-fuzz-base/base-builder@sha256:1b6a6993690fa947df74ceabbf6a1f89a4
 
 # Curl will be checked out to the commit hash specified in benchmark.yaml.
 RUN git clone --depth 1 https://github.com/curl/curl.git /src/curl
-RUN git clone https://github.com/curl/curl-fuzzer.git /src/curl_fuzzer
-RUN git -C /src/curl_fuzzer checkout -f 9a48d437484b5ad5f2a97c0cab0d8bcbb5d058de
+RUN git clone https://github.com/curl/curl-fuzzer /src/curl_fuzzer
+RUN git -C /src/curl_fuzzer checkout 543b9926cc322a18ad30945dc55d78dbbfa679e1
 
 # Use curl-fuzzer's scripts to get latest dependencies.
 RUN $SRC/curl_fuzzer/scripts/ossfuzzdeps.sh
