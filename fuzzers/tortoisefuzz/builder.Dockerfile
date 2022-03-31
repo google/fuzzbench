@@ -40,7 +40,7 @@ RUN mkdir /workdir && cd /workdir && \
 RUN cd /workdir && mkdir build6 && unset CFLAGS && unset CXXFLAGS && \
     cd build6 && \
     cmake -G "Ninja" -DLLVM_ENABLE_ASSERTIONS=On -DCMAKE_BUILD_TYPE=Release ../llvm6 && \
-    ninja -j 6 && \
+    ninja && \
     ninja install
 
 # Compile TortoiseFuzz
