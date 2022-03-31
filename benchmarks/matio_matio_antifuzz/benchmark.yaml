@@ -1,0 +1,26 @@
+commit: aefd09e9d20aebb4a0b0a5e5c619f46038dba3bc
+commit_date: 2019-09-11 02:28:00+00:00
+fuzz_target: matio_fuzzer
+project: matio
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - aflplusplus_qemu_tracepc
+  - aflplusplus_frida
+  - honggfuzz_qemu
+  - klee
+  - weizz_qemu
+  - lafintel
+  - eclipser
+  - eclipser_aflplusplus
+  - aflplusplus_cmplog_double
+  - symcc_aflplusplus_single
+  - eclipser_aflplusplus
+  - aflplusplus_qemu_double
+  - fuzzolic_aflplusplus_z3
+  - symqemu_aflplusplus
+  - fuzzolic_aflplusplus_fuzzy
+  - fuzzolic_aflplusplus_z3dict
+  - aflplusplus_gcc
