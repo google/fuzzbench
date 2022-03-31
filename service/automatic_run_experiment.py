@@ -212,9 +212,11 @@ def run_requested_experiment(dry_run):
 
     benchmark_type = requested_experiment.get('type')
     if benchmark_type == benchmark_utils.BenchmarkType.BUG.value:
-        valid_benchmarks = benchmark_utils.get_bug_benchmarks()
+        valid_benchmarks = benchmark_utils.exclude_non_cpp(
+            benchmark_utils.get_bug_benchmarks())
     else:
-        valid_benchmarks = benchmark_utils.get_coverage_benchmarks()
+        valid_benchmarks = benchmark_utils.exclude_non_cpp(
+            benchmark_utils.get_coverage_benchmarks())
 
     benchmarks = requested_experiment.get('benchmarks')
     if benchmarks is None:

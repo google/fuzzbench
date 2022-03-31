@@ -1,4 +1,4 @@
-# Copyright 2016 Google Inc.
+# Copyright 2020 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,15 +14,14 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:1b6a6993690fa947df74ceabbf6a1f89a46d7e4277492addcd45a8525e34be5a
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:aeb14ce0acc046345fd42cc78af7a9557bfebde4af29012b6cbac1f0398adc15
 
-# Curl will be checked out to the commit hash specified in benchmark.yaml.
-RUN git clone --depth 1 https://github.com/curl/curl.git /src/curl
-RUN git clone https://github.com/curl/curl-fuzzer /src/curl_fuzzer
-RUN git -C /src/curl_fuzzer checkout 543b9926cc322a18ad30945dc55d78dbbfa679e1
+RUN git clone --single-branch --depth=1 https://github.com/ethereum/go-ethereum $GOPATH/src/github.com/ethereum/go-ethereum 
+RUN (cd $GOPATH/src/github.com/ethereum/go-ethereum && go mod download)
 
-# Use curl-fuzzer's scripts to get latest dependencies.
-RUN $SRC/curl_fuzzer/scripts/ossfuzzdeps.sh
+RUN cp $GOPATH/src/github.com/ethereum/go-ethereum/oss-fuzz.sh $SRC/build.sh
+# Enable this for easier local testing / repro
+#ADD build.sh $SRC/build.sh
 
-WORKDIR $SRC/curl_fuzzer
-COPY build.sh $SRC/
+WORKDIR $SRC/
+
