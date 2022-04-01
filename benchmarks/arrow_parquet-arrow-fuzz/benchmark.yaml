@@ -52,3 +52,4 @@ unsupported_fuzzers:
   - fuzzolic_aflplusplus_z3dict
   - aflplusplus_gcc
   - aflplusplus_classic
+  - tortoisefuzz

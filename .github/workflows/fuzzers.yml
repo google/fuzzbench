@@ -37,6 +37,7 @@ jobs:
           - pythia_effect_bb
           - pythia_bb
           - fafuzz
+          - tortoisefuzz
           # Binary-only (greybox) fuzzers.
           - eclipser
           - afl_qemu
