@@ -77,7 +77,7 @@ jobs:
           - aflpp_random_wrs_rp
           - aflplusplus_pcguard
           - aflplusplus_classic
-          - aflplusplus_frida_cache
+          - aflplusplus_llvm15
           - entropic_execute_final
           - libfuzzer_exeute_final
 
