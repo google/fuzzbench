@@ -202,6 +202,7 @@ def test_copy_resources_to_bucket(tmp_path):
         'experiment': 'experiment',
         'benchmarks': ['libxslt_xpath'],
         'oss_fuzz_corpus': True,
+        'custom_seed_corpus_dir': None,
     }
     try:
         with mock.patch('common.filestore_utils.cp') as mocked_filestore_cp:

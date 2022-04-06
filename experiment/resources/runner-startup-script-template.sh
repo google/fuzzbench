@@ -46,6 +46,7 @@ docker run \
 -e NO_SEEDS={{no_seeds}} \
 -e NO_DICTIONARIES={{no_dictionaries}} \
 -e OSS_FUZZ_CORPUS={{oss_fuzz_corpus}} \
+-e CUSTOM_SEED_CORPUS={{custom_seed_corpus_dir}} \
 -e DOCKER_REGISTRY={{docker_registry}} {% if not local_experiment %}-e CLOUD_PROJECT={{cloud_project}} -e CLOUD_COMPUTE_ZONE={{cloud_compute_zone}} {% endif %}\
 -e EXPERIMENT_FILESTORE={{experiment_filestore}} {% if local_experiment %}-v {{experiment_filestore}}:{{experiment_filestore}} {% endif %}\
 -e REPORT_FILESTORE={{report_filestore}} {% if local_experiment %}-v {{report_filestore}}:{{report_filestore}} {% endif %}\
