@@ -20,6 +20,16 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-04-22-aflpp
+  description: "afl++ new pass manager test"
+  fuzzers:
+    - aflplusplus_llvm15
+    - aflplusplus
+    - honggfuzz
+    - libafl
+    - aflplusplus_optimal
+    - entropic
+
 - experiment: 2022-03-04-grammar
   description: "test grammar fuzzers"
   type: bug
