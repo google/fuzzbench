@@ -219,7 +219,8 @@ def start_experiment(  # pylint: disable=too-many-arguments
         allow_uncommitted_changes=False,
         concurrent_builds=None,
         measurers_cpus=None,
-        runners_cpus=None):
+        runners_cpus=None,
+        use_branch_coverage=False):
     """Start a fuzzer benchmarking experiment."""
     if not allow_uncommitted_changes:
         check_no_uncommitted_changes()
@@ -234,6 +235,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
     config['git_hash'] = get_git_hash()
     config['no_seeds'] = no_seeds
     config['no_dictionaries'] = no_dictionaries
+    config['use_branch_coverage'] = use_branch_coverage
     config['oss_fuzz_corpus'] = oss_fuzz_corpus
     config['description'] = description
     config['concurrent_builds'] = concurrent_builds
@@ -543,6 +545,12 @@ def main():
                         required=False,
                         default=False,
                         action='store_true')
+    parser.add_argument('-bc',
+                        '--use-branch-coverage',
+                        help='Use branch coverage instead of region coverage.',
+                        required=False,
+                        default=False,
+                        action='store_true')
     parser.add_argument('-a',
                         '--allow-uncommitted-changes',
                         help='Skip check that no uncommited changes made.',
@@ -596,7 +604,8 @@ def main():
                      allow_uncommitted_changes=args.allow_uncommitted_changes,
                      concurrent_builds=concurrent_builds,
                      measurers_cpus=measurers_cpus,
-                     runners_cpus=runners_cpus)
+                     runners_cpus=runners_cpus,
+                     use_branch_coverage=args.use_branch_coverage)
     return 0
 
 

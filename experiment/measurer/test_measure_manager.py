@@ -178,7 +178,7 @@ def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
     measure_manager.measure_trial_coverage(measure_request, max_cycle,
                                            mocked_queue())
     expected_calls = [
-        mock.call(FUZZER, BENCHMARK, TRIAL_NUM, cycle)
+        mock.call(FUZZER, BENCHMARK, TRIAL_NUM, cycle, False)
         for cycle in range(min_cycle, max_cycle + 1)
     ]
     assert mocked_measure_snapshot_coverage.call_args_list == expected_calls
