@@ -365,6 +365,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
 
     UNIT_BLACKLIST = collections.defaultdict(set)
 
+    # pylint: disable=too-many-arguments
     def __init__(self,
                  fuzzer: str,
                  benchmark: str,
