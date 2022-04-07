@@ -20,6 +20,12 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-04-07-aflpp
+  description: "afl++ dont throw away timeouts"
+  fuzzers:
+    - aflplusplus_llvm15
+    - aflplusplus
+
 - experiment: 2022-04-22-aflpp
   description: "afl++ new pass manager test"
   fuzzers:
