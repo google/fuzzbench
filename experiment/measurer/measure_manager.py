@@ -371,11 +371,6 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         self.measured_files_path = os.path.join(self.report_dir,
                                                 'measured-files.txt')
 
-        # Used by the runner to signal that there won't be a corpus archive for
-        # a cycle because the corpus hasn't changed since the last cycle.
-        self.unchanged_cycles_path = os.path.join(self.trial_dir, 'results',
-                                                  'unchanged-cycles')
-
         # Store the profraw file containing coverage data for each cycle.
         self.profraw_file_pattern = os.path.join(self.coverage_dir,
                                                  'data-%m.profraw')
@@ -476,43 +471,6 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             self.logger.error('Empty profdata file found for cycle: %d.', cycle)
             return
         self.generate_summary(cycle)
-
-    def is_cycle_unchanged(self, cycle: int) -> bool:
-        """Returns True if |cycle| is unchanged according to the
-        unchanged-cycles file. This file is written to by the trial's runner."""
-
-        def copy_unchanged_cycles_file():
-            unchanged_cycles_filestore_path = exp_path.filestore(
-                self.unchanged_cycles_path)
-            result = filestore_utils.cp(unchanged_cycles_filestore_path,
-                                        self.unchanged_cycles_path,
-                                        expect_zero=False)
-            return result.retcode == 0
-
-        if not os.path.exists(self.unchanged_cycles_path):
-            if not copy_unchanged_cycles_file():
-                return False
-
-        def get_unchanged_cycles():
-            return [
-                int(cycle) for cycle in filesystem.read(
-                    self.unchanged_cycles_path).splitlines()
-            ]
-
-        unchanged_cycles = get_unchanged_cycles()
-        if cycle in unchanged_cycles:
-            return True
-
-        if cycle < max(unchanged_cycles):
-            # If the last/max unchanged cycle is greater than |cycle| then we
-            # don't need to copy the file again.
-            return False
-
-        if not copy_unchanged_cycles_file():
-            return False
-
-        unchanged_cycles = get_unchanged_cycles()
-        return cycle in unchanged_cycles
 
     def extract_corpus(self, corpus_archive_path) -> bool:
         """Extract the corpus archive for this cycle if it exists."""
@@ -657,16 +615,6 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
     measuring_start_time = time.time()
     snapshot_logger.info('Measuring cycle: %d.', cycle)
     this_time = experiment_utils.get_cycle_time(cycle)
-    if snapshot_measurer.is_cycle_unchanged(cycle):
-        snapshot_logger.info('Cycle: %d is unchanged.', cycle)
-        regions_covered = snapshot_measurer.get_current_coverage()
-        fuzzer_stats_data = snapshot_measurer.get_fuzzer_stats(cycle)
-        return models.Snapshot(time=this_time,
-                               trial_id=trial_num,
-                               edges_covered=regions_covered,
-                               fuzzer_stats=fuzzer_stats_data,
-                               crashes=[])
-
     corpus_archive_dst = os.path.join(
         snapshot_measurer.trial_dir, 'corpus',
         experiment_utils.get_corpus_archive_name(cycle))

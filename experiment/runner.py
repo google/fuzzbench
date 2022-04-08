@@ -14,7 +14,6 @@
 # limitations under the License.
 """Runs fuzzer for trial."""
 
-from collections import namedtuple
 import importlib
 import json
 import os
@@ -63,8 +62,6 @@ EXCLUDE_PATHS = set([
 
 CORPUS_ELEMENT_BYTES_LIMIT = 1 * 1024 * 1024
 SEED_CORPUS_ARCHIVE_SUFFIX = '_seed_corpus.zip'
-
-File = namedtuple('File', ['path', 'modified_time', 'change_time'])
 
 fuzzer_errored_out = False  # pylint:disable=invalid-name
 
@@ -239,14 +236,12 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             self.gcs_sync_dir = None
 
         self.cycle = 1
-        self.corpus_dir = 'corpus'
-        self.corpus_archives_dir = 'corpus-archives'
-        self.results_dir = 'results'
-        self.unchanged_cycles_path = os.path.join(self.results_dir,
-                                                  'unchanged-cycles')
+        self.corpus_dir = os.path.abspath('corpus')
+        self.corpus_archives_dir = os.path.abspath('corpus-archives')
+        self.results_dir = os.path.abspath('results')
         self.log_file = os.path.join(self.results_dir, 'fuzzer-log.txt')
         self.last_sync_time = None
-        self.corpus_dir_contents = set()
+        self.last_archive_time = -float('inf')
 
     def initialize_directories(self):
         """Initialize directories needed for the trial."""
@@ -281,7 +276,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             self.cycle += 1
 
         logs.info('Doing final sync.')
-        self.do_sync(final_sync=True)
+        self.do_sync()
         fuzz_thread.join()
 
     def sleep_until_next_sync(self):
@@ -305,52 +300,12 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         # roughly get_snapshot_seconds() after each other.
         self.last_sync_time = time.time()
 
-    def _set_corpus_dir_contents(self):
-        """Set |self.corpus_dir_contents| to the current contents of
-        |self.corpus_dir|. Don't include files or directories excluded by
-        |EXCLUDE_PATHS|."""
-        self.corpus_dir_contents = set()
-        corpus_dir = os.path.abspath(self.corpus_dir)
-        for root, _, files in os.walk(corpus_dir):
-            # Check if root is excluded.
-            relpath = os.path.relpath(root, corpus_dir)
-            if _is_path_excluded(relpath):
-                continue
-
-            for filename in files:
-                # Check if filename is excluded first.
-                if _is_path_excluded(filename):
-                    continue
-
-                file_path = os.path.join(root, filename)
-                stat_info = os.stat(file_path)
-                last_modified_time = stat_info.st_mtime
-                # Warning: ctime means creation time on Win and may not work as
-                # expected.
-                last_changed_time = stat_info.st_ctime
-                file_tuple = File(file_path, last_modified_time,
-                                  last_changed_time)
-                self.corpus_dir_contents.add(file_tuple)
-
-    def is_corpus_dir_same(self):
-        """Sets |self.corpus_dir_contents| to the current contents and returns
-        True if it is the same as the previous contents."""
-        logs.debug('Checking if corpus dir is the same.')
-        prev_contents = self.corpus_dir_contents.copy()
-        self._set_corpus_dir_contents()
-        return prev_contents == self.corpus_dir_contents
-
-    def do_sync(self, final_sync=False):
+    def do_sync(self):
         """Save corpus archives and results to GCS."""
         try:
-            if not final_sync and self.is_corpus_dir_same():
-                logs.debug('Cycle: %d unchanged.', self.cycle)
-                filesystem.append(self.unchanged_cycles_path, str(self.cycle))
-            else:
-                logs.debug('Cycle: %d changed.', self.cycle)
-                self.archive_and_save_corpus()
-
-            self.record_stats()
+            self.archive_and_save_corpus()
+            # TODO(metzman): Enable stats at some point.
+            # self.record_stats()
             self.save_results()
             logs.debug('Finished sync.')
         except Exception:  # pylint: disable=broad-except
@@ -395,15 +350,38 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             self.corpus_archives_dir,
             experiment_utils.get_corpus_archive_name(self.cycle))
 
-        directories = [self.corpus_dir]
-        if self.cycle == 1:
-            # Some fuzzers like eclipser and LibFuzzer don't actually copy the
-            # seed/input corpus to the output corpus (which AFL does do), this
-            # results in their coverage being undercounted.
-            seed_corpus = environment.get('SEED_CORPUS_DIR')
-            directories.append(seed_corpus)
+        corpus_dir_name = os.path.basename(self.corpus_dir)
+        with tarfile.open(archive, 'w:gz') as tar:
+            if self.cycle == 1:
+                # Some fuzzers like eclipser and LibFuzzer don't actually copy
+                # the seed/input corpus to the output corpus (which AFL does
+                # do), this results in their coverage being undercounted.
+                seed_corpus_dir = environment.get('SEED_CORPUS_DIR')
+                tar_directory(seed_corpus_dir, tar)
 
-        archive_directories(directories, archive)
+            new_archive_time = self.last_archive_time
+            for file_path in get_corpus_elements(self.corpus_dir):
+                stat_info = os.stat(file_path)
+                last_modified_time = stat_info.st_mtime
+                if last_modified_time <= self.last_archive_time:
+                    continue  # We've saved this file already.
+                new_archive_time = max(new_archive_time, last_modified_time)
+
+                arcname = os.path.join(
+                    corpus_dir_name, os.path.relpath(file_path,
+                                                     corpus_dir_name))
+                try:
+                    tar.add(file_path, arcname=arcname)
+                except (FileNotFoundError, OSError):
+                    # We will get these errors if files or directories are being
+                    # deleted from |directory| as we archive it. Don't bother
+                    # rescanning the directory, new files will be archived in
+                    # the next sync.
+                    pass
+                except Exception:  # pylint: disable=broad-except
+                    logs.error('Unexpected exception occurred when archiving.')
+        self.last_archive_time = new_archive_time
+
         return archive
 
     def save_corpus_archive(self, archive):
@@ -412,7 +390,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             return
 
         basename = os.path.basename(archive)
-        gcs_path = posixpath.join(self.gcs_sync_dir, self.corpus_dir, basename)
+        gcs_path = posixpath.join(self.gcs_sync_dir, 'corpus', basename)
 
         # Don't use parallel to avoid stability issues.
         filestore_utils.cp(archive, gcs_path)
@@ -439,7 +417,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         # directory and can be written to by the fuzzer at any time.
         results_copy = filesystem.make_dir_copy(self.results_dir)
         filestore_utils.rsync(
-            results_copy, posixpath.join(self.gcs_sync_dir, self.results_dir))
+            results_copy, posixpath.join(self.gcs_sync_dir, 'results'))
 
 
 def get_fuzzer_module(fuzzer):
@@ -449,14 +427,6 @@ def get_fuzzer_module(fuzzer):
     fuzzer_module_name = 'fuzzers.{fuzzer}.fuzzer'.format(fuzzer=fuzzer)
     fuzzer_module = importlib.import_module(fuzzer_module_name)
     return fuzzer_module
-
-
-def archive_directories(directories, archive_path):
-    """Create a tar.gz file named |archive_path| containing the contents of each
-    directory in |directories|."""
-    with tarfile.open(archive_path, 'w:gz') as tar:
-        for directory in directories:
-            tar_directory(directory, tar)
 
 
 def tar_directory(directory, tar):
@@ -480,6 +450,20 @@ def tar_directory(directory, tar):
                 pass
             except Exception:  # pylint: disable=broad-except
                 logs.error('Unexpected exception occurred when archiving.')
+
+
+def get_corpus_elements(corpus_dir):
+    """Returns a list of absolute paths to corpus elements in |corpus_dir|.
+    Excludes certain elements."""
+    corpus_dir = os.path.abspath(corpus_dir)
+    corpus_elements = []
+    for root, _, files in os.walk(corpus_dir):
+        for filename in files:
+            file_path = os.path.join(root, filename)
+            if _is_path_excluded(file_path):
+                continue
+            corpus_elements.append(file_path)
+    return corpus_elements
 
 
 def _is_path_excluded(path):
