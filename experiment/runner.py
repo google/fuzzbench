@@ -416,8 +416,8 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         # in size because the log file containing the fuzzer's output is in this
         # directory and can be written to by the fuzzer at any time.
         results_copy = filesystem.make_dir_copy(self.results_dir)
-        filestore_utils.rsync(
-            results_copy, posixpath.join(self.gcs_sync_dir, 'results'))
+        filestore_utils.rsync(results_copy,
+                              posixpath.join(self.gcs_sync_dir, 'results'))
 
 
 def get_fuzzer_module(fuzzer):

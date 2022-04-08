@@ -217,8 +217,7 @@ def test_archive_corpus_name_correct(_, trial_runner):
 
 
 @mock.patch('common.logs.debug')
-def test_do_sync_unchanged(mocked_debug,
-                           trial_runner, fuzzer_module):
+def test_do_sync_unchanged(mocked_debug, trial_runner, fuzzer_module):
     """Test that do_sync records if there was no corpus change since last
     cycle."""
     trial_runner.cycle = 1337
@@ -232,16 +231,16 @@ def test_do_sync_unchanged(mocked_debug,
                  'corpus-archive-1337.tar.gz')
             ],
             [
-            'gsutil', 'rsync', '-d', '-r', '/results-copy',
-            ('gs://bucket/experiment-name/experiment-folders/'
-             'benchmark-1-fuzzer_a/trial-1/results')
-        ]]
+                'gsutil', 'rsync', '-d', '-r', '/results-copy',
+                ('gs://bucket/experiment-name/experiment-folders/'
+                 'benchmark-1-fuzzer_a/trial-1/results')
+            ]
+        ]
     # !!!
 
 
 @mock.patch('common.new_process.execute')
-def test_do_sync_changed(mocked_execute, fs,
-                         trial_runner, fuzzer_module):
+def test_do_sync_changed(mocked_execute, fs, trial_runner, fuzzer_module):
     """Test that do_sync archives and saves a corpus if it changed from the
     previous one."""
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
