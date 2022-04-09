@@ -22,17 +22,3 @@ RUN mkdir /clang && \
 RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
     cd /llvm-project/ && \
     git checkout f4037650e0c74454e12b4eabd94fec06d678505f
-
-COPY weak.c /
-RUN /clang/bin/clang /weak.c -c -o /weak.o
-
-COPY Trace-store-and-load-commands.patch /
-
-RUN cd /llvm-project/ && \
-    git apply /Trace-store-and-load-commands.patch && \
-    cd compiler-rt/lib/fuzzer && \
-    (for f in *.cpp; do \
-      /clang/bin/clang -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \
-    done && wait) && \
-    ar r /usr/lib/libFuzzer.a *.o
-
