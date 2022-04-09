@@ -456,9 +456,9 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             coverage_data = coverage_info["data"][0]
             summary_data = coverage_data["totals"]
             if self.use_branch_coverage:
-                regions_coverage_data = summary_data["branches"]
+                regions_coverage_data = summary_data['branches']
             else:
-                regions_coverage_data = summary_data["regions"]
+                regions_coverage_data = summary_data['regions']
             regions_covered = regions_coverage_data["covered"]
             return regions_covered
         except Exception:  # pylint: disable=broad-except

@@ -547,7 +547,7 @@ def main():
                         action='store_true')
     parser.add_argument('-bc',
                         '--use-branch-coverage',
-                        help='Use branch coverage instead of region coverage.',
+                        help='Use branch as a coverage metric.',
                         required=False,
                         default=False,
                         action='store_true')
