@@ -61,6 +61,7 @@ jobs:
           - token_level
           - grimoire
           # Temporary variants.
+          - libafl_new
           - aflplusplus_dict2file
           - afl_2_52_b
           - aflplusplus_cmplog
