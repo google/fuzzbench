@@ -76,9 +76,7 @@ def measure_main(experiment_config):
     max_total_time = experiment_config['max_total_time']
     measurers_cpus = experiment_config['measurers_cpus']
     runners_cpus = experiment_config['runners_cpus']
-    use_branch_coverage = experiment_config['use_branch_coverage']
-    measure_loop(experiment, max_total_time, measurers_cpus, runners_cpus,
-                 use_branch_coverage)
+    measure_loop(experiment, max_total_time, measurers_cpus, runners_cpus)
 
     # Clean up resources.
     gc.collect()
@@ -99,8 +97,7 @@ def _process_init(cores_queue):
 def measure_loop(experiment: str,
                  max_total_time: int,
                  measurers_cpus=None,
-                 runners_cpus=None,
-                 use_branch_coverage=False):
+                 runners_cpus=None):
     """Continuously measure trials for |experiment|."""
     logger.info('Start measure_loop.')
 
@@ -129,8 +126,7 @@ def measure_loop(experiment: str,
                 # races.
                 all_trials_ended = scheduler.all_trials_ended(experiment)
 
-                if not measure_all_trials(experiment, max_total_time, pool, q,
-                                          use_branch_coverage):
+                if not measure_all_trials(experiment, max_total_time, pool, q):
                     # We didn't measure any trials.
                     if all_trials_ended:
                         # There are no trials producing snapshots to measure.
@@ -145,12 +141,7 @@ def measure_loop(experiment: str,
     logger.info('Finished measure loop.')
 
 
-def measure_all_trials(
-        experiment: str,
-        max_total_time: int,
-        pool,
-        q,
-        use_branch_coverage: bool = False) -> bool:  # pylint: disable=invalid-name
+def measure_all_trials(experiment: str, max_total_time: int, pool, q) -> bool:  # pylint: disable=invalid-name
     """Get coverage data (with coverage runs) for all active trials. Note that
     this should not be called unless multiprocessing.set_start_method('spawn')
     was called first. Otherwise it will use fork which breaks logging."""
@@ -167,7 +158,7 @@ def measure_all_trials(
         return False
 
     measure_trial_coverage_args = [
-        (unmeasured_snapshot, max_cycle, q, use_branch_coverage)
+        (unmeasured_snapshot, max_cycle, q)
         for unmeasured_snapshot in unmeasured_snapshots
     ]
 
@@ -366,12 +357,8 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
     UNIT_BLACKLIST = collections.defaultdict(set)
 
     # pylint: disable=too-many-arguments
-    def __init__(self,
-                 fuzzer: str,
-                 benchmark: str,
-                 trial_num: int,
-                 trial_logger: logs.Logger,
-                 use_branch_coverage: bool = False):
+    def __init__(self, fuzzer: str, benchmark: str, trial_num: int,
+                 trial_logger: logs.Logger):
         super().__init__(fuzzer, benchmark, trial_num)
         self.logger = trial_logger
         self.corpus_dir = os.path.join(self.measurement_dir, 'corpus')
@@ -400,9 +387,6 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         # Store the coverage information in json form.
         self.cov_summary_file = os.path.join(self.report_dir,
                                              'cov_summary.json')
-
-        # Whether to use branch coverage or region coverage (default)
-        self.use_branch_coverage = use_branch_coverage
 
     def get_profraw_files(self):
         """Return generated profraw files."""
@@ -455,10 +439,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
                 self.cov_summary_file)
             coverage_data = coverage_info["data"][0]
             summary_data = coverage_data["totals"]
-            if self.use_branch_coverage:
-                regions_coverage_data = summary_data['branches']
-            else:
-                regions_coverage_data = summary_data['regions']
+            regions_coverage_data = summary_data['branches']
             regions_covered = regions_coverage_data["covered"]
             return regions_covered
         except Exception:  # pylint: disable=broad-except
@@ -632,10 +613,10 @@ def get_fuzzer_stats(stats_filestore_path):
 
 
 def measure_trial_coverage(  # pylint: disable=invalid-name
-        measure_req,
-        max_cycle: int,
-        q: multiprocessing.Queue,
-        use_branch_coverage: bool = False) -> models.Snapshot:
+    measure_req,
+    max_cycle: int,
+    q: multiprocessing.Queue,
+) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
@@ -646,8 +627,7 @@ def measure_trial_coverage(  # pylint: disable=invalid-name
         try:
             snapshot = measure_snapshot_coverage(measure_req.fuzzer,
                                                  measure_req.benchmark,
-                                                 measure_req.trial_id, cycle,
-                                                 use_branch_coverage)
+                                                 measure_req.trial_id, cycle)
             if not snapshot:
                 break
             q.put(snapshot)
@@ -663,11 +643,8 @@ def measure_trial_coverage(  # pylint: disable=invalid-name
 
 
 def measure_snapshot_coverage(  # pylint: disable=too-many-locals
-        fuzzer: str,
-        benchmark: str,
-        trial_num: int,
-        cycle: int,
-        use_branch_coverage: bool = False) -> models.Snapshot:
+        fuzzer: str, benchmark: str, trial_num: int,
+        cycle: int) -> models.Snapshot:
     """Measure coverage of the snapshot for |cycle| for |trial_num| of |fuzzer|
     and |benchmark|."""
     snapshot_logger = logs.Logger('measurer',
@@ -678,7 +655,7 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
                                       'cycle': str(cycle),
                                   })
     snapshot_measurer = SnapshotMeasurer(fuzzer, benchmark, trial_num,
-                                         snapshot_logger, use_branch_coverage)
+                                         snapshot_logger)
 
     measuring_start_time = time.time()
     snapshot_logger.info('Measuring cycle: %d.', cycle)

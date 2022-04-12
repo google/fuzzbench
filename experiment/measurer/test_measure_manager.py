@@ -64,7 +64,7 @@ def test_get_current_coverage(fs, experiment):
     fs.add_real_file(json_cov_summary_file, read_only=False)
     snapshot_measurer.cov_summary_file = json_cov_summary_file
     covered_regions = snapshot_measurer.get_current_coverage()
-    assert covered_regions == 8
+    assert covered_regions == 7
 
 
 def test_get_current_coverage_error(fs, experiment):
@@ -178,7 +178,7 @@ def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
     measure_manager.measure_trial_coverage(measure_request, max_cycle,
                                            mocked_queue())
     expected_calls = [
-        mock.call(FUZZER, BENCHMARK, TRIAL_NUM, cycle, False)
+        mock.call(FUZZER, BENCHMARK, TRIAL_NUM, cycle)
         for cycle in range(min_cycle, max_cycle + 1)
     ]
     assert mocked_measure_snapshot_coverage.call_args_list == expected_calls
