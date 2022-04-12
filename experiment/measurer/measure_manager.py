@@ -356,7 +356,6 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
 
     UNIT_BLACKLIST = collections.defaultdict(set)
 
-    # pylint: disable=too-many-arguments
     def __init__(self, fuzzer: str, benchmark: str, trial_num: int,
                  trial_logger: logs.Logger):
         super().__init__(fuzzer, benchmark, trial_num)
@@ -613,9 +612,9 @@ def get_fuzzer_stats(stats_filestore_path):
 
 
 def measure_trial_coverage(  # pylint: disable=invalid-name
-    measure_req,
-    max_cycle: int,
-    q: multiprocessing.Queue,
+        measure_req,
+        max_cycle: int,
+        q: multiprocessing.Queue,
 ) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
