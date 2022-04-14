@@ -3,6 +3,7 @@
 #include <mruby.h>
 #include <mruby/compile.h>
 
+
 int LLVMFuzzerTestOneInput(uint8_t *Data, size_t size) {
     if (size < 1) {
         return 0;
