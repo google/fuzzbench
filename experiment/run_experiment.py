@@ -585,9 +585,9 @@ def main():
                         '--runners-cpus',
                         help='Cpus available to the runners.',
                         required=False)
-    parser.add_argument('-rs',
-                        '--random-seed-corpus-dir',
-                        help='Path to the random seed corpus',
+    parser.add_argument('-cs',
+                        '--custom-seed-corpus-dir',
+                        help='Path to the custom seed corpus',
                         required=False)
 
     all_fuzzers = fuzzer_utils.get_fuzzer_names()
