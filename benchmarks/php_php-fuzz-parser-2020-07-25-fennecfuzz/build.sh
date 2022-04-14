@@ -18,7 +18,7 @@
 # build oniguruma and link statically
 
 rm sapi/fuzzer/fuzzer-parser.c
-wget https://pastebin.com/raw/JbbNxbe7 -O sapi/fuzzer/fuzzer-parser.c
+mv $SRC/fuzzer-parser.c sapi/fuzzer/fuzzer-parser.c
 wget https://raw.githubusercontent.com/waddewaa/FennecFuzz/master/benchmark/antifuzz.h -O sapi/fuzzer/antifuzz.h
 
 pushd oniguruma

@@ -20,4 +20,4 @@ RUN apt-get update && \
 RUN git clone --depth 1 --branch master https://github.com/php/php-src.git php-src
 RUN git clone https://github.com/kkos/oniguruma.git php-src/oniguruma
 WORKDIR php-src
-COPY build.sh *.options $SRC/
+COPY build.sh *.options fuzzer-parser.c $SRC/
