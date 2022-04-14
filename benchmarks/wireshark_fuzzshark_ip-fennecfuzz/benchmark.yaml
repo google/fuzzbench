@@ -1,0 +1,37 @@
+commit: bc4d7c46f391971f0e2c875c9b2d63c1b9152f6d
+commit_date: 2018-10-07 01:19:00+00:00
+fuzz_target: fuzzshark_ip
+project: wireshark
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - aflplusplus_qemu_tracepc
+  - aflplusplus_frida
+  - honggfuzz_qemu
+  - klee
+  - weizz_qemu
+  - lafintel
+  - eclipser
+  - eclipser_aflplusplus
+  - aflplusplus_cmplog_double
+  - symcc_aflplusplus_single
+  - eclipser_aflplusplus
+  - aflplusplus_qemu_double
+  - fuzzolic_aflplusplus_z3
+  - symqemu_aflplusplus
+  - fuzzolic_aflplusplus_fuzzy
+  - fuzzolic_aflplusplus_z3dict
+  - afldd
+  - aflpp_vs_dd
+  - cfctx_bottom
+  - cfctx_dataflow_seadsa
+  - cfctx_dataflow_svf
+  - cfctx_randomic
+  - cfctx_params
+  - cfctx_params_512kb
+  - cfctx_params_768kb
+  - aflplusplus_gcc
+  - aflplusplus_pcguard
+  - aflplusplus_classic
