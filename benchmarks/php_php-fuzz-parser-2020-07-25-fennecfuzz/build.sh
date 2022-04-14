@@ -19,7 +19,7 @@
 
 rm sapi/fuzzer/fuzzer-parser.c
 mv $SRC/fuzzer-parser.c sapi/fuzzer/fuzzer-parser.c
-wget https://raw.githubusercontent.com/waddewaa/FennecFuzz/master/benchmark/antifuzz.h -O sapi/fuzzer/antifuzz.h
+wget https://raw.githubusercontent.com/waddewaa/FennecFuzz/master/benchmark/fennecfuzz.h -O sapi/fuzzer/antifuzz.h
 
 pushd oniguruma
 autoreconf -vfi
