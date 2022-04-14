@@ -39,6 +39,7 @@ from common import logs
 from common import new_process
 from common import utils
 from common import yaml_utils
+from experiment import runner
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
@@ -64,8 +65,6 @@ _OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT = (
     'gs://{project}-backup.clusterfuzz-external.appspot.com/corpus/'
     'libFuzzer/{fuzz_target}/public.zip')
 
-# max size allowed per seed corpus for AFL
-CORPUS_ELEMENT_BYTES_LIMIT = 1 * 1024 * 1024
 
 
 def read_and_validate_experiment_config(config_filename: str) -> Dict:
@@ -177,7 +176,7 @@ def validate_and_pack_custom_seed_corpus(custom_seed_corpus_dir, benchmarks):
                 file_path = os.path.join(root, filename)
                 file_size = os.path.getsize(file_path)
 
-                if file_size == 0 or file_size > CORPUS_ELEMENT_BYTES_LIMIT:
+                if file_size == 0 or file_size > runner.CORPUS_ELEMENT_BYTES_LIMIT:
                     continue
                 valid_corpus_files.add(file_path)
 
