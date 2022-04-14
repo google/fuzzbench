@@ -20,7 +20,7 @@ svn export https://github.com/mozillasecurity/fuzzdata.git/trunk/samples/h264 co
 mv ./res/*.264 ./corpus/
 zip -j0r ${OUT}/decoder_fuzzer_seed_corpus.zip ./corpus/
 
-wget https://raw.githubusercontent.com/waddewaa/FennecFuzz/master/benchmark/antifuzz.h -O $SRC/antifuzz.h
+wget https://raw.githubusercontent.com/waddewaa/FennecFuzz/master/benchmark/fennecfuzz.h -O $SRC/antifuzz.h
 
 # build 
 if [[ $CXXFLAGS = *sanitize=memory* ]]; then

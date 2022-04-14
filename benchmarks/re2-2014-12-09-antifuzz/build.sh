@@ -16,7 +16,7 @@
 cd re2
 git checkout 499ef7eff7455ce9c9fae86111d4a77b6ac335de
 make -j $(nproc)
-wget https://github.com/waddewaa/FennecFuzz/blob/master/benchmark/fennecfuzz_noBB.h?raw=true -O $SRC/antifuzz.h
+wget https://raw.githubusercontent.com/waddewaa/FennecFuzz/master/benchmark/fennecfuzz_noBB.h -O $SRC/antifuzz.h
 
 
 

@@ -18,7 +18,7 @@
 
 rm ./src/mat.c
 wget https://raw.githubusercontent.com/waddewaa/FennecFuzz/master/benchmark/matio_matio/mat.c -O ./src/mat.c
-wget https://raw.githubusercontent.com/waddewaa/FennecFuzz/master/benchmark/antifuzz.h -O ./src/antifuzz.h
+wget https://raw.githubusercontent.com/waddewaa/FennecFuzz/master/benchmark/fennecfuzz.h -O ./src/antifuzz.h
 
 
 

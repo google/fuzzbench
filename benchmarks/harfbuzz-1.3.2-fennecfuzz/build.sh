@@ -16,8 +16,8 @@
 cd harfbuzz
 git checkout f73a87d9a8c76a181794b74b527ea268048f78e3
 
-# wget https://pastebin.com/raw/zU4VeaHK -O test/fuzzing/hb-fuzzer.cc
-# wget https://github.com/waddewaa/FennecFuzz/blob/master/benchmark/antifuzz.h?raw=true -O test/fuzzing/antifuzz.h
+mv $SRC/hb-fuzzer.cc test/fuzzing/hb-fuzzer.cc
+wget https://raw.githubusercontent.com/waddewaa/FennecFuzz/master/benchmark/fennecfuzz.h -O test/fuzzing/antifuzz.h
 
 ./autogen.sh
 (cd ./src/hb-ucdn && CCLD="$CXX $CXXFLAGS" make)

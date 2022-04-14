@@ -15,7 +15,7 @@
 
 cd libjpeg-turbo
 git checkout b0971e47d76fdb81270e93bbf11ff5558073350d
-wget https://github.com/waddewaa/FennecFuzz/blob/master/benchmark/antifuzz.h?raw=true -O $SRC/antifuzz.h
+wget https://raw.githubusercontent.com/waddewaa/FennecFuzz/master/benchmark/fennecfuzz.h -O $SRC/antifuzz.h
 
 autoreconf -fiv
 ./configure

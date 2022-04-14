@@ -14,6 +14,9 @@
 
 #include <string>
 #include "re2/re2.h"
+#include <unistd.h>
+#include <utmpx.h>
+#include "antifuzz.h"
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   if (size < 3 || size > 64) return 0;
