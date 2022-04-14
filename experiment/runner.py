@@ -199,7 +199,7 @@ def run_fuzzer(max_total_time, log_filename):
         logs.error('Fuzz target binary not found.')
         return
 
-    if environment.get('CUSTOM_SEED_CORPUS'):
+    if environment.get('CUSTOM_SEED_CORPUS_DIR'):
         _unpack_custom_seed_corpus(input_corpus)
     else:
         _unpack_clusterfuzz_seed_corpus(target_binary, input_corpus)
