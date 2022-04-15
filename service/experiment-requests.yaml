@@ -32,6 +32,15 @@
     - libafl
     - entropic
 
+- experiment: 2022-04-11-libafl
+  description: "libafl new test"
+  fuzzers:
+    - libafl
+    - libafl_new
+    - aflplusplus
+    - honggfuzz
+    - entropic
+
 - experiment: 2022-04-07-aflpp
   description: "afl++ dont throw away timeouts"
   fuzzers:

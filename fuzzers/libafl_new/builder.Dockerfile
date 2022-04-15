@@ -37,7 +37,7 @@ RUN git clone https://github.com/AFLplusplus/libafl /libafl && \
 RUN cd /libafl && unset CFLAGS && unset CXXFLAGS && \
     export CC=clang && export CXX=clang++ && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
-    cd ./fuzzers/fuzzbench && \
+    cd ./fuzzers/fuzzbench_weighted && \
     PATH="$PATH:/root/.cargo/bin/" cargo build --release
 
 RUN wget https://gist.githubusercontent.com/andreafioraldi/e5f60d68c98b31665a274207cfd05541/raw/4da351a321f1408df566a9cf2ce7cde6eeab3904/empty_fuzzer_lib.c -O /empty_fuzzer_lib.c && \
