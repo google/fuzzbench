@@ -20,6 +20,43 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-04-10-aflpp
+  description: "afl++ bug ranking"
+  type: bug
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_qemu
+    - aflplusplus_frida
+    - aflplusplus_optimal
+    - honggfuzz
+    - libafl
+    - entropic
+
+- experiment: 2022-04-11-libafl
+  description: "libafl new test"
+  fuzzers:
+    - libafl
+    - libafl_new
+    - aflplusplus
+    - honggfuzz
+    - entropic
+
+- experiment: 2022-04-07-aflpp
+  description: "afl++ dont throw away timeouts"
+  fuzzers:
+    - aflplusplus_llvm15
+    - aflplusplus
+
+- experiment: 2022-04-22-aflpp
+  description: "afl++ new pass manager test"
+  fuzzers:
+    - aflplusplus_llvm15
+    - aflplusplus
+    - honggfuzz
+    - libafl
+    - aflplusplus_optimal
+    - entropic
+
 - experiment: 2022-03-04-grammar
   description: "test grammar fuzzers"
   type: bug

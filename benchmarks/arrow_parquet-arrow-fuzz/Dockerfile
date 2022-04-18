@@ -30,4 +30,4 @@ RUN apt-get update -y -q && \
 
 RUN git clone --depth=1 https://github.com/apache/arrow.git $SRC/arrow
 
-COPY build.sh $SRC/
+COPY build.sh thrift.patch $SRC/
