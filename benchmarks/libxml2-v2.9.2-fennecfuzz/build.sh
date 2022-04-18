@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+wget https://raw.githubusercontent.com/waddewaa/FennecFuzz/master/benchmark/fennecfuzz.h -O $SRC/antifuzz.h
+
 cd libxml2
 # Git is converting CRLF to LF automatically and causing issues when checking
 # out the branch. So use -f to ignore the complaint about lost changes that we
