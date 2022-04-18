@@ -17,7 +17,7 @@
 
 # rm $SRC/wireshark/tools/oss-fuzzshark/fuzzshark.c
 mv $SRC/fuzzshark.c $SRC/wireshark/tools/oss-fuzzshark/fuzzshark.c
-wget https://raw.githubusercontent.com/waddewaa/FennecFuzz/master/benchmark/fennecfuzz.h -O $SRC/wireshark/tools/oss-fuzzshark/fennecfuzz.h
+wget https://raw.githubusercontent.com/waddewaa/FennecFuzz/master/benchmark/fennecfuzz.h -O $SRC/wireshark/tools/oss-fuzzshark/antifuzz.h
 
 WIRESHARK_BUILD_PATH="$WORK/build"
 mkdir -p "$WIRESHARK_BUILD_PATH"
