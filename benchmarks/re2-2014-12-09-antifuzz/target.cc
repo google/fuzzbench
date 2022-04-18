@@ -20,6 +20,7 @@
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   if (size < 3 || size > 64) return 0;
+  antifuzz_init((char*)data, FLAG_ALL);
   uint16_t f = (data[0] << 16) + data[1];
   RE2::Options opt;
   opt.set_log_errors(false);

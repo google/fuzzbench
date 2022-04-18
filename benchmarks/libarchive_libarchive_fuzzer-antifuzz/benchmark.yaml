@@ -1,0 +1,23 @@
+commit: 94ca3f0734f71a0d9389ceaa237ce5a4ed8a21cd
+commit_date: 2019-05-03 02:15:00+00:00
+fuzz_target: libarchive_fuzzer
+project: libarchive
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - aflplusplus_qemu_tracepc
+  - aflplusplus_frida
+  - honggfuzz_qemu
+  - klee
+  - weizz_qemu
+  - lafintel
+  - aflplusplus_cmplog_double
+  - symcc_aflplusplus_single
+  - eclipser_aflplusplus
+  - aflplusplus_qemu_double
+  - fuzzolic_aflplusplus_z3
+  - symqemu_aflplusplus
+  - fuzzolic_aflplusplus_fuzzy
+  - fuzzolic_aflplusplus_z3dict

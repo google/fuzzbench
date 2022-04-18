@@ -1,4 +1,4 @@
-# Copyright 2017 Google Inc.
+# Copyright 2020 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,13 +15,8 @@
 ################################################################################
 
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:1b6a6993690fa947df74ceabbf6a1f89a46d7e4277492addcd45a8525e34be5a
-
-RUN apt-get update && apt-get install -y make cmake \
-                       flex bison \
-                       libglib2.0-dev libgcrypt20-dev
-
-RUN git clone --depth=1 https://gitlab.com/wireshark/wireshark.git
-RUN git clone --depth=1 https://bitbucket.org/jwzawadzki/wireshark-fuzzdb.git
-
-WORKDIR wireshark
-COPY build.sh fuzzshark.c $SRC/
+RUN apt-get update && apt-get install -y make autoconf automake libtool
+RUN apt-get install -y build-essential cmake pkg-config
+RUN git clone https://github.com/beltoforion/muparser.git muparser
+WORKDIR muparser
+COPY build.sh set_eval_fuzzer.cc $SRC/
