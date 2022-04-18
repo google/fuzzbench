@@ -21,7 +21,8 @@ RUN apt-get update && \
     make \
     automake \
     libtool \
-    nasm
+    nasm \
+    wget
 
 RUN git clone https://github.com/libjpeg-turbo/libjpeg-turbo.git
 

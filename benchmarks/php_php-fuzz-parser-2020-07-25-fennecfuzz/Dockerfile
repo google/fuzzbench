@@ -16,7 +16,7 @@
 
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:1b6a6993690fa947df74ceabbf6a1f89a46d7e4277492addcd45a8525e34be5a
 RUN apt-get update && \
-    apt-get install -y autoconf automake libtool bison re2c pkg-config
+    apt-get install -y autoconf automake libtool bison re2c pkg-config wget
 RUN git clone --depth 1 --branch master https://github.com/php/php-src.git php-src
 RUN git clone https://github.com/kkos/oniguruma.git php-src/oniguruma
 WORKDIR php-src

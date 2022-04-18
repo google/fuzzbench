@@ -23,7 +23,8 @@ RUN apt-get update && \
     automake \
     libtool \
     ragel \
-    pkg-config
+    pkg-config \
+    wget
 
 RUN git clone https://github.com/behdad/harfbuzz.git
 
