@@ -524,7 +524,8 @@ def schedule(experiment_config: dict, pool, cores=None):
 
     # Start pending trials.
     pending_trials = list(get_pending_trials(experiment_config['experiment']))
-    started_trials = start_trials(pending_trials, experiment_config, pool, cores)
+    started_trials = start_trials(pending_trials, experiment_config, pool,
+                                  cores)
     return started_trials
 
 
@@ -625,7 +626,10 @@ def start_trials(trials, experiment_config: dict, pool, cores=None):
 
     start_trial_args = []
     for index, trial in enumerate(shuffled_trials):
-        start_trial_args += [(TrialProxy(trial), experiment_config, cores[index % len(cores)] if cores is not None else None)]
+        start_trial_args += [
+            (TrialProxy(trial), experiment_config,
+            cores[index % len(cores)] if cores is not None else None)
+        ]
 
     started_trial_proxies = pool.starmap(_start_trial, start_trial_args)
     started_trials = update_started_trials(started_trial_proxies,
@@ -672,7 +676,8 @@ def _start_trial(trial: TrialProxy, experiment_config: dict, cpuset=None):
     _initialize_logs(experiment_config['experiment'])
     logger.info('Start trial %d.', trial.id)
     started = create_trial_instance(trial.fuzzer, trial.benchmark, trial.id,
-                                    experiment_config, trial.preemptible, cpuset)
+                                    experiment_config, trial.preemptible,
+                                    cpuset)
     if started:
         trial.time_started = datetime_now()
         return trial
@@ -680,9 +685,12 @@ def _start_trial(trial: TrialProxy, experiment_config: dict, cpuset=None):
     return None
 
 
-def render_startup_script_template(instance_name: str, fuzzer: str,
-                                   benchmark: str, trial_id: int,
-                                   experiment_config: dict, cpuset=None):
+def render_startup_script_template(instance_name: str,
+                                   fuzzer: str,
+                                   benchmark: str,
+                                   trial_id: int,
+                                   experiment_config: dict,
+                                   cpuset=None):
     """Render the startup script using the template and the parameters
     provided and return the result."""
     experiment = experiment_config['experiment']
@@ -719,8 +727,12 @@ def render_startup_script_template(instance_name: str, fuzzer: str,
     return template.render(**kwargs)
 
 
-def create_trial_instance(fuzzer: str, benchmark: str, trial_id: int,
-                          experiment_config: dict, preemptible: bool, cpuset=None) -> bool:
+def create_trial_instance(fuzzer: str,
+                          benchmark: str,
+                          trial_id: int,
+                          experiment_config: dict,
+                          preemptible: bool,
+                          cpuset=None) -> bool:
     """Create or start a trial instance for a specific
     trial_id,fuzzer,benchmark."""
     instance_name = experiment_utils.get_trial_instance_name(
