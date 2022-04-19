@@ -215,18 +215,8 @@ make build-$FUZZER_NAME-$BENCHMARK_NAME
 # This command will fuzz forever. Press Ctrl-C to stop it.
 make run-$FUZZER_NAME-$BENCHMARK_NAME
 ```
-Finally, add your benchmark to the list of OSS-Fuzz benchmarks in
-[test_fuzzer_benchmarks.py](https://github.com/google/fuzzbench/blob/master/.github/workflows/test_fuzzer_benchmarks.py)
-
-This ensures that CI tests your benchmark with all fuzzers.
 
 ## Submitting the benchmark in a pull request
-
-Add your benchmark to a list in
-[build_and_test_run_fuzzer_benchmarks.py](https://github.com/google/fuzzbench/blob/master/.github/workflows/build_and_test_run_fuzzer_benchmarks.py)
-so that it will be tested in CI. If your benchmark is a standard benchmark, add
-it to the `STANDARD_BENCHMARKS` list, otherwise add it to the the
-`OSS_FUZZ_BENCHMARKS` list.
 
 If everything works, submit the integration in a
 [GitHub pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
