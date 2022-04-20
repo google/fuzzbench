@@ -16,7 +16,7 @@
 import os
 
 from fuzzers import utils
-from fuzzers.libfuzzer import fuzzer
+from fuzzers.libfuzzer_dataflow_pre import fuzzer
 
 
 def build():
