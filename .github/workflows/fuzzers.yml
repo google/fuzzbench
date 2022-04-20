@@ -31,6 +31,10 @@ jobs:
           - lafintel
           - klee
           - libfuzzer
+          - libfuzzer_dataflow
+          - libfuzzer_dataflow_load
+          - libfuzzer_dataflow_store
+          - libfuzzer_dataflow_pre
           - mopt
           - neuzz
           - libafl
