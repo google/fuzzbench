@@ -18,3 +18,6 @@ fuzz_target: curl_fuzzer_http
 project: curl
 unsupported_fuzzers:
   - klee
+  - libfuzzer_dataflow
+  - libfuzzer_dataflow_load
+  - libfuzzer_dataflow_store
