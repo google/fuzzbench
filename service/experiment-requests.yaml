@@ -20,6 +20,66 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-04-25-fennecfuzz-bug
+  description: "Test on protected benchmarks"
+  type: bug
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - entropic
+    - fairfuzz
+    - hongfuzz
+    - libfuzzer
+    - mopt
+    - tortoisefuzz
+  benchmarks:
+    - libarchive_libarchive_fuzzer
+    - libarchive_libarchive_fuzzer-antifuzz
+    - libarchive_libarchive_fuzzer-fennecfuzz
+    - mruby-2018-05-23
+    - mruby-2018-05-23-antifuzz
+    - mruby-2018-05-23-fennecfuzz
+    - muparser_set_eval_fuzzer
+    - muparser_set_eval_fuzzer-antifuzz
+    - muparser_set_eval_fuzzer-fennecfuzz
+    - php_php-fuzz-parser-2020-07-25
+    - php_php-fuzz-parser-2020-07-25-antifuzz
+    - php_php-fuzz-parser-2020-07-25-fennecfuzz
+    - wireshark_fuzzshark_ip
+    - wireshark_fuzzshark_ip-antifuzz
+    - wireshark_fuzzshark_ip-fennecfuzz
+
+ experiment: 2022-04-25-fennecfuzz-rerun
+  description: "Test on protected benchmarks"
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - entropic
+    - fairfuzz
+    - hongfuzz
+    - libfuzzer
+    - mopt
+    - tortoisefuzz
+  benchmarks:
+    - lcms-2017-03-21
+    - lcms-2017-03-21-antifuzz 
+    - lcms-2017-03-21-fennecfuzz 
+    - libjpeg-turbo-07-2017
+    - libjpeg-turbo-07-2017-antifuzz 
+    - libjpeg-turbo-07-2017-fennecfuzz 
+    - libpng-1.2.56
+    - libpng-1.2.56-antifuzz 
+    - libpng-1.2.56-fennecfuzz 
+    - libxml2-v2.9.2
+    - libxml2-v2.9.2-antifuzz  
+    - libxml2-v2.9.2-fennecfuzz
+    - re2-2014-12-09
+    - re2-2014-12-09-antifuzz 
+
 - experiment: 2022-04-10-aflpp
   description: "afl++ bug ranking"
   type: bug
