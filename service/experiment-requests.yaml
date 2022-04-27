@@ -30,7 +30,7 @@
     - aflsmart
     - entropic
     - fairfuzz
-    - hongfuzz
+    - honggfuzz
     - libfuzzer
     - mopt
     - tortoisefuzz
@@ -51,7 +51,7 @@
     - wireshark_fuzzshark_ip-antifuzz
     - wireshark_fuzzshark_ip-fennecfuzz
 
- experiment: 2022-04-25-fennecfuzz-rerun
+- experiment: 2022-04-25-fennecfuzz-rerun
   description: "Test on protected benchmarks"
   fuzzers:
     - afl
@@ -60,7 +60,7 @@
     - aflsmart
     - entropic
     - fairfuzz
-    - hongfuzz
+    - honggfuzz
     - libfuzzer
     - mopt
     - tortoisefuzz
