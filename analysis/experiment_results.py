@@ -264,7 +264,7 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
         """Rank fuzzers using average normalized score on unique code coverage
         across benchmarks."""
         benchmarks_unique_coverage_list = [
-            benchmark.unique_region_cov_df for benchmark in self.benchmarks
+            benchmark.unique_branch_cov_df for benchmark in self.benchmarks
         ]
         return coverage_data_utils.rank_by_average_normalized_score(
             benchmarks_unique_coverage_list)

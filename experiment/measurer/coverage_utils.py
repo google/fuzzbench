@@ -72,8 +72,8 @@ def generate_coverage_report(experiment, benchmark, fuzzer):
         # Generate the coverage summary json file based on merged profdata file.
         coverage_reporter.generate_coverage_summary_json()
 
-        # Generate the coverage regions json file.
-        coverage_reporter.generate_coverage_regions_json()
+        # Generate the coverage branches json file.
+        coverage_reporter.generate_coverage_branches_json()
 
         # Generates the html reports using llvm-cov.
         coverage_reporter.generate_coverage_report()
@@ -168,15 +168,15 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         dst_dir = exp_path.filestore(self.report_dir)
         filestore_utils.cp(src_dir, dst_dir, recursive=True, parallel=True)
 
-    def generate_coverage_regions_json(self):
+    def generate_coverage_branches_json(self):
         """Stores the coverage data in a json file."""
-        covered_regions = extract_covered_regions_from_summary_json(
+        covered_branches = extract_covered_branches_from_summary_json(
             self.merged_summary_json_file)
-        coverage_json_src = os.path.join(self.data_dir, 'covered_regions.json')
+        coverage_json_src = os.path.join(self.data_dir, 'covered_branches.json')
         coverage_json_dst = exp_path.filestore(coverage_json_src)
         filesystem.create_directory(self.data_dir)
         with open(coverage_json_src, 'w') as file_handle:
-            json.dump(covered_regions, file_handle)
+            json.dump(covered_branches, file_handle)
         filestore_utils.cp(coverage_json_src,
                            coverage_json_dst,
                            expect_zero=False)
@@ -271,26 +271,31 @@ def generate_json_summary(coverage_binary,
     return result
 
 
-def extract_covered_regions_from_summary_json(summary_json_file):
-    """Returns the covered regions given a coverage summary json file."""
-    covered_regions = []
+def extract_covered_branches_from_summary_json(summary_json_file):
+    """Returns the covered branches given a coverage summary json file."""
+    covered_branches = []
     try:
         coverage_info = get_coverage_infomation(summary_json_file)
         functions_data = coverage_info['data'][0]['functions']
-        # The fourth number in the region-list indicates if the region
-        # is hit.
-        hit_index = 4
-        # The last number in the region-list indicates what type of the
-        # region it is; 'code_region' is used to obtain various code
-        # coverage statistic and is represented by number 0.
+
+        # The fourth and the fifth item tell whether the branch is evaluated to
+        # true or false respectively.
+        # Detail about llvm-cov indexing:
+        # https://github.com/llvm/llvm-project/blob/main/llvm/tools/llvm-cov/CoverageExporterJson.cpp#L93
+        hit_true_index = 4
+        hit_false_index = 5
+        # The last number in the branch-list indicates what type of the
+        # region it is; 'branch_region' is represented by number 4.
         type_index = -1
-        # The number of index 5 represents the file number.
-        file_index = 5
+        # The number of index 6 represents the file number.
+        file_index = 6
         for function_data in functions_data:
-            for region in function_data['regions']:
-                if region[hit_index] != 0 and region[type_index] == 0:
-                    covered_regions.append(region[:hit_index] +
-                                           region[file_index:])
+            for branch in function_data['branches']:
+                if branch[hit_true_index] != 0 or branch[
+                        hit_false_index] != 0 and branch[type_index] == 4:
+                    covered_branches.append(branch[:hit_true_index] +
+                                            branch[file_index:])
+
     except Exception:  # pylint: disable=broad-except
         logger.error('Coverage summary json file defective or missing.')
-    return covered_regions
+    return covered_branches

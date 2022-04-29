@@ -226,7 +226,7 @@ def generate_report(experiment_names,
     coverage_dict = {}
     if coverage_report:
         logger.info('Generating coverage report info.')
-        coverage_dict = coverage_data_utils.get_covered_regions_dict(
+        coverage_dict = coverage_data_utils.get_covered_branches_dict(
             experiment_df)
         logger.info('Finished generating coverage report info.')
 

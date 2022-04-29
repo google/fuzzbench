@@ -438,9 +438,9 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
                 self.cov_summary_file)
             coverage_data = coverage_info["data"][0]
             summary_data = coverage_data["totals"]
-            regions_coverage_data = summary_data['branches']
-            regions_covered = regions_coverage_data["covered"]
-            return regions_covered
+            branches_coverage_data = summary_data['branches']
+            branches_covered = branches_coverage_data["covered"]
+            return branches_covered
         except Exception:  # pylint: disable=broad-except
             self.logger.error(
                 'Coverage summary json file defective or missing.')
@@ -659,11 +659,11 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
     this_time = experiment_utils.get_cycle_time(cycle)
     if snapshot_measurer.is_cycle_unchanged(cycle):
         snapshot_logger.info('Cycle: %d is unchanged.', cycle)
-        regions_covered = snapshot_measurer.get_current_coverage()
+        branches_covered = snapshot_measurer.get_current_coverage()
         fuzzer_stats_data = snapshot_measurer.get_fuzzer_stats(cycle)
         return models.Snapshot(time=this_time,
                                trial_id=trial_num,
-                               edges_covered=regions_covered,
+                               edges_covered=branches_covered,
                                fuzzer_stats=fuzzer_stats_data,
                                crashes=[])
 
@@ -697,11 +697,11 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
     crashes = snapshot_measurer.process_crashes(cycle)
 
     # Get the coverage of the new corpus units.
-    regions_covered = snapshot_measurer.get_current_coverage()
+    branches_covered = snapshot_measurer.get_current_coverage()
     fuzzer_stats_data = snapshot_measurer.get_fuzzer_stats(cycle)
     snapshot = models.Snapshot(time=this_time,
                                trial_id=trial_num,
-                               edges_covered=regions_covered,
+                               edges_covered=branches_covered,
                                fuzzer_stats=fuzzer_stats_data,
                                crashes=crashes)
 

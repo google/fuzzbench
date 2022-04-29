@@ -63,8 +63,8 @@ def test_get_current_coverage(fs, experiment):
     json_cov_summary_file = get_test_data_path('cov_summary.json')
     fs.add_real_file(json_cov_summary_file, read_only=False)
     snapshot_measurer.cov_summary_file = json_cov_summary_file
-    covered_regions = snapshot_measurer.get_current_coverage()
-    assert covered_regions == 7
+    covered_branches = snapshot_measurer.get_current_coverage()
+    assert covered_branches == 7
 
 
 def test_get_current_coverage_error(fs, experiment):
@@ -75,8 +75,8 @@ def test_get_current_coverage_error(fs, experiment):
     json_cov_summary_file = get_test_data_path('cov_summary_defective.json')
     fs.add_real_file(json_cov_summary_file, read_only=False)
     snapshot_measurer.cov_summary_file = json_cov_summary_file
-    covered_regions = snapshot_measurer.get_current_coverage()
-    assert not covered_regions
+    covered_branches = snapshot_measurer.get_current_coverage()
+    assert not covered_branches
 
 
 def test_get_current_coverage_no_file(fs, experiment):
@@ -85,8 +85,8 @@ def test_get_current_coverage_no_file(fs, experiment):
         FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER)
     json_cov_summary_file = get_test_data_path('cov_summary_not_exist.json')
     snapshot_measurer.cov_summary_file = json_cov_summary_file
-    covered_regions = snapshot_measurer.get_current_coverage()
-    assert not covered_regions
+    covered_branches = snapshot_measurer.get_current_coverage()
+    assert not covered_branches
 
 
 @mock.patch('common.new_process.execute')
