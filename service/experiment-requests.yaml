@@ -20,6 +20,52 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-04-19
+  description: "Main coverage experiment"
+  type: code
+  fuzzers:
+    - honggfuzz
+    - aflplusplus
+    - eclipser
+    - entropic
+    - libfuzzer
+    - aflsmart
+    - lafintel
+    - afl
+    - mopt
+    - aflfast
+    - fairfuzz
+
+
+- experiment: 2022-04-19-bug
+  description: "Main bug experiment"
+  type: bug
+  fuzzers:
+    - honggfuzz
+    - aflplusplus
+    - eclipser
+    - entropic
+    - libfuzzer
+    - aflsmart
+    - lafintel
+    - afl
+    - mopt
+    - aflfast
+    - fairfuzz
+
+
+- experiment: 2022-04-10-aflpp
+  description: "afl++ bug ranking"
+  type: bug
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_qemu
+    - aflplusplus_frida
+    - aflplusplus_optimal
+    - honggfuzz
+    - libafl
+    - entropic
+
 - experiment: 2022-04-11-libafl
   description: "libafl new test"
   fuzzers:
@@ -60,7 +106,7 @@
 
 - experiment: 2022-02-25-libfuzzer-variants
   description: "Requesting experiment on variants of libfuzzer."
-  fuzzers:    
+  fuzzers:
     - libfuzzer
     - entropic
     - libfuzzer_exeute_final
@@ -85,7 +131,7 @@
     - quickjs_eval-2020-01-05
     - php_php-fuzz-execute
     - mruby-2018-05-23
- 
+
 - experiment: 2022-02-18-aflpp
   description: "afl++ frida tests"
   fuzzers:
@@ -556,8 +602,8 @@
     - cfctx_params_llc
     - cfctx_params_512kb
     - cfctx_params_768kb
-    
-    
+
+
 - experiment: 2021-09-02-datadependency
   description: "Different AFL instrumentations against afldd"
   type: bug
@@ -677,7 +723,7 @@
     - aflplusplus_frida
     - aflplusplus_frida_better
     - aflplusplus_qemu
-    
+
 - experiment: 2021-07-15-saturated
   description: "Benchmark a new experimental feature for AFL++ (saturated)"
   type: bug
@@ -685,7 +731,7 @@
   fuzzers:
     - aflplusplus_unusual_disabled
     - aflplusplus_unusual_enabled
-    
+
 - experiment: 2021-07-09-cloning
   description: >
     Benchmark some variants of AFL++ that use different function cloning
@@ -837,7 +883,7 @@
     - honggfuzz
     - lafintel
     - libfuzzer
-    - mopt    
+    - mopt
 
 - experiment: 2021-06-12-aflpp
   description: "Benchmark AFL++ regressions"
@@ -902,7 +948,7 @@
 
 - experiment: 2021-06-02-symccafl-pp
   description: >
-               Symcc experiment. The difference between this and 
+               Symcc experiment. The difference between this and
                2021-06-01-symccafl is that we now have a version of
                symcc in combination with aflplusplus. Some bug fixing in
                symcc has happened, which makes it less prone to crashing.
@@ -931,13 +977,13 @@
     - honggfuzz
     - lafintel
     - libfuzzer
-    - mopt    
+    - mopt
 
 - experiment: 2021-06-01-symccafl
   description: >
-               Symcc-AFL test. The difference between this and 
+               Symcc-AFL test. The difference between this and
                2021-05-29-symccafl is that we now have afl benchmarks
-               that run multiple instances of afl. This is for 
+               that run multiple instances of afl. This is for
                comparison purposes since symcc also utilises mutliple
                processes. The goal is to try and avoid any bias due
                to more total CPU time.
@@ -955,7 +1001,7 @@
     - honggfuzz
     - lafintel
     - libfuzzer
-    - mopt    
+    - mopt
 - experiment: 2021-06-02
   description: "Experiment to compare afl with honggfuzz and libfuzzer"
   fuzzers:
@@ -979,7 +1025,7 @@
     - honggfuzz
     - lafintel
     - libfuzzer
-    - mopt    
+    - mopt
 
 - experiment: 2021-05-25-symccafl
   description: "Symcc-AFL first test"
@@ -995,7 +1041,7 @@
     - honggfuzz
     - lafintel
     - libfuzzer
-    - mopt    
+    - mopt
 
 - experiment: 2021-05-25-cloning
   description: >
@@ -1047,7 +1093,7 @@
     - aflplusplus_qemu_inmem
 
 - experiment: 2021-04-22-bwhua
-  fuzzers:  
+  fuzzers:
     - aflplusplus
     - entropic
     - fairfuzz
@@ -1648,7 +1694,7 @@
   fuzzers:
     - aflplusplus_268c_qemu
     - aflplusplus_qemu
-    
+
 - experiment: 2020-12-03
   description: "AFL++ some fast variants"
   fuzzers:
@@ -1847,7 +1893,7 @@
     - afl_fast_v2
     - afl_fast_v2_exp
     - afl_fast_branches_v2
-     
+
 - experiment: 2020-10-21
   description: "further memcache tests with fixed random"
   fuzzers:
@@ -1889,10 +1935,10 @@
     - aflplusplus_memcache_200mb
 
 - experiment: 2020-10-17
-  description: > 
+  description: >
     Evaluating several AFL schedules. There are two edge-count-based boosting
     schedules (afl_branches_u8, afl_branches_16). For each edge, AFL already
-    maintains favourite seeds (the fastest and smallest seed). We choose 
+    maintains favourite seeds (the fastest and smallest seed). We choose
     identify rarely executed edges and mark those favourites as 'champions',
     and skip most non-champions as long as some champions exist. There are two
     FAST schedules that also consider the number of times a seed is fuzzed
@@ -1902,7 +1948,7 @@
     23 hours. There are five baselines (afl, afl_shuffled, afl_nofast,
     afl_fast, and afl_coe) where afl_shuffled starts with a shuffled queue,
     and afl_nofast uses xxh3 for hashing.
- 
+
   fuzzers:
     - afl
     - afl_coe
