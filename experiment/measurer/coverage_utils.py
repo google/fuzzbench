@@ -280,8 +280,6 @@ def extract_covered_branches_from_summary_json(summary_json_file):
 
         # The fourth and the fifth item tell whether the branch is evaluated to
         # true or false respectively.
-        # Detail about llvm-cov indexing:
-        # https://github.com/llvm/llvm-project/blob/main/llvm/tools/llvm-cov/CoverageExporterJson.cpp#L93
         hit_true_index = 4
         hit_false_index = 5
         # The last number in the branch-list indicates what type of the
