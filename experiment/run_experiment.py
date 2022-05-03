@@ -187,10 +187,7 @@ def validate_and_pack_custom_seed_corpus(custom_seed_corpus_dir, benchmarks):
                                                      f'{benchmark}.zip')
         with zipfile.ZipFile(benchmark_corpus_archive_path, 'w') as archive:
             for filename in valid_corpus_files:
-                dir_name = os.path.dirname(filename)
-                archive.write(
-                    filename,
-                    os.path.relpath(filename, os.path.join(dir_name, '..')))
+                archive.write(filename, os.path.basename(filename))
 
 
 def validate_benchmarks(benchmarks: List[str]):
