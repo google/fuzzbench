@@ -66,7 +66,6 @@ _OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT = (
     'libFuzzer/{fuzz_target}/public.zip')
 
 
-
 def read_and_validate_experiment_config(config_filename: str) -> Dict:
     """Reads |config_filename|, validates it, finds as many errors as possible,
     and returns it."""
@@ -261,7 +260,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
         allow_uncommitted_changes=False,
         concurrent_builds=None,
         measurers_cpus=None,
-        runners_cpus=None,        
+        runners_cpus=None,
         custom_seed_corpus_dir=None):
     """Start a fuzzer benchmarking experiment."""
     if not allow_uncommitted_changes:
@@ -667,7 +666,7 @@ def main():
                      allow_uncommitted_changes=args.allow_uncommitted_changes,
                      concurrent_builds=concurrent_builds,
                      measurers_cpus=measurers_cpus,
-                     runners_cpus=runners_cpus,                     
+                     runners_cpus=runners_cpus,
                      custom_seed_corpus_dir=args.custom_seed_corpus_dir)
     return 0
 
