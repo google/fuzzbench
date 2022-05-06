@@ -33,8 +33,6 @@ def prepare_build_environment():
     os.environ['FUZZER_LIB'] = '/libAFL.a'
 
 
-
-
 def build():
     """Build benchmark."""
     prepare_build_environment()
