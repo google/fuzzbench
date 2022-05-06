@@ -20,6 +20,24 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-05-06-dissecting
+  description: "Dissecting AFL paper"
+  type: bug
+  fuzzers:
+    - afl
+    - afl_no_favored
+    - afl_collision_free
+    - afl_double_timeout
+    - afl_no_favfactor
+    - afl_no_trim
+    - afl_scheduling_lifo
+    - afl_scheduling_random
+    - afl_score_max
+    - afl_score_min
+    - afl_score_no_novel_prioritization
+    - afl_score_random
+    - afl_splicing_mutation
+
 - experiment: 2022-04-19
   description: "Main coverage experiment"
   type: code

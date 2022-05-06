@@ -65,14 +65,12 @@ jobs:
           - token_level
           - grimoire
           # Temporary variants.
-          - libafl_new
           - aflplusplus_dict2file
           - afl_2_52_b
           - aflplusplus_cmplog
           - aflplusplus_311
           - aflplusplus_314
           - afl_two_instances
-          - afl_no_favored
           - afl_random_favored
           - aflpp_random_default
           - aflpp_random_no_favs
@@ -85,6 +83,18 @@ jobs:
           - aflplusplus_llvm15
           - entropic_execute_final
           - libfuzzer_exeute_final
+          - afl_no_favored
+          - afl_collision_free
+          - afl_double_timeout
+          - afl_no_favfactor
+          - afl_no_trim
+          - afl_scheduling_lifo
+          - afl_scheduling_random
+          - afl_score_max
+          - afl_score_min
+          - afl_score_no_novel_prioritization
+          - afl_score_random
+          - afl_splicing_mutation
 
         benchmark_type:
           - oss-fuzz
