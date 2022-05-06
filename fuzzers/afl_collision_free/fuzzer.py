@@ -33,6 +33,8 @@ def prepare_build_environment():
     os.environ['FUZZER_LIB'] = '/libAFL.a'
 
 
+
+
 def build():
     """Build benchmark."""
     prepare_build_environment()
@@ -76,8 +78,8 @@ def prepare_fuzz_environment(input_corpus):
     os.environ['AFL_SKIP_CRASHES'] = '1'
     # Shuffle the queue
     os.environ['AFL_SHUFFLE_QUEUE'] = '1'
-    # Disables AFL corpus culling
-    os.environ['AFL_NO_FAVORED'] = '1'
+    # Sets AFL to avoid collisions
+    os.environ['AFL_COLLISION_FREE'] = '1'
 
     # AFL needs at least one non-empty seed to start.
     utils.create_seed_file_for_empty_corpus(input_corpus)
