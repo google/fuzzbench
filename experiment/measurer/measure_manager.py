@@ -436,10 +436,10 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         try:
             coverage_info = coverage_utils.get_coverage_infomation(
                 self.cov_summary_file)
-            coverage_data = coverage_info["data"][0]
-            summary_data = coverage_data["totals"]
+            coverage_data = coverage_info['data'][0]
+            summary_data = coverage_data['totals']
             branches_coverage_data = summary_data['branches']
-            branches_covered = branches_coverage_data["covered"]
+            branches_covered = branches_coverage_data['covered']
             return branches_covered
         except Exception:  # pylint: disable=broad-except
             self.logger.error(

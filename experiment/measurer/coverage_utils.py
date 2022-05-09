@@ -285,12 +285,13 @@ def extract_covered_branches_from_summary_json(summary_json_file):
         # The last number in the branch-list indicates what type of the
         # region it is; 'branch_region' is represented by number 4.
         type_index = -1
+        branch_region_type = 4
         # The number of index 6 represents the file number.
         file_index = 6
         for function_data in functions_data:
             for branch in function_data['branches']:
                 if branch[hit_true_index] != 0 or branch[
-                        hit_false_index] != 0 and branch[type_index] == 4:
+                        hit_false_index] != 0 and branch[type_index] == branch_region_type:
                     covered_branches.append(branch[:hit_true_index] +
                                             branch[file_index:])
 
