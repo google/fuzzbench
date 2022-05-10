@@ -150,6 +150,20 @@ def get_directories(parent_dir):
     ]
 
 
+def get_custom_corpus_valid_files(benchmark_corpus_dir: str):
+    """Walk through custom corpus and skip invalid files"""
+    valid_corpus_files = set()
+    for root, _, files in os.walk(benchmark_corpus_dir):
+        for filename in files:
+            file_path = os.path.join(root, filename)
+            file_size = os.path.getsize(file_path)
+
+            if file_size == 0 or file_size > runner.CORPUS_ELEMENT_BYTES_LIMIT:
+                continue
+            valid_corpus_files.add(file_path)
+    return valid_corpus_files
+
+
 # pylint: disable=too-many-locals
 def validate_and_pack_custom_seed_corpus(custom_seed_corpus_dir, benchmarks):
     """Validate and archive seed corpus provided by user"""
@@ -168,17 +182,7 @@ def validate_and_pack_custom_seed_corpus(custom_seed_corpus_dir, benchmarks):
         if not os.listdir(benchmark_corpus_dir):
             raise ValidationError('Seed corpus of benchmark "%s" is empty.' %
                                   benchmark)
-
-        valid_corpus_files = set()
-        for root, _, files in os.walk(benchmark_corpus_dir):
-            for filename in files:
-                file_path = os.path.join(root, filename)
-                file_size = os.path.getsize(file_path)
-
-                if file_size == 0 or file_size > runner.CORPUS_ELEMENT_BYTES_LIMIT:
-                    continue
-                valid_corpus_files.add(file_path)
-
+        valid_corpus_files = get_custom_corpus_valid_files(benchmark_corpus_dir)
         if not valid_corpus_files:
             raise ValidationError('No valid corpus files for "%s"' % benchmark)
 
