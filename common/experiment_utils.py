@@ -72,6 +72,12 @@ def get_oss_fuzz_corpora_filestore_path():
     return posixpath.join(get_experiment_filestore_path(), 'oss_fuzz_corpora')
 
 
+def get_custom_seed_corpora_filestore_path():
+    """Returns path containing the user-provided seed corpora."""
+    return posixpath.join(get_experiment_filestore_path(),
+                          'custom_seed_corpora')
+
+
 def get_dispatcher_instance_name(experiment: str) -> str:
     """Returns a dispatcher instance name for an experiment."""
     return 'd-%s' % experiment

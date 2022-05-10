@@ -22,6 +22,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import zipfile
 from typing import Dict, List
 
 import jinja2
@@ -38,6 +39,7 @@ from common import logs
 from common import new_process
 from common import utils
 from common import yaml_utils
+from experiment import runner
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
@@ -148,6 +150,45 @@ def get_directories(parent_dir):
     ]
 
 
+# pylint: disable=too-many-locals
+def validate_and_pack_custom_seed_corpus(custom_seed_corpus_dir, benchmarks):
+    """Validate and archive seed corpus provided by user"""
+    if not os.path.isdir(custom_seed_corpus_dir):
+        raise ValidationError('Corpus location "%s" is invalid.' %
+                              custom_seed_corpus_dir)
+
+    for benchmark in benchmarks:
+        benchmark_corpus_dir = os.path.join(custom_seed_corpus_dir, benchmark)
+        if not os.path.exists(benchmark_corpus_dir):
+            raise ValidationError('Custom seed corpus directory for '
+                                  'benchmark "%s" does not exist.' % benchmark)
+        if not os.path.isdir(benchmark_corpus_dir):
+            raise ValidationError('Seed corpus of benchmark "%s" must be '
+                                  'a directory.' % benchmark)
+        if not os.listdir(benchmark_corpus_dir):
+            raise ValidationError('Seed corpus of benchmark "%s" is empty.' %
+                                  benchmark)
+
+        valid_corpus_files = set()
+        for root, _, files in os.walk(benchmark_corpus_dir):
+            for filename in files:
+                file_path = os.path.join(root, filename)
+                file_size = os.path.getsize(file_path)
+
+                if file_size == 0 or file_size > runner.CORPUS_ELEMENT_BYTES_LIMIT:
+                    continue
+                valid_corpus_files.add(file_path)
+
+        if not valid_corpus_files:
+            raise ValidationError('No valid corpus files for "%s"' % benchmark)
+
+        benchmark_corpus_archive_path = os.path.join(custom_seed_corpus_dir,
+                                                     f'{benchmark}.zip')
+        with zipfile.ZipFile(benchmark_corpus_archive_path, 'w') as archive:
+            for filename in valid_corpus_files:
+                archive.write(filename, os.path.basename(filename))
+
+
 def validate_benchmarks(benchmarks: List[str]):
     """Parses and validates list of benchmarks."""
     benchmark_types = set()
@@ -219,7 +260,8 @@ def start_experiment(  # pylint: disable=too-many-arguments
         allow_uncommitted_changes=False,
         concurrent_builds=None,
         measurers_cpus=None,
-        runners_cpus=None):
+        runners_cpus=None,
+        custom_seed_corpus_dir=None):
     """Start a fuzzer benchmarking experiment."""
     if not allow_uncommitted_changes:
         check_no_uncommitted_changes()
@@ -248,6 +290,12 @@ def start_experiment(  # pylint: disable=too-many-arguments
     # 12GB is just the amount that KLEE needs, use this default to make KLEE
     # experiments easier to run.
     config['runner_memory'] = config.get('runner_memory', '12GB')
+
+    config['custom_seed_corpus_dir'] = custom_seed_corpus_dir
+    if config['custom_seed_corpus_dir']:
+        validate_and_pack_custom_seed_corpus(config['custom_seed_corpus_dir'],
+                                             benchmarks)
+
     return start_experiment_from_full_config(config)
 
 
@@ -329,6 +377,16 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
             experiment_utils.get_oss_fuzz_corpora_filestore_path())
         for benchmark in config['benchmarks']:
             add_oss_fuzz_corpus(benchmark, oss_fuzz_corpora_dir)
+
+    if config['custom_seed_corpus_dir']:
+        for benchmark in config['benchmarks']:
+            benchmark_corpus_archive_path = os.path.join(
+                config['custom_seed_corpus_dir'], f'{benchmark}.zip')
+            filestore_utils.cp(
+                benchmark_corpus_archive_path,
+                experiment_utils.get_custom_seed_corpora_filestore_path() + '/',
+                recursive=True,
+                parallel=True)
 
 
 class BaseDispatcher:
@@ -522,6 +580,10 @@ def main():
                         '--runners-cpus',
                         help='Cpus available to the runners.',
                         required=False)
+    parser.add_argument('-cs',
+                        '--custom-seed-corpus-dir',
+                        help='Path to the custom seed corpus',
+                        required=False)
 
     all_fuzzers = fuzzer_utils.get_fuzzer_names()
     parser.add_argument('-f',
@@ -585,6 +647,14 @@ def main():
         parser.error('The sum of runners and measurers cpus is greater than the'
                      ' available cpu cores (%d)' % os.cpu_count())
 
+    if args.custom_seed_corpus_dir:
+        if args.no_seeds:
+            parser.error('Cannot enable options "custom_seed_corpus_dir" and '
+                         '"no_seeds" at the same time')
+        if args.oss_fuzz_corpus:
+            parser.error('Cannot enable options "custom_seed_corpus_dir" and '
+                         '"oss_fuzz_corpus" at the same time')
+
     start_experiment(args.experiment_name,
                      args.experiment_config,
                      args.benchmarks,
@@ -596,7 +666,8 @@ def main():
                      allow_uncommitted_changes=args.allow_uncommitted_changes,
                      concurrent_builds=concurrent_builds,
                      measurers_cpus=measurers_cpus,
-                     runners_cpus=runners_cpus)
+                     runners_cpus=runners_cpus,
+                     custom_seed_corpus_dir=args.custom_seed_corpus_dir)
     return 0
 
 
