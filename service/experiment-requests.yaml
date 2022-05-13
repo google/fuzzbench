@@ -34,7 +34,6 @@
 
 - experiment: 2022-05-13-afl
   description: "afl map tests"
-  type: bug
   fuzzers:
     - afl_virginmap
     - afl_maxmap
