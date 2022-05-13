@@ -15,19 +15,17 @@
 ARG parent_image
 FROM $parent_image
 
-RUN apt-get update && \
-    apt-get install -y wget libstdc++-5-dev libexpat1-dev \
-                       apt-utils apt-transport-https ca-certificates
-
-# Download afl++
-RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && \
-    git checkout 2a4d77abc69942f3bf102befb50501cf5fc0ea0b
-    
-# Build without Python support as we don't need it.
+# Download and compile AFL v2.57b.
 # Set AFL_NO_X86 to skip flaky tests.
-RUN cd /afl && unset CFLAGS && unset CXXFLAGS && export AFL_NO_X86=1 && \
-    CC=clang PYTHON_INCLUDE=/ make && make install && \
-    make -C utils/aflpp_driver && \
-    cp utils/aflpp_driver/libAFLDriver.a / && \
-    cp -va `llvm-config --libdir`/libc++* /afl/
+RUN git clone https://github.com/vanhauser-thc/AFL.git /afl && \
+    cd /afl && \
+    git checkout virgin && \
+    AFL_NO_X86=1 make
+
+# Use afl_driver.cpp from LLVM as our fuzzing library.
+RUN apt-get update && \
+    apt-get install wget -y && \
+    wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
+    clang -Wno-pointer-sign -c /afl/llvm_mode/afl-llvm-rt.o.c -I/afl && \
+    clang++ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp && \
+    ar r /libAFL.a *.o

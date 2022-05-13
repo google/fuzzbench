@@ -20,6 +20,26 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-05-13-aflpp
+  description: "afl++ bug ranking"
+  type: bug
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_qemu
+    - aflplusplus_frida
+    - aflplusplus_optimal
+    - honggfuzz
+    - libafl
+    - entropic
+
+- experiment: 2022-05-13-afl
+  description: "afl map tests"
+  type: bug
+  fuzzers:
+    - afl_virginmap
+    - afl_maxmap
+    - afl
+
 - experiment: 2022-05-06-dissecting
   description: "Dissecting AFL paper"
   type: bug
@@ -53,7 +73,6 @@
     - mopt
     - aflfast
     - fairfuzz
-
 
 - experiment: 2022-04-19-bug
   description: "Main bug experiment"
