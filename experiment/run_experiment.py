@@ -150,23 +150,9 @@ def get_directories(parent_dir):
     ]
 
 
-def get_custom_corpus_valid_files(benchmark_corpus_dir: str):
-    """Walk through custom corpus and skip invalid files"""
-    valid_corpus_files = set()
-    for root, _, files in os.walk(benchmark_corpus_dir):
-        for filename in files:
-            file_path = os.path.join(root, filename)
-            file_size = os.path.getsize(file_path)
-
-            if file_size == 0 or file_size > runner.CORPUS_ELEMENT_BYTES_LIMIT:
-                continue
-            valid_corpus_files.add(file_path)
-    return valid_corpus_files
-
-
 # pylint: disable=too-many-locals
-def validate_and_pack_custom_seed_corpus(custom_seed_corpus_dir, benchmarks):
-    """Validate and archive seed corpus provided by user"""
+def validate_custom_seed_corpus(custom_seed_corpus_dir, benchmarks):
+    """Validate seed corpus provided by user"""
     if not os.path.isdir(custom_seed_corpus_dir):
         raise ValidationError('Corpus location "%s" is invalid.' %
                               custom_seed_corpus_dir)
@@ -182,15 +168,6 @@ def validate_and_pack_custom_seed_corpus(custom_seed_corpus_dir, benchmarks):
         if not os.listdir(benchmark_corpus_dir):
             raise ValidationError('Seed corpus of benchmark "%s" is empty.' %
                                   benchmark)
-        valid_corpus_files = get_custom_corpus_valid_files(benchmark_corpus_dir)
-        if not valid_corpus_files:
-            raise ValidationError('No valid corpus files for "%s"' % benchmark)
-
-        benchmark_corpus_archive_path = os.path.join(custom_seed_corpus_dir,
-                                                     f'{benchmark}.zip')
-        with zipfile.ZipFile(benchmark_corpus_archive_path, 'w') as archive:
-            for filename in valid_corpus_files:
-                archive.write(filename, os.path.basename(filename))
 
 
 def validate_benchmarks(benchmarks: List[str]):
@@ -297,8 +274,8 @@ def start_experiment(  # pylint: disable=too-many-arguments
 
     config['custom_seed_corpus_dir'] = custom_seed_corpus_dir
     if config['custom_seed_corpus_dir']:
-        validate_and_pack_custom_seed_corpus(config['custom_seed_corpus_dir'],
-                                             benchmarks)
+        validate_custom_seed_corpus(config['custom_seed_corpus_dir'],
+                                    benchmarks)
 
     return start_experiment_from_full_config(config)
 
@@ -384,10 +361,10 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
 
     if config['custom_seed_corpus_dir']:
         for benchmark in config['benchmarks']:
-            benchmark_corpus_archive_path = os.path.join(
-                config['custom_seed_corpus_dir'], f'{benchmark}.zip')
+            benchmark_custom_corpus_dir = os.path.join(
+                config['custom_seed_corpus_dir'], benchmark)
             filestore_utils.cp(
-                benchmark_corpus_archive_path,
+                benchmark_custom_corpus_dir,
                 experiment_utils.get_custom_seed_corpora_filestore_path() + '/',
                 recursive=True,
                 parallel=True)
