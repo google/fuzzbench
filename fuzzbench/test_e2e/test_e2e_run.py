@@ -45,6 +45,7 @@ def redis_connection():
 class TestEndToEndRunResults:
     """Checks the result of a test experiment run."""
 
+    # pylint: disable=redefined-outer-name
     def test_jobs_dependency(self, experiment_config, redis_connection):
         """Tests that jobs dependency preserves during working."""
         all_images = docker_images.get_images_to_build(

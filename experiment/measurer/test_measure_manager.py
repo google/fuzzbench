@@ -301,12 +301,7 @@ def test_run_cov_new_units(_, mocked_execute, fs, environ):
     snapshot_measurer = measure_manager.SnapshotMeasurer(
         FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER)
     snapshot_measurer.initialize_measurement_dirs()
-    shared_units = ['shared1', 'shared2']
-    fs.create_file(snapshot_measurer.measured_files_path,
-                   contents='\n'.join(shared_units))
-    for unit in shared_units:
-        fs.create_file(os.path.join(snapshot_measurer.corpus_dir, unit))
-
+    # TODO(metzman): Test that already measured files are not remeasured.
     new_units = ['new1', 'new2']
     for unit in new_units:
         fs.create_file(os.path.join(snapshot_measurer.corpus_dir, unit))
@@ -422,20 +417,6 @@ class TestIntegrationMeasurement:
         assert snapshot
         assert snapshot.time == cycle * experiment_utils.get_snapshot_seconds()
         assert snapshot.edges_covered == 13178
-
-
-@pytest.mark.parametrize('archive_name',
-                         ['libfuzzer-corpus.tgz', 'afl-corpus.tgz'])
-def test_extract_corpus(archive_name, tmp_path):
-    """"Tests that extract_corpus unpacks a corpus as we expect."""
-    archive_path = get_test_data_path(archive_name)
-    measure_manager.extract_corpus(archive_path, set(), tmp_path)
-    expected_corpus_files = {
-        '5ea57dfc9631f35beecb5016c4f1366eb6faa810',
-        '2f1507c3229c5a1f8b619a542a8e03ccdbb3c29c',
-        'b6ccc20641188445fa30c8485a826a69ac4c6b60'
-    }
-    assert expected_corpus_files.issubset(set(os.listdir(tmp_path)))
 
 
 @mock.patch('time.sleep', return_value=None)
