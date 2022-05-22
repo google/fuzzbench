@@ -121,11 +121,9 @@ def _copy_custom_seed_corpus(corpus_directory):
     benchmark = environment.get('BENCHMARK')
     benchmark_custom_corpus_dir = posixpath.join(
         experiment_utils.get_custom_seed_corpora_filestore_path(), benchmark)
-    idx = 0
     filestore_utils.cp(benchmark_custom_corpus_dir,
                        corpus_directory,
                        recursive=True)
-    logs.info('Unarchived %d files from custom seed corpus.', idx)
 
 
 def _unpack_clusterfuzz_seed_corpus(fuzz_target_path, corpus_directory):

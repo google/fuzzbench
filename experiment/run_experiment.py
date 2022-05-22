@@ -22,7 +22,6 @@ import subprocess
 import sys
 import tarfile
 import tempfile
-import zipfile
 from typing import Dict, List
 
 import jinja2
@@ -39,7 +38,6 @@ from common import logs
 from common import new_process
 from common import utils
 from common import yaml_utils
-from experiment import runner
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
