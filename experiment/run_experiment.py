@@ -148,6 +148,26 @@ def get_directories(parent_dir):
     ]
 
 
+# pylint: disable=too-many-locals
+def validate_custom_seed_corpus(custom_seed_corpus_dir, benchmarks):
+    """Validate seed corpus provided by user"""
+    if not os.path.isdir(custom_seed_corpus_dir):
+        raise ValidationError('Corpus location "%s" is invalid.' %
+                              custom_seed_corpus_dir)
+
+    for benchmark in benchmarks:
+        benchmark_corpus_dir = os.path.join(custom_seed_corpus_dir, benchmark)
+        if not os.path.exists(benchmark_corpus_dir):
+            raise ValidationError('Custom seed corpus directory for '
+                                  'benchmark "%s" does not exist.' % benchmark)
+        if not os.path.isdir(benchmark_corpus_dir):
+            raise ValidationError('Seed corpus of benchmark "%s" must be '
+                                  'a directory.' % benchmark)
+        if not os.listdir(benchmark_corpus_dir):
+            raise ValidationError('Seed corpus of benchmark "%s" is empty.' %
+                                  benchmark)
+
+
 def validate_benchmarks(benchmarks: List[str]):
     """Parses and validates list of benchmarks."""
     benchmark_types = set()
@@ -219,7 +239,8 @@ def start_experiment(  # pylint: disable=too-many-arguments
         allow_uncommitted_changes=False,
         concurrent_builds=None,
         measurers_cpus=None,
-        runners_cpus=None):
+        runners_cpus=None,
+        custom_seed_corpus_dir=None):
     """Start a fuzzer benchmarking experiment."""
     if not allow_uncommitted_changes:
         check_no_uncommitted_changes()
@@ -248,6 +269,12 @@ def start_experiment(  # pylint: disable=too-many-arguments
     # 12GB is just the amount that KLEE needs, use this default to make KLEE
     # experiments easier to run.
     config['runner_memory'] = config.get('runner_memory', '12GB')
+
+    config['custom_seed_corpus_dir'] = custom_seed_corpus_dir
+    if config['custom_seed_corpus_dir']:
+        validate_custom_seed_corpus(config['custom_seed_corpus_dir'],
+                                    benchmarks)
+
     return start_experiment_from_full_config(config)
 
 
@@ -329,6 +356,16 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
             experiment_utils.get_oss_fuzz_corpora_filestore_path())
         for benchmark in config['benchmarks']:
             add_oss_fuzz_corpus(benchmark, oss_fuzz_corpora_dir)
+
+    if config['custom_seed_corpus_dir']:
+        for benchmark in config['benchmarks']:
+            benchmark_custom_corpus_dir = os.path.join(
+                config['custom_seed_corpus_dir'], benchmark)
+            filestore_utils.cp(
+                benchmark_custom_corpus_dir,
+                experiment_utils.get_custom_seed_corpora_filestore_path() + '/',
+                recursive=True,
+                parallel=True)
 
 
 class BaseDispatcher:
@@ -522,6 +559,10 @@ def main():
                         '--runners-cpus',
                         help='Cpus available to the runners.',
                         required=False)
+    parser.add_argument('-cs',
+                        '--custom-seed-corpus-dir',
+                        help='Path to the custom seed corpus',
+                        required=False)
 
     all_fuzzers = fuzzer_utils.get_fuzzer_names()
     parser.add_argument('-f',
@@ -585,6 +626,14 @@ def main():
         parser.error('The sum of runners and measurers cpus is greater than the'
                      ' available cpu cores (%d)' % os.cpu_count())
 
+    if args.custom_seed_corpus_dir:
+        if args.no_seeds:
+            parser.error('Cannot enable options "custom_seed_corpus_dir" and '
+                         '"no_seeds" at the same time')
+        if args.oss_fuzz_corpus:
+            parser.error('Cannot enable options "custom_seed_corpus_dir" and '
+                         '"oss_fuzz_corpus" at the same time')
+
     start_experiment(args.experiment_name,
                      args.experiment_config,
                      args.benchmarks,
@@ -596,7 +645,8 @@ def main():
                      allow_uncommitted_changes=args.allow_uncommitted_changes,
                      concurrent_builds=concurrent_builds,
                      measurers_cpus=measurers_cpus,
-                     runners_cpus=runners_cpus)
+                     runners_cpus=runners_cpus,
+                     custom_seed_corpus_dir=args.custom_seed_corpus_dir)
     return 0
 
 
