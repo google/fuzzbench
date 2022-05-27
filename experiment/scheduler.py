@@ -628,7 +628,7 @@ def start_trials(trials, experiment_config: dict, pool, cores=None):
     for index, trial in enumerate(shuffled_trials):
         start_trial_args += [
             (TrialProxy(trial), experiment_config,
-            cores[index % len(cores)] if cores is not None else None)
+             cores[index % len(cores)] if cores is not None else None)
         ]
 
     started_trial_proxies = pool.starmap(_start_trial, start_trial_args)
@@ -685,6 +685,7 @@ def _start_trial(trial: TrialProxy, experiment_config: dict, cpuset=None):
     return None
 
 
+# pylint: disable=too-many-arguments
 def render_startup_script_template(instance_name: str,
                                    fuzzer: str,
                                    benchmark: str,
@@ -727,6 +728,7 @@ def render_startup_script_template(instance_name: str,
     return template.render(**kwargs)
 
 
+# pylint: disable=too-many-arguments
 def create_trial_instance(fuzzer: str,
                           benchmark: str,
                           trial_id: int,

@@ -219,7 +219,8 @@ def start_experiment(  # pylint: disable=too-many-arguments
         allow_uncommitted_changes=False,
         concurrent_builds=None,
         measurers_cpus=None,
-        runners_cpus=None):
+        runners_cpus=None,
+        region_coverage=False):
     """Start a fuzzer benchmarking experiment."""
     if not allow_uncommitted_changes:
         check_no_uncommitted_changes()
@@ -248,6 +249,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
     # 12GB is just the amount that KLEE needs, use this default to make KLEE
     # experiments easier to run.
     config['runner_memory'] = config.get('runner_memory', '12GB')
+    config['region_coverage'] = region_coverage
     return start_experiment_from_full_config(config)
 
 
@@ -549,6 +551,12 @@ def main():
                         required=False,
                         default=False,
                         action='store_true')
+    parser.add_argument('-cr',
+                        '--region-coverage',
+                        help='Use region as coverage metric.',
+                        required=False,
+                        default=False,
+                        action='store_true')
     parser.add_argument(
         '-o',
         '--oss-fuzz-corpus',
@@ -596,7 +604,8 @@ def main():
                      allow_uncommitted_changes=args.allow_uncommitted_changes,
                      concurrent_builds=concurrent_builds,
                      measurers_cpus=measurers_cpus,
-                     runners_cpus=runners_cpus)
+                     runners_cpus=runners_cpus,
+                     region_coverage=args.region_coverage)
     return 0
 
 
