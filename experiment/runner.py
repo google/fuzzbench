@@ -115,6 +115,17 @@ def get_clusterfuzz_seed_corpus_path(fuzz_target_path):
     return seed_corpus_path if os.path.exists(seed_corpus_path) else None
 
 
+def _copy_custom_seed_corpus(corpus_directory):
+    "Copy custom seed corpus provided by user"
+    shutil.rmtree(corpus_directory)
+    benchmark = environment.get('BENCHMARK')
+    benchmark_custom_corpus_dir = posixpath.join(
+        experiment_utils.get_custom_seed_corpora_filestore_path(), benchmark)
+    filestore_utils.cp(benchmark_custom_corpus_dir,
+                       corpus_directory,
+                       recursive=True)
+
+
 def _unpack_clusterfuzz_seed_corpus(fuzz_target_path, corpus_directory):
     """If a clusterfuzz seed corpus archive is available, unpack it into the
     corpus directory if it exists. Copied from unpack_seed_corpus in
@@ -172,7 +183,10 @@ def run_fuzzer(max_total_time, log_filename):
         logs.error('Fuzz target binary not found.')
         return
 
-    _unpack_clusterfuzz_seed_corpus(target_binary, input_corpus)
+    if environment.get('CUSTOM_SEED_CORPUS_DIR'):
+        _copy_custom_seed_corpus(input_corpus)
+    else:
+        _unpack_clusterfuzz_seed_corpus(target_binary, input_corpus)
     _clean_seed_corpus(input_corpus)
 
     if max_total_time is None:

@@ -685,13 +685,13 @@ def _start_trial(trial: TrialProxy, experiment_config: dict, cpuset=None):
     return None
 
 
-# pylint: disable=too-many-arguments
-def render_startup_script_template(instance_name: str,
-                                   fuzzer: str,
-                                   benchmark: str,
-                                   trial_id: int,
-                                   experiment_config: dict,
-                                   cpuset=None):
+def render_startup_script_template(  # pylint: disable=too-many-arguments
+        instance_name: str,
+        fuzzer: str,
+        benchmark: str,
+        trial_id: int,
+        experiment_config: dict,
+        cpuset=None):
     """Render the startup script using the template and the parameters
     provided and return the result."""
     experiment = experiment_config['experiment']
@@ -719,6 +719,7 @@ def render_startup_script_template(instance_name: str,
         'oss_fuzz_corpus': experiment_config['oss_fuzz_corpus'],
         'num_cpu_cores': experiment_config['runner_num_cpu_cores'],
         'cpuset': cpuset,
+        'custom_seed_corpus_dir': experiment_config['custom_seed_corpus_dir'],
     }
 
     if not local_experiment:
@@ -728,13 +729,13 @@ def render_startup_script_template(instance_name: str,
     return template.render(**kwargs)
 
 
-# pylint: disable=too-many-arguments
-def create_trial_instance(fuzzer: str,
-                          benchmark: str,
-                          trial_id: int,
-                          experiment_config: dict,
-                          preemptible: bool,
-                          cpuset=None) -> bool:
+def create_trial_instance(  # pylint: disable=too-many-arguments
+        fuzzer: str,
+        benchmark: str,
+        trial_id: int,
+        experiment_config: dict,
+        preemptible: bool,
+        cpuset=None) -> bool:
     """Create or start a trial instance for a specific
     trial_id,fuzzer,benchmark."""
     instance_name = experiment_utils.get_trial_instance_name(
