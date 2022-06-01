@@ -628,7 +628,7 @@ def start_trials(trials, experiment_config: dict, pool, cores=None):
     for index, trial in enumerate(shuffled_trials):
         start_trial_args += [
             (TrialProxy(trial), experiment_config,
-            cores[index % len(cores)] if cores is not None else None)
+             cores[index % len(cores)] if cores is not None else None)
         ]
 
     started_trial_proxies = pool.starmap(_start_trial, start_trial_args)
@@ -685,12 +685,13 @@ def _start_trial(trial: TrialProxy, experiment_config: dict, cpuset=None):
     return None
 
 
-def render_startup_script_template(instance_name: str,
-                                   fuzzer: str,
-                                   benchmark: str,
-                                   trial_id: int,
-                                   experiment_config: dict,
-                                   cpuset=None):
+def render_startup_script_template(  # pylint: disable=too-many-arguments
+        instance_name: str,
+        fuzzer: str,
+        benchmark: str,
+        trial_id: int,
+        experiment_config: dict,
+        cpuset=None):
     """Render the startup script using the template and the parameters
     provided and return the result."""
     experiment = experiment_config['experiment']
@@ -718,6 +719,7 @@ def render_startup_script_template(instance_name: str,
         'oss_fuzz_corpus': experiment_config['oss_fuzz_corpus'],
         'num_cpu_cores': experiment_config['runner_num_cpu_cores'],
         'cpuset': cpuset,
+        'custom_seed_corpus_dir': experiment_config['custom_seed_corpus_dir'],
     }
 
     if not local_experiment:
@@ -727,12 +729,13 @@ def render_startup_script_template(instance_name: str,
     return template.render(**kwargs)
 
 
-def create_trial_instance(fuzzer: str,
-                          benchmark: str,
-                          trial_id: int,
-                          experiment_config: dict,
-                          preemptible: bool,
-                          cpuset=None) -> bool:
+def create_trial_instance(  # pylint: disable=too-many-arguments
+        fuzzer: str,
+        benchmark: str,
+        trial_id: int,
+        experiment_config: dict,
+        preemptible: bool,
+        cpuset=None) -> bool:
     """Create or start a trial instance for a specific
     trial_id,fuzzer,benchmark."""
     instance_name = experiment_utils.get_trial_instance_name(

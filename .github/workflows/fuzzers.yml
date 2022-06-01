@@ -80,7 +80,6 @@ jobs:
           - aflpp_random_wrs_rp
           - aflplusplus_pcguard
           - aflplusplus_classic
-          - aflplusplus_llvm15
           - entropic_execute_final
           - libfuzzer_exeute_final
           - afl_no_favored
@@ -95,6 +94,8 @@ jobs:
           - afl_score_no_novel_prioritization
           - afl_score_random
           - afl_splicing_mutation
+          - afl_virginmap
+          - afl_maxmap
 
         benchmark_type:
           - oss-fuzz
