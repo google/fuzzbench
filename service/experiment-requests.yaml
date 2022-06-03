@@ -20,6 +20,14 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-06-01-dissecting
+  description: "Dissecting AFL paper (scheduling)"
+  type: bug
+  fuzzers:
+    - afl
+    - afl_scheduling_lifo
+    - afl_scheduling_random
+
 - experiment: 2022-05-13-afl
   description: "afl map tests"
   fuzzers:
