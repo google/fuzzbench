@@ -378,7 +378,7 @@ class TestIntegrationMeasurement:
         # fakefs. A directory containing necessary llvm tools is also added to
         # PATH.
         llvm_tools_path = get_test_data_path('llvm_tools')
-        os.environ["PATH"] += os.pathsep + llvm_tools_path
+        os.environ['PATH'] += os.pathsep + llvm_tools_path
         os.environ['WORK'] = str(tmp_path)
         mocked_is_cycle_unchanged.return_value = False
         # Set up the coverage binary.
@@ -423,7 +423,7 @@ class TestIntegrationMeasurement:
                 snapshot_measurer.trial_num, cycle, False)
         assert snapshot
         assert snapshot.time == cycle * experiment_utils.get_snapshot_seconds()
-        assert snapshot.edges_covered == 13178
+        assert snapshot.edges_covered == 4629
 
 
 @pytest.mark.parametrize('archive_name',
