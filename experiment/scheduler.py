@@ -116,21 +116,29 @@ def delete_instances(instances, experiment_config):
                                    experiment_config['cloud_compute_zone'])
 
 
-def end_expired_trials(experiment_config: dict):
+def end_expired_trials(experiment_config: dict, core_allocation: dict):
     """Get all expired trials, end them and return them."""
     trials_past_expiry = get_expired_trials(experiment_config['experiment'],
                                             experiment_config['max_total_time'])
     expired_instances = []
+    expired_trial_ids = []
     current_dt = datetime_now()
     for trial in trials_past_expiry:
+        trial_id = trial.id
         expired_instances.append(
             experiment_utils.get_trial_instance_name(
-                experiment_config['experiment'], trial.id))
+                experiment_config['experiment'], trial_id))
+        expired_trial_ids.append(trial_id)
         trial.time_ended = current_dt
 
     # Bail out here because trials_past_expiry will be truthy until evaluated.
     if not expired_instances:
         return
+
+    if core_allocation is not None:
+        for cpuset, trial_id in core_allocation.items():
+            if trial_id in expired_trial_ids:
+                core_allocation[cpuset] = None
 
     if not experiment_utils.is_local_experiment() and not delete_instances(
             expired_instances, experiment_config):
@@ -514,18 +522,18 @@ def replace_trial(trial, preemptible):
     return replacement
 
 
-def schedule(experiment_config: dict, pool, cores=None):
+def schedule(experiment_config: dict, pool, core_allocation=None):
     """Gets all pending trials for the current experiment and then schedules
     those that are possible."""
     logger.info('Finding trials to schedule.')
 
     # End expired trials
-    end_expired_trials(experiment_config)
+    end_expired_trials(experiment_config, core_allocation)
 
     # Start pending trials.
     pending_trials = list(get_pending_trials(experiment_config['experiment']))
     started_trials = start_trials(pending_trials, experiment_config, pool,
-                                  cores)
+                                  core_allocation)
     return started_trials
 
 
@@ -541,18 +549,19 @@ def schedule_loop(experiment_config: dict):
         get_experiment_trials(experiment_config['experiment']).all())
     local_experiment = experiment_utils.is_local_experiment()
     pool_args = ()
-    cores = None
+    core_allocation = None
     runners_cpus = experiment_config['runners_cpus']
     if runners_cpus is not None:
         if local_experiment:
             runner_num_cpu_cores = experiment_config['runner_num_cpu_cores']
             processes = runners_cpus // runner_num_cpu_cores
             logger.info('Scheduling runners from core 0 to %d.' %
-                        (processes - 1))
-            cores = []
+                        (runner_num_cpu_cores * processes - 1))
+            core_allocation = {}
             for cpu in range(0, runner_num_cpu_cores * processes,
                              runner_num_cpu_cores):
-                cores += ['%d-%d' % (cpu, cpu + runner_num_cpu_cores - 1)]
+                core_allocation['%d-%d' %
+                                (cpu, cpu + runner_num_cpu_cores - 1)] = None
             pool_args = (processes,)
         else:
             pool_args = (runners_cpus,)
@@ -576,7 +585,7 @@ def schedule_loop(experiment_config: dict):
                     #    initial trial was started.
                     handle_preempted = True
 
-                schedule(experiment_config, pool, cores)
+                schedule(experiment_config, pool, core_allocation)
                 if handle_preempted:
                     trial_instance_manager.handle_preempted_trials()
             except Exception:  # pylint: disable=broad-except
@@ -592,7 +601,7 @@ def schedule_loop(experiment_config: dict):
     logger.info('Finished scheduling.')
 
 
-def update_started_trials(trial_proxies, trial_id_mapping):
+def update_started_trials(trial_proxies, trial_id_mapping, core_allocation):
     """Update started trials in |trial_id_mapping| with results from
     |trial_proxies| and save the updated trials."""
     # Map proxies back to trials and mark trials as started when proxies were
@@ -603,13 +612,17 @@ def update_started_trials(trial_proxies, trial_id_mapping):
             continue
         trial = trial_id_mapping[proxy.id]
         trial.time_started = proxy.time_started
+
+        if core_allocation is not None:
+            core_allocation[proxy.cpuset] = proxy.id
+
         started_trials.append(trial)
     if started_trials:
         db_utils.add_all(started_trials)
     return started_trials
 
 
-def start_trials(trials, experiment_config: dict, pool, cores=None):
+def start_trials(trials, experiment_config: dict, pool, core_allocation=None):
     """Start all |trials| that are possible to start. Marks the ones that were
     started as started."""
     logger.info('Starting trials.')
@@ -624,17 +637,25 @@ def start_trials(trials, experiment_config: dict, pool, cores=None):
     shuffled_trials = list(trial_id_mapping.values())
     random.shuffle(shuffled_trials)
 
+    free_cpusets = [
+        cpuset for cpuset, trial_id in core_allocation.items()
+        if trial_id is None
+    ] if core_allocation is not None else None
+
     start_trial_args = []
     for index, trial in enumerate(shuffled_trials):
+        if free_cpusets is not None and index >= len(free_cpusets):
+            break
+
         start_trial_args += [
             (TrialProxy(trial), experiment_config,
-             cores[index % len(cores)] if cores is not None else None)
+             free_cpusets[index] if free_cpusets is not None else None)
         ]
 
     started_trial_proxies = pool.starmap(_start_trial, start_trial_args)
     started_trials = update_started_trials(started_trial_proxies,
-                                           trial_id_mapping)
-    logger.info('Done starting trials.')
+                                           trial_id_mapping, core_allocation)
+    logger.info(f'Started {len(started_trials)} trials.')
     return started_trials
 
 
@@ -649,6 +670,7 @@ class TrialProxy:
         self.time_started = trial.time_started
         self.time_ended = trial.time_ended
         self.preemptible = trial.preemptible
+        self.cpuset = None
 
 
 def _initialize_logs(experiment):
@@ -680,6 +702,7 @@ def _start_trial(trial: TrialProxy, experiment_config: dict, cpuset=None):
                                     cpuset)
     if started:
         trial.time_started = datetime_now()
+        trial.cpuset = cpuset
         return trial
     logger.info('Trial: %d not started.', trial.id)
     return None
