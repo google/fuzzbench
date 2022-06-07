@@ -77,6 +77,8 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     bool_params = {'private', 'merge_with_nonprivate'}
 
     local_experiment = config.get('local_experiment', False)
+    snapshot_period = config.get('snapshot_period',
+                                 experiment_utils.DEFAULT_SNAPSHOT_SECONDS)
     if not local_experiment:
         required_params = required_params.union(cloud_config)
 
@@ -133,6 +135,7 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
         raise ValidationError('Config: %s is invalid.' % config_filename)
 
     config['local_experiment'] = local_experiment
+    config['snapshot_period'] = snapshot_period
     return config
 
 
@@ -416,6 +419,8 @@ class LocalDispatcher(BaseDispatcher):
         set_report_filestore_arg = (
             'REPORT_FILESTORE={report_filestore}'.format(
                 report_filestore=self.config['report_filestore']))
+        set_snapshot_period_arg = 'SNAPSHOT_PERIOD={snapshot_period}'.format(
+            snapshot_period=self.config['snapshot_period'])
         docker_image_url = '{docker_registry}/dispatcher-image'.format(
             docker_registry=docker_registry)
         command = [
@@ -437,6 +442,8 @@ class LocalDispatcher(BaseDispatcher):
             sql_database_arg,
             '-e',
             set_experiment_filestore_arg,
+            '-e',
+            set_snapshot_period_arg,
             '-e',
             set_report_filestore_arg,
             '-e',
