@@ -52,6 +52,7 @@ docker run \
 -e REPORT_FILESTORE={{report_filestore}} {% if local_experiment %}-v {{report_filestore}}:{{report_filestore}} {% endif %}\
 -e FUZZ_TARGET={{fuzz_target}} \
 -e LOCAL_EXPERIMENT={{local_experiment}} \
+-e PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python \
 {% if not local_experiment %}--name=runner-container {% endif %}\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \
 --security-opt seccomp=unconfined \
