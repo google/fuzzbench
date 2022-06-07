@@ -42,6 +42,7 @@ GIT_HASH = 'FAKE-GIT-HASH'
 CYCLE = 1
 
 SNAPSHOT_LOGGER = measure_manager.logger
+REGION_COVERAGE = False
 
 # pylint: disable=unused-argument,invalid-name,redefined-outer-name,protected-access
 
@@ -59,34 +60,34 @@ def db_experiment(experiment_config, db):
 def test_get_current_coverage(fs, experiment):
     """Tests that get_current_coverage reads the correct data from json file."""
     snapshot_measurer = measure_manager.SnapshotMeasurer(
-        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER)
+        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
     json_cov_summary_file = get_test_data_path('cov_summary.json')
     fs.add_real_file(json_cov_summary_file, read_only=False)
     snapshot_measurer.cov_summary_file = json_cov_summary_file
-    covered_regions = snapshot_measurer.get_current_coverage()
-    assert covered_regions == 8
+    covered_branches = snapshot_measurer.get_current_coverage()
+    assert covered_branches == 7
 
 
 def test_get_current_coverage_error(fs, experiment):
     """Tests that get_current_coverage returns None from a
     defective json file."""
     snapshot_measurer = measure_manager.SnapshotMeasurer(
-        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER)
+        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
     json_cov_summary_file = get_test_data_path('cov_summary_defective.json')
     fs.add_real_file(json_cov_summary_file, read_only=False)
     snapshot_measurer.cov_summary_file = json_cov_summary_file
-    covered_regions = snapshot_measurer.get_current_coverage()
-    assert not covered_regions
+    covered_branches = snapshot_measurer.get_current_coverage()
+    assert not covered_branches
 
 
 def test_get_current_coverage_no_file(fs, experiment):
     """Tests that get_current_coverage returns None with no json file."""
     snapshot_measurer = measure_manager.SnapshotMeasurer(
-        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER)
+        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
     json_cov_summary_file = get_test_data_path('cov_summary_not_exist.json')
     snapshot_measurer.cov_summary_file = json_cov_summary_file
-    covered_regions = snapshot_measurer.get_current_coverage()
-    assert not covered_regions
+    covered_branches = snapshot_measurer.get_current_coverage()
+    assert not covered_branches
 
 
 @mock.patch('common.new_process.execute')
@@ -94,7 +95,7 @@ def test_generate_profdata_create(mocked_execute, experiment, fs):
     """Tests that generate_profdata can run the correct command."""
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
     snapshot_measurer = measure_manager.SnapshotMeasurer(
-        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER)
+        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
     snapshot_measurer.profdata_file = '/work/reports/data.profdata'
     snapshot_measurer.profraw_file_pattern = '/work/reports/data-%m.profraw'
     profraw_file = '/work/reports/data-123.profraw'
@@ -116,7 +117,7 @@ def test_generate_profdata_merge(mocked_execute, experiment, fs):
     """Tests that generate_profdata can run correctly with existing profraw."""
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
     snapshot_measurer = measure_manager.SnapshotMeasurer(
-        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER)
+        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
     snapshot_measurer.profdata_file = '/work/reports/data.profdata'
     snapshot_measurer.profraw_file_pattern = '/work/reports/data-%m.profraw'
     profraw_file = '/work/reports/data-123.profraw'
@@ -144,7 +145,7 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
     mocked_get_coverage_binary.return_value = coverage_binary_path
 
     snapshot_measurer = measure_manager.SnapshotMeasurer(
-        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER)
+        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
     snapshot_measurer.cov_summary_file = "/reports/cov_summary.txt"
     snapshot_measurer.profdata_file = "/reports/data.profdata"
     fs.create_dir('/reports')
@@ -176,9 +177,9 @@ def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
     measure_request = measure_manager.SnapshotMeasureRequest(
         FUZZER, BENCHMARK, TRIAL_NUM, min_cycle)
     measure_manager.measure_trial_coverage(measure_request, max_cycle,
-                                           mocked_queue())
+                                           mocked_queue(), False)
     expected_calls = [
-        mock.call(FUZZER, BENCHMARK, TRIAL_NUM, cycle)
+        mock.call(FUZZER, BENCHMARK, TRIAL_NUM, cycle, False)
         for cycle in range(min_cycle, max_cycle + 1)
     ]
     assert mocked_measure_snapshot_coverage.call_args_list == expected_calls
@@ -191,7 +192,7 @@ def test_measure_all_trials_not_ready(mocked_rsync, mocked_ls, experiment):
     mocked_ls.return_value = new_process.ProcessResult(1, '', False)
     assert measure_manager.measure_all_trials(
         experiment_utils.get_experiment_name(), MAX_TOTAL_TIME,
-        test_utils.MockPool(), queue.Queue())
+        test_utils.MockPool(), queue.Queue(), False)
     assert not mocked_rsync.called
 
 
@@ -208,14 +209,14 @@ def test_measure_all_trials_no_more(mocked_directories_have_same_files,
     mock_pool = test_utils.MockPool()
     assert not measure_manager.measure_all_trials(
         experiment_utils.get_experiment_name(), MAX_TOTAL_TIME, mock_pool,
-        queue.Queue())
+        queue.Queue(), False)
 
 
 def test_is_cycle_unchanged_doesnt_exist(experiment):
     """Test that is_cycle_unchanged can properly determine if a cycle is
     unchanged or not when it needs to copy the file for the first time."""
     snapshot_measurer = measure_manager.SnapshotMeasurer(
-        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER)
+        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
     this_cycle = 1
     with test_utils.mock_popen_ctx_mgr(returncode=1):
         assert not snapshot_measurer.is_cycle_unchanged(this_cycle)
@@ -227,7 +228,7 @@ def test_is_cycle_unchanged_first_copy(mocked_read, mocked_cp, experiment):
     """Test that is_cycle_unchanged can properly determine if a cycle is
     unchanged or not when it needs to copy the file for the first time."""
     snapshot_measurer = measure_manager.SnapshotMeasurer(
-        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER)
+        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
     this_cycle = 100
     unchanged_cycles_file_contents = (
         '\n'.join([str(num) for num in range(10)] + [str(this_cycle)]))
@@ -242,7 +243,7 @@ def test_is_cycle_unchanged_update(fs, experiment):
     """Test that is_cycle_unchanged can properly determine that a
     cycle has changed when it has the file but needs to update it."""
     snapshot_measurer = measure_manager.SnapshotMeasurer(
-        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER)
+        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
 
     this_cycle = 100
     initial_unchanged_cycles_file_contents = (
@@ -266,7 +267,7 @@ def test_is_cycle_unchanged_skip_cp(mocked_cp, fs, experiment):
     """Check that is_cycle_unchanged doesn't call filestore_utils.cp
     unnecessarily."""
     snapshot_measurer = measure_manager.SnapshotMeasurer(
-        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER)
+        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
     this_cycle = 100
     initial_unchanged_cycles_file_contents = (
         '\n'.join([str(num) for num in range(10)] + [str(this_cycle + 1)]))
@@ -282,7 +283,7 @@ def test_is_cycle_unchanged_no_file(mocked_cp, fs, experiment):
     unchanged-cycles file."""
     # Make sure we log if there is no unchanged-cycles file.
     snapshot_measurer = measure_manager.SnapshotMeasurer(
-        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER)
+        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
     mocked_cp.return_value = new_process.ProcessResult(1, '', False)
     assert not snapshot_measurer.is_cycle_unchanged(0)
 
@@ -299,7 +300,7 @@ def test_run_cov_new_units(_, mocked_execute, fs, environ):
     }
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
     snapshot_measurer = measure_manager.SnapshotMeasurer(
-        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER)
+        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
     snapshot_measurer.initialize_measurement_dirs()
     shared_units = ['shared1', 'shared2']
     fs.create_file(snapshot_measurer.measured_files_path,
@@ -402,7 +403,8 @@ class TestIntegrationMeasurement:
         db_utils.add_all([trial])
 
         snapshot_measurer = measure_manager.SnapshotMeasurer(
-            trial.fuzzer, trial.benchmark, trial.id, SNAPSHOT_LOGGER)
+            trial.fuzzer, trial.benchmark, trial.id, SNAPSHOT_LOGGER,
+            REGION_COVERAGE)
 
         # Set up the snapshot archive.
         cycle = 1
@@ -418,7 +420,7 @@ class TestIntegrationMeasurement:
             # integration tests.
             snapshot = measure_manager.measure_snapshot_coverage(
                 snapshot_measurer.fuzzer, snapshot_measurer.benchmark,
-                snapshot_measurer.trial_num, cycle)
+                snapshot_measurer.trial_num, cycle, False)
         assert snapshot
         assert snapshot.time == cycle * experiment_utils.get_snapshot_seconds()
         assert snapshot.edges_covered == 13178

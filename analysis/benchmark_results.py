@@ -95,30 +95,30 @@ class BenchmarkResults:
     @property
     @functools.lru_cache()
     def _benchmark_coverage_dict(self):
-        """Covered regions of each fuzzer on this benchmark."""
+        """Covered branches of each fuzzer on this benchmark."""
         return coverage_data_utils.get_benchmark_cov_dict(
             self._coverage_dict, self.name)
 
     @property
     @functools.lru_cache()
     def _benchmark_aggregated_coverage_df(self):
-        """Aggregated covered regions of each fuzzer on this benchmark."""
+        """Aggregated covered branches of each fuzzer on this benchmark."""
         return coverage_data_utils.get_benchmark_aggregated_cov_df(
             self._coverage_dict, self.name)
 
     @property
     @functools.lru_cache()
-    def _unique_region_dict(self):
-        """Unique regions with the fuzzers that cover it."""
-        return coverage_data_utils.get_unique_region_dict(
+    def _unique_branch_dict(self):
+        """Unique branches with the fuzzers that cover it."""
+        return coverage_data_utils.get_unique_branch_dict(
             self._benchmark_coverage_dict)
 
     @property
     @functools.lru_cache()
-    def unique_region_cov_df(self):
-        """Fuzzers with the number of covered unique regions."""
-        return coverage_data_utils.get_unique_region_cov_df(
-            self._unique_region_dict, self.fuzzer_names)
+    def unique_branch_cov_df(self):
+        """Fuzzers with the number of covered unique branches."""
+        return coverage_data_utils.get_unique_branch_cov_df(
+            self._unique_branch_dict, self.fuzzer_names)
 
     @property
     def fuzzers_with_not_enough_samples(self):
@@ -344,12 +344,12 @@ class BenchmarkResults:
 
     @property
     def violin_plot(self):
-        """Region coverage violin plot."""
+        """Branch coverage violin plot."""
         return self._generic_violin_plot('violin.svg')
 
     @property
     def bug_violin_plot(self):
-        """Region coverage violin plot."""
+        """Branch coverage violin plot."""
         return self._generic_violin_plot('bug_violin.svg', bugs=True)
 
     def _generic_box_plot(self, filename, bugs=False):
@@ -362,7 +362,7 @@ class BenchmarkResults:
 
     @property
     def box_plot(self):
-        """Region coverage boxplot."""
+        """Branch coverage boxplot."""
         return self._generic_box_plot('boxplot.svg')
 
     @property
@@ -399,19 +399,19 @@ class BenchmarkResults:
     @property
     def unique_coverage_ranking_plot(self):
         """Ranking plot for unique coverage."""
-        plot_filename = self._prefix_with_benchmark('ranking_unique_region.svg')
-        unique_region_cov_df_combined = self.unique_region_cov_df.merge(
+        plot_filename = self._prefix_with_benchmark('ranking_unique_branch.svg')
+        unique_branch_cov_df_combined = self.unique_branch_cov_df.merge(
             self._benchmark_aggregated_coverage_df, on='fuzzer')
         self._plotter.write_unique_coverage_ranking_plot(
-            unique_region_cov_df_combined, self._get_full_path(plot_filename))
+            unique_branch_cov_df_combined, self._get_full_path(plot_filename))
         return plot_filename
 
     @property
     @functools.lru_cache()
     def pairwise_unique_coverage_table(self):
         """Pairwise unique coverage table for each pair of fuzzers."""
-        fuzzers = self.unique_region_cov_df.sort_values(
-            by='unique_regions_covered', ascending=False).fuzzer
+        fuzzers = self.unique_branch_cov_df.sort_values(
+            by='unique_branches_covered', ascending=False).fuzzer
         return coverage_data_utils.get_pairwise_unique_coverage_table(
             self._benchmark_coverage_dict, fuzzers)
 

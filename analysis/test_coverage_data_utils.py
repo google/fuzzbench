@@ -44,41 +44,41 @@ def create_coverage_data():
     }
 
 
-def test_get_unique_region_dict():
-    """Tests get_unique_region_dict() function."""
+def test_get_unique_branch_dict():
+    """Tests get_unique_branch_dict() function."""
     coverage_dict = create_coverage_data()
     benchmark_coverage_dict = coverage_data_utils.get_benchmark_cov_dict(
         coverage_dict, 'libpng-1.2.56')
-    unique_region_dict = coverage_data_utils.get_unique_region_dict(
+    unique_branch_dict = coverage_data_utils.get_unique_branch_dict(
         benchmark_coverage_dict)
     expected_dict = {
         (0, 0, 2, 2): ['afl'],
         (0, 0, 2, 3): ['libfuzzer'],
         (0, 0, 4, 4): ['libfuzzer']
     }
-    assert expected_dict == unique_region_dict
+    assert expected_dict == unique_branch_dict
 
 
-def test_get_unique_region_cov_df():
-    """Tests get_unique_region_cov_df() function."""
+def test_get_unique_branch_cov_df():
+    """Tests get_unique_branch_cov_df() function."""
     coverage_dict = create_coverage_data()
     benchmark_coverage_dict = coverage_data_utils.get_benchmark_cov_dict(
         coverage_dict, 'libpng-1.2.56')
-    unique_region_dict = coverage_data_utils.get_unique_region_dict(
+    unique_branch_dict = coverage_data_utils.get_unique_branch_dict(
         benchmark_coverage_dict)
     fuzzer_names = ['afl', 'libfuzzer']
-    unique_region_df = coverage_data_utils.get_unique_region_cov_df(
-        unique_region_dict, fuzzer_names)
-    unique_region_df = unique_region_df.sort_values(by=['fuzzer']).reset_index(
+    unique_branch_df = coverage_data_utils.get_unique_branch_cov_df(
+        unique_branch_dict, fuzzer_names)
+    unique_branch_df = unique_branch_df.sort_values(by=['fuzzer']).reset_index(
         drop=True)
     expected_df = pd.DataFrame([{
         'fuzzer': 'afl',
-        'unique_regions_covered': 1
+        'unique_branches_covered': 1
     }, {
         'fuzzer': 'libfuzzer',
-        'unique_regions_covered': 2
+        'unique_branches_covered': 2
     }])
-    assert unique_region_df.equals(expected_df)
+    assert unique_branch_df.equals(expected_df)
 
 
 def test_get_benchmark_cov_dict():
@@ -109,15 +109,15 @@ def test_get_pairwise_unique_coverage_table():
     pd_test.assert_frame_equal(table, expected_table)
 
 
-def test_get_fuzzer_benchmark_covered_regions_filestore_path():
-    """Tests that get_fuzzer_benchmark_covered_regions_filestore_path returns
+def test_get_fuzzer_benchmark_covered_branches_filestore_path():
+    """Tests that get_fuzzer_benchmark_covered_branches_filestore_path returns
     the correct result."""
-    assert (
-        coverage_data_utils.get_fuzzer_benchmark_covered_regions_filestore_path(
-            FUZZER, BENCHMARK,
-            EXPERIMENT_FILESTORE_PATH) == ('gs://fuzzbench-data/myexperiment/'
-                                           'coverage/data/libpng-1.2.56/afl/'
-                                           'covered_regions.json'))
+    assert (coverage_data_utils.
+            get_fuzzer_benchmark_covered_branches_filestore_path(
+                FUZZER, BENCHMARK, EXPERIMENT_FILESTORE_PATH) == (
+                    'gs://fuzzbench-data/myexperiment/'
+                    'coverage/data/libpng-1.2.56/afl/'
+                    'covered_branches.json'))
 
 
 def test_fuzzer_and_benchmark_to_key():
