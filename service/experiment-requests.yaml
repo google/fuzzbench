@@ -20,6 +20,13 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-06-09-afl-splicing
+  description: "Test AFL with splicing as mutation"
+  type: bug
+  fuzzers:
+    - afl
+    - afl_splicing_mutation
+
 - experiment: 2022-06-08-dissecting
   description: "Dissecting AFL paper (scheduling)"
   type: bug
