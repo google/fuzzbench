@@ -115,6 +115,7 @@ docker run \\
 -e EXPERIMENT=test-experiment \\
 -e TRIAL_ID=9 \\
 -e MAX_TOTAL_TIME=86400 \\
+-e SNAPSHOT_PERIOD=900 \\
 -e NO_SEEDS=False \\
 -e NO_DICTIONARIES=False \\
 -e OSS_FUZZ_CORPUS=False \\

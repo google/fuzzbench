@@ -15,6 +15,7 @@
 experiment: test-experiment
 trials: 4
 max_total_time: 86400
+snapshot_period: 900
 cloud_project: fuzzbench
 docker_registry: gcr.io/fuzzbench
 cloud_compute_zone: us-central1-a
