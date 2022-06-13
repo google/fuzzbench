@@ -43,6 +43,7 @@ docker run \
 -e EXPERIMENT={{experiment}} \
 -e TRIAL_ID={{trial_id}} \
 -e MAX_TOTAL_TIME={{max_total_time}} \
+-e SNAPSHOT_PERIOD={{snapshot_period}} \
 -e NO_SEEDS={{no_seeds}} \
 -e NO_DICTIONARIES={{no_dictionaries}} \
 -e OSS_FUZZ_CORPUS={{oss_fuzz_corpus}} \
