@@ -731,6 +731,7 @@ def render_startup_script_template(  # pylint: disable=too-many-arguments
         'fuzzer': fuzzer,
         'trial_id': trial_id,
         'max_total_time': experiment_config['max_total_time'],
+        'snapshot_period': experiment_config['snapshot_period'],
         'experiment_filestore': experiment_config['experiment_filestore'],
         'report_filestore': experiment_config['report_filestore'],
         'fuzz_target': fuzz_target,
