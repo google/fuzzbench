@@ -181,7 +181,7 @@ class Plotter:
                     loc='upper left',
                     frameon=False)
 
-        axes.set(ylabel='Bug coverage' if bugs else 'Code region coverage')
+        axes.set(ylabel='Bug coverage' if bugs else 'Code branch coverage')
         axes.set(xlabel='Time (hour:minute)')
 
         if self._logscale or logscale:
@@ -260,7 +260,7 @@ class Plotter:
             sns.stripplot(**common_args, size=3, color="black", alpha=0.6)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
-        ylabel = 'Reached {} coverage'.format('bug' if bugs else 'region')
+        ylabel = 'Reached {} coverage'.format('bug' if bugs else 'branch')
         axes.set(ylabel=ylabel)
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
         axes.set_xticklabels(axes.get_xticklabels(),
@@ -307,7 +307,7 @@ class Plotter:
         axes.set_title(_formatted_title(benchmark_snapshot_df))
         axes.legend(loc='upper right', frameon=False)
 
-        axes.set(xlabel='Bug coverage' if bugs else 'Code region coverage')
+        axes.set(xlabel='Bug coverage' if bugs else 'Code branch coverage')
         axes.set(ylabel='Density')
         axes.set_xticklabels(axes.get_xticklabels(),
                              rotation=_DEFAULT_LABEL_ROTATION,
@@ -339,7 +339,7 @@ class Plotter:
                            ax=axes)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
-        ylabel = 'Reached {} coverage'.format('bug' if bugs else 'region')
+        ylabel = 'Reached {} coverage'.format('bug' if bugs else 'branch')
         axes.set(ylabel=ylabel)
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
         axes.set_xticklabels(axes.get_xticklabels(),
@@ -491,17 +491,17 @@ class Plotter:
             plt.close(fig)
 
     def unique_coverage_ranking_plot(self,
-                                     unique_region_cov_df_combined,
+                                     unique_branch_cov_df_combined,
                                      axes=None):
         """Draws unique_coverage_ranking plot. The fuzzer labels will be in
         the order of their coverage."""
 
-        fuzzer_order = unique_region_cov_df_combined.sort_values(
-            by='unique_regions_covered', ascending=False).fuzzer
+        fuzzer_order = unique_branch_cov_df_combined.sort_values(
+            by='unique_branches_covered', ascending=False).fuzzer
 
-        axes = sns.barplot(y='unique_regions_covered',
+        axes = sns.barplot(y='unique_branches_covered',
                            x='fuzzer',
-                           data=unique_region_cov_df_combined,
+                           data=unique_branch_cov_df_combined,
                            order=fuzzer_order,
                            palette=self._fuzzer_colors,
                            ax=axes)
@@ -517,7 +517,7 @@ class Plotter:
 
         sns.barplot(y='aggregated_edges_covered',
                     x='fuzzer',
-                    data=unique_region_cov_df_combined,
+                    data=unique_branch_cov_df_combined,
                     order=fuzzer_order,
                     facecolor=(1, 1, 1, 0),
                     edgecolor='0.2',
@@ -531,11 +531,11 @@ class Plotter:
 
         sns.despine(ax=axes, trim=True)
 
-    def write_unique_coverage_ranking_plot(self, unique_region_cov_df_combined,
+    def write_unique_coverage_ranking_plot(self, unique_branch_cov_df_combined,
                                            image_path):
         """Writes ranking plot for unique coverage."""
         self._write_plot_to_image(self.unique_coverage_ranking_plot,
-                                  unique_region_cov_df_combined,
+                                  unique_branch_cov_df_combined,
                                   image_path,
                                   wide=True)
 

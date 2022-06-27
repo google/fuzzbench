@@ -42,13 +42,13 @@ def test_unique_coverage_ranking_plot(tmp_path):
     fuzzer_num = 22
 
     fuzzers = [f'fuzzer-{i}' for i in range(fuzzer_num)]
-    unique_regions = [10 * i for i in range(fuzzer_num)]
-    total_regions = [1000] * fuzzer_num
+    unique_branchs = [10 * i for i in range(fuzzer_num)]
+    total_branches = [1000] * fuzzer_num
 
     df = pd.DataFrame({
         'fuzzer': fuzzers,
-        'unique_regions_covered': unique_regions,
-        'aggregated_edges_covered': total_regions
+        'unique_branches_covered': unique_branchs,
+        'aggregated_edges_covered': total_branches
     })
 
     plotter = plotting.Plotter(fuzzers)

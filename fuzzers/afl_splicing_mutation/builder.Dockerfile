@@ -19,8 +19,8 @@ FROM $parent_image
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/andreafioraldi/AFL-exp.git /afl && \
     cd /afl && \
-    git checkout 9827ba4ffc26393f8b0faa1c8d7ac52db5f5539b && \
-    CFLAGS="-DSLICING_MUTATION=1" AFL_NO_X86=1 make
+    git checkout de4433fdb0c894aa305ea142c1efd4215b96b2c5 && \
+    CFLAGS="-DSPLICING_MUTATION=1" AFL_NO_X86=1 make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
 RUN apt-get update && \

@@ -24,11 +24,12 @@ def get_test_data_path(*subpaths):
     return os.path.join(TEST_DATA_PATH, *subpaths)
 
 
-def test_extract_covered_regions_from_summary_json(fs):
-    """Tests that extract_covered_regions_from_summary_json returns the covered
-    regions from summary json file."""
+def test_extract_covered_branches_from_summary_json(fs):
+    """Tests that extract_covered_branches_from_summary_json returns the covered
+    branches from summary json file."""
     summary_json_file = get_test_data_path('cov_summary.json')
     fs.add_real_file(summary_json_file, read_only=False)
-    covered_regions = coverage_utils.extract_covered_regions_from_summary_json(
+    covered_branches = coverage_utils. \
+    extract_covered_branches_from_summary_json(
         summary_json_file)
-    assert len(covered_regions) == 15
+    assert len(covered_branches) == 9

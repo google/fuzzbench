@@ -15,6 +15,7 @@
 experiment: test-experiment
 trials: 4
 max_total_time: 86400
+snapshot_period: 900
 cloud_project: fuzzbench
 docker_registry: gcr.io/fuzzbench
 cloud_compute_zone: us-central1-a
@@ -31,6 +32,7 @@ git_hash: "git-hash"
 no_seeds: false
 no_dictionaries: false
 oss_fuzz_corpus: false
+custom_seed_corpus_dir: null
 description: "Test experiment"
 concurrent_builds: null
 runners_cpus: null
