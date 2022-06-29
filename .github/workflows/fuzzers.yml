@@ -96,6 +96,8 @@ jobs:
           - afl_splicing_mutation
           - afl_virginmap
           - afl_maxmap
+          - aflplusplus_libafl
+          - libafl_aflpp
 
         benchmark_type:
           - oss-fuzz
