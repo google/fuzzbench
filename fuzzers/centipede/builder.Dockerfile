@@ -27,5 +27,7 @@ RUN apt install -y curl gnupg apt-transport-https vim && \
 RUN git clone https://github.com/google/centipede.git /centipede && \
   cd /centipede/ && \
   git checkout 1.0.0 && \
+  echo 'build --client_env=CC=clang --cxxopt=-std=c++17 --cxxopt=-stdlib=libc++ --cxxopt=-msse4.2 --linkopt=-lc++' \
+    > .bazelrc && \
   bazel build -c opt :centipede
 
