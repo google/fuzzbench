@@ -15,19 +15,39 @@
 ARG parent_image
 FROM $parent_image
 
-RUN apt install -y curl gnupg apt-transport-https vim && \
-  curl -fsSL https://bazel.build/bazel-release.pub.gpg \
-    | gpg --dearmor > bazel.gpg && \
-  mv bazel.gpg /etc/apt/trusted.gpg.d/ && \
-  echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" \
-    | tee /etc/apt/sources.list.d/bazel.list && \
+ENV BAZEL_GPG_LINK='https://bazel.build/bazel-release.pub.gpg'
+ENV BAZEL_GPG_FILE='/etc/apt/trusted.gpg.d/bazel.gpg'
+ENV BAZEL_APT_LINK='https://storage.googleapis.com/bazel-apt'
+ENV BAZEL_APT_LIST='/etc/apt/sources.list.d/bazel.list'
+ENV CENTIPEDE_GITHUB='https://github.com/google/centipede.git'
+ENV CENTIPEDE_SRC='/src/centipede/'
+ENV CENTIPEDE_CONFIG='build \
+  --client_env=CC=clang \
+  --cxxopt=-std=c++17 \
+  --cxxopt=-stdlib=libc++ \
+  --linkopt=-lc++'
+
+# Install deps of centipede, clone&build centipede
+RUN apt update && \
+  apt install -y apt-transport-https && \
+  curl -fsSL "${BAZEL_GPG_LINK}" \
+    | gpg --dearmor > "${BAZEL_GPG_FILE}" && \
+  echo "deb [arch=amd64] ${BAZEL_APT_LINK} stable jdk1.8" \
+    | tee "${BAZEL_APT_LIST}" && \
   apt update && \
-  apt install bazel
+  apt install -y \
+    vim \
+    bazel && \
+  git clone \
+    --depth 1 \
+    --branch main \
+    --single-branch \
+    "${CENTIPEDE_GITHUB}" "${CENTIPEDE_SRC}" && \
+  cd "${CENTIPEDE_SRC}" && \
+  echo "${CENTIPEDE_CONFIG}" > ~/.bazelrc && \
+  bazel build -c opt :centipede && \
+  ln -s "${CENTIPEDE_SRC}/bazel-bin/centipede" "/bin/centipede"
 
-RUN git clone https://github.com/google/centipede.git /centipede && \
-  cd /centipede/ && \
-  git checkout 1.0.0 && \
-  echo 'build --client_env=CC=clang --cxxopt=-std=c++17 --cxxopt=-stdlib=libc++ --cxxopt=-msse4.2 --linkopt=-lc++' \
-    > .bazelrc && \
-  bazel build -c opt :centipede
+# TODO: Build target
 
+WORKDIR "${WORK}"
