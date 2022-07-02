@@ -1,4 +1,4 @@
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for libFuzzer fuzzer."""
+"""Integration code for centipede fuzzer."""
 
 import subprocess
 import os
@@ -30,7 +30,13 @@ def build():
 
     os.environ['CC'] = 'clang'
     os.environ['CXX'] = 'clang++'
-    os.environ['FUZZER_LIB'] = '/usr/lib/libFuzzer.a'
+    os.environ['FUZZER_LIB'] = (
+        '/src/centipede/bazel-bin/libfuzz_target_runner.a '
+        '/src/centipede/bazel-bin/libfuzz_target_runner_no_main.a '
+        '/src/centipede/bazel-bin/libshared_memory_blob_sequence.a '
+        '/src/centipede/bazel-bin/libexecution_request.a '
+        '/src/centipede/bazel-bin/libexecution_result.a '
+        '/src/centipede/bazel-bin/libbyte_array_mutator.a')
 
     utils.build_benchmark()
 
@@ -40,8 +46,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     run_fuzzer."""
     run_fuzzer(input_corpus,
                output_corpus,
-               target_binary,
-               extra_flags=['-keep_seed=1', '-cross_over_uniform_dist=1'])
+               target_binary)
 
 
 def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
@@ -57,30 +62,19 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     os.makedirs(output_corpus)
 
     flags = [
-        '-print_final_stats=1',
-        # `close_fd_mask` to prevent too much logging output from the target.
-        '-close_fd_mask=3',
+        #'--alsologtostderr',
+        f'--workdir={output_corpus}',
+        f'--binary={target_binary}',
+        '--num_runs=100',
         # Run in fork mode to allow ignoring ooms, timeouts, crashes and
         # continue fuzzing indefinitely.
-        '-fork=1',
-        '-ignore_ooms=1',
-        '-ignore_timeouts=1',
-        '-ignore_crashes=1',
-
-        # Don't use LSAN's leak detection. Other fuzzers won't be using it and
-        # using it will cause libFuzzer to find "crashes" no one cares about.
-        '-detect_leaks=0',
-
-        # Store crashes along with corpus for bug based benchmarking.
-        f'-artifact_prefix={crashes_dir}/',
+        '--fork_server=1',
+        '--timeout=0',
     ]
-    flags += extra_flags
-    if 'ADDITIONAL_ARGS' in os.environ:
-        flags += os.environ['ADDITIONAL_ARGS'].split(' ')
     dictionary_path = utils.get_dictionary_path(target_binary)
     if dictionary_path:
-        flags.append('-dict=' + dictionary_path)
+        flags.append('-dictionary=' + dictionary_path)
 
-    command = [target_binary] + flags + [output_corpus, input_corpus]
+    command = ['/out/centipede'] + flags
     print('[run_fuzzer] Running command: ' + ' '.join(command))
     subprocess.check_call(command)

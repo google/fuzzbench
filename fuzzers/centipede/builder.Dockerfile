@@ -43,11 +43,7 @@ RUN apt update && \
     --branch main \
     --single-branch \
     "${CENTIPEDE_GITHUB}" "${CENTIPEDE_SRC}" && \
-  cd "${CENTIPEDE_SRC}" && \
   echo "${CENTIPEDE_CONFIG}" > ~/.bazelrc && \
-  bazel build -c opt :centipede && \
-  ln -s "${CENTIPEDE_SRC}/bazel-bin/centipede" "/bin/centipede"
-
-# TODO: Build target
-
-WORKDIR "${WORK}"
+  (cd "${CENTIPEDE_SRC}" && \
+  bazel build -c opt :all) && \
+  cp "${CENTIPEDE_SRC}/bazel-bin/centipede" "/out/centipede"
