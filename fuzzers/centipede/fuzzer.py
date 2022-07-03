@@ -44,9 +44,7 @@ def build():
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer. Wrapper that uses the defaults when calling
     run_fuzzer."""
-    run_fuzzer(input_corpus,
-               output_corpus,
-               target_binary)
+    run_fuzzer(input_corpus, output_corpus, target_binary)
 
 
 def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
@@ -73,8 +71,9 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     ]
     dictionary_path = utils.get_dictionary_path(target_binary)
     if dictionary_path:
-        flags.append('-dictionary=' + dictionary_path)
-
+        flags.append(f'--dictionary={dictionary_path}')
+    if os.path.isdir(input_corpus):
+        flags.append(f'--corpus_dir={input_corpus}')
     command = ['/out/centipede'] + flags
     print('[run_fuzzer] Running command: ' + ' '.join(command))
     subprocess.check_call(command)
