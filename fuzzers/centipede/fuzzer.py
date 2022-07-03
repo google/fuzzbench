@@ -24,7 +24,7 @@ def build():
     # With LibFuzzer we use -fsanitize=fuzzer-no-link for build CFLAGS and then
     # /usr/lib/libFuzzer.a as the FUZZER_LIB for the main fuzzing binary. This
     # allows us to link against a version of LibFuzzer that we specify.
-    cflags = ['-fsanitize=fuzzer-no-link']
+    cflags = ['-fsanitize-coverage=trace-pc-guard,pc-table,trace-cmp']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
@@ -56,12 +56,14 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     # |output_corpus| to avoid conflicts when corpus directory is reloaded.
     crashes_dir = os.path.join(output_corpus, 'crashes')
     output_corpus = os.path.join(output_corpus, 'corpus')
+    work_dir = os.path.join(output_corpus, 'WD')
     os.makedirs(crashes_dir)
     os.makedirs(output_corpus)
+    os.makedirs(work_dir)
 
     flags = [
-        #'--alsologtostderr',
-        f'--workdir={output_corpus}',
+        f'--workdir={work_dir}',
+        f'--corpus_dir={output_corpus},{input_corpus}'
         f'--binary={target_binary}',
         '--num_runs=100',
         # Run in fork mode to allow ignoring ooms, timeouts, crashes and
@@ -72,8 +74,7 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     dictionary_path = utils.get_dictionary_path(target_binary)
     if dictionary_path:
         flags.append(f'--dictionary={dictionary_path}')
-    if os.path.isdir(input_corpus):
-        flags.append(f'--corpus_dir={input_corpus}')
+
     command = ['/out/centipede'] + flags
     print('[run_fuzzer] Running command: ' + ' '.join(command))
     subprocess.check_call(command)

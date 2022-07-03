@@ -47,3 +47,5 @@ RUN apt update && \
   (cd "${CENTIPEDE_SRC}" && \
   bazel build -c opt :all) && \
   cp "${CENTIPEDE_SRC}/bazel-bin/centipede" "/out/centipede"
+  #cp "${CENTIPEDE_SRC}/bazel-bin/centipede" "/out/centipede" && \
+  #cp "${CENTIPEDE_SRC}/bazel-bin/libcentipede_fork_server_helper.so" "/out/"
