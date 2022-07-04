@@ -29,6 +29,8 @@ def build():
 
     os.environ['CC'] = 'clang'
     os.environ['CXX'] = 'clang++'
+    # TODO(Dongge): Replace the following libs with a single .a file
+    # once Centipede has it
     os.environ['FUZZER_LIB'] = (
         '/src/centipede/bazel-bin/libfuzz_target_runner.a '
         '/src/centipede/bazel-bin/libfuzz_target_runner_no_main.a '
