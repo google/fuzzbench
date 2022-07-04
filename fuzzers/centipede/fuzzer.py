@@ -21,9 +21,8 @@ from fuzzers import utils
 
 def build():
     """Build benchmark."""
-    # With LibFuzzer we use -fsanitize=fuzzer-no-link for build CFLAGS and then
-    # /usr/lib/libFuzzer.a as the FUZZER_LIB for the main fuzzing binary. This
-    # allows us to link against a version of LibFuzzer that we specify.
+    # TODO(Dongge): Check if they support trace-dataflow.
+    # TODO(Dongge): Build targets with sanitizers.
     cflags = ['-fsanitize-coverage=trace-pc-guard,pc-table,trace-cmp']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)

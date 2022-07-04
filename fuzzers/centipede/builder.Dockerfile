@@ -27,7 +27,7 @@ ENV CENTIPEDE_CONFIG='build \
   --cxxopt=-stdlib=libc++ \
   --linkopt=-lc++'
 
-# Install deps of centipede, clone&build centipede
+# Install deps of centipede, clone&build centipede.
 RUN apt update && \
   apt install -y apt-transport-https && \
   curl -fsSL "${BAZEL_GPG_LINK}" \
@@ -47,5 +47,3 @@ RUN apt update && \
   (cd "${CENTIPEDE_SRC}" && \
   bazel build -c opt :all) && \
   cp "${CENTIPEDE_SRC}/bazel-bin/centipede" "/out/centipede"
-  #cp "${CENTIPEDE_SRC}/bazel-bin/centipede" "/out/centipede" && \
-  #cp "${CENTIPEDE_SRC}/bazel-bin/libcentipede_fork_server_helper.so" "/out/"
