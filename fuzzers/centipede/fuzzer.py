@@ -21,14 +21,22 @@ from fuzzers import utils
 
 def build():
     """Build benchmark."""
-    # TODO(Dongge): Check if they support trace-dataflow.
     # TODO(Dongge): Build targets with sanitizers.
-    cflags = ['-fsanitize-coverage=trace-pc-guard,pc-table,trace-cmp']
+    cflags = ['-fsanitize-coverage='
+              'trace-pc-guard,'
+              'pc-table,'
+              'trace-cmp,'
+              'trace-loads,'
+              'trace-stores',
+              '-ldl',
+              '-lrt',
+              '-lpthread',
+              '/weak.o']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
-    os.environ['CC'] = 'clang'
-    os.environ['CXX'] = 'clang++'
+    os.environ['CC'] = '/clang/bin/clang'
+    os.environ['CXX'] = '/clang/bin/clang++'
     # TODO(Dongge): Replace the following libs with a single .a file
     # once Centipede has it
     os.environ['FUZZER_LIB'] = (
