@@ -63,12 +63,14 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
 
     # Seperate out corpus and crash directories as sub-directories of
     # |output_corpus| to avoid conflicts when corpus directory is reloaded.
+    work_dir = os.path.join(output_corpus, 'WD')
+    work_dir_crash = os.path.join(work_dir, 'crashes')
     crashes_dir = os.path.join(output_corpus, 'crashes')
     output_corpus = os.path.join(output_corpus, 'corpus')
-    work_dir = os.path.join(output_corpus, 'WD')
+    os.makedirs(work_dir)
+    os.symlink(crashes_dir, work_dir_crash)
     os.makedirs(crashes_dir)
     os.makedirs(output_corpus)
-    os.makedirs(work_dir)
 
     flags = [
         f'--workdir={work_dir}',
