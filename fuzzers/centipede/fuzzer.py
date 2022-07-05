@@ -22,16 +22,14 @@ from fuzzers import utils
 def build():
     """Build benchmark."""
     # TODO(Dongge): Build targets with sanitizers.
-    cflags = ['-fsanitize-coverage='
-              'trace-pc-guard,'
-              'pc-table,'
-              'trace-cmp,'
-              'trace-loads,'
-              'trace-stores',
-              '-ldl',
-              '-lrt',
-              '-lpthread',
-              '/weak.o']
+    cflags = [
+        '-fsanitize-coverage='
+        'trace-pc-guard,'
+        'pc-table,'
+        'trace-cmp,'
+        'trace-loads,'
+        'trace-stores', '-ldl', '-lrt', '-lpthread', '/weak.o'
+    ]
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
