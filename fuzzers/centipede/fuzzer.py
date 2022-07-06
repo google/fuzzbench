@@ -72,7 +72,7 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
 
     flags = [
         f'--workdir={work_dir}',
-        f'--corpus_dir={output_corpus},{input_corpus}'
+        f'--corpus_dir={output_corpus},{input_corpus}',
         f'--binary={target_binary}',
         '--num_runs=100',
         # Run in fork mode to allow ignoring ooms, timeouts, crashes and
