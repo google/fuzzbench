@@ -29,12 +29,12 @@ ENV CENTIPEDE_CONFIG='build \
 
 # Add C++15
 ADD https://commondatastorage.googleapis.com/chromium-browser-clang/Linux_x64/clang-llvmorg-15-init-1995-g5bec1ea7-1.tgz /
-RUN mkdir /clang && \
-    tar zxvf /clang-llvmorg-15-init-1995-g5bec1ea7-1.tgz -C /clang
+RUN mkdir /bin/clang && \
+    tar zxvf /clang-llvmorg-15-init-1995-g5bec1ea7-1.tgz -C /bin/clang
 
-# Assist building with dataflow sanitizers
-COPY weak.c /
-RUN /clang/bin/clang /weak.c -c -o /weak.o
+# Assist building targets with dataflow sanitizers
+COPY weak.c /src/
+RUN /bin/clang/bin/clang /src/weak.c -c -o /lib/weak.o
 
 # Install deps of centipede, clone&build centipede.
 RUN apt update && \
