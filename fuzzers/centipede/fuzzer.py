@@ -33,8 +33,8 @@ def build():
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
-    os.environ['CC'] = '/bin/clang/bin/clang'
-    os.environ['CXX'] = '/bin/clang/bin/clang++'
+    os.environ['CC'] = '/clang/bin/clang'
+    os.environ['CXX'] = '/clang/bin/clang++'
     # TODO(Dongge): Replace the following libs with a single .a file
     # once Centipede has it.
     os.environ['FUZZER_LIB'] = (
