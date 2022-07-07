@@ -25,6 +25,7 @@ jobs:
           - aflplusplus_tracepc
           - aflplusplus_zafl
           - aflsmart
+          - centipede
           - entropic
           - fairfuzz
           - honggfuzz
@@ -98,7 +99,6 @@ jobs:
           - afl_maxmap
           - aflplusplus_libafl
           - libafl_aflpp
-          - centipede
 
         benchmark_type:
           - oss-fuzz
