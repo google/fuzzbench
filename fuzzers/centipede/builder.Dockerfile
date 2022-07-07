@@ -27,12 +27,12 @@ ENV CENTIPEDE_CONFIG='build \
   --cxxopt=-stdlib=libc++ \
   --linkopt=-lc++'
 
-# Add C++15
+# Add C++15.
 ADD https://commondatastorage.googleapis.com/chromium-browser-clang/Linux_x64/clang-llvmorg-15-init-1995-g5bec1ea7-1.tgz /
 RUN mkdir /bin/clang && \
     tar zxvf /clang-llvmorg-15-init-1995-g5bec1ea7-1.tgz -C /bin/clang
 
-# Assist building targets with dataflow sanitizers
+# Assist building targets with dataflow sanitizers.
 COPY weak.c /src/
 RUN /bin/clang/bin/clang /src/weak.c -c -o /lib/weak.o
 

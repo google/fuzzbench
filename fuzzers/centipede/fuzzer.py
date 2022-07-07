@@ -36,7 +36,7 @@ def build():
     os.environ['CC'] = '/bin/clang/bin/clang'
     os.environ['CXX'] = '/bin/clang/bin/clang++'
     # TODO(Dongge): Replace the following libs with a single .a file
-    # once Centipede has it
+    # once Centipede has it.
     os.environ['FUZZER_LIB'] = (
         '/src/centipede/bazel-bin/libfuzz_target_runner.a '
         '/src/centipede/bazel-bin/libfuzz_target_runner_no_main.a '
@@ -49,8 +49,7 @@ def build():
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
-    """Run fuzzer. Wrapper that uses the defaults when calling
-    run_fuzzer."""
+    """Run fuzzer. Wrapper that uses the defaults when calling run_fuzzer."""
     run_fuzzer(input_corpus, output_corpus, target_binary)
 
 
@@ -61,7 +60,7 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
 
     # Seperate out corpus and crash directories as sub-directories of
     # |output_corpus| to avoid conflicts when corpus directory is reloaded.
-    work_dir = os.path.join(output_corpus, 'WD')
+    work_dir = os.path.join(output_corpus, 'work-dir')
     work_dir_crash = os.path.join(work_dir, 'crashes')
     crashes_dir = os.path.join(output_corpus, 'crashes')
     output_corpus = os.path.join(output_corpus, 'corpus')
@@ -74,7 +73,6 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
         f'--workdir={work_dir}',
         f'--corpus_dir={output_corpus},{input_corpus}',
         f'--binary={target_binary}',
-        '--num_runs=100',
         # Run in fork mode to allow ignoring ooms, timeouts, crashes and
         # continue fuzzing indefinitely.
         '--fork_server=1',
