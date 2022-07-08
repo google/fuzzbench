@@ -64,7 +64,11 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
         f'--binary={target_binary}',
         # Run in fork mode to allow ignoring ooms, timeouts, crashes and
         # continue fuzzing indefinitely.
-        '--fork_server=0',
+        '--fork_server=1',
+        '--exit_on_crash=0',
+        '--timeout=1200',
+        '--rss_limit_mb=0',
+        '--address_space_limit_mb=0',
     ]
     dictionary_path = utils.get_dictionary_path(target_binary)
     if dictionary_path:
