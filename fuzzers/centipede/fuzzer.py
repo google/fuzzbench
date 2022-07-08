@@ -32,15 +32,7 @@ def build():
 
     os.environ['CC'] = '/clang/bin/clang'
     os.environ['CXX'] = '/clang/bin/clang++'
-    # TODO(Dongge): Replace the following libs with a single .a file
-    # once Centipede has it.
-    os.environ['FUZZER_LIB'] = (
-        '/src/centipede/bazel-bin/libfuzz_target_runner.a '
-        '/src/centipede/bazel-bin/libfuzz_target_runner_no_main.a '
-        '/src/centipede/bazel-bin/libshared_memory_blob_sequence.a '
-        '/src/centipede/bazel-bin/libexecution_request.a '
-        '/src/centipede/bazel-bin/libexecution_result.a '
-        '/src/centipede/bazel-bin/libbyte_array_mutator.a')
+    os.environ['FUZZER_LIB'] = '/src/centipede/bazel-bin/libcentipede_runner.pic.a'
 
     utils.build_benchmark()
 
