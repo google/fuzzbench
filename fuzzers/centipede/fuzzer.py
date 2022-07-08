@@ -24,7 +24,10 @@ def build():
     # TODO(Dongge): Build targets with sanitizers.
     cflags = [
         '@/src/centipede/clang-flags.txt',
-        '-ldl', '-lrt', '-lpthread', '/lib/weak.o',
+        '-ldl',
+        '-lrt',
+        '-lpthread',
+        '/lib/weak.o',
         '-fsanitize-coverage=trace-loads,trace-stores',
     ]
     utils.append_flags('CFLAGS', cflags)
@@ -32,7 +35,8 @@ def build():
 
     os.environ['CC'] = '/clang/bin/clang'
     os.environ['CXX'] = '/clang/bin/clang++'
-    os.environ['FUZZER_LIB'] = '/src/centipede/bazel-bin/libcentipede_runner.pic.a'
+    os.environ[
+        'FUZZER_LIB'] = '/src/centipede/bazel-bin/libcentipede_runner.pic.a'
 
     utils.build_benchmark()
 
