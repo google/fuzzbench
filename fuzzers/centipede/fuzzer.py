@@ -23,12 +23,9 @@ def build():
     """Build benchmark."""
     # TODO(Dongge): Build targets with sanitizers.
     cflags = [
-        '-fsanitize-coverage='
-        'trace-pc-guard,'
-        'pc-table,'
-        'trace-cmp,'
-        'trace-loads,'
-        'trace-stores', '-ldl', '-lrt', '-lpthread', '/lib/weak.o'
+        '@/src/centipede/clang-flags.txt',
+        '-ldl', '-lrt', '-lpthread', '/lib/weak.o',
+        '-fsanitize-coverage=trace-loads,trace-stores',
     ]
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
