@@ -15,18 +15,6 @@
 ARG parent_image
 FROM $parent_image
 
-ENV BAZEL_GPG_LINK='https://bazel.build/bazel-release.pub.gpg'
-ENV BAZEL_GPG_FILE='/etc/apt/trusted.gpg.d/bazel.gpg'
-ENV BAZEL_APT_LINK='https://storage.googleapis.com/bazel-apt'
-ENV BAZEL_APT_LIST='/etc/apt/sources.list.d/bazel.list'
-ENV CENTIPEDE_GITHUB='https://github.com/google/centipede.git'
-ENV CENTIPEDE_SRC='/src/centipede/'
-ENV CENTIPEDE_CONFIG='build \
-  --client_env=CC=clang \
-  --cxxopt=-std=c++17 \
-  --cxxopt=-stdlib=libc++ \
-  --linkopt=-lc++'
-
 # Add C++15.
 ADD https://commondatastorage.googleapis.com/chromium-browser-clang/Linux_x64/clang-llvmorg-15-init-1995-g5bec1ea7-1.tgz /
 RUN mkdir /clang && \
@@ -35,10 +23,11 @@ RUN mkdir /clang && \
 # Install deps of centipede, clone&build centipede.
 RUN apt update && \
   apt install -y apt-transport-https && \
-  curl -fsSL "${BAZEL_GPG_LINK}" \
-    | gpg --dearmor > "${BAZEL_GPG_FILE}" && \
-  echo "deb [arch=amd64] ${BAZEL_APT_LINK} stable jdk1.8" \
-    | tee "${BAZEL_APT_LIST}" && \
+  curl -fsSL 'https://bazel.build/bazel-release.pub.gpg' \
+    | gpg --dearmor > '/etc/apt/trusted.gpg.d/bazel.gpg' && \
+  echo 'deb [arch=amd64] ' \
+    'https://storage.googleapis.com/bazel-apt stable jdk1.8' \
+    | tee '/etc/apt/sources.list.d/bazel.list' && \
   apt update && \
   apt install -y \
     vim \
@@ -47,11 +36,12 @@ RUN apt update && \
     --depth 1 \
     --branch main \
     --single-branch \
-    "${CENTIPEDE_GITHUB}" "${CENTIPEDE_SRC}" && \
-  echo "${CENTIPEDE_CONFIG}" > ~/.bazelrc && \
-  (cd "${CENTIPEDE_SRC}" && \
+    'https://github.com/google/centipede.git' '/src/centipede/' && \
+  echo 'build --client_env=CC=clang --cxxopt=-std=c++17 ' \
+    '--cxxopt=-stdlib=libc++ --linkopt=-lc++' >> ~/.bazelrc && \
+  (cd '/src/centipede/' && \
   bazel build -c opt :all) && \
-  cp "${CENTIPEDE_SRC}/bazel-bin/centipede" "/out/centipede" && \
+  cp '/src/centipede/bazel-bin/centipede' '/out/centipede' && \
   CENTIPEDE_FLAGS=`cat /src/centipede/clang-flags.txt`
 
 ENV CFLAGS="$CFLAGS $CENTIPEDE_FLAGS"
