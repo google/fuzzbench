@@ -55,4 +55,8 @@ RUN apt update && \
   echo "${CENTIPEDE_CONFIG}" > ~/.bazelrc && \
   (cd "${CENTIPEDE_SRC}" && \
   bazel build -c opt :all) && \
-  cp "${CENTIPEDE_SRC}/bazel-bin/centipede" "/out/centipede"
+  cp "${CENTIPEDE_SRC}/bazel-bin/centipede" "/out/centipede" && \
+  CENTIPEDE_FLAGS=`cat /src/centipede/clang-flags.txt`
+
+ENV CFLAGS="$CFLAGS $CENTIPEDE_FLAGS"
+ENV CXXFLAGS="$CXXFLAGS $CENTIPEDE_FLAGS"

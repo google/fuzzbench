@@ -23,7 +23,6 @@ def build():
     """Build benchmark."""
     # TODO(Dongge): Build targets with sanitizers.
     cflags = [
-        '@/src/centipede/clang-flags.txt',
         '-ldl',
         '-lrt',
         '-lpthread',
