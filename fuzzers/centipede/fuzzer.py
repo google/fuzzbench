@@ -26,7 +26,6 @@ def build():
         '-ldl',
         '-lrt',
         '-lpthread',
-        '/lib/weak.o',
         '-fsanitize-coverage=trace-loads,trace-stores',
     ]
     utils.append_flags('CFLAGS', cflags)
