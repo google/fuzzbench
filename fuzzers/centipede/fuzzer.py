@@ -26,7 +26,7 @@ def build():
         '-ldl',
         '-lrt',
         '-lpthread',
-        '-fsanitize-coverage=trace-loads,trace-stores',
+        '-fsanitize-coverage=trace-loads',
     ]
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
