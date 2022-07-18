@@ -25,6 +25,7 @@ jobs:
           - aflplusplus_tracepc
           - aflplusplus_zafl
           - aflsmart
+          - centipede
           - entropic
           - fairfuzz
           - honggfuzz
