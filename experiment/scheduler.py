@@ -19,6 +19,7 @@ import os
 import sys
 import random
 import time
+import sqlite3
 from typing import List, Dict
 
 import jinja2
@@ -103,7 +104,7 @@ def all_trials_ended(experiment: str) -> bool:
     try:
         return not get_experiment_trials(experiment).filter(
             models.Trial.time_ended.is_(None)).all()
-    except Exception:  # pylint: disable=broad-except
+    except sqlite3.OperationalError:
         logger.error('Failed to check whether all trials ended.')
         return False
 
