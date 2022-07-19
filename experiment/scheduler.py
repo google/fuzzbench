@@ -100,8 +100,12 @@ def get_expired_trials(experiment: str, max_total_time: int):
 def all_trials_ended(experiment: str) -> bool:
     """Return a bool if there are any trials in |experiment| that have not
     started."""
-    return not get_experiment_trials(experiment).filter(
-        models.Trial.time_ended.is_(None)).all()
+    try:
+        return not get_experiment_trials(experiment).filter(
+            models.Trial.time_ended.is_(None)).all()
+    except Exception:  # pylint: disable=broad-except
+        logger.error('Failed to check whether all trials ended.')
+        return False
 
 
 def delete_instances(instances, experiment_config):
