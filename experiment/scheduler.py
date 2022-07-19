@@ -16,10 +16,10 @@ import datetime
 import math
 import multiprocessing
 import os
+import sqlite3
 import sys
 import random
 import time
-import sqlite3
 from typing import List, Dict
 
 import jinja2
