@@ -30,7 +30,8 @@ RUN git clone -n https://gitlab.freedesktop.org/mesa/drm.git
 RUN cd drm; git checkout 5db0f7692d1fdf05f9f6c0c02ffa5a5f4379c1f3 
 RUN git clone --depth 1 https://github.com/mstorsjo/fdk-aac.git
 ADD https://sourceforge.net/projects/lame/files/latest/download lame.tar.gz
-RUN git clone --depth 1 git://anongit.freedesktop.org/xorg/lib/libXext
+RUN git clone --depth 2 git://anongit.freedesktop.org/xorg/lib/libXext
+RUN (cd /src/libXext; git checkout d965a1a8ce9331d2aaf1c697a29455ad55171b36)
 RUN git clone -n git://anongit.freedesktop.org/git/xorg/lib/libXfixes
 RUN cd libXfixes; git checkout 174a94975af710247719310cfc53bd13e1f3b44d
 RUN git clone --depth 1 https://github.com/intel/libva
