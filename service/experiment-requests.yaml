@@ -20,12 +20,34 @@
 # Please add new experiment requests towards the top of this file.
 #
 
-- experiment: 2022-07-06-afl-new-splicing
+- experiment: 2022-07-21-afl-new-splicing
   description: "Test AFL with a new splicing as mutation"
   type: bug
   fuzzers:
     - afl
     - afl_splicing_mutation
+
+- experiment: 2022-07-20-aflpp
+  description: "afl++ libafl tests. Redo 07-13."
+  fuzzers:
+    - aflplusplus_libafl
+    - libafl_aflpp
+    - libafl
+    - aflplusplus
+    - aflplusplus_optimal
+    - honggfuzz
+    - entropic
+
+- experiment: 2022-07-13-aflpp
+  description: "afl++ libafl tests"
+  fuzzers:
+    - aflplusplus_libafl
+    - libafl_aflpp
+    - libafl
+    - aflplusplus
+    - aflplusplus_optimal
+    - honggfuzz
+    - entropic
 
 - experiment: 2022-06-29-aflpp
   description: "afl++ libafl tests"
