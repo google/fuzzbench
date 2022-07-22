@@ -22,7 +22,6 @@
 
 - experiment: 2022-07-22-centipede
   description: "Test AFL with a new splicing as mutation"
-  type: bug
   fuzzers:
     - honggfuzz
     - aflplusplus
