@@ -23,6 +23,8 @@ def build():
     """Build benchmark."""
     # TODO(Dongge): Build targets with sanitizers.
     cflags = [
+        '-fno-builtin',
+        '-gline-tables-only',
         '-ldl',
         '-lrt',
         '-lpthread',
