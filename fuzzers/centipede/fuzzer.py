@@ -33,8 +33,10 @@ def build():
 
     os.environ['CC'] = '/clang/bin/clang'
     os.environ['CXX'] = '/clang/bin/clang++'
-    os.environ[
-        'FUZZER_LIB'] = '/src/centipede/bazel-bin/libcentipede_runner.pic.a'
+
+    centipede_lib = '/src/centipede/bazel-bin/libcentipede_runner.pic.a'
+    os.environ['FUZZER_LIB'] = centipede_lib
+    os.environ['LIB_FUZZING_ENGINE'] = centipede_lib
 
     utils.build_benchmark()
 
