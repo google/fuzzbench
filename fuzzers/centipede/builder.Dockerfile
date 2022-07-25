@@ -31,6 +31,7 @@ RUN apt update && \
   apt update && \
   apt install -y \
     vim \
+    libssl-dev \
     bazel && \
   git clone \
     --depth 1 \

@@ -20,6 +20,54 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-07-24-centipede
+  description: "Test centipede"
+  fuzzers:
+    - honggfuzz
+    - aflplusplus
+    - eclipser
+    - entropic
+    - libfuzzer
+    - lafintel
+    - afl
+    - mopt
+    - fairfuzz
+    - libfuzzer_dataflow
+    - centipede
+
+- experiment: 2022-07-22-centipede
+  description: "Test AFL with a new splicing as mutation"
+  fuzzers:
+    - honggfuzz
+    - aflplusplus
+    - eclipser
+    - entropic
+    - libfuzzer
+    - lafintel
+    - afl
+    - mopt
+    - fairfuzz
+    - libfuzzer_dataflow
+    - centipede
+
+- experiment: 2022-07-21-afl-new-splicing
+  description: "Test AFL with a new splicing as mutation"
+  type: bug
+  fuzzers:
+    - afl
+    - afl_splicing_mutation
+
+- experiment: 2022-07-20-aflpp
+  description: "afl++ libafl tests. Redo 07-13."
+  fuzzers:
+    - aflplusplus_libafl
+    - libafl_aflpp
+    - libafl
+    - aflplusplus
+    - aflplusplus_optimal
+    - honggfuzz
+    - entropic
+
 - experiment: 2022-07-13-aflpp
   description: "afl++ libafl tests"
   fuzzers:

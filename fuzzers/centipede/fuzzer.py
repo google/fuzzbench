@@ -23,10 +23,12 @@ def build():
     """Build benchmark."""
     # TODO(Dongge): Build targets with sanitizers.
     cflags = [
+        '-fno-builtin',
+        '-gline-tables-only',
         '-ldl',
         '-lrt',
         '-lpthread',
-        '-fsanitize-coverage=trace-loads',
+        '-fsanitize-coverage=trace-loads,trace-pc-guard,trace-cmp,pc-table',
     ]
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
