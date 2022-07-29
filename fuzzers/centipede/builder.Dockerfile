@@ -29,5 +29,5 @@ RUN git clone \
   cp "$CENTIPEDE_SRC/bazel-bin/centipede" '/out/centipede' && \
   CENTIPEDE_FLAGS=`cat "$CENTIPEDE_SRC/clang-flags.txt"`
 
-ENV CFLAGS="$CFLAGS $CENTIPEDE_FLAGS"
-ENV CXXFLAGS="$CXXFLAGS $CENTIPEDE_FLAGS"
+COPY weak.c /src
+RUN /clang/bin/clang /src/weak.c -c -o /lib/weak.o
