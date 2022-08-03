@@ -1,0 +1,2 @@
+fuzz_target: H20FlowInc
+project: cgc_h20flowinc

@@ -1,0 +1,2 @@
+fuzz_target: Simple_Stack_Machine
+project: cgc_simple_stack_machine

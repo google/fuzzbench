@@ -1,0 +1,2 @@
+fuzz_target: PKK_Steganography
+project: cgc_pkk_steganography

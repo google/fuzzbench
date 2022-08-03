@@ -1,0 +1,2 @@
+fuzz_target: CNMP
+project: cgc_cnmp

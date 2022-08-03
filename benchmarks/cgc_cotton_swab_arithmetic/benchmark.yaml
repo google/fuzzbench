@@ -1,0 +1,2 @@
+fuzz_target: cotton_swab_arithmetic
+project: cgc_cotton_swab_arithmetic

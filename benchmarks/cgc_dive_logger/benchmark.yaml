@@ -1,0 +1,2 @@
+fuzz_target: Dive_Logger
+project: cgc_dive_logger

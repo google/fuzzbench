@@ -1,0 +1,2 @@
+fuzz_target: online_job_application2
+project: cgc_online_job_application2

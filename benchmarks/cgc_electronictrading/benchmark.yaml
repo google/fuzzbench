@@ -1,0 +1,2 @@
+fuzz_target: electronictrading
+project: cgc_electronictrading

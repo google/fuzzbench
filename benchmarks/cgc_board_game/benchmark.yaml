@@ -1,0 +1,2 @@
+fuzz_target: Board_Game
+project: cgc_board_game

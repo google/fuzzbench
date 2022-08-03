@@ -1,0 +1,2 @@
+fuzz_target: Accel
+project: cgc_accel

@@ -1,0 +1,2 @@
+fuzz_target: Street_map_service
+project: cgc_street_map_service

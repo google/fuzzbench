@@ -1,0 +1,2 @@
+fuzz_target: BitBlaster
+project: cgc_bitblaster

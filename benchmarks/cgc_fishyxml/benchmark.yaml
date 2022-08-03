@@ -1,0 +1,2 @@
+fuzz_target: FISHYXML
+project: cgc_fishyxml

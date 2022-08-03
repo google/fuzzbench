@@ -1,0 +1,2 @@
+fuzz_target: greeter
+project: cgc_greeter

@@ -1,0 +1,2 @@
+fuzz_target: Email_System_2
+project: cgc_email_system_2

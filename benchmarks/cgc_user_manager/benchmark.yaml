@@ -1,0 +1,2 @@
+fuzz_target: User_Manager
+project: cgc_user_manager

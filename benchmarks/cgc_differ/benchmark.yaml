@@ -1,0 +1,2 @@
+fuzz_target: Differ
+project: cgc_differ

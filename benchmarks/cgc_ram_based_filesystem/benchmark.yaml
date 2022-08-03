@@ -1,0 +1,2 @@
+fuzz_target: RAM_based_filesystem
+project: cgc_ram_based_filesystem

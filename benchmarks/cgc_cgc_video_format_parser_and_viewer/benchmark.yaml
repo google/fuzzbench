@@ -1,0 +1,2 @@
+fuzz_target: CGC_Video_Format_Parser_and_Viewer
+project: cgc_cgc_video_format_parser_and_viewer

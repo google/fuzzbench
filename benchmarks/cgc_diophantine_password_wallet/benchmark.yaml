@@ -1,0 +1,2 @@
+fuzz_target: Diophantine_Password_Wallet
+project: cgc_diophantine_password_wallet

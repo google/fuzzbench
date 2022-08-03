@@ -1,0 +1,2 @@
+fuzz_target: anagram_game
+project: cgc_anagram_game

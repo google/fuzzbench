@@ -1,0 +1,2 @@
+fuzz_target: Packet_Receiver
+project: cgc_packet_receiver

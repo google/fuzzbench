@@ -1,0 +1,2 @@
+fuzz_target: cyber_blogger
+project: cgc_cyber_blogger
