@@ -21,16 +21,27 @@ from fuzzers import utils
 
 def build():
     """Build benchmark."""
-    # TODO(Dongge): Build targets with sanitizers.
-    cflags = [
-        '-fno-builtin',
-        '-gline-tables-only',
+    san_cflags = [
+        '-fsanitize-coverage=trace-loads'
+    ]
+
+    link_cflags = [
         '-ldl',
         '-lrt',
         '-lpthread',
-        '-fsanitize-coverage=trace-loads,trace-pc-guard,trace-cmp,pc-table',
         '/lib/weak.o',
     ]
+
+    # TODO(Dongge): Build targets with sanitizers.
+    try:
+        centipede_cflags = subprocess.run(
+            ['cat', '/src/centipede/clang-flags.txt'],
+            stdout=subprocess.PIPE,
+            check=True).stdout.decode('utf-8').split('\n')
+    except subprocess.CalledProcessError as err:
+        print(err)
+
+    cflags = san_cflags + centipede_cflags + link_cflags
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 

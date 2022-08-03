@@ -26,8 +26,8 @@ RUN git clone \
     '--cxxopt=-stdlib=libc++ --linkopt=-lc++' >> ~/.bazelrc && \
   (cd "$CENTIPEDE_SRC" && \
   bazel build -c opt :all) && \
-  cp "$CENTIPEDE_SRC/bazel-bin/centipede" '/out/centipede' && \
-  CENTIPEDE_FLAGS=`cat "$CENTIPEDE_SRC/clang-flags.txt"`
+  cp "$CENTIPEDE_SRC/bazel-bin/centipede" '/out/centipede'
+
 
 COPY weak.c /src
 RUN /clang/bin/clang /src/weak.c -c -o /lib/weak.o
