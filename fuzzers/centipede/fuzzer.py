@@ -33,7 +33,8 @@ def build():
     # TODO(Dongge): Build targets with sanitizers.
     with open('/src/centipede/clang-flags.txt', 'r') as clang_flags_handle:
         centipede_cflags = [
-            line.strip() for line in clang_flags_handle.readlines()]
+            line.strip() for line in clang_flags_handle.readlines()
+        ]
 
     cflags = san_cflags + centipede_cflags + link_cflags
     utils.append_flags('CFLAGS', cflags)
