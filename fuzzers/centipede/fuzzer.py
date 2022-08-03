@@ -31,13 +31,9 @@ def build():
     ]
 
     # TODO(Dongge): Build targets with sanitizers.
-    try:
-        centipede_cflags = subprocess.run(
-            ['cat', '/src/centipede/clang-flags.txt'],
-            stdout=subprocess.PIPE,
-            check=True).stdout.decode('utf-8').split('\n')
-    except subprocess.CalledProcessError as err:
-        print(err)
+    with open('/src/centipede/clang-flags.txt', 'r') as clang_flags_handle:
+        centipede_cflags = [
+            line.strip() for line in clang_flags_handle.readlines()]
 
     cflags = san_cflags + centipede_cflags + link_cflags
     utils.append_flags('CFLAGS', cflags)
@@ -45,9 +41,8 @@ def build():
 
     os.environ['CC'] = '/clang/bin/clang'
     os.environ['CXX'] = '/clang/bin/clang++'
-    os.environ[
-        'FUZZER_LIB'] = '/src/centipede/bazel-bin/libcentipede_runner.pic.a'
-
+    os.environ['FUZZER_LIB'] = (
+        '/src/centipede/bazel-bin/libcentipede_runner.pic.a')
     utils.build_benchmark()
 
 
