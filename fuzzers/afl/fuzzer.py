@@ -124,7 +124,7 @@ def run_afl_fuzz(input_corpus,
         target_binary,
         # Pass INT_MAX to afl the maximize the number of persistent loops it
         # performs.
-        '2147483647'
+        '@@'
     ]
     print('[run_afl_fuzz] Running command: ' + ' '.join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
