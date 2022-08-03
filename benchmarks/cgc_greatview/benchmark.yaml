@@ -1,0 +1,2 @@
+fuzz_target: GreatView
+project: cgc_greatview

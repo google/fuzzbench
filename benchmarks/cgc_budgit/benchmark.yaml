@@ -1,0 +1,2 @@
+fuzz_target: BudgIT
+project: cgc_budgit

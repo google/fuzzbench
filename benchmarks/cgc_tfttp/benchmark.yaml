@@ -1,0 +1,2 @@
+fuzz_target: TFTTP
+project: cgc_tfttp

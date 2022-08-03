@@ -1,0 +1,2 @@
+fuzz_target: stream_vm
+project: cgc_stream_vm

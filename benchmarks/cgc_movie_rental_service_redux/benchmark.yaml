@@ -1,0 +1,2 @@
+fuzz_target: Movie_Rental_Service_Redux
+project: cgc_movie_rental_service_redux

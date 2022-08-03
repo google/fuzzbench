@@ -1,0 +1,2 @@
+fuzz_target: Single-Sign-On
+project: cgc_single-sign-on

@@ -1,0 +1,2 @@
+fuzz_target: Particle_Simulator
+project: cgc_particle_simulator

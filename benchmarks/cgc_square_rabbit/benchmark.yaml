@@ -1,0 +1,2 @@
+fuzz_target: Square_Rabbit
+project: cgc_square_rabbit

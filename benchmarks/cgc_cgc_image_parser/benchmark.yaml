@@ -1,0 +1,2 @@
+fuzz_target: CGC_Image_Parser
+project: cgc_cgc_image_parser

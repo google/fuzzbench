@@ -1,0 +1,2 @@
+fuzz_target: basic_emulator
+project: cgc_basic_emulator

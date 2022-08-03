@@ -1,0 +1,2 @@
+fuzz_target: NarfRPN
+project: cgc_narfrpn

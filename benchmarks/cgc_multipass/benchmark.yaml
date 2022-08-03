@@ -1,0 +1,2 @@
+fuzz_target: Multipass
+project: cgc_multipass

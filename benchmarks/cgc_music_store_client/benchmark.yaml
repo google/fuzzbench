@@ -1,0 +1,2 @@
+fuzz_target: Music_Store_Client
+project: cgc_music_store_client

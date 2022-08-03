@@ -1,0 +1,2 @@
+fuzz_target: Casino_Games
+project: cgc_casino_games

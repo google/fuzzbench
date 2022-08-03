@@ -1,0 +1,2 @@
+fuzz_target: simpleOCR
+project: cgc_simpleocr

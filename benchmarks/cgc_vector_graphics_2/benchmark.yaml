@@ -1,0 +1,2 @@
+fuzz_target: Vector_Graphics_2
+project: cgc_vector_graphics_2

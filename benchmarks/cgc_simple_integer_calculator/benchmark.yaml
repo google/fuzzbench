@@ -1,0 +1,2 @@
+fuzz_target: simple_integer_calculator
+project: cgc_simple_integer_calculator
