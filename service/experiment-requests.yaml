@@ -19,16 +19,12 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
-- experiment: 2022-08-03-aflpp
-  description: "afl++ libafl tests. Redo 07-13."
+- experiment: 2022-07-21-afl-new-splicing
+  description: "Test AFL with a new splicing as mutation"
+  type: bug
   fuzzers:
-    - aflplusplus_libafl
-    - libafl_aflpp
-    - libafl
-    - aflplusplus
-    - aflplusplus_optimal
-    - honggfuzz
-    - entropic
+    - afl
+    - afl_splicing_mutation
 
 - experiment: 2022-07-24-centipede
   description: "Test centipede"
