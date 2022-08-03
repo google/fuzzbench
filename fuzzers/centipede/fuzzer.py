@@ -21,9 +21,7 @@ from fuzzers import utils
 
 def build():
     """Build benchmark."""
-    san_cflags = [
-        '-fsanitize-coverage=trace-loads'
-    ]
+    san_cflags = ['-fsanitize-coverage=trace-loads']
 
     link_cflags = [
         '-ldl',
