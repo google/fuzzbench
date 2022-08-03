@@ -1,0 +1,2 @@
+fuzz_target: router_simulator
+project: cgc_router_simulator

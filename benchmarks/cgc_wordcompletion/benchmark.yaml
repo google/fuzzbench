@@ -1,0 +1,2 @@
+fuzz_target: WordCompletion
+project: cgc_wordcompletion

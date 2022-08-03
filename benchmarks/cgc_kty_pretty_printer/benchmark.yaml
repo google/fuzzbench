@@ -1,0 +1,2 @@
+fuzz_target: KTY_Pretty_Printer
+project: cgc_kty_pretty_printer

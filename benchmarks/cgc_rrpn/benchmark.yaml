@@ -1,0 +1,2 @@
+fuzz_target: RRPN
+project: cgc_rrpn

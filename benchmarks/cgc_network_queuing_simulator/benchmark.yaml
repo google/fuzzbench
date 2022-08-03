@@ -1,0 +1,2 @@
+fuzz_target: Network_Queuing_Simulator
+project: cgc_network_queuing_simulator

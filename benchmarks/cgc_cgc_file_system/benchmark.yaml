@@ -1,0 +1,2 @@
+fuzz_target: CGC_File_System
+project: cgc_cgc_file_system

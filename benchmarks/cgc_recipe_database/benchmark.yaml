@@ -1,0 +1,2 @@
+fuzz_target: Recipe_Database
+project: cgc_recipe_database

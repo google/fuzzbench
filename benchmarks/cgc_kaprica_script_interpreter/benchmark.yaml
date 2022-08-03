@@ -1,0 +1,2 @@
+fuzz_target: Kaprica_Script_Interpreter
+project: cgc_kaprica_script_interpreter

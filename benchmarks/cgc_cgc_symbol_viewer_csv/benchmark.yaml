@@ -1,0 +1,2 @@
+fuzz_target: CGC_Symbol_Viewer_CSV
+project: cgc_cgc_symbol_viewer_csv

@@ -1,0 +1,2 @@
+fuzz_target: netstorage
+project: cgc_netstorage

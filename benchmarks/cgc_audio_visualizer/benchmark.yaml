@@ -1,0 +1,2 @@
+fuzz_target: Audio_Visualizer
+project: cgc_audio_visualizer

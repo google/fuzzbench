@@ -1,0 +1,2 @@
+fuzz_target: ASCII_Content_Server
+project: cgc_ascii_content_server

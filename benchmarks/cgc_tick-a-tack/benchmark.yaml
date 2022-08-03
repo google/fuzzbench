@@ -1,0 +1,2 @@
+fuzz_target: Tick-A-Tack
+project: cgc_tick-a-tack

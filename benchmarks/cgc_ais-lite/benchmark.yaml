@@ -1,0 +1,2 @@
+fuzz_target: AIS-Lite
+project: cgc_ais-lite

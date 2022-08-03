@@ -1,0 +1,2 @@
+fuzz_target: Divelogger2
+project: cgc_divelogger2

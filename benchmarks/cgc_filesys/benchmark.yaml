@@ -1,0 +1,2 @@
+fuzz_target: FileSys
+project: cgc_filesys

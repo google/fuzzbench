@@ -1,0 +1,2 @@
+fuzz_target: HackMan
+project: cgc_hackman

@@ -1,0 +1,2 @@
+fuzz_target: LMS
+project: cgc_lms

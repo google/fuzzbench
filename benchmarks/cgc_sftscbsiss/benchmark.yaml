@@ -1,0 +1,2 @@
+fuzz_target: SFTSCBSISS
+project: cgc_sftscbsiss

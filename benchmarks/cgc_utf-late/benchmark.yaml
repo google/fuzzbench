@@ -1,0 +1,2 @@
+fuzz_target: UTF-late
+project: cgc_utf-late
