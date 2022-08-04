@@ -17,6 +17,7 @@ import yaml
 
 from fuzzers.libfuzzer import fuzzer
 
+
 def build():
     """Build benchmark."""
     fuzzer.build()
@@ -31,7 +32,9 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # For now just use the first function, later will for multiple functions
     focus_func = focus_functions['functions'][0]
     fuzzer.run_fuzzer(input_corpus,
-               output_corpus,
-               target_binary,
-               extra_flags=['-keep_seed=1', '-cross_over_uniform_dist=1',
-                            f'-focus_function={focus_func}'])
+                      output_corpus,
+                      target_binary,
+                      extra_flags=[
+                          '-keep_seed=1', '-cross_over_uniform_dist=1',
+                          f'-focus_function={focus_func}'
+                      ])
