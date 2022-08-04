@@ -19,7 +19,7 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
-- experiment: 2022-08-04-libfuzzer_focus
+- experiment: 2022-08-04-libfuzzer-focus
   description: "Testing with focus function driven by fuzz introspector results"
   fuzzers:
     - libfuzzer
