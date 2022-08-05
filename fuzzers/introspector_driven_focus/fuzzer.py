@@ -27,14 +27,11 @@ def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer. Wrapper that uses the defaults when calling
     run_fuzzer."""
 
-    with open("focus_list.yaml", 'r') as focus_file:
+    with open('focus_list.yaml', 'r') as focus_file:
         focus_functions = yaml.load(focus_file)
-    # For now just use the first function, later will for multiple functions
+    # For now just use the first function, later will for multiple functions.
     focus_func = focus_functions['functions'][0]
     fuzzer.run_fuzzer(input_corpus,
                       output_corpus,
                       target_binary,
-                      extra_flags=[
-                          '-keep_seed=1', '-cross_over_uniform_dist=1',
-                          f'-focus_function={focus_func}'
-                      ])
+                      extra_flags=[f'-focus_function={focus_func}'])
