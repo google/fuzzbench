@@ -99,6 +99,7 @@ jobs:
           - afl_maxmap
           - aflplusplus_libafl
           - libafl_aflpp
+          - introspector_driven_focus
 
         benchmark_type:
           - oss-fuzz
