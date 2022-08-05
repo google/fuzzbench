@@ -13,3 +13,5 @@
 # limitations under the License.
 
 FROM gcr.io/fuzzbench/base-image
+
+COPY focus_list.yaml /

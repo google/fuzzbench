@@ -24,4 +24,3 @@ RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
     done && wait) && \
     ar r /usr/lib/libFuzzer.a *.o
 
-COPY focus_list.yaml /
