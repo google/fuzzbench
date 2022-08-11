@@ -287,9 +287,6 @@ make build-$FUZZER_NAME-all
 
 * Run `make presubmit` to lint your code and ensure all tests are passing.
 
-* Run `make clear-cache` to clear docker containers' caches. Next time you build
-  a project, the container will be built from scratch.
-
 ## Blocklisting benchmarks
 
 You should make sure that your fuzzer builds and runs successfully against all
