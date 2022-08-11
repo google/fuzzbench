@@ -128,7 +128,7 @@ docker run \\
 --name=runner-container \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
 --security-opt seccomp=unconfined \\
-{docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
+{docker_image_url} 2>&1 | tee /tmp/runner-log-9.txt'''
     with mock.patch('common.benchmark_utils.get_fuzz_target',
                     return_value=expected_target):
         _test_create_trial_instance(benchmark, expected_image, expected_target,
@@ -172,7 +172,7 @@ docker run \\
 \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
 --security-opt seccomp=unconfined \\
-{docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
+{docker_image_url} 2>&1 | tee /tmp/runner-log-9.txt'''
     _test_create_trial_instance(benchmark, expected_image, expected_target,
                                 expected_startup_script,
                                 local_experiment_config, False)
