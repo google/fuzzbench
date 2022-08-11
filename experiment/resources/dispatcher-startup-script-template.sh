@@ -26,7 +26,7 @@ docker run --rm \
   -e POSTGRES_PASSWORD={{postgres_password}} \
   -e CLOUD_SQL_INSTANCE_CONNECTION_NAME={{cloud_sql_instance_connection_name}} \
   -e DOCKER_REGISTRY={{docker_registry}} \
-  --shm-size=1g \
+  --shm-size=2g \
   --cap-add=SYS_PTRACE --cap-add=SYS_NICE \
   -v /var/run/docker.sock:/var/run/docker.sock --name=dispatcher-container \
   {{docker_registry}}/dispatcher-image /work/startup-dispatcher.sh
