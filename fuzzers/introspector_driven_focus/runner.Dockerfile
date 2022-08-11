@@ -15,3 +15,4 @@
 FROM gcr.io/fuzzbench/base-image
 
 COPY focus_list.yaml /
+COPY llvm-symbolizer /usr/local/bin/
