@@ -78,7 +78,7 @@ def checkout_repo_commit(commit, repo_dir):
 def main():
     """Check out an OSS-Fuzz project repo."""
     if len(sys.argv) != 3:
-        print("Usage: %s <commit> <src_dir>" % sys.argv[0])
+        print(f'Usage: {sys.argv[0]}" <commit> <src_dir>')
         return 1
 
     commit = sys.argv[1]
@@ -100,7 +100,7 @@ def main():
                 continue
             if checkout_success:
                 return 0
-    print("Checkout unsuccessful.")
+    print('Checkout unsuccessful.')
     return 1
 
 

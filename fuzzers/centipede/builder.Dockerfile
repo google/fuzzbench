@@ -15,35 +15,19 @@
 ARG parent_image
 FROM $parent_image
 
-# Add C++15.
-ADD https://commondatastorage.googleapis.com/chromium-browser-clang/Linux_x64/clang-llvmorg-15-init-1995-g5bec1ea7-1.tgz /
-RUN mkdir /clang && \
-    tar zxvf /clang-llvmorg-15-init-1995-g5bec1ea7-1.tgz -C /clang
+ENV CENTIPEDE_SRC=/src/centipede
 
-# Install deps of centipede, clone&build centipede.
-RUN apt update && \
-  apt install -y apt-transport-https && \
-  curl -fsSL 'https://bazel.build/bazel-release.pub.gpg' \
-    | gpg --dearmor > '/etc/apt/trusted.gpg.d/bazel.gpg' && \
-  echo 'deb [arch=amd64] ' \
-    'https://storage.googleapis.com/bazel-apt stable jdk1.8' \
-    | tee '/etc/apt/sources.list.d/bazel.list' && \
-  apt update && \
-  apt install -y \
-    vim \
-    libssl-dev \
-    bazel && \
-  git clone \
+# Build centipede.
+RUN git clone \
     --depth 1 \
-    --branch main \
-    --single-branch \
-    'https://github.com/google/centipede.git' '/src/centipede/' && \
+    https://github.com/google/centipede.git "$CENTIPEDE_SRC" && \
+  "$CENTIPEDE_SRC/install_dependencies_debian.sh" && \
   echo 'build --client_env=CC=clang --cxxopt=-std=c++17 ' \
     '--cxxopt=-stdlib=libc++ --linkopt=-lc++' >> ~/.bazelrc && \
-  (cd '/src/centipede/' && \
+  (cd "$CENTIPEDE_SRC" && \
   bazel build -c opt :all) && \
-  cp '/src/centipede/bazel-bin/centipede' '/out/centipede' && \
-  CENTIPEDE_FLAGS=`cat /src/centipede/clang-flags.txt`
+  cp "$CENTIPEDE_SRC/bazel-bin/centipede" '/out/centipede'
 
-ENV CFLAGS="$CFLAGS $CENTIPEDE_FLAGS"
-ENV CXXFLAGS="$CXXFLAGS $CENTIPEDE_FLAGS"
+
+COPY weak.c /src
+RUN /clang/bin/clang /src/weak.c -c -o /lib/weak.o
