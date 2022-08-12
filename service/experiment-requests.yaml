@@ -35,12 +35,6 @@
     - libfuzzer_dataflow
     - centipede
 
-- experiment: 2022-08-12-centipede
-  description: "Test centipede (`no pc_table` error should have been fixed)"
-  fuzzers:
-    - libfuzzer
-    - centipede
-
 - experiment: 2022-08-04-libfuzzer-focus
   description: "Testing with focus function driven by fuzz introspector results"
   fuzzers:
