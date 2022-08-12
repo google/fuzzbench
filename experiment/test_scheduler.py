@@ -126,6 +126,7 @@ docker run \\
 -e FUZZ_TARGET={oss_fuzz_target} \\
 -e LOCAL_EXPERIMENT=False \\
 --name=runner-container \\
+--shm-size=2g \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
 --security-opt seccomp=unconfined \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
@@ -170,6 +171,7 @@ docker run \\
 -e FUZZ_TARGET={oss_fuzz_target} \\
 -e LOCAL_EXPERIMENT=True \\
 \\
+--shm-size=2g \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
 --security-opt seccomp=unconfined \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''

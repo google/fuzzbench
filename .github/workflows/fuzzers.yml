@@ -69,8 +69,6 @@ jobs:
           - aflplusplus_dict2file
           - afl_2_52_b
           - aflplusplus_cmplog
-          - aflplusplus_311
-          - aflplusplus_314
           - afl_two_instances
           - afl_random_favored
           - aflpp_random_default
@@ -99,6 +97,7 @@ jobs:
           - afl_maxmap
           - aflplusplus_libafl
           - libafl_aflpp
+          - introspector_driven_focus
 
         benchmark_type:
           - oss-fuzz
