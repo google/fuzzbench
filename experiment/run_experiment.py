@@ -452,6 +452,7 @@ class LocalDispatcher(BaseDispatcher):
             set_docker_registry_arg,
             '-e',
             'LOCAL_EXPERIMENT=True',
+            '--shm-size=2g',
             '--cap-add=SYS_PTRACE',
             '--cap-add=SYS_NICE',
             '--name=%s' % container_name,
