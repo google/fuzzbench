@@ -19,11 +19,20 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
+
 - experiment: 2022-08-12-centipede
   description: "Test centipede (`no pc_table` error should have been fixed)"
   fuzzers:
     - libfuzzer
     - centipede
+
+- experiment: 2022-08-04-libfuzzer-focus
+  description: "Testing with focus function driven by fuzz introspector results"
+  fuzzers:
+    - libfuzzer
+    - introspector_driven_focus
+  benchmarks:
+    - libarchive_libarchive_fuzzer
 
 - experiment: 2022-08-04-afl-new-splicing
   description: "Test AFL with a new splicing as mutation"
@@ -31,7 +40,7 @@
   fuzzers:
     - afl
     - afl_splicing_mutation
-    
+
 - experiment: 2022-08-03-afl-new-splicing
   description: "Test AFL with a new splicing as mutation"
   type: bug
