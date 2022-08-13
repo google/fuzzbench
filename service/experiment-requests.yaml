@@ -20,10 +20,19 @@
 # Please add new experiment requests towards the top of this file.
 #
 
-- experiment: 2022-08-12-centipede
-  description: "Test centipede (`no pc_table` error should have been fixed)"
+- experiment: 2022-08-13-centipede
+  description: "Test the latest centipede"
   fuzzers:
+    - honggfuzz
+    - aflplusplus
+    - eclipser
+    - entropic
     - libfuzzer
+    - lafintel
+    - afl
+    - mopt
+    - fairfuzz
+    - libfuzzer_dataflow
     - centipede
 
 - experiment: 2022-08-04-libfuzzer-focus
