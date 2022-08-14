@@ -20,6 +20,12 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-08-14-aflpp
+  description: "afl++ tests"
+  fuzzers:
+    - aflplusplus_cmplog_nocal
+    - aflplusplus_cmplog
+
 - experiment: 2022-08-13-centipede
   description: "Test the latest centipede"
   fuzzers:
