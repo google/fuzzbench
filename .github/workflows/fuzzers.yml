@@ -95,6 +95,9 @@ jobs:
           - afl_splicing_mutation
           - afl_virginmap
           - afl_maxmap
+          - aflplusplus_libafl
+          - libafl_aflpp
+          - introspector_driven_focus
 
         benchmark_type:
           - oss-fuzz

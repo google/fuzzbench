@@ -18,16 +18,15 @@ FROM $parent_image
 ENV CENTIPEDE_SRC=/src/centipede
 
 # Build centipede.
-RUN git clone \
-    --depth 1 \
+RUN git clone -n \
     https://github.com/google/centipede.git "$CENTIPEDE_SRC" && \
-  "$CENTIPEDE_SRC/install_dependencies_debian.sh" && \
   echo 'build --client_env=CC=clang --cxxopt=-std=c++17 ' \
     '--cxxopt=-stdlib=libc++ --linkopt=-lc++' >> ~/.bazelrc && \
   (cd "$CENTIPEDE_SRC" && \
-  bazel build -c opt :all) && \
+    git checkout 2a2c78a2c161d99f5962b9710bce61feb00acc3d && \
+    ./install_dependencies_debian.sh && \
+    bazel build -c opt :all) && \
   cp "$CENTIPEDE_SRC/bazel-bin/centipede" '/out/centipede'
-
 
 COPY weak.c /src
 RUN /clang/bin/clang /src/weak.c -c -o /lib/weak.o
