@@ -222,6 +222,7 @@ def run_requested_experiment(dry_run):
     if benchmarks is None:
         benchmarks = valid_benchmarks
     else:
+
         errors = False
         for benchmark in benchmarks:
             if benchmark not in valid_benchmarks:
@@ -254,12 +255,12 @@ def _run_experiment(  # pylint: disable=too-many-arguments
     if dry_run:
         logs.info('Dry run. Not actually running experiment.')
         return
-    run_experiment.start_experiment(experiment_name,
-                                    EXPERIMENT_CONFIG_FILE,
-                                    benchmarks,
-                                    fuzzers,
-                                    description=description,
-                                    oss_fuzz_corpus=oss_fuzz_corpus)
+    # run_experiment.start_experiment(experiment_name,
+    #                                 EXPERIMENT_CONFIG_FILE,
+    #                                 benchmarks,
+    #                                 fuzzers,
+    #                                 description=description,
+    #                                 oss_fuzz_corpus=oss_fuzz_corpus)
 
 
 def main():
