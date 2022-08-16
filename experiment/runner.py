@@ -337,14 +337,17 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
                     continue
 
                 file_path = os.path.join(root, filename)
-                stat_info = os.stat(file_path)
-                last_modified_time = stat_info.st_mtime
-                # Warning: ctime means creation time on Win and may not work as
-                # expected.
-                last_changed_time = stat_info.st_ctime
-                file_tuple = File(file_path, last_modified_time,
-                                  last_changed_time)
-                self.corpus_dir_contents.add(file_tuple)
+                try:
+                    stat_info = os.stat(file_path)
+                    last_modified_time = stat_info.st_mtime
+                    # Warning: ctime means creation time on Win and
+                    # may not work as expected.
+                    last_changed_time = stat_info.st_ctime
+                    file_tuple = File(file_path, last_modified_time,
+                                      last_changed_time)
+                    self.corpus_dir_contents.add(file_tuple)
+                except Exception:  # pylint: disable=broad-except
+                    pass
 
     def is_corpus_dir_same(self):
         """Sets |self.corpus_dir_contents| to the current contents and returns
