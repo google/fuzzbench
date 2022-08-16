@@ -57,4 +57,4 @@ docker run \
 --shm-size=2g \
 --cap-add SYS_NICE --cap-add SYS_PTRACE \
 --security-opt seccomp=unconfined \
-{{docker_image_url}} 2>&1 | tee /tmp/runner-log.txt
+{{docker_image_url}} 2>&1 | tee /tmp/runner-log-{{trial_id}}.txt
