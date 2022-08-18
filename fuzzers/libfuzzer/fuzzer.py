@@ -53,6 +53,13 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     os.makedirs(crashes_dir)
     os.makedirs(output_corpus)
 
+    # Enable symbolization if needed.
+    for flag in extra_flags:
+        if flag.startswith('-focus_function'):
+            os.environ['ASAN_OPTIONS'] += ':symbolize=1'
+            os.environ['UBSAN_OPTIONS'] += ':symbolize=1'
+            break
+
     flags = [
         '-print_final_stats=1',
         # `close_fd_mask` to prevent too much logging output from the target.

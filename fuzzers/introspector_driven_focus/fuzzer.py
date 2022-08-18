@@ -28,7 +28,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     run_fuzzer."""
 
     with open('/focus_list.yaml', 'r') as focus_file:
-        focus_functions = yaml.load(focus_file)
+        focus_functions = yaml.safe_load(focus_file)
     # For now just use the first function, later will for multiple functions.
     focus_func = focus_functions['functions'][0]
     fuzzer.run_fuzzer(input_corpus,
