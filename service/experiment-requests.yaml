@@ -20,6 +20,13 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-08-18-aflpp
+  description: "afl++ tests"
+  fuzzers:
+    - aflplusplus_cmplog_nocal
+    - aflplusplus_cmplog_nocal2
+    - aflplusplus_cmplog
+
 - experiment: 2022-08-17-aflpp
   description: "afl++ tests"
   fuzzers:
@@ -771,7 +778,6 @@
     - cfctx_params_512kb
     - cfctx_params_768kb
 
-
 - experiment: 2021-09-02-datadependency
   description: "Different AFL instrumentations against afldd"
   type: bug
@@ -871,12 +877,14 @@
     - aflsmartformat
     - aflsmart
     - afl
+
 - experiment: 2021-07-08-feedback
   description: "Different feedback mechanisms"
   type: bug
   fuzzers:
     - afldd
     - aflpp_vs_dd
+
 - experiment: 2021-07-09-aflpp
   description: "afl++: frida, cmplog, symbolic"
   fuzzers:
