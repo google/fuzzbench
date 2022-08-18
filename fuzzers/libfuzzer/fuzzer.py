@@ -54,6 +54,8 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     os.makedirs(output_corpus)
 
     # Enable symbolization if needed.
+    # Note: if the flags are like `symbolize=0:..:symbolize=1` then
+    # only symbolize=1 is respected.
     for flag in extra_flags:
         if flag.startswith('-focus_function'):
             os.environ['ASAN_OPTIONS'] += ':symbolize=1'
