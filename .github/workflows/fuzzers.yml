@@ -96,8 +96,6 @@ jobs:
           - afl_virginmap
           - afl_maxmap
           - introspector_driven_focus
-          - aflplusplus_cmplog_nocal
-          - aflplusplus_cmplog_nocal2
 
         benchmark_type:
           - oss-fuzz
