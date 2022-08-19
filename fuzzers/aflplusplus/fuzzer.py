@@ -271,6 +271,8 @@ def fuzz(input_corpus,
         if 'ADDITIONAL_ARGS' in os.environ:
             flags += os.environ['ADDITIONAL_ARGS'].split(' ')
 
+    os.environ['AFL_FAST_CAL'] = '1'
+
     afl_fuzzer.run_afl_fuzz(input_corpus,
                             output_corpus,
                             target_binary,
