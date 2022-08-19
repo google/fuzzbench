@@ -25,6 +25,7 @@
   fuzzers:
     - libfuzzer
     - introspector_driven_focus
+  type: bug
   benchmarks:
     - libarchive_libarchive_fuzzer
 
