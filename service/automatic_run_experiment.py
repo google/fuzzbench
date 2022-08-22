@@ -149,9 +149,9 @@ def _validate_individual_experiment_requests(experiment_requests):
             if (benchmark_type == benchmark_utils.BenchmarkType.BUG.value and
                     experiment_type != benchmark_utils.BenchmarkType.BUG.value):
                 logger.error(
-                    'Benchmark %s is type Bug, '
-                    'so the experiment %s should have type Bug, too.',
-                    benchmark, experiment)
+                    'Benchmark %s is "type: bug". '
+                    'Experiment %s must be "type: bug" as well.', benchmark,
+                    experiment)
                 valid = False
                 break
 
