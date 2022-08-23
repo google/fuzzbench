@@ -13,8 +13,8 @@
 # limitations under the License.
 """Integration code for libFuzzer fuzzer."""
 
-import yaml
 import os
+import yaml
 
 from fuzzers.libfuzzer import fuzzer
 
