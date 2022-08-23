@@ -30,7 +30,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     with open('/focus_map.yaml', 'r') as focus_file:
         focus_map = yaml.safe_load(focus_file)
-    # loads focus function at index 0 for the current benchmark
+    # loads focus function at index 5 for the current benchmark
     benchmark = os.getenv('BENCHMARK', None)
     if benchmark not in focus_map:
         return
