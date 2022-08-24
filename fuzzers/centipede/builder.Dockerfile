@@ -28,5 +28,4 @@ RUN git clone -n \
     bazel build -c opt :all) && \
   cp "$CENTIPEDE_SRC/bazel-bin/centipede" '/out/centipede'
 
-COPY weak.c /src
-RUN /clang/bin/clang /src/weak.c -c -o /lib/weak.o
+RUN /clang/bin/clang "$CENTIPEDE_SRC/weak_sancov_stubs.cc" -c -o /lib/weak.o
