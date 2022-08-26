@@ -33,7 +33,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # This fuzzer just uses the first function from the list to focus
     benchmark = os.getenv('BENCHMARK', None)
     if benchmark not in focus_map:
-        return    
+        return
     focus_func = focus_map[benchmark][0]
     fuzzer.run_fuzzer(input_corpus,
                       output_corpus,
