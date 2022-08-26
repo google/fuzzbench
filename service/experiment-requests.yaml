@@ -20,6 +20,13 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-08-25-aflpp-um
+  description: "afl++ um coverage experiments (compare our fuzzers against afl++)"
+  fuzzers:
+    - aflplusplus_um_prioritize
+    - aflplusplus_um_random
+    - aflplusplus
+
 - experiment: 2022-08-18-libfuzzer-focus
   description: "Testing with focus function driven by fuzz introspector results"
   fuzzers:

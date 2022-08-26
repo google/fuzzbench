@@ -24,6 +24,8 @@ jobs:
           - aflplusplus_optimal
           - aflplusplus_tracepc
           - aflplusplus_zafl
+          - aflplusplus_um_prioritize
+          - aflplusplus_um_random
           - aflsmart
           - centipede
           - entropic
