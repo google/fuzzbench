@@ -39,7 +39,7 @@ bloaty_fuzz_target:
 - bloaty::BloatyDoMain(bloaty::Options const&, bloaty::InputFileFactory const&, bloaty::RollupOutput*)
 - google::protobuf::DescriptorProto::IsInitialized() const
 curl_curl_fuzzer_http:
-- ossl_connect
+- Curl_ossl_connect
 - ssl3_connect
 - ssl3_ctrl
 - Curl_is_connected
@@ -48,8 +48,7 @@ file_magic_fuzzer:
 - file_buffer
 - mget
 - apprentice_sort
-freetype2-2017:
-- OSS_FUZZ_png_read_info
+freetype2-2017: []
 harfbuzz-1.3.2:
 - hb_serialize_context_t::resolve_links()
 - hb_buffer_t::verify(hb_buffer_t*, hb_font_t*, hb_feature_t const*, unsigned int,
@@ -97,7 +96,6 @@ libjpeg-turbo-07-2017:
 - tjDecompress2
 - tjDestroy
 - alloc_small
-- init_simd
 - alloc_large
 - access_virt_barray
 - realize_virt_arrays
@@ -108,11 +106,10 @@ libpcap_fuzz_both:
 - pcap_lex
 - pcap_parse
 libpng-1.2.56:
-- OSS_FUZZ_png_init_read_transformations
-- OSS_FUZZ_png_do_read_transformations
+- png_init_read_transformations
+- png_do_read_transformations
 libxml2-v2.9.2:
 - xmlTextReaderRead
-- xmlXIncludeLoadFallback
 - xmlNodeDumpOutputInternal
 libxslt_xpath:
 - htmlParseStartTag
@@ -122,11 +119,9 @@ libxslt_xpath:
 - xmlParseDocument
 matio_matio_fuzzer: []
 mbedtls_fuzz_dtlsclient:
-- mbedtls_ssl_write_client_hello
 - mbedtls_rsa_complete
 - mbedtls_ssl_fetch_input
 - mbedtls_ssl_handshake_step
-- mbedtls_ssl_write_client_hello
 mruby-2018-05-23:
 - mrb_vm_exec
 muparser_set_eval_fuzzer:
@@ -171,7 +166,7 @@ proj4_standard_fuzzer:
   std::__1::vector, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>
   >, bool, long, unsigned long, double, std::__1::allocator, proj_nlohmann::adl_serializer,
   std::__1::vector<unsigned char, std::__1::allocator<unsigned char> > > const&)
-- proj_create_crs_to_crs_from_pj
+- proj_create_crs_to_crs
 - osgeo::proj::io::createFromUserInput(std::__1::basic_string<char, std::__1::char_traits<char>,
   std::__1::allocator<char> > const&, std::__1::shared_ptr<osgeo::proj::io::DatabaseContext>
   const&, bool, pj_ctx*)
@@ -226,6 +221,5 @@ zstd_stream_decompress:
 - ZSTDv06_decompressBegin_usingDict
 - ZSTDv07_decompressBegin_usingDict
 - ZSTD_decompressSequences
-- ZSTD_decompressSequencesSplitLitBuffer
 - HUF_decompress4X1_usingDTable_internal
 - ZSTD_decompressStream
