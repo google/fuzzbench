@@ -107,6 +107,7 @@ jobs:
           - libfuzzer_focus_idx6
           - libfuzzer_focus_idx7
           - libfuzzer_focus_idx8
+          - centipede_function_filter
 
         benchmark_type:
           - oss-fuzz
