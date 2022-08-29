@@ -80,6 +80,7 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
         '--rss_limit_mb=0',
         '--address_space_limit_mb=0',
     ]
+    flags += extra_flags
     dictionary_path = utils.get_dictionary_path(target_binary)
     if dictionary_path:
         flags.append(f'--dictionary={dictionary_path}')
