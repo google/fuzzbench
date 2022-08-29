@@ -13,11 +13,9 @@
 # limitations under the License.
 """Integration code for centipede fuzzer."""
 
-import subprocess
 import os
 import yaml
 
-from fuzzers import utils
 from fuzzers.centipede import fuzzer
 
 
@@ -37,6 +35,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
     focus_filter = ','.join(focus_list)
     print("DEBUG: ", focus_filter)
     fuzzer.run_fuzzer(input_corpus,
-               output_corpus,
-               target_binary,
-               extra_flags=[f'--function_filter={focus_filter}'])
+                      output_corpus,
+                      target_binary,
+                      extra_flags=[f'--function_filter={focus_filter}'])
