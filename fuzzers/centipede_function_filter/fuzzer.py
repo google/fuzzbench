@@ -33,7 +33,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
         return
     focus_list = focus_map[benchmark]
     focus_filter = ','.join(focus_list)
-    print("DEBUG: ", focus_filter)
     fuzzer.run_fuzzer(input_corpus,
                       output_corpus,
                       target_binary,
