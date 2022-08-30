@@ -24,6 +24,7 @@
   description: "Focus function experiment -- type: code"
   fuzzers:
     - libfuzzer
+    - centipede_function_filter
     - libfuzzer_focus_idx0
     - libfuzzer_focus_idx1
     - libfuzzer_focus_idx2
@@ -55,6 +56,7 @@
   description: "Focus function experiment -- type: bug"
   fuzzers:
     - libfuzzer
+    - centipede_function_filter
     - libfuzzer_focus_idx0
     - libfuzzer_focus_idx1
     - libfuzzer_focus_idx2
