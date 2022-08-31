@@ -26,13 +26,6 @@
     - aflplusplus_um_random
     - aflplusplus
 
-- experiment: 2022-08-25-aflpp-um
-  description: "afl++ um coverage experiments (compare our fuzzers against afl++)"
-  fuzzers:
-    - aflplusplus_um_prioritize
-    - aflplusplus_um_random
-    - aflplusplus
-
 - experiment: 2022-08-29-focus-code
   description: "Focus function experiment -- type: code"
   fuzzers:
