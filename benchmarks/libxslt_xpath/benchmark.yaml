@@ -5,8 +5,16 @@ project: libxslt
 unsupported_fuzzers:
   - aflcc
   - aflplusplus_qemu
-  - aflplusplus_um_prioritize
   - aflplusplus_um_random
+  - aflplusplus_um_prioritize
+  - afl_um_random
+  - afl_um_prioritize
+  - honggfuzz_um_random
+  - honggfuzz_um_prioritize
+  - eclipser_um_random
+  - eclipser_um_prioritize
+  - libfuzzer_um_random
+  - libfuzzer_um_prioritize
   - aflplusplus_qemu_tracepc
   - aflplusplus_frida
   - klee
