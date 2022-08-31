@@ -58,11 +58,11 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     # only symbolize=1 is respected.
     for flag in extra_flags:
         if flag.startswith('-focus_function'):
-            if os.environ['ASAN_OPTIONS']:
+            if 'ASAN_OPTIONS' in os.environ:
                 os.environ['ASAN_OPTIONS'] += ':symbolize=1'
             else:
                 os.environ['ASAN_OPTIONS'] = 'symbolize=1'
-            if os.environ['UBSAN_OPTIONS']:
+            if 'UBSAN_OPTIONS' in os.environ:
                 os.environ['UBSAN_OPTIONS'] += ':symbolize=1'
             else:
                 os.environ['UBSAN_OPTIONS'] = 'symbolize=1'
