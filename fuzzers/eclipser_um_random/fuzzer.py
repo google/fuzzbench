@@ -13,7 +13,6 @@
 # limitations under the License.
 """Integration code for eclipser fuzzer."""
 
-
 import glob
 import os
 from pathlib import Path
