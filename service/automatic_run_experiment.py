@@ -143,6 +143,18 @@ def _validate_individual_experiment_requests(experiment_requests):
                          experiment_type, benchmark_utils.BENCHMARK_TYPE_STRS)
             valid = False
 
+        benchmarks = request.get('benchmarks', [])
+        for benchmark in benchmarks:
+            benchmark_type = benchmark_utils.get_type(benchmark)
+            if (benchmark_type == benchmark_utils.BenchmarkType.BUG.value and
+                    experiment_type != benchmark_utils.BenchmarkType.BUG.value):
+                logger.error(
+                    'Benchmark %s is "type: bug". '
+                    'Experiment %s must be "type: bug" as well.', benchmark,
+                    experiment)
+                valid = False
+                break
+
     return valid
 
 

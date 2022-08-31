@@ -21,3 +21,5 @@ unsupported_fuzzers:
   - libfuzzer_dataflow
   - libfuzzer_dataflow_load
   - libfuzzer_dataflow_store
+  - centipede
+  - centipede_function_filter

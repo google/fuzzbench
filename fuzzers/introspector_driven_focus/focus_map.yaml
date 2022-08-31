@@ -1,0 +1,225 @@
+arrow_parquet-arrow-fuzz:
+- arrow::compute::internal::RegisterScalarAggregateBasic(arrow::compute::FunctionRegistry*)
+- parquet::ColumnChunkMetaData::ColumnChunkMetaDataImpl::ColumnChunkMetaDataImpl(parquet::format::ColumnChunk
+  const*, parquet::ColumnDescriptor const*, short, short, parquet::ReaderProperties
+  const&, parquet::ApplicationVersion const*, std::__1::shared_ptr<parquet::InternalFileDecryptor>)
+- parquet::arrow::(anonymous namespace)::FileReaderImpl::ReadRowGroups(std::__1::vector<int,
+  std::__1::allocator<int> > const&, std::__1::vector<int, std::__1::allocator<int>
+  > const&, std::__1::shared_ptr<arrow::Table>*)
+- arrow::ipc::MessageDecoder::MessageDecoderImpl::ConsumeBuffer(std::__1::shared_ptr<arrow::Buffer>)
+- arrow::ipc::MessageDecoder::MessageDecoderImpl::ConsumeData(unsigned char const*,
+  long)
+- parquet::ReaderProperties::GetStream(std::__1::shared_ptr<arrow::io::RandomAccessFile>,
+  long, long)
+- arrow::compute::detail::(anonymous namespace)::ScalarExecutor::Execute(arrow::compute::ExecBatch
+  const&, arrow::compute::detail::ExecListener*)
+aspell_aspell_fuzzer:
+- aspeller::SpellerImpl::setup(acommon::Config*)
+- acommon::Config::read_in_settings(acommon::Config const*)
+- acommon::find_word_list(acommon::Config*)
+- aspeller::Language::setup(acommon::String const&, acommon::Config const*)
+- acommon::FilterModeList::get_new(acommon::String const&, acommon::Config const*)
+bloaty_fuzz_target:
+- google::protobuf::internal::EpsCopyInputStream::ReadStringFallback(char const*,
+  int, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>
+  >*)
+- bloaty::ItaniumDemangle(std::__1::basic_string_view<char, std::__1::char_traits<char>
+  >, bloaty::DataSource)
+- bloaty::RangeMap::AddDualRange(unsigned long, unsigned long, unsigned long, std::__1::basic_string<char,
+  std::__1::char_traits<char>, std::__1::allocator<char> > const&)
+- bloaty::Rollup::AddInternal(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>,
+  std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>,
+  std::__1::allocator<char> > > > const&, unsigned long, unsigned long, bool)
+- google::protobuf::internal::VerifyVersion(int, int, char const*)
+- bloaty::Bloaty::ScanAndRollupFile(std::__1::basic_string<char, std::__1::char_traits<char>,
+  std::__1::allocator<char> > const&, bloaty::Rollup*, std::__1::vector<std::__1::basic_string<char,
+  std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char,
+  std::__1::char_traits<char>, std::__1::allocator<char> > > >*) const
+- google::protobuf::DescriptorProto_ExtensionRange::IsInitialized() const
+- bloaty::BloatyDoMain(bloaty::Options const&, bloaty::InputFileFactory const&, bloaty::RollupOutput*)
+- google::protobuf::DescriptorProto::IsInitialized() const
+curl_curl_fuzzer_http:
+- Curl_ossl_connect
+- ssl3_connect
+- ssl3_ctrl
+- Curl_is_connected
+file_magic_fuzzer:
+- cdf_check_summary_info
+- file_buffer
+- mget
+- apprentice_sort
+freetype2-2017: []
+harfbuzz-1.3.2:
+- hb_serialize_context_t::resolve_links()
+- hb_buffer_t::verify(hb_buffer_t*, hb_font_t*, hb_feature_t const*, unsigned int,
+  char const* const*)
+- hb_font_create
+- _hb_ot_shape_fallback_kern(hb_ot_shape_plan_t const*, hb_font_t*, hb_buffer_t*)
+- OT::hmtxvmtx<OT::vmtx, OT::vhea, OT::VVAR>::accelerator_t::get_leading_bearing_with_var_unscaled(hb_font_t*,
+  unsigned int, int*) const
+- hb_ot_map_builder_t::compile(hb_ot_map_t&, hb_ot_shape_plan_key_t const&)
+- hb_hashmap_t<unsigned int, unsigned int, true>::resize(unsigned int)
+jsoncpp_jsoncpp_fuzzer:
+- Json::OurReader::decodeDouble(Json::OurReader::Token&, Json::Value&)
+- Json::Value::operator[](unsigned int)
+- Json::OurReader::readValue()
+- Json::OurReader::readToken(Json::OurReader::Token&)
+- Json::OurReader::decodeString(Json::OurReader::Token&, std::__1::basic_string<char,
+  std::__1::char_traits<char>, std::__1::allocator<char> >&)
+- Json::duplicateAndPrefixStringValue(char const*, unsigned int)
+- Json::OurReader::readObject(Json::OurReader::Token&)
+lcms-2017-03-21:
+- _cmsReadOutputLUT
+- cmsDetectDestinationBlackPoint
+- cmsDetectBlackPoint
+- cmsCreateExtendedTransform
+- OptimizeByResampling
+- ComputeConversion
+- cmsCloseProfile
+- cmsStageAllocToneCurves
+libarchive_libarchive_fuzzer:
+- read_Header
+- pax_attribute_acl
+- archive_read_format_zip_read_data
+- tar_read_header
+- archive_read_format_lha_read_header
+libhevc_hevc_dec_fuzzer:
+- ihevcd_parse_pic_init
+- ihevcd_decode
+libhtp_fuzz_htp:
+- htp_decode_path_inplace
+- htp_mpartp_destroy
+- htp_normalize_parsed_uri
+- htp_parse_uri
+- htp_urlenp_destroy
+libjpeg-turbo-07-2017:
+- tjDecompress2
+- tjDestroy
+- alloc_small
+- alloc_large
+- access_virt_barray
+- realize_virt_arrays
+libpcap_fuzz_both:
+- convert_code_r
+- gen_vlan
+- gen_prevlinkhdr_check
+- pcap_lex
+- pcap_parse
+libpng-1.2.56:
+- png_init_read_transformations
+- png_do_read_transformations
+libxml2-v2.9.2:
+- xmlTextReaderRead
+- xmlNodeDumpOutputInternal
+libxslt_xpath:
+- htmlParseStartTag
+- xmlParseReference
+- xsltLoadDocument
+- xmlResolveResourceFromCatalog
+- xmlParseDocument
+matio_matio_fuzzer: []
+mbedtls_fuzz_dtlsclient:
+- mbedtls_rsa_complete
+- mbedtls_ssl_fetch_input
+- mbedtls_ssl_handshake_step
+mruby-2018-05-23:
+- mrb_vm_exec
+muparser_set_eval_fuzzer:
+- mu::MathImpl<double>::Sum(double const*, int)
+- mu::ParserBase::ApplyBinOprt(std::__1::stack<mu::ParserToken<double, std::__1::basic_string<char,
+  std::__1::char_traits<char>, std::__1::allocator<char> > >, std::__1::deque<mu::ParserToken<double,
+  std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>
+  > >, std::__1::allocator<mu::ParserToken<double, std::__1::basic_string<char, std::__1::char_traits<char>,
+  std::__1::allocator<char> > > > > >&, std::__1::stack<mu::ParserToken<double, std::__1::basic_string<char,
+  std::__1::char_traits<char>, std::__1::allocator<char> > >, std::__1::deque<mu::ParserToken<double,
+  std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>
+  > >, std::__1::allocator<mu::ParserToken<double, std::__1::basic_string<char, std::__1::char_traits<char>,
+  std::__1::allocator<char> > > > > >&) const
+- mu::MathImpl<double>::Min(double const*, int)
+- mu::MathImpl<double>::Avg(double const*, int)
+- mu::ParserBase::CreateRPN() const
+- mu::ParserBase::ApplyFunc(std::__1::stack<mu::ParserToken<double, std::__1::basic_string<char,
+  std::__1::char_traits<char>, std::__1::allocator<char> > >, std::__1::deque<mu::ParserToken<double,
+  std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>
+  > >, std::__1::allocator<mu::ParserToken<double, std::__1::basic_string<char, std::__1::char_traits<char>,
+  std::__1::allocator<char> > > > > >&, std::__1::stack<mu::ParserToken<double, std::__1::basic_string<char,
+  std::__1::char_traits<char>, std::__1::allocator<char> > >, std::__1::deque<mu::ParserToken<double,
+  std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>
+  > >, std::__1::allocator<mu::ParserToken<double, std::__1::basic_string<char, std::__1::char_traits<char>,
+  std::__1::allocator<char> > > > > >&, int) const
+- mu::ParserBase::ParseCmdCodeBulk(int, int) const
+openthread-2019-12-23:
+- ot::Mle::Mle::Start(ot::Mle::Mle::StartMode)
+- ot::Mle::MleRouter::HandleTimeTick()
+- ot::MeshCoP::Dtls::Process()
+- ot::NetworkData::Publisher::DnsSrpServiceEntry::HandleNotifierEvents(ot::Events)
+- ot::TimeTicker::HandleTimer()
+- ot::Ip6::Tcp::HandleMessage(ot::Ip6::Header&, ot::Message&, ot::Ip6::MessageInfo&)
+proj4_standard_fuzzer:
+- osgeo::proj::io::createFromURNPart(std::__1::shared_ptr<osgeo::proj::io::DatabaseContext>
+  const&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>
+  > const&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>
+  > const&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>
+  > const&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>
+  > const&)
+- osgeo::proj::io::JSONParser::buildVerticalCRS(proj_nlohmann::basic_json<std::__1::map,
+  std::__1::vector, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>
+  >, bool, long, unsigned long, double, std::__1::allocator, proj_nlohmann::adl_serializer,
+  std::__1::vector<unsigned char, std::__1::allocator<unsigned char> > > const&)
+- proj_create_crs_to_crs
+- osgeo::proj::io::createFromUserInput(std::__1::basic_string<char, std::__1::char_traits<char>,
+  std::__1::allocator<char> > const&, std::__1::shared_ptr<osgeo::proj::io::DatabaseContext>
+  const&, bool, pj_ctx*)
+- inv_finalize(PJconsts*, PJ_COORD&)
+quickjs_eval-2020-01-05:
+- js_parse_function_decl2
+- js_binary_arith_bigint
+- JS_CallInternal
+re2-2014-12-09:
+- re2::DFA::FastSearchLoop(re2::DFA::SearchParams*)
+- re2::FactorAlternationImpl::Round3(re2::Regexp**, int, re2::Regexp::ParseFlags,
+  std::__1::vector<re2::Splice, std::__1::allocator<re2::Splice> >*)
+- re2::DFA::RunStateOnByte(re2::DFA::State*, int)
+- re2::DFA::FastSearchLoop(re2::DFA::SearchParams*)
+- re2::DFA::FastSearchLoop(re2::DFA::SearchParams*)
+- re2::DFA::FastSearchLoop(re2::DFA::SearchParams*)
+- re2::NFA::Search(re2::StringPiece const&, re2::StringPiece const&, bool, bool, re2::StringPiece*,
+  int)
+- re2::RE2::Match(re2::StringPiece const&, unsigned long, unsigned long, re2::RE2::Anchor,
+  re2::StringPiece*, int) const
+- re2::DFA::FastSearchLoop(re2::DFA::SearchParams*)
+- re2::DFA::FastSearchLoop(re2::DFA::SearchParams*)
+stb_stbi_read_fuzzer:
+- stbi__parse_png_file(stbi__png*, int, int)
+- stbi__hdr_load(stbi__context*, int*, int*, int*, int, stbi__result_info*)
+- stbi__pnm_info(stbi__context*, int*, int*, int*)
+- stbi__bmp_parse_header(stbi__context*, stbi__bmp_data*)
+- stbi__load_main(stbi__context*, int*, int*, int*, int, stbi__result_info*, int)
+- stbi__pnm_test(stbi__context*)
+- stbi__create_png_image_raw(stbi__png*, unsigned char*, unsigned int, int, unsigned
+  int, unsigned int, int, int)
+usrsctp_fuzzer_connect:
+- sctp_handle_asconf_ack
+- sctp_chunk_output
+- sctp_timeout_handler
+vorbis-2017-12-11:
+- _fetch_and_process_packet
+- _ov_open2
+- _os_lacing_expand
+- ov_read_filter
+- _ov_open1
+- vorbis_dsp_clear
+- _vds_shared_init
+zlib_zlib_uncompress_fuzzer:
+- inflateReset2
+- inflate
+- uncompress2
+zstd_stream_decompress:
+- ZSTD_decodeLiteralsBlock
+- HUF_decompress4X2_usingDTable_internal
+- ZSTDv05_decompressBegin_usingDict
+- ZSTDv06_decompressBegin_usingDict
+- ZSTDv07_decompressBegin_usingDict
+- ZSTD_decompressSequences
+- HUF_decompress4X1_usingDTable_internal
+- ZSTD_decompressStream

@@ -20,11 +20,82 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-08-29-focus-code
+  description: "Focus function experiment -- type: code"
+  fuzzers:
+    - libfuzzer
+    - centipede_function_filter
+    - libfuzzer_focus_idx0
+    - libfuzzer_focus_idx1
+    - libfuzzer_focus_idx2
+    - libfuzzer_focus_idx3
+    - libfuzzer_focus_idx4
+    - libfuzzer_focus_idx5
+    - libfuzzer_focus_idx6
+    - libfuzzer_focus_idx7
+    - libfuzzer_focus_idx8
+  benchmarks:
+    - curl_curl_fuzzer_http
+    - jsoncpp_jsoncpp_fuzzer
+    - libjpeg-turbo-07-2017
+    - mbedtls_fuzz_dtlsclient
+    - openthread-2019-12-23
+    - vorbis-2017-12-11
+    - freetype2-2017
+    - harfbuzz-1.3.2
+    - lcms-2017-03-21
+    - bloaty_fuzz_target
+    - libpng-1.2.56
+    - zlib_zlib_uncompress_fuzzer
+    - re2-2014-12-09
+    - libxml2-v2.9.2
+    - libxslt_xpath
+    - libpcap_fuzz_both
+
+- experiment: 2022-08-29-focus-bug
+  description: "Focus function experiment -- type: bug"
+  fuzzers:
+    - libfuzzer
+    - centipede_function_filter
+    - libfuzzer_focus_idx0
+    - libfuzzer_focus_idx1
+    - libfuzzer_focus_idx2
+    - libfuzzer_focus_idx3
+    - libfuzzer_focus_idx4
+    - libfuzzer_focus_idx5
+    - libfuzzer_focus_idx6
+    - libfuzzer_focus_idx7
+    - libfuzzer_focus_idx8
+  type: bug
+  benchmarks:
+    - stb_stbi_read_fuzzer
+    - proj4_standard_fuzzer
+    - usrsctp_fuzzer_connect
+    - muparser_set_eval_fuzzer
+    - zstd_stream_decompress
+    - mruby-2018-05-23
+    - libhevc_hevc_dec_fuzzer
+    - file_magic_fuzzer
+    - quickjs_eval-2020-01-05
+    - libarchive_libarchive_fuzzer
+    - arrow_parquet-arrow-fuzz
+    - aspell_aspell_fuzzer
+    - matio_matio_fuzzer
+    - libhtp_fuzz_htp
+
+- experiment: 2022-08-25-aflpp-um
+  description: "afl++ um coverage experiments (compare our fuzzers against afl++)"
+  fuzzers:
+    - aflplusplus_um_prioritize
+    - aflplusplus_um_random
+    - aflplusplus
+
 - experiment: 2022-08-18-libfuzzer-focus
   description: "Testing with focus function driven by fuzz introspector results"
   fuzzers:
     - libfuzzer
     - introspector_driven_focus
+  type: bug
   benchmarks:
     - libarchive_libarchive_fuzzer
 
