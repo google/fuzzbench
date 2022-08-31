@@ -19,6 +19,7 @@ from pathlib import Path
 import random
 import shutil
 import filecmp
+from subprocess import CalledProcessError
 import time
 import signal
 import math
@@ -152,6 +153,8 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
                         else:
                             print("EQUAL")
                     except RuntimeError:
+                        pass
+                    except CalledProcessError:
                         pass
                     os.system(f"cp {mutate_dir}/orig {source_file}")
                     ind += 1
