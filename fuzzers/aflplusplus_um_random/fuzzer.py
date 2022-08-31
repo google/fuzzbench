@@ -26,6 +26,7 @@ from pathlib import Path
 import random
 import shutil
 import filecmp
+from subprocess import CalledProcessError
 import time
 import signal
 import math
@@ -43,7 +44,6 @@ TOTAL_FUZZING_TIME_DEFAULT = 82800  # 23 hours
 TOTAL_BUILD_TIME = 43200  # 12 hours
 FUZZ_PROP = 0.5
 DEFAULT_MUTANT_TIMEOUT = 300
-PRIORITIZE_MULTIPLIER = 3
 GRACE_TIME = 3600  # 1 hour in seconds
 
 
@@ -85,7 +85,7 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
                     f"{mutate_bins}/{orig_fuzz_target}")
     benchmark = os.getenv("BENCHMARK")
 
-    source_extensions = [".c"]
+    source_extensions = [".c", ".cc", ".cpp"]
     # Use heuristic to try to find benchmark directory,
     # otherwise look for all files in the current directory.
     subdirs = [
@@ -144,8 +144,8 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
                     os.system(f"cp {mutate_dir}/{mutant} {source_file}")
 
                     try:
-                        new_fuzz_target = f"{os.getenv('FUZZ_TARGET')}\
-                            .{num_non_buggy}"
+                        new_fuzz_target = f"{os.getenv('FUZZ_TARGET')}"\
+                            f".{num_non_buggy}"
 
                         os.system(f"rm -rf {out}/*")
                         aflplusplus_fuzzer.build()
@@ -160,6 +160,8 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
                         else:
                             print("EQUAL")
                     except RuntimeError:
+                        pass
+                    except CalledProcessError:
                         pass
                     os.system(f"cp {mutate_dir}/orig {source_file}")
                     ind += 1

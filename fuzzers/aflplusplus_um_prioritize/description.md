@@ -1,13 +1,8 @@
-# aflplusplus
+# aflplusplus UM (prioritize)
 
-AFL++ fuzzer instance that has the following config active for all benchmarks:
-  - PCGUARD instrumentation 
-  - cmplog feature
-  - dict2file feature
-  - "fast" power schedule
-  - persistent mode + shared memory test cases
+Run aflplusplus over mutated code with UM prioritization
 
-Repository: [https://github.com/AFLplusplus/AFLplusplus/](https://github.com/AFLplusplus/AFLplusplus/)
+NOTE: This only works with C or C++ benchmarks.
 
 [builder.Dockerfile](builder.Dockerfile)
 [fuzzer.py](fuzzer.py)
