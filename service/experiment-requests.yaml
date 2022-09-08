@@ -20,6 +20,21 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-09-08-centipede
+  description: "Another round of centipede experiment"
+  fuzzers:
+    - honggfuzz
+    - aflplusplus
+    - eclipser
+    - entropic
+    - libfuzzer
+    - lafintel
+    - afl
+    - mopt
+    - fairfuzz
+    - libfuzzer_dataflow
+    - centipede
+
 - experiment: 2022-08-29-focus-code
   description: "Focus function experiment -- type: code"
   fuzzers:
