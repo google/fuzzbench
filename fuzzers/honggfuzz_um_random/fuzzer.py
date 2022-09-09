@@ -38,7 +38,7 @@ TOTAL_BUILD_TIME = 43200  # 12 hours
 FUZZ_PROP = 0.5
 DEFAULT_MUTANT_TIMEOUT = 300
 GRACE_TIME = 3600  # 1 hour in seconds
-MAX_FILES = 200
+MAX_FILES = 100
 
 
 @contextmanager
