@@ -39,6 +39,7 @@ FUZZ_PROP = 0.5
 DEFAULT_MUTANT_TIMEOUT = 300
 PRIORITIZE_MULTIPLIER = 20
 GRACE_TIME = 3600  # 1 hour in seconds
+MAX_FILES = 200
 
 
 @contextmanager
@@ -100,6 +101,8 @@ def build():  # pylint: disable=too-many-locals,too-many-statements,too-many-bra
     for extension in source_extensions:
         source_files += glob.glob(f"{benchmark_src_dir}/**/*{extension}",
                                   recursive=True)
+    random.shuffle(source_files)
+    source_files = source_files[:MAX_FILES]
 
     num_prioritized = math.ceil(
         (num_mutants * PRIORITIZE_MULTIPLIER) / len(source_files))
