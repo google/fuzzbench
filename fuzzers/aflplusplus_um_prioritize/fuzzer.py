@@ -131,7 +131,7 @@ def build():  # pylint: disable=too-many-locals,too-many-statements,too-many-bra
             break
 
     prioritize_map = {}
-    num_prioritized = max(
+    num_prioritized = min(
         math.ceil((num_mutants * PRIORITIZE_MULTIPLIER) / len(mutants_map)),
         MAX_PRIORITIZE)
     for source_file in mutants_map:
