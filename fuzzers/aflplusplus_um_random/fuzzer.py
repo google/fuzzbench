@@ -45,7 +45,7 @@ TOTAL_BUILD_TIME = 43200  # 12 hours
 FUZZ_PROP = 0.5
 DEFAULT_MUTANT_TIMEOUT = 300
 GRACE_TIME = 3600  # 1 hour in seconds
-MAX_FILES = 100
+MAX_MUTANTS = 200000
 
 
 @contextmanager
@@ -104,7 +104,6 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
         source_files += glob.glob(f"{benchmark_src_dir}/**/*{extension}",
                                   recursive=True)
     random.shuffle(source_files)
-    source_files = source_files[:MAX_FILES]
 
     mutants = []
     for source_file in source_files:
@@ -119,6 +118,9 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
             f"{source_dir}/{mutant.split('/')[-1]}"[1:]
             for mutant in mutants_glob
         ]
+
+        if len(mutants) > MAX_MUTANTS:
+            break
 
     random.shuffle(mutants)
     with open(f"{mutate_dir}/mutants.txt", "w", encoding="utf-8") as f_name:

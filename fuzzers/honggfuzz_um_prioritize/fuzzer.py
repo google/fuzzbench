@@ -39,7 +39,8 @@ FUZZ_PROP = 0.5
 DEFAULT_MUTANT_TIMEOUT = 300
 PRIORITIZE_MULTIPLIER = 5
 GRACE_TIME = 3600  # 1 hour in seconds
-MAX_FILES = 100
+MAX_MUTANTS = 200000
+MAX_PRIORITIZE = 30
 
 
 @contextmanager
@@ -102,12 +103,9 @@ def build():  # pylint: disable=too-many-locals,too-many-statements,too-many-bra
         source_files += glob.glob(f"{benchmark_src_dir}/**/*{extension}",
                                   recursive=True)
     random.shuffle(source_files)
-    source_files = source_files[:MAX_FILES]
 
-    num_prioritized = math.ceil(
-        (num_mutants * PRIORITIZE_MULTIPLIER) / len(source_files))
-
-    prioritize_map = {}
+    mutants_map = {}
+    num_mutants = 0
     for source_file in source_files:
         source_dir = os.path.dirname(source_file).split(src, 1)[1]
         Path(f"{mutate_dir}/{source_dir}").mkdir(parents=True, exist_ok=True)
@@ -120,6 +118,17 @@ def build():  # pylint: disable=too-many-locals,too-many-statements,too-many-bra
             f"{source_dir}/{mutant.split('/')[-1]}"[1:]
             for mutant in mutants_glob
         ]
+        num_mutants += len(mutants)
+        mutants_map[source_file] = mutants
+        if num_mutants > MAX_MUTANTS:
+            break
+
+    prioritize_map = {}
+    num_prioritized = max(
+        math.ceil((num_mutants * PRIORITIZE_MULTIPLIER) / len(mutants_map)),
+        MAX_PRIORITIZE)
+    for source_file in mutants_map:
+        mutants = mutants_map[source_file]
         with open(f"{mutate_dir}/mutants.txt", "w", encoding="utf_8") as f_name:
             f_name.writelines(f"{l}\n" for l in mutants)
         os.system(f"prioritize_mutants {mutate_dir}/mutants.txt \
@@ -145,7 +154,6 @@ def build():  # pylint: disable=too-many-locals,too-many-statements,too-many-bra
                 finished = False
                 order.append((key, ind))
         ind += 1
-    print(order)
     curr_time = time.time()
 
     # Add grace time for final build at end
