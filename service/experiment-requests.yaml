@@ -20,7 +20,7 @@
 # Please add new experiment requests towards the top of this file.
 #
 
-- experiment: 2022-09-12-centipede-focus-code
+- experiment: 2022-09-12-centipede-code
   description: "Centipede Focus function experiment -- type: code"
   fuzzers:
     - centipede
@@ -43,7 +43,7 @@
     - libxslt_xpath
     - libpcap_fuzz_both
     
-- experiment: 2022-09-12-centipede-focus-bug
+- experiment: 2022-09-12-centipede-bug
   description: "Centipede Focus function experiment -- type: bug"
   fuzzers:
     - centipede
