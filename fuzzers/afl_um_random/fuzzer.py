@@ -11,14 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for AFLplusplus fuzzer."""
-
-# This optimized afl++ variant should always be run together with
-# "aflplusplus" to show the difference - a default configured afl++ vs.
-# a hand-crafted optimized one. afl++ is configured not to enable the good
-# stuff by default to be as close to vanilla afl as possible.
-# But this means that the good stuff is hidden away in this benchmark
-# otherwise.
+"""Integration code for afl fuzzer."""
 
 import glob
 import os
@@ -32,7 +25,7 @@ import signal
 import math
 from contextlib import contextmanager
 
-from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
+from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers import utils
 
 
@@ -81,7 +74,7 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
 
     orig_fuzz_target = os.getenv("FUZZ_TARGET")
     with utils.restore_directory(src), utils.restore_directory(work):
-        aflplusplus_fuzzer.build()
+        afl_fuzzer.build()
         shutil.copy(f"{out}/{orig_fuzz_target}",
                     f"{mutate_bins}/{orig_fuzz_target}")
     benchmark = os.getenv("BENCHMARK")
@@ -149,11 +142,11 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
                     os.system(f"cp {mutate_dir}/{mutant} {source_file}")
 
                     try:
-                        new_fuzz_target = f"{os.getenv('FUZZ_TARGET')}"\
-                            f".{num_non_buggy}"
+                        new_fuzz_target = f"{os.getenv('FUZZ_TARGET')}\
+                            .{num_non_buggy}"
 
                         os.system(f"rm -rf {out}/*")
-                        aflplusplus_fuzzer.build()
+                        afl_fuzzer.build()
                         if not filecmp.cmp(f'{mutate_bins}/{orig_fuzz_target}',
                                            f'{out}/{orig_fuzz_target}',
                                            shallow=False):
@@ -174,7 +167,7 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
         pass
 
     os.system(f"rm -rf {out}/*")
-    aflplusplus_fuzzer.build()
+    afl_fuzzer.build()
     os.system(f"cp {mutate_bins}/* {out}/")
 
 
@@ -199,10 +192,10 @@ def fuzz(input_corpus, output_corpus, target_binary):
         os.system(f"cp -r {input_corpus_dir}/* {input_corpus}/*")
         try:
             with time_limit(timeout):
-                aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, mutant)
+                afl_fuzzer.fuzz(input_corpus, output_corpus, mutant)
         except TimeoutException:
             pass
         os.system(f"cp -r {output_corpus}/* {input_corpus_dir}/*")
 
     os.system(f"cp -r {input_corpus_dir}/* {input_corpus}/*")
-    aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
+    afl_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
