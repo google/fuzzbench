@@ -19,7 +19,7 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
-- experiment: 2022-08-31-aflpp-um
+- experiment: 2022-09-14-aflpp-um
   description: "afl++ um coverage experiments (compare our fuzzers against afl++)"
   fuzzers:
     - aflplusplus_um_prioritize
