@@ -13,3 +13,5 @@
 # limitations under the License.
 
 FROM gcr.io/fuzzbench/base-image
+
+COPY --from=base-clang /usr/local/bin/llvm-symbolizer /usr/local/bin/
