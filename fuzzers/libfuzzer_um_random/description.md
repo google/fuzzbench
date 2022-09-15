@@ -1,7 +1,6 @@
-# aflplusplus UM (random)
+# libfuzzer UM (prioritize)
 
-Run aflplusplus over mutated code without UM prioritization. Randomly sample
-list of generated mutants.
+Run libfuzzer over mutated code with UM prioritization
 
 NOTE: This only works with C or C++ benchmarks.
 

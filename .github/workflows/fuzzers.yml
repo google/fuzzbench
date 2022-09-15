@@ -18,12 +18,12 @@ jobs:
       matrix:
         fuzzer:
           - afl
-          - aflcc
           - aflfast
+          - afl_um_prioritize
+          - afl_um_random
           - aflplusplus
           - aflplusplus_optimal
           - aflplusplus_tracepc
-          - aflplusplus_zafl
           - aflplusplus_um_prioritize
           - aflplusplus_um_random
           - aflsmart
@@ -31,9 +31,13 @@ jobs:
           - entropic
           - fairfuzz
           - honggfuzz
+          - honggfuzz_um_random
+          - honggfuzz_um_prioritize
           - lafintel
           - klee
           - libfuzzer
+          - libfuzzer_um_random
+          - libfuzzer_um_prioritize
           - libfuzzer_dataflow
           - libfuzzer_dataflow_load
           - libfuzzer_dataflow_store
@@ -47,11 +51,12 @@ jobs:
           - tortoisefuzz
           # Binary-only (greybox) fuzzers.
           - eclipser
+          - eclipser_um_prioritize
+          - eclipser_um_random
           - afl_qemu
           - honggfuzz_qemu
           - weizz_qemu
           - aflplusplus_qemu
-          - aflplusplus_qemu_tracepc
           - aflplusplus_frida
           # Concolic execution
           - fuzzolic_aflplusplus_z3
@@ -71,16 +76,7 @@ jobs:
           - aflplusplus_dict2file
           - afl_2_52_b
           - aflplusplus_cmplog
-          - afl_two_instances
           - afl_random_favored
-          - aflpp_random_default
-          - aflpp_random_no_favs
-          - aflpp_random_wrs
-          - aflpp_random_wrs_rf
-          - aflpp_random_wrs_rf_rp
-          - aflpp_random_wrs_rp
-          - aflplusplus_pcguard
-          - aflplusplus_classic
           - entropic_execute_final
           - libfuzzer_exeute_final
           - afl_no_favored
@@ -99,14 +95,6 @@ jobs:
           - afl_maxmap
           - introspector_driven_focus
           - libfuzzer_focus_idx0
-          - libfuzzer_focus_idx1
-          - libfuzzer_focus_idx2
-          - libfuzzer_focus_idx3
-          - libfuzzer_focus_idx4
-          - libfuzzer_focus_idx5
-          - libfuzzer_focus_idx6
-          - libfuzzer_focus_idx7
-          - libfuzzer_focus_idx8
           - centipede_function_filter
 
         benchmark_type:

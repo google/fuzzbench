@@ -26,6 +26,7 @@ from pathlib import Path
 import random
 import shutil
 import filecmp
+from subprocess import CalledProcessError
 import time
 import math
 import signal
@@ -43,8 +44,10 @@ TOTAL_FUZZING_TIME_DEFAULT = 82800  # 23 hours
 TOTAL_BUILD_TIME = 43200  # 12 hours
 FUZZ_PROP = 0.5
 DEFAULT_MUTANT_TIMEOUT = 300
-PRIORITIZE_MULTIPLIER = 20
+PRIORITIZE_MULTIPLIER = 5
 GRACE_TIME = 3600  # 1 hour in seconds
+MAX_MUTANTS = 200000
+MAX_PRIORITIZE = 30
 
 
 @contextmanager
@@ -62,7 +65,7 @@ def time_limit(seconds):
         signal.alarm(0)
 
 
-def build():  # pylint: disable=too-many-locals,too-many-statements
+def build():  # pylint: disable=too-many-locals,too-many-statements,too-many-branches
     """Build benchmark."""
     start_time = time.time()
 
@@ -87,7 +90,7 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
     total_fuzzing_time = int(
         os.getenv('MAX_TOTAL_TIME', str(TOTAL_FUZZING_TIME_DEFAULT)))
 
-    source_extensions = [".c"]
+    source_extensions = [".c", ".cc", ".cpp"]
     num_mutants = math.ceil(
         (total_fuzzing_time * FUZZ_PROP) / DEFAULT_MUTANT_TIMEOUT)
     # Use heuristic to try to find benchmark directory, otherwise look for all
@@ -106,11 +109,10 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
     for extension in source_extensions:
         source_files += glob.glob(f"{benchmark_src_dir}/**/*{extension}",
                                   recursive=True)
+    random.shuffle(source_files)
 
-    num_prioritized = math.ceil(
-        (num_mutants * PRIORITIZE_MULTIPLIER) / len(source_files))
-
-    prioritize_map = {}
+    mutants_map = {}
+    num_mutants = 0
     for source_file in source_files:
         source_dir = os.path.dirname(source_file).split(src, 1)[1]
         Path(f"{mutate_dir}/{source_dir}").mkdir(parents=True, exist_ok=True)
@@ -123,6 +125,17 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
             f"{source_dir}/{mutant.split('/')[-1]}"[1:]
             for mutant in mutants_glob
         ]
+        num_mutants += len(mutants)
+        mutants_map[source_file] = mutants
+        if num_mutants > MAX_MUTANTS:
+            break
+
+    prioritize_map = {}
+    num_prioritized = min(
+        math.ceil((num_mutants * PRIORITIZE_MULTIPLIER) / len(mutants_map)),
+        MAX_PRIORITIZE)
+    for source_file in mutants_map:
+        mutants = mutants_map[source_file]
         with open(f"{mutate_dir}/mutants.txt", "w", encoding="utf_8") as f_name:
             f_name.writelines(f"{l}\n" for l in mutants)
         os.system(f"prioritize_mutants {mutate_dir}/mutants.txt \
@@ -148,7 +161,6 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
                 finished = False
                 order.append((key, ind))
         ind += 1
-    print(order)
     curr_time = time.time()
 
     # Add grace time for final build at end
@@ -173,8 +185,8 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
                     os.system(f"cp {source_file} {mutate_dir}/orig")
                     os.system(f"cp {mutate_dir}/{mutant} {source_file}")
                     try:
-                        new_fuzz_target = f"{os.getenv('FUZZ_TARGET')}\
-                            .{num_non_buggy}"
+                        new_fuzz_target = f"{os.getenv('FUZZ_TARGET')}"\
+                            f".{num_non_buggy}"
 
                         os.system(f"rm -rf {out}/*")
                         aflplusplus_fuzzer.build()
@@ -191,6 +203,8 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
                         else:
                             print(f"EQUAL {num_non_buggy}, ind: {ind}")
                     except RuntimeError:
+                        pass
+                    except CalledProcessError:
                         pass
                     os.system(f"cp {mutate_dir}/orig {source_file}")
                 ind += 1
