@@ -25,7 +25,7 @@ RUN git clone -n \
   (cd "$CENTIPEDE_SRC" && \
     git checkout 93b6567ea2e6f2fd9f3c61dcbd2820abb8993ddd && \
     ./install_dependencies_debian.sh && \
-    bazel build -c opt :all) && \
+    bazel build -c opt :centipede :centipede_runner) && \
   cp "$CENTIPEDE_SRC/bazel-bin/centipede" '/out/centipede'
 
 RUN /clang/bin/clang "$CENTIPEDE_SRC/weak_sancov_stubs.cc" -c -o /lib/weak.o
