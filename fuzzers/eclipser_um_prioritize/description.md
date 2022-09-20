@@ -1,7 +1,6 @@
-# aflplusplus UM (random)
+# eclipser UM (prioritize)
 
-Run aflplusplus over mutated code without UM prioritization. Randomly sample
-list of generated mutants.
+Run eclipser over mutated code with UM prioritization
 
 NOTE: This only works with C or C++ benchmarks.
 
