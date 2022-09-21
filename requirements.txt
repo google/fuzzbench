@@ -9,23 +9,23 @@ Jinja2==2.11.3
 numpy==1.22.0
 MarkupSafe==2.0.1
 Orange3==3.28.0
-pandas==1.2.4
+pandas==1.5.0
 psutil==5.9.0
-psycopg2-binary==2.8.4
+psycopg2-binary==2.9.3
 pyfakefs==3.7.1
-pytest==6.1.2
+pytest==7.1.3
 python-dateutil==2.8.1
 pytz==2019.3
 PyYAML==5.4
 redis==3.5.3
 rq==1.4.3
 scikit-posthocs==0.6.2
-scipy==1.6.2
+scipy==1.9.1
 seaborn==0.11.1
 sqlalchemy==1.3.19
 protobuf==3.20.1
 
 # Needed for development.
 pylint==2.7.4
-pytype==2021.4.15
+pytype==2022.9.19
 yapf==0.30.0

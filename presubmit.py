@@ -241,20 +241,20 @@ def pytype(paths: List[Path]) -> bool:
     """Run pytype on |path| if it is a python file. Return False if it fails
     type checking."""
     paths = [path for path in paths if is_python(path)]
-    if not paths:
-        return True
-
     base_command = ['python3', '-m', 'pytype']
     success = True
 
     # TODO(metzman): Change this to the parallel pytype when the path issue is
     # solved.
+    print(paths)
     for path in paths:
         command = base_command[:]
+        print('PAAATH', path)
         command.append(path)
         returncode = subprocess.run(command, check=False).returncode
         if returncode != 0:
             success = False
+    import pdb; pdb.set_trace()
     return success
 
 
