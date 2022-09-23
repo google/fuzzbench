@@ -45,8 +45,8 @@ else:
 # be conservative. Use 30 for now since this is limit for FuzzBench service.
 DEFAULT_MAX_CONCURRENT_BUILDS = 30
 
-# Build fail retries and wait interval.
-NUM_BUILD_RETRIES = 3
+# Build attempts and wait interval.
+NUM_BUILD_ATTEMPTS = 1
 BUILD_FAIL_WAIT = 5 * 60
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
@@ -146,12 +146,12 @@ def split_successes_and_failures(inputs: List,
 def retry_build_loop(build_func: Callable, inputs: List[Tuple],
                      num_concurrent_builds: int) -> List:
     """Calls |build_func| in parallel on |inputs|. Repeat on failures up to
-    |NUM_BUILD_RETRIES| times. Returns the list of inputs that |build_func| was
+    |NUM_BUILD_ATTEMPTS| times. Returns the list of inputs that |build_func| was
     called successfully on."""
     successes = []
     logs.info('Concurrent builds: %d.', num_concurrent_builds)
     with mp_pool.ThreadPool(num_concurrent_builds) as pool:
-        for _ in range(NUM_BUILD_RETRIES):
+        for _ in range(NUM_BUILD_ATTEMPTS):
             logs.info('Building using (%s): %s', build_func, inputs)
             results = pool.starmap(build_func, inputs)
             curr_successes, curr_failures = split_successes_and_failures(
