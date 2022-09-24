@@ -23,7 +23,7 @@ def build():
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer. Wrapper that uses the defaults when calling run_fuzzer."""
     # Use features derived from bounded execution paths.
-    mode_flags = ['--path_level=100']
+    mode_flags = ['--path_level=99']
     fuzzer.run_fuzzer(input_corpus,
                       output_corpus,
                       target_binary,
