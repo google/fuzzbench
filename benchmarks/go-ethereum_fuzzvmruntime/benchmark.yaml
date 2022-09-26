@@ -14,3 +14,4 @@ unsupported_fuzzers:
   - eclipser_um_prioritize
   - libfuzzer_um_random
   - libfuzzer_um_prioritize
+  - wingfuzz

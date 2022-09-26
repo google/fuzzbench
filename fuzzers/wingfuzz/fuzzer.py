@@ -23,11 +23,12 @@ def build():
     """Build benchmark."""
     cflags = [
         '-fsanitize=fuzzer-no-link', '-fno-sanitize-coverage=trace-cmp',
-        '-fno-legacy-pass-manager', '-fpass-plugin=/LoadCmpTracer.so'
+        '-fno-legacy-pass-manager', '-fpass-plugin=/LoadCmpTracer.so',
+        # Hack: support non-standard build scripts ignoring LDFLAGS
+        '-w', '-Wl,/WeakSym.o'
     ]
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
-    utils.append_flags('LDFLAGS', ['/WeakSym.o'])
 
     os.environ['CC'] = 'clang'
     os.environ['CXX'] = 'clang++'
