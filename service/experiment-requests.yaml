@@ -19,7 +19,7 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
-- experiment: 2022-09-25-wingfuzz
+- experiment: 2022-09-27-wingfuzz
   description: "Wingfuzz coverage experiment (compare against core fuzzers)"
   fuzzers:
     - afl
@@ -34,7 +34,29 @@
     - libfuzzer
     - mopt
     - wingfuzz
-
+- experiment: 2022-09-27-centipede-corpus
+  description: "Centipede Focus function experiment -- type: code"
+  oss-fuzz-corpus: true
+  fuzzers:
+    - centipede
+    - centipede_function_filter
+  benchmarks:
+    - curl_curl_fuzzer_http
+    - jsoncpp_jsoncpp_fuzzer
+    - libjpeg-turbo-07-2017
+    - mbedtls_fuzz_dtlsclient
+    - openthread-2019-12-23
+    - vorbis-2017-12-11
+    - freetype2-2017
+    - harfbuzz-1.3.2
+    - lcms-2017-03-21
+    - bloaty_fuzz_target
+    - libpng-1.2.56
+    - zlib_zlib_uncompress_fuzzer
+    - re2-2014-12-09
+    - libxml2-v2.9.2
+    - libxslt_xpath
+    - libpcap_fuzz_both
 - experiment: 2022-09-22-aflpp-um
   description: "afl++ um coverage experiments (compare our fuzzers against afl++)"
   fuzzers:
