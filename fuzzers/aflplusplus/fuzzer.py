@@ -213,8 +213,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         new_env['SYMCC_NO_SYMBOLIC_INPUT'] = "1"
         new_env['SYMCC_SILENT'] = "1"
 
-        # For CmpLog build, set the OUT and FUZZ_TARGET environment
-        # variable to point to the new CmpLog build directory.
+        # For symcc build, set the OUT and FUZZ_TARGET environment
+        # variable to point to the new symcc build directory.
         new_env['OUT'] = symcc_build_directory
         fuzz_target = os.getenv('FUZZ_TARGET')
         if fuzz_target:
