@@ -221,7 +221,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
             new_env['FUZZ_TARGET'] = os.path.join(symcc_build_directory,
                                                   os.path.basename(fuzz_target))
 
-        print('Re-building benchmark for CmpLog fuzzing target')
+        print('Re-building benchmark for symcc fuzzing target')
         utils.build_benchmark(env=new_env)
 
     shutil.copy('/afl/afl-fuzz', build_directory)
