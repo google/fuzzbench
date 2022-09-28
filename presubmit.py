@@ -454,7 +454,7 @@ def main() -> int:
         ('licensecheck', license_check),
         ('format', yapf),
         ('lint', lint),
-        # ('typecheck', pytype),
+        ('typecheck', pytype),
         ('test', pytest),
         ('validate_fuzzers_and_benchmarks', validate_fuzzers_and_benchmarks),
         ('validate_experiment_requests', validate_experiment_requests),
