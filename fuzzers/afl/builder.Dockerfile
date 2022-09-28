@@ -20,7 +20,7 @@ FROM $parent_image
 RUN git clone https://github.com/google/AFL.git /afl && \
     cd /afl && \
     git checkout 61037103ae3722c8060ff7082994836a794f978e && \
-    AFL_NO_X86=1 make
+    CFLAGS= CXXFLAGS= AFL_NO_X86=1 make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
 RUN apt-get update && \
