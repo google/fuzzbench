@@ -246,7 +246,6 @@ def pytype(paths: List[Path]) -> bool:
 
     # TODO(metzman): Change this to the parallel pytype when the path issue is
     # solved.
-    print(paths)
     for path in paths:
         command = base_command[:]
         command.append(path)
