@@ -19,6 +19,7 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
+
 - experiment: 2022-05-06-dissecting-repro
   description: "Reproduce: Dissecting AFL paper"
   type: bug
@@ -60,6 +61,18 @@
     - libxml2-v2.9.2
     - libxslt_xpath
     - libpcap_fuzz_both
+
+- experiment: 2022-09-26-aflpp-um
+  description: "afl++ and libfuzzer um coverage experiments (compare our fuzzers against afl++)"
+  fuzzers:
+    - aflplusplus_um_prioritize
+    - aflplusplus_um_random
+    - aflplusplus_um_parallel
+    - aflplusplus
+    - libfuzzer_um_prioritize
+    - libfuzzer_um_random
+    - libfuzzer_um_parallel
+    - libfuzzer
 
 - experiment: 2022-09-22-aflpp-um
   description: "afl++ um coverage experiments (compare our fuzzers against afl++)"
