@@ -6,10 +6,10 @@ google-cloud-logging==1.15.1
 google-cloud-secret-manager==2.4.0
 clusterfuzz==0.0.1a0
 Jinja2==2.11.3
-numpy==1.22.0
+numpy==1.23.3
 MarkupSafe==2.0.1
 Orange3==3.28.0
-pandas==1.5.0
+pandas==1.2.4
 psutil==5.9.0
 psycopg2-binary==2.9.3
 pyfakefs==3.7.1
@@ -27,5 +27,5 @@ protobuf==3.20.1
 
 # Needed for development.
 pylint==2.7.4
-pytype==2022.9.19
+pytype==2022.4.15
 yapf==0.30.0
