@@ -14,6 +14,9 @@
 
 FROM ubuntu:focal
 
+# Avoid interaction when installing timezone related packages.
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Build Python 3.8.6 from source because pandas doesn't support xenial's
 # Python3 version (3.5.2).
 ENV PYTHON_VERSION 3.8.6
@@ -46,13 +49,10 @@ COPY ./requirements.txt /
 RUN pip3 install -r /requirements.txt
 
 # Install google-cloud-sdk.
-RUN apt-get update -y && apt-get install -y \
-    apt-transport-https \
-    lsb-release
-RUN CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
-    echo "deb https://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" \
+RUN apt-get update -y && apt-get install -y apt-transport-https lsb-release && \
+    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
     | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg \
-    | apt-key add - && \
+    | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
     apt-get update -y && \
     apt-get install -y google-cloud-sdk
