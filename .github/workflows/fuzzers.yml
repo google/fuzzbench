@@ -53,6 +53,7 @@ jobs:
           - pythia_bb
           - fafuzz
           - tortoisefuzz
+          - wingfuzz
           # Binary-only (greybox) fuzzers.
           - eclipser
           - eclipser_um_prioritize
