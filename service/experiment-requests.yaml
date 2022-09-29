@@ -35,6 +35,23 @@
     - libfuzzer
     - mopt
     - wingfuzz
+    
+- experiment: 2022-09-29
+  description: "Main coverage experiment"
+  type: code
+  fuzzers:
+    - honggfuzz
+    - aflplusplus
+    - eclipser
+    - entropic
+    - libfuzzer
+    - aflsmart
+    - lafintel
+    - afl
+    - mopt
+    - aflfast
+    - fairfuzz
+    - libafl
 - experiment: 2022-05-06-dissecting-repro
   description: "Reproduce: Dissecting AFL paper"
   type: bug
