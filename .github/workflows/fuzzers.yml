@@ -21,11 +21,13 @@ jobs:
           - aflfast
           - afl_um_prioritize
           - afl_um_random
+          - afl_um_parallel
           - aflplusplus
           - aflplusplus_optimal
           - aflplusplus_tracepc
           - aflplusplus_um_prioritize
           - aflplusplus_um_random
+          - aflplusplus_um_parallel
           - aflsmart
           - centipede
           - entropic
@@ -33,11 +35,13 @@ jobs:
           - honggfuzz
           - honggfuzz_um_random
           - honggfuzz_um_prioritize
+          - honggfuzz_um_parallel
           - lafintel
           - klee
           - libfuzzer
           - libfuzzer_um_random
           - libfuzzer_um_prioritize
+          - libfuzzer_um_parallel
           - libfuzzer_dataflow
           - libfuzzer_dataflow_load
           - libfuzzer_dataflow_store
@@ -54,6 +58,7 @@ jobs:
           - eclipser
           - eclipser_um_prioritize
           - eclipser_um_random
+          - eclipser_um_parallel
           - afl_qemu
           - honggfuzz_qemu
           - weizz_qemu

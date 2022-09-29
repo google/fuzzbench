@@ -19,7 +19,8 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
-- experiment: 2022-09-27-wingfuzz
+
+- experiment: 2022-09-29-wingfuzz
   description: "Wingfuzz coverage experiment (compare against core fuzzers)"
   fuzzers:
     - afl
@@ -34,6 +35,24 @@
     - libfuzzer
     - mopt
     - wingfuzz
+- experiment: 2022-05-06-dissecting-repro
+  description: "Reproduce: Dissecting AFL paper"
+  type: bug
+  fuzzers:
+    - afl
+    - afl_no_favored
+    - afl_collision_free
+    - afl_double_timeout
+    - afl_no_favfactor
+    - afl_no_trim
+    - afl_scheduling_lifo
+    - afl_scheduling_random
+    - afl_score_max
+    - afl_score_min
+    - afl_score_no_novel_prioritization
+    - afl_score_random
+    - afl_splicing_mutation
+
 - experiment: 2022-09-27-centipede-corpus
   description: "Centipede Focus function experiment -- type: code"
   oss-fuzz-corpus: true
@@ -57,6 +76,19 @@
     - libxml2-v2.9.2
     - libxslt_xpath
     - libpcap_fuzz_both
+
+- experiment: 2022-09-26-aflpp-um
+  description: "afl++ and libfuzzer um coverage experiments (compare our fuzzers against afl++)"
+  fuzzers:
+    - aflplusplus_um_prioritize
+    - aflplusplus_um_random
+    - aflplusplus_um_parallel
+    - aflplusplus
+    - libfuzzer_um_prioritize
+    - libfuzzer_um_random
+    - libfuzzer_um_parallel
+    - libfuzzer
+
 - experiment: 2022-09-22-aflpp-um
   description: "afl++ um coverage experiments (compare our fuzzers against afl++)"
   fuzzers:
