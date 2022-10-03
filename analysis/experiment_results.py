@@ -382,7 +382,7 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
 
         Represents average ranks of fuzzers across all benchmarks,
         considering medians on final coverage.
-        """        
+        """
         average_ranks = self.rank_by_coverage_and_normalized_score
         num_of_benchmarks = self.summary_table.shape[0]
 
