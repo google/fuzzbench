@@ -20,6 +20,13 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-10-04-um-6-12
+  description: "UM fuzzer experiment"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_um_random_6
+    - aflplusplus_um_random_12
+
 - experiment: 2022-10-04-um
   description: "UM fuzzer experiment"
   fuzzers:
