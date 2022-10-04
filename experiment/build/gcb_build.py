@@ -48,8 +48,11 @@ def build_base_images():
     image_templates = {
         image: buildable_images[image] for image in ['base-image', 'worker']
     }
-    config = generate_cloudbuild.create_cloudbuild_spec(image_templates,
-                                                        build_base_images=True)
+    config = generate_cloudbuild.create_cloudbuild_spec(
+        image_templates,
+        benchmark='no-benchmark',
+        fuzzer='no-fuzzer',
+        build_base_images=True)
     _build(config, 'base-images')
 
 
@@ -63,7 +66,8 @@ def build_coverage(benchmark):
             image_specs['type'] == 'coverage')
     }
     config = generate_cloudbuild.create_cloudbuild_spec(image_templates,
-                                                        benchmark=benchmark)
+                                                        benchmark=benchmark,
+                                                        fuzzer='coverage')
     config_name = 'benchmark-{benchmark}-coverage'.format(benchmark=benchmark)
     _build(config, config_name)
 
@@ -117,8 +121,9 @@ def build_fuzzer_benchmark(fuzzer: str, benchmark: str):
         if image_specs['type'] in ('base', 'coverage', 'dispatcher'):
             continue
         image_templates[image_name] = image_specs
-    config = generate_cloudbuild.create_cloudbuild_spec(image_templates)
     config_name = 'benchmark-{benchmark}-fuzzer-{fuzzer}'.format(
         benchmark=benchmark, fuzzer=fuzzer)
-
+    config = generate_cloudbuild.create_cloudbuild_spec(image_templates,
+                                                        benchmark=benchmark,
+                                                        fuzzer=fuzzer)
     _build(config, config_name)
