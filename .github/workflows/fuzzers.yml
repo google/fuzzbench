@@ -27,6 +27,8 @@ jobs:
           - aflplusplus_tracepc
           - aflplusplus_um_prioritize
           - aflplusplus_um_random
+          - aflplusplus_um_random_6
+          - aflplusplus_um_random_12
           - aflplusplus_um_parallel
           - aflsmart
           - centipede
