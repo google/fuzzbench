@@ -154,11 +154,12 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
 
                             os.system(f"rm -rf {out}/*")
                             aflplusplus_fuzzer.build()
-                            if not filecmp.cmp(f'{mutate_bins}/{orig_fuzz_target}',
-                                            f'{out}/{orig_fuzz_target}',
-                                            shallow=False):
+                            if not filecmp.cmp(
+                                    f'{mutate_bins}/{orig_fuzz_target}',
+                                    f'{out}/{orig_fuzz_target}',
+                                    shallow=False):
                                 print(f"{out}/{orig_fuzz_target}",
-                                    f"{mutate_bins}/{new_fuzz_target}")
+                                      f"{mutate_bins}/{new_fuzz_target}")
                                 shutil.copy(f"{out}/{orig_fuzz_target}",
                                             f"{mutate_bins}/{new_fuzz_target}")
                                 num_non_buggy += 1
@@ -196,7 +197,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     for mutant in mutants[:num_mutants]:
         os.system(f"cp -r {input_corpus_dir}/* {input_corpus}/*")
-        with utils.restore_directory(input_corpus), utils.restore_directory(output_corpus):
+        with utils.restore_directory(input_corpus), utils.restore_directory(
+                output_corpus):
             try:
                 with time_limit(timeout):
                     aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, mutant)
