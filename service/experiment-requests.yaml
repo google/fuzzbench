@@ -20,6 +20,12 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-10-04-um
+  description: "UM fuzzer experiment"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_um_random
+  
 - experiment: 2022-09-29-wingfuzz
   description: "Wingfuzz coverage experiment (compare against core fuzzers)"
   fuzzers:
@@ -52,6 +58,7 @@
     - aflfast
     - fairfuzz
     - libafl
+
 - experiment: 2022-05-06-dissecting-repro
   description: "Reproduce: Dissecting AFL paper"
   type: bug
