@@ -20,6 +20,86 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-10-04-um
+  description: "UM fuzzer experiment"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_um_random
+  
+- experiment: 2022-09-29-wingfuzz
+  description: "Wingfuzz coverage experiment (compare against core fuzzers)"
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - entropic
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - lafintel
+    - libfuzzer
+    - mopt
+    - wingfuzz
+    
+- experiment: 2022-09-29
+  description: "Main coverage experiment"
+  type: code
+  fuzzers:
+    - honggfuzz
+    - aflplusplus
+    - eclipser
+    - entropic
+    - libfuzzer
+    - aflsmart
+    - lafintel
+    - afl
+    - mopt
+    - aflfast
+    - fairfuzz
+    - libafl
+- experiment: 2022-05-06-dissecting-repro
+  description: "Reproduce: Dissecting AFL paper"
+  type: bug
+  fuzzers:
+    - afl
+    - afl_no_favored
+    - afl_collision_free
+    - afl_double_timeout
+    - afl_no_favfactor
+    - afl_no_trim
+    - afl_scheduling_lifo
+    - afl_scheduling_random
+    - afl_score_max
+    - afl_score_min
+    - afl_score_no_novel_prioritization
+    - afl_score_random
+    - afl_splicing_mutation
+
+- experiment: 2022-09-27-centipede-corpus
+  description: "Centipede Focus function experiment -- type: code"
+  oss-fuzz-corpus: true
+  fuzzers:
+    - centipede
+    - centipede_function_filter
+  benchmarks:
+    - curl_curl_fuzzer_http
+    - jsoncpp_jsoncpp_fuzzer
+    - libjpeg-turbo-07-2017
+    - mbedtls_fuzz_dtlsclient
+    - openthread-2019-12-23
+    - vorbis-2017-12-11
+    - freetype2-2017
+    - harfbuzz-1.3.2
+    - lcms-2017-03-21
+    - bloaty_fuzz_target
+    - libpng-1.2.56
+    - zlib_zlib_uncompress_fuzzer
+    - re2-2014-12-09
+    - libxml2-v2.9.2
+    - libxslt_xpath
+    - libpcap_fuzz_both
+
 - experiment: 2022-09-26-aflpp-um
   description: "afl++ and libfuzzer um coverage experiments (compare our fuzzers against afl++)"
   fuzzers:

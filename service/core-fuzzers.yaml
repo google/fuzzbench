@@ -12,3 +12,4 @@ fuzzers:
     - lafintel
     - libfuzzer
     - mopt
+    - libafl
