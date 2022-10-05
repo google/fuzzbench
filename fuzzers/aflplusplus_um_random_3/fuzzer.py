@@ -41,7 +41,7 @@ class TimeoutException(Exception):
 
 
 TOTAL_FUZZING_TIME_DEFAULT = 82800  # 23 hours
-TOTAL_BUILD_TIME = 43200  # 12 hours
+TOTAL_BUILD_TIME = 10800  # 3 hours
 FUZZ_PROP = 0.5
 DEFAULT_MUTANT_TIMEOUT = 300
 GRACE_TIME = 3600  # 1 hour in seconds

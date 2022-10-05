@@ -41,7 +41,7 @@ class TimeoutException(Exception):
 
 
 TOTAL_FUZZING_TIME_DEFAULT = 82800  # 23 hours
-TOTAL_BUILD_TIME = 10800  # 3 hours
+TOTAL_BUILD_TIME = 43200  # 12 hours
 FUZZ_PROP = 0.5
 DEFAULT_MUTANT_TIMEOUT = 300
 GRACE_TIME = 3600  # 1 hour in seconds
@@ -131,7 +131,9 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
     # Add grace time for final build at end
     remaining_time = int(TOTAL_BUILD_TIME - (start_time - curr_time) -
                          GRACE_TIME)
-    with utils.restore_directory(src), utils.restore_directory(work):
+    with utils.restore_directory(src,
+                                 ignore_errors=True), utils.restore_directory(
+                                     work, ignore_errors=True):
         try:
             with time_limit(remaining_time):
                 num_non_buggy = 1

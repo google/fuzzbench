@@ -1,4 +1,4 @@
-# aflplusplus UM (random) - 12 hours
+# aflplusplus UM (random) - 3 hours
 
 Run aflplusplus over mutated code without UM prioritization. Randomly sample
 list of generated mutants.
