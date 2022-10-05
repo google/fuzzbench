@@ -30,7 +30,10 @@ def test_generate_cloudbuild_spec_build_base_image(experiment):
         }
     }
     generated_spec = generate_cloudbuild.create_cloudbuild_spec(
-        image_templates, build_base_images=True)
+        image_templates,
+        benchmark='no-benchmark',
+        fuzzer='no-fuzzer',
+        build_base_images=True)
 
     expected_spec = {
         'steps': [{
@@ -75,7 +78,10 @@ def test_generate_cloudbuild_spec_other_registry(experiment):
         }
     }
     generated_spec = generate_cloudbuild.create_cloudbuild_spec(
-        image_templates, build_base_images=True)
+        image_templates,
+        benchmark='no-benchmark',
+        fuzzer='no-fuzzer',
+        build_base_images=True)
 
     expected_spec = {
         'steps': [{
@@ -122,7 +128,11 @@ def test_generate_cloudbuild_spec_build_fuzzer_benchmark(experiment):
         }
     }
 
-    generated_spec = generate_cloudbuild.create_cloudbuild_spec(image_templates)
+    generated_spec = generate_cloudbuild.create_cloudbuild_spec(
+        image_templates,
+        benchmark='no-benchmark',
+        fuzzer='no-fuzzer',
+    )
 
     expected_spec = {
         'steps': [{
@@ -186,7 +196,7 @@ def test_generate_cloudbuild_spec_build_benchmark_coverage(experiment):
     }
 
     generated_spec = generate_cloudbuild.create_cloudbuild_spec(
-        image_templates, benchmark='zlib')
+        image_templates, benchmark='zlib', fuzzer='no-fuzzer')
 
     expected_spec = {
         'steps': [{
