@@ -97,6 +97,7 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
         source_files += glob.glob(f"{benchmark_src_dir}/**/*{extension}",
                                   recursive=True)
     random.shuffle(source_files)
+
     mutants = []
     for source_file in source_files:
         source_dir = os.path.dirname(source_file).split(src, 1)[1]
