@@ -20,6 +20,29 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-10-06-um-full
+  description: "UM fuzzer experiment"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_um_parallel
+    - aflplusplus
+    - libfuzzer_um_prioritize
+    - libfuzzer_um_random
+    - libfuzzer_um_parallel
+    - libfuzzer
+    - afl_um_prioritize
+    - afl_um_random
+    - afl_um_parallel
+    - afl
+    - eclipser_um_prioritize
+    - eclipser_um_random
+    - eclipser_um_parallel
+    - eclipser
+    - honggfuzz_um_prioritize
+    - honggfuzz_um_random
+    - honggfuzz_um_parallel
+    - honggfuzz
+
 - experiment: 2022-10-05-um-3
   description: "UM fuzzer experiment"
   fuzzers:
