@@ -22,3 +22,4 @@ unsupported_fuzzers:
   - libfuzzer_um_prioritize
   - libfuzzer_um_parallel
   - wingfuzz
+  - afplusplus_um_prioritize
