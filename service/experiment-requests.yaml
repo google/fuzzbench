@@ -62,6 +62,12 @@
     - aflplusplus
     - aflplusplus_um_random_3
 
+- experiment: 2022-10-05-um-3
+  description: "UM fuzzer experiment"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_um_random_3
+
 - experiment: 2022-06-08-dissecting-repro
   description: "Dissecting AFL paper (scheduling)"
   type: bug
