@@ -71,12 +71,15 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
     os.mkdir(mutate_bins)
     mutate_scripts = f"{storage_dir}/mutant_scripts"
     os.mkdir(mutate_scripts)
+    orig_out = f"{storage_dir}/orig_out"
+    os.mkdir(orig_out)
 
     orig_fuzz_target = os.getenv("FUZZ_TARGET")
     with utils.restore_directory(src), utils.restore_directory(work):
         afl_fuzzer.build()
         shutil.copy(f"{out}/{orig_fuzz_target}",
                     f"{mutate_bins}/{orig_fuzz_target}")
+        os.system(f"cp -r {out}/* {orig_out}/")
     benchmark = os.getenv("BENCHMARK")
 
     source_extensions = [".c", ".cc", ".cpp"]
@@ -124,54 +127,49 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
     # Add grace time for final build at end
     remaining_time = int(TOTAL_BUILD_TIME - (start_time - curr_time) -
                          GRACE_TIME)
+    try:
+        with time_limit(remaining_time):
+            num_non_buggy = 1
+            ind = 0
+            while ind < len(mutants):
+                with utils.restore_directory(src), utils.restore_directory(
+                        work):
+                    mutant = mutants[ind]
+                    suffix = "." + mutant.split(".")[-1]
+                    mpart = ".mutant." + mutant.split(".mutant.")[1]
+                    source_file = f"{src}/{mutant.replace(mpart, suffix)}"
+                    print(source_file)
+                    print(f"{mutate_dir}/{mutant}")
+                    os.system(f"cp {source_file} {mutate_dir}/orig")
+                    os.system(f"cp {mutate_dir}/{mutant} {source_file}")
 
-    with utils.restore_directory(src,
-                                 ignore_errors=True), utils.restore_directory(
-                                     work, ignore_errors=True):
-        try:
-            with time_limit(remaining_time):
-                num_non_buggy = 1
-                ind = 0
-                while ind < len(mutants):
-                    with utils.restore_directory(src), utils.restore_directory(
-                            work):
-                        mutant = mutants[ind]
-                        suffix = "." + mutant.split(".")[-1]
-                        mpart = ".mutant." + mutant.split(".mutant.")[1]
-                        source_file = f"{src}/{mutant.replace(mpart, suffix)}"
-                        print(source_file)
-                        print(f"{mutate_dir}/{mutant}")
-                        os.system(f"cp {source_file} {mutate_dir}/orig")
-                        os.system(f"cp {mutate_dir}/{mutant} {source_file}")
+                    try:
+                        new_fuzz_target = f"{os.getenv('FUZZ_TARGET')}\
+                            .{num_non_buggy}"
 
-                        try:
-                            new_fuzz_target = f"{os.getenv('FUZZ_TARGET')}\
-                                .{num_non_buggy}"
-
-                            os.system(f"rm -rf {out}/*")
-                            afl_fuzzer.build()
-                            if not filecmp.cmp(
-                                    f'{mutate_bins}/{orig_fuzz_target}',
-                                    f'{out}/{orig_fuzz_target}',
-                                    shallow=False):
-                                print(f"{out}/{orig_fuzz_target}",
-                                      f"{mutate_bins}/{new_fuzz_target}")
-                                shutil.copy(f"{out}/{orig_fuzz_target}",
-                                            f"{mutate_bins}/{new_fuzz_target}")
-                                num_non_buggy += 1
-                            else:
-                                print("EQUAL")
-                        except RuntimeError:
-                            pass
-                        except CalledProcessError:
-                            pass
-                        os.system(f"cp {mutate_dir}/orig {source_file}")
-                        ind += 1
-        except TimeoutException:
-            pass
+                        os.system(f"rm -rf {out}/*")
+                        afl_fuzzer.build()
+                        if not filecmp.cmp(f'{mutate_bins}/{orig_fuzz_target}',
+                                           f'{out}/{orig_fuzz_target}',
+                                           shallow=False):
+                            print(f"{out}/{orig_fuzz_target}",
+                                  f"{mutate_bins}/{new_fuzz_target}")
+                            shutil.copy(f"{out}/{orig_fuzz_target}",
+                                        f"{mutate_bins}/{new_fuzz_target}")
+                            num_non_buggy += 1
+                        else:
+                            print("EQUAL")
+                    except RuntimeError:
+                        pass
+                    except CalledProcessError:
+                        pass
+                    os.system(f"cp {mutate_dir}/orig {source_file}")
+                    ind += 1
+    except TimeoutException:
+        pass
 
     os.system(f"rm -rf {out}/*")
-    afl_fuzzer.build()
+    os.system(f"cp -r {orig_out}/* {out}/")
     os.system(f"cp {mutate_bins}/* {out}/")
 
 
