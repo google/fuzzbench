@@ -35,7 +35,19 @@ RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
     cp utils/aflpp_driver/libAFLDriver.a /
 
 # Install the packages we need.
-RUN apt-get install -y ninja-build flex bison python zlib1g-dev cargo 
+RUN apt-get install -y ninja-build flex bison python zlib1g-dev
+
+# RUN rm -rf /usr/local/bin/cargo
+
+# Uninstall old Rust
+RUN if which rustup; then rustup self uninstall -y; fi
+
+# Install latest Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
+    sh /rustup.sh -y
+
+RUN rustup default nightly-2022-09-18
+ENV PATH="/root/.cargo/bin:${PATH}"
 
 # Install Z3 from binary
 RUN wget -qO /tmp/z3x64.zip https://github.com/Z3Prover/z3/releases/download/z3-4.8.7/z3-4.8.7-x64-ubuntu-16.04.zip && \
