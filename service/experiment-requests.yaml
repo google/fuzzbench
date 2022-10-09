@@ -20,6 +20,12 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-10-07-um-3b
+  description: "UM fuzzer experiment"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_um_random_3
+
 - experiment: 2022-10-08-wingfuzz
   description: "Wingfuzz coverage experiment (compare against core fuzzers)"
   fuzzers:
