@@ -12,34 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:xenial
+FROM ubuntu:jammy
 
-# Build Python 3.8.6 from source because pandas doesn't support xenial's
-# Python3 version (3.5.2).
-ENV PYTHON_VERSION 3.8.6
-RUN apt-get update -y && apt-get install -y \
-    build-essential \
+# Python 3.10 is the default version in Ubuntu 22.04 (Jammy Jellyfish)
+ENV PYTHON_VESION 3.10
+RUN apt-get update && apt-get install -y \
     rsync \
     curl \
-    zlib1g-dev \
-    libncurses5-dev \
-    libgdbm-dev \
-    libnss3-dev \
-    libssl-dev \
-    libreadline-dev \
-    libffi-dev \
     virtualenv \
-    libbz2-dev \
-    liblzma-dev \
-    libsqlite3-dev
-
-RUN cd /tmp/ && \
-    curl -O https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz && \
-    tar -xvf Python-$PYTHON_VERSION.tar.xz && \
-    cd Python-$PYTHON_VERSION && \
-    ./configure --enable-loadable-sqlite-extensions --enable-optimizations && \
-    make -j install && \
-    rm -r /tmp/Python-$PYTHON_VERSION.tar.xz /tmp/Python-$PYTHON_VERSION
+    liblzma-dev
 
 # Install common python dependencies.
 COPY ./requirements.txt /

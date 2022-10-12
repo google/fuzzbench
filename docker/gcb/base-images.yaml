@@ -20,10 +20,10 @@ images:
 steps:
 - args:
   - pull
-  - ubuntu:xenial
+  - ubuntu:jammy
   env:
     - DOCKER_BUILDKIT=1
-  id: pull-ubuntu-xenial
+  id: pull-ubuntu-jammy
   name: docker:19.03.12
 - args:
   - build
