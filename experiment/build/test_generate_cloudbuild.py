@@ -34,11 +34,6 @@ def test_generate_cloudbuild_spec_build_base_image(experiment):
 
     expected_spec = {
         'steps': [{
-            'id': 'pull-ubuntu-jammy',
-            'env': ['DOCKER_BUILDKIT=1'],
-            'name': 'docker:19.03.12',
-            'args': ['pull', 'ubuntu:jammy']
-        }, {
             'id': 'base-image',
             'env': ['DOCKER_BUILDKIT=1'],
             'name': 'docker:19.03.12',
@@ -79,11 +74,6 @@ def test_generate_cloudbuild_spec_other_registry(experiment):
 
     expected_spec = {
         'steps': [{
-            'id': 'pull-ubuntu-jammy',
-            'env': ['DOCKER_BUILDKIT=1'],
-            'name': 'docker:19.03.12',
-            'args': ['pull', 'ubuntu:jammy']
-        }, {
             'id': 'base-image',
             'env': ['DOCKER_BUILDKIT=1'],
             'name': 'docker:19.03.12',
