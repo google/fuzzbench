@@ -14,7 +14,7 @@
 
 FROM ubuntu:jammy
 
-# Python 3.10 is the default version in Ubuntu 22.04 (Jammy Jellyfish).
+# Python 3.10.4 is the default version in Ubuntu 22.04 (Jammy Jellyfish).
 ENV PYTHON_VESION 3.10
 RUN apt-get update && apt-get install -y \
     rsync \
