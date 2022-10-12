@@ -113,10 +113,7 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
         df.index = df.index.map(lambda fuzzer: description_link(commit, fuzzer))
         return df
 
-    @property
-    @functools.lru_cache()
-    # TODO(lszekeres): With python3.8+, replace above two decorators with:
-    # @functools.cached_property
+    @functools.cached_property
     def _experiment_snapshots_df(self):
         """Data frame containing only the time snapshots, for each benchmark,
         based on which we do further analysis, i.e., statistical tests and
