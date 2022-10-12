@@ -20,61 +20,61 @@
 # Please add new experiment requests towards the top of this file.
 #
 
-- experiment: 2022-10-12-um-full_10
+- experiment: 2022-10-12-um-full-10
   description: "UM fuzzer experiment (eclipser_um_prioritize, eclipser_um_parallel)"
   fuzzers:
     - eclipser_um_prioritize
     - eclipser_um_parallel
 
-- experiment: 2022-10-12-um-full_9
+- experiment: 2022-10-12-um-full-9
   description: "UM fuzzer experiment (eclipser, eclipser_um_random)"
   fuzzers:
     - eclipser
     - eclipser_um_random
 
-- experiment: 2022-10-12-um-full_8
+- experiment: 2022-10-12-um-full-8
   description: "UM fuzzer experiment (libfuzzer_um_prioritize, libfuzzer_um_parallel)"
   fuzzers:
     - libfuzzer_um_prioritize
     - libfuzzer_um_parallel
 
-- experiment: 2022-10-12-um-full_7
+- experiment: 2022-10-12-um-full-7
   description: "UM fuzzer experiment (libfuzzer, libfuzzer_um_random)"
   fuzzers:
     - libfuzzer
     - libfuzzer_um_random
 
-- experiment: 2022-10-12-um-full_6
+- experiment: 2022-10-12-um-full-6
   description: "UM fuzzer experiment (honggfuzz_um_prioritize, honggfuzz_um_parallel)"
   fuzzers:
     - honggfuzz_um_prioritize
     - honggfuzz_um_parallel
 
-- experiment: 2022-10-12-um-full_5
+- experiment: 2022-10-12-um-full-5
   description: "UM fuzzer experiment (honggfuzz, honggfuzz_um_random)"
   fuzzers:
     - honggfuzz
     - honggfuzz_um_random
 
-- experiment: 2022-10-12-um-full_4
+- experiment: 2022-10-12-um-full-4
   description: "UM fuzzer experiment (aflplusplus_um_prioritize, aflplusplus_um_parallel)"
   fuzzers:
     - aflplusplus_um_prioritize
     - aflplusplus_um_parallel
 
-- experiment: 2022-10-12-um-full_3
+- experiment: 2022-10-12-um-full-3
   description: "UM fuzzer experiment (aflplusplus, aflplusplus_um_random)"
   fuzzers:
     - aflplusplus
     - aflplusplus_um_random
 
-- experiment: 2022-10-12-um-full_2
+- experiment: 2022-10-12-um-full-2
   description: "UM fuzzer experiment (afl_um_prioritize, afl_um_parallel)"
   fuzzers:
     - afl_um_prioritize
     - afl_um_parallel
 
-- experiment: 2022-10-12-um-full_1
+- experiment: 2022-10-12-um-full-1
   description: "UM fuzzer experiment (afl, afl_um_random)"
   fuzzers:
     - afl
