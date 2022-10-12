@@ -277,6 +277,24 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
                               key=self._relevant_column),
             experiment_level_ranking_function)
 
+    def _ranking_not_aggregated(self, benchmark_level_ranking_function,
+                                experiment_level_ranking_function):
+        df = self._experiment_snapshots_df
+        # group trials by assigning a trial group that ranges from 1 to
+        # the maximum number of trials for each combination of fuzzer
+        # and benchmark
+        df['trials_group'] = df.groupby(['fuzzer', 'benchmark']).cumcount() + 1
+        df['trials_group'] = df['trials_group'].astype(str)
+        # append the trial group to each benchmark name
+        df['benchmark'] = df[['benchmark', 'trials_group']].agg('-'.join,
+                                                                axis=1)
+        new_df = df.drop(columns=['trials_group'])
+        return data_utils.experiment_level_ranking(
+            new_df,
+            functools.partial(benchmark_level_ranking_function,
+                              key=self._relevant_column),
+            experiment_level_ranking_function)
+
     @property
     def rank_by_average_rank_and_average_rank(self):
         """Rank fuzzers using average rank per benchmark and average rank
@@ -297,6 +315,14 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
         across benchmarks."""
         return self._ranking(data_utils.benchmark_rank_by_median,
                              data_utils.experiment_rank_by_average_rank)
+
+    @property
+    def rank_by_coverage_and_normalized_score(self):
+        """Rank fuzzers using coverage per trial and normalized score
+        across trials."""
+        return self._ranking_not_aggregated(
+            data_utils.benchmark_rank_by_median,
+            data_utils.experiment_rank_by_average_rank)
 
     @property
     def rank_by_median_and_average_normalized_score(self):
@@ -358,7 +384,7 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
         Represents average ranks of fuzzers across all benchmarks,
         considering medians on final coverage.
         """
-        average_ranks = self.rank_by_median_and_average_rank
+        average_ranks = self.rank_by_coverage_and_normalized_score
         num_of_benchmarks = self.summary_table.shape[0]
 
         plot_filename = 'experiment_critical_difference_plot.svg'
