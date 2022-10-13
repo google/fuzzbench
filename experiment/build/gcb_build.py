@@ -31,7 +31,8 @@ CONFIG_DIR = 'config'
 GCB_BUILD_TIMEOUT = 13 * 60 * 60  # 4 hours.
 
 # TODO(metzman): Make configurable.
-WORKER_POOL_NAME = 'projects/fuzzbench/locations/us-central1/workerPools/buildpool'
+WORKER_POOL_NAME = (
+    'projects/fuzzbench/locations/us-central1/workerPools/buildpool')
 
 logger = logs.Logger('builder')  # pylint: disable=invalid-name
 
@@ -105,6 +106,7 @@ def _build(
         # TODO(metzman): Refactor code so that local_build stores logs as well.
         build_utils.store_build_logs(config_name, result)
         if result.retcode != 0:
+            logs.error('%s resulted in %s.', command, result)
             raise subprocess.CalledProcessError(result.retcode, command)
     return result
 
