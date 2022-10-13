@@ -6,15 +6,19 @@ unsupported_fuzzers:
   - aflcc
   - aflplusplus_qemu
   - aflplusplus_um_random
+  - aflplusplus_um_random_75
   - aflplusplus_um_random_3
   - aflplusplus_um_random_6
   - aflplusplus_um_prioritize
+  - aflplusplus_um_prioritize_75
   - aflplusplus_um_parallel
   - afl_um_random
   - afl_um_prioritize
   - afl_um_parallel
   - honggfuzz_um_random
+  - honggfuzz_um_random_75
   - honggfuzz_um_prioritize
+  - honggfuzz_um_prioritize_75
   - honggfuzz_um_parallel
   - eclipser_um_random
   - eclipser_um_prioritize

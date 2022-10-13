@@ -26,7 +26,9 @@ jobs:
           - aflplusplus_optimal
           - aflplusplus_tracepc
           - aflplusplus_um_prioritize
+          - aflplusplus_um_prioritize_75
           - aflplusplus_um_random
+          - aflplusplus_um_random_75
           - aflplusplus_um_random_3
           - aflplusplus_um_random_6
           - aflplusplus_um_parallel
@@ -36,7 +38,9 @@ jobs:
           - fairfuzz
           - honggfuzz
           - honggfuzz_um_random
+          - honggfuzz_um_random_75
           - honggfuzz_um_prioritize
+          - honggfuzz_um_prioritize_75
           - honggfuzz_um_parallel
           - lafintel
           - klee
