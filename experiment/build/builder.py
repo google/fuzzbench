@@ -16,6 +16,7 @@
 
 import argparse
 import itertools
+import multiprocessing
 from multiprocessing import pool as mp_pool
 import os
 import random
@@ -40,10 +41,8 @@ if not experiment_utils.is_local_experiment():
 else:
     import experiment.build.local_build as buildlib
 
-# FIXME: Use 10 as default quota.
-# Even though it says queueing happen, we end up exceeding limits on "get", so
-# be conservative. Use 30 for now since this is limit for FuzzBench service.
-DEFAULT_MAX_CONCURRENT_BUILDS = 30
+DEFAULT_MAX_CONCURRENT_BUILDS = max(min(2 * multiprocessing.cpu_count(), 150),
+                                    30)
 
 # Build attempts and wait interval.
 NUM_BUILD_ATTEMPTS = 3
