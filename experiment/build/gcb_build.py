@@ -30,10 +30,8 @@ CONFIG_DIR = 'config'
 # Maximum time to wait for a GCB config to finish build.
 GCB_BUILD_TIMEOUT = 13 * 60 * 60  # 4 hours.
 
-# High cpu and memory configuration, matches OSS-Fuzz.
-GCB_MACHINE_TYPE = 'n1-highcpu-32'
-
-DISK_SIZE = '200GB'
+# TODO(metzman): Make configurable.
+WORKER_POOL_NAME = 'projects/fuzzbench/locations/us-central1/workerPools/buildpool'
 
 logger = logs.Logger('builder')  # pylint: disable=invalid-name
 
@@ -82,11 +80,10 @@ def _build(
         logger.debug('Using build configuration: %s' % config)
 
         config_arg = '--config=%s' % config_file.name
-        machine_type_arg = '--machine-type=%s' % GCB_MACHINE_TYPE
-        disk_size_arg = '--disk-size=%s' % DISK_SIZE
 
         # Use "s" suffix to denote seconds.
         timeout_arg = '--timeout=%ds' % timeout_seconds
+        worker_pool_arg = f'--worker-pool={WORKER_POOL_NAME}'
 
         command = [
             'gcloud',
@@ -95,8 +92,7 @@ def _build(
             str(utils.ROOT_DIR),
             config_arg,
             timeout_arg,
-            machine_type_arg,
-            disk_size_arg,
+            worker_pool_arg,
         ]
 
         # Don't write to stdout to make concurrent building faster. Otherwise
