@@ -22,7 +22,7 @@ from common import yaml_utils
 from common.utils import ROOT_DIR
 from experiment.build import build_utils
 
-DOCKER_IMAGE = 'docker:19.03.12'
+DOCKER_IMAGE = 'gcr.io/cloud-builders/docker'
 STANDARD_DOCKER_REGISTRY = 'gcr.io/fuzzbench'
 
 
@@ -118,8 +118,10 @@ def get_docker_registry():
 
 
 def create_cloudbuild_spec(image_templates,
-                           benchmark='',
-                           build_base_images=False):
+                           benchmark,
+                           fuzzer,
+                           build_base_images=False,
+                           cloudbuild_tag=None):
     """Generates Cloud Build specification.
 
     Args:
@@ -131,6 +133,8 @@ def create_cloudbuild_spec(image_templates,
       GCB build steps.
     """
     cloudbuild_spec = {'steps': [], 'images': []}
+    if cloudbuild_tag is not None:
+        cloudbuild_spec['tags'] = [f'fuzzer-{fuzzer}', f'benchmark-{benchmark}']
 
     # Workaround for bug https://github.com/moby/moby/issues/40262.
     # This is only needed for base-image as it inherits from ubuntu:xenial.
@@ -142,6 +146,14 @@ def create_cloudbuild_spec(image_templates,
             'args': ['pull', 'ubuntu:xenial'],
         })
 
+    # TODO(metzman): Figure out how to do this to solve log length issue.
+    # cloudbuild_spec['steps'].append({
+    #     'id': 'buildx-create',
+    #     'name': DOCKER_IMAGE,
+    #     'args': ['buildx', 'create', '--use', 'buildxbuilder', '--driver-opt',
+    #              'env.BUILDKIT_STEP_LOG_MAX_SIZE=500000000']
+    #     })
+
     for image_name, image_specs in image_templates.items():
         step = {
             'id': image_name,
@@ -149,12 +161,17 @@ def create_cloudbuild_spec(image_templates,
             'name': DOCKER_IMAGE,
         }
         step['args'] = [
-            'build', '--tag',
-            _get_experiment_image_tag(image_specs), '--tag',
-            _get_gcb_image_tag(image_specs), '--tag',
-            _get_cachable_image_tag(image_specs), '--cache-from',
-            _get_cachable_image_tag(image_specs), '--build-arg',
-            'BUILDKIT_INLINE_CACHE=1'
+            'build',
+            '--tag',
+            _get_experiment_image_tag(image_specs),
+            '--tag',
+            _get_gcb_image_tag(image_specs),
+            '--tag',
+            _get_cachable_image_tag(image_specs),
+            '--cache-from',
+            _get_cachable_image_tag(image_specs),
+            '--build-arg',
+            'BUILDKIT_INLINE_CACHE=1',
         ]
         for build_arg in image_specs.get('build_arg', []):
             step['args'] += ['--build-arg', build_arg]
@@ -186,7 +203,10 @@ def main():
     image_templates = yaml_utils.read(
         os.path.join(ROOT_DIR, 'docker', 'image_types.yaml'))
     base_images_spec = create_cloudbuild_spec(
-        {'base-image': image_templates['base-image']}, build_base_images=True)
+        {'base-image': image_templates['base-image']},
+        build_base_images=True,
+        benchmark='no-benchmark',
+        fuzzer='no-fuzzer')
     base_images_spec_file = os.path.join(ROOT_DIR, 'docker', 'gcb',
                                          'base-images.yaml')
     yaml_utils.write(base_images_spec_file, base_images_spec)
