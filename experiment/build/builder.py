@@ -46,7 +46,7 @@ else:
 DEFAULT_MAX_CONCURRENT_BUILDS = 30
 
 # Build attempts and wait interval.
-NUM_BUILD_ATTEMPTS = 1
+NUM_BUILD_ATTEMPTS = 3
 BUILD_FAIL_WAIT = 5 * 60
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
