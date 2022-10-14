@@ -78,12 +78,15 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
     os.mkdir(mutate_bins)
     mutate_scripts = f"{storage_dir}/mutant_scripts"
     os.mkdir(mutate_scripts)
+    orig_out = f"{storage_dir}/orig_out"
+    os.mkdir(orig_out)
 
     orig_fuzz_target = os.getenv("FUZZ_TARGET")
     with utils.restore_directory(src), utils.restore_directory(work):
         aflplusplus_fuzzer.build()
         shutil.copy(f"{out}/{orig_fuzz_target}",
                     f"{mutate_bins}/{orig_fuzz_target}")
+        os.system(f"cp -r {out}/* {orig_out}/")
     benchmark = os.getenv("BENCHMARK")
 
     source_extensions = [".c", ".cc", ".cpp"]
@@ -131,7 +134,6 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
     # Add grace time for final build at end
     remaining_time = int(TOTAL_BUILD_TIME - (start_time - curr_time) -
                          GRACE_TIME)
-
     try:
         with time_limit(remaining_time):
             num_non_buggy = 1
@@ -174,7 +176,7 @@ def build():  # pylint: disable=too-many-locals,too-many-statements
         pass
 
     os.system(f"rm -rf {out}/*")
-    aflplusplus_fuzzer.build()
+    os.system(f"cp -r {orig_out}/* {out}/")
     os.system(f"cp {mutate_bins}/* {out}/")
 
 
@@ -191,18 +193,21 @@ def fuzz(input_corpus, output_corpus, target_binary):
     num_mutants = min(math.ceil(total_mutant_time / timeout), len(mutants))
 
     input_corpus_dir = "/storage/input_corpus"
-    os.mkdir("/storage")
-    os.mkdir(input_corpus_dir)
+    os.makedirs(input_corpus_dir, exist_ok=True)
     os.environ['AFL_SKIP_CRASHES'] = "1"
 
     for mutant in mutants[:num_mutants]:
         os.system(f"cp -r {input_corpus_dir}/* {input_corpus}/*")
-        try:
-            with time_limit(timeout):
-                aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, mutant)
-        except TimeoutException:
-            pass
-        os.system(f"cp -r {output_corpus}/* {input_corpus_dir}/*")
+        with utils.restore_directory(input_corpus), utils.restore_directory(
+                output_corpus):
+            try:
+                with time_limit(timeout):
+                    aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, mutant)
+            except TimeoutException:
+                pass
+            except CalledProcessError:
+                pass
+            os.system(f"cp -r {output_corpus}/* {input_corpus_dir}/*")
 
     os.system(f"cp -r {input_corpus_dir}/* {input_corpus}/*")
     aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, target_binary)

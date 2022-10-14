@@ -41,8 +41,6 @@ from common import yaml_utils
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
-OSS_FUZZ_PROJECTS_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz',
-                                     'projects')
 RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
 FUZZER_NAME_REGEX = re.compile(r'^[a-z][a-z0-9_]+$')
 EXPERIMENT_CONFIG_REGEX = re.compile(r'^[a-z0-9-]{0,30}$')
@@ -56,7 +54,6 @@ FILTER_SOURCE_REGEX = re.compile(r'('
                                  r'\#*\#$|'
                                  r'\.pytest_cache/|'
                                  r'.*/test_data/|'
-                                 r'^third_party/oss-fuzz/build/|'
                                  r'^docker/generated.mk$|'
                                  r'^docs/)')
 _OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT = (

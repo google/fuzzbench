@@ -102,7 +102,7 @@ def get_config_value(attribute):
 
 
 @contextlib.contextmanager
-def restore_directory(directory):
+def restore_directory(directory, ignore_errors=False):
     """Helper contextmanager that when created saves a backup of |directory| and
     when closed/exited replaces |directory| with the backup.
 
@@ -127,7 +127,7 @@ def restore_directory(directory):
         backup = os.path.join(temp_dir, os.path.basename(directory))
         shutil.copytree(directory, backup, symlinks=True)
         yield
-        shutil.rmtree(directory)
+        shutil.rmtree(directory, ignore_errors=ignore_errors)
         shutil.move(backup, directory)
         try:
             os.getcwd()
