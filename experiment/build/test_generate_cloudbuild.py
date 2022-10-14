@@ -37,11 +37,6 @@ def test_generate_cloudbuild_spec_build_base_image(experiment):
 
     expected_spec = {
         'steps': [{
-            'id': 'pull-ubuntu-xenial',
-            'env': ['DOCKER_BUILDKIT=1'],
-            'name': 'gcr.io/cloud-builders/docker',
-            'args': ['pull', 'ubuntu:xenial']
-        }, {
             'id': 'base-image',
             'env': ['DOCKER_BUILDKIT=1'],
             'name': 'gcr.io/cloud-builders/docker',
@@ -85,11 +80,6 @@ def test_generate_cloudbuild_spec_other_registry(experiment):
 
     expected_spec = {
         'steps': [{
-            'id': 'pull-ubuntu-xenial',
-            'env': ['DOCKER_BUILDKIT=1'],
-            'name': 'gcr.io/cloud-builders/docker',
-            'args': ['pull', 'ubuntu:xenial']
-        }, {
             'id': 'base-image',
             'env': ['DOCKER_BUILDKIT=1'],
             'name': 'gcr.io/cloud-builders/docker',
