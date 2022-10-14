@@ -36,7 +36,8 @@ do
         -DLIBGIT2_NO_FEATURES_H \
         "$fuzzer" -o "$WORK/$fuzzer_name.o"
     $CXX $CXXFLAGS -std=c++11 -o "$OUT/$fuzzer_name" \
-        -lFuzzingEngine "$WORK/$fuzzer_name.o" "$WORK/lib/libgit2.a"
+        -lFuzzingEngine "$WORK/$fuzzer_name.o" "$WORK/lib/libgit2.a" \
+        -pthread -ldl
 
     zip -j "$OUT/${fuzzer_name}_seed_corpus.zip" \
         ../fuzzers/corpora/${fuzzer_name%_fuzzer}/*

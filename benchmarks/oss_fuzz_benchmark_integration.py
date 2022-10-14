@@ -15,14 +15,16 @@
 will create benchmark.yaml as well as copy the files from OSS-Fuzz to build the
 benchmark."""
 import argparse
+import bisect
 import datetime
 from distutils import spawn
 from distutils import dir_util
+import json
 import os
 import sys
 import subprocess
-import json
-import bisect
+import tempfile
+
 
 from common import utils
 from common import benchmark_utils
@@ -30,8 +32,9 @@ from common import logs
 from common import new_process
 from common import yaml_utils
 
-OSS_FUZZ_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz')
-OSS_FUZZ_REPO_PATH = os.path.join(OSS_FUZZ_DIR, 'infra')
+OSS_FUZZ_REPO_URL = 'https://github.com/google/oss-fuzz'
+OSS_FUZZ_IMAGE_UPGRADE_DATE = datetime.datetime(
+    year=2021, month=8, day=25, tzinfo=datetime.timezone.utc)
 
 
 class GitRepoManager:
@@ -75,39 +78,34 @@ class BaseBuilderDockerRepo:
 def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
     """Checks out the right files from OSS-Fuzz to build the benchmark based on
     |project| and |commit_date|. Then copies them to |benchmark_dir|."""
-    if not os.path.exists(os.path.join(OSS_FUZZ_DIR, '.git')):
-        logs.error(
-            '%s is not a git repo. Try running: git submodule update --init',
-            OSS_FUZZ_DIR)
-        raise RuntimeError('%s is not a git repo.' % OSS_FUZZ_DIR)
-    oss_fuzz_repo_manager = GitRepoManager(OSS_FUZZ_DIR)
-    projects_dir = os.path.join(OSS_FUZZ_DIR, 'projects', project)
-    try:
+    with tempfile.TemporaryDirectory() as oss_fuzz_dir:
+        oss_fuzz_repo_manager = GitRepoManager(oss_fuzz_dir)
+        oss_fuzz_repo_manager.git(['clone', OSS_FUZZ_REPO_URL, oss_fuzz_dir])
+        project_dir = os.path.join(oss_fuzz_dir, 'projects', project)
         # Find an OSS-Fuzz commit that can be used to build the benchmark.
         _, oss_fuzz_commit, _ = oss_fuzz_repo_manager.git([
             'log', '--before=' + commit_date.isoformat(), '-n1', '--format=%H',
-            projects_dir
+            project_dir
         ])
         oss_fuzz_commit = oss_fuzz_commit.strip()
         if not oss_fuzz_commit:
             logs.warning('No suitable earlier OSS-Fuzz commit found.')
             return False
-        oss_fuzz_repo_manager.git(['checkout', oss_fuzz_commit, projects_dir])
-        dir_util.copy_tree(projects_dir, benchmark_dir)
+        oss_fuzz_repo_manager.git(['checkout', oss_fuzz_commit, project_dir])
+        dir_util.copy_tree(project_dir, benchmark_dir)
         os.remove(os.path.join(benchmark_dir, 'project.yaml'))
         return True
-    finally:
-        oss_fuzz_repo_manager.git(['reset', '--hard'])
 
 
 def get_benchmark_name(project, fuzz_target, benchmark_name=None):
     """Returns the name of the benchmark. Returns |benchmark_name| if is set.
     Otherwise returns a name based on |project| and |fuzz_target|."""
-    return benchmark_name if benchmark_name else project + '_' + fuzz_target
+    name = benchmark_name if benchmark_name else project + '_' + fuzz_target
+    return name.lower()
 
 
-def _load_base_builder_docker_repo():
-    """Gets base-image digests. Returns the docker rep."""
+def _load_docker_repo(docker_image):
+    """Gets base-image digests. Returns the docker repo."""
     gcloud_path = spawn.find_executable('gcloud')
     if not gcloud_path:
         logs.warning('gcloud not found in PATH.')
@@ -118,7 +116,7 @@ def _load_base_builder_docker_repo():
         'container',
         'images',
         'list-tags',
-        'gcr.io/oss-fuzz-base/base-builder',
+        docker_image,
         '--format=json',
         '--sort-by=timestamp',
     ])
@@ -133,7 +131,17 @@ def _load_base_builder_docker_repo():
     return repo
 
 
-def _replace_base_builder_digest(dockerfile_path, digest):
+def _get_base_builder(dockerfile_path):
+    with open(dockerfile_path) as handle:
+        lines = handle.readlines()
+    for line in lines:
+        line = line.strip()
+        if line.startswith('FROM gcr.io/oss-fuzz-base/base-builder'):
+            return line[len('FROM '):]
+
+    raise ValueError('Could not find base-builder')
+
+def _replace_base_builder_digest(dockerfile_path, base_builder_name, digest):
     """Replaces the base-builder digest in a Dockerfile."""
     with open(dockerfile_path) as handle:
         lines = handle.readlines()
@@ -141,7 +149,7 @@ def _replace_base_builder_digest(dockerfile_path, digest):
     new_lines = []
     for line in lines:
         if line.strip().startswith('FROM'):
-            line = 'FROM gcr.io/oss-fuzz-base/base-builder@' + digest + '\n'
+            line = f'FROM {base_builder_name}@{digest}\n'
 
         new_lines.append(line)
 
@@ -153,12 +161,15 @@ def replace_base_builder(benchmark_dir, commit_date):
     """Replaces the parent image of the Dockerfile in |benchmark_dir|,
     base-builder (latest), with a version of base-builder that is likely to
     build the project as it was on |commit_date| without issue."""
-    base_builder_repo = _load_base_builder_docker_repo()
+    dockerfile_path = os.path.join(benchmark_dir, 'Dockerfile')
+    base_builder_name = _get_base_builder(dockerfile_path)
+    base_builder_repo = _load_docker_repo(base_builder_name)
     if base_builder_repo:
         base_builder_digest = base_builder_repo.find_digest(commit_date)
         logs.info('Using base-builder with digest %s.', base_builder_digest)
         _replace_base_builder_digest(
-            os.path.join(benchmark_dir, 'Dockerfile'), base_builder_digest)
+            dockerfile_path, base_builder_name, base_builder_digest)
+
 
 
 def create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,
@@ -185,6 +196,10 @@ def integrate_benchmark(project, fuzz_target, benchmark_name, commit,
     # work on arbitrary iso format strings.
     commit_date = datetime.datetime.fromisoformat(commit_date).astimezone(
         datetime.timezone.utc)
+    if commit_date >= OSS_FUZZ_IMAGE_UPGRADE_DATE:
+        raise ValueError(
+            f'Cannot integrate benchmark after {OSS_FUZZ_IMAGE_UPGRADE_DATE}. '
+            'See https://github.com/google/fuzzbench/issues/1353')
     copy_oss_fuzz_files(project, commit_date, benchmark_dir)
     replace_base_builder(benchmark_dir, commit_date)
     create_oss_fuzz_yaml(project, fuzz_target, commit, commit_date,

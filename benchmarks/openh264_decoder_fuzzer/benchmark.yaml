@@ -7,12 +7,12 @@ unsupported_fuzzers:
   - aflcc
   - afl_qemu
   - aflplusplus_qemu
+  - aflplusplus_qemu_tracepc
   - aflplusplus_frida
   - honggfuzz_qemu
   - klee
   - lafintel
   - weizz_qemu
-  - libafl
   - aflplusplus_cmplog_double
   - symcc_aflplusplus_single
   - eclipser_aflplusplus
@@ -21,3 +21,4 @@ unsupported_fuzzers:
   - symqemu_aflplusplus
   - fuzzolic_aflplusplus_fuzzy
   - fuzzolic_aflplusplus_z3dict
+  - tortoisefuzz

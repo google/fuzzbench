@@ -14,6 +14,7 @@
 """Common utilities."""
 
 import hashlib
+import http.client
 import os
 import urllib.request
 import urllib.error
@@ -49,6 +50,8 @@ def is_local():
         urllib.request.urlopen('http://metadata.google.internal')
         _is_local = False
     except urllib.error.URLError:
+        _is_local = True
+    except http.client.RemoteDisconnected:
         _is_local = True
     return _is_local
 

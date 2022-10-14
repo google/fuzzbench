@@ -38,6 +38,10 @@ SANITIZER_FLAGS = [
     '-fsanitize=array-bounds,bool,builtin,enum,float-divide-by-zero,function,'
     'integer-divide-by-zero,null,object-size,return,returns-nonnull-attribute,'
     'shift,signed-integer-overflow,unreachable,vla-bound,vptr',
+    '-fno-sanitize-recover=array-bounds,bool,builtin,enum,float-divide-by-zero,'
+    'function,integer-divide-by-zero,null,object-size,return,'
+    'returns-nonnull-attribute,shift,signed-integer-overflow,unreachable,'
+    'vla-bound,vptr',
 ]
 
 # Use these flags when compiling benchmark code without a sanitizer (e.g. when
@@ -49,6 +53,8 @@ NO_SANITIZER_COMPAT_CFLAGS = [
     '-pthread', '-Wl,--no-as-needed', '-Wl,-ldl', '-Wl,-lm',
     '-Wno-unused-command-line-argument'
 ]
+
+FUZZING_CFLAGS = ['-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION']
 
 OSS_FUZZ_LIB_FUZZING_ENGINE_PATH = '/usr/lib/libFuzzingEngine.a'
 BENCHMARK_CONFIG_YAML_PATH = '/benchmark.yaml'
@@ -96,7 +102,7 @@ def get_config_value(attribute):
 
 
 @contextlib.contextmanager
-def restore_directory(directory):
+def restore_directory(directory, ignore_errors=False):
     """Helper contextmanager that when created saves a backup of |directory| and
     when closed/exited replaces |directory| with the backup.
 
@@ -121,7 +127,7 @@ def restore_directory(directory):
         backup = os.path.join(temp_dir, os.path.basename(directory))
         shutil.copytree(directory, backup, symlinks=True)
         yield
-        shutil.rmtree(directory)
+        shutil.rmtree(directory, ignore_errors=ignore_errors)
         shutil.move(backup, directory)
         try:
             os.getcwd()
@@ -181,18 +187,20 @@ def set_compilation_flags(env=None):
 
     if get_config_value('type') == 'bug':
         append_flags('CFLAGS',
-                     SANITIZER_FLAGS + [BUGS_OPTIMIZATION_LEVEL],
+                     FUZZING_CFLAGS + SANITIZER_FLAGS +
+                     [BUGS_OPTIMIZATION_LEVEL],
                      env=env)
         append_flags('CXXFLAGS',
-                     SANITIZER_FLAGS +
+                     FUZZING_CFLAGS + SANITIZER_FLAGS +
                      [LIBCPLUSPLUS_FLAG, BUGS_OPTIMIZATION_LEVEL],
                      env=env)
     else:
         append_flags('CFLAGS',
-                     NO_SANITIZER_COMPAT_CFLAGS + [DEFAULT_OPTIMIZATION_LEVEL],
+                     FUZZING_CFLAGS + NO_SANITIZER_COMPAT_CFLAGS +
+                     [DEFAULT_OPTIMIZATION_LEVEL],
                      env=env)
         append_flags('CXXFLAGS',
-                     NO_SANITIZER_COMPAT_CFLAGS +
+                     FUZZING_CFLAGS + NO_SANITIZER_COMPAT_CFLAGS +
                      [LIBCPLUSPLUS_FLAG, DEFAULT_OPTIMIZATION_LEVEL],
                      env=env)
 

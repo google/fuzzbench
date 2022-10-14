@@ -14,7 +14,6 @@ unsupported_fuzzers:
   - lafintel
   - eclipser
   - eclipser_aflplusplus
-  - libafl
   - aflplusplus_cmplog_double
   - symcc_aflplusplus_single
   - eclipser_aflplusplus
@@ -23,3 +22,5 @@ unsupported_fuzzers:
   - symqemu_aflplusplus
   - fuzzolic_aflplusplus_fuzzy
   - fuzzolic_aflplusplus_z3dict
+  - aflplusplus_gcc
+  - tortoisefuzz

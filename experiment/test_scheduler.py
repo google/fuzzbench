@@ -108,23 +108,28 @@ done
 
 docker run \\
 --privileged --cpus=1 --rm \\
+\\
 -e INSTANCE_NAME=r-test-experiment-9 \\
 -e FUZZER=fuzzer-a \\
 -e BENCHMARK={benchmark} \\
 -e EXPERIMENT=test-experiment \\
 -e TRIAL_ID=9 \\
 -e MAX_TOTAL_TIME=86400 \\
+-e SNAPSHOT_PERIOD=900 \\
 -e NO_SEEDS=False \\
 -e NO_DICTIONARIES=False \\
 -e OSS_FUZZ_CORPUS=False \\
+-e CUSTOM_SEED_CORPUS_DIR=None \\
 -e DOCKER_REGISTRY=gcr.io/fuzzbench -e CLOUD_PROJECT=fuzzbench -e CLOUD_COMPUTE_ZONE=us-central1-a \\
 -e EXPERIMENT_FILESTORE=gs://experiment-data \\
 -e REPORT_FILESTORE=gs://web-reports \\
 -e FUZZ_TARGET={oss_fuzz_target} \\
 -e LOCAL_EXPERIMENT=False \\
 --name=runner-container \\
+--shm-size=2g \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
-{docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
+--security-opt seccomp=unconfined \\
+{docker_image_url} 2>&1 | tee /tmp/runner-log-9.txt'''
     with mock.patch('common.benchmark_utils.get_fuzz_target',
                     return_value=expected_target):
         _test_create_trial_instance(benchmark, expected_image, expected_target,
@@ -153,6 +158,7 @@ def test_create_trial_instance_local_experiment(benchmark, expected_image,
 
 docker run \\
 --privileged --cpus=1 --rm \\
+\\
 -e INSTANCE_NAME=r-test-experiment-9 \\
 -e FUZZER=fuzzer-a \\
 -e BENCHMARK={benchmark} \\
@@ -165,8 +171,10 @@ docker run \\
 -e FUZZ_TARGET={oss_fuzz_target} \\
 -e LOCAL_EXPERIMENT=True \\
 \\
+--shm-size=2g \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
-{docker_image_url} 2>&1 | tee /tmp/runner-log.txt'''
+--security-opt seccomp=unconfined \\
+{docker_image_url} 2>&1 | tee /tmp/runner-log-9.txt'''
     _test_create_trial_instance(benchmark, expected_image, expected_target,
                                 expected_startup_script,
                                 local_experiment_config, False)

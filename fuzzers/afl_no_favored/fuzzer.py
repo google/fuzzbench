@@ -76,6 +76,8 @@ def prepare_fuzz_environment(input_corpus):
     os.environ['AFL_SKIP_CRASHES'] = '1'
     # Shuffle the queue
     os.environ['AFL_SHUFFLE_QUEUE'] = '1'
+    # Disables AFL corpus culling
+    os.environ['AFL_NO_FAVORED'] = '1'
 
     # AFL needs at least one non-empty seed to start.
     utils.create_seed_file_for_empty_corpus(input_corpus)

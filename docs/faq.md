@@ -137,13 +137,19 @@ or send a pull request fixing the problem.
 You can use the following BibTeX entry:
 {% raw %}
 ```
-@misc{fuzzbench,
-    author       = {Metzman, Jonathan and Arya, Abhishek and Szekeres, Laszlo},
-    title        = {{FuzzBench: Fuzzer Benchmarking as a Service}},
-    year         = {2020},
-    month        = {March},
-    journal      = {Google Security Blog},
-    url          = {https://security.googleblog.com/2020/03/fuzzbench-fuzzer-benchmarking-as-service.html},
+@inproceedings{FuzzBench,
+  author = {Metzman, Jonathan and Szekeres, L\'{a}szl\'{o} and Maurice Romain Simon, Laurent and Trevelin Sprabery, Read and Arya, Abhishek},
+  title = {{FuzzBench: An Open Fuzzer Benchmarking Platform and Service}},
+  year = {2021},
+  isbn = {9781450385626},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  url = {https://doi.org/10.1145/3468264.3473932},
+  doi = {10.1145/3468264.3473932},
+  booktitle = {Proceedings of the 29th ACM Joint Meeting on European Software Engineering Conference and Symposium on the Foundations of Software Engineering},
+  pages = {1393–1403},
+  numpages = {11},
+  series = {ESEC/FSE 2021}
 }
 ```
 {% endraw %}

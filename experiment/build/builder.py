@@ -16,6 +16,7 @@
 
 import argparse
 import itertools
+import multiprocessing
 from multiprocessing import pool as mp_pool
 import os
 import random
@@ -25,7 +26,10 @@ import time
 from typing import Callable, List, Tuple
 
 from common import benchmark_config
+from common import benchmark_utils
 from common import experiment_utils
+from common import fuzzer_config
+from common import fuzzer_utils
 from common import filesystem
 from common import utils
 from common import logs
@@ -37,13 +41,11 @@ if not experiment_utils.is_local_experiment():
 else:
     import experiment.build.local_build as buildlib
 
-# FIXME: Make this configurable for users with the default quota of 10.
-# Even though it says queueing happen, we end up exceeding limits on "get", so
-# be conservative. Use 30 for now since this is limit for FuzzBench service.
-MAX_CONCURRENT_BUILDS = 30
+DEFAULT_MAX_CONCURRENT_BUILDS = max(min(2 * multiprocessing.cpu_count(), 150),
+                                    30)
 
-# Build fail retries and wait interval.
-NUM_BUILD_RETRIES = 3
+# Build attempts and wait interval.
+NUM_BUILD_ATTEMPTS = 3
 BUILD_FAIL_WAIT = 5 * 60
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
@@ -55,17 +57,35 @@ def get_fuzzer_benchmark_pairs(fuzzers, benchmarks):
     """Return a tuple of (fuzzer, benchmark) pairs to build. Excludes
     unsupported fuzzers from each benchmark.
     """
-    fuzzer_benchmark_pairs = list(itertools.product(fuzzers, benchmarks))
+    unsupported_fuzzer_benchmark_pairs = set()
+    for fuzzer in fuzzers:
+        config = fuzzer_config.get_config(fuzzer)
+        unsupported_benchmarks = config.get('unsupported_benchmarks')
+        if unsupported_benchmarks:
+            unsupported_fuzzer_benchmark_pairs.update(
+                itertools.product([fuzzer], unsupported_benchmarks))
+        allowed_benchmarks = config.get('allowed_benchmarks')
+        if allowed_benchmarks:
+            for benchmark in benchmarks:
+                if benchmark not in allowed_benchmarks:
+                    unsupported_fuzzer_benchmark_pairs.add((fuzzer, benchmark))
 
-    unsupported_fuzzer_benchmark_pairs = []
+        # Handle languages.
+        fuzzer_languages = fuzzer_utils.get_languages(fuzzer)
+        for benchmark in benchmarks:
+            benchmark_language = benchmark_utils.get_language(benchmark)
+            if benchmark_language not in fuzzer_languages:
+                unsupported_fuzzer_benchmark_pairs.add((fuzzer, benchmark))
+
     for benchmark in benchmarks:
         config = benchmark_config.get_config(benchmark)
         unsupported_fuzzers = config.get('unsupported_fuzzers')
         if not unsupported_fuzzers:
             continue
-        unsupported_fuzzer_benchmark_pairs += list(
+        unsupported_fuzzer_benchmark_pairs.update(
             itertools.product(unsupported_fuzzers, [benchmark]))
 
+    fuzzer_benchmark_pairs = list(itertools.product(fuzzers, benchmarks))
     return [
         i for i in fuzzer_benchmark_pairs
         if i not in unsupported_fuzzer_benchmark_pairs
@@ -89,13 +109,17 @@ def build_measurer(benchmark: str) -> bool:
         return False
 
 
-def build_all_measurers(benchmarks: List[str]) -> List[str]:
+def build_all_measurers(
+        benchmarks: List[str],
+        num_concurrent_builds: int = DEFAULT_MAX_CONCURRENT_BUILDS
+) -> List[str]:
     """Build measurers for each benchmark in |benchmarks| in parallel
     Returns a list of benchmarks built successfully."""
     logger.info('Building measurers.')
     filesystem.recreate_directory(build_utils.get_coverage_binaries_dir())
     build_measurer_args = [(benchmark,) for benchmark in benchmarks]
-    successful_calls = retry_build_loop(build_measurer, build_measurer_args)
+    successful_calls = retry_build_loop(build_measurer, build_measurer_args,
+                                        num_concurrent_builds)
     logger.info('Done building measurers.')
     # Return list of benchmarks (like the list we were passed as an argument)
     # instead of returning a list of tuples each containing a benchmark.
@@ -118,13 +142,15 @@ def split_successes_and_failures(inputs: List,
     return successes, failures
 
 
-def retry_build_loop(build_func: Callable, inputs: List[Tuple]) -> List:
+def retry_build_loop(build_func: Callable, inputs: List[Tuple],
+                     num_concurrent_builds: int) -> List:
     """Calls |build_func| in parallel on |inputs|. Repeat on failures up to
-    |NUM_BUILD_RETRIES| times. Returns the list of inputs that |build_func| was
+    |NUM_BUILD_ATTEMPTS| times. Returns the list of inputs that |build_func| was
     called successfully on."""
     successes = []
-    with mp_pool.ThreadPool(MAX_CONCURRENT_BUILDS) as pool:
-        for _ in range(NUM_BUILD_RETRIES):
+    logs.info('Concurrent builds: %d.', num_concurrent_builds)
+    with mp_pool.ThreadPool(num_concurrent_builds) as pool:
+        for _ in range(NUM_BUILD_ATTEMPTS):
             logs.info('Building using (%s): %s', build_func, inputs)
             results = pool.starmap(build_func, inputs)
             curr_successes, curr_failures = split_successes_and_failures(
@@ -159,8 +185,11 @@ def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
     return True
 
 
-def build_all_fuzzer_benchmarks(fuzzers: List[str],
-                                benchmarks: List[str]) -> List[str]:
+def build_all_fuzzer_benchmarks(
+        fuzzers: List[str],
+        benchmarks: List[str],
+        num_concurrent_builds: int = DEFAULT_MAX_CONCURRENT_BUILDS
+) -> List[str]:
     """Build fuzzer,benchmark images for all pairs of |fuzzers| and |benchmarks|
     in parallel. Returns a list of fuzzer,benchmark pairs that built
     successfully."""
@@ -171,7 +200,8 @@ def build_all_fuzzer_benchmarks(fuzzers: List[str],
     # TODO(metzman): Use an asynchronous unordered map variant to schedule
     # eagerly.
     successful_calls = retry_build_loop(build_fuzzer_benchmark,
-                                        build_fuzzer_benchmark_args)
+                                        build_fuzzer_benchmark_args,
+                                        num_concurrent_builds)
     logger.info('Done building fuzzer benchmarks.')
     return successful_calls
 
@@ -192,10 +222,19 @@ def main():
                         help='Fuzzer names.',
                         nargs='+',
                         required=True)
+
+    parser.add_argument('-n',
+                        '--num-concurrent-builds',
+                        help='Max concurrent builds allowed.',
+                        type=int,
+                        default=DEFAULT_MAX_CONCURRENT_BUILDS,
+                        required=False)
+
     logs.initialize()
     args = parser.parse_args()
 
-    build_all_fuzzer_benchmarks(args.fuzzers, args.benchmarks)
+    build_all_fuzzer_benchmarks(args.fuzzers, args.benchmarks,
+                                args.num_concurrent_builds)
 
     return 0
 

@@ -32,6 +32,7 @@ def stop_experiment(experiment_name, experiment_config_filename):
         raise NotImplementedError(
             'Local experiment stop logic is not implemented.')
 
+    logger.info('Stopping experiment.')
     cloud_project = experiment_config['cloud_project']
     cloud_compute_zone = experiment_config['cloud_compute_zone']
 
@@ -54,6 +55,7 @@ def stop_experiment(experiment_name, experiment_config_filename):
         logger.warning('No experiment instances found, no work to do.')
         return True
 
+    logger.info('Deleting instance.')
     if not gcloud.delete_instances(experiment_instances, cloud_compute_zone):
         logger.error('Failed to stop experiment instances.')
         return False

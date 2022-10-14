@@ -18,89 +18,96 @@ jobs:
       matrix:
         fuzzer:
           - afl
-          - aflcc
           - aflfast
+          - afl_um_prioritize
+          - afl_um_random
+          - afl_um_parallel
           - aflplusplus
           - aflplusplus_optimal
+          - aflplusplus_tracepc
+          - aflplusplus_um_prioritize
+          - aflplusplus_um_prioritize_75
+          - aflplusplus_um_random
+          - aflplusplus_um_random_75
+          - aflplusplus_um_random_3
+          - aflplusplus_um_random_6
+          - aflplusplus_um_parallel
           - aflsmart
-          - aflsmartformat
+          - centipede
           - entropic
           - fairfuzz
           - honggfuzz
+          - honggfuzz_um_random
+          - honggfuzz_um_random_75
+          - honggfuzz_um_prioritize
+          - honggfuzz_um_prioritize_75
+          - honggfuzz_um_parallel
           - lafintel
           - klee
           - libfuzzer
+          - libfuzzer_um_random
+          - libfuzzer_um_prioritize
+          - libfuzzer_um_parallel
+          - libfuzzer_dataflow
+          - libfuzzer_dataflow_load
+          - libfuzzer_dataflow_store
+          - libfuzzer_dataflow_pre
           - mopt
           - neuzz
           - libafl
-          - afldd
-          - aflpp_vs_dd
+          - pythia_effect_bb
+          - pythia_bb
+          - fafuzz
+          - tortoisefuzz
+          - wingfuzz
           # Binary-only (greybox) fuzzers.
           - eclipser
+          - eclipser_um_prioritize
+          - eclipser_um_random
+          - eclipser_um_parallel
           - afl_qemu
-          - aflplusplus_qemu
           - honggfuzz_qemu
           - weizz_qemu
+          - aflplusplus_qemu
           - aflplusplus_frida
           # Concolic execution
-          - aflplusplus_cmplog_double
-          - aflplusplus_qemu_double
-          - fuzzolic_aflplusplus_z3dict
           - fuzzolic_aflplusplus_z3
           - fuzzolic_aflplusplus_fuzzy
           - eclipser_aflplusplus
           - symqemu_aflplusplus
+          - symcc_aflplusplus
           - symcc_aflplusplus_single
           - symcc_afl
-          - symcc_aflplusplus
           - symcc_afl_single
+          # Grammar fuzzers
+          - nautilus
+          - gramatron
+          - token_level
+          - grimoire
           # Temporary variants.
-          - aflplusplus_introspection
-          - aflplusplus_introspection2
           - aflplusplus_dict2file
+          - afl_2_52_b
           - aflplusplus_cmplog
-          - aflplusplus_flcnt
-          - aflplusplus_fcnt
-          - aflplusplus_lcnt
-          - aflplusplus_311
-          - aflplusplus_313
-          - aflplusplus_cmplog_fullskip
-          - aflplusplus_cmplog_2dict
-          - aflplusplus_cmplog_2dictl
-          - aflplusplus_unusual_enabled
-          - aflplusplus_unusual_disabled
-          - aflprefix
-          - dropfuzzer
-          - afl_two_instances
-          - afl_no_favored
           - afl_random_favored
-          - aflplusplus_classic_ctx
-          - cfctx_basic
-          - cfctx_bottom
-          - cfctx_dataflow_seadsa
-          - cfctx_dataflow_svf
-          - cfctx_randomic
-          - cfctx_params
-          - cfctx_plain
-          - afl_no_favs
-          - afl_rf
-          - afl_rf_u
-          - afl_rf_u_wrs
-          - afl_wrs
-          - afl_wrs_rf
-          - afl_wrs_rf_rp
-          - afl_wrs_rp
-          # Concolic execution
-          - aflplusplus_cmplog_double
-          - aflplusplus_qemu_double
-          - fuzzolic_aflplusplus_z3
-          - fuzzolic_aflplusplus_fuzzy
-          - eclipser_aflplusplus
-          - symqemu_aflplusplus
-          - symcc_aflplusplus_single
-          - symcc_afl
-          - symcc_aflplusplus
-          - symcc_afl_single
+          - entropic_execute_final
+          - libfuzzer_exeute_final
+          - afl_no_favored
+          - afl_collision_free
+          - afl_double_timeout
+          - afl_no_favfactor
+          - afl_no_trim
+          - afl_scheduling_lifo
+          - afl_scheduling_random
+          - afl_score_max
+          - afl_score_min
+          - afl_score_no_novel_prioritization
+          - afl_score_random
+          - afl_splicing_mutation
+          - afl_virginmap
+          - afl_maxmap
+          - introspector_driven_focus
+          - libfuzzer_focus_idx0
+          - centipede_function_filter
 
         benchmark_type:
           - oss-fuzz

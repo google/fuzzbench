@@ -25,6 +25,13 @@ def build():
     os.environ['CC'] = 'clang'
     os.environ['CXX'] = 'clang++'
     os.environ['FUZZER_LIB'] = '/libQEMU.a'
+    # QEMU doesn't like ASan
+    cflags = filter(lambda flag: not flag.startswith('-fsanitize=address'),
+                    os.environ["CFLAGS"].split())
+    cxxflags = filter(lambda flag: not flag.startswith('-fsanitize=address'),
+                      os.environ["CXXFLAGS"].split())
+    os.environ["CFLAGS"] = ' '.join(cflags)
+    os.environ["CXXFLAGS"] = ' '.join(cxxflags)
 
     utils.build_benchmark()
 

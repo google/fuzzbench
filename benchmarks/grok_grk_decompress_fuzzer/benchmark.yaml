@@ -7,13 +7,14 @@ unsupported_fuzzers:
   - aflcc
   - afl_qemu
   - aflplusplus_qemu
+  - aflplusplus_qemu_tracepc
   - aflplusplus_frida
   - honggfuzz_qemu
   - klee
   - lafintel
   - weizz_qemu
   - cfctx_dataflow_seadsa
-  - libafl
+  - cfctx_dataflow_seadsa_llc
   - aflplusplus_cmplog_double
   - symcc_aflplusplus_single
   - eclipser_aflplusplus

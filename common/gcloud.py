@@ -28,7 +28,7 @@ DISPATCHER_BOOT_DISK_SIZE = '4TB'
 DISPATCHER_BOOT_DISK_TYPE = 'pd-ssd'
 
 # Constants for runner specs.
-RUNNER_BOOT_DISK_SIZE = '30GB'
+RUNNER_BOOT_DISK_SIZE = '200GB'
 
 # Constants for measurer worker specs.
 MEASURER_WORKER_MACHINE_TYPE = 'n1-standard-1'

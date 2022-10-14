@@ -17,6 +17,7 @@ commit_date: 2020-02-10 16:19:52+00:00
 fuzz_target: fuzz-link-parser
 project: systemd
 unsupported_fuzzers:
+  - aflplusplus_gcc
   - aflcc
   - klee
   - aflplusplus_cmplog_double
@@ -27,5 +28,4 @@ unsupported_fuzzers:
   - fuzzolic_aflplusplus_z3
   - symqemu_aflplusplus
   - fuzzolic_aflplusplus_fuzzy
-  - libafl
   - fuzzolic_aflplusplus_z3dict

@@ -187,13 +187,13 @@ If, like AFL, your fuzzer has a [persistent mode](https://lcamtuf.blogspot.com/2
 your `FUZZER_LIB` should be a library that will call `LLVMFuzzerTestOneInput`
 in a loop during fuzzing.
 For example, in [afl's builder.Dockerfile](https://github.com/google/fuzzbench/blob/master/fuzzers/afl/builder.Dockerfile)
-you can see how [afl_driver.cpp](https://github.com/llvm/llvm-project/blob/master/compiler-rt/lib/fuzzer/afl/afl_driver.cpp#L223-L276)
+you can see how [afl_driver.cpp](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/fuzzer/afl/afl_driver.cpp#L223-L276)
 is built. In
 [afl's fuzzer.py](https://github.com/google/fuzzbench/blob/master/fuzzers/afl/fuzzer.py)
 this gets used as the `FUZZER_LIB`.
 
 If your fuzzer does not support persistent mode, you can use the
-[StandAloneFuzzTargetMain.cpp](https://github.com/llvm/llvm-project/blob/master/compiler-rt/lib/fuzzer/standalone/StandaloneFuzzTargetMain.c)
+[StandAloneFuzzTargetMain.cpp](https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/fuzzer/standalone/StandaloneFuzzTargetMain.c)
 as your `FUZZER_LIB`. This file takes files as arguments, reads them, and
 invokes `LLVMFuzzerTestOneInput` using their data as input
 (See [Eclipser](https://github.com/google/fuzzbench/blob/master/fuzzers/eclipser/builder.Dockerfile)
@@ -230,6 +230,13 @@ export FUZZER_NAME=afl
 export BENCHMARK_NAME=libpng-1.2.56
 make build-$FUZZER_NAME-$BENCHMARK_NAME
 ```
+
+* To debug a build:
+
+```shell
+make debug-builder-$FUZZER_NAME-$BENCHMARK_NAME
+```
+And then run `fuzzer_build` when you have a shell on the builder.
 
 * Run the fuzzer in the docker image:
 
@@ -279,9 +286,6 @@ make build-$FUZZER_NAME-all
 * Run `make format` to format your code.
 
 * Run `make presubmit` to lint your code and ensure all tests are passing.
-
-* Run `make clear-cache` to clear docker containers' caches. Next time you build
-  a project, the container will be built from scratch.
 
 ## Blocklisting benchmarks
 

@@ -142,16 +142,28 @@ def test_validate_experiment_name(name, expected_result):
         ({
             'fuzzers': ['afl']
         }, False),
-        # Invalid experiment.
+        # Invalid experiment name for request.
         ({
             'experiment': 'invalid',
             'fuzzers': ['afl']
         }, False),
-        # Invalid fuzzers.
+        # Invalid experiment name.
+        ({
+            'experiment': 'i' * 100,
+            'fuzzers': ['afl']
+        }, False),
+        # Nonexistent fuzzers.
         ({
             'experiment': EXPERIMENT,
-            'fuzzers': ['1']
+            'fuzzers': ['nonexistent-fuzzer']
         }, False),
+        # Invalid fuzzers.
+        (
+            {
+                'experiment': EXPERIMENT,
+                'fuzzers': ['1']  # Need to make this exist.
+            },
+            False),
         # Invalid description.
         ({
             'experiment': EXPERIMENT,

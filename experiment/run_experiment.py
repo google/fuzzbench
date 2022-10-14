@@ -41,10 +41,8 @@ from common import yaml_utils
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
-OSS_FUZZ_PROJECTS_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz',
-                                     'projects')
 RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
-FUZZER_NAME_REGEX = re.compile(r'^[a-z0-9_]+$')
+FUZZER_NAME_REGEX = re.compile(r'^[a-z][a-z0-9_]+$')
 EXPERIMENT_CONFIG_REGEX = re.compile(r'^[a-z0-9-]{0,30}$')
 FILTER_SOURCE_REGEX = re.compile(r'('
                                  r'^\.git/|'
@@ -56,7 +54,6 @@ FILTER_SOURCE_REGEX = re.compile(r'('
                                  r'\#*\#$|'
                                  r'\.pytest_cache/|'
                                  r'.*/test_data/|'
-                                 r'^third_party/oss-fuzz/build/|'
                                  r'^docker/generated.mk$|'
                                  r'^docs/)')
 _OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT = (
@@ -77,6 +74,8 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     bool_params = {'private', 'merge_with_nonprivate'}
 
     local_experiment = config.get('local_experiment', False)
+    snapshot_period = config.get('snapshot_period',
+                                 experiment_utils.DEFAULT_SNAPSHOT_SECONDS)
     if not local_experiment:
         required_params = required_params.union(cloud_config)
 
@@ -133,6 +132,7 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
         raise ValidationError('Config: %s is invalid.' % config_filename)
 
     config['local_experiment'] = local_experiment
+    config['snapshot_period'] = snapshot_period
     return config
 
 
@@ -148,45 +148,60 @@ def get_directories(parent_dir):
     ]
 
 
+# pylint: disable=too-many-locals
+def validate_custom_seed_corpus(custom_seed_corpus_dir, benchmarks):
+    """Validate seed corpus provided by user"""
+    if not os.path.isdir(custom_seed_corpus_dir):
+        raise ValidationError('Corpus location "%s" is invalid.' %
+                              custom_seed_corpus_dir)
+
+    for benchmark in benchmarks:
+        benchmark_corpus_dir = os.path.join(custom_seed_corpus_dir, benchmark)
+        if not os.path.exists(benchmark_corpus_dir):
+            raise ValidationError('Custom seed corpus directory for '
+                                  'benchmark "%s" does not exist.' % benchmark)
+        if not os.path.isdir(benchmark_corpus_dir):
+            raise ValidationError('Seed corpus of benchmark "%s" must be '
+                                  'a directory.' % benchmark)
+        if not os.listdir(benchmark_corpus_dir):
+            raise ValidationError('Seed corpus of benchmark "%s" is empty.' %
+                                  benchmark)
+
+
 def validate_benchmarks(benchmarks: List[str]):
     """Parses and validates list of benchmarks."""
     benchmark_types = set()
     for benchmark in set(benchmarks):
         if benchmarks.count(benchmark) > 1:
-            raise Exception('Benchmark "%s" is included more than once.' %
-                            benchmark)
+            raise ValidationError('Benchmark "%s" is included more than once.' %
+                                  benchmark)
         # Validate benchmarks here. It's possible someone might run an
         # experiment without going through presubmit. Better to catch an invalid
         # benchmark than see it in production.
         if not benchmark_utils.validate(benchmark):
-            raise Exception('Benchmark "%s" is invalid.' % benchmark)
+            raise ValidationError('Benchmark "%s" is invalid.' % benchmark)
 
         benchmark_types.add(benchmark_utils.get_type(benchmark))
 
     if (benchmark_utils.BenchmarkType.CODE.value in benchmark_types and
             benchmark_utils.BenchmarkType.BUG.value in benchmark_types):
-        raise Exception(
+        raise ValidationError(
             'Cannot mix bug benchmarks with code coverage benchmarks.')
 
 
 def validate_fuzzer(fuzzer: str):
     """Parses and validates a fuzzer name."""
-    if not re.match(FUZZER_NAME_REGEX, fuzzer):
-        raise Exception(
-            'Fuzzer "%s" may only contain lowercase letters, numbers, '
-            'or underscores.' % fuzzer)
-
-    fuzzers_directories = get_directories(FUZZERS_DIR)
-    if fuzzer not in fuzzers_directories:
-        raise Exception('Fuzzer "%s" does not exist.' % fuzzer)
+    if not fuzzer_utils.validate(fuzzer):
+        raise ValidationError('Fuzzer: %s is invalid.' % fuzzer)
 
 
 def validate_experiment_name(experiment_name: str):
     """Validate |experiment_name| so that it can be used in creating
     instances."""
     if not re.match(EXPERIMENT_CONFIG_REGEX, experiment_name):
-        raise Exception('Experiment name "%s" is invalid. Must match: "%s"' %
-                        (experiment_name, EXPERIMENT_CONFIG_REGEX.pattern))
+        raise ValidationError(
+            'Experiment name "%s" is invalid. Must match: "%s"' %
+            (experiment_name, EXPERIMENT_CONFIG_REGEX.pattern))
 
 
 def set_up_experiment_config_file(config):
@@ -201,9 +216,8 @@ def set_up_experiment_config_file(config):
 
 def check_no_uncommitted_changes():
     """Make sure that there are no uncommitted changes."""
-    assert not subprocess.check_output(
-        ['git', 'diff'],
-        cwd=utils.ROOT_DIR), 'Local uncommitted changes found, exiting.'
+    if subprocess.check_output(['git', 'diff'], cwd=utils.ROOT_DIR):
+        raise ValidationError('Local uncommitted changes found, exiting.')
 
 
 def get_git_hash():
@@ -222,7 +236,12 @@ def start_experiment(  # pylint: disable=too-many-arguments
         no_seeds=False,
         no_dictionaries=False,
         oss_fuzz_corpus=False,
-        allow_uncommitted_changes=False):
+        allow_uncommitted_changes=False,
+        concurrent_builds=None,
+        measurers_cpus=None,
+        runners_cpus=None,
+        region_coverage=False,
+        custom_seed_corpus_dir=None):
     """Start a fuzzer benchmarking experiment."""
     if not allow_uncommitted_changes:
         check_no_uncommitted_changes()
@@ -239,13 +258,25 @@ def start_experiment(  # pylint: disable=too-many-arguments
     config['no_dictionaries'] = no_dictionaries
     config['oss_fuzz_corpus'] = oss_fuzz_corpus
     config['description'] = description
+    config['concurrent_builds'] = concurrent_builds
+    config['measurers_cpus'] = measurers_cpus
+    config['runners_cpus'] = runners_cpus
     config['runner_machine_type'] = config.get('runner_machine_type',
                                                'n1-standard-1')
     config['runner_num_cpu_cores'] = config.get('runner_num_cpu_cores', 1)
+    assert (runners_cpus is None or
+            runners_cpus >= config['runner_num_cpu_cores'])
     # Note this is only used if runner_machine_type is None.
     # 12GB is just the amount that KLEE needs, use this default to make KLEE
     # experiments easier to run.
     config['runner_memory'] = config.get('runner_memory', '12GB')
+    config['region_coverage'] = region_coverage
+
+    config['custom_seed_corpus_dir'] = custom_seed_corpus_dir
+    if config['custom_seed_corpus_dir']:
+        validate_custom_seed_corpus(config['custom_seed_corpus_dir'],
+                                    benchmarks)
+
     return start_experiment_from_full_config(config)
 
 
@@ -258,7 +289,8 @@ def start_experiment_from_full_config(config):
     local_experiment = config.get('local_experiment', False)
     if not local_experiment:
         if 'POSTGRES_PASSWORD' not in os.environ:
-            raise Exception('Must set POSTGRES_PASSWORD environment variable.')
+            raise ValidationError(
+                'Must set POSTGRES_PASSWORD environment variable.')
         gcloud.set_default_project(config['cloud_project'])
 
     start_dispatcher(config, experiment_utils.CONFIG_DIR)
@@ -327,6 +359,16 @@ def copy_resources_to_bucket(config_dir: str, config: Dict):
         for benchmark in config['benchmarks']:
             add_oss_fuzz_corpus(benchmark, oss_fuzz_corpora_dir)
 
+    if config['custom_seed_corpus_dir']:
+        for benchmark in config['benchmarks']:
+            benchmark_custom_corpus_dir = os.path.join(
+                config['custom_seed_corpus_dir'], benchmark)
+            filestore_utils.cp(
+                benchmark_custom_corpus_dir,
+                experiment_utils.get_custom_seed_corpora_filestore_path() + '/',
+                recursive=True,
+                parallel=True)
+
 
 class BaseDispatcher:
     """Class representing the dispatcher."""
@@ -376,6 +418,8 @@ class LocalDispatcher(BaseDispatcher):
         set_report_filestore_arg = (
             'REPORT_FILESTORE={report_filestore}'.format(
                 report_filestore=self.config['report_filestore']))
+        set_snapshot_period_arg = 'SNAPSHOT_PERIOD={snapshot_period}'.format(
+            snapshot_period=self.config['snapshot_period'])
         docker_image_url = '{docker_registry}/dispatcher-image'.format(
             docker_registry=docker_registry)
         command = [
@@ -398,11 +442,14 @@ class LocalDispatcher(BaseDispatcher):
             '-e',
             set_experiment_filestore_arg,
             '-e',
+            set_snapshot_period_arg,
+            '-e',
             set_report_filestore_arg,
             '-e',
             set_docker_registry_arg,
             '-e',
             'LOCAL_EXPERIMENT=True',
+            '--shm-size=2g',
             '--cap-add=SYS_PTRACE',
             '--cap-add=SYS_NICE',
             '--name=%s' % container_name,
@@ -433,7 +480,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
                                           gcloud.InstanceType.DISPATCHER,
                                           self.config,
                                           startup_script=startup_script.name):
-                raise Exception('Failed to create dispatcher.')
+                raise RuntimeError('Failed to create dispatcher.')
             logs.info('Started dispatcher with instance name: %s',
                       self.instance_name)
 
@@ -507,6 +554,22 @@ def main():
                         '--description',
                         help='Description of the experiment.',
                         required=False)
+    parser.add_argument('-cb',
+                        '--concurrent-builds',
+                        help='Max concurrent builds allowed.',
+                        required=False)
+    parser.add_argument('-mc',
+                        '--measurers-cpus',
+                        help='Cpus available to the measurers.',
+                        required=False)
+    parser.add_argument('-rc',
+                        '--runners-cpus',
+                        help='Cpus available to the runners.',
+                        required=False)
+    parser.add_argument('-cs',
+                        '--custom-seed-corpus-dir',
+                        help='Path to the custom seed corpus',
+                        required=False)
 
     all_fuzzers = fuzzer_utils.get_fuzzer_names()
     parser.add_argument('-f',
@@ -534,6 +597,12 @@ def main():
                         required=False,
                         default=False,
                         action='store_true')
+    parser.add_argument('-cr',
+                        '--region-coverage',
+                        help='Use region as coverage metric.',
+                        required=False,
+                        default=False,
+                        action='store_true')
     parser.add_argument(
         '-o',
         '--oss-fuzz-corpus',
@@ -544,6 +613,40 @@ def main():
     args = parser.parse_args()
     fuzzers = args.fuzzers or all_fuzzers
 
+    concurrent_builds = args.concurrent_builds
+    if concurrent_builds is not None:
+        if not concurrent_builds.isdigit():
+            parser.error(
+                'The concurrent build argument must be a positive number')
+        concurrent_builds = int(concurrent_builds)
+    runners_cpus = args.runners_cpus
+    if runners_cpus is not None:
+        if not runners_cpus.isdigit():
+            parser.error('The runners cpus argument must be a positive number')
+        runners_cpus = int(runners_cpus)
+    measurers_cpus = args.measurers_cpus
+    if measurers_cpus is not None:
+        if not measurers_cpus.isdigit():
+            parser.error(
+                'The measurers cpus argument must be a positive number')
+        if runners_cpus is None:
+            parser.error(
+                'With the measurers cpus argument you need to specify the'
+                ' runners cpus argument too')
+        measurers_cpus = int(measurers_cpus)
+    if (runners_cpus if runners_cpus else 0) + (measurers_cpus if measurers_cpus
+                                                else 0) > os.cpu_count():
+        parser.error('The sum of runners and measurers cpus is greater than the'
+                     ' available cpu cores (%d)' % os.cpu_count())
+
+    if args.custom_seed_corpus_dir:
+        if args.no_seeds:
+            parser.error('Cannot enable options "custom_seed_corpus_dir" and '
+                         '"no_seeds" at the same time')
+        if args.oss_fuzz_corpus:
+            parser.error('Cannot enable options "custom_seed_corpus_dir" and '
+                         '"oss_fuzz_corpus" at the same time')
+
     start_experiment(args.experiment_name,
                      args.experiment_config,
                      args.benchmarks,
@@ -552,7 +655,12 @@ def main():
                      no_seeds=args.no_seeds,
                      no_dictionaries=args.no_dictionaries,
                      oss_fuzz_corpus=args.oss_fuzz_corpus,
-                     allow_uncommitted_changes=args.allow_uncommitted_changes)
+                     allow_uncommitted_changes=args.allow_uncommitted_changes,
+                     concurrent_builds=concurrent_builds,
+                     measurers_cpus=measurers_cpus,
+                     runners_cpus=runners_cpus,
+                     region_coverage=args.region_coverage,
+                     custom_seed_corpus_dir=args.custom_seed_corpus_dir)
     return 0
 
 

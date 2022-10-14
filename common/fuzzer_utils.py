@@ -18,6 +18,7 @@ import os
 import re
 from typing import Optional
 
+from common import fuzzer_config
 from common import logs
 from common import utils
 
@@ -25,7 +26,7 @@ DEFAULT_FUZZ_TARGET_NAME = 'fuzz-target'
 FUZZ_TARGET_SEARCH_STRING = b'LLVMFuzzerTestOneInput'
 
 # Must be a valid python module and docker tag.
-VALID_FUZZER_REGEX = re.compile(r'^[a-z0-9_]+$')
+VALID_FUZZER_REGEX = re.compile(r'^[a-z][a-z0-9_]*$')
 
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
 COVERAGE_TOOLS = {'coverage', 'coverage_source_based'}
@@ -139,3 +140,9 @@ def get_fuzzer_names():
         fuzzers.append(fuzzer)
 
     return fuzzers
+
+
+def get_languages(fuzzer):
+    """Returns the programming languages |fuzzer| can fuzz."""
+    config = fuzzer_config.get_config(fuzzer)
+    return config.get('languages', ['c++'])

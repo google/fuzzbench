@@ -15,8 +15,8 @@
 
 import os
 import subprocess
-import resource
 import shutil
+# import resource
 
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
@@ -48,14 +48,19 @@ def fuzz(input_corpus, output_corpus, target_binary):
     os.environ['AFL_FRIDA_PERSISTENT_HOOK'] = "/out/frida_hook.so"
     os.environ['AFL_PATH'] = "/out"
 
-    resource.setrlimit(resource.RLIMIT_CORE,
-                       (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+    # resource.setrlimit(resource.RLIMIT_CORE,
+    #                    (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+
+    # The systemd benchmark fails without full library instrumentation :(
+    benchmark_name = os.environ['BENCHMARK']
+    if benchmark_name == 'systemd_fuzz-link-parser':
+        os.environ['AFL_INST_LIBS'] = "1"
 
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
                             flags=flags)
 
-    sts = os.system("cp -v *core* corpus")
-    if sts == 0:
-        print('Copied cores')
+    # sts = os.system("cp -v *core* corpus")
+    # if sts == 0:
+    #     print('Copied cores')

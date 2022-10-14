@@ -17,6 +17,12 @@
 
 set -ex
 
+# Fix thrift download.
+# This needs to be done in build.sh because the checkout happens after the
+# builder.Dockerfile completes.
+cd $SRC/arrow
+git apply ../thrift.patch || true
+cd -
 ARROW=${SRC}/arrow/cpp
 
 cd ${WORK}

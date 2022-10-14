@@ -7,6 +7,8 @@ unsupported_fuzzers:
   - aflcc
   - afl_qemu
   - aflplusplus_qemu
+  - aflplusplus_qemu_tracepc
+  - aflplusplus_zafl
   - aflplusplus_frida
   - honggfuzz_qemu
   - klee
@@ -21,7 +23,6 @@ unsupported_fuzzers:
   - symcc_aflplusplus_single
   - aflplusplus_unusual_enabled
   - aflplusplus_unusual_disabled
-  - libafl
   - aflplusplus_cmplog_double
   - symcc_aflplusplus_single
   - eclipser_aflplusplus
@@ -30,3 +31,17 @@ unsupported_fuzzers:
   - symqemu_aflplusplus
   - fuzzolic_aflplusplus_fuzzy
   - fuzzolic_aflplusplus_z3dict
+  - cfctx_bottom
+  - cfctx_dataflow_seadsa
+  - cfctx_dataflow_svf
+  - cfctx_randomic
+  - cfctx_params
+  - cfctx_params_512kb
+  - afldd
+  - aflpp_vs_dd
+  - aflplusplus_gcc
+  - libfuzzer_dataflow
+  - libfuzzer_dataflow_load
+  - libfuzzer_dataflow_store
+  - libfuzzer_dataflow_pre
+  - wingfuzz

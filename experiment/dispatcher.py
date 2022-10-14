@@ -41,8 +41,8 @@ LOOP_WAIT_SECONDS = 5 * 60
 # TODO(metzman): Convert more uses of os.path.join to exp_path.path.
 
 
-def _get_config_path():
-    """Return config directory."""
+def _get_config_file_path():
+    """Return config file path."""
     return exp_path.path(
         experiment_utils.get_internal_experiment_config_relative_path())
 
@@ -103,9 +103,11 @@ class Experiment:  # pylint: disable=too-many-instance-attributes
         self.preemptible = self.config.get('preemptible_runners')
 
 
-def build_images_for_trials(fuzzers: List[str], benchmarks: List[str],
+def build_images_for_trials(fuzzers: List[str],
+                            benchmarks: List[str],
                             num_trials: int,
-                            preemptible: bool) -> List[models.Trial]:
+                            preemptible: bool,
+                            concurrent_builds=None) -> List[models.Trial]:
     """Builds the images needed to run |experiment| and returns a list of trials
     that can be run for experiment. This is the number of trials specified in
     experiment times each pair of fuzzer+benchmark that builds successfully."""
@@ -114,8 +116,14 @@ def build_images_for_trials(fuzzers: List[str], benchmarks: List[str],
     builder.build_base_images()
 
     # Only build fuzzers for benchmarks whose measurers built successfully.
-    benchmarks = builder.build_all_measurers(benchmarks)
-    build_successes = builder.build_all_fuzzer_benchmarks(fuzzers, benchmarks)
+    if concurrent_builds is None:
+        benchmarks = builder.build_all_measurers(benchmarks)
+        build_successes = builder.build_all_fuzzer_benchmarks(
+            fuzzers, benchmarks)
+    else:
+        benchmarks = builder.build_all_measurers(benchmarks, concurrent_builds)
+        build_successes = builder.build_all_fuzzer_benchmarks(
+            fuzzers, benchmarks, concurrent_builds)
     experiment_name = experiment_utils.get_experiment_name()
     trials = []
     for fuzzer, benchmark in build_successes:
@@ -140,14 +148,15 @@ def dispatcher_main():
     if experiment_utils.is_local_experiment():
         models.Base.metadata.create_all(db_utils.engine)
 
-    experiment_config_file_path = _get_config_path()
+    experiment_config_file_path = _get_config_file_path()
     experiment = Experiment(experiment_config_file_path)
 
     _initialize_experiment_in_db(experiment.config)
 
     trials = build_images_for_trials(experiment.fuzzers, experiment.benchmarks,
                                      experiment.num_trials,
-                                     experiment.preemptible)
+                                     experiment.preemptible,
+                                     experiment.config['concurrent_builds'])
     _initialize_trials_in_db(trials)
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])
@@ -195,11 +204,11 @@ def main():
     except Exception as error:
         logs.error('Error conducting experiment.')
         raise error
-    experiment_config_file_path = os.path.join(_get_config_path(),
-                                               'experiment.yaml')
 
     if experiment_utils.is_local_experiment():
         return 0
+
+    experiment_config_file_path = _get_config_file_path()
 
     if stop_experiment.stop_experiment(experiment_utils.get_experiment_name(),
                                        experiment_config_file_path):
