@@ -113,7 +113,7 @@ def build_images_for_trials(fuzzers: List[str],
     experiment times each pair of fuzzer+benchmark that builds successfully."""
     # This call will raise an exception if the images can't be built which will
     # halt the experiment.
-    builder.build_base_images()
+    """builder.build_base_images()
 
     # Only build fuzzers for benchmarks whose measurers built successfully.
     if concurrent_builds is None:
@@ -123,17 +123,18 @@ def build_images_for_trials(fuzzers: List[str],
     else:
         benchmarks = builder.build_all_measurers(benchmarks, concurrent_builds)
         build_successes = builder.build_all_fuzzer_benchmarks(
-            fuzzers, benchmarks, concurrent_builds)
+            fuzzers, benchmarks, concurrent_builds)"""
     experiment_name = experiment_utils.get_experiment_name()
     trials = []
-    for fuzzer, benchmark in build_successes:
-        fuzzer_benchmark_trials = [
-            models.Trial(fuzzer=fuzzer,
-                         experiment=experiment_name,
-                         benchmark=benchmark,
-                         preemptible=preemptible) for _ in range(num_trials)
-        ]
-        trials.extend(fuzzer_benchmark_trials)
+    for fuzzer in fuzzers:
+        for benchmark in benchmarks:
+            fuzzer_benchmark_trials = [
+                models.Trial(fuzzer=fuzzer,
+                             experiment=experiment_name,
+                             benchmark=benchmark,
+                             preemptible=preemptible) for _ in range(num_trials)
+            ]
+            trials.extend(fuzzer_benchmark_trials)
     return trials
 
 
