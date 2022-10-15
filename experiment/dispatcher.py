@@ -59,7 +59,7 @@ def _initialize_experiment_in_db(experiment_config: dict):
     with db_utils.session_scope() as session:
         experiment_exists = session.query(models.Experiment).filter(
             models.Experiment.name == experiment_config['experiment']).first()
-    if experiment_exists:
+    """if experiment_exists:
         raise Exception('Experiment already exists in database.')
 
     db_utils.add_all([
@@ -70,7 +70,7 @@ def _initialize_experiment_in_db(experiment_config: dict):
             private=experiment_config.get('private', True),
             experiment_filestore=experiment_config['experiment_filestore'],
             description=experiment_config['description']),
-    ])
+    ])"""
 
 
 def _record_experiment_time_ended(experiment_name: str):
