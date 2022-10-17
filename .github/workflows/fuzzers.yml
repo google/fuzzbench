@@ -107,6 +107,15 @@ jobs:
           - afl_maxmap
           - introspector_driven_focus
           - libfuzzer_focus_idx0
+          - libfuzzer_focus_idx1
+          - libfuzzer_focus_idx2
+          - libfuzzer_focus_idx3
+          - libfuzzer_focus_idx4
+          - libfuzzer_focus_idx5
+          - libfuzzer_focus_idx6
+          - libfuzzer_focus_idx7
+          - libfuzzer_focus_idx8
+          - libfuzzer_fork_parallel
           - centipede_function_filter
 
         benchmark_type:
