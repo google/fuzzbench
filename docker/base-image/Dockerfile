@@ -14,17 +14,28 @@
 
 FROM ubuntu:focal
 
-# Install google-cloud-sdk and Python3.
+# Python 3.10.8 is not the default version in Ubuntu 20.04 (Focal Fossa).
+ENV PYTHON_VERSION 3.10.8
+# Install dependencies required by Python3 or Pip3.
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y apt-transport-https python3-pip python3-dev curl ca-certificates gnupg
+    apt-get install -y \
+    curl \
+    xz-utils \
+    build-essential \
+    zlib1g-dev \
+    libssl-dev \
+    libffi-dev
 
-RUN echo "deb https://packages.cloud.google.com/apt cloud-sdk main" \
-    | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg \
-    | apt-key add - && \
-    apt-get update -y && \
-    apt-get install -y google-cloud-sdk
+RUN cd /tmp/ && \
+    curl -O https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz && \
+    tar -xvf Python-$PYTHON_VERSION.tar.xz && \
+    cd Python-$PYTHON_VERSION && \
+    ./configure --enable-loadable-sqlite-extensions --enable-optimizations && \
+    make -j install && \
+    rm -r /tmp/Python-$PYTHON_VERSION.tar.xz /tmp/Python-$PYTHON_VERSION && \
+    ln -s /usr/local/bin/python3 /usr/local/bin/python && \
+    ln -s /usr/local/bin/pip3 /usr/local/bin/pip
 
 # Install common python dependencies.
 COPY ./requirements.txt /tmp

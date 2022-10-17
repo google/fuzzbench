@@ -355,4 +355,4 @@ def test_experiment_rank_by_average_normalized_score():
     pd_test.assert_series_equal(ranking,
                                 expected_ranking,
                                 check_names=False,
-                                check_less_precise=True)
+                                rtol=10**-3)

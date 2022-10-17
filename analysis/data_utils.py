@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utility functions for data (frame) transformations."""
+import pandas as pd
+
 from analysis import stat_tests
 from common import environment
 
@@ -85,7 +87,7 @@ def clobber_experiments_data(df, experiments):
         experiment_pairs = experiment_data[['benchmark',
                                             'fuzzer']].apply(tuple, axis=1)
         to_include = experiment_data[~experiment_pairs.isin(covered_pairs)]
-        result = result.append(to_include)
+        result = pd.concat([result, to_include])
     return result
 
 
@@ -221,7 +223,7 @@ def experiment_summary(experiment_snapshots_df):
 def benchmark_rank_by_mean(benchmark_snapshot_df, key='edges_covered'):
     """Returns ranking of fuzzers based on mean coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
-    means = benchmark_snapshot_df.groupby('fuzzer')[key].mean()
+    means = benchmark_snapshot_df.groupby('fuzzer')[key].mean().astype(int)
     means.rename('mean cov', inplace=True)
     return means.sort_values(ascending=False)
 
@@ -229,7 +231,7 @@ def benchmark_rank_by_mean(benchmark_snapshot_df, key='edges_covered'):
 def benchmark_rank_by_median(benchmark_snapshot_df, key='edges_covered'):
     """Returns ranking of fuzzers based on median coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
-    medians = benchmark_snapshot_df.groupby('fuzzer')[key].median()
+    medians = benchmark_snapshot_df.groupby('fuzzer')[key].median().astype(int)
     medians.rename('median cov', inplace=True)
     return medians.sort_values(ascending=False)
 
@@ -238,7 +240,8 @@ def benchmark_rank_by_percent(benchmark_snapshot_df, key='edges_covered'):
     """Returns ranking of fuzzers based on median (normalized/%) coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
     max_key = "{}_percent_max".format(key)
-    medians = benchmark_snapshot_df.groupby('fuzzer')[max_key].median()
+    medians = benchmark_snapshot_df.groupby('fuzzer')[max_key].median().astype(
+        int)
     return medians.sort_values(ascending=False)
 
 
