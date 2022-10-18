@@ -25,7 +25,7 @@ def experiment_config():
     config_filepath = os.path.join(os.path.dirname(__file__), 'test_data',
                                    'experiment-config.yaml')
 
-    with open(config_filepath) as file_handle:
+    with open(config_filepath, encoding='utf-8') as file_handle:
         return yaml.load(file_handle, yaml.SafeLoader)
 
 
@@ -36,5 +36,5 @@ def local_experiment_config():
     config_filepath = os.path.join(os.path.dirname(__file__), 'test_data',
                                    'local-experiment-config.yaml')
 
-    with open(config_filepath) as file_handle:
+    with open(config_filepath, encoding='utf-8') as file_handle:
         return yaml.load(file_handle, yaml.SafeLoader)

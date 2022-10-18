@@ -51,7 +51,7 @@ def test_run_fuzzer_log_file(mocked_communicate, fs, environ):
         assert mocked_popen.commands == [[
             'nice', '-n', '5', 'python3', '-u', '-c',
             'from fuzzers.afl import fuzzer; '
-            "fuzzer.fuzz('/out/seeds', '/out/corpus', '/out/fuzz-target')"
+            'fuzzer.fuzz("/out/seeds", "/out/corpus", "/out/fuzz-target")'
         ]]
     assert os.path.exists(log_filename)
 

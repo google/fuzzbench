@@ -89,7 +89,7 @@ def test_clobber_experiments_data():
     """Tests that clobber experiments data clobbers stale snapshots from earlier
     experiments."""
     df = pd.concat(
-        create_experiment_data('experiment-%d' % experiment_num)
+        create_experiment_data(f'experiment-{experiment_num}')
         for experiment_num in range(3))
     df.reset_index(inplace=True)
 

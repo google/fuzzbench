@@ -13,8 +13,6 @@
 # limitations under the License.
 """Tests for run_coverage.py."""
 
-# pylint: disable=no-self-use
-
 import os
 
 import pytest

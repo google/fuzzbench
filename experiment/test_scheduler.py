@@ -392,7 +392,7 @@ def test_get_preempted_trials_stale_preempted(_, preempt_exp_conf):
             'experiment.scheduler.TrialInstanceManager.'
             '_get_started_unfinished_instances',
             return_value=[instance_name]):
-        assert trial_instance_manager.get_preempted_trials() == []
+        assert not trial_instance_manager.get_preempted_trials()
 
 
 def _get_preempted_instance_item(trial_id, exp_conf):
