@@ -53,11 +53,11 @@ class TestIntegrationExecute:
     def test_output_file(self, mocked_info, tmp_path):
         """Test that execute handles the output_file argument as intended."""
         output_file_path = tmp_path / 'output'
-        with open(output_file_path, 'w') as output_file:
+        with open(output_file_path, 'w', encoding='utf-8') as output_file:
             new_process.execute(self.COMMAND,
                                 timeout=1,
                                 output_file=output_file,
                                 expect_zero=False)
 
-        with open(output_file_path, 'r') as output_file:
+        with open(output_file_path, 'r', encoding='utf-8') as output_file:
             assert output_file.read() == 'Hello, World!\n'
