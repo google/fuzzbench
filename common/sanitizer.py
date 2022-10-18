@@ -48,7 +48,7 @@ def _join_memory_tool_options(options):
     """Joins a dict holding memory tool options into a string that can be set in
   the environment."""
     return ':'.join(
-        '%s=%s' % (key, str(value)) for key, value in sorted(options.items()))
+        f'{key}={str(value)}' for key, value in sorted(options.items()))
 
 
 def set_sanitizer_options(env, is_fuzz_run=False):

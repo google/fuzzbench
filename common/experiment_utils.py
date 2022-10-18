@@ -80,19 +80,18 @@ def get_custom_seed_corpora_filestore_path():
 
 def get_dispatcher_instance_name(experiment: str) -> str:
     """Returns a dispatcher instance name for an experiment."""
-    return 'd-%s' % experiment
+    return f'd-{experiment}'
 
 
 def get_trial_instance_name(experiment: str, trial_id: int) -> str:
     """Returns a unique instance name for each trial of an experiment."""
-    return 'r-%s-%d' % (experiment, trial_id)
+    return f'r-{experiment}-{trial_id}'
 
 
 def get_cycle_filename(basename: str, cycle: int) -> str:
     """Returns a filename for a file that is relevant to a particular snapshot
     cycle."""
-    filename = basename + '-' + ('%04d' % cycle)
-    return filename
+    return f'{basename}-{cycle:04d}'
 
 
 def get_corpus_archive_name(cycle: int) -> str:
@@ -124,13 +123,13 @@ def get_trial_dir(fuzzer, benchmark, trial_id):
     """Returns the unique directory for |fuzzer|, |benchmark|, and
     |trial_id|."""
     benchmark_fuzzer_directory = get_benchmark_fuzzer_dir(benchmark, fuzzer)
-    trial_subdir = 'trial-%d' % trial_id
+    trial_subdir = f'trial-{trial_id}'
     return posixpath.join(benchmark_fuzzer_directory, trial_subdir)
 
 
 def get_benchmark_fuzzer_dir(benchmark, fuzzer):
     """Returns the directory for |benchmark| and |fuzzer|."""
-    return '%s-%s' % (benchmark, fuzzer)
+    return f'{benchmark}-{fuzzer}'
 
 
 def get_trial_bucket_dir(fuzzer, benchmark, trial_id):

@@ -54,7 +54,7 @@ def append(path, line):
 def read(path, open_flags='r'):
     """Opens file at |path| with |open_flags| reads it and then returns the
     result."""
-    with open(path, open_flags) as file_handle:
+    with open(path, open_flags, encoding='utf-8') as file_handle:
         return file_handle.read()
 
 
@@ -96,7 +96,7 @@ def replace_dir(src_dir, dst_dir, move=True):
     it."""
     if not os.path.isdir(src_dir):
         raise NotADirectoryError(
-            'src_dir must be a directory. %s is not a directory.' % src_dir)
+            f'src_dir must be a directory. {src_dir} is not a directory.')
     shutil.rmtree(dst_dir, ignore_errors=True)
     if move:
         shutil.move(src_dir, dst_dir)
