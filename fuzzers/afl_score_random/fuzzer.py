@@ -48,7 +48,7 @@ def get_stats(output_corpus, fuzzer_log):  # pylint: disable=unused-argument
     """Gets fuzzer stats for AFL."""
     # Get a dictionary containing the stats AFL reports.
     stats_file = os.path.join(output_corpus, 'fuzzer_stats')
-    with open(stats_file) as file_handle:
+    with open(stats_file, encoding='utf-8') as file_handle:
         stats_file_lines = file_handle.read().splitlines()
     stats_file_dict = {}
     for stats_line in stats_file_lines:

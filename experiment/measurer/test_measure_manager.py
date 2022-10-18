@@ -359,9 +359,6 @@ def get_test_data_path(*subpaths):
     return os.path.join(TEST_DATA_PATH, *subpaths)
 
 
-# pylint: disable=no-self-use
-
-
 class TestIntegrationMeasurement:
     """Integration tests for measurement."""
 
@@ -409,7 +406,7 @@ class TestIntegrationMeasurement:
         # Set up the snapshot archive.
         cycle = 1
         archive = get_test_data_path('test_measure_snapshot_coverage',
-                                     'corpus-archive-%04d.tar.gz' % cycle)
+                                     f'corpus-archive-{cycle:04d}.tar.gz')
         corpus_dir = os.path.join(snapshot_measurer.trial_dir, 'corpus')
         os.makedirs(corpus_dir)
         shutil.copy(archive, corpus_dir)
