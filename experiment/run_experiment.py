@@ -22,7 +22,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import jinja2
 import yaml
@@ -129,7 +129,7 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
                 value)
 
     if not valid:
-        raise ValidationError('Config: %s is invalid.' % config_filename)
+        raise ValidationError(f'Config: {config_filename} is invalid.')
 
     config['local_experiment'] = local_experiment
     config['snapshot_period'] = snapshot_period
@@ -152,20 +152,20 @@ def get_directories(parent_dir):
 def validate_custom_seed_corpus(custom_seed_corpus_dir, benchmarks):
     """Validate seed corpus provided by user"""
     if not os.path.isdir(custom_seed_corpus_dir):
-        raise ValidationError('Corpus location "%s" is invalid.' %
-                              custom_seed_corpus_dir)
+        raise ValidationError(
+            f'Corpus location "{custom_seed_corpus_dir}" is invalid.')
 
     for benchmark in benchmarks:
         benchmark_corpus_dir = os.path.join(custom_seed_corpus_dir, benchmark)
         if not os.path.exists(benchmark_corpus_dir):
             raise ValidationError('Custom seed corpus directory for '
-                                  'benchmark "%s" does not exist.' % benchmark)
+                                  f'benchmark "{benchmark}" does not exist.')
         if not os.path.isdir(benchmark_corpus_dir):
-            raise ValidationError('Seed corpus of benchmark "%s" must be '
-                                  'a directory.' % benchmark)
+            raise ValidationError(
+                f'Seed corpus of benchmark "{benchmark}" must be a directory.')
         if not os.listdir(benchmark_corpus_dir):
-            raise ValidationError('Seed corpus of benchmark "%s" is empty.' %
-                                  benchmark)
+            raise ValidationError(
+                f'Seed corpus of benchmark "{benchmark}" is empty.')
 
 
 def validate_benchmarks(benchmarks: List[str]):
@@ -173,13 +173,13 @@ def validate_benchmarks(benchmarks: List[str]):
     benchmark_types = set()
     for benchmark in set(benchmarks):
         if benchmarks.count(benchmark) > 1:
-            raise ValidationError('Benchmark "%s" is included more than once.' %
-                                  benchmark)
+            raise ValidationError(
+                f'Benchmark "{benchmark}" is included more than once.')
         # Validate benchmarks here. It's possible someone might run an
         # experiment without going through presubmit. Better to catch an invalid
         # benchmark than see it in production.
         if not benchmark_utils.validate(benchmark):
-            raise ValidationError('Benchmark "%s" is invalid.' % benchmark)
+            raise ValidationError(f'Benchmark "{benchmark}" is invalid.')
 
         benchmark_types.add(benchmark_utils.get_type(benchmark))
 
@@ -192,7 +192,7 @@ def validate_benchmarks(benchmarks: List[str]):
 def validate_fuzzer(fuzzer: str):
     """Parses and validates a fuzzer name."""
     if not fuzzer_utils.validate(fuzzer):
-        raise ValidationError('Fuzzer: %s is invalid.' % fuzzer)
+        raise ValidationError(f'Fuzzer: {fuzzer} is invalid.')
 
 
 def validate_experiment_name(experiment_name: str):
@@ -200,8 +200,8 @@ def validate_experiment_name(experiment_name: str):
     instances."""
     if not re.match(EXPERIMENT_CONFIG_REGEX, experiment_name):
         raise ValidationError(
-            'Experiment name "%s" is invalid. Must match: "%s"' %
-            (experiment_name, EXPERIMENT_CONFIG_REGEX.pattern))
+            f'Experiment name "{experiment_name}" is invalid. '
+            f'Must match: "{EXPERIMENT_CONFIG_REGEX.pattern}"')
 
 
 def set_up_experiment_config_file(config):
@@ -210,7 +210,8 @@ def set_up_experiment_config_file(config):
     filesystem.recreate_directory(experiment_utils.CONFIG_DIR)
     experiment_config_filename = (
         experiment_utils.get_internal_experiment_config_relative_path())
-    with open(experiment_config_filename, 'w') as experiment_config_file:
+    with open(experiment_config_filename, 'w',
+              encoding='utf-8') as experiment_config_file:
         yaml.dump(config, experiment_config_file, default_flow_style=False)
 
 
@@ -232,7 +233,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
         config_filename: str,
         benchmarks: List[str],
         fuzzers: List[str],
-        description: str = None,
+        description: Optional[str] = None,
         no_seeds=False,
         no_dictionaries=False,
         oss_fuzz_corpus=False,
@@ -312,7 +313,7 @@ def add_oss_fuzz_corpus(benchmark, oss_fuzz_corpora_dir):
     fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
 
     if not fuzz_target.startswith(project):
-        full_fuzz_target = '%s_%s' % (project, fuzz_target)
+        full_fuzz_target = f'{project}_{fuzz_target}'
     else:
         full_fuzz_target = fuzz_target
 
@@ -397,31 +398,25 @@ class LocalDispatcher(BaseDispatcher):
             self.config['experiment_filestore'])
         filesystem.create_directory(experiment_filestore_path)
         sql_database_arg = (
-            'SQL_DATABASE_URL=sqlite:///{}?check_same_thread=False'.format(
-                os.path.join(experiment_filestore_path, 'local.db')))
+            'SQL_DATABASE_URL=sqlite:///'
+            f'{os.path.join(experiment_filestore_path, "local.db")}'
+            '?check_same_thread=False')
 
         docker_registry = self.config['docker_registry']
-        set_instance_name_arg = 'INSTANCE_NAME={instance_name}'.format(
-            instance_name=self.instance_name)
-        set_experiment_arg = 'EXPERIMENT={experiment}'.format(
-            experiment=self.config['experiment'])
-        shared_experiment_filestore_arg = '{0}:{0}'.format(
-            self.config['experiment_filestore'])
+        set_instance_name_arg = f'INSTANCE_NAME={self.instance_name}'
+        set_experiment_arg = f'EXPERIMENT={self.config["experiment"]}'
+        filestore = self.config['experiment_filestore']
+        shared_experiment_filestore_arg = f'{filestore}:{filestore}'
         # TODO: (#484) Use config in function args or set as environment
         # variables.
-        set_docker_registry_arg = 'DOCKER_REGISTRY={}'.format(docker_registry)
-        set_experiment_filestore_arg = (
-            'EXPERIMENT_FILESTORE={experiment_filestore}'.format(
-                experiment_filestore=self.config['experiment_filestore']))
-        shared_report_filestore_arg = '{0}:{0}'.format(
-            self.config['report_filestore'])
-        set_report_filestore_arg = (
-            'REPORT_FILESTORE={report_filestore}'.format(
-                report_filestore=self.config['report_filestore']))
-        set_snapshot_period_arg = 'SNAPSHOT_PERIOD={snapshot_period}'.format(
-            snapshot_period=self.config['snapshot_period'])
-        docker_image_url = '{docker_registry}/dispatcher-image'.format(
-            docker_registry=docker_registry)
+        set_docker_registry_arg = f'DOCKER_REGISTRY={docker_registry}'
+        set_experiment_filestore_arg = f'EXPERIMENT_FILESTORE={self.config["experiment_filestore"]}'
+
+        filestore = self.config['report_filestore']
+        shared_report_filestore_arg = f'{filestore}:{filestore}'
+        set_report_filestore_arg = f'REPORT_FILESTORE={filestore}'
+        set_snapshot_period_arg = f'SNAPSHOT_PERIOD={self.config["snapshot_period"]}'
+        docker_image_url = f'{docker_registry}/dispatcher-image'
         command = [
             'docker',
             'run',
@@ -452,7 +447,7 @@ class LocalDispatcher(BaseDispatcher):
             '--shm-size=2g',
             '--cap-add=SYS_PTRACE',
             '--cap-add=SYS_NICE',
-            '--name=%s' % container_name,
+            f'--name={container_name}',
             docker_image_url,
             '/bin/bash',
             '-c',
@@ -637,7 +632,7 @@ def main():
     if (runners_cpus if runners_cpus else 0) + (measurers_cpus if measurers_cpus
                                                 else 0) > os.cpu_count():
         parser.error('The sum of runners and measurers cpus is greater than the'
-                     ' available cpu cores (%d)' % os.cpu_count())
+                     f' available cpu cores ({os.cpu_count()})')
 
     if args.custom_seed_corpus_dir:
         if args.no_seeds:

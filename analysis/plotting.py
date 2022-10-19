@@ -13,12 +13,12 @@
 # limitations under the License.
 """Plotting functions."""
 
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
 import numpy as np
 import Orange
 import seaborn as sns
 
+from matplotlib import colors
+from matplotlib import pyplot as plt
 from analysis import data_utils
 from common import experiment_utils
 
@@ -36,11 +36,11 @@ def _formatted_hour_min(seconds):
     hours = int(seconds / 60 / 60)
     minutes = int(seconds / 60) % 60
     if hours:
-        time_string += '%dh' % hours
+        time_string += f'{hours}h'
     if minutes:
         if hours:
             time_string += ':'
-        time_string += '%dm' % minutes
+        time_string += f'{minutes}m'
     return time_string
 
 
@@ -54,7 +54,7 @@ def _formatted_title(benchmark_snapshot_df):
     stats_string += _formatted_hour_min(snapshot_time)
 
     trial_count = benchmark_snapshot_df.fuzzer.value_counts().min()
-    stats_string += ', %d trials/fuzzer' % trial_count
+    stats_string += f', {trial_count} trials/fuzzer'
     stats_string += ')'
     return stats_string
 
@@ -109,7 +109,6 @@ class Plotter:
         self._quick = quick
         self._logscale = logscale
 
-    # pylint: disable=no-self-use
     def _write_plot_to_image(self,
                              plot_function,
                              data,
@@ -260,7 +259,7 @@ class Plotter:
             sns.stripplot(**common_args, size=3, color="black", alpha=0.6)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
-        ylabel = 'Reached {} coverage'.format('bug' if bugs else 'branch')
+        ylabel = f'Reached {"bug" if bugs else "branch"} coverage'
         axes.set(ylabel=ylabel)
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
         axes.set_xticklabels(axes.get_xticklabels(),
@@ -339,7 +338,7 @@ class Plotter:
                            ax=axes)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
-        ylabel = 'Reached {} coverage'.format('bug' if bugs else 'branch')
+        ylabel = f'Reached {"bug" if bugs else "branch"} coverage'
         axes.set(ylabel=ylabel)
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
         axes.set_xticklabels(axes.get_xticklabels(),
