@@ -16,7 +16,7 @@
 import enum
 import posixpath
 import subprocess
-from typing import List
+from typing import List, Optional
 
 from common import experiment_utils
 from common import logs
@@ -47,7 +47,7 @@ class InstanceType(enum.Enum):
 def create_instance(instance_name: str,
                     instance_type: InstanceType,
                     config: dict,
-                    startup_script: str = None,
+                    startup_script: Optional[str] = None,
                     preemptible: bool = False,
                     **kwargs) -> bool:
     """Creates a GCE instance with name, |instance_name|, type, |instance_type|
@@ -126,12 +126,12 @@ def set_default_project(cloud_project: str):
         ['gcloud', 'config', 'set', 'project', cloud_project])
 
 
-def run_local_instance(startup_script: str = None) -> bool:
+def run_local_instance(startup_script: Optional[str] = None) -> bool:
     """Does the equivalent of "create_instance" for local experiments, runs
     |startup_script| in the background."""
     command = ['/bin/bash', startup_script]
     subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    return new_process.ProcessResult(0, '', False)
+    return new_process.ProcessResult(0, '', False).retcode == 0
 
 
 def create_instance_template(template_name, docker_image, env, project, zone):

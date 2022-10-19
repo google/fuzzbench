@@ -22,7 +22,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import jinja2
 import yaml
@@ -232,16 +232,16 @@ def start_experiment(  # pylint: disable=too-many-arguments
         config_filename: str,
         benchmarks: List[str],
         fuzzers: List[str],
-        description: str = None,
-        no_seeds=False,
-        no_dictionaries=False,
-        oss_fuzz_corpus=False,
-        allow_uncommitted_changes=False,
-        concurrent_builds=None,
-        measurers_cpus=None,
-        runners_cpus=None,
-        region_coverage=False,
-        custom_seed_corpus_dir=None):
+        description: Optional[str] = None,
+        no_seeds: bool = False,
+        no_dictionaries: bool = False,
+        oss_fuzz_corpus: bool = False,
+        allow_uncommitted_changes: bool = False,
+        concurrent_builds: Optional[int] = None,
+        measurers_cpus: Optional[int] = None,
+        runners_cpus: Optional[int] = None,
+        region_coverage: bool = False,
+        custom_seed_corpus_dir: Optional[str] = None):
     """Start a fuzzer benchmarking experiment."""
     if not allow_uncommitted_changes:
         check_no_uncommitted_changes()
