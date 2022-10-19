@@ -21,7 +21,7 @@ RUN mkdir /clang && \
 
 RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
     cd /llvm-project/ && \
-    git checkout f4037650e0c74454e12b4eabd94fec06d678505f
+    git checkout aaecabe68b6add7874d481e67cd430cb6f06cb82
 
 COPY weak.c /
 RUN /clang/bin/clang /weak.c -c -o /weak.o
