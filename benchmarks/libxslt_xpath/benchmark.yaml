@@ -1,40 +1,4 @@
-commit: 2c20c70cd81e5ba51dc8e160fbd1c855eb97f065
-commit_date: 2020-09-20 15:01:51+00:00
+commit: 7bcc8dca27041e2b03855508fe54d435d816a78f
+commit_date: 2022-09-22 10:59:13+00:00
 fuzz_target: xpath
 project: libxslt
-unsupported_fuzzers:
-  - aflcc
-  - aflplusplus_qemu
-  - aflplusplus_um_random
-  - aflplusplus_um_random_75
-  - aflplusplus_um_random_3
-  - aflplusplus_um_random_6
-  - aflplusplus_um_prioritize
-  - aflplusplus_um_prioritize_75
-  - aflplusplus_um_parallel
-  - afl_um_random
-  - afl_um_prioritize
-  - afl_um_parallel
-  - honggfuzz_um_random
-  - honggfuzz_um_random_75
-  - honggfuzz_um_prioritize
-  - honggfuzz_um_prioritize_75
-  - honggfuzz_um_parallel
-  - eclipser_um_random
-  - eclipser_um_prioritize
-  - eclipser_um_parallel
-  - libfuzzer_um_random
-  - libfuzzer_um_prioritize
-  - libfuzzer_um_parallel
-  - aflplusplus_qemu_tracepc
-  - aflplusplus_frida
-  - klee
-  - weizz_qemu
-  - aflplusplus_cmplog_double
-  - symcc_aflplusplus_single
-  - eclipser_aflplusplus
-  - aflplusplus_qemu_double
-  - fuzzolic_aflplusplus_z3
-  - symqemu_aflplusplus
-  - fuzzolic_aflplusplus_fuzzy
-  - fuzzolic_aflplusplus_z3dict
