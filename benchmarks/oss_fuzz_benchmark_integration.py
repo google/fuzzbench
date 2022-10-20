@@ -78,7 +78,6 @@ class BaseBuilderDockerRepo:
 def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
     """Checks out the right files from OSS-Fuzz to build the benchmark based on
     |project| and |commit_date|. Then copies them to |benchmark_dir|."""
-    print('j')
     with tempfile.TemporaryDirectory() as oss_fuzz_dir:
         oss_fuzz_repo_manager = GitRepoManager(oss_fuzz_dir)
         oss_fuzz_repo_manager.git(['clone', OSS_FUZZ_REPO_URL, oss_fuzz_dir])
