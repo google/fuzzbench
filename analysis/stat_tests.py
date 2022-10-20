@@ -198,7 +198,8 @@ def a12(measurements_x, measurements_y):
     rank_x_sum = rank_x.sum()
     # A = (R1/n1 - (n1+1)/2)/n2 # formula (14) in Vargha and Delaney, 2000
     # The formula to compute A has been transformed to minimize accuracy errors.
-    # See: http://mtorchiano.wordpress.com/2014/05/19/effect-size-of-r-precision/
+    # See:
+    # http://mtorchiano.wordpress.com/2014/05/19/effect-size-of-r-precision/
 
     a12_measure = (2 * rank_x_sum - x_size * (x_size + 1)) / (
         2 * y_size * x_size)  # equivalent formula to avoid accuracy errors

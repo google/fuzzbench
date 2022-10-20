@@ -13,8 +13,8 @@
 # limitations under the License.
 """Sanitizer helpers."""
 
-# Matches ClusterFuzz configuration.
-# See https://github.com/google/clusterfuzz/blob/master/src/python/system/environment.py.
+# Matches ClusterFuzz configuration. See
+# https://github.com/google/clusterfuzz/blob/master/src/python/system/environment.py.
 SANITIZER_OPTIONS = {
     'handle_abort': 2,
     'handle_sigbus': 2,
