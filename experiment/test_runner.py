@@ -323,8 +323,9 @@ class TestIntegrationRunner:
     @pytest.mark.skipif(not os.environ.get('TEST_EXPERIMENT_FILESTORE'),
                         reason='TEST_EXPERIMENT_FILESTORE is not set, '
                         'skipping integration test.')
-    @mock.patch('common.logs.error')  # pylint: too-many-locals
+    @mock.patch('common.logs.error')
     def test_integration_runner(self, mocked_error, tmp_path, environ):
+        # pylint: disable=too-many-locals
         """Test that runner can run libFuzzer and saves snapshots to GCS."""
         # Switch cwd so that fuzzers don't create tons of files in the repo.
         os.chdir(tmp_path)
