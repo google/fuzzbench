@@ -122,7 +122,7 @@ def measure_loop(experiment: str,
         set_up_coverage_binaries(pool, experiment)
         # Using Multiprocessing.Queue will fail with a complaint about
         # inheriting queue.
-        manager_queue = manager.Queue()  # pytype: disable=attribute-error
+        multiprocessing_queue = manager.Queue()  # pytype: disable=attribute-error
         while True:
             try:
                 # Get whether all trials have ended before we measure to prevent
@@ -130,7 +130,8 @@ def measure_loop(experiment: str,
                 all_trials_ended = scheduler.all_trials_ended(experiment)
 
                 if not measure_all_trials(experiment, max_total_time, pool,
-                                          manager_queue, region_coverage):
+                                          multiprocessing_queue,
+                                          region_coverage):
                     # We didn't measure any trials.
                     if all_trials_ended:
                         # There are no trials producing snapshots to measure.
@@ -146,7 +147,7 @@ def measure_loop(experiment: str,
 
 
 def measure_all_trials(experiment: str, max_total_time: int, pool,
-                       manager_queue, region_coverage) -> bool:  # pylint: disable=invalid-name
+                       multiprocessing_queue, region_coverage) -> bool:  # pylint: disable=invalid-name
     """Get coverage data (with coverage runs) for all active trials. Note that
     this should not be called unless multiprocessing.set_start_method('spawn')
     was called first. Otherwise it will use fork which breaks logging."""
@@ -163,7 +164,7 @@ def measure_all_trials(experiment: str, max_total_time: int, pool,
         return False
 
     measure_trial_coverage_args = [
-        (unmeasured_snapshot, max_cycle, manager_queue, region_coverage)
+        (unmeasured_snapshot, max_cycle, multiprocessing_queue, region_coverage)
         for unmeasured_snapshot in unmeasured_snapshots
     ]
 
@@ -189,7 +190,8 @@ def measure_all_trials(experiment: str, max_total_time: int, pool,
 
     while True:
         try:
-            snapshot = manager_queue.get(timeout=SNAPSHOT_QUEUE_GET_TIMEOUT)
+            snapshot = multiprocessing_queue.get(
+                timeout=SNAPSHOT_QUEUE_GET_TIMEOUT)
             snapshots.append(snapshot)
         except queue.Empty:
             if result.ready():
@@ -624,7 +626,8 @@ def get_fuzzer_stats(stats_filestore_path):
 
 
 def measure_trial_coverage(  # pylint: disable=invalid-name
-        measure_req, max_cycle: int, manager_queue: multiprocessing.Queue,
+        measure_req, max_cycle: int,
+        multiprocessing_queue: multiprocessing.Queue,
         region_coverage) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
@@ -640,7 +643,7 @@ def measure_trial_coverage(  # pylint: disable=invalid-name
                                                  region_coverage)
             if not snapshot:
                 break
-            manager_queue.put(snapshot)
+            multiprocessing_queue.put(snapshot)
         except Exception:  # pylint: disable=broad-except
             logger.error('Error measuring cycle.',
                          extras={
