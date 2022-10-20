@@ -47,7 +47,8 @@ def is_local():
         return _is_local
     try:
         # TODO(github.com/google/fuzzbench/issues/82): Get rid of this.
-        urllib.request.urlopen('http://metadata.google.internal')
+        with urllib.request.urlopen('http://metadata.google.internal'):
+            pass
         _is_local = False
     except urllib.error.URLError:
         _is_local = True
