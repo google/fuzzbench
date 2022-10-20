@@ -31,6 +31,12 @@ extension-pkg-allow-list=
 # for backward compatibility.)
 extension-pkg-whitelist=
 
+# Add files or directories to the blocklist. They should be base names, not
+# paths.
+# Files or directories to be skipped. They should be base names, not paths.
+# Files under alembic are generated and are nonconforming.
+ignore=CVS, alembic
+
 # Return non-zero exit code if any of these messages/categories are detected,
 # even if score is above --fail-under value. Syntax same as enable. Messages
 # specified are enabled, while categories only check already-enabled messages.
@@ -42,9 +48,6 @@ fail-under=10
 # Interpret the stdin as a python script, whose filename needs to be passed as
 # the module_or_package argument.
 #from-stdin=
-
-# Files or directories to be skipped. They should be base names, not paths.
-ignore=CVS
 
 # Add files or directories matching the regular expressions patterns to the
 # ignore-list. The regex matches against paths and can be in Posix or Windows
@@ -70,7 +73,7 @@ ignored-modules=
 # Use multiple processes to speed up Pylint. Specifying 0 will auto-detect the
 # number of processors available to use, and will cap the count on Windows to
 # avoid hangs.
-jobs=1
+jobs=0
 
 # Control the amount of potential inferred values when inferring a single
 # object. This can help the performance when dealing with large functions or
@@ -155,7 +158,12 @@ disable=raw-checker-failed,
         suppressed-message,
         useless-suppression,
         deprecated-pragma,
-        use-symbolic-message-instead
+        use-symbolic-message-instead,
+        raw-checker-failed,
+        fixme,
+        too-few-public-methods,
+        duplicate-code,  # Too many false positives.
+        global-statement, # Rare enough that when used it is always an exception to the rule.
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -174,7 +182,10 @@ allow-any-import-level=
 allow-wildcard-with-all=no
 
 # Deprecated modules which should not be used, separated by a comma.
-deprecated-modules=
+deprecated-modules=regsub,
+                   TERMIOS,
+                   Bastion,
+                   rexec
 
 # Output a graph (.gv or any supported image format) of external dependencies
 # to the given file (report RP0402 must not be disabled).
@@ -407,7 +418,7 @@ indent-after-paren=4
 indent-string='    '
 
 # Maximum number of characters on a single line.
-max-line-length=100
+max-line-length=80
 
 # Maximum number of lines in a module.
 max-module-lines=1000
@@ -430,7 +441,7 @@ ignore-comments=yes
 ignore-docstrings=yes
 
 # Imports are removed from the similarity computation
-ignore-imports=yes
+ignore-imports=no
 
 # Signatures are removed from the similarity computation
 ignore-signatures=yes
@@ -516,9 +527,13 @@ function-naming-style=snake_case
 good-names=i,
            j,
            k,
+           q,
            ex,
            Run,
-           _
+           logger,
+           _,
+           df,
+           fs
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted
