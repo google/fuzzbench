@@ -333,7 +333,8 @@ def extract_corpus(corpus_archive: str, sha_blacklist: Set[str],
         for member in tar.getmembers():
 
             if not member.isfile():
-                # We don't care about directory structure. So skip if not a file.
+                # We don't care about directory structure.
+                # So skip if not a file.
                 continue
 
             member_file_handle = tar.extractfile(member)

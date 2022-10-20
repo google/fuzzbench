@@ -21,9 +21,8 @@ from common import filestore_utils
 
 def store_build_logs(build_config, build_result):
     """Save build results in the build logs bucket."""
-    build_output = (
-        f'Command returned {build_result.retcode}.\nOutput: {build_result.output}'
-    )
+    build_output = (f'Command returned {build_result.retcode}.\n'
+                    f'Output: {build_result.output}')
     with tempfile.NamedTemporaryFile(mode='w') as tmp:
         tmp.write(build_output)
         tmp.flush()

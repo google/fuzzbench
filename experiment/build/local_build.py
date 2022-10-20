@@ -72,7 +72,9 @@ def copy_coverage_binaries(benchmark):
     coverage_build_archive = f'coverage-build-{benchmark}.tar.gz'
     coverage_build_archive_shared_dir_path = os.path.join(
         shared_coverage_binaries_dir, coverage_build_archive)
-    command = f'cd /out; tar -czvf {coverage_build_archive_shared_dir_path} * /src /work'
+    command = (
+        '(cd /out; '
+        f'tar -czvf {coverage_build_archive_shared_dir_path} * /src /work)')
     return new_process.execute([
         'docker', 'run', '-v', mount_arg, builder_image_url, '/bin/bash', '-c',
         command

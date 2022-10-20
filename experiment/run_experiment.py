@@ -410,12 +410,14 @@ class LocalDispatcher(BaseDispatcher):
         # TODO: (#484) Use config in function args or set as environment
         # variables.
         set_docker_registry_arg = f'DOCKER_REGISTRY={docker_registry}'
-        set_experiment_filestore_arg = f'EXPERIMENT_FILESTORE={self.config["experiment_filestore"]}'
+        set_experiment_filestore_arg = (
+            f'EXPERIMENT_FILESTORE={self.config["experiment_filestore"]}')
 
         filestore = self.config['report_filestore']
         shared_report_filestore_arg = f'{filestore}:{filestore}'
         set_report_filestore_arg = f'REPORT_FILESTORE={filestore}'
-        set_snapshot_period_arg = f'SNAPSHOT_PERIOD={self.config["snapshot_period"]}'
+        set_snapshot_period_arg = (
+            f'SNAPSHOT_PERIOD={self.config["snapshot_period"]}')
         docker_image_url = f'{docker_registry}/dispatcher-image'
         command = [
             'docker',

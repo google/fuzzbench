@@ -286,9 +286,8 @@ def validate_experiment_requests(paths: List[Path]):
         experiment_requests = yaml_utils.read(
             automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
     except yaml.parser.ParserError:
-        print(
-            f'Error parsing {automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH}.'
-        )
+        print('Error parsing '
+              f'{automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH}.')
         return False
 
     # Only validate the latest request.
@@ -296,9 +295,8 @@ def validate_experiment_requests(paths: List[Path]):
         experiment_requests[:1])
 
     if not result:
-        print(
-            f'{automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH} is not valid.'
-        )
+        print(f'{automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH}'
+              'is not valid.')
 
     return result
 
