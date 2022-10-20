@@ -24,14 +24,6 @@ ENV FUZZER $fuzzer
 ENV BENCHMARK $benchmark
 ENV DEBUG_BUILDER $debug_builder
 
-# Install python.
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y python3-dev python3-pip
-
-# Install Python dependencies.
-COPY ./requirements.txt /tmp
-RUN unset CC CXX CXXFLAGS CFLAGS LDFLAGS && pip install -r /tmp/requirements.txt
 
 # Copy the entire fuzzers directory tree to allow for module dependencies.
 COPY fuzzers $SRC/fuzzers

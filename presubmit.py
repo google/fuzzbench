@@ -241,9 +241,6 @@ def pytype(paths: List[Path]) -> bool:
     """Run pytype on |path| if it is a python file. Return False if it fails
     type checking."""
     paths = [path for path in paths if is_python(path)]
-    if not paths:
-        return True
-
     base_command = ['python3', '-m', 'pytype']
     success = True
 
