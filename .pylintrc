@@ -33,9 +33,8 @@ extension-pkg-whitelist=
 
 # Add files or directories to the blocklist. They should be base names, not
 # paths.
-# Files or directories to be skipped. They should be base names, not paths.
-# Files under alembic are generated and are nonconforming.
-ignore=CVS, alembic
+ignore=CVS,
+       alembic,  # Files under alembic are generated and are nonconforming.
 
 # Return non-zero exit code if any of these messages/categories are detected,
 # even if score is above --fail-under value. Syntax same as enable. Messages
