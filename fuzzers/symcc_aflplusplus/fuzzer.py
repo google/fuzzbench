@@ -130,4 +130,5 @@ def fuzz(input_corpus, output_corpus, target_binary):
                      "symcc_fuzzing_helper"), "-o", output_corpus, "-a",
         "afl-secondary", "-n", "symcc", "-m", "--", symcc_target_binary, "@@"
     ]
-    subprocess.Popen(cmd, env=new_environ)
+    with subprocess.Popen(cmd, env=new_environ):
+        pass

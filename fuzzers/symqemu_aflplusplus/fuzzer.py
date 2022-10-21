@@ -116,4 +116,5 @@ def fuzz(input_corpus, output_corpus, target_binary):
         symqemu_target, symcc_target_binary, "@@"
     ]
     print(f'Running command: {" ".join(cmd)}')
-    subprocess.Popen(cmd, env=new_environ)
+    with subprocess.Popen(cmd, env=new_environ):
+        pass
