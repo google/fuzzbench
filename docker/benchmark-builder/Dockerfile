@@ -24,6 +24,35 @@ ENV FUZZER $fuzzer
 ENV BENCHMARK $benchmark
 ENV DEBUG_BUILDER $debug_builder
 
+# Python 3.10.8 is not the default version in Ubuntu 20.04 (Focal Fossa).
+ENV PYTHON_VERSION 3.10.8
+
+# Install dependencies required by Python3 or Pip3.
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y \
+    curl \
+    xz-utils \
+    build-essential \
+    zlib1g-dev \
+    libssl-dev \
+    libffi-dev
+
+RUN cd /tmp/ && \
+    curl -O \
+    https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz && \
+    tar -xvf Python-$PYTHON_VERSION.tar.xz && \
+    cd Python-$PYTHON_VERSION && \
+    ./configure --enable-loadable-sqlite-extensions --enable-optimizations && \
+    make -j install && \
+    rm -r /tmp/Python-$PYTHON_VERSION.tar.xz /tmp/Python-$PYTHON_VERSION && \
+    ln -s /usr/local/bin/python3 /usr/local/bin/python && \
+    ln -s /usr/local/bin/pip3 /usr/local/bin/pip
+
+# Install common python dependencies.
+COPY ./requirements.txt /tmp
+RUN pip install -r /tmp/requirements.txt
+
 
 # Copy the entire fuzzers directory tree to allow for module dependencies.
 COPY fuzzers $SRC/fuzzers
