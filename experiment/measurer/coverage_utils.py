@@ -60,9 +60,8 @@ def generate_coverage_reports(experiment_config: dict):
 
 def generate_coverage_report(experiment, benchmark, fuzzer, region_coverage):
     """Generates the coverage report for one pair of benchmark and fuzzer."""
-    logger.info(
-        f'Generating coverage report for benchmark: {benchmark} fuzzer: {fuzzer}.'
-    )
+    logger.info('Generating coverage report for benchmark: %s fuzzer: %s.',
+                benchmark, fuzzer)
 
     try:
         coverage_reporter = CoverageReporter(experiment, fuzzer, benchmark,
@@ -121,9 +120,8 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
 
     def merge_profdata_files(self):
         """Merge profdata files from |src_files| to |dst_files|."""
-        logger.info(
-            f'Merging profdata for fuzzer: {self.fuzzer},benchmark: {self.benchmark}.'
-        )
+        logger.info('Merging profdata for fuzzer: %s, benchmark: %s.',
+                    self.fuzzer, self.benchmark)
 
         files_to_merge = []
         for trial_id in self.trial_ids:
