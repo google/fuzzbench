@@ -108,6 +108,13 @@ jobs:
           - introspector_driven_focus
           - libfuzzer_focus_idx0
           - centipede_function_filter
+          - aflpp_random_wrs_rp
+          - aflpp_random_default
+          - aflpp_random_wrs_rf
+          - aflpp_random_no_favs
+          - aflpp_random_wrs
+          - aflcc
+          - aflpp_random_wrs_rf_rp
 
         benchmark_type:
           - oss-fuzz
