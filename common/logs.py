@@ -72,6 +72,7 @@ def initialize(name='fuzzbench', default_extras=None, log_level=logging.INFO):
     _set_instance_name(default_extras)
     _set_experiment(default_extras)
 
+    # pylint: disable=global-variable-not-assigned
     global _default_extras
     _default_extras.update(default_extras)
 

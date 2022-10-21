@@ -67,6 +67,7 @@ def cleanup():
 @contextmanager
 def session_scope():
     """Provide a transactional scope around a series of operations."""
+    # pylint: disable=global-variable-not-assigned
     global session
     global engine
     global lock
