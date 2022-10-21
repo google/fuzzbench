@@ -52,7 +52,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
         raise RuntimeError('Unsupported benchmark, unavailable grammar')
     dest = os.path.join(os.environ['OUT'], 'grammar.json.gz')
     shutil.copy(copy_file, dest)
-    os.system("gzip -d '%s'" % dest)
+    os.system(f"gzip -d '{dest}'")
 
     os.environ['CC'] = '/libafl_fuzzbench/target/release/gramatron_cc'
     os.environ['CXX'] = '/libafl_fuzzbench/target/release/gramatron_cxx'

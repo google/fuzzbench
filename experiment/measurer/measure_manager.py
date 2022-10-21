@@ -122,7 +122,8 @@ def measure_loop(experiment: str,
         set_up_coverage_binaries(pool, experiment)
         # Using Multiprocessing.Queue will fail with a complaint about
         # inheriting queue.
-        multiprocessing_queue = manager.Queue()  # pytype: disable=attribute-error
+        # pytype: disable=attribute-error
+        multiprocessing_queue = manager.Queue()
         while True:
             try:
                 # Get whether all trials have ended before we measure to prevent
