@@ -33,6 +33,9 @@ from common import fuzzer_utils
 from common import filesystem
 from common import utils
 from common import logs
+from common import yaml_utils
+from common.experiment_utils import (
+    get_internal_experiment_config_relative_path as experiment_config_path)
 
 from experiment.build import build_utils
 
@@ -41,8 +44,8 @@ if not experiment_utils.is_local_experiment():
 else:
     import experiment.build.local_build as buildlib
 
-DEFAULT_MAX_CONCURRENT_BUILDS = max(min(2 * multiprocessing.cpu_count(), 150),
-                                    30)
+DEFAULT_CONCURRENT_BUILDS = yaml_utils.read(experiment_config_path()).get(
+    'concurrent_builds', max(min(2 * multiprocessing.cpu_count(), 150), 30))
 
 # Build attempts and wait interval.
 NUM_BUILD_ATTEMPTS = 3
@@ -111,8 +114,7 @@ def build_measurer(benchmark: str) -> bool:
 
 def build_all_measurers(
         benchmarks: List[str],
-        num_concurrent_builds: int = DEFAULT_MAX_CONCURRENT_BUILDS
-) -> List[str]:
+        num_concurrent_builds: int = DEFAULT_CONCURRENT_BUILDS) -> List[str]:
     """Build measurers for each benchmark in |benchmarks| in parallel
     Returns a list of benchmarks built successfully."""
     logger.info('Building measurers.')
@@ -188,8 +190,7 @@ def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
 def build_all_fuzzer_benchmarks(
         fuzzers: List[str],
         benchmarks: List[str],
-        num_concurrent_builds: int = DEFAULT_MAX_CONCURRENT_BUILDS
-) -> List[str]:
+        num_concurrent_builds: int = DEFAULT_CONCURRENT_BUILDS) -> List[str]:
     """Build fuzzer,benchmark images for all pairs of |fuzzers| and |benchmarks|
     in parallel. Returns a list of fuzzer,benchmark pairs that built
     successfully."""
@@ -227,7 +228,7 @@ def main():
                         '--num-concurrent-builds',
                         help='Max concurrent builds allowed.',
                         type=int,
-                        default=DEFAULT_MAX_CONCURRENT_BUILDS,
+                        default=DEFAULT_CONCURRENT_BUILDS,
                         required=False)
 
     logs.initialize()
