@@ -21,6 +21,8 @@ from common import logs
 from common import new_process
 from common import utils
 from common import yaml_utils
+from common.experiment_utils import (
+    get_internal_experiment_config_relative_path as experiment_config_path)
 from experiment.build import build_utils
 from experiment.build import docker_images
 from experiment.build import generate_cloudbuild
@@ -31,8 +33,7 @@ CONFIG_DIR = 'config'
 GCB_BUILD_TIMEOUT = 13 * 60 * 60  # 4 hours.
 
 # TODO(metzman): Make configurable.
-WORKER_POOL_NAME = (
-    'projects/fuzzbench/locations/us-central1/workerPools/buildpool')
+WORKER_POOL_NAME = yaml_utils.read(experiment_config_path)['pool_name']
 
 logger = logs.Logger('builder')  # pylint: disable=invalid-name
 

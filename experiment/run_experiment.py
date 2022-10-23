@@ -59,6 +59,8 @@ FILTER_SOURCE_REGEX = re.compile(r'('
 _OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT = (
     'gs://{project}-backup.clusterfuzz-external.appspot.com/corpus/'
     'libFuzzer/{fuzz_target}/public.zip')
+DEFAUlT_WORKER_POOL_NAME = (
+    'projects/fuzzbench/locations/us-central1/workerPools/buildpool')
 
 
 def read_and_validate_experiment_config(config_filename: str) -> Dict:
@@ -264,6 +266,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
     config['runner_machine_type'] = config.get('runner_machine_type',
                                                'n1-standard-1')
     config['runner_num_cpu_cores'] = config.get('runner_num_cpu_cores', 1)
+    config['pool_name'] = config.get('pool_name', DEFAUlT_WORKER_POOL_NAME)
     assert (runners_cpus is None or
             runners_cpus >= config['runner_num_cpu_cores'])
     # Note this is only used if runner_machine_type is None.
