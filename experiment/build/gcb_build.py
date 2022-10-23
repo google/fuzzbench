@@ -32,9 +32,8 @@ CONFIG_DIR = 'config'
 # Maximum time to wait for a GCB config to finish build.
 GCB_BUILD_TIMEOUT = 13 * 60 * 60  # 4 hours.
 
-# TODO(metzman): Make configurable.
-WORKER_POOL_NAME = yaml_utils.read(experiment_config_path)['pool_name']
-
+DEFAULT_WORKER_POOL_NAME = (
+    'projects/fuzzbench/locations/us-central1/workerPools/buildpool')
 logger = logs.Logger('builder')  # pylint: disable=invalid-name
 
 
@@ -85,7 +84,9 @@ def _build(
 
         # Use "s" suffix to denote seconds.
         timeout_arg = '--timeout=%ds' % timeout_seconds
-        worker_pool_arg = f'--worker-pool={WORKER_POOL_NAME}'
+        worker_pool_name = yaml_utils.read(experiment_config_path()).get(
+            'pool_name', DEFAULT_WORKER_POOL_NAME)
+        worker_pool_arg = f'--worker-pool={worker_pool_name}'
 
         command = [
             'gcloud',
