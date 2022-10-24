@@ -61,7 +61,9 @@ _OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT = (
     'libFuzzer/{fuzz_target}/public.zip')
 
 
-def read_and_validate_experiment_config(config_filename: str) -> Dict:
+# pylint: disable=too-many-locals
+def read_and_validate_experiment_config(config_filename: str,
+                                        concurrent_builds_arg: int = 0) -> Dict:
     """Reads |config_filename|, validates it, finds as many errors as possible,
     and returns it."""
     config = yaml_utils.read(config_filename)
@@ -127,6 +129,16 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
                 'Config parameter "%s" is "%s". '
                 'It must start with gs:// when running on Google Cloud.', param,
                 value)
+
+    # Concurrent build can be defined either via parameters or in a config file.
+    # If both define it, they need to be consistent.
+    concurrent_builds_yaml = config.get('concurrent_builds')
+    if concurrent_builds_yaml and concurrent_builds_arg and (
+            concurrent_builds_yaml != concurrent_builds_arg):
+        valid = False
+        logs.error('Inconsistent requirements of number of concurrent builds: '
+                   f'File {config_filename} requests {concurrent_builds_yaml}, '
+                   f'but argument requests {concurrent_builds_arg}.')
 
     if not valid:
         raise ValidationError('Config: %s is invalid.' % config_filename)
@@ -249,7 +261,8 @@ def start_experiment(  # pylint: disable=too-many-arguments
     validate_experiment_name(experiment_name)
     validate_benchmarks(benchmarks)
 
-    config = read_and_validate_experiment_config(config_filename)
+    config = read_and_validate_experiment_config(config_filename,
+                                                 concurrent_builds)
     config['fuzzers'] = fuzzers
     config['benchmarks'] = benchmarks
     config['experiment'] = experiment_name
