@@ -40,6 +40,7 @@ def recreate_directory(directory, create_parents=True):
         os.mkdir(directory)
 
 
+# TODO: Fix this function.
 def write(path, contents, open_flags='w'):
     """Opens file at |path| with |open_flags| and writes |contents| to it."""
     # pylint: disable=unspecified-encoding
