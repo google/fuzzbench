@@ -33,9 +33,6 @@ from common import fuzzer_utils
 from common import filesystem
 from common import utils
 from common import logs
-from common import yaml_utils
-from common.experiment_utils import (
-    get_internal_experiment_config_relative_path as experiment_config_path)
 
 from experiment.build import build_utils
 
@@ -44,8 +41,8 @@ if not experiment_utils.is_local_experiment():
 else:
     import experiment.build.local_build as buildlib
 
-DEFAULT_CONCURRENT_BUILDS = yaml_utils.read(experiment_config_path()).get(
-    'concurrent_builds', max(min(2 * multiprocessing.cpu_count(), 150), 30))
+DEFAULT_MAX_CONCURRENT_BUILDS = max(min(2 * multiprocessing.cpu_count(), 150),
+                                    30)
 
 # Build attempts and wait interval.
 NUM_BUILD_ATTEMPTS = 3
@@ -95,16 +92,16 @@ def get_fuzzer_benchmark_pairs(fuzzers, benchmarks):
     ]
 
 
-def build_base_images() -> Tuple[int, str]:
+def build_base_images(worker_pool_name: str = None) -> Tuple[int, str]:
     """Build base images."""
-    return buildlib.build_base_images()
+    return buildlib.build_base_images(worker_pool_name)
 
 
-def build_measurer(benchmark: str) -> bool:
+def build_measurer(benchmark: str, worker_pool_name: str = None) -> bool:
     """Do a coverage build for a benchmark."""
     try:
         logger.info('Building measurer for benchmark: %s.', benchmark)
-        buildlib.build_coverage(benchmark)
+        buildlib.build_coverage(benchmark, worker_pool_name)
         logs.info('Done building measurer for benchmark: %s.', benchmark)
         return True
     except Exception:  # pylint: disable=broad-except
@@ -114,12 +111,15 @@ def build_measurer(benchmark: str) -> bool:
 
 def build_all_measurers(
         benchmarks: List[str],
-        num_concurrent_builds: int = DEFAULT_CONCURRENT_BUILDS) -> List[str]:
+        num_concurrent_builds: int = DEFAULT_MAX_CONCURRENT_BUILDS,
+        worker_pool_name: str = None) -> List[str]:
     """Build measurers for each benchmark in |benchmarks| in parallel
     Returns a list of benchmarks built successfully."""
     logger.info('Building measurers.')
     filesystem.recreate_directory(build_utils.get_coverage_binaries_dir())
-    build_measurer_args = [(benchmark,) for benchmark in benchmarks]
+    build_measurer_args = [
+        (benchmark, worker_pool_name) for benchmark in benchmarks
+    ]
     successful_calls = retry_build_loop(build_measurer, build_measurer_args,
                                         num_concurrent_builds)
     logger.info('Done building measurers.')
@@ -190,7 +190,8 @@ def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
 def build_all_fuzzer_benchmarks(
         fuzzers: List[str],
         benchmarks: List[str],
-        num_concurrent_builds: int = DEFAULT_CONCURRENT_BUILDS) -> List[str]:
+        num_concurrent_builds: int = DEFAULT_MAX_CONCURRENT_BUILDS
+) -> List[str]:
     """Build fuzzer,benchmark images for all pairs of |fuzzers| and |benchmarks|
     in parallel. Returns a list of fuzzer,benchmark pairs that built
     successfully."""
@@ -228,7 +229,7 @@ def main():
                         '--num-concurrent-builds',
                         help='Max concurrent builds allowed.',
                         type=int,
-                        default=DEFAULT_CONCURRENT_BUILDS,
+                        default=DEFAULT_MAX_CONCURRENT_BUILDS,
                         required=False)
 
     logs.initialize()

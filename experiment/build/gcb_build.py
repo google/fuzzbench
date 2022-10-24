@@ -21,8 +21,6 @@ from common import logs
 from common import new_process
 from common import utils
 from common import yaml_utils
-from common.experiment_utils import (
-    get_internal_experiment_config_relative_path as experiment_config_path)
 from experiment.build import build_utils
 from experiment.build import docker_images
 from experiment.build import generate_cloudbuild
@@ -41,7 +39,7 @@ def _get_buildable_images(fuzzer=None, benchmark=None):
     return docker_images.get_images_to_build([fuzzer], [benchmark])
 
 
-def build_base_images():
+def build_base_images(worker_pool_name=None):
     """Build base images on GCB."""
     buildable_images = _get_buildable_images()
     image_templates = {
@@ -52,10 +50,10 @@ def build_base_images():
         benchmark='no-benchmark',
         fuzzer='no-fuzzer',
         build_base_images=True)
-    _build(config, 'base-images')
+    _build(config, 'base-images', worker_pool_name=worker_pool_name)
 
 
-def build_coverage(benchmark):
+def build_coverage(benchmark, worker_pool_name=None):
     """Build coverage image for benchmark on GCB."""
     buildable_images = _get_buildable_images(benchmark=benchmark)
     image_templates = {
@@ -68,13 +66,13 @@ def build_coverage(benchmark):
                                                         benchmark=benchmark,
                                                         fuzzer='coverage')
     config_name = 'benchmark-{benchmark}-coverage'.format(benchmark=benchmark)
-    _build(config, config_name)
+    _build(config, config_name, worker_pool_name=worker_pool_name)
 
 
-def _build(
-        config: Dict,
-        config_name: str,
-        timeout_seconds: int = GCB_BUILD_TIMEOUT) -> new_process.ProcessResult:
+def _build(config: Dict,
+           config_name: str,
+           timeout_seconds: int = GCB_BUILD_TIMEOUT,
+           worker_pool_name: str = None) -> new_process.ProcessResult:
     """Submit build to GCB."""
     with tempfile.NamedTemporaryFile() as config_file:
         yaml_utils.write(config_file.name, config)
@@ -84,9 +82,8 @@ def _build(
 
         # Use "s" suffix to denote seconds.
         timeout_arg = '--timeout=%ds' % timeout_seconds
-        worker_pool_name = yaml_utils.read(experiment_config_path()).get(
-            'pool_name', DEFAULT_WORKER_POOL_NAME)
-        worker_pool_arg = f'--worker-pool={worker_pool_name}'
+        worker_pool_arg = (
+            f'--worker-pool={worker_pool_name or DEFAULT_WORKER_POOL_NAME}')
 
         command = [
             'gcloud',
@@ -113,7 +110,9 @@ def _build(
     return result
 
 
-def build_fuzzer_benchmark(fuzzer: str, benchmark: str):
+def build_fuzzer_benchmark(fuzzer: str,
+                           benchmark: str,
+                           worker_pool_name: str = None):
     """Builds |benchmark| for |fuzzer|."""
     image_templates = {}
     buildable_images = _get_buildable_images(fuzzer=fuzzer, benchmark=benchmark)
@@ -126,4 +125,4 @@ def build_fuzzer_benchmark(fuzzer: str, benchmark: str):
     config = generate_cloudbuild.create_cloudbuild_spec(image_templates,
                                                         benchmark=benchmark,
                                                         fuzzer=fuzzer)
-    _build(config, config_name)
+    _build(config, config_name, worker_pool_name=worker_pool_name)

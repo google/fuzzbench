@@ -271,7 +271,8 @@ def start_experiment(  # pylint: disable=too-many-arguments
     config['no_dictionaries'] = no_dictionaries
     config['oss_fuzz_corpus'] = oss_fuzz_corpus
     config['description'] = description
-    config['concurrent_builds'] = concurrent_builds
+    config['concurrent_builds'] = config.get('concurrent_builds',
+                                             concurrent_builds)
     config['measurers_cpus'] = measurers_cpus
     config['runners_cpus'] = runners_cpus
     config['runner_machine_type'] = config.get('runner_machine_type',

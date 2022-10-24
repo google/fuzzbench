@@ -103,25 +103,29 @@ class Experiment:  # pylint: disable=too-many-instance-attributes
         self.preemptible = self.config.get('preemptible_runners')
 
 
+# pylint: disable=too-many-arguments
 def build_images_for_trials(fuzzers: List[str],
                             benchmarks: List[str],
                             num_trials: int,
                             preemptible: bool,
-                            concurrent_builds=None) -> List[models.Trial]:
+                            concurrent_builds=None,
+                            worker_pool_name=None) -> List[models.Trial]:
     """Builds the images needed to run |experiment| and returns a list of trials
     that can be run for experiment. This is the number of trials specified in
     experiment times each pair of fuzzer+benchmark that builds successfully."""
     # This call will raise an exception if the images can't be built which will
     # halt the experiment.
-    builder.build_base_images()
+    builder.build_base_images(worker_pool_name)
 
     # Only build fuzzers for benchmarks whose measurers built successfully.
     if concurrent_builds is None:
-        benchmarks = builder.build_all_measurers(benchmarks)
+        benchmarks = builder.build_all_measurers(
+            benchmarks, worker_pool_name=worker_pool_name)
         build_successes = builder.build_all_fuzzer_benchmarks(
             fuzzers, benchmarks)
     else:
-        benchmarks = builder.build_all_measurers(benchmarks, concurrent_builds)
+        benchmarks = builder.build_all_measurers(
+            benchmarks, concurrent_builds, worker_pool_name=worker_pool_name)
         build_successes = builder.build_all_fuzzer_benchmarks(
             fuzzers, benchmarks, concurrent_builds)
     experiment_name = experiment_utils.get_experiment_name()
@@ -156,7 +160,8 @@ def dispatcher_main():
     trials = build_images_for_trials(experiment.fuzzers, experiment.benchmarks,
                                      experiment.num_trials,
                                      experiment.preemptible,
-                                     experiment.config['concurrent_builds'])
+                                     experiment.config['concurrent_builds'],
+                                     experiment.config['worker_pool_name'])
     _initialize_trials_in_db(trials)
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])
