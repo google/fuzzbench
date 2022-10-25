@@ -156,9 +156,9 @@ def post_build(fuzz_target):
     """Perform the post-processing for a target"""
     print(f'Fuzz-target: {fuzz_target}')
 
-    getbc_cmd = f"/afl/aflc-get-bc {fuzz_target}"
+    getbc_cmd = f'/afl/aflc-get-bc {fuzz_target}'
     if os.system(getbc_cmd) != 0:
-        raise ValueError("get-bc failed")
+        raise ValueError('get-bc failed')
 
     # Set the flags. ldflags is here temporarily until the benchmarks
     # are cleaned up and standalone.

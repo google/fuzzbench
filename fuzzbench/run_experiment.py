@@ -66,7 +66,7 @@ def run_experiment(config):
 
 def main():
     """Set up Redis connection and start the experiment."""
-    redis_connection = redis.Redis(host="queue-server")
+    redis_connection = redis.Redis(host='queue-server')
 
     config_path = environment.get('EXPERIMENT_CONFIG',
                                   'fuzzbench/local-experiment-config.yaml')

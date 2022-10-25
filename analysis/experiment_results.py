@@ -196,7 +196,7 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
         pivot = pivot.style\
                 .background_gradient(axis=1, cmap=whbl, vmin=95, vmax=100)\
                 .highlight_max(axis=1, color='lightgreen')\
-                .format("{:.2f}")\
+                .format('{:.2f}')\
                 .apply(data_utils.underline_row, axis=1, subset=idx)\
                 .set_table_styles(self._SUMMARY_TABLE_STYLE)
         return pivot
@@ -222,7 +222,7 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
         groups = groups.reset_index()
         pivot = groups.pivot(index='benchmark',
                              columns='fuzzer',
-                             values="crash_key")
+                             values='crash_key')
         # save fuzzer names
         fuzzer_names = pivot.columns
         pivot['Total'] = self._full_experiment_df.groupby(
@@ -250,7 +250,7 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
         # Sort fuzzers left to right by FuzzerSum
         pivot = pivot.sort_values(by='FuzzerSum', axis=1, ascending=False)
         pivot = pivot.style\
-                .format("{:.0f}")\
+                .format('{:.0f}')\
                 .apply(highlight_max, axis=1, subset=fuzzer_names)\
                 .apply(data_utils.underline_row, axis=1, subset=idx)\
                 .set_table_styles(self._SUMMARY_TABLE_STYLE)

@@ -31,9 +31,9 @@ def build():
     os.environ['CC'] = '/cc.sh'
     os.environ['CXX'] = '/cxx.sh'
     if 'LD_LIBRARY_PATH' in os.environ:
-        os.environ['LD_LIBRARY_PATH'] = os.environ['LD_LIBRARY_PATH'] + ":/out"
+        os.environ['LD_LIBRARY_PATH'] = os.environ['LD_LIBRARY_PATH'] + ':/out'
     else:
-        os.environ['LD_LIBRARY_PATH'] = "/out"
+        os.environ['LD_LIBRARY_PATH'] = '/out'
 
     utils.append_flags('CFLAGS', ['-fPIC', '-lpthread'])
     utils.append_flags('CXXFLAGS', ['-fPIC', '-lpthread'])

@@ -67,14 +67,14 @@ def create_experiment_data(experiment='test_experiment',
 
 def test_validate_data_empty():
     experiment_df = pd.DataFrame()
-    with pytest.raises(ValueError, match="Empty"):
+    with pytest.raises(ValueError, match='Empty'):
         data_utils.validate_data(experiment_df)
 
 
 def test_validate_data_missing_columns():
     experiment_df = create_experiment_data()
     experiment_df.drop(columns=['trial_id', 'time'], inplace=True)
-    with pytest.raises(ValueError, match="Missing columns.*trial_id"):
+    with pytest.raises(ValueError, match='Missing columns.*trial_id'):
         data_utils.validate_data(experiment_df)
 
 
@@ -146,7 +146,7 @@ def test_filter_max_time():
     assert filtered_df.time.unique().tolist() == list(expected_times)
 
 
-@pytest.mark.parametrize("threshold", [0.3, 0.8, 1.0])
+@pytest.mark.parametrize('threshold', [0.3, 0.8, 1.0])
 def test_benchmark_snapshot_complete(threshold):
     """Tests that the snapshot data contains only the latest timestamp for all
     trials, in case all trials have the same lengths. This should happen
@@ -168,7 +168,7 @@ def test_benchmark_snapshot_complete(threshold):
 
 
 @pytest.mark.parametrize(
-    "threshold, expected_snapshot_time, expected_trials_left", [
+    'threshold, expected_snapshot_time, expected_trials_left', [
         (1.0, 5, 4),
         (0.8, 5, 4),
         (0.7, 7, 3),

@@ -197,12 +197,12 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         new_env['CC'] = '/symcc/build/symcc'
         new_env['CXX'] = '/symcc/build/sym++'
         new_env['SYMCC_OUTPUT_DIR'] = '/tmp'
-        new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace("-stlib=libc++", "")
+        new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace('-stlib=libc++', '')
         new_env['FUZZER_LIB'] = '/libfuzzer-harness.o'
         new_env['OUT'] = symcc_build_directory
-        new_env['SYMCC_LIBCXX_PATH'] = "/libcxx_native_build"
-        new_env['SYMCC_NO_SYMBOLIC_INPUT'] = "1"
-        new_env['SYMCC_SILENT'] = "1"
+        new_env['SYMCC_LIBCXX_PATH'] = '/libcxx_native_build'
+        new_env['SYMCC_NO_SYMBOLIC_INPUT'] = '1'
+        new_env['SYMCC_SILENT'] = '1'
 
         # For CmpLog build, set the OUT and FUZZ_TARGET environment
         # variable to point to the new CmpLog build directory.
@@ -256,7 +256,7 @@ def fuzz(input_corpus,
         flags += ['-c', cmplog_target_binary]
 
     if not skip:
-        os.environ['AFL_DISABLE_TRIM'] = "1"
+        os.environ['AFL_DISABLE_TRIM'] = '1'
         # os.environ['AFL_FAST_CAL'] = '1'
         os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
         if 'ADDITIONAL_ARGS' in os.environ:

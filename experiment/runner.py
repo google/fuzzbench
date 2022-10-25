@@ -116,7 +116,7 @@ def get_clusterfuzz_seed_corpus_path(fuzz_target_path):
 
 
 def _copy_custom_seed_corpus(corpus_directory):
-    "Copy custom seed corpus provided by user"
+    """Copy custom seed corpus provided by user"""
     shutil.rmtree(corpus_directory)
     benchmark = environment.get('BENCHMARK')
     benchmark_custom_corpus_dir = posixpath.join(

@@ -21,7 +21,7 @@ from common import benchmark_utils
 from common import fuzzer_utils
 from experiment.build import docker_images
 
-BASE_TAG = "gcr.io/fuzzbench"
+BASE_TAG = 'gcr.io/fuzzbench'
 BENCHMARK_DIR = benchmark_utils.BENCHMARKS_DIR
 
 

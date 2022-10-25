@@ -146,8 +146,8 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
 
     snapshot_measurer = measure_manager.SnapshotMeasurer(
         FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
-    snapshot_measurer.cov_summary_file = "/reports/cov_summary.txt"
-    snapshot_measurer.profdata_file = "/reports/data.profdata"
+    snapshot_measurer.cov_summary_file = '/reports/cov_summary.txt'
+    snapshot_measurer.profdata_file = '/reports/data.profdata'
     fs.create_dir('/reports')
     fs.create_file(snapshot_measurer.profdata_file, contents='fake_contents')
     snapshot_measurer.generate_summary(CYCLE)
@@ -162,7 +162,7 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
     assert (len(mocked_execute.call_args_list)) == 1
     args = mocked_execute.call_args_list[0]
     assert args[0][0] == expected
-    assert args[1]['output_file'].name == "/reports/cov_summary.txt"
+    assert args[1]['output_file'].name == '/reports/cov_summary.txt'
 
 
 @mock.patch('common.logs.error')
@@ -199,7 +199,7 @@ def test_measure_all_trials_not_ready(mocked_rsync, mocked_ls, experiment):
 @mock.patch('multiprocessing.pool.ThreadPool', test_utils.MockPool)
 @mock.patch('common.new_process.execute')
 @mock.patch('common.filesystem.directories_have_same_files')
-@pytest.mark.skip(reason="See crbug.com/1012329")
+@pytest.mark.skip(reason='See crbug.com/1012329')
 def test_measure_all_trials_no_more(mocked_directories_have_same_files,
                                     mocked_execute):
     """Test measure_all_trials does what is intended when the experiment is
