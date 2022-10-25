@@ -440,7 +440,7 @@ class LocalDispatcher(BaseDispatcher):
             f'CONCURRENT_BUILDS={self.config["concurrent_builds"]}')
         docker_image_url = '{docker_registry}/dispatcher-image'.format(
             docker_registry=docker_registry)
-        experiment_args = [
+        environment_args = [
             '-e',
             'LOCAL_EXPERIMENT=True',
             '-e',
@@ -463,7 +463,7 @@ class LocalDispatcher(BaseDispatcher):
         if 'worker_pool_name' in self.config:
             set_worker_pool_name_arg = (
                 f'WORKER_POOL_NAME={self.config["worker_pool_name"]}')
-            experiment_args.extend(['-e', set_worker_pool_name_arg])
+            environment_args.extend(['-e', set_worker_pool_name_arg])
 
         command = [
             'docker',
@@ -476,7 +476,7 @@ class LocalDispatcher(BaseDispatcher):
             shared_experiment_filestore_arg,
             '-v',
             shared_report_filestore_arg,
-        ] + experiment_args + [
+        ] + environment_args + [
             '--shm-size=2g',
             '--cap-add=SYS_PTRACE',
             '--cap-add=SYS_NICE',
