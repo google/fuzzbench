@@ -48,7 +48,7 @@ from experiment.measurer import run_coverage
 from experiment.measurer import run_crashes
 from experiment import scheduler
 
-logger = logs.Logger('measurer')  # pylint: disable=invalid-name
+logger = logs.Logger('measurer')
 
 SnapshotMeasureRequest = collections.namedtuple(
     'SnapshotMeasureRequest', ['fuzzer', 'benchmark', 'trial_id', 'cycle'])
@@ -148,7 +148,7 @@ def measure_loop(experiment: str,
 
 
 def measure_all_trials(experiment: str, max_total_time: int, pool,
-                       multiprocessing_queue, region_coverage) -> bool:  # pylint: disable=invalid-name
+                       multiprocessing_queue, region_coverage) -> bool:
     """Get coverage data (with coverage runs) for all active trials. Note that
     this should not be called unless multiprocessing.set_start_method('spawn')
     was called first. Otherwise it will use fork which breaks logging."""
@@ -626,10 +626,9 @@ def get_fuzzer_stats(stats_filestore_path):
     return json.loads(stats_str)
 
 
-def measure_trial_coverage(  # pylint: disable=invalid-name
-        measure_req, max_cycle: int,
-        multiprocessing_queue: multiprocessing.Queue,
-        region_coverage) -> models.Snapshot:
+def measure_trial_coverage(measure_req, max_cycle: int,
+                           multiprocessing_queue: multiprocessing.Queue,
+                           region_coverage) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
