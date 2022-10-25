@@ -436,19 +436,13 @@ class LocalDispatcher(BaseDispatcher):
                 report_filestore=self.config['report_filestore']))
         set_snapshot_period_arg = 'SNAPSHOT_PERIOD={snapshot_period}'.format(
             snapshot_period=self.config['snapshot_period'])
+        set_concurrent_builds_arg = (
+            f'CONCURRENT_BUILDS={self.config["concurrent_builds"]}')
         docker_image_url = '{docker_registry}/dispatcher-image'.format(
             docker_registry=docker_registry)
-        command = [
-            'docker',
-            'run',
-            '-ti',
-            '--rm',
-            '-v',
-            '/var/run/docker.sock:/var/run/docker.sock',
-            '-v',
-            shared_experiment_filestore_arg,
-            '-v',
-            shared_report_filestore_arg,
+        experiment_args = [
+            '-e',
+            'LOCAL_EXPERIMENT=True',
             '-e',
             set_instance_name_arg,
             '-e',
@@ -464,7 +458,25 @@ class LocalDispatcher(BaseDispatcher):
             '-e',
             set_docker_registry_arg,
             '-e',
-            'LOCAL_EXPERIMENT=True',
+            set_concurrent_builds_arg,
+        ]
+        if 'worker_pool_name' in self.config:
+            set_worker_pool_name_arg = (
+                f'WORKER_POOL_NAME={self.config["worker_pool_name"]}')
+            experiment_args.extend(['-e', set_worker_pool_name_arg])
+
+        command = [
+            'docker',
+            'run',
+            '-ti',
+            '--rm',
+            '-v',
+            '/var/run/docker.sock:/var/run/docker.sock',
+            '-v',
+            shared_experiment_filestore_arg,
+            '-v',
+            shared_report_filestore_arg,
+        ] + experiment_args + [
             '--shm-size=2g',
             '--cap-add=SYS_PTRACE',
             '--cap-add=SYS_NICE',
@@ -521,7 +533,10 @@ class GoogleCloudDispatcher(BaseDispatcher):
             'cloud_sql_instance_connection_name':
                 (cloud_sql_instance_connection_name),
             'docker_registry': self.config['docker_registry'],
+            'concurrent_builds': self.config['concurrent_builds'],
         }
+        if 'worker_pool_name' in self.config:
+            kwargs['worker_pool_name'] = self.config['worker_pool_name']
         return template.render(**kwargs)
 
     def write_startup_script(self, startup_script_file):
