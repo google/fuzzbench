@@ -89,7 +89,7 @@ def _initialize_trials_in_db(trials: List[models.Trial]):
     db_utils.bulk_save(trials)
 
 
-class Experiment:  # pylint: disable=too-many-instance-attributes
+class Experiment:
     """Class representing an experiment."""
 
     def __init__(self, experiment_config_filepath: str):
@@ -103,7 +103,6 @@ class Experiment:  # pylint: disable=too-many-instance-attributes
         self.preemptible = self.config.get('preemptible_runners')
 
 
-# pylint: disable=too-many-arguments
 def build_images_for_trials(fuzzers: List[str], benchmarks: List[str],
                             num_trials: int,
                             preemptible: bool) -> List[models.Trial]:
