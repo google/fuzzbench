@@ -59,37 +59,53 @@ FILTER_SOURCE_REGEX = re.compile(r'('
 _OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT = (
     'gs://{project}-backup.clusterfuzz-external.appspot.com/corpus/'
     'libFuzzer/{fuzz_target}/public.zip')
+DEFAULT_MAX_CONCURRENT_BUILDS = 30
 
 
-# pylint: disable=too-many-locals
-def read_and_validate_experiment_config(config_filename: str,
-                                        concurrent_builds_arg: int = 0) -> Dict:
+def set_default_config_values(config: Dict):
+    """Set the default configuration values if they are not specified."""
+    config['concurrent_builds'] = config.get('concurrent_builds',
+                                             DEFAULT_MAX_CONCURRENT_BUILDS)
+
+
+# pylint: disable=too-many-locals, too-many-statements, too-many-branches
+def read_and_validate_experiment_config(config_filename: str) -> Dict:
     """Reads |config_filename|, validates it, finds as many errors as possible,
     and returns it."""
     config = yaml_utils.read(config_filename)
+    set_default_config_values(config)
     filestore_params = {'experiment_filestore', 'report_filestore'}
     cloud_config = {'cloud_compute_zone', 'cloud_project'}
     docker_config = {'docker_registry'}
-    string_params = cloud_config.union(filestore_params).union(docker_config)
-    int_params = {'trials', 'max_total_time'}
+    worker_config = {'worker_pool_name'}
+    string_params = cloud_config.union(filestore_params).union(
+        docker_config).union(worker_config)
+    int_params = {'trials', 'max_total_time', 'concurrent_builds'}
+    optional_params = worker_config
     required_params = int_params.union(filestore_params).union(docker_config)
     bool_params = {'private', 'merge_with_nonprivate'}
 
     local_experiment = config.get('local_experiment', False)
     snapshot_period = config.get('snapshot_period',
                                  experiment_utils.DEFAULT_SNAPSHOT_SECONDS)
-    if not local_experiment:
+    if local_experiment:
+        optional_params = optional_params.union(cloud_config)
+    else:
         required_params = required_params.union(cloud_config)
 
     valid = True
     if 'cloud_experiment_bucket' in config or 'cloud_web_bucket' in config:
         logs.error('"cloud_experiment_bucket" and "cloud_web_bucket" are now '
                    '"experiment_filestore" and "report_filestore".')
-
-    for param in required_params:
-        if param not in config:
+    missing_params = required_params - config.keys()
+    trivial_params = optional_params - config.keys()
+    for param in optional_params.union(required_params):
+        if param in missing_params:
             valid = False
             logs.error('Config does not contain "%s".', param)
+            continue
+        if param in trivial_params:
+            logs.info('Optional parameter "%s" is not set.', param)
             continue
 
         value = config[param]
@@ -129,16 +145,6 @@ def read_and_validate_experiment_config(config_filename: str,
                 'Config parameter "%s" is "%s". '
                 'It must start with gs:// when running on Google Cloud.', param,
                 value)
-
-    # Concurrent build can be defined either via parameters or in a config file.
-    # If both define it, they need to be consistent.
-    concurrent_builds_yaml = config.get('concurrent_builds')
-    if concurrent_builds_yaml and concurrent_builds_arg and (
-            concurrent_builds_yaml != concurrent_builds_arg):
-        valid = False
-        logs.error('Inconsistent requirements of number of concurrent builds: '
-                   f'File {config_filename} requests {concurrent_builds_yaml}, '
-                   f'but argument requests {concurrent_builds_arg}.')
 
     if not valid:
         raise ValidationError('Config: %s is invalid.' % config_filename)
@@ -249,7 +255,6 @@ def start_experiment(  # pylint: disable=too-many-arguments
         no_dictionaries=False,
         oss_fuzz_corpus=False,
         allow_uncommitted_changes=False,
-        concurrent_builds=None,
         measurers_cpus=None,
         runners_cpus=None,
         region_coverage=False,
@@ -261,8 +266,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
     validate_experiment_name(experiment_name)
     validate_benchmarks(benchmarks)
 
-    config = read_and_validate_experiment_config(config_filename,
-                                                 concurrent_builds)
+    config = read_and_validate_experiment_config(config_filename)
     config['fuzzers'] = fuzzers
     config['benchmarks'] = benchmarks
     config['experiment'] = experiment_name
@@ -271,8 +275,6 @@ def start_experiment(  # pylint: disable=too-many-arguments
     config['no_dictionaries'] = no_dictionaries
     config['oss_fuzz_corpus'] = oss_fuzz_corpus
     config['description'] = description
-    config['concurrent_builds'] = config.get('concurrent_builds',
-                                             concurrent_builds)
     config['measurers_cpus'] = measurers_cpus
     config['runners_cpus'] = runners_cpus
     config['runner_machine_type'] = config.get('runner_machine_type',
@@ -568,10 +570,6 @@ def main():
                         '--description',
                         help='Description of the experiment.',
                         required=False)
-    parser.add_argument('-cb',
-                        '--concurrent-builds',
-                        help='Max concurrent builds allowed.',
-                        required=False)
     parser.add_argument('-mc',
                         '--measurers-cpus',
                         help='Cpus available to the measurers.',
@@ -627,12 +625,6 @@ def main():
     args = parser.parse_args()
     fuzzers = args.fuzzers or all_fuzzers
 
-    concurrent_builds = args.concurrent_builds
-    if concurrent_builds is not None:
-        if not concurrent_builds.isdigit():
-            parser.error(
-                'The concurrent build argument must be a positive number')
-        concurrent_builds = int(concurrent_builds)
     runners_cpus = args.runners_cpus
     if runners_cpus is not None:
         if not runners_cpus.isdigit():
@@ -670,7 +662,6 @@ def main():
                      no_dictionaries=args.no_dictionaries,
                      oss_fuzz_corpus=args.oss_fuzz_corpus,
                      allow_uncommitted_changes=args.allow_uncommitted_changes,
-                     concurrent_builds=concurrent_builds,
                      measurers_cpus=measurers_cpus,
                      runners_cpus=runners_cpus,
                      region_coverage=args.region_coverage,
