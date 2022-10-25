@@ -342,7 +342,7 @@ def extract_corpus(corpus_archive: str, sha_blacklist: Set[str],
 
             member_file_handle = tar.extractfile(member)
             if not member_file_handle:
-                logger.info('Failed to get handle to %s', member)
+                logger.info('Failed to get handle to %s.', member)
                 continue
 
             member_contents = member_file_handle.read()
