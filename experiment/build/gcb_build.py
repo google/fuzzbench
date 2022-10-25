@@ -13,6 +13,7 @@
 # limitations under the License.
 """Module for building things on Google Cloud Build for use in trials."""
 
+import os
 import subprocess
 import tempfile
 from typing import Dict
@@ -30,8 +31,6 @@ CONFIG_DIR = 'config'
 # Maximum time to wait for a GCB config to finish build.
 GCB_BUILD_TIMEOUT = 13 * 60 * 60  # 4 hours.
 
-DEFAULT_WORKER_POOL_NAME = (
-    'projects/fuzzbench/locations/us-central1/workerPools/buildpool')
 logger = logs.Logger('builder')  # pylint: disable=invalid-name
 
 
@@ -39,7 +38,7 @@ def _get_buildable_images(fuzzer=None, benchmark=None):
     return docker_images.get_images_to_build([fuzzer], [benchmark])
 
 
-def build_base_images(worker_pool_name=None):
+def build_base_images():
     """Build base images on GCB."""
     buildable_images = _get_buildable_images()
     image_templates = {
@@ -50,10 +49,10 @@ def build_base_images(worker_pool_name=None):
         benchmark='no-benchmark',
         fuzzer='no-fuzzer',
         build_base_images=True)
-    _build(config, 'base-images', worker_pool_name=worker_pool_name)
+    _build(config, 'base-images')
 
 
-def build_coverage(benchmark, worker_pool_name=None):
+def build_coverage(benchmark):
     """Build coverage image for benchmark on GCB."""
     buildable_images = _get_buildable_images(benchmark=benchmark)
     image_templates = {
@@ -66,24 +65,21 @@ def build_coverage(benchmark, worker_pool_name=None):
                                                         benchmark=benchmark,
                                                         fuzzer='coverage')
     config_name = 'benchmark-{benchmark}-coverage'.format(benchmark=benchmark)
-    _build(config, config_name, worker_pool_name=worker_pool_name)
+    _build(config, config_name)
 
 
-def _build(config: Dict,
-           config_name: str,
-           timeout_seconds: int = GCB_BUILD_TIMEOUT,
-           worker_pool_name: str = None) -> new_process.ProcessResult:
+def _build(
+        config: Dict,
+        config_name: str,
+        timeout_seconds: int = GCB_BUILD_TIMEOUT) -> new_process.ProcessResult:
     """Submit build to GCB."""
     with tempfile.NamedTemporaryFile() as config_file:
         yaml_utils.write(config_file.name, config)
         logger.debug('Using build configuration: %s' % config)
 
         config_arg = '--config=%s' % config_file.name
-
         # Use "s" suffix to denote seconds.
         timeout_arg = '--timeout=%ds' % timeout_seconds
-        worker_pool_arg = (
-            f'--worker-pool={worker_pool_name or DEFAULT_WORKER_POOL_NAME}')
 
         command = [
             'gcloud',
@@ -92,8 +88,11 @@ def _build(config: Dict,
             str(utils.ROOT_DIR),
             config_arg,
             timeout_arg,
-            worker_pool_arg,
         ]
+
+        if os.getenv('WORKER_POOL_NAME'):
+            worker_pool_arg = (f'--worker-pool={os.getenv("WORKER_POOL_NAME")}')
+            command.append(worker_pool_arg)
 
         # Don't write to stdout to make concurrent building faster. Otherwise
         # writing becomes the bottleneck.
@@ -110,9 +109,7 @@ def _build(config: Dict,
     return result
 
 
-def build_fuzzer_benchmark(fuzzer: str,
-                           benchmark: str,
-                           worker_pool_name: str = None):
+def build_fuzzer_benchmark(fuzzer: str, benchmark: str):
     """Builds |benchmark| for |fuzzer|."""
     image_templates = {}
     buildable_images = _get_buildable_images(fuzzer=fuzzer, benchmark=benchmark)
@@ -125,4 +122,4 @@ def build_fuzzer_benchmark(fuzzer: str,
     config = generate_cloudbuild.create_cloudbuild_spec(image_templates,
                                                         benchmark=benchmark,
                                                         fuzzer=fuzzer)
-    _build(config, config_name, worker_pool_name=worker_pool_name)
+    _build(config, config_name)
