@@ -40,8 +40,7 @@ def prepare_fuzz_environment(input_corpus):
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
-    os.environ[
-        'CC'] = '/libafl/fuzzers/fuzzbench_text/target/release/libafl_cc'
+    os.environ['CC'] = '/libafl/fuzzers/fuzzbench_text/target/release/libafl_cc'
     os.environ[
         'CXX'] = '/libafl/fuzzers/fuzzbench_text/target/release/libafl_cxx'
 
