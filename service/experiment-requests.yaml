@@ -20,6 +20,25 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-10-19-um-full
+  description: "Add parallel experiments and libfuzzer ones too"
+  fuzzers:
+    - aflplusplus_um_parallel
+    - honggfuzz_um_parallel
+    - libfuzzer
+    - libfuzzer_um_random
+    - libfuzzer_um_random_75
+    - libfuzzer_um_parallel
+    - libfuzzer_um_prioritize
+    - libfuzzer_um_prioritize_75
+
+- experiment: 2022-10-17-update-libfuzzer
+  description: "Compare and consider replacing Entropic with Centipede"
+  fuzzers:
+    - libfuzzer
+    - entropic
+    - centipede
+
 - experiment: 2022-10-13-um-final-5
   description: "UM fuzzer experiment (honggfuzz)"
   fuzzers:

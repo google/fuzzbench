@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,14 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit: a20f74a16ae1e89be170eeaa6059b37e513392a4
-commit_date: 2022-10-20T09:10:15+00:00
-fuzz_target: curl_fuzzer_http
-project: curl
-unsupported_fuzzers:
-  - klee
-  - libfuzzer_dataflow
-  - libfuzzer_dataflow_load
-  - libfuzzer_dataflow_store
-  - centipede
-  - centipede_function_filter
+FROM gcr.io/fuzzbench/base-image

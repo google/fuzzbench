@@ -106,7 +106,7 @@ def _build(
         # TODO(metzman): Refactor code so that local_build stores logs as well.
         build_utils.store_build_logs(config_name, result)
         if result.retcode != 0:
-            logs.error('%s resulted in %s.', command, result)
+            logs.error('%s failed.', command)
             raise subprocess.CalledProcessError(result.retcode, command)
     return result
 
