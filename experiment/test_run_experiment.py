@@ -48,14 +48,25 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
     def setUp(self):
         self.config_filename = 'config'
         self.config = {
-            'experiment_filestore': 'gs://bucket',
-            'report_filestore': 'gs://web-bucket',
-            'experiment': 'experiment-name',
-            'docker_registry': 'gcr.io/fuzzbench',
-            'cloud_project': 'fuzzbench',
-            'cloud_compute_zone': 'us-central1-a',
-            'trials': 10,
-            'max_total_time': 1000,
+            'experiment_filestore':
+                'gs://bucket',
+            'report_filestore':
+                'gs://web-bucket',
+            'experiment':
+                'experiment-name',
+            'docker_registry':
+                'gcr.io/fuzzbench',
+            'cloud_project':
+                'fuzzbench',
+            'cloud_compute_zone':
+                'us-central1-a',
+            'trials':
+                10,
+            'max_total_time':
+                1000,
+            'worker_pool_name': (
+                'projects/fuzzbench/locations/us-central1/workerpools/buildpool'
+            ),
         }
 
     @mock.patch('common.logs.error')
@@ -69,8 +80,8 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
             with pytest.raises(run_experiment.ValidationError):
                 run_experiment.read_and_validate_experiment_config(
                     'config_file')
-            mocked_error.assert_called_with('Config does not contain "%s".',
-                                            'trials')
+            mocked_error.assert_called_with(
+                'Config does not contain required parameter "%s".', 'trials')
 
     @mock.patch('common.logs.error')
     def test_missing_required_cloud(self, mocked_error):
@@ -83,8 +94,9 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
             with pytest.raises(run_experiment.ValidationError):
                 run_experiment.read_and_validate_experiment_config(
                     'config_file')
-            mocked_error.assert_called_with('Config does not contain "%s".',
-                                            'cloud_compute_zone')
+            mocked_error.assert_called_with(
+                'Config does not contain required parameter "%s".',
+                'cloud_compute_zone')
 
     def test_invalid_upper(self):
         """Tests that an error is logged when the config file has a config

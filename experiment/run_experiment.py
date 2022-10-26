@@ -22,7 +22,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
-from typing import Dict, List
+from typing import Dict, List, Set, Union
 
 import jinja2
 import yaml
@@ -62,65 +62,57 @@ _OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT = (
 DEFAULT_CONCURRENT_BUILDS = 30
 
 
-def set_default_config_values(config: Dict):
+def _set_default_config_values(config: Dict[str, Union[int, str, bool]],
+                               local_experiment: bool):
     """Set the default configuration values if they are not specified."""
+    config['local_experiment'] = local_experiment
     config['concurrent_builds'] = config.get('concurrent_builds',
                                              DEFAULT_CONCURRENT_BUILDS)
+    config['snapshot_period'] = config.get(
+        'snapshot_period', experiment_utils.DEFAULT_SNAPSHOT_SECONDS)
 
 
-# pylint: disable=too-many-locals, too-many-statements, too-many-branches
-def read_and_validate_experiment_config(config_filename: str) -> Dict:
-    """Reads |config_filename|, validates it, finds as many errors as possible,
-    and returns it."""
-    config = yaml_utils.read(config_filename)
-    set_default_config_values(config)
-    filestore_params = {'experiment_filestore', 'report_filestore'}
-    cloud_config = {'cloud_compute_zone', 'cloud_project'}
-    docker_config = {'docker_registry'}
-    worker_config = {'worker_pool_name'}
-    string_params = cloud_config.union(filestore_params).union(
-        docker_config).union(worker_config)
-    int_params = {'trials', 'max_total_time', 'concurrent_builds'}
-    optional_params = worker_config
-    required_params = int_params.union(filestore_params).union(docker_config)
-    bool_params = {'private', 'merge_with_nonprivate'}
-
-    local_experiment = config.get('local_experiment', False)
-    snapshot_period = config.get('snapshot_period',
-                                 experiment_utils.DEFAULT_SNAPSHOT_SECONDS)
-    if local_experiment:
-        optional_params = optional_params.union(cloud_config)
-    else:
-        required_params = required_params.union(cloud_config)
-
-    valid = True
+def _validate_required_parameters_existence(
+        config: Dict[str, Union[int, str, bool]],
+        required_params: Set[str]) -> bool:
+    """Validates if the required |params| exist in |config|."""
     if 'cloud_experiment_bucket' in config or 'cloud_web_bucket' in config:
         logs.error('"cloud_experiment_bucket" and "cloud_web_bucket" are now '
                    '"experiment_filestore" and "report_filestore".')
-    missing_params = required_params - config.keys()
-    trivial_params = optional_params - config.keys()
-    for param in optional_params.union(required_params):
-        if param in missing_params:
-            valid = False
-            logs.error('Config does not contain "%s".', param)
-            continue
-        if param in trivial_params:
-            logs.info('Optional parameter "%s" is not set.', param)
-            continue
 
-        value = config[param]
-        if param in int_params and not isinstance(value, int):
-            valid = False
-            logs.error('Config parameter "%s" is "%s". It must be an int.',
-                       param, value)
-            continue
+    for param in required_params - config.keys():
+        logs.error('Config does not contain required parameter "%s".', param)
+    return not params
 
+
+def _notify_optional_parameters_missing(params: Set[str]):
+    """Notify if the optional |params| do not exist in |config|."""
+    for param in params:
+        logs.info('Config does not contain optional parameter "%s".', param)
+
+
+# pylint: disable=too-many-arguments
+def _validate_config_value_type(config: Dict[str, Union[str, int, bool]],
+                                string_params: Set[str], int_params: Set[str],
+                                bool_params: Set[str],
+                                filestore_param: Set[str],
+                                local_experiment: bool) -> bool:
+    """Validates if |params| types and formats in |config| are correct."""
+
+    valid = True
+    for param, value in config.items():
         if param in string_params and (not isinstance(value, str) or
-                                       value != value.lower()):
+                                       not value.islower()):
             valid = False
             logs.error(
                 'Config parameter "%s" is "%s". It must be a lowercase string.',
                 param, str(value))
+            continue
+
+        if param in int_params and not isinstance(value, int):
+            valid = False
+            logs.error('Config parameter "%s" is "%s". It must be an int.',
+                       param, value)
             continue
 
         if param in bool_params and not isinstance(value, bool):
@@ -129,28 +121,70 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
                        param, str(value))
             continue
 
-        if param not in filestore_params:
+        if param not in filestore_param:
             continue
 
-        if local_experiment and not value.startswith('/'):
+        if local_experiment and not (isinstance(value, str) and
+                                     value.startswith('/')):
             valid = False
             logs.error(
                 'Config parameter "%s" is "%s". Local experiments only support '
                 'using Posix file systems as filestores.', param, value)
             continue
 
-        if not local_experiment and not value.startswith('gs://'):
+        if not local_experiment and not (isinstance(value, str) and
+                                         value.startswith('gs://')):
             valid = False
             logs.error(
                 'Config parameter "%s" is "%s". '
                 'It must start with gs:// when running on Google Cloud.', param,
                 value)
+    return valid
 
-    if not valid:
+
+# pylint: disable=too-many-locals
+def read_and_validate_experiment_config(config_filename: str) -> Dict:
+    """Reads |config_filename|, validates it, finds as many errors as possible,
+    and returns it."""
+    # Reads config from file.
+    config = yaml_utils.read(config_filename)
+
+    # Validates config contains all the required parameters.
+    filestore_param = {'experiment_filestore', 'report_filestore'}
+    docker_param = {'docker_registry'}
+    trial_param = {'trials', 'max_total_time'}
+    cloud_param = {'cloud_compute_zone', 'cloud_project', 'worker_pool_name'}
+
+    required_params = filestore_param.union(docker_param).union(trial_param)
+    local_experiment = config.get('local_experiment', False)
+    if not local_experiment:
+        required_params = required_params.union(cloud_param)
+
+    all_required_exist = _validate_required_parameters_existence(
+        config, required_params)
+
+    # Validates all parameters in config are in the correct type.
+    build_param = {'concurrent_builds'}
+    snapshot_param = {'snapshot_period'}
+    location_param = {'local_experiment'}
+
+    string_params = filestore_param.union(docker_param).union(cloud_param)
+    int_params = trial_param.union(build_param).union(snapshot_param)
+    bool_params = {'private', 'merge_with_nonprivate'}.union(location_param)
+    all_types_correct = _validate_config_value_type(config, string_params,
+                                                    int_params, bool_params,
+                                                    filestore_param,
+                                                    local_experiment)
+
+    if not all_required_exist or not all_types_correct:
         raise ValidationError('Config: %s is invalid.' % config_filename)
 
-    config['local_experiment'] = local_experiment
-    config['snapshot_period'] = snapshot_period
+    # Notify if any optional parameters are missing in config.
+    optional_params = bool_params.union(build_param).union(
+        snapshot_param).union(location_param)
+    _notify_optional_parameters_missing(optional_params - config.keys())
+
+    _set_default_config_values(config, local_experiment)
     return config
 
 
