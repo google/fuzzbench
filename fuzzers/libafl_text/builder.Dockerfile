@@ -34,7 +34,7 @@ RUN rustup default nightly
 # Download libafl
 RUN git clone https://github.com/AFLplusplus/libafl /libafl && \
     cd /libafl && \
-    git checkout 5da5997b20a1b97b15d96e7a8070ba0f80d097df
+    git checkout ebdab32b36fd2e22025a3d47dc996b5bc8121c95
 
 # Compile libafl
 RUN cd /libafl && unset CFLAGS && unset CXXFLAGS && \
