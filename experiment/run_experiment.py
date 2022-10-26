@@ -59,13 +59,13 @@ FILTER_SOURCE_REGEX = re.compile(r'('
 _OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT = (
     'gs://{project}-backup.clusterfuzz-external.appspot.com/corpus/'
     'libFuzzer/{fuzz_target}/public.zip')
-DEFAULT_MAX_CONCURRENT_BUILDS = 30
+DEFAULT_CONCURRENT_BUILDS = 30
 
 
 def set_default_config_values(config: Dict):
     """Set the default configuration values if they are not specified."""
     config['concurrent_builds'] = config.get('concurrent_builds',
-                                             DEFAULT_MAX_CONCURRENT_BUILDS)
+                                             DEFAULT_CONCURRENT_BUILDS)
 
 
 # pylint: disable=too-many-locals, too-many-statements, too-many-branches
