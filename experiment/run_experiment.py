@@ -66,23 +66,24 @@ def _set_default_config_values(config: Dict[str, Union[int, str, bool]],
                                local_experiment: bool):
     """Set the default configuration values if they are not specified."""
     config['local_experiment'] = local_experiment
-    config['concurrent_cloud_builds'] = config.get('concurrent_cloud_builds',
-                                             DEFAULT_CONCURRENT_CLOUD_BUILDS)
+    config['concurrent_cloud_builds'] = config.get(
+        'concurrent_cloud_builds', DEFAULT_CONCURRENT_CLOUD_BUILDS)
     config['snapshot_period'] = config.get(
         'snapshot_period', experiment_utils.DEFAULT_SNAPSHOT_SECONDS)
 
 
-def _validate_required_parameters_existence(
-        config: Dict[str, Union[int, str, bool]],
-        required_params: Set[str]) -> bool:
+def _validate_required_parameters_existence(config: Dict[str, Union[int, str,
+                                                                    bool]],
+                                            required_params: Set[str]) -> bool:
     """Validates if the required |params| exist in |config|."""
     if 'cloud_experiment_bucket' in config or 'cloud_web_bucket' in config:
         logs.error('"cloud_experiment_bucket" and "cloud_web_bucket" are now '
                    '"experiment_filestore" and "report_filestore".')
 
-    for param in required_params - config.keys():
+    missing_params = required_params - config.keys()
+    for param in missing_params:
         logs.error('Config does not contain required parameter "%s".', param)
-    return not params
+    return not missing_params
 
 
 def _notify_optional_parameters_missing(params: Set[str]):
