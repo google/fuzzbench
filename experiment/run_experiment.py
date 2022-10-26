@@ -59,15 +59,15 @@ FILTER_SOURCE_REGEX = re.compile(r'('
 _OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT = (
     'gs://{project}-backup.clusterfuzz-external.appspot.com/corpus/'
     'libFuzzer/{fuzz_target}/public.zip')
-DEFAULT_CONCURRENT_BUILDS = 30
+DEFAULT_CONCURRENT_CLOUD_BUILDS = 30
 
 
 def _set_default_config_values(config: Dict[str, Union[int, str, bool]],
                                local_experiment: bool):
     """Set the default configuration values if they are not specified."""
     config['local_experiment'] = local_experiment
-    config['concurrent_builds'] = config.get('concurrent_builds',
-                                             DEFAULT_CONCURRENT_BUILDS)
+    config['concurrent_cloud_builds'] = config.get('concurrent_cloud_builds',
+                                             DEFAULT_CONCURRENT_CLOUD_BUILDS)
     config['snapshot_period'] = config.get(
         'snapshot_period', experiment_utils.DEFAULT_SNAPSHOT_SECONDS)
 
@@ -164,7 +164,7 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
         config, required_params)
 
     # Validates all parameters in config are in the correct type.
-    build_param = {'concurrent_builds'}
+    build_param = {'concurrent_cloud_builds'}
     snapshot_param = {'snapshot_period'}
     location_param = {'local_experiment'}
 
@@ -470,8 +470,8 @@ class LocalDispatcher(BaseDispatcher):
                 report_filestore=self.config['report_filestore']))
         set_snapshot_period_arg = 'SNAPSHOT_PERIOD={snapshot_period}'.format(
             snapshot_period=self.config['snapshot_period'])
-        set_concurrent_builds_arg = (
-            f'CONCURRENT_BUILDS={self.config["concurrent_builds"]}')
+        set_concurrent_cloud_builds_arg = (
+            f'CONCURRENT_CLOUD_BUILDS={self.config["concurrent_cloud_builds"]}')
         docker_image_url = '{docker_registry}/dispatcher-image'.format(
             docker_registry=docker_registry)
         environment_args = [
@@ -492,7 +492,7 @@ class LocalDispatcher(BaseDispatcher):
             '-e',
             set_docker_registry_arg,
             '-e',
-            set_concurrent_builds_arg,
+            set_concurrent_cloud_builds_arg,
         ]
         if 'worker_pool_name' in self.config:
             set_worker_pool_name_arg = (
@@ -567,7 +567,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
             'cloud_sql_instance_connection_name':
                 (cloud_sql_instance_connection_name),
             'docker_registry': self.config['docker_registry'],
-            'concurrent_builds': self.config['concurrent_builds'],
+            'concurrent_cloud_builds': self.config['concurrent_cloud_builds'],
         }
         if 'worker_pool_name' in self.config:
             kwargs['worker_pool_name'] = self.config['worker_pool_name']

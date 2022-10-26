@@ -26,7 +26,7 @@ docker run --rm \
   -e POSTGRES_PASSWORD={{postgres_password}} \
   -e CLOUD_SQL_INSTANCE_CONNECTION_NAME={{cloud_sql_instance_connection_name}} \
   -e DOCKER_REGISTRY={{docker_registry}} \
-  -e CONCURRENT_BUILDS={{concurrent_builds}} \
+  -e CONCURRENT_CLOUD_BUILDS={{concurrent_cloud_builds}} \
   {% if worker_pool_name %}
     -e WORKER_POOL_NAME={{worker_pool_name}} \
   {% endif %}
