@@ -703,8 +703,9 @@ def main():
 
     if (runners_cpus if runners_cpus else 0) + (measurers_cpus if measurers_cpus
                                                 else 0) > os.cpu_count():
-        parser.error('The sum of runners and measurers cpus is greater than the'
-                     ' available cpu cores (%d)' % os.cpu_count())
+        parser.error(f'The sum of runners ({runners_cpus}) and measurers cpus '
+                     f'({measurers_cpus}) is greater than the available cpu '
+                     f'cores (os.cpu_count()).')
 
     if args.custom_seed_corpus_dir:
         if args.no_seeds:
