@@ -94,7 +94,7 @@ def _notify_optional_parameters_missing(params: Set[str]):
 def _validate_config_value_type(config: Dict[str, Union[str, int, bool]],
                                 string_params: Set[str], int_params: Set[str],
                                 bool_params: Set[str],
-                                filestore_param: Set[str],
+                                filestore_params: Set[str],
                                 local_experiment: bool) -> bool:
     """Validates if |params| types and formats in |config| are correct."""
 
@@ -120,7 +120,7 @@ def _validate_config_value_type(config: Dict[str, Union[str, int, bool]],
                        param, str(value))
             continue
 
-        if param not in filestore_param:
+        if param not in filestore_params:
             continue
 
         if local_experiment and not (isinstance(value, str) and
@@ -149,36 +149,36 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     config = yaml_utils.read(config_filename)
 
     # Validates config contains all the required parameters.
-    filestore_param = {'experiment_filestore', 'report_filestore'}
-    docker_param = {'docker_registry'}
-    trial_param = {'trials', 'max_total_time'}
-    cloud_param = {'cloud_compute_zone', 'cloud_project', 'worker_pool_name'}
+    filestore_params = {'experiment_filestore', 'report_filestore'}
+    docker_params = {'docker_registry'}
+    trial_params = {'trials', 'max_total_time'}
+    cloud_params = {'cloud_compute_zone', 'cloud_project', 'worker_pool_name'}
 
-    required_params = filestore_param.union(docker_param).union(trial_param)
+    required_params = filestore_params.union(docker_params).union(trial_params)
     local_experiment = config.get('local_experiment', False)
     if not local_experiment:
-        required_params = required_params.union(cloud_param)
+        required_params = required_params.union(cloud_params)
 
     all_required_exist = _validate_required_parameters_existence(
         config, required_params)
 
     # Validates all parameters in config are in the correct type.
-    snapshot_param = {'snapshot_period'}
-    location_param = {'local_experiment'}
+    snapshot_params = {'snapshot_period'}
+    location_params = {'local_experiment'}
 
-    string_params = filestore_param.union(docker_param).union(cloud_param)
-    int_params = trial_param.union(snapshot_param)
-    bool_params = {'private', 'merge_with_nonprivate'}.union(location_param)
+    string_params = filestore_params.union(docker_params).union(cloud_params)
+    int_params = trial_params.union(snapshot_params)
+    bool_params = {'private', 'merge_with_nonprivate'}.union(location_params)
     all_types_correct = _validate_config_value_type(config, string_params,
                                                     int_params, bool_params,
-                                                    filestore_param,
+                                                    filestore_params,
                                                     local_experiment)
 
     if not all_required_exist or not all_types_correct:
         raise ValidationError('Config: %s is invalid.' % config_filename)
 
     # Notify if any optional parameters are missing in config.
-    optional_params = bool_params.union(snapshot_param).union(location_param)
+    optional_params = bool_params.union(snapshot_params).union(location_params)
     _notify_optional_parameters_missing(optional_params - config.keys())
 
     _set_default_config_values(config, local_experiment)
