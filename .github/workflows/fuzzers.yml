@@ -57,6 +57,7 @@ jobs:
           - mopt
           - neuzz
           - libafl
+          - libafl_text
           - pythia_effect_bb
           - pythia_bb
           - fafuzz
