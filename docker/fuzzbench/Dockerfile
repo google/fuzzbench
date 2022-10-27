@@ -15,7 +15,7 @@
 FROM python:3.10
 
 # Install the docker CLI.
-ENV DOCKER_VERSION=19.03.12
+ENV DOCKER_VERSION=20.10.19
 RUN wget https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz \
  && tar xzvf docker-${DOCKER_VERSION}.tgz --strip 1 -C /usr/local/bin docker/docker \
  && rm -rf docker-${DOCKER_VERSION}.tgz
