@@ -66,8 +66,6 @@ def _set_default_config_values(config: Dict[str, Union[int, str, bool]],
                                local_experiment: bool):
     """Set the default configuration values if they are not specified."""
     config['local_experiment'] = local_experiment
-    config['concurrent_builds'] = config.get('concurrent_builds',
-                                             DEFAULT_CONCURRENT_BUILDS)
     config['snapshot_period'] = config.get(
         'snapshot_period', experiment_utils.DEFAULT_SNAPSHOT_SECONDS)
 
@@ -165,12 +163,11 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
         config, required_params)
 
     # Validates all parameters in config are in the correct type.
-    build_param = {'concurrent_builds'}
     snapshot_param = {'snapshot_period'}
     location_param = {'local_experiment'}
 
     string_params = filestore_param.union(docker_param).union(cloud_param)
-    int_params = trial_param.union(build_param).union(snapshot_param)
+    int_params = trial_param.union(snapshot_param)
     bool_params = {'private', 'merge_with_nonprivate'}.union(location_param)
     all_types_correct = _validate_config_value_type(config, string_params,
                                                     int_params, bool_params,
@@ -181,8 +178,7 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
         raise ValidationError('Config: %s is invalid.' % config_filename)
 
     # Notify if any optional parameters are missing in config.
-    optional_params = bool_params.union(build_param).union(
-        snapshot_param).union(location_param)
+    optional_params = bool_params.union(snapshot_param).union(location_param)
     _notify_optional_parameters_missing(optional_params - config.keys())
 
     _set_default_config_values(config, local_experiment)
@@ -290,6 +286,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
         no_dictionaries=False,
         oss_fuzz_corpus=False,
         allow_uncommitted_changes=False,
+        concurrent_builds=DEFAULT_CONCURRENT_BUILDS,
         measurers_cpus=None,
         runners_cpus=None,
         region_coverage=False,
@@ -310,6 +307,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
     config['no_dictionaries'] = no_dictionaries
     config['oss_fuzz_corpus'] = oss_fuzz_corpus
     config['description'] = description
+    config['concurrent_builds'] = concurrent_builds
     config['measurers_cpus'] = measurers_cpus
     config['runners_cpus'] = runners_cpus
     config['runner_machine_type'] = config.get('runner_machine_type',
@@ -620,6 +618,11 @@ def main():
                         '--description',
                         help='Description of the experiment.',
                         required=False)
+    parser.add_argument('-cb',
+                        '--concurrent-builds',
+                        help='Max concurrent builds allowed.',
+                        default=DEFAULT_CONCURRENT_BUILDS,
+                        required=False)
     parser.add_argument('-mc',
                         '--measurers-cpus',
                         help='Cpus available to the measurers.',
@@ -675,6 +678,12 @@ def main():
     args = parser.parse_args()
     fuzzers = args.fuzzers or all_fuzzers
 
+    concurrent_builds = args.concurrent_builds
+    if concurrent_builds is not None:
+        if not concurrent_builds.isdigit():
+            parser.error(
+                'The concurrent build argument must be a positive number')
+        concurrent_builds = int(concurrent_builds)
     runners_cpus = args.runners_cpus
     if runners_cpus is not None:
         if not runners_cpus.isdigit():
@@ -712,6 +721,7 @@ def main():
                      no_dictionaries=args.no_dictionaries,
                      oss_fuzz_corpus=args.oss_fuzz_corpus,
                      allow_uncommitted_changes=args.allow_uncommitted_changes,
+                     concurrent_builds=concurrent_builds,
                      measurers_cpus=measurers_cpus,
                      runners_cpus=runners_cpus,
                      region_coverage=args.region_coverage,
