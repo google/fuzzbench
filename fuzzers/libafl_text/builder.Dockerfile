@@ -29,7 +29,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
     sh /rustup.sh -y
 
 # Switch to nightly
-RUN rustup default nightly
+RUN PATH="$PATH:/root/.cargo/bin/" rustup default nightly
 
 # Download libafl
 RUN git clone https://github.com/AFLplusplus/libafl /libafl && \
