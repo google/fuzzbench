@@ -15,21 +15,33 @@
 ARG parent_image
 FROM $parent_image
 
+# Install Python2 and Pip2 on Ubuntu:20.04.
+RUN apt-get install -y software-properties-common && \
+    apt-get update && \
+    add-apt-repository universe && \
+    apt-get install -y python2 && \
+    curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py && \
+    python2 get-pip.py && \
+    rm /usr/bin/python && \
+    ln -s /usr/bin/python2.7 /usr/bin/python
+
+# RUN apt-get install --unstable gnupg-curl
+
 # install AFLSmart dependencies
 RUN dpkg --add-architecture i386 && \
     apt-get update -y && apt-get install -y \
     apt-utils \
     libc6-dev-i386 \
-    python-pip \
     g++-multilib \
     mono-complete \
-    gnupg-curl \
     software-properties-common
 
 # install gcc-4.4 & g++-4.4 required by Peach while running on Ubuntu 16.04
 RUN apt-get update -y && \
     apt-get upgrade -y && \
     add-apt-repository --keyserver hkps://keyserver.ubuntu.com:443 ppa:ubuntu-toolchain-r/test -y && \
+    echo 'deb http://dk.archive.ubuntu.com/ubuntu/ trusty main' >> /etc/apt/sources.list && \
+    echo 'deb http://dk.archive.ubuntu.com/ubuntu/ trusty universe' >> /etc/apt/sources.list && \
     apt-get update -y && apt-get install -y \
     gcc-4.4 \
     g++-4.4 \
