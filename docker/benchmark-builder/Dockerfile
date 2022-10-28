@@ -45,13 +45,11 @@ RUN cd /tmp/ && \
     cd Python-$PYTHON_VERSION && \
     ./configure --enable-loadable-sqlite-extensions --enable-optimizations && \
     make -j install && \
-    rm -r /tmp/Python-$PYTHON_VERSION.tar.xz /tmp/Python-$PYTHON_VERSION && \
-    ln -s /usr/local/bin/python3 /usr/local/bin/python && \
-    ln -s /usr/local/bin/pip3 /usr/local/bin/pip
+    rm -r /tmp/Python-$PYTHON_VERSION.tar.xz /tmp/Python-$PYTHON_VERSION
 
 # Install common python dependencies.
 COPY ./requirements.txt /tmp
-RUN pip install -r /tmp/requirements.txt
+RUN pip3 install -r /tmp/requirements.txt
 
 
 # Copy the entire fuzzers directory tree to allow for module dependencies.
