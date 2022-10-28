@@ -57,11 +57,11 @@ sudo apt-get install build-essential
 
 ### Python programming language
 
-[Download Python 3.10](https://www.python.org/downloads/release/python-3104/),
+[Download Python 3.10](https://www.python.org/downloads/release/python-3108/),
 then install it.
 
 If you already have Python installed, you can verify its version by running
-`python3 --version`. The minimum required version is 3.10.4.
+`python3 --version`. The minimum required version is 3.10.8.
 
 ### Python package dependencies
 
