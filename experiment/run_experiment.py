@@ -22,7 +22,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
-from typing import Dict, List, Set, Union
+from typing import Dict, List, Set, Union, Tuple
 
 import jinja2
 import yaml
@@ -70,24 +70,74 @@ def _set_default_config_values(config: Dict[str, Union[int, str, bool]],
         'snapshot_period', experiment_utils.DEFAULT_SNAPSHOT_SECONDS)
 
 
-def _validate_required_parameters_existence(config: Dict[str, Union[int, str,
-                                                                    bool]],
-                                            required_params: Set[str]) -> bool:
+def _validate_config_parameters(
+        config: Dict[str, Union[int, str, bool]],
+        config_requirements: Dict[str, Tuple[bool, type, bool, str]]) -> bool:
     """Validates if the required |params| exist in |config|."""
     if 'cloud_experiment_bucket' in config or 'cloud_web_bucket' in config:
         logs.error('"cloud_experiment_bucket" and "cloud_web_bucket" are now '
                    '"experiment_filestore" and "report_filestore".')
 
-    missing_params = required_params - config.keys()
+    missing_params, optional_params = [], []
+    for param, (mandatory, _, _, _) in config_requirements.items():
+        if param in config:
+            continue
+        if mandatory:
+            missing_params.append(param)
+            continue
+        optional_params.append(param)
+
     for param in missing_params:
         logs.error('Config does not contain required parameter "%s".', param)
+
+    # Notify if any optional parameters are missing in config.
+    for param in optional_params:
+        logs.info('Config does not contain optional parameter "%s".', param)
+
     return not missing_params
 
 
-def _notify_optional_parameters_missing(params: Set[str]):
-    """Notify if the optional |params| do not exist in |config|."""
-    for param in params:
-        logs.info('Config does not contain optional parameter "%s".', param)
+# pylint: disable=too-many-arguments
+def _validate_config_values(
+        config: Dict[str, Union[str, int, bool]],
+        config_requirements: Dict[str, Tuple[bool, type, bool, str]]) -> bool:
+    """Validates if |params| types and formats in |config| are correct."""
+
+    valid = True
+    for param, value in config.items():
+        requirement = config_requirements.get(param, None)
+        # Unrecognised parameter.
+        error_param = 'Config parameter "%s" is "%s".'
+        if requirement is None:
+            valid = False
+            error_reason = 'This parameter is not recognized.'
+            logs.error(f'{error_param} {error_reason}', param, str(value))
+            continue
+
+        _, required_type, required_lowercase, required_startswith = requirement
+
+        if not isinstance(value, required_type):
+            valid = False
+            error_reason = f'It must be a {required_type}.'
+            logs.error(f'{error_param} {error_reason}', param, str(value))
+
+        if not isinstance(value, str):
+            continue
+
+        if required_lowercase and not value.islower():
+            valid = False
+            error_reason = 'It must be a lowercase string.'
+            logs.error(f'{error_param} {error_reason}', param, str(value))
+
+        if required_startswith and not value.startswith(required_startswith):
+            valid = False
+            error_reason = (
+                'Local experiments only support Posix file systems filestores.'
+                if config.get('local_experiment', False) else
+                'Google Cloud experiments must start with "gs://".')
+            logs.error(f'{error_param} {error_reason}', param, value)
+
+    return valid
 
 
 # pylint: disable=too-many-arguments
@@ -149,37 +199,54 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     config = yaml_utils.read(config_filename)
 
     # Validates config contains all the required parameters.
-    filestore_params = {'experiment_filestore', 'report_filestore'}
-    docker_params = {'docker_registry'}
-    trial_params = {'trials', 'max_total_time'}
-    cloud_params = {'cloud_compute_zone', 'cloud_project', 'worker_pool_name'}
-
-    required_params = filestore_params.union(docker_params).union(trial_params)
     local_experiment = config.get('local_experiment', False)
-    if not local_experiment:
-        required_params = required_params.union(cloud_params)
+    # param_name: (mandatory, type, lowercase, startswith).
+    config_requirements = {
+        'experiment_filestore':
+            (True, str, True, '/' if local_experiment else 'gs://'),
+        'report_filestore':
+            (True, str, True, '/' if local_experiment else 'gs://'),
+        'docker_registry': (True, str, True, ''),
+        'trials': (True, int, False, ''),
+        'max_total_time': (True, int, False, ''),
+        'cloud_compute_zone': (not local_experiment, str, True, ''),
+        'cloud_project': (not local_experiment, str, True, ''),
+        'worker_pool_name': (not local_experiment, str, False, ''),
+        'experiment': (False, str, False, ''),
+        'snapshot_period': (False, int, False, ''),
+        'local_experiment': (False, bool, False, ''),
+        'private': (False, bool, False, ''),
+        'merge_with_nonprivate': (False, bool, False, ''),
+    }
 
-    all_required_exist = _validate_required_parameters_existence(
-        config, required_params)
+    # filestore_params = {'experiment_filestore', 'report_filestore'}
+    # docker_params = {'docker_registry'}
+    # trial_params = {'trials', 'max_total_time'}
+    # cloud_params = {'cloud_compute_zone', 'cloud_project'}
+    # worker_params = {'worker_pool_name'}
+
+    all_params_valid = _validate_config_parameters(config, config_requirements)
+
+    # mandatory_params=filestore_params.union(docker_params).union(trial_params)
+    #     local_experiment = config.get('local_experiment', False)
+    #     if not local_experiment:
+    #         required_params = required_params.union(cloud_params)
+    #
+    # all_mandatory_exist = _validate_mandatory_parameters_existence(
+    #    config, required_params)
 
     # Validates all parameters in config are in the correct type.
-    snapshot_params = {'snapshot_period'}
-    location_params = {'local_experiment'}
+    #    snapshot_params = {'snapshot_period'}
+    #    location_params = {'local_experiment'}
 
-    string_params = filestore_params.union(docker_params).union(cloud_params)
-    int_params = trial_params.union(snapshot_params)
-    bool_params = {'private', 'merge_with_nonprivate'}.union(location_params)
-    all_types_correct = _validate_config_value_type(config, string_params,
-                                                    int_params, bool_params,
-                                                    filestore_params,
-                                                    local_experiment)
+    # string_params = filestore_params.union(docker_params).union(cloud_params)
+    # int_params = trial_params.union(snapshot_params)
+    # bool_params = {'private', 'merge_with_nonprivate'}.union(location_params)
 
-    if not all_required_exist or not all_types_correct:
+    all_values_valid = _validate_config_values(config, config_requirements)
+
+    if not all_params_valid or not all_values_valid:
         raise ValidationError('Config: %s is invalid.' % config_filename)
-
-    # Notify if any optional parameters are missing in config.
-    optional_params = bool_params.union(snapshot_params).union(location_params)
-    _notify_optional_parameters_missing(optional_params - config.keys())
 
     _set_default_config_values(config, local_experiment)
     return config

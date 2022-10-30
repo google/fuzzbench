@@ -116,7 +116,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         parameter that should be a string but is not."""
         self._test_invalid(
             'experiment_filestore', 1,
-            'Config parameter "%s" is "%s". It must be a lowercase string.')
+            f'Config parameter "%s" is "%s". It must be a {str}.')
 
     def test_invalid_local_filestore(self):
         """Tests that an error is logged when the config file has a config
@@ -125,7 +125,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         self.config['experiment_filestore'] = '/user/test/folder'
         self._test_invalid(
             'report_filestore', 'gs://wrong-here', 'Config parameter "%s" is '
-            '"%s". Local experiments only support using Posix file systems as '
+            '"%s". Local experiments only support Posix file systems '
             'filestores.')
 
     def test_invalid_cloud_filestore(self):
@@ -133,7 +133,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         parameter that should be a GCS bucket but is not."""
         self._test_invalid(
             'experiment_filestore', 'invalid', 'Config parameter "%s" is "%s". '
-            'It must start with gs:// when running on Google Cloud.')
+            'Google Cloud experiments must start with "gs://".')
 
     @mock.patch('common.logs.error')
     def test_multiple_invalid(self, mocked_error):
@@ -147,10 +147,10 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
                 run_experiment.read_and_validate_experiment_config(
                     'config_file')
         mocked_error.assert_any_call(
-            'Config parameter "%s" is "%s". It must be a lowercase string.',
+            f'Config parameter "%s" is "%s". It must be a {str}.',
             'experiment_filestore', str(self.config['experiment_filestore']))
         mocked_error.assert_any_call(
-            'Config parameter "%s" is "%s". It must be a lowercase string.',
+            f'Config parameter "%s" is "%s". It must be a {str}.',
             'report_filestore', str(self.config['report_filestore']))
 
     @mock.patch('common.logs.error')
