@@ -66,6 +66,7 @@ def _set_default_config_values(config: Dict[str, Union[int, str, bool]],
                                local_experiment: bool):
     """Set the default configuration values if they are not specified."""
     config['local_experiment'] = local_experiment
+    config['worker_pool_name'] = config.get('worker_pool_name', '')
     config['snapshot_period'] = config.get(
         'snapshot_period', experiment_utils.DEFAULT_SNAPSHOT_SECONDS)
 
@@ -538,6 +539,8 @@ class LocalDispatcher(BaseDispatcher):
             snapshot_period=self.config['snapshot_period'])
         set_concurrent_builds_arg = (
             f'CONCURRENT_BUILDS={self.config["concurrent_builds"]}')
+        set_worker_pool_name_arg = (
+            f'WORKER_POOL_NAME={self.config["worker_pool_name"]}')
         docker_image_url = '{docker_registry}/dispatcher-image'.format(
             docker_registry=docker_registry)
         environment_args = [
@@ -559,12 +562,9 @@ class LocalDispatcher(BaseDispatcher):
             set_docker_registry_arg,
             '-e',
             set_concurrent_builds_arg,
+            '-e',
+            set_worker_pool_name_arg,
         ]
-        if 'worker_pool_name' in self.config:
-            set_worker_pool_name_arg = (
-                f'WORKER_POOL_NAME={self.config["worker_pool_name"]}')
-            environment_args.extend(['-e', set_worker_pool_name_arg])
-
         command = [
             'docker',
             'run',
@@ -634,9 +634,8 @@ class GoogleCloudDispatcher(BaseDispatcher):
                 (cloud_sql_instance_connection_name),
             'docker_registry': self.config['docker_registry'],
             'concurrent_builds': self.config['concurrent_builds'],
+            'worker_pool_name': self.config['worker_pool_name']
         }
-        if 'worker_pool_name' in self.config:
-            kwargs['worker_pool_name'] = self.config['worker_pool_name']
         return template.render(**kwargs)
 
     def write_startup_script(self, startup_script_file):
