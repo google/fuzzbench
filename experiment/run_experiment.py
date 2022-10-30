@@ -22,7 +22,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
-from typing import Dict, List, Set, Union, Tuple
+from typing import Dict, List, Union, Tuple
 
 import jinja2
 import yaml
@@ -141,57 +141,6 @@ def _validate_config_values(
     return valid
 
 
-# pylint: disable=too-many-arguments
-def _validate_config_value_type(config: Dict[str, Union[str, int, bool]],
-                                string_params: Set[str], int_params: Set[str],
-                                bool_params: Set[str],
-                                filestore_params: Set[str],
-                                local_experiment: bool) -> bool:
-    """Validates if |params| types and formats in |config| are correct."""
-
-    valid = True
-    for param, value in config.items():
-        if param in string_params and (not isinstance(value, str) or
-                                       not value.islower()):
-            valid = False
-            logs.error(
-                'Config parameter "%s" is "%s". It must be a lowercase string.',
-                param, str(value))
-            continue
-
-        if param in int_params and not isinstance(value, int):
-            valid = False
-            logs.error('Config parameter "%s" is "%s". It must be an int.',
-                       param, value)
-            continue
-
-        if param in bool_params and not isinstance(value, bool):
-            valid = False
-            logs.error('Config parameter "%s" is "%s". It must be a bool.',
-                       param, str(value))
-            continue
-
-        if param not in filestore_params:
-            continue
-
-        if local_experiment and not (isinstance(value, str) and
-                                     value.startswith('/')):
-            valid = False
-            logs.error(
-                'Config parameter "%s" is "%s". Local experiments only support '
-                'using Posix file systems as filestores.', param, value)
-            continue
-
-        if not local_experiment and not (isinstance(value, str) and
-                                         value.startswith('gs://')):
-            valid = False
-            logs.error(
-                'Config parameter "%s" is "%s". '
-                'It must start with gs:// when running on Google Cloud.', param,
-                value)
-    return valid
-
-
 # pylint: disable=too-many-locals
 def read_and_validate_experiment_config(config_filename: str) -> Dict:
     """Reads |config_filename|, validates it, finds as many errors as possible,
@@ -220,32 +169,8 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
         'merge_with_nonprivate': (False, bool, False, ''),
     }
 
-    # filestore_params = {'experiment_filestore', 'report_filestore'}
-    # docker_params = {'docker_registry'}
-    # trial_params = {'trials', 'max_total_time'}
-    # cloud_params = {'cloud_compute_zone', 'cloud_project'}
-    # worker_params = {'worker_pool_name'}
-
     all_params_valid = _validate_config_parameters(config, config_requirements)
-
-    # mandatory_params=filestore_params.union(docker_params).union(trial_params)
-    #     local_experiment = config.get('local_experiment', False)
-    #     if not local_experiment:
-    #         required_params = required_params.union(cloud_params)
-    #
-    # all_mandatory_exist = _validate_mandatory_parameters_existence(
-    #    config, required_params)
-
-    # Validates all parameters in config are in the correct type.
-    #    snapshot_params = {'snapshot_period'}
-    #    location_params = {'local_experiment'}
-
-    # string_params = filestore_params.union(docker_params).union(cloud_params)
-    # int_params = trial_params.union(snapshot_params)
-    # bool_params = {'private', 'merge_with_nonprivate'}.union(location_params)
-
     all_values_valid = _validate_config_values(config, config_requirements)
-
     if not all_params_valid or not all_values_valid:
         raise ValidationError('Config: %s is invalid.' % config_filename)
 
