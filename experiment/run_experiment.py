@@ -22,7 +22,8 @@ import subprocess
 import sys
 import tarfile
 import tempfile
-from typing import Dict, List, Union, Tuple
+from collections import namedtuple
+from typing import Dict, List, Union, NamedTuple
 
 import jinja2
 import yaml
@@ -73,17 +74,17 @@ def _set_default_config_values(config: Dict[str, Union[int, str, bool]],
 
 def _validate_config_parameters(
         config: Dict[str, Union[int, str, bool]],
-        config_requirements: Dict[str, Tuple[bool, type, bool, str]]) -> bool:
+        config_requirements: Dict[str, NamedTuple]) -> bool:
     """Validates if the required |params| exist in |config|."""
     if 'cloud_experiment_bucket' in config or 'cloud_web_bucket' in config:
         logs.error('"cloud_experiment_bucket" and "cloud_web_bucket" are now '
                    '"experiment_filestore" and "report_filestore".')
 
     missing_params, optional_params = [], []
-    for param, (mandatory, _, _, _) in config_requirements.items():
+    for param, requirement in config_requirements.items():
         if param in config:
             continue
-        if mandatory:
+        if requirement.mandatory:
             missing_params.append(param)
             continue
         optional_params.append(param)
@@ -99,9 +100,8 @@ def _validate_config_parameters(
 
 
 # pylint: disable=too-many-arguments
-def _validate_config_values(
-        config: Dict[str, Union[str, int, bool]],
-        config_requirements: Dict[str, Tuple[bool, type, bool, str]]) -> bool:
+def _validate_config_values(config: Dict[str, Union[str, int, bool]],
+                            config_requirements: Dict[str, NamedTuple]) -> bool:
     """Validates if |params| types and formats in |config| are correct."""
 
     valid = True
@@ -115,22 +115,21 @@ def _validate_config_values(
             logs.error(f'{error_param} {error_reason}', param, str(value))
             continue
 
-        _, required_type, required_lowercase, required_startswith = requirement
-
-        if not isinstance(value, required_type):
+        if not isinstance(value, requirement.type):
             valid = False
-            error_reason = f'It must be a {required_type}.'
+            error_reason = f'It must be a {requirement.type}.'
             logs.error(f'{error_param} {error_reason}', param, str(value))
 
         if not isinstance(value, str):
             continue
 
-        if required_lowercase and not value.islower():
+        if requirement.lowercase and not value.islower():
             valid = False
             error_reason = 'It must be a lowercase string.'
             logs.error(f'{error_param} {error_reason}', param, str(value))
 
-        if required_startswith and not value.startswith(required_startswith):
+        if requirement.startswith and not value.startswith(
+                requirement.startswith):
             valid = False
             error_reason = (
                 'Local experiments only support Posix file systems filestores.'
@@ -150,23 +149,37 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
 
     # Validates config contains all the required parameters.
     local_experiment = config.get('local_experiment', False)
-    # param_name: (mandatory, type, lowercase, startswith).
+
+    # Requirement of each config field.
+    Requirement = namedtuple('Requirement',
+                             ['mandatory', 'type', 'lowercase', 'startswith'])
     config_requirements = {
         'experiment_filestore':
-            (True, str, True, '/' if local_experiment else 'gs://'),
+            Requirement(True, str, True, '/' if local_experiment else 'gs://'),
         'report_filestore':
-            (True, str, True, '/' if local_experiment else 'gs://'),
-        'docker_registry': (True, str, True, ''),
-        'trials': (True, int, False, ''),
-        'max_total_time': (True, int, False, ''),
-        'cloud_compute_zone': (not local_experiment, str, True, ''),
-        'cloud_project': (not local_experiment, str, True, ''),
-        'worker_pool_name': (not local_experiment, str, False, ''),
-        'experiment': (False, str, False, ''),
-        'snapshot_period': (False, int, False, ''),
-        'local_experiment': (False, bool, False, ''),
-        'private': (False, bool, False, ''),
-        'merge_with_nonprivate': (False, bool, False, ''),
+            Requirement(True, str, True, '/' if local_experiment else 'gs://'),
+        'docker_registry':
+            Requirement(True, str, True, ''),
+        'trials':
+            Requirement(True, int, False, ''),
+        'max_total_time':
+            Requirement(True, int, False, ''),
+        'cloud_compute_zone':
+            Requirement(not local_experiment, str, True, ''),
+        'cloud_project':
+            Requirement(not local_experiment, str, True, ''),
+        'worker_pool_name':
+            Requirement(not local_experiment, str, False, ''),
+        'experiment':
+            Requirement(False, str, False, ''),
+        'snapshot_period':
+            Requirement(False, int, False, ''),
+        'local_experiment':
+            Requirement(False, bool, False, ''),
+        'private':
+            Requirement(False, bool, False, ''),
+        'merge_with_nonprivate':
+            Requirement(False, bool, False, ''),
     }
 
     all_params_valid = _validate_config_parameters(config, config_requirements)
