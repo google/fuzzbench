@@ -19,20 +19,16 @@ ADD https://commondatastorage.googleapis.com/chromium-browser-clang/Linux_x64/cl
 RUN mkdir /clang && \
     tar zxvf /clang-llvmorg-15-init-1995-g5bec1ea7-1.tgz -C /clang
 
-RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
-    cd /llvm-project/ && \
-    git checkout aaecabe68b6add7874d481e67cd430cb6f06cb82
-
-COPY weak.c /
+COPY weak.c Trace-store-and-load-commands.patch /
 RUN /clang/bin/clang /weak.c -c -o /weak.o
 
-COPY Trace-store-and-load-commands.patch /
-
-RUN cd /llvm-project/ && \
+RUN git clone \
+    --depth 1 \
+    --branch llvmorg-15.0.3 \
+    https://github.com/llvm/llvm-project.git /llvm-project && \
+    cd /llvm-project/compiler-rt/lib/fuzzer && \
     git apply /Trace-store-and-load-commands.patch && \
-    cd compiler-rt/lib/fuzzer && \
     (for f in *.cpp; do \
-      /clang/bin/clang -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \
+      clang++ -stdlib=libc++ -fPIC -O2 -std=c++14 $f -c & \
     done && wait) && \
     ar r /usr/lib/libFuzzer.a *.o
-
