@@ -574,6 +574,8 @@ class GoogleCloudDispatcher(BaseDispatcher):
             'concurrent_builds': self.config['concurrent_builds'],
             'worker_pool_name': self.config['worker_pool_name']
         }
+        if 'worker_pool_name' in self.config:
+            kwargs['worker_pool_name'] = self.config['worker_pool_name']
         return template.render(**kwargs)
 
     def write_startup_script(self, startup_script_file):
@@ -626,14 +628,17 @@ def main():
                         '--concurrent-builds',
                         help='Max concurrent builds allowed.',
                         default=DEFAULT_CONCURRENT_BUILDS,
+                        type=int,
                         required=False)
     parser.add_argument('-mc',
                         '--measurers-cpus',
                         help='Cpus available to the measurers.',
+                        type=int,
                         required=False)
     parser.add_argument('-rc',
                         '--runners-cpus',
                         help='Cpus available to the runners.',
+                        type=int,
                         required=False)
     parser.add_argument('-cs',
                         '--custom-seed-corpus-dir',
@@ -683,30 +688,30 @@ def main():
     fuzzers = args.fuzzers or all_fuzzers
 
     concurrent_builds = args.concurrent_builds
-    if concurrent_builds is not None:
-        if not concurrent_builds.isdigit():
-            parser.error(
-                'The concurrent build argument must be a positive number')
-        concurrent_builds = int(concurrent_builds)
+    if concurrent_builds is not None and concurrent_builds <= 0:
+        parser.error('The concurrent build argument must be a positive number,'
+                     f' received {concurrent_builds}.')
+
     runners_cpus = args.runners_cpus
-    if runners_cpus is not None:
-        if not runners_cpus.isdigit():
-            parser.error('The runners cpus argument must be a positive number')
-        runners_cpus = int(runners_cpus)
+    if runners_cpus is not None and runners_cpus <= 0:
+        parser.error('The runners cpus argument must be a positive number,'
+                     f' received {runners_cpus}.')
+
     measurers_cpus = args.measurers_cpus
-    if measurers_cpus is not None:
-        if not measurers_cpus.isdigit():
-            parser.error(
-                'The measurers cpus argument must be a positive number')
-        if runners_cpus is None:
-            parser.error(
-                'With the measurers cpus argument you need to specify the'
-                ' runners cpus argument too')
-        measurers_cpus = int(measurers_cpus)
+    if measurers_cpus is not None and measurers_cpus <= 0:
+        parser.error('The measurers cpus argument must be a positive number,'
+                     f' received {measurers_cpus}.')
+
+    if runners_cpus is None and measurers_cpus is not None:
+        parser.error('With the measurers cpus argument (received '
+                     f'{measurers_cpus}) you need to specify the runners cpus '
+                     'argument too.')
+
     if (runners_cpus if runners_cpus else 0) + (measurers_cpus if measurers_cpus
                                                 else 0) > os.cpu_count():
-        parser.error('The sum of runners and measurers cpus is greater than the'
-                     ' available cpu cores (%d)' % os.cpu_count())
+        parser.error(f'The sum of runners ({runners_cpus}) and measurers cpus '
+                     f'({measurers_cpus}) is greater than the available cpu '
+                     f'cores (os.cpu_count()).')
 
     if args.custom_seed_corpus_dir:
         if args.no_seeds:
