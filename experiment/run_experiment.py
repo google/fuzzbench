@@ -23,7 +23,7 @@ import sys
 import tarfile
 import tempfile
 from collections import namedtuple
-from typing import Dict, List, Union, NamedTuple
+from typing import Dict, List, NamedTuple, Optional, Union
 
 import jinja2
 import yaml
