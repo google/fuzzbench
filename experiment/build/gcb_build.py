@@ -90,8 +90,9 @@ def _build(
             timeout_arg,
         ]
 
-        if os.getenv('WORKER_POOL_NAME'):
-            worker_pool_arg = (f'--worker-pool={os.getenv("WORKER_POOL_NAME")}')
+        worker_pool_name = os.getenv('WORKER_POOL_NAME')
+        if worker_pool_name:
+            worker_pool_arg = (f'--worker-pool={worker_pool_name}')
             command.append(worker_pool_arg)
 
         # Don't write to stdout to make concurrent building faster. Otherwise

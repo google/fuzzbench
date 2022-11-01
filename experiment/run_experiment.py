@@ -22,7 +22,8 @@ import subprocess
 import sys
 import tarfile
 import tempfile
-from typing import Dict, List, Set, Union
+from collections import namedtuple
+from typing import Dict, List, Union, NamedTuple
 
 import jinja2
 import yaml
@@ -66,78 +67,76 @@ def _set_default_config_values(config: Dict[str, Union[int, str, bool]],
                                local_experiment: bool):
     """Set the default configuration values if they are not specified."""
     config['local_experiment'] = local_experiment
+    config['worker_pool_name'] = config.get('worker_pool_name', '')
     config['snapshot_period'] = config.get(
         'snapshot_period', experiment_utils.DEFAULT_SNAPSHOT_SECONDS)
 
 
-def _validate_required_parameters_existence(config: Dict[str, Union[int, str,
-                                                                    bool]],
-                                            required_params: Set[str]) -> bool:
+def _validate_config_parameters(
+        config: Dict[str, Union[int, str, bool]],
+        config_requirements: Dict[str, NamedTuple]) -> bool:
     """Validates if the required |params| exist in |config|."""
     if 'cloud_experiment_bucket' in config or 'cloud_web_bucket' in config:
         logs.error('"cloud_experiment_bucket" and "cloud_web_bucket" are now '
                    '"experiment_filestore" and "report_filestore".')
 
-    missing_params = required_params - config.keys()
+    missing_params, optional_params = [], []
+    for param, requirement in config_requirements.items():
+        if param in config:
+            continue
+        if requirement.mandatory:
+            missing_params.append(param)
+            continue
+        optional_params.append(param)
+
     for param in missing_params:
         logs.error('Config does not contain required parameter "%s".', param)
+
+    # Notify if any optional parameters are missing in config.
+    for param in optional_params:
+        logs.info('Config does not contain optional parameter "%s".', param)
+
     return not missing_params
 
 
-def _notify_optional_parameters_missing(params: Set[str]):
-    """Notify if the optional |params| do not exist in |config|."""
-    for param in params:
-        logs.info('Config does not contain optional parameter "%s".', param)
-
-
 # pylint: disable=too-many-arguments
-def _validate_config_value_type(config: Dict[str, Union[str, int, bool]],
-                                string_params: Set[str], int_params: Set[str],
-                                bool_params: Set[str],
-                                filestore_params: Set[str],
-                                local_experiment: bool) -> bool:
+def _validate_config_values(config: Dict[str, Union[str, int, bool]],
+                            config_requirements: Dict[str, NamedTuple]) -> bool:
     """Validates if |params| types and formats in |config| are correct."""
 
     valid = True
     for param, value in config.items():
-        if param in string_params and (not isinstance(value, str) or
-                                       not value.islower()):
+        requirement = config_requirements.get(param, None)
+        # Unrecognised parameter.
+        error_param = 'Config parameter "%s" is "%s".'
+        if requirement is None:
             valid = False
-            logs.error(
-                'Config parameter "%s" is "%s". It must be a lowercase string.',
-                param, str(value))
+            error_reason = 'This parameter is not recognized.'
+            logs.error(f'{error_param} {error_reason}', param, str(value))
             continue
 
-        if param in int_params and not isinstance(value, int):
+        if not isinstance(value, requirement.type):
             valid = False
-            logs.error('Config parameter "%s" is "%s". It must be an int.',
-                       param, value)
+            error_reason = f'It must be a {requirement.type}.'
+            logs.error(f'{error_param} {error_reason}', param, str(value))
+
+        if not isinstance(value, str):
             continue
 
-        if param in bool_params and not isinstance(value, bool):
+        if requirement.lowercase and not value.islower():
             valid = False
-            logs.error('Config parameter "%s" is "%s". It must be a bool.',
-                       param, str(value))
-            continue
+            error_reason = 'It must be a lowercase string.'
+            logs.error(f'{error_param} {error_reason}', param, str(value))
 
-        if param not in filestore_params:
-            continue
-
-        if local_experiment and not (isinstance(value, str) and
-                                     value.startswith('/')):
+        if requirement.startswith and not value.startswith(
+                requirement.startswith):
             valid = False
-            logs.error(
-                'Config parameter "%s" is "%s". Local experiments only support '
-                'using Posix file systems as filestores.', param, value)
-            continue
+            error_reason = (
+                'Local experiments only support Posix file systems filestores.'
+                if config.get('local_experiment', False) else
+                'Google Cloud experiments must start with "gs://".')
+            logs.error(f'{error_param} {error_reason}', param, value)
 
-        if not local_experiment and not (isinstance(value, str) and
-                                         value.startswith('gs://')):
-            valid = False
-            logs.error(
-                'Config parameter "%s" is "%s". '
-                'It must start with gs:// when running on Google Cloud.', param,
-                value)
     return valid
 
 
@@ -149,37 +148,44 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     config = yaml_utils.read(config_filename)
 
     # Validates config contains all the required parameters.
-    filestore_params = {'experiment_filestore', 'report_filestore'}
-    docker_params = {'docker_registry'}
-    trial_params = {'trials', 'max_total_time'}
-    cloud_params = {'cloud_compute_zone', 'cloud_project', 'worker_pool_name'}
-
-    required_params = filestore_params.union(docker_params).union(trial_params)
     local_experiment = config.get('local_experiment', False)
-    if not local_experiment:
-        required_params = required_params.union(cloud_params)
 
-    all_required_exist = _validate_required_parameters_existence(
-        config, required_params)
+    # Requirement of each config field.
+    Requirement = namedtuple('Requirement',
+                             ['mandatory', 'type', 'lowercase', 'startswith'])
+    config_requirements = {
+        'experiment_filestore':
+            Requirement(True, str, True, '/' if local_experiment else 'gs://'),
+        'report_filestore':
+            Requirement(True, str, True, '/' if local_experiment else 'gs://'),
+        'docker_registry':
+            Requirement(True, str, True, ''),
+        'trials':
+            Requirement(True, int, False, ''),
+        'max_total_time':
+            Requirement(True, int, False, ''),
+        'cloud_compute_zone':
+            Requirement(not local_experiment, str, True, ''),
+        'cloud_project':
+            Requirement(not local_experiment, str, True, ''),
+        'worker_pool_name':
+            Requirement(not local_experiment, str, False, ''),
+        'experiment':
+            Requirement(False, str, False, ''),
+        'snapshot_period':
+            Requirement(False, int, False, ''),
+        'local_experiment':
+            Requirement(False, bool, False, ''),
+        'private':
+            Requirement(False, bool, False, ''),
+        'merge_with_nonprivate':
+            Requirement(False, bool, False, ''),
+    }
 
-    # Validates all parameters in config are in the correct type.
-    snapshot_params = {'snapshot_period'}
-    location_params = {'local_experiment'}
-
-    string_params = filestore_params.union(docker_params).union(cloud_params)
-    int_params = trial_params.union(snapshot_params)
-    bool_params = {'private', 'merge_with_nonprivate'}.union(location_params)
-    all_types_correct = _validate_config_value_type(config, string_params,
-                                                    int_params, bool_params,
-                                                    filestore_params,
-                                                    local_experiment)
-
-    if not all_required_exist or not all_types_correct:
+    all_params_valid = _validate_config_parameters(config, config_requirements)
+    all_values_valid = _validate_config_values(config, config_requirements)
+    if not all_params_valid or not all_values_valid:
         raise ValidationError('Config: %s is invalid.' % config_filename)
-
-    # Notify if any optional parameters are missing in config.
-    optional_params = bool_params.union(snapshot_params).union(location_params)
-    _notify_optional_parameters_missing(optional_params - config.keys())
 
     _set_default_config_values(config, local_experiment)
     return config
@@ -471,6 +477,8 @@ class LocalDispatcher(BaseDispatcher):
             snapshot_period=self.config['snapshot_period'])
         set_concurrent_builds_arg = (
             f'CONCURRENT_BUILDS={self.config["concurrent_builds"]}')
+        set_worker_pool_name_arg = (
+            f'WORKER_POOL_NAME={self.config["worker_pool_name"]}')
         docker_image_url = '{docker_registry}/dispatcher-image'.format(
             docker_registry=docker_registry)
         environment_args = [
@@ -492,12 +500,9 @@ class LocalDispatcher(BaseDispatcher):
             set_docker_registry_arg,
             '-e',
             set_concurrent_builds_arg,
+            '-e',
+            set_worker_pool_name_arg,
         ]
-        if 'worker_pool_name' in self.config:
-            set_worker_pool_name_arg = (
-                f'WORKER_POOL_NAME={self.config["worker_pool_name"]}')
-            environment_args.extend(['-e', set_worker_pool_name_arg])
-
         command = [
             'docker',
             'run',
@@ -567,6 +572,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
                 (cloud_sql_instance_connection_name),
             'docker_registry': self.config['docker_registry'],
             'concurrent_builds': self.config['concurrent_builds'],
+            'worker_pool_name': self.config['worker_pool_name']
         }
         if 'worker_pool_name' in self.config:
             kwargs['worker_pool_name'] = self.config['worker_pool_name']
