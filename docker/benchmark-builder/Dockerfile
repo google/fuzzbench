@@ -43,8 +43,11 @@ RUN cd /tmp/ && \
     https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz && \
     tar -xvf Python-$PYTHON_VERSION.tar.xz && \
     cd Python-$PYTHON_VERSION && \
-    ./configure --enable-loadable-sqlite-extensions --enable-optimizations && \
-    make -j install && \
+    ./configure \
+        --enable-loadable-sqlite-extensions \
+        --enable-optimizations \
+        > /dev/null && \
+    make -j install > /dev/null && \
     rm -r /tmp/Python-$PYTHON_VERSION.tar.xz /tmp/Python-$PYTHON_VERSION
 
 # Install common python dependencies.
