@@ -29,7 +29,7 @@ RUN apt-get update && \
 
 RUN cd /tmp/ && \
     curl -O https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz && \
-    tar -xvf Python-$PYTHON_VERSION.tar.xz && \
+    tar -xvf Python-$PYTHON_VERSION.tar.xz > /dev/null && \
     cd Python-$PYTHON_VERSION && \
     ./configure \
         --enable-loadable-sqlite-extensions \
