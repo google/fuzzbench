@@ -19,7 +19,7 @@
 (
 cd $SRC/mruby
 export LD=$CC
-export LDFLAGS="$CFLAGS"
+export LDFLAGS="$CFLAGS -fPIE"
 rake -m || true
 
 test -f $SRC/mruby/build/host/lib/libmruby.a
