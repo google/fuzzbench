@@ -17,9 +17,18 @@
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
 MAINTAINER jonathan@titanous.com
 RUN apt-get update && apt-get upgrade -y && apt-get install -y make autoconf libz-dev lib32z1-dev zlib1g-dev automake libtool pkg-config cmake
-RUN git clone --depth 1 https://anongit.freedesktop.org/git/poppler/poppler.git
-RUN git clone --depth 1 git://git.sv.nongnu.org/freetype/freetype2.git
-RUN git clone --depth 1 https://github.com/mozilla/pdf.js pdf.js && \
+RUN git clone \
+        --depth 1 \
+        --branch poppler-22.11.0 \
+        https://github.com/freedesktop/poppler.git
+RUN git clone \
+        --depth 1 \
+        --branch VER-2-12-1 \
+        https://gitlab.freedesktop.org/freetype/freetype.git
+RUN git clone \
+        --depth 1 \
+        --branch v3.0.279 \
+        https://github.com/mozilla/pdf.js pdf.js && \
     zip -q $SRC/pdf_fuzzer_seed_corpus.zip pdf.js/test/pdfs/*.pdf && \
     rm -rf pdf.js
 ADD https://raw.githubusercontent.com/rc0r/afl-fuzz/master/dictionaries/pdf.dict $SRC/pdf_fuzzer.dict
