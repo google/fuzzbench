@@ -21,7 +21,11 @@ RUN apt-get update && \
         gperf m4 gettext libcap-dev libmount-dev libkmod-dev \
         pkg-config wget && \
     pip3 install meson==0.55.3 ninja==1.10.0
-RUN git clone https://github.com/systemd/systemd systemd
-WORKDIR systemd
-COPY build.sh $SRC/
 
+RUN git clone \
+        --depth 1 \
+        --branch v252 \
+        https://github.com/systemd/systemd && \
+    cp $SRC/systemd/tools/oss-fuzz.sh $SRC/build.sh
+
+WORKDIR systemd
