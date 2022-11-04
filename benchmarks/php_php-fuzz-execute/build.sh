@@ -48,10 +48,10 @@ sapi/cli/php sapi/fuzzer/generate_all.php
 
 FUZZERS="php-fuzz-execute"
 for fuzzerName in $FUZZERS; do
-	cp sapi/fuzzer/$fuzzerName $OUT/
+    cp sapi/fuzzer/$fuzzerName $OUT/
 done
 # copy corpora from source
 for fuzzerName in `ls sapi/fuzzer/corpus`; do
-	zip -j $OUT/php-fuzz-${fuzzerName}_seed_corpus.zip sapi/fuzzer/corpus/${fuzzerName}/*
+    zip -j $OUT/php-fuzz-${fuzzerName}_seed_corpus.zip sapi/fuzzer/corpus/${fuzzerName}/*
 done
 
