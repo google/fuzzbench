@@ -17,8 +17,13 @@
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
 RUN apt-get update && apt-get install -y make autoconf automake libtool \
     mercurial libpcre3-dev subversion
-RUN hg clone http://hg.nginx.org/njs
-RUN git clone --branch pcre2-10.40 https://github.com/PCRE2Project/pcre2 pcre
+RUN hg clone \
+        --updaterev 0.7.8 \
+        http://hg.nginx.org/njs
+RUN git clone \
+        --depth 1 \
+        --branch pcre2-10.40 \
+        https://github.com/PCRE2Project/pcre2 pcre
 
 WORKDIR njs
 COPY build.sh $SRC/
