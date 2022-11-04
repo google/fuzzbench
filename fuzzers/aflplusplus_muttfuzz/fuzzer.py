@@ -21,12 +21,12 @@
 # otherwise.
 
 import os
-import subprocess
 
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers import utils
-
+from muttfuzz import fuzzutil
+import sys
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
@@ -44,94 +44,33 @@ def check_skip_det_compatible(additional_flags):
         return False
     return True
 
+def restore_out(input_corpus, output_corpus, crashes_storage):
+    # print(f"cp {output_corpus}/default/crashes/crashes.*/id* {input_corpus}/")
+    # print(f"cp {output_corpus}/default/queue/* {input_corpus}/")
+    # print(f"rm -rf {output_corpus}/*")
+    os.system(f"rm -rf {input_corpus}/*")
+    os.system(f"cp {output_corpus}/default/crashes/crashes.*/id* {crashes_storage}/")
+    os.system(f"cp {output_corpus}/default/crashes/crashes.*/id* {input_corpus}/")
+    os.system(f"cp {output_corpus}/default/queue/* {input_corpus}/")
+    os.system(f"rm -rf {output_corpus}/*")
+    #time.sleep(10)
+
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     os.environ['AFL_SKIP_CRASHES'] = "1"
-    # Calculate CmpLog binary path from the instrumented target binary.
-    target_binary_directory = os.path.dirname(target_binary)
-    cmplog_target_binary_directory = (
-        get_cmplog_build_directory(target_binary_directory))
-    target_binary_name = os.path.basename(target_binary)
-    cmplog_target_binary = os.path.join(cmplog_target_binary_directory,
-                                        target_binary_name)
+    os.environ['AFL_AUTORESUME'] = "1"
+    print(f"{input_corpus} {output_corpus} {target_binary}")
 
-    afl_fuzzer.prepare_fuzz_environment(input_corpus)
-    # decomment this to enable libdislocator.
-    # os.environ['AFL_ALIGNED_ALLOC'] = '1' # align malloc to max_align_t
-    # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
+    crashes_storage = "/storage"
+    os.makedirs(crashes_storage, exist_ok=True)
 
-    flags = list()
 
-    if os.path.exists('./afl++.dict'):
-        flags += ['-x', './afl++.dict']
+    aflplusplus_fuzz_fn = lambda: aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
+    
 
-    # Move the following to skip for upcoming _double tests:
-    if os.path.exists(cmplog_target_binary):
-        flags += ['-c', cmplog_target_binary]
-
-    os.environ['AFL_DISABLE_TRIM'] = "1"
-    # os.environ['AFL_FAST_CAL'] = '1'
-    os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
-    if 'ADDITIONAL_ARGS' in os.environ:
-        flags += os.environ['ADDITIONAL_ARGS'].split(' ')
-
-    os.environ['AFL_FAST_CAL'] = '1'
-
-    afl_command = [
-        './afl-fuzz',
-        '-i',
-        input_corpus,
-        '-o',
-        output_corpus,
-        # Use no memory limit as ASAN doesn't play nicely with one.
-        '-m',
-        'none',
-        '-t',
-        '1000+',  # Use same default 1 sec timeout, but add '+' to skip hangs.
-    ]
-    # Use '-d' to skip deterministic mode, as long as it it compatible with
-    # flags.
-    if not flags or check_skip_det_compatible(flags):
-        afl_command.append('-d')
-    if flags:
-        afl_command.extend(flags)
-    dictionary_path = utils.get_dictionary_path(target_binary)
-    if dictionary_path:
-        afl_command.extend(['-x', dictionary_path])
-    afl_command += [
-        '--',
-        target_binary,
-        # Pass INT_MAX to afl the maximize the number of persistent loops it
-        # performs.
-        '2147483647'
-    ]
-
-    command = [
-        'muttfuzz',
-        '"',
-    ]
-    command += afl_command
-
-    command += [
-        '"',
-        target_binary,
-        '--initial_fuzz_cmd',
-        '"',
-    ]
-
-    command+=afl_command
-
-    command += [
-        '"',
-        '--initial_budget',
-        '1800',
-        '--budget',
-        '86400',
-        '--post_mutant_cmd',
-        '"cp fuzz_target/crashes.*/id* fuzz_target/queue/; rm -rf fuzz_target/crashes.*"'
-    ]
-
-    print('[run_afl_fuzz] Running target with afl-fuzz')
-    print(command)
-
-    #subprocess.check_call(command)
+    budget = 86_400
+    fraction_mutant = 0.5
+    time_per_mutant = 300
+    initial_budget = 1_800
+    post_mutant_fn = lambda: restore_out(input_corpus, output_corpus, crashes_storage)
+    fuzzutil.fuzz_with_mutants_via_function(aflplusplus_fuzz_fn, target_binary, budget, time_per_mutant, fraction_mutant, initial_fn=aflplusplus_fuzz_fn, initial_budget=initial_budget, post_initial_fn=post_mutant_fn, post_mutant_fn=post_mutant_fn)

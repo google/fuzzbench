@@ -22,8 +22,7 @@ ENV AFL_SKIP_CPUFREQ=1
 ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
 ENV AFL_TESTCACHE_SIZE=2
 
-RUN apt-get update && apt-get install -y python3 git-all sudo
+RUN apt-get update && apt-get install -y python3
 
-RUN git clone https://github.com/agroce/muttfuzz /muttfuzz && \
-    cd /muttfuzz && \
-    sudo python3 setup.py install
+RUN pip3 install --upgrade --force pip
+RUN pip install muttfuzz

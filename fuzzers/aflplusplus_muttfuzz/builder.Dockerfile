@@ -34,3 +34,7 @@ RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
     make -C utils/aflpp_driver && \
     cp utils/aflpp_driver/libAFLDriver.a /
 
+RUN apt-get update && apt-get install -y python3
+
+RUN pip3 install --upgrade --force pip
+RUN pip install muttfuzz
