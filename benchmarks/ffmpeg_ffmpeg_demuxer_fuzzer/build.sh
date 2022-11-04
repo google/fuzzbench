@@ -34,12 +34,6 @@ make clean
 make -j$(nproc) all
 make install)
 
-# (cd $SRC/drm
-# # Requires meson libpciaccess-dev
-# meson builddir/ --prefix="$FFMPEG_DEPS_PATH"
-# ninja -C builddir/ install
-# export PKG_CONFIG_PATH="${FFMPEG_DEPS_PATH}/lib/x86_64-linux-gnu/pkgconfig")
-
 (cd $SRC/fdk-aac
 autoreconf -fiv
 CXXFLAGS="$CXXFLAGS -fno-sanitize=shift-base" \
@@ -48,14 +42,6 @@ make clean
 make -j$(nproc) all
 make install)
 
-# cd $SRC
-# tar xzf lame.tar.gz
-# (cd lame-*
-# ./configure --prefix="$FFMPEG_DEPS_PATH" --enable-static
-# make clean
-# make -j$(nproc)
-# make install)
-
 (cd $SRC/libxext
 ./autogen.sh
 ./configure --prefix="$FFMPEG_DEPS_PATH" --enable-static
@@ -63,30 +49,12 @@ make clean
 make -j$(nproc)
 make install)
 
-# tar xzf xorgproto-2021.4.tar.gz
-# rm xorgproto-2021.4.tar.gz
-# (cd xorgproto-2021.4
-# ./configure
-# make install)
-
-# (cd $SRC/libxfixes
-# ./autogen.sh
-# ./configure --prefix="$FFMPEG_DEPS_PATH" --enable-static
-# make clean
-# make -j$(nproc)
-# make install)
-
 (cd $SRC/libva
 ./autogen.sh
 ./configure --prefix="$FFMPEG_DEPS_PATH" --enable-static --disable-shared
 make clean
 make -j$(nproc) all
 make install)
-
-# (cd $SRC/libvdpau
-# meson builddir/ --prefix="$FFMPEG_DEPS_PATH"
-# ninja -C builddir/ install
-# export PKG_CONFIG_PATH="${FFMPEG_DEPS_PATH}/lib/x86_64-linux-gnu/pkgconfig")
 
 (cd $SRC/libvdpau
 # Requires libpciaccess-dev
@@ -138,23 +106,6 @@ make clean
 make -j$(nproc)
 make install)
 
-# (cd $SRC/x264
-# LDFLAGS="$CXXFLAGS" ./configure --prefix="$FFMPEG_DEPS_PATH" \
-#     --enable-static
-# make clean
-# make -j$(nproc)
-# make install)
-
-# (cd $SRC/x265/build/linux
-# cmake -G "Unix Makefiles" \
-#     -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
-#     -DCMAKE_C_FLAGS="$CFLAGS" -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
-#     -DCMAKE_INSTALL_PREFIX="$FFMPEG_DEPS_PATH" -DENABLE_SHARED:bool=off \
-#     ../../source
-# make clean
-# make -j$(nproc) x265-static
-# make install)
-
 (cd $SRC/libxml2
 ./autogen.sh --prefix="$FFMPEG_DEPS_PATH" --enable-static \
     --without-debug --without-ftp --without-http \
@@ -182,14 +133,11 @@ PKG_CONFIG_PATH="$FFMPEG_DEPS_PATH/lib/pkgconfig" ./configure \
     --enable-libass \
     --enable-libfdk-aac \
     --enable-libfreetype \
- #    --enable-libmp3lame \
     --enable-libopus \
     --enable-libtheora \
     --enable-libvorbis \
     --enable-libvpx \
     --enable-libxml2 \
- #    --enable-libx264 \
- #    --enable-libx265 \
     --enable-nonfree \
     --disable-muxers \
     --disable-protocols \
