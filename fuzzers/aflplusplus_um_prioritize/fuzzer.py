@@ -202,7 +202,6 @@ def build():  # pylint: disable=too-many-locals,too-many-statements,too-many-bra
                             num_non_buggy += 1
                             print(f"FOUND NOT EQUAL {num_non_buggy}, \
                                     ind: {ind}")
-                            break # Remove for final version
                         else:
                             print(f"EQUAL {num_non_buggy}, ind: {ind}")
                     except RuntimeError:
@@ -227,8 +226,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     mutants = glob.glob(f"{target_binary}.*")
     random.shuffle(mutants)
-    timeout = min(DEFAULT_MUTANT_TIMEOUT,
-                  int(total_mutant_time / max(len(mutants), 1))) # change to max for final version
+    timeout = max(DEFAULT_MUTANT_TIMEOUT,
+                  int(total_mutant_time / max(len(mutants), 1)))
     num_mutants = min(math.ceil(total_mutant_time / timeout), len(mutants))
 
     input_corpus_dir = "/storage/input_corpus"
@@ -253,8 +252,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
             os.system(f"cp {output_corpus}/default/crashes/crashes.*/id* {crashes_dir}/")
             os.system(f"cp {output_corpus}/default/crashes/crashes.*/id* {input_corpus_dir}/")
             os.system(f"cp {output_corpus}/default/queue/* {input_corpus_dir}/")
-            break # remove for PR
-            #os.system(f"cp -r {output_corpus}/* {input_corpus_dir}/*") - cut
 
-    os.system(f"cp -r {input_corpus_dir}/* {input_corpus}/*")
-    #aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
+    os.system(f"cp -r {input_corpus_dir}/* {input_corpus}/")
+    aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
