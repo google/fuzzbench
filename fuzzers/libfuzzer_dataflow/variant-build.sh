@@ -19,6 +19,6 @@ cd /llvm-project/ && \
 git apply /src/fuzzers/libfuzzer_dataflow/Trace-store-and-load-commands.patch && \
 cd compiler-rt/lib/fuzzer && \
 (for f in *.cpp; do \
-  /clang/bin/clang -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \
+  /clang/bin/clang -stdlib=libc++ -fPIC -O2 -std=c++14 $f -c & \
 done && wait) && \
 ar r /usr/lib/libFuzzer.a *.o

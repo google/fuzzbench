@@ -32,6 +32,13 @@
     - aflplusplus
     - aflplusplus_um_prioritize
 
+- experiment: 2022-10-31-update-libfuzzer-2
+  description: "Compare and consider replacing Entropic with Centipede"
+  fuzzers:
+    - libfuzzer
+    - entropic
+    - centipede
+
 - experiment: 2022-10-19-um-full
   description: "Add parallel experiments and libfuzzer ones too"
   fuzzers:

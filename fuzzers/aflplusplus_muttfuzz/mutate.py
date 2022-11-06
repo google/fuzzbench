@@ -4,21 +4,19 @@ import subprocess
 
 JUMP_OPCODES = ["je", "jne", "jl", "jle", "jg", "jge"]
 SHORT_JUMPS = list(
-    map(bytes.fromhex, ["74", "75", "7C", "7D", "7E", "7F", "EB"])
-)
+    map(bytes.fromhex, ["74", "75", "7C", "7D", "7E", "7F", "EB"]))
 # no unconditional for near jumps, since changes opcode length, not worth it
 NEAR_JUMPS = list(
     map(
         bytes.fromhex,
         ["0F 84", "0F 85", "0F 8C", "0F 8D", "0F 8E", "0F 8F", "90 E9"],
-    )
-)
+    ))
 
 # known markers for fuzzer/compiler injected instrumentation/etc.
 INST_SET = ["__afl", "__asan", "__ubsan", "__sanitizer", "__lsan", "__sancov"]
 
 
-def get_jumps(filename): # pylint: disable=too-many-locals
+def get_jumps(filename):  # pylint: disable=too-many-locals
     """Method to get all jumps in file"""
     jumps = {}
 
@@ -52,7 +50,7 @@ def get_jumps(filename): # pylint: disable=too-many-locals
                     loc = int(loc_bytes, 16) + section_offset
                     jumps[loc] = (opcode, bytes.fromhex(fields[1]))
         # pylint: disable=bare-except
-        except: # If we can't parse some line in the objdump, just skip it
+        except:  # If we can't parse some line in the objdump, just skip it
             pass
 
     return jumps
@@ -64,24 +62,19 @@ def different_jump(hexdata):
     if hexdata[0] == 15:  # pylint: disable=no-else-return
         # Have a high chance of just changing near JE and JNE to a
         # forced JMP, "removing" a branch
-        if (
-            (hexdata[1] == NEAR_JUMPS[0][1]) or (hexdata[1] == NEAR_JUMPS[1][1])
-        ) and (random.random() <= 0.75):
+        if ((hexdata[1] == NEAR_JUMPS[0][1]) or
+            (hexdata[1] == NEAR_JUMPS[1][1])) and (random.random() <= 0.75):
             return NEAR_JUMPS[-1]
         return random.choice(
-            list(filter(lambda j: j[1] != hexdata[1], NEAR_JUMPS))
-        )
+            list(filter(lambda j: j[1] != hexdata[1], NEAR_JUMPS)))
     else:
         # Have a high chance of just changing short JE and
         # JNE to a forced JMP, "removing" a branch
-        if (
-            (hexdata[0] == SHORT_JUMPS[0][0])
-            or (hexdata[0] == SHORT_JUMPS[1][0])
-        ) and (random.random() <= 0.75):
+        if ((hexdata[0] == SHORT_JUMPS[0][0]) or
+            (hexdata[0] == SHORT_JUMPS[1][0])) and (random.random() <= 0.75):
             return SHORT_JUMPS[-1]
         return random.choice(
-            list(filter(lambda j: j[0] != hexdata[0], SHORT_JUMPS))
-        )
+            list(filter(lambda j: j[0] != hexdata[0], SHORT_JUMPS)))
 
 
 def pick_and_change(jumps):
@@ -100,10 +93,9 @@ def mutant_from(code, jumps, order=1):
     """Get new code from code and jumps"""
     new_code = bytearray(code)
     for _ in range(
-        order
-    ):  # allows higher-order mutants, though can undo mutations
+            order):  # allows higher-order mutants, though can undo mutations
         (loc, new_data) = pick_and_change(jumps)
-        for offset in range(0, len(new_data)): # pylint: disable=consider-using-enumerate
+        for offset in range(0, len(new_data)):  # pylint: disable=consider-using-enumerate
             new_code[loc + offset] = new_data[offset]
     return new_code
 

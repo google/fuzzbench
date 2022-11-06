@@ -43,7 +43,7 @@ def silent_run_with_timeout(cmd, timeout):
     start_p = time.time()
     try:
         with open("cmd_errors.txt", "w") as cmd_errors:
-            process = subprocess.Popen( # pylint: disable=subprocess-popen-preexec-fn
+            process = subprocess.Popen(  # pylint: disable=subprocess-popen-preexec-fn
                 cmd,
                 shell=True,
                 preexec_fn=os.setsid,
@@ -51,8 +51,7 @@ def silent_run_with_timeout(cmd, timeout):
                 stderr=cmd_errors,
             )
             while (process.poll() is None) and (
-                (time.time() - start_p) < timeout
-            ):
+                (time.time() - start_p) < timeout):
                 time.sleep(0.5)
             if process.poll() is None:
                 os.killpg(os.getpgid(process.pid), signal.SIGTERM)
@@ -66,7 +65,7 @@ def silent_run_with_timeout(cmd, timeout):
             os.killpg(os.getpgid(process.pid), signal.SIGTERM)
 
 
-def fuzz_with_mutants( # pylint: disable=too-many-locals,too-many-arguments
+def fuzz_with_mutants(  # pylint: disable=too-many-locals,too-many-arguments
     fuzzer_cmd,
     executable,
     budget,
@@ -88,9 +87,8 @@ def fuzz_with_mutants( # pylint: disable=too-many-locals,too-many-arguments
         if initial_fuzz_cmd != "":
             print(
                 "=" * 10,
-                datetime.utcfromtimestamp(time.time()).strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                ),
+                datetime.utcfromtimestamp(
+                    time.time()).strftime("%Y-%m-%d %H:%M:%S"),
                 "=" * 10,
             )
             print("RUNNING INITIAL FUZZING...")
@@ -101,14 +99,12 @@ def fuzz_with_mutants( # pylint: disable=too-many-locals,too-many-arguments
             if post_initial_cmd != "":
                 subprocess.call(post_initial_cmd, shell=True)
 
-        while ((time.time() - start_fuzz) - initial_budget) < (
-            budget * fraction_mutant
-        ):
+        while ((time.time() - start_fuzz) - initial_budget) < (budget *
+                                                               fraction_mutant):
             print(
                 "=" * 10,
-                datetime.utcfromtimestamp(time.time()).strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                ),
+                datetime.utcfromtimestamp(
+                    time.time()).strftime("%Y-%m-%d %H:%M:%S"),
                 "=" * 10,
             )
             print(
@@ -141,11 +137,10 @@ def fuzz_with_mutants( # pylint: disable=too-many-locals,too-many-arguments
                 subprocess.call(status_cmd, shell=True)
 
         print(
-            datetime.utcfromtimestamp(time.time()).strftime("%Y-%m-%d %H:%M:%S")
-        )
-        print(
-            round(time.time() - start_fuzz, 2), "ELAPSED: STARTING FINAL FUZZ"
-        )
+            datetime.utcfromtimestamp(
+                time.time()).strftime("%Y-%m-%d %H:%M:%S"))
+        print(round(time.time() - start_fuzz, 2),
+              "ELAPSED: STARTING FINAL FUZZ")
         restore_executable(executable, executable_code)
         silent_run_with_timeout(fuzzer_cmd, budget - (time.time() - start_fuzz))
         print(
@@ -161,7 +156,7 @@ def fuzz_with_mutants( # pylint: disable=too-many-locals,too-many-arguments
         restore_executable(executable, executable_code)
 
 
-def fuzz_with_mutants_via_function( # pylint: disable=too-many-locals,too-many-statements,too-many-arguments
+def fuzz_with_mutants_via_function(  # pylint: disable=too-many-locals,too-many-statements,too-many-arguments
     fuzzer_fn,
     executable,
     budget,
@@ -183,9 +178,8 @@ def fuzz_with_mutants_via_function( # pylint: disable=too-many-locals,too-many-s
         if initial_fn is not None:
             print(
                 "=" * 10,
-                datetime.utcfromtimestamp(time.time()).strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                ),
+                datetime.utcfromtimestamp(
+                    time.time()).strftime("%Y-%m-%d %H:%M:%S"),
                 "=" * 10,
             )
             print("RUNNING INITIAL FUZZING...")
@@ -200,14 +194,12 @@ def fuzz_with_mutants_via_function( # pylint: disable=too-many-locals,too-many-s
             if post_initial_fn is not None:
                 post_initial_fn()
 
-        while ((time.time() - start_fuzz) - initial_budget) < (
-            budget * fraction_mutant
-        ):
+        while ((time.time() - start_fuzz) - initial_budget) < (budget *
+                                                               fraction_mutant):
             print(
                 "=" * 10,
-                datetime.utcfromtimestamp(time.time()).strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                ),
+                datetime.utcfromtimestamp(
+                    time.time()).strftime("%Y-%m-%d %H:%M:%S"),
                 "=" * 10,
             )
             print(
@@ -244,11 +236,10 @@ def fuzz_with_mutants_via_function( # pylint: disable=too-many-locals,too-many-s
                 status_fn()
 
         print(
-            datetime.utcfromtimestamp(time.time()).strftime("%Y-%m-%d %H:%M:%S")
-        )
-        print(
-            round(time.time() - start_fuzz, 2), "ELAPSED: STARTING FINAL FUZZ"
-        )
+            datetime.utcfromtimestamp(
+                time.time()).strftime("%Y-%m-%d %H:%M:%S"))
+        print(round(time.time() - start_fuzz, 2),
+              "ELAPSED: STARTING FINAL FUZZ")
         restore_executable(executable, executable_code)
         try:
             with time_limit(int(budget - (time.time() - start_fuzz))):
