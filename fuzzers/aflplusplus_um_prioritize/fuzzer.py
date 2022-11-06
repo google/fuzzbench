@@ -248,9 +248,11 @@ def fuzz(input_corpus, output_corpus, target_binary):
                 pass
             except CalledProcessError:
                 pass
-            
-            os.system(f"cp {output_corpus}/default/crashes/crashes.*/id* {crashes_dir}/")
-            os.system(f"cp {output_corpus}/default/crashes/crashes.*/id* {input_corpus_dir}/")
+
+            os.system(f"cp {output_corpus}/default/crashes/crashes.*/id* \
+                {crashes_dir}/")
+            os.system(f"cp {output_corpus}/default/crashes/crashes.*/id* \
+                {input_corpus_dir}/")
             os.system(f"cp {output_corpus}/default/queue/* {input_corpus_dir}/")
 
     os.system(f"cp -r {input_corpus_dir}/* {input_corpus}/")

@@ -21,20 +21,19 @@
 # otherwise.
 
 import os
-
+from fuzzers.aflplusplus_muttfuzz import fuzzutil
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
-from fuzzers.afl import fuzzer as afl_fuzzer
-from fuzzers import utils
-from muttfuzz import fuzzutil
-import sys
+
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     aflplusplus_fuzzer.build()
 
+
 def get_cmplog_build_directory(target_directory):
     """Return path to CmpLog target directory."""
     return os.path.join(target_directory, 'cmplog')
+
 
 def check_skip_det_compatible(additional_flags):
     """ Checks if additional flags are compatible with '-d' option"""
@@ -44,16 +43,17 @@ def check_skip_det_compatible(additional_flags):
         return False
     return True
 
+
 def restore_out(input_corpus, output_corpus, crashes_storage):
-    # print(f"cp {output_corpus}/default/crashes/crashes.*/id* {input_corpus}/")
-    # print(f"cp {output_corpus}/default/queue/* {input_corpus}/")
-    # print(f"rm -rf {output_corpus}/*")
+    """Restores output dir and copies crashes after mutant is done running"""
     os.system(f"rm -rf {input_corpus}/*")
-    os.system(f"cp {output_corpus}/default/crashes/crashes.*/id* {crashes_storage}/")
-    os.system(f"cp {output_corpus}/default/crashes/crashes.*/id* {input_corpus}/")
+    os.system(
+        f"cp {output_corpus}/default/crashes/crashes.*/id* {crashes_storage}/")
+    os.system(
+        f"cp {output_corpus}/default/crashes/crashes.*/id* {input_corpus}/")
     os.system(f"cp {output_corpus}/default/queue/* {input_corpus}/")
     os.system(f"rm -rf {output_corpus}/*")
-    #time.sleep(10)
+
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
@@ -64,13 +64,21 @@ def fuzz(input_corpus, output_corpus, target_binary):
     crashes_storage = "/storage"
     os.makedirs(crashes_storage, exist_ok=True)
 
-
-    aflplusplus_fuzz_fn = lambda: aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
-    
+    aflplusplus_fuzz_fn = lambda: aflplusplus_fuzzer.fuzz(
+        input_corpus, output_corpus, target_binary)
 
     budget = 86_400
     fraction_mutant = 0.5
     time_per_mutant = 300
     initial_budget = 1_800
-    post_mutant_fn = lambda: restore_out(input_corpus, output_corpus, crashes_storage)
-    fuzzutil.fuzz_with_mutants_via_function(aflplusplus_fuzz_fn, target_binary, budget, time_per_mutant, fraction_mutant, initial_fn=aflplusplus_fuzz_fn, initial_budget=initial_budget, post_initial_fn=post_mutant_fn, post_mutant_fn=post_mutant_fn)
+    post_mutant_fn = lambda: restore_out(input_corpus, output_corpus,
+                                         crashes_storage)
+    fuzzutil.fuzz_with_mutants_via_function(aflplusplus_fuzz_fn,
+                                            target_binary,
+                                            budget,
+                                            time_per_mutant,
+                                            fraction_mutant,
+                                            initial_fn=aflplusplus_fuzz_fn,
+                                            initial_budget=initial_budget,
+                                            post_initial_fn=post_mutant_fn,
+                                            post_mutant_fn=post_mutant_fn)
