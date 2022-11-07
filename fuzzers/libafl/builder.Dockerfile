@@ -36,15 +36,20 @@ RUN apt-get update && \
 
 ENV PATH="/usr/bin:$PATH"
 
-# Download libafl
+# Download libafl.
 RUN git clone \
         --depth 1 \
         --branch 0.8.2 \
         https://github.com/AFLplusplus/libafl /libafl
 
-# Compile libafl
+# Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
     cd ./fuzzers/fuzzbench && \
     PATH="/root/.cargo/bin/:$PATH" cargo build --release
+
+# Auxiliary weak references.
+RUN wget https://gist.githubusercontent.com/andreafioraldi/e5f60d68c98b31665a274207cfd05541/raw/4da351a321f1408df566a9cf2ce7cde6eeab3904/empty_fuzzer_lib.c -O /empty_fuzzer_lib.c && \
+    clang -c /empty_fuzzer_lib.c && \
+    ar r /emptylib.a *.o
