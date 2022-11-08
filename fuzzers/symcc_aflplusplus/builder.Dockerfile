@@ -35,7 +35,15 @@ RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
     cp utils/aflpp_driver/libAFLDriver.a /
 
 # Install the packages we need.
-RUN apt-get install -y ninja-build flex bison python zlib1g-dev cargo 
+RUN apt-get update && \
+    apt-get install -y ninja-build flex bison python zlib1g-dev
+
+# Uninstall old Rust
+RUN if which rustup; then rustup self uninstall -y; fi
+
+# Install latest rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
+    sh /rustup.sh -y
 
 # Install Z3 from binary
 RUN wget -qO /tmp/z3x64.zip https://github.com/Z3Prover/z3/releases/download/z3-4.8.7/z3-4.8.7-x64-ubuntu-16.04.zip && \
@@ -66,7 +74,7 @@ RUN cd / && \
     export SYMCC_PC=1 && \
     ../build/symcc -c ./libfuzz-harness-proxy.c -o /libfuzzer-harness.o && \
     cd ../ && echo "[+] Installing cargo now 4" && \
-    cargo install --path util/symcc_fuzzing_helper
+    PATH="$PATH:/root/.cargo/bin/" cargo install --path util/symcc_fuzzing_helper
 
 # Build libcxx with the SymCC compiler so we can instrument 
 # C++ code.
