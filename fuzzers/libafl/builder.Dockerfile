@@ -34,8 +34,6 @@ RUN apt-get update && \
         apt-utils apt-transport-https ca-certificates joe curl && \
     PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
 
-ENV PATH="/usr/bin:$PATH"
-
 # Download libafl.
 RUN git clone \
         --depth 1 \
