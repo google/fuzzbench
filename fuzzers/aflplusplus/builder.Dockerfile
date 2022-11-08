@@ -30,8 +30,7 @@ RUN apt-get update && \
         cargo \
         libgtk-3-dev \
         # for QEMU mode
-        ninja-build && \
-    apt-get install -y \
+        ninja-build \
         gcc-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-plugin-dev \
         libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
