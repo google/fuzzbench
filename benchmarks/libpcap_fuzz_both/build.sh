@@ -23,16 +23,15 @@ cd build
 cmake ..
 make
 
-if [[ $FUZZER == aflplusplus ]]
-then
-    export CXXFLAGS="$CXXFLAGS -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -ldbus-1"
-fi
+# Add required libs for AFL++.
+[[ $FUZZER == aflplusplus ]] && export EXTRA_LIBS='/usr/lib/x86_64-linux-gnu/libdbus-1.a /lib/x86_64-linux-gnu/libsystemd.so.0'
 
 # build fuzz targets
 for target in pcap filter both
 do
     $CC $CFLAGS -I.. -c ../testprogs/fuzz/fuzz_$target.c -o fuzz_$target.o
-    $CXX $CXXFLAGS fuzz_$target.o -o $OUT/fuzz_$target libpcap.a $LIB_FUZZING_ENGINE
+    $CXX $CXXFLAGS fuzz_$target.o -o $OUT/fuzz_$target \
+        libpcap.a $LIB_FUZZING_ENGINE $EXTRA_LIBS
 done
 
 # export other associated stuff
