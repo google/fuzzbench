@@ -25,6 +25,7 @@ jobs:
           - aflplusplus
           - aflplusplus_optimal
           - aflplusplus_tracepc
+          - aflplusplus_muttfuzz
           - aflplusplus_um_prioritize
           - aflplusplus_um_prioritize_75
           - aflplusplus_um_random
