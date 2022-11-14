@@ -291,7 +291,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         |preemptible_starts| is the number of preemptibles we've already
         started."""
         if not self.experiment_config.get('preemptible_runners'):
-            # This code shouldn't be executed in a non preemptible experiment.
+            # This code shouldn't be executed in a nonpreemptible experiment.
             # But just in case it is, it's not OK to create a preemptible trial
             # in a non-preemptible experiment.
             return False
@@ -316,8 +316,8 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
     def can_start_nonpreemptible(self, nonpreemptible_starts: int) -> bool:
         """Returns True if we can start a nonpreemptible trial."""
         if not self.experiment_config.get('preemptible_runners'):
-            # This code shouldn't be executed in a preemptible experiment.
-            # But just in case it is, it's not always OK to a non-preemptible
+            # This code shouldn't be executed in a nonpreemptible experiment.
+            # But just in case it is, it's always OK to start a non-preemptible
             # trial in a non-preemptible experiment.
             return True
 
