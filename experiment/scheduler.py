@@ -338,7 +338,7 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
 
     def _format_statistic_info(self, trial: models.Trial,
                                statistic: int) -> str:
-        """Format a trial's statistic and information for logging."""
+        """Formats a trial's statistic and information for logging."""
         return (f'Trial ID: {trial.id}. '
                 f'Benchmark-Fuzzer pair: {trial.benchmark}-{trial.fuzzer}. '
                 f'Accumulating to {statistic/self.num_trials*100:3.2f}% '
