@@ -219,8 +219,8 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
     def __init__(self, num_trials, experiment_config):
         self.experiment_config = experiment_config
         self.num_trials = num_trials
-        self.num_omitted_trials = 0
-        self.num_converted_trials = 0
+        self.num_preemptible_restarts = 0
+        self.num_preemptible_omits = 0
 
         # Bound for the number of nonpreemptibles we can start if the experiment
         # specified preemptible_runners.
@@ -336,6 +336,21 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         return get_started_trials(self.experiment_config['experiment']).filter(
             models.Trial.preemptible.is_(False)).count()
 
+    def _format_statistic_info(self, trial: models.Trial,
+                               statistic: int) -> str:
+        """Format a trial's statistic and information for logging."""
+        return (f'Trial ID: {trial.id}. '
+                f'Benchmark-Fuzzer pair: {trial.benchmark}-{trial.fuzzer}. '
+                f'Accumulating to {statistic/self.num_trials*100:3.2f}% '
+                f'({statistic} / {self.num_trials}) of all trials.')
+
+    def _log_restart(self, preemptible: bool, trial: models.Trial,
+                     statistic: int) -> None:
+        """Logs the statistics of restarting trials."""
+        logs.info('Restarting a preemptible trial as a %s one: %s',
+                  'preemptible' if preemptible else 'nonpreemptible',
+                  self._format_statistic_info(trial, statistic))
+
     def _get_preempted_replacements(self,
                                     preempted_trials) -> List[models.Trial]:
         """Returns a list containing a replacement trial for each trial that can
@@ -355,16 +370,10 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             # trying nonpreemptible to minimize cost.
             if self.can_start_preemptible():
                 # See if we can replace with a preemptible.
+                self.num_preemptible_restarts += 1
                 replacements.append(replace_trial(trial, preemptible=True))
 
-                self.num_converted_trials += 1
-                logs.info(
-                    'Restarting a preemptible trial as a preemptible one: '
-                    'Benchmark-Fuzzer pair: %s-%s.'
-                    'Trial ID %d, restarted %3.2f%% trials (%d/%d) as '
-                    'preemptilbes so far.', trial.benchmark, trial.fuzzer,
-                    trial, self.num_converted_trials / self.num_trials * 100,
-                    self.num_converted_trials, self.num_trials)
+                self._log_restart(True, trial, self.num_preemptible_restarts)
                 continue
 
             if self.can_start_nonpreemptible(nonpreemptible_starts):
@@ -373,23 +382,13 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
                 nonpreemptible_starts += 1
                 replacements.append(replace_trial(trial, preemptible=False))
 
-                logs.info(
-                    'Restarting a preemptible trial as a nonpreemptible one: '
-                    'Benchmark-Fuzzer pair: %s-%s.'
-                    'Trial ID %d, restarted %3.2f%% trials (%d/%d) as '
-                    'nonpreemptibles so far.', trial.benchmark, trial.fuzzer,
-                    trial, nonpreemptible_starts / self.num_trials * 100,
-                    nonpreemptible_starts, self.num_trials)
+                self._log_restart(False, trial, nonpreemptible_starts)
                 continue
 
-            self.num_omitted_trials += 1
+            self.num_preemptible_omits += 1
             logs.warning(
-                'Omitting trials due to time and budget constraints: '
-                'Benchmark-Fuzzer pair: %s-%s.'
-                'Trial ID %d, omitted %3.2f%% trials (%d/%d) so far.',
-                trial.benchmark, trial.fuzzer, trial,
-                self.num_omitted_trials / self.num_trials * 100,
-                self.num_omitted_trials, self.num_trials)
+                'Omitting a trial due to time and budget constraints: %s',
+                self._format_statistic_info(trial, self.num_preemptible_omits))
 
         return replacements
 
