@@ -219,6 +219,8 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
     def __init__(self, num_trials, experiment_config):
         self.experiment_config = experiment_config
         self.num_trials = num_trials
+        self.num_omitted_trials = 0
+        self.num_converted_trials = 0
 
         # Bound for the number of nonpreemptibles we can start if the experiment
         # specified preemptible_runners.
@@ -354,6 +356,15 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             if self.can_start_preemptible():
                 # See if we can replace with a preemptible.
                 replacements.append(replace_trial(trial, preemptible=True))
+
+                self.num_converted_trials += 1
+                logs.info(
+                    'Restarting a preemptible trial as a preemptible one: '
+                    'Benchmark-Fuzzer pair: %s-%s.'
+                    'Trial ID %d, restarted %3.2f%% trials (%d/%d) as '
+                    'preemptilbes so far.', trial.benchmark, trial.fuzzer,
+                    trial, self.num_converted_trials / self.num_trials * 100,
+                    self.num_converted_trials, self.num_trials)
                 continue
 
             if self.can_start_nonpreemptible(nonpreemptible_starts):
@@ -361,7 +372,24 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
                 # replace it with a nonpreemptible.
                 nonpreemptible_starts += 1
                 replacements.append(replace_trial(trial, preemptible=False))
+
+                logs.info(
+                    'Restarting a preemptible trial as a nonpreemptible one: '
+                    'Benchmark-Fuzzer pair: %s-%s.'
+                    'Trial ID %d, restarted %3.2f%% trials (%d/%d) as '
+                    'nonpreemptibles so far.', trial.benchmark, trial.fuzzer,
+                    trial, nonpreemptible_starts / self.num_trials * 100,
+                    nonpreemptible_starts, self.num_trials)
                 continue
+
+            self.num_omitted_trials += 1
+            logs.warning(
+                'Omitting trials due to time and budget constraints: '
+                'Benchmark-Fuzzer pair: %s-%s.'
+                'Trial ID %d, omitted %3.2f%% trials (%d/%d) so far.',
+                trial.benchmark, trial.fuzzer, trial,
+                self.num_omitted_trials / self.num_trials * 100,
+                self.num_omitted_trials, self.num_trials)
 
         return replacements
 
