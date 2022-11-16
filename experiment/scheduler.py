@@ -219,6 +219,8 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
     def __init__(self, num_trials, experiment_config):
         self.experiment_config = experiment_config
         self.num_trials = num_trials
+        self.num_preemptible_restarts = 0
+        self.num_preemptible_omits = 0
 
         # Bound for the number of nonpreemptibles we can start if the experiment
         # specified preemptible_runners.
@@ -334,6 +336,20 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         return get_started_trials(self.experiment_config['experiment']).filter(
             models.Trial.preemptible.is_(False)).count()
 
+    def _format_count_info(self, trial: models.Trial, count: int) -> str:
+        """Formats a trial's count and information for logging."""
+        return (f'Trial ID: {trial.id}. '
+                f'Benchmark-Fuzzer pair: {trial.benchmark}-{trial.fuzzer}. '
+                f'Accumulating to {count/self.num_trials*100:3.2f}% '
+                f'({count} / {self.num_trials}) of all trials.')
+
+    def _log_restart(self, preemptible: bool, trial: models.Trial,
+                     count: int) -> None:
+        """Logs the count of restarting trials."""
+        logs.info('Restarting a preemptible trial as a %s one: %s',
+                  'preemptible' if preemptible else 'nonpreemptible',
+                  self._format_count_info(trial, count))
+
     def _get_preempted_replacements(self,
                                     preempted_trials) -> List[models.Trial]:
         """Returns a list containing a replacement trial for each trial that can
@@ -353,7 +369,10 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
             # trying nonpreemptible to minimize cost.
             if self.can_start_preemptible():
                 # See if we can replace with a preemptible.
+                self.num_preemptible_restarts += 1
                 replacements.append(replace_trial(trial, preemptible=True))
+
+                self._log_restart(True, trial, self.num_preemptible_restarts)
                 continue
 
             if self.can_start_nonpreemptible(nonpreemptible_starts):
@@ -361,7 +380,14 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
                 # replace it with a nonpreemptible.
                 nonpreemptible_starts += 1
                 replacements.append(replace_trial(trial, preemptible=False))
+
+                self._log_restart(False, trial, nonpreemptible_starts)
                 continue
+
+            self.num_preemptible_omits += 1
+            logs.warning(
+                'Omitting a trial to cap cost: %s',
+                self._format_count_info(trial, self.num_preemptible_omits))
 
         return replacements
 
