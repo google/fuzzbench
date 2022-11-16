@@ -336,20 +336,19 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
         return get_started_trials(self.experiment_config['experiment']).filter(
             models.Trial.preemptible.is_(False)).count()
 
-    def _format_statistic_info(self, trial: models.Trial,
-                               statistic: int) -> str:
-        """Formats a trial's statistic and information for logging."""
+    def _format_count_info(self, trial: models.Trial, count: int) -> str:
+        """Formats a trial's count and information for logging."""
         return (f'Trial ID: {trial.id}. '
                 f'Benchmark-Fuzzer pair: {trial.benchmark}-{trial.fuzzer}. '
-                f'Accumulating to {statistic/self.num_trials*100:3.2f}% '
-                f'({statistic} / {self.num_trials}) of all trials.')
+                f'Accumulating to {count/self.num_trials*100:3.2f}% '
+                f'({count} / {self.num_trials}) of all trials.')
 
     def _log_restart(self, preemptible: bool, trial: models.Trial,
-                     statistic: int) -> None:
-        """Logs the statistics of restarting trials."""
+                     count: int) -> None:
+        """Logs the count of restarting trials."""
         logs.info('Restarting a preemptible trial as a %s one: %s',
                   'preemptible' if preemptible else 'nonpreemptible',
-                  self._format_statistic_info(trial, statistic))
+                  self._format_count_info(trial, count))
 
     def _get_preempted_replacements(self,
                                     preempted_trials) -> List[models.Trial]:
@@ -387,8 +386,8 @@ class TrialInstanceManager:  # pylint: disable=too-many-instance-attributes
 
             self.num_preemptible_omits += 1
             logs.warning(
-                'Omitting a trial due to time and budget constraints: %s',
-                self._format_statistic_info(trial, self.num_preemptible_omits))
+                'Omitting a trial to cap cost: %s',
+                self._format_count_info(trial, self.num_preemptible_omits))
 
         return replacements
 
