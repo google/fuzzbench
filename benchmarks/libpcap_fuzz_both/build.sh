@@ -23,9 +23,6 @@ cd build
 cmake ..
 make
 
-# Add required libs for AFL++.
-[[ $FUZZER == aflplusplus ]] && export EXTRA_LIBS='/usr/lib/x86_64-linux-gnu/libdbus-1.a /lib/x86_64-linux-gnu/libsystemd.so.0'
-
 # build fuzz targets
 for target in pcap filter both
 do
