@@ -30,18 +30,18 @@ jobs:
           - libfuzzer
           - mopt
           - wingfuzz
-          - klee               # To Be Fixed.
-          - tortoisefuzz       # To Be Fixed.
+          # - klee               # To Be Fixed.
+          # - tortoisefuzz       # To Be Fixed.
           # Concolic execution
-          - symcc_aflplusplus  # To Be Fixed.
+          # - symcc_aflplusplus  # To Be Fixed.
           # Grammar fuzzers
-          - nautilus           # To Be Fixed.
-          - gramatron          # To Be Fixed.
-          - token_level        # To Be Fixed.
-          - grimoire           # To Be Fixed.
+          # - nautilus           # To Be Fixed.
+          # - gramatron          # To Be Fixed.
+          # - token_level        # To Be Fixed.
+          # - grimoire           # To Be Fixed.
           # Temporary variants.
-          - introspector_driven_focus
-          - centipede_function_filter
+          # - introspector_driven_focus
+          # - centipede_function_filter
           # - aflplusplus_dict2file
           # - afl_2_52_b
           # - aflplusplus_cmplog
