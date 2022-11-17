@@ -30,6 +30,8 @@ RUN apt-get update && \
 RUN git clone \
         --depth=1 \
         --branch apache-arrow-10.0.0 \
-        https://github.com/apache/arrow.git
+        --recurse-submodules \
+        https://github.com/apache/arrow.git \
+        $SRC/arrow
 
 COPY build.sh thrift.patch $SRC/
