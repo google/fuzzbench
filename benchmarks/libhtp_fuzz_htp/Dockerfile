@@ -17,7 +17,12 @@
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
 
 RUN apt-get update && apt-get install -y make autoconf automake libtool zlib1g-dev liblzma-dev
-RUN git clone https://github.com/OISF/libhtp.git libhtp
+RUN git clone \
+        --depth 1 \
+        --branch 0.5.41 \
+        https://github.com/OISF/libhtp.git \
+        libhtp
+
 WORKDIR $SRC
 
 COPY build.sh $SRC/
