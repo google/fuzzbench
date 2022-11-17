@@ -15,16 +15,15 @@
 ################################################################################
 
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
+
 RUN apt-get update && \
-    apt-get install -y autoconf automake libtool bison re2c pkg-config
+    apt-get install -y \
+        autoconf automake libtool bison re2c pkg-config
+
 RUN git clone \
         --depth 1 \
-        --branch php-8.1.12 \
+        --branch php-8.2.0RC6 \
         https://github.com/php/php-src.git
-RUN git clone \
-        --depth 1 \
-        --branch v6.9.8 \
-        https://github.com/kkos/oniguruma.git php-src/oniguruma
 
 WORKDIR php-src
 COPY build.sh *.options $SRC/
