@@ -4,3 +4,4 @@ unsupported_fuzzers:
   - aflcc
   - klee
   - lafintel
+  - honggfuzz

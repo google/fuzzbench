@@ -1,6 +1,7 @@
 fuzz_target: grk_decompress_fuzzer
 project: grok
 unsupported_fuzzers:
+  - centipede
   - aflcc
   - afl_qemu
   - aflplusplus_qemu
