@@ -1,6 +1,7 @@
 fuzz_target: objects_fuzzer
 project: libgit2
 unsupported_fuzzers:
+  - libafl
   - aflcc
   - afl_qemu
   - aflplusplus_qemu
