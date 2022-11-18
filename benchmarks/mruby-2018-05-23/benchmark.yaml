@@ -1,3 +1,4 @@
 fuzz_target: mruby_fuzzer
 project: mruby
 unsupported_fuzzers:
+  - libafl
