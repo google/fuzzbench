@@ -20,6 +20,13 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-11-19-update-libfuzzer
+  description: "Compare and consider replacing Entropic with Centipede"
+  fuzzers:
+    - libfuzzer
+    - entropic
+    - centipede
+
 - experiment: 2022-11-12-muttfuzz
   description: "Try out muttfuzz and compare against afl"
   fuzzers:
