@@ -20,6 +20,18 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-11-18-um
+  description: "Try out um prioritize 75 and random again"
+  fuzzers:
+    - aflplusplus_um_random
+    - aflplusplus_um_prioritize_75
+
+- experiment: 2022-11-18-muttfuzz
+  description: "Try out muttfuzz and compare against afl"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_muttfuzz
+
 - experiment: 2022-11-12-muttfuzz
   description: "Try out muttfuzz and compare against afl"
   fuzzers:

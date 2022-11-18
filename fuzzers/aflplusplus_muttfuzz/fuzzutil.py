@@ -170,7 +170,7 @@ def fuzz_with_mutants(  # pylint: disable=too-many-locals,too-many-arguments
         restore_executable(executable, executable_code)
 
 
-def fuzz_with_mutants_via_function(  # pylint: disable=too-many-locals,too-many-statements,too-many-arguments
+def fuzz_with_mutants_via_function(  # pylint: disable=too-many-locals,too-many-statements,too-many-arguments,too-many-branches
     fuzzer_fn,
     executable,
     budget,
