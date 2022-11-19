@@ -20,7 +20,7 @@
 # Please add new experiment requests towards the top of this file.
 #
 
-- experiment: 2022-11-22-aflpp_cmplog
+- experiment: 2022-11-22-aflpp-cmplog
   description: "afl++ cmplog enhancements"
   fuzzers:
     - aflplusplus_cmplog
