@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit: 376d5bb323c03c0fc4af266c03abac8f067fbd0e
-commit_date: 2020-07-26 21:48:36+00:00
+commit: a20f74a16ae1e89be170eeaa6059b37e513392a4
+commit_date: 2022-10-20T09:10:15+00:00
 fuzz_target: curl_fuzzer_http
 project: curl
 unsupported_fuzzers:

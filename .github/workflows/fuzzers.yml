@@ -21,23 +21,36 @@ jobs:
           - aflfast
           - afl_um_prioritize
           - afl_um_random
+          - afl_um_parallel
           - aflplusplus
           - aflplusplus_optimal
           - aflplusplus_tracepc
+          - aflplusplus_muttfuzz
           - aflplusplus_um_prioritize
+          - aflplusplus_um_prioritize_75
           - aflplusplus_um_random
+          - aflplusplus_um_random_75
+          - aflplusplus_um_random_3
+          - aflplusplus_um_random_6
+          - aflplusplus_um_parallel
           - aflsmart
           - centipede
           - entropic
           - fairfuzz
           - honggfuzz
           - honggfuzz_um_random
+          - honggfuzz_um_random_75
           - honggfuzz_um_prioritize
+          - honggfuzz_um_prioritize_75
+          - honggfuzz_um_parallel
           - lafintel
           - klee
           - libfuzzer
           - libfuzzer_um_random
+          - libfuzzer_um_random_75
           - libfuzzer_um_prioritize
+          - libfuzzer_um_prioritize_75
+          - libfuzzer_um_parallel
           - libfuzzer_dataflow
           - libfuzzer_dataflow_load
           - libfuzzer_dataflow_store
@@ -45,14 +58,19 @@ jobs:
           - mopt
           - neuzz
           - libafl
+          - libafl_text
           - pythia_effect_bb
           - pythia_bb
           - fafuzz
           - tortoisefuzz
+          - wingfuzz
           # Binary-only (greybox) fuzzers.
           - eclipser
           - eclipser_um_prioritize
+          - eclipser_um_prioritize_75
           - eclipser_um_random
+          - eclipser_um_random_75
+          - eclipser_um_parallel
           - afl_qemu
           - honggfuzz_qemu
           - weizz_qemu
@@ -79,22 +97,8 @@ jobs:
           - afl_random_favored
           - entropic_execute_final
           - libfuzzer_exeute_final
-          - afl_no_favored
-          - afl_collision_free
-          - afl_double_timeout
-          - afl_no_favfactor
-          - afl_no_trim
-          - afl_scheduling_lifo
-          - afl_scheduling_random
-          - afl_score_max
-          - afl_score_min
-          - afl_score_no_novel_prioritization
-          - afl_score_random
-          - afl_splicing_mutation
-          - afl_virginmap
-          - afl_maxmap
           - introspector_driven_focus
-          - libfuzzer_focus_idx0
+          - libfuzzer_fork_parallel
           - centipede_function_filter
 
         benchmark_type:
