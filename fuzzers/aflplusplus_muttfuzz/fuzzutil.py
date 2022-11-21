@@ -16,6 +16,7 @@ from datetime import datetime
 import os
 import signal
 import subprocess
+from subprocess import CalledProcessError
 import time
 from contextlib import contextmanager
 
@@ -169,7 +170,7 @@ def fuzz_with_mutants(  # pylint: disable=too-many-locals,too-many-arguments
         restore_executable(executable, executable_code)
 
 
-def fuzz_with_mutants_via_function(  # pylint: disable=too-many-locals,too-many-statements,too-many-arguments
+def fuzz_with_mutants_via_function(  # pylint: disable=too-many-locals,too-many-statements,too-many-arguments,too-many-branches
     fuzzer_fn,
     executable,
     budget,
@@ -237,6 +238,8 @@ def fuzz_with_mutants_via_function(  # pylint: disable=too-many-locals,too-many-
                     fuzzer_fn()
             except TimeoutException:
                 pass
+            except CalledProcessError:
+                pass
             print(
                 "FINISHED FUZZING IN",
                 round(time.time() - start_run, 2),
@@ -258,6 +261,8 @@ def fuzz_with_mutants_via_function(  # pylint: disable=too-many-locals,too-many-
             with time_limit(int(budget - (time.time() - start_fuzz))):
                 fuzzer_fn()
         except TimeoutException:
+            pass
+        except CalledProcessError:
             pass
         print(
             "COMPLETED ALL FUZZING AFTER",
