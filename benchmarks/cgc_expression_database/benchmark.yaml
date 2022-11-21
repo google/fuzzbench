@@ -1,0 +1,2 @@
+fuzz_target: expression_database
+project: cgc_expression_database

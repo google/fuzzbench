@@ -1,0 +1,2 @@
+fuzz_target: SCUBA_Dive_Logging
+project: cgc_scuba_dive_logging

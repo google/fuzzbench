@@ -1,0 +1,2 @@
+fuzz_target: CGC_Planet_Markup_Language_Parser
+project: cgc_cgc_planet_markup_language_parser

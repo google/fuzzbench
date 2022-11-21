@@ -1,0 +1,2 @@
+fuzz_target: Carbonate
+project: cgc_carbonate

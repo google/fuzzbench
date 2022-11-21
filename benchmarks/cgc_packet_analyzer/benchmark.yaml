@@ -1,0 +1,2 @@
+fuzz_target: Packet_Analyzer
+project: cgc_packet_analyzer

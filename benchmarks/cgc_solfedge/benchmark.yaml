@@ -1,0 +1,2 @@
+fuzz_target: SOLFEDGE
+project: cgc_solfedge

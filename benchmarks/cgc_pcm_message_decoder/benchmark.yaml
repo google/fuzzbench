@@ -1,0 +1,2 @@
+fuzz_target: PCM_Message_decoder
+project: cgc_pcm_message_decoder

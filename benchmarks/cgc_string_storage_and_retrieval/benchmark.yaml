@@ -1,0 +1,2 @@
+fuzz_target: String_Storage_and_Retrieval
+project: cgc_string_storage_and_retrieval

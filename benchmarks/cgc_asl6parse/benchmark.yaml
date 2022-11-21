@@ -1,0 +1,2 @@
+fuzz_target: ASL6parse
+project: cgc_asl6parse

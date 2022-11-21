@@ -1,0 +1,2 @@
+fuzz_target: hawaii_sets
+project: cgc_hawaii_sets

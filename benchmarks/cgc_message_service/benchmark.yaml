@@ -1,0 +1,2 @@
+fuzz_target: Message_Service
+project: cgc_message_service

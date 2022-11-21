@@ -1,0 +1,2 @@
+fuzz_target: Cromulence_All_Service
+project: cgc_cromulence_all_service

@@ -1,0 +1,2 @@
+fuzz_target: yolodex
+project: cgc_yolodex

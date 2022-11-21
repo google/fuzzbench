@@ -1,0 +1,2 @@
+fuzz_target: NarfAgainShell
+project: cgc_narfagainshell

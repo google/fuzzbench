@@ -1,0 +1,2 @@
+fuzz_target: matrices_for_sale
+project: cgc_matrices_for_sale

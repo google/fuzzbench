@@ -1,0 +1,2 @@
+fuzz_target: CableGrind
+project: cgc_cablegrind

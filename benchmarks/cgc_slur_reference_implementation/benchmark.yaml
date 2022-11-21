@@ -1,0 +1,2 @@
+fuzz_target: SLUR_reference_implementation
+project: cgc_slur_reference_implementation

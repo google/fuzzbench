@@ -1,0 +1,2 @@
+fuzz_target: CGC_Board
+project: cgc_cgc_board

@@ -1,0 +1,2 @@
+fuzz_target: stack_vm
+project: cgc_stack_vm
