@@ -94,6 +94,9 @@ jobs:
           - aflplusplus_dict2file
           - afl_2_52_b
           - aflplusplus_cmplog
+          - aflplusplus_cmplog_r
+          - aflplusplus_cmplog_1587
+          - aflplusplus_cmplog_1585
           - afl_random_favored
           - entropic_execute_final
           - libfuzzer_exeute_final
