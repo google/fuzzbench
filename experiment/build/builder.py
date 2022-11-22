@@ -140,7 +140,7 @@ def retry_build_loop(build_func: Callable, inputs: List[Tuple]) -> List:
     |NUM_BUILD_ATTEMPTS| times. Returns the list of inputs that |build_func| was
     called successfully on."""
     successes = []
-    num_concurrent_builds = os.getenv('CONCURRENT_BUILDS')
+    num_concurrent_builds = int(os.getenv('CONCURRENT_BUILDS'))
     logs.info('Concurrent builds: %d.', num_concurrent_builds)
     with mp_pool.ThreadPool(num_concurrent_builds) as pool:
         for _ in range(NUM_BUILD_ATTEMPTS):
