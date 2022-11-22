@@ -155,7 +155,7 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
             return 'code'
         raise ValueError(
             'Cannot mix bug benchmarks with code coverage benchmarks.\n'
-            '"\n".join([f"{b}\t: {b.type}" for b in self.benchmarks])'
+            f'{"\n".join([f"{b}\t: {b.type}" for b in self.benchmarks])}'
         )
 
     @property
