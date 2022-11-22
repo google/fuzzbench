@@ -22,13 +22,23 @@ RUN apt-get update && \
     autoconf \
     automake \
     libtool \
-    wget \
     zlib1g-dev
 
-RUN wget --no-check-certificate \
-    https://downloads.sourceforge.net/project/libpng/libpng12/older-releases/1.2.56/libpng-1.2.56.tar.gz
+RUN git clone \
+        --depth 1 \
+        --branch v1.2.13 \
+        https://github.com/madler/zlib.git
+
+RUN git clone \
+        --depth 1 \
+        --branch v1.6.38 \
+        https://github.com/glennrp/libpng.git
+RUN cp libpng/contrib/oss-fuzz/build.sh $SRC
+
+WORKDIR libpng
 
 RUN wget --no-check-certificate -qO $OUT/libpng_read_fuzzer.dict \
     https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/png.dict
+
 ADD seeds /opt/seeds
 COPY * $SRC/

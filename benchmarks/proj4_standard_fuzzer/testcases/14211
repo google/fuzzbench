@@ -1,2 +1,0 @@
-	+proj=eqc
-+proj=pipeline	+lat_2=90e3	+proj=eqdc	+step

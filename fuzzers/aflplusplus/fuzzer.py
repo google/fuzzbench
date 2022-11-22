@@ -36,6 +36,12 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration.
 
+    # Add required libs for libpcap_fuzz_both.
+    os.environ['EXTRA_LIBS'] = (
+        '/usr/lib/x86_64-linux-gnu/libdbus-1.a '
+        '/lib/x86_64-linux-gnu/libsystemd.so.0'
+    )
+
     build_modes = list(args)
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')

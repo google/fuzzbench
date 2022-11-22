@@ -17,93 +17,98 @@ jobs:
       fail-fast: false
       matrix:
         fuzzer:
+          # Default fuzzers general comparison evaluation.
           - afl
           - aflfast
-          - afl_um_prioritize
-          - afl_um_random
-          - afl_um_parallel
           - aflplusplus
-          - aflplusplus_optimal
-          - aflplusplus_tracepc
-          - aflplusplus_um_prioritize
-          - aflplusplus_um_prioritize_75
-          - aflplusplus_um_random
-          - aflplusplus_um_random_75
-          - aflplusplus_um_random_3
-          - aflplusplus_um_random_6
-          - aflplusplus_um_parallel
           - aflsmart
           - centipede
-          - entropic
+          - eclipser
           - fairfuzz
           - honggfuzz
-          - honggfuzz_um_random
-          - honggfuzz_um_random_75
-          - honggfuzz_um_prioritize
-          - honggfuzz_um_prioritize_75
-          - honggfuzz_um_parallel
-          - lafintel
-          - klee
-          - libfuzzer
-          - libfuzzer_um_random
-          - libfuzzer_um_random_75
-          - libfuzzer_um_prioritize
-          - libfuzzer_um_prioritize_75
-          - libfuzzer_um_parallel
-          - libfuzzer_dataflow
-          - libfuzzer_dataflow_load
-          - libfuzzer_dataflow_store
-          - libfuzzer_dataflow_pre
-          - mopt
-          - neuzz
           - libafl
-          - libafl_text
-          - pythia_effect_bb
-          - pythia_bb
-          - fafuzz
-          - tortoisefuzz
+          - libfuzzer
+          - mopt
           - wingfuzz
-          # Binary-only (greybox) fuzzers.
-          - eclipser
-          - eclipser_um_prioritize
-          - eclipser_um_prioritize_75
-          - eclipser_um_random
-          - eclipser_um_random_75
-          - eclipser_um_parallel
-          - afl_qemu
-          - honggfuzz_qemu
-          - weizz_qemu
-          - aflplusplus_qemu
-          - aflplusplus_frida
+          # - klee               # To Be Fixed.
+          # - tortoisefuzz       # To Be Fixed.
           # Concolic execution
-          - fuzzolic_aflplusplus_z3
-          - fuzzolic_aflplusplus_fuzzy
-          - eclipser_aflplusplus
-          - symqemu_aflplusplus
-          - symcc_aflplusplus
-          - symcc_aflplusplus_single
-          - symcc_afl
-          - symcc_afl_single
+          # - symcc_aflplusplus  # To Be Fixed.
           # Grammar fuzzers
-          - nautilus
-          - gramatron
-          - token_level
-          - grimoire
+          # - nautilus           # To Be Fixed.
+          # - gramatron          # To Be Fixed.
+          # - token_level        # To Be Fixed.
+          # - grimoire           # To Be Fixed.
           # Temporary variants.
-          - aflplusplus_dict2file
-          - afl_2_52_b
-          - aflplusplus_cmplog
-          - afl_random_favored
-          - entropic_execute_final
-          - libfuzzer_exeute_final
-          - introspector_driven_focus
-          - libfuzzer_fork_parallel
-          - centipede_function_filter
+          # - introspector_driven_focus
+          # - centipede_function_filter
+          # - aflplusplus_dict2file
+          # - afl_2_52_b
+          # - aflplusplus_cmplog
+          # - afl_random_favored
+          # - entropic_execute_final
+          # - libfuzzer_exeute_final
+          # - libfuzzer_fork_parallel
+          # - afl_um_prioritize
+          # - afl_um_random
+          # - afl_um_parallel
+          # - aflplusplus_optimal
+          # - aflplusplus_tracepc
+          # - aflplusplus_um_prioritize
+          # - aflplusplus_um_prioritize_75
+          # - aflplusplus_um_random
+          # - aflplusplus_um_random_75
+          # - aflplusplus_um_random_3
+          # - aflplusplus_um_random_6
+          # - aflplusplus_um_parallel
+          # - honggfuzz_um_random
+          # - honggfuzz_um_random_75
+          # - honggfuzz_um_prioritize
+          # - honggfuzz_um_prioritize_75
+          # - honggfuzz_um_parallel
+          # - libfuzzer_um_random
+          # - libfuzzer_um_random_75
+          # - libfuzzer_um_prioritize
+          # - libfuzzer_um_prioritize_75
+          # - libfuzzer_um_parallel
+          # - libfuzzer_dataflow
+          # - libfuzzer_dataflow_load
+          # - libfuzzer_dataflow_store
+          # - libfuzzer_dataflow_pre
+          # - libafl_text
+          # - pythia_effect_bb
+          ## Binary-only (greybox) fuzzers.
+          # - eclipser_um_prioritize
+          # - eclipser_um_prioritize_75
+          # - eclipser_um_random
+          # - eclipser_um_random_75
+          # - eclipser_um_parallel
+          ## Binary-only (greybox) fuzzers.
+          # - afl_qemu
+          # - honggfuzz_qemu
+          # - weizz_qemu
+          # - aflplusplus_qemu
+          # - aflplusplus_frida
+          ## Concolic fuzzers.
+          # - fuzzolic_aflplusplus_z3
+          # - fuzzolic_aflplusplus_fuzzy
+          # - eclipser_aflplusplus
+          # - symqemu_aflplusplus
+          # - symcc_aflplusplus_single
+          # - symcc_afl
+          ## Concolic execution
+          # - symcc_afl_single
+          ## Deprecated.
+          # - entropic
+          # - lafintel
+          # - neuzz
+          # - pythia_bb
+          # - fafuzz
 
         benchmark_type:
           - oss-fuzz
           - standard
-          - bug
+          # - bug
 
     steps:
     - uses: actions/checkout@v2

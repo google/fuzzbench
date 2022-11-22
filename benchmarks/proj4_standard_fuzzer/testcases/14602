@@ -1,3 +1,0 @@
-+proj=ups
-+proj=pipeline +inv +proj=geos	h=5e71 +step
-BINARY_3D:                        
