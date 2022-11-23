@@ -24,6 +24,7 @@ def build():
     san_cflags = ['-fsanitize-coverage=trace-loads']
 
     link_cflags = [
+        '-Wno-error=unused-command-line-argument'
         '-ldl',
         '-lrt',
         '-lpthread',
