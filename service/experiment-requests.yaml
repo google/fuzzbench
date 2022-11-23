@@ -20,6 +20,14 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-11-23-aflpp-cmplog
+  description: "afl++ cmplog enhancements"
+  fuzzers:
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_r
+    - aflplusplus_cmplog_1587
+    - aflplusplus_cmplog_1585
+
 - experiment: 2022-11-18-um
   description: "Try out um prioritize 75 and random again"
   fuzzers:
