@@ -153,10 +153,11 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
             return 'bug'
         if all(b.type == 'code' for b in self.benchmarks):
             return 'code'
+        benchmark_types = '\n'.join(
+            [f'{b}\t: {b.type}' for b in self.benchmarks])
         raise ValueError(
             'Cannot mix bug benchmarks with code coverage benchmarks.\n'
-            f'{"\n".join([f"{b}\t: {b.type}" for b in self.benchmarks])}'
-        )
+            f'{benchmark_types}')
 
     @property
     def _relevant_column(self):
