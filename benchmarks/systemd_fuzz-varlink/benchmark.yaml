@@ -1,7 +1,6 @@
 fuzz_target: fuzz-varlink
 project: systemd
 unsupported_fuzzers:
-  - centipede
   - aflcc
   - afl_qemu
   - aflplusplus_qemu
