@@ -16,13 +16,13 @@ ARG parent_image
 FROM $parent_image
 
 RUN apt-get update && \
-    apt-get install -y wget libstdc++-5-dev libexpat1-dev \
+    apt-get install -y wget libstdc++-10-dev libexpat1-dev \
                        apt-utils apt-transport-https ca-certificates
 
 # Download afl++
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 0c122aeee65c5e91b6ecc465dcdf740aa67943d1
+    git checkout b7c87350cf3481416b782fe19bc56467090ff220
     
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.

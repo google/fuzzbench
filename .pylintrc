@@ -54,6 +54,10 @@ fail-under=10
 # can't be used as an escape character.
 ignore-paths=fuzzers/libfuzzer_focus_.*,
              fuzzers/.*_um_.*,
+             fuzzers/.*_muttfuzz,
+             fuzzers/libafl_text,
+             fuzzers/.*_cmplog_.*,
+
 
 # Files or directories matching the regular expression patterns are skipped.
 # The regex matches against base names, not paths. The default value ignores

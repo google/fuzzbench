@@ -18,7 +18,10 @@ FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y make python wget
 # Clone source
-RUN git clone https://github.com/facebook/zstd
+RUN git clone \
+        --depth 1 \
+        --branch v1.5.2 \
+        https://github.com/facebook/zstd
 WORKDIR zstd
 
 COPY build.sh $SRC/

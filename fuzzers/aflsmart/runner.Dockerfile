@@ -14,6 +14,8 @@
 
 FROM gcr.io/fuzzbench/base-image
 
-RUN apt-get update -y && apt-get install -y \
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC \
+    apt-get install -y \
     mono-complete \
     tzdata

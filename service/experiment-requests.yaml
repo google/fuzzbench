@@ -20,6 +20,95 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2022-11-18-um
+  description: "Try out um prioritize 75 and random again"
+  fuzzers:
+    - aflplusplus_um_random
+    - aflplusplus_um_prioritize_75
+
+- experiment: 2022-11-18-muttfuzz
+  description: "Try out muttfuzz and compare against afl"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_muttfuzz
+
+- experiment: 2022-11-22-aflpp-cmplog
+  description: "afl++ cmplog enhancements"
+  fuzzers:
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_r
+    - aflplusplus_cmplog_1587
+    - aflplusplus_cmplog_1585
+
+- experiment: 2022-11-19-update-libfuzzer
+  description: "Compare and consider replacing Entropic with Centipede"
+  fuzzers:
+    - libfuzzer
+    - entropic
+    - centipede
+
+- experiment: 2022-11-12-muttfuzz
+  description: "Try out muttfuzz and compare against afl"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_muttfuzz
+
+- experiment: 2022-11-12-um-prioritize
+  description: "Try out um prioritize again"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_um_prioritize
+
+- experiment: 2022-11-11-muttfuzz
+  description: "Try out muttfuzz and compare against afl"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_muttfuzz
+
+- experiment: 2022-11-11-um-prioritize
+  description: "Try out um prioritize again"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_um_prioritize
+
+- experiment: 2022-11-06-muttfuzz
+  description: "Try out muttfuzz and compare against afl"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_muttfuzz
+
+- experiment: 2022-11-06-um-prioritize
+  description: "Try out um prioritize again"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_um_prioritize
+
+- experiment: 2022-10-31-update-libfuzzer-2
+  description: "Compare and consider replacing Entropic with Centipede"
+  fuzzers:
+    - libfuzzer
+    - entropic
+    - centipede
+
+- experiment: 2022-11-06-muttfuzz
+  description: "Try out muttfuzz and compare against afl"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_muttfuzz
+
+- experiment: 2022-11-06-um-prioritize
+  description: "Try out um prioritize again"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_um_prioritize
+
+- experiment: 2022-10-31-update-libfuzzer-2
+  description: "Compare and consider replacing Entropic with Centipede"
+  fuzzers:
+    - libfuzzer
+    - entropic
+    - centipede
+
 - experiment: 2022-10-19-um-full
   description: "Add parallel experiments and libfuzzer ones too"
   fuzzers:

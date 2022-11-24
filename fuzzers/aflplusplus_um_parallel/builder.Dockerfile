@@ -21,7 +21,7 @@ RUN pip install universalmutator
 
 # Install libstdc++ to use llvm_mode.
 RUN apt-get update && \
-    apt-get install -y wget libstdc++-5-dev libtool-bin automake flex bison \
+    apt-get install -y wget libstdc++-10-dev libtool-bin automake flex bison \
                        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
                        apt-utils apt-transport-https ca-certificates
 

@@ -17,6 +17,10 @@
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
 MAINTAINER weinrank@fh-muenster.de
 RUN apt-get update && apt-get install -y make cmake pkg-config
-RUN git clone --branch oss-fuzz https://github.com/weinrank/usrsctp usrsctp
+RUN git clone \
+        --depth 1 \
+        --branch 0.9.5.0 \
+        https://github.com/sctplab/usrsctp.git \
+        usrsctp
 WORKDIR usrsctp
 COPY build.sh $SRC/

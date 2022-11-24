@@ -49,6 +49,7 @@
     - 'parent_image=gcr.io/fuzzbench/builders/coverage/{benchmark}-intermediate'
   depends_on:
     - 'coverage-{benchmark}-builder-intermediate'
+    - 'base-image'
   dockerfile: 'docker/benchmark-builder/Dockerfile'
   context: '.'
   tag: 'builders/coverage/{benchmark}'
@@ -72,6 +73,7 @@
     - 'parent_image=gcr.io/fuzzbench/builders/{fuzzer}/{benchmark}-intermediate'
   depends_on:
     - '{fuzzer}-{benchmark}-builder-intermediate'
+    - 'base-image'
   dockerfile: 'docker/benchmark-builder/Dockerfile'
   context: '.'
   tag: 'builders/{fuzzer}/{benchmark}'
@@ -84,6 +86,7 @@
     - 'parent_image=gcr.io/fuzzbench/builders/{fuzzer}/{benchmark}-intermediate'
   depends_on:
     - '{fuzzer}-{benchmark}-builder-intermediate'
+    - 'base-image'
   dockerfile: 'docker/benchmark-builder/Dockerfile'
   context: '.'
   tag: 'builders/{fuzzer}/{benchmark}'
@@ -92,6 +95,7 @@
 '{fuzzer}-{benchmark}-intermediate-runner':
   depends_on:
     - '{fuzzer}-{benchmark}-builder'
+    - 'base-image'
   dockerfile: 'fuzzers/{fuzzer}/runner.Dockerfile'
   context: 'fuzzers/{fuzzer}'
   tag: 'runners/{fuzzer}/{benchmark}-intermediate'

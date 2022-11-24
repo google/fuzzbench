@@ -15,6 +15,16 @@
 ################################################################################
 
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
-RUN git clone --depth 1 https://github.com/systemd/systemd systemd
+
+RUN apt-get update && \
+    apt-get install -y libcap-dev
+
+RUN git clone \
+        --depth 1 \
+        --branch v252 \
+        https://github.com/systemd/systemd && \
+    cp $SRC/systemd/tools/oss-fuzz.sh $SRC/build.sh && \
+    # Move shared libraries and tweak rpath for all $ARCHITECTURE.
+    sed -i '119d;126d' $SRC/build.sh
+
 WORKDIR systemd
-COPY build.sh $SRC/

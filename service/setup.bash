@@ -16,7 +16,7 @@
 # Use this script once to setup a machine for running the fuzzbench service.
 
 # Install a supported python version.
-export PYTHON_VERSION=3.7.6
+export PYTHON_VERSION=3.10.8
 
 sudo apt-get update -y && sudo apt-get install -y \
   build-essential \

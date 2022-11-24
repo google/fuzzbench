@@ -2,3 +2,6 @@ commit: 07faa4990fcc1e80c9ef63c09eb91bb73dab19cb
 commit_date: 2022-09-28 12:03:03+00:00
 fuzz_target: fuzz-link-parser
 project: systemd
+unsupported_fuzzers:
+  - centipede
+  - wingfuzz

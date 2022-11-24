@@ -13,6 +13,7 @@
 # limitations under the License.
 """Module for building things on Google Cloud Build for use in trials."""
 
+import os
 import subprocess
 import tempfile
 from typing import Dict
@@ -29,10 +30,6 @@ CONFIG_DIR = 'config'
 
 # Maximum time to wait for a GCB config to finish build.
 GCB_BUILD_TIMEOUT = 13 * 60 * 60  # 4 hours.
-
-# TODO(metzman): Make configurable.
-WORKER_POOL_NAME = (
-    'projects/fuzzbench/locations/us-central1/workerPools/buildpool')
 
 logger = logs.Logger('builder')  # pylint: disable=invalid-name
 
@@ -84,7 +81,6 @@ def _build(
 
         # Use "s" suffix to denote seconds.
         timeout_arg = f'--timeout={timeout_seconds}s'
-        worker_pool_arg = f'--worker-pool={WORKER_POOL_NAME}'
 
         command = [
             'gcloud',
@@ -93,8 +89,12 @@ def _build(
             str(utils.ROOT_DIR),
             config_arg,
             timeout_arg,
-            worker_pool_arg,
         ]
+
+        worker_pool_name = os.getenv('WORKER_POOL_NAME')
+        if worker_pool_name:
+            worker_pool_arg = (f'--worker-pool={worker_pool_name}')
+            command.append(worker_pool_arg)
 
         # Don't write to stdout to make concurrent building faster. Otherwise
         # writing becomes the bottleneck.

@@ -29,10 +29,13 @@ RUN apt-get update && \
 
 RUN cd /tmp/ && \
     curl -O https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz && \
-    tar -xvf Python-$PYTHON_VERSION.tar.xz && \
+    tar -xvf Python-$PYTHON_VERSION.tar.xz > /dev/null && \
     cd Python-$PYTHON_VERSION && \
-    ./configure --enable-loadable-sqlite-extensions --enable-optimizations && \
-    make -j install && \
+    ./configure \
+        --enable-loadable-sqlite-extensions \
+        --enable-optimizations \
+        > /dev/null && \
+    make -j install > /dev/null && \
     rm -r /tmp/Python-$PYTHON_VERSION.tar.xz /tmp/Python-$PYTHON_VERSION && \
     ln -s /usr/local/bin/python3 /usr/local/bin/python && \
     ln -s /usr/local/bin/pip3 /usr/local/bin/pip
