@@ -92,6 +92,7 @@ def execute(  # pylint: disable=too-many-locals,too-many-branches
     if kill_children:
         kwargs['preexec_fn'] = os.setsid
 
+    # pylint: disable=consider-using-with
     process = subprocess.Popen(command, *args, **kwargs)
     process_group_id = os.getpgid(process.pid)
 

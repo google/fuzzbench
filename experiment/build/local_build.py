@@ -54,7 +54,7 @@ def make_shared_coverage_binaries_dir():
 
 def build_coverage(benchmark):
     """Build (locally) coverage image for benchmark."""
-    image_name = 'build-coverage-{}'.format(benchmark)
+    image_name = f'build-coverage-{benchmark}'
     result = make([image_name])
     if result.retcode:
         return result
@@ -66,14 +66,15 @@ def build_coverage(benchmark):
 def copy_coverage_binaries(benchmark):
     """Copy coverage binaries in a local experiment."""
     shared_coverage_binaries_dir = get_shared_coverage_binaries_dir()
-    mount_arg = '{0}:{0}'.format(shared_coverage_binaries_dir)
+    mount_arg = f'{shared_coverage_binaries_dir}:{shared_coverage_binaries_dir}'
     builder_image_url = benchmark_utils.get_builder_image_url(
         benchmark, 'coverage', environment.get('DOCKER_REGISTRY'))
-    coverage_build_archive = 'coverage-build-{}.tar.gz'.format(benchmark)
+    coverage_build_archive = f'coverage-build-{benchmark}.tar.gz'
     coverage_build_archive_shared_dir_path = os.path.join(
         shared_coverage_binaries_dir, coverage_build_archive)
-    command = 'cd /out; tar -czvf {} * /src /work'.format(
-        coverage_build_archive_shared_dir_path)
+    command = (
+        '(cd /out; '
+        f'tar -czvf {coverage_build_archive_shared_dir_path} * /src /work)')
     return new_process.execute([
         'docker', 'run', '-v', mount_arg, builder_image_url, '/bin/bash', '-c',
         command
@@ -82,5 +83,5 @@ def copy_coverage_binaries(benchmark):
 
 def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
     """Builds |benchmark| for |fuzzer|."""
-    image_name = 'build-{}-{}'.format(fuzzer, benchmark)
+    image_name = f'build-{fuzzer}-{benchmark}'
     make([image_name])

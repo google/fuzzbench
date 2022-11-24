@@ -52,4 +52,4 @@ def test_get_files_dependent_benchmarks():
         benchmark_dependencies.get_files_dependent_benchmarks(
             [fake_build_sh_path]))
 
-    assert dependent_benchmarks == []
+    assert not dependent_benchmarks

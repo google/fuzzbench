@@ -283,8 +283,8 @@ def validate_experiment_requests(paths: List[Path]):
         experiment_requests = yaml_utils.read(
             automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
     except yaml.parser.ParserError:
-        print('Error parsing %s.' %
-              automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
+        print('Error parsing '
+              f'{automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH}.')
         return False
 
     # Only validate the latest request.
@@ -292,8 +292,8 @@ def validate_experiment_requests(paths: List[Path]):
         experiment_requests[:1])
 
     if not result:
-        print('%s is not valid.' %
-              automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
+        print(f'{automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH}'
+              'is not valid.')
 
     return result
 
@@ -329,9 +329,9 @@ def license_check(paths: List[Path]) -> bool:
         if is_path_ignored(path):
             continue
 
-        with open(path) as file_handle:
+        with open(path, encoding='utf-8') as file_handle:
             if _LICENSE_CHECK_STRING not in file_handle.read():
-                print('Missing license header in file %s.' % str(path))
+                print(f'Missing license header in file {str(path)}.')
                 success = False
 
     return success
@@ -375,11 +375,11 @@ def do_default_checks(file_paths: List[Path], checks) -> bool:
             continue
 
         if not check(file_paths):
-            print('ERROR: %s failed, see errors above.' % check_name)
+            print(f'ERROR: {check_name} failed, see errors above.')
             failed_checks.append(check_name)
 
     if failed_checks:
-        print('Failed checks: %s' % ' '.join(failed_checks))
+        print(f'Failed checks: {" ".join(failed_checks)}')
         return False
 
     return True
@@ -440,7 +440,7 @@ def do_single_check(command: str, relevant_files: List[Path],
     else:
         success = check(relevant_files)
     if not success:
-        print('ERROR: %s failed, see errors above.' % check.__name__)
+        print(f'ERROR: {check.__name__} failed, see errors above.')
 
     return success
 

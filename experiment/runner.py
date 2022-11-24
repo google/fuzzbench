@@ -116,7 +116,7 @@ def get_clusterfuzz_seed_corpus_path(fuzz_target_path):
 
 
 def _copy_custom_seed_corpus(corpus_directory):
-    "Copy custom seed corpus provided by user"
+    """Copy custom seed corpus provided by user"""
     shutil.rmtree(corpus_directory)
     benchmark = environment.get('BENCHMARK')
     benchmark_custom_corpus_dir = posixpath.join(
@@ -162,7 +162,7 @@ def _unpack_clusterfuzz_seed_corpus(fuzz_target_path, corpus_directory):
             if seed_corpus_file.file_size > CORPUS_ELEMENT_BYTES_LIMIT:
                 continue
 
-            output_filename = '%016d' % idx
+            output_filename = f'{idx:016d}'
             output_file_path = os.path.join(corpus_directory, output_filename)
             zip_file.extract(seed_corpus_file, output_file_path)
             idx += 1
@@ -208,13 +208,10 @@ def run_fuzzer(max_total_time, log_filename):
         command = [
             'nice', '-n',
             str(0 - runner_niceness), 'python3', '-u', '-c',
-            ('from fuzzers.{fuzzer} import fuzzer; '
+            (f'from fuzzers.{environment.get("FUZZER")} import fuzzer; '
              'fuzzer.fuzz('
-             "'{input_corpus}', '{output_corpus}', '{target_binary}')").format(
-                 fuzzer=environment.get('FUZZER'),
-                 input_corpus=shlex.quote(input_corpus),
-                 output_corpus=shlex.quote(output_corpus),
-                 target_binary=shlex.quote(target_binary))
+             f'"{shlex.quote(input_corpus)}", "{shlex.quote(output_corpus)}", '
+             f'"{shlex.quote(target_binary)}")')
         ]
 
         # Write output to stdout if user is fuzzing from command line.
@@ -403,7 +400,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
 
         stats_filename = experiment_utils.get_stats_filename(self.cycle)
         stats_path = os.path.join(self.results_dir, stats_filename)
-        with open(stats_path, 'w') as stats_file_handle:
+        with open(stats_path, 'w', encoding='utf-8') as stats_file_handle:
             stats_file_handle.write(stats_json_str)
 
     def archive_corpus(self):
@@ -463,7 +460,7 @@ def get_fuzzer_module(fuzzer):
     """Returns the fuzzer.py module for |fuzzer|. We made this function so that
     we can mock the module because importing modules makes hard to undo changes
     to the python process."""
-    fuzzer_module_name = 'fuzzers.{fuzzer}.fuzzer'.format(fuzzer=fuzzer)
+    fuzzer_module_name = f'fuzzers.{fuzzer}.fuzzer'
     fuzzer_module = importlib.import_module(fuzzer_module_name)
     return fuzzer_module
 

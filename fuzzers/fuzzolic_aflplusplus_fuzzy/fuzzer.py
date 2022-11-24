@@ -78,9 +78,9 @@ def fuzzolic(input_corpus, output_corpus, target_binary):
     # test cases with each other. For Fuzzolic, we should explicitly specify an
     # output directory under this sync directory.
     if input_corpus:
-        fuzzolic_out = os.path.join(output_corpus, "fuzzolic_output")
-    afl_out = os.path.join(output_corpus, "afl-worker")
-    afl_queue = os.path.join(afl_out, "queue")
+        fuzzolic_out = os.path.join(output_corpus, 'fuzzolic_output')
+    afl_out = os.path.join(output_corpus, 'afl-worker')
+    afl_queue = os.path.join(afl_out, 'queue')
     command = [
         '/out/fuzzolic/fuzzolic/fuzzolic.py',
         '-f',  # fuzzy-sat solver
@@ -99,7 +99,8 @@ def fuzzolic(input_corpus, output_corpus, target_binary):
         target_binary,
     ]
     print('[fuzzolic] Running Fuzzolic with command: ' + ' '.join(command))
-    subprocess.Popen(command)
+    with subprocess.Popen(command):
+        pass
 
 
 def afl_worker(input_corpus, output_corpus, target_binary):
@@ -118,7 +119,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
 
     print('[fuzz] Running AFL worker')
-    os.environ['AFL_DISABLE_TRIM'] = "1"
+    os.environ['AFL_DISABLE_TRIM'] = '1'
     afl_args = (input_corpus, output_corpus, target_binary)
     afl_worker_thread = threading.Thread(target=afl_worker, args=afl_args)
     afl_worker_thread.start()

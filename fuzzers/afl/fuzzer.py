@@ -51,7 +51,7 @@ def get_stats(output_corpus, fuzzer_log):  # pylint: disable=unused-argument
     if not os.path.exists(stats_file):
         print('Can\'t find fuzzer_stats')
         return '{}'
-    with open(stats_file) as file_handle:
+    with open(stats_file, encoding='utf-8') as file_handle:
         stats_file_lines = file_handle.read().splitlines()
     stats_file_dict = {}
     for stats_line in stats_file_lines:

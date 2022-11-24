@@ -21,7 +21,7 @@ from common import benchmark_utils
 from common import fuzzer_utils
 from experiment.build import docker_images
 
-BASE_TAG = "gcr.io/fuzzbench"
+BASE_TAG = 'gcr.io/fuzzbench'
 BENCHMARK_DIR = benchmark_utils.BENCHMARKS_DIR
 
 
@@ -144,7 +144,7 @@ def main():
         return 1
     makefile_path = sys.argv[1]
     makefile_contents = generate_makefile()
-    with open(makefile_path, 'w') as file_handle:
+    with open(makefile_path, 'w', encoding='utf-8') as file_handle:
         file_handle.write(makefile_contents)
     return 0
 

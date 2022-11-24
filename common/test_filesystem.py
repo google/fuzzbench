@@ -31,7 +31,7 @@ def test_recreate_directory_existing(fs):
     new_directory = 'new-directory'
     os.mkdir(new_directory)
     new_file = os.path.join(new_directory, 'file')
-    with open(new_file, 'w') as file_handle:
+    with open(new_file, 'w', encoding='utf-8') as file_handle:
         file_handle.write('hi')
 
     filesystem.recreate_directory(new_directory)
@@ -65,7 +65,7 @@ def test_copy(fs):
     dst = 'destination_file'
     filesystem.copy(src, dst, ignore_errors=True)
     assert os.path.exists(dst)
-    with open(dst) as file_handle:
+    with open(dst, encoding='utf-8') as file_handle:
         assert file_handle.read() == contents
 
 
@@ -148,7 +148,7 @@ def _assert_has_source_dir_contents(directory):
     for idx in range(3):
         file_path = os.path.join(directory, str(idx))
         assert os.path.exists(file_path)
-        with open(file_path) as file_handle:
+        with open(file_path, encoding='utf-8') as file_handle:
             assert file_handle.read() == 'srcfile'
 
 
@@ -180,7 +180,8 @@ def test_make_dir_copy(fs):
     new_filename = 'new-file'
     copied_new_file_path = os.path.join(copy_dir, new_filename)
     assert not os.path.exists(copied_new_file_path)
-    with open(os.path.join(SOURCE_DIR, new_filename), 'w') as file_handle:
+    with open(os.path.join(SOURCE_DIR, new_filename), 'w',
+              encoding='utf-8') as file_handle:
         file_handle.write('')
     copy_dir = filesystem.make_dir_copy(SOURCE_DIR)
     _assert_has_source_dir_contents(copy_dir)

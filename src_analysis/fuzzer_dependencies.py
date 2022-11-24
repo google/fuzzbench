@@ -48,7 +48,7 @@ PY_DEPENDENCIES_CACHE: Dict[str, Set[str]] = {}
 def _get_fuzzer_module_name(fuzzer: str) -> str:
     """Returns the name of the fuzzer.py module of |fuzzer|. Assumes |fuzzer| is
     an underlying fuzzer."""
-    return 'fuzzers.{}.fuzzer'.format(fuzzer)
+    return f'fuzzers.{fuzzer}.fuzzer'
 
 
 def is_builtin_module(module: types.ModuleType) -> bool:

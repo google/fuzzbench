@@ -30,7 +30,7 @@ def get_symcc_build_dir(target_directory):
 
 def build():
     """Build an AFL version and SymCC version of the benchmark"""
-    print("Step 1: Building with AFL")
+    print('Step 1: Building with AFL')
     build_directory = os.environ['OUT']
 
     # First build with AFL.
@@ -42,46 +42,46 @@ def build():
         # twice in the same directory without this.
         afl_fuzzer.build()
 
-    print("Step 2: Completed AFL build")
+    print('Step 2: Completed AFL build')
     # Copy over AFL artifacts needed by SymCC.
-    shutil.copy("/afl/afl-fuzz", build_directory)
-    shutil.copy("/afl/afl-showmap", build_directory)
+    shutil.copy('/afl/afl-fuzz', build_directory)
+    shutil.copy('/afl/afl-showmap', build_directory)
 
     # Build the SymCC-instrumented target.
-    print("Step 3: Building the benchmark with SymCC")
+    print('Step 3: Building the benchmark with SymCC')
     symcc_build_dir = get_symcc_build_dir(os.environ['OUT'])
     os.mkdir(symcc_build_dir)
 
     # Set flags to ensure compilation with SymCC.
     new_env = os.environ.copy()
-    new_env['CC'] = "/symcc/build/symcc"
-    new_env['CXX'] = "/symcc/build/sym++"
-    new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace("-stlib=libc++", "")
+    new_env['CC'] = '/symcc/build/symcc'
+    new_env['CXX'] = '/symcc/build/sym++'
+    new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace('-stlib=libc++', '')
     new_env['FUZZER_LIB'] = '/libfuzzer-harness.o'
     new_env['OUT'] = symcc_build_dir
 
-    new_env['CXXFLAGS'] += " -fno-sanitize=all "
-    new_env['CFLAGS'] += " -fno-sanitize=all "
+    new_env['CXXFLAGS'] += ' -fno-sanitize=all '
+    new_env['CFLAGS'] += ' -fno-sanitize=all '
 
     # Setting this environment variable instructs SymCC to use the
     # libcxx library compiled with SymCC instrumentation.
-    new_env['SYMCC_LIBCXX_PATH'] = "/libcxx_native_build"
+    new_env['SYMCC_LIBCXX_PATH'] = '/libcxx_native_build'
 
     # Instructs SymCC to consider no symbolic inputs at runtime. This is needed
     # if, for example, some tests are run during compilation of the benchmark.
-    new_env['SYMCC_NO_SYMBOLIC_INPUT'] = "1"
+    new_env['SYMCC_NO_SYMBOLIC_INPUT'] = '1'
 
     # Build benchmark.
     utils.build_benchmark(env=new_env)
 
     # Copy over symcc artifacts and symbolic libc++.
     shutil.copy(
-        "/symcc/build//SymRuntime-prefix/src/SymRuntime-build/libSymRuntime.so",
+        '/symcc/build//SymRuntime-prefix/src/SymRuntime-build/libSymRuntime.so',
         symcc_build_dir)
-    shutil.copy("/usr/lib/libz3.so", os.path.join(symcc_build_dir, "libz3.so"))
-    shutil.copy("/libcxx_native_build/lib/libc++.so.1", symcc_build_dir)
-    shutil.copy("/libcxx_native_build/lib/libc++abi.so.1", symcc_build_dir)
-    shutil.copy("/rust/bin/symcc_fuzzing_helper", symcc_build_dir)
+    shutil.copy('/usr/lib/libz3.so', os.path.join(symcc_build_dir, 'libz3.so'))
+    shutil.copy('/libcxx_native_build/lib/libc++.so.1', symcc_build_dir)
+    shutil.copy('/libcxx_native_build/lib/libc++abi.so.1', symcc_build_dir)
+    shutil.copy('/rust/bin/symcc_fuzzing_helper', symcc_build_dir)
 
 
 def launch_afl_thread(input_corpus, output_corpus, target_binary,
@@ -109,25 +109,26 @@ def fuzz(input_corpus, output_corpus, target_binary, master_only=False):
     print('[run_fuzzer] Running AFL for SymCC')
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     launch_afl_thread(input_corpus, output_corpus, target_binary,
-                      ["-M", "afl-master"])
+                      ['-M', 'afl-master'])
     time.sleep(5)
 
     if master_only:
-        sharing_dir = "afl-master"
+        sharing_dir = 'afl-master'
     else:
         launch_afl_thread(input_corpus, output_corpus, target_binary,
-                          ["-S", "afl-secondary"])
+                          ['-S', 'afl-secondary'])
         time.sleep(5)
-        sharing_dir = "afl-secondary"
+        sharing_dir = 'afl-secondary'
 
     # Start an instance of SymCC.
     # We need to ensure it uses the symbolic version of libc++.
-    print("Starting the SymCC helper")
+    print('Starting the SymCC helper')
     new_environ = os.environ.copy()
     new_environ['LD_LIBRARY_PATH'] = symcc_workdir
     cmd = [
         os.path.join(symcc_workdir,
-                     "symcc_fuzzing_helper"), "-o", output_corpus, "-a",
-        sharing_dir, "-n", "symcc", "--", symcc_target_binary, "@@"
+                     'symcc_fuzzing_helper'), '-o', output_corpus, '-a',
+        sharing_dir, '-n', 'symcc', '--', symcc_target_binary, '@@'
     ]
-    subprocess.Popen(cmd, env=new_environ)
+    with subprocess.Popen(cmd, env=new_environ):
+        pass

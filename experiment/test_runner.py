@@ -51,7 +51,7 @@ def test_run_fuzzer_log_file(mocked_communicate, fs, environ):
         assert mocked_popen.commands == [[
             'nice', '-n', '5', 'python3', '-u', '-c',
             'from fuzzers.afl import fuzzer; '
-            "fuzzer.fuzz('/out/seeds', '/out/corpus', '/out/fuzz-target')"
+            'fuzzer.fuzz("/out/seeds", "/out/corpus", "/out/fuzz-target")'
         ]]
     assert os.path.exists(log_filename)
 
@@ -105,9 +105,9 @@ def test_record_stats(trial_runner, fuzzer_module):
     cycle = 1337
     trial_runner.cycle = cycle
 
-    stats_file = os.path.join(trial_runner.results_dir, 'stats-%d.json' % cycle)
+    stats_file = os.path.join(trial_runner.results_dir, f'stats-{cycle}.json')
     trial_runner.record_stats()
-    with open(stats_file) as file_handle:
+    with open(stats_file, encoding='utf-8') as file_handle:
         stats_file_contents = file_handle.read()
 
     assert stats_file_contents == FuzzerAModule.DEFAULT_STATS
@@ -126,7 +126,7 @@ def test_record_stats_unsupported(trial_runner):
                     return_value=FuzzerAModuleNoGetStats):
         trial_runner.record_stats()
 
-    stats_file = os.path.join(trial_runner.results_dir, 'stats-%d.json' % cycle)
+    stats_file = os.path.join(trial_runner.results_dir, f'stats-{cycle}.json')
     assert not os.path.exists(stats_file)
 
 
@@ -151,7 +151,7 @@ def test_record_stats_invalid(stats_data, trial_runner, fuzzer_module):
         with mock.patch('common.logs.error') as mocked_log_error:
             trial_runner.record_stats()
 
-    stats_file = os.path.join(trial_runner.results_dir, 'stats-%d.json' % cycle)
+    stats_file = os.path.join(trial_runner.results_dir, f'stats-{cycle}.json')
     assert not os.path.exists(stats_file)
     mocked_log_error.assert_called_with('Stats are invalid.')
 
@@ -175,7 +175,7 @@ def test_record_stats_exception(mocked_log_error, trial_runner, fuzzer_module):
                     return_value=FuzzerAModuleGetStatsException):
         trial_runner.record_stats()
 
-    stats_file = os.path.join(trial_runner.results_dir, 'stats-%d.json' % cycle)
+    stats_file = os.path.join(trial_runner.results_dir, f'stats-{cycle}.json')
     assert not os.path.exists(stats_file)
     mocked_log_error.assert_called_with(
         'Call to %s failed.', FuzzerAModuleGetStatsException.get_stats)
@@ -234,7 +234,7 @@ def test_do_sync_unchanged(mocked_is_corpus_dir_same, mocked_debug,
     mocked_debug.assert_any_call('Cycle: %d unchanged.', trial_runner.cycle)
     unchanged_cycles_path = os.path.join(trial_runner.results_dir,
                                          'unchanged-cycles')
-    with open(unchanged_cycles_path) as file_handle:
+    with open(unchanged_cycles_path, encoding='utf-8') as file_handle:
         assert str(trial_runner.cycle) == file_handle.read().strip()
     assert not os.listdir(trial_runner.corpus_archives_dir)
 
@@ -312,7 +312,7 @@ def test_is_corpus_dir_same_modified(trial_runner, fs):
     file_path = os.path.join(trial_runner.corpus_dir, 'f')
     fs.create_file(file_path)
     trial_runner._set_corpus_dir_contents()  # pylint: disable=protected-access
-    with open(file_path, 'w') as file_handle:
+    with open(file_path, 'w', encoding='utf-8') as file_handle:
         file_handle.write('hi')
     assert not trial_runner.is_corpus_dir_same()
 
@@ -323,8 +323,9 @@ class TestIntegrationRunner:
     @pytest.mark.skipif(not os.environ.get('TEST_EXPERIMENT_FILESTORE'),
                         reason='TEST_EXPERIMENT_FILESTORE is not set, '
                         'skipping integration test.')
-    @mock.patch('common.logs.error')  # pylint: disable=no-self-use,too-many-locals
+    @mock.patch('common.logs.error')
     def test_integration_runner(self, mocked_error, tmp_path, environ):
+        # pylint: disable=too-many-locals
         """Test that runner can run libFuzzer and saves snapshots to GCS."""
         # Switch cwd so that fuzzers don't create tons of files in the repo.
         os.chdir(tmp_path)
@@ -351,7 +352,7 @@ class TestIntegrationRunner:
         experiment = 'integration-test-experiment'
         gcs_directory = posixpath.join(test_experiment_bucket, experiment,
                                        'experiment-folders',
-                                       '%s-%s' % (benchmark, fuzzer), 'trial-1')
+                                       f'{benchmark}-{fuzzer}', 'trial-1')
         filestore_utils.rm(gcs_directory, force=True)
         # Add fuzzer directory to make it easy to run fuzzer.py in local
         # configuration.
@@ -430,15 +431,13 @@ def test_clean_seed_corpus(fs):
     assert not os.path.exists(os.path.join(seed_corpus_dir, 'efg'))
     assert len(os.listdir(seed_corpus_dir)) == 3  # Directory 'a' and two files.
 
-    with open(
-            os.path.join(
-                seed_corpus_dir,
-                'a9993e364706816aba3e25717850c26c9cd0d89d')) as file_handle:
+    with open(os.path.join(seed_corpus_dir,
+                           'a9993e364706816aba3e25717850c26c9cd0d89d'),
+              encoding='utf-8') as file_handle:
         assert file_handle.read() == 'abc'
-    with open(
-            os.path.join(
-                seed_corpus_dir,
-                '589c22335a381f122d129225f5c0ba3056ed5811')) as file_handle:
+    with open(os.path.join(seed_corpus_dir,
+                           '589c22335a381f122d129225f5c0ba3056ed5811'),
+              encoding='utf-8') as file_handle:
         assert file_handle.read() == 'def'
 
 

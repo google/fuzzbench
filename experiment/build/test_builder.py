@@ -91,7 +91,6 @@ def builder_integration(experiment):
         yield
 
 
-# pylint: disable=no-self-use
 @pytest.mark.skipif(
     not os.getenv('TEST_INTEGRATION_ALL'),
     reason='Tests take too long and can interfere with real '

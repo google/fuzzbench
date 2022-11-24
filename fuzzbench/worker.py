@@ -20,7 +20,7 @@ import rq
 
 def main():
     """Sets up Redis connection and starts the worker."""
-    redis_connection = redis.Redis(host="queue-server")
+    redis_connection = redis.Redis(host='queue-server')
     with rq.Connection(redis_connection):
         queue = rq.Queue('build_n_run_queue')
         worker = rq.Worker([queue])

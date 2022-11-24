@@ -60,7 +60,7 @@ def initialize(experiment_config: dict):
     instance_template_name = get_measure_worker_instance_template_name(
         experiment)
     docker_image = posixpath.join(experiment_config['docker_registry'],
-                                  'measure-worker:{}'.format(experiment))
+                                  f'measure-worker:{experiment}')
 
     redis_host = experiment_config['redis_host']
     experiment_filestore = experiment_config['experiment_filestore']
