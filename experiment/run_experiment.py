@@ -23,7 +23,7 @@ import sys
 import tarfile
 import tempfile
 from collections import namedtuple
-from typing import Dict, List, NamedTuple, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import jinja2
 import yaml
@@ -62,6 +62,9 @@ _OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT = (
     'libFuzzer/{fuzz_target}/public.zip')
 DEFAULT_CONCURRENT_BUILDS = 30
 
+Requirement = namedtuple('Requirement',
+                         ['mandatory', 'type', 'lowercase', 'startswith'])
+
 
 def _set_default_config_values(config: Dict[str, Union[int, str, bool]],
                                local_experiment: bool):
@@ -74,7 +77,7 @@ def _set_default_config_values(config: Dict[str, Union[int, str, bool]],
 
 def _validate_config_parameters(
         config: Dict[str, Union[int, str, bool]],
-        config_requirements: Dict[str, NamedTuple]) -> bool:
+        config_requirements: Dict[str, Requirement]) -> bool:
     """Validates if the required |params| exist in |config|."""
     if 'cloud_experiment_bucket' in config or 'cloud_web_bucket' in config:
         logs.error('"cloud_experiment_bucket" and "cloud_web_bucket" are now '
@@ -100,8 +103,9 @@ def _validate_config_parameters(
 
 
 # pylint: disable=too-many-arguments
-def _validate_config_values(config: Dict[str, Union[str, int, bool]],
-                            config_requirements: Dict[str, NamedTuple]) -> bool:
+def _validate_config_values(
+        config: Dict[str, Union[str, int, bool]],
+        config_requirements: Dict[str, Requirement]) -> bool:
     """Validates if |params| types and formats in |config| are correct."""
 
     valid = True
@@ -151,8 +155,6 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     local_experiment = config.get('local_experiment', False)
 
     # Requirement of each config field.
-    Requirement = namedtuple('Requirement',
-                             ['mandatory', 'type', 'lowercase', 'startswith'])
     config_requirements = {
         'experiment_filestore':
             Requirement(True, str, True, '/' if local_experiment else 'gs://'),
