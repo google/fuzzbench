@@ -151,7 +151,7 @@ def modify_experiment_data_if_requested(  # pylint: disable=too-many-arguments
     by the user on the command line (or callers to generate_report)."""
     logger.debug('Before filtering benchmarks (benchmarks): %s', benchmarks)
     logger.debug('Before filtering benchmarks (experiment_df benchmarks): %s',
-                 experiment_df['benchmarks'])
+                 experiment_df['benchmark'])
     logger.debug('Before filtering benchmarks (experiment_df): %s',
                  experiment_df)
     if benchmarks:
@@ -160,7 +160,7 @@ def modify_experiment_data_if_requested(  # pylint: disable=too-many-arguments
 
     logger.debug('After filtering benchmarks (benchmarks): %s', benchmarks)
     logger.debug('After filtering benchmarks (experiment_df benchmarks): %s',
-                 experiment_df['benchmarks'])
+                 experiment_df['benchmark'])
     logger.debug('After filtering benchmarks (experiment_df): %s',
                  experiment_df)
 
