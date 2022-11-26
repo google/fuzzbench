@@ -15,6 +15,9 @@
 from analysis import stat_tests
 from common import benchmark_utils
 from common import environment
+from common import logs
+
+logger = logs.Logger('data_utils')
 
 
 class EmptyDataError(ValueError):
@@ -99,9 +102,22 @@ def filter_benchmarks(experiment_df, included_benchmarks):
     """Returns table with only rows where benchmark is in
     |included_benchmarks|."""
     valid_benchmarks = [
-        benchmarks for benchmarks in included_benchmarks
-        if benchmark_utils.validate(benchmarks)
+        benchmark for benchmark in included_benchmarks
+        if benchmark_utils.validate(benchmark)
     ]
+    logger.info('Included benchmarks: %s', included_benchmarks)
+    logger.warning('Invalid included benchmarks: %s',
+                   set(included_benchmarks) - set(valid_benchmarks))
+    experiment_df = experiment_df[experiment_df['benchmark'].isin(
+        valid_benchmarks)]
+
+    valid_benchmarks = [
+        benchmark for benchmark in experiment_df['benchmark']
+        if benchmark_utils.validate(benchmark)
+    ]
+    logger.info('experiment_df benchmarks: %s', experiment_df['benchmark'])
+    logger.warning('Invalid experiment_df Includedbenchmarks: %s',
+                   set(included_benchmarks) - set(experiment_df['benchmark']))
     return experiment_df[experiment_df['benchmark'].isin(valid_benchmarks)]
 
 

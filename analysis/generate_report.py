@@ -149,10 +149,22 @@ def modify_experiment_data_if_requested(  # pylint: disable=too-many-arguments
     """Helper function that returns a copy of |experiment_df| that is modified
     based on the other parameters. These parameters come from values specified
     by the user on the command line (or callers to generate_report)."""
+    logger.debug('Before filtering benchmarks (benchmarks): %s', benchmarks)
+    logger.debug('Before filtering benchmarks (experiment_df benchmarks): %s',
+                 experiment_df['benchmarks'])
+    logger.debug('Before filtering benchmarks (experiment_df): %s',
+                 experiment_df)
     if benchmarks:
         # Filter benchmarks if requested.
         experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks)
 
+    logger.debug('After filtering benchmarks (benchmarks): %s', benchmarks)
+    logger.debug('After filtering benchmarks (experiment_df benchmarks): %s',
+                 experiment_df['benchmarks'])
+    logger.debug('After filtering benchmarks (experiment_df): %s',
+                 experiment_df)
+
+    logger.debug('Filter fuzzers %s', fuzzers)
     if fuzzers is not None:
         # Filter fuzzers if requested.
         experiment_df = data_utils.filter_fuzzers(experiment_df, fuzzers)
@@ -191,29 +203,37 @@ def generate_report(experiment_names,
                     merge_with_clobber_nonprivate=False,
                     coverage_report=False):
     """Generate report helper."""
+    logger.debug('Generate report with benchmarks 1: %s', benchmarks)
     if merge_with_clobber_nonprivate:
         experiment_names = (
             queries.add_nonprivate_experiments_for_merge_with_clobber(
                 experiment_names))
         merge_with_clobber = True
 
+    logger.debug('Generate report with benchmarks 2: %s', benchmarks)
     main_experiment_name = experiment_names[0]
     report_name = report_name or main_experiment_name
 
+    logger.debug('Generate report with benchmarks 3: %s', benchmarks)
     filesystem.create_directory(report_directory)
 
+    logger.debug('Generate report with benchmarks 4: %s', benchmarks)
     data_path = os.path.join(report_directory, DATA_FILENAME)
     experiment_df, experiment_description = get_experiment_data(
         experiment_names, main_experiment_name, from_cached_data, data_path)
 
+    logger.debug('Generate report with benchmarks 5: %s', benchmarks)
     # TODO(metzman): Ensure that each experiment is in the df. Otherwise there
     # is a good chance user misspelled something.
     data_utils.validate_data(experiment_df)
 
+    logger.debug('Modify experiment data with benchmarks: %s', benchmarks)
+    logger.debug('Modify experiment data with experiment_df: %s', experiment_df)
     experiment_df = modify_experiment_data_if_requested(
         experiment_df, experiment_names, benchmarks, fuzzers,
         label_by_experiment, end_time, merge_with_clobber)
 
+    logger.debug('Modified experiment data with benchmarks: %s', experiment_df)
     # Add |bugs_covered| column prior to export.
     experiment_df = data_utils.add_bugs_covered_column(experiment_df)
 
