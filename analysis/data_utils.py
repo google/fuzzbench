@@ -117,7 +117,7 @@ def filter_benchmarks(experiment_df, included_benchmarks):
     ]
     logger.info('experiment_df benchmarks: %s', experiment_df['benchmark'])
     logger.warning('Invalid experiment_df Includedbenchmarks: %s',
-                   set(included_benchmarks) - set(experiment_df['benchmark']))
+                   set(experiment_df['benchmark']) - set(valid_benchmarks))
     return experiment_df[experiment_df['benchmark'].isin(valid_benchmarks)]
 
 
