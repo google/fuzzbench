@@ -64,8 +64,10 @@ def output_report(experiment_config: dict,
     # Don't merge with nonprivate experiments until the very end as doing it
     # while the experiment is in progress will produce unusable realtime
     # results.
+    logger.info('In progress: %s.', in_progress)
     merge_with_nonprivate = (not in_progress and experiment_config.get(
         'merge_with_nonprivate', False))
+    logger.info('Merging with nonprivate: %s.', merge_with_nonprivate)
 
     try:
         logger.debug('Generating report.')

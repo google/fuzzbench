@@ -149,14 +149,18 @@ def modify_experiment_data_if_requested(  # pylint: disable=too-many-arguments
     """Helper function that returns a copy of |experiment_df| that is modified
     based on the other parameters. These parameters come from values specified
     by the user on the command line (or callers to generate_report)."""
+    logger.info('Filter the following benchmarks from "benchmarks": %s',
+                benchmarks)
     if benchmarks:
         # Filter benchmarks if requested.
         experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks)
 
+    logger.info('Filter the following benchmarks from "experiment_df": %s',
+                experiment_df['benchmark'].unique())
     if not experiment_df['benchmark'].empty:
         # Filter benchmarks in experiment dataframe.
-        experiment_df = data_utils.filter_benchmarks(experiment_df,
-                                                     experiment_df['benchmark'])
+        experiment_df = data_utils.filter_benchmarks(
+            experiment_df, experiment_df['benchmark'].unique())
 
     logger.debug('Filter fuzzers %s', fuzzers)
     if fuzzers is not None:
@@ -222,7 +226,8 @@ def generate_report(experiment_names,
     data_utils.validate_data(experiment_df)
 
     logger.debug('Modify experiment data with benchmarks: %s', benchmarks)
-    logger.debug('Modify experiment data with experiment_df: %s', experiment_df)
+    logger.debug('Modify experiment data with experiment_df: %s',
+                 experiment_df['benchmark'])
     experiment_df = modify_experiment_data_if_requested(
         experiment_df, experiment_names, benchmarks, fuzzers,
         label_by_experiment, end_time, merge_with_clobber)
