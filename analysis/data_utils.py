@@ -98,12 +98,12 @@ def filter_fuzzers(experiment_df, included_fuzzers):
     return experiment_df[experiment_df['fuzzer'].isin(included_fuzzers)]
 
 
-def filter_benchmarks(experiment_df, included_benchmarks):
+def filter_benchmarks(experiment_df, included_benchmarks, experiment_type=None):
     """Returns table with only rows where benchmark is in
     |included_benchmarks|."""
     valid_benchmarks = [
         benchmark for benchmark in included_benchmarks
-        if benchmark_utils.validate(benchmark)
+        if benchmark_utils.validate(benchmark, experiment_type)
     ]
     logger.info('Included benchmarks: %s', included_benchmarks)
     logger.warning('Invalid included benchmarks: %s',

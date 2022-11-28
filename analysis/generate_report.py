@@ -25,6 +25,7 @@ from analysis import experiment_results
 from analysis import plotting
 from analysis import queries
 from analysis import rendering
+from common.benchmark_utils import get_type, BenchmarkType
 from common import filesystem
 from common import logs
 
@@ -143,9 +144,31 @@ def get_experiment_data(experiment_names, main_experiment_name,
     return experiment_df, description
 
 
+def get_experiment_type(main_experiment_name, from_cached_data, data_path):
+    """Helper function that reads data from disk or from the database. Returns
+    the main experiment's type."""
+    if from_cached_data and os.path.exists(data_path):
+        logger.info('Reading experiment data from %s.', data_path)
+        experiment_df = pd.read_csv(data_path)
+    else:
+        logger.info('Reading experiment data from db.')
+        experiment_df = queries.get_experiment_data([main_experiment_name])
+        logger.info('Done reading experiment data from db.')
+    benchmarks = experiment_df['benchmark']
+    for benchmark_type in BenchmarkType:
+        type_value = benchmark_type.value
+        if all(get_type(benchmark) == type_value for benchmark in benchmarks):
+            logger.info('Main experiment benchmark type is %s', type_value)
+            return type_value
+
+    benchmark_types = ';'.join([f'{b}: {get_type(b)}' for b in benchmarks])
+    raise ValueError('Cannot mix bug benchmarks with code coverage benchmarks: '
+                     f'{benchmark_types}')
+
+
 def modify_experiment_data_if_requested(  # pylint: disable=too-many-arguments
         experiment_df, experiment_names, benchmarks, fuzzers,
-        label_by_experiment, end_time, merge_with_clobber):
+        label_by_experiment, end_time, merge_with_clobber, experiment_type):
     """Helper function that returns a copy of |experiment_df| that is modified
     based on the other parameters. These parameters come from values specified
     by the user on the command line (or callers to generate_report)."""
@@ -153,14 +176,15 @@ def modify_experiment_data_if_requested(  # pylint: disable=too-many-arguments
                 benchmarks)
     if benchmarks:
         # Filter benchmarks if requested.
-        experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks)
+        experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks,
+                                                     experiment_type)
 
     logger.info('Filter the following benchmarks from "experiment_df": %s',
                 experiment_df['benchmark'].unique())
     if not experiment_df['benchmark'].empty:
         # Filter benchmarks in experiment dataframe.
         experiment_df = data_utils.filter_benchmarks(
-            experiment_df, experiment_df['benchmark'].unique())
+            experiment_df, experiment_df['benchmark'].unique(), experiment_type)
 
     logger.debug('Filter fuzzers %s', fuzzers)
     if fuzzers is not None:
@@ -228,11 +252,14 @@ def generate_report(experiment_names,
     logger.debug('Modify experiment data with benchmarks: %s', benchmarks)
     logger.debug('Modify experiment data with experiment_df: %s',
                  experiment_df['benchmark'])
+    experiment_type = get_experiment_type(main_experiment_name,
+                                          from_cached_data, data_path)
     experiment_df = modify_experiment_data_if_requested(
         experiment_df, experiment_names, benchmarks, fuzzers,
-        label_by_experiment, end_time, merge_with_clobber)
+        label_by_experiment, end_time, merge_with_clobber, experiment_type)
 
-    logger.debug('Modified experiment data with benchmarks: %s', experiment_df)
+    logger.debug('Modified experiment data with benchmarks: %s',
+                 experiment_df['benchmark'])
     # Add |bugs_covered| column prior to export.
     experiment_df = data_utils.add_bugs_covered_column(experiment_df)
 

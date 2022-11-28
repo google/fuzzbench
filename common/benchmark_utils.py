@@ -87,9 +87,14 @@ def validate_name(benchmark):
     return True
 
 
-def validate_type(benchmark):
+def validate_type(benchmark, experiment_type=None):
     """Returns True if |benchmark| has a valid type."""
     benchmark_type = get_type(benchmark)
+    if experiment_type and benchmark_type != experiment_type:
+        logs.warning(
+            '%s has an invalid benchmark type %s, must be the same as %s',
+            benchmark, benchmark_type, experiment_type)
+        return False
     if benchmark_type not in BENCHMARK_TYPE_STRS:
         logs.error('%s has an invalid benchmark type %s, must be one of %s',
                    benchmark, benchmark_type, BENCHMARK_TYPE_STRS)
@@ -97,7 +102,7 @@ def validate_type(benchmark):
     return True
 
 
-def validate(benchmark):
+def validate(benchmark, experiment_type=None):
     """Returns True if |benchmark| is a valid fuzzbench benchmark."""
     if not validate_name(benchmark):
         return False
@@ -119,7 +124,7 @@ def validate(benchmark):
         return False
 
     # Validate type.
-    return validate_type(benchmark)
+    return validate_type(benchmark, experiment_type)
 
 
 def get_all_benchmarks():
