@@ -22,7 +22,7 @@ from analysis import benchmark_results
 from analysis import coverage_data_utils
 from analysis import data_utils
 from analysis import stat_tests
-from common import benchmark_config
+from common import experiment_utils
 from common import logs
 
 logger = logs.Logger('generate_report')
@@ -136,26 +136,13 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
         until a property is evaluated.
         """
         benchmark_names = self._experiment_df.benchmark.unique()
-        logger.debug('All experiment_df benchmark names: %s.', benchmark_names)
-
-        exist_benchmark_names = []
-        for name in sorted(benchmark_names):
-            if os.path.isfile(benchmark_config.get_config_file(name)):
-                logger.debug('Benchmark %s exists.', name)
-                exist_benchmark_names.append(name)
-                continue
-            logger.error('Benchmark %s does not exist.', name)
-        logger.debug('Exist experiment_df benchmark names: %s.',
-                     benchmark_names)
-        logger.error('Non-exist experiment_df benchmark names: %s.',
-                     set(benchmark_names) - set(exist_benchmark_names))
 
         return [
             benchmark_results.BenchmarkResults(name, self._experiment_df,
                                                self._coverage_dict,
                                                self._output_directory,
                                                self._plotter)
-            for name in sorted(exist_benchmark_names)
+            for name in sorted(benchmark_names)
         ]
 
     @property
@@ -167,15 +154,8 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
 
         Raises ValueError if the benchmark types are mixed.
         """
-        if all(b.type == 'bug' for b in self.benchmarks):
-            return 'bug'
-        if all(b.type == 'code' for b in self.benchmarks):
-            return 'code'
-        benchmark_types = ';'.join(
-            [f'{b.name}: {b.type}' for b in self.benchmarks])
-        raise ValueError(
-            'Cannot mix bug benchmarks with code coverage benchmarks: '
-            f'{benchmark_types}')
+        benchmarks = [benchmark.name for benchmark in self.benchmarks]
+        return experiment_utils.get_experiment_type(benchmarks)
 
     @property
     def _relevant_column(self):

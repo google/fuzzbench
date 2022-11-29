@@ -25,7 +25,7 @@ from analysis import experiment_results
 from analysis import plotting
 from analysis import queries
 from analysis import rendering
-from common.benchmark_utils import get_type, BenchmarkType
+from common import experiment_utils
 from common import filesystem
 from common import logs
 
@@ -144,49 +144,58 @@ def get_experiment_data(experiment_names, main_experiment_name,
     return experiment_df, description
 
 
-def get_experiment_type(main_experiment_name, from_cached_data, data_path):
+def filter_experiments(all_experiment_names):
     """Helper function that reads data from disk or from the database. Returns
-    the main experiment's type."""
-    if from_cached_data and os.path.exists(data_path):
-        logger.info('Reading experiment data from %s.', data_path)
-        experiment_df = pd.read_csv(data_path)
-    else:
-        logger.info('Reading experiment data from db.')
-        experiment_df = queries.get_experiment_data([main_experiment_name])
-        logger.info('Done reading experiment data from db.')
-    benchmarks = experiment_df['benchmark']
-    for benchmark_type in BenchmarkType:
-        type_value = benchmark_type.value
-        if all(get_type(benchmark) == type_value for benchmark in benchmarks):
-            logger.info('Main experiment benchmark type is %s', type_value)
-            return type_value
+    a list of old experiments of the same type as the main experiment."""
+    main_experiment_name, prev_experiment_names = all_experiment_names[
+        0], all_experiment_names[1:]
+    logger.debug('Verifying benchmark type of the main experiment ...')
+    experiment_benchmark_df = queries.get_experiment_benchmarks(
+        [main_experiment_name])
+    main_experiment_type = experiment_utils.get_experiment_type(
+        experiment_benchmark_df['benchmark'].unique().tolist())
+    logger.info('Main experiment benchmark type is %s.', main_experiment_type)
 
-    benchmark_types = ';'.join([f'{b}: {get_type(b)}' for b in benchmarks])
-    raise ValueError('Cannot mix bug benchmarks with code coverage benchmarks: '
-                     f'{benchmark_types}')
+    same_type_experiments = [main_experiment_name]
+    for experiment_name in prev_experiment_names:
+        logger.debug('Verifying the benchmark type of %s ...', experiment_name)
+        try:
+            experiment_benchmark_df = queries.get_experiment_benchmarks(
+                [experiment_name])
+            experiment_type = experiment_utils.get_experiment_type(
+                experiment_benchmark_df['benchmark'].unique().tolist())
+        except ValueError as mixing_benchmark_error:
+            # Ignore old experiments with mixing benchmarks.
+            logger.warning(mixing_benchmark_error)
+            continue
+        if experiment_type != main_experiment_type:
+            logger.debug('Excluding benchmark %s with type %s.',
+                         experiment_name, experiment_type)
+            continue
+        logger.info('Including benchmark %s with type %s.', experiment_name,
+                    experiment_type)
+        same_type_experiments.append(experiment_name)
+    return same_type_experiments
 
 
 def modify_experiment_data_if_requested(  # pylint: disable=too-many-arguments
         experiment_df, experiment_names, benchmarks, fuzzers,
-        label_by_experiment, end_time, merge_with_clobber, experiment_type):
+        label_by_experiment, end_time, merge_with_clobber):
     """Helper function that returns a copy of |experiment_df| that is modified
     based on the other parameters. These parameters come from values specified
     by the user on the command line (or callers to generate_report)."""
-    logger.info('Filter the following benchmarks from "benchmarks": %s',
-                benchmarks)
     if benchmarks:
         # Filter benchmarks if requested.
-        experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks,
-                                                     experiment_type)
+        logger.debug('Filter included benchmarks: %s', benchmarks)
+        experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks)
 
-    logger.info('Filter the following benchmarks from "experiment_df": %s',
-                experiment_df['benchmark'].unique())
     if not experiment_df['benchmark'].empty:
-        # Filter benchmarks in experiment dataframe.
-        experiment_df = data_utils.filter_benchmarks(
-            experiment_df, experiment_df['benchmark'].unique(), experiment_type)
+        # Filter benchmarks in experiment DataFrame.
+        unique_benchmarks = experiment_df['benchmark'].unique().tolist()
+        logger.debug('Filter experiment_df benchmarks: %s', unique_benchmarks)
+        experiment_df = data_utils.filter_benchmarks(experiment_df,
+                                                     unique_benchmarks)
 
-    logger.debug('Filter fuzzers %s', fuzzers)
     if fuzzers is not None:
         # Filter fuzzers if requested.
         experiment_df = data_utils.filter_fuzzers(experiment_df, fuzzers)
@@ -225,41 +234,30 @@ def generate_report(experiment_names,
                     merge_with_clobber_nonprivate=False,
                     coverage_report=False):
     """Generate report helper."""
-    logger.debug('Generate report with benchmarks 1: %s', benchmarks)
     if merge_with_clobber_nonprivate:
         experiment_names = (
             queries.add_nonprivate_experiments_for_merge_with_clobber(
                 experiment_names))
         merge_with_clobber = True
 
-    logger.debug('Generate report with benchmarks 2: %s', benchmarks)
     main_experiment_name = experiment_names[0]
+    experiment_names = filter_experiments(experiment_names)
     report_name = report_name or main_experiment_name
 
-    logger.debug('Generate report with benchmarks 3: %s', benchmarks)
     filesystem.create_directory(report_directory)
 
-    logger.debug('Generate report with benchmarks 4: %s', benchmarks)
     data_path = os.path.join(report_directory, DATA_FILENAME)
     experiment_df, experiment_description = get_experiment_data(
         experiment_names, main_experiment_name, from_cached_data, data_path)
 
-    logger.debug('Generate report with benchmarks 5: %s', benchmarks)
     # TODO(metzman): Ensure that each experiment is in the df. Otherwise there
     # is a good chance user misspelled something.
     data_utils.validate_data(experiment_df)
 
-    logger.debug('Modify experiment data with benchmarks: %s', benchmarks)
-    logger.debug('Modify experiment data with experiment_df: %s',
-                 experiment_df['benchmark'])
-    experiment_type = get_experiment_type(main_experiment_name,
-                                          from_cached_data, data_path)
     experiment_df = modify_experiment_data_if_requested(
         experiment_df, experiment_names, benchmarks, fuzzers,
-        label_by_experiment, end_time, merge_with_clobber, experiment_type)
+        label_by_experiment, end_time, merge_with_clobber)
 
-    logger.debug('Modified experiment data with benchmarks: %s',
-                 experiment_df['benchmark'])
     # Add |bugs_covered| column prior to export.
     experiment_df = data_utils.add_bugs_covered_column(experiment_df)
 

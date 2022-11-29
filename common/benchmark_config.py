@@ -35,5 +35,5 @@ def get_config(benchmark):
     benchmark_config = get_config_file(benchmark)
     if os.path.isfile(benchmark_config):
         return yaml_utils.read(benchmark_config)
-    logger.error('Benchmark config does not exist: %s', benchmark_config)
+    logger.warning('Benchmark config does not exist: %s', benchmark_config)
     return {}
