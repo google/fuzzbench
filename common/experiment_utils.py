@@ -71,7 +71,7 @@ def get_experiment_type(benchmarks):
     benchmark_types = ';'.join(
         [f'{b}: {get_benchmark_type(b)}' for b in benchmarks])
     raise ValueError('Cannot mix bug benchmarks with code coverage benchmarks: '
-                     f'{benchmark_types}')
+                     f'{benchmark_types}.')
 
 
 def get_cloud_project():

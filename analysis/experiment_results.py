@@ -23,9 +23,6 @@ from analysis import coverage_data_utils
 from analysis import data_utils
 from analysis import stat_tests
 from common import experiment_utils
-from common import logs
-
-logger = logs.Logger('generate_report')
 
 
 def strip_gs_protocol(url):

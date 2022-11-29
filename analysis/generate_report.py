@@ -149,7 +149,7 @@ def filter_experiments(all_experiment_names):
     a list of old experiments of the same type as the main experiment."""
     main_experiment_name, prev_experiment_names = all_experiment_names[
         0], all_experiment_names[1:]
-    logger.debug('Verifying benchmark type of the main experiment ...')
+    logger.debug('Verifying benchmark type of the main experiment...')
     experiment_benchmark_df = queries.get_experiment_benchmarks(
         [main_experiment_name])
     main_experiment_type = experiment_utils.get_experiment_type(
@@ -158,7 +158,7 @@ def filter_experiments(all_experiment_names):
 
     same_type_experiments = [main_experiment_name]
     for experiment_name in prev_experiment_names:
-        logger.debug('Verifying the benchmark type of %s ...', experiment_name)
+        logger.debug('Verifying the benchmark type of %s...', experiment_name)
         try:
             experiment_benchmark_df = queries.get_experiment_benchmarks(
                 [experiment_name])
@@ -186,13 +186,13 @@ def modify_experiment_data_if_requested(  # pylint: disable=too-many-arguments
     by the user on the command line (or callers to generate_report)."""
     if benchmarks:
         # Filter benchmarks if requested.
-        logger.debug('Filter included benchmarks: %s', benchmarks)
+        logger.debug('Filter included benchmarks: %s.', benchmarks)
         experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks)
 
     if not experiment_df['benchmark'].empty:
         # Filter benchmarks in experiment DataFrame.
         unique_benchmarks = experiment_df['benchmark'].unique().tolist()
-        logger.debug('Filter experiment_df benchmarks: %s', unique_benchmarks)
+        logger.debug('Filter experiment_df benchmarks: %s.', unique_benchmarks)
         experiment_df = data_utils.filter_benchmarks(experiment_df,
                                                      unique_benchmarks)
 
