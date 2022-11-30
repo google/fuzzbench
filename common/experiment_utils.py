@@ -16,7 +16,7 @@
 import os
 import posixpath
 
-from common.benchmark_utils import BenchmarkType, get_type as get_benchmark_type
+from common import benchmark_utils
 from common import environment
 from common import experiment_path as exp_path
 
@@ -61,15 +61,15 @@ def get_experiment_type(benchmarks):
     'code' or 'bug'.
     Raises ValueError if the benchmark types are mixed.
     """
-    for benchmark_type in BenchmarkType:
+    for benchmark_type in benchmark_utils.BenchmarkType:
         type_value = benchmark_type.value
         if all(
-                get_benchmark_type(benchmark) == type_value
+                benchmark_utils.get_type(benchmark) == type_value
                 for benchmark in benchmarks):
             return type_value
 
     benchmark_types = ';'.join(
-        [f'{b}: {get_benchmark_type(b)}' for b in benchmarks])
+        [f'{b}: {benchmark_utils.get_type(b)}' for b in benchmarks])
     raise ValueError('Cannot mix bug benchmarks with code coverage benchmarks: '
                      f'{benchmark_types}.')
 

@@ -32,8 +32,8 @@ def get_config_file(benchmark):
 @functools.lru_cache(maxsize=None)
 def get_config(benchmark):
     """Returns a dictionary containing the config for a benchmark."""
-    benchmark_config = get_config_file(benchmark)
-    if os.path.isfile(benchmark_config):
-        return yaml_utils.read(benchmark_config)
-    logger.warning('Benchmark config does not exist: %s.', benchmark_config)
+    config_file = get_config_file(benchmark)
+    if os.path.isfile(config_file):
+        return yaml_utils.read(config_file)
+    logger.warning('Benchmark config does not exist: %s.', config_file)
     return {}

@@ -147,23 +147,23 @@ def get_experiment_data(experiment_names, main_experiment_name,
 def filter_experiments(all_experiment_names):
     """Helper function that reads data from disk or from the database. Returns
     a list of old experiments of the same type as the main experiment."""
-    main_experiment_name, prev_experiment_names = all_experiment_names[
-        0], all_experiment_names[1:]
     logger.debug('Verifying benchmark type of the main experiment...')
-    experiment_benchmark_df = queries.get_experiment_benchmarks(
+    main_experiment_name = all_experiment_names[0]
+    experiment_benchmarks = queries.get_experiment_benchmarks(
         [main_experiment_name])
     main_experiment_type = experiment_utils.get_experiment_type(
-        experiment_benchmark_df['benchmark'].unique().tolist())
+        experiment_benchmarks)
     logger.info('Main experiment benchmark type is %s.', main_experiment_type)
 
     same_type_experiments = [main_experiment_name]
+    prev_experiment_names = all_experiment_names[1:]
     for experiment_name in prev_experiment_names:
         logger.debug('Verifying the benchmark type of %s...', experiment_name)
         try:
-            experiment_benchmark_df = queries.get_experiment_benchmarks(
+            experiment_benchmarks = queries.get_experiment_benchmarks(
                 [experiment_name])
             experiment_type = experiment_utils.get_experiment_type(
-                experiment_benchmark_df['benchmark'].unique().tolist())
+                experiment_benchmarks)
         except ValueError as mixing_benchmark_error:
             # Ignore old experiments with mixing benchmarks.
             logger.warning(mixing_benchmark_error)

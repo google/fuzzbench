@@ -107,7 +107,7 @@ def filter_benchmarks(experiment_df, included_benchmarks):
     ]
     logger.warning('Filtered out invalid benchmarks: %s.',
                    set(included_benchmarks) - set(valid_benchmarks))
-    logger.debug('Benchmarks passed: %s.', valid_benchmarks)
+    logger.debug('Valid benchmarks: %s.', valid_benchmarks)
     return experiment_df[experiment_df['benchmark'].isin(valid_benchmarks)]
 
 

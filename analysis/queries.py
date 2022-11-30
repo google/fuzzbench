@@ -24,13 +24,15 @@ from database import utils as db_utils
 def get_experiment_benchmarks(experiment_names):
     """Get benchmarks of |experiment_names| from the database."""
     with db_utils.session_scope() as session:
-        snapshots_query = session.query(Trial.benchmark)\
+        snapshots_query = session.query(Trial.benchmark, Trial.experiment)\
+            .distinct(Trial.benchmark)\
             .select_from(Experiment)\
             .join(Trial)\
             .filter(Experiment.name.in_(experiment_names))\
             .filter(Trial.preempted.is_(False))
 
-    return pd.read_sql_query(snapshots_query.statement, db_utils.engine)
+    return pd.read_sql_query(snapshots_query.statement,
+                             db_utils.engine)['benchmark'].tolist()
 
 
 def get_experiment_data(experiment_names):

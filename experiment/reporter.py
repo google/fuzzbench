@@ -67,7 +67,7 @@ def output_report(experiment_config: dict,
     logger.info('In progress: %s.', in_progress)
     merge_with_nonprivate = (not in_progress and experiment_config.get(
         'merge_with_nonprivate', False))
-    logger.info('Merging with nonprivate: %s.', merge_with_nonprivate)
+    logger.info('Is merging with nonprivate:: %s.', merge_with_nonprivate)
 
     try:
         logger.debug('Generating report.')
