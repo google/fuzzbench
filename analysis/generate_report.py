@@ -25,7 +25,6 @@ from analysis import experiment_results
 from analysis import plotting
 from analysis import queries
 from analysis import rendering
-from common import experiment_utils
 from common import filesystem
 from common import logs
 
@@ -128,8 +127,11 @@ def get_arg_parser():
     return parser
 
 
-def get_experiment_data(experiment_names, main_experiment_name,
-                        from_cached_data, data_path):
+def get_experiment_data(experiment_names,
+                        main_experiment_name,
+                        from_cached_data,
+                        data_path,
+                        main_experiment_benchmarks=None):
     """Helper function that reads data from disk or from the database. Returns a
     dataframe and the experiment description."""
     if from_cached_data and os.path.exists(data_path):
@@ -138,44 +140,11 @@ def get_experiment_data(experiment_names, main_experiment_name,
         logger.info('Done reading data from %s.', data_path)
         return experiment_df, 'from cached data'
     logger.info('Reading experiment data from db.')
-    experiment_df = queries.get_experiment_data(experiment_names)
+    experiment_df = queries.get_experiment_data(experiment_names,
+                                                main_experiment_benchmarks)
     logger.info('Done reading experiment data from db.')
     description = queries.get_experiment_description(main_experiment_name)
     return experiment_df, description
-
-
-def filter_experiments(all_experiment_names):
-    """Helper function that reads data from disk or from the database. Returns
-    a list of old experiments of the same type as the main experiment."""
-    logger.debug('Verifying benchmark type of the main experiment...')
-    main_experiment_name = all_experiment_names[0]
-    experiment_benchmarks = queries.get_experiment_benchmarks(
-        [main_experiment_name])
-    main_experiment_type = experiment_utils.get_experiment_type(
-        experiment_benchmarks)
-    logger.info('Main experiment benchmark type is %s.', main_experiment_type)
-
-    same_type_experiments = [main_experiment_name]
-    prev_experiment_names = all_experiment_names[1:]
-    for experiment_name in prev_experiment_names:
-        logger.debug('Verifying the benchmark type of %s...', experiment_name)
-        try:
-            experiment_benchmarks = queries.get_experiment_benchmarks(
-                [experiment_name])
-            experiment_type = experiment_utils.get_experiment_type(
-                experiment_benchmarks)
-        except ValueError as mixing_benchmark_error:
-            # Ignore old experiments with mixing benchmarks.
-            logger.warning(mixing_benchmark_error)
-            continue
-        if experiment_type != main_experiment_type:
-            logger.debug('Excluding benchmark %s with type %s.',
-                         experiment_name, experiment_type)
-            continue
-        logger.info('Including benchmark %s with type %s.', experiment_name,
-                    experiment_type)
-        same_type_experiments.append(experiment_name)
-    return same_type_experiments
 
 
 def modify_experiment_data_if_requested(  # pylint: disable=too-many-arguments
@@ -232,7 +201,8 @@ def generate_report(experiment_names,
                     end_time=None,
                     merge_with_clobber=False,
                     merge_with_clobber_nonprivate=False,
-                    coverage_report=False):
+                    coverage_report=False,
+                    experiment_benchmarks=None):
     """Generate report helper."""
     if merge_with_clobber_nonprivate:
         experiment_names = (
@@ -241,14 +211,17 @@ def generate_report(experiment_names,
         merge_with_clobber = True
 
     main_experiment_name = experiment_names[0]
-    experiment_names = filter_experiments(experiment_names)
     report_name = report_name or main_experiment_name
 
     filesystem.create_directory(report_directory)
 
     data_path = os.path.join(report_directory, DATA_FILENAME)
     experiment_df, experiment_description = get_experiment_data(
-        experiment_names, main_experiment_name, from_cached_data, data_path)
+        experiment_names,
+        main_experiment_name,
+        from_cached_data,
+        data_path,
+        main_experiment_benchmarks=experiment_benchmarks)
 
     # TODO(metzman): Ensure that each experiment is in the df. Otherwise there
     # is a good chance user misspelled something.

@@ -69,6 +69,7 @@ def output_report(experiment_config: dict,
         'merge_with_nonprivate', False))
     logger.info('Is merging with nonprivate:: %s.', merge_with_nonprivate)
 
+    experiment_benchmarks = set(experiment_config['benchmarks'])
     try:
         logger.debug('Generating report.')
         filesystem.recreate_directory(reports_dir)
@@ -79,7 +80,8 @@ def output_report(experiment_config: dict,
             fuzzers=fuzzers,
             in_progress=in_progress,
             merge_with_clobber_nonprivate=merge_with_nonprivate,
-            coverage_report=coverage_report)
+            coverage_report=coverage_report,
+            experiment_benchmarks=experiment_benchmarks)
         filestore_utils.rsync(
             str(reports_dir),
             web_filestore_path,
