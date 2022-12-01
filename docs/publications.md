@@ -1,14 +1,14 @@
 [FuzzBench](https://dl.acm.org/doi/pdf/10.1145/3468264.3473932)
-([BitTex](https://ieeexplore.ieee.org/abstract/document/9787836))
+[[BibTex](https://ieeexplore.ieee.org/abstract/document/9787836)]
 has been widely used by many research works to evaluate fuzzers and will
 continue to serve on facilitating fuzzing evaluation for both academia and
 the industry.
 You are more than welcome to reach out to us to evaluate your fuzzers.
 
-FuzzBench has the honor in helping the following works by providing either an
+FuzzBench has the honor in helping the following publications by providing either an
 evaluation framework or benchmark programs.
 
-Here are some publications that use FuzzBench.
+<!---
 [//]: # (Only included publications of top venues.)
 [//]: # (Citations are in Chicago style.)
 [//]: # (Include the following links of each publication, if available:)
@@ -17,13 +17,14 @@ Here are some publications that use FuzzBench.
 [//]: # (3. Slides.)
 [//]: # (4. Video.)
 [//]: # (5. BibTex.)
+-->
 
 ## 2022
 * Zhang, Zenong, Zach Patterson, Michael Hicks, and Shiyi Wei.
   ["{FIXREVERTER}: A Realistic Bug Injection Methodology for Benchmarking Fuzz
   Testing."](https://www.usenix.org/system/files/sec22-zhang-zenong.pdf) In 31st
-  USENIX Security Symposium (USENIX Security 22), pp. 3699-3715. 2022.{
-  [Video](https://youtu.be/8n0GVJGvF7w)
+  USENIX Security Symposium (USENIX Security 22), pp. 3699-3715. 2022.
+  { [Video](https://youtu.be/8n0GVJGvF7w)
   | [BibTex](https://www.usenix.org/biblio/export/bibtex/281412)
   }
 * Asprone, Dario, Jonathan Metzman, Abhishek Arya, Giovani Guizzo, and Federica
@@ -33,8 +34,8 @@ Here are some publications that use FuzzBench.
 * Chen, Ju, Wookhyun Han, Mingjun Yin, Haochen Zeng, Chengyu Song, Byoungyoung
   Lee, Heng Yin, and Insik Shin. ["{SYMSAN}: Time and Space Efficient Concolic
   Execution via Dynamic Data-flow Analysis."](https://www.usenix.org/system/files/sec22-chen-ju.pdf)
-  In 31st USENIX Security Symposium (USENIX Security 22), pp. 2531-2548. 2022. {
-  (Slides)[https://www.usenix.org/system/files/sec22_slides-chen_ju.pdf]
+  In 31st USENIX Security Symposium (USENIX Security 22), pp. 2531-2548. 2022.
+  { [Slides](https://www.usenix.org/system/files/sec22_slides-chen_ju.pdf)
   | [Video](https://youtu.be/kactPkTffIo)
   | [BibTex](https://www.usenix.org/biblio/export/bibtex/281360)
   }
@@ -47,7 +48,9 @@ Here are some publications that use FuzzBench.
   Skadron. ["BigMap: Future-proofing Fuzzers with Efficient Large Maps."](https://alifahmed.github.io/res/BigMap_DSN.pdf)
   In 2021 51st Annual IEEE/IFIP International Conference on Dependable Systems
   and Networks (DSN), pp. 531-542. IEEE, 2021.
-* Chen, Ju, Jinghan Wang, Chengyu Song, and Heng Yin. "JIGSAW: Efficient and Scalable Path Constraints Fuzzing." In 2022 IEEE Symposium on Security and Privacy (SP), pp. 1531-1531. IEEE Computer Society, 2022.
+* Chen, Ju, Jinghan Wang, Chengyu Song, and Heng Yin. ["JIGSAW: Efficient and
+  Scalable Path Constraints Fuzzing."](https://www.cs.ucr.edu/~heng/pubs/jigsaw_sp22.pdf)
+  In 2022 IEEE Symposium on Security and Privacy (SP), pp. 1531-1531. IEEE Computer Society, 2022.
 
 
 ## 2021
@@ -70,8 +73,8 @@ Here are some publications that use FuzzBench.
 * Fioraldi, Andrea, Dominik Maier, Heiko Eißfeldt, and Marc Heuse. ["{AFL++}:
   Combining Incremental Steps of Fuzzing
   Research."](https://escholarship.org/uc/item/44p2v1gd) In 14th USENIX Workshop on
-  Offensive Technologies (WOOT 20). 2020.{
-  [Slides](https://www.usenix.org/system/files/woot20-paper36-slides-fioraldi.pdf)
+  Offensive Technologies (WOOT 20). 2020.
+  { [Slides](https://www.usenix.org/system/files/woot20-paper36-slides-fioraldi.pdf)
   | [Video](https://youtu.be/cZidm6I7KWU)
   | [BibTex](https://www.usenix.org/biblio/export/bibtex/257204)
   }
