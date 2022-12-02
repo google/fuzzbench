@@ -22,6 +22,7 @@ from analysis import benchmark_results
 from analysis import coverage_data_utils
 from analysis import data_utils
 from analysis import stat_tests
+from common import experiment_utils
 
 
 def strip_gs_protocol(url):
@@ -132,6 +133,7 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
         until a property is evaluated.
         """
         benchmark_names = self._experiment_df.benchmark.unique()
+
         return [
             benchmark_results.BenchmarkResults(name, self._experiment_df,
                                                self._coverage_dict,
@@ -149,12 +151,8 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
 
         Raises ValueError if the benchmark types are mixed.
         """
-        if all(b.type == 'bug' for b in self.benchmarks):
-            return 'bug'
-        if all(b.type == 'code' for b in self.benchmarks):
-            return 'code'
-        raise ValueError(
-            'Cannot mix bug benchmarks with code coverage benchmarks.')
+        benchmarks = [benchmark.name for benchmark in self.benchmarks]
+        return experiment_utils.get_experiment_type(benchmarks)
 
     @property
     def _relevant_column(self):

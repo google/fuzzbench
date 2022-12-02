@@ -62,6 +62,7 @@ def test_output_report_filestore(experiment_fuzzers, expected_merged_fuzzers,
     filestore."""
     experiment_config = _setup_experiment_files(fs)
     experiment_config['fuzzers'] = experiment_fuzzers
+    experiment_benchmarks = set(experiment_config['benchmarks'])
 
     with test_utils.mock_popen_ctx_mgr() as mocked_popen:
         with mock.patch('analysis.generate_report.generate_report'
@@ -80,4 +81,5 @@ def test_output_report_filestore(experiment_fuzzers, expected_merged_fuzzers,
                 fuzzers=expected_merged_fuzzers,
                 in_progress=False,
                 merge_with_clobber_nonprivate=False,
-                coverage_report=False)
+                coverage_report=False,
+                experiment_benchmarks=experiment_benchmarks)

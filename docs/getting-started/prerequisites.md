@@ -23,7 +23,6 @@ Clone the FuzzBench repository to your machine by running the following command:
 ```bash
 git clone https://github.com/google/fuzzbench
 cd fuzzbench
-git submodule update --init
 ```
 
 ## Installing prerequisites

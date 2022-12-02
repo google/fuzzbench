@@ -44,3 +44,4 @@ unsupported_fuzzers:
   - libfuzzer_dataflow_load
   - libfuzzer_dataflow_store
   - libfuzzer_dataflow_pre
+  - wingfuzz

@@ -21,7 +21,7 @@ from database.models import Experiment, Trial, Snapshot, Crash
 from database import utils as db_utils
 
 
-def get_experiment_data(experiment_names):
+def get_experiment_data(experiment_names, main_experiment_benchmarks=None):
     """Get measurements (such as coverage) on experiments from the database."""
     with db_utils.session_scope() as session:
         snapshots_query = session.query(
@@ -38,6 +38,9 @@ def get_experiment_data(experiment_names):
                        Snapshot.trial_id == Crash.trial_id), isouter=True)\
             .filter(Experiment.name.in_(experiment_names))\
             .filter(Trial.preempted.is_(False))
+        if main_experiment_benchmarks:
+            snapshots_query = snapshots_query.filter(
+                Trial.benchmark.in_(main_experiment_benchmarks))
 
     return pd.read_sql_query(snapshots_query.statement, db_utils.engine)
 

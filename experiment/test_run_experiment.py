@@ -48,14 +48,25 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
     def setUp(self):
         self.config_filename = 'config'
         self.config = {
-            'experiment_filestore': 'gs://bucket',
-            'report_filestore': 'gs://web-bucket',
-            'experiment': 'experiment-name',
-            'docker_registry': 'gcr.io/fuzzbench',
-            'cloud_project': 'fuzzbench',
-            'cloud_compute_zone': 'us-central1-a',
-            'trials': 10,
-            'max_total_time': 1000,
+            'experiment_filestore':
+                'gs://bucket',
+            'report_filestore':
+                'gs://web-bucket',
+            'experiment':
+                'experiment-name',
+            'docker_registry':
+                'gcr.io/fuzzbench',
+            'cloud_project':
+                'fuzzbench',
+            'cloud_compute_zone':
+                'us-central1-a',
+            'trials':
+                10,
+            'max_total_time':
+                1000,
+            'worker_pool_name': (
+                'projects/fuzzbench/locations/us-central1/workerpools/buildpool'
+            ),
         }
 
     @mock.patch('common.logs.error')
@@ -69,22 +80,28 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
             with pytest.raises(run_experiment.ValidationError):
                 run_experiment.read_and_validate_experiment_config(
                     'config_file')
-            mocked_error.assert_called_with('Config does not contain "%s".',
-                                            'trials')
+            mocked_error.assert_called_with(
+                'Config does not contain required parameter "%s".', 'trials')
 
     @mock.patch('common.logs.error')
     def test_missing_required_cloud(self, mocked_error):
         """Tests that an error is logged when the config file is missing a
         required cloudconfig parameter."""
-        # All but cloud_compute_zone.
-        del self.config['cloud_compute_zone']
-        with mock.patch('common.yaml_utils.read') as mocked_read_yaml:
-            mocked_read_yaml.return_value = self.config
-            with pytest.raises(run_experiment.ValidationError):
-                run_experiment.read_and_validate_experiment_config(
-                    'config_file')
-            mocked_error.assert_called_with('Config does not contain "%s".',
-                                            'cloud_compute_zone')
+        # All but each cloud_param defined in run_experiment.py.
+        cloud_params = {
+            'cloud_compute_zone', 'cloud_project', 'worker_pool_name'
+        }
+        for cloud_param in cloud_params:
+            test_config = self.config.copy()
+            del test_config[cloud_param]
+            with mock.patch('common.yaml_utils.read') as mocked_read_yaml:
+                mocked_read_yaml.return_value = test_config
+                with pytest.raises(run_experiment.ValidationError):
+                    run_experiment.read_and_validate_experiment_config(
+                        'config_file')
+                mocked_error.assert_called_with(
+                    'Config does not contain required parameter "%s".',
+                    cloud_param)
 
     def test_invalid_upper(self):
         """Tests that an error is logged when the config file has a config
@@ -99,7 +116,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         parameter that should be a string but is not."""
         self._test_invalid(
             'experiment_filestore', 1,
-            'Config parameter "%s" is "%s". It must be a lowercase string.')
+            f'Config parameter "%s" is "%s". It must be a {str}.')
 
     def test_invalid_local_filestore(self):
         """Tests that an error is logged when the config file has a config
@@ -108,7 +125,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         self.config['experiment_filestore'] = '/user/test/folder'
         self._test_invalid(
             'report_filestore', 'gs://wrong-here', 'Config parameter "%s" is '
-            '"%s". Local experiments only support using Posix file systems as '
+            '"%s". Local experiments only support Posix file systems '
             'filestores.')
 
     def test_invalid_cloud_filestore(self):
@@ -116,7 +133,7 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
         parameter that should be a GCS bucket but is not."""
         self._test_invalid(
             'experiment_filestore', 'invalid', 'Config parameter "%s" is "%s". '
-            'It must start with gs:// when running on Google Cloud.')
+            'Google Cloud experiments must start with "gs://".')
 
     @mock.patch('common.logs.error')
     def test_multiple_invalid(self, mocked_error):
@@ -130,10 +147,10 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
                 run_experiment.read_and_validate_experiment_config(
                     'config_file')
         mocked_error.assert_any_call(
-            'Config parameter "%s" is "%s". It must be a lowercase string.',
+            f'Config parameter "%s" is "%s". It must be a {str}.',
             'experiment_filestore', str(self.config['experiment_filestore']))
         mocked_error.assert_any_call(
-            'Config parameter "%s" is "%s". It must be a lowercase string.',
+            f'Config parameter "%s" is "%s". It must be a {str}.',
             'report_filestore', str(self.config['report_filestore']))
 
     @mock.patch('common.logs.error')
