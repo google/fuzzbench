@@ -13,7 +13,11 @@
 # limitations under the License.
 """Utility functions for data (frame) transformations."""
 from analysis import stat_tests
+from common import benchmark_utils
 from common import environment
+from common import logs
+
+logger = logs.Logger('data_utils')
 
 
 class EmptyDataError(ValueError):
@@ -97,7 +101,14 @@ def filter_fuzzers(experiment_df, included_fuzzers):
 def filter_benchmarks(experiment_df, included_benchmarks):
     """Returns table with only rows where benchmark is in
     |included_benchmarks|."""
-    return experiment_df[experiment_df['benchmark'].isin(included_benchmarks)]
+    valid_benchmarks = [
+        benchmark for benchmark in included_benchmarks
+        if benchmark_utils.validate(benchmark)
+    ]
+    logger.warning('Filtered out invalid benchmarks: %s.',
+                   set(included_benchmarks) - set(valid_benchmarks))
+    logger.debug('Valid benchmarks: %s.', valid_benchmarks)
+    return experiment_df[experiment_df['benchmark'].isin(valid_benchmarks)]
 
 
 def label_fuzzers_by_experiment(experiment_df):

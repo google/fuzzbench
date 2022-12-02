@@ -16,6 +16,7 @@
 import os
 import posixpath
 
+from common import benchmark_utils
 from common import environment
 from common import experiment_path as exp_path
 
@@ -53,6 +54,24 @@ def get_experiment_name():
 def get_experiment_folders_dir():
     """Returns experiment folders directory."""
     return exp_path.path('experiment-folders')
+
+
+def get_experiment_type(benchmarks):
+    """Returns the experiment type based on the type of |benchmarks|, i.e.,
+    'code' or 'bug'.
+    Raises ValueError if the benchmark types are mixed.
+    """
+    for benchmark_type in benchmark_utils.BenchmarkType:
+        type_value = benchmark_type.value
+        if all(
+                benchmark_utils.get_type(benchmark) == type_value
+                for benchmark in benchmarks):
+            return type_value
+
+    benchmark_types = ';'.join(
+        [f'{b}: {benchmark_utils.get_type(b)}' for b in benchmarks])
+    raise ValueError('Cannot mix bug benchmarks with code coverage benchmarks: '
+                     f'{benchmark_types}.')
 
 
 def get_cloud_project():
