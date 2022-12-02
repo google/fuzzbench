@@ -1,5 +1,5 @@
 [FuzzBench](https://dl.acm.org/doi/pdf/10.1145/3468264.3473932)
-[[BibTex](https://ieeexplore.ieee.org/abstract/document/9787836)]
+[[BibTeX](https://ieeexplore.ieee.org/abstract/document/9787836)]
 has been widely used by many research works to evaluate fuzzers and will
 continue to serve on facilitating fuzzing evaluation for both academia and
 the industry.
@@ -16,7 +16,7 @@ evaluation framework or benchmark programs.
 [//]: # (2. Our FuzzBench report.)
 [//]: # (3. Slides.)
 [//]: # (4. Video.)
-[//]: # (5. BibTex.)
+[//]: # (5. BibTeX.)
 -->
 
 ## 2022
@@ -25,7 +25,7 @@ evaluation framework or benchmark programs.
   Testing."](https://www.usenix.org/system/files/sec22-zhang-zenong.pdf) In 31st
   USENIX Security Symposium (USENIX Security 22), pp. 3699-3715. 2022.
   { [Video](https://youtu.be/8n0GVJGvF7w)
-  | [BibTex](https://www.usenix.org/biblio/export/bibtex/281412)
+  | [BibTeX](https://www.usenix.org/biblio/export/bibtex/281412)
   }
 * Asprone, Dario, Jonathan Metzman, Abhishek Arya, Giovani Guizzo, and Federica
   Sarro. ["Comparing Fuzzers on a Level Playing Field with FuzzBench."](https://discovery.ucl.ac.uk/id/eprint/10144606/1/Comparing%20Fuzzers%20on%20a%20Level%20Playing%20Field%20with%20FuzzBench.pdf)
@@ -37,7 +37,7 @@ evaluation framework or benchmark programs.
   In 31st USENIX Security Symposium (USENIX Security 22), pp. 2531-2548. 2022.
   { [Slides](https://www.usenix.org/system/files/sec22_slides-chen_ju.pdf)
   | [Video](https://youtu.be/kactPkTffIo)
-  | [BibTex](https://www.usenix.org/biblio/export/bibtex/281360)
+  | [BibTeX](https://www.usenix.org/biblio/export/bibtex/281360)
   }
 * Zhang, Zenong, George Klees, Eric Wang, Michael Hicks, and Shiyi Wei.
   ["Registered Report: Fuzzing Configurations of Program
@@ -91,6 +91,6 @@ evaluation framework or benchmark programs.
   Offensive Technologies (WOOT 20). 2020.
   { [Slides](https://www.usenix.org/system/files/woot20-paper36-slides-fioraldi.pdf)
   | [Video](https://youtu.be/cZidm6I7KWU)
-  | [BibTex](https://www.usenix.org/biblio/export/bibtex/257204)
+  | [BibTeX](https://www.usenix.org/biblio/export/bibtex/257204)
   }
 
