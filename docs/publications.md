@@ -51,9 +51,24 @@ evaluation framework or benchmark programs.
 * Chen, Ju, Jinghan Wang, Chengyu Song, and Heng Yin. ["JIGSAW: Efficient and
   Scalable Path Constraints Fuzzing."](https://www.cs.ucr.edu/~heng/pubs/jigsaw_sp22.pdf)
   In 2022 IEEE Symposium on Security and Privacy (SP), pp. 1531-1531. IEEE Computer Society, 2022.
+* Böhme, Marcel, László Szekeres, and Jonathan Metzman.
+  ["On the Reliability of Coverage-Based Fuzzer Benchmarking."](http://seclab.cs.sunysb.edu/lszekeres/Papers/ICSE22.pdf)
+  In 44th IEEE/ACM International Conference on Software Engineering, ser. ICSE,
+  vol. 22. 2022.
+* Vishnyakov, Alexey, Daniil Kuts, Vlada Logunova, Darya Parygina, Eli Kobrin,
+  Georgy Savidov, and Andrey Fedotov. ["Sydr-Fuzz: Continuous Hybrid Fuzzing and
+  Dynamic Analysis for Security Development Lifecycle."](https://arxiv.org/pdf/2211.11595.pdf)
+  arXiv preprint arXiv:2211.11595 (2022).
+
 
 
 ## 2021
+* Metzman, Jonathan, László Szekeres, Laurent Simon, Read Sprabery, and
+  Abhishek Arya. ["FuzzBench: an open fuzzer benchmarking platform and
+  service."](https://dl.acm.org/doi/pdf/10.1145/3468264.3473932)
+  In Proceedings of the 29th ACM Joint Meeting on European Software Engineering
+  Conference and Symposium on the Foundations of Software Engineering, pp.
+  1393-1403. 2021.
 * Wang, Jinghan, Chengyu Song, and Heng Yin. ["Reinforcement learning-based
   hierarchical seed scheduling for greybox
   fuzzing."](https://escholarship.org/uc/item/44p2v1gd) (2021).
