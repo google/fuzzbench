@@ -127,8 +127,11 @@ def get_arg_parser():
     return parser
 
 
-def get_experiment_data(experiment_names, main_experiment_name,
-                        from_cached_data, data_path):
+def get_experiment_data(experiment_names,
+                        main_experiment_name,
+                        from_cached_data,
+                        data_path,
+                        main_experiment_benchmarks=None):
     """Helper function that reads data from disk or from the database. Returns a
     dataframe and the experiment description."""
     if from_cached_data and os.path.exists(data_path):
@@ -137,7 +140,8 @@ def get_experiment_data(experiment_names, main_experiment_name,
         logger.info('Done reading data from %s.', data_path)
         return experiment_df, 'from cached data'
     logger.info('Reading experiment data from db.')
-    experiment_df = queries.get_experiment_data(experiment_names)
+    experiment_df = queries.get_experiment_data(experiment_names,
+                                                main_experiment_benchmarks)
     logger.info('Done reading experiment data from db.')
     description = queries.get_experiment_description(main_experiment_name)
     return experiment_df, description
@@ -151,7 +155,15 @@ def modify_experiment_data_if_requested(  # pylint: disable=too-many-arguments
     by the user on the command line (or callers to generate_report)."""
     if benchmarks:
         # Filter benchmarks if requested.
+        logger.debug('Filter included benchmarks: %s.', benchmarks)
         experiment_df = data_utils.filter_benchmarks(experiment_df, benchmarks)
+
+    if not experiment_df['benchmark'].empty:
+        # Filter benchmarks in experiment DataFrame.
+        unique_benchmarks = experiment_df['benchmark'].unique().tolist()
+        logger.debug('Filter experiment_df benchmarks: %s.', unique_benchmarks)
+        experiment_df = data_utils.filter_benchmarks(experiment_df,
+                                                     unique_benchmarks)
 
     if fuzzers is not None:
         # Filter fuzzers if requested.
@@ -189,7 +201,8 @@ def generate_report(experiment_names,
                     end_time=None,
                     merge_with_clobber=False,
                     merge_with_clobber_nonprivate=False,
-                    coverage_report=False):
+                    coverage_report=False,
+                    experiment_benchmarks=None):
     """Generate report helper."""
     if merge_with_clobber_nonprivate:
         experiment_names = (
@@ -204,7 +217,11 @@ def generate_report(experiment_names,
 
     data_path = os.path.join(report_directory, DATA_FILENAME)
     experiment_df, experiment_description = get_experiment_data(
-        experiment_names, main_experiment_name, from_cached_data, data_path)
+        experiment_names,
+        main_experiment_name,
+        from_cached_data,
+        data_path,
+        main_experiment_benchmarks=experiment_benchmarks)
 
     # TODO(metzman): Ensure that each experiment is in the df. Otherwise there
     # is a good chance user misspelled something.
