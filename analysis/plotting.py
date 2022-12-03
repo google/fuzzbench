@@ -21,6 +21,9 @@ import seaborn as sns
 
 from analysis import data_utils
 from common import experiment_utils
+from common import logs
+
+logger = logs.Logger('plotting')
 
 _DEFAULT_TICKS_COUNT = 12
 _DEFAULT_LABEL_ROTATION = 30
@@ -155,6 +158,15 @@ class Plotter:
         snapshot_time = benchmark_snapshot_df.time.unique()[0]
         fuzzer_order = data_utils.benchmark_rank_by_mean(
             benchmark_snapshot_df, key=column_of_interest).index
+
+        logger.debug('column of interest: %s', column_of_interest)
+        logger.debug('fuzzer_order: %s', fuzzer_order)
+        logger.debug('benchmark_df: %s',
+                     benchmark_df[benchmark_df.time <= snapshot_time])
+        logger.debug('ci: %s', None if bugs or self._quick else 95)
+        logger.debug('estimator: %s', np.median)
+        logger.debug('palette: %s', self._fuzzer_colors)
+        logger.info('markers: %s', self._fuzzer_markers)
 
         axes = sns.lineplot(
             y=column_of_interest,
