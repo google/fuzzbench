@@ -90,7 +90,7 @@ class Plotter:
     # We specify 20 markers for the 20 colors above.
     _MARKER_PALETTE = [
         'o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P',
-        'X', ',', '+', 'x', '|', '_'
+        'X', ',', '.'
     ]
 
     def __init__(self, fuzzers, quick=False, logscale=False):
