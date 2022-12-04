@@ -29,17 +29,26 @@ jobs:
           - libafl
           - libfuzzer
           - mopt
+          # Greybox fuzzers.
           - wingfuzz
-          # - klee               # To Be Fixed.
           # - tortoisefuzz       # To Be Fixed.
-          # Concolic execution
+          # Symbolic ececution.
+          # - klee               # To Be Fixed.
+          # Concolic execution.
           # - symcc_aflplusplus  # To Be Fixed.
-          # Grammar fuzzers
+          # Grammar fuzzers.
           # - nautilus           # To Be Fixed.
           # - gramatron          # To Be Fixed.
           # - token_level        # To Be Fixed.
           # - grimoire           # To Be Fixed.
           # Temporary variants.
+          # - aflplusplus_um_prioritize
+          # - aflplusplus_um_prioritize_75
+          # - aflplusplus_um_random
+          # - aflplusplus_um_random_3
+          # - aflplusplus_um_random_6
+          # - aflplusplus_um_random_75
+          # To be Removed.
           # - introspector_driven_focus
           # - centipede_function_filter
           # - aflplusplus_dict2file
@@ -54,12 +63,6 @@ jobs:
           # - afl_um_parallel
           # - aflplusplus_optimal
           # - aflplusplus_tracepc
-          # - aflplusplus_um_prioritize
-          # - aflplusplus_um_prioritize_75
-          # - aflplusplus_um_random
-          # - aflplusplus_um_random_75
-          # - aflplusplus_um_random_3
-          # - aflplusplus_um_random_6
           # - aflplusplus_um_parallel
           # - honggfuzz_um_random
           # - honggfuzz_um_random_75
