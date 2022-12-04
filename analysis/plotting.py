@@ -88,13 +88,10 @@ class Plotter:
     # We need a manually specified marker list due to:
     # https://github.com/mwaskom/seaborn/issues/1513
     # We specify 20 markers for the 20 colors above.
-    # We cannot mix filled and line markers.
-    _FILLED_MARKER_PALETTE = [
+    _MARKER_PALETTE = [
         'o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P',
         'X', ',', '.'
     ]
-    # Keep following line markers in case needed.
-    _LINE_MARKER_PALETTE = ['+', 'x', '|', '_']
 
     def __init__(self, fuzzers, quick=False, logscale=False):
         """Instantiates plotter with list of |fuzzers|. If |quick| is True,
@@ -105,8 +102,7 @@ class Plotter:
             for idx, fuzzer in enumerate(sorted(fuzzers))
         }
         self._fuzzer_markers = {
-            fuzzer:
-            self._FILLED_MARKER_PALETTE[idx % len(self._FILLED_MARKER_PALETTE)]
+            fuzzer: self._MARKER_PALETTE[idx % len(self._MARKER_PALETTE)]
             for idx, fuzzer in enumerate(sorted(fuzzers))
         }
 
