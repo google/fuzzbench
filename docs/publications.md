@@ -9,7 +9,7 @@ permalink: /publications/
 # Publications
 
 [FuzzBench](https://dl.acm.org/doi/pdf/10.1145/3468264.3473932)
-[[BibTeX](https://ieeexplore.ieee.org/abstract/document/9787836)]
+[[BibTeX](https://scholar.googleusercontent.com/scholar.bib?q=info:ELh3M_umuJoJ:scholar.google.com/&output=citation&scisdr=CgXp-uhUEOWDvhWGNzg:AAGBfm0AAAAAY42ALzg1eyEmlFpd8_hvdW7JVBxoPP5m&scisig=AAGBfm0AAAAAY42AL1eb8vNiL_vvBm3HWkO1EEQPHzke&scisf=4&ct=citation&cd=-1&hl=en)]
 has been widely used by many research works to evaluate fuzzers and will
 continue to serve on facilitating fuzzing evaluation for both academia and
 the industry.
