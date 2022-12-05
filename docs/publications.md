@@ -9,6 +9,7 @@ permalink: /publications/
 # Publications
 
 [FuzzBench](https://dl.acm.org/doi/pdf/10.1145/3468264.3473932)
+[[BibTeX](https://google.github.io/fuzzbench/faq/#how-can-i-cite-fuzzbench-in-my-paper)]
 has been widely used by many research works to evaluate fuzzers and will
 continue to serve on facilitating fuzzing evaluation for both academia and
 the industry.
