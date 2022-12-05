@@ -90,7 +90,7 @@ evaluation framework or benchmark programs.
   }
 
 
-## ArXiv
+## arXiv
 * Vishnyakov, Alexey, Daniil Kuts, Vlada Logunova, Darya Parygina, Eli Kobrin,
   Georgy Savidov, and Andrey Fedotov. ["Sydr-Fuzz: Continuous Hybrid Fuzzing and
   Dynamic Analysis for Security Development Lifecycle."](https://arxiv.org/pdf/2211.11595.pdf)
