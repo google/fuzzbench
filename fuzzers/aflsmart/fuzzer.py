@@ -42,7 +42,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     composite_mode = False
     input_model = ''
     benchmark_name = os.environ['BENCHMARK']
-    if benchmark_name == 'libpng-1.2.56':
+    if benchmark_name == 'libpng-1.6.38':
         input_model = 'png.xml'
     if benchmark_name == 'libpcap_fuzz_both':
         input_model = 'pcap.xml'

@@ -94,7 +94,7 @@ def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-man
         os.environ['AFL_KEEP_TIMEOUTS'] = '1'
     elif benchmark_name == 'harfbuzz-1.3.2':
         os.environ['AFL_KEEP_TIMEOUTS'] = '1'
-    elif benchmark_name == 'libpng-1.2.56':
+    elif benchmark_name == 'libpng-1.6.38':
         os.environ['AFL_TESTCACHE_SIZE'] = '2'
         os.environ['AFL_KEEP_TIMEOUTS'] = '1'
         run_options = ['-l', '2AT']
