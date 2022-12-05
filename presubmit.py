@@ -115,7 +115,8 @@ def is_fuzzer_ignored_in_ci(fuzzer: str) -> bool:
     fuzzers.yml."""
     yaml_filepath = _SRC_ROOT / '.github' / 'workflows' / 'fuzzers.yml'
     yaml_contents = yaml_utils.read(yaml_filepath)
-    fuzzer_list = yaml_contents['jobs']['build']['strategy']['matrix']['fuzzer_to_ignore']
+    fuzzer_list = yaml_contents['jobs']['build']['strategy']['matrix'][
+        'fuzzer_to_ignore']
     is_ignored = fuzzer in fuzzer_list
     if is_ignored:
         print(f'{fuzzer} is intentionally ignored by {yaml_filepath}.')
@@ -141,7 +142,8 @@ class FuzzerAndBenchmarkValidator:
             # We know this is invalid and have already complained about it.
             return False
 
-        if fuzzer != 'coverage' and not is_fuzzer_tested_in_ci(fuzzer) and not is_fuzzer_ignored_in_ci(fuzzer):
+        if fuzzer != 'coverage' and not is_fuzzer_tested_in_ci(
+                fuzzer) and not is_fuzzer_ignored_in_ci(fuzzer):
             self.invalid_fuzzers.add(fuzzer)
             return False
 
