@@ -1,3 +1,13 @@
+---
+layout: default
+title: Publications
+has_children: false
+nav_order: 9
+permalink: /publications/
+---
+
+# Publications
+
 [FuzzBench](https://dl.acm.org/doi/pdf/10.1145/3468264.3473932)
 [[BibTeX](https://ieeexplore.ieee.org/abstract/document/9787836)]
 has been widely used by many research works to evaluate fuzzers and will
