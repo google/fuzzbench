@@ -39,7 +39,7 @@ def get_all_fuzzer_dirs():
 
 def _get_fuzzer_module(fuzzer):
     """Get the module for |fuzzer|'s fuzzer.py."""
-    return 'fuzzers.{}.fuzzer'.format(fuzzer)
+    return f'fuzzers.{fuzzer}.fuzzer'
 
 
 def _get_all_fuzzer_modules():

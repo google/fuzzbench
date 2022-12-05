@@ -1,8 +1,5 @@
-commit: 987bbb684e688651e3d06502e2ff9b6f08130538
-commit_date: 2018-08-31 03:01:00+00:00
 fuzz_target: pdf_fuzzer
 project: poppler
-type: bug
 unsupported_fuzzers:
   - aflcc
   - afl_qemu
@@ -24,3 +21,4 @@ unsupported_fuzzers:
   - fuzzolic_aflplusplus_z3dict
   - aflplusplus_gcc
   - tortoisefuzz
+  - wingfuzz

@@ -19,7 +19,7 @@ import sys
 import traceback
 
 import google.cloud.logging
-from google.cloud.logging.handlers.handlers import CloudLoggingHandler
+from google.cloud.logging_v2.handlers.handlers import CloudLoggingHandler
 from google.cloud import error_reporting
 
 # Disable this check since we have a bunch of non-constant globals in this file.
@@ -72,6 +72,7 @@ def initialize(name='fuzzbench', default_extras=None, log_level=logging.INFO):
     _set_instance_name(default_extras)
     _set_experiment(default_extras)
 
+    # pylint: disable=global-variable-not-assigned
     global _default_extras
     _default_extras.update(default_extras)
 

@@ -14,15 +14,69 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:1b6a6993690fa947df74ceabbf6a1f89a46d7e4277492addcd45a8525e34be5a
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
 MAINTAINER jonathan@titanous.com
-RUN apt-get update && apt-get upgrade -y && apt-get install -y make autoconf libz-dev lib32z1-dev zlib1g-dev automake libtool pkg-config cmake
-RUN git clone --depth 1 https://anongit.freedesktop.org/git/poppler/poppler.git
-RUN git clone --depth 1 git://git.sv.nongnu.org/freetype/freetype2.git
-RUN git clone --depth 1 https://github.com/mozilla/pdf.js pdf.js && \
+
+RUN apt-get update && \
+    apt-get install -y \
+        wget autoconf automake libtool pkg-config gperf
+RUN pip3 install \
+        meson ninja gyp-next
+
+RUN git clone \
+        --depth 1 \
+        --branch v1.2.13 \
+        https://github.com/madler/zlib.git
+RUN git clone \
+        --depth 1 \
+        --branch VER-2-12-1 \
+        https://gitlab.freedesktop.org/freetype/freetype.git
+RUN git clone \
+        --depth 1 \
+        --branch lcms2.14 \
+        https://github.com/mm2/Little-CMS.git
+RUN git clone \
+        --depth 1 \
+        --branch v2.5.0 \
+        https://github.com/uclouvain/openjpeg
+RUN git clone \
+        --depth 1 \
+        --branch v1.6.38 \
+        https://github.com/glennrp/libpng.git
+RUN git clone \
+        --depth 1 \
+        --branch 2.14.1 \
+        https://gitlab.freedesktop.org/fontconfig/fontconfig.git
+RUN git clone \
+        --depth 1 \
+        --branch 1.17.6 \
+        https://gitlab.freedesktop.org/cairo/cairo.git
+RUN git clone \
+        --depth 1 \
+        --branch=5.15 \
+        git://code.qt.io/qt/qtbase.git
+RUN git clone \
+        --depth 1 \
+        --branch 1.50.11 \
+        https://gitlab.gnome.org/GNOME/pango.git
+
+ADD https://ftp.gnome.org/pub/gnome/sources/glib/2.70/glib-2.70.0.tar.xz $SRC
+RUN tar xvJf $SRC/glib-2.70.0.tar.xz
+RUN wget https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.bz2
+RUN wget https://ftp.mozilla.org/pub/security/nss/releases/NSS_3_75_RTM/src/nss-3.75-with-nspr-4.32.tar.gz
+
+RUN git clone \
+        --depth 1 \
+        --branch poppler-22.02.0 \
+        https://github.com/freedesktop/poppler.git
+
+RUN git clone \
+        --depth 1 \
+        --branch v3.0.279 \
+        https://github.com/mozilla/pdf.js pdf.js && \
     zip -q $SRC/pdf_fuzzer_seed_corpus.zip pdf.js/test/pdfs/*.pdf && \
     rm -rf pdf.js
-ADD https://raw.githubusercontent.com/rc0r/afl-fuzz/master/dictionaries/pdf.dict $SRC/pdf_fuzzer.dict
-WORKDIR $SRC
-COPY *.cc poppler/fuzz/
+
+ADD https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/pdf.dict $SRC/poppler.dict
+WORKDIR $SRC/poppler
 COPY build.sh $SRC/

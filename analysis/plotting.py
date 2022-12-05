@@ -13,12 +13,12 @@
 # limitations under the License.
 """Plotting functions."""
 
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
 import numpy as np
 import Orange
 import seaborn as sns
 
+from matplotlib import colors
+from matplotlib import pyplot as plt
 from analysis import data_utils
 from common import experiment_utils
 
@@ -36,11 +36,11 @@ def _formatted_hour_min(seconds):
     hours = int(seconds / 60 / 60)
     minutes = int(seconds / 60) % 60
     if hours:
-        time_string += '%dh' % hours
+        time_string += f'{hours}h'
     if minutes:
         if hours:
             time_string += ':'
-        time_string += '%dm' % minutes
+        time_string += f'{minutes}m'
     return time_string
 
 
@@ -54,7 +54,7 @@ def _formatted_title(benchmark_snapshot_df):
     stats_string += _formatted_hour_min(snapshot_time)
 
     trial_count = benchmark_snapshot_df.fuzzer.value_counts().min()
-    stats_string += ', %d trials/fuzzer' % trial_count
+    stats_string += f', {trial_count} trials/fuzzer'
     stats_string += ')'
     return stats_string
 
@@ -109,7 +109,6 @@ class Plotter:
         self._quick = quick
         self._logscale = logscale
 
-    # pylint: disable=no-self-use
     def _write_plot_to_image(self,
                              plot_function,
                              data,
@@ -126,7 +125,7 @@ class Plotter:
         fig, axes = plt.subplots(figsize=figsize)
         try:
             plot_function(data, axes=axes, **kwargs)
-            fig.savefig(image_path, bbox_inches="tight")
+            fig.savefig(image_path, bbox_inches='tight')
         finally:
             plt.close(fig)
 
@@ -257,10 +256,10 @@ class Plotter:
                         showmeans=True,
                         meanprops=mean_props)
 
-            sns.stripplot(**common_args, size=3, color="black", alpha=0.6)
+            sns.stripplot(**common_args, size=3, color='black', alpha=0.6)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
-        ylabel = 'Reached {} coverage'.format('bug' if bugs else 'branch')
+        ylabel = f'Reached {"bug" if bugs else "branch"} coverage'
         axes.set(ylabel=ylabel)
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
         axes.set_xticklabels(axes.get_xticklabels(),
@@ -339,7 +338,7 @@ class Plotter:
                            ax=axes)
 
         axes.set_title(_formatted_title(benchmark_snapshot_df))
-        ylabel = 'Reached {} coverage'.format('bug' if bugs else 'branch')
+        ylabel = f'Reached {"bug" if bugs else "branch"} coverage'
         axes.set(ylabel=ylabel)
         axes.set(xlabel='Fuzzer (highest median coverage on the left)')
         axes.set_xticklabels(axes.get_xticklabels(),
@@ -387,8 +386,8 @@ class Plotter:
             args['annot'] = False
 
         axis = sns.heatmap(values, ax=axes, **args)
-        axis.set_ylabel("")
-        axis.set_xlabel("")
+        axis.set_ylabel('')
+        axis.set_xlabel('')
         label_args = {'rotation': 0, 'horizontalalignment': 'right'}
         axis.set_yticklabels(axis.get_yticklabels(), **label_args)
         label_args = {'rotation': 270, 'horizontalalignment': 'right'}
@@ -424,7 +423,7 @@ class Plotter:
         heatmap_args = {
             'cmap': cmap,
             'mask': mask if symmetric else None,
-            'fmt': ".3f",
+            'fmt': '.3f',
             'norm': norm
         }
 
@@ -464,7 +463,7 @@ class Plotter:
             'vmax': 1.0,
             'square': True,
             'annot': True,
-            'fmt': ".2f"
+            'fmt': '.2f'
         }
         return self._generic_heatmap_plot(a12_values,
                                           axes,
@@ -486,7 +485,7 @@ class Plotter:
                                       critical_difference)
         fig = plt.gcf()
         try:
-            fig.savefig(image_path, bbox_inches="tight")
+            fig.savefig(image_path, bbox_inches='tight')
         finally:
             plt.close(fig)
 

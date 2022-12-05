@@ -14,11 +14,21 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:1b6a6993690fa947df74ceabbf6a1f89a46d7e4277492addcd45a8525e34be5a
-RUN apt-get update && apt-get install -y make cmake flex bison
-RUN git clone --depth 1 https://github.com/the-tcpdump-group/libpcap.git libpcap
-# for corpus as wireshark
-RUN git clone --depth=1 https://github.com/the-tcpdump-group/tcpdump.git tcpdump
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
+RUN apt-get update && \
+    apt-get install -y make cmake flex bison
+
+RUN git clone \
+        --depth 1 \
+        --branch libpcap-1.10.1 \
+        https://github.com/the-tcpdump-group/libpcap.git libpcap
+
+# For corpus as wireshark.
+RUN git clone \
+        --depth=1 \
+        --branch tcpdump-4.99.1 \
+        https://github.com/the-tcpdump-group/tcpdump.git tcpdump
+
 WORKDIR $SRC
 COPY build.sh $SRC/
 COPY patch.diff $SRC/

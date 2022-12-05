@@ -23,18 +23,18 @@ from fuzzers import utils
 
 def prepare_fuzz_environment(input_corpus):
     """Prepare to fuzz with a LibAFL-based fuzzer."""
-    os.environ['ASAN_OPTIONS'] = "abort_on_error=1:detect_leaks=0:"\
-                                 "malloc_context_size=0:symbolize=0:"\
-                                 "allocator_may_return_null=1:"\
-                                 "detect_odr_violation=0:handle_segv=0:"\
-                                 "handle_sigbus=0:handle_abort=0:"\
-                                 "handle_sigfpe=0:handle_sigill=0"
-    os.environ['UBSAN_OPTIONS'] =  "abort_on_error=1:"\
-                                   "allocator_release_to_os_interval_ms=500:"\
-                                   "handle_abort=0:handle_segv=0:"\
-                                   "handle_sigbus=0:handle_sigfpe=0:"\
-                                   "handle_sigill=0:print_stacktrace=0:"\
-                                   "symbolize=0:symbolize_inline_frames=0"
+    os.environ['ASAN_OPTIONS'] = 'abort_on_error=1:detect_leaks=0:'\
+                                 'malloc_context_size=0:symbolize=0:'\
+                                 'allocator_may_return_null=1:'\
+                                 'detect_odr_violation=0:handle_segv=0:'\
+                                 'handle_sigbus=0:handle_abort=0:'\
+                                 'handle_sigfpe=0:handle_sigill=0'
+    os.environ['UBSAN_OPTIONS'] =  'abort_on_error=1:'\
+                                   'allocator_release_to_os_interval_ms=500:'\
+                                   'handle_abort=0:handle_segv=0:'\
+                                   'handle_sigbus=0:handle_sigfpe=0:'\
+                                   'handle_sigill=0:print_stacktrace=0:'\
+                                   'symbolize=0:symbolize_inline_frames=0'
     # Create at least one non-empty seed to start.
     utils.create_seed_file_for_empty_corpus(input_corpus)
 
@@ -52,7 +52,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
         raise RuntimeError('Unsupported benchmark, unavailable grammar')
     dest = os.path.join(os.environ['OUT'], 'grammar.json.gz')
     shutil.copy(copy_file, dest)
-    os.system("gzip -d '%s'" % dest)
+    os.system(f'gzip -d "{dest}"')
 
     os.environ['CC'] = '/libafl_fuzzbench/target/release/gramatron_cc'
     os.environ['CXX'] = '/libafl_fuzzbench/target/release/gramatron_cxx'

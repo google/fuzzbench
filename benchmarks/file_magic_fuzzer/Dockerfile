@@ -14,9 +14,12 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:1b6a6993690fa947df74ceabbf6a1f89a46d7e4277492addcd45a8525e34be5a
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
 MAINTAINER mike.aizatsky@gmail.com
 RUN apt-get update && apt-get install -y make autoconf automake libtool shtool zlib1g-dev
-RUN git clone --depth 1 https://github.com/file/file.git
+RUN git clone \
+        --depth 1 \
+        --branch FILE5_43 \
+        https://github.com/file/file.git
 WORKDIR file
 COPY build.sh magic_fuzzer.cc $SRC/

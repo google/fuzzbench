@@ -14,12 +14,17 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:1b6a6993690fa947df74ceabbf6a1f89a46d7e4277492addcd45a8525e34be5a
-RUN apt-get update &&\
-    apt-get install -y gperf m4 gettext python3-pip \
-        libcap-dev libmount-dev libkmod-dev \
-        pkg-config wget &&\
-    pip3 install meson==0.55.3 ninja==1.10.0
-RUN git clone --depth 1 https://github.com/systemd/systemd systemd
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
+
+RUN apt-get update && \
+    apt-get install -y libcap-dev
+
+RUN git clone \
+        --depth 1 \
+        --branch v252 \
+        https://github.com/systemd/systemd && \
+    cp $SRC/systemd/tools/oss-fuzz.sh $SRC/build.sh && \
+    # Move shared libraries and tweak rpath for all $ARCHITECTURE.
+    sed -i '119d;126d' $SRC/build.sh
+
 WORKDIR systemd
-COPY build.sh $SRC/

@@ -48,7 +48,7 @@ from experiment.measurer import run_coverage
 from experiment.measurer import run_crashes
 from experiment import scheduler
 
-logger = logs.Logger('measurer')  # pylint: disable=invalid-name
+logger = logs.Logger('measurer')
 
 SnapshotMeasureRequest = collections.namedtuple(
     'SnapshotMeasureRequest', ['fuzzer', 'benchmark', 'trial_id', 'cycle'])
@@ -109,8 +109,8 @@ def measure_loop(experiment: str,
         local_experiment = experiment_utils.is_local_experiment()
         if local_experiment:
             cores_queue = multiprocessing.Queue()
-            logger.info('Scheduling measurers from core %d to %d.' %
-                        (runners_cpus, runners_cpus + measurers_cpus - 1))
+            logger.info('Scheduling measurers from core %d to %d.',
+                        runners_cpus, runners_cpus + measurers_cpus - 1)
             for cpu in range(runners_cpus, runners_cpus + measurers_cpus):
                 cores_queue.put(cpu)
             pool_args = (measurers_cpus, _process_init, (cores_queue,))
@@ -122,14 +122,16 @@ def measure_loop(experiment: str,
         set_up_coverage_binaries(pool, experiment)
         # Using Multiprocessing.Queue will fail with a complaint about
         # inheriting queue.
-        q = manager.Queue()  # pytype: disable=attribute-error
+        # pytype: disable=attribute-error
+        multiprocessing_queue = manager.Queue()
         while True:
             try:
                 # Get whether all trials have ended before we measure to prevent
                 # races.
                 all_trials_ended = scheduler.all_trials_ended(experiment)
 
-                if not measure_all_trials(experiment, max_total_time, pool, q,
+                if not measure_all_trials(experiment, max_total_time, pool,
+                                          multiprocessing_queue,
                                           region_coverage):
                     # We didn't measure any trials.
                     if all_trials_ended:
@@ -145,8 +147,8 @@ def measure_loop(experiment: str,
     logger.info('Finished measure loop.')
 
 
-def measure_all_trials(experiment: str, max_total_time: int, pool, q,
-                       region_coverage) -> bool:  # pylint: disable=invalid-name
+def measure_all_trials(experiment: str, max_total_time: int, pool,
+                       multiprocessing_queue, region_coverage) -> bool:
     """Get coverage data (with coverage runs) for all active trials. Note that
     this should not be called unless multiprocessing.set_start_method('spawn')
     was called first. Otherwise it will use fork which breaks logging."""
@@ -163,7 +165,7 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q,
         return False
 
     measure_trial_coverage_args = [
-        (unmeasured_snapshot, max_cycle, q, region_coverage)
+        (unmeasured_snapshot, max_cycle, multiprocessing_queue, region_coverage)
         for unmeasured_snapshot in unmeasured_snapshots
     ]
 
@@ -189,7 +191,8 @@ def measure_all_trials(experiment: str, max_total_time: int, pool, q,
 
     while True:
         try:
-            snapshot = q.get(timeout=SNAPSHOT_QUEUE_GET_TIMEOUT)
+            snapshot = multiprocessing_queue.get(
+                timeout=SNAPSHOT_QUEUE_GET_TIMEOUT)
             snapshots.append(snapshot)
         except queue.Empty:
             if result.ready():
@@ -329,30 +332,31 @@ def extract_corpus(corpus_archive: str, sha_blacklist: Set[str],
                    output_directory: str):
     """Extract a corpus from |corpus_archive| to |output_directory|."""
     pathlib.Path(output_directory).mkdir(exist_ok=True)
-    tar = tarfile.open(corpus_archive, 'r:gz')
-    for member in tar.getmembers():
+    with tarfile.open(corpus_archive, 'r:gz') as tar:
+        for member in tar.getmembers():
 
-        if not member.isfile():
-            # We don't care about directory structure. So skip if not a file.
-            continue
+            if not member.isfile():
+                # We don't care about directory structure.
+                # So skip if not a file.
+                continue
 
-        member_file_handle = tar.extractfile(member)
-        if not member_file_handle:
-            logger.info('Failed to get handle to %s', member)
-            continue
+            member_file_handle = tar.extractfile(member)
+            if not member_file_handle:
+                logger.info('Failed to get handle to %s.', member)
+                continue
 
-        member_contents = member_file_handle.read()
-        filename = utils.string_hash(member_contents)
-        if filename in sha_blacklist:
-            continue
+            member_contents = member_file_handle.read()
+            filename = utils.string_hash(member_contents)
+            if filename in sha_blacklist:
+                continue
 
-        file_path = os.path.join(output_directory, filename)
+            file_path = os.path.join(output_directory, filename)
 
-        if os.path.exists(file_path):
-            # Don't write out duplicates in the archive.
-            continue
+            if os.path.exists(file_path):
+                # Don't write out duplicates in the archive.
+                continue
 
-        filesystem.write(file_path, member_contents, 'wb')
+            filesystem.write(file_path, member_contents, 'wb')
 
 
 class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-many-instance-attributes
@@ -572,8 +576,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         crash_metadata = run_crashes.do_crashes_run(app_binary,
                                                     self.crashes_dir)
         crashes = []
-        for crash_key in crash_metadata:
-            crash = crash_metadata[crash_key]
+        for crash_key, crash in crash_metadata.items():
             crashes.append(
                 models.Crash(crash_key=crash_key,
                              crash_testcase=crash.crash_testcase,
@@ -623,9 +626,9 @@ def get_fuzzer_stats(stats_filestore_path):
     return json.loads(stats_str)
 
 
-def measure_trial_coverage(  # pylint: disable=invalid-name
-        measure_req, max_cycle: int, q: multiprocessing.Queue,
-        region_coverage) -> models.Snapshot:
+def measure_trial_coverage(measure_req, max_cycle: int,
+                           multiprocessing_queue: multiprocessing.Queue,
+                           region_coverage) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
@@ -640,7 +643,7 @@ def measure_trial_coverage(  # pylint: disable=invalid-name
                                                  region_coverage)
             if not snapshot:
                 break
-            q.put(snapshot)
+            multiprocessing_queue.put(snapshot)
         except Exception:  # pylint: disable=broad-except
             logger.error('Error measuring cycle.',
                          extras={
@@ -748,15 +751,15 @@ def set_up_coverage_binary(benchmark):
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
     benchmark_coverage_binary_dir = coverage_binaries_dir / benchmark
     filesystem.create_directory(benchmark_coverage_binary_dir)
-    archive_name = 'coverage-build-%s.tar.gz' % benchmark
+    archive_name = f'coverage-build-{benchmark}.tar.gz'
     archive_filestore_path = exp_path.filestore(coverage_binaries_dir /
                                                 archive_name)
     filestore_utils.cp(archive_filestore_path,
                        str(benchmark_coverage_binary_dir))
     archive_path = benchmark_coverage_binary_dir / archive_name
-    tar = tarfile.open(archive_path, 'r:gz')
-    tar.extractall(benchmark_coverage_binary_dir)
-    os.remove(archive_path)
+    with tarfile.open(archive_path, 'r:gz') as tar:
+        tar.extractall(benchmark_coverage_binary_dir)
+        os.remove(archive_path)
 
 
 def initialize_logs():

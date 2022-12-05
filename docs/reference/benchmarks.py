@@ -25,8 +25,8 @@ import zipfile
 
 from common import benchmark_utils
 from common import filesystem
+from common import fuzzer_config
 from common import fuzzer_utils as common_fuzzer_utils
-from common import oss_fuzz
 from common import utils
 from fuzzers import utils as fuzzer_utils
 
@@ -68,10 +68,10 @@ def get_real_benchmark_name(benchmark):
         if not os.path.isdir(os.path.join(benchmarks_dir, real_benchmark)):
             continue
 
-        if not benchmark_utils.is_oss_fuzz(real_benchmark):
+        if not benchmark_utils.is_oss_fuzz_benchmark(real_benchmark):
             continue
 
-        config = oss_fuzz.get_config(real_benchmark)
+        config = fuzzer_config.get_config(real_benchmark)
         if config['project'] == benchmark:
             return real_benchmark
 
@@ -126,8 +126,8 @@ def get_binary_size_mb(fuzz_target_path):
 
 def get_fuzz_target(benchmark, benchmark_path):
     """Returns the fuzz target and its path for |benchmark|."""
-    if benchmark_utils.is_oss_fuzz(benchmark):
-        fuzz_target = oss_fuzz.get_config(benchmark)['fuzz_target']
+    if benchmark_utils.is_oss_fuzz_benchmark(benchmark):
+        fuzz_target = fuzzer_config.get_config(benchmark)['fuzz_target']
     else:
         fuzz_target = common_fuzzer_utils.DEFAULT_FUZZ_TARGET_NAME
 

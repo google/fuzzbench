@@ -154,11 +154,11 @@ def prepare_build_environment():
 
 def post_build(fuzz_target):
     """Perform the post-processing for a target"""
-    print('Fuzz-target: {target}'.format(target=fuzz_target))
+    print(f'Fuzz-target: {fuzz_target}')
 
-    getbc_cmd = "/afl/aflc-get-bc {target}".format(target=fuzz_target)
+    getbc_cmd = f'/afl/aflc-get-bc {fuzz_target}'
     if os.system(getbc_cmd) != 0:
-        raise ValueError("get-bc failed")
+        raise ValueError('get-bc failed')
 
     # Set the flags. ldflags is here temporarily until the benchmarks
     # are cleaned up and standalone.
@@ -192,7 +192,7 @@ def post_build(fuzz_target):
         target=fuzz_target,
         ldflags=ldflags)
     if os.system(bin1_cmd) != 0:
-        raise ValueError('command "{command}" failed'.format(command=bin1_cmd))
+        raise ValueError(f'command "{bin1_cmd}" failed')
 
     # The normalized build with non-optimized dictionary.
     print('[post_build] Generating normalized-none-nopt')
@@ -206,7 +206,7 @@ def post_build(fuzz_target):
         target=fuzz_target,
         ldflags=ldflags)
     if os.system(bin2_cmd) != 0:
-        raise ValueError('command "{command}" failed'.format(command=bin2_cmd))
+        raise ValueError(f'command "{bin2_cmd}" failed')
 
     # The no-collision split-condition optimized dictionary.
     print('[post_build] Generating no-collision-all-opt build')
@@ -220,7 +220,7 @@ def post_build(fuzz_target):
         target=fuzz_target,
         ldflags=ldflags)
     if os.system(bin3_cmd) != 0:
-        raise ValueError('command "{command}" failed'.format(command=bin3_cmd))
+        raise ValueError(f'command "{bin3_cmd}" failed')
 
     print('[post_build] Copying afl-fuzz to $OUT directory')
     # Copy out the afl-fuzz binary as a build artifact.
@@ -285,30 +285,29 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     # Use a dictionary for original afl as well.
     print('[fuzz] Running AFL for original binary')
-    src_file = '{target}-normalized-none-nopt.dict'.format(target=target_binary)
-    dst_file = '{target}-original.dict'.format(target=target_binary)
+    src_file = f'{target_binary}-normalized-none-nopt.dict'
+    dst_file = f'{target_binary}-original.dict'
     shutil.copy(src_file, dst_file)
     # Instead of generating a new dict, just hack this one
     # to be non-optimized to prevent AFL from aborting.
-    os.system('sed -i \'s/OPTIMIZED/NORMAL/g\' {dict}'.format(dict=dst_file))
-    afl_fuzz_thread1 = threading.Thread(
-        target=run_fuzzer,
-        args=(input_corpus, output_corpus,
-              '{target}-original'.format(target=target_binary),
-              ['-S', 'secondary-original']))
+    os.system(f'sed -i \'s/OPTIMIZED/NORMAL/g\' {dst_file}')
+    afl_fuzz_thread1 = threading.Thread(target=run_fuzzer,
+                                        args=(input_corpus, output_corpus,
+                                              f'{target_binary}-original',
+                                              ['-S', 'secondary-original']))
     afl_fuzz_thread1.start()
 
     print('[run_fuzzer] Running AFL for normalized and optimized dictionary')
     afl_fuzz_thread2 = threading.Thread(
         target=run_fuzzer,
         args=(input_corpus, output_corpus,
-              '{target}-normalized-none-nopt'.format(target=target_binary),
+              f'{target_binary}-normalized-none-nopt',
               ['-S', 'secondary-normalized-nopt']))
     afl_fuzz_thread2.start()
 
     print('[run_fuzzer] Running AFL for FBSP and optimized dictionary')
     run_fuzzer(input_corpus,
                output_corpus,
-               '{target}-no-collision-all-opt'.format(target=target_binary),
+               f'{target_binary}-no-collision-all-opt',
                ['-S', 'secondary-no-collision-all-opt'],
                hide_output=False)

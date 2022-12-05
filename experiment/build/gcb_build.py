@@ -64,7 +64,7 @@ def build_coverage(benchmark):
     config = generate_cloudbuild.create_cloudbuild_spec(image_templates,
                                                         benchmark=benchmark,
                                                         fuzzer='coverage')
-    config_name = 'benchmark-{benchmark}-coverage'.format(benchmark=benchmark)
+    config_name = f'benchmark-{benchmark}-coverage'
     _build(config, config_name)
 
 
@@ -75,11 +75,12 @@ def _build(
     """Submit build to GCB."""
     with tempfile.NamedTemporaryFile() as config_file:
         yaml_utils.write(config_file.name, config)
-        logger.debug('Using build configuration: %s' % config)
+        logger.debug('Using build configuration: %s', config)
 
-        config_arg = '--config=%s' % config_file.name
+        config_arg = f'--config={config_file.name}'
+
         # Use "s" suffix to denote seconds.
-        timeout_arg = '--timeout=%ds' % timeout_seconds
+        timeout_arg = f'--timeout={timeout_seconds}s'
 
         command = [
             'gcloud',
@@ -118,8 +119,7 @@ def build_fuzzer_benchmark(fuzzer: str, benchmark: str):
         if image_specs['type'] in ('base', 'coverage', 'dispatcher'):
             continue
         image_templates[image_name] = image_specs
-    config_name = 'benchmark-{benchmark}-fuzzer-{fuzzer}'.format(
-        benchmark=benchmark, fuzzer=fuzzer)
+    config_name = f'benchmark-{benchmark}-fuzzer-{fuzzer}'
     config = generate_cloudbuild.create_cloudbuild_spec(image_templates,
                                                         benchmark=benchmark,
                                                         fuzzer=fuzzer)

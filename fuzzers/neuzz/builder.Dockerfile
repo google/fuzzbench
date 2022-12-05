@@ -16,6 +16,13 @@
 ARG parent_image
 FROM $parent_image
 
+# Install and setup clang-11 for AFL/NEUZZ.
+RUN apt install -y clang-11 && \
+    ln -s /usr/bin/clang-11 /usr/bin/clang && \
+    ln -s /usr/bin/clang++-11 /usr/bin/clang++
+ENV PATH="/usr/bin:${PATH}"
+ENV LD_LIBRARY_PATH="/usr/lib/clang/11.0.0/lib/linux:${LD_LIBRARY_PATH}"
+
 # Download and compile AFL v2.56b.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/google/AFL.git /afl && \

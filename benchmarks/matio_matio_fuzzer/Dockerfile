@@ -14,11 +14,22 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:1b6a6993690fa947df74ceabbf6a1f89a46d7e4277492addcd45a8525e34be5a
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
 MAINTAINER t-beu@users.sourceforge.net
-RUN apt-get update && apt-get install -y make autoconf automake libhdf5-dev libtool zlib1g-dev
-ENV HDF5_DIR /usr/lib/x86_64-linux-gnu/hdf5/serial
-RUN git clone --depth 1 git://git.code.sf.net/p/matio/matio matio
+RUN apt-get update && \
+    apt-get install -y \
+        make autoconf automake libtool
+
+RUN git clone \
+        --depth 1 \
+        --branch v1.2.13 \
+        https://github.com/madler/zlib
+RUN git clone \
+        --depth 1 \
+        --branch v1.5.23 \
+        https://github.com/tbeu/matio.git matio
+ADD https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.12/hdf5-1.12.1/src/hdf5-1.12.1.tar.gz \
+    hdf5-1.12.1.tar.gz
+
 WORKDIR matio
-ADD https://support.hdfgroup.org/ftp/lib-external/szip/2.1.1/src/szip-2.1.1.tar.gz szip.tar.gz
 COPY build.sh $SRC/

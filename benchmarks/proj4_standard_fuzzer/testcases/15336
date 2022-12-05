@@ -1,3 +1,0 @@
-+proj=ups
-+proj=pipeline +a=1	proj=leac	rf=2e98 +step +inv +step +step +inv +step +proj=aeqd
-BINARY_3D:               ÿ   ÿÿÿÿ 

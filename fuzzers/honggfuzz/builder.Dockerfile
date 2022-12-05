@@ -30,7 +30,7 @@ RUN apt-get update -y && \
 # honggfuzz doesn't need this when hfuzz-clang(++) is used).
 RUN git clone https://github.com/google/honggfuzz.git /honggfuzz && \
     cd /honggfuzz && \
-    git checkout 0b4cd5b1c4cf26b7e022dc1deb931d9318c054cb && \
+    git checkout oss-fuzz && \
     CFLAGS="-O3 -funroll-loops" make && \
     touch empty_lib.c && \
     cc -c -o empty_lib.o empty_lib.c

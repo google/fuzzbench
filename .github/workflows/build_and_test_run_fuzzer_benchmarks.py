@@ -92,7 +92,7 @@ def make_builds(benchmarks, fuzzer):
     # Sort benchmarks so that they get built in a deterministic order.
     fuzzer_benchmark_pairs = sorted(fuzzer_benchmark_pairs,
                                     key=lambda pair: pair[1])
-    print('Building fuzzer-benchmark pairs: {}'.format(fuzzer_benchmark_pairs))
+    print(f'Building fuzzer-benchmark pairs: {fuzzer_benchmark_pairs}')
     for _, benchmark in fuzzer_benchmark_pairs:
         make_target = get_make_target(fuzzer, benchmark)
         make_command = ['make', 'RUNNING_ON_CI=yes', '-j', make_target]
@@ -116,7 +116,7 @@ def do_build(build_type, fuzzer, always_build):
     elif build_type == 'bug':
         benchmarks = benchmark_utils.get_bug_benchmarks()
     else:
-        raise Exception('Invalid build_type: %s' % build_type)
+        raise Exception(f'Invalid build_type: {build_type}')
 
     if always_build:
         # Always do a build if always_build is True.
@@ -138,7 +138,7 @@ def do_build(build_type, fuzzer, always_build):
 def main():
     """Build OSS-Fuzz or standard benchmarks with a fuzzer."""
     if len(sys.argv) != 3:
-        print('Usage: %s <build_type> <fuzzer>' % sys.argv[0])
+        print(f'Usage: {sys.argv[0]} <build_type> <fuzzer>')
         return 1
     build_type = sys.argv[1]
     fuzzer = sys.argv[2]

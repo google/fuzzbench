@@ -258,7 +258,7 @@ Building benchmarks and fuzzers entails the following process:
    image. This is the first image in this build process that is defined by the
    main FuzzBench code (e.g. not fuzzers, benchmarks, or OSS-Fuzz). Its first
    function is to copy the FuzzBench code and install packages needed to run
-   FuzzBench like Python3.7 For benchmarks that define a `commit` in their
+   FuzzBench like Python3.10. For benchmarks that define a `commit` in their
    `benchmark.yaml` (i.e. OSS-Fuzz benchmarks) the build process for this image
    checks out the source code of that project at the specified commit. Then the
    process defines the environment variables `CC`, `CXX`, `CXXFLAGS`, `CFLAGS`
