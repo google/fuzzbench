@@ -28,6 +28,7 @@ jobs:
           - honggfuzz
           - libafl
           - libfuzzer
+          - libfuzzer_dataflow
           - mopt
           # Greybox fuzzers.
           - wingfuzz
