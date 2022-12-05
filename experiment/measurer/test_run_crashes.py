@@ -13,8 +13,6 @@
 # limitations under the License.
 """Tests for run_coverage.py."""
 
-# pylint: disable=no-self-use
-
 import os
 
 import pytest
@@ -36,7 +34,7 @@ class TestIntegrationRunCoverage:
         """Test that do_coverage_run returns crashing inputs."""
         llvm_tools_path = os.path.abspath(
             os.path.join(TEST_DATA_PATH, '..', 'llvm_tools'))
-        os.environ["PATH"] = llvm_tools_path + os.pathsep + os.environ["PATH"]
+        os.environ['PATH'] = llvm_tools_path + os.pathsep + os.environ['PATH']
 
         crashes_dir = os.path.join(TEST_DATA_PATH, 'crash-corpus')
         crashes = run_crashes.do_crashes_run(self.APP_BINARY_PATH, crashes_dir)

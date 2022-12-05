@@ -118,7 +118,7 @@ def validate(fuzzer):
         return False
 
     # Try importing the fuzzer module.
-    module_name = 'fuzzers.{}.fuzzer'.format(fuzzer)
+    module_name = f'fuzzers.{fuzzer}.fuzzer'
     try:
         importlib.import_module(module_name)
         return True

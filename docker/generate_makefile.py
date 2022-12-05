@@ -21,7 +21,7 @@ from common import benchmark_utils
 from common import fuzzer_utils
 from experiment.build import docker_images
 
-BASE_TAG = "gcr.io/fuzzbench"
+BASE_TAG = 'gcr.io/fuzzbench'
 BENCHMARK_DIR = benchmark_utils.BENCHMARKS_DIR
 
 
@@ -116,7 +116,7 @@ def get_rules_for_image(name, image):
                 section += ' .' + dep
     section += '\n'
     if 'base-' in name:
-        section += '\tdocker pull ubuntu:xenial\n'
+        section += '\tdocker pull ubuntu:focal\n'
     section += '\tdocker build \\\n'
     section += '\t--tag ' + os.path.join(BASE_TAG, image['tag']) + ' \\\n'
     section += '\t--build-arg BUILDKIT_INLINE_CACHE=1 \\\n'
@@ -144,7 +144,7 @@ def main():
         return 1
     makefile_path = sys.argv[1]
     makefile_contents = generate_makefile()
-    with open(makefile_path, 'w') as file_handle:
+    with open(makefile_path, 'w', encoding='utf-8') as file_handle:
         file_handle.write(makefile_contents)
     return 0
 

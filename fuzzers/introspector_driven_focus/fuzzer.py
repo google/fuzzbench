@@ -28,7 +28,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer. Wrapper that uses the defaults when calling
     run_fuzzer."""
 
-    with open('/focus_map.yaml', 'r') as focus_file:
+    with open('/focus_map.yaml', 'r', encoding='utf-8') as focus_file:
         focus_map = yaml.safe_load(focus_file)
     # This fuzzer just uses the first function from the list to focus
     benchmark = os.getenv('BENCHMARK', None)

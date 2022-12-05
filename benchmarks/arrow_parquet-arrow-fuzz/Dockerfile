@@ -14,11 +14,10 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:1b6a6993690fa947df74ceabbf6a1f89a46d7e4277492addcd45a8525e34be5a
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
 
 ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get update -y -q && \
-    apt-get upgrade -y -q && \
+RUN apt-get update && \
     apt-get install -y -q --no-install-recommends \
         bison \
         build-essential \
@@ -28,6 +27,11 @@ RUN apt-get update -y -q && \
         ninja-build \
         python3
 
-RUN git clone --depth=1 https://github.com/apache/arrow.git $SRC/arrow
+RUN git clone \
+        --depth=1 \
+        --branch apache-arrow-10.0.0 \
+        --recurse-submodules \
+        https://github.com/apache/arrow.git \
+        $SRC/arrow
 
 COPY build.sh thrift.patch $SRC/

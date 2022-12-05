@@ -1,3 +1,0 @@
-+proj=pipeline +proj=gs50	towgs84 +inv +step +step +inv
-+proj=aeqd
-BINARY_3D:                   ÿ   ÿ

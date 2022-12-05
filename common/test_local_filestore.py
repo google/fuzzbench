@@ -26,7 +26,7 @@ def test_rm(tmp_path):
     """Tests rm works as expected."""
     file_path = tmp_path / 'file'
     data = 'hello'
-    with open(file_path, 'w') as file_handle:
+    with open(file_path, 'w', encoding='utf-8') as file_handle:
         file_handle.write(data)
     local_filestore.rm(str(file_path))
     assert not os.path.exists(file_path)
@@ -52,9 +52,9 @@ def test_ls_one_file_per_line(tmp_path):
     dir_path = tmp_path
     file1 = dir_path / 'file1'
     file2 = dir_path / 'file2'
-    with open(file1, 'w+'):
+    with open(file1, 'w+', encoding='utf-8'):
         pass
-    with open(file2, 'w+'):
+    with open(file2, 'w+', encoding='utf-8'):
         pass
     assert local_filestore.ls(str(dir_path)).output == 'file1\nfile2\n'
 
@@ -63,11 +63,11 @@ def test_cp(tmp_path):
     """Tests cp works as expected."""
     source = tmp_path / 'source'
     data = 'hello'
-    with open(source, 'w') as file_handle:
+    with open(source, 'w', encoding='utf-8') as file_handle:
         file_handle.write(data)
     destination = tmp_path / 'destination'
     local_filestore.cp(str(source), str(destination))
-    with open(destination) as file_handle:
+    with open(destination, encoding='utf-8') as file_handle:
         assert file_handle.read() == data
 
 
@@ -77,7 +77,7 @@ def test_cp_nonexistent_dest(tmp_path):
     source_dir.mkdir()
     source_file = source_dir / 'file1'
     cp_dest_dir = tmp_path / 'cp_test' / 'intermediate' / 'cp_dest'
-    with open(source_file, 'w'):
+    with open(source_file, 'w', encoding='utf-8'):
         pass
 
     # Should run without exceptions.
@@ -90,7 +90,7 @@ def test_rsync_nonexistent_dest(tmp_path):
     source_dir.mkdir()
     source_file = source_dir / 'file1'
     rsync_dest_dir = tmp_path / 'rsync_test' / 'intermediate' / 'rsync_dest'
-    with open(source_file, 'w'):
+    with open(source_file, 'w', encoding='utf-8'):
         pass
 
     # Should run without exceptions.

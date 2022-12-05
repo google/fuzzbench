@@ -14,14 +14,23 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:1b6a6993690fa947df74ceabbf6a1f89a46d7e4277492addcd45a8525e34be5a
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
 
 # Upgrade to avoid certs errors
-RUN apt-get update && apt-get upgrade -y && \
-    apt-get install -y make autoconf automake libtool pkg-config python-dev python3-dev
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    make autoconf libtool pkg-config \
+    zlib1g-dev zlib1g-dev:i386 liblzma-dev liblzma-dev:i386
 
-RUN git clone https://gitlab.gnome.org/GNOME/libxml2.git
+# Build requires automake 1.16.3
+RUN curl -LO \
+        http://mirrors.kernel.org/ubuntu/pool/main/a/automake-1.16/automake_1.16.5-1.3_all.deb && \
+    apt install ./automake_1.16.5-1.3_all.deb
+
+RUN git clone \
+        --depth 1 \
+        --branch v2.10.3 \
+        https://gitlab.gnome.org/GNOME/libxml2.git
 WORKDIR libxml2
 
 COPY build.sh $SRC/
-COPY *.cc *.h *.dict $SRC/
