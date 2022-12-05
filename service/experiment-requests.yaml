@@ -35,6 +35,12 @@
     - mopt
     - wingfuzz
 
+- experiment: 2022-12-05-aflpp-cmplog
+  description: "afl++ cmplog enhancements"
+  fuzzers:
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_r
+
 - experiment: 2022-12-01-um
   description: "Try out um prioritize 75 and random again"
   fuzzers:
