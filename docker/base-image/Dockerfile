@@ -27,7 +27,8 @@ RUN apt-get update && \
     build-essential \
     zlib1g-dev \
     libssl-dev \
-    libffi-dev
+    libffi-dev \
+    libsqlite3-dev
 
 RUN cd /tmp/ && \
     curl -O https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz && \
