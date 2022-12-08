@@ -14,6 +14,8 @@
 
 FROM ubuntu:focal
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Python 3.10.8 is not the default version in Ubuntu 20.04 (Focal Fossa).
 ENV PYTHON_VERSION 3.10.8
 # Install dependencies required by Python3 or Pip3.
