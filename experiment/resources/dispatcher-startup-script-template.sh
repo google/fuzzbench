@@ -30,4 +30,4 @@ docker run --rm \
   -e WORKER_POOL_NAME={{worker_pool_name}} \
   --cap-add=SYS_PTRACE --cap-add=SYS_NICE \
   -v /var/run/docker.sock:/var/run/docker.sock --name=dispatcher-container \
-  {{docker_registry}}/dispatcher-image /work/startup-dispatcher.sh
+  {{docker_registry}}/dispatcher-image /work/startup-dispatcher.sh &> /tmp/dispatcher.log
