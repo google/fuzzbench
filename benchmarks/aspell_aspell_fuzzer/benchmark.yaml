@@ -1,3 +1,4 @@
+commit: e8eb74793bce4fab381cc40f1c60f9572a99fb94
 fuzz_target: aspell_fuzzer
 project: aspell
 unsupported_fuzzers:

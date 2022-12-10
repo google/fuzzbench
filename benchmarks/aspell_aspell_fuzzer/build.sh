@@ -15,12 +15,7 @@
 #
 ################################################################################
 
-# Suppress an immediate UBSan violation that prevents fuzzing
-pushd $SRC/aspell
-git apply fix_aspell_ub.patch
-popd
 # Run the OSS-Fuzz script in the fuzzer project.
 pushd $SRC/aspell-fuzz
-export LDFLAGS="$LDFLAGS -ldl"
 ./ossfuzz.sh
 popd
