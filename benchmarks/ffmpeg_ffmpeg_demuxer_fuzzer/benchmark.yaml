@@ -1,3 +1,4 @@
+commit: 7adeeff91f974ec5a69967dffe18331f666530eb
 fuzz_target: ffmpeg_DEMUXER_fuzzer
 project: ffmpeg
 unsupported_fuzzers:
