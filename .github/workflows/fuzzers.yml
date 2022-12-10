@@ -112,7 +112,7 @@ jobs:
         benchmark_type:
           - oss-fuzz
           - standard
-          # - bug
+          - bug
 
     steps:
     - uses: actions/checkout@v2
