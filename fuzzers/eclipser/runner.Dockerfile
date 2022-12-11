@@ -43,4 +43,6 @@ RUN wget -q https://storage.googleapis.com/fuzzbench-files/packages-microsoft-pr
 RUN git clone https://github.com/SoftSec-KAIST/Eclipser.git /Eclipser && \
     cd /Eclipser && \
     git checkout ba1d7a55c168f7c19ecceb788a81ea07c2625e45 && \
-    make
+    ln -sf /usr/bin/python2.7 /usr/local/bin/python && \
+    make -j && \
+    ln -sf /usr/local/bin/python3.10 /usr/local/bin/python
