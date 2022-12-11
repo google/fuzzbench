@@ -27,7 +27,8 @@ RUN apt-get update -y && \
         autoconf \
         bison \
         git \
-        gdb
+        gdb \
+        python2
 
 # Use a copy of
 # https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
