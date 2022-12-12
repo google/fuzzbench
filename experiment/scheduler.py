@@ -16,7 +16,6 @@ import datetime
 import math
 import multiprocessing
 import os
-import sqlite3
 import sys
 import random
 import time
@@ -104,7 +103,7 @@ def all_trials_ended(experiment: str) -> bool:
     try:
         return not get_experiment_trials(experiment).filter(
             models.Trial.time_ended.is_(None)).all()
-    except sqlite3.OperationalError:
+    except RuntimeError:
         logger.error('Failed to check whether all trials ended.')
         return False
 
