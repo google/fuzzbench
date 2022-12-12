@@ -19,6 +19,34 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
+- experiment: 2022-12-05-rerun-b
+  description: "Wingfuzz coverage experiment (compare against core fuzzers)"
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - entropic
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - lafintel
+    - libfuzzer
+    - mopt
+    - wingfuzz
+
+- experiment: 2022-12-05-aflpp-cmplog-b
+  description: "afl++ cmplog enhancements"
+  fuzzers:
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_r
+
+- experiment: 2022-12-01-um-b
+  description: "Try out um prioritize 75 and random again"
+  fuzzers:
+    - aflplusplus_um_random
+    - aflplusplus_um_prioritize_75
+    
 - experiment: 2022-12-05-rerun
   description: "Wingfuzz coverage experiment (compare against core fuzzers)"
   fuzzers:
