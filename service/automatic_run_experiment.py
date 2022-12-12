@@ -44,7 +44,7 @@ REQUESTED_EXPERIMENTS_PATH = os.path.join(utils.ROOT_DIR, 'service',
 PAUSE_SERVICE_KEYWORD = 'PAUSE_SERVICE'
 
 EXPERIMENT_NAME_REGEX = re.compile(r'^\d{4}-\d{2}-\d{2}.*')
-SERVICE_CONCURRET_BUILDS = 150
+SERVICE_CONCURRENT_BUILDS = 150
 
 
 def _get_experiment_name(experiment_config: dict) -> str:
