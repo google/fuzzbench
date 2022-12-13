@@ -36,6 +36,8 @@ EXPERIMENT_REQUESTS = [{
     'oss_fuzz_corpus': True,
 }]
 
+SERVICE_CONCURRENT_BUILDS = 150
+
 
 @mock.patch('experiment.run_experiment.start_experiment')
 @mock.patch('common.logs.warning')
@@ -125,6 +127,7 @@ def test_run_requested_experiment(mocked_get_requested_experiments,
                               expected_benchmarks,
                               expected_fuzzers,
                               description='Test experiment',
+                              concurrent_builds=SERVICE_CONCURRENT_BUILDS,
                               oss_fuzz_corpus=True)
     start_experiment_call_args = mocked_start_experiment.call_args_list
     assert len(start_experiment_call_args) == 1
