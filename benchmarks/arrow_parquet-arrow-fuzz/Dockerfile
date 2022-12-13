@@ -28,8 +28,6 @@ RUN apt-get update && \
         python3
 
 RUN git clone \
-        --depth=1 \
-        --branch apache-arrow-10.0.0 \
         --recurse-submodules \
         https://github.com/apache/arrow.git \
         $SRC/arrow

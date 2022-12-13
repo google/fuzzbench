@@ -1,5 +1,7 @@
+commit: 6cfe24633b9fe3c474137571940eca35d7a475dc
 fuzz_target: parquet-arrow-fuzz
 project: arrow
+type: bug
 unsupported_fuzzers:
   - honggfuzz  # To Be Fixed.
   - libafl     # To Be Fixed.

@@ -18,8 +18,6 @@ FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1
 MAINTAINER mike.aizatsky@gmail.com
 RUN apt-get update && apt-get install -y make autoconf automake libtool shtool zlib1g-dev
 RUN git clone \
-        --depth 1 \
-        --branch FILE5_43 \
         https://github.com/file/file.git
 WORKDIR file
 COPY build.sh magic_fuzzer.cc $SRC/
