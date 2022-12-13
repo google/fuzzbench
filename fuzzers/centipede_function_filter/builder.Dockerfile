@@ -23,7 +23,7 @@ RUN git clone -n \
   echo 'build --client_env=CC=clang --cxxopt=-std=c++17 ' \
     '--cxxopt=-stdlib=libc++ --linkopt=-lc++' >> ~/.bazelrc && \
   (cd "$CENTIPEDE_SRC" && \
-    git checkout 93b6567ea2e6f2fd9f3c61dcbd2820abb8993ddd && \
+    git checkout 6ff15301c6bbfc555f2fc1bd323f041062413619 && \
     ./install_dependencies_debian.sh && \
     bazel build -c opt :centipede :centipede_runner) && \
   cp "$CENTIPEDE_SRC/bazel-bin/centipede" '/out/centipede'
