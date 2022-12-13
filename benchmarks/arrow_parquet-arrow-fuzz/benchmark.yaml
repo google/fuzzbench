@@ -1,4 +1,4 @@
-commit: e9222ae00b515a0f57d8c7d54bdb19457d68582f
+commit: 6cfe24633b9fe3c474137571940eca35d7a475dc
 fuzz_target: parquet-arrow-fuzz
 project: arrow
 type: bug
