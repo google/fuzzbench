@@ -19,6 +19,18 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
+
+- experiment: 2022-12-13-libafl
+  description: "Test the LibAFL forkserver"
+  type: bug
+  fuzzers:
+    - aflplusplus
+    - entropic
+    - libfuzzer
+    - honggfuzz
+    - libafl
+    - libafl_forkserver
+
 - experiment: 2022-12-05-rerun-b
   description: "Wingfuzz coverage experiment (compare against core fuzzers)"
   fuzzers:
