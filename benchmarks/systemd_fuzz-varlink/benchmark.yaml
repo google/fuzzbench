@@ -1,5 +1,6 @@
 fuzz_target: fuzz-varlink
 project: systemd
+type: bug
 unsupported_fuzzers:
   - aflcc
   - afl_qemu
