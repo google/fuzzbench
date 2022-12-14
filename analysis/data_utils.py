@@ -140,12 +140,6 @@ def add_bugs_covered_column(experiment_df):
     df = experiment_df.sort_values(grouping3)
     df['firsts'] = ~df.duplicated(subset=grouping1) & ~df.crash_key.isna()
     df['bugs_cumsum'] = df.groupby(grouping2)['firsts'].transform('cumsum')
-
-    logger.info('bugs_covered: %s',
-                df.groupby(grouping3)['bugs_cumsum'].transform('max'))
-    logger.info('grouping3: %s', grouping3)
-    logger.info('df: %s', df.groupby(grouping3))
-    logger.info('bugs_cumsum: %s', df.groupby(grouping3)['bugs_cumsum'])
     df['bugs_covered'] = (
         df.groupby(grouping3)['bugs_cumsum'].transform('max').astype(int))
     new_df = df.drop(columns=['bugs_cumsum', 'firsts'])
@@ -240,11 +234,8 @@ def experiment_summary(experiment_snapshots_df):
 def benchmark_rank_by_mean(benchmark_snapshot_df, key='edges_covered'):
     """Returns ranking of fuzzers based on mean coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
-    logger.info('Mean: %s', benchmark_snapshot_df.groupby('fuzzer')[key].mean())
-    logger.info('benchmark_df: %s', benchmark_snapshot_df.groupby('fuzzer'))
-    logger.info('key: %s', key)
-    logger.info('benchmark_df[key]: %s',
-                benchmark_snapshot_df.groupby('fuzzer')[key])
+    logger.debug('Mean: %s',
+                 benchmark_snapshot_df.groupby('fuzzer')[key].mean())
     means = benchmark_snapshot_df.groupby('fuzzer')[key].mean().astype(int)
     means.rename('mean cov', inplace=True)
     return means.sort_values(ascending=False)
@@ -253,12 +244,8 @@ def benchmark_rank_by_mean(benchmark_snapshot_df, key='edges_covered'):
 def benchmark_rank_by_median(benchmark_snapshot_df, key='edges_covered'):
     """Returns ranking of fuzzers based on median coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
-    logger.info('Median: %s',
-                benchmark_snapshot_df.groupby('fuzzer')[key].median())
-    logger.info('benchmark_df: %s', benchmark_snapshot_df.groupby('fuzzer'))
-    logger.info('key: %s', key)
-    logger.info('benchmark_df[key]: %s',
-                benchmark_snapshot_df.groupby('fuzzer')[key])
+    logger.debug('Median: %s',
+                 benchmark_snapshot_df.groupby('fuzzer')[key].median())
     medians = benchmark_snapshot_df.groupby('fuzzer')[key].median().astype(int)
     medians.rename('median cov', inplace=True)
     return medians.sort_values(ascending=False)
@@ -268,33 +255,9 @@ def benchmark_rank_by_percent(benchmark_snapshot_df, key='edges_covered'):
     """Returns ranking of fuzzers based on median (normalized/%) coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
     max_key = f'{key}_percent_max'
-    logger.warning('Median: %s',
-                   benchmark_snapshot_df.groupby('fuzzer')[max_key].median())
-    logger.warning('benchmark_df: %s', benchmark_snapshot_df)
-
-    fuzzer_group_df = benchmark_snapshot_df.groupby('fuzzer')
-    for df_key, value in fuzzer_group_df:
-        logger.warning(
-            'benchmark_df.groupby("fuzzer"): {key:%s, value: %s, group: %s}',
-            df_key, value, fuzzer_group_df.get_group(df_key))
-
-    logger.warning('max_key: %s', max_key)
-
-    fuzzer_max_key_group_df = benchmark_snapshot_df.groupby('fuzzer')[max_key]
-    for df_key, value in fuzzer_max_key_group_df:
-        logger.warning(
-            'benchmark_df.groupby("fuzzer")[max_key]: '
-            '{key:%s, value: %s, group: %s}', df_key, value,
-            fuzzer_max_key_group_df.get_group(df_key))
-
-    logger.warning('benchmark_df[max_key]: %s',
-                   benchmark_snapshot_df.groupby('fuzzer')[max_key])
-
+    logger.debug('Median: %s',
+                 benchmark_snapshot_df.groupby('fuzzer')[max_key].median())
     benchmark_snapshot_df = benchmark_snapshot_df.fillna(0)
-
-    logger.warning('Median: %s',
-                   benchmark_snapshot_df.groupby('fuzzer')[max_key].median())
-
     medians = benchmark_snapshot_df.groupby('fuzzer')[max_key].median().astype(
         int)
     return medians.sort_values(ascending=False)
