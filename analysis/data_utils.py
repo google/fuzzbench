@@ -270,10 +270,31 @@ def benchmark_rank_by_percent(benchmark_snapshot_df, key='edges_covered'):
     max_key = f'{key}_percent_max'
     logger.warning('Median: %s',
                    benchmark_snapshot_df.groupby('fuzzer')[max_key].median())
-    logger.warning('benchmark_df: %s', benchmark_snapshot_df.groupby('fuzzer'))
+    logger.warning('benchmark_df: %s', benchmark_snapshot_df)
+
+    fuzzer_group_df = benchmark_snapshot_df.groupby('fuzzer')
+    for df_key, value in fuzzer_group_df:
+        logger.warning(
+            'benchmark_df.groupby("fuzzer"): {key:%s, value: %s, group: %s}',
+            df_key, value, fuzzer_group_df.get_group(df_key))
+
     logger.warning('max_key: %s', max_key)
+
+    fuzzer_max_key_group_df = benchmark_snapshot_df.groupby('fuzzer')[max_key]
+    for df_key, value in fuzzer_max_key_group_df:
+        logger.warning(
+            'benchmark_df.groupby("fuzzer")[max_key]: '
+            '{key:%s, value: %s, group: %s}', df_key, value,
+            fuzzer_max_key_group_df.get_group(df_key))
+
     logger.warning('benchmark_df[max_key]: %s',
                    benchmark_snapshot_df.groupby('fuzzer')[max_key])
+
+    benchmark_snapshot_df = benchmark_snapshot_df.fillna(0)
+
+    logger.warning('Median: %s',
+                   benchmark_snapshot_df.groupby('fuzzer')[max_key].median())
+
     medians = benchmark_snapshot_df.groupby('fuzzer')[max_key].median().astype(
         int)
     return medians.sort_values(ascending=False)
