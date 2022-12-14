@@ -1,6 +1,6 @@
 fuzz_target: libarchive_fuzzer
 project: libarchive
-type: bug
+type: bug-draft
 unsupported_fuzzers:
   - aflcc
   - afl_qemu

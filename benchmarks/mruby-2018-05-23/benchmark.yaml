@@ -1,5 +1,5 @@
 fuzz_target: mruby_fuzzer
 project: mruby
-type: bug
+type: bug-draft
 unsupported_fuzzers:
   - libafl
