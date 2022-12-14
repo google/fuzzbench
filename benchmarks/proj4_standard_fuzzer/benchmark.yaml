@@ -1,6 +1,6 @@
 fuzz_target: standard_fuzzer
 project: proj4
-type: bug
+type: bug-draft
 unsupported_fuzzers:
   - aflcc
   - afl_qemu
