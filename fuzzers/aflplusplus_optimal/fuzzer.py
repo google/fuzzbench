@@ -32,49 +32,49 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     benchmark_name = os.environ['BENCHMARK']
 
     if benchmark_name == 'bloaty_fuzz_target':
-        aflplusplus_fuzzer.build("lto")
+        aflplusplus_fuzzer.build('lto')
     elif benchmark_name == 'curl_curl_fuzzer_http':
-        aflplusplus_fuzzer.build("lto")
+        aflplusplus_fuzzer.build('lto')
     elif benchmark_name == 'freetype2-2017':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
+        aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file')
     elif benchmark_name == 'harfbuzz-1.3.2':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
+        aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file')
     elif benchmark_name == 'jsoncpp_jsoncpp_fuzzer':
-        aflplusplus_fuzzer.build("lto", "laf")
+        aflplusplus_fuzzer.build('lto', 'laf')
     elif benchmark_name == 'lcms-2017-03-21':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
+        aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file')
     elif benchmark_name == 'libjpeg-turbo-07-2017':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
+        aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file')
     elif benchmark_name == 'libxslt_xpath':
-        aflplusplus_fuzzer.build("lto", "cmplog")
+        aflplusplus_fuzzer.build('lto', 'cmplog')
     elif benchmark_name == 'openh264_decoder_fuzzer':
-        aflplusplus_fuzzer.build("lto", "cmplog")
+        aflplusplus_fuzzer.build('lto', 'cmplog')
     elif benchmark_name == 'openssl_x509':
-        aflplusplus_fuzzer.build("tracepc", "dict2file")
+        aflplusplus_fuzzer.build('tracepc', 'dict2file')
     elif benchmark_name == 'php_php-fuzz-parser':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
+        aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file')
     elif benchmark_name == 'proj4-2017-08-14':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
+        aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file')
     elif benchmark_name == 'sqlite3_ossfuzz':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
+        aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file')
     elif benchmark_name == 'stb_stbi_read_fuzzer':
-        aflplusplus_fuzzer.build("lto", "cmplog")
+        aflplusplus_fuzzer.build('lto', 'cmplog')
     elif benchmark_name == 'systemd_fuzz-link-parser':
-        aflplusplus_fuzzer.build("tracepc", "dict2file")
+        aflplusplus_fuzzer.build('tracepc', 'dict2file')
     elif benchmark_name == 'vorbis-2017-12-11':
-        aflplusplus_fuzzer.build("lto", "laf")
+        aflplusplus_fuzzer.build('lto', 'laf')
     elif benchmark_name == 'woff2-2016-05-06':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
+        aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file')
     elif benchmark_name == 'zlib_zlib_uncompress_fuzzer':
-        aflplusplus_fuzzer.build("tracepc", "cmplog", "dict2file")
+        aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file')
     else:
         build_flags = os.environ['CFLAGS']
         if build_flags.find('array-bounds') != -1:
-            aflplusplus_fuzzer.build("tracepc", "dict2file")
+            aflplusplus_fuzzer.build('tracepc', 'dict2file')
         else:
-            aflplusplus_fuzzer.build("lto", "cmplog")
+            aflplusplus_fuzzer.build('lto', 'cmplog')
 
-    for copy_file in glob.glob("/afl/libc*"):
+    for copy_file in glob.glob('/afl/libc*'):
         shutil.copy(copy_file, os.environ['OUT'])
 
 
@@ -94,7 +94,7 @@ def fuzz(input_corpus, output_corpus, target_binary):  # pylint: disable=too-man
         os.environ['AFL_KEEP_TIMEOUTS'] = '1'
     elif benchmark_name == 'harfbuzz-1.3.2':
         os.environ['AFL_KEEP_TIMEOUTS'] = '1'
-    elif benchmark_name == 'libpng-1.2.56':
+    elif benchmark_name == 'libpng-1.6.38':
         os.environ['AFL_TESTCACHE_SIZE'] = '2'
         os.environ['AFL_KEEP_TIMEOUTS'] = '1'
         run_options = ['-l', '2AT']

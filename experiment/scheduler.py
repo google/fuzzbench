@@ -16,7 +16,6 @@ import datetime
 import math
 import multiprocessing
 import os
-import sqlite3
 import sys
 import random
 import time
@@ -104,7 +103,7 @@ def all_trials_ended(experiment: str) -> bool:
     try:
         return not get_experiment_trials(experiment).filter(
             models.Trial.time_ended.is_(None)).all()
-    except sqlite3.OperationalError:
+    except RuntimeError:
         logger.error('Failed to check whether all trials ended.')
         return False
 
@@ -586,13 +585,13 @@ def schedule_loop(experiment_config: dict):
         if local_experiment:
             runner_num_cpu_cores = experiment_config['runner_num_cpu_cores']
             processes = runners_cpus // runner_num_cpu_cores
-            logger.info('Scheduling runners from core 0 to %d.' %
-                        (runner_num_cpu_cores * processes - 1))
+            logger.info('Scheduling runners from core 0 to %d.',
+                        runner_num_cpu_cores * processes - 1)
             core_allocation = {}
             for cpu in range(0, runner_num_cpu_cores * processes,
                              runner_num_cpu_cores):
-                core_allocation['%d-%d' %
-                                (cpu, cpu + runner_num_cpu_cores - 1)] = None
+                core_allocation[
+                    f'{cpu}-{cpu + runner_num_cpu_cores - 1}'] = None
             pool_args = (processes,)
         else:
             pool_args = (runners_cpus,)
@@ -798,8 +797,8 @@ def create_trial_instance(  # pylint: disable=too-many-arguments
     startup_script = render_startup_script_template(instance_name, fuzzer,
                                                     benchmark, trial_id,
                                                     experiment_config, cpuset)
-    startup_script_path = '/tmp/%s-start-docker.sh' % instance_name
-    with open(startup_script_path, 'w') as file_handle:
+    startup_script_path = f'/tmp/{instance_name}-start-docker.sh'
+    with open(startup_script_path, 'w', encoding='utf-8') as file_handle:
         file_handle.write(startup_script)
 
     return gcloud.create_instance(instance_name,
@@ -817,7 +816,7 @@ def main():
     })
 
     if len(sys.argv) != 2:
-        print('Usage: {} <experiment_config.yaml>'.format(sys.argv[0]))
+        print(f'Usage: {sys.argv[0]} <experiment_config.yaml>')
         return 1
 
     experiment_config = yaml_utils.read(sys.argv[1])

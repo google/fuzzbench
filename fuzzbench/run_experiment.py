@@ -36,8 +36,9 @@ def run_experiment(config):
     for name, image in images_to_build.items():
         depends = image.get('depends_on', None)
         if depends is not None:
-            assert len(depends) == 1, 'image %s has %d dependencies. Multiple '\
-            'dependencies are currently not supported.' % (name, len(depends))
+            assert len(depends) == 1, (
+                f'image {name} has {len(depends)} dependencies. '
+                'Multiple dependencies are currently not supported.')
         jobs_list.append(
             queue.enqueue(
                 jobs.build_image,
@@ -49,13 +50,13 @@ def run_experiment(config):
 
     while True:
         print('Current status of jobs:')
-        print('\tqueued:\t%d' % queue.count)
-        print('\tstarted:\t%d' % queue.started_job_registry.count)
-        print('\tdeferred:\t%d' % queue.deferred_job_registry.count)
-        print('\tfinished:\t%d' % queue.finished_job_registry.count)
-        print('\tfailed:\t%d' % queue.failed_job_registry.count)
+        print(f'\tqueued:\t{queue.count}')
+        print(f'\tstarted:\t{queue.started_job_registry.count}')
+        print(f'\tdeferred:\t{queue.deferred_job_registry.count}')
+        print(f'\tfinished:\t{queue.finished_job_registry.count}')
+        print(f'\tfailed:\t{queue.failed_job_registry.count}')
         for job in jobs_list:
-            print('  %s : %s\t(%s)' % (job.func_name, job.get_status(), job.id))
+            print(f'  {job.func_name} : {job.get_status()}\t({job.id})')
 
         if all([job.result is not None for job in jobs_list]):  # pylint: disable=use-a-generator
             break
@@ -65,7 +66,7 @@ def run_experiment(config):
 
 def main():
     """Set up Redis connection and start the experiment."""
-    redis_connection = redis.Redis(host="queue-server")
+    redis_connection = redis.Redis(host='queue-server')
 
     config_path = environment.get('EXPERIMENT_CONFIG',
                                   'fuzzbench/local-experiment-config.yaml')

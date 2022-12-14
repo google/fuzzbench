@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utility functions for data (frame) transformations."""
+import pandas as pd
+
 from analysis import stat_tests
 from common import benchmark_utils
 from common import environment
@@ -47,7 +49,7 @@ def validate_data(experiment_df):
     missing_columns = expected_columns.difference(experiment_df.columns)
     if missing_columns:
         raise ValueError(
-            'Missing columns in experiment data: {}'.format(missing_columns))
+            f'Missing columns in experiment data: {missing_columns}')
 
 
 def drop_uninteresting_columns(experiment_df):
@@ -89,7 +91,7 @@ def clobber_experiments_data(df, experiments):
         experiment_pairs = experiment_data[['benchmark',
                                             'fuzzer']].apply(tuple, axis=1)
         to_include = experiment_data[~experiment_pairs.isin(covered_pairs)]
-        result = result.append(to_include)
+        result = pd.concat([result, to_include])
     return result
 
 
@@ -232,7 +234,7 @@ def experiment_summary(experiment_snapshots_df):
 def benchmark_rank_by_mean(benchmark_snapshot_df, key='edges_covered'):
     """Returns ranking of fuzzers based on mean coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
-    means = benchmark_snapshot_df.groupby('fuzzer')[key].mean()
+    means = benchmark_snapshot_df.groupby('fuzzer')[key].mean().astype(int)
     means.rename('mean cov', inplace=True)
     return means.sort_values(ascending=False)
 
@@ -240,7 +242,7 @@ def benchmark_rank_by_mean(benchmark_snapshot_df, key='edges_covered'):
 def benchmark_rank_by_median(benchmark_snapshot_df, key='edges_covered'):
     """Returns ranking of fuzzers based on median coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
-    medians = benchmark_snapshot_df.groupby('fuzzer')[key].median()
+    medians = benchmark_snapshot_df.groupby('fuzzer')[key].median().astype(int)
     medians.rename('median cov', inplace=True)
     return medians.sort_values(ascending=False)
 
@@ -248,8 +250,9 @@ def benchmark_rank_by_median(benchmark_snapshot_df, key='edges_covered'):
 def benchmark_rank_by_percent(benchmark_snapshot_df, key='edges_covered'):
     """Returns ranking of fuzzers based on median (normalized/%) coverage."""
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
-    max_key = "{}_percent_max".format(key)
-    medians = benchmark_snapshot_df.groupby('fuzzer')[max_key].median()
+    max_key = f'{key}_percent_max'
+    medians = benchmark_snapshot_df.groupby('fuzzer')[max_key].median().astype(
+        int)
     return medians.sort_values(ascending=False)
 
 
@@ -378,11 +381,11 @@ def add_relative_columns(experiment_df):
     for key in ['edges_covered', 'bugs_covered']:
         if key not in df.columns:
             continue
-        new_col = "{}_percent_max".format(key)
+        new_col = f'{key}_percent_max'
         df[new_col] = df[key] / df.groupby('benchmark')[key].transform(
             'max') * 100.0
 
-        new_col = "{}_percent_fmax".format(key)
+        new_col = f'{key}_percent_fmax'
         df[new_col] = df[key] / df.groupby(['benchmark', 'fuzzer'
                                            ])[key].transform('max') * 100
     return df

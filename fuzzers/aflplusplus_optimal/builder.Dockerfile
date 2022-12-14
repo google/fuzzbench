@@ -16,7 +16,7 @@ ARG parent_image
 FROM $parent_image
 
 RUN apt-get update && \
-    apt-get install -y wget libstdc++-5-dev libexpat1-dev \
+    apt-get install -y wget libstdc++-10-dev libexpat1-dev \
                        apt-utils apt-transport-https ca-certificates
 
 # Download afl++

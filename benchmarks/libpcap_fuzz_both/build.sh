@@ -23,12 +23,12 @@ cd build
 cmake ..
 make
 
-
 # build fuzz targets
 for target in pcap filter both
 do
     $CC $CFLAGS -I.. -c ../testprogs/fuzz/fuzz_$target.c -o fuzz_$target.o
-    $CXX $CXXFLAGS fuzz_$target.o -o $OUT/fuzz_$target libpcap.a $LIB_FUZZING_ENGINE
+    $CXX $CXXFLAGS fuzz_$target.o -o $OUT/fuzz_$target \
+        libpcap.a $LIB_FUZZING_ENGINE $EXTRA_LIBS
 done
 
 # export other associated stuff

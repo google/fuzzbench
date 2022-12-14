@@ -72,7 +72,7 @@ def eclipser(input_corpus, output_corpus, target_binary):
     # We will use output_corpus as a directory where AFL and Eclipser sync their
     # test cases with each other. For Eclipser, we should explicitly specify an
     # output directory under this sync directory.
-    eclipser_out = os.path.join(output_corpus, "eclipser_output")
+    eclipser_out = os.path.join(output_corpus, 'eclipser_output')
     command = [
         'dotnet',
         '/Eclipser/build/Eclipser.dll',
@@ -94,7 +94,8 @@ def eclipser(input_corpus, output_corpus, target_binary):
     if os.listdir(input_corpus):  # Specify inputs only if any seed exists.
         command += ['-i', input_corpus]
     print('[eclipser] Run Eclipser with command: ' + ' '.join(command))
-    subprocess.Popen(command)
+    with subprocess.Popen(command):
+        pass
 
 
 def afl_worker(input_corpus, output_corpus, target_binary):

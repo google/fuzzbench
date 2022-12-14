@@ -16,6 +16,6 @@ ARG parent_image
 FROM $parent_image
 
 RUN git clone https://github.com/WingTecherTHU/wingfuzz
-RUN cd wingfuzz && git checkout f1a8dd2a49fefb7b85ae42e3d204dec2999fc8eb && \
+RUN cd wingfuzz && git checkout 6ef3281f145fa1839df0f46c38b348ec9d93b0e2 && \
     ./build.sh && cd instrument && ./build.sh && clang -c WeakSym.c && \
     cp ../libFuzzer.a /libWingfuzz.a && cp WeakSym.o / && cp LoadCmpTracer.so /

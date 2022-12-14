@@ -12,47 +12,54 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:xenial
+FROM ubuntu:focal
 
-# Build Python 3.8.6 from source because pandas doesn't support xenial's
-# Python3 version (3.5.2).
-ENV PYTHON_VERSION 3.8.6
-RUN apt-get update -y && apt-get install -y \
-    build-essential \
-    rsync \
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Python 3.10.8 is not the default version in Ubuntu 20.04 (Focal Fossa).
+ENV PYTHON_VERSION 3.10.8
+# Install dependencies required by Python3 or Pip3.
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y \
     curl \
+    xz-utils \
+    build-essential \
     zlib1g-dev \
-    libncurses5-dev \
-    libgdbm-dev \
-    libnss3-dev \
     libssl-dev \
-    libreadline-dev \
     libffi-dev \
-    virtualenv \
+    libsqlite3-dev \
     libbz2-dev \
-    liblzma-dev \
-    libsqlite3-dev
+    liblzma-dev
 
 RUN cd /tmp/ && \
     curl -O https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz && \
-    tar -xvf Python-$PYTHON_VERSION.tar.xz && \
+    tar -xvf Python-$PYTHON_VERSION.tar.xz > /dev/null && \
     cd Python-$PYTHON_VERSION && \
-    ./configure --enable-loadable-sqlite-extensions --enable-optimizations && \
-    make -j install && \
-    rm -r /tmp/Python-$PYTHON_VERSION.tar.xz /tmp/Python-$PYTHON_VERSION
+    ./configure \
+        --enable-loadable-sqlite-extensions \
+        --enable-optimizations \
+        > /dev/null && \
+    make -j install > /dev/null && \
+    rm -r /tmp/Python-$PYTHON_VERSION.tar.xz /tmp/Python-$PYTHON_VERSION && \
+    ln -s /usr/local/bin/python3 /usr/local/bin/python && \
+    ln -s /usr/local/bin/pip3 /usr/local/bin/pip
 
 # Install common python dependencies.
-COPY ./requirements.txt /
-RUN pip3 install -r /requirements.txt
+COPY ./requirements.txt /tmp
+RUN pip install -r /tmp/requirements.txt
 
-# Install google-cloud-sdk.
-RUN apt-get update -y && apt-get install -y \
+# Install dependencies required by google-cloud-cli.
+RUN apt-get update && \
+    apt-get install -y \
     apt-transport-https \
-    lsb-release
-RUN CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
-    echo "deb https://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" \
+    ca-certificates \
+    gnupg
+
+# Install google-cloud-cli (previously named google-cloud-sdk).
+RUN echo "deb https://packages.cloud.google.com/apt cloud-sdk main" \
     | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg \
     | apt-key add - && \
-    apt-get update -y && \
-    apt-get install -y google-cloud-sdk
+    apt-get update && \
+    apt-get install -y google-cloud-cli
