@@ -1,6 +1,6 @@
 fuzz_target: php-fuzz-execute
 project: php
-type: bug
+type: bug-draft
 unsupported_fuzzers:
   - aflcc
   - afl_qemu
