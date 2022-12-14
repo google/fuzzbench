@@ -236,6 +236,7 @@ def benchmark_rank_by_mean(benchmark_snapshot_df, key='edges_covered'):
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
     logger.debug('Mean: %s',
                  benchmark_snapshot_df.groupby('fuzzer')[key].mean())
+    benchmark_snapshot_df = benchmark_snapshot_df.fillna(0)
     means = benchmark_snapshot_df.groupby('fuzzer')[key].mean().astype(int)
     means.rename('mean cov', inplace=True)
     return means.sort_values(ascending=False)
@@ -246,6 +247,7 @@ def benchmark_rank_by_median(benchmark_snapshot_df, key='edges_covered'):
     assert benchmark_snapshot_df.time.nunique() == 1, 'Not a snapshot!'
     logger.debug('Median: %s',
                  benchmark_snapshot_df.groupby('fuzzer')[key].median())
+    benchmark_snapshot_df = benchmark_snapshot_df.fillna(0)
     medians = benchmark_snapshot_df.groupby('fuzzer')[key].median().astype(int)
     medians.rename('median cov', inplace=True)
     return medians.sort_values(ascending=False)
