@@ -23,6 +23,18 @@
 
 - experiment: 2022-12-15-bug-based
   description: "Test running core fuzzers on 5 new bug-based benchmarks."
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - centipede
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - libafl
+    - libfuzzer
+    - mopt
   benchmarks:
     - arrow_parquet-arrow-fuzz
     - aspell_aspell_fuzzer
