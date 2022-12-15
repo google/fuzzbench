@@ -35,12 +35,29 @@
     - libafl
     - libfuzzer
     - mopt
+  type: bug
   benchmarks:
     - arrow_parquet-arrow-fuzz
     - aspell_aspell_fuzzer
     - ffmpeg_ffmpeg_demuxer_fuzzer
     - file_magic_fuzzer
     - grok_grk_decompress_fuzzer
+    
+- experiment: 2022-12-05-rerun-c
+  description: "Wingfuzz coverage experiment (compare against core fuzzers)"
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - entropic
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - lafintel
+    - libfuzzer
+    - mopt
+    - wingfuzz
 
 - experiment: 2022-12-05-rerun-c
   description: "Wingfuzz coverage experiment (compare against core fuzzers)"
