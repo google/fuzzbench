@@ -85,7 +85,7 @@
   fuzzers:
     - aflplusplus_um_random
     - aflplusplus_um_prioritize_75
-    
+
 - experiment: 2022-12-05-rerun
   description: "Wingfuzz coverage experiment (compare against core fuzzers)"
   fuzzers:
