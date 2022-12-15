@@ -1,6 +1,6 @@
 fuzz_target: stream_decompress
 project: zstd
-type: bug
+type: bug-draft
 unsupported_fuzzers:
   - aflcc
   - afl_qemu
