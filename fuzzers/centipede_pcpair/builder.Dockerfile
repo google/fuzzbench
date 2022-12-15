@@ -17,8 +17,9 @@ FROM $parent_image
 
 ENV CENTIPEDE_SRC=/src/centipede
 
-# Build centipede.
-RUN git clone -n \
+# Remove the Centipede from OSS-Fuzz base-builder and rebuild centipede.
+RUN rm -rf "$CENTIPEDE_SRC" && \
+  git clone -n \
     https://github.com/google/centipede.git "$CENTIPEDE_SRC" && \
   echo 'build --client_env=CC=clang --cxxopt=-std=c++17 ' \
     '--cxxopt=-stdlib=libc++ --linkopt=-lc++' >> ~/.bazelrc && \
