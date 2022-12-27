@@ -36,12 +36,12 @@ cd fuzz
 make clean-corpus
 make fuzz.o
 
-for fuzzer in html regexp schema uri xml xpath; do
+for fuzzer in xml; do
     make $fuzzer.o
     # Link with $CXX
     $CXX $CXXFLAGS \
         $fuzzer.o fuzz.o \
-        -o $OUT/libxml2_xml_reader_for_file_fuzzer \
+        -o $OUT/$fuzzer \
         $LIB_FUZZING_ENGINE \
         ../.libs/libxml2.a -Wl,-Bstatic -lz -llzma -Wl,-Bdynamic
 
