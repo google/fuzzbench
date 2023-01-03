@@ -1,5 +1,6 @@
 fuzz_target: njs_process_script_fuzzer
 project: njs
+type: bug-draft
 unsupported_fuzzers:
   - aflcc
   - afl_qemu

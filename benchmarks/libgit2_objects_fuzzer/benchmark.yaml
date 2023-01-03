@@ -1,5 +1,6 @@
 fuzz_target: objects_fuzzer
 project: libgit2
+type: bug-draft
 unsupported_fuzzers:
   - libafl
   - aflcc

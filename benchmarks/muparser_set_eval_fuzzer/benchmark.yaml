@@ -1,5 +1,6 @@
 fuzz_target: set_eval_fuzzer
 project: muparser
+type: bug-draft
 unsupported_fuzzers:
   - aflcc
   - afl_qemu
