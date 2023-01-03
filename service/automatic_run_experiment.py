@@ -44,6 +44,7 @@ REQUESTED_EXPERIMENTS_PATH = os.path.join(utils.ROOT_DIR, 'service',
 PAUSE_SERVICE_KEYWORD = 'PAUSE_SERVICE'
 
 EXPERIMENT_NAME_REGEX = re.compile(r'^\d{4}-\d{2}-\d{2}.*')
+SERVICE_CONCURRENT_BUILDS = 150
 
 
 def _get_experiment_name(experiment_config: dict) -> str:
@@ -271,6 +272,7 @@ def _run_experiment(  # pylint: disable=too-many-arguments
                                     benchmarks,
                                     fuzzers,
                                     description=description,
+                                    concurrent_builds=SERVICE_CONCURRENT_BUILDS,
                                     oss_fuzz_corpus=oss_fuzz_corpus)
 
 

@@ -36,6 +36,8 @@ EXPERIMENT_REQUESTS = [{
     'oss_fuzz_corpus': True,
 }]
 
+SERVICE_CONCURRENT_BUILDS = 150
+
 
 @mock.patch('experiment.run_experiment.start_experiment')
 @mock.patch('common.logs.warning')
@@ -79,52 +81,30 @@ def test_run_requested_experiment(mocked_get_requested_experiments,
         'libxslt_xpath',
         'mbedtls_fuzz_dtlsclient',
         'openssl_x509',
-        'php_php-fuzz-parser',
         'sqlite3_ossfuzz',
         'systemd_fuzz-link-parser',
         'zlib_zlib_uncompress_fuzzer',
-        'arrow_parquet-arrow-fuzz',
-        'aspell_aspell_fuzzer',
-        'ffmpeg_ffmpeg_demuxer_fuzzer',
-        'file_magic_fuzzer',
         'freetype2-2017',
-        'grok_grk_decompress_fuzzer',
         'harfbuzz-1.3.2',
         'lcms-2017-03-21',
-        'libarchive_libarchive_fuzzer',
-        'libgit2_objects_fuzzer',
-        'libhevc_hevc_dec_fuzzer',
-        'libhtp_fuzz_htp',
         'libjpeg-turbo-07-2017',
         'libpng-1.6.38',
         'libxml2-v2.9.2',
-        'libxml2_libxml2_xml_reader_for_file_fuzzer',
-        'matio_matio_fuzzer',
-        'mruby-2018-05-23',
-        'muparser_set_eval_fuzzer',
-        'njs_njs_process_script_fuzzer',
         'openh264_decoder_fuzzer',
         'openthread-2019-12-23',
-        'php_php-fuzz-execute',
         'php_php-fuzz-parser-2020-07-25',
-        'poppler_pdf_fuzzer',
         'proj4-2017-08-14',
-        'proj4_standard_fuzzer',
-        'quickjs_eval-2020-01-05',
         're2-2014-12-09',
         'stb_stbi_read_fuzzer',
-        'systemd_fuzz-varlink',
-        'usrsctp_fuzzer_connect',
         'vorbis-2017-12-11',
-        'wireshark_fuzzshark_ip',
         'woff2-2016-05-06',
-        'zstd_stream_decompress',
     ]
     expected_call = mock.call(expected_experiment_name,
                               expected_config_file,
                               expected_benchmarks,
                               expected_fuzzers,
                               description='Test experiment',
+                              concurrent_builds=SERVICE_CONCURRENT_BUILDS,
                               oss_fuzz_corpus=True)
     start_experiment_call_args = mocked_start_experiment.call_args_list
     assert len(start_experiment_call_args) == 1

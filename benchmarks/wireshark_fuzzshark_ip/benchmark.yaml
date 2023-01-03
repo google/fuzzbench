@@ -1,5 +1,6 @@
 fuzz_target: fuzzshark_ip
 project: wireshark
+type: bug-draft
 unsupported_fuzzers:
   - aflcc
   - afl_qemu

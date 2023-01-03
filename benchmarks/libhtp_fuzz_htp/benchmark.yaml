@@ -1,5 +1,6 @@
 fuzz_target: fuzz_htp
 project: libhtp
+type: bug-draft
 unsupported_fuzzers:
   - aflcc
   - afl_qemu

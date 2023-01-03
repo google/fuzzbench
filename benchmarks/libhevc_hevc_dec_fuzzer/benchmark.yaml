@@ -1,5 +1,6 @@
 fuzz_target: hevc_dec_fuzzer
 project: libhevc
+type: bug-draft
 unsupported_fuzzers:
   - aflcc
   - afl_qemu

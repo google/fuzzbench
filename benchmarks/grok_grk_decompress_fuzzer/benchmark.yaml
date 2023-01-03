@@ -1,5 +1,7 @@
+commit: 9cd001d3bb41e4a24e4fbaea95855110fbf3068a
 fuzz_target: grk_decompress_fuzzer
 project: grok
+type: bug
 unsupported_fuzzers:
   - centipede
   - aflcc

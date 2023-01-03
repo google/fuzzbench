@@ -17,8 +17,6 @@
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
 
 RUN git clone \
-        --depth 1 \
-        --branch v10.0.4 \
         https://github.com/GrokImageCompression/grok.git \
         grok
 RUN git clone https://github.com/GrokImageCompression/grok-test-data.git \

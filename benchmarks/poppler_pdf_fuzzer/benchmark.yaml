@@ -1,5 +1,6 @@
 fuzz_target: pdf_fuzzer
 project: poppler
+type: bug-draft
 unsupported_fuzzers:
   - aflcc
   - afl_qemu

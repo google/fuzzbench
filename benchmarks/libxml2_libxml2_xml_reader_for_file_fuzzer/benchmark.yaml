@@ -1,5 +1,6 @@
 fuzz_target: libxml2_xml_reader_for_file_fuzzer
 project: libxml2
+type: bug-draft
 unsupported_fuzzers:
   - aflcc
   - afl_qemu
