@@ -38,13 +38,33 @@ RUN apt-get update && \
 RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl
 
 # Checkout a current commit
-RUN cd /afl && git checkout bddee6ed1e9f52b551ceef4de86b9a6cafa7ee8d
+RUN cd /afl && git checkout 35f09e11a4373b0fb42c690d23127c144f72f73c
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /afl && \
     unset CFLAGS CXXFLAGS && \
     export CC=clang AFL_NO_X86=1 && \
-    PYTHON_INCLUDE=/ make distrib && \
+    PYTHON_INCLUDE=/ make && \
     make install && \
     cp utils/aflpp_driver/libAFLDriver.a /
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
+    sh /rustup.sh -y
+
+RUN apt-get remove -y llvm-10 && \
+    apt-get install -y \
+        build-essential \
+        llvm-11 \
+        clang-12 \
+        cargo && \
+    apt-get install -y wget libstdc++5 libtool-bin automake flex bison \
+        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
+        apt-utils apt-transport-https ca-certificates joe curl && \
+    PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
+
+RUN cd /afl/custom_mutators/libafl_base && \
+    unset CFLAGS CXXFLAGS && \
+    export PATH="/root/.cargo/bin/:$PATH" && \
+    make && \
+    cp -f libafl_base.so /

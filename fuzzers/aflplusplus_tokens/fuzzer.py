@@ -20,17 +20,22 @@
 # But this means that the good stuff is hidden away in this benchmark
 # otherwise.
 
+import os
+import shutil
+
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     aflplusplus_fuzzer.build("tracepc", "cmplog")
+    shutil.copy('/libafl_base.so', os.environ['OUT'])
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
-    run_options = ['-l', '2C']
+    run_options = ['-l', '2']
+    os.environ['AFL_CUSTOM_MUTATOR_LIBRARY'] = os.environ['OUT'] + '/libafl_base.so'
 
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
