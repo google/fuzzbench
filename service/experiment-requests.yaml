@@ -21,6 +21,17 @@
 #
 
 
+- experiment: 2023-01-03-aflpp
+  description: "aflpp token test"
+  fuzzers:
+    - aflplusplus_tokens
+    - aflplusplus
+    - afl
+    - eclipser
+    - honggfuzz
+    - libafl
+  type: bug
+
 - experiment: 2022-12-15-bug-based
   description: "Test running core fuzzers on 5 new bug-based benchmarks."
   fuzzers:
