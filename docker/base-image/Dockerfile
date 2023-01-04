@@ -54,6 +54,7 @@ RUN apt-get update && \
     apt-get install -y \
     apt-transport-https \
     ca-certificates \
+    rsync \
     gnupg
 
 # Install google-cloud-cli (previously named google-cloud-sdk).
