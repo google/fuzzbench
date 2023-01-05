@@ -21,6 +21,12 @@
 #
 
 
+- experiment: 2023-01-05-aflpp
+  description: "aflpp token test"
+  fuzzers:
+    - aflplusplus_tokens
+    - aflplusplus
+
 - experiment: 2023-01-03-aflpp
   description: "aflpp token test"
   fuzzers:
