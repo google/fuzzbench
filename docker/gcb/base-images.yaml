@@ -42,4 +42,22 @@ steps:
     - DOCKER_BUILDKIT=1
   id: base-image
   name: docker:19.03.12
+- args:
+  - build
+  - --tag
+  - gcr.io/fuzzbench/dispatcher-image
+  - --tag
+  - gcr.io/fuzzbench/dispatcher-image:test-experiment
+  - --cache-from
+  - gcr.io/fuzzbench/dispatcher-image
+  - --build-arg
+  - BUILDKIT_INLINE_CACHE=1
+  - --file
+  - docker/dispatcher-image/Dockerfile
+  - .
+  env:
+    - DOCKER_BUILDKIT=1
+  id: dispatcher-image
+  name: docker:19.03.12
+
 timeout: '1800s'
