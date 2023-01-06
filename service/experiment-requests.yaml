@@ -19,7 +19,32 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
-
+- experiment: 2023-01-06-scheduler-test
+  description: "Test fuzzers on 12 benchmarks."
+  fuzzers:
+    - afl
+    - aflfast
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - libafl
+    - libfuzzer
+    - mopt
+    - libafl_kscheduler
+  type: bug
+  benchmarks:
+    - freetype2-2017
+    - libpng-1.6.38
+    - libxml2-v2.9.2
+    - lcms-2017-03-21
+    - harfbuzz-1.3.2
+    - libjpeg-turbo-07-2017
+    - openssl_x509
+    - openthread-2019-12-23
+    - re2-2014-12-09
+    - sqlite3_ossfuzz
+    - vorbis-2017-12-11
+    - zlib_zlib_uncompress_fuzzer
 
 - experiment: 2023-01-05-aflpp
   description: "aflpp token test"
