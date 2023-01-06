@@ -20,6 +20,7 @@ jobs:
           # Default fuzzers general comparison evaluation.
           - afl
           - aflfast
+          - aflchurn
           - aflplusplus
           - aflsmart
           - centipede
