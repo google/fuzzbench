@@ -21,6 +21,14 @@
 #
 
 
+- experiment: 2023-01-10-aflpp
+  description: "Test if the previous aflpp build failure is flaky."
+  fuzzers:
+    - aflplusplus_tokens
+    - aflplusplus
+  trials: 2
+  max_total_time: 910
+
 - experiment: 2023-01-05-aflpp
   description: "aflpp token test"
   fuzzers:
