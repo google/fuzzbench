@@ -19,7 +19,7 @@ FROM $parent_image
 RUN apt-get update && \
     apt-get install -y build-essential libstdc++5 libtool-bin automake flex \
         bison libglib2.0-dev python3-setuptools unzip python3-dev joe curl \
-        cmake git apt-utils apt-transport-https ca-certificates
+        cmake git apt-utils apt-transport-https ca-certificates libdbus-1-dev
 
 # Uninstall old Rust & Install the latest one.
 RUN if which rustup; then rustup self uninstall -y; fi && \

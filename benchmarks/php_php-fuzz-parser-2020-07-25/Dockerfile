@@ -18,7 +18,7 @@ FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1
 
 RUN apt-get update && \
     apt-get install -y \
-        autoconf automake libtool bison re2c pkg-config libdbus-1-dev
+        autoconf automake libtool bison re2c pkg-config
 
 RUN git clone \
         --depth 1 \
