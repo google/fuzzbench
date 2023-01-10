@@ -173,7 +173,7 @@ def set_fuzz_target(env=None):
     if env is None:
         env = os.environ
 
-    env['FUZZ_TARGET'] = get_config_value('fuzz_target')
+    # env['FUZZ_TARGET'] = get_config_value('fuzz_target')
 
 
 def set_compilation_flags(env=None):
@@ -183,6 +183,18 @@ def set_compilation_flags(env=None):
 
     env['CFLAGS'] = ''
     env['CXXFLAGS'] = ''
+
+    if os.getenv('OOD'):
+        if os.getenv('SANITIZER') == 'address':
+            append_flags('CFLAGS',
+                     FUZZING_CFLAGS + ['-fsanitize=address'] +
+                     [BUGS_OPTIMIZATION_LEVEL],
+                     env=env)
+            append_flags('CXXFLAGS',
+                     FUZZING_CFLAGS + ['-fsanitize=address'] +
+                     [BUGS_OPTIMIZATION_LEVEL],
+                     env=env)
+        return
 
     if get_config_value('type') == 'bug':
         append_flags('CFLAGS',
