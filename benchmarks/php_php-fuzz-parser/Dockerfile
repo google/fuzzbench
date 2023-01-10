@@ -16,7 +16,7 @@
 
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
 RUN apt-get update && \
-    apt-get install -y autoconf automake libtool bison re2c pkg-config libdbus-1-3
+    apt-get install -y autoconf automake libtool bison re2c pkg-config libdbus-1-dev
 
 # php-src will be checked out to the commit hash specified in benchmark.yaml.
 RUN git clone --depth 1 --branch master https://github.com/php/php-src.git php-src
