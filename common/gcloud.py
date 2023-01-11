@@ -132,7 +132,7 @@ def run_local_instance(startup_script: Optional[str] = None) -> bool:
     command = ['/bin/bash', startup_script]
     # pylint: disable=consider-using-with
     subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    return new_process.ProcessResult(0, '', False).retcode == 0
+    return True
 
 
 def create_instance_template(template_name, docker_image, env, project, zone):
