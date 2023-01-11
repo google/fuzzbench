@@ -23,6 +23,17 @@ jobs:
           - aflplusplus
           - aflsmart
           - centipede
+          - centipede_corpus_1000
+          - centipede_corpus_10000
+          - centipede_counter
+          - centipede_coverage_frontier
+          - centipede_no_cmp
+          - centipede_no_corpus_weight
+          - centipede_no_dataflow
+          - centipede_path_10
+          - centipede_path_5
+          - centipede_pcpair
+          - entropic
           - eclipser
           - fairfuzz
           - honggfuzz

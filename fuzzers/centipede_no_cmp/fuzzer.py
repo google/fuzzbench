@@ -11,8 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Integration code for a mode of centipede fuzzer."""
+from fuzzers.centipede import fuzzer
 
-FROM gcr.io/oss-fuzz-base/base-clang@sha256:30706816922bf9c141b15ff4a5a44af8c0ec5700d4b46e0572029c15e495d45b AS base-clang
-FROM gcr.io/fuzzbench/base-image
 
-COPY --from=base-clang /usr/local/bin/llvm-symbolizer /usr/local/bin/
+def build():
+    """Build benchmark."""
+    fuzzer.build()
+
+
+def fuzz(input_corpus, output_corpus, target_binary):
+    """Run fuzzer. Wrapper that uses the defaults when calling run_fuzzer."""
+    # Not use features derived from instrumentation of CMP instructions.
+    mode_flags = ['--use_cmp_features=0']
+    fuzzer.run_fuzzer(input_corpus,
+                      output_corpus,
+                      target_binary,
+                      extra_flags=mode_flags)

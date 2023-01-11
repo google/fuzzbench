@@ -24,9 +24,9 @@ RUN rm -rf "$CENTIPEDE_SRC" && \
   echo 'build --client_env=CC=clang --cxxopt=-std=c++17 ' \
     '--cxxopt=-stdlib=libc++ --linkopt=-lc++' >> ~/.bazelrc && \
   (cd "$CENTIPEDE_SRC" && \
-    git checkout 2a2c78a2c161d99f5962b9710bce61feb00acc3d && \
+    git checkout 6ff15301c6bbfc555f2fc1bd323f041062413619 && \
     ./install_dependencies_debian.sh && \
-    bazel build -c opt :all) && \
+    bazel build -c opt :centipede :centipede_runner) && \
   cp "$CENTIPEDE_SRC/bazel-bin/centipede" '/out/centipede'
 
 RUN /clang/bin/clang "$CENTIPEDE_SRC/weak_sancov_stubs.cc" -c -o /lib/weak.o
