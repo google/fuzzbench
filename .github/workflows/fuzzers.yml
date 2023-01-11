@@ -31,6 +31,7 @@ jobs:
           - mopt
           # Greybox fuzzers.
           - wingfuzz
+          - libafl_forkserver
           # - tortoisefuzz       # To Be Fixed.
           # Symbolic ececution.
           # - klee               # To Be Fixed.
