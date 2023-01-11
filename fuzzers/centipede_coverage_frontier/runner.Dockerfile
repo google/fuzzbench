@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+FROM gcr.io/oss-fuzz-base/base-clang16 as base-clang
+
 FROM gcr.io/fuzzbench/base-image
 
 COPY --from=base-clang /usr/local/bin/llvm-symbolizer /usr/local/bin/

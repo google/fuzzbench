@@ -13,12 +13,34 @@
 # limitations under the License.
 """Integration code for a mode of centipede fuzzer."""
 from fuzzers.centipede import fuzzer
-
+from fuzzers import utils
+import os
 
 def build():
     """Build benchmark."""
-    fuzzer.build()
+#    fuzzer.build()
+    san_cflags = ['-fsanitize-coverage=trace-pc-guard,pc-table,control-flow']
 
+    link_cflags = [
+                '-Wno-error=unused-command-line-argument',
+                '-ldl',
+                '-lrt',
+                '-lpthread',
+                '/lib/weak.o',
+                ]
+    centipede_flags = [
+        '-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION',
+        '-fno-builtin',
+        '-O2',
+        '-gline-tables-only']
+    cflags = san_cflags + link_cflags + centipede_flags
+    utils.append_flags('CFLAGS', cflags)
+    utils.append_flags('CXXFLAGS', cflags)
+    os.environ['CC'] = '/usr/local/bin/clang'
+    os.environ['CXX'] = '/usr/local/bin/clang++'
+    os.environ['FUZZER_LIB'] = (
+                '/src/centipede/bazel-bin/libcentipede_runner.pic.a')
+    utils.build_benchmark()
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer. Wrapper that uses the defaults when calling run_fuzzer."""

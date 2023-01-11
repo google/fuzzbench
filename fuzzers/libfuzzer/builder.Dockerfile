@@ -17,7 +17,7 @@ FROM $parent_image
 
 RUN git clone \
     --depth 1 \
-    --branch llvmorg-15.0.3 \
+    --branch llvmorg-16-init \
     https://github.com/llvm/llvm-project.git /llvm-project && \
     cd /llvm-project/compiler-rt/lib/fuzzer && \
     (for f in *.cpp; do \

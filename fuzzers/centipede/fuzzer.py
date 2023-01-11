@@ -42,8 +42,8 @@ def build():
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
-    os.environ['CC'] = '/clang/bin/clang'
-    os.environ['CXX'] = '/clang/bin/clang++'
+    os.environ['CC'] = '/usr/local/bin/clang'
+    os.environ['CXX'] = '/usr/local/bin/clang++'
     os.environ['FUZZER_LIB'] = (
         '/src/centipede/bazel-bin/libcentipede_runner.pic.a')
     utils.build_benchmark()

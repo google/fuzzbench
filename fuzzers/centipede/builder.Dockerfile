@@ -29,4 +29,4 @@ RUN rm -rf "$CENTIPEDE_SRC" && \
     bazel build -c opt :all) && \
   cp "$CENTIPEDE_SRC/bazel-bin/centipede" '/out/centipede'
 
-RUN /clang/bin/clang "$CENTIPEDE_SRC/weak_sancov_stubs.cc" -c -o /lib/weak.o
+RUN /usr/local/bin/clang "$CENTIPEDE_SRC/weak_sancov_stubs.cc" -c -o /lib/weak.o
