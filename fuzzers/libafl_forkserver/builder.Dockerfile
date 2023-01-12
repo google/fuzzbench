@@ -15,30 +15,23 @@
 ARG parent_image
 FROM $parent_image
 
+# Install dependencies.
 RUN apt-get update && \
-    apt-get install -y \
-        build-essential \
-        python3-dev \
-        python3-setuptools \
-        automake \
-        cmake \
-        git \
-        flex \
-        bison \
-        libglib2.0-dev \
-        libpixman-1-dev \
-        cargo \
-        libgtk-3-dev \
-        # for QEMU mode
-        ninja-build \
-        gcc-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-plugin-dev \
-        libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
+    apt-get install -y build-essential libstdc++5 libtool-bin automake flex \
+        bison libglib2.0-dev python3-setuptools unzip python3-dev joe curl \
+        cmake git apt-utils apt-transport-https ca-certificates libdbus-1-dev
+
+# Uninstall old Rust & Install the latest one.
+RUN if which rustup; then rustup self uninstall -y; fi && \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
+    sh /rustup.sh -y && \
+    rm /rustup.sh
 
 # Download afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl
 
 # Checkout a current commit
-RUN cd /afl && git checkout e4ff0ebd56d8076abd2413ebfaeb7b5e6c07bc3a
+RUN cd /afl && git checkout 8cdc48f73a17ddd557897f2098937a8ba3bfe184
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
@@ -48,3 +41,16 @@ RUN cd /afl && \
     PYTHON_INCLUDE=/ make && \
     make install && \
     cp utils/aflpp_driver/libAFLDriver.a /
+
+# Download libafl.
+RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
+
+# Checkout a current commit
+RUN cd /libafl && git checkout 664e87809e6005f1814df1b55a345e7b2247f15b
+
+# Compile libafl.
+RUN cd /libafl && \
+    unset CFLAGS CXXFLAGS && \
+    cd ./fuzzers/fuzzbench_forkserver && \
+    PATH="/root/.cargo/bin/:$PATH" cargo build --release
+

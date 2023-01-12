@@ -20,6 +20,23 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-01-12-aflpp
+  description: "afl++ tokens + libafl test."
+  fuzzers:
+    - aflplusplus_tokens_only
+    - aflplusplus_tokens
+    - aflplusplus
+
+- experiment: 2023-01-05-libafl
+  description: "Test the LibAFL forkserver"
+  type: bug
+  fuzzers:
+    - aflplusplus
+    - entropic
+    - libfuzzer
+    - honggfuzz
+    - libafl
+    - libafl_forkserver
 
 - experiment: 2023-01-10-aflpp
   description: "Test if the previous aflpp build failure is flaky."

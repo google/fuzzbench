@@ -31,6 +31,7 @@ jobs:
           - mopt
           # Greybox fuzzers.
           - wingfuzz
+          - libafl_forkserver
           # - tortoisefuzz       # To Be Fixed.
           # Symbolic ececution.
           # - klee               # To Be Fixed.
@@ -55,6 +56,7 @@ jobs:
           # - afl_2_52_b
           - aflplusplus_cmplog
           - aflplusplus_tokens
+          - aflplusplus_tokens_only
           # - afl_random_favored
           # - entropic_execute_final
           # - libfuzzer_exeute_final
