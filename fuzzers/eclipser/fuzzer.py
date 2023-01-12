@@ -94,8 +94,8 @@ def eclipser(input_corpus, output_corpus, target_binary):
     if os.listdir(input_corpus):  # Specify inputs only if any seed exists.
         command += ['-i', input_corpus]
     print('[eclipser] Run Eclipser with command: ' + ' '.join(command))
-    # pylint: disable=consider-using-with
-    subprocess.Popen(command)
+    with subprocess.Popen(command):
+        pass
 
 
 def afl_worker(input_corpus, output_corpus, target_binary):

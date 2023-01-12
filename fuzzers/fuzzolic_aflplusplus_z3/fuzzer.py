@@ -98,8 +98,8 @@ def fuzzolic(input_corpus, output_corpus, target_binary):
         target_binary,
     ]
     print('[fuzzolic] Running Fuzzolic with command: ' + ' '.join(command))
-    # pylint: disable=consider-using-with
-    subprocess.Popen(command)
+    with subprocess.Popen(command):
+        pass
 
 
 def afl_worker(input_corpus, output_corpus, target_binary):

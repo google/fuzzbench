@@ -91,8 +91,8 @@ def run_neuzz(input_corpus,
         'python2', './nn.py', '--output-folder', afl_output_dir, target_binary
     ]
     print('[run_neuzz] Running command: ' + ' '.join(command))
-    # pylint: disable=consider-using-with
-    subprocess.Popen(command, stdout=output_stream, stderr=output_stream)
+    with subprocess.Popen(command, stdout=output_stream, stderr=output_stream):
+        pass
     time.sleep(40)
     target_rel_path = os.path.relpath(target_binary, os.getcwd())
     # Spinning up neuzz
@@ -101,11 +101,9 @@ def run_neuzz(input_corpus,
         target_rel_path, '@@'
     ]
     print('[run_neuzz] Running command: ' + ' '.join(command))
-    # pylint: disable=consider-using-with
-    neuzz_proc = subprocess.Popen(command,
-                                  stdout=output_stream,
-                                  stderr=output_stream)
-    neuzz_proc.wait()
+    with subprocess.Popen(command, stdout=output_stream,
+                          stderr=output_stream) as neuzz_proc:
+        neuzz_proc.wait()
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
