@@ -525,7 +525,7 @@ class LocalDispatcher(BaseDispatcher):
             docker_image_url,
             '/bin/bash',
             '-c',
-            'rsync -r "${EXPERIMENT_FILESTORE}/${EXPERIMENT}/input/" ${WORK} && '
+            '"rsync -r ${EXPERIMENT_FILESTORE}/${EXPERIMENT}/input/ ${WORK}" && '
             'mkdir ${WORK}/src && '
             'tar -xvzf ${WORK}/src.tar.gz -C ${WORK}/src && '
             'PYTHONPATH=${WORK}/src python3 '
