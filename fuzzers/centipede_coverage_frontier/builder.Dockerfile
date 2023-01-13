@@ -20,12 +20,11 @@ ENV CENTIPEDE_SRC=/src/centipede
 # Build centipede.
 RUN rm -rf "$CENTIPEDE_SRC" && \
     git clone -n \
-    #https://github.com/google/centipede.git "$CENTIPEDE_SRC" && \
-    https://github.com/Navidem/centipede.git "$CENTIPEDE_SRC" && \
+    https://github.com/google/centipede.git "$CENTIPEDE_SRC" && \
   echo 'build --client_env=CC=clang --cxxopt=-std=c++17 ' \
     '--cxxopt=-stdlib=libc++ --linkopt=-lc++' >> ~/.bazelrc && \
   (cd "$CENTIPEDE_SRC" && \
-    git checkout e915c4aab29582990798ca9accfff8c2080d915c && \
+    git checkout b52db1969580580d2157e9c199267dd5d861588c && \
     ./install_dependencies_debian.sh && \
     bazel build -c opt :centipede :centipede_runner) && \
   cp "$CENTIPEDE_SRC/bazel-bin/centipede" '/out/centipede'
