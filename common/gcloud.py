@@ -130,10 +130,9 @@ def run_local_instance(startup_script: Optional[str] = None) -> bool:
     """Does the equivalent of "create_instance" for local experiments, runs
     |startup_script| in the background."""
     command = ['/bin/bash', startup_script]
-    with subprocess.Popen(command,
-                          stdout=subprocess.PIPE,
-                          stderr=subprocess.STDOUT):
-        return new_process.ProcessResult(0, '', False)
+    # pylint: disable=consider-using-with
+    subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    return True
 
 
 def create_instance_template(template_name, docker_image, env, project, zone):
