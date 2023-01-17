@@ -49,6 +49,7 @@ jobs:
           # - aflplusplus_um_random_3
           # - aflplusplus_um_random_6
           # - aflplusplus_um_random_75
+          - aflrustrust
           # To be Removed.
           # - introspector_driven_focus
           # - centipede_function_filter
