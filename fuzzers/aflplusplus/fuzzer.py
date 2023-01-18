@@ -268,6 +268,9 @@ def fuzz(input_corpus,
     if os.path.exists(cmplog_target_binary) and no_cmplog is False:
         flags += ['-c', cmplog_target_binary]
 
+    os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
+    os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
+
     if not skip:
         os.environ['AFL_DISABLE_TRIM'] = '1'
         # os.environ['AFL_FAST_CAL'] = '1'
