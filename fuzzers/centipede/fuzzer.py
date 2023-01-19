@@ -24,11 +24,8 @@ def build():
     san_cflags = ['-fsanitize-coverage=trace-loads']
 
     link_cflags = [
-        '-Wno-error=unused-command-line-argument',
-        '-ldl',
-        '-lrt',
-        '-lpthread',
-        '/lib/weak.o',
+        '-Wno-unused-command-line-argument',
+        '-Wl,-ldl,-lrt,-lpthread,/lib/weak.o'
     ]
 
     # TODO(Dongge): Build targets with sanitizers.
@@ -41,6 +38,7 @@ def build():
     cflags = san_cflags + centipede_cflags + link_cflags
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
+    utils.append_flags('LDFLAGS', ['/lib/weak.o'])
 
     os.environ['CC'] = '/clang/bin/clang'
     os.environ['CXX'] = '/clang/bin/clang++'
