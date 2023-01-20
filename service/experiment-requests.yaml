@@ -20,6 +20,20 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-01-23-aflpp
+  description: "afl++ cmplog variants."
+  fuzzers:
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_exp
+    - aflplusplus_cmplog_exp1
+
+- experiment: 2023-01-12-aflpp
+  description: "afl++ tokens + libafl test."
+  fuzzers:
+    - aflplusplus_tokens_only
+    - aflplusplus_tokens
+    - aflplusplus
+
 - experiment: 2023-01-05-libafl
   description: "Test the LibAFL forkserver"
   type: bug
