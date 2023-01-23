@@ -36,11 +36,11 @@ cd fuzz
 make clean-corpus
 make fuzz.o
 
-make $xml.o
-# Link with $CXX
+make xml.o
+# Link with $CXX.
 $CXX $CXXFLAGS \
-    $xml.o fuzz.o \
-    -o $OUT/$xml \
+    xml.o fuzz.o \
+    -o $OUT/xml \
     $LIB_FUZZING_ENGINE \
     ../.libs/libxml2.a -Wl,-Bstatic -lz -llzma -Wl,-Bdynamic
 
