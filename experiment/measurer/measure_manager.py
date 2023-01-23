@@ -25,7 +25,7 @@ import sys
 import tempfile
 import tarfile
 import time
-from typing import List, Set
+from typing import List
 import queue
 import psutil
 

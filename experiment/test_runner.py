@@ -250,7 +250,7 @@ def test_do_sync_changed(mocked_execute, fs, trial_runner, fuzzer_module):
     trial_runner.do_sync()
     assert mocked_execute.call_args_list == [
         mock.call([
-            'gsutil', 'cp', 'corpus-archives/corpus-archive-1337.tar.gz',
+            'gsutil', 'cp', '/corpus-archives/corpus-archive-1337.tar.gz',
             ('gs://bucket/experiment-name/experiment-folders/'
              'benchmark-1-fuzzer_a/trial-1/corpus/'
              'corpus-archive-1337.tar.gz')
@@ -263,10 +263,6 @@ def test_do_sync_changed(mocked_execute, fs, trial_runner, fuzzer_module):
         ],
                   expect_zero=True)
     ]
-    unchanged_cycles_path = os.path.join(trial_runner.results_dir,
-                                         'unchanged-cycles')
-    assert not os.path.exists(unchanged_cycles_path)
-
     # Archives should get deleted after syncing.
     archives = os.listdir(trial_runner.corpus_archives_dir)
     assert len(archives) == 0
