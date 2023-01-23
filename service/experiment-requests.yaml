@@ -20,6 +20,13 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-01-23-3-aflpp
+  description: "afl++ weighting variants."
+  fuzzers:
+    - aflplusplus_cmplog_exp
+    - aflplusplus_unfuzzed
+    - aflplusplus_faved
+
 - experiment: 2023-01-23-2-aflpp
   description: "afl++ cmplog variants."
   fuzzers:
