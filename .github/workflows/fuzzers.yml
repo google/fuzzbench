@@ -93,8 +93,8 @@ jobs:
           # - afl_qemu
           # - honggfuzz_qemu
           # - weizz_qemu
-          # - aflplusplus_qemu
-          # - aflplusplus_frida
+          - aflplusplus_qemu
+          - aflplusplus_frida
           ## Concolic fuzzers.
           # - fuzzolic_aflplusplus_z3
           # - fuzzolic_aflplusplus_fuzzy
