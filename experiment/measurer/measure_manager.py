@@ -404,11 +404,9 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
     def run_cov_new_units(self):
         """Run the coverage binary on new units."""
         coverage_binary = coverage_utils.get_coverage_binary(self.benchmark)
-        run_coverage.do_coverage_run(coverage_binary,
-                                     self.corpus_dir,
+        run_coverage.do_coverage_run(coverage_binary, self.corpus_dir,
                                      self.profraw_file_pattern,
                                      self.crashes_dir)
-
 
     def generate_summary(self, cycle: int, summary_only=False):
         """Transforms the .profdata file into json form."""

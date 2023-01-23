@@ -217,8 +217,7 @@ def test_archive_corpus_name_correct(_, trial_runner):
 
 
 @mock.patch('common.logs.debug')
-def test_do_sync_unchanged(mocked_debug,
-                           trial_runner, fuzzer_module):
+def test_do_sync_unchanged(mocked_debug, trial_runner, fuzzer_module):
     """Test that do_sync records if there was no corpus change since last
     cycle."""
     trial_runner.cycle = 1337
@@ -237,7 +236,7 @@ def test_do_sync_unchanged(mocked_debug,
                  'benchmark-1-fuzzer_a/trial-1/results')
             ]
         ]
-    assert not os.listdir(trial_runner.corpus_archives_dir) # !!! make it work
+    assert not os.listdir(trial_runner.corpus_archives_dir)  # !!! make it work
 
 
 @mock.patch('common.new_process.execute')

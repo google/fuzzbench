@@ -66,9 +66,8 @@ class TestIntegrationRunCoverage:
         coverage_dir = _make_coverage_dir(tmp_path)
         profraw_file = os.path.join(coverage_dir, 'test_crash.profraw')
         crashes_dir = _make_crashes_dir(tmp_path)
-        run_coverage.do_coverage_run(self.COVERAGE_BINARY_PATH,
-                                     units, profraw_file,
-                                     crashes_dir)
+        run_coverage.do_coverage_run(self.COVERAGE_BINARY_PATH, units,
+                                     profraw_file, crashes_dir)
 
         # Ensure the crashing units are returned.
         assert os.listdir(crashes_dir) == [
@@ -83,9 +82,8 @@ class TestIntegrationRunCoverage:
         coverage_dir = _make_coverage_dir(tmp_path)
         profraw_file = os.path.join(coverage_dir, 'test_no_crash.profraw')
         crashes_dir = _make_crashes_dir(tmp_path)
-        run_coverage.do_coverage_run(self.COVERAGE_BINARY_PATH,
-                                     units, profraw_file,
-                                     crashes_dir)
+        run_coverage.do_coverage_run(self.COVERAGE_BINARY_PATH, units,
+                                     profraw_file, crashes_dir)
 
         # Assert no crashing units.
         assert not os.listdir(crashes_dir)
@@ -100,9 +98,8 @@ class TestIntegrationRunCoverage:
         coverage_dir = _make_coverage_dir(tmp_path)
         profraw_file = os.path.join(coverage_dir, 'test_max_time.profraw')
         crashes_dir = _make_crashes_dir(tmp_path)
-        run_coverage.do_coverage_run(self.COVERAGE_BINARY_PATH,
-                                     units, profraw_file,
-                                     crashes_dir)
+        run_coverage.do_coverage_run(self.COVERAGE_BINARY_PATH, units,
+                                     profraw_file, crashes_dir)
 
         assert mocked_log_error.call_count
         # Assert no crashing units
