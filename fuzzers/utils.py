@@ -188,11 +188,11 @@ def set_compilation_flags(env=None):
         if os.getenv('SANITIZER') == 'address':
             append_flags('CFLAGS',
                      FUZZING_CFLAGS + ['-fsanitize=address'] +
-                     [BUGS_OPTIMIZATION_LEVEL],
+                     [LIBCPLUSPLUS_FLAG, BUGS_OPTIMIZATION_LEVEL],
                      env=env)
             append_flags('CXXFLAGS',
                      FUZZING_CFLAGS + ['-fsanitize=address'] +
-                     [BUGS_OPTIMIZATION_LEVEL],
+                     [LIBCPLUSPLUS_FLAG, BUGS_OPTIMIZATION_LEVEL],
                      env=env)
         return
 
