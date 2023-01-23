@@ -434,7 +434,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         # directory and can be written to by the fuzzer at any time.
         results_copy = filesystem.make_dir_copy(self.results_dir)
         filestore_utils.rsync(
-            results_copy, posixpath.join(self.gcs_sync_dir, RESULTS_DIR_NAME))
+            results_copy, posixpath.join(self.gcs_sync_dir, RESULTS_DIRNAME))
 
 
 def get_fuzzer_module(fuzzer):

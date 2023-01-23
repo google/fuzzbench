@@ -257,7 +257,7 @@ def test_do_sync_changed(mocked_execute, fs, trial_runner, fuzzer_module):
         ],
                   expect_zero=True),
         mock.call([
-            'gsutil', 'rsync', '-d', '-r', 'results-copy',
+            'gsutil', 'rsync', '-d', '-r', '/results-copy',
             ('gs://bucket/experiment-name/experiment-folders/'
              'benchmark-1-fuzzer_a/trial-1/results')
         ],

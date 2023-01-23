@@ -212,16 +212,6 @@ def test_measure_all_trials_no_more(mocked_directories_have_same_files,
         queue.Queue(), False)
 
 
-def test_is_cycle_unchanged_doesnt_exist(experiment):
-    """Test that is_cycle_unchanged can properly determine if a cycle is
-    unchanged or not when it needs to copy the file for the first time."""
-    snapshot_measurer = measure_manager.SnapshotMeasurer(
-        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
-    this_cycle = 1
-    with test_utils.mock_popen_ctx_mgr(returncode=1):
-        assert not snapshot_measurer.is_cycle_unchanged(this_cycle)
-
-
 @mock.patch('common.new_process.execute')
 @mock.patch('common.benchmark_utils.get_fuzz_target',
             return_value='fuzz-target')
@@ -294,10 +284,8 @@ class TestIntegrationMeasurement:
     # portable binary.
     @pytest.mark.skipif(not os.getenv('FUZZBENCH_TEST_INTEGRATION'),
                         reason='Not running integration tests.')
-    @mock.patch('experiment.measurer.measure_manager.SnapshotMeasurer'
-                '.is_cycle_unchanged')
     def test_measure_snapshot_coverage(  # pylint: disable=too-many-locals
-            self, mocked_is_cycle_unchanged, db, experiment, tmp_path):
+            self, db, experiment, tmp_path):
         """Integration test for measure_snapshot_coverage."""
         # WORK is set by experiment to a directory that only makes sense in a
         # fakefs. A directory containing necessary llvm tools is also added to
@@ -305,7 +293,6 @@ class TestIntegrationMeasurement:
         llvm_tools_path = get_test_data_path('llvm_tools')
         os.environ['PATH'] += os.pathsep + llvm_tools_path
         os.environ['WORK'] = str(tmp_path)
-        mocked_is_cycle_unchanged.return_value = False
         # Set up the coverage binary.
         benchmark = 'freetype2-2017'
         coverage_binary_src = get_test_data_path(
