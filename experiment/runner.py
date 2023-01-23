@@ -171,6 +171,10 @@ def _unpack_clusterfuzz_seed_corpus(fuzz_target_path, corpus_directory):
               seed_corpus_archive_path)
 
 
+def is_using_sanitizer(benchmark):
+    return environment.get('OSS_FUZZ_ON_DEMAND') or benchmark_config.get_config(benchmark).get('type') == 'bug'
+
+
 def run_fuzzer(max_total_time, log_filename):
     """Runs the fuzzer using its script. Logs stdout and stderr of the fuzzer
     script to |log_filename| if provided."""
@@ -198,7 +202,7 @@ def run_fuzzer(max_total_time, log_filename):
     # benchmark.
     env = None
     benchmark = environment.get('BENCHMARK')
-    if benchmark_config.get_config(benchmark).get('type') == 'bug':
+    if is_using_sanitizer(benchmark):
         env = os.environ.copy()
         sanitizer.set_sanitizer_options(env, is_fuzz_run=True)
 
