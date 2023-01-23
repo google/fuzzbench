@@ -144,7 +144,7 @@ def _validate_individual_experiment_requests(experiment_requests):
                          experiment_type, benchmark_utils.BENCHMARK_TYPE_STRS)
             valid = False
 
-        benchmarks = request.get('benchmarks', [])
+        benchmarks = sorted(request.get('benchmarks', []))  # Sort for testing.
         for benchmark in benchmarks:
             benchmark_type = benchmark_utils.get_type(benchmark)
             if (benchmark_type == benchmark_utils.BenchmarkType.BUG.value and
