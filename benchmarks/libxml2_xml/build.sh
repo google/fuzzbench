@@ -36,17 +36,15 @@ cd fuzz
 make clean-corpus
 make fuzz.o
 
-for fuzzer in html regexp schema uri xml xpath; do
-    make $fuzzer.o
-    # Link with $CXX
-    $CXX $CXXFLAGS \
-        $fuzzer.o fuzz.o \
-        -o $OUT/libxml2_xml_reader_for_file_fuzzer \
-        $LIB_FUZZING_ENGINE \
-        ../.libs/libxml2.a -Wl,-Bstatic -lz -llzma -Wl,-Bdynamic
+make xml.o
+# Link with $CXX.
+$CXX $CXXFLAGS \
+    xml.o fuzz.o \
+    -o $OUT/xml \
+    $LIB_FUZZING_ENGINE \
+    ../.libs/libxml2.a -Wl,-Bstatic -lz -llzma -Wl,-Bdynamic
 
-    [ -e seed/$fuzzer ] || make seed/$fuzzer.stamp
-    zip -j $OUT/${fuzzer}_seed_corpus.zip seed/$fuzzer/*
-done
+[ -e seed/xml ] || make seed/xml.stamp
+zip -j $OUT/xml_seed_corpus.zip seed/xml/*
 
 cp *.dict *.options $OUT/
