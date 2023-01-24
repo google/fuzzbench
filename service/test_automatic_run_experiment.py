@@ -73,7 +73,7 @@ def test_run_requested_experiment(mocked_get_requested_experiments,
     expected_config_file = os.path.join(utils.ROOT_DIR, 'service',
                                         'experiment-config.yaml')
 
-    expected_benchmarks = [
+    expected_benchmarks = sorted([
         'bloaty_fuzz_target',
         'curl_curl_fuzzer_http',
         'jsoncpp_jsoncpp_fuzzer',
@@ -98,7 +98,7 @@ def test_run_requested_experiment(mocked_get_requested_experiments,
         'stb_stbi_read_fuzzer',
         'vorbis-2017-12-11',
         'woff2-2016-05-06',
-    ]
+    ])
     expected_call = mock.call(expected_experiment_name,
                               expected_config_file,
                               expected_benchmarks,
