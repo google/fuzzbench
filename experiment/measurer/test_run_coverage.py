@@ -71,7 +71,7 @@ class TestIntegrationRunCoverage:
 
         # Ensure the crashing units are returned.
         assert os.listdir(crashes_dir) == [
-            '86f7e437faa5a7fce15d1ddcb9eaeaea377667b8'
+            'crash-86f7e437faa5a7fce15d1ddcb9eaeaea377667b8'
         ]
         _assert_profraw_files(coverage_dir)
 
