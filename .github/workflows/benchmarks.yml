@@ -11,7 +11,7 @@ on:
       - '.github/worfkflows/build_and_test_run_fuzzer_benchmarks.py'
 
 jobs:
-  test:
+  Test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -46,7 +46,6 @@ jobs:
           - openh264_decoder_fuzzer
           - openssl_x509
           - openthread-2019-12-23
-          - oss_fuzz_benchmark_integration.py
           - php_php-fuzz-execute
           - php_php-fuzz-parser
           - php_php-fuzz-parser-2020-07-25
