@@ -40,7 +40,7 @@ def build():
     utils.build_benchmark()
 
     print('[post_build] Copying afl-fuzz to $OUT directory')
-    # Copy the afl-fuzz binary as a build artifact to OUT.
+    # Copy out the afl-fuzz binary as a build artifact.
     shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
 
 

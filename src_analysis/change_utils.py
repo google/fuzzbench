@@ -40,6 +40,7 @@ def get_absolute_paths(file_paths):
 def get_changed_fuzzers(changed_files: List[str] = None) -> List[str]:
     """Returns a list of fuzzers that have changed functionality based
     on the files that have changed in |changed_files|."""
+    import pdb; pdb.set_trace()
     changed_files = get_absolute_paths(changed_files)
     changed_fuzzers = fuzzer_dependencies.get_files_dependent_fuzzers(
         changed_files)

@@ -109,7 +109,7 @@ def do_build(benchmark):
     """Build the benchmark with every changed fuzzer."""
     changed_files = diff_utils.get_changed_files()
     changed_fuzzers = change_utils.get_changed_fuzzers(changed_files)
-    print('changed_fuzzers', changed_fuzzers)q
+    print('changed_fuzzers', changed_fuzzers)
     # Only build fuzzers that have changed.
     return make_builds(benchmark, changed_fuzzers)
 
