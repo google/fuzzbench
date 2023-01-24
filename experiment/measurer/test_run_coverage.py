@@ -71,9 +71,7 @@ class TestIntegrationRunCoverage:
                                                       crashes_dir)
 
         # Ensure the crashing units are returned.
-        assert crashing_units == [
-            'crash-86f7e437faa5a7fce15d1ddcb9eaeaea377667b8'
-        ]
+        assert crashing_units == ['86f7e437faa5a7fce15d1ddcb9eaeaea377667b8']
         _assert_profraw_files(coverage_dir)
 
     def test_integration_do_coverage_run_no_crash(self, tmp_path):
