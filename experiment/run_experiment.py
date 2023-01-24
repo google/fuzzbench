@@ -22,7 +22,8 @@ import subprocess
 import sys
 import tarfile
 import tempfile
-from typing import Dict, List
+from collections import namedtuple
+from typing import Dict, List, Optional, Union
 
 import jinja2
 import yaml
@@ -41,8 +42,6 @@ from common import yaml_utils
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
-OSS_FUZZ_PROJECTS_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz',
-                                     'projects')
 RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
 FUZZER_NAME_REGEX = re.compile(r'^[a-z][a-z0-9_]+$')
 EXPERIMENT_CONFIG_REGEX = re.compile(r'^[a-z0-9-]{0,30}$')
@@ -56,86 +55,145 @@ FILTER_SOURCE_REGEX = re.compile(r'('
                                  r'\#*\#$|'
                                  r'\.pytest_cache/|'
                                  r'.*/test_data/|'
-                                 r'^third_party/oss-fuzz/build/|'
                                  r'^docker/generated.mk$|'
                                  r'^docs/)')
 _OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT = (
     'gs://{project}-backup.clusterfuzz-external.appspot.com/corpus/'
     'libFuzzer/{fuzz_target}/public.zip')
+DEFAULT_CONCURRENT_BUILDS = 30
+
+Requirement = namedtuple('Requirement',
+                         ['mandatory', 'type', 'lowercase', 'startswith'])
 
 
-def read_and_validate_experiment_config(config_filename: str) -> Dict:
-    """Reads |config_filename|, validates it, finds as many errors as possible,
-    and returns it."""
-    config = yaml_utils.read(config_filename)
-    filestore_params = {'experiment_filestore', 'report_filestore'}
-    cloud_config = {'cloud_compute_zone', 'cloud_project'}
-    docker_config = {'docker_registry'}
-    string_params = cloud_config.union(filestore_params).union(docker_config)
-    int_params = {'trials', 'max_total_time'}
-    required_params = int_params.union(filestore_params).union(docker_config)
-    bool_params = {'private', 'merge_with_nonprivate'}
+def _set_default_config_values(config: Dict[str, Union[int, str, bool]],
+                               local_experiment: bool):
+    """Set the default configuration values if they are not specified."""
+    config['local_experiment'] = local_experiment
+    config['worker_pool_name'] = config.get('worker_pool_name', '')
+    config['snapshot_period'] = config.get(
+        'snapshot_period', experiment_utils.DEFAULT_SNAPSHOT_SECONDS)
 
-    local_experiment = config.get('local_experiment', False)
-    snapshot_period = config.get('snapshot_period',
-                                 experiment_utils.DEFAULT_SNAPSHOT_SECONDS)
-    if not local_experiment:
-        required_params = required_params.union(cloud_config)
 
-    valid = True
+def _validate_config_parameters(
+        config: Dict[str, Union[int, str, bool]],
+        config_requirements: Dict[str, Requirement]) -> bool:
+    """Validates if the required |params| exist in |config|."""
     if 'cloud_experiment_bucket' in config or 'cloud_web_bucket' in config:
         logs.error('"cloud_experiment_bucket" and "cloud_web_bucket" are now '
                    '"experiment_filestore" and "report_filestore".')
 
-    for param in required_params:
-        if param not in config:
+    missing_params, optional_params = [], []
+    for param, requirement in config_requirements.items():
+        if param in config:
+            continue
+        if requirement.mandatory:
+            missing_params.append(param)
+            continue
+        optional_params.append(param)
+
+    for param in missing_params:
+        logs.error('Config does not contain required parameter "%s".', param)
+
+    # Notify if any optional parameters are missing in config.
+    for param in optional_params:
+        logs.info('Config does not contain optional parameter "%s".', param)
+
+    return not missing_params
+
+
+# pylint: disable=too-many-arguments
+def _validate_config_values(
+        config: Dict[str, Union[str, int, bool]],
+        config_requirements: Dict[str, Requirement]) -> bool:
+    """Validates if |params| types and formats in |config| are correct."""
+
+    valid = True
+    for param, value in config.items():
+        requirement = config_requirements.get(param, None)
+        # Unrecognised parameter.
+        error_param = 'Config parameter "%s" is "%s".'
+        if requirement is None:
             valid = False
-            logs.error('Config does not contain "%s".', param)
+            error_reason = 'This parameter is not recognized.'
+            logs.error(f'{error_param} {error_reason}', param, str(value))
             continue
 
-        value = config[param]
-        if param in int_params and not isinstance(value, int):
+        if not isinstance(value, requirement.type):
             valid = False
-            logs.error('Config parameter "%s" is "%s". It must be an int.',
-                       param, value)
+            error_reason = f'It must be a {requirement.type}.'
+            logs.error(f'{error_param} {error_reason}', param, str(value))
+
+        if not isinstance(value, str):
             continue
 
-        if param in string_params and (not isinstance(value, str) or
-                                       value != value.lower()):
+        if requirement.lowercase and not value.islower():
             valid = False
-            logs.error(
-                'Config parameter "%s" is "%s". It must be a lowercase string.',
-                param, str(value))
-            continue
+            error_reason = 'It must be a lowercase string.'
+            logs.error(f'{error_param} {error_reason}', param, str(value))
 
-        if param in bool_params and not isinstance(value, bool):
+        if requirement.startswith and not value.startswith(
+                requirement.startswith):
             valid = False
-            logs.error('Config parameter "%s" is "%s". It must be a bool.',
-                       param, str(value))
-            continue
+            error_reason = (
+                'Local experiments only support Posix file systems filestores.'
+                if config.get('local_experiment', False) else
+                'Google Cloud experiments must start with "gs://".')
+            logs.error(f'{error_param} {error_reason}', param, value)
 
-        if param not in filestore_params:
-            continue
+    return valid
 
-        if local_experiment and not value.startswith('/'):
-            valid = False
-            logs.error(
-                'Config parameter "%s" is "%s". Local experiments only support '
-                'using Posix file systems as filestores.', param, value)
-            continue
 
-        if not local_experiment and not value.startswith('gs://'):
-            valid = False
-            logs.error(
-                'Config parameter "%s" is "%s". '
-                'It must start with gs:// when running on Google Cloud.', param,
-                value)
+# pylint: disable=too-many-locals
+def read_and_validate_experiment_config(config_filename: str) -> Dict:
+    """Reads |config_filename|, validates it, finds as many errors as possible,
+    and returns it."""
+    # Reads config from file.
+    config = yaml_utils.read(config_filename)
 
-    if not valid:
-        raise ValidationError('Config: %s is invalid.' % config_filename)
+    # Validates config contains all the required parameters.
+    local_experiment = config.get('local_experiment', False)
 
-    config['local_experiment'] = local_experiment
-    config['snapshot_period'] = snapshot_period
+    # Requirement of each config field.
+    config_requirements = {
+        'experiment_filestore':
+            Requirement(True, str, True, '/' if local_experiment else 'gs://'),
+        'report_filestore':
+            Requirement(True, str, True, '/' if local_experiment else 'gs://'),
+        'docker_registry':
+            Requirement(True, str, True, ''),
+        'trials':
+            Requirement(True, int, False, ''),
+        'max_total_time':
+            Requirement(True, int, False, ''),
+        'cloud_compute_zone':
+            Requirement(not local_experiment, str, True, ''),
+        'cloud_project':
+            Requirement(not local_experiment, str, True, ''),
+        'worker_pool_name':
+            Requirement(not local_experiment, str, False, ''),
+        'experiment':
+            Requirement(False, str, False, ''),
+        'cloud_sql_instance_connection_name':
+            Requirement(False, str, True, ''),
+        'snapshot_period':
+            Requirement(False, int, False, ''),
+        'local_experiment':
+            Requirement(False, bool, False, ''),
+        'private':
+            Requirement(False, bool, False, ''),
+        'merge_with_nonprivate':
+            Requirement(False, bool, False, ''),
+        'preemptible_runners':
+            Requirement(False, bool, False, ''),
+    }
+
+    all_params_valid = _validate_config_parameters(config, config_requirements)
+    all_values_valid = _validate_config_values(config, config_requirements)
+    if not all_params_valid or not all_values_valid:
+        raise ValidationError(f'Config: {config_filename} is invalid.')
+
+    _set_default_config_values(config, local_experiment)
     return config
 
 
@@ -155,20 +213,20 @@ def get_directories(parent_dir):
 def validate_custom_seed_corpus(custom_seed_corpus_dir, benchmarks):
     """Validate seed corpus provided by user"""
     if not os.path.isdir(custom_seed_corpus_dir):
-        raise ValidationError('Corpus location "%s" is invalid.' %
-                              custom_seed_corpus_dir)
+        raise ValidationError(
+            f'Corpus location "{custom_seed_corpus_dir}" is invalid.')
 
     for benchmark in benchmarks:
         benchmark_corpus_dir = os.path.join(custom_seed_corpus_dir, benchmark)
         if not os.path.exists(benchmark_corpus_dir):
             raise ValidationError('Custom seed corpus directory for '
-                                  'benchmark "%s" does not exist.' % benchmark)
+                                  f'benchmark "{benchmark}" does not exist.')
         if not os.path.isdir(benchmark_corpus_dir):
-            raise ValidationError('Seed corpus of benchmark "%s" must be '
-                                  'a directory.' % benchmark)
+            raise ValidationError(
+                f'Seed corpus of benchmark "{benchmark}" must be a directory.')
         if not os.listdir(benchmark_corpus_dir):
-            raise ValidationError('Seed corpus of benchmark "%s" is empty.' %
-                                  benchmark)
+            raise ValidationError(
+                f'Seed corpus of benchmark "{benchmark}" is empty.')
 
 
 def validate_benchmarks(benchmarks: List[str]):
@@ -176,13 +234,13 @@ def validate_benchmarks(benchmarks: List[str]):
     benchmark_types = set()
     for benchmark in set(benchmarks):
         if benchmarks.count(benchmark) > 1:
-            raise ValidationError('Benchmark "%s" is included more than once.' %
-                                  benchmark)
+            raise ValidationError(
+                f'Benchmark "{benchmark}" is included more than once.')
         # Validate benchmarks here. It's possible someone might run an
         # experiment without going through presubmit. Better to catch an invalid
         # benchmark than see it in production.
         if not benchmark_utils.validate(benchmark):
-            raise ValidationError('Benchmark "%s" is invalid.' % benchmark)
+            raise ValidationError(f'Benchmark "{benchmark}" is invalid.')
 
         benchmark_types.add(benchmark_utils.get_type(benchmark))
 
@@ -195,7 +253,7 @@ def validate_benchmarks(benchmarks: List[str]):
 def validate_fuzzer(fuzzer: str):
     """Parses and validates a fuzzer name."""
     if not fuzzer_utils.validate(fuzzer):
-        raise ValidationError('Fuzzer: %s is invalid.' % fuzzer)
+        raise ValidationError(f'Fuzzer: {fuzzer} is invalid.')
 
 
 def validate_experiment_name(experiment_name: str):
@@ -203,8 +261,8 @@ def validate_experiment_name(experiment_name: str):
     instances."""
     if not re.match(EXPERIMENT_CONFIG_REGEX, experiment_name):
         raise ValidationError(
-            'Experiment name "%s" is invalid. Must match: "%s"' %
-            (experiment_name, EXPERIMENT_CONFIG_REGEX.pattern))
+            f'Experiment name "{experiment_name}" is invalid. '
+            f'Must match: "{EXPERIMENT_CONFIG_REGEX.pattern}"')
 
 
 def set_up_experiment_config_file(config):
@@ -213,7 +271,8 @@ def set_up_experiment_config_file(config):
     filesystem.recreate_directory(experiment_utils.CONFIG_DIR)
     experiment_config_filename = (
         experiment_utils.get_internal_experiment_config_relative_path())
-    with open(experiment_config_filename, 'w') as experiment_config_file:
+    with open(experiment_config_filename, 'w',
+              encoding='utf-8') as experiment_config_file:
         yaml.dump(config, experiment_config_file, default_flow_style=False)
 
 
@@ -235,16 +294,16 @@ def start_experiment(  # pylint: disable=too-many-arguments
         config_filename: str,
         benchmarks: List[str],
         fuzzers: List[str],
-        description: str = None,
-        no_seeds=False,
-        no_dictionaries=False,
-        oss_fuzz_corpus=False,
-        allow_uncommitted_changes=False,
-        concurrent_builds=None,
-        measurers_cpus=None,
-        runners_cpus=None,
-        region_coverage=False,
-        custom_seed_corpus_dir=None):
+        description: Optional[str] = None,
+        no_seeds: bool = False,
+        no_dictionaries: bool = False,
+        oss_fuzz_corpus: bool = False,
+        allow_uncommitted_changes: bool = False,
+        concurrent_builds: Optional[int] = DEFAULT_CONCURRENT_BUILDS,
+        measurers_cpus: Optional[int] = None,
+        runners_cpus: Optional[int] = None,
+        region_coverage: bool = False,
+        custom_seed_corpus_dir: Optional[str] = None):
     """Start a fuzzer benchmarking experiment."""
     if not allow_uncommitted_changes:
         check_no_uncommitted_changes()
@@ -315,7 +374,7 @@ def add_oss_fuzz_corpus(benchmark, oss_fuzz_corpora_dir):
     fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
 
     if not fuzz_target.startswith(project):
-        full_fuzz_target = '%s_%s' % (project, fuzz_target)
+        full_fuzz_target = f'{project}_{fuzz_target}'
     else:
         full_fuzz_target = fuzz_target
 
@@ -400,42 +459,34 @@ class LocalDispatcher(BaseDispatcher):
             self.config['experiment_filestore'])
         filesystem.create_directory(experiment_filestore_path)
         sql_database_arg = (
-            'SQL_DATABASE_URL=sqlite:///{}?check_same_thread=False'.format(
-                os.path.join(experiment_filestore_path, 'local.db')))
+            'SQL_DATABASE_URL=sqlite:///'
+            f'{os.path.join(experiment_filestore_path, "local.db")}'
+            '?check_same_thread=False')
 
         docker_registry = self.config['docker_registry']
-        set_instance_name_arg = 'INSTANCE_NAME={instance_name}'.format(
-            instance_name=self.instance_name)
-        set_experiment_arg = 'EXPERIMENT={experiment}'.format(
-            experiment=self.config['experiment'])
-        shared_experiment_filestore_arg = '{0}:{0}'.format(
-            self.config['experiment_filestore'])
+        set_instance_name_arg = f'INSTANCE_NAME={self.instance_name}'
+        set_experiment_arg = f'EXPERIMENT={self.config["experiment"]}'
+        filestore = self.config['experiment_filestore']
+        shared_experiment_filestore_arg = f'{filestore}:{filestore}'
         # TODO: (#484) Use config in function args or set as environment
         # variables.
-        set_docker_registry_arg = 'DOCKER_REGISTRY={}'.format(docker_registry)
+        set_docker_registry_arg = f'DOCKER_REGISTRY={docker_registry}'
         set_experiment_filestore_arg = (
-            'EXPERIMENT_FILESTORE={experiment_filestore}'.format(
-                experiment_filestore=self.config['experiment_filestore']))
-        shared_report_filestore_arg = '{0}:{0}'.format(
-            self.config['report_filestore'])
-        set_report_filestore_arg = (
-            'REPORT_FILESTORE={report_filestore}'.format(
-                report_filestore=self.config['report_filestore']))
-        set_snapshot_period_arg = 'SNAPSHOT_PERIOD={snapshot_period}'.format(
-            snapshot_period=self.config['snapshot_period'])
-        docker_image_url = '{docker_registry}/dispatcher-image'.format(
-            docker_registry=docker_registry)
-        command = [
-            'docker',
-            'run',
-            '-ti',
-            '--rm',
-            '-v',
-            '/var/run/docker.sock:/var/run/docker.sock',
-            '-v',
-            shared_experiment_filestore_arg,
-            '-v',
-            shared_report_filestore_arg,
+            f'EXPERIMENT_FILESTORE={self.config["experiment_filestore"]}')
+
+        filestore = self.config['report_filestore']
+        shared_report_filestore_arg = f'{filestore}:{filestore}'
+        set_report_filestore_arg = f'REPORT_FILESTORE={filestore}'
+        set_snapshot_period_arg = (
+            f'SNAPSHOT_PERIOD={self.config["snapshot_period"]}')
+        docker_image_url = f'{docker_registry}/dispatcher-image'
+        set_concurrent_builds_arg = (
+            f'CONCURRENT_BUILDS={self.config["concurrent_builds"]}')
+        set_worker_pool_name_arg = (
+            f'WORKER_POOL_NAME={self.config["worker_pool_name"]}')
+        environment_args = [
+            '-e',
+            'LOCAL_EXPERIMENT=True',
             '-e',
             set_instance_name_arg,
             '-e',
@@ -451,10 +502,26 @@ class LocalDispatcher(BaseDispatcher):
             '-e',
             set_docker_registry_arg,
             '-e',
-            'LOCAL_EXPERIMENT=True',
+            set_concurrent_builds_arg,
+            '-e',
+            set_worker_pool_name_arg,
+        ]
+        command = [
+            'docker',
+            'run',
+            '-ti',
+            '--rm',
+            '-v',
+            '/var/run/docker.sock:/var/run/docker.sock',
+            '-v',
+            shared_experiment_filestore_arg,
+            '-v',
+            shared_report_filestore_arg,
+        ] + environment_args + [
+            '--shm-size=2g',
             '--cap-add=SYS_PTRACE',
             '--cap-add=SYS_NICE',
-            '--name=%s' % container_name,
+            f'--name={container_name}',
             docker_image_url,
             '/bin/bash',
             '-c',
@@ -507,7 +574,11 @@ class GoogleCloudDispatcher(BaseDispatcher):
             'cloud_sql_instance_connection_name':
                 (cloud_sql_instance_connection_name),
             'docker_registry': self.config['docker_registry'],
+            'concurrent_builds': self.config['concurrent_builds'],
+            'worker_pool_name': self.config['worker_pool_name']
         }
+        if 'worker_pool_name' in self.config:
+            kwargs['worker_pool_name'] = self.config['worker_pool_name']
         return template.render(**kwargs)
 
     def write_startup_script(self, startup_script_file):
@@ -559,14 +630,18 @@ def main():
     parser.add_argument('-cb',
                         '--concurrent-builds',
                         help='Max concurrent builds allowed.',
+                        default=DEFAULT_CONCURRENT_BUILDS,
+                        type=int,
                         required=False)
     parser.add_argument('-mc',
                         '--measurers-cpus',
                         help='Cpus available to the measurers.',
+                        type=int,
                         required=False)
     parser.add_argument('-rc',
                         '--runners-cpus',
                         help='Cpus available to the runners.',
+                        type=int,
                         required=False)
     parser.add_argument('-cs',
                         '--custom-seed-corpus-dir',
@@ -616,30 +691,30 @@ def main():
     fuzzers = args.fuzzers or all_fuzzers
 
     concurrent_builds = args.concurrent_builds
-    if concurrent_builds is not None:
-        if not concurrent_builds.isdigit():
-            parser.error(
-                'The concurrent build argument must be a positive number')
-        concurrent_builds = int(concurrent_builds)
+    if concurrent_builds is not None and concurrent_builds <= 0:
+        parser.error('The concurrent build argument must be a positive number,'
+                     f' received {concurrent_builds}.')
+
     runners_cpus = args.runners_cpus
-    if runners_cpus is not None:
-        if not runners_cpus.isdigit():
-            parser.error('The runners cpus argument must be a positive number')
-        runners_cpus = int(runners_cpus)
+    if runners_cpus is not None and runners_cpus <= 0:
+        parser.error('The runners cpus argument must be a positive number,'
+                     f' received {runners_cpus}.')
+
     measurers_cpus = args.measurers_cpus
-    if measurers_cpus is not None:
-        if not measurers_cpus.isdigit():
-            parser.error(
-                'The measurers cpus argument must be a positive number')
-        if runners_cpus is None:
-            parser.error(
-                'With the measurers cpus argument you need to specify the'
-                ' runners cpus argument too')
-        measurers_cpus = int(measurers_cpus)
+    if measurers_cpus is not None and measurers_cpus <= 0:
+        parser.error('The measurers cpus argument must be a positive number,'
+                     f' received {measurers_cpus}.')
+
+    if runners_cpus is None and measurers_cpus is not None:
+        parser.error('With the measurers cpus argument (received '
+                     f'{measurers_cpus}) you need to specify the runners cpus '
+                     'argument too.')
+
     if (runners_cpus if runners_cpus else 0) + (measurers_cpus if measurers_cpus
                                                 else 0) > os.cpu_count():
-        parser.error('The sum of runners and measurers cpus is greater than the'
-                     ' available cpu cores (%d)' % os.cpu_count())
+        parser.error(f'The sum of runners ({runners_cpus}) and measurers cpus '
+                     f'({measurers_cpus}) is greater than the available cpu '
+                     f'cores (os.cpu_count()).')
 
     if args.custom_seed_corpus_dir:
         if args.no_seeds:

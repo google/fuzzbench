@@ -50,10 +50,9 @@ def get_changed_files(commit_name: str = 'origin...') -> List[str]:
         # This probably won't happen to anyone. It can happen if your copy
         # of the repo wasn't cloned so give instructions on how to handle.
         pass
-    raise DiffError((
-        '"%s" failed.\n'
+    raise DiffError(
+        f'"{" ".join(committed_diff_command)}" failed.\n'
         'Please run "git fetch origin master --unshallow && '
         'git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master" '
         'and try again.\n'
-        'Please file an issue if this doesn\'t fix things.') %
-                    ' '.join(committed_diff_command))
+        'Please file an issue if this doesn\'t fix things.')

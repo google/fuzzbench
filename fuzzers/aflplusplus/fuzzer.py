@@ -36,6 +36,10 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration.
 
+    # Add required libs for libpcap_fuzz_both.
+    os.environ['EXTRA_LIBS'] = ('/usr/lib/x86_64-linux-gnu/libdbus-1.a '
+                                '/lib/x86_64-linux-gnu/libsystemd.so.0')
+
     build_modes = list(args)
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
@@ -159,8 +163,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     else:
         os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
 
-    # Some benchmarks like lcms
-    # (see: https://github.com/mm2/Little-CMS/commit/ab1093539b4287c233aca6a3cf53b234faceb792#diff-f0e6d05e72548974e852e8e55dffc4ccR212)
+    # Some benchmarks like lcms. (see:
+    # https://github.com/mm2/Little-CMS/commit/ab1093539b4287c233aca6a3cf53b234faceb792#diff-f0e6d05e72548974e852e8e55dffc4ccR212)
     # fail to compile if the compiler outputs things to stderr in unexpected
     # cases. Prevent these failures by using AFL_QUIET to stop afl-clang-fast
     # from writing AFL specific messages to stderr.
@@ -206,22 +210,22 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         new_env['CC'] = '/symcc/build/symcc'
         new_env['CXX'] = '/symcc/build/sym++'
         new_env['SYMCC_OUTPUT_DIR'] = '/tmp'
-        new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace("-stlib=libc++", "")
+        new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace('-stlib=libc++', '')
         new_env['FUZZER_LIB'] = '/libfuzzer-harness.o'
         new_env['OUT'] = symcc_build_directory
-        new_env['SYMCC_LIBCXX_PATH'] = "/libcxx_native_build"
-        new_env['SYMCC_NO_SYMBOLIC_INPUT'] = "1"
-        new_env['SYMCC_SILENT'] = "1"
+        new_env['SYMCC_LIBCXX_PATH'] = '/libcxx_native_build'
+        new_env['SYMCC_NO_SYMBOLIC_INPUT'] = '1'
+        new_env['SYMCC_SILENT'] = '1'
 
-        # For CmpLog build, set the OUT and FUZZ_TARGET environment
-        # variable to point to the new CmpLog build directory.
+        # For symcc build, set the OUT and FUZZ_TARGET environment
+        # variable to point to the new symcc build directory.
         new_env['OUT'] = symcc_build_directory
         fuzz_target = os.getenv('FUZZ_TARGET')
         if fuzz_target:
             new_env['FUZZ_TARGET'] = os.path.join(symcc_build_directory,
                                                   os.path.basename(fuzz_target))
 
-        print('Re-building benchmark for CmpLog fuzzing target')
+        print('Re-building benchmark for symcc fuzzing target')
         utils.build_benchmark(env=new_env)
 
     shutil.copy('/afl/afl-fuzz', build_directory)
@@ -264,9 +268,12 @@ def fuzz(input_corpus,
     if os.path.exists(cmplog_target_binary) and no_cmplog is False:
         flags += ['-c', cmplog_target_binary]
 
+    os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
+    os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
+    os.environ['AFL_FAST_CAL'] = '1'
+
     if not skip:
-        os.environ['AFL_DISABLE_TRIM'] = "1"
-        # os.environ['AFL_FAST_CAL'] = '1'
+        os.environ['AFL_DISABLE_TRIM'] = '1'
         os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
         if 'ADDITIONAL_ARGS' in os.environ:
             flags += os.environ['ADDITIONAL_ARGS'].split(' ')

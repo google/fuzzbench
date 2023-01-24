@@ -44,6 +44,7 @@ REQUESTED_EXPERIMENTS_PATH = os.path.join(utils.ROOT_DIR, 'service',
 PAUSE_SERVICE_KEYWORD = 'PAUSE_SERVICE'
 
 EXPERIMENT_NAME_REGEX = re.compile(r'^\d{4}-\d{2}-\d{2}.*')
+SERVICE_CONCURRENT_BUILDS = 150
 
 
 def _get_experiment_name(experiment_config: dict) -> str:
@@ -142,6 +143,18 @@ def _validate_individual_experiment_requests(experiment_requests):
             logger.error('Type: %s is invalid, must be one of %s',
                          experiment_type, benchmark_utils.BENCHMARK_TYPE_STRS)
             valid = False
+
+        benchmarks = sorted(request.get('benchmarks', []))  # Sort for testing.
+        for benchmark in benchmarks:
+            benchmark_type = benchmark_utils.get_type(benchmark)
+            if (benchmark_type == benchmark_utils.BenchmarkType.BUG.value and
+                    experiment_type != benchmark_utils.BenchmarkType.BUG.value):
+                logger.error(
+                    'Benchmark %s is "type: bug". '
+                    'Experiment %s must be "type: bug" as well.', benchmark,
+                    experiment)
+                valid = False
+                break
 
     return valid
 
@@ -259,6 +272,7 @@ def _run_experiment(  # pylint: disable=too-many-arguments
                                     benchmarks,
                                     fuzzers,
                                     description=description,
+                                    concurrent_builds=SERVICE_CONCURRENT_BUILDS,
                                     oss_fuzz_corpus=oss_fuzz_corpus)
 
 

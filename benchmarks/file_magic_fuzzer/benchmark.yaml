@@ -1,5 +1,5 @@
-commit: d1ff3af7a2c6b38bdbdde7af26b59e3c50a48fff
-commit_date: 2018-10-18 23:35:42+00:00
+commit: 87060b287acdc06297bb73e668445e57023f3a75
+commit_date: 2022-10-20T09:10:15+00:00
 fuzz_target: magic_fuzzer
 project: file
 type: bug
@@ -7,3 +7,4 @@ unsupported_fuzzers:
   - aflcc
   - klee
   - lafintel
+  - honggfuzz

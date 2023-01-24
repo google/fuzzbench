@@ -17,7 +17,7 @@ import os
 import signal
 import subprocess
 import threading
-from typing import List
+from typing import List, Optional
 
 from common import logs
 
@@ -72,10 +72,10 @@ def execute(  # pylint: disable=too-many-locals,too-many-branches
         command: List[str],
         *args,
         expect_zero: bool = True,
-        timeout: int = None,
+        timeout: Optional[int] = None,
         write_to_stdout=False,
         # If not set, will default to PIPE.
-        output_file=None,
+        output_file: Optional[int] = None,
         # Not True by default because we can't always set group on processes.
         kill_children: bool = False,
         **kwargs) -> ProcessResult:
@@ -92,6 +92,7 @@ def execute(  # pylint: disable=too-many-locals,too-many-branches
     if kill_children:
         kwargs['preexec_fn'] = os.setsid
 
+    # pylint: disable=consider-using-with
     process = subprocess.Popen(command, *args, **kwargs)
     process_group_id = os.getpgid(process.pid)
 

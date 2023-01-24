@@ -1,9 +1,9 @@
-commit: 6473a5d35c16b1e673c07f0927ec5d2e10433e79
-commit_date: 2019-06-14 01:51:00+00:00
+commit: 7adeeff91f974ec5a69967dffe18331f666530eb
 fuzz_target: ffmpeg_DEMUXER_fuzzer
 project: ffmpeg
 type: bug
 unsupported_fuzzers:
+  - libafl
   - aflcc
   - afl_qemu
   - aflplusplus_qemu
@@ -44,3 +44,4 @@ unsupported_fuzzers:
   - libfuzzer_dataflow_load
   - libfuzzer_dataflow_store
   - libfuzzer_dataflow_pre
+  - wingfuzz

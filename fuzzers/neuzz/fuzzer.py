@@ -53,10 +53,10 @@ def build():
 
 def kill_afl(output_stream=subprocess.DEVNULL):
     """kill afl-fuzz process."""
-    print("Warmed up!")
+    print('Warmed up!')
     # Can't avoid this because 'run_afl_fuzz' doesn't return a handle to
     # 'afl-fuzz' process so that we can kill it with subprocess.terminate()
-    subprocess.call(["pkill", "-f", "afl-fuzz"],
+    subprocess.call(['pkill', '-f', 'afl-fuzz'],
                     stdout=output_stream,
                     stderr=output_stream)
 
@@ -73,9 +73,9 @@ def run_neuzz(input_corpus,
     afl.run_afl_fuzz(input_corpus, output_corpus, target_binary,
                      additional_flags, hide_output)
     # After warming up, copy the 'queue' to use for neuzz input
-    print("[run_neuzz] Warmed up!")
+    print('[run_neuzz] Warmed up!')
     command = [
-        "cp", "-RT", f"{output_corpus}/queue/", f"{input_corpus}_neuzzin/"
+        'cp', '-RT', f'{output_corpus}/queue/', f'{input_corpus}_neuzzin/'
     ]
     print('[run_neuzz] Running command: ' + ' '.join(command))
 
@@ -88,22 +88,22 @@ def run_neuzz(input_corpus,
 
     # Spinning up the neural network
     command = [
-        "python2", "./nn.py", '--output-folder', afl_output_dir, target_binary
+        'python2', './nn.py', '--output-folder', afl_output_dir, target_binary
     ]
     print('[run_neuzz] Running command: ' + ' '.join(command))
-    subprocess.Popen(command, stdout=output_stream, stderr=output_stream)
+    with subprocess.Popen(command, stdout=output_stream, stderr=output_stream):
+        pass
     time.sleep(40)
     target_rel_path = os.path.relpath(target_binary, os.getcwd())
     # Spinning up neuzz
     command = [
-        "./neuzz", "-m", "none", "-i", neuzz_input_dir, "-o", afl_output_dir,
-        target_rel_path, "@@"
+        './neuzz', '-m', 'none', '-i', neuzz_input_dir, '-o', afl_output_dir,
+        target_rel_path, '@@'
     ]
     print('[run_neuzz] Running command: ' + ' '.join(command))
-    neuzz_proc = subprocess.Popen(command,
-                                  stdout=output_stream,
-                                  stderr=output_stream)
-    neuzz_proc.wait()
+    with subprocess.Popen(command, stdout=output_stream,
+                          stderr=output_stream) as neuzz_proc:
+        neuzz_proc.wait()
 
 
 def fuzz(input_corpus, output_corpus, target_binary):

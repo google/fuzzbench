@@ -39,7 +39,7 @@ def build():
     fuzz_target = os.getenv('FUZZ_TARGET')
 
     # First, build an uninstrumented binary for Eclipser.
-    aflplusplus_fuzzer.build("qemu", "eclipser")
+    aflplusplus_fuzzer.build('qemu', 'eclipser')
     eclipser_dir = get_symcc_build_dir(build_directory)
     os.mkdir(eclipser_dir)
     fuzz_binary = build_directory + '/' + fuzz_target
@@ -49,23 +49,23 @@ def build():
 
     # Second, build an instrumented binary for AFL++.
     os.environ = orig_env
-    aflplusplus_fuzzer.build("tracepc")
+    aflplusplus_fuzzer.build('tracepc')
     print('[build] Copying afl-fuzz to $OUT directory')
 
     # Copy afl-fuzz
     shutil.copy('/afl/afl-fuzz', build_directory)
-    shutil.copy("/afl/afl-showmap", build_directory)
-    shutil.copy("/rust/bin/symcc_fuzzing_helper", eclipser_dir)
+    shutil.copy('/afl/afl-showmap', build_directory)
+    shutil.copy('/rust/bin/symcc_fuzzing_helper', eclipser_dir)
 
     symcc_build_dir = get_symcc_build_dir(os.environ['OUT'])
 
     # Copy over symcc artifacts and symbolic libc++.
     shutil.copy(
-        "/symcc/build//SymRuntime-prefix/src/SymRuntime-build/libSymRuntime.so",
+        '/symcc/build//SymRuntime-prefix/src/SymRuntime-build/libSymRuntime.so',
         symcc_build_dir)
-    shutil.copy("/usr/lib/libz3.so", os.path.join(symcc_build_dir, "libz3.so"))
-    shutil.copy("/rust/bin/symcc_fuzzing_helper", symcc_build_dir)
-    shutil.copy("/symqemu/build/x86_64-linux-user/symqemu-x86_64",
+    shutil.copy('/usr/lib/libz3.so', os.path.join(symcc_build_dir, 'libz3.so'))
+    shutil.copy('/rust/bin/symcc_fuzzing_helper', symcc_build_dir)
+    shutil.copy('/symqemu/build/x86_64-linux-user/symqemu-x86_64',
                 symcc_build_dir)
 
 
@@ -89,31 +89,32 @@ def fuzz(input_corpus, output_corpus, target_binary):
     target_binary_name = os.path.basename(target_binary)
     symcc_target_binary = os.path.join(symcc_workdir, target_binary_name)
 
-    os.environ['AFL_DISABLE_TRIM'] = "1"
+    os.environ['AFL_DISABLE_TRIM'] = '1'
 
     # Start a master and secondary instance of AFL.
     # We need both because of the way SymCC works.
     print('[run_fuzzer] Running AFL for SymCC')
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     launch_afl_thread(input_corpus, output_corpus, target_binary,
-                      ["-S", "afl-secondary"])
+                      ['-S', 'afl-secondary'])
     time.sleep(5)
 
     # Start an instance of SymCC.
     # We need to ensure it uses the symbolic version of libc++.
-    symqemu_target = os.path.join(symcc_workdir, "symqemu-x86_64")
+    symqemu_target = os.path.join(symcc_workdir, 'symqemu-x86_64')
     if os.path.isfile(symqemu_target):
-        print("Found symqemu target")
+        print('Found symqemu target')
     else:
-        print("Did not find symqemu target")
+        print('Did not find symqemu target')
 
-    print("Starting the SymCC helper")
+    print('Starting the SymCC helper')
     new_environ = os.environ.copy()
     new_environ['LD_LIBRARY_PATH'] = symcc_workdir
     cmd = [
-        os.path.join(symcc_workdir, "symcc_fuzzing_helper"), "-o",
-        output_corpus, "-a", "afl-secondary", "-n", "symqemu", "-m", "--",
-        symqemu_target, symcc_target_binary, "@@"
+        os.path.join(symcc_workdir, 'symcc_fuzzing_helper'), '-o',
+        output_corpus, '-a', 'afl-secondary', '-n', 'symqemu', '-m', '--',
+        symqemu_target, symcc_target_binary, '@@'
     ]
-    print("Running command: %s" % (" ".join(cmd)))
-    subprocess.Popen(cmd, env=new_environ)
+    print(f'Running command: {" ".join(cmd)}')
+    with subprocess.Popen(cmd, env=new_environ):
+        pass

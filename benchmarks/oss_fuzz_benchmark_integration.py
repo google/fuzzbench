@@ -15,14 +15,16 @@
 will create benchmark.yaml as well as copy the files from OSS-Fuzz to build the
 benchmark."""
 import argparse
+import bisect
 import datetime
 from distutils import spawn
 from distutils import dir_util
+import json
 import os
 import sys
 import subprocess
-import json
-import bisect
+import tempfile
+
 
 from common import utils
 from common import benchmark_utils
@@ -30,8 +32,7 @@ from common import logs
 from common import new_process
 from common import yaml_utils
 
-OSS_FUZZ_DIR = os.path.join(utils.ROOT_DIR, 'third_party', 'oss-fuzz')
-OSS_FUZZ_REPO_PATH = os.path.join(OSS_FUZZ_DIR, 'infra')
+OSS_FUZZ_REPO_URL = 'https://github.com/google/oss-fuzz'
 OSS_FUZZ_IMAGE_UPGRADE_DATE = datetime.datetime(
     year=2021, month=8, day=25, tzinfo=datetime.timezone.utc)
 
@@ -77,14 +78,10 @@ class BaseBuilderDockerRepo:
 def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
     """Checks out the right files from OSS-Fuzz to build the benchmark based on
     |project| and |commit_date|. Then copies them to |benchmark_dir|."""
-    if not os.path.exists(os.path.join(OSS_FUZZ_DIR, '.git')):
-        logs.error(
-            '%s is not a git repo. Try running: git submodule update --init',
-            OSS_FUZZ_DIR)
-        raise RuntimeError('%s is not a git repo.' % OSS_FUZZ_DIR)
-    oss_fuzz_repo_manager = GitRepoManager(OSS_FUZZ_DIR)
-    project_dir = os.path.join(OSS_FUZZ_DIR, 'projects', project)
-    try:
+    with tempfile.TemporaryDirectory() as oss_fuzz_dir:
+        oss_fuzz_repo_manager = GitRepoManager(oss_fuzz_dir)
+        oss_fuzz_repo_manager.git(['clone', OSS_FUZZ_REPO_URL, oss_fuzz_dir])
+        project_dir = os.path.join(oss_fuzz_dir, 'projects', project)
         # Find an OSS-Fuzz commit that can be used to build the benchmark.
         _, oss_fuzz_commit, _ = oss_fuzz_repo_manager.git([
             'log', '--before=' + commit_date.isoformat(), '-n1', '--format=%H',
@@ -98,8 +95,6 @@ def copy_oss_fuzz_files(project, commit_date, benchmark_dir):
         dir_util.copy_tree(project_dir, benchmark_dir)
         os.remove(os.path.join(benchmark_dir, 'project.yaml'))
         return True
-    finally:
-        oss_fuzz_repo_manager.git(['reset', '--hard'])
 
 
 def get_benchmark_name(project, fuzz_target, benchmark_name=None):
@@ -170,7 +165,11 @@ def replace_base_builder(benchmark_dir, commit_date):
     base_builder_name = _get_base_builder(dockerfile_path)
     base_builder_repo = _load_docker_repo(base_builder_name)
     if base_builder_repo:
-        base_builder_digest = base_builder_repo.find_digest(commit_date)
+        # base_builder_digest = base_builder_repo.find_digest(commit_date)
+        base_builder_digest = ('sha256:fb1a9a49752c9e504687448d1f1a048ec1e0'
+                               '62e2e40f7e8a23e86b63ff3dad7c')
+        print(f'Using image {base_builder_digest}. '
+              'See https://github.com/google/oss-fuzz/issues/8625')
         logs.info('Using base-builder with digest %s.', base_builder_digest)
         _replace_base_builder_digest(
             dockerfile_path, base_builder_name, base_builder_digest)
@@ -201,9 +200,9 @@ def integrate_benchmark(project, fuzz_target, benchmark_name, commit,
     # work on arbitrary iso format strings.
     commit_date = datetime.datetime.fromisoformat(commit_date).astimezone(
         datetime.timezone.utc)
-    if commit_date >= OSS_FUZZ_IMAGE_UPGRADE_DATE:
+    if commit_date <= OSS_FUZZ_IMAGE_UPGRADE_DATE:
         raise ValueError(
-            f'Cannot integrate benchmark after {OSS_FUZZ_IMAGE_UPGRADE_DATE}. '
+            f'Cannot integrate benchmark before {OSS_FUZZ_IMAGE_UPGRADE_DATE}. '
             'See https://github.com/google/fuzzbench/issues/1353')
     copy_oss_fuzz_files(project, commit_date, benchmark_dir)
     replace_base_builder(benchmark_dir, commit_date)
@@ -230,14 +229,19 @@ def main():
         '--benchmark-name',
         help='Benchmark name. Defaults to <project>_<fuzz_target>',
         required=False)
-    parser.add_argument('-c', '--commit', help='Project commit hash.')
+    parser.add_argument('-c', '--commit', help='Project commit hash.',
+                        required=True)
     parser.add_argument(
         '-d',
         '--date',
-        help='Date of the commit. Example: 2019-10-19T09:07:25+01:00')
+        help='Date of the commit. Example: 2019-10-19T09:07:25+01:00',
+        required=True)
 
     logs.initialize()
     args = parser.parse_args()
+    if args.date is None and args.commit is None:
+        args.date = str(datetime.datetime.utcnow())
+        print('Neither date nor commit specified, using time now: ', args.date)
     benchmark = integrate_benchmark(
         args.project, args.fuzz_target, args.benchmark_name,
         args.commit, args.date)

@@ -26,6 +26,8 @@ docker run --rm \
   -e POSTGRES_PASSWORD={{postgres_password}} \
   -e CLOUD_SQL_INSTANCE_CONNECTION_NAME={{cloud_sql_instance_connection_name}} \
   -e DOCKER_REGISTRY={{docker_registry}} \
+  -e CONCURRENT_BUILDS={{concurrent_builds}} \
+  -e WORKER_POOL_NAME={{worker_pool_name}} \
   --cap-add=SYS_PTRACE --cap-add=SYS_NICE \
   -v /var/run/docker.sock:/var/run/docker.sock --name=dispatcher-container \
-  {{docker_registry}}/dispatcher-image /work/startup-dispatcher.sh
+  {{docker_registry}}/dispatcher-image /work/startup-dispatcher.sh &> /tmp/dispatcher.log

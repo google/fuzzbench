@@ -218,6 +218,12 @@ make run-$FUZZER_NAME-$BENCHMARK_NAME
 
 ## Submitting the benchmark in a pull request
 
+* Add your benchmark to the list in `.github/workflows/benchmarks.yml` so that
+  our continuous integration will test that your fuzzer can build and briefly
+  run on all benchmarks once you've submitted a pull request.
+
+* Submit the integration in a
+[GitHub pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
 If everything works, submit the integration in a
 [GitHub pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
 
@@ -258,7 +264,7 @@ Building benchmarks and fuzzers entails the following process:
    image. This is the first image in this build process that is defined by the
    main FuzzBench code (e.g. not fuzzers, benchmarks, or OSS-Fuzz). Its first
    function is to copy the FuzzBench code and install packages needed to run
-   FuzzBench like Python3.7 For benchmarks that define a `commit` in their
+   FuzzBench like Python3.10. For benchmarks that define a `commit` in their
    `benchmark.yaml` (i.e. OSS-Fuzz benchmarks) the build process for this image
    checks out the source code of that project at the specified commit. Then the
    process defines the environment variables `CC`, `CXX`, `CXXFLAGS`, `CFLAGS`

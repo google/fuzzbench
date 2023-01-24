@@ -73,10 +73,7 @@ class BenchmarkResults:
         the analysis (e.g., 'edges_covered', or 'bugs_covered')."""
         return 'edges_covered' if self.type == 'code' else 'bugs_covered'
 
-    @property
-    @functools.lru_cache()
-    # TODO(lszekeres): With python3.8+, replace above two decorators with:
-    # @functools.cached_property
+    @functools.cached_property
     def _benchmark_df(self):
         exp_df = self._experiment_df
         return exp_df[exp_df.benchmark == self.name]

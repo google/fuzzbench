@@ -14,9 +14,6 @@
 
 ARG parent_image
 
-# Using multi-stage build to copy latest Python 3.
-FROM gcr.io/fuzzbench/base-image AS base-image
-
 FROM $parent_image
 
 ARG fuzzer
@@ -27,11 +24,36 @@ ENV FUZZER $fuzzer
 ENV BENCHMARK $benchmark
 ENV DEBUG_BUILDER $debug_builder
 
-# Copy latest python3 from base-image into local.
-COPY --from=base-image /usr/local/bin/python3* /usr/local/bin/
-COPY --from=base-image /usr/local/lib/python3.8 /usr/local/lib/python3.8
-COPY --from=base-image /usr/local/include/python3.8 /usr/local/include/python3.8
-COPY --from=base-image /usr/local/lib/python3.8/site-packages /usr/local/lib/python3.8/site-packages
+# Python 3.10.8 is not the default version in Ubuntu 20.04 (Focal Fossa).
+ENV PYTHON_VERSION 3.10.8
+
+# Install dependencies required by Python3 or Pip3.
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y \
+    curl \
+    xz-utils \
+    build-essential \
+    zlib1g-dev \
+    libssl-dev \
+    libffi-dev
+
+RUN cd /tmp/ && \
+    curl -O \
+    https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz && \
+    tar -xvf Python-$PYTHON_VERSION.tar.xz > /dev/null && \
+    cd Python-$PYTHON_VERSION && \
+    ./configure \
+        --enable-loadable-sqlite-extensions \
+        --enable-optimizations \
+        > /dev/null && \
+    make -j install > /dev/null && \
+    rm -r /tmp/Python-$PYTHON_VERSION.tar.xz /tmp/Python-$PYTHON_VERSION
+
+# Install common python dependencies.
+COPY ./requirements.txt /tmp
+RUN pip3 install -r /tmp/requirements.txt
+
 
 # Copy the entire fuzzers directory tree to allow for module dependencies.
 COPY fuzzers $SRC/fuzzers

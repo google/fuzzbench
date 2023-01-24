@@ -55,27 +55,17 @@ def get_type(benchmark):
                                                       BenchmarkType.CODE.value)
 
 
-def is_oss_fuzz_benchmark(benchmark):
-    """Returns if benchmark is a OSS-Fuzz benchmark."""
-    return bool(benchmark_config.get_config(benchmark).get('commit_date'))
-
-
 def get_runner_image_url(experiment, benchmark, fuzzer, docker_registry):
     """Get the URL of the docker runner image for fuzzing the benchmark with
     fuzzer."""
     tag = 'latest' if environment.get('LOCAL_EXPERIMENT') else experiment
-    return '{docker_registry}/runners/{fuzzer}/{benchmark}:{tag}'.format(
-        docker_registry=docker_registry,
-        fuzzer=fuzzer,
-        benchmark=benchmark,
-        tag=tag)
+    return f'{docker_registry}/runners/{fuzzer}/{benchmark}:{tag}'
 
 
 def get_builder_image_url(benchmark, fuzzer, docker_registry):
     """Get the URL of the docker builder image for fuzzing the benchmark with
     fuzzer."""
-    return '{docker_registry}/builders/{fuzzer}/{benchmark}'.format(
-        docker_registry=docker_registry, fuzzer=fuzzer, benchmark=benchmark)
+    return f'{docker_registry}/builders/{fuzzer}/{benchmark}'
 
 
 def validate_name(benchmark):
@@ -134,25 +124,9 @@ def get_all_benchmarks():
 
 def get_coverage_benchmarks():
     """Returns the list of all coverage benchmarks."""
-    return (get_oss_fuzz_coverage_benchmarks() +
-            get_standard_coverage_benchmarks())
-
-
-def get_oss_fuzz_coverage_benchmarks():
-    """Returns the list of OSS-Fuzz coverage benchmarks."""
     return [
         benchmark for benchmark in get_all_benchmarks()
-        if is_oss_fuzz_benchmark(benchmark) and
-        get_type(benchmark) == BenchmarkType.CODE.value
-    ]
-
-
-def get_standard_coverage_benchmarks():
-    """Returns the list of standard coverage benchmarks."""
-    return [
-        benchmark for benchmark in get_all_benchmarks()
-        if not is_oss_fuzz_benchmark(benchmark) and
-        get_type(benchmark) == BenchmarkType.CODE.value
+        if get_type(benchmark) == BenchmarkType.CODE.value
     ]
 
 

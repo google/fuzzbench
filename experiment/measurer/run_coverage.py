@@ -53,14 +53,13 @@ def do_coverage_run(  # pylint: disable=too-many-locals
         coverage_binary: str, new_units_dir: List[str],
         profraw_file_pattern: str, crashes_dir: str) -> List[str]:
     """Does a coverage run of |coverage_binary| on |new_units_dir|. Writes
-    the result to |profraw_file_pattern|. Returns a list of crashing units."""
+    the result to |profraw_file_pattern|."""
     with tempfile.TemporaryDirectory() as merge_dir:
         command = [
             coverage_binary, '-merge=1', '-dump_coverage=1',
-            '-artifact_prefix=%s/' % crashes_dir,
-            '-timeout=%d' % UNIT_TIMEOUT,
-            '-rss_limit_mb=%d' % RSS_LIMIT_MB,
-            '-max_total_time=%d' % (MAX_TOTAL_TIME - EXIT_BUFFER), merge_dir,
+            f'-artifact_prefix={crashes_dir}/', f'-timeout={UNIT_TIMEOUT}',
+            f'-rss_limit_mb={RSS_LIMIT_MB}',
+            f'-max_total_time={MAX_TOTAL_TIME - EXIT_BUFFER}', merge_dir,
             new_units_dir
         ]
         coverage_binary_dir = os.path.dirname(coverage_binary)

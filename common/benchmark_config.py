@@ -17,6 +17,9 @@ import os
 
 from common import utils
 from common import yaml_utils
+from common import logs
+
+logger = logs.Logger('benchmark_config')
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 
@@ -29,4 +32,8 @@ def get_config_file(benchmark):
 @functools.lru_cache(maxsize=None)
 def get_config(benchmark):
     """Returns a dictionary containing the config for a benchmark."""
-    return yaml_utils.read(get_config_file(benchmark))
+    config_file = get_config_file(benchmark)
+    if os.path.isfile(config_file):
+        return yaml_utils.read(config_file)
+    logger.warning('Benchmark config does not exist: %s.', config_file)
+    return {}

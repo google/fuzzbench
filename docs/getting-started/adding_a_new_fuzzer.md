@@ -41,7 +41,7 @@ with your fuzzer. For most projects, this will look like:
 
 ```dockerfile
 ARG parent_image
-FROM $parent_image                         # Base builder image (Ubuntu 16.04, with latest Clang).
+FROM $parent_image                         # Base builder image (Ubuntu 20.04, with latest Clang).
 
 RUN apt-get update && \                    # Install any system dependencies to build your fuzzer.
     apt-get install -y pkg1 pkg2
@@ -65,7 +65,7 @@ This file defines the image that will be used to run benchmarks with your
 fuzzer. Making this lightweight allows trial instances to be spun up fast.
 
 ```dockerfile
-FROM gcr.io/fuzzbench/base-image           # Base image (Ubuntu 16.04).
+FROM gcr.io/fuzzbench/base-image           # Base image (Ubuntu 20.04).
 
 RUN apt-get update && \                    # Install any runtime dependencies for your fuzzer.
     apt-get install pkg1 pkg2
@@ -287,9 +287,6 @@ make build-$FUZZER_NAME-all
 
 * Run `make presubmit` to lint your code and ensure all tests are passing.
 
-* Run `make clear-cache` to clear docker containers' caches. Next time you build
-  a project, the container will be built from scratch.
-
 ## Blocklisting benchmarks
 
 You should make sure that your fuzzer builds and runs successfully against all
@@ -325,10 +322,6 @@ experiment starts since every fuzzer-benchmark pair in the experiment must build
 in order for fuzzing to start.
 
 ## Submitting your integration
-
-* Add your fuzzer to the list in `.github/workflows/fuzzers.yml` so that our
-  continuous integration will test that your fuzzer can build and briefly run on
-  all benchmarks once you've submitted a pull request.
 
 * Submit the integration in a
 [GitHub pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).

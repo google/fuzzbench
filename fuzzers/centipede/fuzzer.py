@@ -24,30 +24,26 @@ def build():
     san_cflags = ['-fsanitize-coverage=trace-loads']
 
     link_cflags = [
-        '-ldl',
-        '-lrt',
-        '-lpthread',
-        '/lib/weak.o',
+        '-Wno-unused-command-line-argument',
+        '-Wl,-ldl,-lrt,-lpthread,/lib/weak.o'
     ]
 
     # TODO(Dongge): Build targets with sanitizers.
-    try:
-        centipede_cflags = subprocess.run(
-            ['cat', '/src/centipede/clang-flags.txt'],
-            stdout=subprocess.PIPE,
-            check=True).stdout.decode('utf-8').split('\n')
-    except subprocess.CalledProcessError as err:
-        print(err)
+    with open('/src/centipede/clang-flags.txt', 'r',
+              encoding='utf-8') as clang_flags_handle:
+        centipede_cflags = [
+            line.strip() for line in clang_flags_handle.readlines()
+        ]
 
     cflags = san_cflags + centipede_cflags + link_cflags
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
+    utils.append_flags('LDFLAGS', ['/lib/weak.o'])
 
     os.environ['CC'] = '/clang/bin/clang'
     os.environ['CXX'] = '/clang/bin/clang++'
-    os.environ[
-        'FUZZER_LIB'] = '/src/centipede/bazel-bin/libcentipede_runner.pic.a'
-
+    os.environ['FUZZER_LIB'] = (
+        '/src/centipede/bazel-bin/libcentipede_runner.pic.a')
     utils.build_benchmark()
 
 
@@ -84,6 +80,7 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
         '--rss_limit_mb=0',
         '--address_space_limit_mb=0',
     ]
+    flags += extra_flags
     dictionary_path = utils.get_dictionary_path(target_binary)
     if dictionary_path:
         flags.append(f'--dictionary={dictionary_path}')
