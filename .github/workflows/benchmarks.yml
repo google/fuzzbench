@@ -11,7 +11,7 @@ on:
       - '.github/worfkflows/build_and_test_run_fuzzer_benchmarks.py'
 
 jobs:
-  Test:
+  build:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -42,6 +42,7 @@ jobs:
           - mbedtls_fuzz_dtlsclient
           - mruby-2018-05-23
           - muparser_set_eval_fuzzer
+          - fake
           - njs_njs_process_script_fuzzer
           - openh264_decoder_fuzzer
           - openssl_x509
