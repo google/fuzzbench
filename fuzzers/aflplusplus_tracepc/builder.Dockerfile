@@ -17,14 +17,14 @@ FROM $parent_image
 
 # Install libstdc++ to use llvm_mode.
 RUN apt-get update && \
-    apt-get install -y wget libstdc++-5-dev libtool-bin automake flex bison \
+    apt-get install -y wget libstdc++-10-dev libtool-bin automake flex bison \
                        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
                        apt-utils apt-transport-https ca-certificates
 
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     cd /afl && \
-    git checkout 0c122aeee65c5e91b6ecc465dcdf740aa67943d1
+    git checkout 4124a272d821629adce648fb37ca1e7f0ce0e84f
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.

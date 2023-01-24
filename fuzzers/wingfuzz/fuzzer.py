@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for Entropic fuzzer."""
+"""Integration code for Wingfuzz fuzzer."""
 
 import os
 
@@ -47,8 +47,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
                                 target_binary,
                                 extra_flags=[
                                     '-fork=0', '-keep_seed=1',
-                                    '-cross_over_uniform_dist=1',
-                                    '-entropic_scale_per_exec_time=1',
                                     '-jobs=2147483647', '-workers=1',
                                     '-reload=0'
                                 ])

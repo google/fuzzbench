@@ -46,13 +46,13 @@ def create_experiment_data(experiment='test_experiment',
                            experiment_filestore='gs://fuzzbench-data'):
     """Utility function to create test experiment data."""
     return pd.concat([
-        create_trial_data(0, 'libpng', 'afl', 10, 100, experiment,
+        create_trial_data(0, 'libpng-1.6.38', 'afl', 10, 100, experiment,
                           experiment_filestore),
-        create_trial_data(1, 'libpng', 'afl', 10, 200, experiment,
+        create_trial_data(1, 'libpng-1.6.38', 'afl', 10, 200, experiment,
                           experiment_filestore),
-        create_trial_data(2, 'libpng', 'libfuzzer', 10, 200, experiment,
+        create_trial_data(2, 'libpng-1.6.38', 'libfuzzer', 10, 200, experiment,
                           experiment_filestore),
-        create_trial_data(3, 'libpng', 'libfuzzer', 10, 300, experiment,
+        create_trial_data(3, 'libpng-1.6.38', 'libfuzzer', 10, 300, experiment,
                           experiment_filestore),
         create_trial_data(4, 'libxml', 'afl', 6 if incomplete else 10, 1000,
                           experiment, experiment_filestore),
@@ -67,14 +67,14 @@ def create_experiment_data(experiment='test_experiment',
 
 def test_validate_data_empty():
     experiment_df = pd.DataFrame()
-    with pytest.raises(ValueError, match="Empty"):
+    with pytest.raises(ValueError, match='Empty'):
         data_utils.validate_data(experiment_df)
 
 
 def test_validate_data_missing_columns():
     experiment_df = create_experiment_data()
     experiment_df.drop(columns=['trial_id', 'time'], inplace=True)
-    with pytest.raises(ValueError, match="Missing columns.*trial_id"):
+    with pytest.raises(ValueError, match='Missing columns.*trial_id'):
         data_utils.validate_data(experiment_df)
 
 
@@ -89,12 +89,12 @@ def test_clobber_experiments_data():
     """Tests that clobber experiments data clobbers stale snapshots from earlier
     experiments."""
     df = pd.concat(
-        create_experiment_data('experiment-%d' % experiment_num)
+        create_experiment_data(f'experiment-{experiment_num}')
         for experiment_num in range(3))
     df.reset_index(inplace=True)
 
     to_drop = df[(df.experiment == 'experiment-2') &
-                 (df.benchmark == 'libpng') & (df.fuzzer == 'afl')].index
+                 (df.benchmark == 'libpng-1.6.38') & (df.fuzzer == 'afl')].index
     df.drop(to_drop, inplace=True)
 
     experiments = list(df['experiment'].drop_duplicates().values)
@@ -102,10 +102,10 @@ def test_clobber_experiments_data():
 
     columns = ['experiment', 'benchmark', 'fuzzer']
     expected_result = pd.DataFrame([
-        ['experiment-2', 'libpng', 'libfuzzer'],
+        ['experiment-2', 'libpng-1.6.38', 'libfuzzer'],
         ['experiment-2', 'libxml', 'afl'],
         ['experiment-2', 'libxml', 'libfuzzer'],
-        ['experiment-1', 'libpng', 'afl'],
+        ['experiment-1', 'libpng-1.6.38', 'afl'],
     ],
                                    columns=columns)
     expected_result.sort_index(inplace=True)
@@ -123,7 +123,7 @@ def test_filter_fuzzers():
 
 def test_filter_benchmarks():
     experiment_df = create_experiment_data()
-    benchmarks_to_keep = ['libpng']
+    benchmarks_to_keep = ['libpng-1.6.38']
     filtered_df = data_utils.filter_benchmarks(experiment_df,
                                                benchmarks_to_keep)
 
@@ -146,7 +146,7 @@ def test_filter_max_time():
     assert filtered_df.time.unique().tolist() == list(expected_times)
 
 
-@pytest.mark.parametrize("threshold", [0.3, 0.8, 1.0])
+@pytest.mark.parametrize('threshold', [0.3, 0.8, 1.0])
 def test_benchmark_snapshot_complete(threshold):
     """Tests that the snapshot data contains only the latest timestamp for all
     trials, in case all trials have the same lengths. This should happen
@@ -168,7 +168,7 @@ def test_benchmark_snapshot_complete(threshold):
 
 
 @pytest.mark.parametrize(
-    "threshold, expected_snapshot_time, expected_trials_left", [
+    'threshold, expected_snapshot_time, expected_trials_left', [
         (1.0, 5, 4),
         (0.8, 5, 4),
         (0.7, 7, 3),
@@ -245,7 +245,7 @@ def test_experiment_summary():
     summary = data_utils.experiment_summary(snapshots_df)
 
     expected_summary = pd.DataFrame({
-        'benchmark': ['libpng', 'libpng', 'libxml', 'libxml'],
+        'benchmark': ['libpng-1.6.38', 'libpng-1.6.38', 'libxml', 'libxml'],
         'fuzzer': ['libfuzzer', 'afl', 'afl', 'libfuzzer'],
         'time': [9, 9, 9, 9],
         'count': [2, 2, 2, 2],
@@ -306,8 +306,8 @@ def test_experiment_pivot_table():
 
     # yapf: disable
     expected_data = pd.DataFrame([
-        {'benchmark': 'libpng', 'fuzzer': 'afl', 'median':  150},
-        {'benchmark': 'libpng', 'fuzzer': 'libfuzzer', 'median':  250},
+        {'benchmark': 'libpng-1.6.38', 'fuzzer': 'afl', 'median':  150},
+        {'benchmark': 'libpng-1.6.38', 'fuzzer': 'libfuzzer', 'median':  250},
         {'benchmark': 'libxml', 'fuzzer': 'afl', 'median': 1100},
         {'benchmark': 'libxml', 'fuzzer': 'libfuzzer', 'median':  700},
     ])
@@ -355,4 +355,4 @@ def test_experiment_rank_by_average_normalized_score():
     pd_test.assert_series_equal(ranking,
                                 expected_ranking,
                                 check_names=False,
-                                check_less_precise=True)
+                                rtol=10**-3)

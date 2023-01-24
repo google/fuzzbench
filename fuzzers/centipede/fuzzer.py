@@ -24,14 +24,13 @@ def build():
     san_cflags = ['-fsanitize-coverage=trace-loads']
 
     link_cflags = [
-        '-ldl',
-        '-lrt',
-        '-lpthread',
-        '/lib/weak.o',
+        '-Wno-unused-command-line-argument',
+        '-Wl,-ldl,-lrt,-lpthread,/lib/weak.o'
     ]
 
     # TODO(Dongge): Build targets with sanitizers.
-    with open('/src/centipede/clang-flags.txt', 'r') as clang_flags_handle:
+    with open('/src/centipede/clang-flags.txt', 'r',
+              encoding='utf-8') as clang_flags_handle:
         centipede_cflags = [
             line.strip() for line in clang_flags_handle.readlines()
         ]
@@ -39,6 +38,7 @@ def build():
     cflags = san_cflags + centipede_cflags + link_cflags
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
+    utils.append_flags('LDFLAGS', ['/lib/weak.o'])
 
     os.environ['CC'] = '/clang/bin/clang'
     os.environ['CXX'] = '/clang/bin/clang++'

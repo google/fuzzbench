@@ -20,6 +20,288 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-01-23-3-aflpp
+  description: "afl++ weighting variants."
+  fuzzers:
+    - aflplusplus_cmplog_exp
+    - aflplusplus_unfuzzed
+    - aflplusplus_faved
+
+- experiment: 2023-01-23-2-aflpp
+  description: "afl++ cmplog variants."
+  fuzzers:
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_exp
+    - aflplusplus_cmplog_exp1
+
+- experiment: 2023-01-23-aflpp
+  description: "afl++ cmplog variants."
+  fuzzers:
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_exp
+    - aflplusplus_cmplog_exp1
+
+- experiment: 2023-01-12-aflpp
+  description: "afl++ tokens + libafl test."
+  fuzzers:
+    - aflplusplus_tokens_only
+    - aflplusplus_tokens
+    - aflplusplus
+
+- experiment: 2023-01-05-libafl
+  description: "Test the LibAFL forkserver"
+  type: bug
+  fuzzers:
+    - aflplusplus
+    - entropic
+    - libfuzzer
+    - honggfuzz
+    - libafl
+    - libafl_forkserver
+
+- experiment: 2023-01-10-aflpp
+  description: "Test if the previous aflpp build failure is flaky."
+  fuzzers:
+    - aflplusplus_tokens
+    - aflplusplus
+  trials: 2
+  max_total_time: 910
+
+- experiment: 2023-01-05-aflpp
+  description: "aflpp token test"
+  fuzzers:
+    - aflplusplus_tokens
+    - aflplusplus
+
+- experiment: 2023-01-03-aflpp
+  description: "aflpp token test"
+  fuzzers:
+    - aflplusplus_tokens
+    - aflplusplus
+    - afl
+    - eclipser
+    - honggfuzz
+    - libafl
+  type: bug
+
+- experiment: 2022-12-15-bug-based
+  description: "Test running core fuzzers on 5 new bug-based benchmarks."
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - centipede
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - libafl
+    - libfuzzer
+    - mopt
+  type: bug
+  benchmarks:
+    - arrow_parquet-arrow-fuzz
+    - aspell_aspell_fuzzer
+    - ffmpeg_ffmpeg_demuxer_fuzzer
+    - file_magic_fuzzer
+    - grok_grk_decompress_fuzzer
+    
+- experiment: 2022-12-05-rerun-c
+  description: "Wingfuzz coverage experiment (compare against core fuzzers)"
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - entropic
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - lafintel
+    - libfuzzer
+    - mopt
+    - wingfuzz
+
+- experiment: 2022-12-05-rerun-c
+  description: "Wingfuzz coverage experiment (compare against core fuzzers)"
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - entropic
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - lafintel
+    - libfuzzer
+    - mopt
+    - wingfuzz
+
+- experiment: 2022-12-05-aflpp-cmplog-c
+  description: "afl++ cmplog enhancements"
+  fuzzers:
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_r
+
+- experiment: 2022-12-01-um-c
+  description: "Try out um prioritize 75 and random again"
+  fuzzers:
+    - aflplusplus_um_random
+    - aflplusplus_um_prioritize_75
+
+- experiment: 2022-12-05-rerun-b
+  description: "Wingfuzz coverage experiment (compare against core fuzzers)"
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - entropic
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - lafintel
+    - libfuzzer
+    - mopt
+    - wingfuzz
+
+- experiment: 2022-12-05-aflpp-cmplog-b
+  description: "afl++ cmplog enhancements"
+  fuzzers:
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_r
+
+- experiment: 2022-12-01-um-b
+  description: "Try out um prioritize 75 and random again"
+  fuzzers:
+    - aflplusplus_um_random
+    - aflplusplus_um_prioritize_75
+
+- experiment: 2022-12-05-rerun
+  description: "Wingfuzz coverage experiment (compare against core fuzzers)"
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - entropic
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - lafintel
+    - libfuzzer
+    - mopt
+    - wingfuzz
+
+- experiment: 2022-12-05-aflpp-cmplog
+  description: "afl++ cmplog enhancements"
+  fuzzers:
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_r
+
+- experiment: 2022-12-01-um
+  description: "Try out um prioritize 75 and random again"
+  fuzzers:
+    - aflplusplus_um_random
+    - aflplusplus_um_prioritize_75
+
+- experiment: 2022-12-01-muttfuzz
+  description: "Try out muttfuzz and compare against afl"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_muttfuzz
+
+- experiment: 2022-11-23-aflpp-cmplog
+  description: "afl++ cmplog enhancements"
+  fuzzers:
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_r
+    - aflplusplus_cmplog_1587
+    - aflplusplus_cmplog_1585
+
+- experiment: 2022-11-18-um
+  description: "Try out um prioritize 75 and random again"
+  fuzzers:
+    - aflplusplus_um_random
+    - aflplusplus_um_prioritize_75
+
+- experiment: 2022-11-18-muttfuzz
+  description: "Try out muttfuzz and compare against afl"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_muttfuzz
+
+- experiment: 2022-11-22-aflpp-cmplog
+  description: "afl++ cmplog enhancements"
+  fuzzers:
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_r
+    - aflplusplus_cmplog_1587
+    - aflplusplus_cmplog_1585
+
+- experiment: 2022-11-19-update-libfuzzer
+  description: "Compare and consider replacing Entropic with Centipede"
+  fuzzers:
+    - libfuzzer
+    - entropic
+    - centipede
+
+- experiment: 2022-11-12-muttfuzz
+  description: "Try out muttfuzz and compare against afl"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_muttfuzz
+
+- experiment: 2022-11-12-um-prioritize
+  description: "Try out um prioritize again"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_um_prioritize
+
+- experiment: 2022-11-11-muttfuzz
+  description: "Try out muttfuzz and compare against afl"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_muttfuzz
+
+- experiment: 2022-11-11-um-prioritize
+  description: "Try out um prioritize again"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_um_prioritize
+
+- experiment: 2022-11-06-muttfuzz
+  description: "Try out muttfuzz and compare against afl"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_muttfuzz
+
+- experiment: 2022-11-06-um-prioritize
+  description: "Try out um prioritize again"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_um_prioritize
+
+- experiment: 2022-10-31-update-libfuzzer-2
+  description: "Compare and consider replacing Entropic with Centipede"
+  fuzzers:
+    - libfuzzer
+    - entropic
+    - centipede
+
+- experiment: 2022-11-06-muttfuzz
+  description: "Try out muttfuzz and compare against afl"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_muttfuzz
+
+- experiment: 2022-11-06-um-prioritize
+  description: "Try out um prioritize again"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_um_prioritize
+
 - experiment: 2022-10-31-update-libfuzzer-2
   description: "Compare and consider replacing Entropic with Centipede"
   fuzzers:

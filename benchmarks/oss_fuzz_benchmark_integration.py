@@ -165,7 +165,11 @@ def replace_base_builder(benchmark_dir, commit_date):
     base_builder_name = _get_base_builder(dockerfile_path)
     base_builder_repo = _load_docker_repo(base_builder_name)
     if base_builder_repo:
-        base_builder_digest = base_builder_repo.find_digest(commit_date)
+        # base_builder_digest = base_builder_repo.find_digest(commit_date)
+        base_builder_digest = ('sha256:fb1a9a49752c9e504687448d1f1a048ec1e0'
+                               '62e2e40f7e8a23e86b63ff3dad7c')
+        print(f'Using image {base_builder_digest}. '
+              'See https://github.com/google/oss-fuzz/issues/8625')
         logs.info('Using base-builder with digest %s.', base_builder_digest)
         _replace_base_builder_digest(
             dockerfile_path, base_builder_name, base_builder_digest)
@@ -196,9 +200,9 @@ def integrate_benchmark(project, fuzz_target, benchmark_name, commit,
     # work on arbitrary iso format strings.
     commit_date = datetime.datetime.fromisoformat(commit_date).astimezone(
         datetime.timezone.utc)
-    if commit_date >= OSS_FUZZ_IMAGE_UPGRADE_DATE:
+    if commit_date <= OSS_FUZZ_IMAGE_UPGRADE_DATE:
         raise ValueError(
-            f'Cannot integrate benchmark after {OSS_FUZZ_IMAGE_UPGRADE_DATE}. '
+            f'Cannot integrate benchmark before {OSS_FUZZ_IMAGE_UPGRADE_DATE}. '
             'See https://github.com/google/fuzzbench/issues/1353')
     copy_oss_fuzz_files(project, commit_date, benchmark_dir)
     replace_base_builder(benchmark_dir, commit_date)
@@ -225,14 +229,19 @@ def main():
         '--benchmark-name',
         help='Benchmark name. Defaults to <project>_<fuzz_target>',
         required=False)
-    parser.add_argument('-c', '--commit', help='Project commit hash.')
+    parser.add_argument('-c', '--commit', help='Project commit hash.',
+                        required=True)
     parser.add_argument(
         '-d',
         '--date',
-        help='Date of the commit. Example: 2019-10-19T09:07:25+01:00')
+        help='Date of the commit. Example: 2019-10-19T09:07:25+01:00',
+        required=True)
 
     logs.initialize()
     args = parser.parse_args()
+    if args.date is None and args.commit is None:
+        args.date = str(datetime.datetime.utcnow())
+        print('Neither date nor commit specified, using time now: ', args.date)
     benchmark = integrate_benchmark(
         args.project, args.fuzz_target, args.benchmark_name,
         args.commit, args.date)

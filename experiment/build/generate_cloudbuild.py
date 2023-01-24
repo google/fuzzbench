@@ -136,16 +136,6 @@ def create_cloudbuild_spec(image_templates,
     if cloudbuild_tag is not None:
         cloudbuild_spec['tags'] = [f'fuzzer-{fuzzer}', f'benchmark-{benchmark}']
 
-    # Workaround for bug https://github.com/moby/moby/issues/40262.
-    # This is only needed for base-image as it inherits from ubuntu:xenial.
-    if build_base_images:
-        cloudbuild_spec['steps'].append({
-            'id': 'pull-ubuntu-xenial',
-            'env': ['DOCKER_BUILDKIT=1'],
-            'name': DOCKER_IMAGE,
-            'args': ['pull', 'ubuntu:xenial'],
-        })
-
     # TODO(metzman): Figure out how to do this to solve log length issue.
     # cloudbuild_spec['steps'].append({
     #     'id': 'buildx-create',

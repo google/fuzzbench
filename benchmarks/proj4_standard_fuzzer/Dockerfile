@@ -14,8 +14,35 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:1b6a6993690fa947df74ceabbf6a1f89a46d7e4277492addcd45a8525e34be5a
-RUN apt-get update && apt-get install -y make autoconf automake libtool g++ sqlite3 libsqlite3-dev pkg-config
-RUN git clone --depth 1 https://github.com/OSGeo/proj.4 proj.4
-WORKDIR proj.4
-COPY build.sh $SRC/
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
+
+RUN apt-get update && \
+    apt-get install -y \
+        make autoconf automake libtool g++ sqlite3 pkg-config wget
+
+RUN git clone \
+        --depth 1 \
+        --branch 9.1.0 \
+        https://github.com/OSGeo/PROJ \
+        PROJ
+RUN git clone \
+        --depth 1 \
+        --branch curl-7_86_0 \
+        https://github.com/curl/curl.git \
+        PROJ/curl
+# Use a commit hash instead of the latest release of libtiff because the latter
+# does not use autogen.sh, which is required in the lateest build.sh.
+# Feel free to change back to release tag in the next update.
+RUN git clone \
+        https://gitlab.com/libtiff/libtiff.git \
+        PROJ/libtiff && \
+    (cd PROJ/libtiff && \
+    git checkout 31d9e9f73dc8b6fa599c931d9ff058d8ea32795c)
+
+WORKDIR PROJ
+
+RUN cp test/fuzzers/build.sh $SRC/
+# This is to fix Fuzz Introspector build by using LLVM old pass manager
+# re https://github.com/ossf/fuzz-introspector/issues/305
+ENV OLD_LLVMPASS 1
+ENV fuzzerName=standard_fuzzer

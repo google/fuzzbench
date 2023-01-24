@@ -15,32 +15,39 @@
 ARG parent_image
 FROM $parent_image
 
-# install AFLSmart dependencies
-RUN dpkg --add-architecture i386 && \
-    apt-get update -y && apt-get install -y \
-    apt-utils \
-    libc6-dev-i386 \
-    python-pip \
-    g++-multilib \
-    mono-complete \
-    gnupg-curl \
-    software-properties-common
-
-# install gcc-4.4 & g++-4.4 required by Peach while running on Ubuntu 16.04
-RUN apt-get update -y && \
-    apt-get upgrade -y && \
-    add-apt-repository --keyserver hkps://keyserver.ubuntu.com:443 ppa:ubuntu-toolchain-r/test -y && \
-    apt-get update -y && apt-get install -y \
+# Install gcc-4.4 & g++-4.4 required by Peach while running on Ubuntu 16.04.
+# Install Python2 and Pip2 required by AFLSmart on Ubuntu:20.04.
+RUN echo 'deb http://dk.archive.ubuntu.com/ubuntu/ trusty main' >> \
+        /etc/apt/sources.list && \
+    echo 'deb http://dk.archive.ubuntu.com/ubuntu/ trusty universe' >> \
+        /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get install -y \
     gcc-4.4 \
     g++-4.4 \
     unzip \
     wget \
-    tzdata
+    tzdata \
+    python2 && \
+    curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py && \
+    python2 get-pip.py && \
+    rm /usr/bin/python && \
+    ln -s /usr/bin/python2.7 /usr/bin/python
 
-# Download and compile AFLSmart
+# Install AFLSmart dependencies.
+RUN dpkg --add-architecture i386 && \
+    apt-get update && \
+    apt-get install -y \
+    apt-utils \
+    libc6-dev-i386 \
+    g++-multilib \
+    mono-complete \
+    software-properties-common
+
+# Download and compile AFLSmart.
 RUN git clone https://github.com/aflsmart/aflsmart /afl && \
     cd /afl && \
-    git checkout a9d60257a6b5a7df2e177bddc6982376723bfd90 && \
+    git checkout 4286ae47e0e5d8c412f91aae94ef9d11fb97dfd8 && \
     AFL_NO_X86=1 make
 
 # Setup Peach.

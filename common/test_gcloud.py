@@ -110,7 +110,7 @@ def test_create_instance_failed_create(mocked_execute):
 def test_delete_instances_less_than_batch_size(mocked_execute):
     """Test that delete_instances works as intended when instance count is less
     than batch size."""
-    instances = ['instance-%d' % i for i in range(5)]
+    instances = [f'instance-{i}' for i in range(5)]
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
     zone = 'us-central1-a'
     expected_command = (['gcloud', 'compute', 'instances', 'delete', '-q'] +
@@ -124,16 +124,16 @@ def test_delete_instances_less_than_batch_size(mocked_execute):
 def test_delete_instances_greater_than_batch_size(mocked_execute):
     """Test that delete_instances works as intended when instance count is more
   than batch size."""
-    instances = ['instance-%d' % i for i in range(103)]
+    instances = [f'instance-{i}' for i in range(103)]
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
     zone = 'us-central1-a'
     result = gcloud.delete_instances(instances, zone)
     assert result
     expected_command_1 = (['gcloud', 'compute', 'instances', 'delete', '-q'] +
-                          ['instance-%d' % i for i in range(100)] +
+                          [f'instance-{i}' for i in range(100)] +
                           ['--zone', zone])
     expected_command_2 = (['gcloud', 'compute', 'instances', 'delete', '-q'] +
-                          ['instance-%d' % i for i in range(100, 103)] +
+                          [f'instance-{i}' for i in range(100, 103)] +
                           ['--zone', zone])
     mocked_execute.assert_has_calls([
         mock.call(expected_command_1, expect_zero=False),
@@ -144,7 +144,7 @@ def test_delete_instances_greater_than_batch_size(mocked_execute):
 @mock.patch('common.new_process.execute')
 def test_delete_instances_fail(mocked_execute):
     """Test that delete_instances returns False when instance deletion fails."""
-    instances = ['instance-%d' % i for i in range(5)]
+    instances = [f'instance-{i}' for i in range(5)]
     mocked_execute.return_value = new_process.ProcessResult(1, 'Error', False)
     zone = 'us-central1-a'
     expected_command = (['gcloud', 'compute', 'instances', 'delete', '-q'] +
@@ -175,9 +175,8 @@ def test_create_instance_template(mocked_execute):
     ]
     mocked_execute.assert_called_with(expected_command)
     expected_result = (
-        'https://www.googleapis.com/compute/v1/projects/{project}'
-        '/global/instanceTemplates/{name}').format(project=project,
-                                                   name=template_name)
+        f'https://www.googleapis.com/compute/v1/projects/{project}'
+        f'/global/instanceTemplates/{template_name}')
     assert result == expected_result
 
 

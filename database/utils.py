@@ -34,8 +34,8 @@ def initialize():
         postgres_password = os.getenv('POSTGRES_PASSWORD')
         assert postgres_password, 'POSTGRES_PASSWORD needs to be set.'
         database_url = (
-            'postgresql+psycopg2://postgres:{password}@127.0.0.1:5432'.format(
-                password=postgres_password))
+            f'postgresql+psycopg2://postgres:{postgres_password}@127.0.0.1:5432'
+        )
 
     global engine
     engine = sqlalchemy.create_engine(database_url)
@@ -67,6 +67,7 @@ def cleanup():
 @contextmanager
 def session_scope():
     """Provide a transactional scope around a series of operations."""
+    # pylint: disable=global-variable-not-assigned
     global session
     global engine
     global lock

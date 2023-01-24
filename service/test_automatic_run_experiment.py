@@ -36,6 +36,8 @@ EXPERIMENT_REQUESTS = [{
     'oss_fuzz_corpus': True,
 }]
 
+SERVICE_CONCURRENT_BUILDS = 150
+
 
 @mock.patch('experiment.run_experiment.start_experiment')
 @mock.patch('common.logs.warning')
@@ -71,7 +73,7 @@ def test_run_requested_experiment(mocked_get_requested_experiments,
     expected_config_file = os.path.join(utils.ROOT_DIR, 'service',
                                         'experiment-config.yaml')
 
-    expected_benchmarks = [
+    expected_benchmarks = sorted([
         'bloaty_fuzz_target',
         'curl_curl_fuzzer_http',
         'jsoncpp_jsoncpp_fuzzer',
@@ -79,7 +81,6 @@ def test_run_requested_experiment(mocked_get_requested_experiments,
         'libxslt_xpath',
         'mbedtls_fuzz_dtlsclient',
         'openssl_x509',
-        'php_php-fuzz-parser',
         'sqlite3_ossfuzz',
         'systemd_fuzz-link-parser',
         'zlib_zlib_uncompress_fuzzer',
@@ -87,19 +88,23 @@ def test_run_requested_experiment(mocked_get_requested_experiments,
         'harfbuzz-1.3.2',
         'lcms-2017-03-21',
         'libjpeg-turbo-07-2017',
-        'libpng-1.2.56',
+        'libpng-1.6.38',
         'libxml2-v2.9.2',
+        'openh264_decoder_fuzzer',
         'openthread-2019-12-23',
+        'php_php-fuzz-parser-2020-07-25',
         'proj4-2017-08-14',
         're2-2014-12-09',
+        'stb_stbi_read_fuzzer',
         'vorbis-2017-12-11',
         'woff2-2016-05-06',
-    ]
+    ])
     expected_call = mock.call(expected_experiment_name,
                               expected_config_file,
                               expected_benchmarks,
                               expected_fuzzers,
                               description='Test experiment',
+                              concurrent_builds=SERVICE_CONCURRENT_BUILDS,
                               oss_fuzz_corpus=True)
     start_experiment_call_args = mocked_start_experiment.call_args_list
     assert len(start_experiment_call_args) == 1

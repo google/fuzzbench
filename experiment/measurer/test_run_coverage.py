@@ -13,8 +13,6 @@
 # limitations under the License.
 """Tests for run_crashes.py."""
 
-# pylint: disable=no-self-use
-
 import os
 from unittest import mock
 import glob

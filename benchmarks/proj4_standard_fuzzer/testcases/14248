@@ -1,3 +1,0 @@
-+proj=pipeline +lat_1=5	lat_2	proj=imw_p +step
-+proj=aeqd
-BINARY_3D:       @       +        

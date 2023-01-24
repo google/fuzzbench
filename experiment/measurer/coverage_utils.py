@@ -60,10 +60,8 @@ def generate_coverage_reports(experiment_config: dict):
 
 def generate_coverage_report(experiment, benchmark, fuzzer, region_coverage):
     """Generates the coverage report for one pair of benchmark and fuzzer."""
-    logger.info(
-        ('Generating coverage report for '
-         'benchmark: {benchmark} fuzzer: {fuzzer}.').format(benchmark=benchmark,
-                                                            fuzzer=fuzzer))
+    logger.info('Generating coverage report for benchmark: %s fuzzer: %s.',
+                benchmark, fuzzer)
 
     try:
         coverage_reporter = CoverageReporter(experiment, fuzzer, benchmark,
@@ -122,9 +120,8 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
 
     def merge_profdata_files(self):
         """Merge profdata files from |src_files| to |dst_files|."""
-        logger.info('Merging profdata for fuzzer: '
-                    '{fuzzer},benchmark: {benchmark}.'.format(
-                        fuzzer=self.fuzzer, benchmark=self.benchmark))
+        logger.info('Merging profdata for fuzzer: %s, benchmark: %s.',
+                    self.fuzzer, self.benchmark)
 
         files_to_merge = []
         for trial_id in self.trial_ids:
@@ -148,24 +145,27 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         if result.retcode != 0:
             logger.error(
                 'Merged coverage summary json file generation failed for '
-                'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
-                    fuzzer=self.fuzzer, benchmark=self.benchmark))
+                f'fuzzer: {self.fuzzer},benchmark: {self.benchmark}.')
 
     def generate_coverage_report(self):
         """Generates the coverage report and stores in bucket."""
         command = [
-            'llvm-cov', 'show', '-format=html',
-            '-path-equivalence=/,{prefix}'.format(prefix=self.source_files_dir),
-            '-output-dir={dst_dir}'.format(dst_dir=self.report_dir),
-            '-Xdemangler', 'c++filt', '-Xdemangler', '-n', self.binary_file,
-            '-instr-profile={profdata}'.format(
-                profdata=self.merged_profdata_file)
+            'llvm-cov',
+            'show',
+            '-format=html',
+            f'-path-equivalence=/,{self.source_files_dir}',
+            f'-output-dir={self.report_dir}',
+            '-Xdemangler',
+            'c++filt',
+            '-Xdemangler',
+            '-n',
+            self.binary_file,
+            f'-instr-profile={self.merged_profdata_file}',
         ]
         result = new_process.execute(command, expect_zero=False)
         if result.retcode != 0:
             logger.error('Coverage report generation failed for '
-                         'fuzzer: {fuzzer},benchmark: {benchmark}.'.format(
-                             fuzzer=self.fuzzer, benchmark=self.benchmark))
+                         f'fuzzer: {self.fuzzer},benchmark: {self.benchmark}.')
             return
 
         src_dir = self.report_dir
@@ -183,7 +183,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
         coverage_json_src = os.path.join(self.data_dir, 'covered_branches.json')
         coverage_json_dst = exp_path.filestore(coverage_json_src)
         filesystem.create_directory(self.data_dir)
-        with open(coverage_json_src, 'w') as file_handle:
+        with open(coverage_json_src, 'w', encoding='utf-8') as file_handle:
             json.dump(edges_covered, file_handle)
         filestore_utils.cp(coverage_json_src,
                            coverage_json_dst,
@@ -192,12 +192,12 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
 
 def get_coverage_archive_name(benchmark):
     """Gets the archive name for |benchmark|."""
-    return 'coverage-build-%s.tar.gz' % benchmark
+    return f'coverage-build-{benchmark}.tar.gz'
 
 
 def get_profdata_file_name(trial_id):
     """Returns the profdata file name for |trial_id|."""
-    return 'data-{id}.profdata'.format(id=trial_id)
+    return f'data-{trial_id}.profdata'
 
 
 def get_coverage_binary(benchmark: str) -> str:
@@ -234,7 +234,7 @@ def merge_profdata_files(src_files, dst_file):
 def get_coverage_infomation(coverage_summary_file):
     """Reads the coverage information from |coverage_summary_file|
     and skip possible warnings in the file."""
-    with open(coverage_summary_file) as summary:
+    with open(coverage_summary_file, encoding='utf-8') as summary:
         return json.loads(summary.readlines()[-1])
 
 
@@ -264,15 +264,20 @@ def generate_json_summary(coverage_binary,
     """Generates the json summary file from |coverage_binary|
     and |profdata_file|."""
     command = [
-        'llvm-cov', 'export', '-format=text', '-num-threads=1',
-        '-region-coverage-gt=0', '-skip-expansions', coverage_binary,
-        '-instr-profile=%s' % profdata_file
+        'llvm-cov',
+        'export',
+        '-format=text',
+        '-num-threads=1',
+        '-region-coverage-gt=0',
+        '-skip-expansions',
+        coverage_binary,
+        f'-instr-profile={profdata_file}',
     ]
 
     if summary_only:
         command.append('-summary-only')
 
-    with open(output_file, 'w') as dst_file:
+    with open(output_file, 'w', encoding='utf-8') as dst_file:
         result = new_process.execute(command,
                                      output_file=dst_file,
                                      expect_zero=False)

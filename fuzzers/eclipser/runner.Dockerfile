@@ -27,7 +27,8 @@ RUN apt-get update -y && \
         autoconf \
         bison \
         git \
-        gdb
+        gdb \
+        python2
 
 # Use a copy of
 # https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
@@ -41,5 +42,7 @@ RUN wget -q https://storage.googleapis.com/fuzzbench-files/packages-microsoft-pr
 # Build Eclipser.
 RUN git clone https://github.com/SoftSec-KAIST/Eclipser.git /Eclipser && \
     cd /Eclipser && \
-    git checkout 310220649a4d790f8bc858ef85873399bba79a8c && \
-    make
+    git checkout ba1d7a55c168f7c19ecceb788a81ea07c2625e45 && \
+    ln -sf /usr/bin/python2.7 /usr/local/bin/python && \
+    make -j && \
+    ln -sf /usr/local/bin/python3.10 /usr/local/bin/python

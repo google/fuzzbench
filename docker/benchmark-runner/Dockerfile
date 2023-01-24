@@ -42,7 +42,8 @@ FROM gcr.io/fuzzbench/runners/$fuzzer/$benchmark-intermediate
 
 # Install runtime dependencies for benchmarks.
 
-RUN apt-get update -y && apt-get install -y \
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND="noninteractive" apt-get install -y \
     libglib2.0-0 \
     libxml2 \
     libarchive13 \

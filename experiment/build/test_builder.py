@@ -19,8 +19,8 @@ from unittest import mock
 
 import pytest
 
-from common import utils
 from experiment.build import builder
+from experiment.run_experiment import DEFAULT_CONCURRENT_BUILDS
 
 SRC_ROOT = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
 
@@ -62,17 +62,21 @@ def get_benchmarks_or_fuzzers(benchmarks_or_fuzzers_directory, filename,
     ]
 
 
-@pytest.mark.skipif(sys.version_info.minor > 7,
+@pytest.mark.skipif(sys.version_info.minor > 10,
                     reason='Test can stop responding on versions greater than '
-                    '3.7')
-@mock.patch('experiment.build.builder.build_measurer')
-@mock.patch('time.sleep')
+                    '3.10')
 @pytest.mark.parametrize('build_measurer_return_value', [True, False])
-def test_build_all_measurers(_, mocked_build_measurer,
-                             build_measurer_return_value, experiment, fs):
+@mock.patch('experiment.build.builder.build_measurer')
+@mock.patch('experiment.build.builder.time')
+@mock.patch('experiment.build.builder.filesystem')
+@mock.patch('experiment.build.builder.build_utils')
+@mock.patch.dict(os.environ,
+                 {'CONCURRENT_BUILDS': str(DEFAULT_CONCURRENT_BUILDS)})
+def test_build_all_measurers(mocked_build_utils, mocked_fs, mocked_time,
+                             mocked_build_measurer,
+                             build_measurer_return_value):
     """Tests that build_all_measurers works as intendend when build_measurer
     calls fail."""
-    fs.add_real_directory(utils.ROOT_DIR)
     mocked_build_measurer.return_value = build_measurer_return_value
     benchmarks = get_regular_benchmarks()
     result = builder.build_all_measurers(benchmarks)
@@ -91,7 +95,6 @@ def builder_integration(experiment):
         yield
 
 
-# pylint: disable=no-self-use
 @pytest.mark.skipif(
     not os.getenv('TEST_INTEGRATION_ALL'),
     reason='Tests take too long and can interfere with real '

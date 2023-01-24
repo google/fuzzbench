@@ -232,10 +232,13 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     input_corpus_dir = "/storage/input_corpus"
     os.makedirs(input_corpus_dir, exist_ok=True)
+    crashes_dir = "/storage/crashes"
+    os.makedirs(crashes_dir, exist_ok=True)
     os.environ['AFL_SKIP_CRASHES'] = "1"
 
     for mutant in mutants[:num_mutants]:
         os.system(f"cp -r {input_corpus_dir}/* {input_corpus}/*")
+        os.system(f"rm -rf {input_corpus_dir}/*")
         with utils.restore_directory(input_corpus), utils.restore_directory(
                 output_corpus):
             try:
@@ -245,7 +248,12 @@ def fuzz(input_corpus, output_corpus, target_binary):
                 pass
             except CalledProcessError:
                 pass
-            os.system(f"cp -r {output_corpus}/* {input_corpus_dir}/*")
 
-    os.system(f"cp -r {input_corpus_dir}/* {input_corpus}/*")
+            os.system(f"cp {output_corpus}/default/crashes/crashes.*/id* \
+                {crashes_dir}/")
+            os.system(f"cp {output_corpus}/default/crashes/crashes.*/id* \
+                {input_corpus_dir}/")
+            os.system(f"cp {output_corpus}/default/queue/* {input_corpus_dir}/")
+
+    os.system(f"cp -r {input_corpus_dir}/* {input_corpus}/")
     aflplusplus_fuzzer.fuzz(input_corpus, output_corpus, target_binary)
