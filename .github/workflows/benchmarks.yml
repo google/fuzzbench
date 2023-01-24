@@ -1,4 +1,4 @@
-name: Fuzzers/Benchmarks
+name: Fuzzers+Benchmarks
 on:
   pull_request:
     paths:
