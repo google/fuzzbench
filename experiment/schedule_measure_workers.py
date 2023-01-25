@@ -25,7 +25,7 @@ from common import logs
 from common import queue_utils
 from common import yaml_utils
 
-logger = logs.Logger('schedule_measure_workers')  # pylint: disable=invalid-name
+logger = logs.Logger()  # pylint: disable=invalid-name
 
 # This is the default quota on GCE.
 # TODO(metzman): Use the GCE API to determine this quota.

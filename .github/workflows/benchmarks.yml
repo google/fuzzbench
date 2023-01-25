@@ -42,7 +42,6 @@ jobs:
           - mbedtls_fuzz_dtlsclient
           - mruby-2018-05-23
           - muparser_set_eval_fuzzer
-          - fake
           - njs_njs_process_script_fuzzer
           - openh264_decoder_fuzzer
           - openssl_x509
