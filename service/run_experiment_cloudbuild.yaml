@@ -1,13 +1,12 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
   args:
-    - pull
-    - gcr.io/fuzzbench/experiment-runner
-
-- name: 'gcr.io/cloud-builders/docker'
-  args:
   - build
   - -t
+  - gcr.io/fuzzbench/experiment-runner
+  - --build-arg
+  - BUILDKIT_INLINE_CACHE=1
+  - --cache-from
   - gcr.io/fuzzbench/experiment-runner
   - -f
   - service/Dockerfile
