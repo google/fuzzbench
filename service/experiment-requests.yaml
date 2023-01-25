@@ -20,6 +20,14 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-01-25-libafl
+  description: "libafl grammar comparison"
+  fuzzers:
+    - libafl
+    - libafl_text
+    - libafl_token_alt
+    - libafl_token_neu
+
 - experiment: 2023-01-23-3-aflpp
   description: "afl++ weighting variants."
   fuzzers:
