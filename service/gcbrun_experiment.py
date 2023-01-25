@@ -65,10 +65,12 @@ def exec_command_from_github(pull_request_number):
     """Executes the gcbrun command for run_experiment.py in the most recent
   command on |pull_request_number|."""
     comments = get_comments(pull_request_number)
+    print(comments)
     command = get_latest_gcbrun_command(comments)
     if command is None:
         logging.info('Experiment not requested.')
         return None
+    print(command)
     logging.info('Command: %s.', command)
     return run_experiment.run_experiment_main(command)
 
