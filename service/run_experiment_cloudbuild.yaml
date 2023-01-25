@@ -12,7 +12,7 @@ steps:
   - -f
   - service/Dockerfile
   - .
-- name: 'gcr.io/oss-fuzz-base/trial-build'
+- name: 'gcr.io/oss-fuzz-base/experiment-runner'
   args: []
   env:
     - 'PULL_REQUEST_NUMBER=${_PR_NUMBER}'
