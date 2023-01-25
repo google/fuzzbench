@@ -187,7 +187,7 @@ def test_trial_runner(trial_runner):
         'gs://bucket/experiment-name/'
         'experiment-folders/benchmark-1-fuzzer_a/trial-1')
 
-    assert trial_runner.cycle == 1
+    assert trial_runner.cycle == 0
 
 
 @mock.patch('common.logs.log')

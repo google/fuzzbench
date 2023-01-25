@@ -249,7 +249,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         else:
             self.gcs_sync_dir = None
 
-        self.cycle = 1
+        self.cycle = 0
         self.corpus_dir = 'corpus'
         self.corpus_archives_dir = 'corpus-archives'
         self.results_dir = 'results'
@@ -278,6 +278,18 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
 
         max_total_time = environment.get('MAX_TOTAL_TIME')
         args = (max_total_time, self.log_file)
+
+        input_corpus = environment.get('SEED_CORPUS_DIR')
+        output_corpus = environment.get('OUTPUT_CORPUS_DIR')
+
+        # Ensure seeds are in output corpus
+        os.rmdir(output_corpus)
+        os.makedirs(input_corpus, exist_ok=True)
+        shutil.copytree(input_corpus, output_corpus)
+
+        # sync initial corpus before fuzzing begins
+        self.do_sync()
+
         fuzz_thread = threading.Thread(target=run_fuzzer, args=args)
         fuzz_thread.start()
         if environment.get('FUZZ_OUTSIDE_EXPERIMENT'):
@@ -287,9 +299,9 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             time.sleep(5)
 
         while fuzz_thread.is_alive():
+            self.cycle += 1
             self.sleep_until_next_sync()
             self.do_sync()
-            self.cycle += 1
 
         logs.info('Doing final sync.')
         self.do_sync(final_sync=True)
@@ -410,12 +422,6 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             experiment_utils.get_corpus_archive_name(self.cycle))
 
         directories = [self.corpus_dir]
-        if self.cycle == 1:
-            # Some fuzzers like eclipser and LibFuzzer don't actually copy the
-            # seed/input corpus to the output corpus (which AFL does do), this
-            # results in their coverage being undercounted.
-            seed_corpus = environment.get('SEED_CORPUS_DIR')
-            directories.append(seed_corpus)
 
         archive_directories(directories, archive)
         return archive

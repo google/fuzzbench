@@ -41,6 +41,8 @@ def _formatted_hour_min(seconds):
         if hours:
             time_string += ':'
         time_string += f'{minutes}m'
+    if seconds == 0:
+        time_string = '0m'
     return time_string
 
 
@@ -184,21 +186,24 @@ class Plotter:
         axes.set(xlabel='Time (hour:minute)')
 
         if self._logscale or logscale:
-            axes.set_xscale('log')
+            axes.set_xscale('symlog')
             ticks = np.logspace(
                 # Start from the time of the first measurement.
-                np.log10(experiment_utils.DEFAULT_SNAPSHOT_SECONDS),
+                0.0,
                 np.log10(snapshot_time + 1),  # Include tick at end time.
-                _DEFAULT_TICKS_COUNT)
+                _DEFAULT_TICKS_COUNT - 1)
+            ticks = np.insert(ticks, 0, 0)
+            axes.set_xticks([], minor=True)
         else:
             ticks = np.arange(
-                experiment_utils.DEFAULT_SNAPSHOT_SECONDS,
+                0.0,
                 snapshot_time + 1,  # Include tick at end time.
-                snapshot_time / _DEFAULT_TICKS_COUNT)
+                max(snapshot_time / _DEFAULT_TICKS_COUNT, 1))
 
         axes.set_xticks(ticks)
         axes.set_xticklabels([_formatted_hour_min(t) for t in ticks])
 
+        plt.xlim(0)
         sns.despine(ax=axes, trim=True)
 
     def write_coverage_growth_plot(  # pylint: disable=too-many-arguments
