@@ -21,6 +21,7 @@ import logging
 import os
 import sys
 
+# pytype: disable=import-error
 import github  # pylint: disable=import-error
 
 from experiment import run_experiment
