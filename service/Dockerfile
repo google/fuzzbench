@@ -28,4 +28,4 @@ COPY . $FUZZBENCH_DIR
 
 WORKDIR $FUZZBENCH_DIR
 ENV PYTHONPATH=$FUZZBENCH_DIR
-ENTRYPOINT ["python3", "$FUZZBENCH_DIR/service/gcbrun_experiment.py"]
+ENTRYPOINT ["python3", "/opt/fuzzbench/service/gcbrun_experiment.py"]
