@@ -41,7 +41,7 @@ GRACE_TIME_SECONDS = 5 * 60
 
 FAIL_WAIT_SECONDS = 10 * 60
 
-logger = logs.Logger('scheduler')  # pylint: disable=invalid-name
+logger = logs.Logger()  # pylint: disable=invalid-name
 
 RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
 

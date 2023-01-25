@@ -19,7 +19,7 @@ from common import benchmark_utils
 from common import environment
 from common import logs
 
-logger = logs.Logger('data_utils')
+logger = logs.Logger()
 
 
 class EmptyDataError(ValueError):
