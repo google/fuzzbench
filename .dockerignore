@@ -5,7 +5,6 @@
 .pytest_cache
 .pytype
 .venv
-__pycache__
+**__pycache__*
 docs
 report*
-third_party/oss-fuzz/build
