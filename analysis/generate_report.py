@@ -28,7 +28,7 @@ from analysis import rendering
 from common import filesystem
 from common import logs
 
-logger = logs.Logger('generate_report')
+logger = logs.Logger()
 
 DATA_FILENAME = 'data.csv.gz'
 

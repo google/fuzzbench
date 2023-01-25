@@ -282,11 +282,16 @@ def check_no_uncommitted_changes():
         raise ValidationError('Local uncommitted changes found, exiting.')
 
 
-def get_git_hash():
+def get_git_hash(allow_uncommitted_changes):
     """Return the git hash for the last commit in the local repo."""
-    output = subprocess.check_output(['git', 'rev-parse', 'HEAD'],
-                                     cwd=utils.ROOT_DIR)
-    return output.strip().decode('utf-8')
+    try:
+        output = subprocess.check_output(['git', 'rev-parse', 'HEAD'],
+                                         cwd=utils.ROOT_DIR)
+        return output.strip().decode('utf-8')
+    except subprocess.CalledProcessError as error:
+        if not allow_uncommitted_changes:
+            raise error
+        return ''
 
 
 def start_experiment(  # pylint: disable=too-many-arguments
@@ -315,7 +320,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
     config['fuzzers'] = fuzzers
     config['benchmarks'] = benchmarks
     config['experiment'] = experiment_name
-    config['git_hash'] = get_git_hash()
+    config['git_hash'] = get_git_hash(allow_uncommitted_changes)
     config['no_seeds'] = no_seeds
     config['no_dictionaries'] = no_dictionaries
     config['oss_fuzz_corpus'] = oss_fuzz_corpus
@@ -597,7 +602,12 @@ def get_dispatcher(config: Dict) -> BaseDispatcher:
 
 
 def main():
-    """Run an experiment in the cloud."""
+    """Run an experiment."""
+    return run_experiment_main()
+
+
+def run_experiment_main(args=None):
+    """Run an experiment."""
     logs.initialize()
 
     parser = argparse.ArgumentParser(
@@ -687,7 +697,7 @@ def main():
         required=False,
         default=False,
         action='store_true')
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     fuzzers = args.fuzzers or all_fuzzers
 
     concurrent_builds = args.concurrent_builds

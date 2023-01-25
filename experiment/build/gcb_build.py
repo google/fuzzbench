@@ -31,7 +31,7 @@ CONFIG_DIR = 'config'
 # Maximum time to wait for a GCB config to finish build.
 GCB_BUILD_TIMEOUT = 13 * 60 * 60  # 4 hours.
 
-logger = logs.Logger('builder')  # pylint: disable=invalid-name
+logger = logs.Logger()  # pylint: disable=invalid-name
 
 
 def _get_buildable_images(fuzzer=None, benchmark=None):
