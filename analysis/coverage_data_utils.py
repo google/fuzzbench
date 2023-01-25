@@ -26,7 +26,7 @@ from analysis import data_utils
 from common import filestore_utils
 from common import logs
 
-logger = logs.Logger('coverage_data_utils')
+logger = logs.Logger()
 
 
 def fuzzer_and_benchmark_to_key(fuzzer: str, benchmark: str) -> str:

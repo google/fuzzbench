@@ -23,7 +23,7 @@ from common import logs
 from common import new_process
 from common import sanitizer
 
-logger = logs.Logger('run_coverage')
+logger = logs.Logger()
 
 # Time buffer for libfuzzer merge to gracefully exit.
 EXIT_BUFFER = 15

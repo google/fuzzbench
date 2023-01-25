@@ -31,7 +31,7 @@ from database import models
 from database import utils as db_utils
 from experiment import run_experiment
 
-logger = logs.Logger('automatic_run_experiment')  # pylint: disable=invalid-name
+logger = logs.Logger()  # pylint: disable=invalid-name
 
 EXPERIMENT_CONFIG_FILE = os.path.join(utils.ROOT_DIR, 'service',
                                       'experiment-config.yaml')
