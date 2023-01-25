@@ -39,7 +39,7 @@ RUN git clone \
         --branch vhtokens \
         https://github.com/AFLplusplus/libafl /libafl && \
         cd /libafl && \
-        git checkout 4e4ce38cb6afe6c815573607a26b7d6bca8f30ec || \
+        git checkout fdc430f2e7c3db643cae9835a8a2d2b4fab026a9 || \
         true
 
 # Compile libafl.
