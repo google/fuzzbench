@@ -597,7 +597,12 @@ def get_dispatcher(config: Dict) -> BaseDispatcher:
 
 
 def main():
-    """Run an experiment in the cloud."""
+    """Run an experiment."""
+    return run_experiment_main()
+
+
+def run_experiment_main(args=None):
+    """Run an experiment."""
     logs.initialize()
 
     parser = argparse.ArgumentParser(
@@ -687,7 +692,7 @@ def main():
         required=False,
         default=False,
         action='store_true')
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     fuzzers = args.fuzzers or all_fuzzers
 
     concurrent_builds = args.concurrent_builds
