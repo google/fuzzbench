@@ -35,18 +35,17 @@ RUN apt-get update && \
     PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
 
 # Download libafl.
-RUN git clone \
-        --branch vhtokens \
+RUN git clone --branch vhtokens \
         https://github.com/AFLplusplus/libafl /libafl && \
         cd /libafl && \
-        git checkout 6c7f6566b0c8b3b82352c052a0672f46a2f7d1e9 || \
+        git checkout 6ffd8f883f00c8e649907c9f5d39167c9dab462e || \
         true
 
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
-    cd ./fuzzers/fuzzbench_text && \
+    cd ./fuzzers/fuzzbench_tokens && \
     PATH="/root/.cargo/bin/:$PATH" cargo build --release
 
 # Auxiliary weak references.
