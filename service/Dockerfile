@@ -1,5 +1,4 @@
-#!/bin/bash -eu
-# Copyright 2017 Google Inc.
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,15 +14,19 @@
 #
 ################################################################################
 
+FROM gcr.io/cloud-builders/gcloud
 
-cd tests/fuzz
+RUN apt-get update && apt-get install python3-pip -y
 
-# Download the seed corpora
-make -j seedcorpora
-# Build all of the fuzzers
-./fuzz.py build all
+# Do this expensive step before the cache is destroyed.
+COPY ./requirements.txt /tmp/requirements.txt
+RUN pip install -r /tmp/requirements.txt
+RUN pip install PyGithub==1.51
 
-for target in "stream_decompress"; do
-    cp "$target" "$OUT"
-    cp "corpora/${target}_seed_corpus.zip" "$OUT"
-done
+ENV FUZZBENCH_DIR /opt/fuzzbench
+COPY . $FUZZBENCH_DIR
+
+WORKDIR $FUZZBENCH_DIR
+ENV PYTHONPATH=$FUZZBENCH_DIR
+ENV FORCE_LOCAL=1
+ENTRYPOINT ["python3", "/opt/fuzzbench/service/gcbrun_experiment.py"]

@@ -22,7 +22,7 @@ from common import gce
 from common import gcloud
 from common import yaml_utils
 
-logger = logs.Logger('stop_experiment')  # pylint: disable=invalid-name
+logger = logs.Logger()  # pylint: disable=invalid-name
 
 
 def stop_experiment(experiment_name, experiment_config_filename):

@@ -54,7 +54,7 @@ steps:
   - BUILDKIT_INLINE_CACHE=1
   - --file
   - docker/dispatcher-image/Dockerfile
-  - .
+  - docker/dispatcher-image
   env:
     - DOCKER_BUILDKIT=1
   id: dispatcher-image
