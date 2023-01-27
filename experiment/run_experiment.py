@@ -575,7 +575,8 @@ class GoogleCloudDispatcher(BaseDispatcher):
                 (cloud_sql_instance_connection_name),
             'docker_registry': self.config['docker_registry'],
             'concurrent_builds': self.config['concurrent_builds'],
-            'worker_pool_name': self.config['worker_pool_name']
+            'worker_pool_name': self.config['worker_pool_name'],
+            'private': self.config['private'],
         }
         if 'worker_pool_name' in self.config:
             kwargs['worker_pool_name'] = self.config['worker_pool_name']
