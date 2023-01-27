@@ -21,6 +21,15 @@
 #
 
 
+- experiment: 2023-01-27-aflpp
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_at
+    - aflplusplus_at_cm
+    - aflplusplus_at_cm_fav
+    - aflplusplus_at_cm_old
+
 - experiment: 2023-01-27-test-request
   description: "Test if the new system can run experiments by online request."
   fuzzers:
