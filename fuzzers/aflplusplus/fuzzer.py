@@ -237,6 +237,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         shutil.copy('/afl/afl-frida-trace.so', build_directory)
         shutil.copy('/get_frida_entry.sh', build_directory)
 
+
 # pylint: disable=too-many-arguments
 def fuzz(input_corpus,
          output_corpus,
