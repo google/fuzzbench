@@ -21,6 +21,12 @@
 #
 
 
+- experiment: 2023-01-28-aflpp
+  description: "afl++ vs llvm native instrumentation."
+  fuzzers:
+    - aflplusplus_at
+    - aflplusplus_at_llvm
+
 - experiment: 2023-01-27-aflpp
   description: "afl+++ token experiment."
   fuzzers:
