@@ -33,7 +33,7 @@ do
 
     $CC $CFLAGS -c -I./src -I../src/libgit2 -I../src/util -I../include \
         "$fuzzer" -o "$WORK/$fuzzer_name.o"
-    $CXX $CXXFLAGS -std=c++11 -o "$OUT/$fuzzer_name" \
+    $CXX $CXXFLAGS -std=c++11 -o "$OUT/$fuzzer_name" -lpcre \
         $LIB_FUZZING_ENGINE "$WORK/$fuzzer_name.o" "$WORK/lib/libgit2.a"
 
     zip -j "$OUT/${fuzzer_name}_seed_corpus.zip" \

@@ -17,16 +17,20 @@ FROM $parent_image
 
 # Install the necessary packages.
 RUN apt-get update && \
-    apt-get install -y wget libstdc++-5-dev libtool-bin automake flex bison \
-                       libglib2.0-dev libpixman-1-dev python3-setuptools unzip
+    apt-get install -y \
+        build-essential \
+        git \
+        flex \
+        bison \
+        libglib2.0-dev \
+        libpixman-1-dev \
+        ninja-build \
+        libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
-# Why do some build images have ninja, other not? Weird.
-RUN cd / && wget https://github.com/ninja-build/ninja/releases/download/v1.10.1/ninja-linux.zip && \
-    unzip ninja-linux.zip && chmod 755 ninja && mv ninja /usr/local/bin
 
 # Download afl++
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && git checkout 4124a272d821629adce648fb37ca1e7f0ce0e84f
+    cd /afl && git checkout 35f09e11a4373b0fb42c690d23127c144f72f73c
     
 # Build afl++ without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.

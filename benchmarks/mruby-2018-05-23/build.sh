@@ -21,7 +21,9 @@ cd $SRC/mruby
 export LD=$CC
 export LDFLAGS="$CFLAGS -fPIE"
 
-LD=/usr/local/bin/clang CC=/usr/local/bin/clang CXX=/usr/local/bin/clang++ rake -m || true
+# No you cannot overwrite CC/CXX, otherwise afl++, libafl, etc. wont work!
+#LD=/usr/local/bin/clang CC=/usr/local/bin/clang CXX=/usr/local/bin/clang++ rake -m || true
+rake -m || true
 
 test -f $SRC/mruby/build/host/lib/libmruby.a
 
