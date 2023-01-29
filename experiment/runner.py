@@ -282,12 +282,12 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         input_corpus = environment.get('SEED_CORPUS_DIR')
         output_corpus = environment.get('OUTPUT_CORPUS_DIR')
 
-        # Ensure seeds are in output corpus
+        # Ensure seeds are in output corpus.
         os.rmdir(output_corpus)
         os.makedirs(input_corpus, exist_ok=True)
         shutil.copytree(input_corpus, output_corpus)
 
-        # sync initial corpus before fuzzing begins
+        # Sync initial corpus before fuzzing begins.
         self.do_sync()
 
         fuzz_thread = threading.Thread(target=run_fuzzer, args=args)

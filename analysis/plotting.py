@@ -20,7 +20,6 @@ import seaborn as sns
 from matplotlib import colors
 from matplotlib import pyplot as plt
 from analysis import data_utils
-from common import experiment_utils
 
 _DEFAULT_TICKS_COUNT = 12
 _DEFAULT_LABEL_ROTATION = 30
