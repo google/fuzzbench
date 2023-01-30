@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+commit: 3b19db4e6e7493a748369974819b4c5fa84c7614
+commit_date: 2023-01-28T00:24:41+00:00
 fuzz_target: libjpeg_turbo_fuzzer
 project: libjpeg-turbo
 unsupported_fuzzers:
