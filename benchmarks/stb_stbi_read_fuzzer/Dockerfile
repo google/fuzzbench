@@ -22,8 +22,6 @@ RUN apt-get update && \
 
 # This project does not have any release/tag.
 RUN git clone \
-        --depth 1 \
-        --branch master \
         https://github.com/nothings/stb.git
 
 RUN mkdir $SRC/stbi # CIFuzz workaround
