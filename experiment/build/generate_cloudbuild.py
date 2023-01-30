@@ -118,6 +118,7 @@ def get_docker_registry():
 
 
 def get_cloudbuild_tags(fuzzer, benchmark):
+    """Returns cloudbuild tags that are useful for identifying a build."""
     experiment = os.environ['EXPERIMENT']
     tags = [experiment]
     if fuzzer:

@@ -16,7 +16,7 @@
 import os
 import subprocess
 import tempfile
-from typing import Dict, Optional
+from typing import Dict
 
 from common import logs
 from common import new_process
