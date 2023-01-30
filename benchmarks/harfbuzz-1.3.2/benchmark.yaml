@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+commit: cb47dca74cbf6d147aac9cf3067f249555aa68b1
+commit_date: 2023-01-29T17:03:52+00:00
 fuzz_target: hb-shape-fuzzer
 project: harfbuzz
 unsupported_fuzzers:
