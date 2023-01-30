@@ -143,9 +143,11 @@ def create_cloudbuild_spec(image_templates,
       GCB build steps.
     """
     cloudbuild_spec = {'steps': [], 'images': []}
+
     if cloudbuild_tags is None:
-        experiment = os.getenv('EXPERIMENT')
-        cloudbuild_spec['tags'] = get_tags(fuzzer, benchmark)
+        cloudbuild_tags = get_cloudbuild_tags(fuzzer, benchmark)
+    if cloudbuild_tags:
+        cloudbuild_spec['tags'] = cloudbuild_tags
 
     for image_name, image_specs in image_templates.items():
         step = {
