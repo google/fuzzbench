@@ -19,7 +19,6 @@ RUN apt-get update && apt-get install -y make cmake
 
 RUN git clone --depth 1 https://github.com/google/boringssl.git boringssl
 RUN git clone --depth 1 https://github.com/openssl/openssl.git openssl
-
 RUN git clone --recursive https://github.com/ARMmbed/mbedtls.git mbedtls
 RUN git clone https://github.com/ARMmbed/mbed-crypto mbedtls/crypto && \
     git -C mbedtls/crypto checkout 819799cfc68e4c4381673a8a27af19802c8263f2
