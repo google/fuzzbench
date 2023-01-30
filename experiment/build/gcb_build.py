@@ -89,7 +89,6 @@ def _build(
             str(utils.ROOT_DIR),
             config_arg,
             timeout_arg,
-            '--machine-type=e2-standard-32'  # Mem 128GB
         ]
 
         worker_pool_name = os.getenv('WORKER_POOL_NAME')
