@@ -38,8 +38,9 @@ def _get_buildable_images(fuzzer=None, benchmark=None):
     return docker_images.get_images_to_build([fuzzer], [benchmark])
 
 
-def generate_gcb_tags(benchmark=None: Optional[str], fuzzer=None: Optional[str]) -> List[Optional[str]]:
+def generate_gcb_tags(benchmark: Optional[str] =None, fuzzer: Optional[str]=None) -> List[Optional[str]]:
     """Returns tags for GCB."""
+    experiment = os.getenv('EXPERIMENT')
     return [benchmark, fuzzer, experiment]
 
 
@@ -98,7 +99,7 @@ def _build(
             config_arg,
             timeout_arg,
         ]
-        add_tags
+        _add_gcb_tags(command, tags)
 
         worker_pool_name = os.getenv('WORKER_POOL_NAME')
         if worker_pool_name:
