@@ -49,8 +49,7 @@ def build_base_images():
         benchmark='no-benchmark',
         fuzzer='no-fuzzer',
         build_base_images=True)
-    tags = generate_gcb_tags()
-    _build(config, 'base-images', tags)
+    _build(config, 'base-images')
 
 
 def build_coverage(benchmark):
@@ -66,14 +65,12 @@ def build_coverage(benchmark):
                                                         benchmark=benchmark,
                                                         fuzzer='coverage')
     config_name = f'benchmark-{benchmark}-coverage'
-    tags = generate_gcb_tags(fuzzer='coverage', benchmark=benchmark)
-    _build(config, config_name, tags)
+    _build(config, config_name)
 
 
 def _build(
         config: Dict,
         config_name: str,
-        tags=List[Optional[str]],
         timeout_seconds: int = GCB_BUILD_TIMEOUT) -> new_process.ProcessResult:
     """Submit build to GCB."""
     with tempfile.NamedTemporaryFile() as config_file:
@@ -126,5 +123,4 @@ def build_fuzzer_benchmark(fuzzer: str, benchmark: str):
     config = generate_cloudbuild.create_cloudbuild_spec(image_templates,
                                                         benchmark=benchmark,
                                                         fuzzer=fuzzer)
-    tags = generate_gcb_tags(fuzzer=fuzzer, benchmark=benchmark)
-    _build(config, config_name, tags)
+    _build(config, config_name)

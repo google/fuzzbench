@@ -117,6 +117,16 @@ def get_docker_registry():
     return os.environ['DOCKER_REGISTRY']
 
 
+def get_cloudbuild_tags(fuzzer, benchmark):
+    experiment = os.environ['EXPERIMENT']
+    tags = [experiment]
+    if fuzzer:
+        tags.append(fuzzer)
+    if benchmark:
+        tags.append(benchmark)
+    return tags
+
+
 def create_cloudbuild_spec(image_templates,
                            benchmark,
                            fuzzer,
@@ -135,7 +145,7 @@ def create_cloudbuild_spec(image_templates,
     cloudbuild_spec = {'steps': [], 'images': []}
     if cloudbuild_tags is None:
         experiment = os.getenv('EXPERIMENT')
-        cloudbuild_spec['tags'] = [fuzzer, benchmark, experiment]
+        cloudbuild_spec['tags'] = get_tags(fuzzer, benchmark)
 
     for image_name, image_specs in image_templates.items():
         step = {
