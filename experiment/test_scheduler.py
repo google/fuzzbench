@@ -124,6 +124,7 @@ docker run \\
 -e EXPERIMENT_FILESTORE=gs://experiment-data \\
 -e REPORT_FILESTORE=gs://web-reports \\
 -e FUZZ_TARGET={oss_fuzz_target} \\
+-e PRIVATE=False \\
 -e LOCAL_EXPERIMENT=False \\
 --name=runner-container \\
 --shm-size=2g \\
