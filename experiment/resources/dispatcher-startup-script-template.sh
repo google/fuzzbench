@@ -29,7 +29,7 @@ docker run --rm \
   -e DOCKER_REGISTRY={{docker_registry}} \
   -e CONCURRENT_BUILDS={{concurrent_builds}} \
   -e WORKER_POOL_NAME={{worker_pool_name}} \
-  -e PRIVATE={{private}}
+  -e PRIVATE={{private}} \
   --cap-add=SYS_PTRACE --cap-add=SYS_NICE \
   -v /var/run/docker.sock:/var/run/docker.sock --name=dispatcher-container \
   {{docker_registry}}/dispatcher-image /work/startup-dispatcher.sh &> /tmp/dispatcher.log
