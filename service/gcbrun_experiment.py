@@ -81,7 +81,7 @@ def main():
     pull_request_number = int(os.environ['PULL_REQUEST_NUMBER'])
     result = exec_command_from_github(pull_request_number)
     print('result', result)
-    if result or result is None:
+    if not result:
         return 0
     return 1
 
