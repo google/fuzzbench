@@ -19,7 +19,6 @@ FROM gcr.io/cloud-builders/gcloud
 RUN apt-get update && apt-get install python3-pip -y
 
 # Do this expensive step before the cache is destroyed.
-RUN pip install pip --upgrade
 COPY ./requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
 RUN pip install PyGithub==1.51

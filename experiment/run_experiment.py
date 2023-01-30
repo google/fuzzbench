@@ -734,20 +734,20 @@ def run_experiment_main(args=None):
             parser.error('Cannot enable options "custom_seed_corpus_dir" and '
                          '"oss_fuzz_corpus" at the same time')
 
-    start_experiment(args.experiment_name,
-                     args.experiment_config,
-                     args.benchmarks,
-                     fuzzers,
-                     description=args.description,
-                     no_seeds=args.no_seeds,
-                     no_dictionaries=args.no_dictionaries,
-                     oss_fuzz_corpus=args.oss_fuzz_corpus,
-                     allow_uncommitted_changes=args.allow_uncommitted_changes,
-                     concurrent_builds=concurrent_builds,
-                     measurers_cpus=measurers_cpus,
-                     runners_cpus=runners_cpus,
-                     region_coverage=args.region_coverage,
-                     custom_seed_corpus_dir=args.custom_seed_corpus_dir)
+    # start_experiment(args.experiment_name,
+    #                  args.experiment_config,
+    #                  args.benchmarks,
+    #                  fuzzers,
+    #                  description=args.description,
+    #                  no_seeds=args.no_seeds,
+    #                  no_dictionaries=args.no_dictionaries,
+    #                  oss_fuzz_corpus=args.oss_fuzz_corpus,
+    #                  allow_uncommitted_changes=args.allow_uncommitted_changes,
+    #                  concurrent_builds=concurrent_builds,
+    #                  measurers_cpus=measurers_cpus,
+    #                  runners_cpus=runners_cpus,
+    #                  region_coverage=args.region_coverage,
+    #                  custom_seed_corpus_dir=args.custom_seed_corpus_dir)
     return 0
 
 
