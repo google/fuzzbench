@@ -16,7 +16,7 @@
 import os
 import subprocess
 import tempfile
-from typing import Dict
+from typing import Dict, List, Optional
 
 from common import logs
 from common import new_process
@@ -38,6 +38,11 @@ def _get_buildable_images(fuzzer=None, benchmark=None):
     return docker_images.get_images_to_build([fuzzer], [benchmark])
 
 
+def generate_gcb_tags(benchmark=None: Optional[str], fuzzer=None: Optional[str]) -> List[Optional[str]]:
+    """Returns tags for GCB."""
+    return [benchmark, fuzzer, experiment]
+
+
 def build_base_images():
     """Build base images on GCB."""
     buildable_images = _get_buildable_images()
@@ -49,7 +54,8 @@ def build_base_images():
         benchmark='no-benchmark',
         fuzzer='no-fuzzer',
         build_base_images=True)
-    _build(config, 'base-images')
+    tags = generate_gcb_tags()
+    _build(config, 'base-images', tags)
 
 
 def build_coverage(benchmark):
@@ -65,12 +71,14 @@ def build_coverage(benchmark):
                                                         benchmark=benchmark,
                                                         fuzzer='coverage')
     config_name = f'benchmark-{benchmark}-coverage'
-    _build(config, config_name)
+    tags = generate_gcb_tags(fuzzer='coverage', benchmark=benchmark)
+    _build(config, config_name, tags)
 
 
 def _build(
         config: Dict,
         config_name: str,
+        tags=List[Optional[str]],
         timeout_seconds: int = GCB_BUILD_TIMEOUT) -> new_process.ProcessResult:
     """Submit build to GCB."""
     with tempfile.NamedTemporaryFile() as config_file:
@@ -90,6 +98,7 @@ def _build(
             config_arg,
             timeout_arg,
         ]
+        add_tags
 
         worker_pool_name = os.getenv('WORKER_POOL_NAME')
         if worker_pool_name:
@@ -111,6 +120,14 @@ def _build(
     return result
 
 
+def _add_gcb_tags(command: List[str], tags: List[Optional[str]]) -> None:
+    """Adds gcb tags from |tags| to |command|. Mutates |command|."""
+    for tag in tags:
+        if tag is None:
+            continue
+        command.append(f'--tag={tag}')
+
+
 def build_fuzzer_benchmark(fuzzer: str, benchmark: str):
     """Builds |benchmark| for |fuzzer|."""
     image_templates = {}
@@ -123,4 +140,5 @@ def build_fuzzer_benchmark(fuzzer: str, benchmark: str):
     config = generate_cloudbuild.create_cloudbuild_spec(image_templates,
                                                         benchmark=benchmark,
                                                         fuzzer=fuzzer)
-    _build(config, config_name)
+    tags = generate_gcb_tags(fuzzer=fuzzer, benchmark=benchmark)
+    _build(config, config_name, tags)
