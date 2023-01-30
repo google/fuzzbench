@@ -121,7 +121,7 @@ def create_cloudbuild_spec(image_templates,
                            benchmark,
                            fuzzer,
                            build_base_images=False,
-                           cloudbuild_tag=None):
+                           cloudbuild_tags=None):
     """Generates Cloud Build specification.
 
     Args:
@@ -133,16 +133,9 @@ def create_cloudbuild_spec(image_templates,
       GCB build steps.
     """
     cloudbuild_spec = {'steps': [], 'images': []}
-    if cloudbuild_tag is not None:
-        cloudbuild_spec['tags'] = [f'fuzzer-{fuzzer}', f'benchmark-{benchmark}']
-
-    # TODO(metzman): Figure out how to do this to solve log length issue.
-    # cloudbuild_spec['steps'].append({
-    #     'id': 'buildx-create',
-    #     'name': DOCKER_IMAGE,
-    #     'args': ['buildx', 'create', '--use', 'buildxbuilder', '--driver-opt',
-    #              'env.BUILDKIT_STEP_LOG_MAX_SIZE=500000000']
-    #     })
+    if cloudbuild_tags is None:
+        experiment = os.getenv('EXPERIMENT')
+        cloudbuild_spec['tags'] = [fuzzer, benchmark, experiment]
 
     for image_name, image_specs in image_templates.items():
         step = {

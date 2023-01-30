@@ -16,7 +16,7 @@
 import os
 import subprocess
 import tempfile
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from common import logs
 from common import new_process
@@ -36,12 +36,6 @@ logger = logs.Logger()  # pylint: disable=invalid-name
 
 def _get_buildable_images(fuzzer=None, benchmark=None):
     return docker_images.get_images_to_build([fuzzer], [benchmark])
-
-
-def generate_gcb_tags(benchmark: Optional[str] =None, fuzzer: Optional[str]=None) -> List[Optional[str]]:
-    """Returns tags for GCB."""
-    experiment = os.getenv('EXPERIMENT')
-    return [benchmark, fuzzer, experiment]
 
 
 def build_base_images():
@@ -99,7 +93,6 @@ def _build(
             config_arg,
             timeout_arg,
         ]
-        _add_gcb_tags(command, tags)
 
         worker_pool_name = os.getenv('WORKER_POOL_NAME')
         if worker_pool_name:
@@ -119,14 +112,6 @@ def _build(
             logs.error('%s failed.', command)
             raise subprocess.CalledProcessError(result.retcode, command)
     return result
-
-
-def _add_gcb_tags(command: List[str], tags: List[Optional[str]]) -> None:
-    """Adds gcb tags from |tags| to |command|. Mutates |command|."""
-    for tag in tags:
-        if tag is None:
-            continue
-        command.append(f'--tag={tag}')
 
 
 def build_fuzzer_benchmark(fuzzer: str, benchmark: str):
