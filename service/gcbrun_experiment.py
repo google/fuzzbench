@@ -80,6 +80,7 @@ def main():
     logging.basicConfig(level=logging.INFO)
     pull_request_number = int(os.environ['PULL_REQUEST_NUMBER'])
     result = exec_command_from_github(pull_request_number)
+    print('result', result)
     if result or result is None:
         return 0
     return 1
