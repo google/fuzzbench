@@ -24,8 +24,6 @@ RUN apt-get update && \
         libz-dev
 
 RUN git clone \
-    --depth 1 \
-    --branch v1.1\
     https://github.com/google/bloaty.git
 
 WORKDIR bloaty
