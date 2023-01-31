@@ -189,6 +189,7 @@ def create_cloudbuild_spec(image_templates,
 
     if any(image_specs['type'] in 'coverage'
            for _, image_specs in image_templates.items()):
+        assert benchmark is not None, 'Coverage build need benchmark'
         cloudbuild_spec['steps'] += get_coverage_steps(benchmark)
 
     return cloudbuild_spec
