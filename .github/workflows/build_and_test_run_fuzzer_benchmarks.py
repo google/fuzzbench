@@ -25,6 +25,8 @@ from src_analysis import diff_utils
 NUM_RETRIES = 2
 RETRY_DELAY = 60
 
+CANARY_FUZZER = 'afl'
+
 
 def get_make_target(fuzzer, benchmark):
     """Return test target for a fuzzer and benchmark."""
@@ -110,6 +112,8 @@ def do_build(benchmark):
     changed_files = diff_utils.get_changed_files()
     changed_fuzzers = change_utils.get_changed_fuzzers(changed_files)
     print('changed_fuzzers', changed_fuzzers)
+    if changed_fuzzers is None:
+        changed_fuzzers = [CANARY_FUZZER]
     # Only build fuzzers that have changed.
     return make_builds(benchmark, changed_fuzzers)
 
