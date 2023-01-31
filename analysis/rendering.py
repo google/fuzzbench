@@ -19,6 +19,7 @@ import jinja2
 
 from common import utils
 
+
 def _warm_benchmark_plot_cache(benchmark_and_attrs):
     """Warm up cache for benchmark plots by making plots. |benchmark_and_attrs|
     is a tuple containing the benchmark and a list of attributes that when

@@ -57,13 +57,6 @@ class BenchmarkResults:
 
     def get_coverage_report_path(self, fuzzer_name, benchmark_name):
         """Returns the filestore name of the |fuzzer_name|."""
-        filestore_path = self._get_experiment_filestore_path(
-            fuzzer_name, benchmark_name)
-
-        return filestore_utils.get_user_accessible_path(filestore_path)
-
-    def get_coverage_report_path(self, fuzzer_name, benchmark_name):
-        """Returns the filestore name of the |fuzzer_name|."""
         filestore_path = coverage_data_utils.get_coverage_report_filestore_path(
             fuzzer_name, benchmark_name, self._benchmark_df)
         return filestore_utils.get_user_facing_path(filestore_path)
@@ -217,8 +210,8 @@ class BenchmarkResults:
     def _vargha_delaney_plot(self, filename, a12_values):
         """Generic Vargha Delany A12 measure plot."""
         plot_filename = self._prefix_with_benchmark(filename)
-        self._plotter.write_a12_heatmap_plot(a12_values,
-                                             self.get_full_plot_path(plot_filename))
+        self._plotter.write_a12_heatmap_plot(
+            a12_values, self.get_full_plot_path(plot_filename))
         return plot_filename
 
     @property
@@ -401,8 +394,8 @@ class BenchmarkResults:
         better_than_table = data_utils.create_better_than_table(
             self._benchmark_snapshot_df)
         plot_filename = self._prefix_with_benchmark('better_than.svg')
-        self._plotter.write_better_than_plot(better_than_table,
-                                             self.get_full_plot_path(plot_filename))
+        self._plotter.write_better_than_plot(
+            better_than_table, self.get_full_plot_path(plot_filename))
         return plot_filename
 
     @property
@@ -412,7 +405,8 @@ class BenchmarkResults:
         unique_branch_cov_df_combined = self.unique_branch_cov_df.merge(
             self._benchmark_aggregated_coverage_df, on='fuzzer')
         self._plotter.write_unique_coverage_ranking_plot(
-            unique_branch_cov_df_combined, self.get_full_plot_path(plot_filename))
+            unique_branch_cov_df_combined,
+            self.get_full_plot_path(plot_filename))
         return plot_filename
 
     @property

@@ -241,10 +241,6 @@ def generate_report(experiment_names,
     if not from_cached_data or not os.path.exists(data_path):
         experiment_df.to_csv(data_path)
 
-    if num_processes == -1:
-        num_processes = None
-    pool = multiprocessing.Pool(num_processes)
-
     # Load the coverage json summary file.
     coverage_dict = {}
     if coverage_report:
@@ -268,9 +264,12 @@ def generate_report(experiment_names,
 
     template = report_type + '.html'
     logger.info('Rendering HTML report.')
-    detailed_report = rendering.render_report(experiment_ctx, template,
-                                              in_progress, coverage_report,
-                                              experiment_description, pool)
+    if num_processes == -1:
+        num_processes = None
+    with multiprocessing.Pool(num_processes) as pool:
+        detailed_report = rendering.render_report(experiment_ctx, template,
+                                                  in_progress, coverage_report,
+                                                  experiment_description, pool)
     logger.info('Done rendering HTML report.')
 
     filesystem.write(os.path.join(report_directory, 'index.html'),
