@@ -65,5 +65,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
         command.extend(['--dict', dictionary_path])
     command.extend(['--', target_binary])
 
+
     print('[fuzz] Running command: ' + ' '.join(command))
     subprocess.check_call(command)
