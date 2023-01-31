@@ -30,10 +30,7 @@ def test_generate_cloudbuild_spec_build_base_image(experiment):
         }
     }
     generated_spec = generate_cloudbuild.create_cloudbuild_spec(
-        image_templates,
-        benchmark='no-benchmark',
-        fuzzer='no-fuzzer',
-        build_base_images=True)
+        image_templates, benchmark=None, fuzzer=None, build_base_images=True)
 
     expected_spec = {
         'steps': [{
@@ -53,7 +50,8 @@ def test_generate_cloudbuild_spec_build_base_image(experiment):
         'images': [
             'gcr.io/fuzzbench/base-image:test-experiment',
             'gcr.io/fuzzbench/base-image'
-        ]
+        ],
+        'tags': ['test-experiment'],
     }
 
     assert generated_spec == expected_spec
@@ -73,10 +71,7 @@ def test_generate_cloudbuild_spec_other_registry(experiment):
         }
     }
     generated_spec = generate_cloudbuild.create_cloudbuild_spec(
-        image_templates,
-        benchmark='no-benchmark',
-        fuzzer='no-fuzzer',
-        build_base_images=True)
+        image_templates, benchmark=None, fuzzer=None, build_base_images=True)
 
     expected_spec = {
         'steps': [{
@@ -96,7 +91,8 @@ def test_generate_cloudbuild_spec_other_registry(experiment):
         'images': [
             'gcr.io/not-fuzzbench/base-image:test-experiment',
             'gcr.io/not-fuzzbench/base-image'
-        ]
+        ],
+        'tags': ['test-experiment'],
     }
 
     assert generated_spec == expected_spec
@@ -120,8 +116,8 @@ def test_generate_cloudbuild_spec_build_fuzzer_benchmark(experiment):
 
     generated_spec = generate_cloudbuild.create_cloudbuild_spec(
         image_templates,
-        benchmark='no-benchmark',
-        fuzzer='no-fuzzer',
+        benchmark='benchmark',
+        fuzzer='fuzzer',
     )
 
     expected_spec = {
@@ -146,7 +142,8 @@ def test_generate_cloudbuild_spec_build_fuzzer_benchmark(experiment):
         'images': [
             'gcr.io/fuzzbench/builders/afl/zlib-intermediate:test-experiment',
             'gcr.io/fuzzbench/builders/afl/zlib-intermediate'
-        ]
+        ],
+        'tags': ['test-experiment', 'fuzzer', 'benchmark'],
     }
     assert generated_spec == expected_spec
 
@@ -186,7 +183,7 @@ def test_generate_cloudbuild_spec_build_benchmark_coverage(experiment):
     }
 
     generated_spec = generate_cloudbuild.create_cloudbuild_spec(
-        image_templates, benchmark='zlib', fuzzer='no-fuzzer')
+        image_templates, benchmark='zlib', fuzzer='coverage')
 
     expected_spec = {
         'steps': [{
@@ -264,7 +261,8 @@ def test_generate_cloudbuild_spec_build_benchmark_coverage(experiment):
             'gcr.io/fuzzbench/builders/coverage/zlib-intermediate',
             'gcr.io/fuzzbench/builders/coverage/zlib:test-experiment',
             'gcr.io/fuzzbench/builders/coverage/zlib'
-        ]
+        ],
+        'tags': ['test-experiment', 'coverage', 'zlib'],
     }
 
     assert generated_spec == expected_spec

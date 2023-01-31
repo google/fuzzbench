@@ -7,8 +7,8 @@ on:
       - 'benchmarks/**'  # Changes to benchmarks.
       # Changes that affect what gets built.
       - 'src_analysis/**'
-      - '.github/worfkflows/benchmarks.yml'
-      - '.github/worfkflows/build_and_test_run_fuzzer_benchmarks.py'
+      - '.github/workflows/benchmarks.yml'
+      - '.github/workflows/build_and_test_run_fuzzer_benchmarks.py'
 
 jobs:
   Test:
