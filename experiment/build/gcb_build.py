@@ -46,8 +46,8 @@ def build_base_images():
     }
     config = generate_cloudbuild.create_cloudbuild_spec(
         image_templates,
-        benchmark='no-benchmark',
-        fuzzer='no-fuzzer',
+        benchmark=None,
+        fuzzer=None,
         build_base_images=True)
     _build(config, 'base-images')
 

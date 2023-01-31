@@ -201,8 +201,8 @@ def main():
     base_images_spec = create_cloudbuild_spec(
         {'base-image': image_templates['base-image']},
         build_base_images=True,
-        benchmark='no-benchmark',
-        fuzzer='no-fuzzer')
+        benchmark=None,
+        fuzzer=None)
     base_images_spec_file = os.path.join(ROOT_DIR, 'docker', 'gcb',
                                          'base-images.yaml')
     yaml_utils.write(base_images_spec_file, base_images_spec)
