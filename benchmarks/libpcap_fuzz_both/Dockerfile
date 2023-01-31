@@ -17,7 +17,7 @@
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
 RUN apt-get update && \
-    apt-get install -y make cmake flex bison libdbus-1-dev
+    apt-get install -y make cmake flex bison
 
 RUN git clone \
         --depth 1 \
