@@ -22,6 +22,7 @@ cd build
 cmake ..
 make
 
+# build fuzz targets
 $CC $CFLAGS -I.. -c ../testprogs/fuzz/fuzz_both.c -o fuzz_both.o
 $CXX $CXXFLAGS fuzz_both.o -o $OUT/fuzz_both libpcap.a $LIB_FUZZING_ENGINE
 
