@@ -48,12 +48,15 @@ RUN cd /afl && git checkout 149366507da1ff8e3e8c4962f3abc6c8fd78b222
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
+COPY src/afl_driver.cpp /afl/afl_driver.cpp
 RUN cd /afl && \
     unset CFLAGS CXXFLAGS && \
     export CC=clang AFL_NO_X86=1 && \
     PYTHON_INCLUDE=/ make distrib && \
     make install && \
     cp utils/aflpp_driver/libAFLDriver.a /
+
+
 
 # Install the packages we need.
 RUN apt-get update && apt-get install -y ninja-build flex bison python zlib1g-dev
@@ -132,22 +135,45 @@ ENV LIBRARY_PATH="/z3/lib/:$LIBRARY_PATH"
 RUN echo "rerun 4"
 
 RUN git clone https://github.com/Lukas-Dresel/symcc.git /symcc && \
-    mkdir /symcc/build && \
-    cd /symcc/build && \
-        cmake -DCMAKE_BUILD_TYPE=Release -DZ3_TRUST_SYSTEM_VERSION=ON ../ && \
+    cd /symcc && \
+    git submodule init && \
+    git submodule update
+
+
+RUN mkdir /symcc/build_simple && \
+    cd /symcc/build_simple && \
+    cmake -DCMAKE_BUILD_TYPE=Release -DZ3_TRUST_SYSTEM_VERSION=ON ../ && \
     make -j
+
+RUN mkdir /symcc/build_qsym && \
+    cd /symcc/build_qsym && \
+    cmake -DQSYM_BACKEND=ON -DCMAKE_BUILD_TYPE=Release -DZ3_TRUST_SYSTEM_VERSION=ON ../ && \
+    make -j4
+
+RUN mkdir /symcc/build && \
+    cd /symcc/build && \
+
+    cmake  -DRUST_BACKEND=ON \
+           -DZ3_TRUST_SYSTEM_VERSION=ON \
+           -DCMAKE_BUILD_TYPE=Release \
+           -DSYMCC_LIBCXX_PATH="$FUZZER/llvm/libcxx_symcc_install" \
+           -DSYMCC_LIBCXX_INCLUDE_PATH="$FUZZER/llvm/libcxx_symcc_install/include/c++/v1" \
+           -DSYMCC_LIBCXXABI_PATH="$FUZZER/llvm/libcxx_symcc_install/lib/libc++abi.a" ../ && \
+
+    make -j4
 
 # LLVM_DIR="$(llvm-config --cmakedir)" LDFLAGS="-pthread -L /usr/lib/llvm-10/lib/" CXXFLAGS="$CXXFLAGS_EXTRA --std=c++17 -pthread" \
 
 
 # Build libcxx with the SymCC compiler so we can instrument
 # C++ code.
-RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.git /llvm_source  && \
-    mkdir /libcxx_native_install && mkdir /libcxx_native_build && \
+RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.git /llvm_source
+RUN mkdir /libcxx_native_install && mkdir /libcxx_native_build && \
     cd /libcxx_native_install && \
     export SYMCC_REGULAR_LIBCXX="" && \
     export SYMCC_NO_SYMBOLIC_INPUT=yes && \
-    cmake /llvm_source/llvm                                     \
+    export SYMCC_RUNTIME_DIR=/symcc/build_qsym/SymRuntime-prefix/src/SymRuntime-build && \
+    cmake /llvm_source/llvm      \
       -G Ninja \
       -DLLVM_ENABLE_PROJECTS="libcxx;libcxxabi"       \
       -DLLVM_DISTRIBUTION_COMPONENTS="cxx;cxxabi;cxx-headers"   \
@@ -165,7 +191,7 @@ RUN mkdir -p /libs_symcc
 
 ENV PATH="/usr/lib/llvm-12/bin/:$PATH"
 
-RUN echo rerun=3 && git clone --depth 1 --recurse-submodules https://github.com/Lukas-Dresel/mctsse/ /mctsse
+RUN echo rerun=6 && git clone --depth 1 --recurse-submodules https://github.com/Lukas-Dresel/mctsse/ /mctsse
 RUN git clone --depth 1 https://github.com/Lukas-Dresel/z3jit.git /mctsse/implementation/z3jit
 RUN mkdir /mctsse/repos/
 RUN git clone -b feat/symcts https://github.com/Lukas-Dresel/LibAFL /mctsse/repos/LibAFL
@@ -176,12 +202,13 @@ RUN git clone -b feat/symcts https://github.com/Lukas-Dresel/LibAFL /mctsse/repo
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/runtime && cargo build --release && cp /mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/libSymRuntime.so /libs_symcc/
 
 
-COPY ./build_zlib.sh /build_zlib.sh
+#COPY ./build_zlib.sh /build_zlib.sh
 # RUN git clone https://github.com/Lukas-Dresel/zlib-nop /zlib/ && cd /zlib && \
 
 # we have to build zlib instrumented because of all the callbacks being passed back and forth because SymCC does not
 # (and cannot) support uninstrumented libraries calling back into instrumented code
 RUN git clone https://github.com/madler/zlib /zlib/ && cd /zlib && \
+    export SYMCC_RUNTIME_DIR=/symcc/build_qsym/SymRuntime-prefix/src/SymRuntime-build && \
     CC=/symcc/build/symcc CXX=/symcc/build/sym++ CFLAGS="-fPIC ${CFLAGS}" CXXFLAGS="-fPIC ${CXXFLAGS}" ./configure --static && \
     make -j && \
     cp libz.a /libs_symcc/libz.a
@@ -215,7 +242,7 @@ RUN cd "/symqemu" && \
 
 
 RUN git clone https://github.com/Lukas-Dresel/symcc_libc_preload /mctsse/repos/symcc_libc_preload && exit 0
-RUN cd /mctsse/repos/symcc_libc_preload && SYMCC_RUNTIME_DIR=/libs_symcc/ CC=/symcc/build/symcc make all
+RUN cd /mctsse/repos/symcc_libc_preload && CC=/symcc/build/symcc make all
 RUN ls /mctsse/repos/symcc_libc_preload/ -al && exit 0
 RUN cp /mctsse/repos/symcc_libc_preload/libc_symcc_preload.a /libs_symcc/libc_symcc_preload.a
 
@@ -228,3 +255,13 @@ RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
 # RUN rm -rf /usr/local/lib/libc++experimental.a /usr/local/lib/libc++abi.a /usr/local/lib/libc++.a && \
 #     ln -s /usr/lib/llvm-10/lib/libc++abi.so.1 /usr/lib/llvm-10/lib/libc++abi.so
 
+# compile afl_driver.cpp
+
+RUN clang++ $CXXFLAGS -std=c++11 -c -fPIC \
+    /afl/afl_driver.cpp -o /out/vanilla/afl_driver.o
+
+RUN /afl/afl-clang-fast++ $CXXFLAGS -std=c++11 -c -fPIC \
+    /afl/afl_driver.cpp -o /afl/afl_driver.o
+
+RUN AFL_LLVM_CMPLOG=1 /afl/afl-clang-fast++ $CXXFLAGS -std=c++11 -c -fPIC \
+    /afl/afl_driver.cpp -o /cmplog/afl_driver.o
