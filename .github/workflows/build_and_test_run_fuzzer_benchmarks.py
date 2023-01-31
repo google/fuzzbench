@@ -112,7 +112,7 @@ def do_build(benchmark):
     changed_files = diff_utils.get_changed_files()
     changed_fuzzers = change_utils.get_changed_fuzzers(changed_files)
     print('changed_fuzzers', changed_fuzzers)
-    if changed_fuzzers is None:
+    if not changed_fuzzers:
         changed_fuzzers = [CANARY_FUZZER]
     # Only build fuzzers that have changed.
     return make_builds(benchmark, changed_fuzzers)
