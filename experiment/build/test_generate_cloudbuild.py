@@ -30,10 +30,7 @@ def test_generate_cloudbuild_spec_build_base_image(experiment):
         }
     }
     generated_spec = generate_cloudbuild.create_cloudbuild_spec(
-        image_templates,
-        benchmark=None,
-        fuzzer=None,
-        build_base_images=True)
+        image_templates, benchmark=None, fuzzer=None, build_base_images=True)
 
     expected_spec = {
         'steps': [{
@@ -74,10 +71,7 @@ def test_generate_cloudbuild_spec_other_registry(experiment):
         }
     }
     generated_spec = generate_cloudbuild.create_cloudbuild_spec(
-        image_templates,
-        benchmark=None,
-        fuzzer=None,
-        build_base_images=True)
+        image_templates, benchmark=None, fuzzer=None, build_base_images=True)
 
     expected_spec = {
         'steps': [{

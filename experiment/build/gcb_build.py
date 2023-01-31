@@ -44,11 +44,10 @@ def build_base_images():
     image_templates = {
         image: buildable_images[image] for image in ['base-image', 'worker']
     }
-    config = generate_cloudbuild.create_cloudbuild_spec(
-        image_templates,
-        benchmark=None,
-        fuzzer=None,
-        build_base_images=True)
+    config = generate_cloudbuild.create_cloudbuild_spec(image_templates,
+                                                        benchmark=None,
+                                                        fuzzer=None,
+                                                        build_base_images=True)
     _build(config, 'base-images')
 
 
