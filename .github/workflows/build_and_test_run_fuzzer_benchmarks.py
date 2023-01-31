@@ -25,6 +25,8 @@ from src_analysis import diff_utils
 NUM_RETRIES = 2
 RETRY_DELAY = 60
 
+# Use AFL because it is the fastest fuzzer to build. libFuzzer clones all of
+# LLVM which is super slow. Also tons of fuzzers depend on AFL.
 CANARY_FUZZER = 'afl'
 
 
