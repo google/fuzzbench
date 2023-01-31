@@ -7,8 +7,8 @@ on:
       - 'benchmarks/**'  # Changes to benchmarks.
       # Changes that affect what gets built.
       - 'src_analysis/**'
-      - '.github/worfkflows/benchmarks.yml'
-      - '.github/worfkflows/build_and_test_run_fuzzer_benchmarks.py'
+      - '.github/workflows/benchmarks.yml'
+      - '.github/workflows/build_and_test_run_fuzzer_benchmarks.py'
 
 jobs:
   Test:
@@ -29,7 +29,6 @@ jobs:
           - jsoncpp_jsoncpp_fuzzer
           - lcms-2017-03-21
           - libarchive_libarchive_fuzzer
-          - libgit2_objects_fuzzer
           - libhevc_hevc_dec_fuzzer
           - libhtp_fuzz_htp
           - libjpeg-turbo-07-2017
@@ -49,7 +48,6 @@ jobs:
           - php_php-fuzz-execute
           - php_php-fuzz-parser
           - php_php-fuzz-parser-2020-07-25
-          - poppler_pdf_fuzzer
           - proj4-2017-08-14
           - proj4_standard_fuzzer
           - quickjs_eval-2020-01-05

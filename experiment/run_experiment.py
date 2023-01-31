@@ -73,6 +73,7 @@ def _set_default_config_values(config: Dict[str, Union[int, str, bool]],
     config['worker_pool_name'] = config.get('worker_pool_name', '')
     config['snapshot_period'] = config.get(
         'snapshot_period', experiment_utils.DEFAULT_SNAPSHOT_SECONDS)
+    config['private'] = config.get('private', False)
 
 
 def _validate_config_parameters(
@@ -580,7 +581,8 @@ class GoogleCloudDispatcher(BaseDispatcher):
                 (cloud_sql_instance_connection_name),
             'docker_registry': self.config['docker_registry'],
             'concurrent_builds': self.config['concurrent_builds'],
-            'worker_pool_name': self.config['worker_pool_name']
+            'worker_pool_name': self.config['worker_pool_name'],
+            'private': self.config['private'],
         }
         if 'worker_pool_name' in self.config:
             kwargs['worker_pool_name'] = self.config['worker_pool_name']

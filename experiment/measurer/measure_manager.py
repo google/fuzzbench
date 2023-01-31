@@ -261,7 +261,7 @@ def _get_unmeasured_first_snapshots(
     snapshot for their trial. The trials are trials in |experiment|."""
     trials_without_snapshots = _query_unmeasured_trials(experiment)
     return [
-        SnapshotMeasureRequest(trial.fuzzer, trial.benchmark, trial.id, 1)
+        SnapshotMeasureRequest(trial.fuzzer, trial.benchmark, trial.id, 0)
         for trial in trials_without_snapshots
     ]
 
