@@ -14,6 +14,7 @@
 """Report generator tool."""
 
 import argparse
+import multiprocessing
 import os
 import sys
 
@@ -202,6 +203,7 @@ def generate_report(experiment_names,
                     merge_with_clobber=False,
                     merge_with_clobber_nonprivate=False,
                     coverage_report=False,
+                    num_processes=-1,
                     experiment_benchmarks=None):
     """Generate report helper."""
     if merge_with_clobber_nonprivate:
@@ -239,6 +241,10 @@ def generate_report(experiment_names,
     if not from_cached_data or not os.path.exists(data_path):
         experiment_df.to_csv(data_path)
 
+    if num_processes == -1:
+        num_processes = None
+   pool = multiprocessing.Pool(num_processes)
+
     # Load the coverage json summary file.
     coverage_dict = {}
     if coverage_report:
@@ -248,7 +254,7 @@ def generate_report(experiment_names,
         logger.info('Finished generating coverage report info.')
 
     fuzzer_names = experiment_df.fuzzer.unique()
-    plotter = plotting.Plotter(fuzzer_names, quick, log_scale)
+    plotter = plotting.Plotter(fuzzer_names, quick, log_scale, cache=True)
     experiment_ctx = experiment_results.ExperimentResults(
         experiment_df,
         coverage_dict,
@@ -256,11 +262,15 @@ def generate_report(experiment_names,
         plotter,
         experiment_name=report_name)
 
+    # Do this so that plotter caching works.
+    plot_path = experiment_ctx.benchmarks[0].get_full_plot_path('')
+    filesystem.recreate_directory(plot_path)
+
     template = report_type + '.html'
     logger.info('Rendering HTML report.')
     detailed_report = rendering.render_report(experiment_ctx, template,
                                               in_progress, coverage_report,
-                                              experiment_description)
+                                              experiment_description, pool)
     logger.info('Done rendering HTML report.')
 
     filesystem.write(os.path.join(report_directory, 'index.html'),
