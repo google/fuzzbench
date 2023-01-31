@@ -29,7 +29,7 @@ from experiment.build import generate_cloudbuild
 CONFIG_DIR = 'config'
 
 # Maximum time to wait for a GCB config to finish build.
-GCB_BUILD_TIMEOUT = 13 * 60 * 60  # 4 hours.
+GCB_BUILD_TIMEOUT = 4 * 60 * 60  # 4 hours.
 
 logger = logs.Logger()  # pylint: disable=invalid-name
 
