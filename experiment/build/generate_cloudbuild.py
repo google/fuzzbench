@@ -81,7 +81,7 @@ def _get_cachable_image_tag(image_specs):
     return _get_image_tag(image_specs)
 
 
-def coverage_steps(benchmark: str):
+def get_coverage_steps(benchmark: str):
     """Returns GCB run steps for coverage builds."""
     coverage_binaries_dir = exp_path.filestore(
         build_utils.get_coverage_binaries_dir())
@@ -189,7 +189,7 @@ def create_cloudbuild_spec(image_templates,
 
     if any(image_specs['type'] in 'coverage'
            for _, image_specs in image_templates.items()):
-        cloudbuild_spec['steps'] += coverage_steps(benchmark)
+        cloudbuild_spec['steps'] += get_coverage_steps(benchmark)
 
     return cloudbuild_spec
 
