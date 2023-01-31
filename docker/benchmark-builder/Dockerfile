@@ -58,9 +58,6 @@ RUN pip3 install -r /tmp/requirements.txt
 # Copy the entire fuzzers directory tree to allow for module dependencies.
 COPY fuzzers $SRC/fuzzers
 
-# Create empty __init__.py to allow python deps to work.
-RUN touch $SRC/__init__.py
-
 # Disable LeakSanitizer since ptrace is unavailable in Google Cloud build
 # and is not needed during build process.
 ENV ASAN_OPTIONS="detect_leaks=0"
