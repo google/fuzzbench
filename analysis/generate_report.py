@@ -243,7 +243,7 @@ def generate_report(experiment_names,
 
     if num_processes == -1:
         num_processes = None
-   pool = multiprocessing.Pool(num_processes)
+    pool = multiprocessing.Pool(num_processes)
 
     # Load the coverage json summary file.
     coverage_dict = {}
