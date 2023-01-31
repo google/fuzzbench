@@ -96,10 +96,6 @@ def _validate_config_parameters(
     for param in missing_params:
         logs.error('Config does not contain required parameter "%s".', param)
 
-    # Notify if any optional parameters are missing in config.
-    for param in optional_params:
-        logs.info('Config does not contain optional parameter "%s".', param)
-
     return not missing_params
 
 
@@ -173,8 +169,6 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
             Requirement(not local_experiment, str, True, ''),
         'worker_pool_name':
             Requirement(not local_experiment, str, False, ''),
-        'experiment':
-            Requirement(False, str, False, ''),
         'cloud_sql_instance_connection_name':
             Requirement(False, str, True, ''),
         'snapshot_period':
