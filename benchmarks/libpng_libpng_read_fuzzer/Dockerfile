@@ -1,4 +1,4 @@
-# Copyright 2019 Google Inc.
+# Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,12 +18,25 @@ FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d
 
 RUN apt-get update && \
     apt-get install -y \
-        autoconf automake libtool bison re2c pkg-config
+    make \
+    autoconf \
+    automake \
+    libtool \
+    zlib1g-dev
 
 RUN git clone \
         --depth 1 \
-        --branch php-8.2.0RC6 \
-        https://github.com/php/php-src.git
+        --branch v1.2.13 \
+        https://github.com/madler/zlib.git
 
-WORKDIR php-src
-COPY build.sh *.options $SRC/
+RUN git clone \
+        https://github.com/glennrp/libpng.git
+RUN cp libpng/contrib/oss-fuzz/build.sh $SRC
+
+WORKDIR libpng
+
+RUN wget --no-check-certificate -qO $OUT/libpng_read_fuzzer.dict \
+    https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/png.dict
+
+ADD seeds /opt/seeds
+COPY * $SRC/

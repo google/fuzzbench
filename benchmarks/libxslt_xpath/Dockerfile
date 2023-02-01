@@ -57,14 +57,9 @@ RUN apt-get update && \
     )
 
 
-RUN git clone \
-        --branch v2.10.3 \
-        --depth 1 \
-        https://gitlab.gnome.org/GNOME/libxml2.git && \
-    git clone \
-        --branch v1.1.37 \
-        --depth 1 \
-        https://gitlab.gnome.org/GNOME/libxslt.git
+RUN git clone https://gitlab.gnome.org/GNOME/libxml2.git && \
+    git -C libxml2 checkout c7260a47f19e01f4f663b6a56fbdc2dafd8a6e7e && \
+    git clone https://gitlab.gnome.org/GNOME/libxslt.git
 
 ENV ACLOCAL_PATH='/usr/share/aclocal/'
 
