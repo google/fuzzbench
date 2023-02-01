@@ -45,6 +45,8 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl
 # Checkout a current commit
 RUN cd /afl && git checkout 149366507da1ff8e3e8c4962f3abc6c8fd78b222
 
+# Prepare output dirs
+RUN mkdir -p /out/afl /out/symcts /out/vanilla /out/cmplog
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
@@ -156,9 +158,9 @@ RUN mkdir /symcc/build && \
     cmake  -DRUST_BACKEND=ON \
            -DZ3_TRUST_SYSTEM_VERSION=ON \
            -DCMAKE_BUILD_TYPE=Release \
-           -DSYMCC_LIBCXX_PATH="$FUZZER/llvm/libcxx_symcc_install" \
-           -DSYMCC_LIBCXX_INCLUDE_PATH="$FUZZER/llvm/libcxx_symcc_install/include/c++/v1" \
-           -DSYMCC_LIBCXXABI_PATH="$FUZZER/llvm/libcxx_symcc_install/lib/libc++abi.a" ../ && \
+           -DSYMCC_LIBCXX_PATH="/llvm/libcxx_symcc_install" \
+           -DSYMCC_LIBCXX_INCLUDE_PATH="/llvm/libcxx_symcc_install/include/c++/v1" \
+           -DSYMCC_LIBCXXABI_PATH="/llvm/libcxx_symcc_install/lib/libc++abi.a" ../ && \
 
     make -j4
 
@@ -202,6 +204,7 @@ RUN git clone -b feat/symcts https://github.com/Lukas-Dresel/LibAFL /mctsse/repo
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/runtime && cargo build --release && cp /mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/libSymRuntime.so /libs_symcc/
 
 
+# RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/runtime && cargo build --features sync_from_other_fuzzers --release && cp /mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/libSymRuntime.so /libs_symcc/
 #COPY ./build_zlib.sh /build_zlib.sh
 # RUN git clone https://github.com/Lukas-Dresel/zlib-nop /zlib/ && cd /zlib && \
 
@@ -240,14 +243,13 @@ RUN cd "/symqemu" && \
 
 # RUN git clone https://github.com/madler/zlib /zlib/ && \
 
-
-RUN git clone https://github.com/Lukas-Dresel/symcc_libc_preload /mctsse/repos/symcc_libc_preload && exit 0
-RUN cd /mctsse/repos/symcc_libc_preload && CC=/symcc/build/symcc make all
+RUN git clone  https://github.com/Lukas-Dresel/symcc_libc_preload /mctsse/repos/symcc_libc_preload && exit 0
+RUN cd /mctsse/repos/symcc_libc_preload && CC=/symcc/build/symcc make libc_symcc_preload.a
 RUN ls /mctsse/repos/symcc_libc_preload/ -al && exit 0
 RUN cp /mctsse/repos/symcc_libc_preload/libc_symcc_preload.a /libs_symcc/libc_symcc_preload.a
 
-RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && cargo build --release
-RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && cargo build --release --features=sync_from_other_fuzzers
+RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && cargo build --release && cp ./target/release/symcts /out/symcts/
+RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && cargo build --release --features=sync_from_other_fuzzers && cp ./target/release/symcts /out/symcts/symcts-from_other
 
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     /symcc/build/symcc -c ./libfuzzer-main.c -o /libfuzzer-main.o /mctsse/repos/symcc_libc_preload/libc_symcc_preload.a /libs_symcc/libz.a
@@ -257,11 +259,25 @@ RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
 
 # compile afl_driver.cpp
 
+# Copy some stuff to output folder
 RUN clang++ $CXXFLAGS -std=c++11 -c -fPIC \
     /afl/afl_driver.cpp -o /out/vanilla/afl_driver.o
 
 RUN /afl/afl-clang-fast++ $CXXFLAGS -std=c++11 -c -fPIC \
-    /afl/afl_driver.cpp -o /afl/afl_driver.o
+    /afl/afl_driver.cpp -o /out/afl/afl_driver.o
 
 RUN AFL_LLVM_CMPLOG=1 /afl/afl-clang-fast++ $CXXFLAGS -std=c++11 -c -fPIC \
-    /afl/afl_driver.cpp -o /cmplog/afl_driver.o
+    /afl/afl_driver.cpp -o /out/cmplog/afl_driver.o
+
+RUN cp /libs_symcc/libc_symcc_preload.a /out/symcts/
+RUN cp /libs_symcc/libz.a /out/symcts/
+
+RUN cp -r /mctsse/ /out/
+RUN cp -r /root/.cargo /out/
+RUN cp -r /root/.rustup /out/
+
+# RUN export SYMCC_LIBCXX_PATH="/llvm/libcxx_symcc_install"
+#     "/symcc/build/sym++" $CXXFLAGS -std=c++11 -c -fPIC \
+#         "/mctsse/repos/symcc_libc_preload/libc_symcc_preload.a" \
+#         "/symcts/libz.a" \
+#         "/afl/afl_driver.cpp" -o "/symcts/afl_driver.o"

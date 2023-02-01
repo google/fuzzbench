@@ -99,6 +99,8 @@ def build():
     shutil.copy("/mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer/target/release/symcts", symcc_build_dir)
     shutil.copy("/mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer/target/release/print_symcc_trace", symcc_build_dir)
 
+    # # Install RUST - I know, this is not a great place but it works
+    # os.system("curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /tmp/rustup.sh && sh /tmp/rustup.sh -y")
 
 def launch_afl_thread(input_corpus, output_corpus, target_binary,
                       additional_flags):
@@ -120,19 +122,35 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
     symcc_workdir = get_symcc_build_dir(target_binary_dir)
     target_binary_name = os.path.basename(target_binary)
     symcc_target_binary = os.path.join(symcc_workdir, target_binary_name)
+    fuzzer = os.environ["FUZZER"]
 
     os.environ['AFL_DISABLE_TRIM'] = '1'
 
-    # Start a master and secondary instance of AFL.
-    # We need both because of the way SymCC works.
-    print('[run_fuzzer] Running AFL for SymCC')
-    afl_fuzzer.prepare_fuzz_environment(input_corpus)
-    if with_afl:
-        launch_afl_thread(input_corpus, output_corpus, target_binary, ['-S', 'afl'])
-        time.sleep(2)
-        launch_afl_thread(input_corpus, output_corpus, target_binary,
-                        ['-S', 'afl-secondary'])
-        time.sleep(2)
+    if "afl" in fuzzer:
+        os.environ["AFL_SKIP_CPUFREQ"] = "1"
+        os.environ["AFL_NO_AFFINITY"] = "1"
+        os.environ["AFL_NO_UI"] = "1"
+        os.environ["AFL_MAP_SIZE"] = "256000"
+        os.environ["AFL_DRIVER_DONT_DEFER"] = "1"
+        os.environ["ASAN_OPTIONS"] = ":detect_leaks=0:abort_on_error=1:symbolize=0"
+
+        flag_cmplog = ["-m", "none", "-c", "/out/cmplog/"]
+        sync_flag_master = ["-F", "/findings/symcts/corpus"] if "symcts" else []
+
+        # Start a master and secondary instance of AFL.
+        # We need both because of the way SymCC works.
+        print('[run_fuzzer] Running %s' % fuzzer)
+        afl_fuzzer.prepare_fuzz_environment(input_corpus)
+        if with_afl:
+            launch_afl_thread(input_corpus, output_corpus, target_binary, flag_cmplog + ['-M', 'afl-main'] + sync_flag_master)
+            time.sleep(2)
+            launch_afl_thread(input_corpus, output_corpus, target_binary, flag_cmplog + ['-S', 'havoc'])
+            time.sleep(2)
+
+    if "symcts" in fuzzer:
+        symcts_bin = "/out/symcts/symcts"
+        if "afl" in fuzzer:
+            symcts_bin = "/out/symcts/symcts-from_other"
 
     # Start an instance of SyMCTS.
     # We need to ensure it uses the symbolic version of libc++.
@@ -141,13 +159,26 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
     new_environ['LD_LIBRARY_PATH'] = symcc_workdir
     new_environ['SYMCTS_INHERIT_STDERR'] = '1'
     new_environ['SYMCTS_INHERIT_STDOUT'] = '1'
+
     cmd = [
-        os.path.join(symcc_workdir,
-                     'symcts'),
+        symcts_bin,
         '-i', input_corpus,
         '-s', output_corpus,
         '-n', 'symcts',
         '--', symcc_target_binary, '@@'
     ]
+    print(cmd)
     with subprocess.Popen(cmd, env=new_environ):
         pass
+
+    # cmd = ['/out/.cargo/bin/cargo', 'run', '--release']
+    # cmd += features
+    # cmd += ['--bin', 'symcts', '--']
+    # cmd += ['-n', 'symcts']
+    # cmd += ['-i', input_corpus]
+    # cmd += ['-s', output_corpus]
+    # cmd += ['--', symcc_target_binary, '@@']
+    # print(" ".join(cmd))
+
+    # with subprocess.Popen(cmd, env=new_environ, cwd='/out/mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer/'):
+    #     pass
