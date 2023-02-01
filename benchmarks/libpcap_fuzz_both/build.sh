@@ -19,7 +19,7 @@ cd libpcap
 # build project
 mkdir build
 cd build
-cmake ..
+cmake -DDISABLE_DBUS=1 ..
 make
 
 # build fuzz targets
