@@ -21,8 +21,6 @@ RUN apt-get update && \
         autoconf automake libtool bison re2c pkg-config
 
 RUN git clone \
-        --depth 1 \
-        --branch php-8.2.0RC6 \
         https://github.com/php/php-src.git
 
 WORKDIR php-src

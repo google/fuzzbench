@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-fuzz_target: libjpeg_turbo_fuzzer
-project: libjpeg-turbo
-unsupported_fuzzers:
-  - aflcc
+commit: cd0ea2a7f53b603d3d9b5b891c779c430047b39a
+commit_date: 2023-01-09T13:17:31+00:00
+fuzz_target: libpng_read_fuzzer
+project: libpng

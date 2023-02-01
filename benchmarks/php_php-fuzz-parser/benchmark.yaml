@@ -1,3 +1,5 @@
+commit: 908d954de05e592cb2612bdce6ce8661be9dead1
+commit_date: 2023-01-28T19:44:37+0000
 fuzz_target: php-fuzz-parser
 project: php
 unsupported_fuzzers:

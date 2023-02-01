@@ -23,8 +23,6 @@ RUN dpkg --add-architecture i386 && \
         libstdc++-9-dev libstdc++-9-dev:i386 nasm subversion
 
 RUN git clone \
-        --branch v2.3.1 \
-        --depth 1 \
         https://github.com/cisco/openh264.git
 
 WORKDIR openh264

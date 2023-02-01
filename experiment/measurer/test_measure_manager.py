@@ -379,7 +379,7 @@ class TestIntegrationMeasurement:
         os.environ['WORK'] = str(tmp_path)
         mocked_is_cycle_unchanged.return_value = False
         # Set up the coverage binary.
-        benchmark = 'freetype2-2017'
+        benchmark = 'freetype2_ftfuzzer'
         coverage_binary_src = get_test_data_path(
             'test_measure_snapshot_coverage', benchmark + '-coverage')
         benchmark_cov_binary_dir = os.path.join(

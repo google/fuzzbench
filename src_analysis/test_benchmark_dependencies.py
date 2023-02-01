@@ -18,7 +18,7 @@ from common import benchmark_utils
 from src_analysis import benchmark_dependencies
 
 OSS_FUZZ_BENCHMARK = 'curl_curl_fuzzer_http'
-STANDARD_BENCHMARK = 'libpng-1.6.38'
+STANDARD_BENCHMARK = 'libpng_libpng_read_fuzzer'
 BENCHMARK_YAML_PATH = os.path.join(benchmark_utils.BENCHMARKS_DIR,
                                    OSS_FUZZ_BENCHMARK, 'benchmark.yaml')
 STANDARD_BUILD_SH_PATH = os.path.join(benchmark_utils.BENCHMARKS_DIR,
