@@ -21,6 +21,24 @@
 #
 
 
+- experiment: 2023-02-02-libafl
+  description: "libafl grammar comparison."
+  fuzzers:
+    - libafl_token_alt
+    - libafl_token_neu
+
+- experiment: 2023-02-02-aflpp-2
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus_at_cm
+    - aflplusplus_at_cm_fav
+
+- experiment: 2023-02-02-aflpp-1
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus_at_cm
+    - aflplusplus_at_cm_old
+
 - experiment: 2023-02-01-aflpp
   description: "afl+++ token experiment."
   fuzzers:
