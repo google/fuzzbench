@@ -51,6 +51,8 @@ RUN cd /tmp/ && \
     rm -r /tmp/Python-$PYTHON_VERSION.tar.xz /tmp/Python-$PYTHON_VERSION
 
 # Install common python dependencies.
+RUN apt-get update && apt-get remove -y python3-pip
+RUN pip3 --version
 COPY ./requirements.txt /tmp
 RUN pip3 install -r /tmp/requirements.txt
 

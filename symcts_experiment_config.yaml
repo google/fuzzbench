@@ -1,14 +1,14 @@
 # The number of trials of a fuzzer-benchmark pair.
-trials: 3
+trials: 1
 
 # The amount of time in seconds that each trial is run for.
 # 1 day =   24 * 60 * 60 = 86400
 # 1 hour =   1 * 60 * 60 = 3600
 # 8 hours =  8 * 60 * 60 = 28800
 # 15 mins = 15 * 60 = 600
-max_total_time: 28800
+max_total_time: 1800
 
-snapshot_period: 600
+snapshot_period: 60
 
 # The location of the docker registry.
 # FIXME: Support custom docker registry.

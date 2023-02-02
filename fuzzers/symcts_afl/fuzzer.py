@@ -31,6 +31,12 @@ def get_symcc_build_dir(target_directory):
 
 def build():
     """Build an AFL version and SymCC version of the benchmark"""
+    print('Step 0: Building a vanilla version of the benchmark')
+    new_env = os.environ.copy()
+    new_env['OUT'] = "/out/vanilla"
+    new_env['FUZZER_LIB'] = '/out/vanilla/afl_driver.o'
+    utils.build_benchmark(env=new_env)
+
     print('Step 1: Building with AFL')
     build_directory = os.environ['OUT']
 
@@ -122,6 +128,8 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
     symcc_workdir = get_symcc_build_dir(target_binary_dir)
     target_binary_name = os.path.basename(target_binary)
     symcc_target_binary = os.path.join(symcc_workdir, target_binary_name)
+    vanilla_target_binary = os.path.join('/out/vanilla/', target_binary_name)
+
     fuzzer = os.environ["FUZZER"]
 
     os.environ['AFL_DISABLE_TRIM'] = '1'
@@ -152,6 +160,23 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
         if "afl" in fuzzer:
             symcts_bin = "/out/symcts/symcts-from_other"
 
+    cmd = [
+        symcts_bin,
+        '-i', input_corpus,
+        '-s', output_corpus,
+        '-n', 'symcts',
+        '--'
+    ]
+
+
+    print(os.environ)
+    print("TARGET: ", target_binary)
+
+    if "symqemu" in fuzzer:
+        cmd += ["/out/symqemu-x86_64", vanilla_target_binary, "@@"]
+    else:
+        cmd += [symcc_target_binary, "@@"]
+
     # Start an instance of SyMCTS.
     # We need to ensure it uses the symbolic version of libc++.
     print('Starting the SyMCTS binary')
@@ -160,14 +185,7 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
     new_environ['SYMCTS_INHERIT_STDERR'] = '1'
     new_environ['SYMCTS_INHERIT_STDOUT'] = '1'
 
-    cmd = [
-        symcts_bin,
-        '-i', input_corpus,
-        '-s', output_corpus,
-        '-n', 'symcts',
-        '--', symcc_target_binary, '@@'
-    ]
-    print(cmd)
+    print("############ RUNNING: ", " ".join(cmd))
     with subprocess.Popen(cmd, env=new_environ):
         pass
 

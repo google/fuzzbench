@@ -62,7 +62,7 @@ RUN cd /afl && \
 
 # Install the packages we need.
 RUN apt-get update && apt-get install -y ninja-build flex bison python zlib1g-dev
-RUN apt-get update && apt-get install -y vim strace
+RUN apt-get update && apt-get install -y vim strace liblzma-dev
 
 # Install libstdc++ to use llvm_mode.
 # RUN apt-get update && \
@@ -161,10 +161,24 @@ RUN mkdir /symcc/build && \
            -DSYMCC_LIBCXX_PATH="/llvm/libcxx_symcc_install" \
            -DSYMCC_LIBCXX_INCLUDE_PATH="/llvm/libcxx_symcc_install/include/c++/v1" \
            -DSYMCC_LIBCXXABI_PATH="/llvm/libcxx_symcc_install/lib/libc++abi.a" ../ && \
-
     make -j4
 
 # LLVM_DIR="$(llvm-config --cmakedir)" LDFLAGS="-pthread -L /usr/lib/llvm-10/lib/" CXXFLAGS="$CXXFLAGS_EXTRA --std=c++17 -pthread" \
+
+RUN mkdir -p /libs_symcc
+
+ENV PATH="/usr/lib/llvm-12/bin/:$PATH"
+
+RUN ls
+RUN echo rerun=6 && git clone --depth 1 --recurse-submodules https://github.com/Lukas-Dresel/mctsse/ /mctsse
+RUN git clone --depth 1 https://github.com/Lukas-Dresel/z3jit.git /mctsse/implementation/z3jit
+RUN mkdir /mctsse/repos/
+RUN git clone -b feat/symcts https://github.com/Lukas-Dresel/LibAFL /mctsse/repos/LibAFL
+
+# RUN cd /mctsse/repos/LibAFL && cargo build --release
+
+# export LLVM_CONFIG=/usr/lib/llvm-12/bin/llvm-config &&
+RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/runtime && cargo build --release && cp /mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/libSymRuntime.so /libs_symcc/
 
 
 # Build libcxx with the SymCC compiler so we can instrument
@@ -174,7 +188,7 @@ RUN mkdir /libcxx_native_install && mkdir /libcxx_native_build && \
     cd /libcxx_native_install && \
     export SYMCC_REGULAR_LIBCXX="" && \
     export SYMCC_NO_SYMBOLIC_INPUT=yes && \
-    export SYMCC_RUNTIME_DIR=/symcc/build_qsym/SymRuntime-prefix/src/SymRuntime-build && \
+    export SYMCC_RUNTIME_DIR=/mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/ && \
     cmake /llvm_source/llvm      \
       -G Ninja \
       -DLLVM_ENABLE_PROJECTS="libcxx;libcxxabi"       \
@@ -189,20 +203,6 @@ RUN mkdir /libcxx_native_install && mkdir /libcxx_native_build && \
     ninja install-distribution && \
     unset SYMCC_REGULAR_LIBCXX SYMCC_NO_SYMBOLIC_INPUT
 
-RUN mkdir -p /libs_symcc
-
-ENV PATH="/usr/lib/llvm-12/bin/:$PATH"
-
-RUN echo rerun=6 && git clone --depth 1 --recurse-submodules https://github.com/Lukas-Dresel/mctsse/ /mctsse
-RUN git clone --depth 1 https://github.com/Lukas-Dresel/z3jit.git /mctsse/implementation/z3jit
-RUN mkdir /mctsse/repos/
-RUN git clone -b feat/symcts https://github.com/Lukas-Dresel/LibAFL /mctsse/repos/LibAFL
-
-# RUN cd /mctsse/repos/LibAFL && cargo build --release
-
-# export LLVM_CONFIG=/usr/lib/llvm-12/bin/llvm-config &&
-RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/runtime && cargo build --release && cp /mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/libSymRuntime.so /libs_symcc/
-
 
 # RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/runtime && cargo build --features sync_from_other_fuzzers --release && cp /mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/libSymRuntime.so /libs_symcc/
 #COPY ./build_zlib.sh /build_zlib.sh
@@ -211,7 +211,7 @@ RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/runtime && cargo build 
 # we have to build zlib instrumented because of all the callbacks being passed back and forth because SymCC does not
 # (and cannot) support uninstrumented libraries calling back into instrumented code
 RUN git clone https://github.com/madler/zlib /zlib/ && cd /zlib && \
-    export SYMCC_RUNTIME_DIR=/symcc/build_qsym/SymRuntime-prefix/src/SymRuntime-build && \
+    export SYMCC_RUNTIME_DIR=/mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/ && \
     CC=/symcc/build/symcc CXX=/symcc/build/sym++ CFLAGS="-fPIC ${CFLAGS}" CXXFLAGS="-fPIC ${CXXFLAGS}" ./configure --static && \
     make -j && \
     cp libz.a /libs_symcc/libz.a
@@ -224,6 +224,7 @@ RUN git clone --depth=1 https://github.com/Lukas-Dresel/symqemu "/symqemu"
 # build SymQEMU
 RUN cd "/symqemu" && \
     mkdir -p build && \
+    export SYMCC_RUNTIME_DIR=/mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/ && \
     cd /symqemu/build && \
     ../configure                                                  \
       --static                                                    \
@@ -238,8 +239,8 @@ RUN cd "/symqemu" && \
       --target-list=x86_64-linux-user                             \
       --enable-capstone=git                                       \
       --symcc-source="/symcc/"                                    \
-      --symcc-runtime-dir="/mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release" # now fixed in my fork && \
-    make -j$(nproc)
+      --symcc-runtime-dir="/mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/" && \
+    make -j$(nproc) && cp /symqemu/build/x86_64-linux-user/symqemu-x86_64 /out/
 
 # RUN git clone https://github.com/madler/zlib /zlib/ && \
 
@@ -273,8 +274,6 @@ RUN cp /libs_symcc/libc_symcc_preload.a /out/symcts/
 RUN cp /libs_symcc/libz.a /out/symcts/
 
 RUN cp -r /mctsse/ /out/
-RUN cp -r /root/.cargo /out/
-RUN cp -r /root/.rustup /out/
 
 # RUN export SYMCC_LIBCXX_PATH="/llvm/libcxx_symcc_install"
 #     "/symcc/build/sym++" $CXXFLAGS -std=c++11 -c -fPIC \

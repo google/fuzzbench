@@ -15,11 +15,17 @@
 ARG parent_image
 FROM $parent_image
 
+RUN echo "deb http://archive.ubuntu.com/ubuntu bionic main universe"  >> /etc/apt/sources.list
 # Install libstdc++ to use llvm_mode.
 RUN apt-get update && \
     apt-get install -y wget libstdc++-5-dev libtool-bin automake flex bison \
                        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
                        apt-utils apt-transport-https ca-certificates
+
+COPY ./preinstall.sh /tmp/
+RUN chmod +x /tmp/preinstall.sh
+RUN /tmp/preinstall.sh
+ENV PATH="/usr/bin/:{$PATH}"
 
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
@@ -31,7 +37,7 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
 RUN cd /afl && unset CFLAGS && unset CXXFLAGS && \
     export CC=clang && export AFL_NO_X86=1 && \
     PYTHON_INCLUDE=/ make && make install && \
-    make -C utils/aflpp_driver && \
+    make -j4 -C utils/aflpp_driver && \
     cp utils/aflpp_driver/libAFLDriver.a /
 
 # Install the packages we need.
@@ -46,13 +52,14 @@ RUN if which rustup; then rustup self uninstall -y; fi
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
     sh /rustup.sh -y
 
-RUN rustup default nightly-2022-09-18
 ENV PATH="/root/.cargo/bin:${PATH}"
+RUN rustup default nightly-2022-09-18
+
 
 # Install Z3 from binary
 RUN wget -qO /tmp/z3x64.zip https://github.com/Z3Prover/z3/releases/download/z3-4.8.7/z3-4.8.7-x64-ubuntu-16.04.zip && \
-     unzip -jd /usr/include /tmp/z3x64.zip "*/include/*.h" && \
-     unzip -jd /usr/lib /tmp/z3x64.zip "*/bin/libz3.so" && \
+     yes | unzip -jd /usr/include /tmp/z3x64.zip "*/include/*.h" && \
+     yes | unzip -jd /usr/lib /tmp/z3x64.zip "*/bin/libz3.so" && \
      rm -f /tmp/*.zip && \
      ldconfig
 
@@ -80,7 +87,9 @@ RUN cd / && \
     cd ../ && echo "[+] Installing cargo now 4" && \
     cargo install --path util/symcc_fuzzing_helper
 
-# Build libcxx with the SymCC compiler so we can instrument 
+RUN mkdir -p /rust/bin/ && cp /symcc/util/symcc_fuzzing_helper/target/release/symcc_fuzzing_helper /rust/bin/
+
+# Build libcxx with the SymCC compiler so we can instrument
 # C++ code.
 RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.git /llvm_source  && \
     mkdir /libcxx_native_install && mkdir /libcxx_native_build && \
@@ -96,4 +105,4 @@ RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.g
       -DCMAKE_INSTALL_PREFIX="/libcxx_native_build" \
       -DHAVE_STEADY_CLOCK=1 && \
     ninja distribution && \
-    ninja install-distribution 
+    ninja install-distribution

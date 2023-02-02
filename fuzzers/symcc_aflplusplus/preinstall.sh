@@ -11,12 +11,14 @@ apt-get update && \
     apt-get install -y lsb-release wget software-properties-common gnupg
 
 (
+  apt purge -y --auto-remove llvm clang
   pushd /tmp/
   wget https://apt.llvm.org/llvm.sh
   chmod +x llvm.sh
   ./llvm.sh 12
   popd
 )
+
 # qemu dependencies (for SymQEMU)
 apt-get install -y git libglib2.0-dev libfdt-dev libpixman-1-dev zlib1g-dev ninja-build libncurses-dev libcurl4-openssl-dev bison flex
 
@@ -27,6 +29,7 @@ apt-get install -y git libglib2.0-dev libfdt-dev libpixman-1-dev zlib1g-dev ninj
   wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
   apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
   apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6AF7F09730B3F0A4
+  apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 42D5A192B819C5DA
   apt update
   apt install kitware-archive-keyring
   rm /etc/apt/trusted.gpg.d/kitware.gpg
@@ -34,6 +37,9 @@ apt-get install -y git libglib2.0-dev libfdt-dev libpixman-1-dev zlib1g-dev ninj
   apt install -y cmake
 )
 cmake --version
+
+pip install --upgrade pip
+pip3 install --upgrade pip
 
 pip install lit
 
