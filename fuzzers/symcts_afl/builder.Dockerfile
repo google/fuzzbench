@@ -54,7 +54,7 @@ COPY src/afl_driver.cpp /afl/afl_driver.cpp
 RUN cd /afl && \
     unset CFLAGS CXXFLAGS && \
     export CC=clang AFL_NO_X86=1 && \
-    PYTHON_INCLUDE=/ make distrib && \
+    NO_NYX=1 PYTHON_INCLUDE=/ make source-only && \
     make install && \
     cp utils/aflpp_driver/libAFLDriver.a /
 
