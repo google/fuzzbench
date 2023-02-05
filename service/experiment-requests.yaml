@@ -20,6 +20,13 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-02-04-aflpp-ddisasm-1
+  description: "Comparison of aflpp_ddisasm with other fuzzers."
+  fuzzers:
+    - afl
+    - aflplusplus
+    - aflplusplus_ddisasm
+    - aflplusplus_zafl
 
 - experiment: 2023-02-04-aflpp-2
   description: "afl+++ token experiment."
