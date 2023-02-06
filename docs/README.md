@@ -20,5 +20,5 @@ make docs-serve
 ```
 
 ## Theme documentation
-We are using the [just the docs](https://pmarsceill.github.io/just-the-docs/)
+We are using the [just the docs](https://just-the-docs.github.io/just-the-docs/)
 theme.
