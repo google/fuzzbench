@@ -18,6 +18,7 @@ import time
 import shutil
 import threading
 import subprocess
+import shutil
 
 from fuzzers import utils
 from fuzzers.afl import fuzzer as afl_fuzzer
@@ -37,14 +38,15 @@ def build():
     new_env['FUZZER_LIB'] = '/out/vanilla/afl_driver.o'
     utils.build_benchmark(env=new_env)
 
-    print('Step 1: Building a cmplog version of the benchmark')
-    new_env = os.environ.copy()
-    new_env['OUT'] = "/out/cmplog"
-    new_env['FUZZER_LIB'] = '/out/cmplog/afl_driver.o'
-    new_env['AFL_LLVM_CMPLOG'] = '1'
-    new_env['CC'] = '/afl/afl-clang-fast'
-    new_env['CXX'] = '/afl/afl-clang-fast++'
-    utils.build_benchmark(env=new_env)
+    shutil.rmtree("/out/cmplog")
+    # print('Step 1: Building a cmplog version of the benchmark')
+    # new_env = os.environ.copy()
+    # new_env['OUT'] = "/out/cmplog"
+    # new_env['FUZZER_LIB'] = '/out/cmplog/afl_driver.o'
+    # new_env['AFL_LLVM_CMPLOG'] = '1'
+    # new_env['CC'] = '/afl/afl-clang-fast'
+    # new_env['CXX'] = '/afl/afl-clang-fast++'
+    # utils.build_benchmark(env=new_env)
 
     print('Step 2: Building with AFL')
     build_directory = os.environ['OUT']
@@ -111,6 +113,7 @@ def build():
     # Build benchmark.
     utils.build_benchmark(env=new_env)
 
+    print("COPYING A BUNCH OF STUFF IN ", symcc_build_dir)
     # Copy over symcc artifacts and symbolic libc++.
     shutil.copy(
         "/mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/libSymRuntime.so",
@@ -127,7 +130,6 @@ def build():
 def launch_afl_thread(input_corpus, output_corpus, target_binary,
                       additional_flags):
     """ Simple wrapper for running AFL. """
-    print("#### LAUNCHING THREAD WITH")
     afl_thread = threading.Thread(target=afl_fuzzer.run_afl_fuzz,
                                   args=(input_corpus, output_corpus,
                                         target_binary, additional_flags))
@@ -167,9 +169,11 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
         print('[run_fuzzer] Running %s' % fuzzer)
         afl_fuzzer.prepare_fuzz_environment(input_corpus)
 
-        launch_afl_thread(input_corpus, output_corpus, target_binary, flag_cmplog + ['-M', 'afl-main'] + sync_flag_master)
+        launch_afl_thread(input_corpus, output_corpus, target_binary,
+                          flag_cmplog + ['-M', 'afl-main'] + sync_flag_master)
         time.sleep(2)
-        launch_afl_thread(input_corpus, output_corpus, target_binary, flag_cmplog + ['-S', 'havoc'])
+        launch_afl_thread(input_corpus, output_corpus, target_binary,
+                          flag_cmplog + ['-S', 'havoc'])
         time.sleep(2)
 
     if "symcts" in fuzzer:
