@@ -18,6 +18,7 @@ import time
 import shutil
 import threading
 import subprocess
+import shutil
 
 from fuzzers import utils
 from fuzzers.afl import fuzzer as afl_fuzzer
@@ -37,7 +38,17 @@ def build():
     new_env['FUZZER_LIB'] = '/out/vanilla/afl_driver.o'
     utils.build_benchmark(env=new_env)
 
-    print('Step 1: Building with AFL')
+    shutil.rmtree("/out/cmplog")
+    # print('Step 1: Building a cmplog version of the benchmark')
+    # new_env = os.environ.copy()
+    # new_env['OUT'] = "/out/cmplog"
+    # new_env['FUZZER_LIB'] = '/out/cmplog/afl_driver.o'
+    # new_env['AFL_LLVM_CMPLOG'] = '1'
+    # new_env['CC'] = '/afl/afl-clang-fast'
+    # new_env['CXX'] = '/afl/afl-clang-fast++'
+    # utils.build_benchmark(env=new_env)
+
+    print('Step 2: Building with AFL')
     build_directory = os.environ['OUT']
 
     # Save the environment for use in SymCC
@@ -50,15 +61,24 @@ def build():
         # Restore SRC to its initial state so we can build again without any
         # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
         # twice in the same directory without this.
+        aflplusplus_fuzzer.build('cmplog')
+
+    # First build with AFL.
+    src = os.getenv('SRC')
+    work = os.getenv('WORK')
+    with utils.restore_directory(src), utils.restore_directory(work):
+        # Restore SRC to its initial state so we can build again without any
+        # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
+        # twice in the same directory without this.
         aflplusplus_fuzzer.build('tracepc')
 
-    print('Step 2: Completed AFL build')
+    print('Step 3: Completed AFL build')
     # Copy over AFL artifacts needed by SymCC.
     shutil.copy('/afl/afl-fuzz', build_directory)
     shutil.copy('/afl/afl-showmap', build_directory)
 
     # Build the SymCC-instrumented target.
-    print('Step 3: Building the benchmark with SymCC')
+    print('Step 4: Building the benchmark with SymCC')
     symcc_build_dir = get_symcc_build_dir(os.environ['OUT'])
     os.mkdir(symcc_build_dir)
 
@@ -93,6 +113,7 @@ def build():
     # Build benchmark.
     utils.build_benchmark(env=new_env)
 
+    print("COPYING A BUNCH OF STUFF IN ", symcc_build_dir)
     # Copy over symcc artifacts and symbolic libc++.
     shutil.copy(
         "/mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/libSymRuntime.so",
@@ -105,13 +126,10 @@ def build():
     shutil.copy("/mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer/target/release/symcts", symcc_build_dir)
     shutil.copy("/mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer/target/release/print_symcc_trace", symcc_build_dir)
 
-    # # Install RUST - I know, this is not a great place but it works
-    # os.system("curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /tmp/rustup.sh && sh /tmp/rustup.sh -y")
 
 def launch_afl_thread(input_corpus, output_corpus, target_binary,
                       additional_flags):
     """ Simple wrapper for running AFL. """
-
     afl_thread = threading.Thread(target=afl_fuzzer.run_afl_fuzz,
                                   args=(input_corpus, output_corpus,
                                         target_binary, additional_flags))
@@ -129,6 +147,7 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
     target_binary_name = os.path.basename(target_binary)
     symcc_target_binary = os.path.join(symcc_workdir, target_binary_name)
     vanilla_target_binary = os.path.join('/out/vanilla/', target_binary_name)
+    cmplog_target_binary  = os.path.join('/out/cmplog/', target_binary_name)
 
     fuzzer = os.environ["FUZZER"]
 
@@ -142,18 +161,20 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
         os.environ["AFL_DRIVER_DONT_DEFER"] = "1"
         os.environ["ASAN_OPTIONS"] = ":detect_leaks=0:abort_on_error=1:symbolize=0"
 
-        flag_cmplog = ["-m", "none", "-c", "/out/cmplog/"]
+        flag_cmplog = ["-c", cmplog_target_binary]
         sync_flag_master = ["-F", "/findings/symcts/corpus"] if "symcts" else []
 
         # Start a master and secondary instance of AFL.
         # We need both because of the way SymCC works.
         print('[run_fuzzer] Running %s' % fuzzer)
         afl_fuzzer.prepare_fuzz_environment(input_corpus)
-        if with_afl:
-            launch_afl_thread(input_corpus, output_corpus, target_binary, flag_cmplog + ['-M', 'afl-main'] + sync_flag_master)
-            time.sleep(2)
-            launch_afl_thread(input_corpus, output_corpus, target_binary, flag_cmplog + ['-S', 'havoc'])
-            time.sleep(2)
+
+        launch_afl_thread(input_corpus, output_corpus, target_binary,
+                          flag_cmplog + ['-M', 'afl-main'] + sync_flag_master)
+        time.sleep(2)
+        launch_afl_thread(input_corpus, output_corpus, target_binary,
+                          flag_cmplog + ['-S', 'havoc'])
+        time.sleep(2)
 
     if "symcts" in fuzzer:
         symcts_bin = "/out/symcts/symcts"
