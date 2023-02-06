@@ -32,7 +32,7 @@ def get_symcc_build_dir(target_directory):
 
 def build():
     """Build an AFL version and SymCC version of the benchmark"""
-    print('Step 0: Building a vanilla version of the benchmark')
+    print('Step 1: Building a vanilla version of the benchmark')
     new_env = os.environ.copy()
     new_env['OUT'] = "/out/vanilla"
     new_env['FUZZER_LIB'] = '/out/vanilla/afl_driver.o'
@@ -61,16 +61,7 @@ def build():
         # Restore SRC to its initial state so we can build again without any
         # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
         # twice in the same directory without this.
-        aflplusplus_fuzzer.build('cmplog')
-
-    # First build with AFL.
-    src = os.getenv('SRC')
-    work = os.getenv('WORK')
-    with utils.restore_directory(src), utils.restore_directory(work):
-        # Restore SRC to its initial state so we can build again without any
-        # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
-        # twice in the same directory without this.
-        aflplusplus_fuzzer.build('tracepc')
+        aflplusplus_fuzzer.build('cmplog', 'tracepc')
 
     print('Step 3: Completed AFL build')
     # Copy over AFL artifacts needed by SymCC.

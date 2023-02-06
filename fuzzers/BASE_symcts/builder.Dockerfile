@@ -19,7 +19,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         python python3 python3-dev python3-setuptools python3-pip strace   \
         automake cmake make build-essential ninja-build gcc-9-plugin-dev   \
-        libpixman-1-dev liblzma-dev libgtk-3-dev libfdt-dev libncurses-dev \
+        libpixman-1-dev liblzma-dev libfdt-dev libncurses-dev \
         libstdc++-9-dev libglib2.0-dev zlib1g-dev libcurl4-openssl-dev     \
         curl wget subversion vim git flex bison                            \
         inotify-tools sudo lsb-release software-properties-common gnupg
@@ -98,6 +98,7 @@ RUN mkdir -p /z3/include /z3/lib && \
 
 ENV LIBRARY_PATH="/z3/lib/:$LIBRARY_PATH"
 
+RUN ls
 RUN git clone https://github.com/Lukas-Dresel/symcc.git /symcc && \
     cd /symcc && \
     git submodule init && \
