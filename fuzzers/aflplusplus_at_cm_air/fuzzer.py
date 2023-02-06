@@ -20,19 +20,30 @@
 # But this means that the good stuff is hidden away in this benchmark
 # otherwise.
 
+import os
+import shutil
+
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
-    aflplusplus_fuzzer.build('tracepc', 'native', 'cmplog', 'dict2file')
+    aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file')
+    build_directory = os.environ['OUT']
+    shutil.copy('/afl/autotokens.so', build_directory)
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     run_options = ['-l', '2']
 
+    os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
+    os.environ['AFL_CUSTOM_MUTATOR_LIBRARY'] = './autotokens.so'
+    os.environ['AUTOTOKENS_ONLY_FAV'] = '1'
+    os.environ['AUTOTOKENS_CREATE_FROM_THIN_AIR'] = '1'
+
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
-                            flags=(run_options))
+                            flags=(run_options),
+                            skip=True)
