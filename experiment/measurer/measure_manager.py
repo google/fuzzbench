@@ -48,7 +48,7 @@ from experiment.measurer import run_coverage
 from experiment.measurer import run_crashes
 from experiment import scheduler
 
-logger = logs.Logger('measurer')
+logger = logs.Logger()
 
 SnapshotMeasureRequest = collections.namedtuple(
     'SnapshotMeasureRequest', ['fuzzer', 'benchmark', 'trial_id', 'cycle'])
@@ -261,7 +261,7 @@ def _get_unmeasured_first_snapshots(
     snapshot for their trial. The trials are trials in |experiment|."""
     trials_without_snapshots = _query_unmeasured_trials(experiment)
     return [
-        SnapshotMeasureRequest(trial.fuzzer, trial.benchmark, trial.id, 1)
+        SnapshotMeasureRequest(trial.fuzzer, trial.benchmark, trial.id, 0)
         for trial in trials_without_snapshots
     ]
 
@@ -660,13 +660,13 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
         region_coverage: bool) -> models.Snapshot:
     """Measure coverage of the snapshot for |cycle| for |trial_num| of |fuzzer|
     and |benchmark|."""
-    snapshot_logger = logs.Logger('measurer',
-                                  default_extras={
-                                      'fuzzer': fuzzer,
-                                      'benchmark': benchmark,
-                                      'trial_id': str(trial_num),
-                                      'cycle': str(cycle),
-                                  })
+    snapshot_logger = logs.Logger(
+        default_extras={
+            'fuzzer': fuzzer,
+            'benchmark': benchmark,
+            'trial_id': str(trial_num),
+            'cycle': str(cycle),
+        })
     snapshot_measurer = SnapshotMeasurer(fuzzer, benchmark, trial_num,
                                          snapshot_logger, region_coverage)
 

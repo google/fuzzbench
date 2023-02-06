@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
 RUN apt-get update && apt-get install -y build-essential make curl wget
 
 # Install latest cmake.
@@ -22,7 +22,7 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.14.5/cmake-3.14.5
     chmod +x cmake-3.14.5-Linux-x86_64.sh && \
     ./cmake-3.14.5-Linux-x86_64.sh --skip-license --prefix="/usr/local"
 
-RUN git clone --depth 1 https://github.com/open-source-parsers/jsoncpp
+RUN git clone https://github.com/open-source-parsers/jsoncpp
 WORKDIR jsoncpp
 
 COPY build.sh $SRC/

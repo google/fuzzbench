@@ -58,9 +58,6 @@ RUN pip3 install -r /tmp/requirements.txt
 # Copy the entire fuzzers directory tree to allow for module dependencies.
 COPY fuzzers $SRC/fuzzers
 
-# Create empty __init__.py to allow python deps to work.
-RUN touch $SRC/__init__.py
-
 # Disable LeakSanitizer since ptrace is unavailable in Google Cloud build
 # and is not needed during build process.
 ENV ASAN_OPTIONS="detect_leaks=0"
@@ -71,6 +68,6 @@ RUN mkdir /opt/fuzzbench/
 COPY docker/benchmark-builder/checkout_commit.py /opt/fuzzbench/
 RUN export CHECKOUT_COMMIT=$(cat /benchmark.yaml | tr -d ' ' | grep 'commit:' | cut -d ':' -f2) && \
     python3 -u /opt/fuzzbench/checkout_commit.py $CHECKOUT_COMMIT $SRC
-RUN echo "#!/bin/bash\nPYTHONPATH=$SRC python3 -u -c \"from fuzzers import utils; utils.initialize_env(); from fuzzers.$FUZZER import fuzzer; fuzzer.build()\"" > /usr/bin/fuzzer_build && \
-    chmod +x /usr/bin/fuzzer_build
+
+COPY docker/benchmark-builder/fuzzer_build /usr/bin/fuzzer_build
 RUN echo "Run fuzzer_build to build the target" && if [ -z "$debug_builder" ] ; then fuzzer_build; fi

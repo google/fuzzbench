@@ -29,9 +29,9 @@ from experiment.build import generate_cloudbuild
 CONFIG_DIR = 'config'
 
 # Maximum time to wait for a GCB config to finish build.
-GCB_BUILD_TIMEOUT = 13 * 60 * 60  # 4 hours.
+GCB_BUILD_TIMEOUT = 4 * 60 * 60  # 4 hours.
 
-logger = logs.Logger('builder')  # pylint: disable=invalid-name
+logger = logs.Logger()  # pylint: disable=invalid-name
 
 
 def _get_buildable_images(fuzzer=None, benchmark=None):
@@ -44,11 +44,10 @@ def build_base_images():
     image_templates = {
         image: buildable_images[image] for image in ['base-image', 'worker']
     }
-    config = generate_cloudbuild.create_cloudbuild_spec(
-        image_templates,
-        benchmark='no-benchmark',
-        fuzzer='no-fuzzer',
-        build_base_images=True)
+    config = generate_cloudbuild.create_cloudbuild_spec(image_templates,
+                                                        benchmark=None,
+                                                        fuzzer=None,
+                                                        build_base_images=True)
     _build(config, 'base-images')
 
 

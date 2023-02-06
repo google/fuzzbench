@@ -19,7 +19,7 @@ from common import utils
 from common import yaml_utils
 from common import logs
 
-logger = logs.Logger('benchmark_config')
+logger = logs.Logger()
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 

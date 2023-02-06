@@ -23,7 +23,7 @@ from common import logs
 from common import new_process
 from common import sanitizer
 
-logger = logs.Logger('run_coverage')
+logger = logs.Logger()
 
 # Time buffer for libfuzzer merge to gracefully exit.
 EXIT_BUFFER = 15
@@ -53,7 +53,7 @@ def do_coverage_run(  # pylint: disable=too-many-locals
         coverage_binary: str, new_units_dir: List[str],
         profraw_file_pattern: str, crashes_dir: str) -> List[str]:
     """Does a coverage run of |coverage_binary| on |new_units_dir|. Writes
-    the result to |profraw_file_pattern|. Returns a list of crashing units."""
+    the result to |profraw_file_pattern|."""
     with tempfile.TemporaryDirectory() as merge_dir:
         command = [
             coverage_binary, '-merge=1', '-dump_coverage=1',

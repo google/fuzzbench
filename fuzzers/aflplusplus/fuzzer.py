@@ -36,10 +36,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration.
 
-    # Add required libs for libpcap_fuzz_both.
-    os.environ['EXTRA_LIBS'] = ('/usr/lib/x86_64-linux-gnu/libdbus-1.a '
-                                '/lib/x86_64-linux-gnu/libsystemd.so.0')
-
     build_modes = list(args)
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
@@ -270,15 +266,13 @@ def fuzz(input_corpus,
 
     os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
     os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
+    os.environ['AFL_FAST_CAL'] = '1'
 
     if not skip:
         os.environ['AFL_DISABLE_TRIM'] = '1'
-        # os.environ['AFL_FAST_CAL'] = '1'
         os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
         if 'ADDITIONAL_ARGS' in os.environ:
             flags += os.environ['ADDITIONAL_ARGS'].split(' ')
-
-    os.environ['AFL_FAST_CAL'] = '1'
 
     afl_fuzzer.run_afl_fuzz(input_corpus,
                             output_corpus,

@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit: 3beb37ea14aec1bdce1a6d542dc464d00f4a6cec
-commit_date: 2020-02-13 21:25:08+00:00
+commit: 8190e061bc2d95da37479a638aa2c9e483e58ec6
+commit_date: 2022-07-14T21:57:37+00:00
 fuzz_target: jsoncpp_fuzzer
 project: jsoncpp
 unsupported_fuzzers:

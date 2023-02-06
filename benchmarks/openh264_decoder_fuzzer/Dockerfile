@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
 MAINTAINER twsmith@mozilla.com
 
 RUN dpkg --add-architecture i386 && \
@@ -23,8 +23,6 @@ RUN dpkg --add-architecture i386 && \
         libstdc++-9-dev libstdc++-9-dev:i386 nasm subversion
 
 RUN git clone \
-        --branch v2.3.1 \
-        --depth 1 \
         https://github.com/cisco/openh264.git
 
 WORKDIR openh264
