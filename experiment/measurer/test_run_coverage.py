@@ -66,12 +66,13 @@ class TestIntegrationRunCoverage:
         coverage_dir = _make_coverage_dir(tmp_path)
         profraw_file = os.path.join(coverage_dir, 'test_crash.profraw')
         crashes_dir = _make_crashes_dir(tmp_path)
-        crashing_units = run_coverage.do_coverage_run(self.COVERAGE_BINARY_PATH,
-                                                      units, profraw_file,
-                                                      crashes_dir)
+        run_coverage.do_coverage_run(self.COVERAGE_BINARY_PATH, units,
+                                     profraw_file, crashes_dir)
 
         # Ensure the crashing units are returned.
-        assert crashing_units == ['86f7e437faa5a7fce15d1ddcb9eaeaea377667b8']
+        assert os.listdir(crashes_dir) == [
+            'crash-86f7e437faa5a7fce15d1ddcb9eaeaea377667b8'
+        ]
         _assert_profraw_files(coverage_dir)
 
     def test_integration_do_coverage_run_no_crash(self, tmp_path):
@@ -81,12 +82,11 @@ class TestIntegrationRunCoverage:
         coverage_dir = _make_coverage_dir(tmp_path)
         profraw_file = os.path.join(coverage_dir, 'test_no_crash.profraw')
         crashes_dir = _make_crashes_dir(tmp_path)
-        crashing_units = run_coverage.do_coverage_run(self.COVERAGE_BINARY_PATH,
-                                                      units, profraw_file,
-                                                      crashes_dir)
+        run_coverage.do_coverage_run(self.COVERAGE_BINARY_PATH, units,
+                                     profraw_file, crashes_dir)
 
-        # Ensure no crashing unit is returned.
-        assert not crashing_units
+        # Assert no crashing units.
+        assert not os.listdir(crashes_dir)
         _assert_profraw_files(coverage_dir)
 
     @mock.patch('common.logs.error')
@@ -98,10 +98,9 @@ class TestIntegrationRunCoverage:
         coverage_dir = _make_coverage_dir(tmp_path)
         profraw_file = os.path.join(coverage_dir, 'test_max_time.profraw')
         crashes_dir = _make_crashes_dir(tmp_path)
-        crashing_units = run_coverage.do_coverage_run(self.COVERAGE_BINARY_PATH,
-                                                      units, profraw_file,
-                                                      crashes_dir)
+        run_coverage.do_coverage_run(self.COVERAGE_BINARY_PATH, units,
+                                     profraw_file, crashes_dir)
 
         assert mocked_log_error.call_count
-        # Ensure no crashing unit is returned.
-        assert not crashing_units
+        # Assert no crashing units
+        assert not os.listdir(crashes_dir)
