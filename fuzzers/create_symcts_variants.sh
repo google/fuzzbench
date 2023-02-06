@@ -9,7 +9,7 @@ VARIANTS+=(symcts symcts_afl)
 VARIANTS+=(symcts_symqemu symcts_symqemu_afl)
 #VARIANTS+=(symcts_context_sensitive symcts_decision_coverage)
 
-FILES=(builder.Dockerfile build_zlib.sh fuzzer.py preinstall.sh runner.Dockerfile src)
+FILES=(builder.Dockerfile build_zlib.sh fuzzer.py runner.Dockerfile src)
 for VARIANT in "${VARIANTS[@]}"; do
     echo "Creating variant $VARIANT"
     rm -rf "$VARIANT"
