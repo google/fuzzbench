@@ -21,6 +21,12 @@
 #
 
 
+- experiment: 2023-02-06-aflpp-3
+  description: "afl++ cmplog experiment."
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_99
+
 - experiment: 2023-02-06-aflpp-2
   description: "afl+++ token experiment."
   fuzzers:
