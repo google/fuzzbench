@@ -43,7 +43,7 @@ COPY --from=base-image /usr/local/bin/python3* /usr/local/bin/
 COPY --from=base-image /usr/local/lib/python3.10 /usr/local/lib/python3.10
 COPY --from=base-image /usr/local/include/python3.10 /usr/local/include/python3.10
 COPY --from=base-image /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
-
+RUN ln -s /usr/local/bin/python3 /usr/local/bin/python && ln -s /usr/local/bin/pip3 /usr/local/bin/pip
 # Copy the entire fuzzers directory tree to allow for module dependencies.
 COPY fuzzers $SRC/fuzzers
 
