@@ -28,7 +28,6 @@ make install
 cd ..
 
 cd freetype2
-git checkout cd02d359a6d0455e9d16b87bf9665961c4699538
 ./autogen.sh
 ./configure --with-harfbuzz=no --with-bzip2=no --with-png=no --without-zlib
 make clean

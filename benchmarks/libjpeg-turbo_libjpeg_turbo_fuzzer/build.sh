@@ -14,7 +14,6 @@
 # limitations under the License.
 
 cd libjpeg-turbo
-git checkout b0971e47d76fdb81270e93bbf11ff5558073350d
 autoreconf -fiv
 ./configure
 make -j $(nproc)
