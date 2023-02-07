@@ -18,8 +18,6 @@ FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d
 RUN apt-get update && apt-get install -y build-essential ruby bison ninja-build \
     cmake zlib1g-dev libbz2-dev liblzma-dev
 RUN git clone \
-        --depth 1 \
-        --branch 3.1.0 \
         https://github.com/mruby/mruby
 RUN git clone --depth 1 https://github.com/bshastry/mruby_seeds.git mruby_seeds
 WORKDIR mruby
