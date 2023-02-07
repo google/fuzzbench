@@ -1,3 +1,4 @@
+#!/bin/bash -ex
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,20 +12,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
+for f in font.cc normalize.cc transform.cc woff2_common.cc woff2_dec.cc \
+         woff2_enc.cc glyph.cc table_tags.cc variable_length.cc woff2_out.cc; do
+  $CXX $CXXFLAGS -std=c++11 -I ../brotli/dec -I ../brotli/enc -c src/$f &
+done
 
-RUN apt-get update && \
-    apt-get install -y \
-    make \
-    automake \
-    autoconf \
-    libtool
+for f in ../brotli/dec/*.c ../brotli/enc/*.cc; do
+  $CXX $CXXFLAGS -c $f &
+done
 
-RUN git clone https://github.com/google/woff2.git
-RUN git clone https://github.com/google/brotli.git
-RUN git clone https://github.com/google/oss-fuzz.git
+wait
 
-COPY target.cc build.sh $SRC/
+$CXX $CXXFLAGS *.o $FUZZER_LIB $SRC/target.cc -I src \
+    -o $OUT/convert_woff2ttf_fuzzer

@@ -12,5 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+commit: 8109a2cc2b27436962ac1cfe40ad0e8a0dca26c8
+commit_date: 2022-03-30T15:59:13+0000
 fuzz_target: convert_woff2ttf_fuzzer
 project: woff2
