@@ -13,14 +13,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cd libxml2
-# Git is converting CRLF to LF automatically and causing issues when checking
-# out the branch. So use -f to ignore the complaint about lost changes that we
-# don't even want.
-./autogen.sh
-CCLD="$CXX $CXXFLAGS" ./configure --without-python --with-threads=no \
-    --with-zlib=no --with-lzma=no
-make -j $(nproc)
+if [ "$SANITIZER" = undefined ]; then
+    export CFLAGS="$CFLAGS -fsanitize=unsigned-integer-overflow -fno-sanitize-recover=unsigned-integer-overflow"
+    export CXXFLAGS="$CXXFLAGS -fsanitize=unsigned-integer-overflow -fno-sanitize-recover=unsigned-integer-overflow"
+fi
 
-$CXX $CXXFLAGS -std=c++11 $SRC/target.cc -I include .libs/libxml2.a \
-    $FUZZER_LIB -o $OUT/xml
+export V=1
+
+./autogen.sh \
+    --disable-shared \
+    --without-debug \
+    --without-ftp \
+    --without-http \
+    --without-legacy \
+    --without-python
+make -j$(nproc)
+
+cd fuzz
+make clean-corpus
+make fuzz.o
+
+make xml.o
+# Link with $CXX
+$CXX $CXXFLAGS \
+    xml.o fuzz.o \
+    -o $OUT/xml \
+    $LIB_FUZZING_ENGINE \
+    ../.libs/libxml2.a -Wl,-Bstatic -lz -llzma -Wl,-Bdynamic
+
+[ -e seed/xml ] || make seed/xml.stamp
+zip -j $OUT/${fuzzer}_seed_corpus.zip seed/xml/*
+
+cp *.dict *.options $OUT/
+cp *.dict *.options $OUT/
