@@ -17,15 +17,20 @@
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
 
 RUN apt-get update &&  \
-    apt-get upgrade -y && \
     apt-get install -y \
-    make \
-    autoconf \
-    libtool \
-    wget
+        autoconf       \
+        cmake          \
+        libtool        \
+        pkg-config     \
+        make           \
+        ninja-build
 
-RUN git clone git://git.sv.nongnu.org/freetype/freetype2.git
-RUN git clone https://github.com/unicode-org/text-rendering-tests.git TRT
-RUN wget https://github.com/libarchive/libarchive/releases/download/v3.4.3/libarchive-3.4.3.tar.xz
 
-COPY * $SRC/
+# Get some files for the seed corpus
+ADD https://github.com/adobe-fonts/adobe-variable-font-prototype/releases/download/1.001/AdobeVFPrototype.otf $SRC/font-corpus/
+RUN git clone https://github.com/unicode-org/text-rendering-tests.git && cp text-rendering-tests/fonts/* $SRC/font-corpus
+
+RUN git clone https://github.com/freetype/freetype2-testing.git
+WORKDIR freetype2-testing
+
+COPY build.sh $SRC/
