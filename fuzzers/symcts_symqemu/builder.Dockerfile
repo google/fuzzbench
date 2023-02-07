@@ -227,4 +227,4 @@ RUN cp /libcxx_native_build/lib/libc++.so.1 /out/target/symcc
 RUN cp /libcxx_native_build/lib/libc++abi.so.1 /out/target/symcc
 
 # Remove stuff that we don't need
-RUN rm -rf /mctsse /llvm_source /symqemu /root/.cache/
+RUN rm -rf /mctsse /llvm_source /symqemu /root/.cache/ /root/.rustup
