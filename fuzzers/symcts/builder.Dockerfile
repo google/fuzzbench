@@ -73,7 +73,7 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl && \
     cd /afl && git checkout 149366507da1ff8e3e8c4962f3abc6c8fd78b222
 
 # Prepare output dirs
-RUN mkdir -p /out/afl /out/symcts /out/vanilla /out/cmplog
+RUN mkdir -p /out/afl /out/symcts /out/target/symcc /out/target/vanilla /out/target/cmplog
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
@@ -99,6 +99,7 @@ RUN mkdir -p /z3/include /z3/lib && \
 ENV LIBRARY_PATH="/z3/lib/:$LIBRARY_PATH"
 
 RUN ls
+
 RUN git clone https://github.com/Lukas-Dresel/symcc.git /symcc && \
     cd /symcc && \
     git submodule init && \
@@ -191,12 +192,6 @@ RUN cd "/symqemu" && \
       --symcc-runtime-dir="/mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/" && \
     make -j$(nproc) && cp /symqemu/build/x86_64-linux-user/symqemu-x86_64 /out/
 
-# RUN git clone https://github.com/madler/zlib /zlib/ && \
-
-# RUN git clone --depth=1 https://github.com/Lukas-Dresel/symcc_libc_preload /mctsse/repos/symcc_libc_preload && exit 0
-# WORKDIR /mctsse/repos/symcc_libc_preload
-# RUN CC=/symcc/build/symcc make libc_symcc_preload.a &&
-#     cp libc_symcc_preload.a /libs_symcc/libc_symcc_preload.a
 
 RUN git clone --depth 1 https://github.com/Lukas-Dresel/symcc_libc_preload /mctsse/repos/symcc_libc_preload
 RUN cd /mctsse/repos/symcc_libc_preload && \
@@ -217,25 +212,19 @@ RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
 # RUN rm -rf /usr/local/lib/libc++experimental.a /usr/local/lib/libc++abi.a /usr/local/lib/libc++.a && \
 #     ln -s /usr/lib/llvm-10/lib/libc++abi.so.1 /usr/lib/llvm-10/lib/libc++abi.so
 
-# compile afl_driver.cpp
-
-# Copy some stuff to output folder
+# Compile vanilla (uninstrumented) afl driver
 RUN clang++ $CXXFLAGS -std=c++11 -c -fPIC \
-    /afl/afl_driver.cpp -o /out/vanilla/afl_driver.o
-
-RUN /afl/afl-clang-fast++ $CXXFLAGS -std=c++11 -c -fPIC \
-    /afl/afl_driver.cpp -o /out/afl/afl_driver.o
-
-RUN AFL_LLVM_CMPLOG=1 /afl/afl-clang-fast++ $CXXFLAGS -std=c++11 -c -fPIC \
-    /afl/afl_driver.cpp -o /out/cmplog/afl_driver.o
+    /afl/afl_driver.cpp -o /out/target/vanilla/afl_driver.o
 
 RUN cp /libs_symcc/libc_symcc_preload.a /out/symcts/
 RUN cp /libs_symcc/libz.a /out/symcts/
 
-RUN cp -r /mctsse/ /out/
+RUN cp /mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/libSymRuntime.so /out/target/symcc/
+RUN cp /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer/target/release/symcts /out/target/symcc
+RUN cp /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer/target/release/print_symcc_trace /out/target/symcc
+RUN cp /z3/lib/libz3.so /out/target/symcc/
+RUN cp /libcxx_native_build/lib/libc++.so.1 /out/target/symcc
+RUN cp /libcxx_native_build/lib/libc++abi.so.1 /out/target/symcc
 
-# RUN export SYMCC_LIBCXX_PATH="/llvm/libcxx_symcc_install"
-#     "/symcc/build/sym++" $CXXFLAGS -std=c++11 -c -fPIC \
-#         "/mctsse/repos/symcc_libc_preload/libc_symcc_preload.a" \
-#         "/symcts/libz.a" \
-#         "/afl/afl_driver.cpp" -o "/symcts/afl_driver.o"
+# Remove stuff that we don't need
+RUN rm -rf /mctsse /llvm_source /symqemu /root/.cache/
