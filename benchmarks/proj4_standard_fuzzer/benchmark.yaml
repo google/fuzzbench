@@ -12,5 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+commit: 9b60d79c426d4d6eef188597a3027fb0e7bfce52
+commit_date: 2023-02-06T16:46:19+0000
 fuzz_target: standard_fuzzer
 project: proj4
