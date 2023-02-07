@@ -38,7 +38,7 @@ jobs:
           - njs_njs_process_script_fuzzer
           - openh264_decoder_fuzzer
           - openssl_x509
-          - openthread_ip6-send-fuzzer
+          - openthread_ot-ip6-send-fuzzer
           - php_php-fuzz-parser
           - proj4_proj_crs_to_crs_fuzzer
           - quickjs_eval
