@@ -11,18 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
-
-RUN apt-get update && \
-    apt-get install -y \
-    make \
-    automake \
-    autoconf \
-    libtool
-
-RUN git clone https://github.com/openthread/openthread.git
-
-COPY build.sh $SRC/
+commit: 25506997f286fdbfa72725f4cee78c922c896255
+commit_date: 2023-01-26T18:02:16+00:00
+fuzz_target: ot-ip6-send-fuzzer
+project: openthread
+unsupported_fuzzers:
+  - klee
