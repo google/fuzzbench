@@ -3,6 +3,7 @@
 import os
 import shutil
 import subprocess
+
 from fuzzers import utils
 
 # This command doesn't work in Dockerfile
@@ -12,8 +13,7 @@ subprocess.run([
     'gtirb',
 ], check=True)
 
-import gtirb
-
+import gtirb #pylint: disable=wrong-import-position, wrong-import-order
 
 def parse_libs(lib):
     """
@@ -43,7 +43,7 @@ def parse_libs(lib):
 
 def extract_libs(target_gtirb):
     """
-        Given a gtirb file name, returns the libraries that the original binary 
+        Given a gtirb file name, returns the libraries that the original binary
         depends on.
 
         Parameters
@@ -60,8 +60,8 @@ def extract_libs(target_gtirb):
         ['-lmagic', '-lc', '-llzma', '-lbz2', '-lz']
 
     """
-    ir = gtirb.IR.load_protobuf(target_gtirb)
-    libs = ir.modules[0].aux_data['libraries'].data
+    gtirb_ir = gtirb.IR.load_protobuf(target_gtirb)
+    libs = gtirb_ir.modules[0].aux_data['libraries'].data
     result = []
     for i in libs:
         result.append(parse_libs(i))
@@ -82,7 +82,8 @@ def create_assembler(target_gtirb):
         text : str
 
     """
-    tab = '\t'
+    tab, period, letter_s = '\t', r'\.', r'\s'
+    backslash = chr(92)
     text = f"""#!/bin/bash
 #
 # Run afl-as to assemble with AFL instrumentation.
@@ -92,10 +93,10 @@ set -ex
 SOURCE=$(readlink -f $1); shift
 TARGET=$(readlink -f $1); shift
 
-AS_FLAGS=$(echo $TARGET | grep -q 'results/x86\.' && echo "--32" ||echo "")
+AS_FLAGS=$(echo $TARGET | grep -q 'results/x86{period}' && echo "--32" ||echo "")
 
-sed 's/^\.text$/{tab}.text/' -i $SOURCE
-sed 's/^\s\{{1,\}}/{tab}/' -i $SOURCE
+sed 's/^{period}text$/{tab}.text/' -i $SOURCE
+sed 's/^{letter_s}{backslash}{{1,{backslash}}}/{tab}/' -i $SOURCE
 
 temp_dir=$(mktemp -d)
 pushd $temp_dir
@@ -163,7 +164,7 @@ def instrument_binary():
                    check=True)
 
     assembler = '/src/fuzzers/aflplusplus_ddisasm/assemble.sh'
-    with open(assembler, 'w') as file:
+    with open(assembler, mode='w', encoding='utf-8') as file:
         file.write(create_assembler(target_gtirb))
 
     os.chmod(assembler, 0o777)
