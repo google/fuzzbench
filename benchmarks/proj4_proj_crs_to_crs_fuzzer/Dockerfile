@@ -18,16 +18,19 @@ FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d
 
 RUN apt-get update && \
     apt-get install -y \
-    make \
-    automake \
-    autoconf \
-    libtool \
-    sqlite3 \
-    wget \
-    libsqlite3-dev
+        make autoconf automake libtool g++ sqlite3 pkg-config wget
 
-RUN git clone https://github.com/OSGeo/PROJ
+RUN git clone https://github.com/OSGeo/PROJ PROJ
 
-RUN wget -qO $OUT/standard_fuzzer.dict \
-    https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/proj4.dict
-COPY build.sh $SRC/
+RUN git clone https://github.com/curl/curl.git PROJ/curl && \
+    git -C PROJ/curl checkout c12fb3ddaf48e709a7a4deaa55ec485e4df163ee
+
+RUN git clone https://gitlab.com/libtiff/libtiff.git PROJ/libtiff && \
+    git -C PROJ/libtiff checkout c8e1289deff3fa60ba833ccec6c030934b02c281
+
+WORKDIR PROJ
+
+RUN cp test/fuzzers/build.sh $SRC/
+# This is to fix Fuzz Introspector build by using LLVM old pass manager
+# re https://github.com/ossf/fuzz-introspector/issues/305
+ENV OLD_LLVMPASS 1
