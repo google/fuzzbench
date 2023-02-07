@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+commit: 84c023699cdf023a32fa4ded32019f194afcdad0
+commit_date: 2021-05-09T11:34:50+0000
 fuzz_target: decode_fuzzer
 project: vorbis
 unsupported_fuzzers:
