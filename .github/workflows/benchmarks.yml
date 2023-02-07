@@ -40,7 +40,7 @@ jobs:
           - openssl_x509
           - openthread_ip6-send-fuzzer
           - php_php-fuzz-parser
-          - proj4_standard_fuzzer
+          - proj4_proj_crs_to_crs_fuzzer
           - quickjs_eval
           - re2_fuzzer
           - sqlite3_ossfuzz
