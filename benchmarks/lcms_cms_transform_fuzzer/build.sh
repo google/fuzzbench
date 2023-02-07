@@ -14,7 +14,6 @@
 # limitations under the License.
 
 cd Little-CMS
-git checkout f9d75ccef0b54c9f4167d95088d4727985133c52
 ./autogen.sh
 ./configure
 make -j $(nproc)
