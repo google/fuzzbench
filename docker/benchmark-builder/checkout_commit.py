@@ -99,6 +99,7 @@ def main():
             except subprocess.CalledProcessError:
                 continue
             if checkout_success:
+                print('Checkout successful.')
                 return 0
     print('Checkout unsuccessful.')
     return 1
