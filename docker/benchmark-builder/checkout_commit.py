@@ -83,7 +83,7 @@ def main():
 
     commit = sys.argv[1]
     src_dir = sys.argv[2]
-    if not commit:
+    if commit == 'NO_COMMIT':
         print('No commit provided, skip.')
         return 0
 
