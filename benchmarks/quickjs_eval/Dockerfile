@@ -18,12 +18,7 @@ FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d
 RUN apt-get update && \
     apt-get install -y autoconf automake libtool bison pkg-config
 
-# This project does not have any release/tag.
-RUN git clone \
-        --depth 1 \
-        --branch master \
-        https://github.com/bellard/quickjs \
-        quickjs
+RUN git clone https://github.com/bellard/quickjs quickjs
 
 WORKDIR quickjs
 COPY build.sh $SRC/
