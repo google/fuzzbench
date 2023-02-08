@@ -1,4 +1,3 @@
-#!/bin/bash -ex
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,12 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cd Little-CMS
-git checkout f9d75ccef0b54c9f4167d95088d4727985133c52
-./autogen.sh
-./configure
-make -j $(nproc)
-
-$CXX $CXXFLAGS $SRC/cms_transform_fuzzer.cc -I include/ src/.libs/liblcms2.a \
-    $FUZZER_LIB -o $OUT/cms_transform_fuzzer
-cp -r /opt/seeds $OUT/
+commit: 84c023699cdf023a32fa4ded32019f194afcdad0
+commit_date: 2021-05-09T11:34:50+0000
+fuzz_target: decode_fuzzer
+project: vorbis
+unsupported_fuzzers:
+  - klee

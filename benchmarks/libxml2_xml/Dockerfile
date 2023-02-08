@@ -17,17 +17,15 @@
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
 
 RUN apt-get update && \
-    apt-get upgrade -y ca-certificates && \
-    apt-get install -y \
-    make \
-    wget \
-    autoconf \
-    automake \
-    libtool \
-    libglib2.0-dev
+    apt-get install -y --no-install-recommends \
+        make autoconf libtool pkg-config \
+        zlib1g-dev zlib1g-dev:i386 liblzma-dev liblzma-dev:i386
+
+# Build requires automake 1.16.3
+RUN curl -LO http://mirrors.kernel.org/ubuntu/pool/main/a/automake-1.16/automake_1.16.5-1.3_all.deb && \
+    apt install ./automake_1.16.5-1.3_all.deb
 
 RUN git clone https://gitlab.gnome.org/GNOME/libxml2.git
 
-RUN wget -qO $OUT/xml.dict \
-    https://raw.githubusercontent.com/google/AFL/debe27037b9444bbf090a0ffbd5d24889bb887ae/dictionaries/xml.dict
-COPY target.cc build.sh $SRC/
+WORKDIR libxml2
+COPY build.sh $SRC/

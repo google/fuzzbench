@@ -16,7 +16,6 @@
 readonly INSTALL_DIR="$PWD/INSTALL"
 
 cd ogg
-git checkout c8391c2b267a7faf9a09df66b1f7d324e9eb7766
 ./autogen.sh
 ./configure \
     --prefix="$INSTALL_DIR" \
@@ -28,7 +27,6 @@ make install
 cd ..
 
 cd vorbis
-git checkout c1c2831fc7306d5fbd7bc800324efd12b28d327f
 ./autogen.sh
 ./configure \
     --prefix="$INSTALL_DIR" \

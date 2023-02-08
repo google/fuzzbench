@@ -1,4 +1,3 @@
-#!/bin/bash -ex
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+################################################################################
 
-cd PROJ
-git checkout d00501750b210a73f9fb107ac97a683d4e3d8e7a
-./autogen.sh
-./configure
-make -j $(nproc)
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
 
-mkdir $OUT/seeds
-cp nad/* $OUT/seeds
+RUN apt-get update && apt-get install -y cmake ninja-build
+RUN git clone https://github.com/openthread/openthread
 
-$CXX $CXXFLAGS -std=c++11 -I src test/fuzzers/standard_fuzzer.cpp \
-    src/.libs/libproj.a $FUZZER_LIB -o $OUT/standard_fuzzer -lpthread
+WORKDIR openthread
+COPY build.sh *.options $SRC/
