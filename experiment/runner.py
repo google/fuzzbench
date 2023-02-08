@@ -27,7 +27,7 @@ import threading
 import time
 import zipfile
 
-from common import benchmark_utils
+from common import benchmark_config
 from common import environment
 from common import experiment_utils
 from common import filesystem
@@ -66,8 +66,6 @@ SEED_CORPUS_ARCHIVE_SUFFIX = '_seed_corpus.zip'
 fuzzer_errored_out = False  # pylint:disable=invalid-name
 
 RESULTS_DIRNAME = 'results'
-CORPUS_DIRNAME = 'corpus'
-
 
 def _clean_seed_corpus(seed_corpus_dir):
     """Prepares |seed_corpus_dir| for the trial. This ensures that it can be
@@ -183,12 +181,6 @@ def run_fuzzer(max_total_time, log_filename):
         logs.error('Fuzz target binary not found.')
         return
 
-    if environment.get('CUSTOM_SEED_CORPUS_DIR'):
-        _copy_custom_seed_corpus(input_corpus)
-    else:
-        _unpack_clusterfuzz_seed_corpus(target_binary, input_corpus)
-    _clean_seed_corpus(input_corpus)
-
     if max_total_time is None:
         logs.warning('max_total_time is None. Fuzzing indefinitely.')
 
@@ -198,7 +190,7 @@ def run_fuzzer(max_total_time, log_filename):
     # benchmark.
     env = None
     benchmark = environment.get('BENCHMARK')
-    if benchmark_utils.get_type(benchmark) == 'bug':
+    if benchmark_config.get_config(benchmark).get('type') == 'bug':
         env = os.environ.copy()
         sanitizer.set_sanitizer_options(env, is_fuzz_run=True)
 
@@ -250,7 +242,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             self.gcs_sync_dir = None
 
         self.cycle = 0
-        self.corpus_dir = os.path.abspath(CORPUS_DIRNAME)
+        self.output_corpus = environment.get('OUTPUT_CORPUS_DIR')
         self.corpus_archives_dir = os.path.abspath('corpus-archives')
         self.results_dir = os.path.abspath(RESULTS_DIRNAME)
         self.log_file = os.path.join(self.results_dir, 'fuzzer-log.txt')
@@ -260,7 +252,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
     def initialize_directories(self):
         """Initialize directories needed for the trial."""
         directories = [
-            self.corpus_dir,
+            self.output_corpus,
             self.corpus_archives_dir,
             self.results_dir,
         ]
@@ -277,13 +269,21 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         max_total_time = environment.get('MAX_TOTAL_TIME')
         args = (max_total_time, self.log_file)
 
-        input_corpus = environment.get('SEED_CORPUS_DIR')
-        output_corpus = environment.get('OUTPUT_CORPUS_DIR')
+        fuzz_target_name = environment.get('FUZZ_TARGET')
+        target_binary = fuzzer_utils.get_fuzz_target_binary(FUZZ_TARGET_DIR,
+                                                            fuzz_target_name)
 
-        # Ensure seeds are in output corpus.
-        os.rmdir(output_corpus)
+        input_corpus = environment.get('SEED_CORPUS_DIR')
         os.makedirs(input_corpus, exist_ok=True)
-        shutil.copytree(input_corpus, output_corpus)
+        if not environment.get('CUSTOM_SEED_CORPUS_DIR'):
+            _unpack_clusterfuzz_seed_corpus(target_binary, input_corpus)
+        else:
+            _copy_custom_seed_corpus(input_corpus)
+
+        _clean_seed_corpus(input_corpus)
+        # Ensure seeds are in output corpus.
+        os.rmdir(self.output_corpus)
+        shutil.copytree(input_corpus, self.output_corpus)
 
         # Sync initial corpus before fuzzing begins.
         self.do_sync()
@@ -375,10 +375,10 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             self.corpus_archives_dir,
             experiment_utils.get_corpus_archive_name(self.cycle))
 
-        corpus_dir_name = os.path.basename(self.corpus_dir)
+        corpus_dir_name = os.path.basename(self.output_corpus)
         with tarfile.open(archive, 'w:gz') as tar:
             new_archive_time = self.last_archive_time
-            for file_path in get_corpus_elements(self.corpus_dir):
+            for file_path in get_corpus_elements(self.output_corpus):
                 stat_info = os.stat(file_path)
                 last_modified_time = stat_info.st_mtime
                 if last_modified_time <= self.last_archive_time:
@@ -407,7 +407,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             return
 
         basename = os.path.basename(archive)
-        gcs_path = posixpath.join(self.gcs_sync_dir, CORPUS_DIRNAME, basename)
+        gcs_path = posixpath.join(self.gcs_sync_dir, 'corpus', basename)
 
         # Don't use parallel to avoid stability issues.
         filestore_utils.cp(archive, gcs_path)
