@@ -25,12 +25,10 @@ RUN apt-get update &&  \
         make           \
         ninja-build
 
+
 # Get some files for the seed corpus
 ADD https://github.com/adobe-fonts/adobe-variable-font-prototype/releases/download/1.001/AdobeVFPrototype.otf $SRC/font-corpus/
-RUN git clone https://github.com/unicode-org/text-rendering-tests.git && \
-    git -C text-rendering-tests checkout \
-        f9535a12551d2fb25d8288547692271ebef38c35 && \
-    cp text-rendering-tests/fonts/* $SRC/font-corpus
+RUN git clone https://github.com/unicode-org/text-rendering-tests.git && cp text-rendering-tests/fonts/* $SRC/font-corpus
 
 RUN git clone https://github.com/freetype/freetype2-testing.git
 WORKDIR freetype2-testing
