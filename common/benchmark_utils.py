@@ -51,6 +51,8 @@ def get_project(benchmark):
 
 def get_type(benchmark):
     """Returns the type of |benchmark|"""
+    # TODO(metzman): Use classes to mock a benchmark config for
+    # OSS_FUZZ_ON_DEMAND.
     if environment.get('OSS_FUZZ_ON_DEMAND'):
         return BenchmarkType.CODE.value
     return benchmark_config.get_config(benchmark).get('type',
