@@ -27,7 +27,7 @@ import threading
 import time
 import zipfile
 
-from common import benchmark_config
+from common import benchmark_utils
 from common import environment
 from common import experiment_utils
 from common import filesystem
@@ -198,7 +198,7 @@ def run_fuzzer(max_total_time, log_filename):
     # benchmark.
     env = None
     benchmark = environment.get('BENCHMARK')
-    if benchmark_config.get_config(benchmark).get('type') == 'bug':
+    if benchmark_utils.get_type(benchmark) == 'bug':
         env = os.environ.copy()
         sanitizer.set_sanitizer_options(env, is_fuzz_run=True)
 
