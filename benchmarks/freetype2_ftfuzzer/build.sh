@@ -13,15 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Tell CMake what fuzzing engine to link:
-export CMAKE_FUZZING_ENGINE="$LIB_FUZZING_ENGINE"
+mkdir $OUT/seeds
+# TRT/fonts is the full seed folder, but they're too big
+cp TRT/fonts/TestKERNOne.otf $OUT/seeds/
+cp TRT/fonts/TestGLYFOne.ttf $OUT/seeds/
 
-bash "fuzzing/scripts/build-fuzzers.sh"
-bash "fuzzing/scripts/prepare-oss-fuzz.sh"
+tar xf libarchive-3.4.3.tar.xz
 
-# Rename the `legacy' target to `ftfuzzer' for historical reasons:
-for f in "${OUT}/legacy"*; do
-    mv "${f}" "${f/legacy/ftfuzzer}"
-done
+cd libarchive-3.4.3
+./configure --disable-shared
+make clean
+make -j $(nproc)
+make install
+cd ..
 
-zip -ju "${OUT}/ftfuzzer_seed_corpus.zip" "${SRC}/font-corpus/"*
+cd freetype2
+./autogen.sh
+./configure --with-harfbuzz=no --with-bzip2=no --with-png=no --without-zlib
+make clean
+make all -j $(nproc)
+
+$CXX $CXXFLAGS -std=c++11 -I include -I . src/tools/ftfuzzer/ftfuzzer.cc \
+    objs/.libs/libfreetype.a $FUZZER_LIB -L /usr/local/lib -larchive \
+    -o $OUT/ftfuzzer
