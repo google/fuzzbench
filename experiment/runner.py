@@ -263,19 +263,13 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         for directory in directories:
             filesystem.recreate_directory(directory)
 
-    def conduct_trial(self):
-        """Conduct the benchmarking trial."""
-        self.initialize_directories()
-
-        logs.info('Starting trial.')
-
-        max_total_time = environment.get('MAX_TOTAL_TIME')
-        args = (max_total_time, self.log_file)
-
+    def set_up_corpus_dirs(self):
+        """Set up corpora for fuzzing. Set up the input corpus for use by the
+        fuzzer and set up the output corpus for the first sync so the initial
+        seeds can be measured."""
         fuzz_target_name = environment.get('FUZZ_TARGET')
         target_binary = fuzzer_utils.get_fuzz_target_binary(
             FUZZ_TARGET_DIR, fuzz_target_name)
-
         input_corpus = environment.get('SEED_CORPUS_DIR')
         os.makedirs(input_corpus, exist_ok=True)
         if not environment.get('CUSTOM_SEED_CORPUS_DIR'):
@@ -287,6 +281,15 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         # Ensure seeds are in output corpus.
         os.rmdir(self.output_corpus)
         shutil.copytree(input_corpus, self.output_corpus)
+
+    def conduct_trial(self):
+        """Conduct the benchmarking trial."""
+        self.initialize_directories()
+
+        logs.info('Starting trial.')
+
+        max_total_time = environment.get('MAX_TOTAL_TIME')
+        args = (max_total_time, self.log_file)
 
         # Sync initial corpus before fuzzing begins.
         self.do_sync()
