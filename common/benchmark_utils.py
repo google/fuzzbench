@@ -51,6 +51,8 @@ def get_project(benchmark):
 
 def get_type(benchmark):
     """Returns the type of |benchmark|"""
+    if environment.get('OSS_FUZZ_ON_DEMAND'):
+        return BenchmarkType.CODE.value
     return benchmark_config.get_config(benchmark).get('type',
                                                       BenchmarkType.CODE.value)
 

@@ -95,7 +95,6 @@ def append_flags(env_var, additional_flags, env=None):
 
 def get_config_value(attribute):
     """Gets config attribute value from benchmark config yaml file."""
-    # TODO(metzman): Get this working in oss-fuzz.
     with open(BENCHMARK_CONFIG_YAML_PATH, encoding='utf-8') as file_handle:
         config = yaml.load(file_handle, yaml.SafeLoader)
         return config.get(attribute)
@@ -171,11 +170,6 @@ def get_dictionary_path(target_binary):
 
 def set_fuzz_target(env=None):
     """Set |FUZZ_TARGET| env flag."""
-
-    # Don't call get_config_value which depends on things that will break in
-    # oss-fuzz.
-    if os.getenv('OSS_FUZZ_ON_DEMAND'):
-        return
     if env is None:
         env = os.environ
 
@@ -189,20 +183,6 @@ def set_compilation_flags(env=None):
 
     env['CFLAGS'] = ''
     env['CXXFLAGS'] = ''
-
-    if os.getenv('OSS_FUZZ_ON_DEMAND'):
-        # Don't call get_config_value which depends on things that will break in
-        # oss-fuzz. Just set the right sanitizer flags.
-        if os.getenv('SANITIZER') == 'address':
-            append_flags('CFLAGS',
-                     FUZZING_CFLAGS + ['-fsanitize=address'] +
-                     [LIBCPLUSPLUS_FLAG, BUGS_OPTIMIZATION_LEVEL],
-                     env=env)
-            append_flags('CXXFLAGS',
-                     FUZZING_CFLAGS + ['-fsanitize=address'] +
-                     [LIBCPLUSPLUS_FLAG, BUGS_OPTIMIZATION_LEVEL],
-                     env=env)
-        return
 
     if get_config_value('type') == 'bug':
         append_flags('CFLAGS',
