@@ -65,7 +65,9 @@ SEED_CORPUS_ARCHIVE_SUFFIX = '_seed_corpus.zip'
 
 fuzzer_errored_out = False  # pylint:disable=invalid-name
 
+CORPUS_DIRNAME = 'corpus'
 RESULTS_DIRNAME = 'results'
+CORPUS_ARCHIVE_DIRNAME = 'corpus-archive'
 
 
 def _clean_seed_corpus(seed_corpus_dir):
@@ -244,7 +246,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
 
         self.cycle = 0
         self.output_corpus = environment.get('OUTPUT_CORPUS_DIR')
-        self.corpus_archives_dir = os.path.abspath('corpus-archives')
+        self.corpus_archives_dir = os.path.abspath(CORPUS_ARCHIVE_DIRNAME)
         self.results_dir = os.path.abspath(RESULTS_DIRNAME)
         self.log_file = os.path.join(self.results_dir, 'fuzzer-log.txt')
         self.last_sync_time = None
@@ -408,7 +410,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             return
 
         basename = os.path.basename(archive)
-        gcs_path = posixpath.join(self.gcs_sync_dir, 'corpus', basename)
+        gcs_path = posixpath.join(self.gcs_sync_dir, CORPUS_DIRNAME, basename)
 
         # Don't use parallel to avoid stability issues.
         filestore_utils.cp(archive, gcs_path)
