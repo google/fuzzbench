@@ -67,7 +67,7 @@ fuzzer_errored_out = False  # pylint:disable=invalid-name
 
 CORPUS_DIRNAME = 'corpus'
 RESULTS_DIRNAME = 'results'
-CORPUS_ARCHIVE_DIRNAME = 'corpus-archive'
+CORPUS_ARCHIVE_DIRNAME = 'corpus-archives'
 
 
 def _clean_seed_corpus(seed_corpus_dir):
@@ -176,7 +176,7 @@ def run_fuzzer(max_total_time, log_filename):
     """Runs the fuzzer using its script. Logs stdout and stderr of the fuzzer
     script to |log_filename| if provided."""
     input_corpus = environment.get('SEED_CORPUS_DIR')
-    output_corpus = environment.get('OUTPUT_CORPUS_DIR')
+    output_corpus = os.environ['OUTPUT_CORPUS_DIR']
     fuzz_target_name = environment.get('FUZZ_TARGET')
     target_binary = fuzzer_utils.get_fuzz_target_binary(FUZZ_TARGET_DIR,
                                                         fuzz_target_name)
