@@ -27,31 +27,31 @@ jobs:
           - grok_grk_decompress_fuzzer
           - harfbuzz_hb-shape-fuzzer
           - jsoncpp_jsoncpp_fuzzer
-          - lcms-2017-03-21
+          - lcms_cms_transform_fuzzer
           - libjpeg-turbo_libjpeg_turbo_fuzzer
           - libpcap_fuzz_both
           - libpng_libpng_read_fuzzer
           - libxml2_xml
           - libxslt_xpath
           - mbedtls_fuzz_dtlsclient
-          - mruby-2018-05-23
+          - mruby_mruby_fuzzer
           - njs_njs_process_script_fuzzer
           - openh264_decoder_fuzzer
           - openssl_x509
-          - openthread_ip6-send-fuzzer
+          - openthread_ot-ip6-send-fuzzer
           - php_php-fuzz-parser
-          - proj4-2017-08-14
-          - quickjs_eval-2020-01-05
-          - re2-2014-12-09
+          - proj4_proj_crs_to_crs_fuzzer
+          - quickjs_eval
+          - re2_fuzzer
           - sqlite3_ossfuzz
           - stb_stbi_read_fuzzer
           - systemd_fuzz-link-parser
-          - vorbis-2017-12-11
-          - woff2-2016-05-06
+          - vorbis_decode_fuzzer
+          - woff2_convert_woff2ttf_fuzzer
           - zlib_zlib_uncompress_fuzzer
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - run: |  # Needed for git diff to work.
         git fetch origin master --unshallow
         git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
@@ -65,14 +65,14 @@ jobs:
         df -h
 
     - name: Setup Python environment
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3
       with:
         python-version: 3.10.8
 
     # Copied from:
     # https://docs.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         # This path is specific to Ubuntu.
         path: ~/.cache/pip

@@ -1,3 +1,5 @@
+commit: 3308415d7de8
+commit_date: 2022-10-25T04:29:44+0000
 fuzz_target: njs_process_script_fuzzer
 project: njs
 type: bug-draft

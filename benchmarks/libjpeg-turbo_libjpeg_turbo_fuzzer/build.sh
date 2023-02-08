@@ -13,12 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cd libjpeg-turbo
-git checkout b0971e47d76fdb81270e93bbf11ff5558073350d
-autoreconf -fiv
-./configure
-make -j $(nproc)
+set -e
+set -u
 
-$CXX $CXXFLAGS -std=c++11 $SRC/libjpeg_turbo_fuzzer.cc -I . \
-    .libs/libturbojpeg.a $FUZZER_LIB -o $OUT/libjpeg_turbo_fuzzer
-cp -r /opt/seeds $OUT/
+cat fuzz/branches.txt | while read branch; do
+    pushd libjpeg-turbo.$branch
+    if [ "$branch" = "main" ]; then
+        sh fuzz/build.sh
+    else
+        sh fuzz/build.sh _$branch
+    fi
+    popd
+done

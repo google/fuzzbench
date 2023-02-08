@@ -15,12 +15,11 @@
 ################################################################################
 
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
-RUN apt-get update && apt-get install -y build-essential ruby bison ninja-build \
-    cmake zlib1g-dev libbz2-dev liblzma-dev
-RUN git clone \
-        --depth 1 \
-        --branch 3.1.0 \
-        https://github.com/mruby/mruby
-RUN git clone --depth 1 https://github.com/bshastry/mruby_seeds.git mruby_seeds
-WORKDIR mruby
-COPY build.sh *.c *.options *.dict $SRC/
+RUN apt-get update && \
+    apt-get install -y autoconf automake libtool bison pkg-config
+
+RUN git clone https://github.com/bellard/quickjs quickjs
+
+WORKDIR quickjs
+COPY build.sh $SRC/
+COPY *.c *.h *.dict $SRC/

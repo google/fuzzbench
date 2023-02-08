@@ -1,3 +1,4 @@
+#!/bin/bash -ex
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-fuzz_target: cms_transform_fuzzer
-project: lcms
-unsupported_fuzzers:
-  - symcc_afl
-  - symcc_afl_single
-  - symcc_aflplusplus
-  - afldd
-  - aflpp_vs_dd
+cd re2
+make -j $(nproc)
+
+$CXX $CXXFLAGS $SRC/target.cc -I . obj/libre2.a -lpthread $FUZZER_LIB \
+    -o $OUT/fuzzer

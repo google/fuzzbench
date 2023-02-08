@@ -24,7 +24,8 @@ RUN apt-get update && \
     libtool \
     wget
 
-RUN git clone https://github.com/xiph/ogg.git
+RUN git clone https://github.com/xiph/ogg.git && \
+    git -C ogg checkout db5c7a49ce7ebda47b15b78471e78fb7f2483e22
 RUN git clone https://github.com/xiph/vorbis.git
 RUN wget -qO $SRC/decode_fuzzer.cc \
     https://raw.githubusercontent.com/google/oss-fuzz/688aadaf44499ddada755562109e5ca5eb3c5662/projects/vorbis/decode_fuzzer.cc

@@ -1,3 +1,4 @@
+#!/bin/bash -ex
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-fuzz_target: decode_fuzzer
-project: vorbis
-unsupported_fuzzers:
-  - klee
+cd Little-CMS
+./autogen.sh
+./configure
+make -j $(nproc)
+
+$CXX $CXXFLAGS $SRC/cms_transform_fuzzer.cc -I include/ src/.libs/liblcms2.a \
+    $FUZZER_LIB -o $OUT/cms_transform_fuzzer
+cp -r /opt/seeds $OUT/

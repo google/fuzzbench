@@ -11,20 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
-
-RUN apt-get update && \
-    apt-get install -y \
-    make \
-    automake \
-    autoconf \
-    libtool
-
-RUN git clone https://github.com/google/woff2.git
-RUN git clone https://github.com/google/brotli.git
-RUN git clone https://github.com/google/oss-fuzz.git
-
-COPY target.cc build.sh $SRC/
+commit: b025c6a3ae05995660e3b882eb3277f4399ced1a
+commit_date: 2023-01-30T18:31:10+0000
+fuzz_target: fuzzer
+project: re2

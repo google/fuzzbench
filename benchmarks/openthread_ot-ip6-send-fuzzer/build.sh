@@ -1,3 +1,4 @@
+#!/bin/bash -ex
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,9 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit: 25506997f286fdbfa72725f4cee78c922c896255
-commit_date: 2023-01-26T18:02:16+00:00
-fuzz_target: ip6-send-fuzzer
-project: openthread
-unsupported_fuzzers:
-  - klee
+bash tests/fuzz/oss-fuzz-build

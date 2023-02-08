@@ -11,23 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
-
-RUN apt-get update && \
-    apt-get install -y \
-    make \
-    automake \
-    autoconf \
-    libtool \
-    sqlite3 \
-    wget \
-    libsqlite3-dev
-
-RUN git clone https://github.com/OSGeo/PROJ
-
-RUN wget -qO $OUT/standard_fuzzer.dict \
-    https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/proj4.dict
-COPY build.sh $SRC/
+commit: a7482d3775f2e346f3680363dd2d641add3e68b2
+commit_date: 2023-02-06T16:46:19+0000
+fuzz_target: proj_crs_to_crs_fuzzer
+project: proj4
