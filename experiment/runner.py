@@ -67,6 +67,7 @@ fuzzer_errored_out = False  # pylint:disable=invalid-name
 
 RESULTS_DIRNAME = 'results'
 
+
 def _clean_seed_corpus(seed_corpus_dir):
     """Prepares |seed_corpus_dir| for the trial. This ensures that it can be
     used by AFL which is picky about the seed corpus. Moves seed corpus files
@@ -270,8 +271,8 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         args = (max_total_time, self.log_file)
 
         fuzz_target_name = environment.get('FUZZ_TARGET')
-        target_binary = fuzzer_utils.get_fuzz_target_binary(FUZZ_TARGET_DIR,
-                                                            fuzz_target_name)
+        target_binary = fuzzer_utils.get_fuzz_target_binary(
+            FUZZ_TARGET_DIR, fuzz_target_name)
 
         input_corpus = environment.get('SEED_CORPUS_DIR')
         os.makedirs(input_corpus, exist_ok=True)
