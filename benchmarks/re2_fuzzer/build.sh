@@ -1,3 +1,4 @@
+#!/bin/bash -ex
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit: cd02d359a6d0455e9d16b87bf9665961c4699538
-commit_date: 2023-01-28T16:04:38+00:00
-fuzz_target: ftfuzzer
-project: freetype2
+cd re2
+make -j $(nproc)
+
+$CXX $CXXFLAGS $SRC/target.cc -I . obj/libre2.a -lpthread $FUZZER_LIB \
+    -o $OUT/fuzzer

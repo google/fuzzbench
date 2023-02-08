@@ -39,6 +39,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
     os.environ['AFL_CUSTOM_MUTATOR_LIBRARY'] = './autotokens.so'
+    os.environ['AUTOTOKENS_FUZZ_COUNT_SHIFT'] = '1'
 
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,

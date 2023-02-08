@@ -19,13 +19,10 @@ RUN apt-get update && \
     apt-get install -y \
         make autoconf automake libtool \
         mercurial libpcre2-dev
-RUN hg clone \
-        --updaterev 0.7.8 \
-        http://hg.nginx.org/njs
-RUN git clone \
-        --depth 1 \
-        --branch pcre2-10.40 \
-        https://github.com/PCRE2Project/pcre2 pcre
+RUN git clone https://github.com/PCRE2Project/pcre2 pcre && \
+    git -C pcre checkout 52c08847921a324c804cabf2814549f50bce1265
+
+RUN hg clone http://hg.nginx.org/njs
 
 WORKDIR njs
 COPY build.sh $SRC/

@@ -17,13 +17,28 @@
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
 
 RUN apt-get update && \
-    apt-get install -y \
-    make \
-    automake \
-    libtool \
-    nasm
+    apt-get install -y make yasm cmake
 
-RUN git clone https://github.com/libjpeg-turbo/libjpeg-turbo.git
+RUN git clone https://github.com/libjpeg-turbo/fuzz && \
+    cat fuzz/branches.txt | while read branch; do \
+      git clone https://github.com/libjpeg-turbo/libjpeg-turbo \
+          -b $branch libjpeg-turbo.$branch; \
+    done
 
-ADD seeds /opt/seeds
-COPY * $SRC/
+RUN git clone https://github.com/libjpeg-turbo/seed-corpora && \
+    git -C seed-corpora checkout 7c9ea5ffaac76ef618657978c9fdfa845d310b93
+RUN cd seed-corpora && \
+    zip -r ../decompress_fuzzer_seed_corpus.zip \
+        afl-testcases/jpeg* \
+        bugs/decompress* \
+        $SRC/libjpeg-turbo/testimages/*.jpg
+RUN cd seed-corpora && \
+    zip -r ../compress_fuzzer_seed_corpus.zip \
+        afl-testcases/bmp \
+        afl-testcases/gif* \
+        bugs/compress* \
+        $SRC/libjpeg-turbo/testimages/*.bmp \
+        $SRC/libjpeg-turbo/testimages/*.ppm
+RUN rm -rf seed-corpora
+
+COPY build.sh $SRC/

@@ -11,8 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+################################################################################
 
-commit: cd02d359a6d0455e9d16b87bf9665961c4699538
-commit_date: 2023-01-28T16:04:38+00:00
-fuzz_target: ftfuzzer
-project: freetype2
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
+
+RUN apt-get update && apt-get install -y cmake ninja-build
+RUN git clone https://github.com/openthread/openthread
+
+WORKDIR openthread
+COPY build.sh *.options $SRC/

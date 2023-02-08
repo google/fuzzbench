@@ -1,4 +1,4 @@
-# Copyright 2020 Google LLC
+# Copyright 2019 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,8 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+################################################################################
 
-commit: cd02d359a6d0455e9d16b87bf9665961c4699538
-commit_date: 2023-01-28T16:04:38+00:00
-fuzz_target: ftfuzzer
-project: freetype2
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
+RUN apt-get update && \
+    apt-get install -y autoconf automake libtool bison pkg-config
+
+RUN git clone https://github.com/bellard/quickjs quickjs
+
+WORKDIR quickjs
+COPY build.sh $SRC/
+COPY *.c *.h *.dict $SRC/

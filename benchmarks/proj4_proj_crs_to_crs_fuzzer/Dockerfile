@@ -17,15 +17,20 @@
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        make autoconf libtool pkg-config \
-        zlib1g-dev zlib1g-dev:i386 liblzma-dev liblzma-dev:i386
+    apt-get install -y \
+        make autoconf automake libtool g++ sqlite3 pkg-config wget
 
-# Build requires automake 1.16.3
-RUN curl -LO http://mirrors.kernel.org/ubuntu/pool/main/a/automake-1.16/automake_1.16.5-1.3_all.deb && \
-    apt install ./automake_1.16.5-1.3_all.deb
+RUN git clone https://github.com/OSGeo/PROJ PROJ
 
-RUN git clone https://gitlab.gnome.org/GNOME/libxml2.git
+RUN git clone https://github.com/curl/curl.git PROJ/curl && \
+    git -C PROJ/curl checkout c12fb3ddaf48e709a7a4deaa55ec485e4df163ee
 
-WORKDIR libxml2
-COPY build.sh $SRC/
+RUN git clone https://gitlab.com/libtiff/libtiff.git PROJ/libtiff && \
+    git -C PROJ/libtiff checkout c8e1289deff3fa60ba833ccec6c030934b02c281
+
+WORKDIR PROJ
+
+RUN cp test/fuzzers/build.sh $SRC/
+# This is to fix Fuzz Introspector build by using LLVM old pass manager
+# re https://github.com/ossf/fuzz-introspector/issues/305
+ENV OLD_LLVMPASS 1

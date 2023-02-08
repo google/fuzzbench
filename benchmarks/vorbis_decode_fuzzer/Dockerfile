@@ -17,15 +17,18 @@
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        make autoconf libtool pkg-config \
-        zlib1g-dev zlib1g-dev:i386 liblzma-dev liblzma-dev:i386
+    apt-get install -y \
+    make \
+    automake \
+    autoconf \
+    libtool \
+    wget
 
-# Build requires automake 1.16.3
-RUN curl -LO http://mirrors.kernel.org/ubuntu/pool/main/a/automake-1.16/automake_1.16.5-1.3_all.deb && \
-    apt install ./automake_1.16.5-1.3_all.deb
+RUN git clone https://github.com/xiph/ogg.git && \
+    git -C ogg checkout db5c7a49ce7ebda47b15b78471e78fb7f2483e22
+RUN git clone https://github.com/xiph/vorbis.git
+RUN wget -qO $SRC/decode_fuzzer.cc \
+    https://raw.githubusercontent.com/google/oss-fuzz/688aadaf44499ddada755562109e5ca5eb3c5662/projects/vorbis/decode_fuzzer.cc
 
-RUN git clone https://gitlab.gnome.org/GNOME/libxml2.git
-
-WORKDIR libxml2
 COPY build.sh $SRC/
+ADD seeds /opt/seeds

@@ -1,3 +1,4 @@
+#!/bin/bash -ex
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit: cd02d359a6d0455e9d16b87bf9665961c4699538
-commit_date: 2023-01-28T16:04:38+00:00
-fuzz_target: ftfuzzer
-project: freetype2
+for f in font.cc normalize.cc transform.cc woff2_common.cc woff2_dec.cc \
+         woff2_enc.cc glyph.cc table_tags.cc variable_length.cc woff2_out.cc; do
+  $CXX $CXXFLAGS -std=c++11 -I ../brotli/dec -I ../brotli/enc -c src/$f &
+done
+
+for f in ../brotli/dec/*.c ../brotli/enc/*.cc; do
+  $CXX $CXXFLAGS -c $f &
+done
+
+wait
+
+$CXX $CXXFLAGS *.o $FUZZER_LIB $SRC/target.cc -I src \
+    -o $OUT/convert_woff2ttf_fuzzer

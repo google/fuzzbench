@@ -13,16 +13,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cd harfbuzz
-git checkout f73a87d9a8c76a181794b74b527ea268048f78e3
-./autogen.sh
-(cd ./src/hb-ucdn && CCLD="$CXX $CXXFLAGS" make)
-CCLD="$CXX $CXXFLAGS" ./configure --enable-static --disable-shared \
-    --with-glib=no --with-cairo=no
-make -j $(nproc) -C src fuzzing
+# Disable:
+# 1. UBSan vptr since target built with -fno-rtti.
+export CFLAGS="$CFLAGS -fno-sanitize=vptr -DHB_NO_VISIBILITY"
+export CXXFLAGS="$CXXFLAGS -fno-sanitize=vptr -DHB_NO_VISIBILITY"
+
+# setup
+build=$WORK/build
+
+# cleanup
+rm -rf $build
+mkdir -p $build
+
+# Build the library.
+meson --default-library=static --wrap-mode=nodownload \
+      -Dexperimental_api=true \
+      -Dfuzzer_ldflags="$(echo $LIB_FUZZING_ENGINE)" \
+      $build \
+  || (cat build/meson-logs/meson-log.txt && false)
+
+# Build the fuzzers.
+ninja -v -j$(nproc) -C $build test/fuzzing/hb-shape-fuzzer
+mv $build/test/fuzzing/hb-shape-fuzzer $OUT/
+
+# Archive and copy to $OUT seed corpus if the build succeeded.
+mkdir all-fonts
+for d in \
+    test/shape/data/in-house/fonts \
+    test/shape/data/aots/fonts \
+    test/shape/data/text-rendering-tests/fonts \
+    test/api/fonts \
+    test/fuzzing/fonts \
+    perf/fonts \
+    ; do
+    cp $d/* all-fonts/
+done
 
 mkdir $OUT/seeds
-cp test/shaping/fonts/sha1sum/* $OUT/seeds/
-
-$CXX $CXXFLAGS -std=c++11 -I src/ test/fuzzing/hb-fuzzer.cc \
-    src/.libs/libharfbuzz-fuzzing.a $FUZZER_LIB -o $OUT/hb-shape-fuzzer
+cp all-fonts/* $OUT/seeds/

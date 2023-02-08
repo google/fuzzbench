@@ -17,15 +17,23 @@
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        make autoconf libtool pkg-config \
-        zlib1g-dev zlib1g-dev:i386 liblzma-dev liblzma-dev:i386
+    apt-get install -y \
+    make \
+    automake \
+    autoconf \
+    libtool
 
-# Build requires automake 1.16.3
-RUN curl -LO http://mirrors.kernel.org/ubuntu/pool/main/a/automake-1.16/automake_1.16.5-1.3_all.deb && \
-    apt install ./automake_1.16.5-1.3_all.deb
+RUN git clone https://github.com/google/brotli.git && \
+    git -C brotli checkout 3a9032ba8733532a6cd6727970bade7f7c0e2f52
 
-RUN git clone https://gitlab.gnome.org/GNOME/libxml2.git
+RUN git clone https://github.com/google/woff2.git
 
-WORKDIR libxml2
-COPY build.sh $SRC/
+# Get seeds.
+RUN git clone https://github.com/google/oss-fuzz.git && \
+    git -C oss-fuzz checkout e8ffee4077b59e35824a2e97aa214ee95d39ed13 && \
+    mkdir -p $OUT/seeds && \
+    cp oss-fuzz/projects/woff2/corpus/* $OUT/seeds
+
+COPY target.cc build.sh $SRC/
+
+WORKDIR woff2
