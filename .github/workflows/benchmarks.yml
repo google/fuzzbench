@@ -51,7 +51,7 @@ jobs:
           - zlib_zlib_uncompress_fuzzer
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - run: |  # Needed for git diff to work.
         git fetch origin master --unshallow
         git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
@@ -65,14 +65,14 @@ jobs:
         df -h
 
     - name: Setup Python environment
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3
       with:
         python-version: 3.10.8
 
     # Copied from:
     # https://docs.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         # This path is specific to Ubuntu.
         path: ~/.cache/pip
