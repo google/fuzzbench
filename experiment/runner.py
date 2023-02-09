@@ -452,29 +452,6 @@ def get_fuzzer_module(fuzzer):
     return fuzzer_module
 
 
-def tar_directory(directory, tar):
-    """Add the contents of |directory| to |tar|. Note that this should not
-    exception just because files and directories are being deleted from
-    |directory| while this function is being executed."""
-    directory = os.path.abspath(directory)
-    directory_name = os.path.basename(directory)
-    for root, _, files in os.walk(directory):
-        for filename in files:
-            file_path = os.path.join(root, filename)
-            arcname = os.path.join(directory_name,
-                                   os.path.relpath(file_path, directory))
-            try:
-                tar.add(file_path, arcname=arcname)
-            except (FileNotFoundError, OSError):
-                # We will get these errors if files or directories are being
-                # deleted from |directory| as we archive it. Don't bother
-                # rescanning the directory, new files will be archived in the
-                # next sync.
-                pass
-            except Exception:  # pylint: disable=broad-except
-                logs.error('Unexpected exception occurred when archiving.')
-
-
 def get_corpus_elements(corpus_dir):
     """Returns a list of absolute paths to corpus elements in |corpus_dir|.
     Excludes certain elements."""
