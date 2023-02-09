@@ -39,13 +39,12 @@ def _initialize_db():
         raise Exception('Experiment already exists in database.')
 
     db_utils.add_all([
-        db_utils.get_or_create(
-            models.Experiment,
-            name=experiment_name,
-            git_hash='none',
-            private=True,
-            experiment_filestore='/out/filestore',
-            description='none'),
+        db_utils.get_or_create(models.Experiment,
+                               name=experiment_name,
+                               git_hash='none',
+                               private=True,
+                               experiment_filestore='/out/filestore',
+                               description='none'),
     ])
 
     # Set up the trial.
@@ -62,6 +61,7 @@ def main():
     """Runs the measurer."""
     _initialize_db()
     return measure_manager.main()
+
 
 if __name__ == '__main__':
     sys.exit(main())
