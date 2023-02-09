@@ -45,7 +45,7 @@ def get_fuzz_target(benchmark):
     # TODO(metzman): Use classes to mock a benchmark config for
     # OSS_FUZZ_ON_DEMAND.
     return benchmark_config.get_config(benchmark).get(
-        'fuzz_target', os.environ['FUZZ_TARGET'])
+        'fuzz_target', environment.get('FUZZ_TARGET'))
 
 
 def get_project(benchmark):
