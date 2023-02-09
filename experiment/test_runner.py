@@ -91,7 +91,8 @@ def trial_runner(fs, environ):
         'TRIAL_ID': str(TRIAL_NUM),
         'FUZZER': FUZZER,
         'EXPERIMENT_FILESTORE': EXPERIMENT_FILESTORE,
-        'MAX_TOTAL_TIME': str(MAX_TOTAL_TIME)
+        'MAX_TOTAL_TIME': str(MAX_TOTAL_TIME),
+        'OUTPUT_CORPUS_DIR': '/out/corpus',
     })
 
     with mock.patch('common.filestore_utils.rm'):
@@ -245,7 +246,7 @@ def test_do_sync_changed(mocked_execute, fs, trial_runner, fuzzer_module):
     previous one."""
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
     corpus_file_name = 'corpus-file'
-    fs.create_file(os.path.join(trial_runner.corpus_dir, corpus_file_name))
+    fs.create_file(os.path.join(trial_runner.output_corpus, corpus_file_name))
     trial_runner.cycle = 1337
     trial_runner.do_sync()
     assert mocked_execute.call_args_list == [
