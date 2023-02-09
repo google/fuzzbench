@@ -13,9 +13,13 @@
 # limitations under the License.
 """Module for starting a measure manager outside of an experiment. Useful when
 measuring results in OSS-Fuzz."""
+import os
+import sys
+
 from database import models
 from database import utils as db_utils
 from experiment.measurer import measure_manager
+from experiment import scheduler
 
 
 def _initialize_db():
