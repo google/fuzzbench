@@ -263,7 +263,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         for directory in directories:
             filesystem.recreate_directory(directory)
 
-    def set_up_corpus_dirs(self):
+    def set_up_corpus_directories(self):
         """Set up corpora for fuzzing. Set up the input corpus for use by the
         fuzzer and set up the output corpus for the first sync so the initial
         seeds can be measured."""
@@ -287,6 +287,8 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         self.initialize_directories()
 
         logs.info('Starting trial.')
+
+        self.set_up_corpus_directories()
 
         max_total_time = environment.get('MAX_TOTAL_TIME')
         args = (max_total_time, self.log_file)
