@@ -43,7 +43,7 @@ from common import utils
 NUM_RETRIES = 3
 RETRY_DELAY = 3
 
-FUZZ_TARGET_DIR = '/out'
+FUZZ_TARGET_DIR = os.getenv('OUT', '/out')
 
 # This is an optimization to sync corpora only when it is needed. These files
 # are temporary files generated during fuzzer runtime and are not related to
