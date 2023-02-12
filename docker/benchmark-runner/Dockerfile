@@ -64,8 +64,6 @@ COPY --from=builder /out/ ./
 COPY benchmarks $ROOT_DIR/benchmarks
 # Copy the fuzzers directory.
 COPY fuzzers $ROOT_DIR/fuzzers
-# Create empty __init__.py to allow python deps to work.
-RUN touch __init__.py
 
 # Define environment variables used when we run the fuzzer:
 # - Directory to get starting seeds from.

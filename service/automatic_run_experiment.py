@@ -31,7 +31,7 @@ from database import models
 from database import utils as db_utils
 from experiment import run_experiment
 
-logger = logs.Logger('automatic_run_experiment')  # pylint: disable=invalid-name
+logger = logs.Logger()  # pylint: disable=invalid-name
 
 EXPERIMENT_CONFIG_FILE = os.path.join(utils.ROOT_DIR, 'service',
                                       'experiment-config.yaml')
@@ -144,7 +144,7 @@ def _validate_individual_experiment_requests(experiment_requests):
                          experiment_type, benchmark_utils.BENCHMARK_TYPE_STRS)
             valid = False
 
-        benchmarks = request.get('benchmarks', [])
+        benchmarks = sorted(request.get('benchmarks', []))  # Sort for testing.
         for benchmark in benchmarks:
             benchmark_type = benchmark_utils.get_type(benchmark)
             if (benchmark_type == benchmark_utils.BenchmarkType.BUG.value and

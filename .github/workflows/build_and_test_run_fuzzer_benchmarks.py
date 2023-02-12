@@ -17,15 +17,17 @@ import sys
 import subprocess
 import time
 
-from common import benchmark_utils
 from common import retry
 from experiment.build import builder
 from src_analysis import change_utils
 from src_analysis import diff_utils
 
-ALWAYS_BUILD_FUZZER = 'afl'
 NUM_RETRIES = 2
 RETRY_DELAY = 60
+
+# Use AFL because it is the fastest fuzzer to build. libFuzzer clones all of
+# LLVM which is super slow. Also tons of fuzzers depend on AFL.
+CANARY_FUZZER = 'afl'
 
 
 def get_make_target(fuzzer, benchmark):
@@ -85,16 +87,16 @@ def run_command(command):
     subprocess.check_call(command)
 
 
-def make_builds(benchmarks, fuzzer):
-    """Use make to test the fuzzer on each benchmark in |benchmarks|."""
-    fuzzer_benchmark_pairs = builder.get_fuzzer_benchmark_pairs([fuzzer],
-                                                                benchmarks)
+def make_builds(benchmark, fuzzers):
+    """Use make to test the |benchmark| on each fuzzer in |fuzzers|."""
+    fuzzer_benchmark_pairs = builder.get_fuzzer_benchmark_pairs(
+        fuzzers, [benchmark])
     # Sort benchmarks so that they get built in a deterministic order.
     fuzzer_benchmark_pairs = sorted(fuzzer_benchmark_pairs,
                                     key=lambda pair: pair[1])
     print(f'Building fuzzer-benchmark pairs: {fuzzer_benchmark_pairs}')
-    for _, benchmark in fuzzer_benchmark_pairs:
-        make_target = get_make_target(fuzzer, benchmark)
+    for current_fuzzer, current_benchmark in fuzzer_benchmark_pairs:
+        make_target = get_make_target(current_fuzzer, current_benchmark)
         make_command = ['make', 'RUNNING_ON_CI=yes', '-j', make_target]
         run_command(make_command)
 
@@ -107,44 +109,24 @@ def make_builds(benchmarks, fuzzer):
     return True
 
 
-def do_build(build_type, fuzzer, always_build):
-    """Build fuzzer,benchmark pairs for CI."""
-    if build_type == 'oss-fuzz':
-        benchmarks = benchmark_utils.get_oss_fuzz_coverage_benchmarks()
-    elif build_type == 'standard':
-        benchmarks = benchmark_utils.get_standard_coverage_benchmarks()
-    elif build_type == 'bug':
-        benchmarks = benchmark_utils.get_bug_benchmarks()
-    else:
-        raise Exception(f'Invalid build_type: {build_type}')
-
-    if always_build:
-        # Always do a build if always_build is True.
-        return make_builds(benchmarks, fuzzer)
-
+def do_build(benchmark):
+    """Build the benchmark with every changed fuzzer."""
     changed_files = diff_utils.get_changed_files()
     changed_fuzzers = change_utils.get_changed_fuzzers(changed_files)
-    if fuzzer in changed_fuzzers:
-        # Otherwise if fuzzer is in changed_fuzzers then build it with all
-        # benchmarks, the change could have affected any benchmark.
-        return make_builds(benchmarks, fuzzer)
-
-    # Otherwise, only build benchmarks that have changed.
-    changed_benchmarks = change_utils.get_changed_benchmarks(changed_files)
-    benchmarks = set(benchmarks).intersection(changed_benchmarks)
-    return make_builds(benchmarks, fuzzer)
+    print('changed_fuzzers', changed_fuzzers)
+    if not changed_fuzzers:
+        changed_fuzzers = [CANARY_FUZZER]
+    # Only build fuzzers that have changed.
+    return make_builds(benchmark, changed_fuzzers)
 
 
 def main():
     """Build OSS-Fuzz or standard benchmarks with a fuzzer."""
-    if len(sys.argv) != 3:
-        print(f'Usage: {sys.argv[0]} <build_type> <fuzzer>')
+    if len(sys.argv) != 2:
+        print(f'Usage: {sys.argv[0]} <benchmark>')
         return 1
-    build_type = sys.argv[1]
-    fuzzer = sys.argv[2]
-    always_build = ALWAYS_BUILD_FUZZER == fuzzer
-    result = do_build(build_type, fuzzer, always_build)
-    return 0 if result else 1
+    benchmark = sys.argv[1]
+    return 0 if do_build(benchmark) else 1
 
 
 if __name__ == '__main__':

@@ -41,7 +41,7 @@ GRACE_TIME_SECONDS = 5 * 60
 
 FAIL_WAIT_SECONDS = 10 * 60
 
-logger = logs.Logger('scheduler')  # pylint: disable=invalid-name
+logger = logs.Logger()  # pylint: disable=invalid-name
 
 RESOURCES_DIR = os.path.join(utils.ROOT_DIR, 'experiment', 'resources')
 
@@ -772,6 +772,7 @@ def render_startup_script_template(  # pylint: disable=too-many-arguments
         'no_dictionaries': experiment_config['no_dictionaries'],
         'oss_fuzz_corpus': experiment_config['oss_fuzz_corpus'],
         'num_cpu_cores': experiment_config['runner_num_cpu_cores'],
+        'private': experiment_config['private'],
         'cpuset': cpuset,
         'custom_seed_corpus_dir': experiment_config['custom_seed_corpus_dir'],
     }
