@@ -13,7 +13,7 @@
 # limitations under the License.
 """Utility functions for data (frame) transformations."""
 import pandas as pd
-from clusterfuzz.stacktraces import crash_comparer
+from clusterfuzz.stacktraces.crash_comparer import CrashComparer
 
 from analysis import stat_tests
 from common import benchmark_utils
@@ -141,7 +141,7 @@ def is_unique_crash(crash_group):
         crash_state = ':'.join(str(crash).split(':')[1:])
         is_unique = True
         for unique_crash in unique_crashes:
-            if crash_comparer.CrashComparer(crash_state, unique_crash).is_similar():
+            if CrashComparer(crash_state, unique_crash).is_similar():
                 is_unique = False
                 break
         unique_crashes.add(crash_state)
