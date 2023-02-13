@@ -136,13 +136,15 @@ def is_unique_crash(crash_group):
     unique_crashes = set()
     is_firsts = []
     for crash in crash_group.crash_key:
-        crash = str(crash)
+        # crash_key is an concatenation of crash type and crash state:
+        # '{crash_type}:{crash_state}'
+        crash_state = ':'.join(str(crash).split(':')[1:])
         is_unique = True
         for unique_crash in unique_crashes:
-            if crash_comparer.CrashComparer(crash, unique_crash).is_similar():
+            if crash_comparer.CrashComparer(crash_state, unique_crash).is_similar():
                 is_unique = False
                 break
-        unique_crashes.add(crash)
+        unique_crashes.add(crash_state)
         is_firsts.append(is_unique)
     crash_group['firsts'] = is_firsts
     return crash_group.firsts
