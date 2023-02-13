@@ -37,11 +37,8 @@ RUN apt-get update && \
 # Download afl++.
 RUN git clone -b dev https://github.com/AFLplusplus/AFLplusplus /afl && \
     cd /afl && \
-    git checkout 33eba1fc5652060e8d877b02135fce2325813d0c || \
+    git checkout 80eabd6e8a30c2ffc0f084ab34df8b9d582419c3 || \
     true
-
-RUN cd /afl && \
-    sed -i 's/AFL_TXT_MIN_PERCENT 94/AFL_TXT_MIN_PERCENT 99/' include/config.h
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
@@ -51,3 +48,7 @@ RUN cd /afl && \
     PYTHON_INCLUDE=/ make && \
     make install && \
     cp utils/aflpp_driver/libAFLDriver.a /
+
+RUN cd /afl && \
+    make -C custom_mutators/autotokens && \
+    cp -f custom_mutators/autotokens/autotokens.so .
