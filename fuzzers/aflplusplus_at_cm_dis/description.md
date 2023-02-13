@@ -3,7 +3,6 @@
 AFL++ fuzzer instance that has the following config active for all benchmarks:
   - PCGUARD instrumentation 
   - cmplog feature
-  - dict2file feature
   - "fast" power schedule
   - persistent mode + shared memory test cases
 
