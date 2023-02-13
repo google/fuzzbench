@@ -22,6 +22,12 @@
 
 
 - experiment: 2023-02-13-aflpp
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus_at_cm
+    - aflplusplus_at_cm_dis
+
+- experiment: 2023-02-13-aflpp
   description: "afl++ dict experiment"
   fuzzers:
     - aflplusplus
