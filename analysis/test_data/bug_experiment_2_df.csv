@@ -18,7 +18,7 @@ aspeller::AffixMgr::munch
 16,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 03:24:08.801538,2023-02-10 03:54:09.150855,89,900,4059,,,False,0,0
 6,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 03:24:08.829626,2023-02-10 03:54:09.150855,90,0,24,,,False,0,0
 14,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 03:24:08.829626,2023-02-10 03:54:09.150855,90,900,24,,,False,0,0
-3,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,libfuzzer,aspell_aspell_fuzzer,2023-02-10 03:24:08.837018,2023-02-10 03:54:09.150855,91,0,4,,,False,0,0
-8,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,libfuzzer,aspell_aspell_fuzzer,2023-02-10 03:24:08.837018,2023-02-10 03:54:09.150855,91,900,2751,,,False,0,0
-0,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,libfuzzer,aspell_aspell_fuzzer,2023-02-10 03:24:08.808719,2023-02-10 03:54:09.150855,92,0,4,,,False,0,0
+3,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,libfuzzer,aspell_aspell_fuzzer,2023-02-10 03:24:08.837018,2023-02-10 03:54:09.150855,91,0,4,,type:sfsdfa,False,0,0
+8,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,libfuzzer,aspell_aspell_fuzzer,2023-02-10 03:24:08.837018,2023-02-10 03:54:09.150855,91,900,2751,,type:sfsdfa,False,0,0
+0,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,libfuzzer,aspell_aspell_fuzzer,2023-02-10 03:24:08.808719,2023-02-10 03:54:09.150855,92,0,4,,type:sfsdfa,False,0,0
 10,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,libfuzzer,aspell_aspell_fuzzer,2023-02-10 03:24:08.808719,2023-02-10 03:54:09.150855,92,900,2768,,,False,0,0
