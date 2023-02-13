@@ -258,7 +258,7 @@ def fuzz(input_corpus,
 
     flags = list(flags)
 
-    dicts = glob.glob("*.dic*")
+    dicts = glob.glob('*.dic*')
     if len(dicts) == 1 and os.path.exists('./afl++.dict'):
         flags += ['-x', './afl++.dict']
 
