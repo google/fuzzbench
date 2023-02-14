@@ -147,6 +147,25 @@ def test_filter_max_time():
     assert filtered_df.time.unique().tolist() == list(expected_times)
 
 
+def test_count_bugs_covered():
+    """Test that grouping works as expected and bugs counts are correct."""
+    testcases = [
+        ('bug_experiment_1_df.csv', 'expected_1.csv'),
+        ('bug_experiment_2_df.csv', 'expected_2.csv'),
+    ]
+
+    for experiment_csv, expected_csv in testcases:
+        experiment_csv = f'analysis/test_data/{experiment_csv}'
+        expected_csv = f'analysis/test_data/{expected_csv}'
+        experiment_df = pd.read_csv(experiment_csv)
+        actual = data_utils.add_bugs_covered_column(experiment_df)
+
+        grouping3 = ['fuzzer', 'benchmark', 'trial_id', 'time']
+        expected = pd.read_csv(expected_csv).sort_values(grouping3)
+
+        assert (expected.bugs_covered == actual.bugs_covered).all()
+
+
 @pytest.mark.parametrize('threshold', [0.3, 0.8, 1.0])
 def test_benchmark_snapshot_complete(threshold):
     """Tests that the snapshot data contains only the latest timestamp for all
