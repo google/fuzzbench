@@ -41,7 +41,11 @@ BENCHMARK_TYPE_STRS = {benchmark_type.value for benchmark_type in BenchmarkType}
 
 def get_fuzz_target(benchmark):
     """Returns the fuzz target of |benchmark|"""
-    return benchmark_config.get_config(benchmark)['fuzz_target']
+    # Do this because of OSS-Fuzz-on-demand.
+    # TODO(metzman): Use classes to mock a benchmark config for
+    # OSS_FUZZ_ON_DEMAND.
+    return benchmark_config.get_config(benchmark).get(
+        'fuzz_target', environment.get('FUZZ_TARGET'))
 
 
 def get_project(benchmark):
@@ -51,6 +55,10 @@ def get_project(benchmark):
 
 def get_type(benchmark):
     """Returns the type of |benchmark|"""
+    # TODO(metzman): Use classes to mock a benchmark config for
+    # OSS_FUZZ_ON_DEMAND.
+    if environment.get('OSS_FUZZ_ON_DEMAND'):
+        return BenchmarkType.CODE.value
     return benchmark_config.get_config(benchmark).get('type',
                                                       BenchmarkType.CODE.value)
 

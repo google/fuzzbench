@@ -1,0 +1,24 @@
+Unnamed: 0,git_hash,experiment_filestore,experiment,fuzzer,benchmark,time_started,time_ended,trial_id,time,edges_covered,fuzzer_stats,crash_key,bugs_covered
+4,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,afl,arrow_parquet-arrow-fuzz,2023-02-10 03:24:08.793004,2023-02-10 03:54:09.150855,93,0,24,,,0
+15,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,afl,arrow_parquet-arrow-fuzz,2023-02-10 03:24:08.793004,2023-02-10 03:54:09.150855,93,900,1109,,,0
+7,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,afl,arrow_parquet-arrow-fuzz,2023-02-10 03:24:08.803078,2023-02-10 03:54:09.150855,94,0,24,,,0
+13,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,afl,arrow_parquet-arrow-fuzz,2023-02-10 03:24:08.803078,2023-02-10 03:54:09.150855,94,900,24,,,0
+2,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,afl,aspell_aspell_fuzzer,2023-02-10 03:24:08.805643,2023-02-10 03:54:09.150855,95,0,4,,,0
+11,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,afl,aspell_aspell_fuzzer,2023-02-10 03:24:08.805643,2023-02-10 03:54:09.150855,95,900,3099,,"Null-dereference:aspeller::PfxEntry::check
+aspeller::AffixMgr::prefix_check
+aspeller::AffixMgr::munch
+",1
+12,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,afl,aspell_aspell_fuzzer,2023-02-10 03:24:08.805643,2023-02-10 03:54:09.150855,95,900,3099,,"Null-dereference:aspeller::SfxEntry::check
+aspeller::AffixMgr::suffix_check
+aspeller::AffixMgr::munch
+",1
+1,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,afl,aspell_aspell_fuzzer,2023-02-10 03:24:08.799625,2023-02-10 03:54:09.150855,96,0,4,,,0
+9,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,afl,aspell_aspell_fuzzer,2023-02-10 03:24:08.799625,2023-02-10 03:54:09.150855,96,900,2965,,,0
+5,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 03:24:08.801538,2023-02-10 03:54:09.150855,89,0,24,,,0
+16,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 03:24:08.801538,2023-02-10 03:54:09.150855,89,900,4059,,,0
+6,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 03:24:08.829626,2023-02-10 03:54:09.150855,90,0,24,,,0
+14,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 03:24:08.829626,2023-02-10 03:54:09.150855,90,900,24,,,0
+3,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,libfuzzer,aspell_aspell_fuzzer,2023-02-10 03:24:08.837018,2023-02-10 03:54:09.150855,91,0,4,,type:sfsdfa,1
+8,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,libfuzzer,aspell_aspell_fuzzer,2023-02-10 03:24:08.837018,2023-02-10 03:54:09.150855,91,900,2751,,type:sfsdfa,1
+0,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,libfuzzer,aspell_aspell_fuzzer,2023-02-10 03:24:08.808719,2023-02-10 03:54:09.150855,92,0,4,,type:sfsdfa,1
+10,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-14,libfuzzer,aspell_aspell_fuzzer,2023-02-10 03:24:08.808719,2023-02-10 03:54:09.150855,92,900,2768,,,1
