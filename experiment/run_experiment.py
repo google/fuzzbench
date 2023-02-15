@@ -60,6 +60,7 @@ FILTER_SOURCE_REGEX = re.compile(r'('
 _OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT = (
     'gs://{project}-backup.clusterfuzz-external.appspot.com/corpus/'
     'libFuzzer/{fuzz_target}/public.zip')
+DEFAULT_CONCURRENT_BUILDS = 30
 
 Requirement = namedtuple('Requirement',
                          ['mandatory', 'type', 'lowercase', 'startswith'])
