@@ -52,6 +52,7 @@ docker run \
 -e EXPERIMENT_FILESTORE={{experiment_filestore}} {% if local_experiment %}-v {{experiment_filestore}}:{{experiment_filestore}} {% endif %}\
 -e REPORT_FILESTORE={{report_filestore}} {% if local_experiment %}-v {{report_filestore}}:{{report_filestore}} {% endif %}\
 -e FUZZ_TARGET={{fuzz_target}} \
+-e PRIVATE={{private}} \
 -e LOCAL_EXPERIMENT={{local_experiment}} \
 {% if not local_experiment %}--name=runner-container {% endif %}\
 --shm-size=2g \

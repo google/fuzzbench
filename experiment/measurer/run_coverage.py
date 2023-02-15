@@ -23,7 +23,7 @@ from common import logs
 from common import new_process
 from common import sanitizer
 
-logger = logs.Logger('run_coverage')
+logger = logs.Logger()
 
 # Time buffer for libfuzzer merge to gracefully exit.
 EXIT_BUFFER = 15
@@ -38,22 +38,11 @@ UNIT_TIMEOUT = 10
 MAX_TOTAL_TIME = experiment_utils.get_snapshot_seconds()
 
 
-def find_crashing_units(artifacts_dir: str) -> List[str]:
-    """Returns the crashing unit in coverage_binary_output."""
-    return [
-        # This assumes the artifacts are named {crash,oom,timeout,*}-$SHA1_HASH
-        # and that input units are also named with their hash.
-        filename.split('-')[1]
-        for filename in os.listdir(artifacts_dir)
-        if os.path.isfile(os.path.join(artifacts_dir, filename))
-    ]
-
-
 def do_coverage_run(  # pylint: disable=too-many-locals
         coverage_binary: str, new_units_dir: List[str],
-        profraw_file_pattern: str, crashes_dir: str) -> List[str]:
+        profraw_file_pattern: str, crashes_dir: str):
     """Does a coverage run of |coverage_binary| on |new_units_dir|. Writes
-    the result to |profraw_file_pattern|. Returns a list of crashing units."""
+    the result to |profraw_file_pattern|."""
     with tempfile.TemporaryDirectory() as merge_dir:
         command = [
             coverage_binary, '-merge=1', '-dump_coverage=1',
@@ -79,4 +68,3 @@ def do_coverage_run(  # pylint: disable=too-many-locals
                          'coverage_binary': coverage_binary,
                          'output': result.output[-new_process.LOG_LIMIT_FIELD:],
                      })
-    return find_crashing_units(crashes_dir)

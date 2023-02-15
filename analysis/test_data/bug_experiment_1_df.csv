@@ -1,0 +1,138 @@
+Unnamed: 0,git_hash,experiment_filestore,experiment,fuzzer,benchmark,time_started,time_ended,trial_id,time,edges_covered,fuzzer_stats,crash_key
+0,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.193808,,108,0,4,,
+1,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.213901,,112,0,4,,
+2,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.223215,,107,0,4,,
+3,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.185009,,111,0,4,,
+4,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.165263,,105,0,24,,
+5,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.149702,,109,0,24,,
+6,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.210657,,106,0,24,,
+7,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.205513,,110,0,24,,
+8,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.193808,,108,900,2853,,
+9,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.223215,,107,900,3211,,"Null-dereference:aspeller::PfxEntry::check
+aspeller::AffixMgr::prefix_check
+aspeller::AffixMgr::munch
+"
+10,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.223215,,107,900,3211,,"Null-dereference:aspeller::SfxEntry::check
+aspeller::AffixMgr::suffix_check
+aspeller::AffixMgr::munch
+"
+11,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.185009,,111,900,3106,,"Null-dereference:aspeller::PfxEntry::check
+aspeller::AffixMgr::prefix_check
+aspeller::AffixMgr::munch
+"
+12,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.185009,,111,900,3106,,"Null-dereference:aspeller::SfxEntry::check
+aspeller::AffixMgr::suffix_check
+aspeller::AffixMgr::munch
+"
+13,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.213901,,112,900,3105,,"Null-dereference:aspeller::PfxEntry::check
+aspeller::AffixMgr::prefix_check
+aspeller::AffixMgr::munch
+"
+14,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.213901,,112,900,3105,,"Null-dereference:aspeller::SfxEntry::check
+aspeller::AffixMgr::suffix_check
+aspeller::AffixMgr::munch
+"
+15,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.165263,,105,900,3870,,
+16,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.210657,,106,900,3981,,
+17,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.205513,,110,900,5322,,
+18,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.149702,,109,900,5111,,
+19,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.223215,,107,1800,3219,,
+20,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.193808,,108,1800,2857,,
+21,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.213901,,112,1800,3112,,"Null-dereference:aspeller::PfxEntry::check
+aspeller::AffixMgr::prefix_check
+aspeller::AffixMgr::munch
+"
+22,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.213901,,112,1800,3112,,"Null-dereference:aspeller::SfxEntry::check
+aspeller::AffixMgr::suffix_check
+aspeller::AffixMgr::munch
+"
+23,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.185009,,111,1800,3130,,"Null-dereference:aspeller::PfxEntry::check
+aspeller::AffixMgr::prefix_check
+aspeller::AffixMgr::munch
+"
+24,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.185009,,111,1800,3130,,"Null-dereference:aspeller::SfxEntry::check
+aspeller::AffixMgr::suffix_check
+aspeller::AffixMgr::munch
+"
+25,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.210657,,106,1800,4042,,
+26,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.165263,,105,1800,4025,,
+27,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.149702,,109,1800,5355,,
+28,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.205513,,110,1800,5366,,
+29,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.223215,,107,2700,3220,,
+30,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.185009,,111,2700,3131,,"Null-dereference:aspeller::SfxEntry::check
+aspeller::AffixMgr::suffix_check
+aspeller::AffixMgr::munch
+"
+31,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.210657,,106,2700,4059,,
+32,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.165263,,105,2700,4240,,
+33,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.193808,,108,2700,2862,,
+34,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.213901,,112,2700,3113,,
+35,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.149702,,109,2700,5394,,
+36,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.205513,,110,2700,5467,,
+37,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.223215,,107,3600,3221,,
+38,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.149702,,109,3600,5400,,
+39,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.205513,,110,3600,5468,,
+40,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.210657,,106,3600,4087,,
+41,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.165263,,105,3600,4266,,
+42,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.193808,,108,3600,2869,,
+43,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.213901,,112,3600,3114,,
+44,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.185009,,111,3600,3132,,
+45,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.223215,,107,4500,3221,,
+46,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.205513,,110,4500,5476,,
+47,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.149702,,109,4500,5400,,
+48,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.165263,,105,4500,4294,,
+49,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.193808,,108,4500,2869,,
+50,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.185009,,111,4500,3132,,
+51,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.213901,,112,4500,3114,,"Null-dereference:aspeller::SfxEntry::check
+aspeller::AffixMgr::suffix_check
+aspeller::AffixMgr::munch
+"
+52,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.210657,,106,4500,4147,,
+53,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.223215,,107,5400,3221,,
+54,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.149702,,109,5400,5407,,
+55,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.205513,,110,5400,5525,,
+56,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.210657,,106,5400,4156,,
+57,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.165263,,105,5400,4313,,
+58,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.193808,,108,5400,2873,,
+59,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.185009,,111,5400,3132,,"Null-dereference:aspeller::PfxEntry::check
+aspeller::AffixMgr::prefix_check
+aspeller::AffixMgr::munch
+"
+60,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.185009,,111,5400,3132,,"Null-dereference:aspeller::SfxEntry::check
+aspeller::AffixMgr::suffix_check
+aspeller::AffixMgr::munch
+"
+61,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.213901,,112,5400,3115,,"Null-dereference:aspeller::PfxEntry::check
+aspeller::AffixMgr::prefix_check
+aspeller::AffixMgr::munch
+"
+62,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.213901,,112,5400,3115,,"Null-dereference:aspeller::SfxEntry::check
+aspeller::AffixMgr::suffix_check
+aspeller::AffixMgr::munch
+"
+63,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.223215,,107,6300,3221,,
+64,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.185009,,111,6300,3132,,
+65,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.205513,,110,6300,5525,,
+66,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.149702,,109,6300,5428,,
+67,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.165263,,105,6300,4320,,
+68,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.193808,,108,6300,2873,,
+69,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.210657,,106,6300,4166,,
+70,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.213901,,112,6300,3135,,"Null-dereference:aspeller::PfxEntry::check
+aspeller::AffixMgr::prefix_check
+aspeller::AffixMgr::munch
+"
+71,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.213901,,112,6300,3135,,"Null-dereference:aspeller::SfxEntry::check
+aspeller::AffixMgr::suffix_check
+aspeller::AffixMgr::munch
+"
+72,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.223215,,107,7200,3221,,
+73,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,aspell_aspell_fuzzer,2023-02-10 09:51:02.193808,,108,7200,2873,,
+74,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.213901,,112,7200,3135,,
+75,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,aspell_aspell_fuzzer,2023-02-10 09:51:02.185009,,111,7200,3132,,"Null-dereference:aspeller::PfxEntry::check
+aspeller::AffixMgr::prefix_check
+aspeller::AffixMgr::munch
+"
+76,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.165263,,105,7200,4324,,
+77,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.149702,,109,7200,5429,,
+78,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,afl,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.205513,,110,7200,5534,,
+79,415c95cf5b5d2f29a7222b5c06685b2416f67be0,/tmp/experiment-data,generate-bug-df-18,libfuzzer,arrow_parquet-arrow-fuzz,2023-02-10 09:51:02.210657,,106,7200,4174,,

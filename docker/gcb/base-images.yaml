@@ -16,7 +16,10 @@
 
 images:
 - gcr.io/fuzzbench/base-image:test-experiment
+- us-central1-docker.pkg.dev/fuzzbench/fuzzbench-private/base-image
 - gcr.io/fuzzbench/base-image
+- gcr.io/fuzzbench/dispatcher-image
+- us-central1-docker.pkg.dev/fuzzbench/fuzzbench-private/dispatcher-image
 steps:
 - args:
   - pull
@@ -27,6 +30,8 @@ steps:
   name: docker:19.03.12
 - args:
   - build
+  - --tag
+  - us-central1-docker.pkg.dev/fuzzbench/fuzzbench-private/base-image
   - --tag
   - gcr.io/fuzzbench/base-image
   - --tag
@@ -48,13 +53,15 @@ steps:
   - gcr.io/fuzzbench/dispatcher-image
   - --tag
   - gcr.io/fuzzbench/dispatcher-image:test-experiment
+  - --tag
+  - us-central1-docker.pkg.dev/fuzzbench/fuzzbench-private/dispatcher-image
   - --cache-from
   - gcr.io/fuzzbench/dispatcher-image
   - --build-arg
   - BUILDKIT_INLINE_CACHE=1
   - --file
   - docker/dispatcher-image/Dockerfile
-  - .
+  - docker/dispatcher-image
   env:
     - DOCKER_BUILDKIT=1
   id: dispatcher-image

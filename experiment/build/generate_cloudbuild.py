@@ -81,7 +81,7 @@ def _get_cachable_image_tag(image_specs):
     return _get_image_tag(image_specs)
 
 
-def coverage_steps(benchmark):
+def get_coverage_steps(benchmark: str):
     """Returns GCB run steps for coverage builds."""
     coverage_binaries_dir = exp_path.filestore(
         build_utils.get_coverage_binaries_dir())
@@ -117,11 +117,22 @@ def get_docker_registry():
     return os.environ['DOCKER_REGISTRY']
 
 
+def get_cloudbuild_tags(fuzzer, benchmark):
+    """Returns cloudbuild tags that are useful for identifying a build."""
+    experiment = os.environ['EXPERIMENT']
+    tags = [experiment]
+    if fuzzer:
+        tags.append(fuzzer)
+    if benchmark:
+        tags.append(benchmark)
+    return tags
+
+
 def create_cloudbuild_spec(image_templates,
                            benchmark,
                            fuzzer,
                            build_base_images=False,
-                           cloudbuild_tag=None):
+                           cloudbuild_tags=None):
     """Generates Cloud Build specification.
 
     Args:
@@ -133,16 +144,11 @@ def create_cloudbuild_spec(image_templates,
       GCB build steps.
     """
     cloudbuild_spec = {'steps': [], 'images': []}
-    if cloudbuild_tag is not None:
-        cloudbuild_spec['tags'] = [f'fuzzer-{fuzzer}', f'benchmark-{benchmark}']
 
-    # TODO(metzman): Figure out how to do this to solve log length issue.
-    # cloudbuild_spec['steps'].append({
-    #     'id': 'buildx-create',
-    #     'name': DOCKER_IMAGE,
-    #     'args': ['buildx', 'create', '--use', 'buildxbuilder', '--driver-opt',
-    #              'env.BUILDKIT_STEP_LOG_MAX_SIZE=500000000']
-    #     })
+    if cloudbuild_tags is None:
+        cloudbuild_tags = get_cloudbuild_tags(fuzzer, benchmark)
+    if cloudbuild_tags:
+        cloudbuild_spec['tags'] = cloudbuild_tags
 
     for image_name, image_specs in image_templates.items():
         step = {
@@ -183,7 +189,8 @@ def create_cloudbuild_spec(image_templates,
 
     if any(image_specs['type'] in 'coverage'
            for _, image_specs in image_templates.items()):
-        cloudbuild_spec['steps'] += coverage_steps(benchmark)
+        assert benchmark is not None, 'Coverage build need benchmark'
+        cloudbuild_spec['steps'] += get_coverage_steps(benchmark)
 
     return cloudbuild_spec
 
@@ -195,8 +202,8 @@ def main():
     base_images_spec = create_cloudbuild_spec(
         {'base-image': image_templates['base-image']},
         build_base_images=True,
-        benchmark='no-benchmark',
-        fuzzer='no-fuzzer')
+        benchmark=None,
+        fuzzer=None)
     base_images_spec_file = os.path.join(ROOT_DIR, 'docker', 'gcb',
                                          'base-images.yaml')
     yaml_utils.write(base_images_spec_file, base_images_spec)

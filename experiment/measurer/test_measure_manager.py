@@ -212,82 +212,6 @@ def test_measure_all_trials_no_more(mocked_directories_have_same_files,
         queue.Queue(), False)
 
 
-def test_is_cycle_unchanged_doesnt_exist(experiment):
-    """Test that is_cycle_unchanged can properly determine if a cycle is
-    unchanged or not when it needs to copy the file for the first time."""
-    snapshot_measurer = measure_manager.SnapshotMeasurer(
-        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
-    this_cycle = 1
-    with test_utils.mock_popen_ctx_mgr(returncode=1):
-        assert not snapshot_measurer.is_cycle_unchanged(this_cycle)
-
-
-@mock.patch('common.filestore_utils.cp')
-@mock.patch('common.filesystem.read')
-def test_is_cycle_unchanged_first_copy(mocked_read, mocked_cp, experiment):
-    """Test that is_cycle_unchanged can properly determine if a cycle is
-    unchanged or not when it needs to copy the file for the first time."""
-    snapshot_measurer = measure_manager.SnapshotMeasurer(
-        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
-    this_cycle = 100
-    unchanged_cycles_file_contents = (
-        '\n'.join([str(num) for num in range(10)] + [str(this_cycle)]))
-    mocked_read.return_value = unchanged_cycles_file_contents
-    mocked_cp.return_value = new_process.ProcessResult(0, '', False)
-
-    assert snapshot_measurer.is_cycle_unchanged(this_cycle)
-    assert not snapshot_measurer.is_cycle_unchanged(this_cycle + 1)
-
-
-def test_is_cycle_unchanged_update(fs, experiment):
-    """Test that is_cycle_unchanged can properly determine that a
-    cycle has changed when it has the file but needs to update it."""
-    snapshot_measurer = measure_manager.SnapshotMeasurer(
-        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
-
-    this_cycle = 100
-    initial_unchanged_cycles_file_contents = (
-        '\n'.join([str(num) for num in range(10)] + [str(this_cycle)]))
-    fs.create_file(snapshot_measurer.unchanged_cycles_path,
-                   contents=initial_unchanged_cycles_file_contents)
-
-    next_cycle = this_cycle + 1
-    unchanged_cycles_file_contents = (initial_unchanged_cycles_file_contents +
-                                      '\n' + str(next_cycle))
-    assert snapshot_measurer.is_cycle_unchanged(this_cycle)
-    with mock.patch('common.filestore_utils.cp') as mocked_cp:
-        with mock.patch('common.filesystem.read') as mocked_read:
-            mocked_cp.return_value = new_process.ProcessResult(0, '', False)
-            mocked_read.return_value = unchanged_cycles_file_contents
-            assert snapshot_measurer.is_cycle_unchanged(next_cycle)
-
-
-@mock.patch('common.filestore_utils.cp')
-def test_is_cycle_unchanged_skip_cp(mocked_cp, fs, experiment):
-    """Check that is_cycle_unchanged doesn't call filestore_utils.cp
-    unnecessarily."""
-    snapshot_measurer = measure_manager.SnapshotMeasurer(
-        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
-    this_cycle = 100
-    initial_unchanged_cycles_file_contents = (
-        '\n'.join([str(num) for num in range(10)] + [str(this_cycle + 1)]))
-    fs.create_file(snapshot_measurer.unchanged_cycles_path,
-                   contents=initial_unchanged_cycles_file_contents)
-    assert not snapshot_measurer.is_cycle_unchanged(this_cycle)
-    mocked_cp.assert_not_called()
-
-
-@mock.patch('common.filestore_utils.cp')
-def test_is_cycle_unchanged_no_file(mocked_cp, fs, experiment):
-    """Test that is_cycle_unchanged returns False when there is no
-    unchanged-cycles file."""
-    # Make sure we log if there is no unchanged-cycles file.
-    snapshot_measurer = measure_manager.SnapshotMeasurer(
-        FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
-    mocked_cp.return_value = new_process.ProcessResult(1, '', False)
-    assert not snapshot_measurer.is_cycle_unchanged(0)
-
-
 @mock.patch('common.new_process.execute')
 @mock.patch('common.benchmark_utils.get_fuzz_target',
             return_value='fuzz-target')
@@ -302,12 +226,6 @@ def test_run_cov_new_units(_, mocked_execute, fs, environ):
     snapshot_measurer = measure_manager.SnapshotMeasurer(
         FUZZER, BENCHMARK, TRIAL_NUM, SNAPSHOT_LOGGER, REGION_COVERAGE)
     snapshot_measurer.initialize_measurement_dirs()
-    shared_units = ['shared1', 'shared2']
-    fs.create_file(snapshot_measurer.measured_files_path,
-                   contents='\n'.join(shared_units))
-    for unit in shared_units:
-        fs.create_file(os.path.join(snapshot_measurer.corpus_dir, unit))
-
     new_units = ['new1', 'new2']
     for unit in new_units:
         fs.create_file(os.path.join(snapshot_measurer.corpus_dir, unit))
@@ -366,10 +284,8 @@ class TestIntegrationMeasurement:
     # portable binary.
     @pytest.mark.skipif(not os.getenv('FUZZBENCH_TEST_INTEGRATION'),
                         reason='Not running integration tests.')
-    @mock.patch('experiment.measurer.measure_manager.SnapshotMeasurer'
-                '.is_cycle_unchanged')
     def test_measure_snapshot_coverage(  # pylint: disable=too-many-locals
-            self, mocked_is_cycle_unchanged, db, experiment, tmp_path):
+            self, db, experiment, tmp_path):
         """Integration test for measure_snapshot_coverage."""
         # WORK is set by experiment to a directory that only makes sense in a
         # fakefs. A directory containing necessary llvm tools is also added to
@@ -377,9 +293,8 @@ class TestIntegrationMeasurement:
         llvm_tools_path = get_test_data_path('llvm_tools')
         os.environ['PATH'] += os.pathsep + llvm_tools_path
         os.environ['WORK'] = str(tmp_path)
-        mocked_is_cycle_unchanged.return_value = False
         # Set up the coverage binary.
-        benchmark = 'freetype2-2017'
+        benchmark = 'freetype2_ftfuzzer'
         coverage_binary_src = get_test_data_path(
             'test_measure_snapshot_coverage', benchmark + '-coverage')
         benchmark_cov_binary_dir = os.path.join(
@@ -428,7 +343,7 @@ class TestIntegrationMeasurement:
 def test_extract_corpus(archive_name, tmp_path):
     """"Tests that extract_corpus unpacks a corpus as we expect."""
     archive_path = get_test_data_path(archive_name)
-    measure_manager.extract_corpus(archive_path, set(), tmp_path)
+    measure_manager.extract_corpus(archive_path, tmp_path)
     expected_corpus_files = {
         '5ea57dfc9631f35beecb5016c4f1366eb6faa810',
         '2f1507c3229c5a1f8b619a542a8e03ccdbb3c29c',

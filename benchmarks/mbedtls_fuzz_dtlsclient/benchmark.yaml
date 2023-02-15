@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit: 4c08dd4e716c0c6d70d78117d3155c2b832f694e
-commit_date: 2020-02-11 08:17:02+00:00
+commit: 169d9e6eb4096cb48aa25651f42b276089841087
+commit_date: 2023-01-27T09:05:00+00:00
 fuzz_target: fuzz_dtlsclient
 project: mbedtls
 unsupported_fuzzers:

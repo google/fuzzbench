@@ -1,1 +1,0 @@
-<?function from(){foreach(range(0,2)as$ÿ){yield;}}function gen($gen){yield from$gen;}$gens[][]=from();for($level=1;;){{gen($gens[$level-1][$ÿ>1])->next();}}

@@ -13,13 +13,14 @@
 # limitations under the License.
 """Utility functions for data (frame) transformations."""
 import pandas as pd
+from clusterfuzz.stacktraces.crash_comparer import CrashComparer
 
 from analysis import stat_tests
 from common import benchmark_utils
 from common import environment
 from common import logs
 
-logger = logs.Logger('data_utils')
+logger = logs.Logger()
 
 
 class EmptyDataError(ValueError):
@@ -128,17 +129,39 @@ def filter_max_time(experiment_df, max_time):
     return experiment_df[experiment_df['time'] <= max_time]
 
 
+def is_unique_crash(crash_group):
+    """Check if each crash in |crash_group| is unique with CF's crash comparer.
+    Return the |crash_group| with an extra columns representing if that crash
+    is the first occurrence."""
+    unique_crashes = set()
+    is_firsts = []
+    for crash in crash_group.crash_key:
+        # crash_key is an concatenation of crash type and crash state:
+        # '{crash_type}:{crash_state}'
+        crash_state = ':'.join(str(crash).split(':')[1:])
+        is_unique = True
+        for unique_crash in unique_crashes:
+            if CrashComparer(crash_state, unique_crash).is_similar():
+                is_unique = False
+                break
+        unique_crashes.add(crash_state)
+        is_firsts.append(is_unique)
+    crash_group['firsts'] = is_firsts
+    return crash_group.firsts
+
+
 def add_bugs_covered_column(experiment_df):
     """Return a modified experiment df in which adds a |bugs_covered| column,
     a cumulative count of bugs covered over time."""
     if 'crash_key' not in experiment_df:
         experiment_df['bugs_covered'] = 0
         return experiment_df
-    grouping1 = ['fuzzer', 'benchmark', 'trial_id', 'crash_key']
     grouping2 = ['fuzzer', 'benchmark', 'trial_id']
     grouping3 = ['fuzzer', 'benchmark', 'trial_id', 'time']
     df = experiment_df.sort_values(grouping3)
-    df['firsts'] = ~df.duplicated(subset=grouping1) & ~df.crash_key.isna()
+    df['firsts'] = (
+        df.groupby(grouping2, group_keys=False).apply(is_unique_crash) &
+        ~df.crash_key.isna())
     df['bugs_cumsum'] = df.groupby(grouping2)['firsts'].transform('cumsum')
     df['bugs_covered'] = (
         df.groupby(grouping3)['bugs_cumsum'].transform('max').astype(int))
