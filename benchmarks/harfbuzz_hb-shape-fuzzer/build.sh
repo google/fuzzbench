@@ -13,6 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+# Do this here because the original python3.8 gets clobbered.
+pip3 install meson==0.56.0 ninja>=1.7 --upgrade
+
 # Disable:
 # 1. UBSan vptr since target built with -fno-rtti.
 export CFLAGS="$CFLAGS -fno-sanitize=vptr -DHB_NO_VISIBILITY"
