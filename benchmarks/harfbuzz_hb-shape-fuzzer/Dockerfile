@@ -17,9 +17,7 @@
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
 
 RUN apt-get update && \
-    apt-get install -y \
-        python3-pip ragel pkg-config && \
-    pip3 install meson==0.56.0 ninja
+    apt-get install -y ragel pkg-config
 
 RUN git clone https://github.com/harfbuzz/harfbuzz.git
 
