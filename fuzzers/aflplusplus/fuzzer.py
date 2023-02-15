@@ -31,6 +31,22 @@ def get_uninstrumented_build_directory(target_directory):
     return os.path.join(target_directory, 'uninstrumented')
 
 
+def get_symsan_build_directory(target_directory):
+    """Return path to CmpLog target directory."""
+    return os.path.join(target_directory, 'symsantrack')
+
+
+def get_symsan_build_fast_directory(target_directory):
+    """Return path to CmpLog target directory."""
+    return os.path.join(target_directory, 'symsanfast')
+
+
+def is_benchmark(name):
+    """Check the benchmark under built."""
+    benchmark = os.getenv('BENCHMARK', None)
+    return benchmark is not None and name in benchmark
+
+
 def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
@@ -193,7 +209,72 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
                                                   os.path.basename(fuzz_target))
 
         print('Re-building benchmark for CmpLog fuzzing target')
-        utils.build_benchmark(env=new_env)
+        with utils.restore_directory(src), utils.restore_directory(work):
+            utils.build_benchmark(env=new_env)
+
+    if 'symsan' in build_modes:
+
+        symsan_build_directory = get_symsan_build_directory(build_directory)
+        os.mkdir(symsan_build_directory)
+
+        # symcc requires an build with different instrumentation.
+        new_env = os.environ.copy()
+        new_env['CC'] = '/symsan/build/bin/ko-clang'
+        new_env['CXX'] = '/symsan/build/bin/ko-clang++'
+        new_env['KO_CC'] = 'clang-12'
+        new_env['KO_CXX'] = 'clang++-12'
+        #new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace("-stlib=libc++", "")
+        new_env['CXXFLAGS'] = ''
+        new_env['CFLAGS'] = ''
+        new_env['FUZZER_LIB'] = '/libfuzzer-harness.o'
+        new_env['OUT'] = symsan_build_directory
+        new_env['KO_DONT_OPTIMIZE'] = '1'
+        new_env['USE_TRACK'] = '1'
+        new_env['KO_USE_FASTGEN'] = '1'
+        if is_benchmark('curl_curl_fuzzer_http'):
+            new_env['SANITIZER'] = 'memory'
+
+        # For CmpLog build, set the OUT and FUZZ_TARGET environment
+        # variable to point to the new CmpLog build directory.
+        fuzz_target = os.getenv('FUZZ_TARGET')
+        if fuzz_target:
+            new_env['FUZZ_TARGET'] = os.path.join(symsan_build_directory,
+                                                  os.path.basename(fuzz_target))
+
+        with utils.restore_directory(src), utils.restore_directory(work):
+            utils.build_benchmark(env=new_env)
+
+    if 'symsanfast' in build_modes:
+
+        symsan_build_fast_directory = get_symsan_build_fast_directory(
+            build_directory)
+        os.mkdir(symsan_build_fast_directory)
+
+        # symcc requires an build with different instrumentation.
+        new_env = os.environ.copy()
+        new_env['CC'] = '/symsan/build/bin/ko-clang'
+        new_env['CXX'] = '/symsan/build/bin/ko-clang++'
+        new_env['KO_CC'] = 'clang-12'
+        new_env['KO_CXX'] = 'clang++-12'
+        new_env['CXXFLAGS'] = '-stdlib=libc++'
+        new_env['KO_USE_NATIVE_LIBCXX'] = '1'
+        new_env['CFLAGS'] = ''
+        #new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace("-stlib=libc++", "")
+        new_env['FUZZER_LIB'] = '/libfuzzer-harness-fast.o'
+        new_env['OUT'] = symsan_build_fast_directory
+        new_env['KO_DONT_OPTIMIZE'] = '1'
+
+        if is_benchmark('curl_curl_fuzzer_http'):
+            new_env['SANITIZER'] = 'memory'
+        # For CmpLog build, set the OUT and FUZZ_TARGET environment
+        # variable to point to the new CmpLog build directory.
+        fuzz_target = os.getenv('FUZZ_TARGET')
+        if fuzz_target:
+            new_env['FUZZ_TARGET'] = os.path.join(symsan_build_fast_directory,
+                                                  os.path.basename(fuzz_target))
+
+        with utils.restore_directory(src), utils.restore_directory(work):
+            utils.build_benchmark(env=new_env)
 
     if 'symcc' in build_modes:
 
@@ -264,15 +345,14 @@ def fuzz(input_corpus,
     if os.path.exists(cmplog_target_binary) and no_cmplog is False:
         flags += ['-c', cmplog_target_binary]
 
-    os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
-    os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
-    os.environ['AFL_FAST_CAL'] = '1'
-
     if not skip:
         os.environ['AFL_DISABLE_TRIM'] = '1'
+        # os.environ['AFL_FAST_CAL'] = '1'
         os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
         if 'ADDITIONAL_ARGS' in os.environ:
             flags += os.environ['ADDITIONAL_ARGS'].split(' ')
+
+    os.environ['AFL_FAST_CAL'] = '1'
 
     afl_fuzzer.run_afl_fuzz(input_corpus,
                             output_corpus,
