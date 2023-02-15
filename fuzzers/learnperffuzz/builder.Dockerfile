@@ -18,15 +18,14 @@ FROM $parent_image
 # Download and compile LearnPerfFuzz.
 # Set AFL_NO_X86 to skip flaky tests.
 
-RUN git clone https://github.com/somiha/LearnPerfFuzz.git /afl && \
-    cd /afl && \
-    git checkout 8d20181a7334abfef19bc449796d772aadf1b829 && \
+RUN git clone https://github.com/somiha/LearnPerfFuzz.git /LearnPerfFuzz && \
+    cd /LearnPerfFuzz && \
     CFLAGS= CXXFLAGS= AFL_NO_X86=1 make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
 RUN apt-get update && \
     apt-get install wget -y && \
-    wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
-    clang -Wno-pointer-sign -c /afl/llvm_mode/afl-llvm-rt.o.c -I/afl && \
-    clang++ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp && \
+    wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /LearnPerfFuzz/afl_driver.cpp && \
+    clang -Wno-pointer-sign -c /LearnPerfFuzz/llvm_mode/afl-llvm-rt.o.c -I/LearnPerfFuzz && \
+    clang++ -stdlib=libc++ -std=c++11 -O2 -c /LearnPerfFuzz/afl_driver.cpp && \
     ar r /libAFL.a *.o
