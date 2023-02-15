@@ -30,11 +30,11 @@ import yaml
 
 from common import benchmark_utils
 from common import experiment_utils
+from common import filestore_utils
 from common import filesystem
 from common import fuzzer_utils
 from common import gcloud
 from common import gsutil
-from common import filestore_utils
 from common import logs
 from common import new_process
 from common import utils
@@ -60,7 +60,6 @@ FILTER_SOURCE_REGEX = re.compile(r'('
 _OSS_FUZZ_CORPUS_BACKUP_URL_FORMAT = (
     'gs://{project}-backup.clusterfuzz-external.appspot.com/corpus/'
     'libFuzzer/{fuzz_target}/public.zip')
-DEFAULT_CONCURRENT_BUILDS = 30
 
 Requirement = namedtuple('Requirement',
                          ['mandatory', 'type', 'lowercase', 'startswith'])
