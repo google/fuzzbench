@@ -42,6 +42,6 @@ $CXX $CXXFLAGS \
     ../.libs/libxml2.a -Wl,-Bstatic -lz -llzma -Wl,-Bdynamic
 
 [ -e seed/xml ] || make seed/xml.stamp
-zip -j $OUT/${fuzzer}_seed_corpus.zip seed/xml/*
+zip -j $OUT/xml_seed_corpus.zip seed/xml/*
 
 cp *.dict *.options $OUT/
