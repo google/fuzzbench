@@ -235,6 +235,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         shutil.copy('/get_frida_entry.sh', build_directory)
     shutil.copy('/afl/autotokens.so', build_directory)
 
+
 # pylint: disable=too-many-arguments
 def fuzz(input_corpus,
          output_corpus,
