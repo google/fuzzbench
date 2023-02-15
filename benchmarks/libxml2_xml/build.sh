@@ -45,4 +45,3 @@ $CXX $CXXFLAGS \
 zip -j $OUT/${fuzzer}_seed_corpus.zip seed/xml/*
 
 cp *.dict *.options $OUT/
-cp *.dict *.options $OUT/
