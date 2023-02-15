@@ -21,6 +21,181 @@
 #
 
 
+- experiment: 2023-02-14-aflpp
+  description: "afl++ dict experiment."
+  fuzzers:
+    - aflplusplus_at
+    - aflplusplus_at_nomain
+
+- experiment: 2023-02-13-aflpp-3
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus_at_cm_new
+    - aflplusplus_at_cm_old
+
+- experiment: 2023-02-13-aflpp-2
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus_at_cm
+    - aflplusplus_at_cm_dis
+
+- experiment: 2023-02-13-aflpp
+  description: "afl++ dict experiment"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_dict
+
+- experiment: 2023-02-08-aflpp
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus_at_cm
+    - aflplusplus_at
+
+- experiment: 2023-02-06-aflpp-3
+  description: "afl++ cmplog experiment."
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_99
+
+- experiment: 2023-02-06-aflpp-2
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus_at_cm_less2
+    - aflplusplus_at_cm_less
+
+- experiment: 2023-02-06-aflpp
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus_at_cm
+    - aflplusplus_at_cm_less
+
+- experiment: 2023-02-05-aflpp
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus_at_cm
+    - aflplusplus_at_cm_air
+
+- experiment: 2023-02-04-aflpp-2
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus_at_cm
+    - aflplusplus_at_cm_less
+
+- experiment: 2023-02-04-aflpp-1
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus_at_cm
+    - aflplusplus_at_cm_learn
+
+- experiment: 2023-02-02-libafl
+  description: "libafl grammar comparison."
+  fuzzers:
+    - libafl_token_alt
+    - libafl_token_neu
+
+- experiment: 2023-02-02-aflpp-2
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus_at_cm
+    - aflplusplus_at_cm_fav
+
+- experiment: 2023-02-02-aflpp-1
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus_at_cm
+    - aflplusplus_at_cm_old
+
+- experiment: 2023-02-01-aflpp
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus_at
+    - aflplusplus_at_cm_fav
+
+- experiment: 2023-01-31-aflpp
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus_at
+    - aflplusplus_at_cm_fav
+
+- experiment: 2023-01-29-aflpp
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_at
+    - aflplusplus_at_cm
+    - aflplusplus_at_cm_fav
+    - aflplusplus_at_cm_old
+
+- experiment: 2023-01-28-aflpp
+  description: "afl++ vs llvm native instrumentation."
+  fuzzers:
+    - aflplusplus_at
+    - aflplusplus_at_llvm
+
+- experiment: 2023-01-27-aflpp
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_at
+    - aflplusplus_at_cm
+    - aflplusplus_at_cm_fav
+    - aflplusplus_at_cm_old
+
+- experiment: 2023-01-27-test-request
+  description: "Test if the new system can run experiments by online request."
+  fuzzers:
+    - aflplusplus
+    - centipede
+    - honggfuzz
+    - libfuzzer
+
+- experiment: 2023-01-25-libafl
+  description: "libafl grammar comparison"
+  fuzzers:
+    - libafl
+    - libafl_text
+    - libafl_token_alt
+    - libafl_token_neu
+
+- experiment: 2023-01-23-3-aflpp
+  description: "afl++ weighting variants."
+  fuzzers:
+    - aflplusplus_cmplog_exp
+    - aflplusplus_unfuzzed
+    - aflplusplus_faved
+
+- experiment: 2023-01-23-2-aflpp
+  description: "afl++ cmplog variants."
+  fuzzers:
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_exp
+    - aflplusplus_cmplog_exp1
+
+- experiment: 2023-01-23-aflpp
+  description: "afl++ cmplog variants."
+  fuzzers:
+    - aflplusplus_cmplog
+    - aflplusplus_cmplog_exp
+    - aflplusplus_cmplog_exp1
+
+- experiment: 2023-01-12-aflpp
+  description: "afl++ tokens + libafl test."
+  fuzzers:
+    - aflplusplus_tokens_only
+    - aflplusplus_tokens
+    - aflplusplus
+
+- experiment: 2023-01-05-libafl
+  description: "Test the LibAFL forkserver"
+  type: bug
+  fuzzers:
+    - aflplusplus
+    - entropic
+    - libfuzzer
+    - honggfuzz
+    - libafl
+    - libafl_forkserver
+
 - experiment: 2023-01-10-aflpp
   description: "Test if the previous aflpp build failure is flaky."
   fuzzers:

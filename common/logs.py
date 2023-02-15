@@ -107,15 +107,17 @@ class Logger:
     """Wrapper around logging.Logger that allows it to be used like we use the
     root logger for stackdriver."""
 
-    def __init__(self, name, default_extras=None, log_level=logging.INFO):
+    _LOGGER_NAME = 'fuzzbench'
+
+    def __init__(self, default_extras=None, log_level=logging.INFO):
         if not utils.is_local():
             _initialize_cloud_clients()
-            self.logger = _log_client.logger(name)
+            self.logger = _log_client.logger(self._LOGGER_NAME)
         else:
-            self.logger = logging.getLogger(name)
+            self.logger = logging.getLogger(self._LOGGER_NAME)
 
-        logging.getLogger(name).setLevel(log_level)
-        logging.getLogger(name).addFilter(LengthFilter())
+        logging.getLogger(self._LOGGER_NAME).setLevel(log_level)
+        logging.getLogger(self._LOGGER_NAME).addFilter(LengthFilter())
         self.default_extras = default_extras if default_extras else {}
 
     def error(self, *args, **kwargs):

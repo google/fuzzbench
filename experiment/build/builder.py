@@ -47,7 +47,7 @@ BUILD_FAIL_WAIT = 5 * 60
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 
-logger = logs.Logger('builder')  # pylint: disable=invalid-name
+logger = logs.Logger()  # pylint: disable=invalid-name
 
 
 def get_fuzzer_benchmark_pairs(fuzzers, benchmarks):

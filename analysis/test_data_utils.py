@@ -46,14 +46,14 @@ def create_experiment_data(experiment='test_experiment',
                            experiment_filestore='gs://fuzzbench-data'):
     """Utility function to create test experiment data."""
     return pd.concat([
-        create_trial_data(0, 'libpng-1.6.38', 'afl', 10, 100, experiment,
-                          experiment_filestore),
-        create_trial_data(1, 'libpng-1.6.38', 'afl', 10, 200, experiment,
-                          experiment_filestore),
-        create_trial_data(2, 'libpng-1.6.38', 'libfuzzer', 10, 200, experiment,
-                          experiment_filestore),
-        create_trial_data(3, 'libpng-1.6.38', 'libfuzzer', 10, 300, experiment,
-                          experiment_filestore),
+        create_trial_data(0, 'libpng_libpng_read_fuzzer', 'afl', 10, 100,
+                          experiment, experiment_filestore),
+        create_trial_data(1, 'libpng_libpng_read_fuzzer', 'afl', 10, 200,
+                          experiment, experiment_filestore),
+        create_trial_data(2, 'libpng_libpng_read_fuzzer', 'libfuzzer', 10, 200,
+                          experiment, experiment_filestore),
+        create_trial_data(3, 'libpng_libpng_read_fuzzer', 'libfuzzer', 10, 300,
+                          experiment, experiment_filestore),
         create_trial_data(4, 'libxml', 'afl', 6 if incomplete else 10, 1000,
                           experiment, experiment_filestore),
         create_trial_data(5, 'libxml', 'afl', 10, 1200, experiment,
@@ -94,7 +94,8 @@ def test_clobber_experiments_data():
     df.reset_index(inplace=True)
 
     to_drop = df[(df.experiment == 'experiment-2') &
-                 (df.benchmark == 'libpng-1.6.38') & (df.fuzzer == 'afl')].index
+                 (df.benchmark == 'libpng_libpng_read_fuzzer') &
+                 (df.fuzzer == 'afl')].index
     df.drop(to_drop, inplace=True)
 
     experiments = list(df['experiment'].drop_duplicates().values)
@@ -102,10 +103,10 @@ def test_clobber_experiments_data():
 
     columns = ['experiment', 'benchmark', 'fuzzer']
     expected_result = pd.DataFrame([
-        ['experiment-2', 'libpng-1.6.38', 'libfuzzer'],
+        ['experiment-2', 'libpng_libpng_read_fuzzer', 'libfuzzer'],
         ['experiment-2', 'libxml', 'afl'],
         ['experiment-2', 'libxml', 'libfuzzer'],
-        ['experiment-1', 'libpng-1.6.38', 'afl'],
+        ['experiment-1', 'libpng_libpng_read_fuzzer', 'afl'],
     ],
                                    columns=columns)
     expected_result.sort_index(inplace=True)
@@ -123,7 +124,7 @@ def test_filter_fuzzers():
 
 def test_filter_benchmarks():
     experiment_df = create_experiment_data()
-    benchmarks_to_keep = ['libpng-1.6.38']
+    benchmarks_to_keep = ['libpng_libpng_read_fuzzer']
     filtered_df = data_utils.filter_benchmarks(experiment_df,
                                                benchmarks_to_keep)
 
@@ -144,6 +145,25 @@ def test_filter_max_time():
     filtered_df = data_utils.filter_max_time(experiment_df, max_time)
     expected_times = range(max_time + 1)
     assert filtered_df.time.unique().tolist() == list(expected_times)
+
+
+def test_count_bugs_covered():
+    """Test that grouping works as expected and bugs counts are correct."""
+    testcases = [
+        ('bug_experiment_1_df.csv', 'expected_1.csv'),
+        ('bug_experiment_2_df.csv', 'expected_2.csv'),
+    ]
+
+    for experiment_csv, expected_csv in testcases:
+        experiment_csv = f'analysis/test_data/{experiment_csv}'
+        expected_csv = f'analysis/test_data/{expected_csv}'
+        experiment_df = pd.read_csv(experiment_csv)
+        actual = data_utils.add_bugs_covered_column(experiment_df)
+
+        grouping3 = ['fuzzer', 'benchmark', 'trial_id', 'time']
+        expected = pd.read_csv(expected_csv).sort_values(grouping3)
+
+        assert (expected.bugs_covered == actual.bugs_covered).all()
 
 
 @pytest.mark.parametrize('threshold', [0.3, 0.8, 1.0])
@@ -245,7 +265,10 @@ def test_experiment_summary():
     summary = data_utils.experiment_summary(snapshots_df)
 
     expected_summary = pd.DataFrame({
-        'benchmark': ['libpng-1.6.38', 'libpng-1.6.38', 'libxml', 'libxml'],
+        'benchmark': [
+            'libpng_libpng_read_fuzzer', 'libpng_libpng_read_fuzzer', 'libxml',
+            'libxml'
+        ],
         'fuzzer': ['libfuzzer', 'afl', 'afl', 'libfuzzer'],
         'time': [9, 9, 9, 9],
         'count': [2, 2, 2, 2],
@@ -306,10 +329,26 @@ def test_experiment_pivot_table():
 
     # yapf: disable
     expected_data = pd.DataFrame([
-        {'benchmark': 'libpng-1.6.38', 'fuzzer': 'afl', 'median':  150},
-        {'benchmark': 'libpng-1.6.38', 'fuzzer': 'libfuzzer', 'median':  250},
-        {'benchmark': 'libxml', 'fuzzer': 'afl', 'median': 1100},
-        {'benchmark': 'libxml', 'fuzzer': 'libfuzzer', 'median':  700},
+        {
+            'benchmark': 'libpng_libpng_read_fuzzer',
+            'fuzzer': 'afl',
+            'median':  150
+        },
+        {
+            'benchmark': 'libpng_libpng_read_fuzzer',
+            'fuzzer': 'libfuzzer',
+            'median':  250
+        },
+        {
+            'benchmark': 'libxml',
+            'fuzzer': 'afl',
+            'median': 1100
+        },
+        {
+            'benchmark': 'libxml',
+            'fuzzer': 'libfuzzer',
+            'median':  700
+        },
     ])
     # yapf: enable
     expected_pivot_table = pd.pivot_table(expected_data,

@@ -323,9 +323,5 @@ in order for fuzzing to start.
 
 ## Submitting your integration
 
-* Add your fuzzer to the list in `.github/workflows/fuzzers.yml` so that our
-  continuous integration will test that your fuzzer can build and briefly run on
-  all benchmarks once you've submitted a pull request.
-
 * Submit the integration in a
 [GitHub pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).

@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit: d615abec7e0237299250c409dca23effb8dd36cc
-commit_date: 2020-02-12 06:46:17+00:00
+commit: 17ff63e88ea99112a905eefc6f862dac20de09e1
+commit_date: 2023-01-07T10:15:39+0000
 fuzz_target: fuzz_both
 project: libpcap
 unsupported_fuzzers:

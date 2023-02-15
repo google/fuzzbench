@@ -1,3 +1,5 @@
+commit: 045aeac1dd01df12dec7b1ef8191b3193cf4273c
+commit_date: 2023-01-04T08:01:08+00:00
 fuzz_target: decoder_fuzzer
 project: openh264
 unsupported_fuzzers:
