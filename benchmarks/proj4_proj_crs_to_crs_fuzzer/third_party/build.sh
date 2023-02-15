@@ -74,7 +74,7 @@ build_fuzzer()
     shift
     shift
     echo "Building fuzzer $fuzzerName"
-    $CXX $CXXFLAGS -std=c++11 -fvisibility=hidden -lzma -Isrc -Iinclude \
+    $CXX $CXXFLAGS -std=c++11 -fvisibility=hidden -llzma -Isrc -Iinclude \
         $sourceFilename $* -o $OUT/$fuzzerName \
         $LIB_FUZZING_ENGINE "$SRC/install/lib/libproj.a" $EXTRA_LIBS
 }
