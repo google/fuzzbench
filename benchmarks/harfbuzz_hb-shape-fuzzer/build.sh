@@ -15,7 +15,8 @@
 
 
 # Do this here because the original python3.8 gets clobbered.
-pip3 install ninja==1.7.2 meson==0.56.0 --upgrade
+apt-get update && apt-get install python3 python3-pip -y
+python3.8 -m pip install ninja meson==0.56.0
 
 # Disable:
 # 1. UBSan vptr since target built with -fno-rtti.
