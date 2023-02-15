@@ -79,7 +79,6 @@ def launch_afl_thread(input_corpus, output_corpus, target_binary,
     return afl_thread
 
 
-
 def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
     """Run fuzzer."""
     # Calculate CmpLog binary path from the instrumented target binary.
@@ -130,14 +129,14 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
     ]
 
     launch_afl_thread(input_corpus,
-                 output_corpus,
-                 target_binary,
-                 additional_flags=flags)
+                      output_corpus,
+                      target_binary,
+                      additional_flags=flags)
 
     with subprocess.Popen(fastgen_cmd, stdout=None, stderr=None) as ori:
         ori.wait()
 
     while True:
         with subprocess.Popen(fastgen_restart_cmd, stdout=None,
-                             stderr=None) as res:
+                              stderr=None) as res:
             res.wait()
