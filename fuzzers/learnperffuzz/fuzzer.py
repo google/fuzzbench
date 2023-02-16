@@ -42,6 +42,8 @@ def build():
     print('[post_build] Copying afl-fuzz to $OUT directory')
     # Copy out the afl-fuzz binary as a build artifact.
     shutil.copy('/LearnPerfFuzz/afl-fuzz', os.environ['OUT'])
+    shutil.copy('/LearnPerfFuzz/learning_engine.py', os.environ['OUT'])
+
 
 
 def get_stats(output_corpus, fuzzer_log):  # pylint: disable=unused-argument
@@ -129,7 +131,11 @@ def run_afl_fuzz(input_corpus,
     ]
     print('[run_afl_fuzz] Running command: ' + ' '.join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
-    subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
+    pipe = subprocess.Popen(command,stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    stdout, stderr = pipe.communicate()
+    #subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
+    
+
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
