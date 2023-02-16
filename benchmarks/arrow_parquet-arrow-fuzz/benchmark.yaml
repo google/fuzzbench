@@ -4,7 +4,6 @@ project: arrow
 type: bug
 unsupported_fuzzers:
   - honggfuzz  # To Be Fixed.
-  - libafl     # To Be Fixed.
   - aflcc
   - afl_qemu
   - aflplusplus_qemu
