@@ -34,7 +34,7 @@ from common import utils
 from common import logs
 
 from experiment.build import build_utils
-from experiment.run_experiment import DEFAULT_CONCURRENT_BUILDS
+from experiment import run_experiment
 
 if not experiment_utils.is_local_experiment():
     import experiment.build.gcb_build as buildlib
@@ -215,13 +215,13 @@ def main():
                         '--num-concurrent-builds',
                         help='Max concurrent builds allowed.',
                         type=int,
-                        default=DEFAULT_CONCURRENT_BUILDS,
+                        default=run_experiment.DEFAULT_CONCURRENT_BUILDS,
                         required=False)
 
     logs.initialize()
     args = parser.parse_args()
     os.environ['CONCURRENT_BUILDS'] = os.getenv('CONCURRENT_BUILDS',
-                                                args.num_concurrent_builds)
+                                                str(args.num_concurrent_builds))
 
     build_all_fuzzer_benchmarks(args.fuzzers, args.benchmarks)
 
