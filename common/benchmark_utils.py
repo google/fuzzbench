@@ -57,7 +57,7 @@ def get_type(benchmark):
     """Returns the type of |benchmark|"""
     # TODO(metzman): Use classes to mock a benchmark config for
     # OSS_FUZZ_ON_DEMAND.
-    default_value = os.getenv(BenchmarkType.BUG.value, 'EXPERIMENT_TYPE')
+    default_value = os.getenv('EXPERIMENT_TYPE', BenchmarkType.CODE.value)
     return benchmark_config.get_config(benchmark).get('type', default_value)
 
 
