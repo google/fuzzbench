@@ -46,7 +46,7 @@ RUN cd /afl && \
 RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git checkout f8a4a020e8138a457d1674a6d276aaa8d75ce9a2
+RUN cd /libafl && git checkout 8bffd28b4c357b315acb9cecd92cbf2b734a625a
 
 # Compile libafl.
 RUN cd /libafl && \
