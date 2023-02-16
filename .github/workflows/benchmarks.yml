@@ -18,28 +18,28 @@ jobs:
       matrix:
         benchmark:
           - arrow_parquet-arrow-fuzz
-          - aspell_aspell_fuzzer
+          - aspell_fuzzer
           - bloaty_fuzz_target
-          - curl_curl_fuzzer_http
-          - ffmpeg_ffmpeg_demuxer_fuzzer
+          - curl_fuzzer_http
+          - ffmpeg_demuxer_fuzzer
           - file_magic_fuzzer
           - freetype2_ftfuzzer
           - grok_grk_decompress_fuzzer
           - harfbuzz_hb-shape-fuzzer
-          - jsoncpp_jsoncpp_fuzzer
+          - jsoncpp_fuzzer
           - lcms_cms_transform_fuzzer
-          - libjpeg-turbo_libjpeg_turbo_fuzzer
+          - libjpeg_turbo_fuzzer
           - libpcap_fuzz_both
-          - libpng_libpng_read_fuzzer
+          - libpng_read_fuzzer
           - libxml2_xml
           - libxslt_xpath
           - mbedtls_fuzz_dtlsclient
-          - mruby_mruby_fuzzer
-          - njs_njs_process_script_fuzzer
+          - mruby_fuzzer
+          - njs_process_script_fuzzer
           - openh264_decoder_fuzzer
           - openssl_x509
           - openthread_ot-ip6-send-fuzzer
-          - php_php-fuzz-parser
+          - php-fuzz-parser
           - proj4_proj_crs_to_crs_fuzzer
           - quickjs_eval
           - re2_fuzzer
@@ -48,7 +48,7 @@ jobs:
           - systemd_fuzz-link-parser
           - vorbis_decode_fuzzer
           - woff2_convert_woff2ttf_fuzzer
-          - zlib_zlib_uncompress_fuzzer
+          - zlib_uncompress_fuzzer
 
     steps:
     - uses: actions/checkout@v3

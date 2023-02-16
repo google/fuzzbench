@@ -46,13 +46,13 @@ def create_experiment_data(experiment='test_experiment',
                            experiment_filestore='gs://fuzzbench-data'):
     """Utility function to create test experiment data."""
     return pd.concat([
-        create_trial_data(0, 'libpng_libpng_read_fuzzer', 'afl', 10, 100,
+        create_trial_data(0, 'libpng_read_fuzzer', 'afl', 10, 100, experiment,
+                          experiment_filestore),
+        create_trial_data(1, 'libpng_read_fuzzer', 'afl', 10, 200, experiment,
+                          experiment_filestore),
+        create_trial_data(2, 'libpng_read_fuzzer', 'libfuzzer', 10, 200,
                           experiment, experiment_filestore),
-        create_trial_data(1, 'libpng_libpng_read_fuzzer', 'afl', 10, 200,
-                          experiment, experiment_filestore),
-        create_trial_data(2, 'libpng_libpng_read_fuzzer', 'libfuzzer', 10, 200,
-                          experiment, experiment_filestore),
-        create_trial_data(3, 'libpng_libpng_read_fuzzer', 'libfuzzer', 10, 300,
+        create_trial_data(3, 'libpng_read_fuzzer', 'libfuzzer', 10, 300,
                           experiment, experiment_filestore),
         create_trial_data(4, 'libxml', 'afl', 6 if incomplete else 10, 1000,
                           experiment, experiment_filestore),
@@ -94,7 +94,7 @@ def test_clobber_experiments_data():
     df.reset_index(inplace=True)
 
     to_drop = df[(df.experiment == 'experiment-2') &
-                 (df.benchmark == 'libpng_libpng_read_fuzzer') &
+                 (df.benchmark == 'libpng_read_fuzzer') &
                  (df.fuzzer == 'afl')].index
     df.drop(to_drop, inplace=True)
 
@@ -103,10 +103,10 @@ def test_clobber_experiments_data():
 
     columns = ['experiment', 'benchmark', 'fuzzer']
     expected_result = pd.DataFrame([
-        ['experiment-2', 'libpng_libpng_read_fuzzer', 'libfuzzer'],
+        ['experiment-2', 'libpng_read_fuzzer', 'libfuzzer'],
         ['experiment-2', 'libxml', 'afl'],
         ['experiment-2', 'libxml', 'libfuzzer'],
-        ['experiment-1', 'libpng_libpng_read_fuzzer', 'afl'],
+        ['experiment-1', 'libpng_read_fuzzer', 'afl'],
     ],
                                    columns=columns)
     expected_result.sort_index(inplace=True)
@@ -124,7 +124,7 @@ def test_filter_fuzzers():
 
 def test_filter_benchmarks():
     experiment_df = create_experiment_data()
-    benchmarks_to_keep = ['libpng_libpng_read_fuzzer']
+    benchmarks_to_keep = ['libpng_read_fuzzer']
     filtered_df = data_utils.filter_benchmarks(experiment_df,
                                                benchmarks_to_keep)
 
@@ -266,8 +266,7 @@ def test_experiment_summary():
 
     expected_summary = pd.DataFrame({
         'benchmark': [
-            'libpng_libpng_read_fuzzer', 'libpng_libpng_read_fuzzer', 'libxml',
-            'libxml'
+            'libpng_read_fuzzer', 'libpng_read_fuzzer', 'libxml', 'libxml'
         ],
         'fuzzer': ['libfuzzer', 'afl', 'afl', 'libfuzzer'],
         'time': [9, 9, 9, 9],
@@ -330,12 +329,12 @@ def test_experiment_pivot_table():
     # yapf: disable
     expected_data = pd.DataFrame([
         {
-            'benchmark': 'libpng_libpng_read_fuzzer',
+            'benchmark': 'libpng_read_fuzzer',
             'fuzzer': 'afl',
             'median':  150
         },
         {
-            'benchmark': 'libpng_libpng_read_fuzzer',
+            'benchmark': 'libpng_read_fuzzer',
             'fuzzer': 'libfuzzer',
             'median':  250
         },
