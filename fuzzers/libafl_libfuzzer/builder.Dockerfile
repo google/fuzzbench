@@ -15,6 +15,16 @@
 ARG parent_image
 FROM $parent_image
 
+RUN apt-get update && \
+    apt-get remove -y llvm-10 && \
+    apt-get install -y \
+        build-essential \
+        llvm-11 \
+        clang-12 && \
+    apt-get install -y wget libstdc++5 libtool-bin automake flex bison \
+        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
+        apt-utils apt-transport-https ca-certificates joe curl \
+
 # Uninstall old Rust & Install the latest one.
 RUN if which rustup; then rustup self uninstall -y; fi && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
@@ -22,32 +32,18 @@ RUN if which rustup; then rustup self uninstall -y; fi && \
     rm /rustup.sh
 
 # Install dependencies.
-RUN apt-get update && \
-    apt-get remove -y llvm-10 && \
-    apt-get install -y \
-        build-essential \
-        llvm-11 \
-        clang-12 \
-        cargo && \
-    apt-get install -y wget libstdc++5 libtool-bin automake flex bison \
-        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
-        apt-utils apt-transport-https ca-certificates joe curl && \
-    PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
+RUN PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
 
 # Download libafl.
 RUN git clone \
         --depth 1 \
-        --branch 0.8.2 \
+        --branch libfuzzer \
         https://github.com/AFLplusplus/libafl /libafl
 
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
-    cd ./fuzzers/fuzzbench && \
-    PATH="/root/.cargo/bin/:$PATH" cargo build --release
-
-# Auxiliary weak references.
-RUN wget https://gist.githubusercontent.com/andreafioraldi/e5f60d68c98b31665a274207cfd05541/raw/4da351a321f1408df566a9cf2ce7cde6eeab3904/empty_fuzzer_lib.c -O /empty_fuzzer_lib.c && \
-    clang -c /empty_fuzzer_lib.c && \
-    ar r /emptylib.a *.o
+    cd ./libafl_libfuzzer/libafl_libfuzzer_runtime && \
+    PATH="/root/.cargo/bin/:$PATH" cargo build --release && \
+    cp ./target/release/libafl_libfuzzer_runtime.a /usr/lib/libFuzzer.a
