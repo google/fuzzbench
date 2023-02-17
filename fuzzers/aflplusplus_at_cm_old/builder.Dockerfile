@@ -35,13 +35,10 @@ RUN apt-get update && \
         libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
 # Download afl++.
-RUN git clone -b dev https://github.com/AFLplusplus/AFLplusplus /afl && \
+RUN git clone -b autotoken2 https://github.com/AFLplusplus/AFLplusplus /afl && \
     cd /afl && \
-    git checkout 33eba1fc5652060e8d877b02135fce2325813d0c || \
+    git checkout b244adcda139d25b1f1a0a70927e00ba3a57661d || \
     true
-
-RUN cd /afl && \
-    sed -i 's/AFL_TXT_MIN_PERCENT 94/AFL_TXT_MIN_PERCENT 99/' include/config.h
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
@@ -51,3 +48,7 @@ RUN cd /afl && \
     PYTHON_INCLUDE=/ make && \
     make install && \
     cp utils/aflpp_driver/libAFLDriver.a /
+
+RUN cd /afl && \
+    make -C custom_mutators/autotokens && \
+    cp -f custom_mutators/autotokens/autotokens.so .
