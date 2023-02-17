@@ -32,7 +32,7 @@ import psutil
 from sqlalchemy import func
 from sqlalchemy import orm
 
-from common import benchmark_config
+from common import benchmark_utils
 from common import experiment_utils
 from common import experiment_path as exp_path
 from common import filesystem
@@ -501,8 +501,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
 
     def process_crashes(self, cycle):
         """Process and store crashes."""
-        benchmark_type = benchmark_config.get_config(self.benchmark).get('type')
-        is_bug_benchmark = benchmark_type == 'bug'
+        is_bug_benchmark = benchmark_utils.get_type(self.benchmark) == 'bug'
         if not is_bug_benchmark:
             return []
 
