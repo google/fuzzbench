@@ -22,7 +22,6 @@ from fuzzers import utils
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 from fuzzers.honggfuzz import fuzzer as honggfuzz_fuzzer
 
-
 TRITONDSE_CONF = """{{
     "seed_format": "RAW",
     "pipe_stdout": false,
@@ -214,16 +213,24 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     # Prepare command-line string.
     command = [
-        'pastis-benchmark', 'run',
-        '-b', targets_dir,
-        '-w', output_corpus,
-        '-s', input_corpus,
-        '-m', 'FULL',
-        '-i', 'ARGV',
-        '-p', '5551',
+        'pastis-benchmark',
+        'run',
+        '-b',
+        targets_dir,
+        '-w',
+        output_corpus,
+        '-s',
+        input_corpus,
+        '-m',
+        'FULL',
+        '-i',
+        'ARGV',
+        '-p',
+        '5551',
         '--triton',
         '--hfuzz',
-        '--hfuzz-threads', '1',
+        '--hfuzz-threads',
+        '1',
         '--aflpp',
         '--skip-cpufreq',
     ]
