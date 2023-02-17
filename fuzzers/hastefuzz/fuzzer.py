@@ -30,6 +30,7 @@ def get_uninstrumented_build_directory(target_directory):
     """Return path to CmpLog target directory."""
     return os.path.join(target_directory, 'uninstrumented')
 
+
 def get_hastemode_build_directory(target_directory):
     """Return path to Hastemode target directory"""
     return os.path.join(target_directory, 'hastemode')
@@ -232,15 +233,16 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     if utils.get_config_value('type') == 'bug':
         new_env = os.environ.copy()
-        t_1 = [utils.DEFAULT_OPTIMIZATION_LEVEL]
-        cflags = utils.FUZZING_CFLAGS + utils.NO_SANITIZER_COMPAT_CFLAGS + t_1
+        t_a = [utils.DEFAULT_OPTIMIZATION_LEVEL]
+        cflags = utils.FUZZING_CFLAGS + utils.NO_SANITIZER_COMPAT_CFLAGS + t_a
         new_env['CFLAGS'] = ' '.join(cflags)
-        t_1 = [utils.LIBCPLUSPLUS_FLAG,utils.DEFAULT_OPTIMIZATION_LEVEL]
-        cxxflags = utils.FUZZING_CFLAGS + utils.NO_SANITIZER_COMPAT_CFLAGS + t_1
+        t_a = [utils.LIBCPLUSPLUS_FLAG, utils.DEFAULT_OPTIMIZATION_LEVEL]
+        cxxflags = utils.FUZZING_CFLAGS + utils.NO_SANITIZER_COMPAT_CFLAGS + t_a
         new_env['CXXFLAGS'] = ' '.join(cxxflags)
         new_env['AFL_LLVM_USE_TRACE_PC'] = '1'
         del new_env['AFL_LLVM_INSTRUMENT']
-        hastemode_build_directory=get_hastemode_build_directory(build_directory)
+        hastemode_build_directory = get_hastemode_build_directory(
+            build_directory)
         os.mkdir(hastemode_build_directory)
         new_env['OUT'] = hastemode_build_directory
         fuzz_target = os.getenv('FUZZ_TARGET')
@@ -280,7 +282,7 @@ def fuzz(input_corpus,
     hastemode_target_binary_directory = (
         get_hastemode_build_directory(target_binary_directory))
     hastemode_target_binary = os.path.join(hastemode_target_binary_directory,
-                                          target_binary_name)
+                                           target_binary_name)
 
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     # decomment this to enable libdislocator.
