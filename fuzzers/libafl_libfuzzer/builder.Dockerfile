@@ -23,7 +23,7 @@ RUN apt-get update && \
         clang-12 && \
     apt-get install -y wget libstdc++5 libtool-bin automake flex bison \
         libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
-        apt-utils apt-transport-https ca-certificates joe curl \
+        apt-utils apt-transport-https ca-certificates joe curl
 
 # Uninstall old Rust & Install the latest one.
 RUN if which rustup; then rustup self uninstall -y; fi && \
