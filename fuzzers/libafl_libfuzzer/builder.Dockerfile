@@ -28,7 +28,7 @@ RUN apt-get update && \
 # Uninstall old Rust & Install the latest one.
 RUN if which rustup; then rustup self uninstall -y; fi && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
-    sh /rustup.sh -y && \
+    sh /rustup.sh --default-toolchain nightly -y && \
     rm /rustup.sh
 
 # Install dependencies.
