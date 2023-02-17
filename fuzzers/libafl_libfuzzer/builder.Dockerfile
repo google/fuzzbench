@@ -31,19 +31,14 @@ RUN if which rustup; then rustup self uninstall -y; fi && \
     sh /rustup.sh --default-toolchain nightly -y && \
     rm /rustup.sh
 
-# Install dependencies.
-RUN PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
-
 # Download libafl.
 RUN git clone \
-        --depth 1 \
+        --depth 2 \
         --branch libfuzzer \
-        https://github.com/AFLplusplus/libafl /libafl
-
-# Compile libafl.
-RUN cd /libafl && \
+        https://github.com/AFLplusplus/libafl /libafl && \
+    cd /libafl && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
     cd ./libafl_libfuzzer/libafl_libfuzzer_runtime && \
-    PATH="/root/.cargo/bin/:$PATH" cargo build --release && \
+    env -i CXX=$CXX CC=$CC PATH="/root/.cargo/bin/:$PATH" cargo build --release && \
     cp ./target/release/libafl_libfuzzer_runtime.a /usr/lib/libFuzzer.a

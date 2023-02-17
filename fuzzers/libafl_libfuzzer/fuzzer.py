@@ -49,7 +49,7 @@ def build():
 
     os.environ['CC'] = 'clang'
     os.environ['CXX'] = 'clang++'
-    os.environ['FUZZER_LIB'] = '/usr/lib/libFuzzer.a'
+    os.environ['FUZZER_LIB'] = '-Wl,--whole-archive -lFuzzer -Wl,--no-whole-archive'
 
     utils.build_benchmark()
 
