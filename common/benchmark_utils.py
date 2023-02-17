@@ -41,7 +41,11 @@ BENCHMARK_TYPE_STRS = {benchmark_type.value for benchmark_type in BenchmarkType}
 
 def get_fuzz_target(benchmark):
     """Returns the fuzz target of |benchmark|"""
-    return benchmark_config.get_config(benchmark)['fuzz_target']
+    # Do this because of OSS-Fuzz-on-demand.
+    # TODO(metzman): Use classes to mock a benchmark config for
+    # OSS_FUZZ_ON_DEMAND.
+    return benchmark_config.get_config(benchmark).get(
+        'fuzz_target', environment.get('FUZZ_TARGET'))
 
 
 def get_project(benchmark):
@@ -51,13 +55,10 @@ def get_project(benchmark):
 
 def get_type(benchmark):
     """Returns the type of |benchmark|"""
-    return benchmark_config.get_config(benchmark).get('type',
-                                                      BenchmarkType.CODE.value)
-
-
-def is_oss_fuzz_benchmark(benchmark):
-    """Returns if benchmark is a OSS-Fuzz benchmark."""
-    return bool(benchmark_config.get_config(benchmark).get('commit_date'))
+    # TODO(metzman): Use classes to mock a benchmark config for
+    # OSS_FUZZ_ON_DEMAND.
+    default_value = os.getenv('EXPERIMENT_TYPE', BenchmarkType.CODE.value)
+    return benchmark_config.get_config(benchmark).get('type', default_value)
 
 
 def get_runner_image_url(experiment, benchmark, fuzzer, docker_registry):
@@ -129,25 +130,9 @@ def get_all_benchmarks():
 
 def get_coverage_benchmarks():
     """Returns the list of all coverage benchmarks."""
-    return (get_oss_fuzz_coverage_benchmarks() +
-            get_standard_coverage_benchmarks())
-
-
-def get_oss_fuzz_coverage_benchmarks():
-    """Returns the list of OSS-Fuzz coverage benchmarks."""
     return [
         benchmark for benchmark in get_all_benchmarks()
-        if is_oss_fuzz_benchmark(benchmark) and
-        get_type(benchmark) == BenchmarkType.CODE.value
-    ]
-
-
-def get_standard_coverage_benchmarks():
-    """Returns the list of standard coverage benchmarks."""
-    return [
-        benchmark for benchmark in get_all_benchmarks()
-        if not is_oss_fuzz_benchmark(benchmark) and
-        get_type(benchmark) == BenchmarkType.CODE.value
+        if get_type(benchmark) == BenchmarkType.CODE.value
     ]
 
 

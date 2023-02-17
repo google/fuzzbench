@@ -30,11 +30,11 @@ import yaml
 
 from common import benchmark_utils
 from common import experiment_utils
+from common import filestore_utils
 from common import filesystem
 from common import fuzzer_utils
 from common import gcloud
 from common import gsutil
-from common import filestore_utils
 from common import logs
 from common import new_process
 from common import utils
@@ -73,6 +73,7 @@ def _set_default_config_values(config: Dict[str, Union[int, str, bool]],
     config['worker_pool_name'] = config.get('worker_pool_name', '')
     config['snapshot_period'] = config.get(
         'snapshot_period', experiment_utils.DEFAULT_SNAPSHOT_SECONDS)
+    config['private'] = config.get('private', False)
 
 
 def _validate_config_parameters(
@@ -94,10 +95,6 @@ def _validate_config_parameters(
 
     for param in missing_params:
         logs.error('Config does not contain required parameter "%s".', param)
-
-    # Notify if any optional parameters are missing in config.
-    for param in optional_params:
-        logs.info('Config does not contain optional parameter "%s".', param)
 
     return not missing_params
 
@@ -172,8 +169,6 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
             Requirement(not local_experiment, str, True, ''),
         'worker_pool_name':
             Requirement(not local_experiment, str, False, ''),
-        'experiment':
-            Requirement(False, str, False, ''),
         'cloud_sql_instance_connection_name':
             Requirement(False, str, True, ''),
         'snapshot_period':
@@ -282,11 +277,16 @@ def check_no_uncommitted_changes():
         raise ValidationError('Local uncommitted changes found, exiting.')
 
 
-def get_git_hash():
+def get_git_hash(allow_uncommitted_changes):
     """Return the git hash for the last commit in the local repo."""
-    output = subprocess.check_output(['git', 'rev-parse', 'HEAD'],
-                                     cwd=utils.ROOT_DIR)
-    return output.strip().decode('utf-8')
+    try:
+        output = subprocess.check_output(['git', 'rev-parse', 'HEAD'],
+                                         cwd=utils.ROOT_DIR)
+        return output.strip().decode('utf-8')
+    except subprocess.CalledProcessError as error:
+        if not allow_uncommitted_changes:
+            raise error
+        return ''
 
 
 def start_experiment(  # pylint: disable=too-many-arguments
@@ -315,7 +315,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
     config['fuzzers'] = fuzzers
     config['benchmarks'] = benchmarks
     config['experiment'] = experiment_name
-    config['git_hash'] = get_git_hash()
+    config['git_hash'] = get_git_hash(allow_uncommitted_changes)
     config['no_seeds'] = no_seeds
     config['no_dictionaries'] = no_dictionaries
     config['oss_fuzz_corpus'] = oss_fuzz_corpus
@@ -575,7 +575,8 @@ class GoogleCloudDispatcher(BaseDispatcher):
                 (cloud_sql_instance_connection_name),
             'docker_registry': self.config['docker_registry'],
             'concurrent_builds': self.config['concurrent_builds'],
-            'worker_pool_name': self.config['worker_pool_name']
+            'worker_pool_name': self.config['worker_pool_name'],
+            'private': self.config['private'],
         }
         if 'worker_pool_name' in self.config:
             kwargs['worker_pool_name'] = self.config['worker_pool_name']
@@ -597,7 +598,12 @@ def get_dispatcher(config: Dict) -> BaseDispatcher:
 
 
 def main():
-    """Run an experiment in the cloud."""
+    """Run an experiment."""
+    return run_experiment_main()
+
+
+def run_experiment_main(args=None):
+    """Run an experiment."""
     logs.initialize()
 
     parser = argparse.ArgumentParser(
@@ -687,7 +693,7 @@ def main():
         required=False,
         default=False,
         action='store_true')
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     fuzzers = args.fuzzers or all_fuzzers
 
     concurrent_builds = args.concurrent_builds

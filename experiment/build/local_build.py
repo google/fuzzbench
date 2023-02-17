@@ -24,7 +24,7 @@ from common import logs
 from common import new_process
 from common import utils
 
-logger = logs.Logger('builder')  # pylint: disable=invalid-name
+logger = logs.Logger()  # pylint: disable=invalid-name
 
 
 def make(targets):

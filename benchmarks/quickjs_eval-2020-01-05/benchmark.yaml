@@ -1,4 +1,0 @@
-fuzz_target: fuzz_eval
-project: quickjs
-type: bug-draft
-unsupported_fuzzers:

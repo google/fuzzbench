@@ -29,7 +29,7 @@ from analysis import data_utils
 
 CORE_FUZZERS_YAML = os.path.join(utils.ROOT_DIR, 'service', 'core-fuzzers.yaml')
 
-logger = logs.Logger('reporter')  # pylint: disable=invalid-name
+logger = logs.Logger()  # pylint: disable=invalid-name
 
 
 def get_reports_dir():
