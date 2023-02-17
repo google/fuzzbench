@@ -45,7 +45,6 @@ def build():
     shutil.copy('/LearnPerfFuzz/learning_engine.py', os.environ['OUT'])
 
 
-
 def get_stats(output_corpus, fuzzer_log):  # pylint: disable=unused-argument
     """Gets fuzzer stats for AFL."""
     # Get a dictionary containing the stats AFL reports.
@@ -131,11 +130,10 @@ def run_afl_fuzz(input_corpus,
     ]
     print('[run_afl_fuzz] Running command: ' + ' '.join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
-    pipe = subprocess.Popen(command,stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    stdout, stderr = pipe.communicate()
-    #subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
-    
 
+    with subprocess.Popen(command, stdout=output_stream,
+                          stderr=output_stream) as pipe:
+        pipe.communicate()
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
