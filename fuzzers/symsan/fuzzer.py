@@ -24,13 +24,17 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 # Helper library that contains important functions for building.
 from fuzzers import utils
 
+def is_benchmark(name):
+    """Check the benchmark under built."""
+    benchmark = os.getenv('BENCHMARK', None)
+    return benchmark is not None and name in benchmark
 
-def get_symsan_build_dir(target_directory):
+def get_symsan_build_directory(target_directory):
     """Return path to CmpLog target directory."""
     return os.path.join(target_directory, 'symsantrack')
 
 
-def get_symsan_build_fast_dir(target_directory):
+def get_symsan_build_fast_directory(target_directory):
     """Return path to CmpLog target directory."""
     return os.path.join(target_directory, 'symsanfast')
 
@@ -45,6 +49,66 @@ def get_cmplog_build_directory(target_directory):
     return os.path.join(target_directory, 'cmplog')
 
 
+def build_symsan_fast(build_directory, src, work):
+    symsan_build_fast_directory = get_symsan_build_fast_directory(
+        build_directory)
+    os.mkdir(symsan_build_fast_directory)
+
+    new_env = os.environ.copy()
+    new_env['CC'] = '/symsan/build/bin/ko-clang'
+    new_env['CXX'] = '/symsan/build/bin/ko-clang++'
+    new_env['KO_CC'] = 'clang-12'
+    new_env['KO_CXX'] = 'clang++-12'
+    new_env['CXXFLAGS'] = '-stdlib=libc++'
+    new_env['KO_USE_NATIVE_LIBCXX'] = '1'
+    new_env['CFLAGS'] = ''
+    #new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace("-stlib=libc++", "")
+    new_env['FUZZER_LIB'] = '/libfuzzer-harness-fast.o'
+    new_env['OUT'] = symsan_build_fast_directory
+    new_env['KO_DONT_OPTIMIZE'] = '1'
+
+    if is_benchmark('curl_curl_fuzzer_http'):
+        new_env['SANITIZER'] = 'memory'
+
+    fuzz_target = os.getenv('FUZZ_TARGET')
+    if fuzz_target:
+        new_env['FUZZ_TARGET'] = os.path.join(symsan_build_fast_directory,
+                                              os.path.basename(fuzz_target))
+
+    with utils.restore_directory(src), utils.restore_directory(work):
+        utils.build_benchmark(env=new_env)
+
+
+def build_symsan(build_directory, src, work):
+    symsan_build_directory = get_symsan_build_directory(build_directory)
+    os.mkdir(symsan_build_directory)
+    new_env = os.environ.copy()
+    new_env['CC'] = '/symsan/build/bin/ko-clang'
+    new_env['CXX'] = '/symsan/build/bin/ko-clang++'
+    new_env['KO_CC'] = 'clang-12'
+    new_env['KO_CXX'] = 'clang++-12'
+    #new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace("-stlib=libc++", "")
+    new_env['CXXFLAGS'] = ''
+    new_env['CFLAGS'] = ''
+    new_env['FUZZER_LIB'] = '/libfuzzer-harness.o'
+    new_env['OUT'] = symsan_build_directory
+    new_env['KO_DONT_OPTIMIZE'] = '1'
+    new_env['USE_TRACK'] = '1'
+    new_env['KO_USE_FASTGEN'] = '1'
+    if is_benchmark('curl_curl_fuzzer_http'):
+        new_env['SANITIZER'] = 'memory'
+
+        # For CmpLog build, set the OUT and FUZZ_TARGET environment
+        # variable to point to the new CmpLog build directory.
+    fuzz_target = os.getenv('FUZZ_TARGET')
+    if fuzz_target:
+        new_env['FUZZ_TARGET'] = os.path.join(symsan_build_directory,
+                                              os.path.basename(fuzz_target))
+
+    with utils.restore_directory(src), utils.restore_directory(work):
+        utils.build_benchmark(env=new_env)
+
+
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
@@ -52,10 +116,13 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
 
     src = os.getenv('SRC')
     work = os.getenv('WORK')
+    build_directory = os.environ['OUT']
+
 
     with utils.restore_directory(src), utils.restore_directory(work):
-        aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file', 'symsan',
-                                 'symsanfast')
+        build_symsan(build_directory, src, work)
+        build_symsan_fast(build_directory, src, work)
+        aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file')
 
     shutil.copy('/symsan/target/release/fastgen', os.environ['OUT'])
 
@@ -92,9 +159,9 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
     target_binary_name = os.path.basename(target_binary)
 
     symsantrack_binary = os.path.join(
-        get_symsan_build_dir(target_binary_directory), target_binary_name)
+        get_symsan_build_directory(target_binary_directory), target_binary_name)
     symsanfast_binary = os.path.join(
-        get_symsan_build_fast_dir(target_binary_directory), target_binary_name)
+        get_symsan_build_fast_directory(target_binary_directory), target_binary_name)
 
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     # decomment this to enable libdislocator.
