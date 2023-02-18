@@ -53,8 +53,7 @@ def get_cmplog_build_directory(target_directory):
 
 def build_symsan_fast(build_directory, src, work):
     """Build symsan fast binaries."""
-    symsan_build_fast_directory = get_symsan_build_fast_dir(
-        build_directory)
+    symsan_build_fast_directory = get_symsan_build_fast_dir(build_directory)
     os.mkdir(symsan_build_fast_directory)
 
     new_env = os.environ.copy()
@@ -164,8 +163,7 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
     symsantrack_binary = os.path.join(
         get_symsan_build_dir(target_binary_directory), target_binary_name)
     symsanfast_binary = os.path.join(
-        get_symsan_build_fast_dir(target_binary_directory),
-        target_binary_name)
+        get_symsan_build_fast_dir(target_binary_directory), target_binary_name)
 
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     # decomment this to enable libdislocator.
