@@ -52,7 +52,7 @@ def build():
 
     # merge all of our lib into a single .o, then pack that into a static lib
     subprocess.check_call([
-        '/usr/bin/ld', '-Ur', '/usr/lib/libFuzzer.a', '-o',
+        '/usr/bin/ld', '-Ur', '--whole-archive', '/usr/lib/libFuzzer.a', '-o',
         '/tmp/libFuzzerMerged.o'
     ])
     subprocess.check_call(['/usr/bin/rm', '/usr/lib/libFuzzer.a'])
