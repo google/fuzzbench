@@ -24,17 +24,19 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 # Helper library that contains important functions for building.
 from fuzzers import utils
 
+
 def is_benchmark(name):
     """Check the benchmark under built."""
     benchmark = os.getenv('BENCHMARK', None)
     return benchmark is not None and name in benchmark
 
-def get_symsan_build_directory(target_directory):
+
+def get_symsan_build_dir(target_directory):
     """Return path to CmpLog target directory."""
     return os.path.join(target_directory, 'symsantrack')
 
 
-def get_symsan_build_fast_directory(target_directory):
+def get_symsan_build_fast_dir(target_directory):
     """Return path to CmpLog target directory."""
     return os.path.join(target_directory, 'symsanfast')
 
@@ -50,7 +52,8 @@ def get_cmplog_build_directory(target_directory):
 
 
 def build_symsan_fast(build_directory, src, work):
-    symsan_build_fast_directory = get_symsan_build_fast_directory(
+    """Build symsan fast binaries."""
+    symsan_build_fast_directory = get_symsan_build_fast_dir(
         build_directory)
     os.mkdir(symsan_build_fast_directory)
 
@@ -80,7 +83,8 @@ def build_symsan_fast(build_directory, src, work):
 
 
 def build_symsan(build_directory, src, work):
-    symsan_build_directory = get_symsan_build_directory(build_directory)
+    """Build symsan track binaries."""
+    symsan_build_directory = get_symsan_build_dir(build_directory)
     os.mkdir(symsan_build_directory)
     new_env = os.environ.copy()
     new_env['CC'] = '/symsan/build/bin/ko-clang'
@@ -117,7 +121,6 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     src = os.getenv('SRC')
     work = os.getenv('WORK')
     build_directory = os.environ['OUT']
-
 
     with utils.restore_directory(src), utils.restore_directory(work):
         build_symsan(build_directory, src, work)
@@ -159,9 +162,10 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
     target_binary_name = os.path.basename(target_binary)
 
     symsantrack_binary = os.path.join(
-        get_symsan_build_directory(target_binary_directory), target_binary_name)
+        get_symsan_build_dir(target_binary_directory), target_binary_name)
     symsanfast_binary = os.path.join(
-        get_symsan_build_fast_directory(target_binary_directory), target_binary_name)
+        get_symsan_build_fast_dir(target_binary_directory),
+        target_binary_name)
 
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     # decomment this to enable libdislocator.
