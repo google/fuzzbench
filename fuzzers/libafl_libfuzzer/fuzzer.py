@@ -44,8 +44,7 @@ def build():
     # /usr/lib/libFuzzer.a as the FUZZER_LIB for the main fuzzing binary. This
     # allows us to link against a version of LibFuzzer that we specify.
     cflags = [
-        '-fsanitize=fuzzer-no-link', '-Wl,--whole-archive', '-lFuzzer',
-        '-Wl,--no-whole-archive'
+        '-fsanitize=fuzzer-no-link'
     ]
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
@@ -57,7 +56,8 @@ def build():
     # to ensure that we never use another fuzzer engine, we provide an empty
     # static library to link against
     subprocess.check_call(['/usr/bin/ar', 'cr', '/usr/lib/libempty.a'])
-    os.environ['FUZZER_LIB'] = '/usr/lib/libempty.a'
+    os.environ['FUZZER_LIB'] = '/usr/lib/libempty.a -Wl,--whole-archive ' \
+                               '-lFuzzer -Wl,--no-whole-archive'
 
     utils.build_benchmark()
 
