@@ -21,6 +21,14 @@
 #
 
 
+- experiment: 2023-02-18-aflpp
+  description: "afl+++ token experiment."
+  fuzzers:
+    - aflplusplus
+    - aflppp
+    - aflppp_no
+    - aflppp_tmout
+
 - experiment: 2023-02-15-test-quota
   description: "Test quota."
   fuzzers:
