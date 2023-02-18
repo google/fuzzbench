@@ -15,6 +15,7 @@
 """Integration code for a LibAFL-based fuzzer."""
 
 import os
+import shutil
 import subprocess
 
 from fuzzers import utils
@@ -58,6 +59,8 @@ def build():
     subprocess.check_call(['/usr/bin/ar', 'cr', '/usr/lib/libempty.a'])
     os.environ['FUZZER_LIB'] = '/usr/lib/libempty.a -Wl,--whole-archive ' \
                                '-lFuzzer -Wl,--no-whole-archive'
+
+    shutil.copy('/usr/lib/libFuzzer.a', utils.OSS_FUZZ_LIB_FUZZING_ENGINE_PATH)
 
     utils.build_benchmark()
 
