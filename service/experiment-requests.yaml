@@ -21,7 +21,7 @@
 #
 
 
-- experiment: 2023-02-15-aflpp
+- experiment: 2023-02-18-aflpp
   description: "afl+++ token experiment."
   fuzzers:
     - aflplusplus
