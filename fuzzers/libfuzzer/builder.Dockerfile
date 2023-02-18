@@ -15,12 +15,13 @@
 ARG parent_image
 FROM $parent_image
 
-RUN git clone \
-    --depth 1 \
-    --branch llvmorg-15.0.3 \
-    https://github.com/llvm/llvm-project.git /llvm-project && \
-    cd /llvm-project/compiler-rt/lib/fuzzer && \
-    (for f in *.cpp; do \
-      clang++ -stdlib=libc++ -fPIC -O2 -std=c++14 $f -c & \
-    done && wait) && \
-    ar r /usr/lib/libFuzzer.a *.o
+ENV LF_PATH /tmp/libfuzzer.zip
+
+# libFuzzer from branch llvmorg-15.0.3 with minor changes to build script.
+RUN wget https://storage.googleapis.com/fuzzbench-artifacts/libfuzzer.zip -O $LF_PATH && \
+    echo "ed761c02a98a16adf6bb9966bf9a3ffd6794367a29dd29d4944a5aae5dba3c90 $LF_PATH" | sha256sum --check --status && \
+    mkdir /tmp/libfuzzer && \
+    cd /tmp/libfuzzer && \
+    unzip $LF_PATH  && \
+    bash build.sh && \
+    cp libFuzzer.a /usr/lib

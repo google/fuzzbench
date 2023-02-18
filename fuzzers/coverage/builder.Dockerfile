@@ -22,11 +22,11 @@ ENV LF_PATH /tmp/libfuzzer.zip
 # https://github.com/google/fuzzbench/blob/cf86138081ec705a47ce0a4bab07b5737292e7e0/fuzzers/coverage/patch.diff
 # applied.
 
-RUN wget https://storage.googleapis.com/fuzzbench-artifacts/libfuzzer.zip -O $LF_PATH && \
+RUN wget https://storage.googleapis.com/fuzzbench-artifacts/libfuzzer-coverage.zip -O $LF_PATH && \
     echo "cc78179f6096cae4b799d0cc9436f000cc0be9b1fb59500d16b14b1585d46b61 $LF_PATH" | sha256sum --check --status && \
     mkdir /tmp/libfuzzer && \
     cd /tmp/libfuzzer && \
     unzip $LF_PATH  && \
     bash build.sh && \
     cp libFuzzer.a /usr/lib && \
-    rm -rf /tmp/libfuzzer $LF_PATH /patch.diff
+    rm -rf /tmp/libfuzzer $LF_PATH
