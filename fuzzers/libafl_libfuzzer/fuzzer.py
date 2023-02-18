@@ -15,7 +15,6 @@
 """Integration code for a LibAFL-based fuzzer."""
 
 import os
-import shutil
 import subprocess
 
 from fuzzers import utils
@@ -47,6 +46,10 @@ def build():
     cflags = [
         '-fsanitize=fuzzer-no-link'
     ]
+    ldflags = [
+        '-Wl,--whole-archive', '-lFuzzer', '-Wl,--no-whole-archive'
+    ]
+    utils.append_flags('LDFLAGS', ldflags)
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
@@ -57,10 +60,7 @@ def build():
     # to ensure that we never use another fuzzer engine, we provide an empty
     # static library to link against
     subprocess.check_call(['/usr/bin/ar', 'cr', '/usr/lib/libempty.a'])
-    os.environ['FUZZER_LIB'] = '/usr/lib/libempty.a -Wl,--whole-archive ' \
-                               '-lFuzzer -Wl,--no-whole-archive'
-
-    shutil.copy('/usr/lib/libFuzzer.a', utils.OSS_FUZZ_LIB_FUZZING_ENGINE_PATH)
+    os.environ['FUZZER_LIB'] = '/usr/lib/libempty.a'
 
     utils.build_benchmark()
 
