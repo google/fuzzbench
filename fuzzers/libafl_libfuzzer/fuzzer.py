@@ -59,7 +59,7 @@ def build():
     subprocess.check_call(
         ['/usr/bin/ar', 'cr', '/usr/lib/libFuzzer.a', '/tmp/libFuzzerMerged.o'])
 
-    os.environ['FUZZER_LIB'] = '/usr/lib/libempty.a'
+    os.environ['FUZZER_LIB'] = '/usr/lib/libFuzzer.a'
 
     utils.build_benchmark()
 
