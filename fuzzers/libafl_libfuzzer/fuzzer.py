@@ -22,18 +22,18 @@ from fuzzers import utils
 
 def prepare_fuzz_environment(input_corpus):
     """Prepare to fuzz with a LibAFL-based fuzzer."""
-    os.environ['ASAN_OPTIONS'] = 'abort_on_error=1:detect_leaks=0:'\
-                                 'malloc_context_size=0:symbolize=0:'\
-                                 'allocator_may_return_null=1:'\
-                                 'detect_odr_violation=0:handle_segv=0:'\
-                                 'handle_sigbus=0:handle_abort=0:'\
+    os.environ['ASAN_OPTIONS'] = 'abort_on_error=1:detect_leaks=0:' \
+                                 'malloc_context_size=0:symbolize=0:' \
+                                 'allocator_may_return_null=1:' \
+                                 'detect_odr_violation=0:handle_segv=0:' \
+                                 'handle_sigbus=0:handle_abort=0:' \
                                  'handle_sigfpe=0:handle_sigill=0'
-    os.environ['UBSAN_OPTIONS'] =  'abort_on_error=1:'\
-                                   'allocator_release_to_os_interval_ms=500:'\
-                                   'handle_abort=0:handle_segv=0:'\
-                                   'handle_sigbus=0:handle_sigfpe=0:'\
-                                   'handle_sigill=0:print_stacktrace=0:'\
-                                   'symbolize=0:symbolize_inline_frames=0'
+    os.environ['UBSAN_OPTIONS'] = 'abort_on_error=1:' \
+                                  'allocator_release_to_os_interval_ms=500:' \
+                                  'handle_abort=0:handle_segv=0:' \
+                                  'handle_sigbus=0:handle_sigfpe=0:' \
+                                  'handle_sigill=0:print_stacktrace=0:' \
+                                  'symbolize=0:symbolize_inline_frames=0'
     # Create at least one non-empty seed to start.
     utils.create_seed_file_for_empty_corpus(input_corpus)
 
@@ -43,13 +43,23 @@ def build():
     # With LibFuzzer we use -fsanitize=fuzzer-no-link for build CFLAGS and then
     # /usr/lib/libFuzzer.a as the FUZZER_LIB for the main fuzzing binary. This
     # allows us to link against a version of LibFuzzer that we specify.
-    cflags = ['-fsanitize=fuzzer-no-link']
+    cflags = [
+        '-fsanitize=fuzzer-no-link',
+        '-Wl,--whole-archive',
+        '-lFuzzer',
+        '-Wl,--no-whole-archive'
+    ]
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
     os.environ['CC'] = 'clang'
     os.environ['CXX'] = 'clang++'
-    os.environ['FUZZER_LIB'] = '-Wl,--whole-archive -lFuzzer -Wl,--no-whole-archive'
+
+    # hack: some of the fuzzers build with flags we cannot control
+    # to ensure that we never use another fuzzer engine, we provide an empty
+    # static library to link against
+    subprocess.check_call(['/usr/bin/ar', 'cr', '/usr/lib/libempty.a'])
+    os.environ['FUZZER_LIB'] = '/usr/lib/libempty.a'
 
     utils.build_benchmark()
 
@@ -89,9 +99,11 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     #         break
 
     flags = [
-        '-print_final_stats=1',  # currently unsupported by libafl_libfuzzer currently
+        '-print_final_stats=1',
+        # currently unsupported by libafl_libfuzzer currently
         # `close_fd_mask` to prevent too much logging output from the target.
-        '-close_fd_mask=3',  # currently unsupported by libafl_libfuzzer currently
+        '-close_fd_mask=3',
+        # currently unsupported by libafl_libfuzzer currently
         # Run in fork mode to allow ignoring ooms, timeouts, crashes and
         # continue fuzzing indefinitely.
         '-fork=1',
@@ -101,7 +113,8 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
 
         # Don't use LSAN's leak detection. Other fuzzers won't be using it and
         # using it will cause libFuzzer to find "crashes" no one cares about.
-        '-detect_leaks=0',  # libafl_libfuzzer does not do leak checking regardless; not supported
+        # libafl_libfuzzer does not do leak checking regardless; not supported
+        '-detect_leaks=0',
 
         # Store crashes along with corpus for bug based benchmarking.
         f'-artifact_prefix={crashes_dir}/',
