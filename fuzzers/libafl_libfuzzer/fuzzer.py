@@ -43,23 +43,22 @@ def build():
     # With LibFuzzer we use -fsanitize=fuzzer-no-link for build CFLAGS and then
     # /usr/lib/libFuzzer.a as the FUZZER_LIB for the main fuzzing binary. This
     # allows us to link against a version of LibFuzzer that we specify.
-    cflags = [
-        '-fsanitize=fuzzer-no-link'
-    ]
-    ldflags = [
-        '-Wl,--whole-archive', '-lFuzzer', '-Wl,--no-whole-archive'
-    ]
-    utils.append_flags('LDFLAGS', ldflags)
+    cflags = ['-fsanitize=fuzzer-no-link']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
     os.environ['CC'] = 'clang'
     os.environ['CXX'] = 'clang++'
 
-    # hack: some of the fuzzers build with flags we cannot control
-    # to ensure that we never use another fuzzer engine, we provide an empty
-    # static library to link against
-    subprocess.check_call(['/usr/bin/ar', 'cr', '/usr/lib/libempty.a'])
+    # merge all of our lib into a single .o, then pack that into a static lib
+    subprocess.check_call([
+        '/usr/bin/ld', '-Ur', '/usr/lib/libFuzzer.a', '-o',
+        '/tmp/libFuzzerMerged.o'
+    ])
+    subprocess.check_call(['/usr/bin/rm', '/usr/lib/libFuzzer.a'])
+    subprocess.check_call(
+        ['/usr/bin/ar', 'cr', '/usr/lib/libFuzzer.a', '/tmp/libFuzzerMerged.o'])
+
     os.environ['FUZZER_LIB'] = '/usr/lib/libempty.a'
 
     utils.build_benchmark()
