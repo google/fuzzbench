@@ -40,6 +40,9 @@ RUN git clone -b autotoken https://github.com/AFLplusplus/AFLplusplus /afl && \
     git checkout 1faf6f67313e726c645ac3b9ecd2d8b5e65f605a || \
     true
 
+RUN cd /afl && \
+    sed -i 's/AFL_TXT_MAX_LEN 65535/AFL_TXT_MAX_LEN MAX_FILE/' include/config.h
+
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /afl && \

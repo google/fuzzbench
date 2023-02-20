@@ -268,7 +268,7 @@ def fuzz(input_corpus,
         flags += ['-c', cmplog_target_binary]
         flags += ['-l2']
 
-    os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
+    #os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
     os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
     os.environ['AFL_FAST_CAL'] = '1'
 
