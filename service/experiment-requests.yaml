@@ -21,6 +21,16 @@
 #
 
 
+- experiment: 2023-02-20-aflpp
+  description: "afl++ and afl+++ experiments."
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_current
+    - aflplusplusplus
+    - aflppp_oldcmplog
+    - aflppp_minlen
+    - aflppp_nomaxlen
+
 - experiment: 2023-02-18-aflpp
   description: "afl+++ token experiment."
   fuzzers:

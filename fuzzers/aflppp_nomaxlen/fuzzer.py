@@ -268,7 +268,7 @@ def fuzz(input_corpus,
         flags += ['-c', cmplog_target_binary]
         flags += ['-l2']
 
-    os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
+    #os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
     os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
     os.environ['AFL_FAST_CAL'] = '1'
 
@@ -276,7 +276,7 @@ def fuzz(input_corpus,
     os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
     os.environ['AFL_LLVM_DICT2FILE_NO_MAIN'] = '1'
 
-    #os.environ['AFL_CUSTOM_MUTATOR_LIBRARY'] = './autotokens.so'
+    os.environ['AFL_CUSTOM_MUTATOR_LIBRARY'] = './autotokens.so'
     os.environ['AUTOTOKENS_FUZZ_COUNT_SHIFT'] = '1'
     os.environ['AUTOTOKENS_AUTO_DISABLE'] = '1'
 
