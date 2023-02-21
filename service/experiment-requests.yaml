@@ -21,6 +21,12 @@
 #
 
 
+- experiment: 2023-02-21-aflppp
+  description: "afl++ regression test."
+  fuzzers:
+    - aflplusplusplus
+    - aflppp_all
+
 - experiment: 2023-02-21-aflpp
   description: "afl++ regression test."
   fuzzers:
