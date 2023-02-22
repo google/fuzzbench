@@ -38,7 +38,7 @@ RUN apt-get update && \
 RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git checkout cf0a0a06989da3a5b07ae1d387c4943e8c4bc0c6
+RUN cd /libafl && git checkout 20958a979f6ef43adad02d696a91a895dcea7623
 
 # Compile libafl.
 RUN cd /libafl && \
