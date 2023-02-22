@@ -14,6 +14,7 @@
 #
 """Integration code for AFLplusplus fuzzer."""
 
+import glob
 import os
 import shutil
 
@@ -232,6 +233,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if os.path.exists('/get_frida_entry.sh'):
         shutil.copy('/afl/afl-frida-trace.so', build_directory)
         shutil.copy('/get_frida_entry.sh', build_directory)
+    shutil.copy('/afl/autotokens.so', build_directory)
 
 
 # pylint: disable=too-many-arguments
@@ -257,20 +259,33 @@ def fuzz(input_corpus,
 
     flags = list(flags)
 
-    if os.path.exists('./afl++.dict'):
+    dicts = glob.glob('*.dic*')
+    if len(dicts) == 1 and os.path.exists('./afl++.dict'):
         flags += ['-x', './afl++.dict']
 
     # Move the following to skip for upcoming _double tests:
     if os.path.exists(cmplog_target_binary) and no_cmplog is False:
         flags += ['-c', cmplog_target_binary]
+        flags += ['-l2']
 
     #os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
     os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
     os.environ['AFL_FAST_CAL'] = '1'
 
+    os.environ['AFL_NO_WARN_INSTABILITY'] = '1'
+    os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
+    os.environ['AFL_LLVM_DICT2FILE_NO_MAIN'] = '1'
+
+    #os.environ['AFL_CUSTOM_MUTATOR_LIBRARY'] = './autotokens.so'
+    os.environ['AUTOTOKENS_FUZZ_COUNT_SHIFT'] = '1'
+    os.environ['AUTOTOKENS_AUTO_DISABLE'] = '1'
+
+    #os.environ['AUTOTOKENS_DEBUG'] = '1'
+    #os.environ['AFL_BENCH_JUST_ONE'] = '1'
+
     if not skip:
-        os.environ['AFL_DISABLE_TRIM'] = '1'
-        os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
+        #os.environ['AFL_DISABLE_TRIM'] = '1'
+        #os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
         if 'ADDITIONAL_ARGS' in os.environ:
             flags += os.environ['ADDITIONAL_ARGS'].split(' ')
 

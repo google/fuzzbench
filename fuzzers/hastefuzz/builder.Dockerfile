@@ -34,15 +34,14 @@ RUN apt-get update && \
         gcc-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-plugin-dev \
         libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
-# Download afl++.
-RUN git clone -b dev https://github.com/AFLplusplus/AFLplusplus /afl && \
-    cd /afl && \
-    git checkout 6f4b5ae0832774389b12c5a8cd3fb95821b438e5 || \
-    true
+# Download hastefuzz.
+RUN git clone https://github.com/AAArdu/hastefuzz.git /hastefuzz && \
+    cd /hastefuzz && \
+    git checkout 5a17712d3d5cce0597f67fcdde74552c433338f0
 
-# Build without Python support as we don't need it.
+# Build hastefuzz without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
-RUN cd /afl && \
+RUN cd /hastefuzz/fuzzer && \
     unset CFLAGS CXXFLAGS && \
     export CC=clang AFL_NO_X86=1 && \
     PYTHON_INCLUDE=/ make && \

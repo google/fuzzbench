@@ -31,6 +31,11 @@ def get_uninstrumented_build_directory(target_directory):
     return os.path.join(target_directory, 'uninstrumented')
 
 
+def get_hastemode_build_directory(target_directory):
+    """Return path to Hastemode target directory"""
+    return os.path.join(target_directory, 'hastemode')
+
+
 def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
@@ -58,8 +63,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     # Instrumentation coverage modes:
     if 'lto' in build_modes:
-        os.environ['CC'] = '/afl/afl-clang-lto'
-        os.environ['CXX'] = '/afl/afl-clang-lto++'
+        os.environ['CC'] = '/hastefuzz/fuzzer/afl-clang-lto'
+        os.environ['CXX'] = '/hastefuzz/fuzzer/afl-clang-lto++'
         edge_file = build_directory + '/aflpp_edges.txt'
         os.environ['AFL_LLVM_DOCUMENT_IDS'] = edge_file
         if os.path.isfile('/usr/local/bin/llvm-ranlib-13'):
@@ -88,8 +93,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
             os.environ['CXXFLAGS'] = ''
             os.environ['CPPFLAGS'] = ''
     else:
-        os.environ['CC'] = '/afl/afl-clang-fast'
-        os.environ['CXX'] = '/afl/afl-clang-fast++'
+        os.environ['CC'] = '/hastefuzz/fuzzer/afl-clang-fast'
+        os.environ['CXX'] = '/hastefuzz/fuzzer/afl-clang-fast++'
 
     print('AFL++ build: ')
     print(build_modes)
@@ -193,7 +198,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
                                                   os.path.basename(fuzz_target))
 
         print('Re-building benchmark for CmpLog fuzzing target')
-        utils.build_benchmark(env=new_env)
+        with utils.restore_directory(src), utils.restore_directory(work):
+            utils.build_benchmark(env=new_env)
 
     if 'symcc' in build_modes:
 
@@ -222,15 +228,39 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
                                                   os.path.basename(fuzz_target))
 
         print('Re-building benchmark for symcc fuzzing target')
-        utils.build_benchmark(env=new_env)
+        with utils.restore_directory(src), utils.restore_directory(work):
+            utils.build_benchmark(env=new_env)
 
-    shutil.copy('/afl/afl-fuzz', build_directory)
-    if os.path.exists('/afl/afl-qemu-trace'):
-        shutil.copy('/afl/afl-qemu-trace', build_directory)
+    if utils.get_config_value('type') == 'bug':
+        new_env = os.environ.copy()
+        t_a = [utils.DEFAULT_OPTIMIZATION_LEVEL]
+        cflags = utils.FUZZING_CFLAGS + utils.NO_SANITIZER_COMPAT_CFLAGS + t_a
+        new_env['CFLAGS'] = ' '.join(cflags)
+        t_a = [utils.LIBCPLUSPLUS_FLAG, utils.DEFAULT_OPTIMIZATION_LEVEL]
+        cxxflags = utils.FUZZING_CFLAGS + utils.NO_SANITIZER_COMPAT_CFLAGS + t_a
+        new_env['CXXFLAGS'] = ' '.join(cxxflags)
+        new_env['AFL_LLVM_USE_TRACE_PC'] = '1'
+        del new_env['AFL_LLVM_INSTRUMENT']
+        hastemode_build_directory = get_hastemode_build_directory(
+            build_directory)
+        os.mkdir(hastemode_build_directory)
+        new_env['OUT'] = hastemode_build_directory
+        fuzz_target = os.getenv('FUZZ_TARGET')
+
+        if fuzz_target:
+            new_env['FUZZ_TARGET'] = os.path.join(hastemode_build_directory,
+                                                  os.path.basename(fuzz_target))
+        print('Re-building benchmark for hastemode fuzzing target')
+        with utils.restore_directory(src), utils.restore_directory(work):
+            utils.build_benchmark(env=new_env)
+
+    shutil.copy('/hastefuzz/fuzzer/afl-fuzz', build_directory)
+    if os.path.exists('/hastefuzz/fuzzer/afl-qemu-trace'):
+        shutil.copy('/hastefuzz/fuzzer/afl-qemu-trace', build_directory)
     if os.path.exists('/aflpp_qemu_driver_hook.so'):
         shutil.copy('/aflpp_qemu_driver_hook.so', build_directory)
     if os.path.exists('/get_frida_entry.sh'):
-        shutil.copy('/afl/afl-frida-trace.so', build_directory)
+        shutil.copy('/hastefuzz/fuzzer/afl-frida-trace.so', build_directory)
         shutil.copy('/get_frida_entry.sh', build_directory)
 
 
@@ -249,6 +279,10 @@ def fuzz(input_corpus,
     target_binary_name = os.path.basename(target_binary)
     cmplog_target_binary = os.path.join(cmplog_target_binary_directory,
                                         target_binary_name)
+    hastemode_target_binary_directory = (
+        get_hastemode_build_directory(target_binary_directory))
+    hastemode_target_binary = os.path.join(hastemode_target_binary_directory,
+                                           target_binary_name)
 
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     # decomment this to enable libdislocator.
@@ -264,7 +298,13 @@ def fuzz(input_corpus,
     if os.path.exists(cmplog_target_binary) and no_cmplog is False:
         flags += ['-c', cmplog_target_binary]
 
-    #os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
+    if os.path.exists(hastemode_target_binary):
+        flags += ['-u', target_binary]
+        target_binary = hastemode_target_binary
+    else:
+        flags += ['-u', '0']
+
+    os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
     os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
     os.environ['AFL_FAST_CAL'] = '1'
 
