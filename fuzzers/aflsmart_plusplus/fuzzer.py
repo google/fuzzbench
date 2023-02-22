@@ -68,6 +68,9 @@ def fuzz(input_corpus, output_corpus, target_binary):
         # Choose FAVOR chunk type selection algo
         '-s',
         2,
+        # Reduce the chance of doing "destructive" mutations
+        '-D',
+        50,
     ]
 
     # Enable composite mode for targets
