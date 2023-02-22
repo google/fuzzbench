@@ -65,6 +65,9 @@ def fuzz(input_corpus, output_corpus, target_binary):
         # Select input model
         '-g',
         input_model,
+        # Choose FAVOR chunk type selection algo
+        '-s',
+        2,
     ]
 
     # Enable composite mode for targets
