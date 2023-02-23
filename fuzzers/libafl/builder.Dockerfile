@@ -18,7 +18,7 @@ FROM $parent_image
 # Uninstall old Rust & Install the latest one.
 RUN if which rustup; then rustup self uninstall -y; fi && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
-    sh /rustup.sh -y && \
+    sh /rustup.sh --default-toolchain nightly -y && \
     rm /rustup.sh
 
 # Install dependencies.
@@ -38,7 +38,7 @@ RUN apt-get update && \
 RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git checkout cf0a0a06989da3a5b07ae1d387c4943e8c4bc0c6
+RUN cd /libafl && git checkout 20958a979f6ef43adad02d696a91a895dcea7623
 
 # Compile libafl.
 RUN cd /libafl && \
