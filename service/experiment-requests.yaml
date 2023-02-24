@@ -27,7 +27,7 @@
     - aflplusplus
     - aflplusplus_cmplog
     - mopt
-    - emasfuzz
+    - EMASFUZZ
 
 - experiment: 2023-02-23-aflpp
   description: "afl++ regression test."
