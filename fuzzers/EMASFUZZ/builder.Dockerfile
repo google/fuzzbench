@@ -27,6 +27,7 @@ RUN apt-get update && \
         bison \
         libglib2.0-dev \
         libpixman-1-dev \
+        libgsl-dev \
         cargo \
         libgtk-3-dev \
         (lld-11 llvm-11 llvm-11-dev clang-11 ||  lld llvm llvm-dev clang) \
