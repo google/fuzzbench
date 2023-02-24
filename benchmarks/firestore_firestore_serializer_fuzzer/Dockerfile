@@ -14,7 +14,8 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
+
 RUN apt-get update && apt-get install -y make autoconf automake libtool wget golang python python-protobuf python-six
 RUN git clone https://github.com/firebase/firebase-ios-sdk.git
 COPY build.sh $SRC/
