@@ -21,6 +21,36 @@
 #
 
 
+- experiment: 2023-02-23-aflpp
+  description: "afl++ regression test."
+  fuzzers:
+    - aflplusplus_025f617d
+    - aflplusplus_3e8a691a
+    - aflplusplus_old
+    - aflplusplus_1a9f9685
+    - aflplusplus_f01bf776
+    - aflplusplus_25b4b326
+  benchmarks:
+    - bloaty_fuzz_target
+    - freetype2_ftfuzzer
+    - lcms_cms_transform_fuzzer
+    - proj4_proj_crs_to_crs_fuzzer
+    - stb_stbi_read_fuzzer
+
+- experiment: 2023-02-22-aflpp
+  description: "afl++ regression test."
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_old
+    - aflplusplus_rq
+    - aflplusplus_onebug
+
+- experiment: 2023-02-21-aflppp
+  description: "afl++ regression test."
+  fuzzers:
+    - aflplusplusplus
+    - aflppp_all
+
 - experiment: 2023-02-21-aflpp
   description: "afl++ regression test."
   fuzzers:
