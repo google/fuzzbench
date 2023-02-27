@@ -23,7 +23,7 @@
 
 - experiment: 2023-02-27-aflppp
   description: "afl+++ variants."
-   trials: 10
+  trials: 10
   fuzzers:
     - aflplusplusplus
     - aflppp_fav
