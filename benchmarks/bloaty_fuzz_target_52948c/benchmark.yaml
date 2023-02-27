@@ -1,0 +1,30 @@
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# 6440215450877952
+commit: 52948c107c8f81045e7f9223ec02706b19cfa882
+commit_date: 2022-11-11T17:41:21+00:00
+fuzz_target: fuzz_target
+project: bloaty
+type: bug
+unsupported_fuzzers:
+  - klee
+  - aflplusplus_cmplog_double
+  - symcc_aflplusplus_single
+  - eclipser_aflplusplus
+  - aflplusplus_qemu_double
+  - fuzzolic_aflplusplus_z3
+  - symqemu_aflplusplus
+  - fuzzolic_aflplusplus_fuzzy
+  - fuzzolic_aflplusplus_z3dict
