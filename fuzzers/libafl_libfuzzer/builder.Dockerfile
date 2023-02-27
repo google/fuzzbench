@@ -36,7 +36,7 @@ RUN git clone \
         --branch libfuzzer \
         https://github.com/AFLplusplus/libafl /libafl && \
     cd /libafl && \
-    git checkout 7e70fcd8695271e373cbc172a5bd22c9ac3d15ff && \
+    git checkout 63a8823570091bbb9a3909bbbf38cbc3637314a7 && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
     cd ./libafl_libfuzzer/libafl_libfuzzer_runtime && \
