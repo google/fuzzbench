@@ -21,6 +21,19 @@
 #
 
 
+- experiment: 2023-02-27-aflpp
+  description: "afl++ regression test."
+  fuzzers:
+    - aflplusplus_onebug
+    - aflplusplus_new
+    - aflplusplus_old
+  benchmarks:
+    - bloaty_fuzz_target
+    - freetype2_ftfuzzer
+    - lcms_cms_transform_fuzzer
+    - proj4_proj_crs_to_crs_fuzzer
+    - stb_stbi_read_fuzzer
+
 - experiment: 2023-02-26-aflppp
   description: "afl+++ impact test."
   fuzzers:
