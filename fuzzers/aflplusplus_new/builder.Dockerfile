@@ -48,7 +48,3 @@ RUN cd /afl && \
     PYTHON_INCLUDE=/ make && \
     make install && \
     cp utils/aflpp_driver/libAFLDriver.a /
-
-RUN cd /afl && \
-    make -C custom_mutators/autotokens && \
-    cp -f custom_mutators/autotokens/autotokens.so .
