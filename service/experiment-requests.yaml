@@ -20,6 +20,21 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-02-27-learnperffuzz
+  description: "Test quota."
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - libafl
+    - libfuzzer
+    - mopt
+    - learnperffuzz
+
 
 - experiment: 2023-02-27-aflpp-3
   description: "afl++ regression test (different one)."
