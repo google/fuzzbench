@@ -21,6 +21,24 @@
 #
 
 
+- experiment: 2023-02-27-aflppp
+  description: "afl+++ variants."
+   trials: 10
+  fuzzers:
+    - aflplusplusplus
+    - aflppp_fav
+    - aflppp_learn
+  benchmarks:
+    - curl_curl_fuzzer_http
+    - jsoncpp_jsoncpp_fuzzer
+    - libxml2_xml
+    - libxslt_xpath
+    - php_php-fuzz-parser
+    - proj4_proj_crs_to_crs_fuzzer
+    - re2_fuzzer
+    - sqlite3_ossfuzz
+    - systemd_fuzz-link-parser
+
 - experiment: 2023-02-27-aflpp-2
   description: "afl++ regression test."
   trials: 10
