@@ -19,6 +19,14 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
+
+- experiment: 2023-02-28-ecofuzz
+  description: "Test EcoFuzz."
+  fuzzers:
+    - afl
+    - aflfast
+    - ecofuzz
+
 - experiment: 2023-02-27-aflpp-3
   description: "afl++ regression test (different one)."
   trials: 10
