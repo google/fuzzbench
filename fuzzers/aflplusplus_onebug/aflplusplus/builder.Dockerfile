@@ -37,7 +37,7 @@ RUN apt-get update && \
 # Download afl++.
 RUN git clone -b dev https://github.com/AFLplusplus/AFLplusplus /afl && \
     cd /afl && \
-    git checkout 2b5c9954f6099d7a70cbcf2db9af5a19327f385f || \
+    git checkout 6f4b5ae0832774389b12c5a8cd3fb95821b438e5 || \
     true
 
 # Build without Python support as we don't need it.
@@ -48,7 +48,3 @@ RUN cd /afl && \
     PYTHON_INCLUDE=/ make && \
     make install && \
     cp utils/aflpp_driver/libAFLDriver.a /
-
-RUN cd /afl && \
-    make -C custom_mutators/autotokens && \
-    cp -f custom_mutators/autotokens/autotokens.so .
