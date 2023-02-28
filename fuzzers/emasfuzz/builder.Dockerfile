@@ -39,7 +39,7 @@ RUN apt-get update && \
 
 # Download EMASFUZZ.
 RUN git clone -b dev https://github.com/Ricardo-609/EMASFUZZ /afl && \
-    cd /afl && \
+    #cd /afl && \
     #git checkout c5a84a124c56a9478cf779b5aea7369a4eed07ed || \
     #true
 
