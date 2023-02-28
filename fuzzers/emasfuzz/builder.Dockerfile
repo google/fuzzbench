@@ -17,24 +17,24 @@ FROM $parent_image
 
 RUN apt-get update && \
     apt-get install -y \
-        build-essential \
-        python3-dev \
-        python3-setuptools \
-        automake \
-        cmake \
-        git \
-        flex \
-        bison \
-        libglib2.0-dev \
-        libpixman-1-dev \
-        libgsl-dev \
-        cargo \
-        libgtk-3-dev \
-        (lld-11 llvm-11 llvm-11-dev clang-11 ||  lld llvm llvm-dev clang) \
-        # for QEMU mode
-        ninja-build \
-        gcc-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-plugin-dev \
-        libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
+    build-essential \
+    python3-dev \
+    python3-setuptools \
+    automake \
+    cmake \
+    git \
+    flex \
+    bison \
+    libglib2.0-dev \
+    libpixman-1-dev \
+    cargo \
+    libgtk-3-dev \
+    (lld-11 llvm-11 llvm-11-dev clang-11 ||  lld llvm llvm-dev clang) \
+    # for QEMU mode
+    ninja-build \
+    gcc-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-plugin-dev \
+    libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev \
+    libgsl-dev
 
 
 # Download EMASFUZZ.
@@ -43,9 +43,9 @@ RUN git clone -b dev https://github.com/Ricardo-609/EMASFUZZ /afl && \
     #git checkout c5a84a124c56a9478cf779b5aea7369a4eed07ed || \
     #true
 
-# Build without Python support as we don't need it.
-# Set AFL_NO_X86 to skip flaky tests.
-RUN cd /afl && \
+    # Build without Python support as we don't need it.
+    # Set AFL_NO_X86 to skip flaky tests.
+    RUN cd /afl && \
     unset CFLAGS CXXFLAGS && \
     export CC=clang AFL_NO_X86=1 && \
     PYTHON_INCLUDE=/ make && \
