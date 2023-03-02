@@ -41,11 +41,6 @@ def get_symsan_build_fast_dir(target_directory):
     return os.path.join(target_directory, 'symsanfast')
 
 
-#def is_benchmark(name):
-#    benchmark = os.getenv('BENCHMARK', None)
-#    return benchmark is not None and name in benchmark
-
-
 def get_cmplog_build_directory(target_directory):
     """Return path to CmpLog target directory."""
     return os.path.join(target_directory, 'cmplog')
@@ -70,6 +65,12 @@ def build_symsan_fast(build_directory, src, work):
     new_env['KO_DONT_OPTIMIZE'] = '1'
 
     if is_benchmark('curl_curl_fuzzer_http'):
+        new_env['SANITIZER'] = 'memory'
+    if is_benchmark('libxslt_xpath'):
+        new_env['SANITIZER'] = 'memory'
+    if is_benchmark('openssl_x509'):
+        new_env['CFLAGS'] = '-fsanitize=memory'
+    if is_benchmark('proj4_proj_crs_to_crs_fuzzer'):
         new_env['SANITIZER'] = 'memory'
 
     fuzz_target = os.getenv('FUZZ_TARGET')
@@ -99,6 +100,12 @@ def build_symsan(build_directory, src, work):
     new_env['USE_TRACK'] = '1'
     new_env['KO_USE_FASTGEN'] = '1'
     if is_benchmark('curl_curl_fuzzer_http'):
+        new_env['SANITIZER'] = 'memory'
+    if is_benchmark('libxslt_xpath'):
+        new_env['SANITIZER'] = 'memory'
+    if is_benchmark('openssl_x509'):
+        new_env['CFLAGS'] = '-fsanitize=memory'
+    if is_benchmark('proj4_proj_crs_to_crs_fuzzer'):
         new_env['SANITIZER'] = 'memory'
 
         # For CmpLog build, set the OUT and FUZZ_TARGET environment
