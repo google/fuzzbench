@@ -364,7 +364,6 @@ def experiment_rank_by_average_rank(experiment_pivot_df):
     # Rank fuzzers in each benchmark block.
     pivot_ranked = experiment_pivot_df.fillna(0).rank('columns',
                                                       method='min',
-                                                      na_option='bottom',
                                                       ascending=False)
     average_ranks = pivot_ranked.mean().sort_values()
     return average_ranks.rename('average rank')
@@ -376,7 +375,6 @@ def experiment_rank_by_num_firsts(experiment_pivot_df):
     # Rank fuzzers in each benchmark block.
     pivot_ranked = experiment_pivot_df.fillna(0).rank('columns',
                                                       method='min',
-                                                      na_option='bottom',
                                                       ascending=False)
     # Count first places for each fuzzer.
     firsts = pivot_ranked[pivot_ranked == 1]
