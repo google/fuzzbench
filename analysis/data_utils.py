@@ -388,7 +388,7 @@ def experiment_rank_by_average_normalized_score(experiment_pivot_df):
     # Normalize coverage values.
     benchmark_maximum = experiment_pivot_df.fillna(0).max(axis='columns')
     normalized_score = experiment_pivot_df.fillna(0).div(benchmark_maximum,
-                                               axis='index').mul(100)
+                                                         axis='index').mul(100)
 
     average_score = normalized_score.mean().sort_values(ascending=False)
     return average_score.rename('average normalized score')
