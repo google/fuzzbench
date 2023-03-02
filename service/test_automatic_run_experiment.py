@@ -36,8 +36,6 @@ EXPERIMENT_REQUESTS = [{
     'oss_fuzz_corpus': True,
 }]
 
-SERVICE_CONCURRENT_BUILDS = 150
-
 
 @mock.patch('experiment.run_experiment.start_experiment')
 @mock.patch('common.logs.warning')
@@ -92,20 +90,20 @@ def test_run_requested_experiment(mocked_get_requested_experiments,
         'libxml2_xml',
         'openh264_decoder_fuzzer',
         'openthread_ot-ip6-send-fuzzer',
-        'php_php-fuzz-parser',
         'proj4_proj_crs_to_crs_fuzzer',
         're2_fuzzer',
         'stb_stbi_read_fuzzer',
         'vorbis_decode_fuzzer',
         'woff2_convert_woff2ttf_fuzzer',
     ])
-    expected_call = mock.call(expected_experiment_name,
-                              expected_config_file,
-                              expected_benchmarks,
-                              expected_fuzzers,
-                              description='Test experiment',
-                              concurrent_builds=SERVICE_CONCURRENT_BUILDS,
-                              oss_fuzz_corpus=True)
+    expected_call = mock.call(
+        expected_experiment_name,
+        expected_config_file,
+        expected_benchmarks,
+        expected_fuzzers,
+        description='Test experiment',
+        concurrent_builds=(automatic_run_experiment.CONCURRENT_BUILDS),
+        oss_fuzz_corpus=True)
     start_experiment_call_args = mocked_start_experiment.call_args_list
     assert len(start_experiment_call_args) == 1
     start_experiment_call_args = start_experiment_call_args[0]

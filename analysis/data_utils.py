@@ -362,9 +362,9 @@ def experiment_rank_by_average_rank(experiment_pivot_df):
     (smaller is better).
     """
     # Rank fuzzers in each benchmark block.
-    pivot_ranked = experiment_pivot_df.rank('columns',
-                                            na_option='keep',
-                                            ascending=False)
+    pivot_ranked = experiment_pivot_df.fillna(0).rank('columns',
+                                                      method='min',
+                                                      ascending=False)
     average_ranks = pivot_ranked.mean().sort_values()
     return average_ranks.rename('average rank')
 
@@ -373,9 +373,9 @@ def experiment_rank_by_num_firsts(experiment_pivot_df):
     """Creates experiment level ranking by number of first places in per
     benchmark rankings (higher is better)."""
     # Rank fuzzers in each benchmark block.
-    pivot_ranked = experiment_pivot_df.rank('columns',
-                                            na_option='keep',
-                                            ascending=False)
+    pivot_ranked = experiment_pivot_df.fillna(0).rank('columns',
+                                                      method='min',
+                                                      ascending=False)
     # Count first places for each fuzzer.
     firsts = pivot_ranked[pivot_ranked == 1]
     num_firsts = firsts.sum().sort_values(ascending=False)
@@ -386,9 +386,9 @@ def experiment_rank_by_average_normalized_score(experiment_pivot_df):
     """Creates experiment level ranking by taking the average of normalized per
     benchmark scores from 0 to 100, where 100 is the highest reach coverage."""
     # Normalize coverage values.
-    benchmark_maximum = experiment_pivot_df.max(axis='columns')
-    normalized_score = experiment_pivot_df.div(benchmark_maximum,
-                                               axis='index').mul(100)
+    benchmark_maximum = experiment_pivot_df.fillna(0).max(axis='columns')
+    normalized_score = experiment_pivot_df.fillna(0).div(benchmark_maximum,
+                                                         axis='index').mul(100)
 
     average_score = normalized_score.mean().sort_values(ascending=False)
     return average_score.rename('average normalized score')
