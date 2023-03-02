@@ -16,6 +16,7 @@
 import numpy as np
 import Orange
 import seaborn as sns
+import warnings
 
 from matplotlib import colors
 from matplotlib import pyplot as plt
@@ -23,6 +24,8 @@ from analysis import data_utils
 
 _DEFAULT_TICKS_COUNT = 12
 _DEFAULT_LABEL_ROTATION = 30
+warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.simplefilter(action='ignore', category=DeprecationWarning)
 
 
 def _formatted_hour_min(seconds):
