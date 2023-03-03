@@ -18,7 +18,7 @@ FROM $parent_image
 RUN apt-get update -y &&  \
     apt-get -y install wget python3-dev python3-setuptools apt-transport-https \
     libboost-all-dev texinfo \
-    build-essential automake flex bison libglib2.0-dev libpixman-1-dev libgtk-3-dev ninja-build libibverbs-dev \
+    build-essential automake flex bison libglib2.0-dev libpixman-1-dev libgtk-3-dev ninja-build libnl-genl-3-dev \
     lsb-release software-properties-common autoconf curl zlib1g-dev cmake protobuf-compiler libprotobuf-dev
 
 RUN if [ -x "$(command -v rustc)" ]; then rustup self uninstall -y; fi

@@ -24,6 +24,30 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 # Helper library that contains important functions for building.
 from fuzzers import utils
 
+OSS_FUZZ_LIB_FUZZING_ENGINE_PATH = '/usr/lib/libFuzzingEngine.a'
+
+
+def build_benchmark_symsan(env, benchmark_name):
+    """Build a benchmark using fuzzer library."""
+    if not env:
+        env = os.environ.copy()
+
+    # Add OSS-Fuzz environment variable for fuzzer library.
+    fuzzer_lib = env['FUZZER_LIB']
+    env['LIB_FUZZING_ENGINE'] = fuzzer_lib
+    if os.path.exists(fuzzer_lib):
+        # Make /usr/lib/libFuzzingEngine.a point to our library for OSS-Fuzz
+        # so we can build projects that are using -lFuzzingEngine.
+        shutil.copy(fuzzer_lib, OSS_FUZZ_LIB_FUZZING_ENGINE_PATH)
+
+    build_script_name = 'build_' + benchmark_name + '.sh'
+    build_script = os.path.join('/src/fuzzers/symsan', build_script_name)
+
+    benchmark = os.getenv('BENCHMARK')
+    fuzzer = os.getenv('FUZZER')
+    print(f'Building benchmark {benchmark} with fuzzer {fuzzer}')
+    subprocess.check_call(['/bin/bash', '-ex', build_script], env=env)
+
 
 def is_benchmark(name):
     """Check the benchmark under built."""
@@ -70,8 +94,6 @@ def build_symsan_fast(build_directory, src, work):
         new_env['SANITIZER'] = 'memory'
     if is_benchmark('openssl_x509'):
         new_env['CFLAGS'] = '-fsanitize=memory'
-    if is_benchmark('proj4_proj_crs_to_crs_fuzzer'):
-        new_env['SANITIZER'] = 'memory'
 
     fuzz_target = os.getenv('FUZZ_TARGET')
     if fuzz_target:
@@ -79,7 +101,10 @@ def build_symsan_fast(build_directory, src, work):
                                               os.path.basename(fuzz_target))
 
     with utils.restore_directory(src), utils.restore_directory(work):
-        utils.build_benchmark(env=new_env)
+        if is_benchmark('freetype2_ftfuzzer'):
+            build_benchmark_symsan(new_env, 'freetype2')
+        else:
+            utils.build_benchmark(env=new_env)
 
 
 def build_symsan(build_directory, src, work):
@@ -105,8 +130,6 @@ def build_symsan(build_directory, src, work):
         new_env['SANITIZER'] = 'memory'
     if is_benchmark('openssl_x509'):
         new_env['CFLAGS'] = '-fsanitize=memory'
-    if is_benchmark('proj4_proj_crs_to_crs_fuzzer'):
-        new_env['SANITIZER'] = 'memory'
 
         # For CmpLog build, set the OUT and FUZZ_TARGET environment
         # variable to point to the new CmpLog build directory.
@@ -116,7 +139,10 @@ def build_symsan(build_directory, src, work):
                                               os.path.basename(fuzz_target))
 
     with utils.restore_directory(src), utils.restore_directory(work):
-        utils.build_benchmark(env=new_env)
+        if is_benchmark('freetype2_ftfuzzer'):
+            build_benchmark_symsan(new_env, 'freetype2')
+        else:
+            utils.build_benchmark(env=new_env)
 
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
