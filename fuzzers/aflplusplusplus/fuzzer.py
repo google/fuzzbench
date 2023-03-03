@@ -279,6 +279,8 @@ def fuzz(input_corpus,
     os.environ['AFL_CUSTOM_MUTATOR_LIBRARY'] = './autotokens.so'
     os.environ['AUTOTOKENS_FUZZ_COUNT_SHIFT'] = '1'
     os.environ['AUTOTOKENS_AUTO_DISABLE'] = '1'
+    os.environ['AUTOTOKENS_ONLY_FAV'] = '1'
+    os.environ['AUTOTOKENS_LEARN_DICT'] = '2'
 
     #os.environ['AUTOTOKENS_DEBUG'] = '1'
     #os.environ['AFL_BENCH_JUST_ONE'] = '1'
