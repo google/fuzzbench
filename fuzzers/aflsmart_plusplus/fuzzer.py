@@ -57,11 +57,11 @@ def fuzz(input_corpus, output_corpus, target_binary):
         '-D',
         '50',
     ]
-    
+
     benchmark_name = os.environ['BENCHMARK']
-    
+
     # Disable smart fuzzing mode for some known buggy benchmarks
-    if "harfbuzz" in benchmark_name:
+    if 'harfbuzz' in benchmark_name:
         input_model = ''
 
     if input_model != '':
