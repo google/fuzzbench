@@ -19,44 +19,80 @@ import shutil
 import threading
 import subprocess
 import shutil
+import contextlib
 
 from fuzzers import utils
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
 
-# def get_symcc_build_dir(target_directory):
-#     """Return path to uninstrumented target directory."""
-#     return os.path.join(target_directory, 'uninstrumented')
+@contextlib.contextmanager
+def with_lukas_afl():
+    os.symlink('/afl-lukas', '/afl', target_is_directory=True)
+    # os.symlink('/libAFLDriver-lukas.a', '/libAFLDriver.a', target_is_directory=False)
 
+    shutil.copyfile('/afl-base/afl-fuzz', '/afl/afl-fuzz')
+    yield
+
+    os.unlink('/afl')
+    # os.unlink('/libAFLDriver.a')
+
+
+@contextlib.contextmanager
+def with_base_afl(delete=True):
+    os.symlink('/afl-base', '/afl', target_is_directory=True)
+    # os.symlink('/libAFLDriver-base.a', '/libAFLDriver.a', target_is_directory=False)
+
+    yield
+
+    if delete:
+        os.unlink('/afl')
+        # os.unlink('/libAFLDriver.a')
 
 def build():
-    """Build an AFL version and SymCC version of the benchmark"""
+    shutil.rmtree('/afl/')
+
     print('Step 1: Building a vanilla version of the benchmark')
     new_env = os.environ.copy()
     new_env['OUT'] = "/out/target/vanilla"
-    new_env['FUZZER_LIB'] = '/out/target/vanilla/afl_driver.o'
+    new_env['FUZZER_LIB'] = '/out/target/vanilla/aflpp_driver.o'
     utils.build_benchmark(env=new_env)
 
     # Save the environment for use in SymCC
     new_env = os.environ.copy()
     build_directory = os.environ['OUT']
 
-    print('Step 2: Building with AFL')
-    os.environ['OUT'] = '/out/target/cmplog/'
-    src = os.getenv('SRC')
-    work = os.getenv('WORK')
-    with utils.restore_directory(src), utils.restore_directory(work):
-        aflplusplus_fuzzer.build('cmplog', 'tracepc')
+    with with_base_afl():
+        print('Step 2: Building with AFL')
+        os.environ['OUT'] = '/out/target/cmplog/'
+        src = os.getenv('SRC')
+        work = os.getenv('WORK')
+        with utils.restore_directory(src), utils.restore_directory(work):
+            aflplusplus_fuzzer.build('cmplog', 'tracepc') # This uses /libAFLDriver.c
 
-    # Copy the target binary so the experiment runner does not complain
-    shutil.copy('/out/target/cmplog/' + os.environ['FUZZ_TARGET'], '/out/')
+        # Copy the target binary so the experiment runner does not complain
+        shutil.copy('/out/target/cmplog/' + os.environ['FUZZ_TARGET'], '/out/')
 
+        print('Step 2: Building with AFL (no cmplog)')
+        os.environ['OUT'] = '/out/target/afl/'
+        src = os.getenv('SRC')
+        work = os.getenv('WORK')
+        with utils.restore_directory(src), utils.restore_directory(work):
+            aflplusplus_fuzzer.build('tracepc')
+
+    with with_lukas_afl():
+        print('Step 2a: Building with AFL (no cmplog) with afl-lukas')
+        os.system("ls -al / | grep afl")
+        os.environ['OUT'] = '/out/target/afl-lukas/'
+        src = os.getenv('SRC')
+        work = os.getenv('WORK')
+        with utils.restore_directory(src), utils.restore_directory(work):
+            aflplusplus_fuzzer.build('tracepc')
 
     print('Step 3: Completed AFL build')
     # Copy over AFL artifacts needed by SymCC.
-    shutil.copy('/afl/afl-fuzz', build_directory)
-    shutil.copy('/afl/afl-showmap', build_directory)
+    shutil.copy('/afl-base/afl-fuzz', build_directory)
+    shutil.copy('/afl-base/afl-showmap', build_directory)
 
     # Build the SymCC-instrumented target.
     print('Step 4: Building the benchmark with SymCC')
@@ -111,6 +147,8 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
     symcc_target_binary   = os.path.join('/out/target/symcc/',   target_binary_name)
     vanilla_target_binary = os.path.join('/out/target/vanilla/', target_binary_name)
     cmplog_target_binary  = os.path.join('/out/target/cmplog/',  target_binary_name)
+    afl_target_binary     = os.path.join('/out/target/afl/',     target_binary_name)
+    afl_lukas_target_binary  = os.path.join('/out/target/afl-lukas/',     target_binary_name)
 
     fuzzer = os.environ["FUZZER"]
 
@@ -132,6 +170,10 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
         print('[run_fuzzer] Running %s' % fuzzer)
         afl_fuzzer.prepare_fuzz_environment(input_corpus)
 
+        # Keep  /afl pointing to /afl-base forever..
+        with with_base_afl(delete=False):
+            pass
+
         launch_afl_thread(input_corpus, output_corpus, target_binary,
                           flag_cmplog + ['-M', 'afl-main'] + sync_flag_master)
         time.sleep(2)
@@ -149,13 +191,14 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
         '-i', input_corpus,
         '-s', output_corpus,
         '-n', 'symcts',
+        '-c', afl_lukas_target_binary,
         '--'
     ]
 
     if "symqemu" in fuzzer:
-        cmd += ["/out/symqemu-x86_64", vanilla_target_binary, "@@"]
+        cmd += ["/out/symqemu-x86_64", vanilla_target_binary]
     else:
-        cmd += [symcc_target_binary, "@@"]
+        cmd += [symcc_target_binary]
 
     # Start an instance of SyMCTS.
     # We need to ensure it uses the symbolic version of libc++.
@@ -165,6 +208,10 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
     new_environ['SYMCTS_INHERIT_STDERR'] = '1'
     new_environ['SYMCTS_INHERIT_STDOUT'] = '1'
 
+    new_environ["RUST_LOG"] = "generate_mutations_sampled=info"
+
     print("############ RUNNING: ", " ".join(cmd))
+    os.system("ls -al " + input_corpus)
+
     with subprocess.Popen(cmd, env=new_environ):
         pass

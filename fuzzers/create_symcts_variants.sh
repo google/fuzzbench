@@ -15,6 +15,6 @@ for VARIANT in "${VARIANTS[@]}"; do
     rm -rf "$VARIANT"
     mkdir -p "$VARIANT/src/"
     for f in "${FILES[@]}"; do
-        ln "BASE_symcts/$f" "$VARIANT/$f"
+        cp "BASE_symcts/$f" "$VARIANT/$f"
     done
 done

@@ -69,21 +69,41 @@ RUN update-alternatives \
     --slave    /usr/bin/clang-cpp         clang-cpp        /usr/bin/clang-cpp-12
 
 # Install AFL++.
-RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl && \
-    cd /afl && git checkout 149366507da1ff8e3e8c4962f3abc6c8fd78b222
+# RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl && \
+#     cd /afl && git checkout 149366507da1ff8e3e8c4962f3abc6c8fd78b222
+
+RUN echo "rerun=11"
+RUN git clone https://github.com/Lukas-Dresel/AFLplusplus/ /afl-lukas && \
+    cd /afl-lukas && git checkout feat/larger_counters
+
+
+RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl-base/
+
 
 # Prepare output dirs
-RUN mkdir -p /out/afl /out/symcts /out/target/symcc /out/target/vanilla /out/target/cmplog
+RUN mkdir -p /out/afl /out/symcts /out/target/symcc /out/target/vanilla /out/target/cmplog /out/target/afl/
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
-COPY src/afl_driver.cpp /afl/afl_driver.cpp
-RUN cd /afl && \
+# COPY src/afl_driver.cpp /afl/afl_driver.cpp
+RUN cd /afl-base/ && \
     unset CFLAGS CXXFLAGS && \
     export CC=clang AFL_NO_X86=1 && \
     make -j$(nproc) NO_NYX=1 NO_PYTHON=1 source-only && \
     make install && \
-    cp utils/aflpp_driver/libAFLDriver.a /
+    cp utils/aflpp_driver/libAFLDriver.a /libAFLDriver-base.a && \
+    cp -r /afl-base/ /afl/
+
+# Build without Python support as we don't need it.
+# Set AFL_NO_X86 to skip flaky tests.
+# COPY src/afl_driver.cpp /afl/afl_driver.cpp
+RUN cd /afl-lukas/ && \
+    unset CFLAGS CXXFLAGS && \
+    export CC=clang AFL_NO_X86=1 && \
+    (LLVM_CONFIG=llvm-config-12 make -j$(nproc) -k NO_NYX=1 NO_PYTHON=1 source-only || true ) && \
+    (LLVM_CONFIG=llvm-config-12 make install -k || true) && \
+    (cd utils/aflpp_driver && LLVM_CONFIG=llvm-config-12 make && cp libAFLDriver.a /libAFLDriver-lukas.a)
+
 
 ENV CFLAGS=""
 ENV CXXFLAGS=""
@@ -97,8 +117,6 @@ RUN mkdir -p /z3/include /z3/lib && \
     ldconfig
 
 ENV LIBRARY_PATH="/z3/lib/:$LIBRARY_PATH"
-
-RUN ls
 
 RUN git clone https://github.com/Lukas-Dresel/symcc.git /symcc && \
     cd /symcc && \
@@ -130,7 +148,8 @@ RUN mkdir -p /libs_symcc
 ENV PATH="/usr/lib/llvm-12/bin/:$PATH"
 
 # Building MCTSSE
-RUN git clone --depth 1 --recurse-submodules https://github.com/Lukas-Dresel/mctsse/ /mctsse
+RUN ls -l
+RUN git clone -b feat/branch_dependence --depth 1 --recurse-submodules https://github.com/Lukas-Dresel/mctsse/ /mctsse
 RUN git clone --depth 1 https://github.com/Lukas-Dresel/z3jit.git /mctsse/implementation/z3jit
 RUN git clone -b feat/symcts https://github.com/Lukas-Dresel/LibAFL /mctsse/repos/LibAFL
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/runtime && \
@@ -207,14 +226,14 @@ RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     cp ./target/release/symcts /out/symcts/symcts-from_other
 
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
-    /symcc/build/symcc -c ./libfuzzer-main.c -o /libfuzzer-main.o /libs_symcc/libc_symcc_preload.a /libs_symcc/libz.a
+    /symcc/build/symcc -I/afl-lukas/include -c /afl-lukas/utils/aflpp_driver/aflpp_driver.c -o /libfuzzer-main.o /libs_symcc/libc_symcc_preload.a /libs_symcc/libz.a
 
 # RUN rm -rf /usr/local/lib/libc++experimental.a /usr/local/lib/libc++abi.a /usr/local/lib/libc++.a && \
 #     ln -s /usr/lib/llvm-10/lib/libc++abi.so.1 /usr/lib/llvm-10/lib/libc++abi.so
 
 # Compile vanilla (uninstrumented) afl driver
-RUN clang++ $CXXFLAGS -std=c++11 -c -fPIC \
-    /afl/afl_driver.cpp -o /out/target/vanilla/afl_driver.o
+RUN clang $CXXFLAGS -c -fPIC -I/afl-lukas/include \
+    /afl-lukas/utils/aflpp_driver/aflpp_driver.c -o /out/target/vanilla/aflpp_driver.o
 
 RUN cp /libs_symcc/libc_symcc_preload.a /out/symcts/
 RUN cp /libs_symcc/libz.a /out/symcts/
@@ -228,3 +247,6 @@ RUN cp /libcxx_native_build/lib/libc++abi.so.1 /out/target/symcc
 
 # Remove stuff that we don't need
 RUN rm -rf /mctsse /llvm_source /symqemu /root/.cache/ /root/.rustup
+RUN git config --global --add safe.directory '*'
+
+RUN mkdir /out/target/afl-lukas/
