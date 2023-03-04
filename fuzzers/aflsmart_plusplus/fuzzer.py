@@ -52,10 +52,10 @@ def fuzz(input_corpus, output_corpus, target_binary):
         input_model,
         # Choose FAVOR chunk type selection algo
         '-s',
-        2,
+        '2',
         # Reduce the chance of doing "destructive" mutations
         '-D',
-        50,
+        '50',
     ]
 
     if input_model != '':
