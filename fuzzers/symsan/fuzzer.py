@@ -80,9 +80,9 @@ def build_symsan_fast(build_directory, src, work):
     new_env['CXX'] = '/symsan/build/bin/ko-clang++'
     new_env['KO_CC'] = 'clang-12'
     new_env['KO_CXX'] = 'clang++-12'
-    if not is_benchmark("libjpeg"):
-      new_env['CXXFLAGS'] = '-stdlib=libc++'
-      new_env['CFLAGS'] = ''
+    if not is_benchmark('libjpeg'):
+        new_env['CXXFLAGS'] = '-stdlib=libc++'
+        new_env['CFLAGS'] = ''
     if is_benchmark('libpcap'):
         new_env['CXXFLAGS'] = '-stdlib=libc++ -libverbs'
     new_env['KO_USE_NATIVE_LIBCXX'] = '1'
@@ -120,9 +120,9 @@ def build_symsan(build_directory, src, work):
     new_env['KO_CC'] = 'clang-12'
     new_env['KO_CXX'] = 'clang++-12'
     #new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace("-stlib=libc++", "")
-    if not is_benchmark("libjpeg"):
-      new_env['CXXFLAGS'] = ''
-      new_env['CFLAGS'] = ''
+    if not is_benchmark('libjpeg'):
+        new_env['CXXFLAGS'] = ''
+        new_env['CFLAGS'] = ''
     if is_benchmark('libpcap'):
         new_env['CXXFLAGS'] = '-libverbs'
     new_env['FUZZER_LIB'] = '/libfuzzer-harness.o'
