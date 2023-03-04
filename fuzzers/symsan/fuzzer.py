@@ -98,7 +98,9 @@ def build_symsan_fast(build_directory, src, work):
     if is_benchmark('openssl_x509'):
         new_env['CFLAGS'] = '-fsanitize=memory'
     if is_benchmark('proj'):
-        with open('/symsan/build/lib/symsan/dfsan_abilist.txt', 'a') as abilist:
+        with open('/symsan/build/lib/symsan/dfsan_abilist.txt',
+                  'a',
+                  encoding='utf-8') as abilist:
             abilist.write('fun:sqlite3_*=uninstrumented\n')
             abilist.write('fun:sqlite3_*=discard\n')
 
@@ -143,7 +145,9 @@ def build_symsan(build_directory, src, work):
     if is_benchmark('openssl_x509'):
         new_env['CFLAGS'] = '-fsanitize=memory'
     if is_benchmark('proj'):
-        with open('/symsan/build/lib/symsan/dfsan_abilist.txt', 'a') as abilist:
+        with open('/symsan/build/lib/symsan/dfsan_abilist.txt',
+                  'a',
+                  encoding='utf-8') as abilist:
             abilist.write('fun:sqlite3_*=uninstrumented\n')
             abilist.write('fun:sqlite3_*=discard\n')
 
