@@ -80,11 +80,12 @@ def build_symsan_fast(build_directory, src, work):
     new_env['CXX'] = '/symsan/build/bin/ko-clang++'
     new_env['KO_CC'] = 'clang-12'
     new_env['KO_CXX'] = 'clang++-12'
-    new_env['CXXFLAGS'] = '-stdlib=libc++'
-    if is_benchmark("libpcap"):
+    if not is_benchmark("libjpeg"):
+      new_env['CXXFLAGS'] = '-stdlib=libc++'
+      new_env['CFLAGS'] = ''
+    if is_benchmark('libpcap'):
         new_env['CXXFLAGS'] = '-stdlib=libc++ -libverbs'
     new_env['KO_USE_NATIVE_LIBCXX'] = '1'
-    new_env['CFLAGS'] = ''
     #new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace("-stlib=libc++", "")
     new_env['FUZZER_LIB'] = '/libfuzzer-harness-fast.o'
     new_env['OUT'] = symsan_build_fast_directory
@@ -119,10 +120,11 @@ def build_symsan(build_directory, src, work):
     new_env['KO_CC'] = 'clang-12'
     new_env['KO_CXX'] = 'clang++-12'
     #new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace("-stlib=libc++", "")
-    new_env['CXXFLAGS'] = ''
-    if is_benchmark("libpcap"):
+    if not is_benchmark("libjpeg"):
+      new_env['CXXFLAGS'] = ''
+      new_env['CFLAGS'] = ''
+    if is_benchmark('libpcap'):
         new_env['CXXFLAGS'] = '-libverbs'
-    new_env['CFLAGS'] = ''
     new_env['FUZZER_LIB'] = '/libfuzzer-harness.o'
     new_env['OUT'] = symsan_build_directory
     new_env['KO_DONT_OPTIMIZE'] = '1'
@@ -159,7 +161,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     build_directory = os.environ['OUT']
 
     if is_benchmark('libpcap_fuzz_both'):
-        os.environ["CXXFLAGS"] = os.environ["CXXFLAGS"] + ' -libverbs'
+        os.environ['CXXFLAGS'] = os.environ['CXXFLAGS'] + ' -libverbs'
 
     with utils.restore_directory(src), utils.restore_directory(work):
         build_symsan(build_directory, src, work)
