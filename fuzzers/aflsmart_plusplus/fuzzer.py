@@ -40,6 +40,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
     os.environ['PATH'] += os.pathsep + '/out/peach-3.0.202/'
 
     additional_flags = [
+        # Enable its composite mode
+        '-c',
         # Enable stacked mutations
         '-h',
         # Enable structure-aware fuzzing
@@ -54,8 +56,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
         # Reduce the chance of doing "destructive" mutations
         '-D',
         50,
-        # Enable its composite mode
-        '-c',
     ]
 
     afl_fuzzer.run_afl_fuzz(input_corpus, output_corpus, target_binary,
