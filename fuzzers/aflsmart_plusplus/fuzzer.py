@@ -39,6 +39,23 @@ def fuzz(input_corpus, output_corpus, target_binary):
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     os.environ['PATH'] += os.pathsep + '/out/peach-3.0.202/'
 
+    composite_mode = False
+    input_model = ''
+    benchmark_name = os.environ['BENCHMARK']
+    if benchmark_name == 'libpng-1.6.38':
+        input_model = 'png.xml'
+    if benchmark_name == 'libpcap_fuzz_both':
+        input_model = 'pcap.xml'
+    if benchmark_name == 'libjpeg-turbo-07-2017':
+        input_model = 'jpeg.xml'
+    if benchmark_name == 'freetype2-2017':
+        input_model = 'xtf.xml'
+    if benchmark_name == 'vorbis-2017-12-11':
+        input_model = 'ogg.xml'
+    if benchmark_name == 'bloaty_fuzz_target':
+        input_model = 'bloaty_composite.xml'
+        composite_mode = True
+
     additional_flags = [
         # Enable stacked mutations
         '-h',
@@ -47,7 +64,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
         'peach',
         # Select input model
         '-g',
-        'all_composite.xml',
+        input_model,
         # Choose FAVOR chunk type selection algo
         '-s',
         2,
@@ -56,5 +73,13 @@ def fuzz(input_corpus, output_corpus, target_binary):
         50,
     ]
 
-    afl_fuzzer.run_afl_fuzz(input_corpus, output_corpus, target_binary,
+    # Enable composite mode for targets
+    # taking multiple input formats like bloaty
+    if composite_mode:
+        additional_flags.append('-c')
+
+    if input_model != '':
+        afl_fuzzer.run_afl_fuzz(input_corpus, output_corpus, target_binary,
                                 additional_flags)
+    else:
+        afl_fuzzer.run_afl_fuzz(input_corpus, output_corpus, target_binary)
