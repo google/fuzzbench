@@ -97,6 +97,10 @@ def build_symsan_fast(build_directory, src, work):
         new_env['SANITIZER'] = 'memory'
     if is_benchmark('openssl_x509'):
         new_env['CFLAGS'] = '-fsanitize=memory'
+    if is_benchmark('proj'):
+        with open('/symsan/build/lib/symsan/dfsan_abilist.txt', 'a') as abilist:
+            abilist.write('fun:sqlite3_*=uninstrumented\n')
+            abilist.write('fun:sqlite3_*=discard\n')
 
     fuzz_target = os.getenv('FUZZ_TARGET')
     if fuzz_target:
@@ -106,6 +110,8 @@ def build_symsan_fast(build_directory, src, work):
     with utils.restore_directory(src), utils.restore_directory(work):
         if is_benchmark('freetype2_ftfuzzer'):
             build_benchmark_symsan(new_env, 'freetype2')
+        elif is_benchmark('proj'):
+            build_benchmark_symsan(new_env, 'proj')
         else:
             utils.build_benchmark(env=new_env)
 
@@ -136,6 +142,10 @@ def build_symsan(build_directory, src, work):
         new_env['SANITIZER'] = 'memory'
     if is_benchmark('openssl_x509'):
         new_env['CFLAGS'] = '-fsanitize=memory'
+    if is_benchmark('proj'):
+        with open('/symsan/build/lib/symsan/dfsan_abilist.txt', 'a') as abilist:
+            abilist.write('fun:sqlite3_*=uninstrumented\n')
+            abilist.write('fun:sqlite3_*=discard\n')
 
         # For CmpLog build, set the OUT and FUZZ_TARGET environment
         # variable to point to the new CmpLog build directory.
@@ -147,6 +157,8 @@ def build_symsan(build_directory, src, work):
     with utils.restore_directory(src), utils.restore_directory(work):
         if is_benchmark('freetype2_ftfuzzer'):
             build_benchmark_symsan(new_env, 'freetype2')
+        elif is_benchmark('proj'):
+            build_benchmark_symsan(new_env, 'proj')
         else:
             utils.build_benchmark(env=new_env)
 
