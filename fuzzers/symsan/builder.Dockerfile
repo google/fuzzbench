@@ -17,7 +17,7 @@ FROM $parent_image
 
 RUN apt-get update -y &&  \
     apt-get -y install wget python3-dev python3-setuptools apt-transport-https \
-    libboost-all-dev texinfo \
+    libboost-all-dev texinfo libz3-dev \
     build-essential automake flex bison libglib2.0-dev libpixman-1-dev libgtk-3-dev ninja-build libnl-genl-3-dev \
     lsb-release software-properties-common autoconf curl zlib1g-dev cmake protobuf-compiler libprotobuf-dev
 
@@ -25,15 +25,6 @@ RUN if [ -x "$(command -v rustc)" ]; then rustup self uninstall -y; fi
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
 
 RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 12
-
-RUN rm -rf /usr/include/z3
-RUN rm -rf /usr/local/include/z3
-RUN mkdir -p /out/lib
-RUN git clone https://github.com/Z3Prover/z3.git /z3 && \
-		cd /z3 && git checkout z3-4.8.12 && mkdir -p build && cd build && \
-		#cmake -DCMAKE_INSTALL_PREFIX=/out .. && make -j && make install
-		CC=clang-12 CXX=clang++-12 cmake  .. && make -j && make install
-RUN ldconfig
 
 # Download and compile afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
@@ -44,7 +35,6 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
     PYTHON_INCLUDE=/ make && make install && \
     cp utils/aflpp_driver/libAFLDriver.a /
 
-RUN cp /usr/local/lib/libz3.so.4.8.12.0 /out/lib/
 ENV PATH="/out/bin:${PATH}"
 ENV PATH="/root/.cargo/bin:${PATH}"
 RUN cp /usr/local/lib/libpython3.8.so.1.0 /out/
