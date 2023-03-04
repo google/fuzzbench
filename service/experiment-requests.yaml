@@ -19,7 +19,135 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
+- experiment: 2023-02-27-aflpp-3
+  description: "afl++ regression test (different one)."
+  trials: 10
+  fuzzers:
+    - aflplusplus_new
+    - aflplusplus_div
+    - aflplusplus_explore
+  benchmarks:
+    - bloaty_fuzz_target
+    - freetype2_ftfuzzer
+    - lcms_cms_transform_fuzzer
+    - libpcap_fuzz_both
+    - mbedtls_fuzz_dtlsclient
+    - openthread_ot-ip6-send-fuzzer
+    - proj4_proj_crs_to_crs_fuzzer
+    - sqlite3_ossfuzz
+    - stb_stbi_read_fuzzer
+    - systemd_fuzz-link-parser
 
+- experiment: 2023-02-27-aflppp
+  description: "afl+++ variants."
+  trials: 10
+  fuzzers:
+    - aflplusplusplus
+    - aflppp_fav
+    - aflppp_learn
+  benchmarks:
+    - curl_curl_fuzzer_http
+    - jsoncpp_jsoncpp_fuzzer
+    - libxml2_xml
+    - libxslt_xpath
+    - proj4_proj_crs_to_crs_fuzzer
+    - re2_fuzzer
+    - sqlite3_ossfuzz
+    - systemd_fuzz-link-parser
+    
+- experiment: 2023-02-27-learnperffuzz
+  description: "Test quota."
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - libafl
+    - libfuzzer
+    - mopt
+    - learnperffuzz
+
+- experiment: 2023-02-27-aflpp-2
+  description: "afl++ regression test."
+  trials: 10
+  fuzzers:
+    - aflplusplus_onebug
+    - aflplusplus_new
+    - aflplusplus_old
+    - aflplusplus_025f617d
+    - aflplusplus
+  benchmarks:
+    - bloaty_fuzz_target
+    - freetype2_ftfuzzer
+    - lcms_cms_transform_fuzzer
+    - libpcap_fuzz_both
+    - mbedtls_fuzz_dtlsclient
+    - openthread_ot-ip6-send-fuzzer
+    - proj4_proj_crs_to_crs_fuzzer
+    - sqlite3_ossfuzz
+    - stb_stbi_read_fuzzer
+    - systemd_fuzz-link-parser
+
+- experiment: 2023-02-27-aflpp
+  description: "afl++ regression test."
+  fuzzers:
+    - aflplusplus_onebug
+    - aflplusplus_new
+    - aflplusplus_old
+  benchmarks:
+    - bloaty_fuzz_target
+    - freetype2_ftfuzzer
+    - lcms_cms_transform_fuzzer
+    - proj4_proj_crs_to_crs_fuzzer
+    - stb_stbi_read_fuzzer
+
+- experiment: 2023-02-26-aflppp
+  description: "afl+++ impact test."
+  fuzzers:
+    - aflplusplus_new
+    - aflplusplusplus
+  benchmarks:
+    - curl_curl_fuzzer_http
+    - jsoncpp_jsoncpp_fuzzer
+    - libxml2_xml
+    - libxslt_xpath
+    - php_php-fuzz-parser
+    - proj4_proj_crs_to_crs_fuzzer
+    - re2_fuzzer
+    - sqlite3_ossfuzz
+    - systemd_fuzz-link-parser
+
+- experiment: 2023-02-26-aflpp
+  description: "afl++ regression test."
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_new
+    - aflplusplus_old
+  benchmarks:
+    - bloaty_fuzz_target
+    - freetype2_ftfuzzer
+    - lcms_cms_transform_fuzzer
+    - proj4_proj_crs_to_crs_fuzzer
+    - stb_stbi_read_fuzzer
+
+- experiment: 2023-02-23-aflpp
+  description: "afl++ regression test."
+  fuzzers:
+    - aflplusplus_025f617d
+    - aflplusplus_3e8a691a
+    - aflplusplus_old
+    - aflplusplus_1a9f9685
+    - aflplusplus_f01bf776
+    - aflplusplus_25b4b326
+  benchmarks:
+    - bloaty_fuzz_target
+    - freetype2_ftfuzzer
+    - lcms_cms_transform_fuzzer
+    - proj4_proj_crs_to_crs_fuzzer
+    - stb_stbi_read_fuzzer
 
 - experiment: 2023-02-22-aflpp
   description: "afl++ regression test."

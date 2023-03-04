@@ -386,13 +386,13 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         with tarfile.open(archive, 'w:gz') as tar:
             new_archive_time = self.last_archive_time
             for file_path in get_corpus_elements(self.output_corpus):
-                stat_info = os.stat(file_path)
-                last_modified_time = stat_info.st_mtime
-                if last_modified_time <= self.last_archive_time:
-                    continue  # We've saved this file already.
-                new_archive_time = max(new_archive_time, last_modified_time)
-                arcname = os.path.relpath(file_path, self.output_corpus)
                 try:
+                    stat_info = os.stat(file_path)
+                    last_modified_time = stat_info.st_mtime
+                    if last_modified_time <= self.last_archive_time:
+                        continue  # We've saved this file already.
+                    new_archive_time = max(new_archive_time, last_modified_time)
+                    arcname = os.path.relpath(file_path, self.output_corpus)
                     tar.add(file_path, arcname=arcname)
                 except (FileNotFoundError, OSError):
                     # We will get these errors if files or directories are being

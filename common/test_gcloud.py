@@ -63,7 +63,7 @@ def _get_expected_create_runner_command(is_preemptible):
         '--scopes=cloud-platform',
         '--machine-type=my-machine-type',
         '--no-address',
-        '--boot-disk-size=200GB',
+        '--boot-disk-size=30GB',
     ]
     if is_preemptible:
         command.append('--preemptible')
