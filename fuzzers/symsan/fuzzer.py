@@ -70,30 +70,21 @@ def get_cmplog_build_directory(target_directory):
     return os.path.join(target_directory, 'cmplog')
 
 
-def build_symsan_fast(build_directory, src, work):
-    """Build symsan fast binaries."""
-    symsan_build_fast_directory = get_symsan_build_fast_dir(build_directory)
-    os.mkdir(symsan_build_fast_directory)
-
-    new_env = os.environ.copy()
+def fix_flags(new_env):
+    """Fix symsan/symsan_fast build flags"""
     new_env['CC'] = '/symsan/build/bin/ko-clang'
     new_env['CXX'] = '/symsan/build/bin/ko-clang++'
     new_env['KO_CC'] = 'clang-12'
     new_env['KO_CXX'] = 'clang++-12'
     if not is_benchmark('libjpeg'):
-        new_env['CXXFLAGS'] = '-stdlib=libc++'
+        new_env['CXXFLAGS'] = ''
         new_env['CFLAGS'] = ''
     if is_benchmark('libpcap'):
-        new_env['CXXFLAGS'] = '-stdlib=libc++ -libverbs'
+        new_env['CXXFLAGS'] = '-libverbs'
     if is_benchmark('libgit'):
-        new_env['CXXFLAGS'] = '-stdlib=libc++ -lpcre'
+        new_env['CXXFLAGS'] = '-lpcre'
     if is_benchmark('file_magic'):
-        new_env['CXXFLAGS'] = '-stdlib=libc++ -llzma'
-    new_env['KO_USE_NATIVE_LIBCXX'] = '1'
-    #new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace("-stlib=libc++", "")
-    new_env['FUZZER_LIB'] = '/libfuzzer-harness-fast.o'
-    new_env['OUT'] = symsan_build_fast_directory
-    new_env['KO_DONT_OPTIMIZE'] = '1'
+        new_env['CXXFLAGS'] = '-llzma'
 
     if is_benchmark('curl_curl_fuzzer_http'):
         new_env['SANITIZER'] = 'memory'
@@ -124,6 +115,21 @@ def build_symsan_fast(build_directory, src, work):
             with open('/src/fuzzers/symsan/pcre.abilist', 'r',
                       encoding='utf-8') as pcre:
                 abilist.write(pcre.read())
+
+
+def build_symsan_fast(build_directory, src, work):
+    """Build symsan fast binaries."""
+    symsan_build_fast_directory = get_symsan_build_fast_dir(build_directory)
+    os.mkdir(symsan_build_fast_directory)
+
+    new_env = os.environ.copy()
+
+    fix_flags(new_env)
+    new_env['KO_USE_NATIVE_LIBCXX'] = '1'
+    new_env['FUZZER_LIB'] = '/libfuzzer-harness-fast.o'
+    new_env['OUT'] = symsan_build_fast_directory
+    new_env['KO_DONT_OPTIMIZE'] = '1'
+    new_env['CXXFLAGS'] = new_env['CXXFLAGS'] + ' -stdlib=libc++'
 
     fuzz_target = os.getenv('FUZZ_TARGET')
     if fuzz_target:
@@ -144,57 +150,15 @@ def build_symsan(build_directory, src, work):
     symsan_build_directory = get_symsan_build_dir(build_directory)
     os.mkdir(symsan_build_directory)
     new_env = os.environ.copy()
-    new_env['CC'] = '/symsan/build/bin/ko-clang'
-    new_env['CXX'] = '/symsan/build/bin/ko-clang++'
-    new_env['KO_CC'] = 'clang-12'
-    new_env['KO_CXX'] = 'clang++-12'
-    #new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace("-stlib=libc++", "")
-    if not is_benchmark('libjpeg'):
-        new_env['CXXFLAGS'] = ''
-        new_env['CFLAGS'] = ''
-    if is_benchmark('libgit'):
-        new_env['CXXFLAGS'] = '-lpcre'
-    if is_benchmark('file_magic'):
-        new_env['CXXFLAGS'] = '-llzma'
-    if is_benchmark('libpcap'):
-        new_env['CXXFLAGS'] = '-libverbs'
+
+    fix_flags(new_env)
     new_env['FUZZER_LIB'] = '/libfuzzer-harness.o'
     new_env['OUT'] = symsan_build_directory
     new_env['KO_DONT_OPTIMIZE'] = '1'
     new_env['USE_TRACK'] = '1'
     new_env['KO_USE_FASTGEN'] = '1'
-    if is_benchmark('curl_curl_fuzzer_http'):
-        new_env['SANITIZER'] = 'memory'
-    if is_benchmark('libxslt_xpath'):
-        new_env['SANITIZER'] = 'memory'
-    if is_benchmark('openssl_x509'):
-        new_env['CFLAGS'] = '-fsanitize=memory'
-    if is_benchmark('proj'):
-        with open('/symsan/build/lib/symsan/dfsan_abilist.txt',
-                  'a',
-                  encoding='utf-8') as abilist:
-            abilist.write('fun:sqlite3_*=uninstrumented\n')
-            abilist.write('fun:sqlite3_*=discard\n')
-    if is_benchmark('libarchive'):
-        with open('/symsan/build/lib/symsan/dfsan_abilist.txt',
-                  'a',
-                  encoding='utf-8') as abilist:
-            with open('/src/fuzzers/symsan/xml.abilist', 'r',
-                      encoding='utf-8') as xml:
-                abilist.write(xml.read())
-            with open('/src/fuzzers/symsan/bz2.abilist', 'r',
-                      encoding='utf-8') as bz2:
-                abilist.write(bz2.read())
-    if is_benchmark('libgit'):
-        with open('/symsan/build/lib/symsan/dfsan_abilist.txt',
-                  'a',
-                  encoding='utf-8') as abilist:
-            with open('/src/fuzzers/symsan/pcre.abilist', 'r',
-                      encoding='utf-8') as pcre:
-                abilist.write(pcre.read())
-
-        # For CmpLog build, set the OUT and FUZZ_TARGET environment
-        # variable to point to the new CmpLog build directory.
+    # For CmpLog build, set the OUT and FUZZ_TARGET environment
+    # variable to point to the new CmpLog build directory.
     fuzz_target = os.getenv('FUZZ_TARGET')
     if fuzz_target:
         new_env['FUZZ_TARGET'] = os.path.join(symsan_build_directory,
@@ -227,8 +191,8 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
 
     with utils.restore_directory(src), utils.restore_directory(work):
         if is_benchmark('njs') or is_benchmark('muparser'):
-          os.remove('/usr/local/lib/libc++.a')
-          os.remove('/usr/local/lib/libc++abi.a')
+            os.remove('/usr/local/lib/libc++.a')
+            os.remove('/usr/local/lib/libc++abi.a')
         build_symsan(build_directory, src, work)
         build_symsan_fast(build_directory, src, work)
         aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file')
