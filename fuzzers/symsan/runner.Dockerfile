@@ -17,7 +17,7 @@ FROM gcr.io/fuzzbench/base-image
 
 RUN apt-get update 
 RUN apt-get -y install git cmake wget build-essential autoconf libtool python3-pip python3-setuptools  apt-transport-https libboost-all-dev lsb-release software-properties-common
-RUN apt-get install -y libc++abi-dev libc++-dev libunwind-dev
+RUN apt-get install -y wget libc++abi-dev libc++-dev libunwind-dev
 
 
 RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 12
@@ -25,8 +25,6 @@ ENV PATH="/out/bin:${PATH}"
 ENV PATH="/root/.cargo/bin:${PATH}"
 RUN ln -s /out/lib/libz3.so /usr/local/lib/libz3.so
 RUN ln -s /out/lib/libtcmalloc.so /usr/local/lib/libtcmalloc.so
-RUN ln -s /out/lib/libprotobuf.so /usr/local/lib/libprotobuf.so
-RUN ln -s /out/lib/libprotobuf.so.25 /usr/local/lib/libprotobuf.so.25
 RUN ldconfig
 
 
