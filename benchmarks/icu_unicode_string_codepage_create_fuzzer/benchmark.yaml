@@ -1,0 +1,3 @@
+commit: d86b1cebe192004759b6c875b0f831b97ccdae34
+fuzz_target: unicode_string_codepage_create_fuzzer
+project: icu

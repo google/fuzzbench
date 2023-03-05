@@ -1,0 +1,3 @@
+commit: 60f9a33e7084482df67b48e16f315f4f7a6f5da9
+fuzz_target: firestore_serializer_fuzzer
+project: firestore

@@ -1,0 +1,3 @@
+commit: a7d04c855450ccfdb4e772905a531d2a4e752adf
+fuzz_target: json_load_dump_fuzzer
+project: jansson
