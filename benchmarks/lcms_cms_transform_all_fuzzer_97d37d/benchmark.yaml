@@ -17,6 +17,7 @@ commit: 97D37DF9C961638E80C639FEB2F31B38C40A14BA
 commit_date: 2022-07-26T14:34:48+0000
 fuzz_target: cms_transform_all_fuzzer
 project: lcms
+type: bug
 unsupported_fuzzers:
   - symcc_afl
   - symcc_afl_single

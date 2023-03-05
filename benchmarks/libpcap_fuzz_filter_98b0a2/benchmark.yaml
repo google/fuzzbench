@@ -17,6 +17,7 @@ commit: 98B0A25B92C09850079325D780EF521B8ED6453E
 commit_date: 2023-02-25T22:56:01+0000
 fuzz_target: fuzz_filter
 project: libpcap
+type: bug
 unsupported_fuzzers:
   - klee
   - symcc_afl
