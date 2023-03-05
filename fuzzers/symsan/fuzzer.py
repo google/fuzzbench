@@ -85,6 +85,10 @@ def build_symsan_fast(build_directory, src, work):
         new_env['CFLAGS'] = ''
     if is_benchmark('libpcap'):
         new_env['CXXFLAGS'] = '-stdlib=libc++ -libverbs'
+    if is_benchmark('libgit'):
+        new_env['CXXFLAGS'] = '-stdlib=libc++ -lpcre'
+    if is_benchmark('file_magic'):
+        new_env['CXXFLAGS'] = '-stdlib=libc++ -llzma'
     new_env['KO_USE_NATIVE_LIBCXX'] = '1'
     #new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace("-stlib=libc++", "")
     new_env['FUZZER_LIB'] = '/libfuzzer-harness-fast.o'
@@ -103,6 +107,23 @@ def build_symsan_fast(build_directory, src, work):
                   encoding='utf-8') as abilist:
             abilist.write('fun:sqlite3_*=uninstrumented\n')
             abilist.write('fun:sqlite3_*=discard\n')
+    if is_benchmark('libarchive'):
+        with open('/symsan/build/lib/symsan/dfsan_abilist.txt',
+                  'a',
+                  encoding='utf-8') as abilist:
+            with open('/src/fuzzers/symsan/xml.abilist', 'r',
+                      encoding='utf-8') as xml:
+                abilist.write(xml.read())
+            with open('/src/fuzzers/symsan/bz2.abilist', 'r',
+                      encoding='utf-8') as bz2:
+                abilist.write(bz2.read())
+    if is_benchmark('libgit'):
+        with open('/symsan/build/lib/symsan/dfsan_abilist.txt',
+                  'a',
+                  encoding='utf-8') as abilist:
+            with open('/src/fuzzers/symsan/pcre.abilist', 'r',
+                      encoding='utf-8') as pcre:
+                abilist.write(pcre.read())
 
     fuzz_target = os.getenv('FUZZ_TARGET')
     if fuzz_target:
@@ -131,6 +152,10 @@ def build_symsan(build_directory, src, work):
     if not is_benchmark('libjpeg'):
         new_env['CXXFLAGS'] = ''
         new_env['CFLAGS'] = ''
+    if is_benchmark('libgit'):
+        new_env['CXXFLAGS'] = '-lpcre'
+    if is_benchmark('file_magic'):
+        new_env['CXXFLAGS'] = '-llzma'
     if is_benchmark('libpcap'):
         new_env['CXXFLAGS'] = '-libverbs'
     new_env['FUZZER_LIB'] = '/libfuzzer-harness.o'
@@ -150,6 +175,23 @@ def build_symsan(build_directory, src, work):
                   encoding='utf-8') as abilist:
             abilist.write('fun:sqlite3_*=uninstrumented\n')
             abilist.write('fun:sqlite3_*=discard\n')
+    if is_benchmark('libarchive'):
+        with open('/symsan/build/lib/symsan/dfsan_abilist.txt',
+                  'a',
+                  encoding='utf-8') as abilist:
+            with open('/src/fuzzers/symsan/xml.abilist', 'r',
+                      encoding='utf-8') as xml:
+                abilist.write(xml.read())
+            with open('/src/fuzzers/symsan/bz2.abilist', 'r',
+                      encoding='utf-8') as bz2:
+                abilist.write(bz2.read())
+    if is_benchmark('libgit'):
+        with open('/symsan/build/lib/symsan/dfsan_abilist.txt',
+                  'a',
+                  encoding='utf-8') as abilist:
+            with open('/src/fuzzers/symsan/pcre.abilist', 'r',
+                      encoding='utf-8') as pcre:
+                abilist.write(pcre.read())
 
         # For CmpLog build, set the OUT and FUZZ_TARGET environment
         # variable to point to the new CmpLog build directory.
@@ -178,6 +220,10 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
 
     if is_benchmark('libpcap_fuzz_both'):
         os.environ['CXXFLAGS'] = os.environ['CXXFLAGS'] + ' -libverbs'
+    if is_benchmark('libgit'):
+        os.environ['CXXFLAGS'] = os.environ['CXXFLAGS'] + ' -lpcre'
+    if is_benchmark('file_magic'):
+        os.environ['CXXFLAGS'] = os.environ['CXXFLAGS'] + ' -llzma'
 
     with utils.restore_directory(src), utils.restore_directory(work):
         build_symsan(build_directory, src, work)
