@@ -1,0 +1,3 @@
+commit: 9f856abaafb4b39f1f013763ff061522e0261c6f
+fuzz_target: draco_pc_decoder_fuzzer
+project: draco
