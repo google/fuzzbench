@@ -36,9 +36,9 @@ RUN git clone \
         --branch libfuzzer \
         https://github.com/AFLplusplus/libafl /libafl && \
     cd /libafl && \
-    git checkout 04ef0f650baff36ab4ae379364821c7c11c88e6e && \
+    git checkout d31f82387d1d233771ff1e13ef7e49cdb508410f && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
     cd ./libafl_libfuzzer/libafl_libfuzzer_runtime && \
-    env -i CXX=$CXX CC=$CC PATH="/root/.cargo/bin/:$PATH" cargo build --release && \
+    env -i CXX=$CXX CC=$CC PATH="/root/.cargo/bin/:$PATH" cargo build --release --no-default-features && \
     cp ./target/release/libafl_libfuzzer_runtime.a /usr/lib/libFuzzer.a
