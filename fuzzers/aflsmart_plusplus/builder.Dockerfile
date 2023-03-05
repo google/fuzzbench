@@ -41,8 +41,15 @@ RUN dpkg --add-architecture i386 && \
     apt-utils \
     libc6-dev-i386 \
     g++-multilib \
-    mono-complete \
     software-properties-common
+
+RUN apt install gnupg ca-certificates && \
+    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 \
+        --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
+    echo "deb https://download.mono-project.com/repo/ubuntu stable-focal main" \
+        | tee /etc/apt/sources.list.d/mono-official-stable.list && \
+    apt update && \
+    apt install -y monodoc-manual mono-complete
 
 # Download and compile AFLSmart.
 RUN git clone https://github.com/thuanpv/aflsmart /afl && \
