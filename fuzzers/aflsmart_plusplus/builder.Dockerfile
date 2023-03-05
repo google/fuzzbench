@@ -47,7 +47,7 @@ RUN dpkg --add-architecture i386 && \
 # Download and compile AFLSmart.
 RUN git clone https://github.com/thuanpv/aflsmart /afl && \
     cd /afl && \
-    git checkout 87dc56b92779fb80d440be41d35336b18cd5e608 && \
+    git checkout de0b3855b0e688b3a9f52ccb241d2ebaf3d7f6b4 && \
     AFL_NO_X86=1 make
 
 # Setup Peach.
