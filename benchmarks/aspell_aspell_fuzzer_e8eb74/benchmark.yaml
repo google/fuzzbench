@@ -1,0 +1,50 @@
+# 4546146634170368
+commit: e8eb74793bce4fab381cc40f1c60f9572a99fb94
+commit_date : 2022-06-01T23:38:41+0000
+fuzz_target: aspell_fuzzer
+project: aspell
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - aflplusplus_qemu_tracepc
+  - aflplusplus_frida
+  - honggfuzz_qemu
+  - klee
+  - lafintel
+  - weizz_qemu
+  - aflplusplus_classic_ctx
+  - aflplusplus_classic_ctx_18
+  - aflplusplus_classic_ctx_20
+  - aflplusplus_classic_ctx_21
+  - aflplusplus_classic_ctx_23
+  - aflplusplus_pcguard
+  - aflplusplus_classic
+  - cfctx_basic
+  - cfctx_bottom
+  - cfctx_dataflow_seadsa
+  - cfctx_dataflow_svf
+  - cfctx_params
+  - cfctx_plain
+  - cfctx_randomic
+  - cfctx_bottom_llc
+  - cfctx_dataflow_seadsa_llc
+  - cfctx_dataflow_svf_llc
+  - cfctx_randomic_llc
+  - cfctx_params_llc
+  - cfctx_params_1mb
+  - cfctx_params_2mb
+  - cfctx_params_4mb
+  - cfctx_params_512kb
+  - cfctx_params_768kb
+  - cfctx_full
+  - aflplusplus_cmplog_double
+  - symcc_aflplusplus_single
+  - eclipser_aflplusplus
+  - aflplusplus_qemu_double
+  - fuzzolic_aflplusplus_z3
+  - symqemu_aflplusplus
+  - fuzzolic_aflplusplus_fuzzy
+  - fuzzolic_aflplusplus_z3dict
+  - tortoisefuzz
