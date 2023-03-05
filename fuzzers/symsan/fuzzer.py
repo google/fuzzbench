@@ -86,6 +86,8 @@ def fix_flags(new_env):
         new_env['CXXFLAGS'] = '-lpcre'
     if is_benchmark('file_magic'):
         new_env['CXXFLAGS'] = '-llzma'
+    if is_benchmark('wireshark'):
+        new_env['CXXFLAGS'] = '-llzma -licuuc'
 
     if is_benchmark('curl_curl_fuzzer_http'):
         new_env['SANITIZER'] = 'memory'
@@ -93,6 +95,10 @@ def fix_flags(new_env):
         new_env['SANITIZER'] = 'memory'
     if is_benchmark('openssl_x509'):
         new_env['CFLAGS'] = '-fsanitize=memory'
+
+
+def fix_abilist():
+    """Fix abilist for symsan"""
     if is_benchmark('proj'):
         with open('/symsan/build/lib/symsan/dfsan_abilist.txt',
                   'a',
@@ -121,6 +127,23 @@ def fix_flags(new_env):
             with open('/src/fuzzers/symsan/pcre.abilist', 'r',
                       encoding='utf-8') as pcre:
                 abilist.write(pcre.read())
+    if is_benchmark('wireshark'):
+        with open('/symsan/build/lib/symsan/dfsan_abilist.txt',
+                  'a',
+                  encoding='utf-8') as abilist:
+            with open('/src/fuzzers/symsan/gcry.abilist', 'r',
+                      encoding='utf-8') as gcry:
+                abilist.write(gcry.read())
+            with open('/src/fuzzers/symsan/cares.abilist',
+                      'r',
+                      encoding='utf-8') as cares:
+                abilist.write(cares.read())
+            with open('/src/fuzzers/symsan/glib.abilist', 'r',
+                      encoding='utf-8') as glib:
+                abilist.write(glib.read())
+            with open('/src/fuzzers/symsan/xml.abilist', 'r',
+                      encoding='utf-8') as xml:
+                abilist.write(xml.read())
 
 
 def build_symsan_fast(build_directory, src, work):
@@ -162,6 +185,7 @@ def build_symsan(build_directory, src, work):
     new_env = os.environ.copy()
 
     fix_flags(new_env)
+    fix_abilist()
     new_env['FUZZER_LIB'] = '/libfuzzer-harness.o'
     new_env['OUT'] = symsan_build_directory
     new_env['KO_DONT_OPTIMIZE'] = '1'
@@ -229,6 +253,8 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
         os.environ['CXXFLAGS'] = os.environ['CXXFLAGS'] + ' -lpcre'
     if is_benchmark('file_magic'):
         os.environ['CXXFLAGS'] = os.environ['CXXFLAGS'] + ' -llzma'
+    if is_benchmark('wireshark'):
+        os.environ['CXXFLAGS'] = os.environ['CXXFLAGS'] + ' -llzma -licuuc'
 
     with utils.restore_directory(src), utils.restore_directory(work):
         if is_benchmark('njs') or is_benchmark('muparser') or is_benchmark(
