@@ -201,7 +201,7 @@ download/v3.9.1/protobuf-cpp-3.9.1.tar.gz'
     subprocess.check_call(command, cwd='/src/protobuf-3.9.1')
     command = ['./configure']
     subprocess.check_call(command, cwd='/src/protobuf-3.9.1')
-    command = ['make', '-j']
+    command = ['make']
     subprocess.check_call(command, cwd='/src/protobuf-3.9.1')
     command = ['make', 'install']
     subprocess.check_call(command, cwd='/src/protobuf-3.9.1')
