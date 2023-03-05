@@ -226,6 +226,9 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
         os.environ['CXXFLAGS'] = os.environ['CXXFLAGS'] + ' -llzma'
 
     with utils.restore_directory(src), utils.restore_directory(work):
+        if is_benchmark('njs') or is_benchmark('muparser'):
+          os.remove('/usr/local/lib/libc++.a')
+          os.remove('/usr/local/lib/libc++abi.a')
         build_symsan(build_directory, src, work)
         build_symsan_fast(build_directory, src, work)
         aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file')
