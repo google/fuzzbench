@@ -20,7 +20,7 @@ import subprocess
 from fuzzers import utils
 
 
-def prepare_fuzz_environment(input_corpus):
+def prepare_fuzz_environment():
     """Prepare to fuzz with a LibAFL-based fuzzer."""
     os.environ['ASAN_OPTIONS'] = 'abort_on_error=1:detect_leaks=0:' \
                                  'malloc_context_size=0:symbolize=0:' \
@@ -34,8 +34,6 @@ def prepare_fuzz_environment(input_corpus):
                                   'handle_sigbus=0:handle_sigfpe=0:' \
                                   'handle_sigill=0:print_stacktrace=0:' \
                                   'symbolize=0:symbolize_inline_frames=0'
-    # Create at least one non-empty seed to start.
-    utils.create_seed_file_for_empty_corpus(input_corpus)
 
 
 def build():
@@ -75,6 +73,11 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     if extra_flags is None:
         extra_flags = []
 
+    # ASAN doesn't play nicely with our signal handling
+    # in the future, we will make this more compatible with libfuzzer, but
+    # for the initial implementation, we consider this sufficient
+    prepare_fuzz_environment()
+
     # Seperate out corpus and crash directories as sub-directories of
     # |output_corpus| to avoid conflicts when corpus directory is reloaded.
     crashes_dir = os.path.join(output_corpus, 'crashes')
@@ -82,28 +85,11 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     os.makedirs(crashes_dir)
     os.makedirs(output_corpus)
 
-    # Enable symbolization if needed.
-    # Note: if the flags are like `symbolize=0:..:symbolize=1` then
-    # only symbolize=1 is respected.
-    # libafl_libfuzzer does not currently support focus_function
-    # for flag in extra_flags:
-    #     if flag.startswith('-focus_function'):
-    #         if 'ASAN_OPTIONS' in os.environ:
-    #             os.environ['ASAN_OPTIONS'] += ':symbolize=1'
-    #         else:
-    #             os.environ['ASAN_OPTIONS'] = 'symbolize=1'
-    #         if 'UBSAN_OPTIONS' in os.environ:
-    #             os.environ['UBSAN_OPTIONS'] += ':symbolize=1'
-    #         else:
-    #             os.environ['UBSAN_OPTIONS'] = 'symbolize=1'
-    #         break
-
     flags = [
+        # not supported by libafl_libfuzzer currently
         '-print_final_stats=1',
-        # currently unsupported by libafl_libfuzzer currently
         # `close_fd_mask` to prevent too much logging output from the target.
         '-close_fd_mask=3',
-        # currently unsupported by libafl_libfuzzer currently
         # Run in fork mode to allow ignoring ooms, timeouts, crashes and
         # continue fuzzing indefinitely.
         '-fork=1',
