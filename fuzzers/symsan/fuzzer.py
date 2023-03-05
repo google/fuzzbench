@@ -14,6 +14,7 @@
 ''' Uses the SymSan-AFL hybrid from SymSan. '''
 
 import shutil
+import glob
 import os
 import subprocess
 import threading
@@ -98,6 +99,11 @@ def fix_flags(new_env):
                   encoding='utf-8') as abilist:
             abilist.write('fun:sqlite3_*=uninstrumented\n')
             abilist.write('fun:sqlite3_*=discard\n')
+    if is_benchmark('bloaty'):
+        with open('/symsan/build/lib/symsan/dfsan_abilist.txt',
+                  'a',
+                  encoding='utf-8') as abilist:
+            abilist.write('fun:*google8protobuf*=uninstrumented\n')
     if is_benchmark('libarchive'):
         with open('/symsan/build/lib/symsan/dfsan_abilist.txt',
                   'a',
@@ -141,6 +147,10 @@ def build_symsan_fast(build_directory, src, work):
             build_benchmark_symsan(new_env, 'freetype2')
         elif is_benchmark('proj'):
             build_benchmark_symsan(new_env, 'proj')
+        elif is_benchmark('bloaty'):
+            shutil.copy('/src/fuzzers/symsan/CMakeLists_bloaty.txt',
+                        '/src/bloaty/CMakeLists.txt')
+            utils.build_benchmark(env=new_env)
         else:
             utils.build_benchmark(env=new_env)
 
@@ -169,8 +179,36 @@ def build_symsan(build_directory, src, work):
             build_benchmark_symsan(new_env, 'freetype2')
         elif is_benchmark('proj'):
             build_benchmark_symsan(new_env, 'proj')
+        elif is_benchmark('bloaty'):
+            shutil.copy('/src/fuzzers/symsan/CMakeLists_bloaty.txt',
+                        '/src/bloaty/CMakeLists.txt')
+            utils.build_benchmark(env=new_env)
         else:
             utils.build_benchmark(env=new_env)
+
+
+def update_protobuf():
+    """Update protobuf version to 3.9.1"""
+    command = [
+        'wget', '-P', '/src',
+        'https://github.com/protocolbuffers/protobuf/releases/\
+download/v3.9.1/protobuf-cpp-3.9.1.tar.gz'
+    ]
+    subprocess.check_call(command)
+    command = ['tar', '-xvf', 'protobuf-cpp-3.9.1.tar.gz']
+    subprocess.check_call(command, cwd='/src')
+    command = ['./autogen.sh']
+    subprocess.check_call(command, cwd='/src/protobuf-3.9.1')
+    command = ['./configure']
+    subprocess.check_call(command, cwd='/src/protobuf-3.9.1')
+    command = ['make', '-j']
+    subprocess.check_call(command, cwd='/src/protobuf-3.9.1')
+    command = ['make', 'install']
+    subprocess.check_call(command, cwd='/src/protobuf-3.9.1')
+    command = ['ldconfig']
+    subprocess.check_call(command)
+    for filename in glob.glob('/usr/lib/x86_64-linux-gnu/libprotobuf*'):
+        os.remove(filename)
 
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
@@ -182,6 +220,9 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     work = os.getenv('WORK')
     build_directory = os.environ['OUT']
 
+    if is_benchmark('bloaty'):
+        update_protobuf()
+
     if is_benchmark('libpcap_fuzz_both'):
         os.environ['CXXFLAGS'] = os.environ['CXXFLAGS'] + ' -libverbs'
     if is_benchmark('libgit'):
@@ -190,7 +231,8 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
         os.environ['CXXFLAGS'] = os.environ['CXXFLAGS'] + ' -llzma'
 
     with utils.restore_directory(src), utils.restore_directory(work):
-        if is_benchmark('njs') or is_benchmark('muparser'):
+        if is_benchmark('njs') or is_benchmark('muparser') or is_benchmark(
+                'bloaty'):
             os.remove('/usr/local/lib/libc++.a')
             os.remove('/usr/local/lib/libc++abi.a')
         build_symsan(build_directory, src, work)
