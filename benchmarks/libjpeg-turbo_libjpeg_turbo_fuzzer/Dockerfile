@@ -19,11 +19,7 @@ FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d
 RUN apt-get update && \
     apt-get install -y make yasm cmake
 
-RUN git clone https://github.com/libjpeg-turbo/fuzz && \
-    cat fuzz/branches.txt | while read branch; do \
-      git clone https://github.com/libjpeg-turbo/libjpeg-turbo \
-          -b $branch libjpeg-turbo.$branch; \
-    done
+RUN git clone https://github.com/libjpeg-turbo/libjpeg-turbo libjpeg-turbo
 
 RUN git clone https://github.com/libjpeg-turbo/seed-corpora && \
     git -C seed-corpora checkout 7c9ea5ffaac76ef618657978c9fdfa845d310b93
@@ -42,3 +38,4 @@ RUN cd seed-corpora && \
 RUN rm -rf seed-corpora
 
 COPY build.sh $SRC/
+COPY libjpeg_turbo_fuzzer.cc $SRC/decompress.cc

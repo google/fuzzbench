@@ -16,12 +16,10 @@
 set -e
 set -u
 
-cat fuzz/branches.txt | while read branch; do
-    pushd libjpeg-turbo.$branch
-    if [ "$branch" = "main" ]; then
-        sh fuzz/build.sh
-    else
-        sh fuzz/build.sh _$branch
-    fi
-    popd
-done
+cd libjpeg-turbo
+
+# Substitute original fuzz target
+rm fuzz/decompress.cc
+cp ../decompress.cc fuzz/decompress.cc
+
+sh fuzz/build.sh
