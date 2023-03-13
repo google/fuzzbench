@@ -26,6 +26,10 @@ import tarfile
 import threading
 import time
 import zipfile
+from random import Random
+from numpy.random import RandomState
+import glob
+import numpy as np
 
 from common import benchmark_config
 from common import environment
@@ -132,6 +136,7 @@ def _unpack_clusterfuzz_seed_corpus(fuzz_target_path, corpus_directory):
     corpus directory if it exists. Copied from unpack_seed_corpus in
     engine_common.py in ClusterFuzz.
     """
+
     oss_fuzz_corpus = environment.get('OSS_FUZZ_CORPUS')
     if oss_fuzz_corpus:
         benchmark = environment.get('BENCHMARK')
@@ -172,12 +177,61 @@ def _unpack_clusterfuzz_seed_corpus(fuzz_target_path, corpus_directory):
               seed_corpus_archive_path)
 
 
+def sample_corpus(corpus_dir,
+                  random_seed,
+                  dest_dir=None,
+                  distribution="EXP",
+                  mean_seed_usage=0.2):
+    """Samples a pseudo-random number of files from the input corpus. By default sampling is done 
+    in-place, destructively, removing unsampled files. Will sample (mean_seed_usage * number of seeds)
+    files on average, according to the specified distribution. Sampling is deterministic wrt the 
+    random seed"""
+
+    gen = Random(random_seed)
+    npgen = RandomState(random_seed)
+
+    inplace = dest_dir is None
+
+    corpus_paths = [f for f in glob.glob(f"{corpus_dir}/**/*", recursive=True) if os.path.isfile(f)]
+    corpus_paths.sort()  # need to be ordered for deterministic sampling
+    print(f"Sampling from {len(corpus_paths)} files under {corpus_dir}")
+
+    num_seeds = len(corpus_paths)
+
+    if distribution == "UNIFORM":
+        trial_num_seeds = gen.randint(1,
+                                      int(np.round(mean_seed_usage *
+                                                   num_seeds)))  # inclusive []
+    elif distribution == "EXP":
+        trial_num_seeds = int(
+            np.round(
+                npgen.exponential(scale=(mean_seed_usage * num_seeds),
+                                  size=1)[0]))
+    else:
+        raise Exception("Unimplemented sampling algorithm")
+
+    trial_num_seeds = min(trial_num_seeds, num_seeds)  # no more than exists
+
+    trial_seeds = gen.sample(corpus_paths, k=trial_num_seeds)
+    print(trial_seeds)
+    print(len(trial_seeds))
+
+    if inplace:
+        for path in corpus_paths:
+            if path not in trial_seeds:
+                os.remove(path)
+    else:
+        for path in trial_seeds:
+            shutil.copy(path, dest_dir)
+
+
 def run_fuzzer(max_total_time, log_filename):
     """Runs the fuzzer using its script. Logs stdout and stderr of the fuzzer
     script to |log_filename| if provided."""
     input_corpus = environment.get('SEED_CORPUS_DIR')
     output_corpus = os.environ['OUTPUT_CORPUS_DIR']
     fuzz_target_name = environment.get('FUZZ_TARGET')
+
     target_binary = fuzzer_utils.get_fuzz_target_binary(FUZZ_TARGET_DIR,
                                                         fuzz_target_name)
     if not target_binary:
@@ -293,8 +347,33 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         max_total_time = environment.get('MAX_TOTAL_TIME')
         args = (max_total_time, self.log_file)
 
+        ## Setup initial corpus before fuzzer thread so that first sync is of the
+        ## initial corpus alone with no new test cases
+        input_corpus = environment.get('SEED_CORPUS_DIR')
+        output_corpus = environment.get('OUTPUT_CORPUS_DIR')
+        fuzz_target_name = environment.get('FUZZ_TARGET')
+        corpus_variant_id = environment.get('CORPUS_VARIANT_ID')
+        seed_sample_distribution = environment.get('SEED_SAMPLE_DIST')
+        seed_sample_mean_utilization = environment.get('SEED_SAMPLE_MEAN_UTIL')
+        randomness_seed = int(environment.get('RANDOMNESS_SEED') or 0)
+
+        target_binary = fuzzer_utils.get_fuzz_target_binary(
+            FUZZ_TARGET_DIR, fuzz_target_name)
+
+        if seed_sample_distribution is not None:
+            sample_corpus(input_corpus,
+                          corpus_variant_id + randomness_seed,
+                          distribution=seed_sample_distribution,
+                          mean_seed_usage=float(seed_sample_mean_utilization))
+
+        # Ensure seeds are in output corpus
+        shutil.rmtree(output_corpus)
+        os.makedirs(input_corpus, exist_ok=True)
+        shutil.copytree(input_corpus, output_corpus)
+
         # Sync initial corpus before fuzzing begins.
         self.do_sync()
+        ## end setup
 
         fuzz_thread = threading.Thread(target=run_fuzzer, args=args)
         fuzz_thread.start()

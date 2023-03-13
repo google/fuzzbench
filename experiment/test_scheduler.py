@@ -81,6 +81,7 @@ def pending_trials(db, experiment_config):
             models.Trial.id.in_(our_trial_ids))
 
 
+# @pytest.mark.skip(reason='This fails because of fragile string comparisons on the templates -- not worth fixing until yaml is finalized')
 @pytest.mark.parametrize(
     'benchmark,expected_image,expected_target',
     [('benchmark1',
@@ -124,6 +125,8 @@ docker run \\
 -e EXPERIMENT_FILESTORE=gs://experiment-data \\
 -e REPORT_FILESTORE=gs://web-reports \\
 -e FUZZ_TARGET={oss_fuzz_target} \\
+-e CORPUS_VARIANT_ID=0 \\
+-e RANDOMNESS_SEED=0 \\
 -e PRIVATE=False \\
 -e LOCAL_EXPERIMENT=False \\
 --name=runner-container \\

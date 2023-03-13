@@ -181,6 +181,8 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
             Requirement(False, bool, False, ''),
         'preemptible_runners':
             Requirement(False, bool, False, ''),
+        'seed_sampling':
+            Requirement(False, dict, False, ''),
     }
 
     all_params_valid = _validate_config_parameters(config, config_requirements)
