@@ -20,6 +20,21 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-03-15-aflpp
+  description: "afl++ identify regressions."
+  trials: 10
+  fuzzers:
+    - aflplusplus_post_0
+    - aflplusplus_post_1
+    - aflplusplus_post_2
+    - aflplusplus_post_3
+    - aflplusplus_pre_0
+    - aflplusplus_pre_1
+    - aflplusplus_pre_2
+    - aflplusplus_pre_3
+    - aflplusplus_pre_4
+    - aflplusplus_pre_5
+
 - experiment: 2023-03-10-aflpp
   description: "afl++ classify tests."
   trials: 10
