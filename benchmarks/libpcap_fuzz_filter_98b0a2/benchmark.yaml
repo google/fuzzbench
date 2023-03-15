@@ -1,0 +1,35 @@
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# 4503656338161664
+commit: 98B0A25B92C09850079325D780EF521B8ED6453E
+commit_date: 2023-02-25T22:56:01+0000
+fuzz_target: fuzz_filter
+project: libpcap
+type: bug
+unsupported_fuzzers:
+  - klee
+  - symcc_afl
+  - symcc_afl_single
+  - symcc_aflplusplus
+  - symcc_aflplusplus_single
+  - aflplusplus_cmplog_double
+  - eclipser_aflplusplus
+  - aflplusplus_qemu_double
+  - fuzzolic_aflplusplus_z3
+  - symqemu_aflplusplus
+  - fuzzolic_aflplusplus_fuzzy
+  - fuzzolic_aflplusplus_z3dict
+  - afldd
+  - aflpp_vs_dd

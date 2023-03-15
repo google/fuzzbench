@@ -233,14 +233,14 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     if utils.get_config_value('type') == 'bug':
         new_env = os.environ.copy()
-        t_a = [utils.DEFAULT_OPTIMIZATION_LEVEL]
+        t_a = [utils.BUGS_OPTIMIZATION_LEVEL]
         cflags = utils.FUZZING_CFLAGS + utils.NO_SANITIZER_COMPAT_CFLAGS + t_a
         new_env['CFLAGS'] = ' '.join(cflags)
-        t_a = [utils.LIBCPLUSPLUS_FLAG, utils.DEFAULT_OPTIMIZATION_LEVEL]
+        t_a = [utils.LIBCPLUSPLUS_FLAG, utils.BUGS_OPTIMIZATION_LEVEL]
         cxxflags = utils.FUZZING_CFLAGS + utils.NO_SANITIZER_COMPAT_CFLAGS + t_a
         new_env['CXXFLAGS'] = ' '.join(cxxflags)
-        new_env['AFL_LLVM_USE_TRACE_PC'] = '1'
-        del new_env['AFL_LLVM_INSTRUMENT']
+        #new_env['AFL_LLVM_USE_TRACE_PC'] = '1'
+        #del new_env['AFL_LLVM_INSTRUMENT']
         hastemode_build_directory = get_hastemode_build_directory(
             build_directory)
         os.mkdir(hastemode_build_directory)
@@ -288,6 +288,7 @@ def fuzz(input_corpus,
     # decomment this to enable libdislocator.
     # os.environ['AFL_ALIGNED_ALLOC'] = '1' # align malloc to max_align_t
     # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
+    os.environ['AFL_MAX_DET_EXTRAS'] = '99999'
 
     flags = list(flags)
 

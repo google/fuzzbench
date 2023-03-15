@@ -1,0 +1,3 @@
+commit: 54652664fb2b1585645ce4e24ecd3ad599ae1026
+fuzz_target: pdu_parse_fuzzer
+project: libcoap
