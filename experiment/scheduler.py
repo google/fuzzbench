@@ -752,7 +752,7 @@ def _start_trial(trial: TrialProxy,
     # so that measuring a schedule doesn't require waiting until the map call
     # that calls this function completely terminates.
     _initialize_logs(experiment_config['experiment'])
-    logger.info('Start trial %d.', trial.id)
+    logger.info('Start trial %d with corpus variant %d.', trial.id, corpus_variant_id)
     started = create_trial_instance(trial.fuzzer, trial.benchmark, trial.id,
                                     experiment_config, trial.preemptible,
                                     cpuset, corpus_variant_id)

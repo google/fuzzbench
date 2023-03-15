@@ -136,7 +136,6 @@ def _unpack_clusterfuzz_seed_corpus(fuzz_target_path, corpus_directory):
     corpus directory if it exists. Copied from unpack_seed_corpus in
     engine_common.py in ClusterFuzz.
     """
-
     oss_fuzz_corpus = environment.get('OSS_FUZZ_CORPUS')
     if oss_fuzz_corpus:
         benchmark = environment.get('BENCHMARK')
@@ -194,7 +193,7 @@ def sample_corpus(corpus_dir,
 
     corpus_paths = [f for f in glob.glob(f"{corpus_dir}/**/*", recursive=True) if os.path.isfile(f)]
     corpus_paths.sort()  # need to be ordered for deterministic sampling
-    print(f"Sampling from {len(corpus_paths)} files under {corpus_dir}")
+    logs.info('Sampling from %d files in seed corpus dir %s.', len(corpus_paths), corpus_dir)
 
     num_seeds = len(corpus_paths)
 
@@ -213,8 +212,6 @@ def sample_corpus(corpus_dir,
     trial_num_seeds = min(trial_num_seeds, num_seeds)  # no more than exists
 
     trial_seeds = gen.sample(corpus_paths, k=trial_num_seeds)
-    print(trial_seeds)
-    print(len(trial_seeds))
 
     if inplace:
         for path in corpus_paths:
