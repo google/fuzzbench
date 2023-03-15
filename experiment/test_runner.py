@@ -317,13 +317,6 @@ class TestIntegrationRunner:
         os.environ['EXPERIMENT_FILESTORE'] = test_experiment_bucket
         os.environ['EXPERIMENT'] = experiment
 
-        os.environ['CORPUS_VARIANT_ID'] = "0"
-        os.environ['SEED_SAMPLE_DIST'] = "EXP"
-        os.environ['SEED_SAMPLE_MEAN_UTIL'] = "0.2"
-        os.environ['RANDOMNESS_SEED'] = "0"
-
-
-
         os.environ['TRIAL_ID'] = str(TRIAL_NUM)
 
         max_total_time = 10
@@ -348,16 +341,16 @@ class TestIntegrationRunner:
 
         local_gcs_corpus_dir_copy = tmp_path / 'gcs_corpus_dir'
         os.mkdir(local_gcs_corpus_dir_copy)
-        filestore_utils.cp(gcs_corpus_directory,
+        filestore_utils.cp(posixpath.join(gcs_corpus_directory, '*'),
                            str(local_gcs_corpus_dir_copy),
                            recursive=True,
                            parallel=True)
-        archive_size = os.path.getsize(local_gcs_corpus_dir_copy / 
-                                       'corpus/corpus-archive-0001.tar.gz')
+        archive_size = os.path.getsize(local_gcs_corpus_dir_copy /
+                                       'corpus-archive-0001.tar.gz')
 
         assert archive_size > 500
 
-        # assert len(os.listdir(output_corpus_dir)) > 5
+        assert len(os.listdir(output_corpus_dir)) > 5
         mocked_error.assert_not_called()
 
 
