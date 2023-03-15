@@ -811,9 +811,9 @@ def render_startup_script_template(  # pylint: disable=too-many-arguments
     if 'seed_sampling' in experiment_config:
         kwargs['use_seed_sampling'] = True
         kwargs['seed_sampling_distribution'] = experiment_config[
-            'seed_sampling']['distribution']
+            'seed_sampling'].get('distribution')
         kwargs['seed_sampling_mean_utilization'] = experiment_config[
-            'seed_sampling']['mean_seed_utilization']
+            'seed_sampling'].get('mean_seed_utilization')
     else:
         kwargs['use_seed_sampling'] = False
 

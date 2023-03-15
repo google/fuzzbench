@@ -364,7 +364,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             sample_corpus(input_corpus,
                           corpus_variant_id + randomness_seed,
                           distribution=seed_sample_distribution,
-                          mean_seed_usage=float(seed_sample_mean_utilization))
+                          mean_seed_usage=float(seed_sample_mean_utilization)) if seed_sample_mean_utilization else None
 
         # Ensure seeds are in output corpus
         shutil.rmtree(output_corpus)
