@@ -116,7 +116,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # Generate an extra dictionary.
     if 'dict2file' in build_modes or 'native' in build_modes:
         os.environ['AFL_LLVM_DICT2FILE'] = build_directory + '/afl++.dict'
-        os.environ['AFL_LLVM_DICT2FILE_NO_MAIN'] = '1'
     # Enable context sentitivity for LLVM mode (non LTO only)
     if 'ctx' in build_modes:
         os.environ['AFL_LLVM_CTX'] = '1'
@@ -260,6 +259,8 @@ def fuzz(input_corpus,
 
     if os.path.exists('./afl++.dict'):
         flags += ['-x', './afl++.dict']
+
+    flags += ['-p', 'explore']
 
     # Move the following to skip for upcoming _double tests:
     if os.path.exists(cmplog_target_binary) and no_cmplog is False:

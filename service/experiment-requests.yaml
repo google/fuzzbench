@@ -19,6 +19,17 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
+
+- experiment: 2023-03-10-aflpp
+  description: "afl++ classify tests."
+  trials: 10
+  fuzzers:
+    - aflplusplus_base
+    - aflplusplus_explore
+    - aflplusplus_class_explore
+    - aflplusplus_class
+    - aflplusplus_onebug
+
 - experiment: 2023-02-27-aflpp-3
   description: "afl++ regression test (different one)."
   trials: 10
