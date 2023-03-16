@@ -355,7 +355,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         output_corpus = environment.get('OUTPUT_CORPUS_DIR')
         corpus_variant_id = environment.get('CORPUS_VARIANT_ID')
         seed_sample_distribution = environment.get('SEED_SAMPLE_DIST')
-        seed_sample_mean_utilization = environment.get('SEED_SAMPLE_MEAN_UTIL')
+        mean_seed_util = environment.get('SEED_SAMPLE_MEAN_UTIL')
         random_seed = environment.get('RANDOMNESS_SEED')
 
         mean_seed_util = float(
@@ -368,7 +368,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             sample_corpus(input_corpus,
                           random_seed + corpus_variant_id,
                           distribution=seed_sample_distribution,
-                          mean_seed_util=seed_sample_mean_utilization)
+                          mean_seed_util=mean_seed_util)
 
         # Ensure seeds are in output corpus
         shutil.rmtree(output_corpus)
