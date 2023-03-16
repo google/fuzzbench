@@ -187,7 +187,8 @@ def sample_corpus(corpus_dir,
     files on average, according to the specified distribution. Sampling is deterministic wrt the 
     random seed"""
 
-    mean_seed_util = float(mean_seed_util) if mean_seed_util is not None else 0.2
+    mean_seed_util = float(
+        mean_seed_util) if mean_seed_util is not None else 0.2
     random_seed = int(random_seed) if random_seed is not None else 0
 
     internal_random_seed = int(random_seed) + corpus_variant_id
@@ -197,9 +198,13 @@ def sample_corpus(corpus_dir,
 
     inplace = dest_dir is None
 
-    corpus_paths = [f for f in glob.glob(f"{corpus_dir}/**/*", recursive=True) if os.path.isfile(f)]
+    corpus_paths = [
+        f for f in glob.glob(f"{corpus_dir}/**/*", recursive=True)
+        if os.path.isfile(f)
+    ]
     corpus_paths.sort()  # need to be ordered for deterministic sampling
-    logs.info('Sampling from %d files in seed corpus dir %s.', len(corpus_paths), corpus_dir)
+    logs.info('Sampling from %d files in seed corpus dir %s.',
+              len(corpus_paths), corpus_dir)
 
     num_seeds = len(corpus_paths)
 
