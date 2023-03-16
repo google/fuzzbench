@@ -185,6 +185,8 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
             Requirement(False, str, True, ''),
         'runner_num_cpu_cores':
             Requirement(False, int, False, ''),
+        'runner_memory':
+            Requirement(False, str, False, ''),
     }
 
     all_params_valid = _validate_config_parameters(config, config_requirements)
