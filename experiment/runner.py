@@ -16,6 +16,7 @@
 
 import importlib
 import json
+import glob
 import os
 import posixpath
 import shlex
@@ -28,7 +29,6 @@ import time
 import zipfile
 from random import Random
 from numpy.random import RandomState
-import glob
 import numpy as np
 
 from common import benchmark_config
@@ -177,29 +177,23 @@ def _unpack_clusterfuzz_seed_corpus(fuzz_target_path, corpus_directory):
 
 
 def sample_corpus(corpus_dir,
-                  corpus_variant_id=0,
-                  random_seed=0,
+                  random_seed,
                   dest_dir=None,
-                  distribution="EXP",
+                  distribution='EXP',
                   mean_seed_util=0.2):
-    """Samples a pseudo-random number of files from the input corpus. By default sampling is done 
-    in-place, destructively, removing unsampled files. Will sample (mean_seed_util * number of seeds)
-    files on average, according to the specified distribution. Sampling is deterministic wrt the 
-    random seed"""
+    """Samples a pseudo-random number of files from the input corpus. By
+    default sampling is done in-place, destructively, removing unsampled
+    files. Will sample (mean_seed_util * number of seeds) files on
+    average, according to the specified distribution. Sampling is
+    deterministic wrt the random seed"""
 
-    mean_seed_util = float(
-        mean_seed_util) if mean_seed_util is not None else 0.2
-    random_seed = int(random_seed) if random_seed is not None else 0
-
-    internal_random_seed = int(random_seed) + corpus_variant_id
-
-    gen = Random(internal_random_seed)
-    npgen = RandomState(internal_random_seed)
+    gen = Random(random_seed)
+    npgen = RandomState(random_seed)
 
     inplace = dest_dir is None
 
     corpus_paths = [
-        f for f in glob.glob(f"{corpus_dir}/**/*", recursive=True)
+        f for f in glob.glob(f'{corpus_dir}/**/*', recursive=True)
         if os.path.isfile(f)
     ]
     corpus_paths.sort()  # need to be ordered for deterministic sampling
@@ -208,17 +202,17 @@ def sample_corpus(corpus_dir,
 
     num_seeds = len(corpus_paths)
 
-    if distribution == "UNIFORM":
+    if distribution == 'UNIFORM':
         trial_num_seeds = gen.randint(1,
                                       int(np.round(mean_seed_util *
                                                    num_seeds)))  # inclusive []
-    elif distribution == "EXP":
+    elif distribution == 'EXP':
         trial_num_seeds = int(
             np.round(
                 npgen.exponential(scale=(mean_seed_util * num_seeds),
                                   size=1)[0]))
     else:
-        raise Exception("Unimplemented sampling algorithm")
+        raise Exception('Unimplemented sampling algorithm')
 
     trial_num_seeds = min(trial_num_seeds, num_seeds)  # no more than exists
 
@@ -355,23 +349,24 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         max_total_time = environment.get('MAX_TOTAL_TIME')
         args = (max_total_time, self.log_file)
 
-        ## Setup initial corpus before fuzzer thread so that first sync is of the
-        ## initial corpus alone with no new test cases
+        ## Setup initial corpus before fuzzer thread so that first sync is of
+        ## the initial corpus alone with no new test cases
         input_corpus = environment.get('SEED_CORPUS_DIR')
         output_corpus = environment.get('OUTPUT_CORPUS_DIR')
-        fuzz_target_name = environment.get('FUZZ_TARGET')
         corpus_variant_id = environment.get('CORPUS_VARIANT_ID')
         seed_sample_distribution = environment.get('SEED_SAMPLE_DIST')
         seed_sample_mean_utilization = environment.get('SEED_SAMPLE_MEAN_UTIL')
-        randomness_seed = environment.get('RANDOMNESS_SEED')
+        random_seed = environment.get('RANDOMNESS_SEED')
 
-        target_binary = fuzzer_utils.get_fuzz_target_binary(
-            FUZZ_TARGET_DIR, fuzz_target_name)
+        mean_seed_util = float(
+            mean_seed_util) if mean_seed_util is not None else 0.2
+        random_seed = int(random_seed) if random_seed is not None else 0
+        corpus_variant_id = int(corpus_variant_id) \
+            if corpus_variant_id is not None else 0
 
         if seed_sample_distribution is not None:
             sample_corpus(input_corpus,
-                          corpus_variant_id,
-                          randomness_seed,
+                          random_seed + corpus_variant_id,
                           distribution=seed_sample_distribution,
                           mean_seed_util=seed_sample_mean_utilization)
 
