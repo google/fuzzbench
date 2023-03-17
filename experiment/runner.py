@@ -334,25 +334,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             _copy_custom_seed_corpus(input_corpus)
 
         _clean_seed_corpus(input_corpus)
-        # Ensure seeds are in output corpus.
-        os.rmdir(self.output_corpus)
-        shutil.copytree(input_corpus, self.output_corpus)
 
-    def conduct_trial(self):
-        """Conduct the benchmarking trial."""
-        self.initialize_directories()
-
-        logs.info('Starting trial.')
-
-        self.set_up_corpus_directories()
-
-        max_total_time = environment.get('MAX_TOTAL_TIME')
-        args = (max_total_time, self.log_file)
-
-        ## Setup initial corpus before fuzzer thread so that first sync is of
-        ## the initial corpus alone with no new test cases
-        input_corpus = environment.get('SEED_CORPUS_DIR')
-        output_corpus = environment.get('OUTPUT_CORPUS_DIR')
         corpus_variant_id = environment.get('CORPUS_VARIANT_ID')
         seed_sample_distribution = environment.get('SEED_SAMPLE_DIST')
         mean_seed_util = environment.get('SEED_SAMPLE_MEAN_UTIL')
@@ -370,14 +352,23 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
                           distribution=seed_sample_distribution,
                           mean_seed_util=mean_seed_util)
 
-        # Ensure seeds are in output corpus
-        shutil.rmtree(output_corpus)
-        os.makedirs(input_corpus, exist_ok=True)
-        shutil.copytree(input_corpus, output_corpus)
+        # Ensure seeds are in output corpus.
+        os.rmdir(self.output_corpus)
+        shutil.copytree(input_corpus, self.output_corpus)
+
+    def conduct_trial(self):
+        """Conduct the benchmarking trial."""
+        self.initialize_directories()
+
+        logs.info('Starting trial.')
+
+        self.set_up_corpus_directories()
+
+        max_total_time = environment.get('MAX_TOTAL_TIME')
+        args = (max_total_time, self.log_file)
 
         # Sync initial corpus before fuzzing begins.
         self.do_sync()
-        ## end setup
 
         fuzz_thread = threading.Thread(target=run_fuzzer, args=args)
         fuzz_thread.start()
