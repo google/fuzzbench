@@ -185,8 +185,6 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
             Requirement(False, str, True, ''),
         'runner_num_cpu_cores':
             Requirement(False, int, False, ''),
-        'randomness_seed':
-            Requirement(False, int, False, ''),
         'seed_sampling':
             Requirement(False, dict, False, ''),
     }

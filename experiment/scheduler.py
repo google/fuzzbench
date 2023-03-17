@@ -806,17 +806,18 @@ def render_startup_script_template(  # pylint: disable=too-many-arguments
         'custom_seed_corpus_dir': experiment_config['custom_seed_corpus_dir'],
     }
 
-    kwargs['randomness_seed'] = experiment_config[
-        'randomness_seed'] if 'randomness_seed' in experiment_config else 0
-
     if 'seed_sampling' in experiment_config:
         kwargs['use_seed_sampling'] = True
-        kwargs['seed_sampling_distribution'] = experiment_config[
-            'seed_sampling'].get('distribution')
-        kwargs['seed_sampling_mean_utilization'] = experiment_config[
-            'seed_sampling'].get('mean_seed_utilization')
+
+        kwargs['randomness_seed'] = experiment_config['seed_sampling'] \
+                .get('randomness_seed')
+        kwargs['seed_sampling_distribution'] = \
+            experiment_config['seed_sampling'].get('distribution')
+        kwargs['seed_sampling_mean_utilization'] = \
+            experiment_config['seed_sampling'].get('mean_seed_utilization')
     else:
         kwargs['use_seed_sampling'] = False
+        kwargs['randomness_seed'] = 0
 
     if not local_experiment:
         kwargs['cloud_compute_zone'] = experiment_config['cloud_compute_zone']
