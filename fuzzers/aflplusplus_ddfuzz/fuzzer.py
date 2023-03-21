@@ -45,7 +45,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     # If nothing was set this is the default:
     if not build_modes:
-        build_modes = ['tracepc', 'cmplog', 'dict2file']
+        build_modes = ['classic', 'cmplog', 'dict2file']
 
     # For bug type benchmarks we have to instrument via native clang pcguard :(
     build_flags = os.environ['CFLAGS']
@@ -55,6 +55,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     ) != -1 and 'qemu' not in build_modes and 'classic' not in build_modes:
         if 'gcc' not in build_modes:
             build_modes[0] = 'native'
+
+    os.environ['DDG_INSTR'] = '1'
 
     # Instrumentation coverage modes:
     if 'lto' in build_modes:
@@ -93,6 +95,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     print('AFL++ build: ')
     print(build_modes)
+
+    os.system("/afl/afl-clang-fast -v")
 
     if 'qemu' in build_modes or 'symcc' in build_modes:
         os.environ['CFLAGS'] = ' '.join(utils.NO_SANITIZER_COMPAT_CFLAGS)
@@ -268,7 +272,6 @@ def fuzz(input_corpus,
     #os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
     os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
     os.environ['AFL_FAST_CAL'] = '1'
-    os.environ['AFL_NO_WARN_INSTABILITY'] = '1'
 
     if not skip:
         os.environ['AFL_DISABLE_TRIM'] = '1'
