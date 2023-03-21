@@ -96,8 +96,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     print('AFL++ build: ')
     print(build_modes)
 
-    os.system("/afl/afl-clang-fast -v")
-
     if 'qemu' in build_modes or 'symcc' in build_modes:
         os.environ['CFLAGS'] = ' '.join(utils.NO_SANITIZER_COMPAT_CFLAGS)
         cxxflags = [utils.LIBCPLUSPLUS_FLAG] + utils.NO_SANITIZER_COMPAT_CFLAGS
