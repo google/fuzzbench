@@ -22,7 +22,8 @@ RUN apt-get update && \
         libpixman-1-dev liblzma-dev libfdt-dev libncurses-dev \
         libstdc++-9-dev libglib2.0-dev zlib1g-dev libcurl4-openssl-dev     \
         curl wget subversion vim git flex bison                            \
-        inotify-tools sudo lsb-release software-properties-common gnupg
+        inotify-tools sudo lsb-release software-properties-common gnupg    \
+        libfontconfig1-dev
 
 # Install latest Rust
 RUN if which rustup; then rustup self uninstall -y; fi
@@ -148,8 +149,8 @@ RUN mkdir -p /libs_symcc
 ENV PATH="/usr/lib/llvm-12/bin/:$PATH"
 
 # Building MCTSSE
-RUN ls -l
-RUN git clone -b feat/branch_dependence --depth 1 --recurse-submodules https://github.com/Lukas-Dresel/mctsse/ /mctsse
+RUN ls -l && echo rerun=1
+RUN git clone -b main --depth 1 --recurse-submodules https://github.com/Lukas-Dresel/mctsse/ /mctsse
 RUN git clone --depth 1 https://github.com/Lukas-Dresel/z3jit.git /mctsse/implementation/z3jit
 RUN git clone -b feat/symcts https://github.com/Lukas-Dresel/LibAFL /mctsse/repos/LibAFL
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/runtime && \
@@ -242,6 +243,7 @@ RUN cp /mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/
 RUN cp /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer/target/release/symcts /out/target/symcc
 RUN cp /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer/target/release/print_symcc_trace /out/target/symcc
 RUN cp /z3/lib/libz3.so /out/target/symcc/
+RUN ln -s /out/target/symcc/libz3.so /out/target/symcc/libz3.so.4
 RUN cp /libcxx_native_build/lib/libc++.so.1 /out/target/symcc
 RUN cp /libcxx_native_build/lib/libc++abi.so.1 /out/target/symcc
 
