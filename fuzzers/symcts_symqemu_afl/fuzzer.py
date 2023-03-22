@@ -29,25 +29,25 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 @contextlib.contextmanager
 def with_lukas_afl():
     os.symlink('/afl-lukas', '/afl', target_is_directory=True)
-    # os.symlink('/libAFLDriver-lukas.a', '/libAFLDriver.a', target_is_directory=False)
+    os.symlink('/libAFLDriver-lukas.a', '/libAFLDriver.a', target_is_directory=False)
 
     shutil.copyfile('/afl-base/afl-fuzz', '/afl/afl-fuzz')
     yield
 
     os.unlink('/afl')
-    # os.unlink('/libAFLDriver.a')
+    os.unlink('/libAFLDriver.a')
 
 
 @contextlib.contextmanager
 def with_base_afl(delete=True):
     os.symlink('/afl-base', '/afl', target_is_directory=True)
-    # os.symlink('/libAFLDriver-base.a', '/libAFLDriver.a', target_is_directory=False)
+    os.symlink('/libAFLDriver-base.a', '/libAFLDriver.a', target_is_directory=False)
 
     yield
 
     if delete:
         os.unlink('/afl')
-        # os.unlink('/libAFLDriver.a')
+        os.unlink('/libAFLDriver.a')
 
 def build():
     shutil.rmtree('/afl/')
