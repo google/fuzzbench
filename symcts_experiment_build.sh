@@ -1,5 +1,5 @@
 #!/bin/bash
-FUZZERS=(symcts symcts_afl symcts_symqemu symcts_symqemu_afl honggfuzz libfuzzer symcc_aflplusplus)
+FUZZERS=(symcts symcts_afl symcts_symqemu symcts_symqemu_afl honggfuzz libfuzzer symcc_aflplusplus symsan)
 TARGETS=(libxml2-v2.9.2 libpng-1.6.38 freetype2-2017)
 
 MAKEFILETARGETS=()

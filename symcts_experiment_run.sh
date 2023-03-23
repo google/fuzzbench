@@ -14,4 +14,4 @@ PYTHONPATH=. python3.10 experiment/run_experiment.py \
     --runners-cpus 8 \
     --measurers-cpus 8 \
     --experiment-name $EXPERIMENT_NAME \
-    --fuzzers symcc_aflplusplus libfuzzer honggfuzz symcts symcts_afl symcts_symqemu symcts_symqemu_afl
+    --fuzzers symcc_aflplusplus libfuzzer honggfuzz symcts symcts_afl symcts_symqemu symcts_symqemu_afl symsan
