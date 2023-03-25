@@ -38,17 +38,17 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     build_modes = list(args)
     if 'BUILD_MODES' in os.environ:
-        build_modes = #os.environ['BUILD_MODES'].split(',')
+        build_modes = os.environ['BUILD_MODES'].split(',')
 
     # Placeholder comment.
-    build_directory = #os.environ['OUT']
+    build_directory = os.environ['OUT']
 
     # If nothing was set this is the default:
     if not build_modes:
         build_modes = ['tracepc', 'cmplog', 'dict2file']
 
     # For bug type benchmarks we have to instrument via native clang pcguard :(
-    build_flags = #os.environ['CFLAGS']
+    build_flags = os.environ['CFLAGS']
 
     if build_flags.find(
             'array-bounds'
@@ -58,115 +58,115 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     # Instrumentation coverage modes:
     if 'lto' in build_modes:
-        #os.environ['CC'] = '/afl/afl-clang-lto'
-        #os.environ['CXX'] = '/afl/afl-clang-lto++'
+        os.environ['CC'] = '/afl/afl-clang-lto'
+        os.environ['CXX'] = '/afl/afl-clang-lto++'
         edge_file = build_directory + '/aflpp_edges.txt'
-        #os.environ['AFL_LLVM_DOCUMENT_IDS'] = edge_file
+        os.environ['AFL_LLVM_DOCUMENT_IDS'] = edge_file
         if os.path.isfile('/usr/local/bin/llvm-ranlib-13'):
-            #os.environ['RANLIB'] = 'llvm-ranlib-13'
-            #os.environ['AR'] = 'llvm-ar-13'
-            #os.environ['AS'] = 'llvm-as-13'
+            os.environ['RANLIB'] = 'llvm-ranlib-13'
+            os.environ['AR'] = 'llvm-ar-13'
+            os.environ['AS'] = 'llvm-as-13'
         elif os.path.isfile('/usr/local/bin/llvm-ranlib-12'):
-            #os.environ['RANLIB'] = 'llvm-ranlib-12'
-            #os.environ['AR'] = 'llvm-ar-12'
-            #os.environ['AS'] = 'llvm-as-12'
+            os.environ['RANLIB'] = 'llvm-ranlib-12'
+            os.environ['AR'] = 'llvm-ar-12'
+            os.environ['AS'] = 'llvm-as-12'
         else:
-            #os.environ['RANLIB'] = 'llvm-ranlib'
-            #os.environ['AR'] = 'llvm-ar'
-            #os.environ['AS'] = 'llvm-as'
+            os.environ['RANLIB'] = 'llvm-ranlib'
+            os.environ['AR'] = 'llvm-ar'
+            os.environ['AS'] = 'llvm-as'
     elif 'qemu' in build_modes:
-        #os.environ['CC'] = 'clang'
-        #os.environ['CXX'] = 'clang++'
+        os.environ['CC'] = 'clang'
+        os.environ['CXX'] = 'clang++'
     elif 'gcc' in build_modes:
-        #os.environ['CC'] = 'afl-gcc-fast'
-        #os.environ['CXX'] = 'afl-g++-fast'
+        os.environ['CC'] = 'afl-gcc-fast'
+        os.environ['CXX'] = 'afl-g++-fast'
         if build_flags.find('array-bounds') != -1:
-            #os.environ['CFLAGS'] = '-fsanitize=address -O1'
-            #os.environ['CXXFLAGS'] = '-fsanitize=address -O1'
+            os.environ['CFLAGS'] = '-fsanitize=address -O1'
+            os.environ['CXXFLAGS'] = '-fsanitize=address -O1'
         else:
-            #os.environ['CFLAGS'] = ''
-            #os.environ['CXXFLAGS'] = ''
-            #os.environ['CPPFLAGS'] = ''
+            os.environ['CFLAGS'] = ''
+            os.environ['CXXFLAGS'] = ''
+            os.environ['CPPFLAGS'] = ''
     else:
-        #os.environ['CC'] = '/afl/afl-clang-fast'
-        #os.environ['CXX'] = '/afl/afl-clang-fast++'
+        os.environ['CC'] = '/afl/afl-clang-fast'
+        os.environ['CXX'] = '/afl/afl-clang-fast++'
 
     print('AFL++ build: ')
     print(build_modes)
 
     if 'qemu' in build_modes or 'symcc' in build_modes:
-        #os.environ['CFLAGS'] = ' '.join(utils.NO_SANITIZER_COMPAT_CFLAGS)
+        os.environ['CFLAGS'] = ' '.join(utils.NO_SANITIZER_COMPAT_CFLAGS)
         cxxflags = [utils.LIBCPLUSPLUS_FLAG] + utils.NO_SANITIZER_COMPAT_CFLAGS
-        #os.environ['CXXFLAGS'] = ' '.join(cxxflags)
+        os.environ['CXXFLAGS'] = ' '.join(cxxflags)
 
     if 'tracepc' in build_modes or 'pcguard' in build_modes:
-        #os.environ['AFL_LLVM_USE_TRACE_PC'] = '1'
+        os.environ['AFL_LLVM_USE_TRACE_PC'] = '1'
     elif 'classic' in build_modes:
-        #os.environ['AFL_LLVM_INSTRUMENT'] = 'CLASSIC'
+        os.environ['AFL_LLVM_INSTRUMENT'] = 'CLASSIC'
     elif 'native' in build_modes:
-        #os.environ['AFL_LLVM_INSTRUMENT'] = 'LLVMNATIVE'
+        os.environ['AFL_LLVM_INSTRUMENT'] = 'LLVMNATIVE'
 
     # Instrumentation coverage options:
     # Do not use a fixed map location (LTO only)
     if 'dynamic' in build_modes:
-        #os.environ['AFL_LLVM_MAP_DYNAMIC'] = '1'
+        os.environ['AFL_LLVM_MAP_DYNAMIC'] = '1'
     # Use a fixed map location (LTO only)
     if 'fixed' in build_modes:
-        #os.environ['AFL_LLVM_MAP_ADDR'] = '0x10000'
+        os.environ['AFL_LLVM_MAP_ADDR'] = '0x10000'
     # Generate an extra dictionary.
     if 'dict2file' in build_modes or 'native' in build_modes:
-        #os.environ['AFL_LLVM_DICT2FILE'] = build_directory + '/afl++.dict'
+        os.environ['AFL_LLVM_DICT2FILE'] = build_directory + '/afl++.dict'
         #os.environ['AFL_LLVM_DICT2FILE_NO_MAIN'] = '1'
     # Enable context sentitivity for LLVM mode (non LTO only)
     if 'ctx' in build_modes:
-        #os.environ['AFL_LLVM_CTX'] = '1'
+        os.environ['AFL_LLVM_CTX'] = '1'
     # Enable N-gram coverage for LLVM mode (non LTO only)
     if 'ngram2' in build_modes:
-        #os.environ['AFL_LLVM_NGRAM_SIZE'] = '2'
+        os.environ['AFL_LLVM_NGRAM_SIZE'] = '2'
     elif 'ngram3' in build_modes:
-        #os.environ['AFL_LLVM_NGRAM_SIZE'] = '3'
+        os.environ['AFL_LLVM_NGRAM_SIZE'] = '3'
     elif 'ngram4' in build_modes:
-        #os.environ['AFL_LLVM_NGRAM_SIZE'] = '4'
+        os.environ['AFL_LLVM_NGRAM_SIZE'] = '4'
     elif 'ngram5' in build_modes:
-        #os.environ['AFL_LLVM_NGRAM_SIZE'] = '5'
+        os.environ['AFL_LLVM_NGRAM_SIZE'] = '5'
     elif 'ngram6' in build_modes:
-        #os.environ['AFL_LLVM_NGRAM_SIZE'] = '6'
+        os.environ['AFL_LLVM_NGRAM_SIZE'] = '6'
     elif 'ngram7' in build_modes:
-        #os.environ['AFL_LLVM_NGRAM_SIZE'] = '7'
+        os.environ['AFL_LLVM_NGRAM_SIZE'] = '7'
     elif 'ngram8' in build_modes:
-        #os.environ['AFL_LLVM_NGRAM_SIZE'] = '8'
+        os.environ['AFL_LLVM_NGRAM_SIZE'] = '8'
     elif 'ngram16' in build_modes:
-        #os.environ['AFL_LLVM_NGRAM_SIZE'] = '16'
+        os.environ['AFL_LLVM_NGRAM_SIZE'] = '16'
     if 'ctx1' in build_modes:
-        #os.environ['AFL_LLVM_CTX_K'] = '1'
+        os.environ['AFL_LLVM_CTX_K'] = '1'
     elif 'ctx2' in build_modes:
-        #os.environ['AFL_LLVM_CTX_K'] = '2'
+        os.environ['AFL_LLVM_CTX_K'] = '2'
     elif 'ctx3' in build_modes:
-        #os.environ['AFL_LLVM_CTX_K'] = '3'
+        os.environ['AFL_LLVM_CTX_K'] = '3'
     elif 'ctx4' in build_modes:
-        #os.environ['AFL_LLVM_CTX_K'] = '4'
+        os.environ['AFL_LLVM_CTX_K'] = '4'
 
     # Only one of the following OR cmplog
     # enable laf-intel compare splitting
     if 'laf' in build_modes:
-        #os.environ['AFL_LLVM_LAF_SPLIT_SWITCHES'] = '1'
-        #os.environ['AFL_LLVM_LAF_SPLIT_COMPARES'] = '1'
-        #os.environ['AFL_LLVM_LAF_SPLIT_FLOATS'] = '1'
+        os.environ['AFL_LLVM_LAF_SPLIT_SWITCHES'] = '1'
+        os.environ['AFL_LLVM_LAF_SPLIT_COMPARES'] = '1'
+        os.environ['AFL_LLVM_LAF_SPLIT_FLOATS'] = '1'
         if 'autodict' not in build_modes:
-            #os.environ['AFL_LLVM_LAF_TRANSFORM_COMPARES'] = '1'
+            os.environ['AFL_LLVM_LAF_TRANSFORM_COMPARES'] = '1'
 
     if 'eclipser' in build_modes:
-        #os.environ['FUZZER_LIB'] = '/libStandaloneFuzzTarget.a'
+        os.environ['FUZZER_LIB'] = '/libStandaloneFuzzTarget.a'
     else:
-        #os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
+        os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
 
     # Some benchmarks like lcms. (see:
     # https://github.com/mm2/Little-CMS/commit/ab1093539b4287c233aca6a3cf53b234faceb792#diff-f0e6d05e72548974e852e8e55dffc4ccR212)
     # fail to compile if the compiler outputs things to stderr in unexpected
     # cases. Prevent these failures by using AFL_QUIET to stop afl-clang-fast
     # from writing AFL specific messages to stderr.
-    #os.environ['AFL_QUIET'] = '1'
-    #os.environ['AFL_MAP_SIZE'] = '2621440'
+    os.environ['AFL_QUIET'] = '1'
+    os.environ['AFL_MAP_SIZE'] = '2621440'
 
     src = os.getenv('SRC')
     work = os.getenv('WORK')
@@ -253,8 +253,8 @@ def fuzz(input_corpus,
 
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     # decomment this to enable libdislocator.
-    # #os.environ['AFL_ALIGNED_ALLOC'] = '1' # align malloc to max_align_t
-    # #os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
+    # os.environ['AFL_ALIGNED_ALLOC'] = '1' # align malloc to max_align_t
+    # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
     flags = list(flags)
 
@@ -265,15 +265,16 @@ def fuzz(input_corpus,
     if os.path.exists(cmplog_target_binary) and no_cmplog is False:
         flags += ['-c', cmplog_target_binary]
 
-    ##os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
-    #os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
-    #os.environ['AFL_FAST_CAL'] = '1'
+    #os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
+    os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
+    os.environ['AFL_FAST_CAL'] = '1'
+    os.environ['AFL_NO_WARN_INSTABILITY'] = '1'
 
     if not skip:
-        #os.environ['AFL_DISABLE_TRIM'] = '1'
-        #os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
+        os.environ['AFL_DISABLE_TRIM'] = '1'
+        os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
         if 'ADDITIONAL_ARGS' in os.environ:
-            flags += #os.environ['ADDITIONAL_ARGS'].split(' ')
+            flags += os.environ['ADDITIONAL_ARGS'].split(' ')
 
     afl_fuzzer.run_afl_fuzz(input_corpus,
                             output_corpus,
