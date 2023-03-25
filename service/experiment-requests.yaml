@@ -20,7 +20,7 @@
 # Please add new experiment requests towards the top of this file.
 #
 
-- experiment: 2023-03-25-aflpp_comp
+- experiment: 2023-03-25-aflpp-comp
   description: "Tests main fuzzers"
   fuzzers:
     - aflplusplus
