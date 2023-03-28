@@ -23,7 +23,7 @@ RUN apt-get update && \
         libstdc++-9-dev libglib2.0-dev zlib1g-dev libcurl4-openssl-dev     \
         curl wget subversion vim git flex bison                            \
         inotify-tools sudo lsb-release software-properties-common gnupg    \
-        libfontconfig1-dev
+        libfontconfig1-dev libdbus-1-dev
 
 # Install latest Rust
 RUN if which rustup; then rustup self uninstall -y; fi
