@@ -28,6 +28,8 @@
     - aflplusplus_mutsamehavoc
     - aflplusplus_mutnewhavoc
     - aflplusplus_406
+    - aflplusplus_newqueue
+    - aflplusplus_newqueuez
   benchmarks:
     - bloaty_fuzz_target
     - curl_curl_fuzzer_http
