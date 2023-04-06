@@ -29,7 +29,8 @@ RUN apt-get update -y && apt-get install -y \
     ffmpeg \
     libsm6 \
     libxext6 \
-    rsync
+    rsync \
+    libdbus-1-dev
 
 # Install docker cli.
 RUN DOCKER_VERSION=18.09.7 && \

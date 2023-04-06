@@ -36,7 +36,8 @@ RUN apt-get update && \
     build-essential \
     zlib1g-dev \
     libssl-dev \
-    libffi-dev
+    libffi-dev \
+    libdbus-1-dev
 
 RUN cd /tmp/ && \
     curl -O \

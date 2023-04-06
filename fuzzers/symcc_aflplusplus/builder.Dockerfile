@@ -18,9 +18,9 @@ FROM $parent_image
 RUN echo "deb http://archive.ubuntu.com/ubuntu bionic main universe"  >> /etc/apt/sources.list
 # Install libstdc++ to use llvm_mode.
 RUN apt-get update && \
-    apt-get install -y wget libstdc++-5-dev libtool-bin automake flex bison \
+    apt-get install -y wget libstdc++-5-dev libtool-bin flex bison \
                        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
-                       apt-utils apt-transport-https ca-certificates
+                       apt-utils apt-transport-https ca-certificates libdbus-1-dev
 
 COPY ./preinstall.sh /tmp/
 RUN chmod +x /tmp/preinstall.sh
@@ -66,11 +66,14 @@ RUN wget -qO /tmp/z3x64.zip https://github.com/Z3Prover/z3/releases/download/z3-
 ENV CFLAGS=""
 ENV CXXFLAGS=""
 
+COPY adacc_atexit_not_preserving_return_code.patch /tmp/
+
 # Get and install symcc.
 RUN cd / && \
     git clone https://github.com/AdaLogics/adacc symcc && \
     cd symcc && \
     git checkout edda79dcb830c95ba6d303e47c698839313ef506 && \
+    git apply /tmp/adacc_atexit_not_preserving_return_code.patch && \
     cd ./runtime/qsym_backend && \
     git clone https://github.com/adalogics/qsym && \
     cd qsym && \
