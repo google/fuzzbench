@@ -71,7 +71,7 @@ def build():
         src = os.getenv('SRC')
         work = os.getenv('WORK')
         with utils.restore_directory(src), utils.restore_directory(work):
-            aflplusplus_fuzzer.build('cmplog', 'tracepc') # This uses /libAFLDriver.c
+            aflplusplus_fuzzer.build('cmplog', 'tracepc', 'dict2file') # This uses /libAFLDriver.c
 
         # Copy the target binary so the experiment runner does not complain
         shutil.copy('/out/target/cmplog/' + os.environ['FUZZ_TARGET'], '/out/')
@@ -81,7 +81,7 @@ def build():
         src = os.getenv('SRC')
         work = os.getenv('WORK')
         with utils.restore_directory(src), utils.restore_directory(work):
-            aflplusplus_fuzzer.build('tracepc')
+            aflplusplus_fuzzer.build('tracepc', 'dict2file')
 
     with with_lukas_afl():
         print('Step 2a: Building with AFL (no cmplog) with afl-lukas')
