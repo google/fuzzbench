@@ -1,5 +1,5 @@
 # The number of trials of a fuzzer-benchmark pair.
-trials: 3
+trials: 5
 
 # The amount of time in seconds that each trial is run for.
 # 1 day =   24 * 60 * 60 = 86400
