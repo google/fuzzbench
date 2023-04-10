@@ -20,6 +20,30 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-04-09-aflpp
+  description: "Test new mutation engine and -z option"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_mutsamehavoc
+    - aflplusplus_newqueuez
+    - aflplusplus_313
+    - aflplusplus_313_2
+    - aflplusplus_mega
+    - aflplusplus_314
+  benchmarks:
+    - bloaty_fuzz_target
+    - curl_curl_fuzzer_http
+    - freetype2_ftfuzzer
+    - lcms_cms_transform_fuzzer
+    - libpcap_fuzz_both
+    - libxml2_xml
+    - mbedtls_fuzz_dtlsclient
+    - openthread_ot-ip6-send-fuzzer
+    - proj4_proj_crs_to_crs_fuzzer
+    - sqlite3_ossfuzz
+    - stb_stbi_read_fuzzer
+    - woff2_convert_woff2ttf_fuzzer
+
 - experiment: 2023-04-05-aflpp
   description: "Test new mutation engine"
   fuzzers:
