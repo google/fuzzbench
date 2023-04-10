@@ -166,7 +166,8 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
         os.environ['ASAN_OPTIONS'] = ':detect_leaks=0:abort_on_error=1:symbolize=0'
 
         flag_cmplog = ['-c', cmplog_target_binary]
-        sync_flag_master = ['-F', str(Path(output_corpus) / 'symcts' / 'corpus')] if 'symcts' in fuzzer else []
+        flag_dict = ['-x', './afl++.dict'] if os.path.exists('./afl++.dict') else []
+        # sync_flag_master = ['-F', str(Path(output_corpus) / 'symcts' / 'queue')] if 'symcts' in fuzzer else []
 
         # Start a master and secondary instance of AFL.
         # We need both because of the way SymCC works.
@@ -177,12 +178,15 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
         with with_base_afl(delete=False):
             pass
 
+        # launch_afl_thread(input_corpus, output_corpus, target_binary,
+        #                   flag_cmplog + flag_dict + ['-M', 'afl-main'])
+        # time.sleep(2)
+        # launch_afl_thread(input_corpus, output_corpus, target_binary,
+        #                   flag_cmplog + flag_dict + ['-S', 'havoc'])
+        # time.sleep(2)
+
         launch_afl_thread(input_corpus, output_corpus, target_binary,
-                          flag_cmplog + ['-M', 'afl-main'] + sync_flag_master)
-        time.sleep(2)
-        launch_afl_thread(input_corpus, output_corpus, target_binary,
-                          flag_cmplog + ['-S', 'havoc'])
-        time.sleep(2)
+                          ['-d'] + flag_dict + flag_cmplog)
 
     if 'symcts' in fuzzer:
         symcts_bin = '/out/symcts/symcts'
