@@ -7,6 +7,7 @@ set -e
 VARIANTS=()
 VARIANTS+=(symcts symcts_afl)
 VARIANTS+=(symcts_symqemu symcts_symqemu_afl)
+VARIANTS+=(afl_companion)
 #VARIANTS+=(symcts_context_sensitive symcts_decision_coverage)
 
 FILES=(builder.Dockerfile build_zlib.sh fuzzer.py runner.Dockerfile src/afl_driver.cpp)
