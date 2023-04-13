@@ -20,6 +20,22 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-04-13-aflpp
+  description: "Find regression"
+  fuzzers:
+    - aflplusplus_mega
+    - aflplusplus_314_0
+    - aflplusplus_314_1
+    - aflplusplus_314_2
+    - aflplusplus_314_3
+    - aflplusplus_314_4
+    - aflplusplus_314_5
+    - aflplusplus_314
+  benchmarks:
+    - bloaty_fuzz_target
+    - libxml2_xml
+    - sqlite3_ossfuzz
+
 - experiment: 2023-04-09-aflpp
   description: "Test new mutation engine and -z option"
   fuzzers:
