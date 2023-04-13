@@ -142,7 +142,10 @@ def is_unique_crash(crash_group):
         crash_state = ':'.join(str(crash).split(':')[1:])
         is_unique = True
         for unique_crash in unique_crashes:
-            if CrashComparer(crash_state, unique_crash).is_similar():
+            comparer = CrashComparer(crash_state, unique_crash)
+            comparer.compare_threshold = 0
+            comparer.SAME_FRAMES_THRESHOLD = 0
+            if comparer.is_similar():
                 is_unique = False
                 break
         unique_crashes.add(crash_state)
