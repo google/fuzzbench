@@ -171,7 +171,9 @@ def add_bugs_covered_column(experiment_df):
     df['bugs_covered'] = (
         df.groupby(grouping3)['bugs_cumsum'].transform('max').astype(int))
     # The time spent to find the bug.
-    df['bugs_time'] = np.where(df['firsts'], df['time'], environment.get('MAX_TOTAL_TIME', df['time'].max()))
+    df['bugs_time'] = np.where(
+        df['firsts'], df['time'],
+        environment.get('MAX_TOTAL_TIME', df['time'].max()))
     df['bugs_earliest'] = df.groupby(grouping2)['bugs_time'].transform('min')
     new_df = df.drop(columns=['bugs_cumsum', 'firsts', 'bugs_time'])
     return new_df
@@ -271,7 +273,8 @@ def benchmark_rank_by_mean(benchmark_snapshot_df, key='edges_covered'):
     means = benchmark_snapshot_df.groupby('fuzzer')[key].mean()
     means.rename('mean cov', inplace=True)
     if 'bugs_earliest' in means:
-      return means.sort_values(['bugs_covered', 'bugs_earliest'], ascending=[False, True])
+        return means.sort_values(['bugs_covered', 'bugs_earliest'],
+                                 ascending=[False, True])
     return means.sort_values(ascending=False)
 
 
@@ -284,10 +287,10 @@ def benchmark_rank_by_median(benchmark_snapshot_df, key='edges_covered'):
     medians = benchmark_snapshot_df.groupby('fuzzer')[key].median()
     if 'bugs_covered' in medians:
         medians['bugs_covered'].rename('median cov', inplace=True)
-        return medians.sort_values(['bugs_covered', 'bugs_earliest'], ascending=[False, True])
-    else:
-        medians.rename('median cov', inplace=True)
-        return medians.sort_values(ascending=False)
+        return medians.sort_values(['bugs_covered', 'bugs_earliest'],
+                                   ascending=[False, True])
+    medians.rename('median cov', inplace=True)
+    return medians.sort_values(ascending=False)
 
 
 def benchmark_rank_by_percent(benchmark_snapshot_df, key='edges_covered'):
@@ -382,7 +385,7 @@ def experiment_rank_by_average_rank(experiment_pivot_df):
         time_mean = experiment_pivot_df['bugs_earliest'].fillna(time_max).rank(
             'columns', method='min', ascending=True).mean()
         combined_df = pd.concat([bugs_mean, time_mean], axis=1)
-        ranking = combined_df.sort_values([0,1], ascending=True)
+        ranking = combined_df.sort_values([0, 1], ascending=True)
         return ranking[0].rename('average rank')
 
     # Rank fuzzers in each benchmark block.
@@ -413,22 +416,28 @@ def experiment_rank_by_average_normalized_score(experiment_pivot_df):
     bug_based = 'bugs_earliest' in experiment_pivot_df
     # Sperate bug finding time.
     if bug_based:
-        bugs_earliest = experiment_pivot_df['bugs_earliest'].fillna(experiment_pivot_df['bugs_earliest'].max())
+        bugs_earliest = experiment_pivot_df['bugs_earliest'].fillna(
+            experiment_pivot_df['bugs_earliest'].max())
         experiment_pivot_df = experiment_pivot_df['bugs_covered']
 
     benchmark_maximum = experiment_pivot_df.fillna(0).max(axis='columns')
-    normalized_score = experiment_pivot_df.div(benchmark_maximum, axis='index').fillna(0).mul(100)
+    normalized_score = experiment_pivot_df.div(benchmark_maximum,
+                                               axis='index').fillna(0).mul(100)
     average_score = normalized_score.mean()
 
     if bug_based:
         average_earliest = bugs_earliest.mean()
         average_earliest = average_earliest - average_earliest.min()
         score_earliest = pd.concat([average_score, average_earliest], axis=1)
-        ranking = score_earliest.sort_values([0,1], ascending=[False, True])
+        ranking = score_earliest.sort_values([0, 1], ascending=[False, True])
     else:
         ranking = average_score.sort_values(ascending=False).to_frame()
 
-    return ranking.rename(columns={0: 'average normalized score', 1: 'average extra time to find bugs (seconds)'})
+    return ranking.rename(
+        columns={
+            0: 'average normalized score',
+            1: 'average extra time to find bugs (seconds)'
+        })
 
 
 def experiment_level_ranking(experiment_snapshots_df,

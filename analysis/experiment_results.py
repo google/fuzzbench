@@ -155,7 +155,9 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
     def _relevant_column(self):
         """Returns the name of the column that will be used as the basis of
         the analysis (e.g., 'edges_covered', or 'bugs_covered')."""
-        return 'edges_covered' if self.type == 'code' else ['bugs_covered', 'bugs_earliest']
+        return 'edges_covered' if self.type == 'code' else [
+            'bugs_covered', 'bugs_earliest'
+        ]
 
     @property
     @functools.lru_cache()
