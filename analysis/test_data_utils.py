@@ -392,7 +392,7 @@ def test_experiment_rank_by_average_normalized_score():
 
     expected_ranking = pd.Series(index=['libfuzzer', 'afl'],
                                  data=[81.81, 80.00])
-    pd_test.assert_series_equal(ranking,
+    pd_test.assert_series_equal(ranking.squeeze(),
                                 expected_ranking,
                                 check_names=False,
                                 rtol=10**-3)
