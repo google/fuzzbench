@@ -193,4 +193,4 @@ reasonable amount of time.
 
 ## Run an experiment
 
-* Follow the [guide on running an experiment]({{ site.baseurl }}/running-your-own-experiment/running-an-experiment/)
+* Follow the [guide on running an experiment]({{ site.baseurl }}/running-a-cloud-experiment/running-an-experiment/)

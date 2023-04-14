@@ -1,3 +1,0 @@
-commit: b7ebfe88286aa60c33c3618494ad82b480df678b
-fuzz_target: av1_dec_fuzzer
-project: libaom
