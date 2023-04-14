@@ -286,7 +286,7 @@ def test_benchmark_rank_by_mean():
     snapshot_df = data_utils.get_benchmark_snapshot(benchmark_df)
     ranking = data_utils.benchmark_rank_by_mean(snapshot_df)
 
-    expected_ranking = pd.Series(index=['afl', 'libfuzzer'], data=[1100, 700])
+    expected_ranking = pd.Series(index=['afl', 'libfuzzer'], data=[1100., 700.])
     assert ranking.equals(expected_ranking)
 
 
@@ -296,7 +296,7 @@ def test_benchmark_rank_by_median():
     snapshot_df = data_utils.get_benchmark_snapshot(benchmark_df)
     ranking = data_utils.benchmark_rank_by_median(snapshot_df)
 
-    expected_ranking = pd.Series(index=['afl', 'libfuzzer'], data=[1100, 700])
+    expected_ranking = pd.Series(index=['afl', 'libfuzzer'], data=[1100., 700.])
     assert ranking.equals(expected_ranking)
 
 
@@ -333,22 +333,22 @@ def test_experiment_pivot_table():
         {
             'benchmark': 'libpng_libpng_read_fuzzer',
             'fuzzer': 'afl',
-            'median':  150
+            'median':  150.
         },
         {
             'benchmark': 'libpng_libpng_read_fuzzer',
             'fuzzer': 'libfuzzer',
-            'median':  250
+            'median':  250.
         },
         {
             'benchmark': 'libxml',
             'fuzzer': 'afl',
-            'median': 1100
+            'median': 1100.
         },
         {
             'benchmark': 'libxml',
             'fuzzer': 'libfuzzer',
-            'median':  700
+            'median':  700.
         },
     ])
     # yapf: enable
