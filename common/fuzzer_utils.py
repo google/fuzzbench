@@ -98,7 +98,7 @@ def get_fuzz_target_binary(search_directory: str,
                 if FUZZ_TARGET_SEARCH_STRING in file_handle.read():
                     return file_path
 
-    logs.error('Fuzz target binary does not exist: %s.', fuzz_target_binary)
+    logs.error('Fuzz target binary does not exist: %s.', fuzz_target_name)
     return None
 
 
