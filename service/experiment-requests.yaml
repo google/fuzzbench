@@ -20,6 +20,12 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-04-15-alphaphuzz
+  description: "test variant"
+  fuzzers:
+    - aflplusplus_314
+    - aflplusplus_aflphuzz
+
 - experiment: 2023-04-13-aflpp
   description: "Find regression"
   fuzzers:
