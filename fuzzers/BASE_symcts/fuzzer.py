@@ -15,7 +15,6 @@
 
 import os
 from os.path import join, exists, basename, dirname, abspath, realpath
-from pathlib import Path
 import time
 import shutil
 import threading
@@ -99,14 +98,14 @@ def build_symcc(build_out, src, work):
     with utils.restore_directory(src), utils.restore_directory(work):
         utils.build_benchmark(env=new_env)
 
-def get_afl_base_out_dir(build_out) -> Path:
-    return Path(os.path.join(build_out, 'instrumented/afl_base'))
+def get_afl_base_out_dir(build_out) -> str:
+    return os.path.join(build_out, 'instrumented/afl_base')
 
-def get_afl_lukas_out_dir(build_out) -> Path:
-    return Path(os.path.join(build_out, 'instrumented/afl_lukas'))
+def get_afl_lukas_out_dir(build_out) -> str:
+    return os.path.join(build_out, 'instrumented/afl_lukas')
 
-def get_symcts_out_dir(build_out) -> Path:
-    return Path(os.path.join(build_out, 'instrumented/symcts'))
+def get_symcts_out_dir(build_out) -> str:
+    return os.path.join(build_out, 'instrumented/symcts')
 
 def build():
     shutil.rmtree('/afl/')
@@ -170,10 +169,10 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
     out_dir = os.path.dirname(target_binary)
     target_binary_name = os.path.basename(target_binary)
 
-    symcts_target_binary = str(get_symcts_out_dir(out_dir) / target_binary_name)
-    cmplog_target_binary  = str(get_afl_base_out_dir(out_dir) / 'cmplog' / target_binary_name)
-    afl_target_binary     = str(get_afl_base_out_dir(out_dir) / target_binary_name)
-    afl_lukas_target_binary  = str(get_afl_lukas_out_dir(out_dir) / target_binary_name)
+    symcts_target_binary = join(get_symcts_out_dir(out_dir), target_binary_name)
+    cmplog_target_binary  = join(get_afl_base_out_dir(out_dir), 'cmplog', target_binary_name)
+    afl_target_binary     = join(get_afl_base_out_dir(out_dir), target_binary_name)
+    afl_lukas_target_binary  = join(get_afl_lukas_out_dir(out_dir), target_binary_name)
 
     fuzzer = os.environ['FUZZER']
 
@@ -238,7 +237,7 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
         new_environ['SYMCTS_INHERIT_STDERR'] = '1'
         new_environ['SYMCTS_INHERIT_STDOUT'] = '1'
 
-        new_environ['RUST_LOG'] = 'generate_mutations_sampled=INFOO,symcts_scheduler=INFO'
+        new_environ['RUST_LOG'] = 'generate_mutations_sampled=INFO,symcts_scheduler=INFO'
 
         print('############ RUNNING: ', ' '.join(cmd))
         os.system('ls -al ' + input_corpus)
