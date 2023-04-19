@@ -82,7 +82,7 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl-base/
 
 
 # Prepare output dirs
-RUN mkdir -p /out/afl /out/symcts /out/target/symcc /out/target/vanilla /out/target/cmplog /out/target/afl/
+RUN mkdir -p /out/afl /out/symcts /out/instrumened/{symcts,afl_base,afl_lukas}
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
