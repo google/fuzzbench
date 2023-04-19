@@ -99,13 +99,22 @@ def build_symcc(build_out, src, work):
         utils.build_benchmark(env=new_env)
 
 def get_afl_base_out_dir(build_out) -> str:
-    return os.path.join(build_out, 'instrumented/afl_base')
+    d = os.path.join(build_out, 'instrumented/afl_base')
+    # if not exists(d):
+    #     os.makedirs(d)
+    return d
 
 def get_afl_lukas_out_dir(build_out) -> str:
-    return os.path.join(build_out, 'instrumented/afl_lukas')
+    d = os.path.join(build_out, 'instrumented/afl_lukas')
+    # if not exists(d):
+    #     os.makedirs(d)
+    return d
 
 def get_symcts_out_dir(build_out) -> str:
-    return os.path.join(build_out, 'instrumented/symcts')
+    d = os.path.join(build_out, 'instrumented/symcts')
+    # if not exists(d):
+    #     os.makedirs(d)
+    return d
 
 def build():
     shutil.rmtree('/afl/')
