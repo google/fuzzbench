@@ -17,10 +17,11 @@ EXPERIMENT_NAME="symcts-$(date +%Y%m%d-%H%M%S)"
 # use python3.10 if it exists, otherwise use python3.8 if it exists, otherwise use python3
 PYTHON3=$(which python3.10 || which python3.8 || which python3)
 
+    # --no-seeds \
+    # --no-dictionaries \
+
 PYTHONPATH=. "$PYTHON3" experiment/run_experiment.py \
     --allow-uncommitted-changes \
-    --no-seeds \
-    --no-dictionaries \
     --experiment-config symcts_experiment_config.yaml \
     --concurrent-builds 1 \
     --runners-cpus 60 \

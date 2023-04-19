@@ -73,7 +73,7 @@ RUN update-alternatives \
 # RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl && \
 #     cd /afl && git checkout 149366507da1ff8e3e8c4962f3abc6c8fd78b222
 
-RUN echo "rerun=2"
+RUN echo "rerun=4"
 RUN git clone https://github.com/Lukas-Dresel/AFLplusplus/ /afl-lukas && \
     cd /afl-lukas && git checkout feat/larger_counters
 
@@ -223,8 +223,16 @@ RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     cp ./target/release/symcts /out/symcts/
 
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
+    cargo build --release --features=weak_solving && \
+    cp ./target/release/symcts /out/symcts/symcts-weak
+
+RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     cargo build --release --features=sync_from_other_fuzzers &&    \
     cp ./target/release/symcts /out/symcts/symcts-from_other
+
+RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
+    cargo build --release --features=weak_solving,sync_from_other_fuzzers &&    \
+    cp ./target/release/symcts /out/symcts/symcts-weak-from_other
 
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     /symcc/build/symcc -I/afl-lukas/include -c /afl-lukas/utils/aflpp_driver/aflpp_driver.c -o /libfuzzer-main.o /libs_symcc/libc_symcc_preload.a /libs_symcc/libz.a
