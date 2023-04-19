@@ -35,9 +35,16 @@ RUN apt-get update && \
         libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
 # Download afl++.
-RUN git clone -b muttest https://github.com/AFLplusplus/AFLplusplus /afl && \
+RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl && \
     cd /afl && \
-    git checkout 3c3fe89bc5e1e949b7381d476fea5f92e7845035
+    git checkout 21215ac21cfca26f18c5b59ceb71a3b5a2920244 || \
+    true
+
+RUN apt install -y lsb-release wget software-properties-common gnupg
+
+RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 13
+
+ENV LLVM_CONFIG llvm-config-13
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
@@ -45,5 +52,5 @@ RUN cd /afl && \
     unset CFLAGS CXXFLAGS && \
     export CC=clang AFL_NO_X86=1 && \
     PYTHON_INCLUDE=/ make && \
-    make install && \
+    make -C utils/aflpp_driver && \
     cp utils/aflpp_driver/libAFLDriver.a /
