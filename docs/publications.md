@@ -65,6 +65,11 @@ evaluation framework or benchmark programs.
   ["On the Reliability of Coverage-Based Fuzzer Benchmarking."](http://seclab.cs.sunysb.edu/lszekeres/Papers/ICSE22.pdf)
   In 44th IEEE/ACM International Conference on Software Engineering, ser. ICSE,
   vol. 22. 2022.
+* Vishnyakov, Alexey, Daniil Kuts, Vlada Logunova, Darya Parygina, Eli Kobrin,
+  Georgy Savidov, and Andrey Fedotov. ["Sydr-Fuzz: Continuous Hybrid Fuzzing and
+  Dynamic Analysis for Security Development Lifecycle."](https://arxiv.org/pdf/2211.11595.pdf)
+  In 2022 Ivannikov ISPRAS Open Conference (ISPRAS), pp. 111-123, IEEE, 2022.
+  { [Evaluation](https://sydr-fuzz.github.io/fuzzbench/) }
 
 
 ## 2021
@@ -98,11 +103,3 @@ evaluation framework or benchmark programs.
   | [Video](https://youtu.be/cZidm6I7KWU)
   | [BibTeX](https://www.usenix.org/biblio/export/bibtex/257204)
   }
-
-
-## arXiv
-* Vishnyakov, Alexey, Daniil Kuts, Vlada Logunova, Darya Parygina, Eli Kobrin,
-  Georgy Savidov, and Andrey Fedotov. ["Sydr-Fuzz: Continuous Hybrid Fuzzing and
-  Dynamic Analysis for Security Development Lifecycle."](https://arxiv.org/pdf/2211.11595.pdf)
-  arXiv preprint arXiv:2211.11595 (2022).
-  { [Evaluation](https://sydr-fuzz.github.io/fuzzbench/) }
