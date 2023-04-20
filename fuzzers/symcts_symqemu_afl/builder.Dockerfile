@@ -73,7 +73,7 @@ RUN update-alternatives \
 # RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl && \
 #     cd /afl && git checkout 149366507da1ff8e3e8c4962f3abc6c8fd78b222
 
-RUN echo "rerun=4"
+RUN echo "rerun=6"
 RUN git clone https://github.com/Lukas-Dresel/AFLplusplus/ /afl-lukas && \
     cd /afl-lukas && git checkout feat/larger_counters
 
@@ -82,7 +82,7 @@ RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl-base/
 
 
 # Prepare output dirs
-RUN mkdir -p /out/afl /out/symcts /out/instrumened/{symcts,afl_base,afl_lukas}
+RUN mkdir -p /out/afl /out/symcts /out/instrumented/symcts /out/instrumented/afl_base /out/instrumented/afl_lukas
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
@@ -242,18 +242,18 @@ RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
 
 # Compile vanilla (uninstrumented) afl driver
 RUN clang $CXXFLAGS -c -fPIC -I/afl-lukas/include \
-    /afl-lukas/utils/aflpp_driver/aflpp_driver.c -o /out/target/vanilla/aflpp_driver.o
+    /afl-lukas/utils/aflpp_driver/aflpp_driver.c -o /out/instrumented/aflpp_driver.o
 
 RUN cp /libs_symcc/libc_symcc_preload.a /out/symcts/
 RUN cp /libs_symcc/libz.a /out/symcts/
 
-RUN cp /mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/libSymRuntime.so /out/target/symcc/
-RUN cp /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer/target/release/symcts /out/target/symcc
-RUN cp /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer/target/release/print_symcc_trace /out/target/symcc
-RUN cp /z3/lib/libz3.so /out/target/symcc/
-RUN ln -s /out/target/symcc/libz3.so /out/target/symcc/libz3.so.4
-RUN cp /libcxx_native_build/lib/libc++.so.1 /out/target/symcc
-RUN cp /libcxx_native_build/lib/libc++abi.so.1 /out/target/symcc
+RUN cp /mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/libSymRuntime.so /out/instrumented/symcts/
+RUN cp /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer/target/release/symcts /out/instrumented/symcts
+RUN cp /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer/target/release/print_symcc_trace /out/instrumented/symcts
+RUN cp /z3/lib/libz3.so /out/instrumented/symcts
+RUN ln -s /out/instrumented/symcts/libz3.so /out/instrumented/symcts/libz3.so.4
+RUN cp /libcxx_native_build/lib/libc++.so.1 /out/instrumented/symcts
+RUN cp /libcxx_native_build/lib/libc++abi.so.1 /out/instrumented/symcts
 
 # Remove stuff that we don't need
 RUN rm -rf /mctsse /llvm_source /symqemu /root/.cache/ /root/.rustup

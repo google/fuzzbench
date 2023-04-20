@@ -61,7 +61,7 @@ def restore_env():
 def build_vanilla(build_out, src, work):
     new_env = os.environ.copy()
     new_env['OUT'] = build_out
-    new_env['FUZZER_LIB'] = '/out/target/vanilla/aflpp_driver.o'
+    new_env['FUZZER_LIB'] = '/out/instrumented/aflpp_driver.o'
 
     with utils.restore_directory(src), utils.restore_directory(work):
         utils.build_benchmark(env=new_env)

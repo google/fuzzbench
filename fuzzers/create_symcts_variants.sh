@@ -5,8 +5,8 @@ set -e
 
 # VARIANTS=(afl_companion symcc_afl symqemu_afl)
 VARIANTS=()
-VARIANTS+=(symcts symcts_afl)
-VARIANTS+=(symcts_symqemu symcts_symqemu_afl)
+VARIANTS+=(symcts symcts_afl symcts_weak symcts_afl_weak)
+VARIANTS+=(symcts_symqemu symcts_symqemu_afl symcts_symqemu_weak symcts_symqemu_afl_weak )
 VARIANTS+=(afl_companion)
 #VARIANTS+=(symcts_context_sensitive symcts_decision_coverage)
 
