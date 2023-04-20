@@ -55,7 +55,7 @@ def _formatted_title(benchmark_snapshot_df):
     stats_string += _formatted_hour_min(snapshot_time)
 
     trial_count = benchmark_snapshot_df.fuzzer.value_counts().min()
-    stats_string += f', {trial_count} trials/fuzzer'
+    stats_string += f', at least {trial_count} trials/fuzzer'
     stats_string += ')'
     return stats_string
 

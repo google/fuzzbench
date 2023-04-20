@@ -7,8 +7,8 @@ on:
       - 'benchmarks/**'  # Changes to benchmarks.
       # Changes that affect what gets built.
       - 'src_analysis/**'
-      - '.github/worfkflows/benchmarks.yml'
-      - '.github/worfkflows/build_and_test_run_fuzzer_benchmarks.py'
+      - '.github/workflows/benchmarks.yml'
+      - '.github/workflows/build_and_test_run_fuzzer_benchmarks.py'
 
 jobs:
   Test:
@@ -17,56 +17,37 @@ jobs:
       fail-fast: false
       matrix:
         benchmark:
-          - arrow_parquet-arrow-fuzz
-          - aspell_aspell_fuzzer
           - bloaty_fuzz_target
+          - bloaty_fuzz_target_52948c
           - curl_curl_fuzzer_http
-          - ffmpeg_ffmpeg_demuxer_fuzzer
-          - file_magic_fuzzer
-          - freetype2-2017
-          - grok_grk_decompress_fuzzer
-          - harfbuzz-1.3.2
+          - freetype2_ftfuzzer
+          - harfbuzz_hb-shape-fuzzer
+          - harfbuzz_hb-shape-fuzzer_17863b
           - jsoncpp_jsoncpp_fuzzer
-          - lcms-2017-03-21
-          - libarchive_libarchive_fuzzer
-          - libgit2_objects_fuzzer
-          - libhevc_hevc_dec_fuzzer
-          - libhtp_fuzz_htp
-          - libjpeg-turbo-07-2017
+          - lcms_cms_transform_fuzzer
+          - libjpeg-turbo_libjpeg_turbo_fuzzer
           - libpcap_fuzz_both
-          - libpng-1.6.38
+          - libpng_libpng_read_fuzzer
           - libxml2_xml
-          - libxml2-v2.9.2
+          - libxml2_xml_e85b9b
           - libxslt_xpath
-          - matio_matio_fuzzer
           - mbedtls_fuzz_dtlsclient
-          - mruby-2018-05-23
-          - muparser_set_eval_fuzzer
-          - njs_njs_process_script_fuzzer
+          - mbedtls_fuzz_dtlsclient_7c6b0e
           - openh264_decoder_fuzzer
           - openssl_x509
-          - openthread-2019-12-23
-          - php_php-fuzz-execute
-          - php_php-fuzz-parser
-          - php_php-fuzz-parser-2020-07-25
-          - poppler_pdf_fuzzer
-          - proj4-2017-08-14
-          - proj4_standard_fuzzer
-          - quickjs_eval-2020-01-05
-          - re2-2014-12-09
+          - openthread_ot-ip6-send-fuzzer
+          - php_php-fuzz-parser_0dbedb
+          - proj4_proj_crs_to_crs_fuzzer
+          - re2_fuzzer
           - sqlite3_ossfuzz
           - stb_stbi_read_fuzzer
           - systemd_fuzz-link-parser
-          - systemd_fuzz-varlink
-          - usrsctp_fuzzer_connect
-          - vorbis-2017-12-11
-          - wireshark_fuzzshark_ip
-          - woff2-2016-05-06
+          - vorbis_decode_fuzzer
+          - woff2_convert_woff2ttf_fuzzer
           - zlib_zlib_uncompress_fuzzer
-          - zstd_stream_decompress
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - run: |  # Needed for git diff to work.
         git fetch origin master --unshallow
         git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
@@ -80,14 +61,14 @@ jobs:
         df -h
 
     - name: Setup Python environment
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3
       with:
         python-version: 3.10.8
 
     # Copied from:
     # https://docs.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         # This path is specific to Ubuntu.
         path: ~/.cache/pip

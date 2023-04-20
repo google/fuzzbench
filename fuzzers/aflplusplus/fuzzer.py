@@ -36,10 +36,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
     # a default configuration.
 
-    # Add required libs for libpcap_fuzz_both.
-    os.environ['EXTRA_LIBS'] = ('/usr/lib/x86_64-linux-gnu/libdbus-1.a '
-                                '/lib/x86_64-linux-gnu/libsystemd.so.0')
-
     build_modes = list(args)
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
@@ -120,6 +116,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # Generate an extra dictionary.
     if 'dict2file' in build_modes or 'native' in build_modes:
         os.environ['AFL_LLVM_DICT2FILE'] = build_directory + '/afl++.dict'
+        os.environ['AFL_LLVM_DICT2FILE_NO_MAIN'] = '1'
     # Enable context sentitivity for LLVM mode (non LTO only)
     if 'ctx' in build_modes:
         os.environ['AFL_LLVM_CTX'] = '1'
@@ -268,9 +265,10 @@ def fuzz(input_corpus,
     if os.path.exists(cmplog_target_binary) and no_cmplog is False:
         flags += ['-c', cmplog_target_binary]
 
-    os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
+    #os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
     os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
     os.environ['AFL_FAST_CAL'] = '1'
+    os.environ['AFL_NO_WARN_INSTABILITY'] = '1'
 
     if not skip:
         os.environ['AFL_DISABLE_TRIM'] = '1'

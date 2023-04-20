@@ -20,7 +20,8 @@ mkdir -p $HOME
 docker-credential-gcr configure-docker -include-artifact-registry
 echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
 docker run --rm \
-  -e INSTANCE_NAME={{instance_name}} -e EXPERIMENT={{experiment}} \
+  -e INSTANCE_NAME={{instance_name}} \
+  -e EXPERIMENT={{experiment}} \
   -e CLOUD_PROJECT={{cloud_project}} \
   -e EXPERIMENT_FILESTORE={{experiment_filestore}} \
   -e POSTGRES_PASSWORD={{postgres_password}} \
@@ -28,6 +29,7 @@ docker run --rm \
   -e DOCKER_REGISTRY={{docker_registry}} \
   -e CONCURRENT_BUILDS={{concurrent_builds}} \
   -e WORKER_POOL_NAME={{worker_pool_name}} \
+  -e PRIVATE={{private}} \
   --cap-add=SYS_PTRACE --cap-add=SYS_NICE \
   -v /var/run/docker.sock:/var/run/docker.sock --name=dispatcher-container \
   {{docker_registry}}/dispatcher-image /work/startup-dispatcher.sh &> /tmp/dispatcher.log

@@ -19,13 +19,14 @@ FROM gcr.io/fuzzbench/base-image
 ENV WORK /work
 WORKDIR $WORK
 
-# Install runtime dependencies for benchmarks, easy json parsing.
+# Install runtime dependencies for benchmarks, easy json parsing, and fuzzbench.
 RUN apt-get update -y && apt-get install -y \
     jq \
     libglib2.0-0 \
     libxml2 \
     libarchive13 \
     libgss3 \
+    libgl1 \
     ffmpeg \
     libsm6 \
     libxext6 \

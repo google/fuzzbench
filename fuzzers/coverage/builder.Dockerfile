@@ -15,14 +15,18 @@
 ARG parent_image
 FROM $parent_image
 
-# The patch adds hook to dump clang coverage data when timeout.
-COPY patch.diff /
+ENV LF_PATH /tmp/libfuzzer.zip
 
 # Use a libFuzzer version that supports clang source-based coverage.
-RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
-    cd /llvm-project && \
-    git checkout 0b5e6b11c358e704384520dc036eddb5da1c68bf && \
-    patch -p1 < /patch.diff && \
-    cd /llvm-project/compiler-rt/lib/fuzzer && \
+# This libfuzzer is 0b5e6b11c358e704384520dc036eddb5da1c68bf with
+# https://github.com/google/fuzzbench/blob/cf86138081ec705a47ce0a4bab07b5737292e7e0/fuzzers/coverage/patch.diff
+# applied.
+
+RUN wget https://storage.googleapis.com/fuzzbench-artifacts/libfuzzer-coverage.zip -O $LF_PATH && \
+    echo "cc78179f6096cae4b799d0cc9436f000cc0be9b1fb59500d16b14b1585d46b61 $LF_PATH" | sha256sum --check --status && \
+    mkdir /tmp/libfuzzer && \
+    cd /tmp/libfuzzer && \
+    unzip $LF_PATH  && \
     bash build.sh && \
-    cp libFuzzer.a /usr/lib
+    cp libFuzzer.a /usr/lib && \
+    rm -rf /tmp/libfuzzer $LF_PATH

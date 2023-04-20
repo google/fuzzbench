@@ -91,7 +91,8 @@ def trial_runner(fs, environ):
         'TRIAL_ID': str(TRIAL_NUM),
         'FUZZER': FUZZER,
         'EXPERIMENT_FILESTORE': EXPERIMENT_FILESTORE,
-        'MAX_TOTAL_TIME': str(MAX_TOTAL_TIME)
+        'MAX_TOTAL_TIME': str(MAX_TOTAL_TIME),
+        'OUTPUT_CORPUS_DIR': '/out/corpus',
     })
 
     with mock.patch('common.filestore_utils.rm'):
@@ -217,104 +218,55 @@ def test_archive_corpus_name_correct(_, trial_runner):
 
 
 @mock.patch('common.logs.debug')
-@mock.patch('experiment.runner.TrialRunner.is_corpus_dir_same')
-def test_do_sync_unchanged(mocked_is_corpus_dir_same, mocked_debug,
-                           trial_runner, fuzzer_module):
+def test_do_sync_unchanged(mocked_debug, trial_runner, fuzzer_module):
     """Test that do_sync records if there was no corpus change since last
     cycle."""
     trial_runner.cycle = 1337
-    mocked_is_corpus_dir_same.return_value = True
     with test_utils.mock_popen_ctx_mgr() as mocked_popen:
         trial_runner.do_sync()
-        assert mocked_popen.commands == [[
-            'gsutil', 'rsync', '-d', '-r', 'results-copy',
-            ('gs://bucket/experiment-name/experiment-folders/'
-             'benchmark-1-fuzzer_a/trial-1/results')
-        ]]
-    mocked_debug.assert_any_call('Cycle: %d unchanged.', trial_runner.cycle)
-    unchanged_cycles_path = os.path.join(trial_runner.results_dir,
-                                         'unchanged-cycles')
-    with open(unchanged_cycles_path, encoding='utf-8') as file_handle:
-        assert str(trial_runner.cycle) == file_handle.read().strip()
-    assert not os.listdir(trial_runner.corpus_archives_dir)
+        assert mocked_popen.commands == [
+            [
+                'gsutil', 'cp', '/corpus-archives/corpus-archive-1337.tar.gz',
+                ('gs://bucket/experiment-name/experiment-folders/'
+                 'benchmark-1-fuzzer_a/trial-1/corpus/'
+                 'corpus-archive-1337.tar.gz')
+            ],
+            [
+                'gsutil', 'rsync', '-d', '-r', '/results-copy',
+                ('gs://bucket/experiment-name/experiment-folders/'
+                 'benchmark-1-fuzzer_a/trial-1/results')
+            ]
+        ]
+    assert not os.listdir(trial_runner.corpus_archives_dir)  # !!! make it work
 
 
-@mock.patch('experiment.runner.TrialRunner.is_corpus_dir_same')
 @mock.patch('common.new_process.execute')
-def test_do_sync_changed(mocked_execute, mocked_is_corpus_dir_same, fs,
-                         trial_runner, fuzzer_module):
+def test_do_sync_changed(mocked_execute, fs, trial_runner, fuzzer_module):
     """Test that do_sync archives and saves a corpus if it changed from the
     previous one."""
     mocked_execute.return_value = new_process.ProcessResult(0, '', False)
     corpus_file_name = 'corpus-file'
-    fs.create_file(os.path.join(trial_runner.corpus_dir, corpus_file_name))
+    fs.create_file(os.path.join(trial_runner.output_corpus, corpus_file_name))
     trial_runner.cycle = 1337
-    mocked_is_corpus_dir_same.return_value = False
     trial_runner.do_sync()
     assert mocked_execute.call_args_list == [
         mock.call([
-            'gsutil', 'cp', 'corpus-archives/corpus-archive-1337.tar.gz',
+            'gsutil', 'cp', '/corpus-archives/corpus-archive-1337.tar.gz',
             ('gs://bucket/experiment-name/experiment-folders/'
              'benchmark-1-fuzzer_a/trial-1/corpus/'
              'corpus-archive-1337.tar.gz')
         ],
                   expect_zero=True),
         mock.call([
-            'gsutil', 'rsync', '-d', '-r', 'results-copy',
+            'gsutil', 'rsync', '-d', '-r', '/results-copy',
             ('gs://bucket/experiment-name/experiment-folders/'
              'benchmark-1-fuzzer_a/trial-1/results')
         ],
                   expect_zero=True)
     ]
-    unchanged_cycles_path = os.path.join(trial_runner.results_dir,
-                                         'unchanged-cycles')
-    assert not os.path.exists(unchanged_cycles_path)
-
     # Archives should get deleted after syncing.
     archives = os.listdir(trial_runner.corpus_archives_dir)
     assert len(archives) == 0
-
-
-def test_is_corpus_dir_same_unchanged(trial_runner, fs):
-    """Test is_corpus_dir_same behaves as expected when the corpus is
-    unchanged."""
-    file_path = os.path.join(trial_runner.corpus_dir, '1')
-    fs.create_file(file_path)
-    stat_info = os.stat(file_path)
-    last_modified_time = stat_info.st_mtime
-    last_changed_time = stat_info.st_ctime
-    trial_runner.corpus_dir_contents.add(
-        runner.File(os.path.abspath(file_path), last_modified_time,
-                    last_changed_time))
-    assert trial_runner.is_corpus_dir_same()
-
-
-EXCLUDED_PATTERN = '.cur_input'
-EXCLUDED_DIR_FILE = os.path.join(EXCLUDED_PATTERN, 'hello')
-
-
-@pytest.mark.parametrize(('new_path', 'expected_result'),
-                         [(EXCLUDED_DIR_FILE, True), (EXCLUDED_PATTERN, True),
-                          ('other', False)])
-def test_is_corpus_dir_same_changed(new_path, expected_result, trial_runner,
-                                    fs):
-    """Test is_corpus_dir_same behaves as expected when there actually is a
-    change in the corpus (though some of these changes are excluded from being
-    considered."""
-    file_path = os.path.join(trial_runner.corpus_dir, new_path)
-    fs.create_file(file_path)
-    assert bool(trial_runner.is_corpus_dir_same()) == expected_result
-
-
-def test_is_corpus_dir_same_modified(trial_runner, fs):
-    """Test is_corpus_dir_same behaves as expected when all of the files in the
-    corpus have the same names but one was modified."""
-    file_path = os.path.join(trial_runner.corpus_dir, 'f')
-    fs.create_file(file_path)
-    trial_runner._set_corpus_dir_contents()  # pylint: disable=protected-access
-    with open(file_path, 'w', encoding='utf-8') as file_handle:
-        file_handle.write('hi')
-    assert not trial_runner.is_corpus_dir_same()
 
 
 class TestIntegrationRunner:
