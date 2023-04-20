@@ -22,6 +22,9 @@ RUN mkdir $SRC/sqlite3 && \
     curl 'https://sqlite.org/src/tarball/sqlite.tar.gz?r=c78cbf2e86850cc6' -o sqlite3.tar.gz && \
         tar xzf sqlite3.tar.gz --strip-components 1
 
+COPY bcc-uses-ldflags-and-libs.patch $SRC/sqlite3/
+RUN cd $SRC/sqlite3/ && git apply $SRC/sqlite3/bcc-uses-ldflags-and-libs.patch
+
 RUN find $SRC/sqlite3 -name "*.test" | xargs zip $SRC/ossfuzz_seed_corpus.zip
 
 WORKDIR sqlite3

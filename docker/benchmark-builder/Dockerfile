@@ -34,9 +34,11 @@ RUN apt-get update && \
     apt-get install -y \
     curl \
     xz-utils \
+    build-essential \
     zlib1g-dev \
     libssl-dev \
-    libffi-dev
+    libffi-dev \
+    libdbus-1-dev
 
 RUN rm -rf /usr/local/bin/python3.8* /usr/local/bin/pip3 /usr/local/lib/python3.8 \
     /usr/local/include/python3.8 /usr/local/lib/python3.8/site-packages
@@ -48,9 +50,14 @@ COPY --from=base-image /usr/local/lib/python3.10 /usr/local/lib/python3.10
 COPY --from=base-image /usr/local/include/python3.10 /usr/local/include/python3.10
 COPY --from=base-image /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 
+COPY ./requirements.txt /tmp
+RUN pip3 install -r /tmp/requirements.txt
+
 # Copy the entire fuzzers directory tree to allow for module dependencies.
 COPY fuzzers $SRC/fuzzers
 
+# Create empty __init__.py to allow python deps to work.
+RUN touch $SRC/__init__.py
 # Disable LeakSanitizer since ptrace is unavailable in Google Cloud build
 # and is not needed during build process.
 ENV ASAN_OPTIONS="detect_leaks=0"
@@ -62,5 +69,6 @@ COPY docker/benchmark-builder/checkout_commit.py /opt/fuzzbench/
 RUN export CHECKOUT_COMMIT=$(cat /benchmark.yaml | tr -d ' ' | grep 'commit:' | cut -d ':' -f2) && \
     python3 -u /opt/fuzzbench/checkout_commit.py $CHECKOUT_COMMIT $SRC
 
-COPY docker/benchmark-builder/fuzzer_build /usr/bin/fuzzer_build
+RUN echo "#!/bin/bash\nPYTHONPATH=$SRC python3 -u -c \"from fuzzers import utils; utils.initialize_env(); from fuzzers.$FUZZER import fuzzer; fuzzer.build()\"" > /usr/bin/fuzzer_build && \
+    chmod +x /usr/bin/fuzzer_build
 RUN echo "Run fuzzer_build to build the target" && if [ -z "$debug_builder" ] ; then fuzzer_build; fi

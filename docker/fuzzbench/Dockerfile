@@ -14,6 +14,7 @@
 
 FROM python:3.10.8
 
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 libdbus-1-dev -y
 # Install the docker CLI.
 ENV DOCKER_VERSION=20.10.19
 RUN wget https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz \

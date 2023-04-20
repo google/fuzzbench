@@ -20,6 +20,35 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-04-20-symcts-the-first-act
+  description: Symcts
+
+  max_total_time: 28800
+  trials: 10
+
+  fuzzers:
+    - symcts
+    - symcts_afl
+    - symcts_weak_afl
+    - symcts_symqemu
+    - symctf_symqemu-afl
+    - symcts_symqemu_weak
+    - symsan
+    - symcc_aflplusplus
+
+  benchmarks:
+    - curl_curl_fuzzer_http
+    - harfbuzz-1.3.2
+    - jsoncpp_jsoncpp_fuzzer
+    - libpng-1.6.38
+    - stb_stbi_read_fuzzer
+    - libxml2-v2.9.2
+    - libxslt_xpath
+    - re2-2014-12-09
+    - vorbis-2017-12-11
+    - woff2-2016-05-06
+    - zlib_zlib_uncompress_fuzzer
+
 - experiment: 2023-04-15-alphaphuzz
   description: "test variant"
   fuzzers:

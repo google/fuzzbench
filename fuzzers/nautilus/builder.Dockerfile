@@ -29,17 +29,21 @@ RUN if which rustup; then rustup self uninstall -y; fi
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
     sh /rustup.sh -y
 
+RUN rustup default nightly-2022-09-18
+
 # Download libafl
-RUN git clone https://github.com/AFLplusplus/libafl_fuzzbench /libafl_fuzzbench && \
+RUN git clone https://github.com/Lukas-Dresel/libafl_fuzzbench /libafl_fuzzbench && \
     cd /libafl_fuzzbench && \
-    git checkout db32b7b8c1c0065a0cec2129b4dfe3897d1b9a4b && \
-    git submodule update --init
+    git checkout main && \
+    git submodule update --init && \
+    sed -i 's/(a == b)/a == b/g' LibAFL/libafl/src/events/mod.rs && \
+    echo 'nightly-2022-09-18' > rust-toolchain
 
 # Compile libafl
 RUN cd /libafl_fuzzbench/ && unset CFLAGS && unset CXXFLAGS && \
     export CC=clang && export CXX=clang++ && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
-    PATH="$PATH:/root/.cargo/bin/" cargo build --release
+    PATH="/root/.cargo/bin/:$PATH" cargo build --release
 
 RUN wget https://gist.githubusercontent.com/andreafioraldi/e5f60d68c98b31665a274207cfd05541/raw/4da351a321f1408df566a9cf2ce7cde6eeab3904/empty_fuzzer_lib.c -O /empty_fuzzer_lib.c && \
     clang -c /empty_fuzzer_lib.c && \

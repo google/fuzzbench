@@ -46,5 +46,7 @@ RUN cp \
     $SRC/stbi/gif.dict \
     $SRC/stb
 
+COPY --chmod=755 ./fixed_ossfuzz.sh $SRC/stb/tests/ossfuzz.sh
+
 WORKDIR stb
 COPY build.sh $SRC/
