@@ -16,12 +16,21 @@
 # limitations under the License.
 
 FUZZERS=(symcc_aflplusplus symsan honggfuzz libfuzzer symcts symcts_afl symcts_symqemu_afl aflplusplus)
-# TARGETS=(curl_curl_fuzzer_http harfbuzz-1.3.2 jsoncpp_jsoncpp_fuzzer libpng-1.6.38 libxml2-v2.9.2 libxslt_xpath mbedtls_fuzz_dtlsclient openssl_x509 php_php-fuzz-parser re2-2014-12-09 vorbis-2017-12-11 woff2-2016-05-06 zlib_zlib_uncompress_fuzzer)
+# TARGETS=(curl_curl_fuzzer_http harfbuzz_hb-shape-fuzzer jsoncpp_jsoncpp_fuzzer libpng_libpng_read_fuzzer libxml2_xml libxslt_xpath mbedtls_fuzz_dtlsclient openssl_x509 php_php-fuzz-parser re2_fuzzer vorbis_decode_fuzzer woff2_convert_woff2ttf_fuzzer zlib_zlib_uncompress_fuzzer)
 
-# TARGETS=(openssl_x509 re2-2014-12-09 vorbis-2017-12-11 woff2-2016-05-06 zlib_zlib_uncompress_fuzzer)
+# TARGETS=(openssl_x509 re2_fuzzer vorbis_decode_fuzzer woff2_convert_woff2ttf_fuzzer zlib_zlib_uncompress_fuzzer)
 
-FUZZERS=(symcc_aflplusplus symsan symcts_afl afl_companion)
-TARGETS=(stb_stbi_read_fuzzer libpng_libpng_read_fuzzer curl_curl_fuzzer_http)
+FUZZERS=(symcc_aflplusplus symsan symcts_afl afl_companion symcts aflplusplus)
+TARGETS=(
+    stb_stbi_read_fuzzer
+    libpng_libpng_read_fuzzer
+    curl_curl_fuzzer_http
+    vorbis_decode_fuzzer
+    woff2_convert_woff2ttf_fuzzer
+    zlib_zlib_uncompress_fuzzer
+)
+
+# 2 runs * 6 fuzzers * 6 benchmarks = 72 cores
 
 EXPERIMENT_NAME="symcts-$(date +%Y%m%d-%H%M%S)"
 
@@ -41,8 +50,8 @@ PYTHONPATH=. "$PYTHON3" experiment/run_experiment.py \
     --allow-uncommitted-changes \
     --experiment-config symcts_experiment_config.yaml \
     --concurrent-builds 1 \
-    --runners-cpus 60 \
-    --measurers-cpus 36 \
+    --runners-cpus 72 \
+    --measurers-cpus 24 \
     --experiment-name $EXPERIMENT_NAME \
     --fuzzers "${FUZZERS[@]}" \
     --benchmarks "${TARGETS[@]}" \

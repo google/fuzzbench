@@ -73,7 +73,7 @@ RUN update-alternatives \
 # RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl && \
 #     cd /afl && git checkout 149366507da1ff8e3e8c4962f3abc6c8fd78b222
 
-RUN echo "rerun=8"
+RUN echo "rerun=9"
 RUN git clone https://github.com/Lukas-Dresel/AFLplusplus/ /afl-lukas && \
     cd /afl-lukas && git checkout feat/larger_counters
 

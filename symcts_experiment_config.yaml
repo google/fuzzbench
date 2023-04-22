@@ -1,5 +1,5 @@
 # The number of trials of a fuzzer-benchmark pair.
-trials: 3
+trials: 2
 
 # The amount of time in seconds that each trial is run for.
 # 1 day =   24 * 60 * 60 = 86400
@@ -8,7 +8,7 @@ trials: 3
 # 15 mins = 15 * 60 = 600
 max_total_time: 172800 # 2 days
 
-snapshot_period: 60
+snapshot_period: 300 # 5 mins
 
 # The location of the docker registry.
 # FIXME: Support custom docker registry.
