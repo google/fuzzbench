@@ -21,7 +21,7 @@ FUZZERS=(symcc_aflplusplus symsan honggfuzz libfuzzer symcts symcts_afl symcts_s
 # TARGETS=(openssl_x509 re2-2014-12-09 vorbis-2017-12-11 woff2-2016-05-06 zlib_zlib_uncompress_fuzzer)
 
 FUZZERS=(symcc_aflplusplus symsan symcts_afl afl_companion)
-TARGETS=(stb_stbi_read_fuzzer libpng-1.6.38 curl_curl_fuzzer_http)
+TARGETS=(stb_stbi_read_fuzzer libpng_libpng_read_fuzzer curl_curl_fuzzer_http)
 
 EXPERIMENT_NAME="symcts-$(date +%Y%m%d-%H%M%S)"
 
@@ -36,11 +36,13 @@ PYTHON3=$(which python3.10 || which python3.8 || which python3)
     # --no-dictionaries \
 
 PYTHONPATH=. "$PYTHON3" experiment/run_experiment.py \
+    --no-seeds \
+    --no-dictionaries \
     --allow-uncommitted-changes \
     --experiment-config symcts_experiment_config.yaml \
     --concurrent-builds 1 \
     --runners-cpus 60 \
     --measurers-cpus 36 \
     --experiment-name $EXPERIMENT_NAME \
-    --fuzzers ${FUZZERS[@]} \
-    --benchmarks ${TARGETS[@]} \
+    --fuzzers "${FUZZERS[@]}" \
+    --benchmarks "${TARGETS[@]}" \
