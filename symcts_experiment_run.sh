@@ -20,7 +20,7 @@ FUZZERS=(symcc_aflplusplus symsan honggfuzz libfuzzer symcts symcts_afl symcts_s
 
 # TARGETS=(openssl_x509 re2_fuzzer vorbis_decode_fuzzer woff2_convert_woff2ttf_fuzzer zlib_zlib_uncompress_fuzzer)
 
-FUZZERS=(symcc_aflplusplus symsan symcts_afl afl_companion symcts aflplusplus)
+FUZZERS=(symcc_aflplusplus symsan symcts_symqemu_afl afl_companion symcts_symqemu aflplusplus)
 TARGETS=(
     stb_stbi_read_fuzzer
     libpng_libpng_read_fuzzer
