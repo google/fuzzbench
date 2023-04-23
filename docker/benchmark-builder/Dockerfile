@@ -38,10 +38,14 @@ RUN apt-get update && \
     zlib1g-dev \
     libssl-dev \
     libffi-dev \
-    libdbus-1-dev
+    libdbus-1-dev \
+    qt5-default
 
 RUN rm -rf /usr/local/bin/python3.8* /usr/local/bin/pip3 /usr/local/lib/python3.8 \
     /usr/local/include/python3.8 /usr/local/lib/python3.8/site-packages
+
+RUN rm -rf /usr/local/bin/python3.10* /usr/local/bin/pip3 /usr/local/lib/python3.10 \
+    /usr/local/include/python3.10 /usr/local/lib/python3.10/site-packages
 
 # Copy latest python3 from base-image into local.
 COPY --from=base-image /usr/local/bin/python3* /usr/local/bin/
@@ -50,8 +54,9 @@ COPY --from=base-image /usr/local/lib/python3.10 /usr/local/lib/python3.10
 COPY --from=base-image /usr/local/include/python3.10 /usr/local/include/python3.10
 COPY --from=base-image /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 
+RUN apt-get update && apt install -y python3-pyqt5
 COPY ./requirements.txt /tmp
-RUN pip3 install -r /tmp/requirements.txt
+RUN pip3 install -U pip && pip3 install -r /tmp/requirements.txt
 
 # Copy the entire fuzzers directory tree to allow for module dependencies.
 COPY fuzzers $SRC/fuzzers
