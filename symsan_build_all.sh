@@ -15,9 +15,33 @@
 #!/bin/bash
 
 TARGETS=(libpng-1.6.38 libxml2-v2.9.2)
-TARGETS=(bloaty_fuzz_target curl_curl_fuzzer_http freetype2-2017 harfbuzz-1.3.2 jsoncpp_jsoncpp_fuzzer lcms-2017-03-21 libjpeg-turbo-07-2017 libpcap_fuzz_both libpng-1.6.38 libxml2-v2.9.2 libxslt_xpath mbedtls_fuzz_dtlsclient openssl_x509 openthread-2019-12-23 php_php-fuzz-parser proj4-2017-08-14 re2-2014-12-09 sqlite3_ossfuzz vorbis-2017-12-11 woff2-2016-05-06 zlib_zlib_uncompress_fuzzer)
+TARGETS=(
+    bloaty_fuzz_target
+    curl_curl_fuzzer_http
+    freetype2_ftfuzzer
+    harfbuzz_hb-shape-fuzzer
+    jsoncpp_jsoncpp_fuzzer
+    lcms_cms_transform_fuzzer
+    libjpeg-turbo_libjpeg_turbo_fuzzer
+    libpcap_fuzz_both
+    libpng_libpng_read_fuzzer
+    libxml2_xml
+    libxslt_xpath
+    mbedtls_fuzz_dtlsclient
+    openh264_decoder_fuzzer
+    openssl_x509
+    openthread_ot-ip6-send-fuzzer
+    proj4_proj_crs_to_crs_fuzzer
+    re2_fuzzer
+    sqlite3_ossfuzz
+    stb_stbi_read_fuzzer
+    systemd_fuzz-link-parser
+    vorbis_decode_fuzzer
+    woff2_convert_woff2ttf_fuzzer
+    zlib_zlib_uncompress_fuzzer
+)
 
-FUZZERS=(symsan)
+FUZZERS=(symsan symcts_afl)
 
 
 
@@ -30,6 +54,8 @@ do
         MAKEFILETARGETS+=(build-$fuzzer-$target)
     done
 done
+
+make ${MAKEFILETARGETS[@]} -j4 -k
 
 RESULTS=""
 for f in ${MAKEFILETARGETS[@]}
