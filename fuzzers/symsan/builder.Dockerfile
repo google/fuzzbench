@@ -43,7 +43,7 @@ RUN git clone https://github.com/chenju2k6/symsan /symsan
 
 RUN apt-get install -y libc++abi-12-dev libc++-12-dev libunwind-dev
 
-RUN cd /symsan && \
+RUN cd /symsan && git checkout unified_frontend && \
     unset CFLAGS && \
     unset CXXFLAGS && \
     mkdir build && \
