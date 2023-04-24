@@ -35,9 +35,9 @@ RUN apt-get update && \
         libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
 # Download afl++.
-RUN git clone https://github.com/vanhauser-thc/Alphuzzplusplus /afl && \
+RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl && \
     cd /afl && \
-    git checkout 3ccb3724834321e550bc99ffd5cba7312f98f0c2 || \
+    git checkout 046a9520f3799f01d5df557f0a577171638e0c64 || \
     true
 
 RUN apt install -y lsb-release wget software-properties-common gnupg
