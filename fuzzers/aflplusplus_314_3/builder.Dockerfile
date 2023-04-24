@@ -37,7 +37,7 @@ RUN apt-get update && \
 # Download afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl && \
     cd /afl && \
-    git checkout f1bcd378a2e55ee1559dde0d46e2bc32882c5b39 || \
+    git checkout 7bcd4e290111ca81d6d58d1b70696e9e9aaa5ac1 || \
     true
 
 RUN apt install -y lsb-release wget software-properties-common gnupg
