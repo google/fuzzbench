@@ -53,7 +53,7 @@ def copy_with_deps(binary, out_bin):
     for name, path in to_copy:
         path = os.path.realpath(path)
         print(f'Copying {path} to {out_dir}')
-        shutil.copy(path, out_dir)
+        shutil.copy(path, os.path.join(out_dir, os.path.basename(path)))
         # create a symlink in out_dir mapping {name} to the copied file
         if name is not None and not os.path.exists(os.path.join(out_dir, name)):
             target_name = os.path.basename(path)
