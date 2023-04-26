@@ -213,9 +213,7 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
         os.environ['AFL_NO_AFFINITY'] = '1'
         os.environ['AFL_NO_UI'] = '1'
         os.environ['AFL_MAP_SIZE'] = '256000'
-        os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
-        os.environ[
-            'ASAN_OPTIONS'] = ':detect_leaks=0:abort_on_error=1:symbolize=0'
+        os.environ['ASAN_OPTIONS'] = ':detect_leaks=0:abort_on_error=1:symbolize=0'
 
         flag_cmplog = ['-c', cmplog_target_binary]
         flag_dict = ['-x', potential_autodict_dir] if os.path.exists(potential_autodict_dir) else []
