@@ -28,14 +28,17 @@ LDD_REGEX_NAMED = re.compile(r'\s*(.*) => (.*) \(0x.*\)')
 LDD_REGEX_UNNAMED = re.compile(r'\s/(.*) \(0x.*\)')
 
 
-def copy_with_deps(binary, out_dir):
+def copy_with_deps(binary, out_bin):
+    out_dir = os.path.dirname(out_bin)
     libraries = subprocess.check_output(['ldd', binary]).decode('utf-8')
-    to_copy = [binary]
+    to_copy = [(os.path.basename(out_bin), binary)]
     for line in libraries.splitlines():
         if m := LDD_REGEX_NAMED.match(line):
             lib_path = m.group(2)
+            lib_name = m.group(1)
         elif m := LDD_REGEX_UNNAMED.match(line):
             lib_path = m.group(1)
+            lib_name = None
         else:
             continue
 
@@ -43,14 +46,20 @@ def copy_with_deps(binary, out_dir):
             continue
 
         lib_path = os.path.realpath(lib_path)
-        to_copy.append(lib_path)
+        to_copy.append((lib_name, lib_path))
 
     print(f'Copying {to_copy} to {out_dir}')
 
-    for path in to_copy:
+    for name, path in to_copy:
         path = os.path.realpath(path)
         print(f'Copying {path} to {out_dir}')
         shutil.copy(path, out_dir)
+        # create a symlink in out_dir mapping {name} to the copied file
+        if name is not None and not os.path.exists(os.path.join(out_dir, name)):
+            target_name = os.path.basename(path)
+            new_name = os.path.join(out_dir, name)
+            if target_name != name:
+                os.symlink(target_name, new_name)
 
 
 def get_symcc_build_dir(target_directory):
@@ -111,11 +120,11 @@ def build():
     copy_with_deps(
         '/symcc/build//SymRuntime-prefix/src/SymRuntime-build/libSymRuntime.so',
         symcc_build_dir)
-    shutil.copy('/usr/lib/libz3.so', os.path.join(symcc_build_dir, 'libz3.so'))
-    shutil.copy('/usr/lib/libz3.so', os.path.join(symcc_build_dir, 'libz3.so.4'))
-    shutil.copy('/libcxx_native_build/lib/libc++.so.1', symcc_build_dir)
-    shutil.copy('/libcxx_native_build/lib/libc++abi.so.1', symcc_build_dir)
-    shutil.copy('/rust/bin/symcc_fuzzing_helper', symcc_build_dir)
+    copy_with_deps('/usr/lib/libz3.so', os.path.join(symcc_build_dir, 'libz3.so'))
+    copy_with_deps('/usr/lib/libz3.so', os.path.join(symcc_build_dir, 'libz3.so.4'))
+    copy_with_deps('/libcxx_native_build/lib/libc++.so.1', symcc_build_dir)
+    copy_with_deps('/libcxx_native_build/lib/libc++abi.so.1', symcc_build_dir)
+    copy_with_deps('/rust/bin/symcc_fuzzing_helper', symcc_build_dir)
 
 
 def launch_afl_thread(input_corpus, output_corpus, target_binary,
