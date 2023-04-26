@@ -20,6 +20,14 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-04-25-aflpp
+  description: "Ensure regression is fixed"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_bug
+    - aflplusplus_mega
+    - libafl
+
 - experiment: 2023-04-21-aflpp
   description: "Find regression"
   fuzzers:
