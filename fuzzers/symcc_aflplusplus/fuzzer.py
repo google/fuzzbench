@@ -44,7 +44,7 @@ def build():
         # Restore SRC to its initial state so we can build again without any
         # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
         # twice in the same directory without this.
-        aflplusplus_fuzzer.build('tracepc')
+        aflplusplus_fuzzer.build('tracepc', 'dict2file', 'cmplog')
 
     print('Step 2: Completed AFL build')
     # Copy over AFL artifacts needed by SymCC.
@@ -83,6 +83,7 @@ def build():
         '/symcc/build//SymRuntime-prefix/src/SymRuntime-build/libSymRuntime.so',
         symcc_build_dir)
     shutil.copy('/usr/lib/libz3.so', os.path.join(symcc_build_dir, 'libz3.so'))
+    shutil.copy('/usr/lib/libz3.so', os.path.join(symcc_build_dir, 'libz3.so.4'))
     shutil.copy('/libcxx_native_build/lib/libc++.so.1', symcc_build_dir)
     shutil.copy('/libcxx_native_build/lib/libc++abi.so.1', symcc_build_dir)
     shutil.copy('/rust/bin/symcc_fuzzing_helper', symcc_build_dir)
@@ -103,21 +104,27 @@ def fuzz(input_corpus, output_corpus, target_binary):
     Launches a master and a secondary instance of AFL, as well as
     the symcc helper.
     """
-    target_binary_dir = os.path.dirname(target_binary)
-    symcc_workdir = get_symcc_build_dir(target_binary_dir)
+
     target_binary_name = os.path.basename(target_binary)
+    target_binary_dir = os.path.dirname(target_binary)
+
+    cmplog_target_binary = os.path.join(target_binary_dir, 'cmplog', target_binary_name)
+    symcc_workdir = get_symcc_build_dir(target_binary_dir)
     symcc_target_binary = os.path.join(symcc_workdir, target_binary_name)
 
     os.environ['AFL_DISABLE_TRIM'] = '1'
+
+    flags_cmplog = ['-c', cmplog_target_binary]
+    flags_dict = ['-x', './afl++.dict'] if os.path.exists('./afl++.dict') else []
 
     # Start a master and secondary instance of AFL.
     # We need both because of the way SymCC works.
     print('[run_fuzzer] Running AFL for SymCC')
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
-    launch_afl_thread(input_corpus, output_corpus, target_binary, ['-S', 'afl'])
+    launch_afl_thread(input_corpus, output_corpus, target_binary, ['-S', 'afl'] + flags_cmplog + flags_dict)
     time.sleep(5)
     launch_afl_thread(input_corpus, output_corpus, target_binary,
-                      ['-S', 'afl-secondary'])
+                      ['-S', 'afl-secondary'] + flags_cmplog + flags_dict)
     time.sleep(5)
 
     # Start an instance of SymCC.
