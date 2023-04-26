@@ -29,7 +29,12 @@ LDD_REGEX_UNNAMED = re.compile(r'\s/(.*) \(0x.*\)')
 
 
 def copy_with_deps(binary, out_bin):
-    out_dir = os.path.dirname(out_bin)
+    if os.path.isdir(out_bin):
+        out_dir = out_bin
+        out_bin = os.path.join(out_bin, os.path.basename(binary))
+    else:
+        out_dir = os.path.dirname(out_bin)
+
     libraries = subprocess.check_output(['ldd', binary]).decode('utf-8')
     to_copy = [(os.path.basename(out_bin), binary)]
     for line in libraries.splitlines():
