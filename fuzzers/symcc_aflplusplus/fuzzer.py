@@ -14,6 +14,7 @@
 ''' Uses the SymCC-AFL hybrid from SymCC. '''
 
 import os
+import re
 import time
 import shutil
 import threading
@@ -22,6 +23,34 @@ import subprocess
 from fuzzers import utils
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
+
+LDD_REGEX_NAMED = re.compile(r'\s*(.*) => (.*) \(0x.*\)')
+LDD_REGEX_UNNAMED = re.compile(r'\s/(.*) \(0x.*\)')
+
+
+def copy_with_deps(binary, out_dir):
+    libraries = subprocess.check_output(['ldd', binary]).decode('utf-8')
+    to_copy = [binary]
+    for line in libraries.splitlines():
+        if m := LDD_REGEX_NAMED.match(line):
+            lib_path = m.group(2)
+        elif m := LDD_REGEX_UNNAMED.match(line):
+            lib_path = m.group(1)
+        else:
+            continue
+
+        if not os.path.exists(lib_path):
+            continue
+
+        lib_path = os.path.realpath(lib_path)
+        to_copy.append(lib_path)
+
+    print(f'Copying {to_copy} to {out_dir}')
+
+    for path in to_copy:
+        path = os.path.realpath(path)
+        print(f'Copying {path} to {out_dir}')
+        shutil.copy(path, out_dir)
 
 
 def get_symcc_build_dir(target_directory):
@@ -79,7 +108,7 @@ def build():
     utils.build_benchmark(env=new_env)
 
     # Copy over symcc artifacts and symbolic libc++.
-    shutil.copy(
+    copy_with_deps(
         '/symcc/build//SymRuntime-prefix/src/SymRuntime-build/libSymRuntime.so',
         symcc_build_dir)
     shutil.copy('/usr/lib/libz3.so', os.path.join(symcc_build_dir, 'libz3.so'))
