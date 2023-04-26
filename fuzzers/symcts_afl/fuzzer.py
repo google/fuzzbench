@@ -212,6 +212,7 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
         os.environ['AFL_SKIP_CPUFREQ'] = '1'
         os.environ['AFL_NO_AFFINITY'] = '1'
         os.environ['AFL_NO_UI'] = '1'
+        os.environ['AFL_DISABLE_TRIM'] = '1'
         os.environ['AFL_MAP_SIZE'] = '256000'
         os.environ['ASAN_OPTIONS'] = ':detect_leaks=0:abort_on_error=1:symbolize=0'
 
