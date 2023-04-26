@@ -184,19 +184,25 @@ def launch_afl_thread(input_corpus, output_corpus, target_binary,
 
 def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
     """
-    Launches a master and a secondary instance of AFL, as well as
-    the symcts instance.
+    Launches an instance of AFL, as well as symcts.
     """
+
+    build_directory = os.getenv('OUT')
+
+    afl_build_out = get_afl_base_out_dir(build_directory)
+    afl_lukas_build_out = get_afl_lukas_out_dir(build_directory)
+    symcts_build_out = get_symcts_out_dir(build_directory)
+
     vanilla_target_binary = target_binary
     out_dir = os.path.dirname(target_binary)
     target_binary_name = os.path.basename(target_binary)
 
-    symcts_target_binary = join(get_symcts_out_dir(out_dir), target_binary_name)
-    cmplog_target_binary = join(get_afl_base_out_dir(out_dir), 'cmplog',
-                                target_binary_name)
-    afl_target_binary = join(get_afl_base_out_dir(out_dir), target_binary_name)
-    afl_lukas_target_binary = join(get_afl_lukas_out_dir(out_dir),
-                                   target_binary_name)
+    symcts_target_binary = join(symcts_build_out, target_binary_name)
+    cmplog_target_binary = join(afl_build_out, 'cmplog', target_binary_name)
+    afl_target_binary = join(afl_build_out, target_binary_name)
+    afl_lukas_target_binary = join(afl_lukas_build_out, target_binary_name)
+
+    potential_autodict_dir = join(afl_build_out, 'afl++.dict')
 
     fuzzer = os.environ['FUZZER']
 
@@ -207,12 +213,12 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
         os.environ['AFL_NO_AFFINITY'] = '1'
         os.environ['AFL_NO_UI'] = '1'
         os.environ['AFL_MAP_SIZE'] = '256000'
+        os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
         os.environ[
             'ASAN_OPTIONS'] = ':detect_leaks=0:abort_on_error=1:symbolize=0'
 
         flag_cmplog = ['-c', cmplog_target_binary]
-        flag_dict = ['-x', './afl++.dict'
-                    ] if os.path.exists('./afl++.dict') else []
+        flag_dict = ['-x', potential_autodict_dir] if os.path.exists(potential_autodict_dir) else []
         # sync_flag_master = ['-F', str(Path(output_corpus) / 'symcts' / 'queue')] if 'symcts' in fuzzer else []
 
         # Start a master and secondary instance of AFL.
