@@ -3,7 +3,7 @@
 # will not work with your setup.
 
 trials: 20
-max_total_time: 172800  # 48 hours
+max_total_time: 82800  # back to the default of 23 hours
 cloud_project: fuzzbench
 docker_registry: gcr.io/fuzzbench
 cloud_compute_zone: us-central1-c

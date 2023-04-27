@@ -20,6 +20,25 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-04-20-symcts-2
+  description: Symcts
+
+  max_total_time: 82800
+  trials: 20
+
+  fuzzers:
+    - symcts
+    - symcts_afl
+    - symcts_symqemu
+    - symcts_symqemu_afl
+    - symsan
+    - symcc_aflplusplus
+    - aflplusplus
+    - honggfuzz
+    - libfuzzer
+    - centipede
+    - libafl
+
 - experiment: 2023-04-20-symcts
   description: Symcts
 
