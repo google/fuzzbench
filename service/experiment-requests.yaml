@@ -31,6 +31,12 @@
     - centipede
     - afl
 
+- experiment: 2023-04-27-aflpp
+  description: "Analyse deduplication feature"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_nodedup
+
 - experiment: 2023-04-25-aflpp
   description: "Ensure regression is fixed"
   fuzzers:
