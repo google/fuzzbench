@@ -20,6 +20,23 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-04-27-main
+  description: "Benchmark main fuzzers"
+  fuzzers:
+    - aflplusplus
+    - aflplusplusplus
+    - libafl
+    - honggfuzz
+    - entropic
+    - centipede
+    - afl
+
+- experiment: 2023-04-27-aflpp
+  description: "Analyse deduplication feature"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_nodedup
+
 - experiment: 2023-04-25-aflpp
   description: "Ensure regression is fixed"
   fuzzers:
