@@ -223,16 +223,16 @@ RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     cp ./target/release/symcts /out/symcts/
 
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
-    cargo build --release --features=weak_solving && \
-    cp ./target/release/symcts /out/symcts/symcts-weak
+    cargo build --release --features=quicksampler_solving,quicksampler_path_sensitive_solving && \
+    cp ./target/release/symcts /out/symcts/symcts-sampling
 
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     cargo build --release --features=sync_from_other_fuzzers &&    \
     cp ./target/release/symcts /out/symcts/symcts-from_other
 
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
-    cargo build --release --features=weak_solving,sync_from_other_fuzzers &&    \
-    cp ./target/release/symcts /out/symcts/symcts-weak-from_other
+    cargo build --release --features=quicksampler_solving,quicksampler_path_sensitive_solving,sync_from_other_fuzzers &&    \
+    cp ./target/release/symcts /out/symcts/symcts-sampling-from_other
 
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     /symcc/build/symcc -I/afl-lukas/include -c /afl-lukas/utils/aflpp_driver/aflpp_driver.c -o /libfuzzer-main.o /libs_symcc/libc_symcc_preload.a /libs_symcc/libz.a
