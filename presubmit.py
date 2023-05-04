@@ -215,7 +215,8 @@ def lint(_: List[Path]) -> bool:
         'presubmit.py',
     ]
 
-    command = ['python3', '-m', 'pylint', '-j', '0']
+    # Use "--score no" to make linting quieter.
+    command = ['python3', '-m', 'pylint', '--score', 'no', '-j', '0']
     command.extend(to_check)
     returncode = subprocess.run(command, check=False).returncode
     return returncode == 0
