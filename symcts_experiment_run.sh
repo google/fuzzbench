@@ -48,7 +48,7 @@ PYTHONPATH=. "$PYTHON3" experiment/run_experiment.py \
     --no-seeds \
     --no-dictionaries \
     --allow-uncommitted-changes \
-    --experiment-config symcts_experiment_config.yaml \
+    --experiment-config experiment_config_symcts.yaml \
     --concurrent-builds 1 \
     --runners-cpus 72 \
     --measurers-cpus 24 \
