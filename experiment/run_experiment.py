@@ -188,7 +188,7 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
         'use_seed_sampling':
             Requirement(False, bool, False, ''),
         'seed_sampling_randomness_init':
-            Requirement(False, str, False, ''),
+            Requirement(False, int, False, ''),
         'seed_sampling_distribution':
             Requirement(False, str, False, ''),
         'seed_sampling_mean_utilization':
