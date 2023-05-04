@@ -353,6 +353,11 @@ def start_experiment(  # pylint: disable=too-many-arguments
         validate_custom_seed_corpus(config['custom_seed_corpus_dir'],
                                     benchmarks)
 
+    if config.get('seed_sampling_mean_utilization'):
+        assert 0 < config['seed_sampling_mean_utilization'] < 1
+    if config.get('seed_sampling_distribution'):
+        assert config['seed_sampling_distribution'] in ['EXP', 'UNIFORM']
+
     return start_experiment_from_full_config(config)
 
 

@@ -30,7 +30,6 @@ import time
 import zipfile
 
 import numpy
-from numpy.random import RandomState
 
 from common import benchmark_config
 from common import environment
@@ -174,7 +173,7 @@ def sample_corpus(corpus_dir,
     deterministic wrt the random seed"""
 
     gen = random.Random(random_seed)
-    npgen = RandomState(random_seed)
+    npgen = numpy.random.RandomState(random_seed)
 
     inplace = dest_dir is None
 
