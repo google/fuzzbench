@@ -247,6 +247,7 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
             symcts_bin += '-from_other'
 
         cmd = [
+            '/out/run_with_multilog.sh', os.path.join(output_corpus, '.log_symcts'),
             symcts_bin, '-i', input_corpus, '-s', output_corpus, '-n', 'symcts',
             '--symqemu',
             join(out_dir, 'symqemu-x86_64'), '--afl-coverage-target',

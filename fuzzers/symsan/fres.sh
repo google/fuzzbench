@@ -12,4 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #!/bin/bash
-RUST_LOG=info /out/fastgen --sync_afl -i - -o /out/corpus -t $1 -- $2 @@
+RUST_LOG=info /run_with_multilog.sh /out/corpus/.log_res /out/fastgen --sync_afl -i - -o /out/corpus -t $1 -- $2 @@
