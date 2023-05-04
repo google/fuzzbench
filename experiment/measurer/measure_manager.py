@@ -328,6 +328,10 @@ def get_unmeasured_snapshots(experiment: str,
     return unmeasured_first_snapshots + unmeasured_latest_snapshots
 
 
+def is_file_hidden(path):
+    return any(part.startswith('.') for part in path.split(os.sep))
+
+
 def extract_corpus(corpus_archive: str, output_directory: str):
     """Extract a corpus from |corpus_archive| to |output_directory|."""
     pathlib.Path(output_directory).mkdir(exist_ok=True)
@@ -337,6 +341,11 @@ def extract_corpus(corpus_archive: str, output_directory: str):
             if not member.isfile():
                 # We don't care about directory structure.
                 # So skip if not a file.
+                continue
+
+            if is_file_hidden(member.path):
+                # hidden file, or file in hidden directory, ignore
+                # logger.debug('Ignoring hidden file: %s', repr(member.path))
                 continue
 
             member_file_handle = tar.extractfile(member)
