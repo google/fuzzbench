@@ -654,10 +654,10 @@ def update_started_trials(trial_proxies, trial_id_mapping, core_allocation):
 
 def get_corpus_variant_id_mapping(trials):
     """Generate a shared ID for the Nth trial of each fuzzer on each benchmark
-    This lets us align e.g. the '1st' trial of AFL on bloaty-fuzz-target and
+    This lets us align e.g. the first trial of AFL on bloaty-fuzz-target and
     the '1st' trial of LibFuzzer on bloaty-fuzz-target. When the seed corpora
     are sampled across trials, this ID tells us which trials have identical
-    starting corpora"""
+    starting corpora."""
 
     trial_id_to_corpus_variant_id = {}
     bench_fuzzer_max_ids = {}
@@ -809,12 +809,12 @@ def render_startup_script_template(  # pylint: disable=too-many-arguments
     if 'seed_sampling' in experiment_config:
         kwargs['use_seed_sampling'] = True
 
-        kwargs['randomness_seed'] = experiment_config['seed_sampling'] \
-                .get('randomness_seed')
-        kwargs['seed_sampling_distribution'] = \
-            experiment_config['seed_sampling'].get('distribution')
-        kwargs['seed_sampling_mean_utilization'] = \
-            experiment_config['seed_sampling'].get('mean_seed_utilization')
+        kwargs['randomness_seed'] = (
+            experiment_config['seed_sampling'].get('randomness_seed'))
+        kwargs['seed_sampling_distribution'] = (
+            experiment_config['seed_sampling'].get('distribution'))
+        kwargs['seed_sampling_mean_utilization'] = (
+            experiment_config['seed_sampling'].get('mean_seed_utilization'))
     else:
         kwargs['use_seed_sampling'] = False
         kwargs['randomness_seed'] = 0

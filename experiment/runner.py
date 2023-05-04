@@ -19,6 +19,7 @@ import json
 import glob
 import os
 import posixpath
+import random
 import shlex
 import shutil
 import subprocess
@@ -27,9 +28,9 @@ import tarfile
 import threading
 import time
 import zipfile
-from random import Random
+
+import numpy
 from numpy.random import RandomState
-import numpy as np
 
 from common import benchmark_config
 from common import environment
@@ -172,7 +173,7 @@ def sample_corpus(corpus_dir,
     average, according to the specified distribution. Sampling is
     deterministic wrt the random seed"""
 
-    gen = Random(random_seed)
+    gen = random.Random(random_seed)
     npgen = RandomState(random_seed)
 
     inplace = dest_dir is None
@@ -188,12 +189,11 @@ def sample_corpus(corpus_dir,
     num_seeds = len(corpus_paths)
 
     if distribution == 'UNIFORM':
-        trial_num_seeds = gen.randint(1,
-                                      int(np.round(mean_seed_util *
-                                                   num_seeds)))  # inclusive []
+        trial_num_seeds = gen.randint(
+            1, int(numpy.round(mean_seed_util * num_seeds)))  # inclusive []
     elif distribution == 'EXP':
         trial_num_seeds = int(
-            np.round(
+            numpy.round(
                 npgen.exponential(scale=(mean_seed_util * num_seeds),
                                   size=1)[0]))
     else:
