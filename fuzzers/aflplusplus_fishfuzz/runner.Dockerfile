@@ -17,7 +17,7 @@ FROM gcr.io/fuzzbench/base-image
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
 
-RUN apt -y install git gcc g++ make cmake wget \
+RUN apt update && apt install -y git gcc g++ make cmake wget \
         libgmp-dev libmpfr-dev texinfo bison python3
 
 # for runtime library, we just need libc++-12-dev libc++abi-12-dev

@@ -17,12 +17,14 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 
 from fuzzers import utils
 
+
 def find_files(filename, search_path, mode):
     """Helper function to find path of TEMP, mode 0 for file and 1 for dir"""
-    result = []
+    result = ''
     for root, dir, files in os.walk(search_path):
         if mode == 0:
             if filename in files:
@@ -32,6 +34,7 @@ def find_files(filename, search_path, mode):
             if filename in dir:
                 return os.path.join(root, filename)
     return result
+
 
 def prepare_build_environment():
     """Set environment variables used to build targets for AFL-based
@@ -49,8 +52,6 @@ def prepare_build_environment():
     os.environ['FUZZER_LIB'] = '/libAFL.a'
 
     os.environ['AFL_QUIET'] = '1'
-    os.environ['AFL_LLVM_DICT2FILE'] = build_directory + '/afl++.dict'
-    os.environ['AFL_LLVM_DICT2FILE_NO_MAIN'] = '1'
     os.environ['AFL_LLVM_USE_TRACE_PC'] = '1'
 
 
@@ -63,36 +64,62 @@ def build():
     """Build benchmark."""
     prepare_build_environment()
 
-    with utils.restore_directory(src), utils.restore_directory(work):
-        utils.build_benchmark()
-
-    with utils.restore_directory(src), utils.restore_directory(work):
-        # CmpLog requires an build with different instrumentation.
-        new_env = os.environ.copy()
-        new_env['AFL_LLVM_CMPLOG'] = '1'
-
-        # For CmpLog build, set the OUT and FUZZ_TARGET environment
-        # variable to point to the new CmpLog build directory.
-        cmplog_build_directory = get_cmplog_build_directory(build_directory)
-        os.mkdir(cmplog_build_directory)
-        new_env['OUT'] = cmplog_build_directory
-        fuzz_target = os.getenv('FUZZ_TARGET')
-        if fuzz_target:
-            new_env['FUZZ_TARGET'] = os.path.join(cmplog_build_directory,
-                                                  os.path.basename(fuzz_target))
-
-        print('Re-building benchmark for CmpLog fuzzing target')
-        utils.build_benchmark(env=new_env)
+    #with utils.restore_directory(src), utils.restore_directory(work):
+    utils.build_benchmark()
 
     print('[post_build] Copying afl-fuzz to $OUT directory')
     # Copy out the afl-fuzz binary as a build artifact.
     shutil.copy('/FishFuzz/afl-fuzz', os.environ['OUT'])
-    bin_fuzz_src = find_files('%s.fuzz' % (os.environ['FF_DRIVER_NAME']), '/', 0)
+    print(os.environ['FF_DRIVER_NAME'])
+    os.environ['AFL_CC'] = 'clang-12'
+    os.environ['AFL_CXX'] = 'clang++-12'
     bin_fuzz_dst = '%s/%s' % (os.environ['OUT'], os.environ['FF_DRIVER_NAME'])
-    shutil.copy(bin_fuzz_src, bin_fuzz_dst)
-    tmp_dir_src = find_files('TEMP_%s' % (os.environ['FF_DRIVER_NAME']), '/', 1)
+    bin_fuzz_src = find_files('%s.fuzz' % (os.environ['FF_DRIVER_NAME']), '/',
+                              0)
+    os.system("find / -name '*" + os.environ['FF_DRIVER_NAME'] +
+              "*' > /dev/null")
+    if bin_fuzz_src:
+        shutil.copy(bin_fuzz_src, bin_fuzz_dst)
+    else:
+        print('NOT FOUND: ' + '%s.fuzz' % (os.environ['FF_DRIVER_NAME']))
+        sys.exit(1)
     tmp_dir_dst = '%s/TEMP' % (os.environ['OUT'])
-    shutil.copytree(tmp_dir_src, tmp_dir_dst)
+    tmp_dir_src = find_files('TEMP_%s' % (os.environ['FF_DRIVER_NAME']), '/', 1)
+    print('TEMP_%s' % (os.environ['FF_DRIVER_NAME']))
+    print(tmp_dir_dst)
+    print('that was second')
+    #for tmp_dir_src in foo:
+    if tmp_dir_src:
+        print(tmp_dir_src)
+        print(tmp_dir_dst)
+        shutil.copytree(tmp_dir_src, tmp_dir_dst)
+    else:
+        print('NOT FOUND: ' + 'TEMP_%s' % (os.environ['FF_DRIVER_NAME']))
+        sys.exit(1)
+    print('done')
+
+
+#    src = os.getenv('SRC')
+#    work = os.getenv('WORK')
+#
+#with utils.restore_directory(src), utils.restore_directory(work):
+#    # CmpLog requires an build with different instrumentation.
+#    new_env = os.environ.copy()
+#    new_env['AFL_LLVM_CMPLOG'] = '1'
+#
+#        # For CmpLog build, set the OUT and FUZZ_TARGET environment
+#        # variable to point to the new CmpLog build directory.
+#        build_directory = os.environ['OUT']
+#        #cmplog_build_directory = get_cmplog_build_directory(build_directory)
+#        #os.mkdir(cmplog_build_directory)
+#        new_env['OUT'] = cmplog_build_directory
+#        fuzz_target = os.getenv('FUZZ_TARGET')
+#        if fuzz_target:
+#            new_env['FUZZ_TARGET'] = os.path.join(cmplog_build_directory,
+#                                                  os.path.basename(fuzz_target))
+#
+#        print('Re-building benchmark for CmpLog fuzzing target')
+#        utils.build_benchmark(env=new_env)
 
 
 def get_stats(output_corpus, fuzzer_log):  # pylint: disable=unused-argument
@@ -139,15 +166,6 @@ def prepare_fuzz_environment(input_corpus):
     utils.create_seed_file_for_empty_corpus(input_corpus)
 
 
-def check_skip_det_compatible(additional_flags):
-    """ Checks if additional flags are compatible with '-d' option"""
-    # AFL refuses to take in '-d' with '-M' or '-S' options for parallel mode.
-    # (cf. https://github.com/google/AFL/blob/8da80951/afl-fuzz.c#L7477)
-    if '-M' in additional_flags or '-S' in additional_flags:
-        return False
-    return True
-
-
 def run_afl_fuzz(input_corpus,
                  output_corpus,
                  target_binary,
@@ -187,9 +205,10 @@ def run_afl_fuzz(input_corpus,
     if dictionary_path:
         command.extend(['-x', dictionary_path])
 
-    flags += ['-x', './afl++.dict']
+    #command += ['-x', './afl++.dict']
+    #command += ['-c', cmplog_target_binary]
 
-    flags += ['-c', cmplog_target_binary]
+    os.system('ls -l')
 
     command += [
         '--',
@@ -198,6 +217,7 @@ def run_afl_fuzz(input_corpus,
         # performs.
         '2147483647'
     ]
+
     print('[run_afl_fuzz] Running command: ' + ' '.join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
     subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
@@ -205,6 +225,7 @@ def run_afl_fuzz(input_corpus,
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run afl-fuzz on target."""
+
     prepare_fuzz_environment(input_corpus)
 
     run_afl_fuzz(input_corpus, output_corpus, target_binary)
