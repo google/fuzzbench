@@ -84,13 +84,9 @@ RUN update-alternatives \
 # put the /usr/bin of the highest priority, to make sure clang-12 is called before clang-15, which is in /usr/local/bin
 ENV PATH="/usr/bin:${PATH}"
 
-## Download afl++.
-#RUN git clone -b dev https://github.com/AFLplusplus/AFLplusplus /afl && \
-#    cd /afl && \
-#    git checkout d822181467ec41f1ee2d840c3c5b1918c72ffc86 || \
-#    true
-
-COPY FF_AFL++ /FishFuzz 
+## Download fishfuzz.
+RUN git clone https://github.com/HexHive/FishFuzz/ /afl && \
+    cp -r /afl/FF_AFL++ /FishFuzz
 
 ENV PATH="/usr/bin/:$PATH"
 
@@ -108,4 +104,3 @@ RUN cd /FishFuzz/ && \
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /FishFuzz/afl_driver.cpp && \
     clang++ -stdlib=libc++ -std=c++11 -O2 -c /FishFuzz/afl_driver.cpp -o /FishFuzz/afl_driver.o && \
     ar r /libAFL.a /FishFuzz/afl_driver.o /FishFuzz/afl-compiler-rt.o
-
