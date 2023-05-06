@@ -71,28 +71,23 @@ def build():
     print(os.environ['FF_DRIVER_NAME'])
     os.environ['AFL_CC'] = 'clang-12'
     os.environ['AFL_CXX'] = 'clang++-12'
-    bin_fuzz_dst = '%s/%s' % (os.environ['OUT'], os.environ['FF_DRIVER_NAME'])
-    bin_fuzz_src = find_files('%s.fuzz' % (os.environ['FF_DRIVER_NAME']), '/',
+    bin_fuzz_dst = f'%s/%s' % (os.environ['OUT'], os.environ['FF_DRIVER_NAME'])
+    bin_fuzz_src = find_files(f'%s.fuzz' % (os.environ['FF_DRIVER_NAME']), '/',
                               0)
     os.system('find / -name "*' + os.environ['FF_DRIVER_NAME'] +
               '*" > /dev/null')
     if bin_fuzz_src:
         shutil.copy(bin_fuzz_src, bin_fuzz_dst)
     else:
-        print('NOT FOUND: ' + '%s.fuzz' % (os.environ['FF_DRIVER_NAME']))
+        print('NOT FOUND: ' + f'%s.fuzz' % (os.environ['FF_DRIVER_NAME']))
         sys.exit(1)
-    tmp_dir_dst = '%s/TEMP' % (os.environ['OUT'])
-    tmp_dir_src = find_files('TEMP_%s' % (os.environ['FF_DRIVER_NAME']), '/', 1)
-    print('TEMP_%s' % (os.environ['FF_DRIVER_NAME']))
-    print(tmp_dir_dst)
-    print('that was second')
+    tmp_dir_dst = f'%s/TEMP' % (os.environ['OUT'])
+    tmp_dir_src = find_files(f'TEMP_%s' % (os.environ['FF_DRIVER_NAME']), '/', 1)
     #for tmp_dir_src in foo:
     if tmp_dir_src:
-        print(tmp_dir_src)
-        print(tmp_dir_dst)
         shutil.copytree(tmp_dir_src, tmp_dir_dst)
     else:
-        print('NOT FOUND: ' + 'TEMP_%s' % (os.environ['FF_DRIVER_NAME']))
+        print('NOT FOUND: ' + f'TEMP_%s' % (os.environ['FF_DRIVER_NAME']))
         sys.exit(1)
     print('done')
 
@@ -134,7 +129,7 @@ def prepare_fuzz_environment(input_corpus):
     #os.environ['AFL_SHUFFLE_QUEUE'] = '1'
 
     # Set temporary dir path
-    tmp_dir_src = '%s/TEMP' % (os.environ['OUT'])
+    tmp_dir_src = f'%s/TEMP' % (os.environ['OUT'])
     os.environ['TMP_DIR'] = tmp_dir_src
 
     # AFL needs at least one non-empty seed to start.
@@ -156,8 +151,6 @@ def run_afl_fuzz(input_corpus,
     os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
 
     target_binary_directory = os.path.dirname(target_binary)
-    cmplog_target_binary_directory = (
-        get_cmplog_build_directory(target_binary_directory))
     target_binary_name = os.path.basename(target_binary)
     cmplog_target_binary = os.path.join(cmplog_target_binary_directory,
                                         target_binary_name)
