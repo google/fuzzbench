@@ -82,8 +82,8 @@ def build():
         print('NOT FOUND: ' + f'%s.fuzz' % (os.environ['FF_DRIVER_NAME']))
         sys.exit(1)
     tmp_dir_dst = f'%s/TEMP' % (os.environ['OUT'])
-    tmp_dir_src = find_files(f'TEMP_%s' % (os.environ['FF_DRIVER_NAME']), '/', 1)
-    #for tmp_dir_src in foo:
+    tmp_dir_src = find_files(f'TEMP_%s' % (os.environ['FF_DRIVER_NAME']), '/',
+                             1)
     if tmp_dir_src:
         shutil.copytree(tmp_dir_src, tmp_dir_dst)
     else:
