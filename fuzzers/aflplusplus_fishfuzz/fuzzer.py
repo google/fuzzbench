@@ -25,13 +25,13 @@ from fuzzers import utils
 def find_files(filename, search_path, mode):
     """Helper function to find path of TEMP, mode 0 for file and 1 for dir"""
     result = ''
-    for root, dir, files in os.walk(search_path):
+    for root, directory, files in os.walk(search_path):
         if mode == 0:
             if filename in files:
                 # result.append(os.path.join(root, filename))
                 return os.path.join(root, filename)
         else:
-            if filename in dir:
+            if filename in directory:
                 return os.path.join(root, filename)
     return result
 
@@ -39,8 +39,6 @@ def find_files(filename, search_path, mode):
 def prepare_build_environment():
     """Set environment variables used to build targets for AFL-based
     fuzzers."""
-
-    build_directory = os.environ['OUT']
 
     cflags = ['-fsanitize=address']
     utils.append_flags('CFLAGS', cflags)
@@ -76,8 +74,8 @@ def build():
     bin_fuzz_dst = '%s/%s' % (os.environ['OUT'], os.environ['FF_DRIVER_NAME'])
     bin_fuzz_src = find_files('%s.fuzz' % (os.environ['FF_DRIVER_NAME']), '/',
                               0)
-    os.system("find / -name '*" + os.environ['FF_DRIVER_NAME'] +
-              "*' > /dev/null")
+    os.system('find / -name '*' + os.environ['FF_DRIVER_NAME'] +
+              '*' > /dev/null')
     if bin_fuzz_src:
         shutil.copy(bin_fuzz_src, bin_fuzz_dst)
     else:
@@ -97,29 +95,6 @@ def build():
         print('NOT FOUND: ' + 'TEMP_%s' % (os.environ['FF_DRIVER_NAME']))
         sys.exit(1)
     print('done')
-
-
-#    src = os.getenv('SRC')
-#    work = os.getenv('WORK')
-#
-#with utils.restore_directory(src), utils.restore_directory(work):
-#    # CmpLog requires an build with different instrumentation.
-#    new_env = os.environ.copy()
-#    new_env['AFL_LLVM_CMPLOG'] = '1'
-#
-#        # For CmpLog build, set the OUT and FUZZ_TARGET environment
-#        # variable to point to the new CmpLog build directory.
-#        build_directory = os.environ['OUT']
-#        #cmplog_build_directory = get_cmplog_build_directory(build_directory)
-#        #os.mkdir(cmplog_build_directory)
-#        new_env['OUT'] = cmplog_build_directory
-#        fuzz_target = os.getenv('FUZZ_TARGET')
-#        if fuzz_target:
-#            new_env['FUZZ_TARGET'] = os.path.join(cmplog_build_directory,
-#                                                  os.path.basename(fuzz_target))
-#
-#        print('Re-building benchmark for CmpLog fuzzing target')
-#        utils.build_benchmark(env=new_env)
 
 
 def get_stats(output_corpus, fuzzer_log):  # pylint: disable=unused-argument
