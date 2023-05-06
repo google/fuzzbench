@@ -53,11 +53,6 @@ def prepare_build_environment():
     os.environ['AFL_LLVM_USE_TRACE_PC'] = '1'
 
 
-def get_cmplog_build_directory(target_directory):
-    """Return path to CmpLog target directory."""
-    return os.path.join(target_directory, 'cmplog')
-
-
 def build():
     """Build benchmark."""
     prepare_build_environment()
@@ -71,25 +66,23 @@ def build():
     print(os.environ['FF_DRIVER_NAME'])
     os.environ['AFL_CC'] = 'clang-12'
     os.environ['AFL_CXX'] = 'clang++-12'
-    bin_fuzz_dst = f'%s/%s' % (os.environ['OUT'], os.environ['FF_DRIVER_NAME'])
-    bin_fuzz_src = find_files(f'%s.fuzz' % (os.environ['FF_DRIVER_NAME']), '/',
-                              0)
+    bin_fuzz_dst = os.environ['OUT'] + '/' + os.environ['FF_DRIVER_NAME']
+    bin_fuzz_src = find_files(os.environ['FF_DRIVER_NAME'] + '.fuzz', '/', 0)
     os.system('find / -name "*' + os.environ['FF_DRIVER_NAME'] +
-              '*" > /dev/null')
+              '*" 2> /dev/null')
     if bin_fuzz_src:
         shutil.copy(bin_fuzz_src, bin_fuzz_dst)
     else:
-        print('NOT FOUND: ' + f'%s.fuzz' % (os.environ['FF_DRIVER_NAME']))
+        #print('NOT FOUND: ' + f'%s.fuzz' % (os.environ['FF_DRIVER_NAME']))
         sys.exit(1)
-    tmp_dir_dst = f'%s/TEMP' % (os.environ['OUT'])
-    tmp_dir_src = find_files(f'TEMP_%s' % (os.environ['FF_DRIVER_NAME']), '/',
-                             1)
+    tmp_dir_dst = os.environ['OUT'] + '/TEMP'
+    tmp_dir_src = find_files('TEMP_' + os.environ['FF_DRIVER_NAME'], '/', 1)
     if tmp_dir_src:
         shutil.copytree(tmp_dir_src, tmp_dir_dst)
     else:
-        print('NOT FOUND: ' + f'TEMP_%s' % (os.environ['FF_DRIVER_NAME']))
+        #print('NOT FOUND: ' + f'TEMP_%s' % (os.environ['FF_DRIVER_NAME']))
         sys.exit(1)
-    print('done')
+    #print('done')
 
 
 def get_stats(output_corpus, fuzzer_log):  # pylint: disable=unused-argument
@@ -129,7 +122,7 @@ def prepare_fuzz_environment(input_corpus):
     #os.environ['AFL_SHUFFLE_QUEUE'] = '1'
 
     # Set temporary dir path
-    tmp_dir_src = f'%s/TEMP' % (os.environ['OUT'])
+    tmp_dir_src = s.environ['OUT'] + '/TEMP'
     os.environ['TMP_DIR'] = tmp_dir_src
 
     # AFL needs at least one non-empty seed to start.
@@ -152,8 +145,6 @@ def run_afl_fuzz(input_corpus,
 
     target_binary_directory = os.path.dirname(target_binary)
     target_binary_name = os.path.basename(target_binary)
-    cmplog_target_binary = os.path.join(cmplog_target_binary_directory,
-                                        target_binary_name)
 
     print('[run_afl_fuzz] Running target with afl-fuzz')
     command = [
@@ -175,8 +166,6 @@ def run_afl_fuzz(input_corpus,
 
     #command += ['-x', './afl++.dict']
     #command += ['-c', cmplog_target_binary]
-
-    os.system('ls -l')
 
     command += [
         '--',
