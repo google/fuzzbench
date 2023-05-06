@@ -20,6 +20,13 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-05-06-afppff
+  description: "Benchmark fishfuzz"
+  type: bug
+  fuzzers:
+    - aflplusplus_ff_comp
+    - aflplusplus_fishfuzz
+
 - experiment: 2023-04-27-main
   description: "Benchmark main fuzzers"
   fuzzers:

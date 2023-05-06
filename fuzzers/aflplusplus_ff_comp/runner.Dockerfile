@@ -14,6 +14,25 @@
 
 FROM gcr.io/fuzzbench/base-image
 
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+RUN apt update && apt install -y git gcc g++ make cmake wget \
+        libgmp-dev libmpfr-dev texinfo bison python3
+
+# for runtime library, we just need libc++-12-dev libc++abi-12-dev
+RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|apt-key add - && \
+    printf  "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main\n" \
+            "deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal main\n" \
+            "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main\n" \
+            "deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main\n" \
+          >> /etc/apt/sources.list && \
+    apt update && \
+    apt install libc++-12-dev libc++abi-12-dev -y
+
+RUN apt-get install -y libboost-all-dev libjsoncpp-dev libgraphviz-dev \
+    pkg-config libglib2.0-dev libunwind-17
+
 # This makes interactive docker runs painless:
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
 #ENV AFL_MAP_SIZE=2621440

@@ -86,7 +86,7 @@ ENV PATH="/usr/bin:${PATH}"
 
 ## Download fishfuzz.
 RUN git clone https://github.com/HexHive/FishFuzz/ /afl && \
-    cp -r /afl/FF_AFL++ /FishFuzz
+    mv /afl/FF_AFL++ /FishFuzz
 
 ENV PATH="/usr/bin/:$PATH"
 
@@ -99,6 +99,7 @@ RUN cd /FishFuzz/ && \
     rm -f ff-all-in-one ff-all-in-one++ && \
     PYTHON_INCLUDE=/ make && \
     make -C dyncfg && \
+    chmod +x scripts/*.py && \
     make install
 
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /FishFuzz/afl_driver.cpp && \
