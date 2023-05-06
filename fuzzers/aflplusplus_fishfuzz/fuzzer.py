@@ -122,7 +122,7 @@ def prepare_fuzz_environment(input_corpus):
     #os.environ['AFL_SHUFFLE_QUEUE'] = '1'
 
     # Set temporary dir path
-    tmp_dir_src = s.environ['OUT'] + '/TEMP'
+    tmp_dir_src = os.environ['OUT'] + '/TEMP'
     os.environ['TMP_DIR'] = tmp_dir_src
 
     # AFL needs at least one non-empty seed to start.
@@ -142,9 +142,6 @@ def run_afl_fuzz(input_corpus,
     os.environ['AFL_NO_WARN_INSTABILITY'] = '1'
     os.environ['AFL_DISABLE_TRIM'] = '1'
     os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
-
-    target_binary_directory = os.path.dirname(target_binary)
-    target_binary_name = os.path.basename(target_binary)
 
     print('[run_afl_fuzz] Running target with afl-fuzz')
     command = [

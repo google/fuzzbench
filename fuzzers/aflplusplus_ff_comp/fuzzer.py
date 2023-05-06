@@ -49,7 +49,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     # For bug type benchmarks we have to instrument via native clang pcguard :(
     build_flags = os.environ['CFLAGS']
-    build_flags += " -fsanitize=address"
+    build_flags += ' -fsanitize=address'
     os.environ['CFLAGS'] = build_flags
 
     #if build_flags.find(
