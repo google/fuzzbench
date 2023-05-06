@@ -26,6 +26,11 @@
   fuzzers:
     - aflplusplus_ff_comp
     - aflplusplus_fishfuzz
+  benchmarks:
+    - bloaty_fuzz_target_52948c
+    - libxml2_xml_e85b9b
+    - mbedtls_fuzz_dtlsclient_7c6b0e
+    - php_php-fuzz-parser_0dbedb
 
 - experiment: 2023-04-27-main
   description: "Benchmark main fuzzers"
