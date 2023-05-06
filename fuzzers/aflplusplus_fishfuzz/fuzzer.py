@@ -74,7 +74,7 @@ def build():
     bin_fuzz_dst = '%s/%s' % (os.environ['OUT'], os.environ['FF_DRIVER_NAME'])
     bin_fuzz_src = find_files('%s.fuzz' % (os.environ['FF_DRIVER_NAME']), '/',
                               0)
-    os.system('find / -name '*' + os.environ['FF_DRIVER_NAME'] +
+    os.system('find / -name "*"' + os.environ['FF_DRIVER_NAME'] +
               '*' > /dev/null')
     if bin_fuzz_src:
         shutil.copy(bin_fuzz_src, bin_fuzz_dst)
