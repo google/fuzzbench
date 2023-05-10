@@ -27,11 +27,10 @@ RUN apt-get update && \
     apt-get install -y \
         build-essential \
         llvm-11 \
-        clang-12 \
-        cargo && \
+        clang-12 && \
     apt-get install -y wget libstdc++5 libtool-bin automake flex bison \
         libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
-        apt-utils apt-transport-https ca-certificates joe curl && \
+        apt-utils apt-transport-https ca-certificates joe curl \
     PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
 
 # Download libafl.

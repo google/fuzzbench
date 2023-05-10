@@ -27,24 +27,24 @@ RUN apt-get update && \
     apt-get install -y \
         build-essential \
         llvm-11 \
-        clang-12 \
+        clang-12 && \
     apt-get install -y wget libstdc++5 libtool-bin automake flex bison \
         libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
-        apt-utils apt-transport-https ca-certificates joe curl && \
-        python3-dev gzip
+        apt-utils apt-transport-https ca-certificates joe curl \
+        python3-dev gzip && \
     PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
 
 # Download libafl
 RUN git clone https://github.com/AFLplusplus/libafl_fuzzbench /libafl_fuzzbench && \
     cd /libafl_fuzzbench && \
-    git checkout 00e777770d37646d05a0018fd9aa961d67c46c41 && \
+    git checkout a910edcc54dc4ecfe49a68dec4e01277818192b3 && \
     git submodule update --init
 
 # Compile libafl
 RUN cd /libafl_fuzzbench/ && unset CFLAGS && unset CXXFLAGS && \
     export CC=clang && export CXX=clang++ && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
-    PATH="$PATH:/root/.cargo/bin/" cargo build --release --features no_link_main
+    PATH="/root/.cargo/bin/:$PATH"  cargo build --release --features no_link_main
 
 # Auxiliary weak references.
 RUN cd /libafl_fuzzbench && \
