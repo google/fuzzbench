@@ -20,6 +20,23 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-05-12-libafl
+  description: "libafl variants comparison."
+  fuzzers:
+    - libafl_fuzzbench_cmplog
+    - libafl_fuzzbench_cov_accounting
+    - libafl_fuzzbench_eco
+    - libafl_fuzzbench_explore
+    - libafl_fuzzbench_fast
+    - libafl_fuzzbench_mopt
+    - libafl_fuzzbench_naive
+    - libafl_fuzzbench_naive_ctx
+    - libafl_fuzzbench_ngram4
+    - libafl_fuzzbench_ngram8
+    - libafl_fuzzbench_rand_scheduler
+    - libafl_fuzzbench_value_profile
+    - libafl_fuzzbench_weighted
+
 - experiment: 2023-05-06-afppff
   description: "Benchmark fishfuzz"
   type: bug
