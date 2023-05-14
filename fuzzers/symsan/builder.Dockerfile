@@ -58,5 +58,5 @@ COPY libfuzz-harness-proxy.c /
 RUN KO_DONT_OPTIMIZE=1 USE_TRACK=1 KO_CC=clang-12 KO_USE_FASTGEN=1 /symsan/build/bin/ko-clang -c /libfuzz-harness-proxy.c -o /libfuzzer-harness.o
 RUN KO_DONT_OPTIMIZE=1 KO_CC=clang-12 /symsan/build/bin/ko-clang -c /libfuzz-harness-proxy.c -o /libfuzzer-harness-fast.o
 
-COPY run_with_multilog.sh /run_with_multilog.sh
-RUN chmod +x /run_with_multilog.sh
+COPY run_with_multilog.sh /out/run_with_multilog.sh
+RUN chmod +x /out/run_with_multilog.sh
