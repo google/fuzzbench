@@ -17,6 +17,7 @@ import os
 import signal
 import subprocess
 import threading
+import time
 from typing import List, Optional
 
 from common import logs
@@ -92,6 +93,7 @@ def execute(  # pylint: disable=too-many-locals,too-many-branches
     if kill_children:
         kwargs['preexec_fn'] = os.setsid
 
+    start_time = time.time()
     # pylint: disable=consider-using-with
     process = subprocess.Popen(command, *args, **kwargs)
     process_group_id = os.getpgid(process.pid)
@@ -109,9 +111,10 @@ def execute(  # pylint: disable=too-many-locals,too-many-branches
         _kill_process_group(process_group_id)
 
     retcode = process.returncode
+    end_time = time.time()
 
     command_log_str = ' '.join(command)[:LOG_LIMIT_FIELD]
-    log_message = 'Executed command: "%s" returned: %d.'
+    log_message = 'Executed command: "%s" returned: %d in %.2fs.'
 
     if output is not None:
         output = output.decode('utf-8', errors='ignore')
@@ -121,8 +124,8 @@ def execute(  # pylint: disable=too-many-locals,too-many-branches
         log_extras = None
 
     if expect_zero and retcode != 0 and not wrapped_process.timed_out:
-        logs.error(log_message, command_log_str, retcode, extras=log_extras)
+        logs.error(log_message, command_log_str, retcode, end_time-start_time, extras=log_extras)
         raise subprocess.CalledProcessError(retcode, command)
 
-    logs.debug(log_message, command_log_str, retcode, extras=log_extras)
+    logs.debug(log_message, command_log_str, retcode, end_time-start_time, extras=log_extras)
     return ProcessResult(retcode, output, wrapped_process.timed_out)
