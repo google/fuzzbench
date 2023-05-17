@@ -46,7 +46,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     os.environ['ASAN_OPTIONS'] = 'abort_on_error=0:allocator_may_return_null=1'
     os.environ['UBSAN_OPTIONS'] = 'abort_on_error=0'
 
-    cflags = ['--libafl']
+    cflags = ['--libafl', '-lm', '-Wno-error=unused-command-line-argument']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
     utils.append_flags('LDFLAGS', cflags)
