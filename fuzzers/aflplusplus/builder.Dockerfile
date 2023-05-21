@@ -46,5 +46,4 @@ RUN cd /afl && \
     unset CFLAGS CXXFLAGS && \
     export CC=clang AFL_NO_X86=1 && \
     PYTHON_INCLUDE=/ make && \
-    make install && \
     cp utils/aflpp_driver/libAFLDriver.a /
