@@ -37,7 +37,7 @@ RUN apt-get update && \
 # Download afl++.
 RUN git clone -b weightsplice https://github.com/AFLplusplus/AFLplusplus /afl && \
     cd /afl && \
-    git checkout a3ee636d5c61d4bf42f71f09500e2fdbfaef0763 || \
+    git checkout d3f7a4229e539c6ee563cd4b424674c310d6cb0c || \
     true
 
 # Build without Python support as we don't need it.
