@@ -1,6 +1,6 @@
-diff -ruN honggfuzz/cmdline.c honggfuzz-b1e09be-pastis/cmdline.c
+diff -ruN honggfuzz/cmdline.c honggfuzz-3a8f2ae-pastis/cmdline.c
 --- honggfuzz/cmdline.c	2022-06-23 17:27:05.000000000 -0300
-+++ honggfuzz-b1e09be-pastis/cmdline.c	2023-01-13 16:48:23.617159827 -0300
++++ honggfuzz-3a8f2ae-pastis/cmdline.c	2023-01-13 16:48:23.617159827 -0300
 @@ -525,6 +525,8 @@
          { { "export_feedback", no_argument, NULL, 0x10E }, "Export the coverage feedback structure as ./hfuzz-feedback" },
          { { "const_feedback", required_argument, NULL, 0x112 }, "Use constant integer/string values from fuzzed programs to mangle input files via a dynamic dictionary (default: true)" },
@@ -23,9 +23,9 @@ diff -ruN honggfuzz/cmdline.c honggfuzz-b1e09be-pastis/cmdline.c
              default:
                  cmdlineHelp(argv[0], custom_opts);
                  return false;
-diff -ruN honggfuzz/fuzz.c honggfuzz-b1e09be-pastis/fuzz.c
+diff -ruN honggfuzz/fuzz.c honggfuzz-3a8f2ae-pastis/fuzz.c
 --- honggfuzz/fuzz.c	2022-06-23 17:27:05.000000000 -0300
-+++ honggfuzz-b1e09be-pastis/fuzz.c	2023-01-13 16:48:50.349198188 -0300
++++ honggfuzz-3a8f2ae-pastis/fuzz.c	2023-01-13 16:48:50.349198188 -0300
 @@ -229,6 +229,39 @@
              softNewPC, softNewCmp, run->hwCnts.cpuInstrCnt, run->hwCnts.cpuBranchCnt,
              run->hwCnts.bbCnt, softCurEdge, softCurPC, softCurCmp);
@@ -66,9 +66,9 @@ diff -ruN honggfuzz/fuzz.c honggfuzz-b1e09be-pastis/fuzz.c
          /* Update per-input coverage metrics */
          run->dynfile->cov[0] = softCurEdge + softCurPC + run->hwCnts.bbCnt;
          run->dynfile->cov[1] = softCurCmp;
-diff -ruN honggfuzz/honggfuzz.c honggfuzz-b1e09be-pastis/honggfuzz.c
+diff -ruN honggfuzz/honggfuzz.c honggfuzz-3a8f2ae-pastis/honggfuzz.c
 --- honggfuzz/honggfuzz.c	2022-06-23 17:27:05.000000000 -0300
-+++ honggfuzz-b1e09be-pastis/honggfuzz.c	2023-01-13 16:49:10.965232496 -0300
++++ honggfuzz-3a8f2ae-pastis/honggfuzz.c	2023-01-13 16:49:10.965232496 -0300
 @@ -23,12 +23,14 @@
   */
  
@@ -125,9 +125,9 @@ diff -ruN honggfuzz/honggfuzz.c honggfuzz-b1e09be-pastis/honggfuzz.c
  
      printSummary(&hfuzz);
  
-diff -ruN honggfuzz/honggfuzz.h honggfuzz-b1e09be-pastis/honggfuzz.h
+diff -ruN honggfuzz/honggfuzz.h honggfuzz-3a8f2ae-pastis/honggfuzz.h
 --- honggfuzz/honggfuzz.h	2022-06-23 17:27:05.000000000 -0300
-+++ honggfuzz-b1e09be-pastis/honggfuzz.h	2023-01-13 16:49:18.817246608 -0300
++++ honggfuzz-3a8f2ae-pastis/honggfuzz.h	2023-01-13 16:49:18.817246608 -0300
 @@ -216,6 +216,9 @@
          dynfile_t*  dynfileq2Current;
          TAILQ_HEAD(dyns_t, _dynfile_t) dynfileq;
@@ -138,9 +138,9 @@ diff -ruN honggfuzz/honggfuzz.h honggfuzz-b1e09be-pastis/honggfuzz.h
      } io;
      struct {
          int                argc;
-diff -ruN honggfuzz/input.c honggfuzz-b1e09be-pastis/input.c
+diff -ruN honggfuzz/input.c honggfuzz-3a8f2ae-pastis/input.c
 --- honggfuzz/input.c	2022-06-23 17:27:05.000000000 -0300
-+++ honggfuzz-b1e09be-pastis/input.c	2023-01-13 16:49:38.961285357 -0300
++++ honggfuzz-3a8f2ae-pastis/input.c	2023-01-13 16:49:38.961285357 -0300
 @@ -31,6 +31,7 @@
  #include <stdio.h>
  #include <stdlib.h>
@@ -278,9 +278,9 @@ diff -ruN honggfuzz/input.c honggfuzz-b1e09be-pastis/input.c
  const uint8_t* input_getRandomInputAsBuf(run_t* run, size_t* len) {
      if (run->global->feedback.dynFileMethod == _HF_DYNFILE_NONE) {
          LOG_W(
-diff -ruN honggfuzz/input.h honggfuzz-b1e09be-pastis/input.h
+diff -ruN honggfuzz/input.h honggfuzz-3a8f2ae-pastis/input.h
 --- honggfuzz/input.h	2022-06-23 17:27:05.000000000 -0300
-+++ honggfuzz-b1e09be-pastis/input.h	2023-01-13 16:49:57.593324375 -0300
++++ honggfuzz-3a8f2ae-pastis/input.h	2023-01-13 16:49:57.593324375 -0300
 @@ -49,5 +49,7 @@
  extern bool           input_prepareExternalFile(run_t* run);
  extern bool           input_postProcessFile(run_t* run, const char* cmd);
