@@ -20,6 +20,13 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-05-17-aflpp-concolic
+  description: "Benchmark afl++ concolic"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_weighsplice
+    - aflplusplus_symqemu
+
 - experiment: 2023-05-06-afppff
   description: "Benchmark fishfuzz"
   type: bug
