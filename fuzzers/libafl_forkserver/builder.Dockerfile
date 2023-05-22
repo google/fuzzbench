@@ -38,7 +38,6 @@ RUN cd /afl && git checkout 6f21cb38480e25557c256b29eedd3905b46d8a69
 RUN cd /afl && \
     unset CFLAGS CXXFLAGS && \
     export CC=clang AFL_NO_X86=1 && \
-    export RUSTFLAGS="-Ctarget-cpu=native" && \
     PYTHON_INCLUDE=/ make && \
     make install && \
     cp utils/aflpp_driver/libAFLDriver.a /
@@ -52,6 +51,7 @@ RUN cd /libafl && git checkout 664e87809e6005f1814df1b55a345e7b2247f15b
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
+    export RUSTFLAGS="-Ctarget-cpu=native" && \
     cd ./fuzzers/fuzzbench_forkserver && \
     PATH="/root/.cargo/bin/:$PATH" cargo build --release
 
