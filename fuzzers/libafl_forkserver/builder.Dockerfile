@@ -38,6 +38,7 @@ RUN cd /afl && git checkout 8cdc48f73a17ddd557897f2098937a8ba3bfe184
 RUN cd /afl && \
     unset CFLAGS CXXFLAGS && \
     export CC=clang AFL_NO_X86=1 && \
+    export RUSTFLAGS="-Ctarget-cpu=native" && \
     PYTHON_INCLUDE=/ make && \
     make install && \
     cp utils/aflpp_driver/libAFLDriver.a /

@@ -46,6 +46,7 @@ RUN git clone \
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
+    export RUSTFLAGS="-Ctarget-cpu=native" && \
     cd ./fuzzers/fuzzbench_text && \
     PATH="/root/.cargo/bin/:$PATH" cargo build --release
 
