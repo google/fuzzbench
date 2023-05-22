@@ -38,7 +38,7 @@ RUN apt-get update && \
 RUN git clone --branch vhtokens \
         https://github.com/AFLplusplus/libafl /libafl && \
         cd /libafl && \
-        git checkout 6ffd8f883f00c8e649907c9f5d39167c9dab462e || \
+        git checkout 6f21cb38480e25557c256b29eedd3905b46d8a69 || \
         true
 
 # Compile libafl.
