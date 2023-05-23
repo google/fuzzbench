@@ -43,7 +43,7 @@ RUN git clone https://github.com/AFLplusplus/libafl_fuzzbench /libafl_fuzzbench 
 # Compile libafl
 RUN cd /libafl_fuzzbench/ && unset CFLAGS && unset CXXFLAGS && \
     export CC=clang && export CXX=clang++ && \
-    export LIBAFL_EDGES_MAP_SIZE=2621440 && \
+    export LIBAFL_EDGES_MAP_SIZE=65536 && \
     PATH="/root/.cargo/bin/:$PATH"  cargo build --release --features no_link_main
 
 # Auxiliary weak references.
