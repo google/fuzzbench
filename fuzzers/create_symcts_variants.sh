@@ -20,8 +20,10 @@ set -e
 
 # VARIANTS=(afl_companion symcc_afl symqemu_afl)
 VARIANTS=()
-VARIANTS+=(symcts symcts_afl symcts_sampling symcts_afl_sampling)
-VARIANTS+=(symcts_symqemu symcts_symqemu_afl symcts_symqemu_sampling symcts_symqemu_afl_sampling)
+VARIANTS+=(symcts symcts_afl)
+#VARIANTS+=(symcts_sampling symcts_afl_sampling)
+VARIANTS+=(symcts_symqemu symcts_symqemu_afl)
+#VARIANTS+=(symcts_symqemu_sampling symcts_symqemu_afl_sampling)
 VARIANTS+=(afl_companion)
 #VARIANTS+=(symcts_context_sensitive symcts_decision_coverage)
 

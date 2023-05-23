@@ -222,17 +222,17 @@ RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     cargo build --release --no-default-features --features=default_fuzzbench && \
     cp ./target/release/symcts /out/symcts/symcts
 
-RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
-    cargo build --release --no-default-features --features=default_fuzzbench --features=quicksampler_solving,quicksampler_path_sensitive_solving && \
-    cp ./target/release/symcts /out/symcts/symcts-sampling
+# RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
+#     cargo build --release --no-default-features --features=default_fuzzbench --features=quicksampler_solving,quicksampler_path_sensitive_solving && \
+#     cp ./target/release/symcts /out/symcts/symcts-sampling
 
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     cargo build --release --no-default-features --features=default_fuzzbench --features=sync_from_other_fuzzers &&    \
     cp ./target/release/symcts /out/symcts/symcts-from_other
 
-RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
-    cargo build --release --no-default-features --features=default_fuzzbench --features=quicksampler_solving,quicksampler_path_sensitive_solving,sync_from_other_fuzzers &&    \
-    cp ./target/release/symcts /out/symcts/symcts-sampling-from_other
+# RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
+#     cargo build --release --no-default-features --features=default_fuzzbench --features=quicksampler_solving,quicksampler_path_sensitive_solving,sync_from_other_fuzzers &&    \
+#     cp ./target/release/symcts /out/symcts/symcts-sampling-from_other
 
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     /symcc/build/symcc -I/afl-lukas/include -c /afl-lukas/utils/aflpp_driver/aflpp_driver.c -o /libfuzzer-main.o /libs_symcc/libc_symcc_preload.a /libs_symcc/libz.a
