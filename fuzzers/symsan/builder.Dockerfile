@@ -19,7 +19,8 @@ RUN apt-get update -y &&  \
     apt-get -y install wget python3-dev python3-setuptools apt-transport-https \
     libboost-all-dev texinfo libz3-dev \
     build-essential automake flex bison libglib2.0-dev libpixman-1-dev libgtk-3-dev ninja-build libnl-genl-3-dev \
-    lsb-release software-properties-common autoconf curl zlib1g-dev cmake protobuf-compiler libprotobuf-dev daemontools
+    lsb-release software-properties-common autoconf curl zlib1g-dev cmake protobuf-compiler libprotobuf-dev \
+    daemontools patchelf
 
 RUN if [ -x "$(command -v rustc)" ]; then rustup self uninstall -y; fi
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y

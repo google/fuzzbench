@@ -14,4 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# avoid coredumps since they take up hundreds of GBs of disk space
+ulimit -H -c 0
+ulimit -S -c 0
 RUST_LOG=info /out/run_with_multilog.sh /out/corpus/.log_res /out/fastgen --sync_afl -i - -o /out/corpus -t $1 -- $2 @@

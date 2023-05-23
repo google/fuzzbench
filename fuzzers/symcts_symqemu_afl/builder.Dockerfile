@@ -73,7 +73,7 @@ RUN update-alternatives \
 # RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl && \
 #     cd /afl && git checkout 149366507da1ff8e3e8c4962f3abc6c8fd78b222
 
-RUN echo "rerun=21"
+RUN echo "rerun=22"
 RUN git clone https://github.com/Lukas-Dresel/AFLplusplus/ /afl-lukas && \
     cd /afl-lukas && git checkout feat/larger_counters
 
@@ -219,19 +219,19 @@ RUN cd /mctsse/repos/symcc_libc_preload && \
     cp /mctsse/repos/symcc_libc_preload/libc_symcc_preload.a /libs_symcc/
 
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
-    cargo build --release && \
-    cp ./target/release/symcts /out/symcts/
+    cargo build --release --no-default-features --features=default_fuzzbench && \
+    cp ./target/release/symcts /out/symcts/symcts
 
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
-    cargo build --release --features=quicksampler_solving,quicksampler_path_sensitive_solving && \
+    cargo build --release --no-default-features --features=default_fuzzbench --features=quicksampler_solving,quicksampler_path_sensitive_solving && \
     cp ./target/release/symcts /out/symcts/symcts-sampling
 
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
-    cargo build --release --features=sync_from_other_fuzzers &&    \
+    cargo build --release --no-default-features --features=default_fuzzbench --features=sync_from_other_fuzzers &&    \
     cp ./target/release/symcts /out/symcts/symcts-from_other
 
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
-    cargo build --release --features=quicksampler_solving,quicksampler_path_sensitive_solving,sync_from_other_fuzzers &&    \
+    cargo build --release --no-default-features --features=default_fuzzbench --features=quicksampler_solving,quicksampler_path_sensitive_solving,sync_from_other_fuzzers &&    \
     cp ./target/release/symcts /out/symcts/symcts-sampling-from_other
 
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
