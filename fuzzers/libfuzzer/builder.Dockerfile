@@ -22,4 +22,5 @@ RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
     (for f in *.cpp; do \
       clang++ -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \
     done && wait) && \
-    ar r /libEntropic.a *.o
+    ar r libFuzzer.a *.o && \
+    cp libFuzzer.a /usr/lib
