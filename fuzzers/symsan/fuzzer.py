@@ -18,6 +18,7 @@ import glob
 import os
 import subprocess
 import threading
+import time
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
@@ -357,3 +358,4 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
         with subprocess.Popen(fastgen_restart_cmd, stdout=None,
                               stderr=None) as res:
             res.wait()
+        time.sleep(30)
