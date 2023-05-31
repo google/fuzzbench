@@ -39,13 +39,14 @@ RUN git clone \
         --branch vhtokens \
         https://github.com/AFLplusplus/libafl /libafl && \
         cd /libafl && \
-        git checkout 6c7f6566b0c8b3b82352c052a0672f46a2f7d1e9 || \
+        git checkout 6f21cb38480e25557c256b29eedd3905b46d8a69 || \
         true
 
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
+    export RUSTFLAGS="-Ctarget-cpu=native" && \
     cd ./fuzzers/fuzzbench_text && \
     PATH="/root/.cargo/bin/:$PATH" cargo build --release
 
