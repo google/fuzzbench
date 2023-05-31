@@ -38,14 +38,13 @@ RUN apt-get update && \
 RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git checkout 6f21cb38480e25557c256b29eedd3905b46d8a69 || true
+RUN cd /libafl && git checkout 8ff8ae41f1ed2956bb1e906c5c7bd0505ca110c0 || true
 # Note that due a nightly bug it is currently fixed to a known version on top!
 
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
-    export RUSTFLAGS="-Ctarget-cpu=native" && \
     cd ./fuzzers/fuzzbench && \
     PATH="/root/.cargo/bin/:$PATH" cargo build --release --features no_link_main
 

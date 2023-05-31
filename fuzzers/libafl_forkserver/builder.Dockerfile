@@ -31,7 +31,7 @@ RUN if which rustup; then rustup self uninstall -y; fi && \
 RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl
 
 # Checkout a current commit
-RUN cd /afl && git checkout c4b1566ba35c697cda7822bd0cf30e2e3eeee0c7
+RUN cd /afl && git checkout 8cdc48f73a17ddd557897f2098937a8ba3bfe184
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
@@ -46,12 +46,11 @@ RUN cd /afl && \
 RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git checkout 6f21cb38480e25557c256b29eedd3905b46d8a69
+RUN cd /libafl && git checkout 664e87809e6005f1814df1b55a345e7b2247f15b
 
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
-    export RUSTFLAGS="-Ctarget-cpu=native" && \
     cd ./fuzzers/fuzzbench_forkserver && \
     PATH="/root/.cargo/bin/:$PATH" cargo build --release
 
