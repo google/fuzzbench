@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# clean up previous angora restart leftovers
+rm -rf /out/angora.*/
+
 # avoid coredumps since they take up hundreds of GBs of disk space
 ulimit -S -c 0
 ulimit -H -c 0
