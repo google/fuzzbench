@@ -20,6 +20,13 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-06-23-aflpp
+  description: "Benchmark afl++ mutations"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_mutcomp
+    - aflplusplus_mutnew
+
 - experiment: 2023-05-17-aflpp-concolic
   description: "Benchmark afl++ concolic"
   fuzzers:
