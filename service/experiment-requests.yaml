@@ -20,7 +20,7 @@
 # Please add new experiment requests towards the top of this file.
 #
 
-- experiment: 2023-06-23-aflpp
+- experiment: 2023-06-09-aflpp
   description: "Benchmark afl++ mutations"
   fuzzers:
     - aflplusplus
