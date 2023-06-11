@@ -4014,3 +4014,22 @@
   fuzzers:
     - aflplusplus
     - libfuzzer
+
+- experiment: 2023-06-11
+  fuzzers:
+    - gmfuzzer
+    - gmfuzzer_aflplusplus
+    - aflplusplus
+    - gmfuzzer_honggfuzz
+    - honggfuzz 
+    - gmfuzzer_libfuzzer
+    - libfuzzer
+    - gmfuzzer_darwin 
+    - darwin
+    - gmfuzzer_fairfuzz
+    - fairfuzz
+    - gmfuzzer_mopt
+    - mopt
+    - gmfuzzer_ecofuzz 
+    - ecofuzz
+
