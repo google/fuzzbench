@@ -27,6 +27,7 @@
     - aflplusplus_406
     - aflplusplus_407
     - aflplusplus_text
+    - aflplusplus_exploit
 
 - experiment: 2023-06-12-aflpp-bug
   description: "Benchmark afl++ releases and newmutation - bug"
