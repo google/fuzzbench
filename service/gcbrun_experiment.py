@@ -57,7 +57,10 @@ def get_latest_gcbrun_command(comments):
             continue
         if len(body) == len(RUN_EXPERIMENT_COMMAND_STR):
             return None
-        return body[len(RUN_EXPERIMENT_COMMAND_STR):].strip().split(' ')
+        command = body[len(RUN_EXPERIMENT_COMMAND_STR):].strip().split(' ')
+        # Items that only contain space are redundant and will confuse
+        # `run_experiment_main()` in `experiment/run_experiment.py`
+        return [word for word in command if word.strip()]
     return None
 
 
