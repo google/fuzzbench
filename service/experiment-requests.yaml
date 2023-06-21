@@ -20,6 +20,27 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-06-23-aflpp
+  description: "Benchmark afl++ releases and newmutation"
+  fuzzers:
+    - aflplusplus
+    - aflplusplusplus
+    - aflplusplus_orig
+    - aflplusplus_orignewtext
+    - aflplusplus_text
+    - aflplusplus_exploit
+
+- experiment: 2023-06-23-aflpp-bug
+  description: "Benchmark afl++ releases and newmutation - bug"
+  type: bug
+  fuzzers:
+    - aflplusplus
+    - aflplusplusplus
+    - aflplusplus_orig
+    - aflplusplus_orignewtext
+    - aflplusplus_text
+    - aflplusplus_exploit
+
 - experiment: 2023-06-12-aflpp
   description: "Benchmark afl++ releases and newmutation"
   fuzzers:
