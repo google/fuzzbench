@@ -31,6 +31,7 @@ jobs:
           - libxml2_xml
           - libxml2_xml_e85b9b
           - libxslt_xpath
+          - libxslt_xpath_f1eb71
           - mbedtls_fuzz_dtlsclient
           - mbedtls_fuzz_dtlsclient_7c6b0e
           - openh264_decoder_fuzzer
@@ -40,6 +41,7 @@ jobs:
           - proj4_proj_crs_to_crs_fuzzer
           - re2_fuzzer
           - sqlite3_ossfuzz
+          - sqlite3_ossfuzz_228a52
           - stb_stbi_read_fuzzer
           - systemd_fuzz-link-parser
           - vorbis_decode_fuzzer
