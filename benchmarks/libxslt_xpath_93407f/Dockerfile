@@ -60,7 +60,7 @@ RUN apt-get update && \
 RUN git clone https://gitlab.gnome.org/GNOME/libxml2.git && \
     git -C libxml2 checkout c7260a47f19e01f4f663b6a56fbdc2dafd8a6e7e && \
     git clone https://gitlab.gnome.org/GNOME/libxslt.git && \
-    git -C libxslt checkout f1eb717f04d9cc297cc5e58e94b81ac96f47e741
+    git -C libxslt checkout 93407f6d3234ae3f036154d69f07da291eff34ff
 
 ENV ACLOCAL_PATH='/usr/share/aclocal/'
 

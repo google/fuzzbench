@@ -1,4 +1,4 @@
-commit: f1eb717f04d9cc297cc5e58e94b81ac96f47e741
+commit: 93407f6d3234ae3f036154d69f07da291eff34ff
 commit_date: 2019-01-01T15:21:36+00:00
 fuzz_target: xpath
 project: libxslt
