@@ -80,4 +80,4 @@ for fuzzer in xpath; do
     #zip -j $OUT/${fuzzer}_seed_corpus.zip tests/fuzz/seed/$fuzzer/*
 done
 
-cp tests/fuzz/*.dict tests/fuzz/*.xml $OUT/
+cp tests/fuzz/*.dict $OUT/
