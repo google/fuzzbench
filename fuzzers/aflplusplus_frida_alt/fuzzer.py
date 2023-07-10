@@ -56,6 +56,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
     if benchmark_name == 'systemd_fuzz-link-parser':
         os.environ['AFL_INST_LIBS'] = '1'
 
+    os.environ['AFL_FRIDA_SKIP_NUM'] = '1'
+
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,
