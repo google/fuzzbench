@@ -39,4 +39,4 @@ RUN cd /afl && \
     cd frida_mode && make && cd .. && \
     cp utils/aflpp_driver/libAFLQemuDriver.a /libAFLDriver.a
 
-COPY get_frida_entry.sh /
+COPY run.sh get_frida_entry.sh /

@@ -39,9 +39,7 @@ RUN cd /afl && \
     AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
     cd qemu_mode && ./build_qemu_support.sh && cd .. && \
     make -C utils/aflpp_driver && \
-    make -C utils/qemu_persistent_hook && \
     cp utils/aflpp_driver/libAFLQemuDriver.a /libAFLDriver.a && \
-    cp utils/aflpp_driver/aflpp_qemu_driver_hook.so / && \
-    cp utils/qemu_persistent_hook/read_into_rdi.so /
+    cp utils/aflpp_driver/aflpp_qemu_driver_hook.so /
 
 COPY run.sh /
