@@ -14,6 +14,8 @@
 
 FROM gcr.io/fuzzbench/base-image
 
+RUN apt install -y unzip git gdb joe
+
 # This makes interactive docker runs painless:
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
 #ENV AFL_MAP_SIZE=2621440
