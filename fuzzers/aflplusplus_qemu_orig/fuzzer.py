@@ -22,6 +22,7 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 def build():
     """Build benchmark."""
     aflplusplus_fuzzer.build('qemu')
+    shutil.copy('/run.sh', os.environ['OUT'])
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
