@@ -28,7 +28,7 @@ RUN apt-get update && \
 
 # Download afl++
 RUN git clone -b frida-perf https://github.com/WorksButNotTested/AFLplusplus /afl && \
-    cd /afl && git checkout 53dd803c1d023c91e491f0cd35d930917b46545d
+    cd /afl && git checkout 3916c4b217c0a733c94a54d036839096fc5e0361
     
 # Build afl++ without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
