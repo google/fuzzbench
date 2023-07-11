@@ -15,6 +15,7 @@
 
 import os
 import subprocess
+import shutil
 
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
@@ -39,6 +40,10 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     # Fuzzer options for qemu_mode.
     flags = ['-Q', '-c0']
+
+    benchmark_name = os.environ['BENCHMARK']
+    if benchmark_name == 'systemd_fuzz-link-parser':
+        os.environ['AFL_INST_LIBS'] = '1'
 
     os.environ['AFL_QEMU_PERSISTENT_ADDR'] = target_func
     os.environ['AFL_ENTRYPOINT'] = target_func
