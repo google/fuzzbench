@@ -28,7 +28,6 @@
     - aflplusplus_fuzzbench_explore
     - aflplusplus_fuzzbench_fast
     - aflplusplus_fuzzbench_laf
-    - aflplusplus_fuzzbench_lto
     - aflplusplus_fuzzbench_ngram4
     - aflplusplus_fuzzbench_ngram8
     - aflplusplus_fuzzbench_weighted
