@@ -33,7 +33,8 @@ RUN apt-get update && \
         ninja-build \
         gcc-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-plugin-dev \
         libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev \
-        apt install lsb-release wget software-properties-common gnupg
+
+RUN apt install lsb-release wget software-properties-common gnupg
 
 # LLVM
 
