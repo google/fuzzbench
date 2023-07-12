@@ -32,9 +32,9 @@ RUN apt-get update && \
         # for QEMU mode
         ninja-build \
         gcc-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-plugin-dev \
-        libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev \
+        libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
-RUN apt install lsb-release wget software-properties-common gnupg
+RUN apt install -y lsb-release wget software-properties-common gnupg
 
 # LLVM
 
