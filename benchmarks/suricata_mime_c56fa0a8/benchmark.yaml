@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit: 7c56fa0a80564174df8afe172ff722ef48754b405
-commit_date: 2022-11-17T12:17:01+0100
+commit: c56fa0a80564174df8afe172ff722ef48754b405
+commit_date: 2022-11-29T10:33:15+01:00
 fuzz_target: fuzz_mimedecparseline
 project: suricata
 type: bug
