@@ -191,7 +191,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         fuzz_target = os.getenv('FUZZ_TARGET')
         if fuzz_target:
             new_env['FUZZ_TARGET'] = os.path.join(cmplog_build_directory,
-                                         os.path.basename(fuzz_target))
+                                                  os.path.basename(fuzz_target))
 
         print('Re-building benchmark for CmpLog fuzzing target')
         utils.build_benchmark(env=new_env)
@@ -258,9 +258,9 @@ def fuzz(input_corpus,
 
     flags = list(flags)
 
-    flags += ['-p', 'explore'] # explore power scheduling
-    flags += ['-Z'] # disable weighted corpus scheduling
-    no_cmplog = True # no cmplog
+    flags += ['-p', 'explore']  # explore power scheduling
+    flags += ['-Z']  # disable weighted corpus scheduling
+    no_cmplog = True  # no cmplog
 
     if os.path.exists('./afl++.dict'):
         flags += ['-x', './afl++.dict']

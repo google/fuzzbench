@@ -258,8 +258,8 @@ def fuzz(input_corpus,
 
     flags = list(flags)
 
-    flags += ['-p', 'explore'] # explore power scheduling
-    flags += ['-Z'] # disable weighted corpus scheduling
+    flags += ['-p', 'explore']  # explore power scheduling
+    flags += ['-Z']  # disable weighted corpus scheduling
     # no_cmplog = True # no cmplog
 
     if os.path.exists('./afl++.dict'):

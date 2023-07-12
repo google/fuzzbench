@@ -20,6 +20,19 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-07-12
+  description: "AFL++ Comparison"
+  fuzzers:
+    - aflplusplus_fuzzbench_cmplog
+    - aflplusplus_fuzzbench_ctx
+    - aflplusplus_fuzzbench_explore
+    - aflplusplus_fuzzbench_fast
+    - aflplusplus_fuzzbench_laf
+    - aflplusplus_fuzzbench_lto
+    - aflplusplus_fuzzbench_ngram4
+    - aflplusplus_fuzzbench_ngram8
+    - aflplusplus_fuzzbench_weighted
+
 - experiment: 2023-06-12-aflpp
   description: "Benchmark afl++ releases and newmutation"
   fuzzers:
