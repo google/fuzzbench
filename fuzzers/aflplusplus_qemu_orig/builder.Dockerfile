@@ -43,3 +43,4 @@ RUN cd /afl && \
     cp utils/aflpp_driver/aflpp_qemu_driver_hook.so /
 
 COPY run.sh /
+COPY qemu_get_symbol_addr.sh /
