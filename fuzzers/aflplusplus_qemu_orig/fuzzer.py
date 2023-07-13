@@ -31,8 +31,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     # Get afl_qemu_driver_stdin_input address.
     nm_proc = subprocess.run([
-        'sh', '-c',
-        'qemu_get_symbol_addr.sh \'' + target_binary + 
+        'sh', '-c', 'qemu_get_symbol_addr.sh \'' + target_binary +
         '\' afl_qemu_driver_stdin_input'
     ],
                              stdout=subprocess.PIPE,

@@ -32,8 +32,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     # Get LLVMFuzzerTestOneInput address.
     nm_proc = subprocess.run([
-        'sh', '-c',
-        'qemu_get_symbol_addr.sh \'' + target_binary + 
+        'sh', '-c', 'qemu_get_symbol_addr.sh \'' + target_binary +
         '\' LLVMFuzzerTestOneInput'
     ],
                              stdout=subprocess.PIPE,
