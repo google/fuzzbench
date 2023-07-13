@@ -23,8 +23,9 @@ from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 def build():
     """Build benchmark."""
     aflplusplus_fuzzer.build('qemu')
-    shutil.copy('/read_into_rdi.so', os.environ['OUT'])
+    shutil.copy('/aflpp_qemu_driver_hook.so', os.environ['OUT'])
     shutil.copy('/run.sh', os.environ['OUT'])
+    shutil.copy('/qemu_get_symbol_addr.sh', os.environ['OUT'])
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
@@ -32,11 +33,13 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # Get LLVMFuzzerTestOneInput address.
     nm_proc = subprocess.run([
         'sh', '-c',
-        'nm \'' + target_binary + '\' | grep -i \'T LLVMFuzzerTestOneInput\''
+        'qemu_get_symbol_addr.sh \'' + target_binary + 
+        '\' LLVMFuzzerTestOneInput'
     ],
                              stdout=subprocess.PIPE,
                              check=True)
-    target_func = '0x' + nm_proc.stdout.split()[0].decode('utf-8')
+
+    target_func = nm_proc.stdout.split()[0].decode('utf-8')
     print('[fuzz] LLVMFuzzerTestOneInput() address =', target_func)
 
     # Fuzzer options for qemu_mode.
@@ -46,11 +49,13 @@ def fuzz(input_corpus, output_corpus, target_binary):
     if benchmark_name == 'systemd_fuzz-link-parser':
         os.environ['AFL_INST_LIBS'] = '1'
 
-    os.environ['AFL_QEMU_PERSISTENT_ADDR'] = target_func
     os.environ['AFL_ENTRYPOINT'] = target_func
+
+    os.environ['AFL_QEMU_PERSISTENT_ADDR'] = target_func
     os.environ['AFL_QEMU_PERSISTENT_CNT'] = '1000000'
-    os.environ['AFL_QEMU_PERSISTENT_HOOK'] = '/out/read_into_rdi.so'
+    os.environ['AFL_QEMU_PERSISTENT_HOOK'] = '/out/aflpp_qemu_driver_hook.so'
     #os.environ['AFL_QEMU_DRIVER_NO_HOOK'] = '1'
+
     aflplusplus_fuzzer.fuzz(input_corpus,
                             output_corpus,
                             target_binary,

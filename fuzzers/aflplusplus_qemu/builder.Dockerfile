@@ -30,7 +30,7 @@ RUN apt-get update && \
 
 # Download afl++
 RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl && \
-    cd /afl && git checkout da3351085519acf73dc8ddde3cf0b526b816551b || true
+    cd /afl && git checkout 534b3eba143c0532e600eb6da08ac2195fa24570 || true
     
 # Build afl++ without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
@@ -39,9 +39,7 @@ RUN cd /afl && \
     AFL_NO_X86=1 CC=clang PYTHON_INCLUDE=/ make && \
     cd qemu_mode && ./build_qemu_support.sh && cd .. && \
     make -C utils/aflpp_driver && \
-    make -C utils/qemu_persistent_hook && \
     cp utils/aflpp_driver/libAFLQemuDriver.a /libAFLDriver.a && \
-    cp utils/aflpp_driver/aflpp_qemu_driver_hook.so / && \
-    cp utils/qemu_persistent_hook/read_into_rdi.so /
+    cp utils/aflpp_driver/aflpp_qemu_driver_hook.so /
 
-COPY run.sh /
+COPY qemu_get_symbol_addr.sh run.sh /
