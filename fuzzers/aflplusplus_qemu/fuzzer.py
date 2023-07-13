@@ -45,8 +45,15 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # Fuzzer options for qemu_mode.
     flags = ['-Q', '-c0']
 
-    benchmark_name = os.environ['BENCHMARK']
-    if benchmark_name == 'systemd_fuzz-link-parser':
+    benchmark = os.environ['BENCHMARK']
+    if benchmark == 'systemd_fuzz-link-parser' ||
+       benchmark == 'libpcap_fuzz_both' ||
+       benchmark == 'proj4_proj_crs_to_crs_fuzzer' ||
+       benchmark == 'freetype2_ftfuzzer' ||
+       benchmark == 'lcms_cms_transform_fuzzer' ||
+       benchmark == 'mbedtls_fuzz_dtlsclient' ||
+       benchmark == 'vorbis_decode_fuzzer' ||
+       benchmark == 'woff2_convert_woff2ttf_fuzzer':
         os.environ['AFL_INST_LIBS'] = '1'
 
     os.environ['AFL_ENTRYPOINT'] = target_func
