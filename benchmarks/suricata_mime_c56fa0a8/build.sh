@@ -98,74 +98,12 @@ sh autogen.sh
 ./src/tests/fuzz/oss-fuzz-configure.sh
 make -j$(nproc)
 
-./src/suricata --list-app-layer-protos | tail -n +2 | while read i; do cp src/fuzz_applayerparserparse $OUT/fuzz_applayerparserparse"$branch"_$i; done
-
 (
 cd src
 ls fuzz_* | while read i; do cp $i $OUT/$i$branch; done
 )
 # dictionaries
-./src/suricata --list-keywords | grep "\- " | sed 's/- //' | awk '{print "\""$0"\""}' > $OUT/fuzz_siginit$branch.dict
-
-echo \"SMB\" > $OUT/fuzz_applayerparserparse"$branch"_smb.dict
-
-echo "\"FPC0\"" > $OUT/fuzz_sigpcap_aware$branch.dict
-echo "\"FPC0\"" > $OUT/fuzz_predefpcap_aware$branch.dict
-
-git grep tag rust | grep '"' | cut -d '"' -f2 | sort | uniq | awk 'length($0) > 2' | awk '{print "\""$0"\""}' | grep -v '\\' > generic.dict
-cat generic.dict >> $OUT/fuzz_siginit$branch.dict
-cat generic.dict >> $OUT/fuzz_applayerparserparse$branch.dict
-cat generic.dict >> $OUT/fuzz_sigpcap$branch.dict
-cat generic.dict >> $OUT/fuzz_sigpcap_aware$branch.dict
+echo "Content-Transfer-Encoding:base64\n\nAB/=\n" > fuzz_mimedecparseline_b64.corp
 
 # build corpuses
-# default configuration file
-zip -r $OUT/fuzz_confyamlloadstring"$branch"_seed_corpus.zip suricata.yaml
-# rebuilds rules corpus with only one rule by file
-unzip ../emerging.rules.zip
-cd rules
-cat *.rules > $OUT/fuzz.rules
-i=0
-mkdir corpus
-# quiet output for commands
-set +x
-cat *.rules | while read l; do echo $l > corpus/$i.rule; i=$((i+1)); done
-set -x
-zip -q -r $OUT/fuzz_siginit"$branch"_seed_corpus.zip corpus
-cd ../../suricata-verify
-
-# corpus with single files
-find . -name "*.pcap" | xargs zip -r $OUT/fuzz_decodepcapfile"$branch"_seed_corpus.zip
-find . -name "*.yaml" | xargs zip -r $OUT/fuzz_confyamlloadstring"$branch"_seed_corpus.zip
-find . -name "*.rules" | xargs zip -r $OUT/fuzz_siginit"$branch"_seed_corpus.zip
-)
-done
-
-# corpus using both rule and pcap as in suricata-verify
-cd $SRC/suricata-verify/tests
-i=0
-mkdir corpus
-set +x
-ls | grep -v corpus | while read t; do
-cat $t/*.rules > corpus/$i || true; echo -ne '\0' >> corpus/$i; cat $t/*.pcap >> corpus/$i || true; i=$((i+1));
-done
-set -x
-zip -q -r $OUT/fuzz_sigpcap_seed_corpus.zip corpus
-rm -Rf corpus
-mkdir corpus
-set +x
-ls | grep -v corpus | while read t; do
-grep -v "#" $t/*.rules | head -1 | cut -d "(" -f2 | cut -d ")" -f1 > corpus/$i || true; echo -ne '\0' >> corpus/$i; fpc_bin $t/*.pcap >> corpus/$i || rm corpus/$i; i=$((i+1));
-echo -ne '\0' >> corpus/$i; python3 $SRC/fuzzpcap/tcptofpc.py $t/*.pcap >> corpus/$i || rm corpus/$i; i=$((i+1));
-done
-set -x
-zip -q -r $OUT/fuzz_sigpcap_aware_seed_corpus.zip corpus
-rm -Rf corpus
-mkdir corpus
-set +x
-ls | grep -v corpus | while read t; do
-fpc_bin $t/*.pcap >> corpus/$i || rm corpus/$i; i=$((i+1));
-python3 $SRC/fuzzpcap/tcptofpc.py $t/*.pcap >> corpus/$i || rm corpus/$i; i=$((i+1));
-done
-set -x
-zip -q -r $OUT/fuzz_predefpcap_aware_seed_corpus.zip corpus
+zip -r $OUT/fuzz_mimedecparseline_seed_corpus.zip fuzz_mimedecparseline_b64.corp
