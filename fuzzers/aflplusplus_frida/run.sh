@@ -1,5 +1,5 @@
-#!/bin/sh
-# Copyright 2020 Google LLC
+#!/bin/bash
+# Copyright 2023 AFLplusplus
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ ADDR=0x`nm "$1"|grep -i 'T LLVMFuzzerTestOneInput'|awk '{print$1}'`
 test -n "$ADDR" || { echo Error: $1 does not contain LLVMFuzzerTestOneInput; exit 1; }
 export AFL_FRIDA_PERSISTENT_ADDR=$ADDR
 export AFL_ENTRYPOINT=$ADDR
+export AFL_FRIDA_PERSISTENT_CNT=1000000
 export AFL_FRIDA_PERSISTENT_HOOK=/out/frida_hook.so
 export AFL_PATH=/out
 export AFL_CMPLOG_ONLY_NEW=1
