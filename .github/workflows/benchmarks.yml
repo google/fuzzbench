@@ -47,6 +47,11 @@ jobs:
           - vorbis_decode_fuzzer
           - woff2_convert_woff2ttf_fuzzer
           - zlib_zlib_uncompress_fuzzer
+          - ssimp_assimp_fuzzer_4d451f
+          - file_magic_fuzzer_2d5f85
+          - grok_grk_decompress_fuzzer_9cd001
+          - lcms_cms_transform_all_fuzzer_97d37d
+          - libaom_av1_dec_fuzzer_6e1848
 
     steps:
     - uses: actions/checkout@v3
