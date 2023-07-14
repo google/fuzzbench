@@ -27,6 +27,8 @@
     - aflplusplus_fuzzbench_ctx
     - aflplusplus_fuzzbench_explore
     - aflplusplus_fuzzbench_fast
+    - aflplusplus_fuzzbench_ngram4
+    - aflplusplus_fuzzbench_ngram8
     - aflplusplus_fuzzbench_weighted
 
 - experiment: 2023-06-12-aflpp
