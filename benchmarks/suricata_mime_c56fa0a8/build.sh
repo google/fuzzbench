@@ -85,14 +85,11 @@ then
     export RUSTFLAGS="$RUSTFLAGS -Cdebug-assertions=yes"
 fi
 
-fuzz_branches=("")
-
-for branch in "${fuzz_branches[@]}"; do
 #we did not put libhtp there before so that cifuzz does not remove it
-cp -r libhtp suricata$branch/
+cp -r libhtp suricata/
 # build project
-(
-cd suricata$branch
+
+cd suricata
 sh autogen.sh
 
 ./src/tests/fuzz/oss-fuzz-configure.sh
@@ -100,7 +97,7 @@ make -j$(nproc)
 
 (
 cd src
-ls fuzz_* | while read i; do cp $i $OUT/$i$branch; done
+ls fuzz_* | while read i; do cp $i $OUT/$i; done
 )
 # dictionaries
 echo -e "Content-Transfer-Encoding:base64\n\nAB/=\n" > fuzz_mimedecparseline_b64.corp
