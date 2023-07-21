@@ -17,7 +17,7 @@ FROM gcr.io/fuzzbench/base-image
 RUN apt update -y && apt-get upgrade -y && \
     apt-get install -y python3-pyelftools bc
 
-RUN apt install -y unzip git gdb joe
+RUN apt update -y && apt install -y unzip git gdb joe
 
 # This makes interactive docker run painless:
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"

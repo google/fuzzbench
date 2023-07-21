@@ -14,7 +14,7 @@
 
 FROM gcr.io/fuzzbench/base-image
 
-RUN apt install -y unzip git gdb joe
+RUN apt update -y && apt install -y unzip git gdb joe
 
 # This makes interactive docker runs painless:
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
