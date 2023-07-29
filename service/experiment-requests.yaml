@@ -20,6 +20,19 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-07-30-powerschedule
+  description: "Comparing afl++ power schedule"
+  fuzzers:
+    - aflplusplus_fast
+    - aflplusplus_exploit
+    - aflplusplus_explore
+    - aflplusplus_rare
+    - aflplusplus_coe
+    - aflplusplus_quad
+    - aflplusplus_lin
+    - aflplusplus_mmopt
+    - aflplusplus_seek
+
 - experiment: 2023-06-12-aflpp
   description: "Benchmark afl++ releases and newmutation"
   fuzzers:
