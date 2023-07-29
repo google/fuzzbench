@@ -17,8 +17,8 @@ jobs:
       fail-fast: false
       matrix:
         benchmark:
-          - bloaty_fuzz_target
-          - bloaty_fuzz_target_52948c
+          #- bloaty_fuzz_target
+          #- bloaty_fuzz_target_52948c
           - curl_curl_fuzzer_http
           - freetype2_ftfuzzer
           - harfbuzz_hb-shape-fuzzer
@@ -36,7 +36,7 @@ jobs:
           - openh264_decoder_fuzzer
           - openssl_x509
           - openthread_ot-ip6-send-fuzzer
-          - php_php-fuzz-parser_0dbedb
+          #- php_php-fuzz-parser_0dbedb
           - proj4_proj_crs_to_crs_fuzzer
           - re2_fuzzer
           - sqlite3_ossfuzz

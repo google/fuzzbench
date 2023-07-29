@@ -14,11 +14,8 @@
 """Integration code fo using SymSan as AFLplusplus custom mutator."""
 
 import shutil
-import glob
 import os
 import subprocess
-import threading
-
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
 
@@ -70,8 +67,8 @@ def fix_flags(new_env):
     if not is_benchmark('libjpeg'):
         new_env['CXXFLAGS'] = ''
         new_env['CFLAGS'] = ''
-    if is_benchmark('libpcap'):
-        new_env['CXXFLAGS'] = '-libverbs'
+    #if is_benchmark('libpcap'):
+    #    new_env['CXXFLAGS'] = '-libverbs'
     if is_benchmark('libgit'):
         new_env['CXXFLAGS'] = '-lpcre'
     if is_benchmark('file_magic'):
@@ -90,18 +87,67 @@ def fix_flags(new_env):
 def fix_abilist():
     """Fix abilist for symsan"""
     if is_benchmark('proj'):
-        with open('/symsan/build/lib/symsan/dfsan_abilist.txt',
+        with open('/usr/local/lib/symsan/dfsan_abilist.txt',
                   'a',
                   encoding='utf-8') as abilist:
             abilist.write('fun:sqlite3_*=uninstrumented\n')
             abilist.write('fun:sqlite3_*=discard\n')
+    if is_benchmark('freetype'):
+        with open('/usr/local/lib/symsan/dfsan_abilist.txt',
+                  'a',
+                  encoding='utf-8') as abilist:
+            abilist.write('fun:lzma*=uninstrumented\n')
+            abilist.write('fun:lzma*=discard\n')
+    if is_benchmark('sqlite3'):
+        with open('/usr/local/lib/symsan/dfsan_abilist.txt',
+                  'a',
+                  encoding='utf-8') as abilist:
+            abilist.write('fun:fcntl64*=uninstrumented\n')
+            abilist.write('fun:fcntl64*=discard\n')
+    if is_benchmark('systemd'):
+        with open('/usr/local/lib/symsan/dfsan_abilist.txt',
+                  'a',
+                  encoding='utf-8') as abilist:
+            abilist.write('fun:fcntl64*=uninstrumented\n')
+            abilist.write('fun:fcntl64*=discard\n')
+    if is_benchmark('libxml'):
+        with open('/usr/local/lib/symsan/dfsan_abilist.txt',
+                  'a',
+                  encoding='utf-8') as abilist:
+            abilist.write('fun:lzma_*=uninstrumented\n')
+            abilist.write('fun:lzma_*=discard\n')
+    if is_benchmark('libxslt'):
+        with open('/usr/local/lib/symsan/dfsan_abilist.txt',
+                  'a',
+                  encoding='utf-8') as abilist:
+            abilist.write('fun:fcntl64*=uninstrumented\n')
+            abilist.write('fun:fcntl64*=discard\n')
+    if is_benchmark('openh264'):
+        with open('/usr/local/lib/symsan/dfsan_abilist.txt',
+                  'a',
+                  encoding='utf-8') as abilist:
+            abilist.write('fun:*sse*=uninstrumented\n')
+            abilist.write('fun:*sse*=discard\n')
+            abilist.write('fun:*_avx2=uninstrumented\n')
+            abilist.write('fun:*_avx2=discard\n')
+            abilist.write('fun:*_mmx=uninstrumented\n')
+            abilist.write('fun:*_mmx=discard\n')
+            abilist.write('fun:Wels*=uninstrumented\n')
+            abilist.write('fun:Wels*=discard\n')
+    if is_benchmark('libjpeg'):
+        with open('/usr/local/lib/symsan/dfsan_abilist.txt',
+                  'a',
+                  encoding='utf-8') as abilist:
+            abilist.write('fun:*simd_*=uninstrumented\n')
+            abilist.write('fun:*simd_*=discard\n')
     if is_benchmark('bloaty'):
-        with open('/symsan/build/lib/symsan/dfsan_abilist.txt',
+        with open('/usr/local/lib/symsan/dfsan_abilist.txt',
                   'a',
                   encoding='utf-8') as abilist:
             abilist.write('fun:*google8protobuf*=uninstrumented\n')
+            abilist.write('fun:*google8protobuf*=uninstrumented\n')
     if is_benchmark('libarchive'):
-        with open('/symsan/build/lib/symsan/dfsan_abilist.txt',
+        with open('/usr/local/lib/symsan/dfsan_abilist.txt',
                   'a',
                   encoding='utf-8') as abilist:
             with open('/src/fuzzers/symsan/xml.abilist', 'r',
@@ -110,30 +156,30 @@ def fix_abilist():
             with open('/src/fuzzers/symsan/bz2.abilist', 'r',
                       encoding='utf-8') as bz2:
                 abilist.write(bz2.read())
-    if is_benchmark('libgit'):
-        with open('/symsan/build/lib/symsan/dfsan_abilist.txt',
-                  'a',
-                  encoding='utf-8') as abilist:
-            with open('/src/fuzzers/symsan/pcre.abilist', 'r',
-                      encoding='utf-8') as pcre:
-                abilist.write(pcre.read())
-    if is_benchmark('wireshark'):
-        with open('/symsan/build/lib/symsan/dfsan_abilist.txt',
-                  'a',
-                  encoding='utf-8') as abilist:
-            with open('/src/fuzzers/symsan/gcry.abilist', 'r',
-                      encoding='utf-8') as gcry:
-                abilist.write(gcry.read())
-            with open('/src/fuzzers/symsan/cares.abilist',
-                      'r',
-                      encoding='utf-8') as cares:
-                abilist.write(cares.read())
-            with open('/src/fuzzers/symsan/glib.abilist', 'r',
-                      encoding='utf-8') as glib:
-                abilist.write(glib.read())
-            with open('/src/fuzzers/symsan/xml.abilist', 'r',
-                      encoding='utf-8') as xml:
-                abilist.write(xml.read())
+    #if is_benchmark('libgit'):
+    #    with open('/usr/local/lib/symsan/dfsan_abilist.txt',
+    #              'a',
+    #              encoding='utf-8') as abilist:
+    #        with open('/src/fuzzers/symsan/pcre.abilist', 'r',
+    #                  encoding='utf-8') as pcre:
+    #            abilist.write(pcre.read())
+    #if is_benchmark('wireshark'):
+    #    with open('/usr/local/lib/symsan/dfsan_abilist.txt',
+    #              'a',
+    #              encoding='utf-8') as abilist:
+    #        with open('/src/fuzzers/symsan/gcry.abilist', 'r',
+    #                  encoding='utf-8') as gcry:
+    #            abilist.write(gcry.read())
+    #        with open('/src/fuzzers/symsan/cares.abilist',
+    #                  'r',
+    #                  encoding='utf-8') as cares:
+    #            abilist.write(cares.read())
+    #        with open('/src/fuzzers/symsan/glib.abilist', 'r',
+    #                  encoding='utf-8') as glib:
+    #            abilist.write(glib.read())
+    #        with open('/src/fuzzers/symsan/xml.abilist', 'r',
+    #                  encoding='utf-8') as xml:
+    #            abilist.write(xml.read())
 
 
 def build_symsan(build_directory, src, work):
@@ -175,8 +221,8 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     work = os.getenv('WORK')
     build_directory = os.environ['OUT']
 
-    if is_benchmark('libpcap'):
-        os.environ['CXXFLAGS'] = os.environ['CXXFLAGS'] + ' -libverbs'
+    #if is_benchmark('libpcap'):
+    #    os.environ['CXXFLAGS'] = os.environ['CXXFLAGS'] + ' -libverbs'
     if is_benchmark('libgit'):
         os.environ['CXXFLAGS'] = os.environ['CXXFLAGS'] + ' -lpcre'
     if is_benchmark('file_magic'):
@@ -200,8 +246,8 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
     # Calculate CmpLog binary path from the instrumented target binary.
     target_binary_directory = os.path.dirname(target_binary)
     target_binary_name = os.path.basename(target_binary)
-    symsan_binary = os.path.join(
-        get_symsan_build_dir(target_binary_directory), target_binary_name)
+    symsan_binary = os.path.join(get_symsan_build_dir(target_binary_directory),
+                                 target_binary_name)
 
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     # decomment this to enable libdislocator.
