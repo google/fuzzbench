@@ -36,7 +36,6 @@
     - libjpeg-turbo_libjpeg_turbo_fuzzer
     - mbedtls_fuzz_dtlsclient
     - openssl_x509
-    - php_php-fuzz-parser_0dbedb
     - systemd_fuzz-link-parser
     - vorbis_decode_fuzzer
     - zlib_zlib_uncompress_fuzzer
