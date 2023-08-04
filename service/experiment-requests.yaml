@@ -19,8 +19,8 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
-- experiment: 2023-07-23-cfuzz
-  description: "cfuzz experiment (compare against core fuzzers)"
+- experiment: 2023-08-04-sfuzz
+  description: "sfuzz experiment (compare against core fuzzers)"
   fuzzers:
     - afl
     - aflfast
@@ -33,7 +33,7 @@
     - lafintel
     - libfuzzer
     - mopt
-    - cfuzz
+    - sfuzz
 
 - experiment: 2023-06-12-aflpp
   description: "Benchmark afl++ releases and newmutation"
