@@ -54,6 +54,8 @@ RUN apt-get update && \
     cd /afl/third_party/sievefuzz && \
     clang -D AF -D TRACE_METRIC -Wno-pointer-sign -c llvm_mode/afl-llvm-rt.o.c -I. -Iinclude && \
     clang++ -stdlib=libc++ -std=c++11 -O2 -c afl_driver.cpp && \
-    ar r /libAFL.a *.o
+    ar r /libAFL.a afl_driver.o afl-llvm-rt.o
+
+
 
 
