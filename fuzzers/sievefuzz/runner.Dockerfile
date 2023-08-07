@@ -13,3 +13,4 @@
 # limitations under the License.
 
 FROM gcr.io/fuzzbench/base-image
+RUN apt-get install -y python3.8-dev
