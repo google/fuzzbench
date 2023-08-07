@@ -44,3 +44,6 @@ docker/generated.mk
 
 # Vim backup files.
 .*.swp
+
+# IntelliJ files
+.idea
