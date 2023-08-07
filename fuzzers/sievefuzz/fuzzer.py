@@ -21,6 +21,17 @@ import subprocess
 from fuzzers import utils
 
 
+def is_benchmark(name):
+    """Check if the benchmark contains the string |name|"""
+    benchmark = os.getenv('BENCHMARK', None)
+    return benchmark is not None and name in benchmark
+
+def fix_fuzzer_lib():
+    """Fix FUZZER_LIB for certain benchmarks"""
+
+    shutil.copy('/libAFL.a', '/usr/lib/libFuzzingEngine.a')
+
+
 def prepare_build_environment():
     """Set environment variables used to build targets for AFL-based
     fuzzers."""
@@ -32,6 +43,9 @@ def prepare_build_environment():
     os.environ['CXX'] = 'clang++'
     os.environ['FUZZER_LIB'] = '/libAFL.a'
 
+    # Fix FUZZER_LIB for various benchmarks.
+    fix_fuzzer_lib()
+
 
 def build():
     """Build benchmark."""
@@ -41,7 +55,7 @@ def build():
 
     print('[post_build] Copying afl-fuzz to $OUT directory')
     # Copy out the afl-fuzz binary as a build artifact.
-    shutil.copy('/afl/afl-fuzz', os.environ['OUT'])
+    shutil.copy('/afl/third_party/sievefuzz/afl-fuzz', os.environ['OUT'])
 
 
 def get_stats(output_corpus, fuzzer_log):  # pylint: disable=unused-argument
@@ -100,7 +114,7 @@ def run_afl_fuzz(input_corpus,
                  hide_output=False):
     """Run afl-fuzz."""
     # Spawn the afl fuzzing process.
-    print('[run_afl_fuzz] Running target with afl-fuzz')
+    print('[run_afl_fuzz] Running target with sievefuzz')
     command = [
         './afl-fuzz',
         '-i',
