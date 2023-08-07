@@ -40,7 +40,7 @@ RUN git clone https://github.com/HexHive/SieveFuzz /afl && \
     git checkout 1751673ed6c56b7dc69b71ef07ace49867e3cfa4 && \
     cd third_party && ./install_svf.sh
 
-RUN  unset CFLAGS CXXFLAGS && \
+RUN  cd /afl/third_party && unset CFLAGS CXXFLAGS && \
      export CC=clang AFL_NO_X86=1 && \
      PYTHON_INCLUDE=/ && ./install_sievefuzz.sh
 
