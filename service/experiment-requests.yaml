@@ -27,6 +27,7 @@
     - afl
     - aflplusplus_407
     - mopt
+    - aflpp_fa
   benchmarks:
     - bloaty_fuzz_target
     - curl_curl_fuzzer_http
