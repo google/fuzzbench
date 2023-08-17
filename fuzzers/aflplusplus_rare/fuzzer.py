@@ -261,7 +261,7 @@ def fuzz(input_corpus,
     if os.path.exists('./afl++.dict'):
         flags += ['-x', './afl++.dict']
 
-    flags += ['-P', 'rare']
+    flags += ['-p', 'rare']
 
     # Move the following to skip for upcoming _double tests:
     if os.path.exists(cmplog_target_binary) and no_cmplog is False:
