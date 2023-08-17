@@ -20,11 +20,6 @@
 # Please add new experiment requests towards the top of this file.
 #
 
-- experiment: 2023-08-16-symsan-aflpp
-  description: "Benchmark afl++ with SYMSAN Concolic Execution Mutator"
-  fuzzers:
-    - symsan_aflplusplus
-
 - experiment: 2023-06-12-aflpp
   description: "Benchmark afl++ releases and newmutation"
   fuzzers:
