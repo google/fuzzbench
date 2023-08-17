@@ -100,7 +100,7 @@ def run_afl_fuzz(input_corpus,
     print('[run_afl_fuzz] Running target with afl-fuzz')
     command = [
         './afl-fuzz',
-        '-A 1',
+        '-A',
         #enable FA mode
         '-i',
         input_corpus,
