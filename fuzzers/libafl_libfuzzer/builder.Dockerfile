@@ -39,5 +39,5 @@ RUN git clone \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
     cd ./libafl_libfuzzer/libafl_libfuzzer_runtime && \
-    env -i CXX=$CXX CC=$CC PATH="/root/.cargo/bin/:$PATH" cargo build --release --no-default-features && \
+    env -i CXX=$CXX CC=$CC PATH="/root/.cargo/bin/:$PATH" cargo build --release && \
     cp ./target/release/libafl_libfuzzer_runtime.a /usr/lib/libFuzzer.a
