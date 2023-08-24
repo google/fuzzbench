@@ -20,14 +20,18 @@
 # Please add new experiment requests towards the top of this file.
 #
 
-- experiment: 2023-05-12-libafl
+- experiment: 2023-08-24-libafl
   description: "libafl variants comparison."
   fuzzers:
+    - aflplusplus
+    - libfuzzer
+    - libafl
+    - honggfuzz
     - libafl_fuzzbench_cmplog
     - libafl_fuzzbench_cov_accounting
-    - libafl_fuzzbench_eco
     - libafl_fuzzbench_explore
     - libafl_fuzzbench_fast
+    - libafl_fuzzbench_cmplog
     - libafl_fuzzbench_mopt
     - libafl_fuzzbench_naive
     - libafl_fuzzbench_naive_ctx
@@ -36,6 +40,24 @@
     - libafl_fuzzbench_rand_scheduler
     - libafl_fuzzbench_value_profile
     - libafl_fuzzbench_weighted
+  benchmarks:
+    - arduinojson_json_fuzzer
+    - assimp_assimp_fuzzer
+    - astc-encoder_fuzz_astc_physical_to_symbolic
+    - botan_tls_server
+    - brotli_decode_fuzzer
+    - double-conversion_string_to_double_fuzzer
+    - draco_draco_pc_decoder_fuzzer
+    - dropbear_fuzzer-postauth_nomaths
+    - firestore_firestore_serializer_fuzzer
+    - fmt_chrono-duration-fuzzer
+    - guetzli_guetzli_fuzzer
+    - icu_unicode_string_codepage_create_fuzzer
+    - jansson_json_load_dump_fuzzer
+    - libaom_av1_dec_fuzzer
+    - libcoap_pdu_parse_fuzzer
+    - libhevc_hevc_dec_fuzzer
+    - librdkafka_fuzz_regex
 
 - experiment: 2023-05-06-afppff
   description: "Benchmark fishfuzz"
