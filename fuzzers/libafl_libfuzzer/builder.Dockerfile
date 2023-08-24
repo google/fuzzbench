@@ -28,15 +28,14 @@ RUN apt-get update && \
 # Uninstall old Rust & Install the latest one.
 RUN if which rustup; then rustup self uninstall -y; fi && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
-    sh /rustup.sh --default-toolchain nightly -y && \
+    sh /rustup.sh --default-toolchain nightly-2023-08-23 -y && \
     rm /rustup.sh
 
 # Download libafl.
 RUN git clone \
-        --branch libfuzzer \
         https://github.com/AFLplusplus/libafl /libafl && \
     cd /libafl && \
-    git checkout d31f82387d1d233771ff1e13ef7e49cdb508410f && \
+    git checkout 920853195104845bd6b31e5a2dbdcde2c1472c08 && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
     cd ./libafl_libfuzzer/libafl_libfuzzer_runtime && \
