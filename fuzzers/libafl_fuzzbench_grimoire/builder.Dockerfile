@@ -18,7 +18,7 @@ FROM $parent_image
 # Uninstall old Rust & Install the latest one.
 RUN if which rustup; then rustup self uninstall -y; fi && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
-    sh /rustup.sh --default-toolchain nightly-2023-03-29 -y && \
+    sh /rustup.sh --default-toolchain nightly-2023-08-31 -y && \
     rm /rustup.sh
 
 # Install dependencies.
@@ -37,7 +37,7 @@ RUN apt-get update && \
 # Download libafl
 RUN git clone https://github.com/AFLplusplus/libafl_fuzzbench /libafl_fuzzbench && \
     cd /libafl_fuzzbench && \
-    git checkout 9c04e3c5e976fc4930eabe3b9fb400ae41c2dda3 && \
+    git checkout 310fe4048bb90def1619f65714ab285a4e7d2e75 && \
     git submodule update --init
 
 # Compile libafl
