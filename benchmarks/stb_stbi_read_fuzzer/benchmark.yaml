@@ -2,6 +2,7 @@ commit: 5736b15f7ea0ffb08dd38af21067c314d6a3aae9
 commit_date: 2023-01-29T18:46:04+00:00
 fuzz_target: stbi_read_fuzzer
 project: stb
+oss_fuzz_corpus_target: stb_stbi_read_fuzzer
 unsupported_fuzzers:
   - aflcc
   - afl_qemu
