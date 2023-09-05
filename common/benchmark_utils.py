@@ -53,6 +53,7 @@ def get_project(benchmark):
     return benchmark_config.get_config(benchmark)['project']
 
 def get_oss_fuzz_corpus_target(benchmark):
+    """Returns oss-fuzz corpus fuzz target of |benchmark|"""
     return benchmark_config.get_config(benchmark).get('oss_fuzz_corpus_target')
 
 def get_type(benchmark):
