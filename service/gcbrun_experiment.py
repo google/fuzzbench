@@ -37,10 +37,10 @@ def get_comments(pull_request_number):
     repo = github_obj.get_repo('google/fuzzbench')
     pull = repo.get_pull(pull_request_number)
     pull_comments = list(pull.get_comments())
-    last_pull_comment = pull_comments[-1] if pull_comments else ''
+    last_pull_comment = pull_comments[-1] if pull_comments else None
     issue = repo.get_issue(pull_request_number)
     issue_comments = list(issue.get_comments())
-    last_issue_comment = issue_comments[-1] if issue_comments else ''
+    last_issue_comment = issue_comments[-1] if issue_comments else None
     # Github only returns comments if from the pull object when a pull request
     # is open. If it is a draft, it will only return comments from the issue
     # object.
@@ -50,6 +50,8 @@ def get_comments(pull_request_number):
 def get_latest_gcbrun_command(comment):
     """Gets the last /gcbrun comment from comments."""
     # This seems to get comments on code too.
+    if comment is None:
+        return None
     body = comment.body
     if body.startswith(SKIP_COMMAND_STR):
         return None
