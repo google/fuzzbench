@@ -42,33 +42,32 @@ def get_comments(pull_request_number):
     # Github only returns comments if from the pull object when a pull request
     # is open. If it is a draft, it will only return comments from the issue
     # object.
-    return pull_comments + issue_comments
+    return pull_comments[-1], issue_comments[-1]
 
 
-def get_latest_gcbrun_command(comments):
+def get_latest_gcbrun_command(comment):
     """Gets the last /gcbrun comment from comments."""
-    for comment in reversed(comments):
-        # This seems to get comments on code too.
-        body = comment.body
-        if body.startswith(SKIP_COMMAND_STR):
-            return None
-        if not body.startswith(RUN_EXPERIMENT_COMMAND_STR):
-            return None
-        if len(body) == len(RUN_EXPERIMENT_COMMAND_STR):
-            return None
-        command = body[len(RUN_EXPERIMENT_COMMAND_STR):].strip().split(' ')
-        # Items that only contain space are redundant and will confuse
-        # `run_experiment_main()` in `experiment/run_experiment.py`
-        return [word for word in command if word.strip()]
-    return None
+    # This seems to get comments on code too.
+    body = comment.body
+    if body.startswith(SKIP_COMMAND_STR):
+        return None
+    if not body.startswith(RUN_EXPERIMENT_COMMAND_STR):
+        return None
+    if len(body) == len(RUN_EXPERIMENT_COMMAND_STR):
+        return None
+    command = body[len(RUN_EXPERIMENT_COMMAND_STR):].strip().split(' ')
+    # Items that only contain space are redundant and will confuse
+    # `run_experiment_main()` in `experiment/run_experiment.py`
+    return [word for word in command if word.strip()]
 
 
 def exec_command_from_github(pull_request_number):
     """Executes the gcbrun command for run_experiment.py in the most recent
   command on |pull_request_number|."""
-    comments = get_comments(pull_request_number)
-    print(comments)
-    command = get_latest_gcbrun_command(comments)
+    pull_cmt, issue_cmt = get_comments(pull_request_number)
+    print(f'Pull comment: {pull_cmt}\nIssue comment: {issue_cmt}')
+    command = (get_latest_gcbrun_command(pull_cmt) or
+               get_latest_gcbrun_command(issue_cmt))
     if command is None:
         logging.info('Experiment not requested.')
         return None
