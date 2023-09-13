@@ -37,12 +37,14 @@ def get_comments(pull_request_number):
     repo = github_obj.get_repo('google/fuzzbench')
     pull = repo.get_pull(pull_request_number)
     pull_comments = list(pull.get_comments())
+    last_pull_comment = pull_comments[-1] if pull_comments else ''
     issue = repo.get_issue(pull_request_number)
     issue_comments = list(issue.get_comments())
+    last_issue_comment = issue_comments[-1] if issue_comments else ''
     # Github only returns comments if from the pull object when a pull request
     # is open. If it is a draft, it will only return comments from the issue
     # object.
-    return pull_comments[-1], issue_comments[-1]
+    return last_pull_comment, last_issue_comment
 
 
 def get_latest_gcbrun_command(comment):
