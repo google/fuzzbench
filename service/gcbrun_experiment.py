@@ -54,7 +54,7 @@ def get_latest_gcbrun_command(comments):
         if body.startswith(SKIP_COMMAND_STR):
             return None
         if not body.startswith(RUN_EXPERIMENT_COMMAND_STR):
-            continue
+            return None
         if len(body) == len(RUN_EXPERIMENT_COMMAND_STR):
             return None
         command = body[len(RUN_EXPERIMENT_COMMAND_STR):].strip().split(' ')
