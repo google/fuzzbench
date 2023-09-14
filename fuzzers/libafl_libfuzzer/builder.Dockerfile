@@ -39,4 +39,4 @@ RUN git clone https://github.com/AFLplusplus/libafl /libafl && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
     cd ./libafl_libfuzzer/libafl_libfuzzer_runtime && \
     env -i CXX=$CXX CC=$CC PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench && \
-    cp ./target/release/libafl_libfuzzer_runtime.a /usr/lib/libFuzzer.a
+    cp ./target/release-fuzzbench/libafl_libfuzzer_runtime.a /usr/lib/libFuzzer.a
