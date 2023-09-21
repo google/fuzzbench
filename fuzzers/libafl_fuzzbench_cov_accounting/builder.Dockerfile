@@ -40,14 +40,11 @@ RUN git clone https://github.com/AFLplusplus/libafl_fuzzbench /libafl_fuzzbench 
     git checkout 310fe4048bb90def1619f65714ab285a4e7d2e75 && \
     git submodule update --init
 
-# We'll build the fuzzer in fuzzer.py
-'''
 # Compile libafl
 RUN cd /libafl_fuzzbench/ && unset CFLAGS && unset CXXFLAGS && \
     export CC=clang && export CXX=clang++ && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
     PATH="/root/.cargo/bin/:$PATH"  cargo build --release --features no_link_main
-'''
 
 # Auxiliary weak references.
 RUN cd /libafl_fuzzbench && \

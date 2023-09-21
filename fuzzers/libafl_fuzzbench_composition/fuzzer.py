@@ -37,11 +37,43 @@ def prepare_fuzz_environment(input_corpus):
     # Create at least one non-empty seed to start.
     utils.create_seed_file_for_empty_corpus(input_corpus)
 
+def build_libafl():
+    os.environ['CC'] = 'clang'
+    os.environ['CXX'] = 'clang++'
+    os.environ['LIBAFL_EDGES_MAP_SIZE'] = 2621440
+    os.environ['PATH'] = "/root/.cargo/bin/:$PATH"
+    
+    benchmark_name = os.environ['BENCHMARK']
+    if benchmark_name == "assimp_assimp_fuzzer":
+        feature_flags = ["fast", "naive_feedback", "grimoire"]
+    elif benchmark_name == "brotli_decode_fuzzer":
+        feature_flags = ["fast", "value_profile", "mopt"]
+    elif benchmark_name == "draco_draco_pc_decoder_fuzzer":
+        feature_flags = ["fast", "naive_feedback", "grimoire"]
+    elif benchmark_name == "guetzli_guetzli_fuzzer":
+        feature_flags = ["fast", "value_profile", "grimoire"]
+    elif benchmark_name == "libaom_av1_dec_fuzzer":
+        feature_flags = ["explore", "value_profile", "grimoire"]
+    elif benchmark_name == "libcoap_pdu_parse_fuzzer":
+        feature_flags = ["fast", "value_profile", "grimoire"]
+    else:
+        print("Unavailable benchmark")
+        exit(1)
+
+    command = ["cargo", "build", "--release", "--package", "composition", "--features"]
+    command += ["no_link_main"]
+    command += feature_flags
+
+    subprocess.check_call(command, cwd='/libafl_fuzzbench')
+
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
-    os.environ['CC'] = '/libafl_fuzzbench/target/release/composition_cc'
-    os.environ['CXX'] = '/libafl_fuzzbench/target/release/composition_cxx'
+
+    build_libafl()
+
+    os.environ['CC'] = '/libafl_fuzzbench/target/release/cov_accounting_cc'
+    os.environ['CXX'] = '/libafl_fuzzbench/target/release/cov_accounting_cxx'
 
     os.environ['ASAN_OPTIONS'] = 'abort_on_error=0:allocator_may_return_null=1'
     os.environ['UBSAN_OPTIONS'] = 'abort_on_error=0'
