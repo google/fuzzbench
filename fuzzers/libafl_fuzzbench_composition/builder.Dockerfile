@@ -35,9 +35,9 @@ RUN apt-get update && \
     PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
 
 # Download libafl
-RUN git clone https://github.com/AFLplusplus/libafl_fuzzbench /libafl_fuzzbench && \
+RUN git clone https://github.com/tokatoka/libafl_fuzzbench /libafl_fuzzbench && \
     cd /libafl_fuzzbench && \
-    git checkout 310fe4048bb90def1619f65714ab285a4e7d2e75 && \
+    git checkout 44ecead5c08f27d9db54a93a98c5d5f31d4645cc && \
     git submodule update --init
 
 # Compile libafl
