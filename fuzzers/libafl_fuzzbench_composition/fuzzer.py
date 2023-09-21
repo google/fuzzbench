@@ -61,8 +61,9 @@ def build_libafl():
         exit(1)
 
     command = ["cargo", "build", "--release", "--package", "composition", "--features"]
-    command += ["no_link_main"]
-    command += feature_flags
+    feature_flags = ["no_link_main"] + feature_flags
+    feature_flags = ",".join(feature_flags)
+    command += [feature_flags]
 
     subprocess.check_call(command, cwd='/libafl_fuzzbench')
 
