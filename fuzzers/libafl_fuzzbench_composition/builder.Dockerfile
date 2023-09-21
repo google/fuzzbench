@@ -41,12 +41,10 @@ RUN git clone https://github.com/tokatoka/libafl_fuzzbench /libafl_fuzzbench && 
     git submodule update --init
 
 # We'll build the fuzzer in fuzzer.py
-'''
-RUN cd /libafl_fuzzbench/ && unset CFLAGS && unset CXXFLAGS && \
-    export CC=clang && export CXX=clang++ && \
-    export LIBAFL_EDGES_MAP_SIZE=2621440 && \
-    PATH="/root/.cargo/bin/:$PATH"  cargo build --release --features no_link_main
-'''
+# RUN cd /libafl_fuzzbench/ && unset CFLAGS && unset CXXFLAGS && \
+#    export CC=clang && export CXX=clang++ && \
+#    export LIBAFL_EDGES_MAP_SIZE=2621440 && \
+#    PATH="/root/.cargo/bin/:$PATH"  cargo build --release --features no_link_main
 
 # Auxiliary weak references.
 RUN cd /libafl_fuzzbench && \
