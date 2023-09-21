@@ -40,7 +40,7 @@ def prepare_fuzz_environment(input_corpus):
 def build_libafl():
     os.environ['CC'] = 'clang'
     os.environ['CXX'] = 'clang++'
-    os.environ['LIBAFL_EDGES_MAP_SIZE'] = 2621440
+    os.environ['LIBAFL_EDGES_MAP_SIZE'] = "2621440"
     os.environ['PATH'] = "/root/.cargo/bin/:$PATH"
     
     benchmark_name = os.environ['BENCHMARK']
