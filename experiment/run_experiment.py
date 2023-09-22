@@ -378,8 +378,12 @@ def add_oss_fuzz_corpus(benchmark, oss_fuzz_corpora_dir):
     fuzz targets."""
     project = benchmark_utils.get_project(benchmark)
     fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
+    oss_fuzz_corpus_target = benchmark_utils.get_oss_fuzz_corpus_target(
+        benchmark)
 
-    if not fuzz_target.startswith(project):
+    if oss_fuzz_corpus_target:
+        full_fuzz_target = oss_fuzz_corpus_target
+    elif not fuzz_target.startswith(project):
         full_fuzz_target = f'{project}_{fuzz_target}'
     else:
         full_fuzz_target = fuzz_target
