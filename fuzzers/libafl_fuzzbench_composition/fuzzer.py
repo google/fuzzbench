@@ -41,7 +41,7 @@ def build_libafl():
     os.environ['CC'] = 'clang'
     os.environ['CXX'] = 'clang++'
     os.environ['LIBAFL_EDGES_MAP_SIZE'] = "2621440"
-    os.environ['PATH'] = "/root/.cargo/bin/:$PATH"
+    os.environ['PATH'] += ":/root/.cargo/bin/"
     
     benchmark_name = os.environ['BENCHMARK']
     if benchmark_name == "assimp_assimp_fuzzer":
