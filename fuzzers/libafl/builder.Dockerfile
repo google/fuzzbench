@@ -46,7 +46,7 @@ RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
     cd ./fuzzers/fuzzbench && \
-    PATH="/root/.cargo/bin/:$PATH" cargo build --release --features no_link_main
+    PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench --features no_link_main
 
 # Auxiliary weak references.
 RUN cd /libafl/fuzzers/fuzzbench && \
