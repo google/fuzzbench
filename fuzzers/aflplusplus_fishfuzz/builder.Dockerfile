@@ -48,7 +48,10 @@ RUN apt install -y lsb-release wget software-properties-common python3-pip
 RUN pip3 install networkx pydot 
 
 # copy Fish++ earlier to patch the llvm
-COPY FishFuzz/FF_AFL++ /FishFuzz
+# COPY FishFuzz/FF_AFL++ /FishFuzz
+RUN git clone https://github.com/kdsjZh/FishFuzz/ /ff_src && \
+    cd /ff_src && git checkout 72e07551dcf712bddf5cf5f8feb0af1f6f0c4afd && \
+    mv /ff_src/FF_AFL++ /FishFuzz && cd / && rm -r /ff_src
 
 # build clang-12 with gold plugin
 RUN mkdir -p /build && \
