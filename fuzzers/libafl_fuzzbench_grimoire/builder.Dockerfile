@@ -37,7 +37,7 @@ RUN apt-get update && \
 # Download libafl
 RUN git clone https://github.com/AFLplusplus/libafl_fuzzbench /libafl_fuzzbench && \
     cd /libafl_fuzzbench && \
-    git checkout 310fe4048bb90def1619f65714ab285a4e7d2e75 && \
+    git checkout 39b9f69a4d79710cdab0ad3270a8fed43557d870 && \
     git submodule update --init
 
 # Compile libafl
