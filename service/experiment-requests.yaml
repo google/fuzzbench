@@ -20,6 +20,19 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-09-25
+  description: "Benchmark orchestra config"
+  fuzzers:
+    - orchestra_236
+    - orchestra_339
+    - orchestra_4310
+    - orchestra_219
+    - orchestra_116
+    - orchestra_aflplusplus
+    - orchestra_honggfuzz
+    - orchestra_libfuzzer
+    - pastis
+
 - experiment: 2023-06-12-aflpp
   description: "Benchmark afl++ releases and newmutation"
   fuzzers:
