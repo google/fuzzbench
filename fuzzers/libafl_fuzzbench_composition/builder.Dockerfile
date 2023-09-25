@@ -37,7 +37,7 @@ RUN apt-get update && \
 # Download libafl
 RUN git clone https://github.com/tokatoka/libafl_fuzzbench /libafl_fuzzbench && \
     cd /libafl_fuzzbench && \
-    git checkout 44ecead5c08f27d9db54a93a98c5d5f31d4645cc && \
+    git checkout 9c6716e2153b6678bffd9e4a7fd9b556d86f057d && \
     git submodule update --init
 
 # We'll build the fuzzer in fuzzer.py

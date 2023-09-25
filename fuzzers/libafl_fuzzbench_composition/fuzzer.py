@@ -37,30 +37,33 @@ def prepare_fuzz_environment(input_corpus):
     # Create at least one non-empty seed to start.
     utils.create_seed_file_for_empty_corpus(input_corpus)
 
+
 def build_libafl():
     os.environ['CC'] = 'clang'
     os.environ['CXX'] = 'clang++'
     os.environ['LIBAFL_EDGES_MAP_SIZE'] = "2621440"
-    os.environ['PATH'] += ":/root/.cargo/bin/"
-    
+    os.environ['PATH'] = "/root/.cargo/bin/:" + os.environ['PATH']
+
     benchmark_name = os.environ['BENCHMARK']
     if benchmark_name == "assimp_assimp_fuzzer":
-        feature_flags = ["fast", "naive_feedback", "grimoire"]
+        feature_flags = ["fast", "naive_feedback", "mopt"]
     elif benchmark_name == "brotli_decode_fuzzer":
-        feature_flags = ["fast", "value_profile", "mopt"]
+        feature_flags = ["fast", "value_profile"]
     elif benchmark_name == "draco_draco_pc_decoder_fuzzer":
-        feature_flags = ["fast", "naive_feedback", "grimoire"]
+        feature_flags = ["fast", "naive_feedback", "mopt"]
     elif benchmark_name == "guetzli_guetzli_fuzzer":
-        feature_flags = ["fast", "value_profile", "grimoire"]
+        feature_flags = ["fast", "value_profile"]
     elif benchmark_name == "libaom_av1_dec_fuzzer":
-        feature_flags = ["explore", "value_profile", "grimoire"]
+        feature_flags = ["explore", "value_profile"]
     elif benchmark_name == "libcoap_pdu_parse_fuzzer":
-        feature_flags = ["fast", "value_profile", "grimoire"]
+        feature_flags = ["fast", "value_profile", "cmplog"]
     else:
         print("Unavailable benchmark")
         exit(1)
 
-    command = ["cargo", "build", "--release", "--package", "composition", "--features"]
+    command = [
+        "cargo", "build", "--release", "--package", "composition_v2", "--features"
+    ]
     feature_flags = ["no_link_main"] + feature_flags
     feature_flags = ",".join(feature_flags)
     command += [feature_flags]
@@ -73,8 +76,8 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
 
     build_libafl()
 
-    os.environ['CC'] = '/libafl_fuzzbench/target/release/cov_accounting_cc'
-    os.environ['CXX'] = '/libafl_fuzzbench/target/release/cov_accounting_cxx'
+    os.environ['CC'] = '/libafl_fuzzbench/target/release/composition_v2_cc'
+    os.environ['CXX'] = '/libafl_fuzzbench/target/release/composition_v2_cxx'
 
     os.environ['ASAN_OPTIONS'] = 'abort_on_error=0:allocator_may_return_null=1'
     os.environ['UBSAN_OPTIONS'] = 'abort_on_error=0'
