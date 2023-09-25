@@ -31,18 +31,19 @@ def get_uninstrumented_build_directory(target_directory):
     return os.path.join(target_directory, 'uninstrumented')
 
 
+# pylint: disable=consider-using-f-string
 def prepare_tmp_files(tmp_dir):
     """ Prepare tmp files."""
     if not os.path.isdir(tmp_dir) or os.path.exists(tmp_dir):
         os.mkdir(tmp_dir)
-    os.mkdir(f'%s/idlog' % (tmp_dir))
-    os.mkdir(f'%s/cg' % (tmp_dir))
-    os.mkdir(f'%s/fid' % (tmp_dir))
-    os.system(f'touch %s/idlog/fid %s/idlog/targid' % (tmp_dir, tmp_dir))
+    os.mkdir('%s/idlog' % (tmp_dir))
+    os.mkdir('%s/cg' % (tmp_dir))
+    os.mkdir('%s/fid' % (tmp_dir))
+    os.system('touch %s/idlog/fid %s/idlog/targid' % (tmp_dir, tmp_dir))
 
 
 def set_ff_env():
-    # set FishFuzz Env before build
+    """ set FishFuzz Env before build. """
     os.environ['TMP_DIR'] = os.environ['OUT'] + '/TEMP'
     os.environ['FF_TMP_DIR'] = os.environ['OUT'] + '/TEMP'
     prepare_tmp_files(os.environ['TMP_DIR'])
