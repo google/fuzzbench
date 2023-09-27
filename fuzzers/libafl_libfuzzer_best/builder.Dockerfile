@@ -37,7 +37,7 @@ RUN env -i PATH="/root/.cargo/bin/:$PATH" cargo install -f ucd-generate
 # Download libafl.
 RUN git clone --branch libfuzzer-best https://github.com/AFLplusplus/libafl /libafl && \
     cd /libafl && \
-    git checkout 4bb3a6821558f140bd3380490c719d9a28a0fefd && \
+    git checkout 8be6733b019fc54b03c85f3a83c051d69677aa34 && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
     cd ./libafl_libfuzzer/libafl_libfuzzer_runtime && \
