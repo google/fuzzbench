@@ -45,17 +45,16 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     # If nothing was set this is the default:
     if not build_modes:
-        build_modes = ['tracepc']
+        build_modes = ['tracepc', 'cmplog', 'dict2file']
 
     # For bug type benchmarks we have to instrument via native clang pcguard :(
     build_flags = os.environ['CFLAGS']
-    os.environ['CFLAGS'] = build_flags
 
-    #if build_flags.find(
-    #        'array-bounds'
-    #) != -1 and 'qemu' not in build_modes and 'classic' not in build_modes:
-    #    if 'gcc' not in build_modes:
-    #        build_modes[0] = 'native'
+    if build_flags.find(
+            'array-bounds'
+    ) != -1 and 'qemu' not in build_modes and 'classic' not in build_modes:
+        if 'gcc' not in build_modes:
+            build_modes[0] = 'native'
 
     # Instrumentation coverage modes:
     if 'lto' in build_modes:
@@ -272,6 +271,7 @@ def fuzz(input_corpus,
     os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
     os.environ['AFL_FAST_CAL'] = '1'
     os.environ['AFL_NO_WARN_INSTABILITY'] = '1'
+    os.environ['AFL_IGNORE_SEED_PROBLEMS'] = '1'
 
     if not skip:
         os.environ['AFL_DISABLE_TRIM'] = '1'
