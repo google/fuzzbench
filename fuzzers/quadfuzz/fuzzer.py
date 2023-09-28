@@ -29,4 +29,4 @@ def fuzz(input_corpus, output_corpus, target_binary):
     libfuzzer.run_fuzzer(input_corpus,
                          output_corpus,
                          target_binary,
-                         extra_flags=["-max_len=1048576"])
+                         extra_flags=["-max_len=262144", "-timeout=30"])

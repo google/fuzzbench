@@ -99,8 +99,3 @@ make -j$(nproc)
 cd src
 ls fuzz_* | while read i; do cp $i $OUT/$i; done
 )
-# dictionaries
-echo -e "Content-Transfer-Encoding:base64\n\nAB/=\n" > fuzz_mimedecparseline_b64.corp
-
-# build corpuses
-zip -r $OUT/fuzz_mimedecparseline_seed_corpus.zip fuzz_mimedecparseline_b64.corp
