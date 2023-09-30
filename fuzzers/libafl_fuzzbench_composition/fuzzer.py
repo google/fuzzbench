@@ -100,4 +100,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
         command += (['-x', dictionary_path])
     command += (['-o', output_corpus, '-i', input_corpus])
     print(command)
-    subprocess.check_call(command, cwd=os.environ['OUT'])
+    fuzzer_env = os.environ.copy()
+    fuzzer_env['LD_PRELOAD']='/usr/lib/x86_64-linux-gnu/libjemalloc.so.2'
+    subprocess.check_call(command, cwd=os.environ['OUT'], env=fuzzer_env)

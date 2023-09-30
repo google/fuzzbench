@@ -13,6 +13,7 @@
 # limitations under the License.
 
 FROM gcr.io/fuzzbench/base-image
+RUN apt install libjemalloc2
 
 # This makes interactive docker runs painless:
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
