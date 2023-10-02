@@ -14,21 +14,30 @@
 """Integration code for clang source-based coverage builds."""
 
 import os
+import subprocess
 
 from fuzzers import utils
+
+MUA_RECORDING_DB = '/tmp/execs.sqlite'
 
 
 def build():
     # """Build benchmark."""
     cflags = [
         # '-fprofile-instr-generate', '-fcoverage-mapping', '-gline-tables-only'
+        '-fPIE',
     ]
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
-    os.environ['CC'] = 'gclang'
-    os.environ['CXX'] = 'gclang++'
-    os.environ['FUZZER_LIB'] = '/home/mutator/dockerfiles/programs/common/main.cc'
+    os.environ['CC'] = 'gclang-wrap'
+    os.environ['CXX'] = 'gclang++-wrap'
+    os.environ['LLVM_COMPILER_PATH'] = '/usr/lib/llvm-15/bin/' 
+    os.environ['FUZZER_LIB'] = '/mutator/dockerfiles/programs/common/main.cc'
+    os.environ['MUA_RECORDING_DB'] = MUA_RECORDING_DB
+
+    if os.path.exists(MUA_RECORDING_DB):
+        os.unlink(MUA_RECORDING_DB)
 
     # fuzzer_lib = env['FUZZER_LIB']
     # env['LIB_FUZZING_ENGINE'] = fuzzer_lib
@@ -45,3 +54,5 @@ def build():
     print(f'Building benchmark {benchmark} with fuzzer {fuzzer}')
 
     utils.build_benchmark()
+
+    # subprocess.check_call(['/bin/mua_build_benchmark'])

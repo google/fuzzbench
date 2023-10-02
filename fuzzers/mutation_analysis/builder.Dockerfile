@@ -20,6 +20,14 @@ FROM gcr.io/fuzzbench/base-image AS base-image
 
 FROM $parent_image
 
+RUN apt-get update && apt-get install -y \
+    lsb-release wget software-properties-common gnupg
+RUN mkdir /llvm && \
+    cd /llvm && \
+    bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" && \
+    wget https://apt.llvm.org/llvm.sh && \
+    chmod +x llvm.sh && \
+    ./llvm.sh 15
 
 # WORKDIR /home/
 # RUN mkdir -p downloads
@@ -27,10 +35,10 @@ FROM $parent_image
 # RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 # RUN python3 get-pip.py
 
-RUN pip3 install wllvm
+RUN pip3 install wllvm 
 
 # ENV PATH "/root/toolchains/build/llvm+clang-901-x86_64-linux-gnu_build/bin/:$PATH"
-ENV LLVM_COMPILER "clang"
+# ENV LLVM_COMPILER "clang"
 
 RUN mkdir -p /tmp/gradle && \
     cd /tmp/gradle && \
@@ -42,36 +50,14 @@ RUN mkdir -p /tmp/gradle && \
 ENV PATH "/usr/local/gradle/bin/:$PATH"
 
 #### install gllvm
-# WORKDIR /root/
-
-# RUN wget -q -c https://dl.google.com/go/go1.16.15.linux-amd64.tar.gz -O - | tar -xz -C /usr/local
-
-# ENV PATH="${PATH}:/root/.cargo/bin:/usr/local/go/bin:/root/go/bin"
-
-# RUN go get github.com/SRI-CSL/gllvm/cmd/...
-
 ENV PATH="${PATH}:/root/.cargo/bin:/usr/local/go/bin:/root/go/bin"
-
 RUN mkdir /tmp/gllvm/ && \
     cd /tmp/gllvm/ && \
     wget -q -c https://dl.google.com/go/go1.16.15.linux-amd64.tar.gz -O - | tar -xz -C /usr/local && \
     go get github.com/SRI-CSL/gllvm/cmd/... && \
     rm -r /tmp/gllvm/
 
-# TODO remove
-# copy main.cc to /home/mutator/programs/common/main.cc while framework is not done
-COPY main.cc /home/mutator/dockerfiles/programs/common/main.cc
-
-# mutator
-
-
-# WORKDIR /home/
-
-# # RUN mkdir mutator
-# WORKDIR /home/mutator
-
-# ARG DEBIAN_FRONTEND=noninteractive
-# RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y openjdk-11-jdk zlib1g-dev
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y openjdk-11-jdk zlib1g-dev file
         # cmake \
         # binutils-dev \
         # libcurl4-openssl-dev \
@@ -87,17 +73,27 @@ COPY main.cc /home/mutator/dockerfiles/programs/common/main.cc
         # libstdc++6
 
 # RUN git clone https://github.com/CISPA-SysSec/mua_fuzzer_bench mutator
-# COPY mua_fuzzer_bench /mutator
+COPY mua_fuzzer_bench /mutator
 
 # COPY modules /home/mutator/modules
 # COPY build.gradle /home/mutator/
 # COPY run_mutation.py /home/mutator/
 # RUN chmod +x run_mutation.py
 # COPY settings.gradle /home/mutator
-# RUN cd /mutator && \
-#     echo "llvmBinPath=/usr/local/bin/" > gradle.properties && \
-#     gradle clean && \
-#     gradle build
+RUN cd /mutator && \
+    echo "llvmBinPath=/usr/lib/llvm-15/bin/" > gradle.properties
+RUN cd /mutator && gradle clean && gradle build
+# RUN ldconfig /mutator/build/install/LLVM_Mutation_Tool/lib/
+
+RUN ln /usr/bin/llvm-link-15 /bin/llvm-link 
+
+RUN apt-get update && apt-get install -y pipx python3.8-venv
+RUN pipx install hatch
+
+RUN ln -s /mutator/exec-recorder.py /exec-recorder.py 
+RUN ln -s /exec-recorder.py /bin/gclang-wrap
+RUN ln -s /exec-recorder.py /bin/gclang++-wrap
+RUN ln -s /mutator/mua_build_benchmark.py /bin/mua_build_benchmark
 
 
 # # set library paths for used shared libraries s.t. the system finds them

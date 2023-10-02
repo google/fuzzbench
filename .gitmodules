@@ -1,0 +1,4 @@
+[submodule "fuzzers/mutation_analysis/mua_fuzzer_bench"]
+	path = fuzzers/mutation_analysis/mua_fuzzer_bench
+	url = https://github.com/phi-go/mua_fuzzer_bench
+	branch = sbft
