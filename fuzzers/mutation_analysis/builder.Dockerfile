@@ -82,10 +82,35 @@ COPY mua_fuzzer_bench /mutator
 # COPY settings.gradle /home/mutator
 RUN cd /mutator && \
     echo "llvmBinPath=/usr/lib/llvm-15/bin/" > gradle.properties
-RUN cd /mutator && gradle clean && gradle build
+# RUN cd /mutator && gradle clean && gradle build
 # RUN ldconfig /mutator/build/install/LLVM_Mutation_Tool/lib/
 
-RUN ln /usr/bin/llvm-link-15 /bin/llvm-link 
+# RUN ln /usr/bin/llvm-link-15 /bin/llvm-link 
+RUN update-alternatives --install \
+            /usr/local/bin/llvm-config       llvm-config      /usr/lib/llvm-15/bin/llvm-config  200 \
+    --slave /usr/local/bin/llvm-ar           llvm-ar          /usr/lib/llvm-15/bin/llvm-ar \
+    --slave /usr/local/bin/llvm-as           llvm-as          /usr/lib/llvm-15/bin/llvm-as \
+    --slave /usr/local/bin/llvm-bcanalyzer   llvm-bcanalyzer  /usr/lib/llvm-15/bin/llvm-bcanalyzer \
+    --slave /usr/local/bin/llvm-cov          llvm-cov         /usr/lib/llvm-15/bin/llvm-cov \
+    --slave /usr/local/bin/llvm-diff         llvm-diff        /usr/lib/llvm-15/bin/llvm-diff \
+    --slave /usr/local/bin/llvm-dis          llvm-dis         /usr/lib/llvm-15/bin/llvm-dis \
+    --slave /usr/local/bin/llvm-dwarfdump    llvm-dwarfdump   /usr/lib/llvm-15/bin/llvm-dwarfdump \
+    --slave /usr/local/bin/llvm-extract      llvm-extract     /usr/lib/llvm-15/bin/llvm-extract \
+    --slave /usr/local/bin/llvm-link         llvm-link        /usr/lib/llvm-15/bin/llvm-link \
+    --slave /usr/local/bin/llvm-mc           llvm-mc          /usr/lib/llvm-15/bin/llvm-mc \
+    --slave /usr/local/bin/llvm-mcmarkup     llvm-mcmarkup    /usr/lib/llvm-15/bin/llvm-mcmarkup \
+    --slave /usr/local/bin/llvm-nm           llvm-nm          /usr/lib/llvm-15/bin/llvm-nm \
+    --slave /usr/local/bin/llvm-objdump      llvm-objdump     /usr/lib/llvm-15/bin/llvm-objdump \
+    --slave /usr/local/bin/llvm-ranlib       llvm-ranlib      /usr/lib/llvm-15/bin/llvm-ranlib \
+    --slave /usr/local/bin/llvm-readobj      llvm-readobj     /usr/lib/llvm-15/bin/llvm-readobj \
+    --slave /usr/local/bin/llvm-rtdyld       llvm-rtdyld      /usr/lib/llvm-15/bin/llvm-rtdyld \
+    --slave /usr/local/bin/llvm-size         llvm-size        /usr/lib/llvm-15/bin/llvm-size \
+    --slave /usr/local/bin/llvm-stress       llvm-stress      /usr/lib/llvm-15/bin/llvm-stress \
+    --slave /usr/local/bin/llvm-symbolizer   llvm-symbolizer  /usr/lib/llvm-15/bin/llvm-symbolizer \
+    --slave /usr/local/bin/llvm-tblgen       llvm-tblgen      /usr/lib/llvm-15/bin/llvm-tblgen \
+    --slave /usr/local/bin/lld               lld              /usr/lib/llvm-15/bin/lld \
+    --slave /usr/local/bin/clang             clang            /usr/lib/llvm-15/bin/clang \
+    --slave /usr/local/bin/clang++           clang++          /usr/lib/llvm-15/bin/clang++
 
 RUN apt-get update && apt-get install -y pipx python3.8-venv
 RUN pipx install hatch
@@ -120,3 +145,6 @@ RUN ln -s /mutator/mua_build_benchmark.py /bin/mua_build_benchmark
 #     bash build.sh && \
 #     cp libFuzzer.a /usr/lib && \
 #     rm -rf /tmp/libfuzzer $LF_PATH
+
+
+# clear && fuzzer_build && mua_build_benchmark && pushd /mutator && gradle build && ldconfig /mutator/build/install/LLVM_Mutation_Tool/lib/ && pipx run hatch run src/mua_fuzzer_benchmark/eval.py locator_local --config-path /tmp/config.json --result-path /tmp/test/ ; popd
