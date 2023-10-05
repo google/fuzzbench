@@ -46,17 +46,17 @@ def build_libafl():
 
     benchmark_name = os.environ['BENCHMARK']
     if benchmark_name == "assimp_assimp_fuzzer":
-        feature_flags = ["fast", "naive_feedback", "mopt"]
+        feature_flags = ["fast", "value_profile", "cmplog"]
     elif benchmark_name == "brotli_decode_fuzzer":
         feature_flags = ["fast", "value_profile"]
     elif benchmark_name == "draco_draco_pc_decoder_fuzzer":
-        feature_flags = ["fast", "naive_feedback", "mopt"]
-    elif benchmark_name == "guetzli_guetzli_fuzzer":
-        feature_flags = ["fast", "value_profile"]
-    elif benchmark_name == "libaom_av1_dec_fuzzer":
-        feature_flags = ["explore", "value_profile"]
-    elif benchmark_name == "libcoap_pdu_parse_fuzzer":
         feature_flags = ["fast", "value_profile", "cmplog"]
+    elif benchmark_name == "guetzli_guetzli_fuzzer":
+        feature_flags = ["fast", "value_profile", "mopt"]
+    elif benchmark_name == "libaom_av1_dec_fuzzer":
+        feature_flags = ["fast", "value_profile"]
+    elif benchmark_name == "libcoap_pdu_parse_fuzzer":
+        feature_flags = ["explore", "value_profile", "cmplog"]
     else:
         print("Unavailable benchmark")
         exit(1)
