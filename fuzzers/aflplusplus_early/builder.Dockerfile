@@ -37,7 +37,7 @@ RUN apt-get update && \
 # Download afl++.
 RUN git clone -b chg_pass_entrypoint https://github.com/AFLplusplus/AFLplusplus /afl && \
     cd /afl && \
-    git checkout 7dec7fb || \
+    git checkout 7dec7fb538465974ee4c94db22dfd35d044e45ef || \
     true
 
 # Build without Python support as we don't need it.
