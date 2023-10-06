@@ -45,7 +45,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     # If nothing was set this is the default:
     if not build_modes:
-        build_modes = ['tracepc', 'cmplog', 'dict2file']
+        build_modes = ['tracepc', 'dict2file']
 
     # For bug type benchmarks we have to instrument via native clang pcguard :(
     build_flags = os.environ['CFLAGS']
@@ -98,6 +98,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['CFLAGS'] = ' '.join(utils.NO_SANITIZER_COMPAT_CFLAGS)
         cxxflags = [utils.LIBCPLUSPLUS_FLAG] + utils.NO_SANITIZER_COMPAT_CFLAGS
         os.environ['CXXFLAGS'] = ' '.join(cxxflags)
+
+    os.environ['AFL_USE_ASAN'] = '1'
 
     if 'tracepc' in build_modes or 'pcguard' in build_modes:
         os.environ['AFL_LLVM_USE_TRACE_PC'] = '1'
@@ -195,8 +197,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
         print('Re-building benchmark for CmpLog fuzzing target')
         utils.build_benchmark(env=new_env)
-    else:
-        os.environ['AFL_USE_ASAN'] = '1'
 
     if 'symcc' in build_modes:
 
