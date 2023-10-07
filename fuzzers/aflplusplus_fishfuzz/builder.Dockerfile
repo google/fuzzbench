@@ -45,6 +45,11 @@ RUN apt-get install -y libboost-all-dev libjsoncpp-dev libgraphviz-dev \
 
 RUN apt install -y lsb-release wget software-properties-common python3-pip 
 
+# these two packages are automatically installed, libpcap will consider libnl 
+# installed and try to link with libnl-genl-3-dev, which is not installed. 
+# Simply remove these packages
+RUN apt remove libnl-3-200 libnl-3-dev -y
+
 RUN pip3 install networkx pydot 
 
 # copy Fish++ earlier to patch the llvm
@@ -84,7 +89,7 @@ ENV LLVM_CONFIG=llvm-config
 
 # make sure our modified clang-12 is called before clang-15, which is in /usr/local/bin
 ENV PATH="/llvm/build/bin:${PATH}"
-ENV LD_LIBRARY_PATH="/llvm/build/lib/x86_64-unknown-linux-gnu/c++/:${LD_LIBRARY_PATH}"
+ENV LD_LIBRARY_PATH="/llvm/build/lib/x86_64-unknown-linux-gnu/c++/"
 
 
 # Build without Python support as we don't need it.

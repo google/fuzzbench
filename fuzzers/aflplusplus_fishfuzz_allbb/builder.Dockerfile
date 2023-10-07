@@ -84,7 +84,7 @@ ENV LLVM_CONFIG=llvm-config
 
 # make sure our modified clang-12 is called before clang-15, which is in /usr/local/bin
 ENV PATH="/llvm/build/bin:${PATH}"
-ENV LD_LIBRARY_PATH="/llvm/build/lib/x86_64-unknown-linux-gnu/c++/:${LD_LIBRARY_PATH}"
+ENV LD_LIBRARY_PATH="/llvm/build/lib/x86_64-unknown-linux-gnu/c++/"
 
 
 # Build without Python support as we don't need it.
