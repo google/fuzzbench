@@ -34,7 +34,7 @@ RUN apt-get update && \
         gcc-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-plugin-dev \
         libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
-RUN cd / && https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 17
+RUN cd / && wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 17
 ENV LLVM_CONFIG=llvm-config-17
 
 # Download afl++.
