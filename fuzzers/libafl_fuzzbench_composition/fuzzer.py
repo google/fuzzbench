@@ -53,7 +53,7 @@ def build_libafl():
             feature_flags = ["fast", "ngram8", "mopt"]
         elif benchmark_name == "brotli_decode_fuzzer":
             feature_flags = ["fast", "value_profile"]
-        elif benchmark_name == "double-coversion_string_to_double_fuzzer":
+        elif benchmark_name == "double-conversion_string_to_double_fuzzer":
             feature_flags = ["fast", "ngram8", "mopt"]
         elif benchmark_name == "draco_draco_pc_decoder_fuzzer":
             feature_flags = ["fast", "cmplog"]
@@ -79,7 +79,7 @@ def build_libafl():
             feature_flags = ["weighted", "value_profile", "mopt"]
         elif benchmark_name == "brotli_decode_fuzzer":
             feature_flags = ["weighted", "mopt"]
-        elif benchmark_name == "double-coversion_string_to_double_fuzzer":
+        elif benchmark_name == "double-conversion_string_to_double_fuzzer":
             feature_flags = ["cov_accounting", "value_profile", "cmplog"]
         elif benchmark_name == "draco_draco_pc_decoder_fuzzer":
             feature_flags = ["fast", "value_profile", "cmplog"]
