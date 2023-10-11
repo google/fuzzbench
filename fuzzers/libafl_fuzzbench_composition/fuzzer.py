@@ -45,21 +45,59 @@ def build_libafl():
     os.environ['PATH'] = "/root/.cargo/bin/:" + os.environ['PATH']
 
     benchmark_name = os.environ['BENCHMARK']
-    if benchmark_name == "assimp_assimp_fuzzer":
-        feature_flags = ["fast", "value_profile", "cmplog"]
-    elif benchmark_name == "brotli_decode_fuzzer":
-        feature_flags = ["fast", "value_profile"]
-    elif benchmark_name == "draco_draco_pc_decoder_fuzzer":
-        feature_flags = ["fast", "value_profile", "cmplog"]
-    elif benchmark_name == "guetzli_guetzli_fuzzer":
-        feature_flags = ["fast", "value_profile", "mopt"]
-    elif benchmark_name == "libaom_av1_dec_fuzzer":
-        feature_flags = ["fast", "value_profile"]
-    elif benchmark_name == "libcoap_pdu_parse_fuzzer":
-        feature_flags = ["explore", "value_profile", "cmplog"]
+    prediction = True
+    if prediction:
+        if benchmark_name == "assimp_assimp_fuzzer":
+            feature_flags = ["fast", "cmplog"]
+        elif benchmark_name == "astc-encoder_fuzz_astc_physical_to_symbolic":
+            feature_flags = ["fast", "ngram8", "mopt"]
+        elif benchmark_name == "brotli_decode_fuzzer":
+            feature_flags = ["fast", "value_profile"]
+        elif benchmark_name == "double-coversion_string_to_double_fuzzer":
+            feature_flags = ["fast", "ngram8", "mopt"]
+        elif benchmark_name == "draco_draco_pc_decoder_fuzzer":
+            feature_flags = ["fast", "cmplog"]
+        elif benchmark_name == "fmt_chrono-duration-fuzzer":
+            feature_flags = ["explore", "cmplog"]
+        elif benchmark_name == "icu_unicode_string_codepage_create_fuzzer":
+            feature_flags = ["cov_accounting", "value_profile", "cmplog"]
+        elif benchmark_name == "guetzli_guetzli_fuzzer":
+            feature_flags = ["explore", "value_profile"]
+        elif benchmark_name == "libaom_av1_dec_fuzzer":
+            feature_flags = ["explore", "value_profile", "mopt"]
+        elif benchmark_name == "libcoap_pdu_parse_fuzzer":
+            feature_flags = ["cov_accounting", "ngram8", "cmplog"]
+        elif benchmark_name == "libhevc_hevc_dec_fuzzer":
+            feature_flags = ["explore", "value_profile", "cmplog"]
+        else:
+            print("Unavailable benchmark")
+            exit(1)
     else:
-        print("Unavailable benchmark")
-        exit(1)
+        if benchmark_name == "assimp_assimp_fuzzer":
+            feature_flags = ["fast", "value_profile", "cmplog"]
+        elif benchmark_name == "astc-encoder_fuzz_astc_physical_to_symbolic":
+            feature_flags = ["weighted", "value_profile", "mopt"]
+        elif benchmark_name == "brotli_decode_fuzzer":
+            feature_flags = ["weighted", "mopt"]
+        elif benchmark_name == "double-coversion_string_to_double_fuzzer":
+            feature_flags = ["cov_accounting", "value_profile", "cmplog"]
+        elif benchmark_name == "draco_draco_pc_decoder_fuzzer":
+            feature_flags = ["fast", "value_profile", "cmplog"]
+        elif benchmark_name == "fmt_chrono-duration-fuzzer":
+            feature_flags = ["rand_scheduler", "value_profile"]
+        elif benchmark_name == "icu_unicode_string_codepage_create_fuzzer":
+            feature_flags = ["weighted"]
+        elif benchmark_name == "guetzli_guetzli_fuzzer":
+            feature_flags = ["weighted", "value_profile", "mopt"]
+        elif benchmark_name == "libaom_av1_dec_fuzzer":
+            feature_flags = ["weighted", "value_profile", "mopt"]
+        elif benchmark_name == "libcoap_pdu_parse_fuzzer":
+            feature_flags = ["naive", "ngram8", "cmplog"]
+        elif benchmark_name == "libhevc_hevc_dec_fuzzer":
+            feature_flags = ["explore", "ngram4"]
+        else:
+            print("Unavailable benchmark")
+            exit(1)
 
     command = [
         "cargo", "build", "--release", "--package", "composition_v2", "--features"
