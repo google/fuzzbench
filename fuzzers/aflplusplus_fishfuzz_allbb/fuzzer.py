@@ -257,8 +257,9 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # python3 /Fish++/distance/merge_callgraph.py -i $FF_TMP_DIR
     # python3 /Fish++/distance/calculate_distance.py -i $FF_TMP_DIR
     os.system('python3 /FishFuzz/distance/match_function.py -i %s' % (tmp_dir_dst))
-    os.system('python3 /FishFuzz/distance/merge_callgraph.py -i %s' % (tmp_dir_dst))
-    os.system('python3 /FishFuzz/distance/calculate_distance.py -i %s' % (tmp_dir_dst))
+    # os.system('python3 /FishFuzz/distance/merge_callgraph.py -i %s' % (tmp_dir_dst))
+    # os.system('python3 /FishFuzz/distance/calculate_distance.py -i %s' % (tmp_dir_dst))
+    os.system('python3 /FishFuzz/distance/calculate_all_distance.py -i %s' % (tmp_dir_dst))
 
 
 # pylint: disable=too-many-arguments
@@ -308,4 +309,3 @@ def fuzz(input_corpus,
                             output_corpus,
                             target_binary,
                             additional_flags=flags)
-

@@ -43,14 +43,14 @@ RUN apt install -y git gcc g++ make cmake wget \
 RUN apt-get install -y libboost-all-dev libjsoncpp-dev libgraphviz-dev \
     pkg-config libglib2.0-dev findutils
 
-RUN apt install -y lsb-release wget software-properties-common python3-pip 
+RUN apt install -y lsb-release wget software-properties-common python3-pip
 
-RUN pip3 install networkx pydot 
+RUN pip3 install networkx pydot
 
 # copy Fish++ earlier to patch the llvm
 # COPY FishFuzz/FF_AFL++ /FishFuzz
 RUN git clone https://github.com/kdsjZh/FishFuzz/ /ff_src && \
-    cd /ff_src && git checkout 1241053ec55142b3e71bd3453b249829db29bf81 && \
+    cd /ff_src && git checkout 7d3e15cc358508e33b31950535adc36252b0056a && \
     mv /ff_src/FF_AFL++ /FishFuzz && cd / && rm -r /ff_src
 
 # build clang-12 with gold plugin
