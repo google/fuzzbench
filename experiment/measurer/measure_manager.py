@@ -120,6 +120,7 @@ def measure_loop(experiment: str,
     with multiprocessing.Pool(
             *pool_args) as pool, multiprocessing.Manager() as manager:
         set_up_coverage_binaries(pool, experiment)
+        set_up_mua_binaries(pool, experiment)
         # Using Multiprocessing.Queue will fail with a complaint about
         # inheriting queue.
         # pytype: disable=attribute-error
@@ -657,6 +658,35 @@ def set_up_coverage_binaries(pool, experiment):
     filesystem.create_directory(coverage_binaries_dir)
     pool.map(set_up_coverage_binary, benchmarks)
 
+def set_up_mua_binaries(pool, experiment):
+    """Set up mua finder binaries for all benchmarks in |experiment|."""
+    # Use set comprehension to select distinct benchmarks.
+    with db_utils.session_scope() as session:
+        benchmarks = [
+            benchmark_tuple[0]
+            for benchmark_tuple in session.query(models.Trial.benchmark).
+            distinct().filter(models.Trial.experiment == experiment)
+        ]
+
+    mua_binaries_dir = build_utils.get_mua_binaries_dir()
+    filesystem.create_directory(mua_binaries_dir)
+    pool.map(set_up_mua_binary, benchmarks)
+
+def set_up_mua_binary(benchmark):
+    """Set up mua finder binaries for |benchmark|."""
+    initialize_logs()
+    mua_binaries_dir = build_utils.get_mua_binaries_dir()
+    benchmark_mua_binary_dir = mua_binaries_dir / benchmark
+    filesystem.create_directory(benchmark_mua_binary_dir)
+    archive_name = f'mutation-analysis-build-{benchmark}.tar.gz'
+    archive_filestore_path = exp_path.filestore(mua_binaries_dir /
+                                                archive_name)
+    filestore_utils.cp(archive_filestore_path,
+                       str(benchmark_mua_binary_dir))
+    archive_path = benchmark_mua_binary_dir / archive_name
+    with tarfile.open(archive_path, 'r:gz') as tar:
+        tar.extractall(benchmark_mua_binary_dir)
+        os.remove(archive_path)
 
 def set_up_coverage_binary(benchmark):
     """Set up coverage binaries for |benchmark|."""

@@ -104,6 +104,17 @@ def build_measurer(benchmark: str) -> bool:
     except Exception:  # pylint: disable=broad-except
         logger.error('Failed to build measurer for %s.', benchmark)
         return False
+    
+def build_mua(benchmark: str) -> bool:
+    """Do a mutation analysis build for a benchmark."""
+    try:
+        logger.info('Building mua measurer for benchmark: %s.', benchmark)
+        buildlib.build_mua(benchmark)
+        logs.info('Done building mua measurer for benchmark: %s.', benchmark)
+        return True
+    except Exception:  # pylint: disable=broad-except
+        logger.error('Failed to build mua measurer for %s.', benchmark)
+        return False
 
 
 def build_all_measurers(benchmarks: List[str]) -> List[str]:
@@ -113,6 +124,8 @@ def build_all_measurers(benchmarks: List[str]) -> List[str]:
     filesystem.recreate_directory(build_utils.get_coverage_binaries_dir())
     build_measurer_args = [(benchmark,) for benchmark in benchmarks]
     successful_calls = retry_build_loop(build_measurer, build_measurer_args)
+    # build mua measurer
+    retry_build_loop(build_mua, build_measurer_args)
     logger.info('Done building measurers.')
     # Return list of benchmarks (like the list we were passed as an argument)
     # instead of returning a list of tuples each containing a benchmark.

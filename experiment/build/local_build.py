@@ -43,6 +43,10 @@ def get_shared_coverage_binaries_dir():
     experiment_filestore_path = experiment_utils.get_experiment_filestore_path()
     return os.path.join(experiment_filestore_path, 'coverage-binaries')
 
+def get_shared_mua_binaries_dir():
+    """Returns the shared mua binaries directory."""
+    experiment_filestore_path = experiment_utils.get_experiment_filestore_path()
+    return os.path.join(experiment_filestore_path, 'mua-binaries')
 
 def make_shared_coverage_binaries_dir():
     """Make the shared coverage binaries directory."""
@@ -50,6 +54,14 @@ def make_shared_coverage_binaries_dir():
     if os.path.exists(shared_coverage_binaries_dir):
         return
     os.makedirs(shared_coverage_binaries_dir)
+
+def make_shared_mua_binaries_dir():
+    """Make the shared mua binaries directory."""
+    shared_mua_binaries_dir = get_shared_mua_binaries_dir()
+    if os.path.exists(shared_mua_binaries_dir):
+        return
+    os.makedirs(shared_mua_binaries_dir)
+
 
 
 def build_coverage(benchmark):
@@ -60,6 +72,16 @@ def build_coverage(benchmark):
         return result
     make_shared_coverage_binaries_dir()
     copy_coverage_binaries(benchmark)
+    return result
+
+def build_mua(benchmark):
+    """Build (locally) mua image for benchmark."""
+    image_name = f'.mutation_analysis-{benchmark}-builder'
+    result = make([image_name])
+    if result.retcode:
+        return result
+    make_shared_mua_binaries_dir()
+    copy_mua_binaries(benchmark)
     return result
 
 
@@ -75,6 +97,26 @@ def copy_coverage_binaries(benchmark):
     command = (
         '(cd /out; '
         f'tar -czvf {coverage_build_archive_shared_dir_path} * /src /work)')
+    return new_process.execute([
+        'docker', 'run', '-v', mount_arg, builder_image_url, '/bin/bash', '-c',
+        command
+    ])
+
+def copy_mua_binaries(benchmark):
+    """Copy mua binaries in a local experiment."""
+    shared_mua_binaries_dir = get_shared_mua_binaries_dir()
+    mount_arg = f'{shared_mua_binaries_dir}:{shared_mua_binaries_dir}'
+    builder_image_url = benchmark_utils.get_builder_image_url(
+        benchmark, 'mutation_analysis', environment.get('DOCKER_REGISTRY'))
+    mua_build_archive = f'mutation-analysis-build-{benchmark}.tar.gz'
+    mua_build_archive_shared_dir_path = os.path.join(
+        shared_mua_binaries_dir, mua_build_archive)
+    command = (
+        '(cd /mutator; '
+        f'tar -czvf {mua_build_archive_shared_dir_path} /mutator)')
+    logger.info('MUA tar command:'+str(command))
+    logger.info('MUA builder_image_url:'+str(builder_image_url))
+    logger.info('MUA DOCKER_REGISTRY:'+str(environment.get('DOCKER_REGISTRY')))
     return new_process.execute([
         'docker', 'run', '-v', mount_arg, builder_image_url, '/bin/bash', '-c',
         command
