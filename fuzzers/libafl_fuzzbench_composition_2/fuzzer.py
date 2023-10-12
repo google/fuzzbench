@@ -45,7 +45,7 @@ def build_libafl():
     os.environ['PATH'] = "/root/.cargo/bin/:" + os.environ['PATH']
 
     benchmark_name = os.environ['BENCHMARK']
-    prediction = True
+    prediction = False
     if prediction:
         if benchmark_name == "assimp_assimp_fuzzer":
             feature_flags = ["fast", "cmplog"]
