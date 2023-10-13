@@ -59,3 +59,31 @@ def build():
     utils.build_benchmark()
 
     # subprocess.check_call(['/bin/mua_build_benchmark'])
+    prepare()
+
+
+def prepare():
+    # executed when benchmark is already present, but no fuzzer selected
+    subprocess.check_call(['/bin/mua_build_benchmark'])
+    subprocess.check_call(['cd /mutator && gradle build'])
+    subprocess.check_call(['ldconfig /mutator/build/install/LLVM_Mutation_Tool/lib/ '])
+    subprocess.check_call(['pipx run hatch run src/mua_fuzzer_benchmark/eval.py locator_local --config-path /tmp/config.json --result-path /tmp/test/'])
+    #subprocess.check_call([''])
+    #subprocess.check_call([''])
+
+     # build tooling
+    # load libs
+     #build location executables
+
+
+    # fuzzer_build # runs fuzzer.py build
+# mua_build_benchmark # builds bitcode to /out/filename.bc and config to /tmp/config
+
+# cd /mutator && gradle build #baut tooling
+# ldconfig /mutator/build/install/LLVM_Mutation_Tool/lib/ 
+# pipx run hatch run src/mua_fuzzer_benchmark/eval.py locator_local --config-path /tmp/config.json --result-path /tmp/test/ # stores infos in /tmp/test
+
+
+# /tmp/test/progs/xml/xml.locator /benchmark.yaml #create a list of all possible mutations
+# cd /mutator && python locator_signal_to_mutation_list.py --trigger-signal-dir /tmp/trigger_signal/ --prog xml --out /tmp/mualist.json && cat /tmp/mualist.json
+# cd /mutator && MUT_NUM_CPUS=24 pipx run hatch run src/mua_fuzzer_benchmark/eval.py locator_mutants_local --result-path /tmp/mutants_$(date +"%Y%m%d_%H%M%S") --statsdb /tmp/test/stats.db --mutation-list /tmp/mualist.json

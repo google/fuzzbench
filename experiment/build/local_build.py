@@ -114,9 +114,9 @@ def copy_mua_binaries(benchmark):
     command = (
         '(cd /mutator; '
         f'tar -czvf {mua_build_archive_shared_dir_path} /mutator)')
-    logger.info('MUA tar command:'+str(command))
-    logger.info('MUA builder_image_url:'+str(builder_image_url))
-    logger.info('MUA DOCKER_REGISTRY:'+str(environment.get('DOCKER_REGISTRY')))
+    # logger.info('MUA tar command:'+str(command))
+    # logger.info('MUA builder_image_url:'+str(builder_image_url))
+    # logger.info('MUA DOCKER_REGISTRY:'+str(environment.get('DOCKER_REGISTRY')))
     return new_process.execute([
         'docker', 'run', '-v', mount_arg, builder_image_url, '/bin/bash', '-c',
         command
