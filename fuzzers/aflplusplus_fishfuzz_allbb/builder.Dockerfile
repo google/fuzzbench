@@ -45,12 +45,17 @@ RUN apt-get install -y libboost-all-dev libjsoncpp-dev libgraphviz-dev \
 
 RUN apt install -y lsb-release wget software-properties-common python3-pip
 
+# these two packages are automatically installed, libpcap will consider libnl 
+# installed and try to link with libnl-genl-3-dev, which is not installed. 
+# Simply remove these packages
+RUN apt remove libnl-3-200 libnl-3-dev -y
+
 RUN pip3 install networkx pydot
 
 # copy Fish++ earlier to patch the llvm
 # COPY FishFuzz/FF_AFL++ /FishFuzz
 RUN git clone https://github.com/kdsjZh/FishFuzz/ /ff_src && \
-    cd /ff_src && git checkout 7d3e15cc358508e33b31950535adc36252b0056a && \
+    cd /ff_src && git checkout e92eb6adc886a944e16524edd9a7f311aec258ef && \
     mv /ff_src/FF_AFL++ /FishFuzz && cd / && rm -r /ff_src
 
 # build clang-12 with gold plugin
