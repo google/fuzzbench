@@ -41,7 +41,7 @@ RUN wget https://gist.githubusercontent.com/tokatoka/26f4ba95991c6e3313999997633
 RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git pull && git checkout fd6e95ff0c6a3db914a0a7e13c145438cee53065 || true
+RUN cd /libafl && git pull && git checkout e6eeaf59ba600bd901e5b3c9dfbf4a71a9367cb3 || true
 # Note that due a nightly bug it is currently fixed to a known version on top!
 
 # Compile libafl.
