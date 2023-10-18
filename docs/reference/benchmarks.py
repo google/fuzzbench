@@ -150,7 +150,26 @@ def get_benchmark_info(build_path):
     filesystem.create_directory(benchmark_path)
 
     with tarfile.open(build_path) as tar_file:
-        tar_file.extractall(benchmark_path)
+        def is_within_directory(directory, target):
+            
+            abs_directory = os.path.abspath(directory)
+            abs_target = os.path.abspath(target)
+        
+            prefix = os.path.commonprefix([abs_directory, abs_target])
+            
+            return prefix == abs_directory
+        
+        def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+        
+            for member in tar.getmembers():
+                member_path = os.path.join(path, member.name)
+                if not is_within_directory(path, member_path):
+                    raise Exception("Attempted Path Traversal in Tar File")
+        
+            tar.extractall(path, members, numeric_owner=numeric_owner) 
+            
+        
+        safe_extract(tar_file, benchmark_path)
 
     fuzz_target, fuzz_target_path = get_fuzz_target(benchmark, benchmark_path)
     has_dictionary = bool(fuzzer_utils.get_dictionary_path(fuzz_target_path))
