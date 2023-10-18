@@ -33,9 +33,8 @@ RUN apt-get update && \
     PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
 
 RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 16
-ENV PATH="/usr/bin/:$PATH"
 
-RUN wget https://gist.githubusercontent.com/tokatoka/26f4ba95991c6e33139999976332aa8e/raw/670119f455ef4f75ca0b6cf835aae5ae8192331e/createAliases.sh && chmod u+x createAliases.sh && ./createAliases.sh
+RUN wget https://gist.githubusercontent.com/tokatoka/26f4ba95991c6e33139999976332aa8e/raw/20996c7348bcbab115b79c315cee964f1a19e5f3/createAliases.sh && chmod u+x createAliases.sh && ./createAliases.sh
 
 # Download libafl.
 RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
