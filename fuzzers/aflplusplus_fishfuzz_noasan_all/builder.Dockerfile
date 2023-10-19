@@ -45,8 +45,8 @@ RUN apt-get install -y libboost-all-dev libjsoncpp-dev libgraphviz-dev \
 
 RUN apt install -y lsb-release wget software-properties-common python3-pip
 
-# these two packages are automatically installed, libpcap will consider libnl 
-# installed and try to link with libnl-genl-3-dev, which is not installed. 
+# these two packages are automatically installed, libpcap will consider libnl
+# installed and try to link with libnl-genl-3-dev, which is not installed.
 # Simply remove these packages
 RUN apt remove libnl-3-200 libnl-3-dev -y
 
@@ -55,21 +55,20 @@ RUN pip3 install networkx pydot
 # copy Fish++ earlier to patch the llvm
 # COPY FishFuzz/FF_AFL++ /FishFuzz
 RUN git clone https://github.com/kdsjZh/FishFuzz/ /ff_src && \
-    cd /ff_src && git checkout e92eb6adc886a944e16524edd9a7f311aec258ef && \
+    cd /ff_src && git checkout c94fabc7468b92f9bebdfb93ce5966d438d0eaf1 && \
     mv /ff_src/FF_AFL++ /FishFuzz && cd / && rm -r /ff_src
 
 # build clang-12 with gold plugin
 RUN mkdir -p /build && \
     git clone \
-         --depth 1 \
-         --branch release/12.x \
         https://github.com/llvm/llvm-project /llvm && \
     git clone \
         --depth 1 \
         --branch binutils-2_40-branch \
         git://sourceware.org/git/binutils-gdb.git /llvm/binutils && \
-    cd /llvm/ && git apply /FishFuzz/asan_patch/llvm-12/llvm-12-asan.diff && \
-    cp /FishFuzz/asan_patch/llvm-12/FishFuzzAddressSanitizer.cpp llvm/lib/Transforms/Instrumentation/ && \
+    cd /llvm/ && git checkout bf7f8d6fa6f460bf0a16ffec319cd71592216bf4 && \
+    git apply /FishFuzz/asan_patch/llvm-15.0/llvm-15-asan.diff && \
+    cp /FishFuzz/asan_patch/llvm-15.0/FishFuzzAddressSanitizer.cpp llvm/lib/Transforms/Instrumentation/ && \
     mkdir /llvm/binutils/build && cd /llvm/binutils/build && \
         CFLAGS="" CXXFLAGS="" CC=gcc CXX=g++ \
         ../configure --enable-gold --enable-plugins --disable-werror && \
@@ -89,7 +88,7 @@ ENV LLVM_CONFIG=llvm-config
 
 # make sure our modified clang-12 is called before clang-15, which is in /usr/local/bin
 ENV PATH="/llvm/build/bin:${PATH}"
-ENV LD_LIBRARY_PATH="/llvm/build/lib/x86_64-unknown-linux-gnu/c++/"
+ENV LD_LIBRARY_PATH="/llvm/build/lib/x86_64-unknown-linux-gnu/"
 
 
 # Build without Python support as we don't need it.
@@ -106,5 +105,3 @@ RUN cd /FishFuzz/ && \
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /FishFuzz/afl_driver.cpp && \
     clang++ -stdlib=libc++ -std=c++11 -O2 -c /FishFuzz/afl_driver.cpp -o /FishFuzz/afl_driver.o && \
     ar r /libAFLDriver.a /FishFuzz/afl_driver.o /FishFuzz/afl-compiler-rt.o
-
-

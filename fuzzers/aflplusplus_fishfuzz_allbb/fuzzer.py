@@ -199,6 +199,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         # CmpLog requires an build with different instrumentation.
         new_env = os.environ.copy()
         new_env['AFL_LLVM_CMPLOG'] = '1'
+        if 'USE_FF_INST' in new_env:
+            del new_env['USE_FF_INST']
 
         # For CmpLog build, set the OUT and FUZZ_TARGET environment
         # variable to point to the new CmpLog build directory.
