@@ -50,23 +50,23 @@ def build_libafl():
         if benchmark_name == "assimp_assimp_fuzzer":
             feature_flags = ["fast", "cmplog"]
         elif benchmark_name == "astc-encoder_fuzz_astc_physical_to_symbolic":
-            feature_flags = ["fast", "ngram8", "mopt"]
+            feature_flags = ["explore", "value_profile", "mopt"]
         elif benchmark_name == "brotli_decode_fuzzer":
             feature_flags = ["fast", "value_profile"]
         elif benchmark_name == "double-conversion_string_to_double_fuzzer":
-            feature_flags = ["fast", "ngram8", "mopt"]
+            feature_flags = ["fast", "ngram8", "cmplog"]
         elif benchmark_name == "draco_draco_pc_decoder_fuzzer":
-            feature_flags = ["fast", "cmplog"]
+            feature_flags = ["fast", "value_profile", "cmplog"]
         elif benchmark_name == "fmt_chrono-duration-fuzzer":
-            feature_flags = ["explore", "cmplog"]
+            feature_flags = ["fast", "value_profile", "cmplog"]
         elif benchmark_name == "icu_unicode_string_codepage_create_fuzzer":
-            feature_flags = ["cov_accounting", "value_profile", "cmplog"]
+            feature_flags = ["explore", "value_profile", "cmplog"]
         elif benchmark_name == "guetzli_guetzli_fuzzer":
             feature_flags = ["explore", "value_profile"]
         elif benchmark_name == "libaom_av1_dec_fuzzer":
             feature_flags = ["explore", "value_profile", "mopt"]
         elif benchmark_name == "libcoap_pdu_parse_fuzzer":
-            feature_flags = ["cov_accounting", "ngram8", "cmplog"]
+            feature_flags = ["rand_scheduler", "value_profile", "cmplog"]
         elif benchmark_name == "libhevc_hevc_dec_fuzzer":
             feature_flags = ["explore", "value_profile", "cmplog"]
         else:
