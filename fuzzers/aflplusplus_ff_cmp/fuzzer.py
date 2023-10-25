@@ -50,7 +50,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # For bug type benchmarks we have to instrument via native clang pcguard :(
     build_flags = os.environ['CFLAGS']
     os.environ['CFLAGS'] = build_flags
-    os.environ['AFL_USE_ASAN'] = '1'
 
     #if build_flags.find(
     #        'array-bounds'
