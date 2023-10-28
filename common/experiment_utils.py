@@ -20,7 +20,7 @@ from common import benchmark_utils
 from common import environment
 from common import experiment_path as exp_path
 
-DEFAULT_SNAPSHOT_SECONDS = 15 * 60  # Seconds.
+DEFAULT_SNAPSHOT_SECONDS = 5#15 * 60  # Seconds.
 CONFIG_DIR = 'config'
 
 

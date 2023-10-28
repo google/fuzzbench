@@ -37,9 +37,9 @@ from database import utils as db_utils
 # Give the trial runner a little extra time to shut down and account for how
 # long it can take to actually start running once an instance is started. 5
 # minutes is an arbitrary amount of time.
-GRACE_TIME_SECONDS = 5 * 60
+GRACE_TIME_SECONDS = 5 * 60 #10
 
-FAIL_WAIT_SECONDS = 10 * 60
+FAIL_WAIT_SECONDS = 10 * 60 #10
 
 logger = logs.Logger()  # pylint: disable=invalid-name
 

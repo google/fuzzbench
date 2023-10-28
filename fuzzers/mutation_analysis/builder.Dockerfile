@@ -121,6 +121,10 @@ RUN ln -s /exec-recorder.py /bin/gclang++-wrap
 RUN ln -s /mutator/mua_build_benchmark.py /bin/mua_build_benchmark
 
 
+#RUN echo "transfering control flow to mua_idle.py"
+#RUN python3 /mutator/mua_idle.py
+
+
 # # set library paths for used shared libraries s.t. the system finds them
 # ENV LD_LIBRARY_PATH /home/mutator/build/install/LLVM_Mutation_Tool/lib/
 # # For all subjects provide the path to the default main here. This is based on oss-fuzz convention.

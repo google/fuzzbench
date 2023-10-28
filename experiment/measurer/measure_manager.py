@@ -33,6 +33,7 @@ from sqlalchemy import func
 from sqlalchemy import orm
 
 from common import benchmark_utils
+from common import environment
 from common import experiment_utils
 from common import experiment_path as exp_path
 from common import filesystem
@@ -48,6 +49,11 @@ from experiment.measurer import run_coverage
 from experiment.measurer import run_crashes
 from experiment import scheduler
 
+if not experiment_utils.is_local_experiment():
+    import experiment.build.gcb_build as buildlib
+else:
+    import experiment.build.local_build as buildlib
+
 logger = logs.Logger()
 
 SnapshotMeasureRequest = collections.namedtuple(
@@ -55,7 +61,7 @@ SnapshotMeasureRequest = collections.namedtuple(
 
 NUM_RETRIES = 3
 RETRY_DELAY = 3
-FAIL_WAIT_SECONDS = 30
+FAIL_WAIT_SECONDS = 5#30
 SNAPSHOT_QUEUE_GET_TIMEOUT = 1
 SNAPSHOTS_BATCH_SAVE_SIZE = 100
 
@@ -120,7 +126,7 @@ def measure_loop(experiment: str,
     with multiprocessing.Pool(
             *pool_args) as pool, multiprocessing.Manager() as manager:
         set_up_coverage_binaries(pool, experiment)
-        set_up_mua_binaries(pool, experiment)
+        #set_up_mua_binaries(pool, experiment)
         # Using Multiprocessing.Queue will fail with a complaint about
         # inheriting queue.
         # pytype: disable=attribute-error
@@ -130,6 +136,7 @@ def measure_loop(experiment: str,
                 # Get whether all trials have ended before we measure to prevent
                 # races.
                 all_trials_ended = scheduler.all_trials_ended(experiment)
+
 
                 if not measure_all_trials(experiment, max_total_time, pool,
                                           multiprocessing_queue,
@@ -165,13 +172,13 @@ def measure_all_trials(experiment: str, max_total_time: int, pool,
     if not unmeasured_snapshots:
         return False
 
-    measure_trial_coverage_args = [
+    measure_trial_args = [
         (unmeasured_snapshot, max_cycle, multiprocessing_queue, region_coverage)
         for unmeasured_snapshot in unmeasured_snapshots
     ]
 
-    result = pool.starmap_async(measure_trial_coverage,
-                                measure_trial_coverage_args)
+    result = pool.starmap_async(measure_trial,
+                                measure_trial_args)
 
     # Poll the queue for snapshots and save them in batches until the pool is
     # done processing each unmeasured snapshot. Then save any remaining
@@ -201,7 +208,7 @@ def measure_all_trials(experiment: str, max_total_time: int, pool,
                 # unmeasured_snapshot. Since it is finished and the queue is
                 # empty, we can stop checking the queue for more snapshots.
                 logger.debug(
-                    'Finished call to map with measure_trial_coverage.')
+                    'Finished call to map with measure_trial.')
                 break
 
             if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE * .75:
@@ -247,10 +254,10 @@ def _query_unmeasured_trials(experiment: str):
 
     with db_utils.session_scope() as session:
         trial_query = session.query(models.Trial)
-        no_snapshots_filter = ~models.Trial.id.in_(ids_of_trials_with_snapshots)
-        started_trials_filter = ~models.Trial.time_started.is_(None)
-        nonpreempted_trials_filter = ~models.Trial.preempted
-        experiment_trials_filter = models.Trial.experiment == experiment
+        no_snapshots_filter = ~models.Trial.id.in_(ids_of_trials_with_snapshots) # trial has no snapshot
+        started_trials_filter = ~models.Trial.time_started.is_(None) # trial already started
+        nonpreempted_trials_filter = ~models.Trial.preempted # trial not preempted
+        experiment_trials_filter = models.Trial.experiment == experiment # trial matches the current experiment
         return trial_query.filter(experiment_trials_filter, no_snapshots_filter,
                                   started_trials_filter,
                                   nonpreempted_trials_filter)
@@ -398,10 +405,18 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
     def initialize_measurement_dirs(self):
         """Initialize directories that will be needed for measuring
         coverage."""
+
         for directory in [self.corpus_dir, self.coverage_dir, self.crashes_dir]:
             filesystem.recreate_directory(directory)
         filesystem.create_directory(self.report_dir)
 
+    def initialize_mua_environment(self):
+        buildlib.initialize_mua(self.benchmark, self.trial_num, self.fuzzer, self.corpus_dir)
+
+    def process_mua(self):
+        """runs mua measurement"""
+        # run all needed mutants in container
+    
     def run_cov_new_units(self):
         """Run the coverage binary on new units."""
         coverage_binary = coverage_utils.get_coverage_binary(self.benchmark)
@@ -553,7 +568,7 @@ def get_fuzzer_stats(stats_filestore_path):
     return json.loads(stats_str)
 
 
-def measure_trial_coverage(measure_req, max_cycle: int,
+def measure_trial(measure_req, max_cycle: int,
                            multiprocessing_queue: multiprocessing.Queue,
                            region_coverage) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
@@ -564,7 +579,7 @@ def measure_trial_coverage(measure_req, max_cycle: int,
     # Add 1 to ensure we measure the last cycle.
     for cycle in range(min_cycle, max_cycle + 1):
         try:
-            snapshot = measure_snapshot_coverage(measure_req.fuzzer,
+            snapshot = measure_snapshot(measure_req.fuzzer,
                                                  measure_req.benchmark,
                                                  measure_req.trial_id, cycle,
                                                  region_coverage)
@@ -582,10 +597,10 @@ def measure_trial_coverage(measure_req, max_cycle: int,
     logger.debug('Done measuring trial: %d.', measure_req.trial_id)
 
 
-def measure_snapshot_coverage(  # pylint: disable=too-many-locals
+def measure_snapshot(  # pylint: disable=too-many-locals
         fuzzer: str, benchmark: str, trial_num: int, cycle: int,
         region_coverage: bool) -> models.Snapshot:
-    """Measure coverage of the snapshot for |cycle| for |trial_num| of |fuzzer|
+    """Measure coverage and mua of the snapshot for |cycle| for |trial_num| of |fuzzer|
     and |benchmark|."""
     snapshot_logger = logs.Logger(
         default_extras={
@@ -617,6 +632,9 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
 
     snapshot_measurer.initialize_measurement_dirs()
     snapshot_measurer.extract_corpus(corpus_archive_dst)
+
+    snapshot_measurer.initialize_mua_environment()
+
     # Don't keep corpus archives around longer than they need to be.
     os.remove(corpus_archive_dst)
 
@@ -638,11 +656,13 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
                                fuzzer_stats=fuzzer_stats_data,
                                crashes=crashes)
 
+    snapshot_measurer.process_mua()
+
     measuring_time = round(time.time() - measuring_start_time, 2)
     snapshot_logger.info('Measured cycle: %d in %f seconds.', cycle,
                          measuring_time)
+    
     return snapshot
-
 
 def set_up_coverage_binaries(pool, experiment):
     """Set up coverage binaries for all benchmarks in |experiment|."""
