@@ -83,8 +83,9 @@ def measure_main(experiment_config):
     measurers_cpus = experiment_config['measurers_cpus']
     runners_cpus = experiment_config['runners_cpus']
     region_coverage = experiment_config['region_coverage']
+    mutation_analysis = experiment_config['mutation_analysis']
     measure_loop(experiment, max_total_time, measurers_cpus, runners_cpus,
-                 region_coverage)
+                 region_coverage, mutation_analysis)
 
     # Clean up resources.
     gc.collect()
@@ -106,7 +107,8 @@ def measure_loop(experiment: str,
                  max_total_time: int,
                  measurers_cpus=None,
                  runners_cpus=None,
-                 region_coverage=False):
+                 region_coverage=False,
+                 mutation_analysis=False):
     """Continuously measure trials for |experiment|."""
     logger.info('Start measure_loop.')
 
@@ -126,7 +128,8 @@ def measure_loop(experiment: str,
     with multiprocessing.Pool(
             *pool_args) as pool, multiprocessing.Manager() as manager:
         set_up_coverage_binaries(pool, experiment)
-        #set_up_mua_binaries(pool, experiment)
+        if(mutation_analysis):
+            set_up_mua_binaries(pool, experiment)
         # Using Multiprocessing.Queue will fail with a complaint about
         # inheriting queue.
         # pytype: disable=attribute-error
@@ -140,7 +143,7 @@ def measure_loop(experiment: str,
 
                 if not measure_all_trials(experiment, max_total_time, pool,
                                           multiprocessing_queue,
-                                          region_coverage):
+                                          region_coverage, mutation_analysis):
                     # We didn't measure any trials.
                     if all_trials_ended:
                         # There are no trials producing snapshots to measure.
@@ -156,7 +159,7 @@ def measure_loop(experiment: str,
 
 
 def measure_all_trials(experiment: str, max_total_time: int, pool,
-                       multiprocessing_queue, region_coverage) -> bool:
+                       multiprocessing_queue, region_coverage, mutation_analysis) -> bool:
     """Get coverage data (with coverage runs) for all active trials. Note that
     this should not be called unless multiprocessing.set_start_method('spawn')
     was called first. Otherwise it will use fork which breaks logging."""
@@ -173,7 +176,7 @@ def measure_all_trials(experiment: str, max_total_time: int, pool,
         return False
 
     measure_trial_args = [
-        (unmeasured_snapshot, max_cycle, multiprocessing_queue, region_coverage)
+        (unmeasured_snapshot, max_cycle, multiprocessing_queue, region_coverage, mutation_analysis)
         for unmeasured_snapshot in unmeasured_snapshots
     ]
 
@@ -570,7 +573,7 @@ def get_fuzzer_stats(stats_filestore_path):
 
 def measure_trial(measure_req, max_cycle: int,
                            multiprocessing_queue: multiprocessing.Queue,
-                           region_coverage) -> models.Snapshot:
+                           region_coverage, mutation_analysis) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
@@ -582,7 +585,7 @@ def measure_trial(measure_req, max_cycle: int,
             snapshot = measure_snapshot(measure_req.fuzzer,
                                                  measure_req.benchmark,
                                                  measure_req.trial_id, cycle,
-                                                 region_coverage)
+                                                 region_coverage, mutation_analysis)
             if not snapshot:
                 break
             multiprocessing_queue.put(snapshot)
@@ -599,7 +602,7 @@ def measure_trial(measure_req, max_cycle: int,
 
 def measure_snapshot(  # pylint: disable=too-many-locals
         fuzzer: str, benchmark: str, trial_num: int, cycle: int,
-        region_coverage: bool) -> models.Snapshot:
+        region_coverage: bool, mutation_analysis: bool) -> models.Snapshot:
     """Measure coverage and mua of the snapshot for |cycle| for |trial_num| of |fuzzer|
     and |benchmark|."""
     snapshot_logger = logs.Logger(
@@ -633,7 +636,8 @@ def measure_snapshot(  # pylint: disable=too-many-locals
     snapshot_measurer.initialize_measurement_dirs()
     snapshot_measurer.extract_corpus(corpus_archive_dst)
 
-    snapshot_measurer.initialize_mua_environment()
+    if(mutation_analysis):
+        snapshot_measurer.initialize_mua_environment()
 
     # Don't keep corpus archives around longer than they need to be.
     os.remove(corpus_archive_dst)
@@ -656,7 +660,8 @@ def measure_snapshot(  # pylint: disable=too-many-locals
                                fuzzer_stats=fuzzer_stats_data,
                                crashes=crashes)
 
-    snapshot_measurer.process_mua()
+    if(mutation_analysis):
+        snapshot_measurer.process_mua()
 
     measuring_time = round(time.time() - measuring_start_time, 2)
     snapshot_logger.info('Measured cycle: %d in %f seconds.', cycle,
