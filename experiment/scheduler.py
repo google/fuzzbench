@@ -701,6 +701,7 @@ class TrialProxy:
         self.time_ended = trial.time_ended
         self.preemptible = trial.preemptible
         self.cpuset = None
+        self.trial_group_num = trial.trial_group_num
 
 
 def _initialize_logs(experiment):
@@ -728,6 +729,7 @@ def _start_trial(trial: TrialProxy, experiment_config: dict, cpuset=None):
     _initialize_logs(experiment_config['experiment'])
     logger.info('Start trial %d.', trial.id)
     started = create_trial_instance(trial.fuzzer, trial.benchmark, trial.id,
+                                    trial.trial_group_num,
                                     experiment_config, trial.preemptible,
                                     cpuset)
     if started:
@@ -743,6 +745,7 @@ def render_startup_script_template(  # pylint: disable=too-many-arguments
         fuzzer: str,
         benchmark: str,
         trial_id: int,
+        trial_group_num: int,
         experiment_config: dict,
         cpuset=None):
     """Render the startup script using the template and the parameters
@@ -760,6 +763,8 @@ def render_startup_script_template(  # pylint: disable=too-many-arguments
         'experiment': experiment,
         'fuzzer': fuzzer,
         'trial_id': trial_id,
+        'trial_group_num': trial_group_num,
+        'micro_experiment': experiment_config['micro_experiment'],
         'max_total_time': experiment_config['max_total_time'],
         'snapshot_period': experiment_config['snapshot_period'],
         'experiment_filestore': experiment_config['experiment_filestore'],
@@ -788,6 +793,7 @@ def create_trial_instance(  # pylint: disable=too-many-arguments
         fuzzer: str,
         benchmark: str,
         trial_id: int,
+        trial_group_num: int,
         experiment_config: dict,
         preemptible: bool,
         cpuset=None) -> bool:
@@ -797,6 +803,7 @@ def create_trial_instance(  # pylint: disable=too-many-arguments
         experiment_config['experiment'], trial_id)
     startup_script = render_startup_script_template(instance_name, fuzzer,
                                                     benchmark, trial_id,
+                                                    trial_group_num,
                                                     experiment_config, cpuset)
     startup_script_path = f'/tmp/{instance_name}-start-docker.sh'
     with open(startup_script_path, 'w', encoding='utf-8') as file_handle:
