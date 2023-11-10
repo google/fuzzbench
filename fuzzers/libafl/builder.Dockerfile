@@ -26,19 +26,18 @@ RUN apt-get update && \
     apt-get remove -y llvm-10 && \
     apt-get install -y \
         build-essential \
-        llvm-11 \
-        clang-12 \
-        cargo && \
+        lsb-release wget software-properties-common gnupg && \
     apt-get install -y wget libstdc++5 libtool-bin automake flex bison \
         libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
         apt-utils apt-transport-https ca-certificates joe curl && \
+    wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 16 \
     PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
 
 # Download libafl.
 RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git pull && git checkout b20fda2a4ada2a6462718dc661e139e6c7a29807 || true
+RUN cd /libafl && git pull && git checkout 1138e6a341d14a4751aa7889cfde0344cb59da05 || true
 # Note that due a nightly bug it is currently fixed to a known version on top!
 
 # Compile libafl.
@@ -46,9 +45,4 @@ RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
     cd ./fuzzers/fuzzbench && \
-    PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench --features no_link_main
-
-# Auxiliary weak references.
-RUN cd /libafl/fuzzers/fuzzbench && \
-    clang -c stub_rt.c && \
-    ar r /stub_rt.a stub_rt.o
+    PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench
