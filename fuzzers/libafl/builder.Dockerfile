@@ -15,12 +15,6 @@
 ARG parent_image
 FROM $parent_image
 
-# Uninstall old Rust & Install the latest one.
-RUN if which rustup; then rustup self uninstall -y; fi && \
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
-    sh /rustup.sh --default-toolchain nightly-2023-09-21 -y && \
-    rm /rustup.sh
-
 # Install dependencies.
 RUN apt-get update && \
     apt-get remove -y llvm-10 && \
@@ -31,6 +25,13 @@ RUN apt-get update && \
         libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
         apt-utils apt-transport-https ca-certificates joe curl && \
     wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 16 \
+    wget https://gist.githubusercontent.com/tokatoka/26f4ba95991c6e33139999976332aa8e/raw/20996c7348bcbab115b79c315cee964f1a19e5f3/createAliases.sh && chmod u+x createAliases.sh && ./createAliases.sh
+
+# Uninstall old Rust & Install the latest one.
+RUN if which rustup; then rustup self uninstall -y; fi && \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
+    sh /rustup.sh --default-toolchain nightly-2023-09-21 -y && \
+    rm /rustup.sh && \
     PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
 
 # Download libafl.
