@@ -15,7 +15,6 @@
 """Module for building things locally for use in trials."""
 
 import os
-import shutil
 from typing import Tuple
 
 from common import benchmark_utils
@@ -84,54 +83,6 @@ def build_mua(benchmark):
     make_shared_mua_binaries_dir()
     prepare_mua_binaries(benchmark)
     return result
-
-def create_dir(dir):
-        if(not os.path.exists(dir)):
-            os.makedirs(dir, exist_ok=True)
-        return os.path.exists(dir)
-
-def initialize_mua(benchmark, trial_num, fuzzer, corpus_dir):
-    # find correct container and start it
-    container_name = 'mutation_analysis_'+benchmark+'_container'
-
-    docker_start_command = 'docker start '+container_name
-    new_process.execute(docker_start_command.split(' '))
-
-    shared_mua_binaries_dir = get_shared_mua_binaries_dir()
-    
-
-    
-    
-    # create corpi directory entry
-    corpi_dir = shared_mua_binaries_dir+'/corpi'
-    fuzzer_corpi_dir = corpi_dir + '/' + fuzzer
-    trial_corpi_dir = fuzzer_corpi_dir + '/' + str(trial_num)
-    create_dir(fuzzer_corpi_dir)
-
-    # create covered_mutants directory entry (contains ids)
-    mutants_ids_dir_entry = shared_mua_binaries_dir+'/mutant_ids'+'/'+fuzzer+'/'+str(trial_num)
-    create_dir(mutants_ids_dir_entry)
-
-    # create mutants directory
-    mutants_dir_entry = shared_mua_binaries_dir+'/mutants'+'/'
-    create_dir(mutants_dir_entry)
-
-    # copy corpus from self.corpus_dir into container
-    shutil.copytree(corpus_dir, trial_corpi_dir, dirs_exist_ok=True)
-
-    # get additional info from commons
-    experiment_name = experiment_utils.get_experiment_name()
-    fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
-
-    # execute command on container
-    command = '(python3 /mutator/mua_build_ids.py '+fuzz_target+' '+experiment_name+' '+fuzzer+' '+str(trial_num)+'; )'
-    
-    docker_exec_command = 'docker exec -t '+container_name+' /bin/bash -c'
-    logger.info('mua initialize command:'+str(docker_exec_command))  
-    docker_exec_command_formated = docker_exec_command.split(" ")
-    docker_exec_command_formated.append(command)
-    print(docker_exec_command_formated)
-    new_process.execute(docker_exec_command_formated)
 
 
 def prepare_mua_binaries(benchmark):

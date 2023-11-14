@@ -21,6 +21,7 @@ import json
 import os
 import pathlib
 import posixpath
+import shutil
 import sys
 import tempfile
 import tarfile
@@ -40,6 +41,7 @@ from common import filesystem
 from common import fuzzer_stats
 from common import filestore_utils
 from common import logs
+from common import new_process
 from common import utils
 from database import utils as db_utils
 from database import models
@@ -48,11 +50,6 @@ from experiment.measurer import coverage_utils
 from experiment.measurer import run_coverage
 from experiment.measurer import run_crashes
 from experiment import scheduler
-
-if not experiment_utils.is_local_experiment():
-    import experiment.build.gcb_build as buildlib
-else:
-    import experiment.build.local_build as buildlib
 
 logger = logs.Logger()
 
@@ -413,8 +410,53 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             filesystem.recreate_directory(directory)
         filesystem.create_directory(self.report_dir)
 
+    def create_dir(self, dir):
+        if(not os.path.exists(dir)):
+            os.makedirs(dir, exist_ok=True)
+        return os.path.exists(dir)
+    
     def initialize_mua_environment(self):
-        buildlib.initialize_mua(self.benchmark, self.trial_num, self.fuzzer, self.corpus_dir)
+        """build all covered mutants"""
+
+        # find correct container and start it
+        container_name = 'mutation_analysis_'+self.benchmark+'_container'
+
+        docker_start_command = 'docker start '+container_name
+        new_process.execute(docker_start_command.split(' '))
+
+        experiment_filestore_path = experiment_utils.get_experiment_filestore_path()
+        shared_mua_binaries_dir = os.path.join(experiment_filestore_path, 'mua-binaries')
+        
+        # create corpi directory entry
+        corpi_dir = shared_mua_binaries_dir+'/corpi'
+        fuzzer_corpi_dir = corpi_dir + '/' + self.fuzzer
+        trial_corpi_dir = fuzzer_corpi_dir + '/' + str(self.trial_num)
+        self.create_dir(fuzzer_corpi_dir)
+
+        # create covered_mutants directory entry (contains ids)
+        mutants_ids_dir_entry = shared_mua_binaries_dir+'/mutant_ids'+'/'+self.fuzzer+'/'+str(self.trial_num)
+        self.create_dir(mutants_ids_dir_entry)
+
+        # create mutants directory
+        mutants_dir_entry = shared_mua_binaries_dir+'/mutants'+'/'
+        self.create_dir(mutants_dir_entry)
+
+        # copy corpus from self.corpus_dir into container
+        shutil.copytree(self.corpus_dir, trial_corpi_dir, dirs_exist_ok=True)
+
+        # get additional info from commons
+        experiment_name = experiment_utils.get_experiment_name()
+        fuzz_target = benchmark_utils.get_fuzz_target(self.benchmark)
+
+        # execute command on container
+        command = '(python3 /mutator/mua_build_ids.py '+fuzz_target+' '+experiment_name+' '+self.fuzzer+' '+str(self.trial_num)+'; )'
+        
+        docker_exec_command = 'docker exec -t '+container_name+' /bin/bash -c'
+        logger.info('mua initialize command:'+str(docker_exec_command))  
+        docker_exec_command_formated = docker_exec_command.split(" ")
+        docker_exec_command_formated.append(command)
+        print(docker_exec_command_formated)
+        new_process.execute(docker_exec_command_formated)
 
     def process_mua(self):
         """runs mua measurement"""
