@@ -455,12 +455,26 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         logger.info('mua initialize command:'+str(docker_exec_command))  
         docker_exec_command_formated = docker_exec_command.split(" ")
         docker_exec_command_formated.append(command)
-        print(docker_exec_command_formated)
+        logger.info(docker_exec_command_formated)
         new_process.execute(docker_exec_command_formated)
 
     def process_mua(self):
         """runs mua measurement"""
+        # get necessary info
+        container_name = 'mutation_analysis_'+self.benchmark+'_container'
+        experiment_name = experiment_utils.get_experiment_name()
+        fuzz_target = benchmark_utils.get_fuzz_target(self.benchmark)        
+
+
         # run all needed mutants in container
+        command = '(python3 /mutator/mua_run_mutants.py '+fuzz_target+' '+experiment_name+' '+self.fuzzer+' '+str(self.trial_num)+'; )'
+        
+        docker_exec_command = 'docker exec -t '+container_name+' /bin/bash -c'
+        logger.info('mua process command:'+str(docker_exec_command))  
+        docker_exec_command_formated = docker_exec_command.split(" ")
+        docker_exec_command_formated.append(command)
+        logger.info(docker_exec_command_formated)
+        new_process.execute(docker_exec_command_formated, write_to_stdout=True)
     
     def run_cov_new_units(self):
         """Run the coverage binary on new units."""
