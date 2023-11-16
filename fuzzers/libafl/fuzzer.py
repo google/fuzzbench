@@ -54,7 +54,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     utils.append_flags('CXXFLAGS', cxxflags)
     utils.append_flags('LDFLAGS', cflags)
 
-    os.environ['FUZZER_LIB'] = ''
+    os.environ['FUZZER_LIB'] = '/stub_rt.a'
     utils.build_benchmark()
 
 
