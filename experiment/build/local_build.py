@@ -74,9 +74,11 @@ def build_coverage(benchmark):
     copy_coverage_binaries(benchmark)
     return result
 
+MUTATION_ANALYSIS_IMAGE_NAME = 'mutation_analysis'
+
 def build_mua(benchmark):
     """Build (locally) mua image for benchmark."""
-    image_name = f'.mutation_analysis-{benchmark}-builder'
+    image_name = f'.{MUTATION_ANALYSIS_IMAGE_NAME}-{benchmark}-builder'
     result = make([image_name])
     if result.retcode:
         return result
@@ -93,31 +95,36 @@ def prepare_mua_binaries(benchmark):
     shared_mua_binaries_dir = get_shared_mua_binaries_dir()
     mount_arg = f'{shared_mua_binaries_dir}:{shared_mua_binaries_dir}'
     builder_image_url = benchmark_utils.get_builder_image_url(
-        benchmark, 'mutation_analysis', environment.get('DOCKER_REGISTRY'))
+        benchmark, MUTATION_ANALYSIS_IMAGE_NAME, environment.get('DOCKER_REGISTRY'))
     
     mua_build_archive = f'mutation-analysis-build-{benchmark}.tar.gz'
     mua_build_archive_shared_dir_path = os.path.join(
         shared_mua_binaries_dir, mua_build_archive)
     
-    container_name = 'mutation_analysis_'+benchmark+'_container'
+    container_name = MUTATION_ANALYSIS_IMAGE_NAME + '_' + benchmark + '_container'
     #new_image_name = builder_image_url+'_prepared'
+
+    host_mua_mapped_dir = os.environ.get('HOST_MUA_MAPPED_DIR')
 
     command = (
         '('
-        'touch /out/testentry; '
-        'cd /src/'+project+' && /bin/mua_build_benchmark; '
-        'cd /mutator && gradle build; '
-        'ldconfig /mutator/build/install/LLVM_Mutation_Tool/lib/; '
-        'pipx run hatch run src/mua_fuzzer_benchmark/eval.py locator_local --config-path /tmp/config.json --result-path /tmp/test/; '
-        'cd /tmp && /tmp/test/progs/'+fuzz_target+'/'+fuzz_target+'.locator /benchmark.yaml; '
-        'cd /mutator && python locator_signal_to_mutation_list.py --trigger-signal-dir /tmp/trigger_signal/ --prog xml --out /out/mua_all_list.json; '
-        'cp /tmp/test/progs/'+fuzz_target+'/'+fuzz_target+'.locator /out/'+fuzz_target+'.locator; '
-        'cp /tmp/config.json /out/config.json; '
-        'tar -czvf '+mua_build_archive_shared_dir_path+' /out;'
+        f'echo {host_mua_mapped_dir}; '
+        'ls -la /mapped_dir; '
+        'cat /mapped_dir/test.txt; '
+        # 'touch /out/testentry; '
+        # 'cd /src/'+project+' && /bin/mua_build_benchmark; '
+        # 'cd /mutator && gradle build; '
+        # 'ldconfig /mutator/build/install/LLVM_Mutation_Tool/lib/; '
+        # 'pipx run hatch run src/mua_fuzzer_benchmark/eval.py locator_local --config-path /tmp/config.json --result-path /tmp/test/; '
+        # 'cd /tmp && /tmp/test/progs/'+fuzz_target+'/'+fuzz_target+'.locator /benchmark.yaml; '
+        # 'cd /mutator && python locator_signal_to_mutation_list.py --trigger-signal-dir /tmp/trigger_signal/ --prog xml --out /out/mua_all_list.json; '
+        # 'cp /tmp/test/progs/'+fuzz_target+'/'+fuzz_target+'.locator /out/'+fuzz_target+'.locator; '
+        # 'cp /tmp/config.json /out/config.json; '
+        f'tar -czvf {mua_build_archive_shared_dir_path} /out; '
         'python3 /mutator/mua_idle.py; )'
         )
     
-    logger.info('mua prepare command:'+str(command))  
+    logger.info('mua prepare command:'+str(command))
     docker_rm_command = 'docker rm -f '+container_name
     try:
         #print("docker rm")
@@ -125,17 +132,25 @@ def prepare_mua_binaries(benchmark):
         new_process.execute(docker_rm_command.split(" "))
     except:
         pass
-    
-    new_process.execute([
+
+    mua_run_cmd = [
         'docker', 'run', '--name', container_name, '-v', mount_arg, 
         '-e', 'FUZZ_OUTSIDE_EXPERIMENT=1',
         '-e', 'FORCE_LOCAL=1',
         '-e', 'TRIAL_ID=1',
         '-e', 'FUZZER=mutation_analysis',
         '-e', 'DEBUG_BUILDER=1',
+        *(
+            []
+            if host_mua_mapped_dir is None
+            else ['-v', f'{host_mua_mapped_dir}:/mapped_dir']
+        ),
         builder_image_url, '/bin/bash', '-c',
         command
-    ])
+    ]
+    
+    logger.info('mua run command:'+str(mua_run_cmd))
+    new_process.execute(mua_run_cmd, write_to_stdout=True)
     
     #docker_commit_command = 'docker commit '+container_name+' '+new_image_name
     #new_process.execute(docker_commit_command.split(' '))

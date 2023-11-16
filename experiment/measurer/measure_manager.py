@@ -46,6 +46,7 @@ from common import utils
 from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
+from experiment.build.local_build import MUTATION_ANALYSIS_IMAGE_NAME
 from experiment.measurer import coverage_utils
 from experiment.measurer import run_coverage
 from experiment.measurer import run_crashes
@@ -419,7 +420,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         """build all covered mutants"""
 
         # find correct container and start it
-        container_name = 'mutation_analysis_'+self.benchmark+'_container'
+        container_name = MUTATION_ANALYSIS_IMAGE_NAME + '_' + self.benchmark + '_container'
 
         docker_start_command = 'docker start '+container_name
         new_process.execute(docker_start_command.split(' '))

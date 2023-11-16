@@ -13,7 +13,7 @@
 # limitations under the License.
 
 ARG parent_image
-
+ARG map_mua
 
 FROM gcr.io/fuzzbench/base-image AS base-image
 
@@ -57,7 +57,7 @@ RUN mkdir /tmp/gllvm/ && \
     go get github.com/SRI-CSL/gllvm/cmd/... && \
     rm -r /tmp/gllvm/
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y openjdk-11-jdk zlib1g-dev file
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y openjdk-11-jdk zlib1g-dev file pipx python3.8-venv
         # cmake \
         # binutils-dev \
         # libcurl4-openssl-dev \
@@ -71,21 +71,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y openjdk-
         # libidn2-0 \
         # idn2 \
         # libstdc++6
+RUN pipx install hatch
 
 # RUN git clone https://github.com/CISPA-SysSec/mua_fuzzer_bench mutator
 COPY mua_fuzzer_bench /mutator
 
-# COPY modules /home/mutator/modules
-# COPY build.gradle /home/mutator/
-# COPY run_mutation.py /home/mutator/
-# RUN chmod +x run_mutation.py
-# COPY settings.gradle /home/mutator
-RUN cd /mutator && \
-    echo "llvmBinPath=/usr/lib/llvm-15/bin/" > gradle.properties
-# RUN cd /mutator && gradle clean && gradle build
-# RUN ldconfig /mutator/build/install/LLVM_Mutation_Tool/lib/
-
-# RUN ln /usr/bin/llvm-link-15 /bin/llvm-link 
 RUN update-alternatives --install \
             /usr/local/bin/llvm-config       llvm-config      /usr/lib/llvm-15/bin/llvm-config  200 \
     --slave /usr/local/bin/llvm-ar           llvm-ar          /usr/lib/llvm-15/bin/llvm-ar \
@@ -112,14 +102,23 @@ RUN update-alternatives --install \
     --slave /usr/local/bin/clang             clang            /usr/lib/llvm-15/bin/clang \
     --slave /usr/local/bin/clang++           clang++          /usr/lib/llvm-15/bin/clang++
 
-RUN apt-get update && apt-get install -y pipx python3.8-venv
-RUN pipx install hatch
+RUN cd /mutator && \
+    echo "llvmBinPath=/usr/lib/llvm-15/bin/" > gradle.properties
 
 RUN ln -s /mutator/exec-recorder.py /exec-recorder.py 
 RUN ln -s /exec-recorder.py /bin/gclang-wrap
 RUN ln -s /exec-recorder.py /bin/gclang++-wrap
 RUN ln -s /mutator/mua_build_benchmark.py /bin/mua_build_benchmark
 
+# COPY modules /home/mutator/modules
+# COPY build.gradle /home/mutator/
+# COPY run_mutation.py /home/mutator/
+# RUN chmod +x run_mutation.py
+# COPY settings.gradle /home/mutator
+# RUN cd /mutator && gradle clean && gradle build
+# RUN ldconfig /mutator/build/install/LLVM_Mutation_Tool/lib/
+
+# RUN ln /usr/bin/llvm-link-15 /bin/llvm-link 
 
 #RUN echo "transfering control flow to mua_idle.py"
 #RUN python3 /mutator/mua_idle.py

@@ -97,9 +97,9 @@ def build_base_images() -> Tuple[int, str]:
 def build_measurer(benchmark: str) -> bool:
     """Do a coverage build for a benchmark."""
     try:
-        logger.info('Building measurer for benchmark: %s.', benchmark)
+        logger.info('Building coverage measurer for benchmark: %s.', benchmark)
         buildlib.build_coverage(benchmark)
-        logs.info('Done building measurer for benchmark: %s.', benchmark)
+        logs.info('Done building coverage measurer for benchmark: %s.', benchmark)
         return True
     except Exception:  # pylint: disable=broad-except
         logger.error('Failed to build measurer for %s.', benchmark)

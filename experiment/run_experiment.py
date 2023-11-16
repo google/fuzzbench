@@ -155,6 +155,8 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     config_requirements = {
         'experiment_filestore':
             Requirement(True, str, True, '/' if local_experiment else 'gs://'),
+        'host_mua_mapped_dir':
+            Requirement(False, str, False, '/'),
         'report_filestore':
             Requirement(True, str, True, '/' if local_experiment else 'gs://'),
         'docker_registry':
@@ -370,6 +372,7 @@ def start_dispatcher(config: Dict, config_dir: str):
     """Start the dispatcher instance and run the dispatcher code on it."""
     dispatcher = get_dispatcher(config)
     # Is dispatcher code being run manually (useful for debugging)?
+    os.environ['HOST_MUA_MAPPED_DIR'] = config.get('host_mua_mapped_dir')
     copy_resources_to_bucket(config_dir, config)
     if not os.getenv('MANUAL_EXPERIMENT'):
         dispatcher.start()
@@ -496,6 +499,7 @@ class LocalDispatcher(BaseDispatcher):
             f'CONCURRENT_BUILDS={self.config["concurrent_builds"]}')
         set_worker_pool_name_arg = (
             f'WORKER_POOL_NAME={self.config["worker_pool_name"]}')
+        mua_mapped_dir = os.environ['HOST_MUA_MAPPED_DIR']
         environment_args = [
             '-e',
             'LOCAL_EXPERIMENT=True',
@@ -517,6 +521,10 @@ class LocalDispatcher(BaseDispatcher):
             set_concurrent_builds_arg,
             '-e',
             set_worker_pool_name_arg,
+            *(
+                ['-e', f'HOST_MUA_MAPPED_DIR={mua_mapped_dir}']
+                if mua_mapped_dir else []
+            ),
         ]
         command = [
             'docker',
@@ -529,6 +537,8 @@ class LocalDispatcher(BaseDispatcher):
             shared_experiment_filestore_arg,
             '-v',
             shared_report_filestore_arg,
+            '-v',  # Just to make repeated run starts faster.
+            "/tmp/dispatcher_venv:/work/src/.venv/lib/python3.10/site-packages",
         ] + environment_args + [
             '--shm-size=2g',
             '--cap-add=SYS_PTRACE',
@@ -539,7 +549,7 @@ class LocalDispatcher(BaseDispatcher):
             '-c',
             'rsync -r '
             '"${EXPERIMENT_FILESTORE}/${EXPERIMENT}/input/" ${WORK} && '
-            'mkdir ${WORK}/src && '
+            'mkdir -p ${WORK}/src && '
             'tar -xvzf ${WORK}/src.tar.gz -C ${WORK}/src && '
             'PYTHONPATH=${WORK}/src python3 '
             '${WORK}/src/experiment/dispatcher.py || '
