@@ -1,4 +1,4 @@
-"""Utility function for micro-experiment run."""
+"""Utility functions for micro-experiment run."""
 
 import random
 import os
@@ -22,16 +22,16 @@ def initialize_random_corpus_fuzzing(benchmarks: List[str],
         pool.starmap(prepare_benchmark_random_corpus, [
             (benchmark, num_trials) for benchmark in benchmarks
         ])
-        logs.info('Done Preparing corpus for micro experiment')
+        logs.info('Done preparing corpus for micro experiment')
 
 def prepare_benchmark_random_corpus(benchmark: str,
                                     num_trials: int):
     
-    # temporary location to park corpus files before get picked randomly
+    # Temporary location to park corpus files before get picked randomly.
     benchmark_unarchived_corpora = os.path.join(experiment_utils.get_oss_fuzz_corpora_unarchived_path(), benchmark)
     filesystem.create_directory(benchmark_unarchived_corpora)
     
-    # unzip oss fuzz corpus 
+    # Unzip oss fuzz corpus.
     corpus_archive_filename = f'{benchmark}.zip'
     oss_fuzz_corpus_archive_path = os.path.join(experiment_utils.get_oss_fuzz_corpora_filestore_path(), corpus_archive_filename)
     with zipfile.ZipFile(oss_fuzz_corpus_archive_path) as zip_file:
@@ -48,8 +48,8 @@ def prepare_benchmark_random_corpus(benchmark: str,
             zip_file.extract(seed_corpus_file, output_file_path)
             idx += 1
 
-    # path used to store and feed seed corpus for benchmark runner
-    # each trial group will have the same seed input(s)
+    # Path used to store and feed seed corpus for benchmark runner
+    # each trial group will have the same seed input(s).
     benchmark_random_corpora = os.path.join(
         experiment_utils.get_random_corpora_filestore_path(), benchmark)
     filesystem.create_directory(benchmark_random_corpora)
@@ -63,8 +63,8 @@ def prepare_benchmark_random_corpus(benchmark: str,
 
         all_corpus_files.sort()
         trial_group_num = 0
-        # all trials in the same group will start with the same
-        # set of randomly selected seed files
+        # All trials in the same group will start with the same
+        # set of randomly selected seed files.
         while trial_group_num < num_trials:
             logs.info('Preparing random corpus: %s, trial_group: %d', benchmark,
                       trial_group_num)
@@ -80,7 +80,7 @@ def prepare_benchmark_random_corpus(benchmark: str,
             for file in source_files:
                 filesystem.copy(file, src_dir)
 
-            # copy only the src directory
+            # Copy only the src directory.
             filesystem.copytree(src_dir, custom_corpus_trial_dir)
             trial_group_num += 1
 
