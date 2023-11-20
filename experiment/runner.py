@@ -105,13 +105,12 @@ def _unpack_random_corpus(corpus_directory):
     shutil.rmtree(corpus_directory)
 
     benchmark = environment.get('BENCHMARK')
-    trial_group_num = 0
     trial_group_num = environment.get('TRIAL_GROUP_NUM', 0)
     random_corpora_dir = experiment_utils.get_random_corpora_filestore_path()
     random_corpora_sub_dir = f'trial-group-{int(trial_group_num)}'
     random_corpus_dir = posixpath.join(random_corpora_dir, benchmark,
                                        random_corpora_sub_dir)
-    shutil.copytree(random_corpus_dir, corpus_directory)
+    filestore_utils.cp(random_corpus_dir, corpus_directory, recursive=True)
 
 
 def _copy_custom_seed_corpus(corpus_directory):
@@ -272,7 +271,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         os.makedirs(input_corpus, exist_ok=True)
         if environment.get('MICRO_EXPERIMENT'):
             _unpack_random_corpus(input_corpus)
-        if not environment.get('CUSTOM_SEED_CORPUS_DIR'):
+        elif not environment.get('CUSTOM_SEED_CORPUS_DIR'):
             _unpack_clusterfuzz_seed_corpus(target_binary, input_corpus)        
         else:
             _copy_custom_seed_corpus(input_corpus)
@@ -465,7 +464,7 @@ def experiment_main():
     """Do a trial as part of an experiment."""
     logs.info('Doing trial as part of experiment.')
     try:
-        runner = TrialRunner()
+        runner = runner.TrialRunner()
         runner.conduct_trial()
     except Exception as error:  # pylint: disable=broad-except
         logs.error('Error doing trial.')
