@@ -729,9 +729,8 @@ def _start_trial(trial: TrialProxy, experiment_config: dict, cpuset=None):
     _initialize_logs(experiment_config['experiment'])
     logger.info('Start trial %d.', trial.id)
     started = create_trial_instance(trial.fuzzer, trial.benchmark, trial.id,
-                                    trial.trial_group_num,
-                                    experiment_config, trial.preemptible,
-                                    cpuset)
+                                    trial.trial_group_num, experiment_config,
+                                    trial.preemptible, cpuset)
     if started:
         trial.time_started = datetime_now()
         trial.cpuset = cpuset

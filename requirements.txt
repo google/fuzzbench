@@ -27,5 +27,5 @@ protobuf==3.20.3
 
 # Needed for development.
 pylint==2.15.4
-pytype==2022.10.13
+pytype==2023.10.24
 yapf==0.32.0

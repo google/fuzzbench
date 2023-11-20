@@ -100,6 +100,7 @@ def get_clusterfuzz_seed_corpus_path(fuzz_target_path):
                         SEED_CORPUS_ARCHIVE_SUFFIX)
     return seed_corpus_path if os.path.exists(seed_corpus_path) else None
 
+
 def _unpack_random_corpus(corpus_directory):
     shutil.rmtree(corpus_directory)
 
@@ -109,8 +110,9 @@ def _unpack_random_corpus(corpus_directory):
     random_corpora_dir = experiment_utils.get_random_corpora_filestore_path()
     random_corpora_sub_dir = f'trial-group-{int(trial_group_num)}'
     random_corpus_dir = posixpath.join(random_corpora_dir, benchmark,
-                                    random_corpora_sub_dir)
+                                       random_corpora_sub_dir)
     shutil.copytree(random_corpus_dir, corpus_directory)
+
 
 def _copy_custom_seed_corpus(corpus_directory):
     """Copy custom seed corpus provided by user"""

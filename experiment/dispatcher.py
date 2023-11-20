@@ -152,9 +152,10 @@ def dispatcher_main():
                                      experiment.num_trials,
                                      experiment.preemptible)
     _initialize_trials_in_db(trials)
-    
+
     if experiment.micro_experiment:
-        random_corpus_fuzzing_utils.initialize_random_corpus_fuzzing(experiment.benchmarks, experiment.num_trials)
+        random_corpus_fuzzing_utils.initialize_random_corpus_fuzzing(
+            experiment.benchmarks, experiment.num_trials)
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])
 

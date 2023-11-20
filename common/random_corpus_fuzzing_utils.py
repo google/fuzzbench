@@ -14,26 +14,28 @@ from common import logs
 MAX_SOURCE_CORPUS_FILES = 1
 CORPUS_ELEMENT_BYTES_LIMIT = 1 * 1024 * 1024
 
-def initialize_random_corpus_fuzzing(benchmarks: List[str],
-                                     num_trials: int):
+
+def initialize_random_corpus_fuzzing(benchmarks: List[str], num_trials: int):
     """Prepare corpus for micro experiment."""
     pool_args = ()
     with multiprocessing.Pool(*pool_args) as pool:
-        pool.starmap(prepare_benchmark_random_corpus, [
-            (benchmark, num_trials) for benchmark in benchmarks
-        ])
+        pool.starmap(prepare_benchmark_random_corpus,
+                     [(benchmark, num_trials) for benchmark in benchmarks])
         logs.info('Done preparing corpus for micro experiment')
 
-def prepare_benchmark_random_corpus(benchmark: str,
-                                    num_trials: int):
-    
+
+def prepare_benchmark_random_corpus(benchmark: str, num_trials: int):
+
     # Temporary location to park corpus files before get picked randomly.
-    benchmark_unarchived_corpora = os.path.join(experiment_utils.get_oss_fuzz_corpora_unarchived_path(), benchmark)
+    benchmark_unarchived_corpora = os.path.join(
+        experiment_utils.get_oss_fuzz_corpora_unarchived_path(), benchmark)
     filesystem.create_directory(benchmark_unarchived_corpora)
-    
+
     # Unzip oss fuzz corpus.
     corpus_archive_filename = f'{benchmark}.zip'
-    oss_fuzz_corpus_archive_path = os.path.join(experiment_utils.get_oss_fuzz_corpora_filestore_path(), corpus_archive_filename)
+    oss_fuzz_corpus_archive_path = os.path.join(
+        experiment_utils.get_oss_fuzz_corpora_filestore_path(),
+        corpus_archive_filename)
     with zipfile.ZipFile(oss_fuzz_corpus_archive_path) as zip_file:
         idx = 0
         for seed_corpus_file in zip_file.infolist():
@@ -44,7 +46,8 @@ def prepare_benchmark_random_corpus(benchmark: str,
             if seed_corpus_file.file_size > CORPUS_ELEMENT_BYTES_LIMIT:
                 continue
             output_filename = f'{idx:016d}'
-            output_file_path = os.path.join(benchmark_unarchived_corpora, output_filename)
+            output_file_path = os.path.join(benchmark_unarchived_corpora,
+                                            output_filename)
             zip_file.extract(seed_corpus_file, output_file_path)
             idx += 1
 
@@ -53,7 +56,7 @@ def prepare_benchmark_random_corpus(benchmark: str,
     benchmark_random_corpora = os.path.join(
         experiment_utils.get_random_corpora_filestore_path(), benchmark)
     filesystem.create_directory(benchmark_random_corpora)
-    
+
     with tempfile.TemporaryDirectory() as tmp_dir:
         all_corpus_files = []
         for root, _, files in os.walk(benchmark_unarchived_corpora):

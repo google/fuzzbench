@@ -96,10 +96,12 @@ def get_custom_seed_corpora_filestore_path():
     return posixpath.join(get_experiment_filestore_path(),
                           'custom_seed_corpora')
 
+
 def get_oss_fuzz_corpora_unarchived_path():
     """Returns path containing the user-provided seed corpora."""
     return posixpath.join(get_experiment_filestore_path(),
                           'oss_fuzz_unarchived')
+
 
 def get_random_corpora_filestore_path():
     """Returns path containing seed corpora for the target fuzzing experiment."""  # pylint: disable=line-too-long
