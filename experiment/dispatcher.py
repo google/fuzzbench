@@ -102,6 +102,7 @@ class Experiment:
         self.experiment_name = self.config['experiment']
         self.git_hash = self.config['git_hash']
         self.preemptible = self.config.get('preemptible_runners')
+        self.micro_experiment = self.config.get('micro_experiment')
 
 
 def build_images_for_trials(fuzzers: List[str], benchmarks: List[str],
