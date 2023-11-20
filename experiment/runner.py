@@ -271,9 +271,9 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         input_corpus = environment.get('SEED_CORPUS_DIR')
         os.makedirs(input_corpus, exist_ok=True)
         if environment.get('MICRO_EXPERIMENT'):
-            _unpack_clusterfuzz_seed_corpus(target_binary, input_corpus)
-        elif not environment.get('CUSTOM_SEED_CORPUS_DIR'):
             _unpack_random_corpus(input_corpus)
+        if not environment.get('CUSTOM_SEED_CORPUS_DIR'):
+            _unpack_clusterfuzz_seed_corpus(target_binary, input_corpus)        
         else:
             _copy_custom_seed_corpus(input_corpus)
 
