@@ -48,15 +48,6 @@ def build():
     os.environ['CC'] = 'clang'
     os.environ['CXX'] = 'clang++'
 
-    # merge all of our lib into a single .o, then pack that into a static lib
-    subprocess.check_call([
-        '/usr/bin/ld', '-Ur', '--whole-archive', '/usr/lib/libFuzzer.a', '-o',
-        '/tmp/libFuzzerMerged.o'
-    ])
-    subprocess.check_call(['/usr/bin/rm', '/usr/lib/libFuzzer.a'])
-    subprocess.check_call(
-        ['/usr/bin/ar', 'cr', '/usr/lib/libFuzzer.a', '/tmp/libFuzzerMerged.o'])
-
     os.environ['FUZZER_LIB'] = '/usr/lib/libFuzzer.a'
 
     utils.build_benchmark()
