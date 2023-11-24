@@ -1,3 +1,16 @@
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """Utility functions for micro-experiment run."""
 
 import random
@@ -24,6 +37,7 @@ def initialize_random_corpus_fuzzing(benchmarks: List[str], num_trials: int):
         logs.info('Done preparing corpus for micro experiment')
 
 
+# pylint: disable=too-many-locals
 def prepare_benchmark_random_corpus(benchmark: str, num_trials: int):
     """Prepare corpus for given benchmark."""
     # Temporary location to park corpus files before get picked randomly.
@@ -69,7 +83,7 @@ def prepare_benchmark_random_corpus(benchmark: str, num_trials: int):
         # All trials in the same group will start with the same
         # set of randomly selected seed files.
         while trial_group_num < num_trials:
-            trial_group_subdir = 'trial-group-%d' % trial_group_num
+            trial_group_subdir = f'trial-group-{trial_group_num}'
             custom_corpus_trial_dir = os.path.join(benchmark_random_corpora,
                                                    trial_group_subdir)
             src_dir = os.path.join(tmp_dir, 'source')

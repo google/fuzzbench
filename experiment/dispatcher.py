@@ -90,7 +90,7 @@ def _initialize_trials_in_db(trials: List[models.Trial]):
     db_utils.bulk_save(trials)
 
 
-class Experiment:
+class Experiment: # pylint: disable=too-many-instance-attributes
     """Class representing an experiment."""
 
     def __init__(self, experiment_config_filepath: str):
