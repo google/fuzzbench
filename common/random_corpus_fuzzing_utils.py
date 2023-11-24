@@ -25,6 +25,7 @@ def initialize_random_corpus_fuzzing(benchmarks: List[str], num_trials: int):
 
 
 def prepare_benchmark_random_corpus(benchmark: str, num_trials: int):
+    """Prepare corpus for given benchmark."""
 
     # Temporary location to park corpus files before get picked randomly.
     benchmark_unarchived_corpora = os.path.join(
@@ -69,13 +70,12 @@ def prepare_benchmark_random_corpus(benchmark: str, num_trials: int):
         # All trials in the same group will start with the same
         # set of randomly selected seed files.
         while trial_group_num < num_trials:
-            logs.info('Preparing random corpus: %s, trial_group: %d', benchmark,
-                      trial_group_num)
+            logs.info(f'Preparing random corpus: {benchmark}, trial_group: {trial_group_num}')
 
             trial_group_subdir = 'trial-group-%d' % trial_group_num
             custom_corpus_trial_dir = os.path.join(benchmark_random_corpora,
                                                    trial_group_subdir)
-            src_dir = os.path.join(tmp_dir, "source")
+            src_dir = os.path.join(tmp_dir, 'source')
             filesystem.recreate_directory(src_dir)
 
             source_files = random.sample(all_corpus_files,

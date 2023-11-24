@@ -272,7 +272,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         if environment.get('MICRO_EXPERIMENT'):
             _unpack_random_corpus(input_corpus)
         elif not environment.get('CUSTOM_SEED_CORPUS_DIR'):
-            _unpack_clusterfuzz_seed_corpus(target_binary, input_corpus)        
+            _unpack_clusterfuzz_seed_corpus(target_binary, input_corpus)
         else:
             _copy_custom_seed_corpus(input_corpus)
 
@@ -464,7 +464,7 @@ def experiment_main():
     """Do a trial as part of an experiment."""
     logs.info('Doing trial as part of experiment.')
     try:
-        runner = runner.TrialRunner()
+        runner = TrialRunner()
         runner.conduct_trial()
     except Exception as error:  # pylint: disable=broad-except
         logs.error('Error doing trial.')
