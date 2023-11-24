@@ -22,3 +22,4 @@ report_filestore: /tmp/web-reports
 local_experiment: true
 benchmarks: "benchmark-1,benchmark-2"
 git_hash: "git-hash"
+micro_experiment: false
