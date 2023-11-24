@@ -791,7 +791,7 @@ def render_startup_script_template(  # pylint: disable=too-many-arguments
 def create_trial_instance(  # pylint: disable=too-many-arguments
         fuzzer: str,
         benchmark: str,
-        trial_id: int,       
+        trial_id: int,
         experiment_config: dict,
         preemptible: bool,
         cpuset=None,
