@@ -729,8 +729,8 @@ def _start_trial(trial: TrialProxy, experiment_config: dict, cpuset=None):
     _initialize_logs(experiment_config['experiment'])
     logger.info('Start trial %d.', trial.id)
     started = create_trial_instance(trial.fuzzer, trial.benchmark, trial.id,
-                                    trial.trial_group_num, experiment_config,
-                                    trial.preemptible, cpuset)
+                                    experiment_config, trial.preemptible, 
+                                    cpuset, trial.trial_group_num)
     if started:
         trial.time_started = datetime_now()
         trial.cpuset = cpuset
@@ -791,11 +791,11 @@ def render_startup_script_template(  # pylint: disable=too-many-arguments
 def create_trial_instance(  # pylint: disable=too-many-arguments
         fuzzer: str,
         benchmark: str,
-        trial_id: int,
-        trial_group_num: int,
+        trial_id: int,        
         experiment_config: dict,
         preemptible: bool,
-        cpuset=None) -> bool:
+        cpuset=None,
+        trial_group_num: int=0) -> bool:
     """Create or start a trial instance for a specific
     trial_id,fuzzer,benchmark."""
     instance_name = experiment_utils.get_trial_instance_name(
