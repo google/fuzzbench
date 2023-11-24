@@ -689,7 +689,7 @@ def start_trials(trials, experiment_config: dict, pool, core_allocation=None):
     return started_trials
 
 
-class TrialProxy: # pylint: disable=too-many-instance-attributes
+class TrialProxy:  # pylint: disable=too-many-instance-attributes
     """A proxy object for a model.Trial. TrialProxy's allow these fields to be
     set and retreived without making any database calls."""
 
