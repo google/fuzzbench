@@ -30,10 +30,7 @@ def get_uninstrumented_build_directory(target_directory):
     """Return path to CmpLog target directory."""
     return os.path.join(target_directory, 'uninstrumented')
 
-
-# pylint: disable=consider-using-f-string
 def prepare_tmp_files(tmp_dir):
-    """ Prepare tmp files."""
     if not os.path.isdir(tmp_dir) or os.path.exists(tmp_dir):
         os.mkdir(tmp_dir)
     os.mkdir('%s/idlog' % (tmp_dir))
@@ -41,13 +38,11 @@ def prepare_tmp_files(tmp_dir):
     os.mkdir('%s/fid' % (tmp_dir))
     os.system('touch %s/idlog/fid %s/idlog/targid' % (tmp_dir, tmp_dir))
 
-
 def set_ff_env():
-    """ set FishFuzz Env before build. """
+    # set FishFuzz Env before build
     os.environ['TMP_DIR'] = os.environ['OUT'] + '/TEMP'
     os.environ['FF_TMP_DIR'] = os.environ['OUT'] + '/TEMP'
     prepare_tmp_files(os.environ['TMP_DIR'])
-
 
 def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
@@ -68,7 +63,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # For bug type benchmarks we have to instrument via native clang pcguard :(
     build_flags = os.environ['CFLAGS']
     os.environ['CFLAGS'] = build_flags
-    os.environ['AFL_USE_ASAN'] = '1'
+    os.environ['USE_FF_INST'] = '1'
 
     #if build_flags.find(
     #        'array-bounds'
@@ -178,7 +173,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'eclipser' in build_modes:
         os.environ['FUZZER_LIB'] = '/libStandaloneFuzzTarget.a'
     else:
-        os.environ['FUZZER_LIB'] = '/FishFuzz/afl_driver.o'
+        os.environ['FUZZER_LIB'] = '/FishFuzz/afl_driver.o' # '/libAFLDriver.a'
 
     # Some benchmarks like lcms. (see:
     # https://github.com/mm2/Little-CMS/commit/ab1093539b4287c233aca6a3cf53b234faceb792#diff-f0e6d05e72548974e852e8e55dffc4ccR212)
@@ -203,6 +198,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         # CmpLog requires an build with different instrumentation.
         new_env = os.environ.copy()
         new_env['AFL_LLVM_CMPLOG'] = '1'
+        if 'USE_FF_INST' in new_env:
+            del new_env['USE_FF_INST']
 
         # For CmpLog build, set the OUT and FUZZ_TARGET environment
         # variable to point to the new CmpLog build directory.
@@ -257,12 +254,13 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     tmp_dir_dst = os.environ['OUT'] + '/TEMP'
     print('[post_build] generating distance files')
-    os.system('python3 /FishFuzz/distance/match_function.py -i %s' %
-              (tmp_dir_dst))
-    os.system('python3 /FishFuzz/distance/merge_callgraph.py -i %s' %
-              (tmp_dir_dst))
-    os.system('python3 /FishFuzz/distance/calculate_distance.py -i %s' %
-              (tmp_dir_dst))
+    # python3 /Fish++/distance/match_function.py -i $FF_TMP_DIR
+    # python3 /Fish++/distance/merge_callgraph.py -i $FF_TMP_DIR
+    # python3 /Fish++/distance/calculate_distance.py -i $FF_TMP_DIR
+    os.system('python3 /FishFuzz/distance/match_function.py -i %s' % (tmp_dir_dst))
+    # os.system('python3 /FishFuzz/distance/merge_callgraph.py -i %s' % (tmp_dir_dst))
+    # os.system('python3 /FishFuzz/distance/calculate_distance.py -i %s' % (tmp_dir_dst))
+    os.system('python3 /FishFuzz/distance/calculate_all_distance.py -i %s' % (tmp_dir_dst))
 
 
 # pylint: disable=too-many-arguments
