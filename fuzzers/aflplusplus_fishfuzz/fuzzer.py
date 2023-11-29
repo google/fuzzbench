@@ -35,10 +35,14 @@ def prepare_tmp_files(tmp_dir):
     """prepare tmp files"""
     if not os.path.isdir(tmp_dir) or os.path.exists(tmp_dir):
         os.mkdir(tmp_dir)
-    os.mkdir('%s/idlog' % (tmp_dir))
-    os.mkdir('%s/cg' % (tmp_dir))
-    os.mkdir('%s/fid' % (tmp_dir))
-    os.system('touch %s/idlog/fid %s/idlog/targid' % (tmp_dir, tmp_dir))
+    fua = tmp_dir + '/idlog'
+    fub = tmp_dir + '/cg'
+    fuc = tmp_dir + '/fid'
+    os.mkdir(fua)
+    os.mkdir(fub)
+    os.mkdir(fuc)
+    fud = 'touch ' + tmp_dir + '/idlog/fid ' + tmp_dir + '/idlog/targid'
+    os.system(fud)
 
 
 def set_ff_env():
@@ -256,17 +260,12 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         shutil.copy('/FishFuzz/afl-frida-trace.so', build_directory)
         shutil.copy('/get_frida_entry.sh', build_directory)
 
-    tmp_dir_dst = os.environ['OUT'] + '/TEMP'
+    tmp_dst = os.environ['OUT'] + '/TEMP'
     print('[post_build] generating distance files')
-    # python3 /Fish++/distance/match_function.py -i $FF_TMP_DIR
-    # python3 /Fish++/distance/merge_callgraph.py -i $FF_TMP_DIR
-    # python3 /Fish++/distance/calculate_distance.py -i $FF_TMP_DIR
-    os.system('python3 /FishFuzz/distance/match_function.py -i %s' %
-              (tmp_dir_dst))
-    # os.system('python3 /FishFuzz/distance/merge_callgraph.py -i %s' % (tmp_dir_dst))
-    # os.system('python3 /FishFuzz/distance/calculate_distance.py -i %s' % (tmp_dir_dst))
-    os.system('python3 /FishFuzz/distance/calculate_all_distance.py -i %s' %
-              (tmp_dir_dst))
+    xxa = 'python3 /FishFuzz/distance/match_function.py -i ' + tmp_dst
+    os.system(xxa)
+    xxb = 'python3 /FishFuzz/distance/calculate_all_distance.py -i ' + tmp_dst
+    os.system(xab)
 
 
 # pylint: disable=too-many-arguments
