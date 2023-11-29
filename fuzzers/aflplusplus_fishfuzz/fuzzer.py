@@ -265,7 +265,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     xxa = 'python3 /FishFuzz/distance/match_function.py -i ' + tmp_dst
     os.system(xxa)
     xxb = 'python3 /FishFuzz/distance/calculate_all_distance.py -i ' + tmp_dst
-    os.system(xab)
+    os.system(xxb)
 
 
 # pylint: disable=too-many-arguments
