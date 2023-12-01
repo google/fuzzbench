@@ -42,6 +42,8 @@ docker run \
 -e BENCHMARK={{benchmark}} \
 -e EXPERIMENT={{experiment}} \
 -e TRIAL_ID={{trial_id}} \
+-e TRIAL_GROUP_NUM={{trial_group_num}} \
+-e MICRO_EXPERIMENT={{micro_experiment}} \
 -e MAX_TOTAL_TIME={{max_total_time}} \
 -e SNAPSHOT_PERIOD={{snapshot_period}} \
 -e NO_SEEDS={{no_seeds}} \
@@ -52,6 +54,7 @@ docker run \
 -e EXPERIMENT_FILESTORE={{experiment_filestore}} {% if local_experiment %}-v {{experiment_filestore}}:{{experiment_filestore}} {% endif %}\
 -e REPORT_FILESTORE={{report_filestore}} {% if local_experiment %}-v {{report_filestore}}:{{report_filestore}} {% endif %}\
 -e FUZZ_TARGET={{fuzz_target}} \
+-e PRIVATE={{private}} \
 -e LOCAL_EXPERIMENT={{local_experiment}} \
 {% if not local_experiment %}--name=runner-container {% endif %}\
 --shm-size=2g \

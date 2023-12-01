@@ -24,7 +24,7 @@ from common import new_process
 from common import sanitizer
 from experiment.measurer import run_coverage
 
-logger = logs.Logger('run_crashes')
+logger = logs.Logger()
 
 Crash = collections.namedtuple('Crash', [
     'crash_testcase', 'crash_type', 'crash_address', 'crash_state',

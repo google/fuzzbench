@@ -28,7 +28,7 @@ from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
 
-logger = logs.Logger('coverage_utils')  # pylint: disable=invalid-name
+logger = logs.Logger()  # pylint: disable=invalid-name
 
 COV_DIFF_QUEUE_GET_TIMEOUT = 1
 

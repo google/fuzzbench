@@ -22,7 +22,7 @@ from common import gce
 from common import gcloud
 from common import yaml_utils
 
-logger = logs.Logger('stop_experiment')  # pylint: disable=invalid-name
+logger = logs.Logger()  # pylint: disable=invalid-name
 
 
 def stop_experiment(experiment_name, experiment_config_filename):
@@ -67,7 +67,7 @@ def stop_experiment(experiment_name, experiment_config_filename):
 def main():
     """Stop the experiment."""
     if len(sys.argv) != 3:
-        print('Usage {0} <experiment-name> <experiment-config.yaml>')
+        print(f'Usage {sys.argv[0]} <experiment-name> <experiment-config.yaml>')
         return 1
     logs.initialize()
     return 0 if stop_experiment(sys.argv[1], sys.argv[2]) else 1

@@ -31,7 +31,7 @@ def test_validate_benchmarks_valid_benchmarks():
     """Tests that validate_benchmarks properly validates and parses a list of
     valid benchmarks."""
     # It won't raise an exception if everything is valid.
-    run_experiment.validate_benchmarks(['freetype2-2017', 'libxml2-v2.9.2'])
+    run_experiment.validate_benchmarks(['freetype2_ftfuzzer', 'libxml2_xml'])
 
 
 def test_validate_benchmarks_invalid_benchmark():
@@ -52,8 +52,6 @@ class TestReadAndValdiateExperimentConfig(unittest.TestCase):
                 'gs://bucket',
             'report_filestore':
                 'gs://web-bucket',
-            'experiment':
-                'experiment-name',
             'docker_registry':
                 'gcr.io/fuzzbench',
             'cloud_project':

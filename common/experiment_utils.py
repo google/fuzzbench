@@ -97,6 +97,17 @@ def get_custom_seed_corpora_filestore_path():
                           'custom_seed_corpora')
 
 
+def get_oss_fuzz_corpora_unarchived_path():
+    """Returns path containing the user-provided seed corpora."""
+    return posixpath.join(get_experiment_filestore_path(),
+                          'oss_fuzz_unarchived')
+
+
+def get_random_corpora_filestore_path():
+    """Returns path containing seed corpora for the target fuzzing experiment."""  # pylint: disable=line-too-long
+    return posixpath.join(get_experiment_filestore_path(), 'random_corpora')
+
+
 def get_dispatcher_instance_name(experiment: str) -> str:
     """Returns a dispatcher instance name for an experiment."""
     return f'd-{experiment}'
@@ -136,6 +147,11 @@ def get_crashes_archive_name(cycle: int) -> str:
 def is_local_experiment():
     """Returns True if running a local experiment."""
     return bool(environment.get('LOCAL_EXPERIMENT'))
+
+
+def is_micro_experiment():
+    """Returns True if running a micro experiment."""
+    return bool(environment.get('MICRO_EXPERIMENT'))
 
 
 def get_trial_dir(fuzzer, benchmark, trial_id):

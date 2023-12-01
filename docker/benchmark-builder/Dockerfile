@@ -14,6 +14,9 @@
 
 ARG parent_image
 
+# Using multi-stage build to copy latest Python 3.
+FROM gcr.io/fuzzbench/base-image AS base-image
+
 FROM $parent_image
 
 ARG fuzzer
@@ -24,8 +27,6 @@ ENV FUZZER $fuzzer
 ENV BENCHMARK $benchmark
 ENV DEBUG_BUILDER $debug_builder
 
-# Python 3.10.8 is not the default version in Ubuntu 20.04 (Focal Fossa).
-ENV PYTHON_VERSION 3.10.8
 
 # Install dependencies required by Python3 or Pip3.
 RUN apt-get update && \
@@ -33,33 +34,22 @@ RUN apt-get update && \
     apt-get install -y \
     curl \
     xz-utils \
-    build-essential \
     zlib1g-dev \
     libssl-dev \
     libffi-dev
 
-RUN cd /tmp/ && \
-    curl -O \
-    https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz && \
-    tar -xvf Python-$PYTHON_VERSION.tar.xz > /dev/null && \
-    cd Python-$PYTHON_VERSION && \
-    ./configure \
-        --enable-loadable-sqlite-extensions \
-        --enable-optimizations \
-        > /dev/null && \
-    make -j install > /dev/null && \
-    rm -r /tmp/Python-$PYTHON_VERSION.tar.xz /tmp/Python-$PYTHON_VERSION
+RUN rm -rf /usr/local/bin/python3.8* /usr/local/bin/pip3 /usr/local/lib/python3.8 \
+    /usr/local/include/python3.8 /usr/local/lib/python3.8/site-packages
 
-# Install common python dependencies.
-COPY ./requirements.txt /tmp
-RUN pip3 install -r /tmp/requirements.txt
-
+# Copy latest python3 from base-image into local.
+COPY --from=base-image /usr/local/bin/python3* /usr/local/bin/
+COPY --from=base-image /usr/local/bin/pip3* /usr/local/bin/
+COPY --from=base-image /usr/local/lib/python3.10 /usr/local/lib/python3.10
+COPY --from=base-image /usr/local/include/python3.10 /usr/local/include/python3.10
+COPY --from=base-image /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 
 # Copy the entire fuzzers directory tree to allow for module dependencies.
 COPY fuzzers $SRC/fuzzers
-
-# Create empty __init__.py to allow python deps to work.
-RUN touch $SRC/__init__.py
 
 # Disable LeakSanitizer since ptrace is unavailable in Google Cloud build
 # and is not needed during build process.
@@ -71,6 +61,6 @@ RUN mkdir /opt/fuzzbench/
 COPY docker/benchmark-builder/checkout_commit.py /opt/fuzzbench/
 RUN export CHECKOUT_COMMIT=$(cat /benchmark.yaml | tr -d ' ' | grep 'commit:' | cut -d ':' -f2) && \
     python3 -u /opt/fuzzbench/checkout_commit.py $CHECKOUT_COMMIT $SRC
-RUN echo "#!/bin/bash\nPYTHONPATH=$SRC python3 -u -c \"from fuzzers import utils; utils.initialize_env(); from fuzzers.$FUZZER import fuzzer; fuzzer.build()\"" > /usr/bin/fuzzer_build && \
-    chmod +x /usr/bin/fuzzer_build
+
+COPY docker/benchmark-builder/fuzzer_build /usr/bin/fuzzer_build
 RUN echo "Run fuzzer_build to build the target" && if [ -z "$debug_builder" ] ; then fuzzer_build; fi

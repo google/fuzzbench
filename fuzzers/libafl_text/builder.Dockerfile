@@ -15,34 +15,41 @@
 ARG parent_image
 FROM $parent_image
 
-# Install libstdc++ to use llvm_mode.
+# Uninstall old Rust & Install the latest one.
+RUN if which rustup; then rustup self uninstall -y; fi && \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
+    sh /rustup.sh --default-toolchain nightly -y && \
+    rm /rustup.sh
+
+# Install dependencies.
 RUN apt-get update && \
-    apt-get install -y wget libstdc++-5-dev libtool-bin automake flex bison \
-                       libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
-                       apt-utils apt-transport-https ca-certificates joe curl
+    apt-get remove -y llvm-10 && \
+    apt-get install -y \
+        build-essential \
+        llvm-11 \
+        clang-12 \
+        cargo && \
+    apt-get install -y wget libstdc++5 libtool-bin automake flex bison \
+        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
+        apt-utils apt-transport-https ca-certificates joe curl && \
+    PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
 
-# Uninstall old Rust
-RUN if which rustup; then rustup self uninstall -y; fi
+# Download libafl.
+RUN git clone \
+        --branch vhtokens \
+        https://github.com/AFLplusplus/libafl /libafl && \
+        cd /libafl && \
+        git checkout 6c7f6566b0c8b3b82352c052a0672f46a2f7d1e9 || \
+        true
 
-# Install latest Rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
-    sh /rustup.sh -y
-
-# Switch to nightly
-RUN PATH="$PATH:/root/.cargo/bin/" rustup default nightly
-
-# Download libafl
-RUN git clone https://github.com/AFLplusplus/libafl /libafl && \
-    cd /libafl && \
-    git checkout ebdab32b36fd2e22025a3d47dc996b5bc8121c95
-
-# Compile libafl
-RUN cd /libafl && unset CFLAGS && unset CXXFLAGS && \
-    export CC=clang && export CXX=clang++ && \
+# Compile libafl.
+RUN cd /libafl && \
+    unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
     cd ./fuzzers/fuzzbench_text && \
-    PATH="$PATH:/root/.cargo/bin/" cargo build --release
+    PATH="/root/.cargo/bin/:$PATH" cargo build --release
 
+# Auxiliary weak references.
 RUN wget https://gist.githubusercontent.com/andreafioraldi/e5f60d68c98b31665a274207cfd05541/raw/4da351a321f1408df566a9cf2ce7cde6eeab3904/empty_fuzzer_lib.c -O /empty_fuzzer_lib.c && \
     clang -c /empty_fuzzer_lib.c && \
     ar r /emptylib.a *.o

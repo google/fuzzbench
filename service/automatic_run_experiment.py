@@ -31,7 +31,7 @@ from database import models
 from database import utils as db_utils
 from experiment import run_experiment
 
-logger = logs.Logger('automatic_run_experiment')  # pylint: disable=invalid-name
+logger = logs.Logger()  # pylint: disable=invalid-name
 
 EXPERIMENT_CONFIG_FILE = os.path.join(utils.ROOT_DIR, 'service',
                                       'experiment-config.yaml')
@@ -44,7 +44,7 @@ REQUESTED_EXPERIMENTS_PATH = os.path.join(utils.ROOT_DIR, 'service',
 PAUSE_SERVICE_KEYWORD = 'PAUSE_SERVICE'
 
 EXPERIMENT_NAME_REGEX = re.compile(r'^\d{4}-\d{2}-\d{2}.*')
-SERVICE_CONCURRENT_BUILDS = 150
+CONCURRENT_BUILDS = 30
 
 
 def _get_experiment_name(experiment_config: dict) -> str:
@@ -144,7 +144,7 @@ def _validate_individual_experiment_requests(experiment_requests):
                          experiment_type, benchmark_utils.BENCHMARK_TYPE_STRS)
             valid = False
 
-        benchmarks = request.get('benchmarks', [])
+        benchmarks = sorted(request.get('benchmarks', []))  # Sort for testing.
         for benchmark in benchmarks:
             benchmark_type = benchmark_utils.get_type(benchmark)
             if (benchmark_type == benchmark_utils.BenchmarkType.BUG.value and
@@ -272,7 +272,7 @@ def _run_experiment(  # pylint: disable=too-many-arguments
                                     benchmarks,
                                     fuzzers,
                                     description=description,
-                                    concurrent_builds=SERVICE_CONCURRENT_BUILDS,
+                                    concurrent_builds=CONCURRENT_BUILDS,
                                     oss_fuzz_corpus=oss_fuzz_corpus)
 
 

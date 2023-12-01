@@ -1,0 +1,88 @@
+name: Fuzzers+Benchmarks
+on:
+  pull_request:
+    paths:
+      - 'docker/**'  # Base image changes.
+      - 'fuzzers/**' # Changes to fuzzers themselves.
+      - 'benchmarks/**'  # Changes to benchmarks.
+      # Changes that affect what gets built.
+      - 'src_analysis/**'
+      - '.github/workflows/benchmarks.yml'
+      - '.github/workflows/build_and_test_run_fuzzer_benchmarks.py'
+
+jobs:
+  Test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        benchmark:
+          - bloaty_fuzz_target
+          - bloaty_fuzz_target_52948c
+          - curl_curl_fuzzer_http
+          - freetype2_ftfuzzer
+          - harfbuzz_hb-shape-fuzzer
+          - harfbuzz_hb-shape-fuzzer_17863b
+          - jsoncpp_jsoncpp_fuzzer
+          - lcms_cms_transform_fuzzer
+          - libjpeg-turbo_libjpeg_turbo_fuzzer
+          - libpcap_fuzz_both
+          - libpng_libpng_read_fuzzer
+          - libxml2_xml
+          - libxml2_xml_e85b9b
+          - libxslt_xpath
+          - mbedtls_fuzz_dtlsclient
+          - mbedtls_fuzz_dtlsclient_7c6b0e
+          - openh264_decoder_fuzzer
+          - openssl_x509
+          - openthread_ot-ip6-send-fuzzer
+          - php_php-fuzz-parser_0dbedb
+          - proj4_proj_crs_to_crs_fuzzer
+          - re2_fuzzer
+          - sqlite3_ossfuzz
+          - stb_stbi_read_fuzzer
+          - systemd_fuzz-link-parser
+          - vorbis_decode_fuzzer
+          - woff2_convert_woff2ttf_fuzzer
+          - zlib_zlib_uncompress_fuzzer
+
+    steps:
+    - uses: actions/checkout@v3
+    - run: |  # Needed for git diff to work.
+        git fetch origin master --unshallow
+        git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
+
+    - name: Clear unnecessary files
+      run: |
+        sudo swapoff -a
+        sudo rm -f /swapfile
+        sudo apt clean
+        docker rmi $(docker images -a -q)
+        df -h
+
+    - name: Setup Python environment
+      uses: actions/setup-python@v3
+      with:
+        python-version: 3.10.8
+
+    # Copied from:
+    # https://docs.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions
+    - name: Cache pip
+      uses: actions/cache@v3
+      with:
+        # This path is specific to Ubuntu.
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements
+        # file.
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+
+    - name: Install dependencies
+      run: |
+        make install-dependencies
+
+    - name: Test fuzzers and benchmarks
+      run: |
+        PATH=.venv/bin/:$PATH PYTHONPATH=. python3 .github/workflows/build_and_test_run_fuzzer_benchmarks.py ${{ matrix.benchmark }}

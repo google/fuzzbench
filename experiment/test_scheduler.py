@@ -114,6 +114,8 @@ docker run \\
 -e BENCHMARK={benchmark} \\
 -e EXPERIMENT=test-experiment \\
 -e TRIAL_ID=9 \\
+-e TRIAL_GROUP_NUM=0 \\
+-e MICRO_EXPERIMENT=False \\
 -e MAX_TOTAL_TIME=86400 \\
 -e SNAPSHOT_PERIOD=900 \\
 -e NO_SEEDS=False \\
@@ -124,6 +126,7 @@ docker run \\
 -e EXPERIMENT_FILESTORE=gs://experiment-data \\
 -e REPORT_FILESTORE=gs://web-reports \\
 -e FUZZ_TARGET={oss_fuzz_target} \\
+-e PRIVATE=False \\
 -e LOCAL_EXPERIMENT=False \\
 --name=runner-container \\
 --shm-size=2g \\

@@ -54,6 +54,7 @@ class Trial(Base):
     # Columns used for preemptible experiments.
     preemptible = Column(Boolean, default=False, nullable=False)
     preempted = Column(Boolean, default=False, nullable=False)
+    trial_group_num = Column(Integer, nullable=True)
 
     # Every trial has snapshots which is basically the saved state of that trial
     # at a given time. The snapshots field here and the trial field on Snapshot,
