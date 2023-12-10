@@ -34,15 +34,10 @@ RUN apt-get update && \
         gcc-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-plugin-dev \
         libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
-RUN apt install -y lsb-release wget software-properties-common gnupg
-
-RUN cd / && wget https://apt.llvm.org/llvm.sh && chmod +x /llvm.sh && /llvm.sh 17
-ENV LLVM_CONFIG=llvm-config-17
-
 # Download afl++.
-RUN git clone -b dev https://github.com/AFLplusplus/AFLplusplus /afl && \
+RUN git clone -b classify https://github.com/AFLplusplus/AFLplusplus /afl && \
     cd /afl && \
-    git checkout a3806158116ae4c5b8a30c19533975cb41dd497f || \
+    git checkout e5447fc2952d0b3d10d73cf078e11fc31ac4d4c1 || \
     true
 
 # Build without Python support as we don't need it.
