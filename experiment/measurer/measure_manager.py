@@ -21,6 +21,7 @@ import json
 import os
 import pathlib
 import posixpath
+import shlex
 import shutil
 import sys
 import tempfile
@@ -28,13 +29,13 @@ import tarfile
 import time
 from typing import List
 import queue
+from pathlib import Path
 import psutil
 
 from sqlalchemy import func
 from sqlalchemy import orm
 
 from common import benchmark_utils
-from common import environment
 from common import experiment_utils
 from common import experiment_path as exp_path
 from common import filesystem
@@ -59,7 +60,7 @@ SnapshotMeasureRequest = collections.namedtuple(
 
 NUM_RETRIES = 3
 RETRY_DELAY = 3
-FAIL_WAIT_SECONDS = 5#30
+FAIL_WAIT_SECONDS = 30
 SNAPSHOT_QUEUE_GET_TIMEOUT = 1
 SNAPSHOTS_BATCH_SAVE_SIZE = 100
 
@@ -101,12 +102,13 @@ def _process_init(cores_queue):
         psutil.Process().cpu_affinity([cpu])
 
 
-def measure_loop(experiment: str,
-                 max_total_time: int,
-                 measurers_cpus=None,
-                 runners_cpus=None,
-                 region_coverage=False,
-                 mutation_analysis=False):
+def measure_loop(  # pylint: disable=too-many-arguments
+        experiment: str,
+        max_total_time: int,
+        measurers_cpus=None,
+        runners_cpus=None,
+        region_coverage=False,
+        mutation_analysis=False):
     """Continuously measure trials for |experiment|."""
     logger.info('Start measure_loop.')
 
@@ -126,18 +128,18 @@ def measure_loop(experiment: str,
     with multiprocessing.Pool(
             *pool_args) as pool, multiprocessing.Manager() as manager:
         set_up_coverage_binaries(pool, experiment)
-        if(mutation_analysis):
+        if mutation_analysis:
             set_up_mua_binaries(pool, experiment)
         # Using Multiprocessing.Queue will fail with a complaint about
         # inheriting queue.
         # pytype: disable=attribute-error
         multiprocessing_queue = manager.Queue()
+        # pytype: enable=attribute-error
         while True:
             try:
                 # Get whether all trials have ended before we measure to prevent
                 # races.
                 all_trials_ended = scheduler.all_trials_ended(experiment)
-
 
                 if not measure_all_trials(experiment, max_total_time, pool,
                                           multiprocessing_queue,
@@ -156,8 +158,9 @@ def measure_loop(experiment: str,
     logger.info('Finished measure loop.')
 
 
-def measure_all_trials(experiment: str, max_total_time: int, pool,
-                       multiprocessing_queue, region_coverage, mutation_analysis) -> bool:
+def measure_all_trials(  # pylint: disable=too-many-arguments
+        experiment: str, max_total_time: int, pool, multiprocessing_queue,
+        region_coverage, mutation_analysis) -> bool:
     """Get coverage data (with coverage runs) for all active trials. Note that
     this should not be called unless multiprocessing.set_start_method('spawn')
     was called first. Otherwise it will use fork which breaks logging."""
@@ -174,12 +177,11 @@ def measure_all_trials(experiment: str, max_total_time: int, pool,
         return False
 
     measure_trial_args = [
-        (unmeasured_snapshot, max_cycle, multiprocessing_queue, region_coverage, mutation_analysis)
-        for unmeasured_snapshot in unmeasured_snapshots
+        (unmeasured_snapshot, max_cycle, multiprocessing_queue, region_coverage,
+         mutation_analysis) for unmeasured_snapshot in unmeasured_snapshots
     ]
 
-    result = pool.starmap_async(measure_trial,
-                                measure_trial_args)
+    result = pool.starmap_async(measure_trial, measure_trial_args)
 
     # Poll the queue for snapshots and save them in batches until the pool is
     # done processing each unmeasured snapshot. Then save any remaining
@@ -208,8 +210,7 @@ def measure_all_trials(experiment: str, max_total_time: int, pool,
                 # If "ready" that means pool has finished calling on each
                 # unmeasured_snapshot. Since it is finished and the queue is
                 # empty, we can stop checking the queue for more snapshots.
-                logger.debug(
-                    'Finished call to map with measure_trial.')
+                logger.debug('Finished call to map with measure_trial.')
                 break
 
             if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE * .75:
@@ -255,10 +256,14 @@ def _query_unmeasured_trials(experiment: str):
 
     with db_utils.session_scope() as session:
         trial_query = session.query(models.Trial)
-        no_snapshots_filter = ~models.Trial.id.in_(ids_of_trials_with_snapshots) # trial has no snapshot
-        started_trials_filter = ~models.Trial.time_started.is_(None) # trial already started
-        nonpreempted_trials_filter = ~models.Trial.preempted # trial not preempted
-        experiment_trials_filter = models.Trial.experiment == experiment # trial matches the current experiment
+        no_snapshots_filter = ~models.Trial.id.in_(
+            ids_of_trials_with_snapshots)  # trial has no snapshot
+        started_trials_filter = ~models.Trial.time_started.is_(
+            None)  # trial already started
+        # trial not preempted
+        nonpreempted_trials_filter = ~models.Trial.preempted
+        # trial matches the current experiment
+        experiment_trials_filter = models.Trial.experiment == experiment
         return trial_query.filter(experiment_trials_filter, no_snapshots_filter,
                                   started_trials_filter,
                                   nonpreempted_trials_filter)
@@ -411,35 +416,40 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             filesystem.recreate_directory(directory)
         filesystem.create_directory(self.report_dir)
 
-    def create_dir(self, dir):
-        if(not os.path.exists(dir)):
-            os.makedirs(dir, exist_ok=True)
-        return os.path.exists(dir)
-    
+    def create_dir(self, directory):
+        """Create directory if it does not exist,
+        also creates parent directories."""
+        if not os.path.exists(directory):
+            os.makedirs(directory, exist_ok=True)
+        return os.path.exists(directory)
+
     def initialize_mua_environment(self):
-        """build all covered mutants"""
+        """Build all covered mutants."""
 
         # find correct container and start it
-        container_name = MUTATION_ANALYSIS_IMAGE_NAME + '_' + self.benchmark + '_container'
+        container_name = \
+            f'{MUTATION_ANALYSIS_IMAGE_NAME}_{self.benchmark}_container'
 
-        docker_start_command = 'docker start '+container_name
+        docker_start_command = 'docker start ' + container_name
         new_process.execute(docker_start_command.split(' '))
 
-        experiment_filestore_path = experiment_utils.get_experiment_filestore_path()
-        shared_mua_binaries_dir = os.path.join(experiment_filestore_path, 'mua-binaries')
-        
+        experiment_filestore_path = \
+            Path(experiment_utils.get_experiment_filestore_path())
+        shared_mua_binaries_dir = experiment_filestore_path / 'mua-binaries'
+
         # create corpi directory entry
-        corpi_dir = shared_mua_binaries_dir+'/corpi'
-        fuzzer_corpi_dir = corpi_dir + '/' + self.fuzzer
-        trial_corpi_dir = fuzzer_corpi_dir + '/' + str(self.trial_num)
+        corpi_dir = Path(shared_mua_binaries_dir) / 'corpi'
+        fuzzer_corpi_dir = corpi_dir / self.fuzzer
+        trial_corpi_dir = fuzzer_corpi_dir / str(self.trial_num)
         self.create_dir(fuzzer_corpi_dir)
 
         # create covered_mutants directory entry (contains ids)
-        mutants_ids_dir_entry = shared_mua_binaries_dir+'/mutant_ids'+'/'+self.fuzzer+'/'+str(self.trial_num)
+        mutants_ids_dir_entry = (shared_mua_binaries_dir / 'mutant_ids' /
+                                 self.fuzzer / str(self.trial_num))
         self.create_dir(mutants_ids_dir_entry)
 
         # create mutants directory
-        mutants_dir_entry = shared_mua_binaries_dir+'/mutants'+'/'
+        mutants_dir_entry = shared_mua_binaries_dir / 'mutants'
         self.create_dir(mutants_dir_entry)
 
         # copy corpus from self.corpus_dir into container
@@ -450,33 +460,42 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         fuzz_target = benchmark_utils.get_fuzz_target(self.benchmark)
 
         # execute command on container
-        command = '(python3 /mutator/mua_build_ids.py '+fuzz_target+' '+experiment_name+' '+self.fuzzer+' '+str(self.trial_num)+'; )'
-        
-        docker_exec_command = 'docker exec -t '+container_name+' /bin/bash -c'
-        logger.info('mua initialize command:'+str(docker_exec_command))  
-        docker_exec_command_formated = docker_exec_command.split(" ")
-        docker_exec_command_formated.append(command)
-        logger.info(docker_exec_command_formated)
-        new_process.execute(docker_exec_command_formated)
+        command = [
+            'python3', '/mutator/mua_build_ids.py', fuzz_target,
+            experiment_name, self.fuzzer,
+            str(self.trial_num)
+        ]
+
+        docker_exec_command = [
+            'docker', 'exec', '-t', container_name, '/bin/bash', '-c',
+            shlex.join(command)
+        ]
+
+        logger.info('mua initialize command:' + str(docker_exec_command))
+        logger.info(docker_exec_command)
+        new_process.execute(docker_exec_command)
 
     def process_mua(self):
         """runs mua measurement"""
         # get necessary info
-        container_name = 'mutation_analysis_'+self.benchmark+'_container'
+        container_name = 'mutation_analysis_' + self.benchmark + '_container'
         experiment_name = experiment_utils.get_experiment_name()
-        fuzz_target = benchmark_utils.get_fuzz_target(self.benchmark)        
-
+        fuzz_target = benchmark_utils.get_fuzz_target(self.benchmark)
 
         # run all needed mutants in container
-        command = '(python3 /mutator/mua_run_mutants.py '+fuzz_target+' '+experiment_name+' '+self.fuzzer+' '+str(self.trial_num)+'; )'
-        
-        docker_exec_command = 'docker exec -t '+container_name+' /bin/bash -c'
-        logger.info('mua process command:'+str(docker_exec_command))  
-        docker_exec_command_formated = docker_exec_command.split(" ")
-        docker_exec_command_formated.append(command)
-        logger.info(docker_exec_command_formated)
-        new_process.execute(docker_exec_command_formated, write_to_stdout=True)
-    
+        command = [
+            'python3', '/mutator/mua_run_mutants.py', fuzz_target,
+            experiment_name, self.fuzzer,
+            str(self.trial_num)
+        ]
+
+        docker_exec_command = [
+            'docker', 'exec', '-t', container_name, '/bin/bash', '-c',
+            shlex.join(command)
+        ]
+        logger.info('mua process command:' + str(docker_exec_command))
+        new_process.execute(docker_exec_command, write_to_stdout=True)
+
     def run_cov_new_units(self):
         """Run the coverage binary on new units."""
         coverage_binary = coverage_utils.get_coverage_binary(self.benchmark)
@@ -629,8 +648,8 @@ def get_fuzzer_stats(stats_filestore_path):
 
 
 def measure_trial(measure_req, max_cycle: int,
-                           multiprocessing_queue: multiprocessing.Queue,
-                           region_coverage, mutation_analysis) -> models.Snapshot:
+                  multiprocessing_queue: multiprocessing.Queue, region_coverage,
+                  mutation_analysis) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
@@ -640,9 +659,9 @@ def measure_trial(measure_req, max_cycle: int,
     for cycle in range(min_cycle, max_cycle + 1):
         try:
             snapshot = measure_snapshot(measure_req.fuzzer,
-                                                 measure_req.benchmark,
-                                                 measure_req.trial_id, cycle,
-                                                 region_coverage, mutation_analysis)
+                                        measure_req.benchmark,
+                                        measure_req.trial_id, cycle,
+                                        region_coverage, mutation_analysis)
             if not snapshot:
                 break
             multiprocessing_queue.put(snapshot)
@@ -657,11 +676,11 @@ def measure_trial(measure_req, max_cycle: int,
     logger.debug('Done measuring trial: %d.', measure_req.trial_id)
 
 
-def measure_snapshot(  # pylint: disable=too-many-locals
+def measure_snapshot(  # pylint: disable=too-many-locals,too-many-arguments
         fuzzer: str, benchmark: str, trial_num: int, cycle: int,
         region_coverage: bool, mutation_analysis: bool) -> models.Snapshot:
-    """Measure coverage and mua of the snapshot for |cycle| for |trial_num| of |fuzzer|
-    and |benchmark|."""
+    """Measure coverage and mua of the snapshot for |cycle| for |trial_num|
+    of |fuzzer| and |benchmark|."""
     snapshot_logger = logs.Logger(
         default_extras={
             'fuzzer': fuzzer,
@@ -693,7 +712,7 @@ def measure_snapshot(  # pylint: disable=too-many-locals
     snapshot_measurer.initialize_measurement_dirs()
     snapshot_measurer.extract_corpus(corpus_archive_dst)
 
-    if(mutation_analysis):
+    if mutation_analysis:
         snapshot_measurer.initialize_mua_environment()
 
     # Don't keep corpus archives around longer than they need to be.
@@ -717,14 +736,15 @@ def measure_snapshot(  # pylint: disable=too-many-locals
                                fuzzer_stats=fuzzer_stats_data,
                                crashes=crashes)
 
-    if(mutation_analysis):
+    if mutation_analysis:
         snapshot_measurer.process_mua()
 
     measuring_time = round(time.time() - measuring_start_time, 2)
     snapshot_logger.info('Measured cycle: %d in %f seconds.', cycle,
                          measuring_time)
-    
+
     return snapshot
+
 
 def set_up_coverage_binaries(pool, experiment):
     """Set up coverage binaries for all benchmarks in |experiment|."""
@@ -740,6 +760,7 @@ def set_up_coverage_binaries(pool, experiment):
     filesystem.create_directory(coverage_binaries_dir)
     pool.map(set_up_coverage_binary, benchmarks)
 
+
 def set_up_mua_binaries(pool, experiment):
     """Set up mua finder binaries for all benchmarks in |experiment|."""
     # Use set comprehension to select distinct benchmarks.
@@ -754,6 +775,7 @@ def set_up_mua_binaries(pool, experiment):
     filesystem.create_directory(mua_binaries_dir)
     pool.map(set_up_mua_binary, benchmarks)
 
+
 def set_up_mua_binary(benchmark):
     """Set up mua finder binaries for |benchmark|."""
     initialize_logs()
@@ -761,14 +783,13 @@ def set_up_mua_binary(benchmark):
     benchmark_mua_binary_dir = mua_binaries_dir / benchmark
     filesystem.create_directory(benchmark_mua_binary_dir)
     archive_name = f'mutation-analysis-build-{benchmark}.tar.gz'
-    archive_filestore_path = exp_path.filestore(mua_binaries_dir /
-                                                archive_name)
-    filestore_utils.cp(archive_filestore_path,
-                       str(benchmark_mua_binary_dir))
+    archive_filestore_path = exp_path.filestore(mua_binaries_dir / archive_name)
+    filestore_utils.cp(archive_filestore_path, str(benchmark_mua_binary_dir))
     archive_path = benchmark_mua_binary_dir / archive_name
     with tarfile.open(archive_path, 'r:gz') as tar:
         tar.extractall(benchmark_mua_binary_dir)
         os.remove(archive_path)
+
 
 def set_up_coverage_binary(benchmark):
     """Set up coverage binaries for |benchmark|."""

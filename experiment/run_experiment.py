@@ -347,7 +347,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
     if config['custom_seed_corpus_dir']:
         validate_custom_seed_corpus(config['custom_seed_corpus_dir'],
                                     benchmarks)
-                                    
+
     config['mutation_analysis'] = mutation_analysis
     return start_experiment_from_full_config(config)
 
@@ -521,10 +521,8 @@ class LocalDispatcher(BaseDispatcher):
             set_concurrent_builds_arg,
             '-e',
             set_worker_pool_name_arg,
-            *(
-                ['-e', f'HOST_MUA_MAPPED_DIR={mua_mapped_dir}']
-                if mua_mapped_dir else []
-            ),
+            *(['-e', f'HOST_MUA_MAPPED_DIR={mua_mapped_dir}']
+              if mua_mapped_dir else []),
         ]
         command = [
             'docker',
@@ -537,8 +535,12 @@ class LocalDispatcher(BaseDispatcher):
             shared_experiment_filestore_arg,
             '-v',
             shared_report_filestore_arg,
-            '-v',  # Just to make repeated run starts faster.
-            "/tmp/dispatcher_venv:/work/src/.venv/lib/python3.10/site-packages",
+            # To avoid having the dispatcher image reinstall the same python
+            # packages with every run the site-packages folder can be mapped
+            # to a volume. This reduces the time needed when repeating local
+            # starts by several minutes.
+            '-v',
+            '/tmp/dispatcher_venv:/work/src/.venv/lib/python3.10/site-packages',
         ] + environment_args + [
             '--shm-size=2g',
             '--cap-add=SYS_PTRACE',

@@ -163,7 +163,8 @@ def generate_makefile():
     for name, image in buildable_images.items():
         makefile += get_rules_for_image(name, image)
 
-    # Print build targets for all fuzzer-benchmark pairs (including coverage and mutation_analysis).
+    # Print build targets for all fuzzer-benchmark pairs
+    # (including coverage and mutation_analysis).
     fuzzers.append('coverage')
     fuzzers.append('mutation_analysis')
     for fuzzer in fuzzers:

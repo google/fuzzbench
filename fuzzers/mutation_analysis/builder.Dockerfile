@@ -20,61 +20,26 @@ FROM gcr.io/fuzzbench/base-image AS base-image
 
 FROM $parent_image
 
-RUN apt-get update && apt-get install -y \
-    lsb-release wget software-properties-common gnupg
+# Required packages
+RUN DEBIAN_FRONTEND=noninteractive \
+    apt-get update && \
+    apt-get install -y \
+        lsb-release \
+        wget \
+        software-properties-common gnupg \
+        openjdk-11-jdk \
+        zlib1g-dev \
+        file \
+        pipx \
+        python3.8-venv
+
+# llvm 15
 RUN mkdir /llvm && \
     cd /llvm && \
     bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" && \
     wget https://apt.llvm.org/llvm.sh && \
     chmod +x llvm.sh && \
     ./llvm.sh 15
-
-# WORKDIR /home/
-# RUN mkdir -p downloads
-# WORKDIR /home/downloads
-# RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-# RUN python3 get-pip.py
-
-RUN pip3 install wllvm 
-
-# ENV PATH "/root/toolchains/build/llvm+clang-901-x86_64-linux-gnu_build/bin/:$PATH"
-# ENV LLVM_COMPILER "clang"
-
-RUN mkdir -p /tmp/gradle && \
-    cd /tmp/gradle && \
-    wget -q https://services.gradle.org/distributions/gradle-6.8-bin.zip && \
-    unzip gradle-6.8-bin.zip && \
-    mv gradle-6.8 /usr/local/gradle && \
-    rm -r /tmp/gradle
-
-ENV PATH "/usr/local/gradle/bin/:$PATH"
-
-#### install gllvm
-ENV PATH="${PATH}:/root/.cargo/bin:/usr/local/go/bin:/root/go/bin"
-RUN mkdir /tmp/gllvm/ && \
-    cd /tmp/gllvm/ && \
-    wget -q -c https://dl.google.com/go/go1.16.15.linux-amd64.tar.gz -O - | tar -xz -C /usr/local && \
-    go get github.com/SRI-CSL/gllvm/cmd/... && \
-    rm -r /tmp/gllvm/
-
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y openjdk-11-jdk zlib1g-dev file pipx python3.8-venv
-        # cmake \
-        # binutils-dev \
-        # libcurl4-openssl-dev \
-        # zlib1g-dev \
-        # libdw-dev \
-        # libiberty-dev \
-        # libssl-dev \
-        # libelf-dev \
-        # libdw-dev \
-        # libidn2-dev \
-        # libidn2-0 \
-        # idn2 \
-        # libstdc++6
-RUN pipx install hatch
-
-# RUN git clone https://github.com/CISPA-SysSec/mua_fuzzer_bench mutator
-COPY mua_fuzzer_bench /mutator
 
 RUN update-alternatives --install \
             /usr/local/bin/llvm-config       llvm-config      /usr/lib/llvm-15/bin/llvm-config  200 \
@@ -102,52 +67,38 @@ RUN update-alternatives --install \
     --slave /usr/local/bin/clang             clang            /usr/lib/llvm-15/bin/clang \
     --slave /usr/local/bin/clang++           clang++          /usr/lib/llvm-15/bin/clang++
 
+# wllvm
+RUN pip3 install wllvm 
+
+# gradle
+RUN mkdir -p /tmp/gradle && \
+    cd /tmp/gradle && \
+    wget -q https://services.gradle.org/distributions/gradle-6.8-bin.zip && \
+    unzip gradle-6.8-bin.zip && \
+    mv gradle-6.8 /usr/local/gradle && \
+    rm -r /tmp/gradle
+
+ENV PATH "/usr/local/gradle/bin/:$PATH"
+
+# gllvm
+ENV PATH="${PATH}:/root/.cargo/bin:/usr/local/go/bin:/root/go/bin"
+RUN mkdir /tmp/gllvm/ && \
+    cd /tmp/gllvm/ && \
+    wget -q -c https://dl.google.com/go/go1.16.15.linux-amd64.tar.gz -O - | tar -xz -C /usr/local && \
+    go get github.com/SRI-CSL/gllvm/cmd/... && \
+    rm -r /tmp/gllvm/
+
+# hatch
+RUN pipx install hatch
+
+# mua_fuzzer_bench
+RUN git clone https://github.com/phi-go/mua_fuzzer_bench mutator && \
+    git checkout d3d361092067423dc02ed4e9d82eefe694179ab5
+
 RUN cd /mutator && \
     echo "llvmBinPath=/usr/lib/llvm-15/bin/" > gradle.properties
 
-RUN ln -s /mutator/exec-recorder.py /exec-recorder.py 
-RUN ln -s /exec-recorder.py /bin/gclang-wrap
-RUN ln -s /exec-recorder.py /bin/gclang++-wrap
-RUN ln -s /mutator/mua_build_benchmark.py /bin/mua_build_benchmark
-
-# COPY modules /home/mutator/modules
-# COPY build.gradle /home/mutator/
-# COPY run_mutation.py /home/mutator/
-# RUN chmod +x run_mutation.py
-# COPY settings.gradle /home/mutator
-# RUN cd /mutator && gradle clean && gradle build
-# RUN ldconfig /mutator/build/install/LLVM_Mutation_Tool/lib/
-
-# RUN ln /usr/bin/llvm-link-15 /bin/llvm-link 
-
-#RUN echo "transfering control flow to mua_idle.py"
-#RUN python3 /mutator/mua_idle.py
-
-
-# # set library paths for used shared libraries s.t. the system finds them
-# ENV LD_LIBRARY_PATH /home/mutator/build/install/LLVM_Mutation_Tool/lib/
-# # For all subjects provide the path to the default main here. This is based on oss-fuzz convention.
-# ENV LIB_FUZZING_ENGINE="/home/mutator/programs/common/main.cc"
-# ENV CC=gclang
-# ENV CXX=gclang++ 
-
-########
-
-# ENV LF_PATH /tmp/libfuzzer.zip
-
-# # Use a libFuzzer version that supports clang source-based coverage.
-# # This libfuzzer is 0b5e6b11c358e704384520dc036eddb5da1c68bf with
-# # https://github.com/google/fuzzbench/blob/cf86138081ec705a47ce0a4bab07b5737292e7e0/fuzzers/coverage/patch.diff
-# # applied.
-
-# RUN wget https://storage.googleapis.com/fuzzbench-artifacts/libfuzzer-coverage.zip -O $LF_PATH && \
-#     echo "cc78179f6096cae4b799d0cc9436f000cc0be9b1fb59500d16b14b1585d46b61 $LF_PATH" | sha256sum --check --status && \
-#     mkdir /tmp/libfuzzer && \
-#     cd /tmp/libfuzzer && \
-#     unzip $LF_PATH  && \
-#     bash build.sh && \
-#     cp libFuzzer.a /usr/lib && \
-#     rm -rf /tmp/libfuzzer $LF_PATH
-
-
-# clear && fuzzer_build && mua_build_benchmark && pushd /mutator && gradle build && ldconfig /mutator/build/install/LLVM_Mutation_Tool/lib/ && pipx run hatch run src/mua_fuzzer_benchmark/eval.py locator_local --config-path /tmp/config.json --result-path /tmp/test/ ; popd
+RUN ln -s /mutator/exec-recorder.py /exec-recorder.py && \
+    ln -s /exec-recorder.py /bin/gclang-wrap && \
+    ln -s /exec-recorder.py /bin/gclang++-wrap && \
+    ln -s /mutator/mua_build_benchmark.py /bin/mua_build_benchmark

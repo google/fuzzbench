@@ -99,12 +99,14 @@ def build_measurer(benchmark: str) -> bool:
     try:
         logger.info('Building coverage measurer for benchmark: %s.', benchmark)
         buildlib.build_coverage(benchmark)
-        logs.info('Done building coverage measurer for benchmark: %s.', benchmark)
+        logs.info('Done building coverage measurer for benchmark: %s.',
+                  benchmark)
         return True
     except Exception:  # pylint: disable=broad-except
         logger.error('Failed to build measurer for %s.', benchmark)
         return False
-    
+
+
 def build_mua(benchmark: str) -> bool:
     """Do a mutation analysis build for a benchmark."""
     try:

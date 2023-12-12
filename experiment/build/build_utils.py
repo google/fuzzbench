@@ -37,6 +37,7 @@ def get_coverage_binaries_dir():
     """Return coverage binaries directory."""
     return exp_path.path('coverage-binaries')
 
+
 def get_mua_binaries_dir():
     """Return mua finder binaries directory."""
     return exp_path.path('mua-binaries')
