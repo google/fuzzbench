@@ -14,6 +14,8 @@
 
 FROM gcr.io/fuzzbench/base-image
 
+RUN apt install libjemalloc2
+
 # This makes interactive docker runs painless:
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
 #ENV AFL_MAP_SIZE=2621440
