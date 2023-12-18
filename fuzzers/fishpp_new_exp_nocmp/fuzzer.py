@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-"""Integration code for AFLplusplus fuzzer."""
+"""Integration code for FishFuzz-AFLplusplus fuzzer."""
 
 import os
 import shutil
@@ -31,6 +31,27 @@ def get_uninstrumented_build_directory(target_directory):
     return os.path.join(target_directory, 'uninstrumented')
 
 
+def prepare_tmp_files(tmp_dir):
+    """prepare tmp files"""
+    if not os.path.isdir(tmp_dir) or os.path.exists(tmp_dir):
+        os.mkdir(tmp_dir)
+    fua = tmp_dir + '/idlog'
+    fub = tmp_dir + '/cg'
+    fuc = tmp_dir + '/fid'
+    os.mkdir(fua)
+    os.mkdir(fub)
+    os.mkdir(fuc)
+    fud = 'touch ' + tmp_dir + '/idlog/fid ' + tmp_dir + '/idlog/targid'
+    os.system(fud)
+
+
+def set_ff_env():
+    """set FishFuzz Env before build"""
+    os.environ['TMP_DIR'] = os.environ['OUT'] + '/TEMP'
+    os.environ['FF_TMP_DIR'] = os.environ['OUT'] + '/TEMP'
+    prepare_tmp_files(os.environ['TMP_DIR'])
+
+
 def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     # BUILD_MODES is not already supported by fuzzbench, meanwhile we provide
@@ -45,21 +66,23 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     # If nothing was set this is the default:
     if not build_modes:
-        build_modes = ['tracepc', 'cmplog', 'dict2file']
+        build_modes = ['tracepc', 'dict2file']
 
     # For bug type benchmarks we have to instrument via native clang pcguard :(
     build_flags = os.environ['CFLAGS']
+    os.environ['CFLAGS'] = build_flags
+    os.environ['USE_FF_INST'] = '1'
 
-    if build_flags.find(
-            'array-bounds'
-    ) != -1 and 'qemu' not in build_modes and 'classic' not in build_modes:
-        if 'gcc' not in build_modes:
-            build_modes[0] = 'native'
+    #if build_flags.find(
+    #        'array-bounds'
+    #) != -1 and 'qemu' not in build_modes and 'classic' not in build_modes:
+    #    if 'gcc' not in build_modes:
+    #        build_modes[0] = 'native'
 
     # Instrumentation coverage modes:
     if 'lto' in build_modes:
-        os.environ['CC'] = '/afl/afl-clang-lto'
-        os.environ['CXX'] = '/afl/afl-clang-lto++'
+        os.environ['CC'] = '/FishFuzz/afl-clang-lto'
+        os.environ['CXX'] = '/FishFuzz/afl-clang-lto++'
         edge_file = build_directory + '/aflpp_edges.txt'
         os.environ['AFL_LLVM_DOCUMENT_IDS'] = edge_file
         if os.path.isfile('/usr/local/bin/llvm-ranlib-13'):
@@ -88,8 +111,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
             os.environ['CXXFLAGS'] = ''
             os.environ['CPPFLAGS'] = ''
     else:
-        os.environ['CC'] = '/afl/afl-clang-fast'
-        os.environ['CXX'] = '/afl/afl-clang-fast++'
+        os.environ['CC'] = '/FishFuzz/afl-clang-fast'
+        os.environ['CXX'] = '/FishFuzz/afl-clang-fast++'
 
     print('AFL++ build: ')
     print(build_modes)
@@ -158,7 +181,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'eclipser' in build_modes:
         os.environ['FUZZER_LIB'] = '/libStandaloneFuzzTarget.a'
     else:
-        os.environ['FUZZER_LIB'] = '/libAFLDriver.a'
+        os.environ['FUZZER_LIB'] = '/FishFuzz/afl_driver.o'
 
     # Some benchmarks like lcms. (see:
     # https://github.com/mm2/Little-CMS/commit/ab1093539b4287c233aca6a3cf53b234faceb792#diff-f0e6d05e72548974e852e8e55dffc4ccR212)
@@ -170,6 +193,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     src = os.getenv('SRC')
     work = os.getenv('WORK')
+    set_ff_env()
 
     with utils.restore_directory(src), utils.restore_directory(work):
         # Restore SRC to its initial state so we can build again without any
@@ -182,6 +206,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         # CmpLog requires an build with different instrumentation.
         new_env = os.environ.copy()
         new_env['AFL_LLVM_CMPLOG'] = '1'
+        if 'USE_FF_INST' in new_env:
+            del new_env['USE_FF_INST']
 
         # For CmpLog build, set the OUT and FUZZ_TARGET environment
         # variable to point to the new CmpLog build directory.
@@ -225,14 +251,21 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         print('Re-building benchmark for symcc fuzzing target')
         utils.build_benchmark(env=new_env)
 
-    shutil.copy('/afl/afl-fuzz', build_directory)
-    if os.path.exists('/afl/afl-qemu-trace'):
-        shutil.copy('/afl/afl-qemu-trace', build_directory)
+    shutil.copy('/FishFuzz/afl-fuzz', build_directory)
+    if os.path.exists('/FishFuzz/afl-qemu-trace'):
+        shutil.copy('/FishFuzz/afl-qemu-trace', build_directory)
     if os.path.exists('/aflpp_qemu_driver_hook.so'):
         shutil.copy('/aflpp_qemu_driver_hook.so', build_directory)
     if os.path.exists('/get_frida_entry.sh'):
-        shutil.copy('/afl/afl-frida-trace.so', build_directory)
+        shutil.copy('/FishFuzz/afl-frida-trace.so', build_directory)
         shutil.copy('/get_frida_entry.sh', build_directory)
+
+    tmp_dst = os.environ['OUT'] + '/TEMP'
+    print('[post_build] generating distance files')
+    xxa = 'python3 /FishFuzz/distance/match_function.py -i ' + tmp_dst
+    os.system(xxa)
+    xxb = 'python3 /FishFuzz/distance/calculate_all_distance.py -i ' + tmp_dst
+    os.system(xxb)
 
 
 # pylint: disable=too-many-arguments
@@ -254,12 +287,14 @@ def fuzz(input_corpus,
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
     # decomment this to enable libdislocator.
     # os.environ['AFL_ALIGNED_ALLOC'] = '1' # align malloc to max_align_t
-    # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
+    # os.environ['AFL_PRELOAD'] = '/FishFuzz/libdislocator.so'
 
     flags = list(flags)
 
     if os.path.exists('./afl++.dict'):
         flags += ['-x', './afl++.dict']
+
+    flags += ['-p', 'explore']
 
     # Move the following to skip for upcoming _double tests:
     if os.path.exists(cmplog_target_binary) and no_cmplog is False:
@@ -269,13 +304,14 @@ def fuzz(input_corpus,
     os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
     os.environ['AFL_FAST_CAL'] = '1'
     os.environ['AFL_NO_WARN_INSTABILITY'] = '1'
-    os.environ['AFL_IGNORE_SEED_PROBLEMS'] = '1'
 
     if not skip:
         os.environ['AFL_DISABLE_TRIM'] = '1'
         os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
         if 'ADDITIONAL_ARGS' in os.environ:
             flags += os.environ['ADDITIONAL_ARGS'].split(' ')
+
+    os.environ['TMP_DIR'] = os.environ['OUT'] + '/TEMP'
 
     afl_fuzzer.run_afl_fuzz(input_corpus,
                             output_corpus,
