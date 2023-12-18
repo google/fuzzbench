@@ -15,42 +15,40 @@
 ARG parent_image
 FROM $parent_image
 
-# Install dependencies.
-RUN apt-get update && \
-    apt-get install -y build-essential libstdc++5 libtool-bin automake flex \
-        bison libglib2.0-dev python3-setuptools unzip python3-dev joe curl \
-        cmake git apt-utils apt-transport-https ca-certificates libdbus-1-dev
-
 # Uninstall old Rust & Install the latest one.
 RUN if which rustup; then rustup self uninstall -y; fi && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
-    sh /rustup.sh --default-toolchain nightly-2023-09-21 -y && \
+    sh /rustup.sh --default-toolchain nightly-2023-03-29 -y && \
     rm /rustup.sh
 
-# Download afl++.
-RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl
-
-# Checkout a current commit
-RUN cd /afl && git checkout 8cdc48f73a17ddd557897f2098937a8ba3bfe184
-
-# Build without Python support as we don't need it.
-# Set AFL_NO_X86 to skip flaky tests.
-RUN cd /afl && \
-    unset CFLAGS CXXFLAGS && \
-    export CC=clang AFL_NO_X86=1 && \
-    PYTHON_INCLUDE=/ make && \
-    make install && \
-    cp utils/aflpp_driver/libAFLDriver.a /
+# Install dependencies.
+RUN apt-get update && \
+    apt-get remove -y llvm-10 && \
+    apt-get install -y \
+        build-essential \
+        llvm-11 \
+        clang-12 \
+        cargo && \
+    apt-get install -y wget libstdc++5 libtool-bin automake flex bison \
+        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
+        apt-utils apt-transport-https ca-certificates joe curl && \
+    PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
 
 # Download libafl.
 RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git checkout c103444396697af102dce2b936a00e93017057ba
+RUN cd /libafl && git checkout 3ce0c102affeace754072368013422e97b9dce9c || true
+# Note that due a nightly bug it is currently fixed to a known version on top!
 
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
-    cd ./fuzzers/fuzzbench_forkserver && \
-    PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench
+    export LIBAFL_EDGES_MAP_SIZE=2621440 && \
+    cd ./fuzzers/fuzzbench && \
+    PATH="/root/.cargo/bin/:$PATH" cargo build --release --features no_link_main
 
+# Auxiliary weak references.
+RUN cd /libafl/fuzzers/fuzzbench && \
+    clang -c stub_rt.c && \
+    ar r /stub_rt.a stub_rt.o

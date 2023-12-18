@@ -87,7 +87,7 @@ def build_aflpp():
         # Restore SRC to its initial state so we can build again without any
         # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
         # twice in the same directory without this.
-        aflplusplus_fuzzer.build('classic')
+        aflplusplus_fuzzer.build()
 
     os.environ['OUT'] = out_dir
 
@@ -210,6 +210,26 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # Copy and rename TritonDSE target binary.
     shutil.copy(os.path.join(os.environ['OUT'], target_binary_name),
                 os.path.join(targets_dir, target_binary_name + '_tt'))
+
+    # Copy and rename the dictionary file in case it exists (AFL++).
+    dictionary_path = os.path.join(aflpp_target_dir, 'afl++.dict')
+    if os.path.exists(dictionary_path):
+        shutil.copy(
+            dictionary_path,
+            os.path.join(targets_dir, target_binary_name + '_aflpp.dict'))
+
+    # Copy and rename the dictionary file in case it exists (Honggfuzz).
+    dictionary_path = utils.get_dictionary_path(target_binary)
+    if dictionary_path and os.path.exists(dictionary_path):
+        shutil.copy(dictionary_path,
+                    os.path.join(targets_dir, target_binary_name + '_hf.dict'))
+
+    # Copy cmplog directory if it exists.
+    cmplog_path = os.path.join(aflpp_target_dir, 'cmplog', target_binary_name)
+    if os.path.exists(cmplog_path):
+        shutil.copy(
+            cmplog_path,
+            os.path.join(targets_dir, target_binary_name + '_aflpp.cmplog'))
 
     # Prepare command-line string.
     command = [

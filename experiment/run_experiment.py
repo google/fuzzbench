@@ -181,6 +181,12 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
             Requirement(False, bool, False, ''),
         'preemptible_runners':
             Requirement(False, bool, False, ''),
+        'runner_machine_type':
+            Requirement(False, str, True, ''),
+        'runner_num_cpu_cores':
+            Requirement(False, int, False, ''),
+        'runner_memory':
+            Requirement(False, str, False, ''),
     }
 
     all_params_valid = _validate_config_parameters(config, config_requirements)
@@ -372,8 +378,12 @@ def add_oss_fuzz_corpus(benchmark, oss_fuzz_corpora_dir):
     fuzz targets."""
     project = benchmark_utils.get_project(benchmark)
     fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
+    oss_fuzz_corpus_target = benchmark_utils.get_oss_fuzz_corpus_target(
+        benchmark)
 
-    if not fuzz_target.startswith(project):
+    if oss_fuzz_corpus_target:
+        full_fuzz_target = oss_fuzz_corpus_target
+    elif not fuzz_target.startswith(project):
         full_fuzz_target = f'{project}_{fuzz_target}'
     else:
         full_fuzz_target = fuzz_target

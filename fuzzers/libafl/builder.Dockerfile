@@ -18,7 +18,7 @@ FROM $parent_image
 # Uninstall old Rust & Install the latest one.
 RUN if which rustup; then rustup self uninstall -y; fi && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
-    sh /rustup.sh --default-toolchain nightly -y && \
+    sh /rustup.sh --default-toolchain nightly-2023-09-21 -y && \
     rm /rustup.sh
 
 # Install dependencies.
@@ -38,14 +38,15 @@ RUN apt-get update && \
 RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git checkout 20958a979f6ef43adad02d696a91a895dcea7623
+RUN cd /libafl && git pull && git checkout b20fda2a4ada2a6462718dc661e139e6c7a29807 || true
+# Note that due a nightly bug it is currently fixed to a known version on top!
 
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
     cd ./fuzzers/fuzzbench && \
-    PATH="/root/.cargo/bin/:$PATH" cargo build --release --features no_link_main
+    PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench --features no_link_main
 
 # Auxiliary weak references.
 RUN cd /libafl/fuzzers/fuzzbench && \
