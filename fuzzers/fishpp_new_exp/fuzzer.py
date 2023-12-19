@@ -262,9 +262,9 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     tmp_dst = os.environ['OUT'] + '/TEMP'
     print('[post_build] generating distance files')
-    xxa = 'python3 /FishFuzz/distance/match_function.py -i ' + tmp_dst
+    xxa = 'python3 /FishFuzz/fish_mode/distance/match_function.py -i ' + tmp_dst
     os.system(xxa)
-    xxb = 'python3 /FishFuzz/distance/calculate_all_distance.py -i ' + tmp_dst
+    xxb = 'python3 /FishFuzz/fish_mode/distance/calculate_all_distance.py -i ' + tmp_dst
     os.system(xxb)
 
 
