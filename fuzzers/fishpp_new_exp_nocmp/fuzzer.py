@@ -266,8 +266,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     os.system(xxa)
     xxb = (
         "python3 /FishFuzz/fish_mode/distance/calculate_all_distance.py -i " +
-        tdst
-    )
+        tdst)
     os.system(xxb)
 
 
