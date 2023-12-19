@@ -260,12 +260,13 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         shutil.copy('/FishFuzz/afl-frida-trace.so', build_directory)
         shutil.copy('/get_frida_entry.sh', build_directory)
 
-    tmp_dst = os.environ['OUT'] + '/TEMP'
+    tdst = os.environ['OUT'] + '/TEMP'
     print('[post_build] generating distance files')
-    xxa = 'python3 /FishFuzz/fish_mode/distance/match_function.py -i ' + tmp_dst
+    xxa = 'python3 /FishFuzz/fish_mode/distance/match_function.py -i ' + tdst
     os.system(xxa)
-    xxb = 'python3 /FishFuzz/fish_mode/distance/calculate_all_distance.py -i ' + tmp_dst
-    os.system(xxb)
+    xxxb = 'python3 /FishFuzz/fish_mode/distance/calculate_all_distance.py -i '
+           + tdst
+    os.system(xxxb)
 
 
 # pylint: disable=too-many-arguments
