@@ -15,6 +15,11 @@
 #
 ################################################################################
 
+# prepare corpus
+svn export https://github.com/mozillasecurity/fuzzdata.git/trunk/samples/h264 corpus/
+mv ./res/*.264 ./corpus/
+zip -j0r ${OUT}/decoder_fuzzer_seed_corpus.zip ./corpus/
+
 # build
 if [[ $CXXFLAGS = *sanitize=memory* ]]; then
   ASM_BUILD=No
