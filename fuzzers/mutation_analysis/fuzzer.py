@@ -18,7 +18,7 @@ import subprocess
 
 from fuzzers import utils
 
-MUA_RECORDING_DB = '/tmp/execs.sqlite'
+MUA_RECORDING_DB = '/mua_build/execs.sqlite'
 
 
 def build():

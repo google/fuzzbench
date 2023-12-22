@@ -70,6 +70,12 @@ def output_report(experiment_config: dict,
     logger.info('Is merging with nonprivate: %s.', merge_with_nonprivate)
 
     experiment_benchmarks = set(experiment_config['benchmarks'])
+    mutation_analysis = experiment_config['mutation_analysis']
+    if mutation_analysis:
+        report_type = 'with_mua'
+    else:
+        report_type = 'default'
+
     try:
         logger.debug('Generating report.')
         filesystem.recreate_directory(reports_dir)
@@ -78,10 +84,12 @@ def output_report(experiment_config: dict,
             str(reports_dir),
             report_name=experiment_name,
             fuzzers=fuzzers,
+            report_type=report_type,
             in_progress=in_progress,
             merge_with_clobber_nonprivate=merge_with_nonprivate,
             coverage_report=coverage_report,
-            experiment_benchmarks=experiment_benchmarks)
+            experiment_benchmarks=experiment_benchmarks,
+            mutation_analysis=mutation_analysis)
         filestore_utils.rsync(
             str(reports_dir),
             web_filestore_path,

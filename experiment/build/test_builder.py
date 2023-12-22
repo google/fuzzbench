@@ -65,8 +65,8 @@ def get_benchmarks_or_fuzzers(benchmarks_or_fuzzers_directory, filename,
 @pytest.mark.skipif(sys.version_info.minor > 10,
                     reason='Test can stop responding on versions greater than '
                     '3.10')
-@pytest.mark.parametrize('build_measurer_return_value', [True, False])
-@mock.patch('experiment.build.builder.build_measurer')
+@pytest.mark.parametrize('build_coverage_measurer_return_value', [True, False])
+@mock.patch('experiment.build.builder.build_coverage_measurer')
 @mock.patch('experiment.build.builder.time')
 @mock.patch('experiment.build.builder.filesystem')
 @mock.patch('experiment.build.builder.build_utils')
@@ -74,13 +74,13 @@ def get_benchmarks_or_fuzzers(benchmarks_or_fuzzers_directory, filename,
                  {'CONCURRENT_BUILDS': str(DEFAULT_CONCURRENT_BUILDS)})
 def test_build_all_measurers(mocked_build_utils, mocked_fs, mocked_time,
                              mocked_build_measurer,
-                             build_measurer_return_value):
+                             build_coverage_measurer_return_value):
     """Tests that build_all_measurers works as intendend when build_measurer
     calls fail."""
-    mocked_build_measurer.return_value = build_measurer_return_value
+    mocked_build_measurer.return_value = build_coverage_measurer_return_value
     benchmarks = get_regular_benchmarks()
     result = builder.build_all_measurers(benchmarks)
-    if build_measurer_return_value:
+    if build_coverage_measurer_return_value:
         assert result == benchmarks
     else:
         assert not result

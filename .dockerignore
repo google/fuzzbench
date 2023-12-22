@@ -9,4 +9,4 @@
 docs
 report*
 fuzzers/mutation_analysis/mua_fuzzer_bench/.git
-fuzzers/mutation_analysis/mua_fuzzer_bench/fuzzbench_mapped_dir/
+fuzzers/mutation_analysis/fuzzbench_mapped_dir/

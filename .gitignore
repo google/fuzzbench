@@ -44,3 +44,4 @@ docker/generated.mk
 
 # Vim backup files.
 .*.swp
+fuzzers/mutation_analysis/fuzzbench_mapped_dir/

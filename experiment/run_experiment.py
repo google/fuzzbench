@@ -372,7 +372,9 @@ def start_dispatcher(config: Dict, config_dir: str):
     """Start the dispatcher instance and run the dispatcher code on it."""
     dispatcher = get_dispatcher(config)
     # Is dispatcher code being run manually (useful for debugging)?
-    os.environ['HOST_MUA_MAPPED_DIR'] = config.get('host_mua_mapped_dir')
+    host_mua_mapped_dir = config.get('host_mua_mapped_dir')
+    if host_mua_mapped_dir is not None:
+        os.environ['HOST_MUA_MAPPED_DIR'] = host_mua_mapped_dir
     copy_resources_to_bucket(config_dir, config)
     if not os.getenv('MANUAL_EXPERIMENT'):
         dispatcher.start()
@@ -499,7 +501,7 @@ class LocalDispatcher(BaseDispatcher):
             f'CONCURRENT_BUILDS={self.config["concurrent_builds"]}')
         set_worker_pool_name_arg = (
             f'WORKER_POOL_NAME={self.config["worker_pool_name"]}')
-        mua_mapped_dir = os.environ['HOST_MUA_MAPPED_DIR']
+        mua_mapped_dir = os.environ.get('HOST_MUA_MAPPED_DIR')
         environment_args = [
             '-e',
             'LOCAL_EXPERIMENT=True',
@@ -522,7 +524,7 @@ class LocalDispatcher(BaseDispatcher):
             '-e',
             set_worker_pool_name_arg,
             *(['-e', f'HOST_MUA_MAPPED_DIR={mua_mapped_dir}']
-              if mua_mapped_dir else []),
+              if mua_mapped_dir is not None else []),
         ]
         command = [
             'docker',
@@ -541,6 +543,10 @@ class LocalDispatcher(BaseDispatcher):
             # starts by several minutes.
             '-v',
             '/tmp/dispatcher_venv:/work/src/.venv/lib/python3.10/site-packages',
+            # To share files between the dispatcher and mutation testing
+            # container we need to map a shared host directory to a volume.
+            '-v',
+            '/workspace/mua_out:/workspace/mua_out',
         ] + environment_args + [
             '--shm-size=2g',
             '--cap-add=SYS_PTRACE',

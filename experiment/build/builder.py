@@ -94,7 +94,7 @@ def build_base_images() -> Tuple[int, str]:
     return buildlib.build_base_images()
 
 
-def build_measurer(benchmark: str) -> bool:
+def build_coverage_measurer(benchmark: str) -> bool:
     """Do a coverage build for a benchmark."""
     try:
         logger.info('Building coverage measurer for benchmark: %s.', benchmark)
@@ -107,7 +107,7 @@ def build_measurer(benchmark: str) -> bool:
         return False
 
 
-def build_mua(benchmark: str) -> bool:
+def build_mua_measurer(benchmark: str) -> bool:
     """Do a mutation analysis build for a benchmark."""
     try:
         logger.info('Building mua measurer for benchmark: %s.', benchmark)
@@ -124,10 +124,12 @@ def build_all_measurers(benchmarks: List[str]) -> List[str]:
     Returns a list of benchmarks built successfully."""
     logger.info('Building measurers.')
     filesystem.recreate_directory(build_utils.get_coverage_binaries_dir())
+    filesystem.recreate_directory(build_utils.get_mua_binaries_dir())
     build_measurer_args = [(benchmark,) for benchmark in benchmarks]
-    successful_calls = retry_build_loop(build_measurer, build_measurer_args)
+    successful_calls = retry_build_loop(build_coverage_measurer,
+                                        build_measurer_args)
     # build mua measurer
-    retry_build_loop(build_mua, build_measurer_args)
+    retry_build_loop(build_mua_measurer, build_measurer_args)
     logger.info('Done building measurers.')
     # Return list of benchmarks (like the list we were passed as an argument)
     # instead of returning a list of tuples each containing a benchmark.

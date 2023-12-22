@@ -30,8 +30,10 @@ logger = logs.Logger()  # pylint: disable=invalid-name
 
 def make(targets):
     """Invoke |make| with |targets| and return the result."""
-    command = ['make', '-j'] + targets
-    return new_process.execute(command, cwd=utils.ROOT_DIR)
+    command = ['make', '--debug=j', '-j'] + targets
+    return new_process.execute(command,
+                               write_to_stdout=True,
+                               cwd=utils.ROOT_DIR)
 
 
 def build_base_images() -> Tuple[int, str]:
@@ -94,8 +96,12 @@ def build_mua(benchmark):
 
 def prepare_mua_binaries(benchmark):
     """Run commands on mua container to prepare it"""
-    shared_mua_binaries_dir = get_shared_mua_binaries_dir()
-    mount_arg = f'{shared_mua_binaries_dir}:{shared_mua_binaries_dir}'
+    experiment_name = experiment_utils.get_experiment_name()
+    shared_mua_binaries_dir = f'/workspace/mua_out/{experiment_name}'
+    docker_mua_binaries_dir = f'/mapped/{experiment_name}'
+    mount_arg = f'{shared_mua_binaries_dir}:{docker_mua_binaries_dir}'
+    os.makedirs(shared_mua_binaries_dir, exist_ok=True)
+
     builder_image_url = benchmark_utils.get_builder_image_url(
         benchmark, MUTATION_ANALYSIS_IMAGE_NAME,
         environment.get('DOCKER_REGISTRY'))
@@ -109,14 +115,12 @@ def prepare_mua_binaries(benchmark):
     host_mua_mapped_dir = os.environ.get('HOST_MUA_MAPPED_DIR')
 
     command = ('('
-               f'echo {host_mua_mapped_dir}; '
-               'ls -la /mapped_dir; '
-               'cat /mapped_dir/test.txt; '
+               f'mkdir -p {shared_mua_binaries_dir}; '
                f'tar -czvf {mua_build_archive_shared_dir_path} /out; '
                'python3 /mutator/mua_idle.py; '
                ')')
 
-    logger.info('mua prepare command:' + str(command))
+    logger.debug('mua prepare command:' + str(command))
     try:
         new_process.execute(['docker', 'rm', '-f', container_name])
     except subprocess.CalledProcessError:
@@ -131,7 +135,7 @@ def prepare_mua_binaries(benchmark):
         '/bin/bash', '-c', command
     ]
 
-    logger.info('mua run command:' + str(mua_run_cmd))
+    logger.debug('mua run command:' + str(mua_run_cmd))
     new_process.execute(mua_run_cmd, write_to_stdout=True)
 
 

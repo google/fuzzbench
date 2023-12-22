@@ -36,13 +36,14 @@ class BenchmarkResults:
     """
 
     def __init__(self, benchmark_name, experiment_df, coverage_dict,
-                 output_directory, plotter):
+                 output_directory, plotter, mua_results):
         self.name = benchmark_name
 
         self._experiment_df = experiment_df
         self._coverage_dict = coverage_dict
         self._output_directory = output_directory
         self._plotter = plotter
+        self.mua_results = mua_results
 
     def _prefix_with_benchmark(self, filename):
         return self.name + '_' + filename
@@ -55,6 +56,10 @@ class BenchmarkResults:
         filestore_path = coverage_data_utils.get_coverage_report_filestore_path(
             fuzzer_name, benchmark_name, self._benchmark_df)
         return filestore_utils.get_user_facing_path(filestore_path)
+
+    def get_mua_report_data(self, _fuzzer_name, _benchmark_name):
+        """Returns results as string"""
+        return 'TODO: Not Implemented Yet'
 
     @property
     @functools.lru_cache()
