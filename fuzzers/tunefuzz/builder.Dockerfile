@@ -52,11 +52,12 @@ RUN apt remove libnl-3-200 libnl-3-dev -y
 
 RUN pip3 install networkx pydot
 
-RUN git clone https://github.com/kdsjZh/FishFuzz/ /ff_src && \
-    cd /ff_src && git checkout 0b49cbf3a89f36e5038c759344454438e21b96d1 && \
-    mv /ff_src/FF_AFL++ /FishFuzz && cd / && rm -r /ff_src
+RUN git clone https://github.com/kdsjZh/Fishpp /FishFuzz && \
+    cd /FishFuzz && \
+    git checkout be113d6a9d27c0b574d083f2d827d1e6c551435d || \
+    true
 
-# build clang-15
+# build clang-12 with gold plugin
 RUN mkdir -p /build && \
     git clone \
         https://github.com/llvm/llvm-project /llvm && \
@@ -65,8 +66,8 @@ RUN mkdir -p /build && \
         --branch binutils-2_40-branch \
         git://sourceware.org/git/binutils-gdb.git /llvm/binutils && \
     cd /llvm/ && git checkout bf7f8d6fa6f460bf0a16ffec319cd71592216bf4 && \
-    git apply /FishFuzz/asan_patch/llvm-15.0/llvm-15-asan.diff && \
-    cp /FishFuzz/asan_patch/llvm-15.0/FishFuzzAddressSanitizer.cpp llvm/lib/Transforms/Instrumentation/ && \
+    git apply /FishFuzz/fish_mode/llvm_patch/llvm-15.0/llvm-15-asan.diff && \
+    cp /FishFuzz/fish_mode/llvm_patch/llvm-15.0/FishFuzzAddressSanitizer.cpp llvm/lib/Transforms/Instrumentation/ && \
     mkdir /llvm/binutils/build && cd /llvm/binutils/build && \
         CFLAGS="" CXXFLAGS="" CC=gcc CXX=g++ \
         ../configure --enable-gold --enable-plugins --disable-werror && \
@@ -75,7 +76,7 @@ RUN mkdir -p /build && \
     CFLAGS="" CXXFLAGS="" CC=gcc CXX=g++ \
     cmake -DCMAKE_BUILD_TYPE=Release \
           -DLLVM_BINUTILS_INCDIR=/llvm/binutils/include \
-          -DLLVM_ENABLE_PROJECTS="compiler-rt;clang;lld" \
+          -DLLVM_ENABLE_PROJECTS="compiler-rt;clang" \
           -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi" ../llvm && \
     make -j$(nproc) && \
     cp /llvm/build/lib/LLVMgold.so //usr/lib/bfd-plugins/ && \
@@ -97,7 +98,7 @@ RUN cd /FishFuzz/ && \
     make clean && \
     PYTHON_INCLUDE=/ make && \
     # make -C dyncfg && \
-    chmod +x distance/*.py && \
+    chmod +x fish_mode/distance/*.py && \
     make install
 
 RUN wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /FishFuzz/afl_driver.cpp && \

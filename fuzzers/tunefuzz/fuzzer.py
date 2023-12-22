@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-"""Integration code for TuneFuzz fuzzer."""
+"""Integration code for FishFuzz-AFLplusplus fuzzer."""
 
 import os
 import shutil
@@ -30,27 +30,19 @@ def get_uninstrumented_build_directory(target_directory):
     """Return path to CmpLog target directory."""
     return os.path.join(target_directory, 'uninstrumented')
 
-
 def prepare_tmp_files(tmp_dir):
-    """prepare tmp files"""
     if not os.path.isdir(tmp_dir) or os.path.exists(tmp_dir):
         os.mkdir(tmp_dir)
-    fua = tmp_dir + '/idlog'
-    fub = tmp_dir + '/cg'
-    fuc = tmp_dir + '/fid'
-    os.mkdir(fua)
-    os.mkdir(fub)
-    os.mkdir(fuc)
-    fud = 'touch ' + tmp_dir + '/idlog/fid ' + tmp_dir + '/idlog/targid'
-    os.system(fud)
-
+    os.mkdir('%s/idlog' % (tmp_dir))
+    os.mkdir('%s/cg' % (tmp_dir))
+    os.mkdir('%s/fid' % (tmp_dir))
+    os.system('touch %s/idlog/fid %s/idlog/targid' % (tmp_dir, tmp_dir))
 
 def set_ff_env():
-    """set FishFuzz Env before build"""
+    # set FishFuzz Env before build
     os.environ['TMP_DIR'] = os.environ['OUT'] + '/TEMP'
     os.environ['FF_TMP_DIR'] = os.environ['OUT'] + '/TEMP'
     prepare_tmp_files(os.environ['TMP_DIR'])
-
 
 def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
@@ -181,7 +173,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if 'eclipser' in build_modes:
         os.environ['FUZZER_LIB'] = '/libStandaloneFuzzTarget.a'
     else:
-        os.environ['FUZZER_LIB'] = '/FishFuzz/afl_driver.o'
+        os.environ['FUZZER_LIB'] = '/FishFuzz/afl_driver.o' # '/libAFLDriver.a'
 
     # Some benchmarks like lcms. (see:
     # https://github.com/mm2/Little-CMS/commit/ab1093539b4287c233aca6a3cf53b234faceb792#diff-f0e6d05e72548974e852e8e55dffc4ccR212)
@@ -260,12 +252,15 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         shutil.copy('/FishFuzz/afl-frida-trace.so', build_directory)
         shutil.copy('/get_frida_entry.sh', build_directory)
 
-    tmp_dst = os.environ['OUT'] + '/TEMP'
+    tmp_dir_dst = os.environ['OUT'] + '/TEMP'
     print('[post_build] generating distance files')
-    xxa = 'python3 /FishFuzz/distance/match_function.py -i ' + tmp_dst
-    os.system(xxa)
-    xxb = 'python3 /FishFuzz/distance/calculate_all_distance.py -i ' + tmp_dst
-    os.system(xxb)
+    # python3 /Fish++/distance/match_function.py -i $FF_TMP_DIR
+    # python3 /Fish++/distance/merge_callgraph.py -i $FF_TMP_DIR
+    # python3 /Fish++/distance/calculate_distance.py -i $FF_TMP_DIR
+    os.system('python3 /FishFuzz/fish_mode/distance/match_function.py -i %s' % (tmp_dir_dst))
+    # os.system('python3 /FishFuzz/distance/merge_callgraph.py -i %s' % (tmp_dir_dst))
+    # os.system('python3 /FishFuzz/distance/calculate_distance.py -i %s' % (tmp_dir_dst))
+    os.system('python3 /FishFuzz/fish_mode/distance/calculate_all_distance.py -i %s' % (tmp_dir_dst))
 
 
 # pylint: disable=too-many-arguments
@@ -298,6 +293,9 @@ def fuzz(input_corpus,
     if os.path.exists(cmplog_target_binary) and no_cmplog is False:
         flags += ['-c', cmplog_target_binary]
 
+    flags += ['-p', 'explore'] 
+
+    os.environ['FUZZ_NEARBY'] = '1'
     #os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
     os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
     os.environ['AFL_FAST_CAL'] = '1'
