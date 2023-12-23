@@ -1,0 +1,27 @@
+# This is the experiment config file used for the fuzzbench service.
+# Unless you are a fuzzbench maintainer running this service, this
+# will not work with your setup.
+
+trials: 4
+max_total_time: 2700
+cloud_project: fuzzbench
+docker_registry: gcr.io/fuzzbench
+cloud_compute_zone: us-central1-c
+experiment_filestore: gs://fuzzbench-data
+report_filestore: gs://www.fuzzbench.com/reports
+cloud_sql_instance_connection_name: "fuzzbench:us-central1:postgres-experiment-db=tcp:5432"
+worker_pool_name: "projects/fuzzbench/locations/us-central1/workerPools/buildpool-e2-std-32"  # Mem 128 GB
+preemptible_runners: true
+
+# This experiment should generate a report that is combined with other public
+# "production" experiments.
+merge_with_nonprivate: false
+
+# This experiment should be merged with other reports in later experiments.
+private: false
+
+# Seed sampling options
+use_seed_sampling: true
+seed_sampling_randomness_init: 64
+seed_sampling_distribution: 'EXP'
+seed_sampling_mean_utilization: 0.2

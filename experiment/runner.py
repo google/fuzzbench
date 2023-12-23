@@ -16,8 +16,10 @@
 
 import importlib
 import json
+import glob
 import os
 import posixpath
+import random
 import shlex
 import shutil
 import subprocess
@@ -26,6 +28,8 @@ import tarfile
 import threading
 import time
 import zipfile
+
+import numpy
 
 from common import benchmark_config
 from common import environment
@@ -157,6 +161,56 @@ def _unpack_clusterfuzz_seed_corpus(fuzz_target_path, corpus_directory):
               seed_corpus_archive_path)
 
 
+def sample_corpus(corpus_dir,
+                  random_seed,
+                  dest_dir=None,
+                  distribution='EXP',
+                  mean_seed_util=0.2):
+    """Samples a pseudo-random number of files from the input corpus. By
+    default sampling is done in-place, destructively, removing unsampled
+    files. Will sample (mean_seed_util * number of seeds) files on
+    average, according to the specified distribution. Sampling is
+    deterministic wrt the random seed"""
+
+    gen = random.Random(random_seed)
+    npgen = numpy.random.RandomState(random_seed)
+
+    inplace = dest_dir is None
+
+    corpus_paths = [
+        f for f in glob.glob(f'{corpus_dir}/**/*', recursive=True)
+        if os.path.isfile(f)
+    ]
+    corpus_paths.sort()  # need to be ordered for deterministic sampling
+    logs.info('Sampling from %d files in seed corpus dir %s.',
+              len(corpus_paths), corpus_dir)
+
+    num_seeds = len(corpus_paths)
+
+    if distribution == 'UNIFORM':
+        trial_num_seeds = gen.randint(
+            1, int(numpy.round(mean_seed_util * num_seeds)))  # inclusive []
+    elif distribution == 'EXP':
+        trial_num_seeds = int(
+            numpy.round(
+                npgen.exponential(scale=(mean_seed_util * num_seeds),
+                                  size=1)[0]))
+    else:
+        raise Exception('Unimplemented sampling algorithm')
+
+    trial_num_seeds = min(trial_num_seeds, num_seeds)  # no more than exists
+
+    trial_seeds = gen.sample(corpus_paths, k=trial_num_seeds)
+
+    if inplace:
+        for path in corpus_paths:
+            if path not in trial_seeds:
+                os.remove(path)
+    else:
+        for path in trial_seeds:
+            shutil.copy(path, dest_dir)
+
+
 def run_fuzzer(max_total_time, log_filename):
     """Runs the fuzzer using its script. Logs stdout and stderr of the fuzzer
     script to |log_filename| if provided."""
@@ -263,6 +317,24 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             _copy_custom_seed_corpus(input_corpus)
 
         _clean_seed_corpus(input_corpus)
+
+        corpus_variant_id = environment.get('CORPUS_VARIANT_ID')
+        seed_sample_distribution = environment.get('SEED_SAMPLE_DIST')
+        mean_seed_util = environment.get('SEED_SAMPLE_MEAN_UTIL')
+        random_seed = environment.get('RANDOMNESS_SEED')
+
+        mean_seed_util = float(
+            mean_seed_util) if mean_seed_util is not None else 0.2
+        random_seed = int(random_seed) if random_seed is not None else 0
+        corpus_variant_id = int(corpus_variant_id) \
+            if corpus_variant_id is not None else 0
+
+        if seed_sample_distribution is not None:
+            sample_corpus(input_corpus,
+                          random_seed + corpus_variant_id,
+                          distribution=seed_sample_distribution,
+                          mean_seed_util=mean_seed_util)
+
         # Ensure seeds are in output corpus.
         os.rmdir(self.output_corpus)
         shutil.copytree(input_corpus, self.output_corpus)

@@ -124,6 +124,8 @@ docker run \\
 -e EXPERIMENT_FILESTORE=gs://experiment-data \\
 -e REPORT_FILESTORE=gs://web-reports \\
 -e FUZZ_TARGET={oss_fuzz_target} \\
+-e CORPUS_VARIANT_ID=0 \\
+-e RANDOMNESS_SEED=0 \\
 -e PRIVATE=False \\
 -e LOCAL_EXPERIMENT=False \\
 --name=runner-container \\

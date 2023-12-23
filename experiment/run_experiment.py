@@ -185,6 +185,14 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
             Requirement(False, str, True, ''),
         'runner_num_cpu_cores':
             Requirement(False, int, False, ''),
+        'use_seed_sampling':
+            Requirement(False, bool, False, ''),
+        'seed_sampling_randomness_init':
+            Requirement(False, int, False, ''),
+        'seed_sampling_distribution':
+            Requirement(False, str, False, ''),
+        'seed_sampling_mean_utilization':
+            Requirement(False, float, False, ''),
         'runner_memory':
             Requirement(False, str, False, ''),
     }
@@ -344,6 +352,11 @@ def start_experiment(  # pylint: disable=too-many-arguments
     if config['custom_seed_corpus_dir']:
         validate_custom_seed_corpus(config['custom_seed_corpus_dir'],
                                     benchmarks)
+
+    if config.get('seed_sampling_mean_utilization'):
+        assert 0 < config['seed_sampling_mean_utilization'] < 1
+    if config.get('seed_sampling_distribution'):
+        assert config['seed_sampling_distribution'] in ['EXP', 'UNIFORM']
 
     return start_experiment_from_full_config(config)
 
