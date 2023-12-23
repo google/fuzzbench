@@ -28,8 +28,8 @@ from typing import Dict, List, Optional, Union
 import jinja2
 import yaml
 from common import (benchmark_utils, experiment_utils, filestore_utils,
-                    filesystem, fuzzer_utils, gcloud, gsutil, logs,
-                    new_process, utils, yaml_utils)
+                    filesystem, fuzzer_utils, gcloud, gsutil, logs, new_process,
+                    utils, yaml_utils)
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
