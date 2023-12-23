@@ -27,18 +27,9 @@ from typing import Dict, List, Optional, Union
 
 import jinja2
 import yaml
-
-from common import benchmark_utils
-from common import experiment_utils
-from common import filestore_utils
-from common import filesystem
-from common import fuzzer_utils
-from common import gcloud
-from common import gsutil
-from common import logs
-from common import new_process
-from common import utils
-from common import yaml_utils
+from common import (benchmark_utils, experiment_utils, filestore_utils,
+                    filesystem, fuzzer_utils, gcloud, gsutil, logs,
+                    new_process, utils, yaml_utils)
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
@@ -726,8 +717,9 @@ def run_experiment_main(args=None):
                      f'{measurers_cpus}) you need to specify the runners cpus '
                      'argument too.')
 
-    if (runners_cpus if runners_cpus else 0) + (measurers_cpus if measurers_cpus
-                                                else 0) > os.cpu_count():
+    cpu_count = os.cpu_count()
+    if cpu_count and (runners_cpus if runners_cpus else 0) + (
+            measurers_cpus if measurers_cpus else 0) > cpu_count:
         parser.error(f'The sum of runners ({runners_cpus}) and measurers cpus '
                      f'({measurers_cpus}) is greater than the available cpu '
                      f'cores (os.cpu_count()).')
