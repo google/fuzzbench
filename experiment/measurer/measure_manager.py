@@ -274,7 +274,7 @@ def _query_measured_latest_snapshots(experiment: str):
     """Returns a generator of a SnapshotWithTime representing a snapshot that is
     the first snapshot for their trial. The trials are trials in
     |experiment|."""
-    latest_time_column = func.max(models.Snapshot.time)
+    latest_time_column = func.max(models.Snapshot.time)  # pylint: disable=not-callable
     # The order of these columns must correspond to the fields in
     # SnapshotWithTime.
     columns = (models.Trial.fuzzer, models.Trial.benchmark,
