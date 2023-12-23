@@ -300,7 +300,8 @@ def start_experiment(  # pylint: disable=too-many-arguments
         measurers_cpus: Optional[int] = None,
         runners_cpus: Optional[int] = None,
         region_coverage: bool = False,
-        custom_seed_corpus_dir: Optional[str] = None):
+        custom_seed_corpus_dir: Optional[str] = None,
+        merge_with_nonprivate: bool = True):
     """Start a fuzzer benchmarking experiment."""
     if not allow_uncommitted_changes:
         check_no_uncommitted_changes()
@@ -335,6 +336,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
     if config['custom_seed_corpus_dir']:
         validate_custom_seed_corpus(config['custom_seed_corpus_dir'],
                                     benchmarks)
+    config['merge_with_nonprivate'] = merge_with_nonprivate
 
     return start_experiment_from_full_config(config)
 
@@ -694,6 +696,12 @@ def run_experiment_main(args=None):
         required=False,
         default=False,
         action='store_true')
+    parser.add_argument('-nm',
+                        '--no-merge-with-nonprivate',
+                        help='Do not merge past public experiment results',
+                        required=False,
+                        default=False,
+                        action='store_true')
     args = parser.parse_args(args)
     fuzzers = args.fuzzers or all_fuzzers
 
@@ -745,7 +753,8 @@ def run_experiment_main(args=None):
                      measurers_cpus=measurers_cpus,
                      runners_cpus=runners_cpus,
                      region_coverage=args.region_coverage,
-                     custom_seed_corpus_dir=args.custom_seed_corpus_dir)
+                     custom_seed_corpus_dir=args.custom_seed_corpus_dir,
+                     merge_with_nonprivate=not args.no_merge_with_nonprivate)
     return 0
 
 
