@@ -95,6 +95,8 @@ def _clean_seed_corpus(seed_corpus_dir):
 def get_clusterfuzz_seed_corpus_path(fuzz_target_path):
     """Returns the path of the clusterfuzz seed corpus archive if one exists.
     Otherwise returns None."""
+    if fuzz_target_path is None:
+        return None
     fuzz_target_without_extension = os.path.splitext(fuzz_target_path)[0]
     seed_corpus_path = (fuzz_target_without_extension +
                         SEED_CORPUS_ARCHIVE_SUFFIX)
