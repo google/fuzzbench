@@ -50,7 +50,7 @@ def get_shared_coverage_binaries_dir():
 def get_shared_mua_binaries_dir():
     """Returns the shared mua binaries directory."""
     experiment_filestore_path = experiment_utils.get_experiment_filestore_path()
-    return os.path.join(experiment_filestore_path, 'mua-binaries')
+    return os.path.join(experiment_filestore_path, 'mua-results')
 
 
 def make_shared_coverage_binaries_dir():

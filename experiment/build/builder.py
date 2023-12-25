@@ -124,7 +124,7 @@ def build_all_measurers(benchmarks: List[str]) -> List[str]:
     Returns a list of benchmarks built successfully."""
     logger.info('Building measurers.')
     filesystem.recreate_directory(build_utils.get_coverage_binaries_dir())
-    filesystem.recreate_directory(build_utils.get_mua_binaries_dir())
+    filesystem.recreate_directory(build_utils.get_mua_results_dir())
     build_measurer_args = [(benchmark,) for benchmark in benchmarks]
     successful_calls = retry_build_loop(build_coverage_measurer,
                                         build_measurer_args)

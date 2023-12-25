@@ -143,7 +143,7 @@ def get_experiment_data(experiment_names,
     logger.info('Reading experiment data from db.')
     experiment_df = queries.get_experiment_data(experiment_names,
                                                 main_experiment_benchmarks)
-    experiment_df.to_csv('/tmp/experiment-data/experiment_data.csv')
+    # experiment_df.to_csv('/tmp/experiment-data/experiment_data.csv')
     logger.info('Done reading experiment data from db.')
     description = queries.get_experiment_description(main_experiment_name)
     return experiment_df, description
@@ -269,7 +269,7 @@ def generate_report(experiment_names,
         experiment_df, experiment_names, benchmarks, fuzzers,
         label_by_experiment, end_time, merge_with_clobber)
 
-    experiment_df.to_csv('/tmp/experiment-data/out.csv')
+    # experiment_df.to_csv('/tmp/experiment-data/out.csv')
 
     #TODO: make this work again
     # Add |bugs_covered| column prior to export.

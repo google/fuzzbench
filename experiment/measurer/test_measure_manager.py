@@ -14,7 +14,6 @@
 """Tests for measure_manager.py."""
 
 import os
-from pathlib import Path
 import shutil
 from unittest import mock
 import queue
@@ -26,9 +25,6 @@ from common import new_process
 from database import models
 from database import utils as db_utils
 from experiment.build import build_utils
-from experiment.build.gcb_build import build_mua
-from experiment.build.local_build import (make_shared_mua_binaries_dir,
-                                          prepare_mua_binaries)
 from experiment.measurer import measure_manager
 from test_libs import utils as test_utils
 

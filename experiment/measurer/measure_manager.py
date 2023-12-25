@@ -32,7 +32,6 @@ import time
 from typing import List, Optional, Tuple
 import queue
 from pathlib import Path
-import uuid
 import psutil
 
 from sqlalchemy import func
@@ -50,11 +49,12 @@ from common import utils
 from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
-from experiment.build.local_build import MUTATION_ANALYSIS_IMAGE_NAME
 from experiment.measurer import coverage_utils
 from experiment.measurer import run_coverage
 from experiment.measurer import run_crashes
 from experiment import scheduler
+from experiment.measurer.run_mua import (copy_mua_stats_db, run_mua_build_ids,
+                                         start_mua_container)
 from experiment.runner import UNIQUE_TIMESTAMP_FILENAME
 
 logger = logs.Logger()
@@ -62,12 +62,6 @@ logger = logs.Logger()
 SnapshotMeasureRequest = collections.namedtuple(
     'SnapshotMeasureRequest', ['fuzzer', 'benchmark', 'trial_id', 'cycle'])
 
-# Exec id is used to identify the current run, if the dispatcher container
-# is preempted the exec id will change. This allows us to identify which actions
-# were performed by earlier runs and which were performed by the current run.
-# We use this to identify which mutants builds were interrupted by a
-# preemption.
-EXEC_ID = uuid.uuid4()
 NUM_RETRIES = 3
 RETRY_DELAY = 3
 FAIL_WAIT_SECONDS = 30
@@ -548,15 +542,26 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             os.makedirs(directory, exist_ok=True)
         return os.path.exists(directory)
 
+    def mua_run_result_dir(self):
+        """Return the directory where mua results are stored."""
+        experiment_name = experiment_utils.get_experiment_name()
+        experiment_filestore_path = Path('/workspace/mua_out')
+        shared_mua_binaries_dir = \
+            experiment_filestore_path / experiment_name / 'mua-results'
+        mua_run_results_dir = (shared_mua_binaries_dir / 'corpus_run_results' /
+                               self.fuzzer / str(self.trial_num))
+        return mua_run_results_dir
+
     def initialize_mua_environment(self, timestamp_info,
-                                   trial_start_time: datetime.datetime, cycle):
+                                   trial_start_time: datetime.datetime,
+                                   benchmark, cycle):
         """Build all covered mutants."""
 
         def initialize_mua_directories():
             experiment_name = experiment_utils.get_experiment_name()
             experiment_filestore_path = Path('/workspace/mua_out')
             shared_mua_binaries_dir = \
-                experiment_filestore_path / experiment_name / 'mua-binaries'
+                experiment_filestore_path / experiment_name / 'mua-results'
 
             # create corpi directory entry
             corpi_dir = Path(shared_mua_binaries_dir) / 'corpi'
@@ -564,18 +569,12 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             trial_corpi_dir = fuzzer_corpi_dir / str(self.trial_num)
             self.create_dir(fuzzer_corpi_dir)
 
-            # create covered_mutants directory entry (contains json files with
-            # covered mutant ids for each corpus entry)
             mutants_ids_dir_entry = (shared_mua_binaries_dir / 'mutant_ids' /
                                      self.fuzzer / str(self.trial_num))
             self.create_dir(mutants_ids_dir_entry)
 
-            # create corpus_run_results directory entry (contains json files
-            # with covered and killed mutant ids for each corpus entry)
-            mutants_ids_dir_entry = (shared_mua_binaries_dir /
-                                     'corpus_run_results' / self.fuzzer /
-                                     str(self.trial_num))
-            self.create_dir(mutants_ids_dir_entry)
+            mua_results_dir = self.mua_run_result_dir()
+            self.create_dir(mua_results_dir)
 
             # create mutants directory
             mutants_dir_entry = shared_mua_binaries_dir / 'mutants'
@@ -585,18 +584,13 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             shutil.copytree(self.corpus_dir,
                             trial_corpi_dir,
                             dirs_exist_ok=True)
-            return mutants_ids_dir_entry
+            return mua_results_dir
 
-        # find correct container and start it
-        container_name = \
-            f'{MUTATION_ANALYSIS_IMAGE_NAME}_{self.benchmark}_container'
+        start_mua_container(self.benchmark)
 
-        docker_start_command = 'docker start ' + container_name
-        new_process.execute(docker_start_command.split(' '))
+        mua_results_dir = initialize_mua_directories()
 
-        mutants_ids_dir_entry = initialize_mua_directories()
-
-        corpus_run_result_db = mutants_ids_dir_entry / 'results.sqlite'
+        corpus_run_result_db = mua_results_dir / 'results.sqlite'
         if timestamp_info is None:
             logs.info('No timestamp info found.')
             timestamp_info = {}
@@ -605,39 +599,11 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
                                          cycle, self.corpus_dir,
                                          corpus_run_result_db)
 
-        corpus_run_stats_db = mutants_ids_dir_entry / 'stats.sqlite'
+        copy_mua_stats_db(benchmark, mua_results_dir)
 
-        if not corpus_run_stats_db.is_file():
-            logger.info(
-                f'Copying stats db from container to: {corpus_run_stats_db}')
+        run_mua_build_ids(benchmark, self.trial_num, self.fuzzer, cycle)
 
-            copy_stats_db_command = [
-                'docker', 'cp', f'{container_name}:/mua_build/build/stats.db',
-                str(corpus_run_stats_db)
-            ]
-            logger.info(f'mua copy stats db command: {copy_stats_db_command}')
-            new_process.execute(copy_stats_db_command, write_to_stdout=True)
-
-        # get additional info from commons
-        experiment_name = experiment_utils.get_experiment_name()
-        fuzz_target = benchmark_utils.get_fuzz_target(self.benchmark)
-
-        # execute command on container
-        command = [
-            'python3', '/mutator/mua_build_ids.py',
-            str(EXEC_ID), fuzz_target, experiment_name, self.fuzzer,
-            str(self.trial_num), '--debug_num_mutants=10'
-        ]
-
-        docker_exec_command = [
-            'docker', 'exec', '-t', container_name, '/bin/bash', '-c',
-            shlex.join(command)
-        ]
-
-        logger.info(f'mua_build_ids command: {docker_exec_command}')
-        new_process.execute(docker_exec_command, write_to_stdout=True)
-
-    def process_mua(self):
+    def process_mua(self, cycle):
         """runs mua measurement"""
         # get necessary info
         container_name = 'mutation_analysis_' + self.benchmark + '_container'
@@ -656,7 +622,13 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             shlex.join(command)
         ]
         logger.info('mua_run_mutants command:' + str(docker_exec_command))
-        new_process.execute(docker_exec_command, write_to_stdout=True)
+        mua_run_res = new_process.execute(docker_exec_command)
+        logger.info('mua_run_mutants result:' + str(mua_run_res))
+        build_utils.store_mua_run_log(mua_run_res.output, self.benchmark,
+                                      self.fuzzer, cycle)
+        results_db = self.mua_run_result_dir() / 'results.sqlite'
+        build_utils.store_mua_results_db(results_db, self.benchmark,
+                                         self.fuzzer, cycle)
 
     def run_cov_new_units(self):
         """Run the coverage binary on new units."""
@@ -880,7 +852,8 @@ def measure_snapshot(  # pylint: disable=too-many-locals,too-many-arguments
     if mutation_analysis:
         trial_start_time = _query_trial_start_time(trial_num)
         snapshot_measurer.initialize_mua_environment(timestamp_info,
-                                                     trial_start_time, cycle)
+                                                     trial_start_time,
+                                                     benchmark, cycle)
 
     # Don't keep corpus archives around longer than they need to be.
     os.remove(corpus_archive_dst)
@@ -904,7 +877,7 @@ def measure_snapshot(  # pylint: disable=too-many-locals,too-many-arguments
                                crashes=crashes)
 
     if mutation_analysis:
-        snapshot_measurer.process_mua()
+        snapshot_measurer.process_mua(cycle)
 
     measuring_time = round(time.time() - measuring_start_time, 2)
     snapshot_logger.info('Measured cycle: %d in %f seconds.', cycle,
@@ -938,8 +911,8 @@ def set_up_mua_binaries(pool, experiment):
             distinct().filter(models.Trial.experiment == experiment)
         ]
 
-    mua_binaries_dir = build_utils.get_mua_binaries_dir()
-    filesystem.create_directory(mua_binaries_dir)
+    mua_results_dir = build_utils.get_mua_results_dir()
+    filesystem.create_directory(mua_results_dir)
     pool.map(set_up_mua_binary, benchmarks)
 
 

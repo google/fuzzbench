@@ -13,6 +13,7 @@
 # limitations under the License.
 """Module for utility code shared by build submodules."""
 
+import os
 import tempfile
 
 from common import experiment_path as exp_path
@@ -33,14 +34,56 @@ def store_build_logs(build_config, build_result):
             exp_path.filestore(get_build_logs_dir() / build_log_filename))
 
 
+def store_mua_stats_db(stats_db, benchmark):
+    """Save mua stats_db in the mua bucket."""
+    stats_db = str(stats_db)
+    filestore_utils.cp(
+        stats_db,
+        exp_path.filestore(get_mua_results_dir() / 'base_build' / benchmark /
+                           'stats.sqlite'))
+
+
+def store_mua_results_db(results_db, benchmark, fuzzer, cycle):
+    """Save mua stats_db in the mua bucket."""
+    results_db = str(results_db)
+    filestore_utils.cp(
+        results_db,
+        exp_path.filestore(get_mua_results_dir() / 'results' / benchmark /
+                           fuzzer / f'{cycle}.sqlite'))
+
+
+def store_mua_build_log(build_output, benchmark, fuzzer, cycle):
+    """Save mua stats_db in the mua bucket."""
+    with tempfile.NamedTemporaryFile(mode='w') as tmp:
+        tmp.write(build_output)
+        tmp.flush()
+        os.chmod(tmp.name, 0o666)
+        filestore_utils.cp(
+            tmp.name,
+            exp_path.filestore(get_mua_results_dir() / 'mua_build' / benchmark /
+                               fuzzer / f'{cycle}.log'))
+
+
+def store_mua_run_log(run_output, benchmark, fuzzer, cycle):
+    """Save mua stats_db in the mua bucket."""
+    with tempfile.NamedTemporaryFile(mode='w') as tmp:
+        tmp.write(run_output)
+        tmp.flush()
+        os.chmod(tmp.name, 0o666)
+        filestore_utils.cp(
+            tmp.name,
+            exp_path.filestore(get_mua_results_dir() / 'mua_run' / benchmark /
+                               fuzzer / f'{cycle}.log'))
+
+
 def get_coverage_binaries_dir():
     """Return coverage binaries directory."""
     return exp_path.path('coverage-binaries')
 
 
-def get_mua_binaries_dir():
+def get_mua_results_dir():
     """Return mua finder binaries directory."""
-    return exp_path.path('mua-binaries')
+    return exp_path.path('mua-results')
 
 
 def get_build_logs_dir():
