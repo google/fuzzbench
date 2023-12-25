@@ -14,6 +14,7 @@
 """Tests for measure_manager.py."""
 
 import os
+from pathlib import Path
 import shutil
 from unittest import mock
 import queue
@@ -286,7 +287,7 @@ class TestIntegrationMeasurement:
     # portable binary.
     @pytest.mark.skipif(not os.getenv('FUZZBENCH_TEST_INTEGRATION'),
                         reason='Not running integration tests.')
-    def test_measure_snapshot(  # pylint: disable=too-many-locals
+    def test_measure_snapshot_coverage(  # pylint: disable=too-many-locals
             self, db, experiment, tmp_path):
         """Integration test for measure_snapshot."""
         # WORK is set by experiment to a directory that only makes sense in a
@@ -305,10 +306,6 @@ class TestIntegrationMeasurement:
         os.makedirs(benchmark_cov_binary_dir)
         coverage_binary_dst_dir = os.path.join(benchmark_cov_binary_dir,
                                                'ftfuzzer')
-
-        # shared_mua_binaries_dir = '/workspace/mua_out'
-        # os.makedirs(shared_mua_binaries_dir, exist_ok=True)
-        # mua_binary_dst_dir = os.path.join(shared_mua_binaries_dir, 'ftfuzzer')
 
         shutil.copy(coverage_binary_src, coverage_binary_dst_dir)
 
@@ -332,17 +329,13 @@ class TestIntegrationMeasurement:
         os.makedirs(corpus_dir)
         shutil.copy(archive, corpus_dir)
 
-        build_mua(benchmark)
-        make_shared_mua_binaries_dir()
-        prepare_mua_binaries(benchmark)
-
         with mock.patch('common.filestore_utils.cp') as mocked_cp:
             mocked_cp.return_value = new_process.ProcessResult(0, '', False)
             # TODO(metzman): Create a system for using actual buckets in
             # integration tests.
             snapshot = measure_manager.measure_snapshot(
                 snapshot_measurer.fuzzer, snapshot_measurer.benchmark,
-                snapshot_measurer.trial_num, cycle, False, True)
+                snapshot_measurer.trial_num, cycle, False, False)
         assert snapshot
         assert snapshot.time == cycle * experiment_utils.get_snapshot_seconds()
         assert snapshot.edges_covered == 4629
