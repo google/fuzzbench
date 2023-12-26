@@ -94,6 +94,7 @@ ENV LD_LIBRARY_PATH="/llvm/build/lib/x86_64-unknown-linux-gnu/"
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /FishFuzz/ && \
     unset CFLAGS CXXFLAGS CC CXX && \
+    git checkout 40947508037b874020c8dd1251359fecaab04b9d src/afl-fuzz-bitmap.c && \
     export AFL_NO_X86=1 && \
     make clean && \
     PYTHON_INCLUDE=/ make && \

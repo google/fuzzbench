@@ -300,7 +300,7 @@ def fuzz(input_corpus,
     if os.path.exists(cmplog_target_binary) and no_cmplog is False:
         flags += ['-c', cmplog_target_binary]
 
-    flags += ['-p', 'explore']
+    # flags += ['-p', 'explore']
 
     os.environ['FUZZ_NEARBY'] = '1'
     #os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
