@@ -79,7 +79,7 @@ def store_mua_run_log(run_output, benchmark, fuzzer, cycle):
 
 def store_report_error_log(report_error):
     """Save mua stats_db in the mua bucket."""
-    timestamp_filename = datetime.datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
+    timestamp_filename = datetime.datetime.now().strftime('%Y_%m_%d-%H_%M_%S')
     with tempfile.NamedTemporaryFile(mode='w') as tmp:
         tmp.write(report_error)
         tmp.flush()

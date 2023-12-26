@@ -21,7 +21,6 @@ from common import experiment_utils
 from common import new_process
 from experiment.build import build_utils
 
-
 logger = logs.Logger()
 
 # Exec id is used to identify the current run, if the dispatcher container
@@ -86,5 +85,5 @@ def run_mua_build_ids(benchmark, trial_num, fuzzer, cycle):
     logger.info(f'mua_build_ids command: {docker_exec_command}')
     mua_build_res = new_process.execute(docker_exec_command)
     logger.info(f'mua_build_ids result: {mua_build_res}')
-    build_utils.store_mua_build_log(mua_build_res.output, benchmark,
-                                    fuzzer, cycle)
+    build_utils.store_mua_build_log(mua_build_res.output, benchmark, fuzzer,
+                                    cycle)
