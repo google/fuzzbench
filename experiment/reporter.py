@@ -16,6 +16,7 @@
 reports."""
 import os
 import posixpath
+import traceback
 
 from common import experiment_utils
 from common import experiment_path as exp_path
@@ -26,6 +27,7 @@ from common import utils
 from common import yaml_utils
 from analysis import generate_report
 from analysis import data_utils
+from experiment.build.build_utils import store_report_error_log
 
 CORE_FUZZERS_YAML = os.path.join(utils.ROOT_DIR, 'service', 'core-fuzzers.yaml')
 
@@ -101,4 +103,6 @@ def output_report(experiment_config: dict,
     except data_utils.EmptyDataError:
         logs.warning('No snapshot data.')
     except Exception:  # pylint: disable=broad-except
+        error_msg = traceback.format_exc()
+        store_report_error_log(f'Error generating HTML report:\n{error_msg}')
         logger.error('Error generating HTML report.')

@@ -13,6 +13,7 @@
 # limitations under the License.
 """Module for utility code shared by build submodules."""
 
+import datetime
 import os
 import tempfile
 
@@ -76,6 +77,19 @@ def store_mua_run_log(run_output, benchmark, fuzzer, cycle):
                                fuzzer / f'{cycle}.log'))
 
 
+def store_report_error_log(report_error):
+    """Save mua stats_db in the mua bucket."""
+    timestamp_filename = datetime.datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
+    with tempfile.NamedTemporaryFile(mode='w') as tmp:
+        tmp.write(report_error)
+        tmp.flush()
+        os.chmod(tmp.name, 0o666)
+        filestore_utils.cp(
+            tmp.name,
+            exp_path.filestore(get_report_errors_logs_dir() /
+                               f'{timestamp_filename}.log'))
+
+
 def get_coverage_binaries_dir():
     """Return coverage binaries directory."""
     return exp_path.path('coverage-binaries')
@@ -89,3 +103,8 @@ def get_mua_results_dir():
 def get_build_logs_dir():
     """Return build logs directory."""
     return exp_path.path('build-logs')
+
+
+def get_report_errors_logs_dir():
+    """Return report errors logs directory."""
+    return exp_path.path('report-errors-logs')
