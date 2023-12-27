@@ -49,4 +49,4 @@ def build():
 
     utils.build_benchmark()
 
-    subprocess.call(['/mutator/fuzzbench_build.sh'])
+    subprocess.check_call(['/mutator/fuzzbench_build.sh'])
