@@ -49,7 +49,6 @@ def build_base_images():
                                                         benchmark=None,
                                                         fuzzer=None,
                                                         build_base_images=True)
-    logger.info(f"build_base_images gcb_build.py: {config}")
     _build(config, 'base-images')
 
 
@@ -81,7 +80,6 @@ def build_mua(benchmark):
     config = generate_cloudbuild.create_cloudbuild_spec(
         image_templates, benchmark=benchmark, fuzzer='mutation_analysis')
     config_name = f'benchmark-{benchmark}-mutation_analysis'
-    logger.info(f"build_mua gcb_build.py: {config_name}, {config}")
     _build(config, config_name)
 
 
