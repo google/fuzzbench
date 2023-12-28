@@ -44,4 +44,7 @@ docker/generated.mk
 
 # Vim backup files.
 .*.swp
+
+# mua related files and directories.
 fuzzers/mutation_analysis/fuzzbench_mapped_dir/
+mua_out/

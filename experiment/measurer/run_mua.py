@@ -13,12 +13,16 @@
 # limitations under the License.
 """Module for mutation testing measurer functionality."""
 
+import os
+from pathlib import Path
 import shlex
+import subprocess
 import uuid
 from common import logs
 from common import benchmark_utils
 from common import experiment_utils
 from common import new_process
+from common import environment
 from experiment.build import build_utils
 
 logger = logs.Logger()
@@ -31,18 +35,74 @@ logger = logs.Logger()
 EXEC_ID = uuid.uuid4()
 
 
+MUTATION_ANALYSIS_IMAGE_NAME = 'mutation_analysis'
+
+
 def get_container_name(benchmark):
     """Return the container name for the given benchmark."""
     return f'mutation_analysis_{benchmark}_container'
 
 
-def start_mua_container(benchmark):
+def get_host_mua_out_dir():
+    """Return the host directory where mua_out is mapped."""
+    return Path(os.environ.get('HOST_MUA_OUT_DIR')).absolute()
+
+
+def get_dispatcher_mua_out_dir():
+    return Path('/mua_out/')
+
+
+def stop_mua_container(benchmark):
+    """Stop the mua container for the benchmark."""
+    container_name = get_container_name(benchmark)
+    try:
+        new_process.execute(['docker', 'rm', '-f', container_name])
+    except subprocess.CalledProcessError:
+        pass
+
+
+def run_mua_container(benchmark):
+    """Run commands on mua container to prepare it"""
+    experiment_name = experiment_utils.get_experiment_name()
+    host_mua_out_dir = get_host_mua_out_dir()
+    shared_mua_binaries_dir = host_mua_out_dir / experiment_name
+    docker_mua_binaries_dir = f'/mapped/{experiment_name}'
+    mount_arg = f'{shared_mua_binaries_dir}:{docker_mua_binaries_dir}'
+    os.makedirs(shared_mua_binaries_dir, exist_ok=True)
+
+    builder_image_url = benchmark_utils.get_builder_image_url(
+        benchmark, MUTATION_ANALYSIS_IMAGE_NAME,
+        environment.get('DOCKER_REGISTRY'))
+
+    container_name = get_container_name(benchmark)
+
+    host_mua_mapped_dir = os.environ.get('HOST_MUA_MAPPED_DIR')
+
+    mua_run_cmd = [
+        'docker', 'run', '--init', '-it', '--detach', '--name', container_name,
+        '-v', mount_arg,
+        *([] if host_mua_mapped_dir is None else
+          ['-v', f'{host_mua_mapped_dir}:/mapped_dir']), builder_image_url,
+        '/bin/bash', '-c', 'sleep infinity'
+    ]
+
+    logger.info('mua container run command:' + str(mua_run_cmd))
+    mua_run_res = new_process.execute(mua_run_cmd)
+    logger.info(f'mua container run result: {mua_run_res.retcode} ' +
+                f'timed_out: {mua_run_res.timed_out}\n' +
+                f'{mua_run_res.output}')
+
+
+def ensure_mua_container_running(benchmark):
     """Start the mutation analysis container for the benchmark."""
     # find correct container and start it
     container_name = get_container_name(benchmark)
 
-    docker_start_command = 'docker start ' + container_name
-    new_process.execute(docker_start_command.split(' '))
+    docker_start_command = ['docker', 'start', container_name]
+    res = new_process.execute(docker_start_command, expect_zero=False)
+    if res.retcode != 0:
+        logger.info('Could not start mua container, using run instead.')
+        run_mua_container(benchmark)
 
 
 def copy_mua_stats_db(benchmark, mua_results_dir):

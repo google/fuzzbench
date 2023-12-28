@@ -28,6 +28,7 @@ from analysis import queries
 from analysis import rendering
 from common import filesystem
 from common import logs
+from experiment.measurer.run_mua import get_dispatcher_mua_out_dir
 
 logger = logs.Logger()
 
@@ -200,7 +201,9 @@ def get_mua_results(experiment_name, fuzzers, _benchmarks, experiment_df):
 
             _benchmark = trial_dict[trial]
 
-            mua_result_db_file = f'/workspace/mua_out/{experiment_name}/' \
+            mua_out_dir = get_dispatcher_mua_out_dir()
+
+            mua_result_db_file = f'/{mua_out_dir}/{experiment_name}/' \
                 f'mua_binaries/corpus_run_results/{fuzzer}/{trial}/' \
                 'results.sqlite'
             con = sqlite3.connect(mua_result_db_file)

@@ -17,6 +17,7 @@ it needs to begin an experiment."""
 
 import argparse
 import os
+from pathlib import Path
 import re
 import subprocess
 import sys
@@ -501,7 +502,17 @@ class LocalDispatcher(BaseDispatcher):
             f'CONCURRENT_BUILDS={self.config["concurrent_builds"]}')
         set_worker_pool_name_arg = (
             f'WORKER_POOL_NAME={self.config["worker_pool_name"]}')
+
+        # TODO(mua): Only pass env and volumes if mua is enabled.
+
         mua_mapped_dir = os.environ.get('HOST_MUA_MAPPED_DIR')
+
+        host_mua_out_dir = str(Path(
+            os.environ.get('HOST_MUA_OUT_DIR', Path.cwd()/'mua_out')
+        ).absolute())
+        os.environ['HOST_MUA_OUT_DIR'] = host_mua_out_dir
+        logs.debug(f'Setting HOST_MUA_OUT_DIR to {host_mua_out_dir}')
+
         environment_args = [
             '-e',
             'LOCAL_EXPERIMENT=True',
@@ -525,6 +536,8 @@ class LocalDispatcher(BaseDispatcher):
             set_worker_pool_name_arg,
             *(['-e', f'HOST_MUA_MAPPED_DIR={mua_mapped_dir}']
               if mua_mapped_dir is not None else []),
+            *(['-e', f'HOST_MUA_OUT_DIR={host_mua_out_dir}']
+              if host_mua_out_dir is not None else []),
         ]
         command = [
             'docker',
@@ -546,7 +559,7 @@ class LocalDispatcher(BaseDispatcher):
             # To share files between the dispatcher and mutation testing
             # container we need to map a shared host directory to a volume.
             '-v',
-            '/workspace/mua_out:/workspace/mua_out',
+            f'{host_mua_out_dir}:/mua_out',
         ] + environment_args + [
             '--shm-size=2g',
             '--cap-add=SYS_PTRACE',
@@ -608,6 +621,12 @@ class GoogleCloudDispatcher(BaseDispatcher):
             'worker_pool_name': self.config['worker_pool_name'],
             'private': self.config['private'],
         }
+        if self.config['mutation_analysis']:
+            kwargs['mutation_analysis'] = True
+            kwargs['mua_mapped_dir'] = '-v /home/chronos/mua_out/:/mua_out'
+        else:
+            kwargs['mutation_analysis'] = False
+            kwargs['mua_mapped_dir'] = ''
         if 'worker_pool_name' in self.config:
             kwargs['worker_pool_name'] = self.config['worker_pool_name']
         return template.render(**kwargs)
@@ -615,6 +634,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
     def write_startup_script(self, startup_script_file):
         """Get the startup script to start the experiment on the dispatcher."""
         startup_script = self._render_startup_script()
+        print(startup_script)
         startup_script_file.write(startup_script)
         startup_script_file.flush()
 

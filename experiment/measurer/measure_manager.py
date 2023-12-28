@@ -53,8 +53,8 @@ from experiment.measurer import coverage_utils
 from experiment.measurer import run_coverage
 from experiment.measurer import run_crashes
 from experiment import scheduler
-from experiment.measurer.run_mua import (copy_mua_stats_db, run_mua_build_ids,
-                                         start_mua_container)
+from experiment.measurer.run_mua import (copy_mua_stats_db, get_dispatcher_mua_out_dir, run_mua_build_ids,
+                                         ensure_mua_container_running)
 from experiment.runner import UNIQUE_TIMESTAMP_FILENAME
 
 logger = logs.Logger()
@@ -545,7 +545,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
     def mua_run_result_dir(self):
         """Return the directory where mua results are stored."""
         experiment_name = experiment_utils.get_experiment_name()
-        experiment_filestore_path = Path('/workspace/mua_out')
+        experiment_filestore_path = get_dispatcher_mua_out_dir()
         shared_mua_binaries_dir = \
             experiment_filestore_path / experiment_name / 'mua-results'
         mua_run_results_dir = (shared_mua_binaries_dir / 'corpus_run_results' /
@@ -559,7 +559,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
 
         def initialize_mua_directories():
             experiment_name = experiment_utils.get_experiment_name()
-            experiment_filestore_path = Path('/workspace/mua_out')
+            experiment_filestore_path = get_dispatcher_mua_out_dir()
             shared_mua_binaries_dir = \
                 experiment_filestore_path / experiment_name / 'mua-results'
 
@@ -586,7 +586,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
                             dirs_exist_ok=True)
             return mua_results_dir
 
-        start_mua_container(self.benchmark)
+        ensure_mua_container_running(self.benchmark)
 
         mua_results_dir = initialize_mua_directories()
 

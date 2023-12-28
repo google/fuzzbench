@@ -24,6 +24,8 @@ from common import experiment_utils
 from common import logs
 from common import new_process
 from common import utils
+from experiment.measurer.run_mua import (MUTATION_ANALYSIS_IMAGE_NAME,
+                                         stop_mua_container)
 
 logger = logs.Logger()  # pylint: disable=invalid-name
 
@@ -80,63 +82,15 @@ def build_coverage(benchmark):
     return result
 
 
-MUTATION_ANALYSIS_IMAGE_NAME = 'mutation_analysis'
-
-
 def build_mua(benchmark):
     """Build (locally) mua image for benchmark."""
+    stop_mua_container(benchmark)
     image_name = f'.{MUTATION_ANALYSIS_IMAGE_NAME}-{benchmark}-builder'
     result = make([image_name])
     if result.retcode:
         return result
     make_shared_mua_binaries_dir()
-    prepare_mua_binaries(benchmark)
     return result
-
-
-def prepare_mua_binaries(benchmark):
-    """Run commands on mua container to prepare it"""
-    experiment_name = experiment_utils.get_experiment_name()
-    shared_mua_binaries_dir = f'/workspace/mua_out/{experiment_name}'
-    docker_mua_binaries_dir = f'/mapped/{experiment_name}'
-    mount_arg = f'{shared_mua_binaries_dir}:{docker_mua_binaries_dir}'
-    os.makedirs(shared_mua_binaries_dir, exist_ok=True)
-
-    builder_image_url = benchmark_utils.get_builder_image_url(
-        benchmark, MUTATION_ANALYSIS_IMAGE_NAME,
-        environment.get('DOCKER_REGISTRY'))
-
-    mua_build_archive = f'mutation-analysis-build-{benchmark}.tar.gz'
-    mua_build_archive_shared_dir_path = os.path.join(shared_mua_binaries_dir,
-                                                     mua_build_archive)
-
-    container_name = f'{MUTATION_ANALYSIS_IMAGE_NAME}_{benchmark}_container'
-
-    host_mua_mapped_dir = os.environ.get('HOST_MUA_MAPPED_DIR')
-
-    command = ('('
-               f'mkdir -p {shared_mua_binaries_dir}; '
-               f'tar -czvf {mua_build_archive_shared_dir_path} /out; '
-               'python3 /mutator/mua_idle.py; '
-               ')')
-
-    logger.debug('mua prepare command:' + str(command))
-    try:
-        new_process.execute(['docker', 'rm', '-f', container_name])
-    except subprocess.CalledProcessError:
-        pass
-
-    mua_run_cmd = [
-        'docker', 'run', '--name', container_name, '-v', mount_arg, '-e',
-        'FUZZ_OUTSIDE_EXPERIMENT=1', '-e', 'FORCE_LOCAL=1', '-e', 'TRIAL_ID=1',
-        '-e', 'FUZZER=mutation_analysis', '-e', 'DEBUG_BUILDER=1',
-        *([] if host_mua_mapped_dir is None else
-          ['-v', f'{host_mua_mapped_dir}:/mapped_dir']), builder_image_url,
-        '/bin/bash', '-c', command
-    ]
-
-    logger.debug('mua run command:' + str(mua_run_cmd))
-    new_process.execute(mua_run_cmd, write_to_stdout=True)
 
 
 def copy_coverage_binaries(benchmark):
