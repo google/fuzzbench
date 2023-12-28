@@ -49,6 +49,7 @@ def build_base_images():
                                                         benchmark=None,
                                                         fuzzer=None,
                                                         build_base_images=True)
+    logger.info(f"build_base_images gcb_build.py: {config}")
     _build(config, 'base-images')
 
 
