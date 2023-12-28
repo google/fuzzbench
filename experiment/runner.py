@@ -480,7 +480,6 @@ def experiment_main():
     """Do a trial as part of an experiment."""
     logs.info('Doing trial as part of experiment.')
     try:
-        logs.error('Do something')
         runner = TrialRunner()
         runner.conduct_trial()
     except Exception as error:  # pylint: disable=broad-except
