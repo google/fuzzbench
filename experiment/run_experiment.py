@@ -507,9 +507,9 @@ class LocalDispatcher(BaseDispatcher):
 
         mua_mapped_dir = os.environ.get('HOST_MUA_MAPPED_DIR')
 
-        host_mua_out_dir = str(Path(
-            os.environ.get('HOST_MUA_OUT_DIR', Path.cwd()/'mua_out')
-        ).absolute())
+        host_mua_out_dir = str(
+            Path(os.environ.get('HOST_MUA_OUT_DIR',
+                                Path.cwd() / 'mua_out')).absolute())
         os.environ['HOST_MUA_OUT_DIR'] = host_mua_out_dir
 
         environment_args = [

@@ -15,7 +15,6 @@
 """Module for building things locally for use in trials."""
 
 import os
-import subprocess
 from typing import Tuple
 
 from common import benchmark_utils

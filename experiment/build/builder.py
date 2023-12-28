@@ -119,7 +119,8 @@ def build_mua_measurer(benchmark: str) -> bool:
         return False
 
 
-def build_all_measurers(benchmarks: List[str], mutation_analysis: bool) -> List[str]:
+def build_all_measurers(benchmarks: List[str],
+                        mutation_analysis: bool) -> List[str]:
     """Build measurers for each benchmark in |benchmarks| in parallel
     Returns a list of benchmarks built successfully."""
     logger.info('Building measurers.')

@@ -97,7 +97,8 @@ def test_build_images_for_trials_base_images_fail(dispatcher_experiment):
         dispatcher.build_images_for_trials(dispatcher_experiment.fuzzers,
                                            dispatcher_experiment.benchmarks,
                                            dispatcher_experiment.num_trials,
-                                           dispatcher_experiment.preemptible)
+                                           dispatcher_experiment.preemptible,
+                                           False)
 
 
 @mock.patch('experiment.build.builder.build_base_images')
@@ -114,7 +115,7 @@ def test_build_images_for_trials_build_success(_, dispatcher_experiment):
             trials = dispatcher.build_images_for_trials(
                 dispatcher_experiment.fuzzers, dispatcher_experiment.benchmarks,
                 dispatcher_experiment.num_trials,
-                dispatcher_experiment.preemptible)
+                dispatcher_experiment.preemptible, False)
     trial_fuzzer_benchmarks = [
         (trial.fuzzer, trial.benchmark) for trial in trials
     ]
@@ -146,7 +147,7 @@ def test_build_images_for_trials_benchmark_fail(_, dispatcher_experiment):
             trials = dispatcher.build_images_for_trials(
                 dispatcher_experiment.fuzzers, dispatcher_experiment.benchmarks,
                 dispatcher_experiment.num_trials,
-                dispatcher_experiment.preemptible)
+                dispatcher_experiment.preemptible, False)
     for trial in trials:
         assert trial.benchmark == successful_benchmark
 
@@ -181,7 +182,8 @@ def test_build_images_for_trials_fuzzer_fail(_, dispatcher_experiment):
         with mock.patch('experiment.build.builder.build_all_fuzzer_benchmarks',
                         side_effect=mocked_build_all_fuzzer_benchmarks):
             trials = dispatcher.build_images_for_trials(fuzzers, benchmarks,
-                                                        num_trials, False)
+                                                        num_trials, False,
+                                                        False)
 
     trial_fuzzer_benchmarks = [
         (trial.fuzzer, trial.benchmark) for trial in trials

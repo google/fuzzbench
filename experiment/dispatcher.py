@@ -104,8 +104,7 @@ class Experiment:
 
 
 def build_images_for_trials(fuzzers: List[str], benchmarks: List[str],
-                            num_trials: int,
-                            preemptible: bool,
+                            num_trials: int, preemptible: bool,
                             mutation_analysis) -> List[models.Trial]:
     """Builds the images needed to run |experiment| and returns a list of trials
     that can be run for experiment. This is the number of trials specified in

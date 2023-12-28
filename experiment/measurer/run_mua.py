@@ -34,7 +34,6 @@ logger = logs.Logger()
 # preemption.
 EXEC_ID = uuid.uuid4()
 
-
 MUTATION_ANALYSIS_IMAGE_NAME = 'mutation_analysis'
 
 
@@ -46,14 +45,13 @@ def get_container_name(benchmark):
 def get_host_mua_out_dir():
     """Return the host directory where mua_out is mapped."""
     if experiment_utils.is_local_experiment():
-        return Path(
-            os.environ.get('HOST_MUA_OUT_DIR', '/tmp/mua_out')
-        ).absolute()
-    else:
-        return Path('/home/chronos/mua_out/')
+        return Path(os.environ.get('HOST_MUA_OUT_DIR',
+                                   '/tmp/mua_out')).absolute()
+    return Path('/home/chronos/mua_out/')
 
 
 def get_dispatcher_mua_out_dir():
+    """Return the dispatcher directory where mua_out is mapped to."""
     return Path('/mua_out/')
 
 
@@ -85,20 +83,18 @@ def run_mua_container(benchmark):
 
     mua_run_cmd = [
         'docker', 'run', '--init', '-it', '--detach', '--name', container_name,
-        '-v', mount_arg,
-        *([] if host_mua_mapped_dir is None else
-          ['-v', f'{host_mua_mapped_dir}:/mapped_dir']), builder_image_url,
-        '/bin/bash', '-c', 'sleep infinity'
+        '-v', mount_arg, *([] if host_mua_mapped_dir is None else
+                           ['-v', f'{host_mua_mapped_dir}:/mapped_dir']),
+        builder_image_url, '/bin/bash', '-c', 'sleep infinity'
     ]
 
     mua_run_res = new_process.execute(mua_run_cmd, expect_zero=False)
     if mua_run_res.retcode != 0:
-        logger.error(
-            f'could not run mua container:\n' +
-            f'command: {mua_run_cmd}\n' +
-            f'returncode: {mua_run_res.retcode}\n' +
-            f'timed_out: {mua_run_res.timed_out}\n' +
-            f'{mua_run_res.output}')
+        logger.error('could not run mua container:\n' +
+                     f'command: {mua_run_cmd}\n' +
+                     f'returncode: {mua_run_res.retcode}\n' +
+                     f'timed_out: {mua_run_res.timed_out}\n' +
+                     f'{mua_run_res.output}')
         raise Exception('Could not run mua container.')
 
 

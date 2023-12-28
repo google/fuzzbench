@@ -79,7 +79,7 @@ def test_build_all_measurers(mocked_build_utils, mocked_fs, mocked_time,
     calls fail."""
     mocked_build_measurer.return_value = build_coverage_measurer_return_value
     benchmarks = get_regular_benchmarks()
-    result = builder.build_all_measurers(benchmarks)
+    result = builder.build_all_measurers(benchmarks, False)
     if build_coverage_measurer_return_value:
         assert result == benchmarks
     else:
@@ -130,7 +130,7 @@ class TestIntegrationBuild:
 
 def _test_build_measurers_benchmarks(benchmarks):
     """Asserts that measurers for each benchmark in |benchmarks| can build."""
-    assert benchmarks == builder.build_all_measurers(benchmarks)
+    assert benchmarks == builder.build_all_measurers(benchmarks, False)
 
 
 def _test_build_fuzzers_benchmarks(fuzzers, benchmarks):

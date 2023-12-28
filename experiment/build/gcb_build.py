@@ -14,7 +14,6 @@
 """Module for building things on Google Cloud Build for use in trials."""
 
 import os
-import pprint
 import subprocess
 import tempfile
 from typing import Dict
