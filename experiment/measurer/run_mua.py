@@ -84,6 +84,8 @@ def run_mua_build_ids(benchmark, trial_num, fuzzer, cycle):
 
     logger.info(f'mua_build_ids command: {docker_exec_command}')
     mua_build_res = new_process.execute(docker_exec_command)
-    logger.info(f'mua_build_ids result: {mua_build_res}')
+    logger.info(f'mua_build_ids result: {mua_build_res.retcode} ' +
+                f'timed_out: {mua_build_res.timed_out}\n' +
+                f'{mua_build_res.output}')
     build_utils.store_mua_build_log(mua_build_res.output, benchmark, fuzzer,
                                     cycle)

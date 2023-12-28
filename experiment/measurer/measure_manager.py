@@ -624,6 +624,9 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         logger.info('mua_run_mutants command:' + str(docker_exec_command))
         mua_run_res = new_process.execute(docker_exec_command)
         logger.info('mua_run_mutants result:' + str(mua_run_res))
+        logger.info(f'mua_run_mutants result: {mua_run_res.retcode} ' +
+                    f'timed_out: {mua_run_res.timed_out}\n' +
+                    f'{mua_run_res.output}')
         build_utils.store_mua_run_log(mua_run_res.output, self.benchmark,
                                       self.fuzzer, cycle)
         results_db = self.mua_run_result_dir() / 'results.sqlite'
