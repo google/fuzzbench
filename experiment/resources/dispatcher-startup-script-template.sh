@@ -24,7 +24,7 @@ docker run --rm \
   -e EXPERIMENT={{experiment}} \
   -e CLOUD_PROJECT={{cloud_project}} \
   -e EXPERIMENT_FILESTORE={{experiment_filestore}} \
-  -e POSTGRES_PASSWORD={{postgres_password}} \
+  -e POSTGRES_PASSWORD="{{postgres_password}}" \
   -e CLOUD_SQL_INSTANCE_CONNECTION_NAME={{cloud_sql_instance_connection_name}} \
   -e DOCKER_REGISTRY={{docker_registry}} \
   -e CONCURRENT_BUILDS={{concurrent_builds}} \
