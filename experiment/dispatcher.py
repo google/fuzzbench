@@ -105,7 +105,8 @@ class Experiment:
 
 def build_images_for_trials(fuzzers: List[str], benchmarks: List[str],
                             num_trials: int,
-                            preemptible: bool) -> List[models.Trial]:
+                            preemptible: bool,
+                            mutation_analysis) -> List[models.Trial]:
     """Builds the images needed to run |experiment| and returns a list of trials
     that can be run for experiment. This is the number of trials specified in
     experiment times each pair of fuzzer+benchmark that builds successfully."""
@@ -114,7 +115,7 @@ def build_images_for_trials(fuzzers: List[str], benchmarks: List[str],
     builder.build_base_images()
 
     # Only build fuzzers for benchmarks whose measurers built successfully.
-    benchmarks = builder.build_all_measurers(benchmarks)
+    benchmarks = builder.build_all_measurers(benchmarks, mutation_analysis)
     build_successes = builder.build_all_fuzzer_benchmarks(fuzzers, benchmarks)
     experiment_name = experiment_utils.get_experiment_name()
     trials = []
@@ -147,7 +148,8 @@ def dispatcher_main():
 
     trials = build_images_for_trials(experiment.fuzzers, experiment.benchmarks,
                                      experiment.num_trials,
-                                     experiment.preemptible)
+                                     experiment.preemptible,
+                                     experiment.config['mutation_analysis'])
     _initialize_trials_in_db(trials)
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])

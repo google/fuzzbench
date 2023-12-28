@@ -511,7 +511,6 @@ class LocalDispatcher(BaseDispatcher):
             os.environ.get('HOST_MUA_OUT_DIR', Path.cwd()/'mua_out')
         ).absolute())
         os.environ['HOST_MUA_OUT_DIR'] = host_mua_out_dir
-        logs.debug(f'Setting HOST_MUA_OUT_DIR to {host_mua_out_dir}')
 
         environment_args = [
             '-e',
@@ -622,10 +621,8 @@ class GoogleCloudDispatcher(BaseDispatcher):
             'private': self.config['private'],
         }
         if self.config['mutation_analysis']:
-            kwargs['mutation_analysis'] = True
             kwargs['mua_mapped_dir'] = '-v /home/chronos/mua_out/:/mua_out'
         else:
-            kwargs['mutation_analysis'] = False
             kwargs['mua_mapped_dir'] = ''
         if 'worker_pool_name' in self.config:
             kwargs['worker_pool_name'] = self.config['worker_pool_name']

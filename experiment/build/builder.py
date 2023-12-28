@@ -119,7 +119,7 @@ def build_mua_measurer(benchmark: str) -> bool:
         return False
 
 
-def build_all_measurers(benchmarks: List[str]) -> List[str]:
+def build_all_measurers(benchmarks: List[str], mutation_analysis: bool) -> List[str]:
     """Build measurers for each benchmark in |benchmarks| in parallel
     Returns a list of benchmarks built successfully."""
     logger.info('Building measurers.')
@@ -129,7 +129,8 @@ def build_all_measurers(benchmarks: List[str]) -> List[str]:
     successful_calls = retry_build_loop(build_coverage_measurer,
                                         build_measurer_args)
     # build mua measurer
-    retry_build_loop(build_mua_measurer, build_measurer_args)
+    if mutation_analysis:
+        retry_build_loop(build_mua_measurer, build_measurer_args)
     logger.info('Done building measurers.')
     # Return list of benchmarks (like the list we were passed as an argument)
     # instead of returning a list of tuples each containing a benchmark.
