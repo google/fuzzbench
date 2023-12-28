@@ -45,7 +45,12 @@ def get_container_name(benchmark):
 
 def get_host_mua_out_dir():
     """Return the host directory where mua_out is mapped."""
-    return Path(os.environ.get('HOST_MUA_OUT_DIR')).absolute()
+    if experiment_utils.is_local_experiment():
+        return Path(
+            os.environ.get('HOST_MUA_OUT_DIR', '/tmp/mua_out')
+        ).absolute()
+    else:
+        return Path('/home/chronos/mua_out/')
 
 
 def get_dispatcher_mua_out_dir():
@@ -86,11 +91,15 @@ def run_mua_container(benchmark):
         '/bin/bash', '-c', 'sleep infinity'
     ]
 
-    logger.info('mua container run command:' + str(mua_run_cmd))
-    mua_run_res = new_process.execute(mua_run_cmd)
-    logger.info(f'mua container run result: {mua_run_res.retcode} ' +
-                f'timed_out: {mua_run_res.timed_out}\n' +
-                f'{mua_run_res.output}')
+    mua_run_res = new_process.execute(mua_run_cmd, expect_zero=False)
+    if mua_run_res.retcode != 0:
+        logger.error(
+            f'could not run mua container:\n' +
+            f'command: {mua_run_cmd}\n' +
+            f'returncode: {mua_run_res.retcode}\n' +
+            f'timed_out: {mua_run_res.timed_out}\n' +
+            f'{mua_run_res.output}')
+        raise Exception('Could not run mua container.')
 
 
 def ensure_mua_container_running(benchmark):
