@@ -14,6 +14,7 @@
 """Module for building things on Google Cloud Build for use in trials."""
 
 import os
+import pprint
 import subprocess
 import tempfile
 from typing import Dict
@@ -79,6 +80,7 @@ def build_mua(benchmark):
     config = generate_cloudbuild.create_cloudbuild_spec(
         image_templates, benchmark=benchmark, fuzzer='mutation_analysis')
     config_name = f'benchmark-{benchmark}-mutation_analysis'
+    logger.info(f"build_mua gcb_build.py: {config_name}, {config}")
     _build(config, config_name)
 
 
