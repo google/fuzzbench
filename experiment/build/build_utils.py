@@ -15,6 +15,7 @@
 
 import datetime
 import os
+import sqlite3
 import tempfile
 
 from common import experiment_path as exp_path
@@ -37,20 +38,29 @@ def store_build_logs(build_config, build_result):
 
 def store_mua_stats_db(stats_db, benchmark):
     """Save mua stats_db in the mua bucket."""
-    stats_db = str(stats_db)
-    filestore_utils.cp(
-        stats_db,
-        exp_path.filestore(get_mua_results_dir() / 'base_build' / benchmark /
-                           'stats.sqlite'))
+    with tempfile.NamedTemporaryFile(mode='w') as tmp:
+        with sqlite3.connect(stats_db) as conn:
+            conn.execute('VACUUM INTO ?', (tmp.name, ))
+        tmp.flush()
+        os.chmod(tmp.name, 0o666)
+        filestore_utils.cp(
+            tmp.name,
+            exp_path.filestore(
+                get_mua_results_dir() / 'base_build' / benchmark /
+                'stats.sqlite'))
 
 
 def store_mua_results_db(results_db, benchmark, fuzzer, cycle):
     """Save mua stats_db in the mua bucket."""
-    results_db = str(results_db)
-    filestore_utils.cp(
-        results_db,
-        exp_path.filestore(get_mua_results_dir() / 'results' / benchmark /
-                           fuzzer / f'{cycle}.sqlite'))
+    with tempfile.NamedTemporaryFile(mode='w') as tmp:
+        with sqlite3.connect(results_db) as conn:
+            conn.execute('VACUUM INTO ?', (tmp.name, ))
+        tmp.flush()
+        os.chmod(tmp.name, 0o666)
+        filestore_utils.cp(
+            tmp.name,
+            exp_path.filestore(get_mua_results_dir() / 'results' / benchmark /
+                            fuzzer / f'{cycle}.sqlite'))
 
 
 def store_mua_build_log(build_output, benchmark, fuzzer, cycle):
