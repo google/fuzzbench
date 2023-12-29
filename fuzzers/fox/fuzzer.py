@@ -77,7 +77,8 @@ def prepare_build_environment():
                 "mbedtls", "library/CMakeLists.txt")
         assert os.path.isfile(file_path), "The file does not exist"
         # Remove -Wdocumentation to make compilation pass with clang 15.0.7
-        subst_cmd = r"sed -i 's/\(-Wdocumentation\)//g' {}".format(file_path)
+        # subst_cmd = r"sed -i 's/\(-Wdocumentation\)//g' {}".format(file_path)
+        subst_cmd = r"sed -i 's/\(-Wdocumentation\)//g'" + " " + file_path
         subprocess.check_call(subst_cmd, shell = True)
 
     # Fixup a file for openthread
@@ -89,18 +90,15 @@ def prepare_build_environment():
                 "openthread/third_party/mbedtls/repo", "CMakeLists.txt")
         assert os.path.isfile(mbed_cmake_one), "The file does not exist"
         assert os.path.isfile(mbed_cmake_two), "The file does not exist"
-        subst_cmd = r"sed -i 's/\(-Wdocumentation\)//g' {}".format(
-                mbed_cmake_one)
+        subst_cmd = r"sed -i 's/\(-Wdocumentation\)//g'" + " " + mbed_cmake_one
         subprocess.check_call(subst_cmd, shell = True)
-        subst_cmd = r"sed -i 's/\(-Werror\)//g' {}".format(mbed_cmake_two)
+        subst_cmd = r"sed -i 's/\(-Wdocumentation\)//g'" + " " + mbed_cmake_two
         subprocess.check_call(subst_cmd, shell = True)
 
-def build():
-    """Build benchmark."""
+def build_fox_binary():
+    """Build fox binary"""
+
     is_vanilla = False
-    install_all()
-    prepare_build_environment()
-
     subprocess.check_call(["rm", "-f", "/dev/shm/*"])
 
     print("[build 0/2] build target binary")
@@ -152,11 +150,23 @@ def build():
             ],
                                   env=env)
             os.chdir(pwd)
-        except:
+        except subprocess.CalledProcessError:
             print("[X] Compilation or metadata gen failed..using fallback")
             # Go back to the base dir where the outfiles are being kept
             os.chdir(pwd)
             is_vanilla = True
+    return is_vanilla
+
+def build():
+    """Build benchmark."""
+    is_vanilla = False
+    install_all()
+    prepare_build_environment()
+
+    src = os.getenv("SRC")
+    work = os.getenv("WORK")
+
+    is_vanilla = build_fox_binary()
 
     if is_vanilla:
         new_env = os.environ.copy()
@@ -189,8 +199,9 @@ def build():
             utils.build_benchmark(env=new_env)
 
         # Write a flag file to signal that fox processing failed
-        with open(os.path.join(os.getenv("OUT"), "is_vanilla"), "w") as fd:
-            pass
+        with open(os.path.join(os.getenv("OUT"), "is_vanilla"), "w",
+                encoding="utf-8") as file_desc:
+            file_desc.write("is_vanilla")
 
     print("[post_build] Copying afl-fuzz to $OUT directory")
     # Copy out the afl-fuzz binary as a build artifact.
