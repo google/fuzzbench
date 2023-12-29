@@ -37,7 +37,7 @@ EXEC_ID = uuid.uuid4()
 
 MUTATION_ANALYSIS_IMAGE_NAME = 'mutation_analysis'
 
-GOOGLE_CLOUD_MUA_MAPPED_DIR = '/var/lib/toolbox/mua_out/'
+GOOGLE_CLOUD_MUA_MAPPED_DIR = '/etc/mua_out/'
 
 
 def get_container_name(benchmark):
