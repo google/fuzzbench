@@ -94,7 +94,7 @@ RUN pipx install hatch
 # mua_fuzzer_bench
 RUN git clone https://github.com/phi-go/mua_fuzzer_bench /mutator && \
     cd /mutator && \
-    git checkout 29341e3b450f59145b81ba119c88eda4fee2dfaa
+    git checkout 9f9266f64ffe0adb562980b69e73f5574cf7ff15
 
 RUN cd /mutator && \
     echo "llvmBinPath=/usr/lib/llvm-15/bin/" > gradle.properties
