@@ -92,7 +92,7 @@ def prepare_build_environment():
         assert os.path.isfile(mbed_cmake_two), "The file does not exist"
         subst_cmd = r"sed -i 's/\(-Wdocumentation\)//g'" + " " + mbed_cmake_one
         subprocess.check_call(subst_cmd, shell = True)
-        subst_cmd = r"sed -i 's/\(-Wdocumentation\)//g'" + " " + mbed_cmake_two
+        subst_cmd = r"sed -i 's/\(-Werror\)//g'" + " " + mbed_cmake_two
         subprocess.check_call(subst_cmd, shell = True)
 
 def build_fox_binary():
@@ -167,6 +167,8 @@ def build():
     work = os.getenv("WORK")
 
     is_vanilla = build_fox_binary()
+    if is_benchmark("systemd"):
+        is_vanilla = True
 
     if is_vanilla:
         new_env = os.environ.copy()
