@@ -622,7 +622,8 @@ class GoogleCloudDispatcher(BaseDispatcher):
             'private': self.config['private'],
         }
         if self.config['mutation_analysis']:
-            kwargs['mua_mapped_dir'] = f'-v {GOOGLE_CLOUD_MUA_MAPPED_DIR}:/mua_out'
+            kwargs[
+                'mua_mapped_dir'] = f'-v {GOOGLE_CLOUD_MUA_MAPPED_DIR}:/mua_out'
         else:
             kwargs['mua_mapped_dir'] = ''
         if 'worker_pool_name' in self.config:

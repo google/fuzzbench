@@ -108,9 +108,9 @@ def mua_container_is_running(benchmark):
     """Return true if the mua container is started."""
     container_name = get_container_name(benchmark)
     try:
-        res = new_process.execute([
-            'docker', 'inspect', '-f', '{{.State.Running}}', container_name
-        ], expect_zero=False)
+        res = new_process.execute(
+            ['docker', 'inspect', '-f', '{{.State.Running}}', container_name],
+            expect_zero=False)
         if res.retcode != 0:
             return False
         if res.output.strip() == 'true':
