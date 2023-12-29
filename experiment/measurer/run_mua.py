@@ -37,6 +37,8 @@ EXEC_ID = uuid.uuid4()
 
 MUTATION_ANALYSIS_IMAGE_NAME = 'mutation_analysis'
 
+GOOGLE_CLOUD_MUA_MAPPED_DIR = '/var/lib/toolbox/mua_out/'
+
 
 def get_container_name(benchmark):
     """Return the container name for the given benchmark."""
@@ -48,7 +50,7 @@ def get_host_mua_out_dir():
     if experiment_utils.is_local_experiment():
         return Path(os.environ.get('HOST_MUA_OUT_DIR',
                                    '/tmp/mua_out')).absolute()
-    return Path('/home/chronos/mua_out/')
+    return Path(GOOGLE_CLOUD_MUA_MAPPED_DIR)
 
 
 def get_dispatcher_mua_out_dir():

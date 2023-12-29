@@ -40,6 +40,7 @@ from common import logs
 from common import new_process
 from common import utils
 from common import yaml_utils
+from experiment.measurer.run_mua import GOOGLE_CLOUD_MUA_MAPPED_DIR
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
@@ -621,7 +622,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
             'private': self.config['private'],
         }
         if self.config['mutation_analysis']:
-            kwargs['mua_mapped_dir'] = '-v /home/chronos/mua_out/:/mua_out'
+            kwargs['mua_mapped_dir'] = f'-v {GOOGLE_CLOUD_MUA_MAPPED_DIR}:/mua_out'
         else:
             kwargs['mua_mapped_dir'] = ''
         if 'worker_pool_name' in self.config:
