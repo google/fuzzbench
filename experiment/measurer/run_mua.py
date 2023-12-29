@@ -17,6 +17,7 @@ import os
 from pathlib import Path
 import shlex
 import subprocess
+import time
 import uuid
 from common import logs
 from common import benchmark_utils
@@ -90,6 +91,9 @@ def run_mua_container(benchmark):
 
     mua_run_res = new_process.execute(mua_run_cmd, expect_zero=False)
     if mua_run_res.retcode != 0:
+        if 'Conflict. The container name' in mua_run_res.output:
+            logger.debug('mua container already running')
+            return
         logger.error('could not run mua container:\n' +
                      f'command: {mua_run_cmd}\n' +
                      f'returncode: {mua_run_res.retcode}\n' +
@@ -98,8 +102,27 @@ def run_mua_container(benchmark):
         raise Exception('Could not run mua container.')
 
 
+def mua_container_is_running(benchmark):
+    """Return true if the mua container is started."""
+    container_name = get_container_name(benchmark)
+    try:
+        res = new_process.execute([
+            'docker', 'inspect', '-f', '{{.State.Running}}', container_name
+        ], expect_zero=False)
+        if res.retcode != 0:
+            return False
+        if res.output.strip() == 'true':
+            return True
+        return False
+    except subprocess.CalledProcessError:
+        return False
+
+
 def ensure_mua_container_running(benchmark):
     """Start the mutation analysis container for the benchmark."""
+    if mua_container_is_running(benchmark):
+        return
+
     # find correct container and start it
     container_name = get_container_name(benchmark)
 
@@ -112,6 +135,13 @@ def ensure_mua_container_running(benchmark):
 
 def copy_mua_stats_db(benchmark, mua_results_dir):
     """Copy the stats db from the container to the mua results dir."""
+    # Wait a bit if the container was just started
+    for _ in range(10):
+        if mua_container_is_running(benchmark):
+            break
+        logger.debug('Waiting for mua container to start.')
+        time.sleep(1)
+
     container_name = get_container_name(benchmark)
     corpus_run_stats_db = mua_results_dir / 'stats.sqlite'
 
@@ -123,7 +153,7 @@ def copy_mua_stats_db(benchmark, mua_results_dir):
             'docker', 'cp', f'{container_name}:/mua_build/build/stats.db',
             str(corpus_run_stats_db)
         ]
-        logger.info(f'mua copy stats db command: {copy_stats_db_command}')
+        logger.debug(f'mua copy stats db command: {copy_stats_db_command}')
         new_process.execute(copy_stats_db_command, write_to_stdout=True)
         build_utils.store_mua_stats_db(corpus_run_stats_db, benchmark)
 
@@ -147,7 +177,7 @@ def run_mua_build_ids(benchmark, trial_num, fuzzer, cycle):
         shlex.join(command)
     ]
 
-    logger.info(f'mua_build_ids command: {docker_exec_command}')
+    logger.debug(f'mua_build_ids command: {docker_exec_command}')
     mua_build_res = new_process.execute(docker_exec_command)
     logger.info(f'mua_build_ids result: {mua_build_res.retcode} ' +
                 f'timed_out: {mua_build_res.timed_out}\n' +
