@@ -114,8 +114,8 @@ def add_timestamps_to_mua_results_db(timestamp_info,
                     continue
                 timestamp = trial_start_time.timestamp()
                 input_file = '<seed_entry>'
-                logger.debug(
-                    f'Using trial start time {timestamp} for {corpus_file}')
+                # logger.debug(
+                #     f'Using trial start time {timestamp} for {corpus_file}')
             else:
                 input_file = timestamp_info[corpus_file]['filename']
                 timestamp = timestamp_info[corpus_file]['timestamp']
@@ -623,9 +623,8 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             'docker', 'exec', '-t', container_name, '/bin/bash', '-c',
             shlex.join(command)
         ]
-        logger.info('mua_run_mutants command:' + str(docker_exec_command))
+        logger.debug('mua_run_mutants command:' + str(docker_exec_command))
         mua_run_res = new_process.execute(docker_exec_command)
-        logger.info('mua_run_mutants result:' + str(mua_run_res))
         logger.info(f'mua_run_mutants result: {mua_run_res.retcode} ' +
                     f'timed_out: {mua_run_res.timed_out}\n' +
                     f'{mua_run_res.output}')
