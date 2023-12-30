@@ -18,26 +18,21 @@ from pathlib import Path
 import shlex
 import subprocess
 import time
-import uuid
 from common import logs
 from common import benchmark_utils
 from common import experiment_utils
 from common import new_process
 from common import environment
 from experiment.build import build_utils
+from experiment.exec_id import read_exec_id
 
 logger = logs.Logger()
-
-# Exec id is used to identify the current run, if the dispatcher container
-# is preempted the exec id will change. This allows us to identify which actions
-# were performed by earlier runs and which were performed by the current run.
-# We use this to identify which mutants builds were interrupted by a
-# preemption.
-EXEC_ID = uuid.uuid4()
 
 MUTATION_ANALYSIS_IMAGE_NAME = 'mutation_analysis'
 
 GOOGLE_CLOUD_MUA_MAPPED_DIR = '/etc/mua_out/'
+
+EXEC_ID = None
 
 
 def get_container_name(benchmark):
@@ -162,6 +157,11 @@ def copy_mua_stats_db(benchmark, mua_results_dir):
 
 def run_mua_build_ids(benchmark, trial_num, fuzzer, cycle):
     """Run mua_build_ids.py on the container."""
+    global EXEC_ID
+    if EXEC_ID is None:
+        EXEC_ID = read_exec_id()
+        logger.debug('Setting EXEC_ID to %s', EXEC_ID)
+
     container_name = get_container_name(benchmark)
     # get additional info from commons
     experiment_name = experiment_utils.get_experiment_name()
@@ -169,9 +169,14 @@ def run_mua_build_ids(benchmark, trial_num, fuzzer, cycle):
 
     # execute command on container
     command = [
-        'python3', '/mutator/mua_build_ids.py',
-        str(EXEC_ID), fuzz_target, experiment_name, fuzzer,
-        str(trial_num), '--debug_num_mutants=10'
+        'python3',
+        '/mutator/mua_build_ids.py',
+        str(EXEC_ID),
+        fuzz_target,
+        benchmark,
+        experiment_name,
+        fuzzer,
+        str(trial_num),
     ]
 
     docker_exec_command = [
@@ -180,9 +185,10 @@ def run_mua_build_ids(benchmark, trial_num, fuzzer, cycle):
     ]
 
     logger.debug(f'mua_build_ids command: {docker_exec_command}')
-    mua_build_res = new_process.execute(docker_exec_command)
+    mua_build_res = new_process.execute(docker_exec_command,
+                                        write_to_stdout=True)
     logger.info(f'mua_build_ids result: {mua_build_res.retcode} ' +
                 f'timed_out: {mua_build_res.timed_out}\n' +
                 f'{mua_build_res.output}')
-    build_utils.store_mua_build_log(mua_build_res.output, benchmark, fuzzer,
-                                    cycle)
+    build_utils.store_mua_build_log(mua_build_res.output or '', benchmark,
+                                    fuzzer, cycle)

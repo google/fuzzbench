@@ -572,7 +572,8 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             self.create_dir(fuzzer_corpi_dir)
 
             mutants_ids_dir_entry = (shared_mua_binaries_dir / 'mutant_ids' /
-                                     self.fuzzer / str(self.trial_num))
+                                     self.benchmark / self.fuzzer /
+                                     str(self.trial_num))
             self.create_dir(mutants_ids_dir_entry)
 
             mua_results_dir = self.mua_run_result_dir()
@@ -615,7 +616,7 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         # run all needed mutants in container
         command = [
             'python3', '/mutator/mua_run_mutants.py', fuzz_target,
-            experiment_name, self.fuzzer,
+            self.benchmark, experiment_name, self.fuzzer,
             str(self.trial_num)
         ]
 

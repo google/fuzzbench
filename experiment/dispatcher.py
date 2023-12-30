@@ -23,6 +23,7 @@ import sys
 import threading
 import time
 from typing import List
+import uuid
 
 from common import experiment_path as exp_path
 from common import experiment_utils
@@ -35,6 +36,7 @@ from experiment.measurer import measure_manager
 from experiment import reporter
 from experiment import scheduler
 from experiment import stop_experiment
+from experiment.exec_id import write_exec_id
 
 LOOP_WAIT_SECONDS = 5 * 60
 
@@ -132,6 +134,8 @@ def build_images_for_trials(fuzzers: List[str], benchmarks: List[str],
 def dispatcher_main():
     """Do the experiment and report results."""
     logs.info('Starting experiment.')
+
+    write_exec_id()
 
     # Set this here because we get failures if we do it in measurer for some
     # reason.
