@@ -23,10 +23,16 @@ MUA_RECORDING_DB = '/mua_build/execs.sqlite'
 
 def build():
     """Build benchmark."""
+    benchmark = os.getenv('BENCHMARK')
+
     cflags = [
         # '-fprofile-instr-generate', '-fcoverage-mapping', '-gline-tables-only'
         '-fPIE',
     ]
+    if benchmark == "re2_fuzzer":
+        cflags = [
+        '',
+        ]
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
@@ -43,7 +49,6 @@ def build():
     build_script = os.path.join(os.environ['SRC'], 'build.sh')
     print(f'build_script: {build_script}')
 
-    benchmark = os.getenv('BENCHMARK')
     fuzzer = os.getenv('FUZZER')
     print(f'Building benchmark {benchmark} with fuzzer {fuzzer}')
 
