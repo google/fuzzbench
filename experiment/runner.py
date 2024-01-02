@@ -390,7 +390,7 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
                         file_timestamps[arcname] = file_timestamp
                     except Exception:  # pylint: disable=broad-except
                         e_msg = traceback.format_exc()
-                        logs.warning(
+                        logs.debug(
                             f'Failed to get timestamp for {arcname}: {e_msg}')
                 except (FileNotFoundError, OSError):
                     # We will get these errors if files or directories are being
@@ -405,13 +405,11 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             # any existing file in the corpus.
             try:
                 with tempfile.NamedTemporaryFile(mode='wt') as temp_file:
-                    logs.debug(
-                        f'Writing timestamp file to archive: {temp_file}')
+                    logs.debug(f"timestamp archiving: {len(file_timestamps)}")
                     temp_file.write(json.dumps(file_timestamps))
                     temp_file.flush()
                     tar.add(temp_file.name,
-                            arcname=UNIQUE_TIMESTAMP_FILENAME,
-                            recursive=False)
+                            arcname=UNIQUE_TIMESTAMP_FILENAME)
             except Exception:  # pylint: disable=broad-except
                 e_msg = traceback.format_exc()
                 logs.warning(

@@ -49,7 +49,7 @@ def store_mua_stats_db(stats_db, benchmark):
                                benchmark / 'stats.sqlite'))
 
 
-def store_mua_results_db(results_db, benchmark, fuzzer, cycle):
+def store_mua_results_db(results_db, trial, cycle):
     """Save mua stats_db in the mua bucket."""
     with tempfile.NamedTemporaryFile(mode='w') as tmp:
         with sqlite3.connect(results_db) as conn:
@@ -58,11 +58,10 @@ def store_mua_results_db(results_db, benchmark, fuzzer, cycle):
         os.chmod(tmp.name, 0o666)
         filestore_utils.cp(
             tmp.name,
-            exp_path.filestore(get_mua_results_dir() / 'results' / benchmark /
-                               fuzzer / f'{cycle}.sqlite'))
+            exp_path.filestore(get_mua_results_dir() / 'results' / str(trial) / f'{cycle}.sqlite'))
 
 
-def store_mua_build_log(build_output, benchmark, fuzzer, cycle):
+def store_mua_build_log(build_output, benchmark, fuzzer, trial, cycle):
     """Save mua stats_db in the mua bucket."""
     with tempfile.NamedTemporaryFile(mode='w') as tmp:
         tmp.write(build_output)
@@ -71,10 +70,10 @@ def store_mua_build_log(build_output, benchmark, fuzzer, cycle):
         filestore_utils.cp(
             tmp.name,
             exp_path.filestore(get_mua_results_dir() / 'mua_build' / benchmark /
-                               fuzzer / f'{cycle}.log'))
+                               fuzzer / str(trial) / f'{cycle}.log'))
 
 
-def store_mua_run_log(run_output, benchmark, fuzzer, cycle):
+def store_mua_run_log(run_output, trial, cycle):
     """Save mua stats_db in the mua bucket."""
     with tempfile.NamedTemporaryFile(mode='w') as tmp:
         tmp.write(run_output)
@@ -82,8 +81,8 @@ def store_mua_run_log(run_output, benchmark, fuzzer, cycle):
         os.chmod(tmp.name, 0o666)
         filestore_utils.cp(
             tmp.name,
-            exp_path.filestore(get_mua_results_dir() / 'mua_run' / benchmark /
-                               fuzzer / f'{cycle}.log'))
+            exp_path.filestore(get_mua_results_dir() / 'mua_run'
+                               / str(trial) / f'{cycle}.log'))
 
 
 def store_report_error_log(report_error):

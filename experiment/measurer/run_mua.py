@@ -177,6 +177,7 @@ def run_mua_build_ids(benchmark, trial_num, fuzzer, cycle):
         experiment_name,
         fuzzer,
         str(trial_num),
+        # "--debug_num_mutants=200"
     ]
 
     docker_exec_command = [
@@ -185,10 +186,9 @@ def run_mua_build_ids(benchmark, trial_num, fuzzer, cycle):
     ]
 
     logger.debug(f'mua_build_ids command: {docker_exec_command}')
-    mua_build_res = new_process.execute(docker_exec_command,
-                                        write_to_stdout=True)
+    mua_build_res = new_process.execute(docker_exec_command)
     logger.info(f'mua_build_ids result: {mua_build_res.retcode} ' +
                 f'timed_out: {mua_build_res.timed_out}\n' +
                 f'{mua_build_res.output}')
     build_utils.store_mua_build_log(mua_build_res.output or '', benchmark,
-                                    fuzzer, cycle)
+                                    fuzzer, trial_num, cycle)
