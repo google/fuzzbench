@@ -149,10 +149,13 @@ def dispatcher_main():
 
     _initialize_experiment_in_db(experiment.config)
 
+    use_mutation_analysis = experiment.config['mutation_analysis']
+    is_local_experiment = experiment_utils.is_local_experiment()
+
     trials = build_images_for_trials(experiment.fuzzers, experiment.benchmarks,
                                      experiment.num_trials,
                                      experiment.preemptible,
-                                     experiment.config['mutation_analysis'])
+                                     use_mutation_analysis)
     _initialize_trials_in_db(trials)
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])
@@ -161,6 +164,16 @@ def dispatcher_main():
     scheduler_loop_thread = threading.Thread(target=scheduler.schedule_loop,
                                              args=(experiment.config,))
     scheduler_loop_thread.start()
+
+    if is_local_experiment and use_mutation_analysis:
+        # Mutation analysis just takes all cpu available, further work needs to
+        # be done to make it work nicely in parallel with trial runners for a 
+        # local experiment. This is not a problem for remote experiments because
+        # the trials are run on a seperate VM.
+
+        # Wait for trials to end before starting measurer.
+        logs.info('Waiting for trials to end.')
+        scheduler_loop_thread.join()
 
     measurer_main_process = multiprocessing.Process(
         target=measure_manager.measure_main, args=(experiment.config,))
