@@ -68,7 +68,7 @@ RUN update-alternatives --install \
     --slave /usr/local/bin/clang++           clang++          /usr/lib/llvm-15/bin/clang++
 
 # wllvm
-RUN pip3 install wllvm 
+RUN pip3 install wllvm py-spy
 
 # gradle
 RUN mkdir -p /tmp/gradle && \
@@ -94,7 +94,7 @@ RUN pipx install hatch
 # mua_fuzzer_bench
 RUN git clone https://github.com/phi-go/mua_fuzzer_bench /mutator && \
     cd /mutator && \
-    git checkout 6dc110191a512b2c240467a16a1aaac5446e12de
+    git checkout 13b77966064b60700e714930ca636dd79e992cd4
 
 RUN cd /mutator && \
     echo "llvmBinPath=/usr/lib/llvm-15/bin/" > gradle.properties
