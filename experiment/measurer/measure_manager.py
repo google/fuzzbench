@@ -29,7 +29,7 @@ import sys
 import tempfile
 import tarfile
 import time
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 import queue
 from pathlib import Path
 import psutil
@@ -90,6 +90,7 @@ def add_timestamps_to_mua_results_db(timestamp_info,
     conn.commit()
 
     cur = conn.cursor()
+    num_timestamp_not_found = 0
     for corpus_file in os.listdir(corpus_dir):
         cur.execute(
             '''
@@ -107,14 +108,17 @@ def add_timestamps_to_mua_results_db(timestamp_info,
             else:
                 timestamp = timestamp_info.get(corpus_file)
                 if timestamp is None:
-                    if cycle != 0:
-                        logger.warning('No timestamp found for %s.', corpus_file)
+                    num_timestamp_not_found += 1
                     continue
-                else:
-                    input_file = timestamp_info[corpus_file]['filename']
-                    timestamp = timestamp_info[corpus_file]['timestamp']
+                input_file = timestamp_info[corpus_file]['filename']
+                timestamp = timestamp_info[corpus_file]['timestamp']
             cur.execute('''INSERT INTO timestamps VALUES (?, ?, ?)''',
                         (corpus_file, input_file, timestamp))
+
+    if num_timestamp_not_found > 0:
+        logger.info('Failed to find timestamp info for %d corpus entries.',
+                    num_timestamp_not_found)
+
     conn.commit()
 
 
@@ -403,7 +407,8 @@ def get_unmeasured_snapshots(experiment: str,
     return unmeasured_first_snapshots + unmeasured_latest_snapshots
 
 
-def enrich_timestamp_info(timestamp_info, member_to_filename):
+def enrich_timestamp_info(timestamp_info,
+                          member_to_filename) -> Dict[str, Dict[str, Any]]:
     """Enrich timestamp info with the filename of the corpus entry."""
     # Replace filenames with hashnames but keep the original filenames
     # for reference.
@@ -431,8 +436,9 @@ def enrich_timestamp_info(timestamp_info, member_to_filename):
     return full_timestamp_info
 
 
-def extract_corpus(corpus_archive: str,
-                   output_directory: str) -> Optional[List[Tuple[str, int]]]:
+def extract_corpus(
+        corpus_archive: str,
+        output_directory: str) -> Optional[Dict[str, Dict[str, Any]]]:
     """Extract a corpus from |corpus_archive| to |output_directory|."""
     pathlib.Path(output_directory).mkdir(exist_ok=True)
     timestamp_info = None
@@ -483,9 +489,9 @@ def extract_corpus(corpus_archive: str,
 
             filesystem.write(file_path, member_contents, 'wb')
 
-    if timestamp_info is not None:
-        return enrich_timestamp_info(timestamp_info, member_to_filename)
-    return None
+    if timestamp_info is None:
+        return None
+    return enrich_timestamp_info(timestamp_info, member_to_filename)
 
 
 class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-many-instance-attributes
@@ -705,8 +711,8 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
         self.generate_summary(cycle)
 
     def extract_corpus(
-            self, corpus_archive_path
-    ) -> Tuple[bool, Optional[List[Tuple[str, int]]]]:
+        self, corpus_archive_path
+    ) -> Tuple[bool, Optional[Dict[str, Dict[str, Any]]]]:
         """Extract the corpus archive for this cycle if it exists."""
         if not os.path.exists(corpus_archive_path):
             self.logger.warning('Corpus not found: %s.', corpus_archive_path)

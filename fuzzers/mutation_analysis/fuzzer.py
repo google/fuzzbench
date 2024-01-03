@@ -29,9 +29,9 @@ def build():
         # '-fprofile-instr-generate', '-fcoverage-mapping', '-gline-tables-only'
         '-fPIE',
     ]
-    if benchmark == "re2_fuzzer":
+    if benchmark == 're2_fuzzer':
         cflags = [
-        '',
+            '',
         ]
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)

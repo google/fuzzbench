@@ -58,7 +58,8 @@ def store_mua_results_db(results_db, trial, cycle):
         os.chmod(tmp.name, 0o666)
         filestore_utils.cp(
             tmp.name,
-            exp_path.filestore(get_mua_results_dir() / 'results' / str(trial) / f'{cycle}.sqlite'))
+            exp_path.filestore(get_mua_results_dir() / 'results' / str(trial) /
+                               f'{cycle}.sqlite'))
 
 
 def store_mua_build_log(build_output, benchmark, fuzzer, trial, cycle):
@@ -81,8 +82,8 @@ def store_mua_run_log(run_output, trial, cycle):
         os.chmod(tmp.name, 0o666)
         filestore_utils.cp(
             tmp.name,
-            exp_path.filestore(get_mua_results_dir() / 'mua_run'
-                               / str(trial) / f'{cycle}.log'))
+            exp_path.filestore(get_mua_results_dir() / 'mua_run' / str(trial) /
+                               f'{cycle}.log'))
 
 
 def store_report_error_log(report_error):

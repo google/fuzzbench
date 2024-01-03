@@ -23,7 +23,6 @@ import sys
 import threading
 import time
 from typing import List
-import uuid
 
 from common import experiment_path as exp_path
 from common import experiment_utils
@@ -167,7 +166,7 @@ def dispatcher_main():
 
     if is_local_experiment and use_mutation_analysis:
         # Mutation analysis just takes all cpu available, further work needs to
-        # be done to make it work nicely in parallel with trial runners for a 
+        # be done to make it work nicely in parallel with trial runners for a
         # local experiment. This is not a problem for remote experiments because
         # the trials are run on a seperate VM.
 

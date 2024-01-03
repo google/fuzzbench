@@ -11,12 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# Exec id is used to identify the current run, if the dispatcher container
-# is preempted the exec id will change. This allows us to identify which actions
-# were performed by earlier runs and which were performed by the current run.
-# We use this to identify which mutants builds were interrupted by a
-# preemption.
+"""
+Exec id is used to identify the current run, if the dispatcher container
+is preempted the exec id will change. This allows us to identify which actions
+were performed by earlier runs and which were performed by the current run.
+We use this to identify which mutants builds were interrupted by a
+preemption.
+"""
 import uuid
 
 
