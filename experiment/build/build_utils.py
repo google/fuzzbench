@@ -17,6 +17,7 @@ import datetime
 import os
 import sqlite3
 import tempfile
+import lzma
 
 from common import experiment_path as exp_path
 from common import filestore_utils
@@ -36,30 +37,33 @@ def store_build_logs(build_config, build_result):
             exp_path.filestore(get_build_logs_dir() / build_log_filename))
 
 
+def _store_db(db_path, dest):
+    """Save db in the mua bucket."""
+    with tempfile.NamedTemporaryFile() as tmp_uncompressed:
+        with tempfile.NamedTemporaryFile() as tmp_compressed:
+            with sqlite3.connect(db_path) as conn:
+                conn.execute('VACUUM INTO ?', (tmp_uncompressed.name,))
+            tmp_uncompressed.flush()
+            os.chmod(tmp_uncompressed.name, 0o666)
+            with lzma.open(tmp_compressed.name, 'wb') as compressed:
+                compressed.write(tmp_uncompressed.read())
+            tmp_compressed.flush()
+            os.chmod(tmp_compressed.name, 0o666)
+            filestore_utils.cp(tmp_compressed.name, dest)
+
+
 def store_mua_stats_db(stats_db, benchmark):
     """Save mua stats_db in the mua bucket."""
-    with tempfile.NamedTemporaryFile(mode='w') as tmp:
-        with sqlite3.connect(stats_db) as conn:
-            conn.execute('VACUUM INTO ?', (tmp.name,))
-        tmp.flush()
-        os.chmod(tmp.name, 0o666)
-        filestore_utils.cp(
-            tmp.name,
-            exp_path.filestore(get_mua_results_dir() / 'base_build' /
-                               benchmark / 'stats.sqlite'))
+    _store_db(stats_db, 
+              exp_path.filestore(get_mua_results_dir() / 'base_build' /
+                                benchmark / 'stats.sqlite.lzma'))
 
 
 def store_mua_results_db(results_db, trial, cycle):
     """Save mua stats_db in the mua bucket."""
-    with tempfile.NamedTemporaryFile(mode='w') as tmp:
-        with sqlite3.connect(results_db) as conn:
-            conn.execute('VACUUM INTO ?', (tmp.name,))
-        tmp.flush()
-        os.chmod(tmp.name, 0o666)
-        filestore_utils.cp(
-            tmp.name,
-            exp_path.filestore(get_mua_results_dir() / 'results' / str(trial) /
-                               f'{cycle}.sqlite'))
+    _store_db(results_db,
+              exp_path.filestore(get_mua_results_dir() / 'results' /
+                                 str(trial) / f'{cycle}.sqlite.lzma'))
 
 
 def store_mua_build_log(build_output, benchmark, fuzzer, trial, cycle):
