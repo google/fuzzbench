@@ -25,26 +25,30 @@ RUN if which rustup; then rustup self uninstall -y; fi && \
 RUN apt-get update && \
     apt-get remove -y llvm-10 && \
     apt-get install -y \
-        build-essential \
-        llvm-11 \
-        clang-12 \
+        build-essential lsb-release wget software-properties-common gnupg \
         cargo && \
     apt-get install -y wget libstdc++5 libtool-bin automake flex bison \
         libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
         apt-utils apt-transport-https ca-certificates joe curl && \
-    PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
+    yes | bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" llvm.sh 17 && \
+    PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Download libafl.
-RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
+RUN git clone https://github.com/am009/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git pull && git checkout b20fda2a4ada2a6462718dc661e139e6c7a29807 || true
+RUN cd /libafl && git pull && git checkout 6ee6492956e0fd497f77b598eb6cfaec004ec257
 # Note that due a nightly bug it is currently fixed to a known version on top!
 
-# Compile libafl.
+
+# export LLVM_BINDIR=/usr/local/bin && \
+# export LLVM_VERSION=15 && \
+# Compile libafl. Let the compiler wrapper call clang 15 in the base image to prevent build failures!!
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
+    export LLVM_CONFIG=/usr/local/bin/llvm-config && \
     cd ./fuzzers/fuzzbench && \
     PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench --features no_link_main
 
