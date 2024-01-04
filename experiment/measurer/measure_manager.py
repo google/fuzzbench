@@ -87,10 +87,12 @@ def add_timestamps_to_mua_results_db(timestamp_info,
             )
         ''')
     cur.execute('''
-        CREATE INDEX IF NOT EXISTS timestamps_hashname_index ON timestamps (hashname)
+        CREATE INDEX IF NOT EXISTS timestamps_hashname_index
+        ON timestamps (hashname)
     ''')
     cur.execute('''
-        CREATE INDEX IF NOT EXISTS timestamps_id_timestamp_index ON timestamps (input_file_id, timestamp)
+        CREATE INDEX IF NOT EXISTS timestamps_id_timestamp_index
+        ON timestamps (input_file_id, timestamp)
     ''')
     conn.commit()
 
@@ -117,8 +119,11 @@ def add_timestamps_to_mua_results_db(timestamp_info,
                     continue
                 input_file = timestamp_info[corpus_file]['filename']
                 timestamp = timestamp_info[corpus_file]['timestamp']
-            cur.execute('''INSERT INTO timestamps (hashname, input_file, timestamp) VALUES (?, ?, ?)''',
-                        (corpus_file, input_file, timestamp))
+            cur.execute(
+                '''
+                    INSERT INTO timestamps (hashname, input_file, timestamp)
+                    VALUES (?, ?, ?)
+                ''', (corpus_file, input_file, timestamp))
 
     if num_timestamp_not_found > 0:
         logger.info('Failed to find timestamp info for %d corpus entries.',

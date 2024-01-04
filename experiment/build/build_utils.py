@@ -54,16 +54,18 @@ def _store_db(db_path, dest):
 
 def store_mua_stats_db(stats_db, benchmark):
     """Save mua stats_db in the mua bucket."""
-    _store_db(stats_db, 
-              exp_path.filestore(get_mua_results_dir() / 'base_build' /
-                                benchmark / 'stats.sqlite.lzma'))
+    _store_db(
+        stats_db,
+        exp_path.filestore(get_mua_results_dir() / 'base_build' / benchmark /
+                           'stats.sqlite.lzma'))
 
 
 def store_mua_results_db(results_db, trial, cycle):
     """Save mua stats_db in the mua bucket."""
-    _store_db(results_db,
-              exp_path.filestore(get_mua_results_dir() / 'results' /
-                                 str(trial) / f'{cycle}.sqlite.lzma'))
+    _store_db(
+        results_db,
+        exp_path.filestore(get_mua_results_dir() / 'results' / str(trial) /
+                           f'{cycle}.sqlite.lzma'))
 
 
 def store_mua_build_log(build_output, benchmark, fuzzer, trial, cycle):
