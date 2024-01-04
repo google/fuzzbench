@@ -33,6 +33,9 @@ RUN DEBIAN_FRONTEND=noninteractive \
         pipx \
         python3.8-venv
 
+#fix pip issue
+RUN ln -s /usr/local/bin/pip3 /usr/local/bin/pip
+
 # llvm 15
 RUN mkdir /llvm && \
     cd /llvm && \
@@ -94,7 +97,8 @@ RUN pipx install hatch
 # mua_fuzzer_bench
 RUN git clone https://github.com/phi-go/mua_fuzzer_bench /mutator && \
     cd /mutator && \
-    git checkout 13b77966064b60700e714930ca636dd79e992cd4
+    git checkout 731b9cf404001e32a96765444e03d109b2fbda33
+
 
 RUN cd /mutator && \
     echo "llvmBinPath=/usr/lib/llvm-15/bin/" > gradle.properties
