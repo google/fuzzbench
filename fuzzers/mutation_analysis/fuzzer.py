@@ -39,9 +39,12 @@ def build():
     os.environ['CC'] = 'gclang-wrap'
     os.environ['CXX'] = 'gclang++-wrap'
     os.environ['LLVM_COMPILER_PATH'] = '/usr/lib/llvm-15/bin/'
-    os.environ['FUZZER_LIB'] = '/mutator/dockerfiles/programs/common/main.cc'
     os.environ['MUA_RECORDING_DB'] = MUA_RECORDING_DB
     os.environ['llvmBinPath'] = '/usr/local/bin/'
+
+    # build FUZZER_LIB
+    subprocess.check_call(['clang++', '-c', '/mutator/dockerfiles/programs/common/main.cc', '-o', '/usr/lib/libFuzzingEngineMutation.a'])
+    os.environ['FUZZER_LIB'] = '/usr/lib/libFuzzingEngineMutation.a'
 
     if os.path.exists(MUA_RECORDING_DB):
         os.unlink(MUA_RECORDING_DB)
