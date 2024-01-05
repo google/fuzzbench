@@ -18,6 +18,7 @@ from pathlib import Path
 import shlex
 import subprocess
 import time
+import traceback
 from common import logs
 from common import benchmark_utils
 from common import experiment_utils
@@ -186,7 +187,15 @@ def run_mua_build_ids(benchmark, trial_num, fuzzer, cycle):
     ]
 
     logger.debug(f'mua_build_ids command: {docker_exec_command}')
-    mua_build_res = new_process.execute(docker_exec_command)
+    try:
+        mua_build_res = new_process.execute(docker_exec_command)
+    except subprocess.CalledProcessError as err:
+        logger.error(f'mua_build_ids failed: {err}')
+        trace_msg = traceback.format_exc()
+        error_msg = f'mua_build_ids failed: {err}\n{trace_msg}'
+        build_utils.store_mua_build_log(error_msg, benchmark, fuzzer, trial_num,
+                                        cycle)
+        raise err
     logger.info(f'mua_build_ids result: {mua_build_res.retcode} ' +
                 f'timed_out: {mua_build_res.timed_out}\n' +
                 f'{mua_build_res.output}')

@@ -25,10 +25,12 @@ import posixpath
 import shlex
 import shutil
 import sqlite3
+import subprocess
 import sys
 import tempfile
 import tarfile
 import time
+import traceback
 from typing import Any, Dict, List, Optional, Tuple
 import queue
 from pathlib import Path
@@ -637,7 +639,13 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             shlex.join(command)
         ]
         logger.debug('mua_run_mutants command:' + str(docker_exec_command))
-        mua_run_res = new_process.execute(docker_exec_command)
+        try:
+            mua_run_res = new_process.execute(docker_exec_command)
+        except subprocess.CalledProcessError as error:
+            trace_msg = traceback.format_exc()
+            error_msg = f'mua_run_mutants failed: {error}\n{trace_msg}'
+            build_utils.store_mua_run_log(error_msg, self.trial_num, cycle)
+            raise error
         logger.info(f'mua_run_mutants result: {mua_run_res.retcode} ' +
                     f'timed_out: {mua_run_res.timed_out}\n' +
                     f'{mua_run_res.output}')
