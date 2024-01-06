@@ -23,8 +23,10 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import tempfile
 import threading
 import time
+import traceback
 import zipfile
 
 from common import benchmark_config
@@ -53,6 +55,8 @@ fuzzer_errored_out = False  # pylint:disable=invalid-name
 CORPUS_DIRNAME = 'corpus'
 RESULTS_DIRNAME = 'results'
 CORPUS_ARCHIVE_DIRNAME = 'corpus-archives'
+UNIQUE_TIMESTAMP_FILENAME = \
+    'timestamps_8a3bb4ff-0dca-4e2d-a54d-db8c4e8bf5af.json'
 
 
 def _clean_seed_corpus(seed_corpus_dir):
@@ -368,6 +372,8 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             self.corpus_archives_dir,
             experiment_utils.get_corpus_archive_name(self.cycle))
 
+        file_timestamps = {}
+
         with tarfile.open(archive, 'w:gz') as tar:
             new_archive_time = self.last_archive_time
             for file_path in get_corpus_elements(self.output_corpus):
@@ -379,6 +385,14 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
                     new_archive_time = max(new_archive_time, last_modified_time)
                     arcname = os.path.relpath(file_path, self.output_corpus)
                     tar.add(file_path, arcname=arcname)
+                    try:
+                        file_timestamp = stat_info.st_mtime
+                        file_timestamps[arcname] = file_timestamp
+                    except Exception:  # pylint: disable=broad-except
+                        # e_msg = traceback.format_exc()
+                        # logs.debug(
+                        #     f'Failed to get timestamp for {arcname}: {e_msg}')
+                        pass
                 except (FileNotFoundError, OSError):
                     # We will get these errors if files or directories are being
                     # deleted from |directory| as we archive it. Don't bother
@@ -387,6 +401,21 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
                     pass
                 except Exception:  # pylint: disable=broad-except
                     logs.error('Unexpected exception occurred when archiving.')
+
+            # Add a timestamp file to the archive, taking care to not overwrite
+            # any existing file in the corpus.
+            try:
+                with tempfile.NamedTemporaryFile(mode='wt') as temp_file:
+                    logs.debug('timestamp archive num entries: '
+                               f'{len(file_timestamps)}')
+                    temp_file.write(json.dumps(file_timestamps))
+                    temp_file.flush()
+                    tar.add(temp_file.name, arcname=UNIQUE_TIMESTAMP_FILENAME)
+            except Exception:  # pylint: disable=broad-except
+                e_msg = traceback.format_exc()
+                logs.warning(
+                    f'Failed to write timestamp file to archive: {e_msg}')
+
         self.last_archive_time = new_archive_time
         return archive
 

@@ -30,6 +30,7 @@ VALID_FUZZER_REGEX = re.compile(r'^[a-z][a-z0-9_]*$')
 
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
 COVERAGE_TOOLS = {'coverage', 'coverage_source_based'}
+MUA_TOOLS = {'mutation_analysis'}
 
 
 class FuzzerDirectory:
@@ -135,7 +136,7 @@ def get_fuzzer_names():
     for fuzzer in os.listdir(fuzzers_dir):
         if not os.path.isfile(os.path.join(fuzzers_dir, fuzzer, 'fuzzer.py')):
             continue
-        if fuzzer in COVERAGE_TOOLS:
+        if fuzzer in (COVERAGE_TOOLS | MUA_TOOLS):
             continue
         fuzzers.append(fuzzer)
 

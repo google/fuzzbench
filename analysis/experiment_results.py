@@ -59,12 +59,15 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
             coverage_dict,
             output_directory,
             plotter,
+            mua_results=None,
             experiment_name=None):
         if experiment_name:
             self.name = experiment_name
         else:
             # Take name from first row.
             self.name = experiment_df.experiment.iloc[0]
+
+        self.mua_results = mua_results
 
         # FuzzBench repo commit hash.
         self.git_hash = None
@@ -135,7 +138,7 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
             benchmark_results.BenchmarkResults(name, self._experiment_df,
                                                self._coverage_dict,
                                                self._output_directory,
-                                               self._plotter)
+                                               self._plotter, self.mua_results)
             for name in sorted(benchmark_names)
         ]
 

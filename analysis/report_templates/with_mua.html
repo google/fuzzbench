@@ -1,0 +1,492 @@
+<!--
+     Copyright 2020 Google LLC
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>
+            FuzzBench: {{ experiment.name }} report
+            {% if in_progress %}
+            (running)
+            {% endif %}
+        </title>
+
+        <!-- Import Materialize CSS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+        <!-- Import Google Material Icon Font -->
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    </head>
+<body>
+    <div class="container"><div class="row"><div class="col s12 m10 l10">
+
+        <h1 class="center-align brown-text text-darken-3">
+            FuzzBench: {{ experiment.name }} report
+        </h1>
+        {% if in_progress %}
+        <h5 class="center-align brown-text text-darken-4">
+            (experiment incomplete/still running...)
+        </h5>
+        {% endif %}
+        <div id="summary" class="section scrollspy">
+            <h2 class="green-text text-darken-3">experiment summary</h2>
+
+            {% if experiment.rank_by_median_and_average_rank.size < 2 %}
+
+            No aggregate ranking as the data contains a single fuzzer.
+
+            {% elif experiment.benchmarks|length < 2 %}
+
+            No aggregate ranking as the data contains a single benchmark.
+
+            {% else %}
+
+            {% block top_level_ranking %}
+
+            We show two different aggregate (cross-benchmark) rankings of fuzzers.
+            The first is based on the average of per-benchmarks scores, where
+            the score represents the percentage of the highest reached median
+            {{ experiment.type }}-coverage on a given benchmark (higher value is better).
+
+            The second ranking shows the average rank of fuzzers, after we rank
+            them on each benchmark according to their median reached
+            {{ experiment.type }}-covereges (lower value is better).
+
+            <div class="row">
+                <div class="col s5 offset-s1">
+                    <h5 class="center-align">By avg. score</h5>
+                    {{ experiment.linkify_names(
+                         experiment.rank_by_median_and_average_normalized_score.round(2).to_frame()
+                       ).to_html(escape=False)
+                    }}
+                </div>
+                <div class="col s5">
+                    <h5 class="center-align">By avg. rank</h5>
+                    {{ experiment.linkify_names(
+                         experiment.rank_by_median_and_average_rank.round(2).to_frame()
+                       ).to_html(escape=False)
+                    }}
+                </div>
+            </div>
+
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Critical difference diagram
+                    </div>
+                    <div class="collapsible-body">
+
+
+            {% if experiment.rank_by_median_and_average_rank.size > 20 %}
+
+            Too many fuzzers to render the diagram. The critical difference plot
+            currently only supports up to 20 fuzzers.
+
+            {% else %}
+
+            The diagram visualizes the average rank of fuzzers (second ranking
+            above) while showing the significance of the differences as well.
+            What is considered a "critical difference" (CD) is based on the
+            Friedman/Nemenyi post-hoc test. See more in the <a
+            href="https://google.github.io/fuzzbench/reference/report/">
+            documentation</a>.
+
+            <br>
+
+            <div class="row">
+                <div class="col s7 offset-s3">
+                    <img class="responsive-img materialboxed"
+                         src="{{ experiment.critical_difference_plot }}">
+                </div>
+            </div>
+
+            Note: If a fuzzer does not support all benchmarks, its ranking as
+            shown in this diagram can be lower than it should be. So please
+            check the list of supported benchmarks for the fuzzer(s) of your interest.
+            The list could be specified in the fuzzer's README.md like
+            <a href="https://github.com/google/fuzzbench/blob/master/fuzzers/aflsmart/README.md">this</a>.
+
+            {% endif %} {# show critical difference diagram #}
+
+                    </div>
+                </li>
+            </ul>
+
+            {% endblock %} {# top_level_ranking #}
+
+            {% endif %} {# data is available for top level ranking #}
+
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Median relative code-coverages on each benchmark
+                    </div>
+                    <div class="collapsible-body">
+                        <p style="margin-bottom:3cm;">
+                      <strong>Note:</strong> The relative coverage summary table shows the median
+                      relative performance of each fuzzer to the <em>experiment maximum</em>.  Thus the 
+                      highest relative performance may not be 100%.<br>
+                      <code> trial_relative_coverage  = trial_coverage / experiment_max_coverage</code><br>
+                        </p>
+                        {{ experiment.relative_code_summary_table.render() }}
+                      <ul>
+                          <li> Fuzzers are sorted by "FuzzerMean" (average median relative coverage), highest on the left.</li>
+                          <li> Green background = highest relative median coverage.</li>
+                          <li> Blue gradient background = greater than 95% relative median coverage.</li>
+                      </ul>
+                    </div>
+                </li>
+            </ul>
+
+            {% if experiment.type == 'bug' %}
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Median relative bug-coverages on each benchmark
+                    </div>
+                    <div class="collapsible-body">
+                        <p style="margin-bottom:3cm;">
+                      <strong>Note:</strong> The relative coverage summary table shows the median
+                      relative performance of each fuzzer to the <em>experiment maximum</em>.  Thus the 
+                      highest relative performance may not be 100%.<br>
+                      <code> trial_relative_coverage  = trial_coverage / experiment_max_coverage</code><br>
+                        {{ experiment.relative_bug_summary_table.render() }}
+                      <ul>
+                          <li> Fuzzers are sorted by "FuzzerMean" (average median relative coverage), highest on the left.</li>
+                          <li> Green background = highest relative median coverage.</li>
+                          <li> Blue gradient background = greater than 95% relative median coverage.</li>
+                      </ul>
+                    </div>
+                </li>
+            </ul>
+
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Total unique bugs found on each benchmark
+                    </div>
+                    <div class="collapsible-body">
+                        {{ experiment.found_bugs_summary_table.render() }}
+                      <ul>
+                          <li> Fuzzers are sorted by "FuzzerSum", highest on the left.</li>
+                          <li> Green background = most unique bugs found.</li>
+                          <li> <strong>*note</strong>: This table represents unique bugs found across all trials.</li>
+                      </ul>
+                    </div>
+                </li>
+            </ul>
+            {% endif %}
+
+        </div> <!-- id="summary" -->
+
+        {% for benchmark in experiment.benchmarks %}
+
+        <div id="{{ benchmark.name }}" class="section scrollspy">
+
+            <h2 class="green-text text-darken-3">{{ benchmark.name }} summary</h2>
+
+            <div class="row">
+                <div class="col s6">
+            {% if benchmark.type == 'bug' %}
+                    <h5 class="center-align">Discovered bug coverage distribution</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.bug_box_plot }}">
+            {% else %}
+                    <h5 class="center-align">Ranking by median reached code coverage</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.ranking_plot }}">
+            {% endif %}
+                </div>
+                <div class="col s6">
+                    <h5 class="center-align">Reached code coverage distribution</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.box_plot }}">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12">
+                    <ul class="tabs">
+            {% if benchmark.type == 'bug' %}
+                      <li class="tab col s3"><a href="#{{ benchmark.name }}_bugs_normal" class="green-text text-darken-3">Bug coverage (linear)</a></li>
+                      <li class="tab col s3"><a href="#{{ benchmark.name }}_bugs_logscale" class="green-text text-darken-3">Bug coverage (log)</a></li>
+                      <li class="tab col s3"><a href="#{{ benchmark.name }}_code_normal" class="green-text text-darken-3">Code coverage (linear)</a></li>
+                      <li class="tab col s3"><a href="#{{ benchmark.name }}_code_logscale" class="green-text text-darken-3">Code coverage (log)</a></li>
+            {% else %}
+                      <li class="tab col s6"><a href="#{{ benchmark.name }}_code_normal" class="green-text text-darken-3">Code coverage (linear)</a></li>
+                      <li class="tab col s6"><a href="#{{ benchmark.name }}_code_logscale" class="green-text text-darken-3">Code coverage (log)</a></li>
+            {% endif %}
+                    </ul>
+                </div>
+                <div id="{{ benchmark.name }}_code_normal" class="col s12">
+                    <h5 class="center-align">Mean code coverage growth over time</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.coverage_growth_plot }}">
+                </div>
+                <div id="{{ benchmark.name }}_code_logscale" class="col s12">
+                    <h5 class="center-align">Mean code coverage growth over time</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.coverage_growth_plot_logscale }}">
+                </div>
+            {% if benchmark.type == 'bug' %}
+                <div id="{{ benchmark.name }}_bugs_normal" class="col s12">
+                    <h5 class="center-align">Mean bug coverage growth over time</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.bug_coverage_growth_plot }}">
+                </div>
+                <div id="{{ benchmark.name }}_bugs_logscale" class="col s12">
+                    <h5 class="center-align">Mean bug coverage growth over time</h5>
+                    <img class="responsive-img materialboxed"
+                         src="{{ benchmark.bug_coverage_growth_plot_logscale }}">
+                </div>
+            {% endif %}
+                <div class="center-align">
+                    * The error bands show the 95% confidence interval
+                      around the mean code coverage.
+                </div>
+            </div>
+
+            {% if benchmark.fuzzers_with_not_enough_samples and not in_progress %}
+            <div class="card-panel deep-orange lighten-3">
+                <div class="row valign-wrapper">
+                    <div class="col s4 m2 center-align">
+                        <i class="medium material-icons">error</i>
+                    </div>
+                    <div class="col s8 m10">
+                        <span class="black-text">
+                            The following fuzzers do not have enough samples:
+                            <strong>
+                                {{ ', '.join(benchmark.fuzzers_with_not_enough_samples) }}.
+                            </strong>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if benchmark.type == 'bug' %}
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Sample statistics and statistical significance (bugs covered)
+                    </div>
+                    <div class="collapsible-body">
+
+                        <h5 class="center-align">Bug coverage sample statistics</h5>
+                        {{ benchmark.bug_summary_table.to_html() }}
+                        <br>
+
+                        <div class="row">
+                            <div class="col s6">
+                                <h5 class="center-align">Vargha-Delaney A12 measure</h4>
+                                    <img class="responsive-img materialboxed"
+                                         src="{{ benchmark.bug_vargha_delaney_plot }}">
+                                    The table summarizes the A12 values from the
+                                    pairwise Vargha-Delaney A measure of effect size.
+                                    Green cells indicate the probability the fuzzer in the
+                                    row will outperform the fuzzer in the column.
+                            </div>
+
+                            <div class="col s6">
+                                <h5 class="center-align">Mann-Whitney U test</h4>
+                                    <img class="responsive-img materialboxed"
+                                         src="{{ benchmark.bug_mann_whitney_plot }}">
+                                    The table summarizes the p values of
+                                    pairwise Mann-Whitney U tests.
+                                    Green cells indicate that the reached
+                                    coverage distribution of a given fuzzer pair
+                                    is significantly different.
+                            </div>
+                        </div> <!-- row -->
+
+                    </div>
+                </li>
+            </ul>
+            {% endif %}
+
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Sample statistics and statistical significance (code coverage)
+                    </div>
+                    <div class="collapsible-body">
+
+                        <h5 class="center-align">Code coverage sample statistics</h5>
+                        {{ benchmark.summary_table.to_html() }}
+                        <br>
+
+                        <div class="row">
+                            <div class="col s6">
+                                <h5 class="center-align">Vargha-Delaney A12 measure</h4>
+                                    <img class="responsive-img materialboxed"
+                                         src="{{ benchmark.vargha_delaney_plot }}">
+                                    The table summarizes the A12 values from the
+                                    pairwise Vargha-Delaney A measure of effect size.
+                                    Green cells indicate the probability the fuzzer in the
+                                    row will outperform the fuzzer in the column.
+                            </div>
+
+                            <div class="col s6">
+                                <h5 class="center-align">Mann-Whitney U test</h4>
+                                    <img class="responsive-img materialboxed"
+                                         src="{{ benchmark.mann_whitney_plot }}">
+                                    The table summarizes the p values of
+                                    pairwise Mann-Whitney U tests.
+                                    Green cells indicate that the reached
+                                    coverage distribution of a given fuzzer pair
+                                    is significantly different.
+                            </div>
+                        </div> <!-- row -->
+
+                    </div>
+                </li>
+            </ul>
+
+            {% if coverage_report %}
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Unique code coverage plots
+                    </div>
+                    <div class="collapsible-body">
+
+                        <div class="row">
+                            <div class="col s6 offset-s3">
+                                <h5 class="center-align">Ranking by unique code branches covered</h4>
+                                    <img class="responsive-img materialboxed"
+                                         src="{{ benchmark.unique_coverage_ranking_plot }}">
+                                    Each bar shows the total number of code branches found by a given fuzzer.
+                                    The colored area shows the number of unique code branches
+                                    (i.e., branches that were not covered by any other fuzzers).
+                            </div>
+                        </div> <!-- row -->
+
+                        <div class="row">
+                            <div class="col s6 offset-s3">
+                                <h5 class="center-align">Pairwise unique code coverage</h4>
+                                    <img class="responsive-img materialboxed"
+                                         src="{{ benchmark.pairwise_unique_coverage_plot }}">
+                                    Each cell represents the number of code branches covered by the fuzzer
+                                    of the column but not by the fuzzer of the row
+                            </div>
+                        </div> <!-- row -->
+
+                    </div>
+                </li>
+            </ul>
+
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Code coverage reports for each fuzzer on this benchmark
+                    </div>
+                    <div class="collapsible-body">
+                        <div class="collection">
+                            {% for fuzzer in benchmark.fuzzer_names %}
+                            <a href="{{ benchmark.get_coverage_report_path(fuzzer, benchmark.name) }}" class="collection-item">{{ fuzzer }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            {% endif %}
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        Mutation analysis reports for each fuzzer on this benchmark
+                    </div>
+                    <div class="collapsible-body">
+                        <div class="collection">
+                            {% for fuzzer in benchmark.fuzzer_names %}
+                            <div>{{ fuzzer }} {{ benchmark.get_mua_report_data(fuzzer, benchmark.name) }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </li>
+            </ul>
+
+        </div> <!-- id="{{ benchmark.name }}" -->
+        {% endfor %}
+
+        <div id="data" class="section scrollspy">
+            <h2 class="green-text text-darken-3">experiment data</h2>
+            You can download the raw data for this report <a href="data.csv.gz">here</a>.
+
+            <br><br>
+            Check out the <a href="https://google.github.io/fuzzbench/developing-fuzzbench/custom_analysis_and_reports">documentation</a> on how to create customized reports using this data.
+            Also see some example Colab notebooks for doing custom analysis on the data <a href="https://github.com/google/fuzzbench/tree/master/analysis/notebooks">here</a>.
+
+            {% if experiment.git_hash %}
+            <br><br>
+            The experiment was conducted using this FuzzBench commit:
+            <a href="https://github.com/google/fuzzbench/commits/{{ experiment.git_hash }}">{{ experiment.git_hash }}</a>
+
+            <br><br>
+            To reproduce this experiment run the following commands in your FuzzBench repo:</a><br>
+            <code>
+            # Check out the right commit. <br>
+            git checkout {{ experiment.git_hash }} <br>
+            # Download the internal config file. <br>
+            curl https://storage.googleapis.com/{{ experiment.experiment_filestore}}/{{ experiment.name }}/{{ experiment_config_relative_path }} >  /tmp/experiment-config.yaml<br>
+            make install-dependencies <br>
+            # Launch the experiment using paramters from the internal config file. <br>
+            PYTHONPATH=. python experiment/reproduce_experiment.py -c /tmp/experiment-config.yaml -e &lt;new_experiment_name&gt;
+            </code>
+
+            {% endif %}
+
+            {% if description %}
+            <br><br>
+            Experiment Description:<br><br>
+            {{ description }}
+            {% endif %}
+        </div>    <!-- id="data" -->
+
+    </div> <!-- class="col" -->
+
+    <div class="col hide-on-med-and-down l2">
+        <ul class="section table-of-contents">
+            <li><a href="#summary">experiment summary</a></li>
+            {% for benchmark in experiment.benchmarks %}
+            <li><a href="#{{ benchmark.name }}">{{ benchmark.name }}</a></li>
+            {% endfor %}
+            <li><a href="#data">experiment data</a></li>
+        </ul>
+    </div>
+
+    </div> <!-- class="row" -->
+    </div> <!-- class="container" -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+     M.AutoInit();
+     document.addEventListener('DOMContentLoaded', function() {
+         var toc = document.querySelectorAll('.table-of-contents');
+         M.Pushpin.init(toc);
+
+         var scrollspy_elems = document.querySelectorAll('.scrollspy');
+         var scrollspy_options = {scrollOffset: 0};
+         M.ScrollSpy.init(scrollspy_elems, scrollspy_options);
+
+         var tabs_elems = document.querySelectorAll('.tabs');
+         var tabs_options = {duration: 500};
+         var instance = M.Tabs.init(tabs_elems, tabs_options);
+     });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.2.2/anchor.min.js"></script>
+    <script>
+     anchors.add();
+    </script>
+</body>
+</html>

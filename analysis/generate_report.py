@@ -16,6 +16,7 @@
 import argparse
 import os
 import sys
+import sqlite3
 
 import pandas as pd
 
@@ -27,6 +28,7 @@ from analysis import queries
 from analysis import rendering
 from common import filesystem
 from common import logs
+from experiment.measurer.run_mua import get_dispatcher_mua_out_dir
 
 logger = logs.Logger()
 
@@ -142,6 +144,7 @@ def get_experiment_data(experiment_names,
     logger.info('Reading experiment data from db.')
     experiment_df = queries.get_experiment_data(experiment_names,
                                                 main_experiment_benchmarks)
+    # experiment_df.to_csv('/tmp/experiment-data/experiment_data.csv')
     logger.info('Done reading experiment data from db.')
     description = queries.get_experiment_description(main_experiment_name)
     return experiment_df, description
@@ -186,6 +189,43 @@ def modify_experiment_data_if_requested(  # pylint: disable=too-many-arguments
     return experiment_df
 
 
+def get_mua_results(experiment_name, fuzzers, _benchmarks, experiment_df):
+    """Get mutation analysis results for each fuzzer in each trial to use in
+    the report."""
+
+    #get relationship between trial_id and benchmark from df
+    trial_dict = experiment_df.set_index('trial_id')['benchmark'].to_dict()
+
+    for fuzzer in fuzzers:
+        for trial in trial_dict.keys():
+
+            _benchmark = trial_dict[trial]
+
+            mua_out_dir = get_dispatcher_mua_out_dir()
+
+            mua_result_db_file = f'/{mua_out_dir}/{experiment_name}/' \
+                f'mua_binaries/corpus_run_results/{fuzzer}/{trial}/' \
+                'results.sqlite'
+            con = sqlite3.connect(mua_result_db_file)
+            cur = con.cursor()
+
+            covered_mutants = cur.execute("""
+                SELECT DISTINCT mut_id FROM results
+                JOIN timestamps ON results.input_file = timestamps.hashname
+                WHERE killed == 0 ORDER BY mut_id
+                """)
+            covered_mutants.fetchall()
+
+            killed_mutants = cur.execute("""
+                SELECT DISTINCT mut_id
+                FROM results JOIN timestamps
+                    ON results.input_file = timestamps.hashname
+                WHERE killed == 1
+                ORDER BY mut_id
+                """)
+            killed_mutants.fetchall()
+
+
 # pylint: disable=too-many-arguments,too-many-locals
 def generate_report(experiment_names,
                     report_directory,
@@ -202,7 +242,8 @@ def generate_report(experiment_names,
                     merge_with_clobber=False,
                     merge_with_clobber_nonprivate=False,
                     coverage_report=False,
-                    experiment_benchmarks=None):
+                    experiment_benchmarks=None,
+                    mutation_analysis=False):
     """Generate report helper."""
     if merge_with_clobber_nonprivate:
         experiment_names = (
@@ -231,6 +272,9 @@ def generate_report(experiment_names,
         experiment_df, experiment_names, benchmarks, fuzzers,
         label_by_experiment, end_time, merge_with_clobber)
 
+    # experiment_df.to_csv('/tmp/experiment-data/out.csv')
+
+    #TODO: make this work again
     # Add |bugs_covered| column prior to export.
     experiment_df = data_utils.add_bugs_covered_column(experiment_df)
 
@@ -247,6 +291,13 @@ def generate_report(experiment_names,
             experiment_df)
         logger.info('Finished generating coverage report info.')
 
+    if mutation_analysis:
+        # TODO get_mua_results(main_experiment_name, fuzzers,
+        # experiment_benchmarks, experiment_df)
+        mua_results = None
+    else:
+        mua_results = None
+
     fuzzer_names = experiment_df.fuzzer.unique()
     plotter = plotting.Plotter(fuzzer_names, quick, log_scale)
     experiment_ctx = experiment_results.ExperimentResults(
@@ -254,6 +305,7 @@ def generate_report(experiment_names,
         coverage_dict,
         report_directory,
         plotter,
+        mua_results=mua_results,
         experiment_name=report_name)
 
     template = report_type + '.html'

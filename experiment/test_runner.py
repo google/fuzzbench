@@ -347,7 +347,6 @@ class TestIntegrationRunner:
                            parallel=True)
         archive_size = os.path.getsize(local_gcs_corpus_dir_copy /
                                        'corpus-archive-0001.tar.gz')
-
         assert archive_size > 500
 
         assert len(os.listdir(output_corpus_dir)) > 5

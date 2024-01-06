@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Module for building things on Google Cloud Build for use in trials."""
+"""Module for building things locally for use in trials."""
 
 import os
 from typing import Tuple
@@ -23,14 +23,18 @@ from common import experiment_utils
 from common import logs
 from common import new_process
 from common import utils
+from experiment.measurer.run_mua import (MUTATION_ANALYSIS_IMAGE_NAME,
+                                         stop_mua_container)
 
 logger = logs.Logger()  # pylint: disable=invalid-name
 
 
 def make(targets):
     """Invoke |make| with |targets| and return the result."""
-    command = ['make', '-j'] + targets
-    return new_process.execute(command, cwd=utils.ROOT_DIR)
+    command = ['make', '--debug=j', '-j'] + targets
+    return new_process.execute(command,
+                               write_to_stdout=True,
+                               cwd=utils.ROOT_DIR)
 
 
 def build_base_images() -> Tuple[int, str]:
@@ -44,12 +48,26 @@ def get_shared_coverage_binaries_dir():
     return os.path.join(experiment_filestore_path, 'coverage-binaries')
 
 
+def get_shared_mua_binaries_dir():
+    """Returns the shared mua binaries directory."""
+    experiment_filestore_path = experiment_utils.get_experiment_filestore_path()
+    return os.path.join(experiment_filestore_path, 'mua-results')
+
+
 def make_shared_coverage_binaries_dir():
     """Make the shared coverage binaries directory."""
     shared_coverage_binaries_dir = get_shared_coverage_binaries_dir()
     if os.path.exists(shared_coverage_binaries_dir):
         return
     os.makedirs(shared_coverage_binaries_dir)
+
+
+def make_shared_mua_binaries_dir():
+    """Make the shared mua binaries directory."""
+    shared_mua_binaries_dir = get_shared_mua_binaries_dir()
+    if os.path.exists(shared_mua_binaries_dir):
+        return
+    os.makedirs(shared_mua_binaries_dir)
 
 
 def build_coverage(benchmark):
@@ -60,6 +78,17 @@ def build_coverage(benchmark):
         return result
     make_shared_coverage_binaries_dir()
     copy_coverage_binaries(benchmark)
+    return result
+
+
+def build_mua(benchmark):
+    """Build (locally) mua image for benchmark."""
+    stop_mua_container(benchmark)
+    image_name = f'.{MUTATION_ANALYSIS_IMAGE_NAME}-{benchmark}-builder'
+    result = make([image_name])
+    if result.retcode:
+        return result
+    make_shared_mua_binaries_dir()
     return result
 
 
