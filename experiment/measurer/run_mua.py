@@ -99,6 +99,25 @@ def run_mua_container(benchmark):
                      f'{mua_run_res.output}')
         raise Exception('Could not run mua container.')
 
+    # Run pipx once to set up environment
+    command = [
+        'pipx', 'run', 'hatch', 'run', 'python', '-c',
+        'import pathlib; pathlib.Path("/tmp/mua_started").touch()'
+    ]
+
+    docker_exec_command = [
+        'docker', 'exec', '-w', '/mutator/', '-t', container_name, '/bin/bash',
+        '-c',
+        shlex.join(command)
+    ]
+
+    logger.info(f'mua run pipx command: {docker_exec_command}')
+    try:
+        new_process.execute(docker_exec_command, write_to_stdout=True)
+    except subprocess.CalledProcessError as err:
+        logger.error(f'mua pipx run failed: {err}')
+        raise err
+
 
 def mua_container_is_running(benchmark):
     """Return true if the mua container is started."""
@@ -127,8 +146,18 @@ def ensure_mua_container_running(benchmark):
     docker_start_command = ['docker', 'start', container_name]
     res = new_process.execute(docker_start_command, expect_zero=False)
     if res.retcode != 0:
-        logger.info('Could not start mua container, using run instead.')
         run_mua_container(benchmark)
+
+    while True:
+        check_mua_prepared_command = [
+            'docker', 'exec', '-t', container_name, '/bin/bash', '-c',
+            'test -f /tmp/mua_started'
+        ]
+        res = new_process.execute(check_mua_prepared_command, expect_zero=False)
+        if res.retcode == 0:
+            logger.info('mua container is prepared')
+            break
+        time.sleep(1)
 
 
 def copy_mua_stats_db(benchmark, mua_results_dir):
