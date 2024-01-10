@@ -97,7 +97,7 @@ RUN pipx install hatch
 # mua_fuzzer_bench
 RUN git clone https://github.com/phi-go/mua_fuzzer_bench /mutator && \
     cd /mutator && \
-    git checkout d83b09b688a111aaaf16a2e2f553f52ee2fe872a
+    git checkout 5acfb1a30e50740c13e55d8c4b394c33a775847f
 
 
 RUN cd /mutator && \
