@@ -60,12 +60,12 @@ def store_mua_stats_db(stats_db, benchmark):
                            'stats.sqlite.lzma'))
 
 
-def store_mua_results_db(results_db, trial, cycle):
+def store_mua_results_db(results_db, trial, _cycle):
     """Save mua stats_db in the mua bucket."""
     _store_db(
         results_db,
         exp_path.filestore(get_mua_results_dir() / 'results' / str(trial) /
-                           f'{cycle}.sqlite.lzma'))
+                           'results.sqlite.lzma'))
 
 
 def store_mua_build_log(build_output, benchmark, fuzzer, trial, cycle):
