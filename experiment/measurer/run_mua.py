@@ -13,9 +13,12 @@
 # limitations under the License.
 """Module for mutation testing measurer functionality."""
 
+from contextlib import contextmanager
 import os
 from pathlib import Path
+import random
 import shlex
+import sqlite3
 import subprocess
 import time
 import traceback
@@ -32,6 +35,7 @@ logger = logs.Logger()
 MUTATION_ANALYSIS_IMAGE_NAME = 'mutation_analysis'
 
 GOOGLE_CLOUD_MUA_MAPPED_DIR = '/etc/mua_out/'
+MAX_PARALLEL_MEASURE_RUNS = 2
 
 EXEC_ID = None
 
@@ -99,6 +103,25 @@ def run_mua_container(benchmark):
                      f'{mua_run_res.output}')
         raise Exception('Could not run mua container.')
 
+    # Run pipx once to set up environment
+    command = [
+        'pipx', 'run', 'hatch', 'run', 'python', '-c',
+        'import pathlib; pathlib.Path("/tmp/mua_started").touch()'
+    ]
+
+    docker_exec_command = [
+        'docker', 'exec', '-w', '/mutator/', '-t', container_name, '/bin/bash',
+        '-c',
+        shlex.join(command)
+    ]
+
+    logger.info(f'mua run pipx command: {docker_exec_command}')
+    try:
+        new_process.execute(docker_exec_command, write_to_stdout=True)
+    except subprocess.CalledProcessError as err:
+        logger.error(f'mua pipx run failed: {err}')
+        raise err
+
 
 def mua_container_is_running(benchmark):
     """Return true if the mua container is started."""
@@ -127,8 +150,18 @@ def ensure_mua_container_running(benchmark):
     docker_start_command = ['docker', 'start', container_name]
     res = new_process.execute(docker_start_command, expect_zero=False)
     if res.retcode != 0:
-        logger.info('Could not start mua container, using run instead.')
         run_mua_container(benchmark)
+
+    while True:
+        check_mua_prepared_command = [
+            'docker', 'exec', '-t', container_name, '/bin/bash', '-c',
+            'test -f /tmp/mua_started'
+        ]
+        res = new_process.execute(check_mua_prepared_command, expect_zero=False)
+        if res.retcode == 0:
+            logger.info('mua container is prepared')
+            break
+        time.sleep(1)
 
 
 def copy_mua_stats_db(benchmark, mua_results_dir):
@@ -201,3 +234,106 @@ def run_mua_build_ids(benchmark, trial_num, fuzzer, cycle):
                 f'{mua_build_res.output}')
     build_utils.store_mua_build_log(mua_build_res.output or '', benchmark,
                                     fuzzer, trial_num, cycle)
+
+
+class MeasureRunsDB:
+    """Class for managing the measure_runs database, which is used to limit
+    concurrently ran mutation measurments."""
+
+    def __init__(self, db_file):
+        self.db_file = db_file
+        self.conn = sqlite3.connect(self.db_file,
+                                    check_same_thread=False,
+                                    timeout=300)
+
+    @contextmanager
+    def cur(self):
+        """Return a cursor to the database."""
+        with self.conn as conn:
+            cur = conn.cursor()
+            yield cur
+            cur.close()
+
+    @contextmanager
+    def transaction(self, transaction_type):
+        """Return a cursor to the database, with a started transaction of the
+        given type."""
+        while True:
+            try:
+                with self.cur() as cur:
+                    cur.execute(f'BEGIN {transaction_type} TRANSACTION')
+                    yield cur
+                    return
+            except sqlite3.OperationalError as err:
+                if 'database is locked' in str(err):
+                    time.sleep(random.random() * 10)
+                else:
+                    raise
+        raise Exception('Could not begin transaction.')
+
+    def initialize(self):
+        """Initialize the database."""
+        with self.cur() as cur:
+            cur.execute('PRAGMA journal_mode=WAL')
+            cur.execute('PRAGMA synchronous=NORMAL')
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS instances (
+                    spot INTEGER PRIMARY KEY,
+                    in_use INTEGER
+                )
+            ''')
+
+            cur.execute('''
+                CREATE INDEX IF NOT EXISTS idx_cpus_used ON instances
+                        (in_use, spot)
+            ''')
+
+        with self.transaction('EXCLUSIVE') as cur:
+            for idx in range(MAX_PARALLEL_MEASURE_RUNS):
+                cur.execute(
+                    '''
+                    INSERT OR IGNORE INTO instances (spot, in_use)
+                    VALUES (?, 0)
+                    ''', (idx,))
+
+    def get_free_spot(self):
+        """Return a free spot, or None if none are available."""
+        with self.transaction('EXCLUSIVE') as cur:
+            cur.execute('''
+                SELECT spot FROM instances WHERE in_use = 0
+                ORDER BY spot ASC LIMIT 1
+            ''')
+            row = cur.fetchone()
+            if row:
+                cur.execute('UPDATE instances SET in_use = 1 WHERE spot = ?',
+                            (row[0],))
+                return row[0]
+            return None
+
+    def release_spot(self, spot):
+        """Release a spot."""
+        with self.transaction('IMMEDIATE') as cur:
+            cur.execute('UPDATE instances SET in_use = 0 WHERE spot = ?',
+                        (spot,))
+
+
+@contextmanager
+def get_measure_spot():
+    """Context manager for getting a free measure spot."""
+    measure_db_path = '/tmp/measure_runs.sqlite'
+    measure_db = MeasureRunsDB(measure_db_path)
+    measure_db.initialize()
+    start_wait = time.time()
+    while True:
+        new_cpu = measure_db.get_free_spot()
+        if new_cpu is not None:
+            logger.info(
+                f'Got spot {new_cpu} after {time.time() - start_wait:.2f}s')
+            try:
+                yield new_cpu
+            finally:
+                measure_db.release_spot(new_cpu)
+            break
+        time.sleep(random.random() * 2)
+    else:  # no break
+        yield None

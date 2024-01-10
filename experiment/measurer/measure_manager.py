@@ -57,7 +57,7 @@ from experiment.measurer import run_crashes
 from experiment import scheduler
 from experiment.measurer.run_mua import (copy_mua_stats_db,
                                          get_dispatcher_mua_out_dir,
-                                         run_mua_build_ids,
+                                         get_measure_spot, run_mua_build_ids,
                                          ensure_mua_container_running)
 from experiment.runner import UNIQUE_TIMESTAMP_FILENAME
 
@@ -618,40 +618,44 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
 
         copy_mua_stats_db(benchmark, mua_results_dir)
 
-        run_mua_build_ids(benchmark, self.trial_num, self.fuzzer, cycle)
+        with get_measure_spot() as _measure_spot:
+            run_mua_build_ids(benchmark, self.trial_num, self.fuzzer, cycle)
 
     def process_mua(self, cycle):
         """runs mua measurement"""
-        # get necessary info
-        container_name = 'mutation_analysis_' + self.benchmark + '_container'
-        experiment_name = experiment_utils.get_experiment_name()
-        fuzz_target = benchmark_utils.get_fuzz_target(self.benchmark)
+        with get_measure_spot() as _measure_spot:
+            # get necessary info
+            container_name = \
+                'mutation_analysis_' + self.benchmark + '_container'
+            experiment_name = experiment_utils.get_experiment_name()
+            fuzz_target = benchmark_utils.get_fuzz_target(self.benchmark)
 
-        # run all needed mutants in container
-        command = [
-            'python3', '/mutator/mua_run_mutants.py', fuzz_target,
-            self.benchmark, experiment_name, self.fuzzer,
-            str(self.trial_num)
-        ]
+            # run all needed mutants in container
+            command = [
+                'python3', '/mutator/mua_run_mutants.py', fuzz_target,
+                self.benchmark, experiment_name, self.fuzzer,
+                str(self.trial_num)
+            ]
 
-        docker_exec_command = [
-            'docker', 'exec', '-t', container_name, '/bin/bash', '-c',
-            shlex.join(command)
-        ]
-        logger.debug('mua_run_mutants command:' + str(docker_exec_command))
-        try:
-            mua_run_res = new_process.execute(docker_exec_command)
-        except subprocess.CalledProcessError as error:
-            trace_msg = traceback.format_exc()
-            error_msg = f'mua_run_mutants failed: {error}\n{trace_msg}'
-            build_utils.store_mua_run_log(error_msg, self.trial_num, cycle)
-            raise error
-        logger.info(f'mua_run_mutants result: {mua_run_res.retcode} ' +
-                    f'timed_out: {mua_run_res.timed_out}\n' +
-                    f'{mua_run_res.output}')
-        build_utils.store_mua_run_log(mua_run_res.output, self.trial_num, cycle)
-        results_db = self.mua_run_result_dir() / 'results.sqlite'
-        build_utils.store_mua_results_db(results_db, self.trial_num, cycle)
+            docker_exec_command = [
+                'docker', 'exec', '-t', container_name, '/bin/bash', '-c',
+                shlex.join(command)
+            ]
+            logger.debug('mua_run_mutants command:' + str(docker_exec_command))
+            try:
+                mua_run_res = new_process.execute(docker_exec_command)
+            except subprocess.CalledProcessError as error:
+                trace_msg = traceback.format_exc()
+                error_msg = f'mua_run_mutants failed: {error}\n{trace_msg}'
+                build_utils.store_mua_run_log(error_msg, self.trial_num, cycle)
+                raise error
+            logger.info(f'mua_run_mutants result: {mua_run_res.retcode} ' +
+                        f'timed_out: {mua_run_res.timed_out}\n' +
+                        f'{mua_run_res.output}')
+            build_utils.store_mua_run_log(mua_run_res.output, self.trial_num,
+                                          cycle)
+            results_db = self.mua_run_result_dir() / 'results.sqlite'
+            build_utils.store_mua_results_db(results_db, self.trial_num, cycle)
 
     def run_cov_new_units(self):
         """Run the coverage binary on new units."""
