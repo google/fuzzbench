@@ -55,10 +55,11 @@ from experiment.measurer import coverage_utils
 from experiment.measurer import run_coverage
 from experiment.measurer import run_crashes
 from experiment import scheduler
-from experiment.measurer.run_mua import (copy_mua_stats_db,
-                                         get_dispatcher_mua_out_dir,
-                                         get_measure_spot, run_mua_build_ids,
-                                         ensure_mua_container_running)
+from experiment.measurer.run_mua import (
+    add_measure_run, add_measure_run_failed, copy_mua_stats_db,
+    get_covered_mutants, get_dispatcher_mua_out_dir, get_measure_spot,
+    get_mua_results_path, init_measure_db, run_mua_build_ids,
+    ensure_mua_container_running, wait_if_median_run)
 from experiment.runner import UNIQUE_TIMESTAMP_FILENAME
 
 logger = logs.Logger()
@@ -152,8 +153,9 @@ def measure_main(experiment_config):
     runners_cpus = experiment_config['runners_cpus']
     region_coverage = experiment_config['region_coverage']
     mutation_analysis = experiment_config['mutation_analysis']
+    num_trials = experiment_config['trials']
     measure_loop(experiment, max_total_time, measurers_cpus, runners_cpus,
-                 region_coverage, mutation_analysis)
+                 num_trials, region_coverage, mutation_analysis)
 
     # Clean up resources.
     gc.collect()
@@ -176,6 +178,7 @@ def measure_loop(  # pylint: disable=too-many-arguments
         max_total_time: int,
         measurers_cpus=None,
         runners_cpus=None,
+        num_trials=None,
         region_coverage=False,
         mutation_analysis=False):
     """Continuously measure trials for |experiment|."""
@@ -198,7 +201,7 @@ def measure_loop(  # pylint: disable=too-many-arguments
             *pool_args) as pool, multiprocessing.Manager() as manager:
         set_up_coverage_binaries(pool, experiment)
         if mutation_analysis:
-            set_up_mua_binaries(pool, experiment)
+            set_up_mua_binaries(pool, experiment, num_trials)
         # Using Multiprocessing.Queue will fail with a complaint about
         # inheriting queue.
         # pytype: disable=attribute-error
@@ -821,10 +824,12 @@ def measure_trial(measure_req, max_cycle: int,
     # Add 1 to ensure we measure the last cycle.
     for cycle in range(min_cycle, max_cycle + 1):
         try:
+            is_last_cycle = cycle == max_cycle
             snapshot = measure_snapshot(measure_req.fuzzer,
                                         measure_req.benchmark,
                                         measure_req.trial_id, cycle,
-                                        region_coverage, mutation_analysis)
+                                        is_last_cycle, region_coverage,
+                                        mutation_analysis)
             if not snapshot:
                 break
             multiprocessing_queue.put(snapshot)
@@ -841,7 +846,8 @@ def measure_trial(measure_req, max_cycle: int,
 
 def measure_snapshot(  # pylint: disable=too-many-locals,too-many-arguments
         fuzzer: str, benchmark: str, trial_num: int, cycle: int,
-        region_coverage: bool, mutation_analysis: bool) -> models.Snapshot:
+        is_last_cycle: bool, region_coverage: bool,
+        mutation_analysis: bool) -> models.Snapshot:
     """Measure coverage and mua of the snapshot for |cycle| for |trial_num|
     of |fuzzer| and |benchmark|."""
     snapshot_logger = logs.Logger(
@@ -870,6 +876,7 @@ def measure_snapshot(  # pylint: disable=too-many-locals,too-many-arguments
                           corpus_archive_dst,
                           expect_zero=False).retcode:
         snapshot_logger.warning('Corpus not found for cycle: %d.', cycle)
+        add_measure_run_failed(benchmark, fuzzer, trial_num)
         return None
 
     snapshot_measurer.initialize_measurement_dirs()
@@ -904,7 +911,15 @@ def measure_snapshot(  # pylint: disable=too-many-locals,too-many-arguments
                                crashes=crashes)
 
     if mutation_analysis:
-        snapshot_measurer.process_mua(cycle)
+        if is_last_cycle:
+            num_covered_muts = get_covered_mutants(trial_num)
+            logger.info(
+                f'Trial {trial_num} covered {num_covered_muts} mutants.')
+            add_measure_run(benchmark, fuzzer, trial_num, num_covered_muts)
+            if wait_if_median_run(benchmark, fuzzer, trial_num):
+                logger.info(
+                    f'The median trial is {trial_num}, get mua results.')
+                snapshot_measurer.process_mua(cycle)
 
     measuring_time = round(time.time() - measuring_start_time, 2)
     snapshot_logger.info('Measured cycle: %d in %f seconds.', cycle,
@@ -928,24 +943,13 @@ def set_up_coverage_binaries(pool, experiment):
     pool.map(set_up_coverage_binary, benchmarks)
 
 
-def set_up_mua_binaries(pool, experiment):
+def set_up_mua_binaries(_pool, _experiment, num_trials):
     """Set up mua finder binaries for all benchmarks in |experiment|."""
-    # Use set comprehension to select distinct benchmarks.
-    with db_utils.session_scope() as session:
-        benchmarks = [
-            benchmark_tuple[0]
-            for benchmark_tuple in session.query(models.Trial.benchmark).
-            distinct().filter(models.Trial.experiment == experiment)
-        ]
-
     mua_results_dir = build_utils.get_mua_results_dir()
     filesystem.create_directory(mua_results_dir)
-    pool.map(set_up_mua_binary, benchmarks)
-
-
-def set_up_mua_binary(_benchmark):
-    """Set up mua finder binaries for |benchmark|."""
-    initialize_logs()
+    mua_results_path = get_mua_results_path()
+    filesystem.create_directory(mua_results_path)
+    init_measure_db(num_trials)
 
 
 def set_up_coverage_binary(benchmark):

@@ -178,8 +178,8 @@ def test_measure_trial(mocked_measure_snapshot, mocked_queue, _, __):
     measure_manager.measure_trial(measure_request, max_cycle, mocked_queue(),
                                   False, True)
     expected_calls = [
-        mock.call(FUZZER, BENCHMARK, TRIAL_NUM, cycle, False, True)
-        for cycle in range(min_cycle, max_cycle + 1)
+        mock.call(FUZZER, BENCHMARK, TRIAL_NUM, cycle, max_cycle == cycle,
+                  False, True) for cycle in range(min_cycle, max_cycle + 1)
     ]
     assert mocked_measure_snapshot.call_args_list == expected_calls
 
@@ -331,7 +331,7 @@ class TestIntegrationMeasurement:
             # integration tests.
             snapshot = measure_manager.measure_snapshot(
                 snapshot_measurer.fuzzer, snapshot_measurer.benchmark,
-                snapshot_measurer.trial_num, cycle, False, False)
+                snapshot_measurer.trial_num, cycle, True, False, False)
         assert snapshot
         assert snapshot.time == cycle * experiment_utils.get_snapshot_seconds()
         assert snapshot.edges_covered == 4629

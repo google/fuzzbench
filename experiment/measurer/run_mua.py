@@ -37,6 +37,8 @@ MUTATION_ANALYSIS_IMAGE_NAME = 'mutation_analysis'
 GOOGLE_CLOUD_MUA_MAPPED_DIR = '/etc/mua_out/'
 MAX_PARALLEL_MEASURE_RUNS = 2
 
+DISPATCHER_MUA_OUT_DIR = Path('/mua_out/')
+
 EXEC_ID = None
 
 
@@ -53,9 +55,20 @@ def get_host_mua_out_dir():
     return Path(GOOGLE_CLOUD_MUA_MAPPED_DIR)
 
 
+def get_mua_results_path():
+    """Return the path to the mua results directory."""
+    experiment_name = experiment_utils.get_experiment_name()
+    return Path(DISPATCHER_MUA_OUT_DIR / experiment_name / 'mua-results')
+
+
+def get_measure_db_path():
+    """Return the path to the measure_runs database."""
+    return get_mua_results_path() / 'measure_runs.sqlite'
+
+
 def get_dispatcher_mua_out_dir():
     """Return the dispatcher directory where mua_out is mapped to."""
-    return Path('/mua_out/')
+    return DISPATCHER_MUA_OUT_DIR
 
 
 def stop_mua_container(benchmark):
@@ -271,8 +284,9 @@ class MeasureRunsDB:
                     raise
         raise Exception('Could not begin transaction.')
 
-    def initialize(self):
+    def initialize(self, num_trials):
         """Initialize the database."""
+        logger.info(f'Initializing measure_runs database: {self.db_file}')
         with self.cur() as cur:
             cur.execute('PRAGMA journal_mode=WAL')
             cur.execute('PRAGMA synchronous=NORMAL')
@@ -287,6 +301,46 @@ class MeasureRunsDB:
                 CREATE INDEX IF NOT EXISTS idx_cpus_used ON instances
                         (in_use, spot)
             ''')
+
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS meta (
+                    num_trials INTEGER
+                )
+            ''')
+
+            cur.execute(
+                '''
+                INSERT OR IGNORE INTO meta (num_trials)
+                VALUES (?)
+                ''', (num_trials,))
+
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS measure_runs (
+                    fuzzer TEXT,
+                    benchmark TEXT,
+                    run_idx INTEGER,
+                    done INTEGER,
+                    trial_num INTEGER,
+                    covered_mutants INTEGER,
+                    PRIMARY KEY (fuzzer, benchmark, run_idx)
+                )''')
+
+            cur.execute('''
+                CREATE INDEX IF NOT EXISTS idx_measure_runs ON measure_runs (
+                    fuzzer, benchmark, run_idx, done
+                )''')
+
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS covered_muts (
+                    trial_id INTEGER,
+                    covered_mut INTEGER,
+                    PRIMARY KEY (trial_id, covered_mut)
+                )''')
+
+            cur.execute('''
+                CREATE INDEX IF NOT EXISTS idx_covered_muts ON covered_muts (
+                    trial_id, covered_mut
+                )''')
 
         with self.transaction('EXCLUSIVE') as cur:
             for idx in range(MAX_PARALLEL_MEASURE_RUNS):
@@ -316,13 +370,162 @@ class MeasureRunsDB:
             cur.execute('UPDATE instances SET in_use = 0 WHERE spot = ?',
                         (spot,))
 
+    def get_num_trials(self):
+        """Return the number of trials."""
+        with self.cur() as cur:
+            cur.execute('SELECT num_trials FROM meta')
+            row = cur.fetchone()
+            if row:
+                return row[0]
+            return None
+
+    def ensure_measure_runs(self, benchmark, fuzzer, num_trials):
+        """Ensure that there are measure runs for the given benchmark and
+        fuzzer."""
+        with self.transaction('EXCLUSIVE') as cur:
+            for run_idx in range(num_trials):
+                cur.execute(
+                    '''
+                    INSERT OR IGNORE INTO measure_runs (
+                        fuzzer, benchmark, run_idx, done
+                    ) VALUES (?, ?, ?, 0)
+                    ''', (fuzzer, benchmark, run_idx))
+
+    def add_measure_run(self, benchmark, fuzzer, trial_num, covered_mutants):
+        """Add a measure run."""
+        with self.transaction('EXCLUSIVE') as cur:
+            cur.execute(
+                '''
+                UPDATE measure_runs SET
+                    done = 1,
+                    trial_num = ?,
+                    covered_mutants = ?
+                WHERE rowid = (
+                    SELECT MIN(rowid)
+                    FROM measure_runs
+                    WHERE fuzzer = ? AND benchmark = ? AND done = 0
+                )
+                ''', (trial_num, covered_mutants, fuzzer, benchmark))
+
+    def add_measure_run_failed(self, benchmark, fuzzer, trial_num):
+        """Add a measure run."""
+        with self.transaction('EXCLUSIVE') as cur:
+            cur.execute(
+                '''
+                UPDATE measure_runs SET
+                    done = 2,
+                    trial_num = ?
+                WHERE rowid = (
+                    SELECT MIN(rowid)
+                    FROM measure_runs
+                    WHERE fuzzer = ? AND benchmark = ? AND done = 0
+                )
+                ''', (trial_num, fuzzer, benchmark))
+
+    def wait_for_other_trials_to_complete(self, benchmark, fuzzer):
+        """Wait for other trials to complete."""
+        num_trials = self.get_num_trials()
+        if num_trials is None:
+            raise Exception('Could not get number of trials from database.')
+        while True:
+            with self.cur() as cur:
+                cur.execute(
+                    '''
+                    SELECT COUNT(*) FROM measure_runs
+                    WHERE fuzzer = ? AND benchmark = ? AND done = 0
+                    ''', (fuzzer, benchmark))
+                row = cur.fetchone()
+                if row:
+                    if row[0] == 0:
+                        return
+                    logger.info(
+                        f'Waiting on other trials for {benchmark} {fuzzer} ' +
+                        f'to complete, {row[0]} remaining.')
+                else:
+                    logger.error('Could not get number of remaining trials.')
+                time.sleep(10)
+
+    def get_median_run(self, benchmark, fuzzer):
+        """Return the median run for the given benchmark and fuzzer."""
+        num_trials = self.get_num_trials()
+        if num_trials is None:
+            raise Exception('Could not get number of trials from database.')
+        with self.cur() as cur:
+            cur.execute(
+                '''
+                SELECT trial_num FROM measure_runs
+                WHERE fuzzer = ? AND benchmark = ? AND done = 1
+                ORDER BY covered_mutants, rowid DESC LIMIT 1 OFFSET ?
+                ''', (fuzzer, benchmark, num_trials // 2))
+            row = cur.fetchone()
+            if row:
+                return row[0]
+            return None
+
+    def get_num_covered_mutants(self, trial_num):
+        """Return the number of covered mutants for the given trial."""
+        with self.cur() as cur:
+            cur.execute(
+                '''
+                SELECT COUNT(*) FROM covered_muts
+                WHERE trial_id = ?
+                ''', (trial_num,))
+            row = cur.fetchone()
+            if row:
+                return row[0]
+            return None
+
+
+def init_measure_db(num_trials):
+    """Initialize the measure_runs database."""
+    measure_db_path = get_measure_db_path()
+    logger.warning(f'Initializing measure_runs database: {measure_db_path}')
+    measure_db = MeasureRunsDB(measure_db_path)
+    measure_db.initialize(num_trials)
+
+
+def get_covered_mutants(trial_num):
+    """Return the number of covered mutants for the given trial."""
+    measure_db_path = get_measure_db_path()
+    measure_db = MeasureRunsDB(measure_db_path)
+    return measure_db.get_num_covered_mutants(trial_num)
+
+
+def add_measure_run_failed(benchmark, fuzzer, trial_num):
+    """Add that the measure run failed and should not be waited for nor used as
+    a candidate for the median run."""
+    measure_db_path = get_measure_db_path()
+    measure_db = MeasureRunsDB(measure_db_path)
+    num_trials = measure_db.get_num_trials()
+    measure_db.ensure_measure_runs(benchmark, fuzzer, num_trials)
+    measure_db.add_measure_run_failed(benchmark, fuzzer, trial_num)
+
+
+def add_measure_run(benchmark, fuzzer, trial_num, covered_mutants):
+    """Add the covered mutants for a measure run, this indicates that the
+    trial is done."""
+    measure_db_path = get_measure_db_path()
+    measure_db = MeasureRunsDB(measure_db_path)
+    num_trials = measure_db.get_num_trials()
+    measure_db.ensure_measure_runs(benchmark, fuzzer, num_trials)
+    measure_db.add_measure_run(benchmark, fuzzer, trial_num, covered_mutants)
+
+
+def wait_if_median_run(benchmark, fuzzer, trial_id):
+    """Wait until all trials for benchmark fuzzer are done and return
+     True if the trial_id is the median run."""
+    measure_db_path = get_measure_db_path()
+    measure_db = MeasureRunsDB(measure_db_path)
+    measure_db.wait_for_other_trials_to_complete(benchmark, fuzzer)
+    median_run_trial_id = measure_db.get_median_run(benchmark, fuzzer)
+    return trial_id == median_run_trial_id
+
 
 @contextmanager
 def get_measure_spot():
     """Context manager for getting a free measure spot."""
-    measure_db_path = '/tmp/measure_runs.sqlite'
+    measure_db_path = get_measure_db_path()
     measure_db = MeasureRunsDB(measure_db_path)
-    measure_db.initialize()
     start_wait = time.time()
     while True:
         new_cpu = measure_db.get_free_spot()
