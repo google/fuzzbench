@@ -407,11 +407,16 @@
                         Mutation analysis reports for each fuzzer on this benchmark
                     </div>
                     <div class="collapsible-body">
-                        <div class="collection">
-                            {% for fuzzer in benchmark.fuzzer_names %}
-                            <div>{{ fuzzer }} {{ benchmark.get_mua_report_data(fuzzer, benchmark.name) }}</div>
-                            {% endfor %}
-                        </div>
+
+                        <div class="row">
+                            <div class="col s6 offset-s3">
+                                <h5 class="center-align">Covered and killed mutants</h4>
+                                    <img class="responsive-img materialboxed"
+                                         src="{{ benchmark.mutation_analysis_plot }}">
+                                    The graphs show the number of covered and killed mutants for a given fuzzer.
+                            </div>
+                        </div> <!-- row -->
+
                     </div>
                 </li>
             </ul>
