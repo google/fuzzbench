@@ -427,6 +427,7 @@ class MeasureRunsDB:
         num_trials = self.get_num_trials()
         if num_trials is None:
             raise Exception('Could not get number of trials from database.')
+        first = True
         while True:
             with self.cur() as cur:
                 cur.execute(
@@ -438,9 +439,11 @@ class MeasureRunsDB:
                 if row:
                     if row[0] == 0:
                         return
-                    logger.info(
-                        f'Waiting on other trials for {benchmark} {fuzzer} ' +
-                        f'to complete, {row[0]} remaining.')
+                    if first:
+                        first = False
+                        logger.info('Waiting on other trials for '
+                                    f'{benchmark} {fuzzer} ' +
+                                    f'to complete, {row[0]} remaining.')
                 else:
                     logger.error('Could not get number of remaining trials.')
                 time.sleep(10)
