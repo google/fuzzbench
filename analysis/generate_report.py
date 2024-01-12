@@ -205,7 +205,6 @@ def modify_experiment_data_if_requested(  # pylint: disable=too-many-arguments
 
 def normalized_timestamps(timestamps):
     """Normalize timestamps."""
-    print(timestamps[0])
     seed_timestamp_file = next(
         (tt for tt in timestamps if tt[2] == '<seed_entry>'), None)
     try:
@@ -220,12 +219,8 @@ def normalized_timestamps(timestamps):
             key=lambda x: x[3])
     except ValueError:
         max_timestamp_file = seed_timestamp_file
-    # print(len(timestamps))
-    # print('min_timestamp', min_timestamp_file)
-    # print('max_timestamp', max_timestamp_file)
     min_timestamp = min_timestamp_file[3]
     max_timestamp = max_timestamp_file[3]
-    print('max_timestamp - min_timestamp', max_timestamp - min_timestamp)
     timestamps_normalized = {}
     for _hashname, input_file_id, input_file, timestamp in timestamps:
         if input_file == '<seed_entry>':
@@ -255,18 +250,17 @@ def get_first_covered_killed(results, timestamps_map):
     return mut_result_times
 
 
-def get_timeline(time_covered_killed, timespan, fuzz_target, benchmark,
-                 fuzzer_name, trial_num, cycle):
+def get_timeline(time_covered_killed, timespan, meta):  # pylint: disable=too-many-locals
     """Create timeline regarding covering and killing of mutants."""
     if timespan == 0:
         max_time_base = 1
     else:
         max_time_base = 16
+    fuzz_target, benchmark, fuzzer_name, trial_num, cycle = meta
     normalized_time_elem = timespan / (max_time_base**2)
     time = 'time'
     count_seen = 'seen'
     count_killed = 'killed'
-    print(f'{time:<10} {count_seen:<7} {count_killed:<7}')
     res = []
     for time_base in range(1, max_time_base + 1):
         time = normalized_time_elem * (time_base**2)
@@ -277,7 +271,6 @@ def get_timeline(time_covered_killed, timespan, fuzz_target, benchmark,
                 count_seen += 1
             if times['killed'] is not None and times['killed'] <= time:
                 count_killed += 1
-        print(f'{time:8.2f}s: {count_seen:>7} {count_killed:>7}')
         res.append((fuzz_target, benchmark, fuzzer_name, trial_num, cycle, time,
                     count_seen, count_killed))
     return res
@@ -312,14 +305,12 @@ def load_result_db(res_db_path):
     return run_info, results, timestamps
 
 
-def get_mua_results(experiment_df):
+def get_mua_results(experiment_df):  # pylint: disable=too-many-locals
     """Get mutation analysis results for each fuzzer in each trial to use in
     the report."""
 
     #get relationship between trial_id and benchmark from df
     trial_dict = experiment_df.set_index('trial_id')['benchmark'].to_dict()
-
-    #logger.info(f'trial_dict: {trial_dict}')
 
     experiment_data_dir = experiment_utils.get_experiment_filestore_path()
     results_data_dir = f'{experiment_data_dir}/mua-results/results'
@@ -332,24 +323,26 @@ def get_mua_results(experiment_df):
     fuzzer_pds = defaultdict(list)
 
     for trial in trial_dict.keys():
-
-        print(experiment_data_dir)
         mua_result_db_file =  f'{results_data_dir}/{trial}/' \
             'results.sqlite.lzma'
-        logger.info('mua_result_db_file:')
-        logger.info(mua_result_db_file)
+        if not os.path.isfile(mua_result_db_file):
+            logger.debug(
+                'mua_result_db_file does not exist, this is expected ' +
+                'if only median trial is evaluated: '
+                f'{mua_result_db_file}')
+            continue
+        logger.info(f'found mua_result_db_file: {mua_result_db_file}')
         run_info, results, timestamps = load_result_db(mua_result_db_file)
         assert len(run_info) == 1
         benchmark, fuzz_target, fuzzer, trial_num = run_info[0]
-        print(benchmark, fuzz_target, fuzzer, trial_num, trial)
         timestamps_map, timespan = normalized_timestamps(timestamps)
 
         results = [
             rr for rr in results if timestamps_map.get(rr[0]) is not None
         ]
         time_covered_killed = get_first_covered_killed(results, timestamps_map)
-        timeline = get_timeline(time_covered_killed, timespan, fuzz_target,
-                                benchmark, fuzzer, trial_num, trial)
+        meta = fuzz_target, benchmark, fuzzer, trial_num, trial
+        timeline = get_timeline(time_covered_killed, timespan, meta)
         pd_timeline = pd.DataFrame(timeline,
                                    columns=[
                                        'fuzz_target', 'benchmark', 'fuzzer',
@@ -359,15 +352,11 @@ def get_mua_results(experiment_df):
         fuzzer_pds[fuzzer].append(pd_timeline)
 
     num_trials = None
-    for fuzzer in fuzzer_pds.keys():
+    for fuzzer, fuzzer_pd in fuzzer_pds.items():
         if num_trials is None:
-            num_trials = len(fuzzer_pds[fuzzer])
+            num_trials = len(fuzzer_pd)
         else:
-            assert num_trials == len(fuzzer_pds[fuzzer])
-
-    num_fuzzers = len(fuzzer_pds)
-
-    print(num_trials, num_fuzzers)
+            assert num_trials == len(fuzzer_pd)
 
     return (num_trials, fuzzer_pds)
 
@@ -438,9 +427,6 @@ def generate_report(experiment_names,
         logger.info('Finished generating coverage report info.')
 
     if mutation_analysis:
-        # TODO get_mua_results(main_experiment_name, fuzzers,
-        # experiment_benchmarks, experiment_df)
-        #fuzzers = ['afl', 'libfuzzer']
         mua_results = get_mua_results(experiment_df)
     else:
         mua_results = None

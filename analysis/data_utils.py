@@ -147,12 +147,6 @@ def is_unique_crash(crash_group):
         unique_crashes.add(crash_state)
         is_firsts.append(is_unique)
     crash_group['firsts'] = is_firsts
-    print(crash_group.head())
-    print(crash_group.index)
-    #crash_group.index = list(crash_group.index)
-    #crash_group.reset_index(inplace=True)
-    #print(crash_group.head())
-    #print(crash_group.index)
     return crash_group.firsts
 
 
