@@ -14,9 +14,13 @@
 """Report generator tool."""
 
 import argparse
+import lzma
 import os
 import sys
 import sqlite3
+import tempfile
+
+from collections import defaultdict
 
 import pandas as pd
 
@@ -28,7 +32,7 @@ from analysis import queries
 from analysis import rendering
 from common import filesystem
 from common import logs
-from experiment.measurer.run_mua import get_dispatcher_mua_out_dir
+from common import experiment_utils
 
 logger = logs.Logger()
 
@@ -46,7 +50,7 @@ def get_arg_parser():
     parser.add_argument(
         '-t',
         '--report-type',
-        choices=['default', 'experimental'],
+        choices=['default', 'experimental', 'with_mua'],
         default='default',
         help='Type of the report (which template to use). Default: default.')
     parser.add_argument(
@@ -60,6 +64,11 @@ def get_arg_parser():
         action='store_true',
         default=False,
         help='If set, plots are created faster, but contain less details.')
+    parser.add_argument('-mua',
+                        '--mutation-analysis',
+                        action='store_true',
+                        default=False,
+                        help='If set, mutation analysis report is created.')
     parser.add_argument(
         '--log-scale',
         action='store_true',
@@ -81,6 +90,11 @@ def get_arg_parser():
                         '--fuzzers',
                         nargs='*',
                         help='Names of the fuzzers to include in the report.')
+    parser.add_argument(
+        '-xb',
+        '--experiment-benchmarks',
+        nargs='*',
+        help='Names of the benchmarks to include in the report.')
     parser.add_argument(
         '-cov',
         '--coverage-report',
@@ -189,41 +203,173 @@ def modify_experiment_data_if_requested(  # pylint: disable=too-many-arguments
     return experiment_df
 
 
-def get_mua_results(experiment_name, fuzzers, _benchmarks, experiment_df):
+def normalized_timestamps(timestamps):
+    """Normalize timestamps."""
+    print(timestamps[0])
+    seed_timestamp_file = next(
+        (tt for tt in timestamps if tt[2] == '<seed_entry>'), None)
+    try:
+        min_timestamp_file = min(
+            (tt for tt in timestamps if tt[2] != '<seed_entry>'),
+            key=lambda x: x[3])
+    except ValueError:
+        min_timestamp_file = seed_timestamp_file
+    try:
+        max_timestamp_file = max(
+            (tt for tt in timestamps if tt[2] != '<seed_entry>'),
+            key=lambda x: x[3])
+    except ValueError:
+        max_timestamp_file = seed_timestamp_file
+    # print(len(timestamps))
+    # print('min_timestamp', min_timestamp_file)
+    # print('max_timestamp', max_timestamp_file)
+    min_timestamp = min_timestamp_file[3]
+    max_timestamp = max_timestamp_file[3]
+    print('max_timestamp - min_timestamp', max_timestamp - min_timestamp)
+    timestamps_normalized = {}
+    for _hashname, input_file_id, input_file, timestamp in timestamps:
+        if input_file == '<seed_entry>':
+            timestamps_normalized[input_file_id] = 0
+        else:
+            timestamps_normalized[input_file_id] = timestamp - min_timestamp
+
+    timespan = max_timestamp - min_timestamp
+    return timestamps_normalized, timespan
+
+
+def get_first_covered_killed(results, timestamps_map):
+    """Get first covered and killed mutant."""
+    ordered_inputs = sorted(results, key=lambda x: timestamps_map[x[0]])
+    mut_result_times = defaultdict(lambda: {'seen': None, 'killed': None})
+    for ordered_input in ordered_inputs:
+        input_file_id, mut_id, skipped, killed = ordered_input[:4]
+        if skipped:
+            continue
+        if mut_id not in mut_result_times:
+            mut_result_times[mut_id]['seen'] = timestamps_map[input_file_id]
+        if killed:
+            assert mut_id in mut_result_times
+            if mut_result_times[mut_id]['killed'] is None:
+                mut_result_times[mut_id]['killed'] = timestamps_map[
+                    input_file_id]
+    return mut_result_times
+
+
+def get_timeline(time_covered_killed, timespan, fuzz_target, benchmark,
+                 fuzzer_name, trial_num, cycle):
+    """Create timeline regarding covering and killing of mutants."""
+    if timespan == 0:
+        max_time_base = 1
+    else:
+        max_time_base = 16
+    normalized_time_elem = timespan / (max_time_base**2)
+    time = 'time'
+    count_seen = 'seen'
+    count_killed = 'killed'
+    print(f'{time:<10} {count_seen:<7} {count_killed:<7}')
+    res = []
+    for time_base in range(1, max_time_base + 1):
+        time = normalized_time_elem * (time_base**2)
+        count_seen = 0
+        count_killed = 0
+        for _mut_id, times in time_covered_killed.items():
+            if times['seen'] is not None and times['seen'] <= time:
+                count_seen += 1
+            if times['killed'] is not None and times['killed'] <= time:
+                count_killed += 1
+        print(f'{time:8.2f}s: {count_seen:>7} {count_killed:>7}')
+        res.append((fuzz_target, benchmark, fuzzer_name, trial_num, cycle, time,
+                    count_seen, count_killed))
+    return res
+
+
+def load_result_db(res_db_path):
+    """Load result.sqlite database."""
+    with tempfile.NamedTemporaryFile() as tmp_file:
+        with lzma.open(res_db_path) as res_db:
+            tmp_file.write(res_db.read())
+        tmp_file.flush()
+        tmp_file.seek(0)
+        with sqlite3.connect(tmp_file.name) as conn:
+            run_info = conn.execute(
+                'SELECT benchmark, fuzz_target, fuzzer, trial_num FROM run_info'
+            ).fetchall()
+            results = conn.execute('''SELECT
+                    input_file_id,
+                    mut_id,
+                    skipped,
+                    killed,
+                    orig_retcode,
+                    mutant_retcode,
+                    orig_runtime,
+                    mutant_runtime,
+                    orig_timed_out,
+                    mutant_timed_out
+                FROM results''').fetchall()
+            timestamps = conn.execute(
+                '''SELECT hashname, input_file_id, input_file, timestamp
+                 FROM timestamps''').fetchall()
+    return run_info, results, timestamps
+
+
+def get_mua_results(experiment_df):
     """Get mutation analysis results for each fuzzer in each trial to use in
     the report."""
 
     #get relationship between trial_id and benchmark from df
     trial_dict = experiment_df.set_index('trial_id')['benchmark'].to_dict()
 
-    for fuzzer in fuzzers:
-        for trial in trial_dict.keys():
+    #logger.info(f'trial_dict: {trial_dict}')
 
-            _benchmark = trial_dict[trial]
+    experiment_data_dir = experiment_utils.get_experiment_filestore_path()
+    results_data_dir = f'{experiment_data_dir}/mua-results/results'
 
-            mua_out_dir = get_dispatcher_mua_out_dir()
+    if not os.path.isdir(results_data_dir):
+        logger.warning('''mua-results/results dir does not exist,
+              stopping mua report creation''')
+        return None
 
-            mua_result_db_file = f'/{mua_out_dir}/{experiment_name}/' \
-                f'mua_binaries/corpus_run_results/{fuzzer}/{trial}/' \
-                'results.sqlite'
-            con = sqlite3.connect(mua_result_db_file)
-            cur = con.cursor()
+    fuzzer_pds = defaultdict(list)
 
-            covered_mutants = cur.execute("""
-                SELECT DISTINCT mut_id FROM results
-                JOIN timestamps ON results.input_file = timestamps.hashname
-                WHERE killed == 0 ORDER BY mut_id
-                """)
-            covered_mutants.fetchall()
+    for trial in trial_dict.keys():
 
-            killed_mutants = cur.execute("""
-                SELECT DISTINCT mut_id
-                FROM results JOIN timestamps
-                    ON results.input_file = timestamps.hashname
-                WHERE killed == 1
-                ORDER BY mut_id
-                """)
-            killed_mutants.fetchall()
+        print(experiment_data_dir)
+        mua_result_db_file =  f'{results_data_dir}/{trial}/' \
+            'results.sqlite.lzma'
+        logger.info('mua_result_db_file:')
+        logger.info(mua_result_db_file)
+        run_info, results, timestamps = load_result_db(mua_result_db_file)
+        assert len(run_info) == 1
+        benchmark, fuzz_target, fuzzer, trial_num = run_info[0]
+        print(benchmark, fuzz_target, fuzzer, trial_num, trial)
+        timestamps_map, timespan = normalized_timestamps(timestamps)
+
+        results = [
+            rr for rr in results if timestamps_map.get(rr[0]) is not None
+        ]
+        time_covered_killed = get_first_covered_killed(results, timestamps_map)
+        timeline = get_timeline(time_covered_killed, timespan, fuzz_target,
+                                benchmark, fuzzer, trial_num, trial)
+        pd_timeline = pd.DataFrame(timeline,
+                                   columns=[
+                                       'fuzz_target', 'benchmark', 'fuzzer',
+                                       'trial_num', 'cycle', 'time', 'seen',
+                                       'killed'
+                                   ])
+        fuzzer_pds[fuzzer].append(pd_timeline)
+
+    num_trials = None
+    for fuzzer in fuzzer_pds.keys():
+        if num_trials is None:
+            num_trials = len(fuzzer_pds[fuzzer])
+        else:
+            assert num_trials == len(fuzzer_pds[fuzzer])
+
+    num_fuzzers = len(fuzzer_pds)
+
+    print(num_trials, num_fuzzers)
+
+    return (num_trials, fuzzer_pds)
 
 
 # pylint: disable=too-many-arguments,too-many-locals
@@ -274,7 +420,7 @@ def generate_report(experiment_names,
 
     # experiment_df.to_csv('/tmp/experiment-data/out.csv')
 
-    #TODO: make this work again
+    #TODO: make this work with a single fuzzer selected
     # Add |bugs_covered| column prior to export.
     experiment_df = data_utils.add_bugs_covered_column(experiment_df)
 
@@ -294,7 +440,8 @@ def generate_report(experiment_names,
     if mutation_analysis:
         # TODO get_mua_results(main_experiment_name, fuzzers,
         # experiment_benchmarks, experiment_df)
-        mua_results = None
+        #fuzzers = ['afl', 'libfuzzer']
+        mua_results = get_mua_results(experiment_df)
     else:
         mua_results = None
 
@@ -338,7 +485,9 @@ def main():
                     from_cached_data=args.from_cached_data,
                     end_time=args.end_time,
                     merge_with_clobber=args.merge_with_clobber,
-                    coverage_report=args.coverage_report)
+                    coverage_report=args.coverage_report,
+                    experiment_benchmarks=args.experiment_benchmarks,
+                    mutation_analysis=args.mutation_analysis)
 
 
 if __name__ == '__main__':

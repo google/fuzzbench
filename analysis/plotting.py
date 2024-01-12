@@ -13,6 +13,8 @@
 # limitations under the License.
 """Plotting functions."""
 
+from itertools import chain
+
 import numpy as np
 import Orange
 import seaborn as sns
@@ -20,6 +22,9 @@ import seaborn as sns
 from matplotlib import colors
 from matplotlib import pyplot as plt
 from analysis import data_utils
+from common import logs
+
+logger = logs.Logger()
 
 _DEFAULT_TICKS_COUNT = 12
 _DEFAULT_LABEL_ROTATION = 30
@@ -541,6 +546,50 @@ class Plotter:
                                   unique_branch_cov_df_combined,
                                   image_path,
                                   wide=True)
+
+    def write_mutation_analysis_plot(self, fuzzer_pds, num_fuzzers, num_trials,
+                                     image_path):
+        """Writes mutation analysis plot."""
+
+        df_list = list(chain(*fuzzer_pds.values()))
+        fig, axes = plt.subplots(num_fuzzers,
+                                 num_trials,
+                                 sharex=True,
+                                 sharey=True)
+
+        #logger.info(f'df_list: {df_list}')
+        #logger.info(f'fuzzer_pds: {fuzzer_pds}')
+        #logger.info(f'num_fuzzers: {num_fuzzers}')
+        #logger.info(f'num_trials: {num_trials}')
+
+        # plot counter
+        count = 0
+        for trial_num in range(num_trials):
+            for fuzzer_num in range(num_fuzzers):
+                if num_trials == 1:
+                    plt_ax = axes[fuzzer_num]
+                else:
+                    plt_ax = axes[fuzzer_num, trial_num]
+                df = df_list[count]
+                #fuzz_target = df.iloc[0]['fuzz_target']
+                benchmark = df.iloc[0]['benchmark']
+                fuzzer = df.iloc[0]['fuzzer']
+                trial_num = df.iloc[0]['trial_num']
+                #cycle = df.iloc[0]['cycle']
+                df_list[count].plot.line(
+                    ax=plt_ax,
+                    x='time',
+                    y=['seen', 'killed'],
+                    title=f'{benchmark} - {fuzzer}',
+                )
+                plt_ax.title.set_fontsize('small')
+                plt_ax.set_xlim(xmin=0)
+                plt_ax.set_ylim(ymin=0)
+                count += 1
+
+        fig.tight_layout()
+        fig.savefig(image_path, bbox_inches='tight')
+        plt.close(fig)
 
     def pairwise_unique_coverage_heatmap_plot(self,
                                               pairwise_unique_coverage_table,

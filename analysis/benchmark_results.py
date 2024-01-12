@@ -21,6 +21,9 @@ from analysis import coverage_data_utils
 from analysis import stat_tests
 from common import benchmark_utils
 from common import filestore_utils
+from common import logs
+
+logger = logs.Logger()
 
 
 # pylint: disable=too-many-public-methods, too-many-arguments
@@ -59,7 +62,25 @@ class BenchmarkResults:
 
     def get_mua_report_data(self, _fuzzer_name, _benchmark_name):
         """Returns results as string"""
-        return 'TODO: Not Implemented Yet'
+        return 'TODO: Not Implemented Yet'  #TODO: implement this or delete
+
+    @property
+    def mutation_analysis_plot(self):
+        """plot for mutation analysis."""
+        plot_filename = self._prefix_with_benchmark('mutation_analysis.svg')
+        if self.mua_results is None:
+            logger.info(
+                'mutation_analysis_plot not rendered, due to missing data')
+            return None
+
+        (num_trials, fuzzer_pds) = self.mua_results
+
+        num_fuzzers = len(fuzzer_pds)
+
+        self._plotter.write_mutation_analysis_plot(
+            fuzzer_pds, num_fuzzers, num_trials,
+            self._get_full_path(plot_filename))
+        return plot_filename
 
     @property
     @functools.lru_cache()
