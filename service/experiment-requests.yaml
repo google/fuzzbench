@@ -19,6 +19,16 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
+- experiment: 2024-01-13-cryptoafl
+  description: "Adapting a cryptographic rand_below and a game model in AFL++"
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - fairfuzz
+    - honggfuzz
+    - libfuzzer
 
 - experiment: 2023-06-12-aflpp
   description: "Benchmark afl++ releases and newmutation"
