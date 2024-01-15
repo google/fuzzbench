@@ -25,12 +25,18 @@ def is_benchmark(name):
     """Check if the benchmark contains the string |name|"""
     benchmark = os.getenv("BENCHMARK", None)
     return benchmark is not None and name in benchmark
+
+
 def get_cmplog_build_directory(target_directory):
     """Return path to CmpLog target directory."""
     return os.path.join(target_directory, "cmplog")
+
+
 def get_vanilla_build_directory(target_directory):
     """Return path to CmpLog target directory."""
     return os.path.join(target_directory, "vanilla")
+
+
 def install(package):
     """Install Dependencies"""
     subprocess.check_call([sys.executable, "-m", "pip", "install", package])
@@ -73,27 +79,29 @@ def prepare_build_environment():
 
     # Fixup a file for mbedtls
     if is_benchmark("mbedtls"):
-        file_path = os.path.join(os.getenv("SRC"),
-                "mbedtls", "library/CMakeLists.txt")
+        file_path = os.path.join(os.getenv("SRC"), "mbedtls",
+                                 "library/CMakeLists.txt")
         assert os.path.isfile(file_path), "The file does not exist"
         # Remove -Wdocumentation to make compilation pass with clang 15.0.7
         # subst_cmd = r"sed -i 's/\(-Wdocumentation\)//g' {}".format(file_path)
         subst_cmd = r"sed -i 's/\(-Wdocumentation\)//g'" + " " + file_path
-        subprocess.check_call(subst_cmd, shell = True)
+        subprocess.check_call(subst_cmd, shell=True)
 
     # Fixup a file for openthread
     if is_benchmark("openthread"):
         mbed_cmake_one = os.path.join(os.getenv("SRC"),
-                "openthread/third_party/mbedtls/repo",
-                "library/CMakeLists.txt")
+                                      "openthread/third_party/mbedtls/repo",
+                                      "library/CMakeLists.txt")
         mbed_cmake_two = os.path.join(os.getenv("SRC"),
-                "openthread/third_party/mbedtls/repo", "CMakeLists.txt")
+                                      "openthread/third_party/mbedtls/repo",
+                                      "CMakeLists.txt")
         assert os.path.isfile(mbed_cmake_one), "The file does not exist"
         assert os.path.isfile(mbed_cmake_two), "The file does not exist"
         subst_cmd = r"sed -i 's/\(-Wdocumentation\)//g'" + " " + mbed_cmake_one
-        subprocess.check_call(subst_cmd, shell = True)
+        subprocess.check_call(subst_cmd, shell=True)
         subst_cmd = r"sed -i 's/\(-Werror\)//g'" + " " + mbed_cmake_two
-        subprocess.check_call(subst_cmd, shell = True)
+        subprocess.check_call(subst_cmd, shell=True)
+
 
 def build_fox_binary():
     """Build fox binary"""
@@ -134,7 +142,7 @@ def build_fox_binary():
             env = os.environ.copy()
 
             fuzz_target = os.path.join(os.environ["OUT"],
-                    os.environ["FUZZ_TARGET"])
+                                       os.environ["FUZZ_TARGET"])
             subprocess.check_call(["get-bc", fuzz_target], env=env)
 
             bc_file = fuzz_target + ".bc"
@@ -155,7 +163,77 @@ def build_fox_binary():
             # Go back to the base dir where the outfiles are being kept
             os.chdir(pwd)
             is_vanilla = True
+            return is_vanilla
+
+    is_vanilla = create_cmplog_binaries()
     return is_vanilla
+
+
+def create_cmplog_binaries():
+    """Build cmplog binaries"""
+
+    is_vanilla = False
+    src = os.getenv("SRC")
+    work = os.getenv("WORK")
+    pwd = os.getcwd()
+
+    # Create main cmplog binary
+    with utils.restore_directory(src), utils.restore_directory(work):
+        # Restore SRC to its initial state so we can build again without any
+        # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
+        # twice in the same directory without this.
+        new_env = os.environ.copy()
+        cmplog_hybrid_directory_main = os.path.join(os.getenv("OUT"),
+                                                    "cmplog_hybrid_main")
+        new_env["OUT"] = cmplog_hybrid_directory_main
+        fuzz_target = os.getenv("FUZZ_TARGET")
+        os.mkdir(cmplog_hybrid_directory_main)
+        if fuzz_target:
+            new_env["FUZZ_TARGET"] = os.path.join(cmplog_hybrid_directory_main,
+                                                  os.path.basename(fuzz_target))
+        new_env["CC"] = "/fox_cmplog/afl-clang-fast"
+        new_env["CXX"] = "/fox_cmplog/afl-clang-fast++"
+        new_env["FUZZER_LIB"] = "/fox_cmplog/libAFLDriver.a"
+        try:
+            utils.build_benchmark(env=new_env)
+            os.chdir(pwd)
+        except subprocess.CalledProcessError:
+            print("[X] Compilation or metadata gen failed for main cmplog")
+            # Go back to the base dir where the outfiles are being kept
+            os.chdir(pwd)
+            is_vanilla = True
+            return is_vanilla
+
+    # Create cmplog build
+    # Create personal backups in case
+    with utils.restore_directory(src), utils.restore_directory(work):
+        # Restore SRC to its initial state so we can build again without any
+        # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
+        # twice in the same directory without this.
+        new_env = os.environ.copy()
+        new_env["AFL_LLVM_CMPLOG"] = "1"
+        cmplog_hybrid_directory_support = os.path.join(os.getenv("OUT"),
+                                                       "cmplog_hybrid_support")
+        new_env["OUT"] = cmplog_hybrid_directory_support
+        fuzz_target = os.getenv("FUZZ_TARGET")
+        os.mkdir(cmplog_hybrid_directory_support)
+        if fuzz_target:
+            new_env["FUZZ_TARGET"] = os.path.join(
+                cmplog_hybrid_directory_support, os.path.basename(fuzz_target))
+        new_env["CC"] = "/fox_cmplog/afl-clang-fast"
+        new_env["CXX"] = "/fox_cmplog/afl-clang-fast++"
+        new_env["FUZZER_LIB"] = "/fox_cmplog/libAFLDriver.a"
+        try:
+            utils.build_benchmark(env=new_env)
+            os.chdir(pwd)
+        except subprocess.CalledProcessError:
+            print("[X] Compilation or metadata gen failed for support cmplog")
+            # Go back to the base dir where the outfiles are being kept
+            os.chdir(pwd)
+            is_vanilla = True
+            return is_vanilla
+    return is_vanilla
+
 
 def build():
     """Build benchmark."""
@@ -167,8 +245,6 @@ def build():
     work = os.getenv("WORK")
 
     is_vanilla = build_fox_binary()
-    if is_benchmark("systemd"):
-        is_vanilla = True
 
     if is_vanilla:
         new_env = os.environ.copy()
@@ -201,15 +277,20 @@ def build():
             utils.build_benchmark(env=new_env)
 
         # Write a flag file to signal that fox processing failed
-        with open(os.path.join(os.getenv("OUT"), "is_vanilla"), "w",
-                encoding="utf-8") as file_desc:
+        with open(os.path.join(os.getenv("OUT"), "is_vanilla"),
+                  "w",
+                  encoding="utf-8") as file_desc:
             file_desc.write("is_vanilla")
 
     print("[post_build] Copying afl-fuzz to $OUT directory")
     # Copy out the afl-fuzz binary as a build artifact.
-    shutil.copy("/fox/afl-fuzz", os.environ["OUT"])
-    shutil.copy("/afl_vanilla/afl-fuzz", os.path.join(os.environ["OUT"],
-        "afl-fuzz-vanilla"))
+    shutil.copy("/fox/afl-fuzz",
+                os.path.join(os.environ["OUT"], "fox_4.09c_hybrid_start"))
+    shutil.copy("/fox/ensemble_runner.py", os.environ["OUT"])
+    shutil.copy("/fox_cmplog/afl-fuzz",
+                os.path.join(os.environ["OUT"], "cmplog_4.09c_hybrid_start"))
+    shutil.copy("/afl_vanilla/afl-fuzz",
+                os.path.join(os.environ["OUT"], "afl-fuzz-vanilla"))
 
 
 def prepare_fuzz_environment(input_corpus):
@@ -232,6 +313,10 @@ def prepare_fuzz_environment(input_corpus):
     #XXX: Added from aflplusplus
     os.environ["AFL_FAST_CAL"] = "1"
     os.environ["AFL_DISABLE_TRIM"] = "1"
+    os.environ["AFL_CMPLOG_ONLY_NEW"] = "1"
+
+    # Allows resuming from an already fuzzed outdir (needed for fox hybrid mode)
+    os.environ["AFL_AUTORESUME"] = "1"
 
     # AFL needs at least one non-empty seed to start.
     utils.create_seed_file_for_empty_corpus(input_corpus)
@@ -242,50 +327,59 @@ def run_afl_fuzz(input_corpus, output_corpus, target_binary, hide_output=False):
     # Spawn the afl fuzzing process.
     is_vanilla = False
     dictionary_path = utils.get_dictionary_path(target_binary)
-    dictionary_file = "/out/keyval.dict"
     print("[run_afl_fuzz] Running target with afl-fuzz")
     # Check if the fuzzer is to be run in fallback mode or not
     if os.path.exists(os.path.join(os.getenv("OUT"), "is_vanilla")):
         is_vanilla = True
     if not is_vanilla:
+        cmplog_target_binary_directory_main = os.path.join(
+            os.path.dirname(target_binary), "cmplog_hybrid_main")
+        cmplog_target_binary_main = os.path.join(
+            cmplog_target_binary_directory_main,
+            os.path.basename(target_binary))
+
+        cmplog_target_binary_directory_support = os.path.join(
+            os.path.dirname(target_binary), "cmplog_hybrid_support")
+        cmplog_target_binary_support = os.path.join(
+            cmplog_target_binary_directory_support,
+            os.path.basename(target_binary))
         if dictionary_path:
             command = [
-                "./afl-fuzz", "-k", "-p", "wd_scheduler", "-i", input_corpus,
-                "-o", output_corpus, "-t", "1000+", "-m", "none", "-x",
-                dictionary_file, "-x", dictionary_path, "--", target_binary
+                "python", "ensemble_runner.py", "-i", input_corpus, "-o",
+                output_corpus, "-b", cmplog_target_binary_main,
+                "--fox_target_binary", target_binary, "-x", "/out/keyval.dict",
+                dictionary_path, "--cmplog_target_binary",
+                cmplog_target_binary_support
             ]
         else:
             command = [
-                "./afl-fuzz", "-k", "-p", "wd_scheduler", "-i", input_corpus,
-                "-o", output_corpus, "-t", "1000+", "-m", "none", "-x",
-                dictionary_file, "--", target_binary
+                "python", "ensemble_runner.py", "-i", input_corpus, "-o",
+                output_corpus, "-b", cmplog_target_binary_main,
+                "--fox_target_binary", target_binary, "-x", "/out/keyval.dict",
+                "--cmplog_target_binary", cmplog_target_binary_support
             ]
     else:
         # Calculate vanilla binary path from the instrumented target binary.
         # Calculate CmpLog binary path from the instrumented target binary.
-        target_binary_directory = os.path.dirname(target_binary)
-        vanilla_target_binary_directory = (
-            get_vanilla_build_directory(target_binary_directory))
-        cmplog_target_binary_directory = (
-            get_cmplog_build_directory(target_binary_directory))
-        target_binary_name = os.path.basename(target_binary)
-        vanilla_target_binary = os.path.join(vanilla_target_binary_directory,
-                                        target_binary_name)
+        cmplog_target_binary_directory = (get_cmplog_build_directory(
+            os.path.dirname(target_binary)))
+        vanilla_target_binary = os.path.join(
+            get_vanilla_build_directory(os.path.dirname(target_binary)),
+            os.path.basename(target_binary))
         cmplog_target_binary = os.path.join(cmplog_target_binary_directory,
-                                        target_binary_name)
+                                            os.path.basename(target_binary))
         if dictionary_path:
             command = [
-                "./afl-fuzz-vanilla", "-i", input_corpus, "-o",
-                output_corpus, "-t", "1000+", "-m", "none", "-c",
-                cmplog_target_binary, "-x", dictionary_file, "-x",
-                dictionary_path, "--", vanilla_target_binary
+                "./afl-fuzz-vanilla", "-i", input_corpus, "-o", output_corpus,
+                "-t", "1000+", "-m", "none", "-c", cmplog_target_binary, "-x",
+                "/out/keyval.dict", "-x", dictionary_path, "--",
+                vanilla_target_binary
             ]
         else:
             command = [
-                "./afl-fuzz-vanilla", "-i", input_corpus, "-o",
-                output_corpus, "-t", "1000+", "-m", "none", "-c",
-                cmplog_target_binary, "-x", dictionary_file, "--",
-                vanilla_target_binary
+                "./afl-fuzz-vanilla", "-i", input_corpus, "-o", output_corpus,
+                "-t", "1000+", "-m", "none", "-c", cmplog_target_binary, "-x",
+                "/out/keyval.dict", "--", vanilla_target_binary
             ]
     print("[run_afl_fuzz] Running command: " + " ".join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
