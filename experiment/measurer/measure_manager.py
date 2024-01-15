@@ -876,7 +876,8 @@ def measure_snapshot(  # pylint: disable=too-many-locals,too-many-arguments
                           corpus_archive_dst,
                           expect_zero=False).retcode:
         snapshot_logger.warning('Corpus not found for cycle: %d.', cycle)
-        add_measure_run_failed(benchmark, fuzzer, trial_num)
+        if mutation_analysis:
+            add_measure_run_failed(benchmark, fuzzer, trial_num)
         return None
 
     snapshot_measurer.initialize_measurement_dirs()
@@ -893,7 +894,11 @@ def measure_snapshot(  # pylint: disable=too-many-locals,too-many-arguments
     os.remove(corpus_archive_dst)
 
     # Run coverage on the new corpus units.
-    snapshot_measurer.run_cov_new_units()
+    if mutation_analysis:
+        with get_measure_spot():
+            snapshot_measurer.run_cov_new_units()
+    else:
+        snapshot_measurer.run_cov_new_units()
 
     # Generate profdata and transform it into json form.
     snapshot_measurer.generate_coverage_information(cycle)
