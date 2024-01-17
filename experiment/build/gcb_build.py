@@ -116,7 +116,8 @@ def _build(
                                      write_to_stdout=False,
                                      kill_children=True,
                                      timeout=timeout_seconds,
-                                     expect_zero=False)
+                                     expect_zero=False,
+                                     limit_log_size=False)
         # TODO(metzman): Refactor code so that local_build stores logs as well.
         build_utils.store_build_logs(config_name, result)
         if result.retcode != 0:

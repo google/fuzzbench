@@ -78,6 +78,7 @@ def execute(  # pylint: disable=too-many-locals,too-many-branches
         output_file: Optional[int] = None,
         # Not True by default because we can't always set group on processes.
         kill_children: bool = False,
+        limit_log_size: bool = True,
         **kwargs) -> ProcessResult:
     """Execute |command| and return the returncode and the output"""
     if write_to_stdout:
@@ -110,12 +111,18 @@ def execute(  # pylint: disable=too-many-locals,too-many-branches
 
     retcode = process.returncode
 
-    command_log_str = ' '.join(command)[:LOG_LIMIT_FIELD]
+    if limit_log_size:
+        command_log_str = ' '.join(command)[:LOG_LIMIT_FIELD]
+    else:
+        command_log_str = ' '.join(command)
     log_message = 'Executed command: "%s" returned: %d.'
 
     if output is not None:
         output = output.decode('utf-8', errors='ignore')
-        output_for_log = output[-LOG_LIMIT_FIELD:]
+        if limit_log_size:
+            output_for_log = output[-LOG_LIMIT_FIELD:]
+        else:
+            output_for_log = output
         log_extras = {'output': output_for_log}
     else:
         log_extras = None

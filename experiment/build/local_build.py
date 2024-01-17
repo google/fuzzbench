@@ -35,8 +35,7 @@ def make(targets):
     """Invoke |make| with |targets| and return the result."""
     command = ['make', '--debug=j', '-j'] + targets
     logger.info(f'Running: {shlex.join(command)}')
-    return new_process.execute(command,
-                               cwd=utils.ROOT_DIR)
+    return new_process.execute(command, cwd=utils.ROOT_DIR)
 
 
 def build_base_images() -> Tuple[int, str]:
