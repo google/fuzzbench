@@ -15,6 +15,7 @@
 """Module for building things locally for use in trials."""
 
 import os
+import shlex
 from typing import Tuple
 
 from common import benchmark_utils
@@ -25,6 +26,7 @@ from common import new_process
 from common import utils
 from experiment.measurer.run_mua import (MUTATION_ANALYSIS_IMAGE_NAME,
                                          stop_mua_container)
+from experiment.build import build_utils
 
 logger = logs.Logger()  # pylint: disable=invalid-name
 
@@ -32,14 +34,16 @@ logger = logs.Logger()  # pylint: disable=invalid-name
 def make(targets):
     """Invoke |make| with |targets| and return the result."""
     command = ['make', '--debug=j', '-j'] + targets
+    logger.info(f'Running: {shlex.join(command)}')
     return new_process.execute(command,
-                               write_to_stdout=True,
                                cwd=utils.ROOT_DIR)
 
 
 def build_base_images() -> Tuple[int, str]:
     """Build base images locally."""
-    return make(['base-image', 'worker'])
+    result = make(['base-image', 'worker'])
+    build_utils.store_build_logs('base-images', result)
+    return result
 
 
 def get_shared_coverage_binaries_dir():
@@ -74,6 +78,7 @@ def build_coverage(benchmark):
     """Build (locally) coverage image for benchmark."""
     image_name = f'build-coverage-{benchmark}'
     result = make([image_name])
+    build_utils.store_build_logs(image_name, result)
     if result.retcode:
         return result
     make_shared_coverage_binaries_dir()
@@ -86,6 +91,7 @@ def build_mua(benchmark):
     stop_mua_container(benchmark)
     image_name = f'.{MUTATION_ANALYSIS_IMAGE_NAME}-{benchmark}-builder'
     result = make([image_name])
+    build_utils.store_build_logs(image_name, result)
     if result.retcode:
         return result
     make_shared_mua_binaries_dir()
@@ -113,4 +119,5 @@ def copy_coverage_binaries(benchmark):
 def build_fuzzer_benchmark(fuzzer: str, benchmark: str) -> bool:
     """Builds |benchmark| for |fuzzer|."""
     image_name = f'build-{fuzzer}-{benchmark}'
-    make([image_name])
+    result = make([image_name])
+    build_utils.store_build_logs(image_name, result)
