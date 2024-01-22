@@ -247,6 +247,9 @@ def build():
     is_vanilla = build_fox_binary()
 
     if is_vanilla:
+        del os.environ["AFL_USE_ASAN"]
+        del os.environ["AFL_CC"]
+        del os.environ["AFL_CXX"]
         new_env = os.environ.copy()
         new_env["CC"] = "/afl_vanilla/afl-clang-fast"
         new_env["CXX"] = "/afl_vanilla/afl-clang-fast++"
@@ -264,6 +267,7 @@ def build():
 
         # Build the vanilla binary
         new_env["AFL_LLVM_CMPLOG"] = "1"
+
         cmplog_build_directory = get_cmplog_build_directory(os.getenv("OUT"))
         os.mkdir(cmplog_build_directory)
         new_env["OUT"] = cmplog_build_directory
