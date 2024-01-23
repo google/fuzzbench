@@ -182,6 +182,9 @@ def create_cmplog_binaries():
         # Restore SRC to its initial state so we can build again without any
         # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
         # twice in the same directory without this.
+        del os.environ["AFL_USE_ASAN"]
+        del os.environ["AFL_CC"]
+        del os.environ["AFL_CXX"]
         new_env = os.environ.copy()
         cmplog_hybrid_directory_main = os.path.join(os.getenv("OUT"),
                                                     "cmplog_hybrid_main")
