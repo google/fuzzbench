@@ -37,7 +37,7 @@ RUN apt-get update && \
 # Download afl++.
 RUN git clone -b dev https://github.com/AFLplusplus/AFLplusplus /afl && \
     cd /afl && \
-    git checkout ba28f5fbfa32564891c87b4395bdb8a59b3df1f4 || \
+    git checkout 88e41f01c839ed5c46882222ad7e1f5c3e7d9e20 || \
     true
 
 # Build without Python support as we don't need it.
@@ -45,5 +45,5 @@ RUN git clone -b dev https://github.com/AFLplusplus/AFLplusplus /afl && \
 RUN cd /afl && \
     unset CFLAGS CXXFLAGS && \
     export CC=clang AFL_NO_X86=1 && \
-    PYTHON_INCLUDE=/ make && \
+    PYTHON_INCLUDE=/ PERFORMANCE=1 make && \
     cp utils/aflpp_driver/libAFLDriver.a /
