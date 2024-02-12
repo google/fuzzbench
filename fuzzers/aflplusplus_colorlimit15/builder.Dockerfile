@@ -35,9 +35,9 @@ RUN apt-get update && \
         libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
 # Download afl++.
-RUN git clone -b dev https://github.com/ndrewh/AFLplusplus /afl && \
+RUN git clone -b colorless https://github.com/AFLplusplus/AFLplusplus /afl && \
     cd /afl && \
-    git checkout 81d5eec210b1abd0965a2778688772c007119f74 || \
+    git checkout 4309e480857892ba57fdec5670a834e8336bfd08 || \
     true
 
 RUN sed -i 's/90 . 1000000/444 * 1000000/g' /afl/src/afl-fuzz-redqueen.c
