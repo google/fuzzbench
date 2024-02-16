@@ -66,14 +66,14 @@ RUN git -C /fox checkout sbft24_stable
 RUN rm -f /dev/shm/*
 
 RUN git clone https://github.com/adamstorek/FOX.git /fox_cmplog
-RUN git -C /fox_cmplog checkout 4.09c_hybrid_mode 
+RUN git -C /fox_cmplog checkout 4.10c_hybrid_mode 
 RUN rm -f /dev/shm/*
 
 # XXX: Set up vanilla AFL++ as a vanilla option to invoke in case the compilation
 # fails (Current known failing targets: harfbuzz, systemd, php) 
 RUN git clone -b dev https://github.com/AFLplusplus/AFLplusplus /afl_vanilla && \
     cd /afl_vanilla && \
-    git checkout 27d05f3c216e18163236efa42b630a5b3784d2e9 || \
+    git checkout tags/v4.10c || \
     true
 
 # Build without Python support as we don't need it.
