@@ -68,14 +68,9 @@ def prepare_build_environment():
     os.environ["AFL_CC"] = "gclang"
     os.environ["AFL_CXX"] = "gclang++"
 
-    os.environ["ASAN_OPTIONS"] = "detect_leaks=0"
-    os.environ["AFL_USE_ASAN"] = "1"
-
     os.environ["CC"] = "/fox/afl-clang-fast"
     os.environ["CXX"] = "/fox/afl-clang-fast++"
     os.environ["FUZZER_LIB"] = "/fox/libAFLDriver.a"
-    os.environ["CFLAGS"] = ""
-    os.environ["CXXFLAGS"] = ""
 
     # Fixup a file for mbedtls
     if is_benchmark("mbedtls"):
@@ -115,6 +110,7 @@ def build_fox_binary():
     pwd = os.getcwd()
 
     os.environ["AFL_LLVM_DICT2FILE"] = os.environ["OUT"] + "/keyval.dict"
+    os.environ["AFL_LLVM_DICT2FILE_NO_MAIN"] = "1" 
 
     # Create personal backups in case
     with utils.restore_directory(src), utils.restore_directory(work):
@@ -151,7 +147,7 @@ def build_fox_binary():
             ll_file = fuzz_target + ".ll"
 
             os.chdir("/out")
-            gen_graph_python = "/fox/gen_graph_dev_no_dot_15.py"
+            gen_graph_python = "/fox/gen_graph_dev_no_dot_15_noasan.py"
             subprocess.check_call([
                 "python3", gen_graph_python, ll_file, fuzz_target,
                 "instrument_meta_data"
@@ -182,9 +178,6 @@ def create_cmplog_binaries():
         # Restore SRC to its initial state so we can build again without any
         # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
         # twice in the same directory without this.
-        del os.environ["AFL_USE_ASAN"]
-        del os.environ["AFL_CC"]
-        del os.environ["AFL_CXX"]
         new_env = os.environ.copy()
         cmplog_hybrid_directory_main = os.path.join(os.getenv("OUT"),
                                                     "cmplog_hybrid_main")
@@ -250,9 +243,6 @@ def build():
     is_vanilla = build_fox_binary()
 
     if is_vanilla:
-        del os.environ["AFL_USE_ASAN"]
-        del os.environ["AFL_CC"]
-        del os.environ["AFL_CXX"]
         new_env = os.environ.copy()
         new_env["CC"] = "/afl_vanilla/afl-clang-fast"
         new_env["CXX"] = "/afl_vanilla/afl-clang-fast++"
