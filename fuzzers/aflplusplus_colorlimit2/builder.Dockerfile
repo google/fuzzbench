@@ -40,6 +40,8 @@ RUN git clone -b colorless https://github.com/AFLplusplus/AFLplusplus /afl && \
     git checkout 0e8324d4b1444672669e9e2a3afb133ab73275bc || \
     true
 
+RUN sed -i 's/TIME_MAX_START 60/TIME_MAX_START 120/g' /afl/include/config.h
+
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /afl && \
