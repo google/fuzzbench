@@ -51,7 +51,7 @@ RUN cd /libafl && git pull && git checkout 47e38899df71c3ca45bb2667f7d7ee99a855c
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
-    export LIBAFL_EDGES_MAP_SIZE=262144 && \
+    export LIBAFL_EDGES_MAP_SIZE=65536 && \
     cd ./fuzzers/fuzzbench_ctx && \
     PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench --features no_link_main
 
