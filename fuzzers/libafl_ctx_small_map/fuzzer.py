@@ -22,38 +22,44 @@ from fuzzers import utils
 
 def prepare_fuzz_environment(input_corpus):
     """Prepare to fuzz with a LibAFL-based fuzzer."""
-    os.environ['ASAN_OPTIONS'] = 'abort_on_error=1:detect_leaks=0:'\
-                                 'malloc_context_size=0:symbolize=0:'\
-                                 'allocator_may_return_null=1:'\
-                                 'detect_odr_violation=0:handle_segv=0:'\
-                                 'handle_sigbus=0:handle_abort=0:'\
-                                 'handle_sigfpe=0:handle_sigill=0'
-    os.environ['UBSAN_OPTIONS'] =  'abort_on_error=1:'\
-                                   'allocator_release_to_os_interval_ms=500:'\
-                                   'handle_abort=0:handle_segv=0:'\
-                                   'handle_sigbus=0:handle_sigfpe=0:'\
-                                   'handle_sigill=0:print_stacktrace=0:'\
-                                   'symbolize=0:symbolize_inline_frames=0'
+    os.environ["ASAN_OPTIONS"] = (
+        "abort_on_error=1:detect_leaks=0:"
+        "malloc_context_size=0:symbolize=0:"
+        "allocator_may_return_null=1:"
+        "detect_odr_violation=0:handle_segv=0:"
+        "handle_sigbus=0:handle_abort=0:"
+        "handle_sigfpe=0:handle_sigill=0"
+    )
+    os.environ["UBSAN_OPTIONS"] = (
+        "abort_on_error=1:"
+        "allocator_release_to_os_interval_ms=500:"
+        "handle_abort=0:handle_segv=0:"
+        "handle_sigbus=0:handle_sigfpe=0:"
+        "handle_sigill=0:print_stacktrace=0:"
+        "symbolize=0:symbolize_inline_frames=0"
+    )
     # Create at least one non-empty seed to start.
     utils.create_seed_file_for_empty_corpus(input_corpus)
 
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
-    os.environ[
-        'CC'] = '/libafl/fuzzers/fuzzbench_ctx/target/release-fuzzbench/libafl_cc'
-    os.environ[
-        'CXX'] = '/libafl/fuzzers/fuzzbench_ctx/target/release-fuzzbench/libafl_cxx'
+    os.environ["CC"] = (
+        "/libafl/fuzzers/fuzzbench_ctx/target/release-fuzzbench/libafl_cc"
+    )
+    os.environ["CXX"] = (
+        "/libafl/fuzzers/fuzzbench_ctx/target/release-fuzzbench/libafl_cxx"
+    )
 
-    os.environ['ASAN_OPTIONS'] = 'abort_on_error=0:allocator_may_return_null=1'
-    os.environ['UBSAN_OPTIONS'] = 'abort_on_error=0'
+    os.environ["ASAN_OPTIONS"] = "abort_on_error=0:allocator_may_return_null=1"
+    os.environ["UBSAN_OPTIONS"] = "abort_on_error=0"
 
-    cflags = ['--libafl']
-    utils.append_flags('CFLAGS', cflags)
-    utils.append_flags('CXXFLAGS', cflags)
-    utils.append_flags('LDFLAGS', cflags)
+    cflags = ["--libafl"]
+    utils.append_flags("CFLAGS", cflags)
+    utils.append_flags("CXXFLAGS", cflags)
+    utils.append_flags("LDFLAGS", cflags)
 
-    os.environ['FUZZER_LIB'] = '/stub_rt.a'
+    os.environ["FUZZER_LIB"] = "/stub_rt.a"
     utils.build_benchmark()
 
 
@@ -63,9 +69,9 @@ def fuzz(input_corpus, output_corpus, target_binary):
     dictionary_path = utils.get_dictionary_path(target_binary)
     command = [target_binary]
     if dictionary_path:
-        command += (['-x', dictionary_path])
-    command += (['-o', output_corpus, '-i', input_corpus])
+        command += ["-x", dictionary_path]
+    command += ["-o", output_corpus, "-i", input_corpus]
     fuzzer_env = os.environ.copy()
-    fuzzer_env['LD_PRELOAD'] = '/usr/lib/x86_64-linux-gnu/libjemalloc.so.2'
+    fuzzer_env["LD_PRELOAD"] = "/usr/lib/x86_64-linux-gnu/libjemalloc.so.2"
     print(command)
-    subprocess.check_call(command, cwd=os.environ['OUT'], env=fuzzer_env)
+    subprocess.check_call(command, cwd=os.environ["OUT"], env=fuzzer_env)
