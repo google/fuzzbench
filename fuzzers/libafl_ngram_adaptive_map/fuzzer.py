@@ -45,10 +45,10 @@ def prepare_fuzz_environment(input_corpus):
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     os.environ["CC"] = (
-        "/libafl/fuzzers/fuzzbench_ctx/target/release-fuzzbench/libafl_cc"
+        "/libafl/fuzzers/fuzzbench_ngram_adaptive/target/release-fuzzbench/libafl_cc"
     )
     os.environ["CXX"] = (
-        "/libafl/fuzzers/fuzzbench_ctx/target/release-fuzzbench/libafl_cxx"
+        "/libafl/fuzzers/fuzzbench_ngram_adaptive/target/release-fuzzbench/libafl_cxx"
     )
 
     os.environ["ASAN_OPTIONS"] = "abort_on_error=0:allocator_may_return_null=1"

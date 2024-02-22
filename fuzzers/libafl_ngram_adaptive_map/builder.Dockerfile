@@ -51,11 +51,10 @@ RUN cd /libafl && git pull && git checkout 47e38899df71c3ca45bb2667f7d7ee99a855c
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
-    export LIBAFL_EDGES_MAP_SIZE=65536 && \
-    cd ./fuzzers/fuzzbench_ngram && \
+    cd ./fuzzers/fuzzbench_ngram_adaptive && \
     PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench --features no_link_main
 
 # Auxiliary weak references.
-RUN cd /libafl/fuzzers/fuzzbench_ngram && \
+RUN cd /libafl/fuzzers/fuzzbench_ngram_adaptive && \
     clang -c stub_rt.c && \
     ar r /stub_rt.a stub_rt.o
