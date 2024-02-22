@@ -45,7 +45,7 @@ RUN if which rustup; then rustup self uninstall -y; fi && \
 RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git pull && git checkout 2ea1930dfd109b08e37904d7e99a2f6b39c73927 || true
+RUN cd /libafl && git pull && git checkout a5f2daf6e70c0b57b6781c1e8cd9a5b309a6c1de || true
 # Note that due a nightly bug it is currently fixed to a known version on top!
 
 # Compile libafl.
