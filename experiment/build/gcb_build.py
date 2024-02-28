@@ -67,6 +67,21 @@ def build_coverage(benchmark):
     _build(config, config_name)
 
 
+def build_mua(benchmark):
+    """Build mutation testing image for benchmark on GCB."""
+    buildable_images = _get_buildable_images(benchmark=benchmark)
+    image_templates = {
+        image_name: image_specs
+        for image_name, image_specs in buildable_images.items()
+        if (image_name == (benchmark + '-project-builder') or
+            image_specs['type'] == 'mutation_analysis')
+    }
+    config = generate_cloudbuild.create_cloudbuild_spec(
+        image_templates, benchmark=benchmark, fuzzer='mutation_analysis')
+    config_name = f'benchmark-{benchmark}-mutation_analysis'
+    _build(config, config_name)
+
+
 def _build(
         config: Dict,
         config_name: str,
@@ -101,7 +116,8 @@ def _build(
                                      write_to_stdout=False,
                                      kill_children=True,
                                      timeout=timeout_seconds,
-                                     expect_zero=False)
+                                     expect_zero=False,
+                                     limit_log_size=False)
         # TODO(metzman): Refactor code so that local_build stores logs as well.
         build_utils.store_build_logs(config_name, result)
         if result.retcode != 0:

@@ -101,8 +101,21 @@ def all_trials_ended(experiment: str) -> bool:
     """Return a bool if there are any trials in |experiment| that have not
     started."""
     try:
-        return not get_experiment_trials(experiment).filter(
+        active_trials = get_experiment_trials(experiment).filter(
             models.Trial.time_ended.is_(None)).all()
+        if experiment_utils.is_local_experiment():
+            # Do some extra logging for local runs
+            logs.info(f'Active trials: {len(active_trials)}')
+            for trial in active_trials:
+                if trial.time_started is None:
+                    runtime_info = 'not started'
+                else:
+                    runtime_info = datetime.datetime.now() - trial.time_started
+                    runtime_info = f'running for {runtime_info}'
+                logs.info('Active trial: ' +
+                          f'{trial.id} {trial.fuzzer} {trial.benchmark}: ' +
+                          f'{runtime_info}')
+        return not active_trials
     except RuntimeError:
         logger.error('Failed to check whether all trials ended.')
         return False

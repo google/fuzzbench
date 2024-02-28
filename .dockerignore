@@ -8,3 +8,5 @@
 **__pycache__*
 docs
 report*
+fuzzers/mutation_analysis/mua_fuzzer_bench/.git
+fuzzers/mutation_analysis/fuzzbench_mapped_dir/

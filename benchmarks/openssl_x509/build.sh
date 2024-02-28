@@ -24,6 +24,10 @@ fi
 if [ "$FUZZER" = "centipede" ]
 then
   WITH_FUZZER_LIB="$FUZZER_LIB"
+elif [ "$FUZZER" = "mutation_analysis" ]
+then
+  clang++ -c /mutator/dockerfiles/programs/common/main.cc -o /usr/lib/libFuzzingEngineMutation.a
+  WITH_FUZZER_LIB="/usr/lib/libFuzzingEngineMutation"
 else
   WITH_FUZZER_LIB='/usr/lib/libFuzzingEngine'
 fi

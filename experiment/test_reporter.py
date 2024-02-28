@@ -78,8 +78,11 @@ def test_output_report_filestore(experiment_fuzzers, expected_merged_fuzzers,
                 [experiment_name],
                 reports_dir,
                 report_name=experiment_name,
+                report_type='default',
                 fuzzers=expected_merged_fuzzers,
                 in_progress=False,
                 merge_with_clobber_nonprivate=False,
                 coverage_report=False,
-                experiment_benchmarks=experiment_benchmarks)
+                experiment_benchmarks=experiment_benchmarks,
+                mutation_analysis=False,
+            )

@@ -163,7 +163,12 @@ def log(logger, severity, message, *args, extras=None):
 
     if utils.is_local():
         if extras:
-            message += ' Extras: ' + str(extras)
+            message += ' Extras: '
+            if isinstance(extras, dict):
+                for key, value in extras.items():
+                    message += f'\n    {key}: {value}'
+            else:
+                message += str(extras)
         logging.log(severity, message)
         return
 

@@ -94,25 +94,44 @@ def build_base_images() -> Tuple[int, str]:
     return buildlib.build_base_images()
 
 
-def build_measurer(benchmark: str) -> bool:
+def build_coverage_measurer(benchmark: str) -> bool:
     """Do a coverage build for a benchmark."""
     try:
-        logger.info('Building measurer for benchmark: %s.', benchmark)
+        logger.info('Building coverage measurer for benchmark: %s.', benchmark)
         buildlib.build_coverage(benchmark)
-        logs.info('Done building measurer for benchmark: %s.', benchmark)
+        logs.info('Done building coverage measurer for benchmark: %s.',
+                  benchmark)
         return True
     except Exception:  # pylint: disable=broad-except
         logger.error('Failed to build measurer for %s.', benchmark)
         return False
 
 
-def build_all_measurers(benchmarks: List[str]) -> List[str]:
+def build_mua_measurer(benchmark: str) -> bool:
+    """Do a mutation analysis build for a benchmark."""
+    try:
+        logger.info('Building mua measurer for benchmark: %s.', benchmark)
+        buildlib.build_mua(benchmark)
+        logs.info('Done building mua measurer for benchmark: %s.', benchmark)
+        return True
+    except Exception:  # pylint: disable=broad-except
+        logger.error('Failed to build mua measurer for %s.', benchmark)
+        return False
+
+
+def build_all_measurers(benchmarks: List[str],
+                        mutation_analysis: bool) -> List[str]:
     """Build measurers for each benchmark in |benchmarks| in parallel
     Returns a list of benchmarks built successfully."""
     logger.info('Building measurers.')
     filesystem.recreate_directory(build_utils.get_coverage_binaries_dir())
+    filesystem.recreate_directory(build_utils.get_mua_results_dir())
     build_measurer_args = [(benchmark,) for benchmark in benchmarks]
-    successful_calls = retry_build_loop(build_measurer, build_measurer_args)
+    successful_calls = retry_build_loop(build_coverage_measurer,
+                                        build_measurer_args)
+    # build mua measurer
+    if mutation_analysis:
+        retry_build_loop(build_mua_measurer, build_measurer_args)
     logger.info('Done building measurers.')
     # Return list of benchmarks (like the list we were passed as an argument)
     # instead of returning a list of tuples each containing a benchmark.

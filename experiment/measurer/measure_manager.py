@@ -14,6 +14,7 @@
 """Module for measuring snapshots from trial runners."""
 
 import collections
+import datetime
 import gc
 import glob
 import multiprocessing
@@ -21,12 +22,18 @@ import json
 import os
 import pathlib
 import posixpath
+import shlex
+import shutil
+import sqlite3
+import subprocess
 import sys
 import tempfile
 import tarfile
 import time
-from typing import List
+import traceback
+from typing import Any, Dict, List, Optional, Tuple
 import queue
+from pathlib import Path
 import psutil
 
 from sqlalchemy import func
@@ -39,6 +46,7 @@ from common import filesystem
 from common import fuzzer_stats
 from common import filestore_utils
 from common import logs
+from common import new_process
 from common import utils
 from database import utils as db_utils
 from database import models
@@ -47,6 +55,12 @@ from experiment.measurer import coverage_utils
 from experiment.measurer import run_coverage
 from experiment.measurer import run_crashes
 from experiment import scheduler
+from experiment.measurer.run_mua import (
+    add_measure_run, add_measure_run_failed, copy_mua_stats_db,
+    get_covered_mutants, get_dispatcher_mua_out_dir, get_measure_spot,
+    get_mua_results_path, init_measure_db, run_mua_build_ids,
+    ensure_mua_container_running, wait_if_median_run)
+from experiment.runner import UNIQUE_TIMESTAMP_FILENAME
 
 logger = logs.Logger()
 
@@ -58,6 +72,67 @@ RETRY_DELAY = 3
 FAIL_WAIT_SECONDS = 30
 SNAPSHOT_QUEUE_GET_TIMEOUT = 1
 SNAPSHOTS_BATCH_SAVE_SIZE = 100
+
+
+def add_timestamps_to_mua_results_db(timestamp_info,
+                                     trial_start_time: datetime.datetime, cycle,
+                                     corpus_dir, db_path):
+    """Add timestamp info to the mua results sqlite db."""
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.execute('''
+            CREATE TABLE IF NOT EXISTS timestamps (
+                input_file_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                hashname TEXT,
+                input_file TEXT,
+                timestamp FLOAT,
+                UNIQUE(hashname)
+            )
+        ''')
+    cur.execute('''
+        CREATE INDEX IF NOT EXISTS timestamps_hashname_index
+        ON timestamps (hashname)
+    ''')
+    cur.execute('''
+        CREATE INDEX IF NOT EXISTS timestamps_id_timestamp_index
+        ON timestamps (input_file_id, timestamp)
+    ''')
+    conn.commit()
+
+    cur = conn.cursor()
+    num_timestamp_not_found = 0
+    for corpus_file in os.listdir(corpus_dir):
+        cur.execute(
+            '''
+                SELECT hashname FROM timestamps WHERE hashname = ?
+                LIMIT 1
+            ''', (corpus_file,))
+        if cur.fetchone() is None:
+            # Corpus file has no associated timestamp yet.
+            # Try to get it from the timestamp_info dict.
+            if cycle == 0:
+                # This is the first cycle, containing only seed inputs,
+                # so use the trial start time.
+                timestamp = trial_start_time.timestamp()
+                input_file = '<seed_entry>'
+            else:
+                timestamp = timestamp_info.get(corpus_file)
+                if timestamp is None:
+                    num_timestamp_not_found += 1
+                    continue
+                input_file = timestamp_info[corpus_file]['filename']
+                timestamp = timestamp_info[corpus_file]['timestamp']
+            cur.execute(
+                '''
+                    INSERT INTO timestamps (hashname, input_file, timestamp)
+                    VALUES (?, ?, ?)
+                ''', (corpus_file, input_file, timestamp))
+
+    if num_timestamp_not_found > 0:
+        logger.info('Failed to find timestamp info for %d corpus entries.',
+                    num_timestamp_not_found)
+
+    conn.commit()
 
 
 def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
@@ -77,8 +152,10 @@ def measure_main(experiment_config):
     measurers_cpus = experiment_config['measurers_cpus']
     runners_cpus = experiment_config['runners_cpus']
     region_coverage = experiment_config['region_coverage']
+    mutation_analysis = experiment_config['mutation_analysis']
+    num_trials = experiment_config['trials']
     measure_loop(experiment, max_total_time, measurers_cpus, runners_cpus,
-                 region_coverage)
+                 num_trials, region_coverage, mutation_analysis)
 
     # Clean up resources.
     gc.collect()
@@ -96,11 +173,14 @@ def _process_init(cores_queue):
         psutil.Process().cpu_affinity([cpu])
 
 
-def measure_loop(experiment: str,
-                 max_total_time: int,
-                 measurers_cpus=None,
-                 runners_cpus=None,
-                 region_coverage=False):
+def measure_loop(  # pylint: disable=too-many-arguments
+        experiment: str,
+        max_total_time: int,
+        measurers_cpus=None,
+        runners_cpus=None,
+        num_trials=None,
+        region_coverage=False,
+        mutation_analysis=False):
     """Continuously measure trials for |experiment|."""
     logger.info('Start measure_loop.')
 
@@ -120,10 +200,13 @@ def measure_loop(experiment: str,
     with multiprocessing.Pool(
             *pool_args) as pool, multiprocessing.Manager() as manager:
         set_up_coverage_binaries(pool, experiment)
+        if mutation_analysis:
+            set_up_mua_binaries(pool, experiment, num_trials)
         # Using Multiprocessing.Queue will fail with a complaint about
         # inheriting queue.
         # pytype: disable=attribute-error
         multiprocessing_queue = manager.Queue()
+        # pytype: enable=attribute-error
         while True:
             try:
                 # Get whether all trials have ended before we measure to prevent
@@ -132,7 +215,7 @@ def measure_loop(experiment: str,
 
                 if not measure_all_trials(experiment, max_total_time, pool,
                                           multiprocessing_queue,
-                                          region_coverage):
+                                          region_coverage, mutation_analysis):
                     # We didn't measure any trials.
                     if all_trials_ended:
                         # There are no trials producing snapshots to measure.
@@ -147,8 +230,9 @@ def measure_loop(experiment: str,
     logger.info('Finished measure loop.')
 
 
-def measure_all_trials(experiment: str, max_total_time: int, pool,
-                       multiprocessing_queue, region_coverage) -> bool:
+def measure_all_trials(  # pylint: disable=too-many-arguments
+        experiment: str, max_total_time: int, pool, multiprocessing_queue,
+        region_coverage, mutation_analysis) -> bool:
     """Get coverage data (with coverage runs) for all active trials. Note that
     this should not be called unless multiprocessing.set_start_method('spawn')
     was called first. Otherwise it will use fork which breaks logging."""
@@ -164,13 +248,12 @@ def measure_all_trials(experiment: str, max_total_time: int, pool,
     if not unmeasured_snapshots:
         return False
 
-    measure_trial_coverage_args = [
-        (unmeasured_snapshot, max_cycle, multiprocessing_queue, region_coverage)
-        for unmeasured_snapshot in unmeasured_snapshots
+    measure_trial_args = [
+        (unmeasured_snapshot, max_cycle, multiprocessing_queue, region_coverage,
+         mutation_analysis) for unmeasured_snapshot in unmeasured_snapshots
     ]
 
-    result = pool.starmap_async(measure_trial_coverage,
-                                measure_trial_coverage_args)
+    result = pool.starmap_async(measure_trial, measure_trial_args)
 
     # Poll the queue for snapshots and save them in batches until the pool is
     # done processing each unmeasured snapshot. Then save any remaining
@@ -199,8 +282,7 @@ def measure_all_trials(experiment: str, max_total_time: int, pool,
                 # If "ready" that means pool has finished calling on each
                 # unmeasured_snapshot. Since it is finished and the queue is
                 # empty, we can stop checking the queue for more snapshots.
-                logger.debug(
-                    'Finished call to map with measure_trial_coverage.')
+                logger.debug('Finished call to map with measure_trial.')
                 break
 
             if len(snapshots) >= SNAPSHOTS_BATCH_SAVE_SIZE * .75:
@@ -246,13 +328,25 @@ def _query_unmeasured_trials(experiment: str):
 
     with db_utils.session_scope() as session:
         trial_query = session.query(models.Trial)
-        no_snapshots_filter = ~models.Trial.id.in_(ids_of_trials_with_snapshots)
-        started_trials_filter = ~models.Trial.time_started.is_(None)
+        no_snapshots_filter = ~models.Trial.id.in_(
+            ids_of_trials_with_snapshots)  # trial has no snapshot
+        started_trials_filter = ~models.Trial.time_started.is_(
+            None)  # trial already started
+        # trial not preempted
         nonpreempted_trials_filter = ~models.Trial.preempted
+        # trial matches the current experiment
         experiment_trials_filter = models.Trial.experiment == experiment
         return trial_query.filter(experiment_trials_filter, no_snapshots_filter,
                                   started_trials_filter,
                                   nonpreempted_trials_filter)
+
+
+def _query_trial_start_time(trial_id: int):
+    """Returns the start time of the trial with id |trial_id|."""
+    with db_utils.session_scope() as session:
+        trial_query = session.query(models.Trial)
+        trial = trial_query.filter(models.Trial.id == trial_id).one()
+        return trial.time_started
 
 
 def _get_unmeasured_first_snapshots(
@@ -328,9 +422,42 @@ def get_unmeasured_snapshots(experiment: str,
     return unmeasured_first_snapshots + unmeasured_latest_snapshots
 
 
-def extract_corpus(corpus_archive: str, output_directory: str):
+def enrich_timestamp_info(timestamp_info,
+                          member_to_filename) -> Dict[str, Dict[str, Any]]:
+    """Enrich timestamp info with the filename of the corpus entry."""
+    # Replace filenames with hashnames but keep the original filenames
+    # for reference.
+    full_timestamp_info = {}
+    for member, timestamp in timestamp_info.items():
+        try:
+            filename = member_to_filename[member]
+        except KeyError:
+            # The file was not extracted, so we don't have a hashname for it
+            # This file will not need to be measured so we can skip it.
+            continue
+        # If there are multiple files with the same hashname, keep the one
+        # with the lowest timestamp.
+        if filename in full_timestamp_info:
+            if timestamp < full_timestamp_info[filename]['timestamp']:
+                full_timestamp_info[filename] = {
+                    'timestamp': timestamp,
+                    'filename': member
+                }
+        else:
+            full_timestamp_info[filename] = {
+                'timestamp': timestamp,
+                'filename': member
+            }
+    return full_timestamp_info
+
+
+def extract_corpus(
+        corpus_archive: str,
+        output_directory: str) -> Optional[Dict[str, Dict[str, Any]]]:
     """Extract a corpus from |corpus_archive| to |output_directory|."""
     pathlib.Path(output_directory).mkdir(exist_ok=True)
+    timestamp_info = None
+    member_to_filename = {}
     with tarfile.open(corpus_archive, 'r:gz') as tar:
         for member in tar.getmembers():
 
@@ -338,6 +465,26 @@ def extract_corpus(corpus_archive: str, output_directory: str):
                 # We don't care about directory structure.
                 # So skip if not a file.
                 continue
+
+            if member.name == UNIQUE_TIMESTAMP_FILENAME:
+                logger.info('Found timestamp file %s.', member.name)
+                timestamp_file_handle = tar.extractfile(member)
+                if timestamp_file_handle is None:
+                    logger.info('Failed to get timestamp file handle to %s.',
+                                member)
+                    continue
+                timestamp_json_string = timestamp_file_handle.read().decode()
+                if len(timestamp_json_string) == 0:
+                    logger.info(
+                        'Empty timestamp json file, this is expected for empty '
+                        'corpus.')
+                    continue
+                try:
+                    timestamp_info = json.loads(timestamp_json_string)
+                except json.decoder.JSONDecodeError:
+                    logger.error('Failed to decode timestamp json file: '
+                                 f'{timestamp_json_string}')
+                    continue
 
             member_file_handle = tar.extractfile(member)
             if not member_file_handle:
@@ -349,12 +496,17 @@ def extract_corpus(corpus_archive: str, output_directory: str):
             member_contents = member_file_handle.read()
             filename = utils.string_hash(member_contents)
             file_path = os.path.join(output_directory, filename)
+            member_to_filename[member.name] = filename
 
             if os.path.exists(file_path):
                 # Don't write out duplicates in the archive.
                 continue
 
             filesystem.write(file_path, member_contents, 'wb')
+
+    if timestamp_info is None:
+        return None
+    return enrich_timestamp_info(timestamp_info, member_to_filename)
 
 
 class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-many-instance-attributes
@@ -397,9 +549,116 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
     def initialize_measurement_dirs(self):
         """Initialize directories that will be needed for measuring
         coverage."""
+
         for directory in [self.corpus_dir, self.coverage_dir, self.crashes_dir]:
             filesystem.recreate_directory(directory)
         filesystem.create_directory(self.report_dir)
+
+    def create_dir(self, directory):
+        """Create directory if it does not exist,
+        also creates parent directories."""
+        if not os.path.exists(directory):
+            os.makedirs(directory, exist_ok=True)
+        return os.path.exists(directory)
+
+    def mua_run_result_dir(self):
+        """Return the directory where mua results are stored."""
+        experiment_name = experiment_utils.get_experiment_name()
+        experiment_filestore_path = get_dispatcher_mua_out_dir()
+        shared_mua_binaries_dir = \
+            experiment_filestore_path / experiment_name / 'mua-results'
+        mua_run_results_dir = (shared_mua_binaries_dir / 'corpus_run_results' /
+                               self.fuzzer / str(self.trial_num))
+        return mua_run_results_dir
+
+    def initialize_mua_environment(self, timestamp_info,
+                                   trial_start_time: datetime.datetime,
+                                   benchmark, cycle):
+        """Build all covered mutants."""
+
+        def initialize_mua_directories():
+            experiment_name = experiment_utils.get_experiment_name()
+            experiment_filestore_path = get_dispatcher_mua_out_dir()
+            shared_mua_binaries_dir = \
+                experiment_filestore_path / experiment_name / 'mua-results'
+
+            # create corpi directory entry
+            corpi_dir = Path(shared_mua_binaries_dir) / 'corpi'
+            fuzzer_corpi_dir = corpi_dir / self.fuzzer
+            trial_corpi_dir = fuzzer_corpi_dir / str(self.trial_num)
+            self.create_dir(fuzzer_corpi_dir)
+
+            mutants_ids_dir_entry = (shared_mua_binaries_dir / 'mutant_ids' /
+                                     self.benchmark / self.fuzzer /
+                                     str(self.trial_num))
+            self.create_dir(mutants_ids_dir_entry)
+
+            mua_results_dir = self.mua_run_result_dir()
+            self.create_dir(mua_results_dir)
+
+            # create mutants directory
+            mutants_dir_entry = shared_mua_binaries_dir / 'mutants'
+            self.create_dir(mutants_dir_entry)
+
+            # copy corpus from self.corpus_dir into container
+            shutil.copytree(self.corpus_dir,
+                            trial_corpi_dir,
+                            dirs_exist_ok=True)
+            return mua_results_dir
+
+        ensure_mua_container_running(self.benchmark)
+
+        mua_results_dir = initialize_mua_directories()
+
+        corpus_run_result_db = mua_results_dir / 'results.sqlite'
+        if timestamp_info is None:
+            logs.info('No timestamp info found.')
+            timestamp_info = {}
+
+        add_timestamps_to_mua_results_db(timestamp_info, trial_start_time,
+                                         cycle, self.corpus_dir,
+                                         corpus_run_result_db)
+
+        copy_mua_stats_db(benchmark, mua_results_dir)
+
+        with get_measure_spot() as _measure_spot:
+            run_mua_build_ids(benchmark, self.trial_num, self.fuzzer, cycle)
+
+    def process_mua(self, cycle):
+        """runs mua measurement"""
+        with get_measure_spot() as _measure_spot:
+            # get necessary info
+            container_name = \
+                'mutation_analysis_' + self.benchmark + '_container'
+            experiment_name = experiment_utils.get_experiment_name()
+            fuzz_target = benchmark_utils.get_fuzz_target(self.benchmark)
+
+            # run all needed mutants in container
+            command = [
+                'python3', '/mutator/mua_run_mutants.py', fuzz_target,
+                self.benchmark, experiment_name, self.fuzzer,
+                str(self.trial_num)
+            ]
+
+            docker_exec_command = [
+                'docker', 'exec', '-t', container_name, '/bin/bash', '-c',
+                shlex.join(command)
+            ]
+            logger.debug('mua_run_mutants command:' + str(docker_exec_command))
+            try:
+                mua_run_res = new_process.execute(docker_exec_command)
+            except subprocess.CalledProcessError as error:
+                trace_msg = traceback.format_exc()
+                error_msg = f'mua_run_mutants failed: {error}\n{trace_msg}'
+                build_utils.store_mua_run_log(error_msg, self.trial_num, cycle)
+                raise error
+            logger.info(f'mua_run_mutants result: {mua_run_res.retcode} ' +
+                        f'timed_out: {mua_run_res.timed_out}\n' +
+                        f'{mua_run_res.output}')
+            build_utils.store_mua_run_log(mua_run_res.output, self.trial_num,
+                                          cycle)
+            results_db = self.mua_run_result_dir() / 'results.sqlite'
+            build_utils.store_mua_results_db(results_db, self.trial_num, cycle)
 
     def run_cov_new_units(self):
         """Run the coverage binary on new units."""
@@ -476,14 +735,16 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
             return
         self.generate_summary(cycle)
 
-    def extract_corpus(self, corpus_archive_path) -> bool:
+    def extract_corpus(
+        self, corpus_archive_path
+    ) -> Tuple[bool, Optional[Dict[str, Dict[str, Any]]]]:
         """Extract the corpus archive for this cycle if it exists."""
         if not os.path.exists(corpus_archive_path):
             self.logger.warning('Corpus not found: %s.', corpus_archive_path)
-            return False
+            return False, None
 
-        extract_corpus(corpus_archive_path, self.corpus_dir)
-        return True
+        timestamp_info = extract_corpus(corpus_archive_path, self.corpus_dir)
+        return True, timestamp_info
 
     def save_crash_files(self, cycle):
         """Save crashes in per-cycle crash archive."""
@@ -552,9 +813,9 @@ def get_fuzzer_stats(stats_filestore_path):
     return json.loads(stats_str)
 
 
-def measure_trial_coverage(measure_req, max_cycle: int,
-                           multiprocessing_queue: multiprocessing.Queue,
-                           region_coverage) -> models.Snapshot:
+def measure_trial(measure_req, max_cycle: int,
+                  multiprocessing_queue: multiprocessing.Queue, region_coverage,
+                  mutation_analysis) -> models.Snapshot:
     """Measure the coverage obtained by |trial_num| on |benchmark| using
     |fuzzer|."""
     initialize_logs()
@@ -563,10 +824,12 @@ def measure_trial_coverage(measure_req, max_cycle: int,
     # Add 1 to ensure we measure the last cycle.
     for cycle in range(min_cycle, max_cycle + 1):
         try:
-            snapshot = measure_snapshot_coverage(measure_req.fuzzer,
-                                                 measure_req.benchmark,
-                                                 measure_req.trial_id, cycle,
-                                                 region_coverage)
+            is_last_cycle = cycle == max_cycle
+            snapshot = measure_snapshot(measure_req.fuzzer,
+                                        measure_req.benchmark,
+                                        measure_req.trial_id, cycle,
+                                        is_last_cycle, region_coverage,
+                                        mutation_analysis)
             if not snapshot:
                 break
             multiprocessing_queue.put(snapshot)
@@ -581,11 +844,12 @@ def measure_trial_coverage(measure_req, max_cycle: int,
     logger.debug('Done measuring trial: %d.', measure_req.trial_id)
 
 
-def measure_snapshot_coverage(  # pylint: disable=too-many-locals
+def measure_snapshot(  # pylint: disable=too-many-locals,too-many-arguments
         fuzzer: str, benchmark: str, trial_num: int, cycle: int,
-        region_coverage: bool) -> models.Snapshot:
-    """Measure coverage of the snapshot for |cycle| for |trial_num| of |fuzzer|
-    and |benchmark|."""
+        is_last_cycle: bool, region_coverage: bool,
+        mutation_analysis: bool) -> models.Snapshot:
+    """Measure coverage and mua of the snapshot for |cycle| for |trial_num|
+    of |fuzzer| and |benchmark|."""
     snapshot_logger = logs.Logger(
         default_extras={
             'fuzzer': fuzzer,
@@ -612,15 +876,29 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
                           corpus_archive_dst,
                           expect_zero=False).retcode:
         snapshot_logger.warning('Corpus not found for cycle: %d.', cycle)
+        if mutation_analysis:
+            add_measure_run_failed(benchmark, fuzzer, trial_num)
         return None
 
     snapshot_measurer.initialize_measurement_dirs()
-    snapshot_measurer.extract_corpus(corpus_archive_dst)
+    _extract_success, timestamp_info = snapshot_measurer.extract_corpus(
+        corpus_archive_dst)
+
+    if mutation_analysis:
+        trial_start_time = _query_trial_start_time(trial_num)
+        snapshot_measurer.initialize_mua_environment(timestamp_info,
+                                                     trial_start_time,
+                                                     benchmark, cycle)
+
     # Don't keep corpus archives around longer than they need to be.
     os.remove(corpus_archive_dst)
 
     # Run coverage on the new corpus units.
-    snapshot_measurer.run_cov_new_units()
+    if mutation_analysis:
+        with get_measure_spot():
+            snapshot_measurer.run_cov_new_units()
+    else:
+        snapshot_measurer.run_cov_new_units()
 
     # Generate profdata and transform it into json form.
     snapshot_measurer.generate_coverage_information(cycle)
@@ -637,9 +915,21 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
                                fuzzer_stats=fuzzer_stats_data,
                                crashes=crashes)
 
+    if mutation_analysis:
+        if is_last_cycle:
+            num_covered_muts = get_covered_mutants(trial_num)
+            logger.info(
+                f'Trial {trial_num} covered {num_covered_muts} mutants.')
+            add_measure_run(benchmark, fuzzer, trial_num, num_covered_muts)
+            if wait_if_median_run(benchmark, fuzzer, trial_num):
+                logger.info(
+                    f'The median trial is {trial_num}, get mua results.')
+                snapshot_measurer.process_mua(cycle)
+
     measuring_time = round(time.time() - measuring_start_time, 2)
     snapshot_logger.info('Measured cycle: %d in %f seconds.', cycle,
                          measuring_time)
+
     return snapshot
 
 
@@ -656,6 +946,15 @@ def set_up_coverage_binaries(pool, experiment):
     coverage_binaries_dir = build_utils.get_coverage_binaries_dir()
     filesystem.create_directory(coverage_binaries_dir)
     pool.map(set_up_coverage_binary, benchmarks)
+
+
+def set_up_mua_binaries(_pool, _experiment, num_trials):
+    """Set up mua finder binaries for all benchmarks in |experiment|."""
+    mua_results_dir = build_utils.get_mua_results_dir()
+    filesystem.create_directory(mua_results_dir)
+    mua_results_path = get_mua_results_path()
+    filesystem.create_directory(mua_results_path)
+    init_measure_db(num_trials)
 
 
 def set_up_coverage_binary(benchmark):

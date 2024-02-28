@@ -17,6 +17,7 @@ it needs to begin an experiment."""
 
 import argparse
 import os
+from pathlib import Path
 import re
 import subprocess
 import sys
@@ -39,6 +40,7 @@ from common import logs
 from common import new_process
 from common import utils
 from common import yaml_utils
+from experiment.measurer.run_mua import GOOGLE_CLOUD_MUA_MAPPED_DIR
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
@@ -155,6 +157,8 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
     config_requirements = {
         'experiment_filestore':
             Requirement(True, str, True, '/' if local_experiment else 'gs://'),
+        'host_mua_mapped_dir':
+            Requirement(False, str, False, '/'),
         'report_filestore':
             Requirement(True, str, True, '/' if local_experiment else 'gs://'),
         'docker_registry':
@@ -309,7 +313,8 @@ def start_experiment(  # pylint: disable=too-many-arguments
         measurers_cpus: Optional[int] = None,
         runners_cpus: Optional[int] = None,
         region_coverage: bool = False,
-        custom_seed_corpus_dir: Optional[str] = None):
+        custom_seed_corpus_dir: Optional[str] = None,
+        mutation_analysis: bool = False):
     """Start a fuzzer benchmarking experiment."""
     if not allow_uncommitted_changes:
         check_no_uncommitted_changes()
@@ -345,6 +350,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
         validate_custom_seed_corpus(config['custom_seed_corpus_dir'],
                                     benchmarks)
 
+    config['mutation_analysis'] = mutation_analysis
     return start_experiment_from_full_config(config)
 
 
@@ -368,6 +374,9 @@ def start_dispatcher(config: Dict, config_dir: str):
     """Start the dispatcher instance and run the dispatcher code on it."""
     dispatcher = get_dispatcher(config)
     # Is dispatcher code being run manually (useful for debugging)?
+    host_mua_mapped_dir = config.get('host_mua_mapped_dir')
+    if host_mua_mapped_dir is not None:
+        os.environ['HOST_MUA_MAPPED_DIR'] = host_mua_mapped_dir
     copy_resources_to_bucket(config_dir, config)
     if not os.getenv('MANUAL_EXPERIMENT'):
         dispatcher.start()
@@ -494,6 +503,16 @@ class LocalDispatcher(BaseDispatcher):
             f'CONCURRENT_BUILDS={self.config["concurrent_builds"]}')
         set_worker_pool_name_arg = (
             f'WORKER_POOL_NAME={self.config["worker_pool_name"]}')
+
+        # TODO(mua): Only pass env and volumes if mua is enabled.
+
+        mua_mapped_dir = os.environ.get('HOST_MUA_MAPPED_DIR')
+
+        host_mua_out_dir = str(
+            Path(os.environ.get('HOST_MUA_OUT_DIR',
+                                Path.cwd() / 'mua_out')).absolute())
+        os.environ['HOST_MUA_OUT_DIR'] = host_mua_out_dir
+
         environment_args = [
             '-e',
             'LOCAL_EXPERIMENT=True',
@@ -515,6 +534,10 @@ class LocalDispatcher(BaseDispatcher):
             set_concurrent_builds_arg,
             '-e',
             set_worker_pool_name_arg,
+            *(['-e', f'HOST_MUA_MAPPED_DIR={mua_mapped_dir}']
+              if mua_mapped_dir is not None else []),
+            *(['-e', f'HOST_MUA_OUT_DIR={host_mua_out_dir}']
+              if host_mua_out_dir is not None else []),
         ]
         command = [
             'docker',
@@ -527,6 +550,16 @@ class LocalDispatcher(BaseDispatcher):
             shared_experiment_filestore_arg,
             '-v',
             shared_report_filestore_arg,
+            # To avoid having the dispatcher image reinstall the same python
+            # packages with every run the site-packages folder can be mapped
+            # to a volume. This reduces the time needed when repeating local
+            # starts by several minutes.
+            '-v',
+            '/tmp/dispatcher_venv:/work/src/.venv/lib/python3.10/site-packages',
+            # To share files between the dispatcher and mutation testing
+            # container we need to map a shared host directory to a volume.
+            '-v',
+            f'{host_mua_out_dir}:/mua_out',
         ] + environment_args + [
             '--shm-size=2g',
             '--cap-add=SYS_PTRACE',
@@ -537,7 +570,7 @@ class LocalDispatcher(BaseDispatcher):
             '-c',
             'rsync -r '
             '"${EXPERIMENT_FILESTORE}/${EXPERIMENT}/input/" ${WORK} && '
-            'mkdir ${WORK}/src && '
+            'mkdir -p ${WORK}/src && '
             'tar -xvzf ${WORK}/src.tar.gz -C ${WORK}/src && '
             'PYTHONPATH=${WORK}/src python3 '
             '${WORK}/src/experiment/dispatcher.py || '
@@ -588,6 +621,11 @@ class GoogleCloudDispatcher(BaseDispatcher):
             'worker_pool_name': self.config['worker_pool_name'],
             'private': self.config['private'],
         }
+        if self.config['mutation_analysis']:
+            kwargs[
+                'mua_mapped_dir'] = f'-v {GOOGLE_CLOUD_MUA_MAPPED_DIR}:/mua_out'
+        else:
+            kwargs['mua_mapped_dir'] = ''
         if 'worker_pool_name' in self.config:
             kwargs['worker_pool_name'] = self.config['worker_pool_name']
         return template.render(**kwargs)
@@ -595,6 +633,7 @@ class GoogleCloudDispatcher(BaseDispatcher):
     def write_startup_script(self, startup_script_file):
         """Get the startup script to start the experiment on the dispatcher."""
         startup_script = self._render_startup_script()
+        print(startup_script)
         startup_script_file.write(startup_script)
         startup_script_file.flush()
 
@@ -703,6 +742,12 @@ def run_experiment_main(args=None):
         required=False,
         default=False,
         action='store_true')
+    parser.add_argument('-ma',
+                        '--mutation-analysis',
+                        help='Run integrated mutation analysis.',
+                        required=False,
+                        default=False,
+                        action='store_true')
     args = parser.parse_args(args)
     fuzzers = args.fuzzers or all_fuzzers
 
@@ -753,7 +798,8 @@ def run_experiment_main(args=None):
                      measurers_cpus=measurers_cpus,
                      runners_cpus=runners_cpus,
                      region_coverage=args.region_coverage,
-                     custom_seed_corpus_dir=args.custom_seed_corpus_dir)
+                     custom_seed_corpus_dir=args.custom_seed_corpus_dir,
+                     mutation_analysis=args.mutation_analysis)
     return 0
 
 

@@ -55,6 +55,30 @@
   tag: 'builders/coverage/{benchmark}'
   type: 'coverage'
 
+'mutation_analysis-{benchmark}-builder-intermediate':
+  build_arg:
+    - 'parent_image=gcr.io/fuzzbench/builders/benchmark/{benchmark}'
+    - 'map_mua=false'
+  depends_on:
+    - '{benchmark}-project-builder'
+  dockerfile: 'fuzzers/mutation_analysis/builder.Dockerfile'
+  context: 'fuzzers/mutation_analysis'
+  tag: 'builders/mutation_analysis/{benchmark}-intermediate'
+  type: 'mutation_analysis'
+
+'mutation_analysis-{benchmark}-builder':
+  build_arg:
+    - 'benchmark={benchmark}'
+    - 'fuzzer=mutation_analysis'
+    - 'parent_image=gcr.io/fuzzbench/builders/mutation_analysis/{benchmark}-intermediate'
+  depends_on:
+    - 'mutation_analysis-{benchmark}-builder-intermediate'
+    - 'base-image'
+  dockerfile: 'docker/benchmark-builder/Dockerfile'
+  context: '.'
+  tag: 'builders/mutation_analysis/{benchmark}'
+  type: 'mutation_analysis'
+
 '{fuzzer}-{benchmark}-builder-intermediate':
   build_arg:
     - 'parent_image=gcr.io/fuzzbench/builders/benchmark/{benchmark}'
