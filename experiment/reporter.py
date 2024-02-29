@@ -16,6 +16,7 @@
 reports."""
 import os
 import posixpath
+import traceback
 
 from common import experiment_utils
 from common import experiment_path as exp_path
@@ -26,6 +27,7 @@ from common import utils
 from common import yaml_utils
 from analysis import generate_report
 from analysis import data_utils
+from experiment.build.build_utils import store_report_error_log
 
 CORE_FUZZERS_YAML = os.path.join(utils.ROOT_DIR, 'service', 'core-fuzzers.yaml')
 
@@ -70,6 +72,12 @@ def output_report(experiment_config: dict,
     logger.info('Is merging with nonprivate: %s.', merge_with_nonprivate)
 
     experiment_benchmarks = set(experiment_config['benchmarks'])
+    mutation_analysis = experiment_config['mutation_analysis']
+    if mutation_analysis:
+        report_type = 'with_mua'
+    else:
+        report_type = 'default'
+
     try:
         logger.debug('Generating report.')
         filesystem.recreate_directory(reports_dir)
@@ -78,10 +86,12 @@ def output_report(experiment_config: dict,
             str(reports_dir),
             report_name=experiment_name,
             fuzzers=fuzzers,
+            report_type=report_type,
             in_progress=in_progress,
             merge_with_clobber_nonprivate=merge_with_nonprivate,
             coverage_report=coverage_report,
-            experiment_benchmarks=experiment_benchmarks)
+            experiment_benchmarks=experiment_benchmarks,
+            mutation_analysis=mutation_analysis)
         filestore_utils.rsync(
             str(reports_dir),
             web_filestore_path,
@@ -93,4 +103,6 @@ def output_report(experiment_config: dict,
     except data_utils.EmptyDataError:
         logs.warning('No snapshot data.')
     except Exception:  # pylint: disable=broad-except
+        error_msg = traceback.format_exc()
+        store_report_error_log(f'Error generating HTML report:\n{error_msg}')
         logger.error('Error generating HTML report.')

@@ -168,21 +168,20 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
 @mock.patch('common.logs.error')
 @mock.patch('experiment.measurer.measure_manager.initialize_logs')
 @mock.patch('multiprocessing.Queue')
-@mock.patch('experiment.measurer.measure_manager.measure_snapshot_coverage')
-def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
-                                _, __):
-    """Tests that measure_trial_coverage works as expected."""
+@mock.patch('experiment.measurer.measure_manager.measure_snapshot')
+def test_measure_trial(mocked_measure_snapshot, mocked_queue, _, __):
+    """Tests that measure_trial works as expected."""
     min_cycle = 1
     max_cycle = 10
     measure_request = measure_manager.SnapshotMeasureRequest(
         FUZZER, BENCHMARK, TRIAL_NUM, min_cycle)
-    measure_manager.measure_trial_coverage(measure_request, max_cycle,
-                                           mocked_queue(), False)
+    measure_manager.measure_trial(measure_request, max_cycle, mocked_queue(),
+                                  False, True)
     expected_calls = [
-        mock.call(FUZZER, BENCHMARK, TRIAL_NUM, cycle, False)
-        for cycle in range(min_cycle, max_cycle + 1)
+        mock.call(FUZZER, BENCHMARK, TRIAL_NUM, cycle, max_cycle == cycle,
+                  False, True) for cycle in range(min_cycle, max_cycle + 1)
     ]
-    assert mocked_measure_snapshot_coverage.call_args_list == expected_calls
+    assert mocked_measure_snapshot.call_args_list == expected_calls
 
 
 @mock.patch('common.filestore_utils.ls')
@@ -192,7 +191,7 @@ def test_measure_all_trials_not_ready(mocked_rsync, mocked_ls, experiment):
     mocked_ls.return_value = new_process.ProcessResult(1, '', False)
     assert measure_manager.measure_all_trials(
         experiment_utils.get_experiment_name(), MAX_TOTAL_TIME,
-        test_utils.MockPool(), queue.Queue(), False)
+        test_utils.MockPool(), queue.Queue(), False, False)
     assert not mocked_rsync.called
 
 
@@ -209,7 +208,7 @@ def test_measure_all_trials_no_more(mocked_directories_have_same_files,
     mock_pool = test_utils.MockPool()
     assert not measure_manager.measure_all_trials(
         experiment_utils.get_experiment_name(), MAX_TOTAL_TIME, mock_pool,
-        queue.Queue(), False)
+        queue.Queue(), False, False)
 
 
 @mock.patch('common.new_process.execute')
@@ -286,7 +285,7 @@ class TestIntegrationMeasurement:
                         reason='Not running integration tests.')
     def test_measure_snapshot_coverage(  # pylint: disable=too-many-locals
             self, db, experiment, tmp_path):
-        """Integration test for measure_snapshot_coverage."""
+        """Integration test for measure_snapshot."""
         # WORK is set by experiment to a directory that only makes sense in a
         # fakefs. A directory containing necessary llvm tools is also added to
         # PATH.
@@ -330,9 +329,9 @@ class TestIntegrationMeasurement:
             mocked_cp.return_value = new_process.ProcessResult(0, '', False)
             # TODO(metzman): Create a system for using actual buckets in
             # integration tests.
-            snapshot = measure_manager.measure_snapshot_coverage(
+            snapshot = measure_manager.measure_snapshot(
                 snapshot_measurer.fuzzer, snapshot_measurer.benchmark,
-                snapshot_measurer.trial_num, cycle, False)
+                snapshot_measurer.trial_num, cycle, True, False, False)
         assert snapshot
         assert snapshot.time == cycle * experiment_utils.get_snapshot_seconds()
         assert snapshot.edges_covered == 4629

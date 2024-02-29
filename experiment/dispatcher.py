@@ -35,6 +35,7 @@ from experiment.measurer import measure_manager
 from experiment import reporter
 from experiment import scheduler
 from experiment import stop_experiment
+from experiment.exec_id import write_exec_id
 
 LOOP_WAIT_SECONDS = 5 * 60
 
@@ -104,8 +105,8 @@ class Experiment:
 
 
 def build_images_for_trials(fuzzers: List[str], benchmarks: List[str],
-                            num_trials: int,
-                            preemptible: bool) -> List[models.Trial]:
+                            num_trials: int, preemptible: bool,
+                            mutation_analysis) -> List[models.Trial]:
     """Builds the images needed to run |experiment| and returns a list of trials
     that can be run for experiment. This is the number of trials specified in
     experiment times each pair of fuzzer+benchmark that builds successfully."""
@@ -114,7 +115,7 @@ def build_images_for_trials(fuzzers: List[str], benchmarks: List[str],
     builder.build_base_images()
 
     # Only build fuzzers for benchmarks whose measurers built successfully.
-    benchmarks = builder.build_all_measurers(benchmarks)
+    benchmarks = builder.build_all_measurers(benchmarks, mutation_analysis)
     build_successes = builder.build_all_fuzzer_benchmarks(fuzzers, benchmarks)
     experiment_name = experiment_utils.get_experiment_name()
     trials = []
@@ -133,6 +134,8 @@ def dispatcher_main():
     """Do the experiment and report results."""
     logs.info('Starting experiment.')
 
+    write_exec_id()
+
     # Set this here because we get failures if we do it in measurer for some
     # reason.
     multiprocessing.set_start_method('spawn')
@@ -145,9 +148,13 @@ def dispatcher_main():
 
     _initialize_experiment_in_db(experiment.config)
 
+    use_mutation_analysis = experiment.config['mutation_analysis']
+    is_local_experiment = experiment_utils.is_local_experiment()
+
     trials = build_images_for_trials(experiment.fuzzers, experiment.benchmarks,
                                      experiment.num_trials,
-                                     experiment.preemptible)
+                                     experiment.preemptible,
+                                     use_mutation_analysis)
     _initialize_trials_in_db(trials)
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])
@@ -156,6 +163,16 @@ def dispatcher_main():
     scheduler_loop_thread = threading.Thread(target=scheduler.schedule_loop,
                                              args=(experiment.config,))
     scheduler_loop_thread.start()
+
+    if is_local_experiment and use_mutation_analysis:
+        # Mutation analysis just takes all cpu available, further work needs to
+        # be done to make it work nicely in parallel with trial runners for a
+        # local experiment. This is not a problem for remote experiments because
+        # the trials are run on a seperate VM.
+
+        # Wait for trials to end before starting measurer.
+        logs.info('Waiting for trials to end.')
+        scheduler_loop_thread.join()
 
     measurer_main_process = multiprocessing.Process(
         target=measure_manager.measure_main, args=(experiment.config,))
