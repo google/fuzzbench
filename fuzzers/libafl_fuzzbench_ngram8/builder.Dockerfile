@@ -31,13 +31,12 @@ RUN apt-get update && \
     apt-get install -y wget libstdc++5 libtool-bin automake flex bison \
         libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
         apt-utils apt-transport-https ca-certificates joe curl \
-        python3-dev gzip && \
-    PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
+        python3-dev gzip
 
 # Download libafl
 RUN git clone https://github.com/tokatoka/libafl_fuzzbench /libafl_fuzzbench && \
     cd /libafl_fuzzbench && \
-    git checkout 3dea2047aa8d59d3b3ff84059b385ec82ec0a864 && \
+    git checkout 5e5eb3fdaddf8769c367841699884946660e45a7 && \
     git submodule update --init
 
 # Compile libafl
