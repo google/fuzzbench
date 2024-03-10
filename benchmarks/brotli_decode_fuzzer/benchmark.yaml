@@ -1,0 +1,3 @@
+commit: ed1995b6bda19244070ab5d331111f16f67c8054
+fuzz_target: decode_fuzzer
+project: brotli

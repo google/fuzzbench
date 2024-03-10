@@ -1,0 +1,3 @@
+commit: 214f2bb42abf5a577c079d00add5d6cc470620d3
+fuzz_target: guetzli_fuzzer
+project: guetzli

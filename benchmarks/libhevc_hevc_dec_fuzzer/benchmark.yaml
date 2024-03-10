@@ -1,0 +1,3 @@
+commit: a3cac8c9d79968772272fff97a98d4edaf3132c1
+fuzz_target: hevc_dec_fuzzer
+project: libhevc

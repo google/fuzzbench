@@ -1,0 +1,3 @@
+commit: 46ae8534f7be93d05bff009a76881c42b3204f24
+fuzz_target: assimp_fuzzer
+project: assimp

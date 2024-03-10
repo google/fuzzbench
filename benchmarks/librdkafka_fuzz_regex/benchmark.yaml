@@ -1,0 +1,3 @@
+commit: c75eae84846b1023422b75798c41d4b6b1f8b0b7
+fuzz_target: fuzz_regex
+project: librdkafka

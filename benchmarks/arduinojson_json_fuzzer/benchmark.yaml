@@ -1,0 +1,3 @@
+commit: b33966c7551ea7585010a901a1d54118294dbaac
+fuzz_target: json_fuzzer
+project: arduinojson
