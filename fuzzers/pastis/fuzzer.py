@@ -35,7 +35,7 @@ TRITONDSE_CONF = """{{
     "thread_scheduling": 200,
     "smt_queries_limit": 0,
     "smt_enumeration_limit": 40,
-    "coverage_strategy": "PREFIXED_EDGE",
+    "coverage_strategy": "EDGE",
     "branch_solving_strategy": [
         "ALL_NOT_COVERED"
     ],
@@ -233,26 +233,10 @@ def fuzz(input_corpus, output_corpus, target_binary):
 
     # Prepare command-line string.
     command = [
-        'pastis-benchmark',
-        'run',
-        '-b',
-        targets_dir,
-        '-w',
-        output_corpus,
-        '-s',
-        input_corpus,
-        '-m',
-        'FULL',
-        '-i',
-        'ARGV',
-        '-p',
-        '5551',
-        '--triton',
-        '--hfuzz',
-        '--hfuzz-threads',
-        '1',
-        '--aflpp',
-        '--skip-cpufreq',
+        'pastis-benchmark', 'run', '-b', targets_dir, '-w', output_corpus, '-s',
+        input_corpus, '-m', 'FULL', '-i', 'ARGV', '-p', '5551', '--triton',
+        '--hfuzz', '--hfuzz-threads', '1', '--aflpp', '--skip-cpufreq', '--',
+        '@@'
     ]
 
     print('[fuzz] Running command: ' + ' '.join(command))
