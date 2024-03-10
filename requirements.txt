@@ -1,7 +1,7 @@
 alembic==1.8.1
 google-api-python-client==2.64.0
 google-auth==2.12.0
-google-cloud-error-reporting==1.6.3
+google-cloud-error-reporting==1.10.0
 google-cloud-logging==3.1.2
 google-cloud-secret-manager==2.12.6
 clusterfuzz==2.6.0
@@ -22,10 +22,10 @@ rq==1.11.1
 scikit-posthocs==0.7.0
 scipy==1.9.2
 seaborn==0.12.0
-sqlalchemy==1.4.41
+sqlalchemy==2.0.23
 protobuf==3.20.3
 
 # Needed for development.
 pylint==2.15.4
-pytype==2022.10.13
+pytype==2023.12.18
 yapf==0.32.0

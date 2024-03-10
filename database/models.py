@@ -32,7 +32,7 @@ class Experiment(Base):
     __tablename__ = 'experiment'
 
     name = Column(String, nullable=False, primary_key=True)
-    time_created = Column(DateTime(), server_default=sqlalchemy.func.now())
+    time_created = Column(DateTime(), server_default=sqlalchemy.func.now())  # pylint: disable=not-callable
     time_ended = Column(DateTime(), nullable=True)
     git_hash = Column(String, nullable=True)
     private = Column(Boolean, nullable=False, default=False)
