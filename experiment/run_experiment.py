@@ -74,7 +74,6 @@ def _set_default_config_values(config: Dict[str, Union[int, str, bool]],
     config['snapshot_period'] = config.get(
         'snapshot_period', experiment_utils.DEFAULT_SNAPSHOT_SECONDS)
     config['private'] = config.get('private', False)
-    config['micro_experiment'] = config.get('micro_experiment', False)
 
 
 def _validate_config_parameters(
@@ -188,8 +187,6 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
             Requirement(False, int, False, ''),
         'runner_memory':
             Requirement(False, str, False, ''),
-        'micro_experiment':
-            Requirement(False, bool, False, ''),
     }
 
     all_params_valid = _validate_config_parameters(config, config_requirements)
