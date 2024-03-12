@@ -50,6 +50,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
 
     cflags = ['--libafl']
     cxxflags = ['--libafl', '--std=c++14']
+    utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cxxflags)
     utils.append_flags('LDFLAGS', cflags)
 
