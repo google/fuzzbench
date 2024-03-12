@@ -26,12 +26,19 @@ RUN apt-get update && \
     apt-get remove -y llvm-10 && \
     apt-get install -y \
         build-essential \
-        llvm-11 \
-        clang-12 \
-        cargo && \
+        lsb-release wget software-properties-common gnupg && \
     apt-get install -y wget libstdc++5 libtool-bin automake flex bison \
         libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
         apt-utils apt-transport-https ca-certificates joe curl && \
+    wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 17
+
+RUN wget https://gist.githubusercontent.com/tokatoka/26f4ba95991c6e33139999976332aa8e/raw/698ac2087d58ce5c7a6ad59adce58dbfdc32bd46/createAliases.sh && chmod u+x ./createAliases.sh && ./createAliases.sh 
+
+# Uninstall old Rust & Install the latest one.
+RUN if which rustup; then rustup self uninstall -y; fi && \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
+    sh /rustup.sh --default-toolchain nightly-2023-09-21 -y && \
+    rm /rustup.sh && \
     PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
 
 # Download libafl.

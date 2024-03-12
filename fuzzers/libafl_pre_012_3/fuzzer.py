@@ -48,9 +48,8 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     os.environ['ASAN_OPTIONS'] = 'abort_on_error=0:allocator_may_return_null=1'
     os.environ['UBSAN_OPTIONS'] = 'abort_on_error=0'
 
-    cflags = ['--libafl']
-    utils.append_flags('CFLAGS', cflags)
-    utils.append_flags('CXXFLAGS', cflags)
+    cxxflags = ['--libafl', '--std=c++14']
+    utils.append_flags('CXXFLAGS', cxxflags)
     utils.append_flags('LDFLAGS', cflags)
 
     os.environ['FUZZER_LIB'] = '/stub_rt.a'
