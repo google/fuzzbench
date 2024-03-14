@@ -37,7 +37,7 @@ RUN wget https://gist.githubusercontent.com/tokatoka/26f4ba95991c6e3313999997633
 # Uninstall old Rust & Install the latest one.
 RUN if which rustup; then rustup self uninstall -y; fi && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
-    sh /rustup.sh --default-toolchain nightly-2024-01-21 -y && \
+    sh /rustup.sh --default-toolchain nightly-2023-09-21 -y && \
     rm /rustup.sh && \
     PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
 
@@ -45,7 +45,7 @@ RUN if which rustup; then rustup self uninstall -y; fi && \
 RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git pull && git checkout 2ac154d473c5d155feda21a8209ae50a673bf577 || true
+RUN cd /libafl && git pull && git checkout 1b7e1da809e9cb18bd7d33a90537e02e17071ae0 || true
 # Note that due a nightly bug it is currently fixed to a known version on top!
 
 # Compile libafl.
