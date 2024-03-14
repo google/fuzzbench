@@ -37,7 +37,7 @@ RUN wget https://gist.githubusercontent.com/tokatoka/26f4ba95991c6e3313999997633
 # Uninstall old Rust & Install the latest one.
 RUN if which rustup; then rustup self uninstall -y; fi && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
-    sh /rustup.sh --default-toolchain nightly-2023-09-21 -y && \
+    sh /rustup.sh --default-toolchain nightly-2023-12-01 -y && \
     rm /rustup.sh && \
     PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
 
