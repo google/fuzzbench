@@ -257,7 +257,6 @@ def fuzz(input_corpus,
     # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
     flags = list(flags)
-    flags += ['-z']
 
     if os.path.exists('./afl++.dict'):
         flags += ['-x', './afl++.dict']
