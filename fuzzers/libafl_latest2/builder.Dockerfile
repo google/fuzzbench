@@ -37,14 +37,14 @@ RUN wget https://gist.githubusercontent.com/tokatoka/26f4ba95991c6e3313999997633
 # Uninstall old Rust & Install the latest one.
 RUN if which rustup; then rustup self uninstall -y; fi && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
-    sh /rustup.sh --default-toolchain nightly-2023-12-01 -y && \
+    sh /rustup.sh --default-toolchain nightly-2024-03-12 -y && \
     rm /rustup.sh
 
 # Download libafl.
 RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git pull && git checkout 517d6962bdf5fb8d19f0733c256652ab4fa20603 || true
+RUN cd /libafl && git pull && git checkout 0a34ad817aa6955c7a1772dca729809a37dfbf73 || true
 # Note that due a nightly bug it is currently fixed to a known version on top!
 
 # Compile libafl.
