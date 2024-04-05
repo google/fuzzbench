@@ -34,6 +34,8 @@ RUN apt-get update && \
         gcc-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-plugin-dev \
         libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
+RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 18
+
 # Download afl++.
 RUN git clone -b early https://github.com/AFLplusplus/AFLplusplus /afl && \
     cd /afl && \
