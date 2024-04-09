@@ -36,9 +36,9 @@ RUN apt-get update && \
 
 RUN apt-get install -y lsb-release software-properties-common gnupg wget
 
-RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 16
+RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 19
 
-ENV LLVM_CONFIG=llvm-config-16
+ENV LLVM_CONFIG=llvm-config-19
 
 # Download afl++.
 RUN git clone -b last https://github.com/AFLplusplus/AFLplusplus /afl && \

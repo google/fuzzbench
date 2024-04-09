@@ -24,4 +24,4 @@ ENV AFL_TESTCACHE_SIZE=2
 RUN apt update && apt install -y unzip git gdb joe
 
 RUN apt-get install -y lsb-release software-properties-common gnupg wget
-RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 16
+RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 19
