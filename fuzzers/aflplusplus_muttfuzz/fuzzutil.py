@@ -54,6 +54,7 @@ def silent_run_with_timeout(cmd, timeout):
     """Method to run command silently with timeout"""
     dnull = open(os.devnull, "w")
     start_p = time.time()
+    process = None
     try:
         with open("cmd_errors.txt", "w") as cmd_errors:
             process = subprocess.Popen(  # pylint: disable=subprocess-popen-preexec-fn
@@ -74,8 +75,9 @@ def silent_run_with_timeout(cmd, timeout):
             print("ERRORS:")
             print(cmd_errors_out)
     finally:
-        if process.poll() is None:
-            os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+        if process is not None:
+            if process.poll() is None:
+                os.killpg(os.getpgid(process.pid), signal.SIGTERM)
 
 
 def fuzz_with_mutants(  # pylint: disable=too-many-locals,too-many-arguments
