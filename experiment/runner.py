@@ -101,6 +101,18 @@ def get_clusterfuzz_seed_corpus_path(fuzz_target_path):
     return seed_corpus_path if os.path.exists(seed_corpus_path) else None
 
 
+def _unpack_random_corpus(corpus_directory):
+    shutil.rmtree(corpus_directory)
+
+    benchmark = environment.get('BENCHMARK')
+    trial_group_num = environment.get('TRIAL_GROUP_NUM', 0)
+    random_corpora_dir = experiment_utils.get_random_corpora_filestore_path()
+    random_corpora_sub_dir = f'trial-group-{int(trial_group_num)}'
+    random_corpus_dir = posixpath.join(random_corpora_dir, benchmark,
+                                       random_corpora_sub_dir)
+    filestore_utils.cp(random_corpus_dir, corpus_directory, recursive=True)
+
+
 def _copy_custom_seed_corpus(corpus_directory):
     """Copy custom seed corpus provided by user"""
     shutil.rmtree(corpus_directory)
@@ -257,7 +269,9 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             FUZZ_TARGET_DIR, fuzz_target_name)
         input_corpus = environment.get('SEED_CORPUS_DIR')
         os.makedirs(input_corpus, exist_ok=True)
-        if not environment.get('CUSTOM_SEED_CORPUS_DIR'):
+        if environment.get('MICRO_EXPERIMENT'):
+            _unpack_random_corpus(input_corpus)
+        elif not environment.get('CUSTOM_SEED_CORPUS_DIR'):
             _unpack_clusterfuzz_seed_corpus(target_binary, input_corpus)
         else:
             _copy_custom_seed_corpus(input_corpus)
