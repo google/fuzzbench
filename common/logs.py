@@ -13,10 +13,12 @@
 # limitations under the License.
 """Set up for logging."""
 from enum import Enum
+from common import retry
 import logging
 import os
 import sys
 import traceback
+import time
 
 import google.cloud.logging
 from google.cloud.logging_v2.handlers.handlers import CloudLoggingHandler
@@ -25,7 +27,6 @@ from google.cloud import error_reporting
 # Disable this check since we have a bunch of non-constant globals in this file.
 # pylint: disable=invalid-name
 
-from common import retry
 from common import utils
 
 _default_logger = None
@@ -37,6 +38,7 @@ LOG_LENGTH_LIMIT = 250 * 1000
 
 NUM_RETRIES = 5
 RETRY_DELAY = 1
+BACKOFF = 2
 
 
 def _initialize_cloud_clients():
@@ -152,48 +154,61 @@ class LogSeverity(Enum):
     INFO = logging.INFO
     DEBUG = logging.DEBUG
 
-
-@retry.wrap(NUM_RETRIES, RETRY_DELAY, 'common.logs.log', log_retries=False)
 def log(logger, severity, message, *args, extras=None):
     """Log a message with severity |severity|. If using stack driver logging
     then |extras| is also logged (in addition to default extras)."""
-    message = str(message)
-    if args:
-        message = message % args
+    # Custom retry logic to avoid circular dependency as retry from retry.py uses log
+    for num_try in range(1, NUM_RETRIES + 1):
+        try:
+            message = str(message)
+            if args:
+                message = message % args
 
-    if utils.is_local():
-        if extras:
-            message += ' Extras: ' + str(extras)
-        logging.log(severity, message)
-        return
+            if utils.is_local():
+                if extras:
+                    message += ' Extras: ' + str(extras)
+                logging.log(severity, message)
+                return
 
-    if logger is None:
-        logger = _default_logger
-    assert logger
+            if logger is None:
+                logger = _default_logger
+            assert logger
 
-    struct_message = {
-        'message': message,
-    }
-    all_extras = _default_extras.copy()
-    extras = extras or {}
-    all_extras.update(extras)
-    struct_message.update(all_extras)
-    severity = LogSeverity(severity).name
-    logger.log_struct(struct_message, severity=severity)
+            struct_message = {
+                'message': message,
+            }
+            all_extras = _default_extras.copy()
+            extras = extras or {}
+            all_extras.update(extras)
+            struct_message.update(all_extras)
+            severity = LogSeverity(severity).name
+            logger.log_struct(struct_message, severity=severity)
+            break
+        except Exception:
+            # We really dont want do to do anything here except sleep here,
+            # since we cant log it out as log itself is already failing
+            time.sleep(retry.get_delay(num_try, RETRY_DELAY, BACKOFF))
+            
 
 
 def error(message, *args, extras=None, logger=None):
     """Logs |message| to stackdriver logging and error reporting (including
     exception if there was one."""
 
-    @retry.wrap(NUM_RETRIES,
-                RETRY_DELAY,
-                'common.logs.error._report_error_with_retries',
-                log_retries=False)
     def _report_error_with_retries(message):
         if utils.is_local():
             return
-        _error_reporting_client.report(message)
+        
+        # Custom retry logic to avoid circular dependency as retry from retry.py uses log
+        for num_try in range(1, NUM_RETRIES + 1):
+            try:
+                _error_reporting_client.report(message)
+                break
+            except:
+                # We really dont want do to do anything here except sleep here,
+                # since we cant log it out as log itself is already failing
+                time.sleep(retry.get_delay(num_try, RETRY_DELAY, BACKOFF)) 
+
 
     if not any(sys.exc_info()):
         _report_error_with_retries(message % args)
