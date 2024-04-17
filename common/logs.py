@@ -154,6 +154,7 @@ class LogSeverity(Enum):
     INFO = logging.INFO
     DEBUG = logging.DEBUG
 
+
 def log(logger, severity, message, *args, extras=None):
     """Log a message with severity |severity|. If using stack driver logging
     then |extras| is also logged (in addition to default extras)."""
@@ -188,7 +189,6 @@ def log(logger, severity, message, *args, extras=None):
             # We really dont want do to do anything here except sleep here,
             # since we cant log it out as log itself is already failing
             time.sleep(retry.get_delay(num_try, RETRY_DELAY, BACKOFF))
-            
 
 
 def error(message, *args, extras=None, logger=None):
@@ -198,7 +198,7 @@ def error(message, *args, extras=None, logger=None):
     def _report_error_with_retries(message):
         if utils.is_local():
             return
-        
+
         # Custom retry logic to avoid circular dependency as retry from retry.py uses log
         for num_try in range(1, NUM_RETRIES + 1):
             try:
@@ -207,8 +207,7 @@ def error(message, *args, extras=None, logger=None):
             except:
                 # We really dont want do to do anything here except sleep here,
                 # since we cant log it out as log itself is already failing
-                time.sleep(retry.get_delay(num_try, RETRY_DELAY, BACKOFF)) 
-
+                time.sleep(retry.get_delay(num_try, RETRY_DELAY, BACKOFF))
 
     if not any(sys.exc_info()):
         _report_error_with_retries(message % args)

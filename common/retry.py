@@ -20,7 +20,7 @@ import inspect
 import sys
 import time
 
-from common import logs 
+from common import logs
 
 
 def sleep(seconds):
@@ -57,10 +57,11 @@ def wrap(  # pylint: disable=too-many-arguments
         def handle_retry(num_try, exception=None):
             """Handle retry."""
 
-            if (exception is None or isinstance(exception, exception_type)) and num_try < tries:
+            if (exception is None or
+                    isinstance(exception, exception_type)) and num_try < tries:
                 logs.info('Retrying on %s failed with %s. Retrying again.',
-                        function_with_type,
-                        sys.exc_info()[1])
+                          function_with_type,
+                          sys.exc_info()[1])
                 sleep(get_delay(num_try, delay, backoff))
                 return True
 
