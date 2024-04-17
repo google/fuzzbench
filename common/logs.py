@@ -13,7 +13,7 @@
 # limitations under the License.
 """Set up for logging."""
 from enum import Enum
-from common.retry import get_delay
+
 import logging
 import os
 import sys
@@ -28,6 +28,7 @@ from google.cloud import error_reporting
 # pylint: disable=invalid-name
 
 from common import utils
+from common.retry import get_delay
 
 _default_logger = None
 _log_client = None
@@ -158,7 +159,8 @@ class LogSeverity(Enum):
 def log(logger, severity, message, *args, extras=None):
     """Log a message with severity |severity|. If using stack driver logging
     then |extras| is also logged (in addition to default extras)."""
-    # Custom retry logic to avoid circular dependency as retry from retry.py uses log
+    # Custom retry logic to avoid circular dependency
+    # as retry from retry.py uses log
     for num_try in range(1, NUM_RETRIES + 1):
         try:
             message = str(message)
@@ -185,7 +187,7 @@ def log(logger, severity, message, *args, extras=None):
             severity = LogSeverity(severity).name
             logger.log_struct(struct_message, severity=severity)
             break
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             # We really dont want do to do anything here except sleep here,
             # since we cant log it out as log itself is already failing
             time.sleep(get_delay(num_try, RETRY_DELAY, BACKOFF))
@@ -199,12 +201,13 @@ def error(message, *args, extras=None, logger=None):
         if utils.is_local():
             return
 
-        # Custom retry logic to avoid circular dependency as retry from retry.py uses log
+        # Custom retry logic to avoid circular dependency
+        # as retry from retry.py uses log
         for num_try in range(1, NUM_RETRIES + 1):
             try:
                 _error_reporting_client.report(message)
                 break
-            except:
+            except Exception:  # pylint: disable=broad-except
                 # We really dont want do to do anything here except sleep here,
                 # since we cant log it out as log itself is already failing
                 time.sleep(get_delay(num_try, RETRY_DELAY, BACKOFF))
