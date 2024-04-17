@@ -13,7 +13,7 @@
 # limitations under the License.
 """Set up for logging."""
 from enum import Enum
-from common import retry
+from common.retry import get_delay
 import logging
 import os
 import sys
@@ -188,7 +188,7 @@ def log(logger, severity, message, *args, extras=None):
         except Exception:
             # We really dont want do to do anything here except sleep here,
             # since we cant log it out as log itself is already failing
-            time.sleep(retry.get_delay(num_try, RETRY_DELAY, BACKOFF))
+            time.sleep(get_delay(num_try, RETRY_DELAY, BACKOFF))
 
 
 def error(message, *args, extras=None, logger=None):
@@ -207,7 +207,7 @@ def error(message, *args, extras=None, logger=None):
             except:
                 # We really dont want do to do anything here except sleep here,
                 # since we cant log it out as log itself is already failing
-                time.sleep(retry.get_delay(num_try, RETRY_DELAY, BACKOFF))
+                time.sleep(get_delay(num_try, RETRY_DELAY, BACKOFF))
 
     if not any(sys.exc_info()):
         _report_error_with_retries(message % args)
