@@ -17,8 +17,8 @@ from enum import Enum
 import logging
 import os
 import sys
-import traceback
 import time
+import traceback
 
 import google.cloud.logging
 from google.cloud.logging_v2.handlers.handlers import CloudLoggingHandler
@@ -28,7 +28,7 @@ from google.cloud import error_reporting
 # pylint: disable=invalid-name
 
 from common import utils
-from common.retry import get_delay
+from common import retry
 
 _default_logger = None
 _log_client = None
@@ -190,7 +190,7 @@ def log(logger, severity, message, *args, extras=None):
         except Exception:  # pylint: disable=broad-except
             # We really dont want do to do anything here except sleep here,
             # since we cant log it out as log itself is already failing
-            time.sleep(get_delay(num_try, RETRY_DELAY, BACKOFF))
+            time.sleep(retry.get_delay(num_try, RETRY_DELAY, BACKOFF))
 
 
 def error(message, *args, extras=None, logger=None):
@@ -210,7 +210,7 @@ def error(message, *args, extras=None, logger=None):
             except Exception:  # pylint: disable=broad-except
                 # We really dont want do to do anything here except sleep here,
                 # since we cant log it out as log itself is already failing
-                time.sleep(get_delay(num_try, RETRY_DELAY, BACKOFF))
+                time.sleep(retry.get_delay(num_try, RETRY_DELAY, BACKOFF))
 
     if not any(sys.exc_info()):
         _report_error_with_retries(message % args)
