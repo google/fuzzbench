@@ -23,7 +23,7 @@ import subprocess
 import sys
 import time
 import types
-from typing import Callable, List, Tuple
+from typing import List, Tuple
 
 from common import benchmark_config
 from common import benchmark_utils
@@ -136,7 +136,8 @@ def split_successes_and_failures(inputs: List,
     return successes, failures
 
 
-def retry_build_loop(build_func: types.FunctionType, inputs: List[Tuple]) -> List:
+def retry_build_loop(build_func: types.FunctionType,
+                     inputs: List[Tuple]) -> List:
     """Calls |build_func| in parallel on |inputs|. Repeat on failures up to
     |NUM_BUILD_ATTEMPTS| times. Returns the list of inputs that |build_func| was
     called successfully on."""
