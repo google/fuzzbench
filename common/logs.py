@@ -28,7 +28,6 @@ from google.cloud import error_reporting
 # pylint: disable=invalid-name
 
 from common import utils
-from common import retry
 
 _default_logger = None
 _log_client = None
@@ -37,7 +36,7 @@ _default_extras = {}
 
 LOG_LENGTH_LIMIT = 250 * 1000
 
-NUM_RETRIES = 5
+NUM_ATTEMPTS = 5
 RETRY_DELAY = 1
 BACKOFF = 2
 
@@ -161,7 +160,7 @@ def log(logger, severity, message, *args, extras=None):
     then |extras| is also logged (in addition to default extras)."""
     # Custom retry logic to avoid circular dependency
     # as retry from retry.py uses log
-    for num_try in range(1, NUM_RETRIES + 1):
+    for num_try in range(1, NUM_ATTEMPTS + 1):
         try:
             message = str(message)
             if args:
@@ -190,7 +189,7 @@ def log(logger, severity, message, *args, extras=None):
         except Exception:  # pylint: disable=broad-except
             # We really dont want do to do anything here except sleep here,
             # since we cant log it out as log itself is already failing
-            time.sleep(retry.get_delay(num_try, RETRY_DELAY, BACKOFF))
+            time.sleep(utils.get_retry_delay(num_try, RETRY_DELAY, BACKOFF))
 
 
 def error(message, *args, extras=None, logger=None):
@@ -203,14 +202,14 @@ def error(message, *args, extras=None, logger=None):
 
         # Custom retry logic to avoid circular dependency
         # as retry from retry.py uses log
-        for num_try in range(1, NUM_RETRIES + 1):
+        for num_try in range(1, NUM_ATTEMPTS + 1):
             try:
                 _error_reporting_client.report(message)
                 break
             except Exception:  # pylint: disable=broad-except
                 # We really dont want do to do anything here except sleep here,
                 # since we cant log it out as log itself is already failing
-                time.sleep(retry.get_delay(num_try, RETRY_DELAY, BACKOFF))
+                time.sleep(utils.get_retry_delay(num_try, RETRY_DELAY, BACKOFF))
 
     if not any(sys.exc_info()):
         _report_error_with_retries(message % args)

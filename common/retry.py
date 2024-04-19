@@ -21,16 +21,12 @@ import sys
 import time
 
 from common import logs
+from common import utils
 
 
 def sleep(seconds):
     """Invoke time.sleep."""
     time.sleep(seconds)
-
-
-def get_delay(num_try, delay, backoff):
-    """Compute backoff delay."""
-    return delay * (backoff**(num_try - 1))
 
 
 def wrap(  # pylint: disable=too-many-arguments
@@ -62,7 +58,7 @@ def wrap(  # pylint: disable=too-many-arguments
                 logs.info('Retrying on %s failed with %s. Retrying again.',
                           function_with_type,
                           sys.exc_info()[1])
-                sleep(get_delay(num_try, delay, backoff))
+                sleep(utils.get_retry_delay(num_try, delay, backoff))
                 return True
 
             logs.error('Retrying on %s failed with %s. Raise.',
