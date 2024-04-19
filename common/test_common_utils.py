@@ -15,6 +15,7 @@
 
 from common import utils
 
+
 def test_get_retry_delay():
     """"Tests if get delay is working as expected"""
     delay = 3
