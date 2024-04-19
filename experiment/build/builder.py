@@ -22,7 +22,8 @@ import random
 import subprocess
 import sys
 import time
-from typing import Callable, List, Tuple
+import types
+from typing import List, Tuple
 
 from common import benchmark_config
 from common import benchmark_utils
@@ -135,7 +136,8 @@ def split_successes_and_failures(inputs: List,
     return successes, failures
 
 
-def retry_build_loop(build_func: Callable, inputs: List[Tuple]) -> List:
+def retry_build_loop(build_func: types.FunctionType,
+                     inputs: List[Tuple]) -> List:
     """Calls |build_func| in parallel on |inputs|. Repeat on failures up to
     |NUM_BUILD_ATTEMPTS| times. Returns the list of inputs that |build_func| was
     called successfully on."""
@@ -144,7 +146,7 @@ def retry_build_loop(build_func: Callable, inputs: List[Tuple]) -> List:
     logs.info('Concurrent builds: %d.', num_concurrent_builds)
     with mp_pool.ThreadPool(num_concurrent_builds) as pool:
         for _ in range(NUM_BUILD_ATTEMPTS):
-            logs.info('Building using (%s): %s', build_func, inputs)
+            logs.info('Building using (%s): %s', build_func.__name__, inputs)
             results = pool.starmap(build_func, inputs)
             curr_successes, curr_failures = split_successes_and_failures(
                 inputs, results)
