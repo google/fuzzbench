@@ -36,7 +36,7 @@ _default_extras = {}
 
 LOG_LENGTH_LIMIT = 250 * 1000
 
-NUM_ATTEMPTS = 5
+NUM_ATTEMPTS = 4
 RETRY_DELAY = 1
 BACKOFF = 2
 
