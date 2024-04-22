@@ -158,8 +158,8 @@ class LogSeverity(Enum):
 def log(logger, severity, message, *args, extras=None):
     """Log a message with severity |severity|. If using stack driver logging
     then |extras| is also logged (in addition to default extras)."""
-    # Custom retry logic to avoid circular dependency
-    # as retry from retry.py uses log
+    # Custom retry logic to avoid circular dependency as retry from
+    # retry.py uses log.
     for num_try in range(1, NUM_ATTEMPTS + 1):
         try:
             message = str(message)
