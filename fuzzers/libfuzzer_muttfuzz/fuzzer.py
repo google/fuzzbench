@@ -11,46 +11,40 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Integration code for AFLplusplus fuzzer."""
-
-# This optimized afl++ variant should always be run together with
-# "aflplusplus" to show the difference - a default configured afl++ vs.
-# a hand-crafted optimized one. afl++ is configured not to enable the good
-# stuff by default to be as close to vanilla afl as possible.
-# But this means that the good stuff is hidden away in this benchmark
-# otherwise.
+"""Integration code for AFLSmart fuzzer."""
 
 import os
+import shutil
+import glob
 
-from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
+from fuzzers.libfuzzer import fuzzer as libfuzzer_fuzzer
 from fuzzers.aflplusplus_muttfuzz import fuzzutil
 
 
-def build():  # pylint: disable=too-many-branches,too-many-statements
+def build():
     """Build benchmark."""
-    aflplusplus_fuzzer.build()
+    libfuzzer_fuzzer.build()
+
 
 def restore_out(input_corpus, output_corpus, crashes_storage):
     """Restores output dir and copies crashes after mutant is done running"""
     os.system(f"rm -rf {input_corpus}/*")
     os.system(
-        f"cp {output_corpus}/default/crashes/crashes.*/id* {crashes_storage}/")
+        f"cp {output_corpus}/crashes/* {crashes_storage}/")
     os.system(
-        f"cp {output_corpus}/default/crashes/crashes.*/id* {input_corpus}/")
-    os.system(f"cp {output_corpus}/default/queue/* {input_corpus}/")
+        f"cp {output_corpus}/crashes/* {input_corpus}/")
+    os.system(f"cp {output_corpus}/corpus/* {input_corpus}/")
     os.system(f"rm -rf {output_corpus}/*")
 
 
 def fuzz(input_corpus, output_corpus, target_binary):
-    """Run fuzzer."""
-    os.environ["AFL_SKIP_CRASHES"] = "1"
-    os.environ["AFL_AUTORESUME"] = "1"
+    """Run afl-fuzz on target."""
     print(f"{input_corpus} {output_corpus} {target_binary}")
 
     crashes_storage = "/storage"
     os.makedirs(crashes_storage, exist_ok=True)
 
-    aflplusplus_fuzz_fn = lambda: aflplusplus_fuzzer.fuzz(
+    libfuzzer_fuzzer_fn = lambda: libfuzzer_fuzzer.fuzz(
         input_corpus, output_corpus, target_binary)
 
     budget = 86_400
@@ -60,12 +54,12 @@ def fuzz(input_corpus, output_corpus, target_binary):
     post_mutant_fn = lambda: restore_out(input_corpus, output_corpus,
                                          crashes_storage)
     fuzzutil.fuzz_with_mutants_via_function(
-        aflplusplus_fuzz_fn,
+        libfuzzer_fuzzer_fn,
         target_binary,
         budget,
         time_per_mutant,
         fraction_mutant,
-        initial_fn=aflplusplus_fuzz_fn,
+        initial_fn=libfuzzer_fuzzer_fn,
         initial_budget=initial_budget,
         post_initial_fn=post_mutant_fn,
         post_mutant_fn=post_mutant_fn,
