@@ -13,12 +13,12 @@
 # limitations under the License.
 """Integration code for AFLSmart fuzzer."""
 
+import glob
 import os
 import shutil
-import glob
 
-from fuzzers.honggfuzz import fuzzer as honggfuzz_fuzzer
 from fuzzers.aflplusplus_muttfuzz import fuzzutil
+from fuzzers.honggfuzz import fuzzer as honggfuzz_fuzzer
 
 
 def build():
@@ -29,10 +29,8 @@ def build():
 def restore_out(input_corpus, output_corpus, crashes_storage):
     """Restores output dir and copies crashes after mutant is done running"""
     os.system(f"rm -rf {input_corpus}/*")
-    os.system(
-        f"cp {output_corpus}/crashes/* {crashes_storage}/")
-    os.system(
-        f"cp {output_corpus}/crashes/* {input_corpus}/")
+    os.system(f"cp {output_corpus}/crashes/* {crashes_storage}/")
+    os.system(f"cp {output_corpus}/crashes/* {input_corpus}/")
     os.system(f"cp {output_corpus}/corpus/* {input_corpus}/")
     os.system(f"rm -rf {output_corpus}/*")
 

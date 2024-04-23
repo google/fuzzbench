@@ -13,12 +13,12 @@
 # limitations under the License.
 """Integration code for AFLSmart fuzzer."""
 
+import glob
 import os
 import shutil
-import glob
 
-from fuzzers.libafl import fuzzer as libafl_fuzzer
 from fuzzers.aflplusplus_muttfuzz import fuzzutil
+from fuzzers.libafl import fuzzer as libafl_fuzzer
 
 
 def build():
@@ -29,10 +29,8 @@ def build():
 def restore_out(input_corpus, output_corpus, crashes_storage):
     """Restores output dir and copies crashes after mutant is done running"""
     os.system(f"rm -rf {input_corpus}/*")
-    os.system(
-        f"cp {output_corpus}/crashes/* {crashes_storage}/")
-    os.system(
-        f"cp {output_corpus}/crashes/* {input_corpus}/")
+    os.system(f"cp {output_corpus}/crashes/* {crashes_storage}/")
+    os.system(f"cp {output_corpus}/crashes/* {input_corpus}/")
     os.system(f"cp {output_corpus}/queue/* {input_corpus}/")
     os.system(f"rm -rf {output_corpus}/*")
 
@@ -44,8 +42,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
     crashes_storage = "/storage"
     os.makedirs(crashes_storage, exist_ok=True)
 
-    libafl_fuzzer_fn = lambda: libafl_fuzzer.fuzz(
-        input_corpus, output_corpus, target_binary)
+    libafl_fuzzer_fn = lambda: libafl_fuzzer.fuzz(input_corpus, output_corpus,
+                                                  target_binary)
 
     budget = 86_400
     fraction_mutant = 0.5

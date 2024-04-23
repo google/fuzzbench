@@ -30,6 +30,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     aflplusplus_fuzzer.build()
 
+
 def restore_out(input_corpus, output_corpus, crashes_storage):
     """Restores output dir and copies crashes after mutant is done running"""
     os.system(f"rm -rf {input_corpus}/*")

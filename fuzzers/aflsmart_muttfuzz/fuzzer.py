@@ -13,12 +13,12 @@
 # limitations under the License.
 """Integration code for AFLSmart fuzzer."""
 
+import glob
 import os
 import shutil
-import glob
 
-from fuzzers.aflsmart import fuzzer as aflsmart_fuzzer
 from fuzzers.aflplusplus_muttfuzz import fuzzutil
+from fuzzers.aflsmart import fuzzer as aflsmart_fuzzer
 
 
 def build():
