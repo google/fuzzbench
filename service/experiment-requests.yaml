@@ -20,11 +20,6 @@
 # Please add new experiment requests towards the top of this file.
 #
 
-- experiment: 2024-04-13-aflpp-muttfuzz
-  description: "Benchmark afl++ muttfuzz"
-  fuzzers:
-    - aflplusplus_muttfuzz
-
 - experiment: 2023-06-12-aflpp
   description: "Benchmark afl++ releases and newmutation"
   fuzzers:
