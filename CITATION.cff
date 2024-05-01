@@ -1,0 +1,50 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: FuzzBench
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Jonathan
+    family-names: Metzman
+    email: metzman@google.com
+    affiliation: Google LLC
+    orcid: 'https://orcid.org/0000-0002-7042-0444'
+  - given-names: Laszlo
+    family-names: Szekeres
+    email: lszekeres@google.com
+    affiliation: Google LLC
+    orcid: 'https://orcid.org/0000-0002-9808-6484'
+  - given-names: Laurent
+    family-names: Simon
+    email: laurentsimon@google.com
+    affiliation: Google LLC
+  - given-names: Read
+    family-names: Sprabery
+    email: sprabery@google.com
+    affiliation: Google LLC
+  - given-names: Abhishek
+    family-names: Arya
+    email: aarya@google.com
+    affiliation: Google LLC
+    orcid: 'https://orcid.org/0009-0009-4558-4314'
+identifiers:
+  - type: doi
+    value: 10.1145/3468264.3473932
+repository-code: 'https://github.com/google/fuzzbench'
+url: 'https://google.github.io/fuzzbench/'
+abstract: >-
+  FuzzBench is a free service that evaluates fuzzers on a
+  wide variety of real-world benchmarks, at Google scale.
+  The goal of FuzzBench is to make it painless to rigorously
+  evaluate fuzzing research and make fuzzing research easier
+  for the community to adopt. We invite members of the
+  research community to contribute their fuzzers and give us
+  feedback on improving our evaluation techniques.
+keywords:
+  - Fuzzing
+  - Evaluation
+license: Apache-2.0
