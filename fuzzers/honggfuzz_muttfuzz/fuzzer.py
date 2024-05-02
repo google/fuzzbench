@@ -35,6 +35,7 @@ def restore_out(input_corpus, output_corpus, crashes_storage):
     # os.system(f"rm -rf {output_corpus}/*")
     pass
 
+
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run afl-fuzz on target."""
     os.environ["AFL_SKIP_CRASHES"] = "1"
