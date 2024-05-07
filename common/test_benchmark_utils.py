@@ -90,7 +90,7 @@ def test_get_default_type(_):
 def test_are_benchmarks_mixed_valid(benchmarks):
     """Tests that are_benchmarks_mixed returns True
     for a list that have both bug and coverage benchmarks"""
-    assert benchmark_utils.are_benchmarks_mixed(benchmarks) is True
+    assert benchmark_utils.are_benchmarks_mixed(benchmarks)
 
 
 @pytest.mark.parametrize(
@@ -99,4 +99,4 @@ def test_are_benchmarks_mixed_valid(benchmarks):
 def test_are_benchmarks_mixed_invalid(benchmarks):
     """Tests that are_benchmarks_mixed returns False
     for a list that have only bug or only coverage benchmarks"""
-    assert benchmark_utils.are_benchmarks_mixed(benchmarks) is False
+    assert not benchmark_utils.are_benchmarks_mixed(benchmarks)

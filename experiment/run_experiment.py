@@ -745,9 +745,12 @@ def run_experiment_main(args=None):
                          '"oss_fuzz_corpus" at the same time')
 
     if benchmark_utils.are_benchmarks_mixed(args.benchmarks):
+        benchmark_types = ';'.join(
+            [f'{b}: {benchmark_utils.get_type(b)}' for b in args.benchmarks])
         raise ValidationError(
-            'Selected benchmarks are a mix between coverage '
-            'and bug benchmarks. This is currently not supported.')
+            'Selected benchmarks are a mix between coverage'
+            'and bug benchmarks. This is currently not supported.'
+            f'Selected benchmarks: {benchmark_types}')
 
     start_experiment(args.experiment_name,
                      args.experiment_config,

@@ -165,18 +165,13 @@ def get_language(benchmark):
     return config.get('language', 'c++')
 
 
-def are_benchmarks_mixed(benchmarks):
-    """"Returns True if benchmarks list
-    is a mix of bugs and coverage benchmarks"""
-    if not benchmarks:
-        return False
+def are_benchmarks_mixed(benchmarks=None):
+    """Returns True if benchmarks list
+    is a mix of bugs and coverage benchmarks."""
+    if benchmarks is None:
+        benchmarks = get_all_benchmarks()
 
-    selected_coverage_benchmarks = get_coverage_benchmarks(benchmarks)
-    only_coverage_benchmarks = len(selected_coverage_benchmarks) == len(
-        benchmarks)
-    only_bug_benchmarks = len(selected_coverage_benchmarks) == 0
+    unique_benchmarks_types = set(
+        get_type(benchmark) for benchmark in benchmarks)
 
-    if only_bug_benchmarks or only_coverage_benchmarks:
-        return False
-
-    return True
+    return len(unique_benchmarks_types) > 1
