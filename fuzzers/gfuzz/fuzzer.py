@@ -225,6 +225,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         print('Re-building benchmark for symcc fuzzing target')
         utils.build_benchmark(env=new_env)
 
+    shutil.copy('/afl/generator_mutation_main', build_directory)
+    shutil.copy('/afl/program_gen_main', build_directory)
     shutil.copy('/afl/afl-fuzz', build_directory)
     if os.path.exists('/afl/afl-qemu-trace'):
         shutil.copy('/afl/afl-qemu-trace', build_directory)
@@ -264,6 +266,9 @@ def fuzz(input_corpus,
     # Move the following to skip for upcoming _double tests:
     if os.path.exists(cmplog_target_binary) and no_cmplog is False:
         flags += ['-c', cmplog_target_binary]
+
+    flags += ['-J', target_binary.rsplit('/', 1)[-1]]
+    flags += ['-k', '.']
 
     #os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
     os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'

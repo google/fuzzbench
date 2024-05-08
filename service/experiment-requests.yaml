@@ -20,6 +20,31 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2024-05-08-aflpp
+  description: "test variant"
+  trials: 2
+  fuzzers:
+    - aflplusplus
+    - gfuzz
+    - libafl
+    - honggfuzz
+    - libfuzzer
+    - mopt
+    - aflsmart
+    - afl
+  benchmarks:
+    - bloaty_fuzz_target
+    - freetype2_ftfuzzer
+    - harfbuzz_hb-shape-fuzzer
+    - lcms_cms_transform_fuzzer
+    - libjpeg-turbo_libjpeg_turbo_fuzzer
+    - libpcap_fuzz_both
+    - libpng_libpng_read_fuzzer
+    - openssl_x509
+    - vorbis_decode_fuzzer
+    - woff2_convert_woff2ttf_fuzzer
+    - zlib_zlib_uncompress_fuzzer
+
 - experiment: 2023-06-12-aflpp
   description: "Benchmark afl++ releases and newmutation"
   fuzzers:
