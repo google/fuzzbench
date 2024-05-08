@@ -133,18 +133,18 @@ def get_all_benchmarks():
     return sorted(all_benchmarks)
 
 
-def get_coverage_benchmarks():
+def get_coverage_benchmarks(benchmarks=get_all_benchmarks()):
     """Returns the list of all coverage benchmarks."""
     return [
-        benchmark for benchmark in get_all_benchmarks()
+        benchmark for benchmark in benchmarks
         if get_type(benchmark) == BenchmarkType.CODE.value
     ]
 
 
-def get_bug_benchmarks():
+def get_bug_benchmarks(benchmarks=get_all_benchmarks()):
     """Returns the list of standard bug benchmarks."""
     return [
-        benchmark for benchmark in get_all_benchmarks()
+        benchmark for benchmark in benchmarks
         if get_type(benchmark) == BenchmarkType.BUG.value
     ]
 
@@ -163,3 +163,15 @@ def get_language(benchmark):
     """Returns the prorgamming language the benchmark was written in."""
     config = benchmark_config.get_config(benchmark)
     return config.get('language', 'c++')
+
+
+def are_benchmarks_mixed(benchmarks=None):
+    """Returns True if benchmarks list is a mix of bugs and coverage
+    benchmarks."""
+    if benchmarks is None:
+        benchmarks = get_all_benchmarks()
+
+    unique_benchmarks_types = set(
+        get_type(benchmark) for benchmark in benchmarks)
+
+    return len(unique_benchmarks_types) > 1

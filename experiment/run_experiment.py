@@ -625,6 +625,7 @@ def run_experiment_main(args=None):
 
     all_benchmarks = benchmark_utils.get_all_benchmarks()
     coverage_benchmarks = benchmark_utils.get_coverage_benchmarks()
+
     parser.add_argument('-b',
                         '--benchmarks',
                         help=('Benchmark names. '
@@ -742,6 +743,14 @@ def run_experiment_main(args=None):
         if args.oss_fuzz_corpus:
             parser.error('Cannot enable options "custom_seed_corpus_dir" and '
                          '"oss_fuzz_corpus" at the same time')
+
+    if benchmark_utils.are_benchmarks_mixed(args.benchmarks):
+        benchmark_types = ';'.join(
+            [f'{b}: {benchmark_utils.get_type(b)}' for b in args.benchmarks])
+        raise ValidationError(
+            'Selected benchmarks are a mix between coverage'
+            'and bug benchmarks. This is currently not supported.'
+            f'Selected benchmarks: {benchmark_types}')
 
     start_experiment(args.experiment_name,
                      args.experiment_config,
