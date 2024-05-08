@@ -166,8 +166,8 @@ def get_language(benchmark):
 
 
 def are_benchmarks_mixed(benchmarks=None):
-    """Returns True if benchmarks list
-    is a mix of bugs and coverage benchmarks."""
+    """Returns True if benchmarks list is a mix of bugs and coverage
+    benchmarks."""
     if benchmarks is None:
         benchmarks = get_all_benchmarks()
 
