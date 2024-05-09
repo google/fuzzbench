@@ -32,8 +32,8 @@ RUN apt-get update && \
     PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
 
 # Download PrescientFuzz
-RUN git clone https://github.com/DanBlackwell/PrescientFuzz
-RUN cd PrescientFuzz && git checkout PrescientFuzz
+RUN git clone https://github.com/DanBlackwell/PrescientFuzz /PrescientFuzz
+RUN cd /PrescientFuzz && git checkout PrescientFuzz
 
 # Compile PrescientFuzz.
 RUN cd /PrescientFuzz && \
