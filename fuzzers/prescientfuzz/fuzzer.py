@@ -17,7 +17,6 @@
 import os
 import sys
 import subprocess
-import shutil
 from pathlib import Path
 
 from fuzzers import utils
@@ -41,12 +40,12 @@ def prepare_fuzz_environment(input_corpus):
     utils.create_seed_file_for_empty_corpus(input_corpus)
 
 
-def build():  # pylint: disable=too-many-branches,too-many-statements
+def build():
     """Build benchmark."""
-    os.environ[
-        'CC'] = '/PrescientFuzz/fuzzers/fuzzbench/target/release-fuzzbench/libafl_cc'
-    os.environ[
-        'CXX'] = '/PrescientFuzz/fuzzers/fuzzbench/target/release-fuzzbench/libafl_cxx'
+    os.environ['CC'] = ('/PrescientFuzz/fuzzers/fuzzbench/target/'
+                        'release-fuzzbench/libafl_cc')
+    os.environ['CXX'] = ('/PrescientFuzz/fuzzers/fuzzbench/target/'
+                         'release-fuzzbench/libafl_cxx')
 
     os.environ['ASAN_OPTIONS'] = 'abort_on_error=0:allocator_may_return_null=1'
     os.environ['UBSAN_OPTIONS'] = 'abort_on_error=0'
@@ -62,6 +61,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     Path(cfg_file).touch()
     os.environ['AFL_LLVM_CFG_FILE'] = cfg_file
     utils.build_benchmark()
+
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
