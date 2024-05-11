@@ -21,4 +21,20 @@ ENV PATH="$PATH:/out"
 ENV AFL_SKIP_CPUFREQ=1
 ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
 ENV AFL_TESTCACHE_SIZE=2
+ENV AFL_FISHFUZZ_DIR=/out/temp
+
 RUN apt update && apt install -y unzip git gdb joe
+
+RUN apt install wget lsb-release software-properties-common gnupg -y
+
+RUN wget https://apt.llvm.org/llvm.sh && \
+    chmod +x llvm.sh &&\
+    ./llvm.sh 15 all 
+
+#libcjson-dev==1.7.15
+RUN wget https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.15.tar.gz && \
+    tar xf v1.7.15.tar.gz && cd cJSON-1.7.15 && sed -i 's/gcc/clang-15/g' Makefile && \
+    make && make install && \
+    cd .. && rm -r cJSON-1.7.15 v1.7.15.tar.gz
+
+

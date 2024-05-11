@@ -35,15 +35,37 @@ RUN apt-get update && \
         libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
 # Download afl++.
-RUN git clone -b dev https://github.com/AFLplusplus/AFLplusplus /afl && \
+RUN git clone -b dev_ff https://github.com/kdsjZh/AFLplusplus /afl && \
     cd /afl && \
-    git checkout 59465bd249b318428d108ff64e4e00b6750ad2ca || \
+    git checkout 7c196d6 || \
     true
+
+RUN apt install lsb-release software-properties-common gnupg -y && \
+    wget https://apt.llvm.org/llvm.sh && \
+    chmod +x llvm.sh && ./llvm.sh 15 all 
+
+RUN apt install python3-pip -y 
+
+RUN pip3 install --upgrade setuptools
+
+RUN pip3 install networkx pydot
+
+#libcjson-dev==1.7.15
+RUN wget https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.15.tar.gz && \
+    tar xf v1.7.15.tar.gz && cd cJSON-1.7.15 && sed -i 's/gcc/clang-15/g' Makefile && \ 
+    make && make install && \
+    cd .. && rm -r cJSON-1.7.15 v1.7.15.tar.gz
+
+# ENV PATH=/usr/bin/:${PATH}
+RUN rm /usr/local/bin/llvm-* /usr/local/bin/clang* && \
+    ln -s /usr/bin/clang-15 /usr/bin/clang && \
+    ln -s /usr/bin/clang++-15 /usr/bin/clang++ && \
+    ln -s /usr/bin/llvm-config-15 /usr/bin/llvm-config
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /afl && \
     unset CFLAGS CXXFLAGS && \
-    export CC=clang AFL_NO_X86=1 && \
+    export CC=clang-15 AFL_NO_X86=1 && \
     PYTHON_INCLUDE=/ make && \
     cp utils/aflpp_driver/libAFLDriver.a /

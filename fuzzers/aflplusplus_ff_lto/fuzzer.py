@@ -43,10 +43,15 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # Placeholder comment.
     build_directory = os.environ['OUT']
 
+    # FishFuzz dir
+    fishfuzz_dir = '%s/temp' % os.environ['OUT']
+    os.environ['AFL_FISHFUZZ_DIR'] = fishfuzz_dir
+    os.environ['AFL_FISHFUZZ_BIN'] = os.environ['FUZZ_TARGET'] 
+
     # If nothing was set this is the default:
     if not build_modes:
-        build_modes = ['tracepc', 'cmplog', 'dict2file']
-
+        build_modes = ['tracepc', 'cmplog', 'dict2file', 'lto']
+    
     # For bug type benchmarks we have to instrument via native clang pcguard :(
     build_flags = os.environ['CFLAGS']
 
@@ -62,10 +67,10 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         os.environ['CXX'] = '/afl/afl-clang-lto++'
         edge_file = build_directory + '/aflpp_edges.txt'
         os.environ['AFL_LLVM_DOCUMENT_IDS'] = edge_file
-        if os.path.isfile('/usr/local/bin/llvm-ranlib-13'):
-            os.environ['RANLIB'] = 'llvm-ranlib-13'
-            os.environ['AR'] = 'llvm-ar-13'
-            os.environ['AS'] = 'llvm-as-13'
+        if os.path.isfile('/usr/bin/llvm-ranlib-15'):
+            os.environ['RANLIB'] = 'llvm-ranlib-15'
+            os.environ['AR'] = 'llvm-ar-15'
+            os.environ['AS'] = 'llvm-as-15'
         elif os.path.isfile('/usr/local/bin/llvm-ranlib-12'):
             os.environ['RANLIB'] = 'llvm-ranlib-12'
             os.environ['AR'] = 'llvm-ar-12'
@@ -171,12 +176,32 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     src = os.getenv('SRC')
     work = os.getenv('WORK')
 
+    # we use clang-15.0.7 to build fishfuzz/lto, while fuzzbench provide clang-15.0.0 by default
+    # mbedtls #6960 (clang 15.0.6 - clang 16.0.0), remove -Wdocumentation
+    if os.environ['BENCHMARK'] == 'mbedtls_fuzz_dtlsclient':
+        os.system("sed -i 's/-Wdocumentation / /g' /src/mbedtls/library/CMakeLists.txt")
+        os.system("sed -i 's/-Wdocumentation / /g' /src/mbedtls/tests/CMakeLists.txt")
+    # mbedtls #7166
+    elif os.environ['BENCHMARK'] == 'openthread_ot-ip6-send-fuzzer':
+        # sed -e '1396i\    (void) t;                   /* Unused in some architectures */' -e '1446d'
+        append_cmd = "'1396i\    (void) t;                   /* Unused in some architectures */'"
+        delete_cmd = "'1447d'"
+        dst_file = '/src/openthread/third_party/mbedtls/repo/library/bignum.c'
+        os.system("sed -i -e %s %s" % (append_cmd, dst_file))
+        os.system("sed -i %s %s" % (delete_cmd, dst_file))
+        os.system("sed -i 's/-Wdocumentation / /g' /src/openthread/third_party/mbedtls/repo/library/CMakeLists.txt")
+        os.system("sed -i 's/-Wdocumentation / /g' /src/openthread/third_party/mbedtls/repo/tests/CMakeLists.txt")
+
     with utils.restore_directory(src), utils.restore_directory(work):
         # Restore SRC to its initial state so we can build again without any
         # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
         # twice in the same directory without this.
         utils.build_benchmark()
 
+    if not os.path.exists(os.environ['AFL_FISHFUZZ_DIR']):
+        print ('Error: FishFuzz distance not found!')
+        exit (-1)
+            
     if 'cmplog' in build_modes and 'qemu' not in build_modes:
 
         # CmpLog requires an build with different instrumentation.
@@ -233,6 +258,13 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if os.path.exists('/get_frida_entry.sh'):
         shutil.copy('/afl/afl-frida-trace.so', build_directory)
         shutil.copy('/get_frida_entry.sh', build_directory)
+    # fishfuzz distance
+    print ('[*] Start FishFuzz distance calculation')
+    rcode1 = os.system('python3 /afl/utils/fishfuzz/match_func_name.py -i %s -m %s' % (fishfuzz_dir, os.environ['FUZZ_TARGET']))
+    rcode2 = os.system('python3 /afl/utils/fishfuzz/calculate_all_distance.py -i %s -m %s' % (fishfuzz_dir, os.environ['FUZZ_TARGET']))
+    if rcode1 or rcode2:
+        print ('Distance calculation failed!')
+        exit(-1)
 
 
 # pylint: disable=too-many-arguments
@@ -257,7 +289,6 @@ def fuzz(input_corpus,
     # os.environ['AFL_PRELOAD'] = '/afl/libdislocator.so'
 
     flags = list(flags)
-    flags += ['-z']
 
     if os.path.exists('./afl++.dict'):
         flags += ['-x', './afl++.dict']
@@ -270,6 +301,7 @@ def fuzz(input_corpus,
     os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
     os.environ['AFL_FAST_CAL'] = '1'
     os.environ['AFL_NO_WARN_INSTABILITY'] = '1'
+    os.environ['AFL_FISHFUZZ_DIR'] = ('%s/temp' % os.environ['OUT'])
 
     if not skip:
         os.environ['AFL_DISABLE_TRIM'] = '1'
