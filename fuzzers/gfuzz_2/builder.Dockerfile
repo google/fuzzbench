@@ -17,7 +17,6 @@ FROM $parent_image
 
 RUN apt-get update && \
     apt-get install -y \
-        pip \
         build-essential \
         python3-dev \
         python3-setuptools \
@@ -36,9 +35,9 @@ RUN apt-get update && \
         libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
 # Download afl++.
-RUN git clone https://github.com/vwrewsge/GFUZZ-bin /afl && \
+RUN git clone https://github.com/vwrewsge/GFUZZ_II /afl && \
     cd /afl && \
-    git checkout eae70ff55ccf22d948010007127a9c640f30d607 || \
+    git checkout 2052b59278d6780323724a4752ec9efa6090fba7 || \
     true
 
 # Build without Python support as we don't need it.

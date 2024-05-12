@@ -225,8 +225,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         print('Re-building benchmark for symcc fuzzing target')
         utils.build_benchmark(env=new_env)
 
-    shutil.copy('/afl/generator_mutation_main', build_directory)
-    shutil.copy('/afl/program_gen_main', build_directory)
+    shutil.copytree('/afl/all_gen_seeds', build_directory + '/all_gen_seeds')
     shutil.copy('/afl/afl-fuzz', build_directory)
     if os.path.exists('/afl/afl-qemu-trace'):
         shutil.copy('/afl/afl-qemu-trace', build_directory)
