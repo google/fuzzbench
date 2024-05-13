@@ -15,16 +15,16 @@
 ################################################################################
 
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
-RUN apt-get update && apt-get install -y make cmake
-RUN apt-get update && apt-get install -y \
-    python-all-dev \
-    python3-all-dev \
-    python3-pip  && \
-    ln -s /usr/local/bin/pip3 /usr/local/bin/pip
 
-RUN git clone --recursive -b development https://github.com/Mbed-TLS/mbedtls.git mbedtls
+RUN apt-get update && \
+    apt-get install -y libcap-dev
 
-RUN git clone --depth 1 https://github.com/google/boringssl.git boringssl
-RUN git clone --depth 1 https://github.com/openssl/openssl.git openssl
-WORKDIR mbedtls
-COPY build.sh $SRC/
+RUN git clone \
+        --depth 1 \
+        --branch v252 \
+        https://github.com/systemd/systemd && \
+    cp $SRC/systemd/tools/oss-fuzz.sh $SRC/build.sh && \
+    # Move shared libraries and tweak rpath for all $ARCHITECTURE.
+    sed -i '119d;126d' $SRC/build.sh
+
+WORKDIR systemd

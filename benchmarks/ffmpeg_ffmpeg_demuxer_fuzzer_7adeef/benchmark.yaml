@@ -1,0 +1,47 @@
+# 5706852010164224
+commit: 7adeeff91f974ec5a69967dffe18331f666530eb
+fuzz_target: ffmpeg_DEMUXER_fuzzer
+project: ffmpeg
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - aflplusplus_qemu_tracepc
+  - aflplusplus_zafl
+  - aflplusplus_frida
+  - honggfuzz_qemu
+  - klee
+  - weizz_qemu
+  - lafintel
+  - eclipser
+  - eclipser_aflplusplus
+  - aflplusplus_qemu_inmem
+  - symcc_afl
+  - symcc_afl_single
+  - symcc_aflplusplus
+  - symcc_aflplusplus_single
+  - aflplusplus_unusual_enabled
+  - aflplusplus_unusual_disabled
+  - aflplusplus_cmplog_double
+  - symcc_aflplusplus_single
+  - eclipser_aflplusplus
+  - aflplusplus_qemu_double
+  - fuzzolic_aflplusplus_z3
+  - symqemu_aflplusplus
+  - fuzzolic_aflplusplus_fuzzy
+  - fuzzolic_aflplusplus_z3dict
+  - cfctx_bottom
+  - cfctx_dataflow_seadsa
+  - cfctx_dataflow_svf
+  - cfctx_randomic
+  - cfctx_params
+  - cfctx_params_512kb
+  - afldd
+  - aflpp_vs_dd
+  - aflplusplus_gcc
+  - libfuzzer_dataflow
+  - libfuzzer_dataflow_load
+  - libfuzzer_dataflow_store
+  - libfuzzer_dataflow_pre
+  - wingfuzz

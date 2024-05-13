@@ -1,4 +1,4 @@
-# Copyright 2018 Google Inc.
+# Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,16 +15,9 @@
 ################################################################################
 
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
-RUN apt-get update && apt-get install -y make cmake
-RUN apt-get update && apt-get install -y \
-    python-all-dev \
-    python3-all-dev \
-    python3-pip  && \
-    ln -s /usr/local/bin/pip3 /usr/local/bin/pip
 
-RUN git clone --recursive -b development https://github.com/Mbed-TLS/mbedtls.git mbedtls
-
-RUN git clone --depth 1 https://github.com/google/boringssl.git boringssl
-RUN git clone --depth 1 https://github.com/openssl/openssl.git openssl
-WORKDIR mbedtls
+RUN apt-get update && apt-get install -y cmake ninja-build
+RUN git clone --recursive https://github.com/assimp/assimp.git
+WORKDIR assimp
 COPY build.sh $SRC/
+

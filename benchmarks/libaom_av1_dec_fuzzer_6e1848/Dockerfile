@@ -15,16 +15,9 @@
 ################################################################################
 
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
-RUN apt-get update && apt-get install -y make cmake
-RUN apt-get update && apt-get install -y \
-    python-all-dev \
-    python3-all-dev \
-    python3-pip  && \
-    ln -s /usr/local/bin/pip3 /usr/local/bin/pip
 
-RUN git clone --recursive -b development https://github.com/Mbed-TLS/mbedtls.git mbedtls
-
-RUN git clone --depth 1 https://github.com/google/boringssl.git boringssl
-RUN git clone --depth 1 https://github.com/openssl/openssl.git openssl
-WORKDIR mbedtls
+RUN apt-get update && apt-get install -y cmake yasm wget
+RUN git clone https://aomedia.googlesource.com/aom
+ADD https://storage.googleapis.com/aom-test-data/fuzzer/dec_fuzzer_seed_corpus.zip $SRC/
 COPY build.sh $SRC/
+WORKDIR aom
