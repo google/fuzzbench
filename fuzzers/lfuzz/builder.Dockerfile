@@ -17,6 +17,7 @@ FROM $parent_image
 
 RUN apt-get update && \
     apt-get install -y \
+        pip \
         build-essential \
         python3-dev \
         python3-setuptools \
