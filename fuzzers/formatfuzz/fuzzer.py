@@ -243,12 +243,14 @@ def fuzz(input_corpus,
          flags=tuple(),
          skip=False,
          no_cmplog=False):  # pylint: disable=too-many-arguments
+    """Run fuzzer."""
 
     if os.path.exists('./all_gen_seeds'):
-        seeds_path = os.path.join('./all_gen_seeds', target_binary.rsplit('/', 1)[-1], "gen_seeds")
-        shutil.copytree(seeds_path, input_corpus + '/gen_seeds')
+        seeds_path = os.path.join('./all_gen_seeds',
+                                  target_binary.rsplit('/', 1)[-1], 'gen_seeds')
+        if os.path.exists(seeds_path):
+            shutil.copytree(seeds_path, input_corpus + '/gen_seeds')
 
-    """Run fuzzer."""
     # Calculate CmpLog binary path from the instrumented target binary.
     target_binary_directory = os.path.dirname(target_binary)
     cmplog_target_binary_directory = (
