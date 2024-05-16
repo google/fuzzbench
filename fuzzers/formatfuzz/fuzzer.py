@@ -226,6 +226,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         utils.build_benchmark(env=new_env)
 
     shutil.copy('/afl/afl-fuzz', build_directory)
+    shutil.copytree('/all_gen_seeds', build_directory + '/all_gen_seeds')
     if os.path.exists('/afl/afl-qemu-trace'):
         shutil.copy('/afl/afl-qemu-trace', build_directory)
     if os.path.exists('/aflpp_qemu_driver_hook.so'):
@@ -243,13 +244,9 @@ def fuzz(input_corpus,
          skip=False,
          no_cmplog=False):  # pylint: disable=too-many-arguments
 
-    for item in os.listdir('/all_gen_seeds'):
-        source_item = os.path.join('/all_gen_seeds', item)
-        target_item = os.path.join(input_corpus, item)
-        
-        # Copy files
-        if os.path.isfile(source_item):
-            shutil.copy2(source_item, target_item)
+    if os.path.exists('./all_gen_seeds'):
+        seeds_path = os.path.join('./all_gen_seeds', target_binary.rsplit('/', 1)[-1], "gen_seeds")
+        shutil.copytree(seeds_path, input_corpus + '/gen_seeds')
 
     """Run fuzzer."""
     # Calculate CmpLog binary path from the instrumented target binary.
