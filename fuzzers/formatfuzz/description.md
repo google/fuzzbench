@@ -1,4 +1,4 @@
-# aflplusplus
+# FormatFuzz
 
 AFL++ fuzzer instance that has the following config active for all benchmarks:
   - PCGUARD instrumentation 
