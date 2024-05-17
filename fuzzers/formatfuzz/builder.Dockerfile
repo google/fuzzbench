@@ -41,7 +41,7 @@ RUN git clone -b dev https://github.com/AFLplusplus/AFLplusplus /afl && \
     true
 
 # Download vseeds
-RUN git clone https://github.com/FuzzGen/vseeds1 /all_gen_seeds
+RUN git clone https://github.com/FormatFuzz/vseeds2 /all_gen_seeds
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
