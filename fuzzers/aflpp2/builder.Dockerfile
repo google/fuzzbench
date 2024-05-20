@@ -37,7 +37,7 @@ RUN apt-get update && \
 # Download afl++.
 RUN git clone -b noweight2 https://github.com/AFLplusplus/AFLplusplus /afl && \
     cd /afl && \
-    git checkout 4265d70d703f78dc322efd0d2789f0faca002af0 || \
+    git checkout 35156eb917ad162fd88c3d8279e7a2679cde0ce6 || \
     true
 
 # Build without Python support as we don't need it.
