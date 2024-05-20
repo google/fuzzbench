@@ -3,7 +3,7 @@
 # will not work with your setup.
 
 trials: 20
-max_total_time: 82800  # 23 hours, the default time for preemptible experiments.
+max_total_time: 172800  # 23 hours, the default time for preemptible experiments.
 cloud_project: fuzzbench
 docker_registry: gcr.io/fuzzbench
 cloud_compute_zone: us-central1-c
@@ -11,7 +11,7 @@ experiment_filestore: gs://fuzzbench-data
 report_filestore: gs://www.fuzzbench.com/reports
 cloud_sql_instance_connection_name: "fuzzbench:us-central1:postgres-experiment-db=tcp:5432"
 worker_pool_name: "projects/fuzzbench/locations/us-central1/workerPools/buildpool-e2-std-32"  # Mem 128 GB
-preemptible_runners: true
+preemptible_runners: false
 
 # This experiment should generate a report that is combined with other public
 # "production" experiments.
