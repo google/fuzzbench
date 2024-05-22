@@ -15,7 +15,7 @@ preemptible_runners: false
 
 # This experiment should generate a report that is combined with other public
 # "production" experiments.
-merge_with_nonprivate: true
+merge_with_nonprivate: false
 
 # This experiment should be merged with other reports in later experiments.
 private: false
