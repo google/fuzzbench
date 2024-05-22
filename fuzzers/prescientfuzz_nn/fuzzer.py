@@ -55,6 +55,9 @@ def build():
     utils.append_flags('CXXFLAGS', cflags)
     utils.append_flags('LDFLAGS', cflags)
 
+    os.environ['RANLIB'] = 'llvm-ranlib'
+    os.environ['AR'] = 'llvm-ar'
+    os.environ['AS'] = 'llvm-as'
     os.environ['FUZZER_LIB'] = '/stub_rt.a'
     build_directory = os.environ['OUT']
     cfg_file = build_directory + '/afl_cfg.bin'
@@ -76,7 +79,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
         command += (['-c', cfg_file])
     else:
         sys.exit(1)
-    command += (['-o', output_corpus, '-i', input_corpus, '-b', '0.999'])
+    command += (['-o', output_corpus, '-i', input_corpus, '-b', '0.9999'])
     fuzzer_env = os.environ.copy()
     fuzzer_env['LD_PRELOAD'] = '/usr/lib/x86_64-linux-gnu/libjemalloc.so.2'
     print(command)

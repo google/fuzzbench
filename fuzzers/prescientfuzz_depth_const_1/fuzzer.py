@@ -55,6 +55,9 @@ def build():
     utils.append_flags('CXXFLAGS', cflags)
     utils.append_flags('LDFLAGS', cflags)
 
+    os.environ['RANLIB'] = 'llvm-ranlib'
+    os.environ['AR'] = 'llvm-ar'
+    os.environ['AS'] = 'llvm-as'
     os.environ['FUZZER_LIB'] = '/stub_rt.a'
     build_directory = os.environ['OUT']
     cfg_file = build_directory + '/afl_cfg.bin'
