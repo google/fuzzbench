@@ -34,7 +34,7 @@ RUN apt-get update && \
 # Download PrescientFuzz
 RUN git clone https://github.com/DanBlackwell/PrescientFuzz /PrescientFuzz
 COPY ./patch /PrescientFuzz/patch
-RUN cd /PrescientFuzz && git fetch && git checkout 814bcd19628ef994a36228d78f1bc002a70d1260 && git apply patch
+RUN cd /PrescientFuzz && git fetch && git checkout 543074581cdd98d747c7e625745dab7ade5799d3 && git apply patch
 
 # Compile PrescientFuzz.
 RUN cd /PrescientFuzz && \

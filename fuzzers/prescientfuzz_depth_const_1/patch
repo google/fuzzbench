@@ -1,5 +1,5 @@
 diff --git a/libafl/src/schedulers/probabilistic_sampling.rs b/libafl/src/schedulers/probabilistic_sampling.rs
-index fd552a3d..c275d211 100644
+index fd552a3d..b9cfc10d 100644
 --- a/libafl/src/schedulers/probabilistic_sampling.rs
 +++ b/libafl/src/schedulers/probabilistic_sampling.rs
 @@ -294,7 +294,7 @@ where
@@ -7,7 +7,7 @@ index fd552a3d..c275d211 100644
                      let backoff_weighting = backoff_weighting_for_direct_neighbour.get(&reachability.direct_neighbour_ancestor_index);
                      if backoff_weighting.is_none() { println!("backoff_weighting is none for {:?}", reachability.direct_neighbour_ancestor_index); }
 -                    neighbour_score += backoff_weighting.unwrap() * rarity * 1f64 / reachability.depth as f64;
-+                    neighbour_score += backoff_weighting.unwrap() * rarity;
++                    neighbour_score += backoff_weighting.unwrap() * rarity; // * 1f64 / reachability.depth as f64;
                      reachability_favored |= favored_filled.insert(reachability.index);
                  }
              }

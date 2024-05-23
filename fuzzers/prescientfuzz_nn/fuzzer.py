@@ -46,8 +46,6 @@ def build():
                         'release-fuzzbench/libafl_cc')
     os.environ['CXX'] = ('/PrescientFuzz/fuzzers/fuzzbench/target/'
                          'release-fuzzbench/libafl_cxx')
-    os.environ['LD'] = ('/PrescientFuzz/fuzzers/fuzzbench/target/'
-                        'release-fuzzbench/libafl_cc')
 
     os.environ['ASAN_OPTIONS'] = 'abort_on_error=0:allocator_may_return_null=1'
     os.environ['UBSAN_OPTIONS'] = 'abort_on_error=0'
@@ -57,9 +55,6 @@ def build():
     utils.append_flags('CXXFLAGS', cflags)
     utils.append_flags('LDFLAGS', cflags)
 
-    os.environ['RANLIB'] = 'llvm-ranlib'
-    os.environ['AR'] = 'llvm-ar'
-    os.environ['AS'] = 'llvm-as'
     os.environ['FUZZER_LIB'] = '/stub_rt.a'
     build_directory = os.environ['OUT']
     cfg_file = build_directory + '/afl_cfg.bin'
