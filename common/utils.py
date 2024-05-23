@@ -73,3 +73,10 @@ def file_hash(file_path):
             chunk = file_handle.read(chunk_size)
 
     return digest.hexdigest()
+
+
+# Calculate a retry delay based on the current try,
+# a default delay, and an exponential backoff
+def get_retry_delay(num_try, delay, backoff):
+    """Compute backoff delay."""
+    return delay * (backoff**(num_try - 1))
