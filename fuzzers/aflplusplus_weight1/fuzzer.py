@@ -57,7 +57,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
             build_modes[0] = 'native'
 
     # Instrumentation coverage modes:
-    os.environ['AFL_DUMP_CYCLOMATIC_COMPLEXITY'] = '1'
     if 'lto' in build_modes:
         os.environ['CC'] = '/afl/afl-clang-lto'
         os.environ['CXX'] = '/afl/afl-clang-lto++'
@@ -260,7 +259,7 @@ def fuzz(input_corpus,
     flags = list(flags)
 
     if os.path.exists('./afl++.dict'):
-        flags += ['-x', './afl++.dict', '-V80000']
+        flags += ['-x', './afl++.dict']
 
     # Move the following to skip for upcoming _double tests:
     if os.path.exists(cmplog_target_binary) and no_cmplog is False:
@@ -270,6 +269,7 @@ def fuzz(input_corpus,
     os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
     os.environ['AFL_FAST_CAL'] = '1'
     os.environ['AFL_NO_WARN_INSTABILITY'] = '1'
+    os.environ['AFL_WEIGHT'] = '1'
 
     if not skip:
         os.environ['AFL_DISABLE_TRIM'] = '1'
