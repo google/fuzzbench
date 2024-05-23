@@ -15,12 +15,6 @@
 ARG parent_image
 FROM $parent_image
 
-# Uninstall old Rust & Install the latest one.
-RUN if which rustup; then rustup self uninstall -y; fi && \
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
-    sh /rustup.sh --default-toolchain nightly-2023-09-21 -y && \
-    rm /rustup.sh
-
 # Install dependencies.
 RUN apt-get update && \
     apt-get remove -y llvm-10 && \
