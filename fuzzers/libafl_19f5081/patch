@@ -1,0 +1,55 @@
+diff --git a/fuzzers/fuzzbench/src/lib.rs b/fuzzers/fuzzbench/src/lib.rs
+index 9b162a48..f1dc0d7b 100644
+--- a/fuzzers/fuzzbench/src/lib.rs
++++ b/fuzzers/fuzzbench/src/lib.rs
+@@ -23,7 +23,7 @@ use libafl::{
+     feedbacks::{CrashFeedback, MaxMapFeedback, TimeFeedback},
+     fuzzer::{Fuzzer, StdFuzzer},
+     inputs::{BytesInput, HasTargetBytes},
+-    monitors::SimpleMonitor,
++    monitors::SimplePrintingMonitor,
+     mutators::{
+         scheduled::havoc_mutations, token_mutations::I2SRandReplace, tokens_mutations,
+         StdMOptMutator, StdScheduledMutator, Tokens,
+@@ -214,13 +214,7 @@ fn fuzz(
+     let file_null = File::open("/dev/null")?;
+ 
+     // 'While the monitor are state, they are usually used in the broker - which is likely never restarted
+-    let monitor = SimpleMonitor::new(|s| {
+-        #[cfg(unix)]
+-        writeln!(&mut stdout_cpy, "{s}").unwrap();
+-        #[cfg(windows)]
+-        println!("{s}");
+-        writeln!(log.borrow_mut(), "{:?} {s}", current_time()).unwrap();
+-    });
++    let monitor = SimplePrintingMonitor::new();
+ 
+     // We need a shared map to store our state before a crash.
+     // This way, we are able to continue fuzzing afterwards.
+@@ -380,16 +374,16 @@ fn fuzz(
+     }
+ 
+     // Remove target output (logs still survive)
+-    #[cfg(unix)]
+-    {
+-        let null_fd = file_null.as_raw_fd();
+-        dup2(null_fd, io::stdout().as_raw_fd())?;
+-        if std::env::var("LIBAFL_FUZZBENCH_DEBUG").is_err() {
+-            dup2(null_fd, io::stderr().as_raw_fd())?;
+-        }
+-    }
+-    // reopen file to make sure we're at the end
+-    log.replace(OpenOptions::new().append(true).create(true).open(logfile)?);
++    // #[cfg(unix)]
++    // {
++    //     let null_fd = file_null.as_raw_fd();
++    //     dup2(null_fd, io::stdout().as_raw_fd())?;
++    //     if std::env::var("LIBAFL_FUZZBENCH_DEBUG").is_err() {
++    //         dup2(null_fd, io::stderr().as_raw_fd())?;
++    //     }
++    // }
++    // // reopen file to make sure we're at the end
++    // log.replace(OpenOptions::new().append(true).create(true).open(logfile)?);
+ 
+     fuzzer.fuzz_loop(&mut stages, &mut executor, &mut state, &mut mgr)?;
+ 

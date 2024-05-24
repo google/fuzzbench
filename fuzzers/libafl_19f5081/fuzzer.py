@@ -15,9 +15,7 @@
 """Integration code for a LibAFL-based fuzzer."""
 
 import os
-import sys
 import subprocess
-from pathlib import Path
 
 from fuzzers import utils
 
@@ -40,29 +38,23 @@ def prepare_fuzz_environment(input_corpus):
     utils.create_seed_file_for_empty_corpus(input_corpus)
 
 
-def build():
+def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
-    os.environ['CC'] = ('/PrescientFuzz/fuzzers/fuzzbench/target/'
-                        'release-fuzzbench/libafl_cc')
-    os.environ['CXX'] = ('/PrescientFuzz/fuzzers/fuzzbench/target/'
-                         'release-fuzzbench/libafl_cxx')
+    os.environ[
+        'CC'] = '/libafl/fuzzers/fuzzbench/target/release-fuzzbench/libafl_cc'
+    os.environ[
+        'CXX'] = '/libafl/fuzzers/fuzzbench/target/release-fuzzbench/libafl_cxx'
 
     os.environ['ASAN_OPTIONS'] = 'abort_on_error=0:allocator_may_return_null=1'
     os.environ['UBSAN_OPTIONS'] = 'abort_on_error=0'
 
     cflags = ['--libafl']
+    cxxflags = ['--libafl', '--std=c++14']
     utils.append_flags('CFLAGS', cflags)
-    utils.append_flags('CXXFLAGS', cflags)
+    utils.append_flags('CXXFLAGS', cxxflags)
     utils.append_flags('LDFLAGS', cflags)
 
-    os.environ['RANLIB'] = 'llvm-ranlib'
-    os.environ['AR'] = 'llvm-ar'
-    os.environ['AS'] = 'llvm-as'
     os.environ['FUZZER_LIB'] = '/stub_rt.a'
-    build_directory = os.environ['OUT']
-    cfg_file = build_directory + '/afl_cfg.bin'
-    Path(cfg_file).touch()
-    os.environ['AFL_LLVM_CFG_FILE'] = cfg_file
     utils.build_benchmark()
 
 
@@ -73,13 +65,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     command = [target_binary]
     if dictionary_path:
         command += (['-x', dictionary_path])
-    build_directory = os.environ['OUT']
-    cfg_file = build_directory + '/afl_cfg.bin'
-    if os.path.exists(cfg_file):
-        command += (['-c', cfg_file])
-    else:
-        sys.exit(1)
-    command += (['-o', output_corpus, '-i', input_corpus, '-b', '0.9999'])
+    command += (['-o', output_corpus, '-i', input_corpus])
     fuzzer_env = os.environ.copy()
     fuzzer_env['LD_PRELOAD'] = '/usr/lib/x86_64-linux-gnu/libjemalloc.so.2'
     print(command)

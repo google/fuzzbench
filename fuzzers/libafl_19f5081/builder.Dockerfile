@@ -18,32 +18,43 @@ FROM $parent_image
 # Uninstall old Rust & Install the latest one.
 RUN if which rustup; then rustup self uninstall -y; fi && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
-    sh /rustup.sh -y && \
-    /root/.cargo/bin/rustup toolchain install nightly && \
+    sh /rustup.sh --default-toolchain nightly-2023-09-21 -y && \
     rm /rustup.sh
 
+# Install dependencies.
 RUN apt-get update && \
+    apt-get remove -y llvm-10 && \
     apt-get install -y \
         build-essential \
-        cargo && \
+        lsb-release wget software-properties-common gnupg && \
     apt-get install -y wget libstdc++5 libtool-bin automake flex bison \
         libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
         apt-utils apt-transport-https ca-certificates joe curl && \
-    PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
+    wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 17
 
-# Download PrescientFuzz
-RUN git clone https://github.com/DanBlackwell/PrescientFuzz /PrescientFuzz
-RUN cd /PrescientFuzz && git fetch && git checkout 814bcd19628ef994a36228d78f1bc002a70d1260
+RUN wget https://gist.githubusercontent.com/tokatoka/26f4ba95991c6e33139999976332aa8e/raw/698ac2087d58ce5c7a6ad59adce58dbfdc32bd46/createAliases.sh && chmod u+x ./createAliases.sh && ./createAliases.sh 
 
-# Compile PrescientFuzz.
-RUN cd /PrescientFuzz && \
+# Uninstall old Rust & Install the latest one.
+RUN if which rustup; then rustup self uninstall -y; fi && \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
+    sh /rustup.sh --default-toolchain nightly-2024-03-12 -y && \
+    rm /rustup.sh
+
+# Download libafl.
+RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
+
+# Checkout a current commit
+RUN cd /libafl && git pull && git checkout 19f5081bd8ce0c043642b6075501988cdd2c6691 || true
+# Note that due a nightly bug it is currently fixed to a known version on top!
+
+# Compile libafl.
+RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
-    export CC=clang AFL_NO_X86 && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
     cd ./fuzzers/fuzzbench && \
-    PATH="/root/.cargo/bin/:$PATH" cargo +nightly build --profile release-fuzzbench --features no_link_main
+    PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench --features no_link_main
 
 # Auxiliary weak references.
-RUN cd /PrescientFuzz/fuzzers/fuzzbench && \
+RUN cd /libafl/fuzzers/fuzzbench && \
     clang -c stub_rt.c && \
     ar r /stub_rt.a stub_rt.o
