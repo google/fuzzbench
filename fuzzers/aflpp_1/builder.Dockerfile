@@ -37,7 +37,7 @@ RUN apt-get update && \
 # Download afl++.
 RUN git clone -b dev https://github.com/AFLplusplus/AFLplusplus /afl && \
     cd /afl && \
-    git checkout 80158de3e801fa7dc1d4e36ec88cb767997f478e || \
+    git checkout 1286d1906fd3eca18225089ae790e6ae53aff609 || \
     true
 
 # Build without Python support as we don't need it.
