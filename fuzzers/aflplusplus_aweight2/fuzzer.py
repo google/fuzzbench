@@ -269,7 +269,7 @@ def fuzz(input_corpus,
     os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
     os.environ['AFL_FAST_CAL'] = '1'
     os.environ['AFL_NO_WARN_INSTABILITY'] = '1'
-    os.environ['TIMEVAR'] = '1'
+    os.environ['AFL_WEIGHT'] = '1'
 
     if not skip:
         os.environ['AFL_DISABLE_TRIM'] = '1'
