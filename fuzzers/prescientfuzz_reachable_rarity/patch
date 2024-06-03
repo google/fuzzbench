@@ -1,0 +1,16 @@
+diff --git a/libafl/src/schedulers/prescient_weighted.rs b/libafl/src/schedulers/prescient_weighted.rs
+index 6761c534..f26e347c 100644
+--- a/libafl/src/schedulers/prescient_weighted.rs
++++ b/libafl/src/schedulers/prescient_weighted.rs
+@@ -274,9 +274,9 @@ where
+                     let freq = reachable_blocks_result.frequency_for_reachability.get(&reachability);
+                     if freq.is_none() { println!("frequency is none for {:?}", reachability); }
+                     let rarity = 1f64 / *freq.unwrap() as f64;
+-                    let backoff_weighting = backoff_weighting_for_direct_neighbour.get(&reachability.direct_neighbour_ancestor_index);
++                    let backoff_weighting = Some(1f64); // backoff_weighting_for_direct_neighbour.get(&reachability.direct_neighbour_ancestor_index);
+                     if backoff_weighting.is_none() { println!("backoff_weighting is none for {:?}", reachability.direct_neighbour_ancestor_index); }
+-                    neighbour_score += backoff_weighting.unwrap() * rarity * 1f64 / reachability.depth as f64;
++                    neighbour_score += backoff_weighting.unwrap() * rarity; // * 1f64 / reachability.depth as f64;
+                     reachability_favored |= favored_filled.insert(reachability.index);
+                 }
+             }

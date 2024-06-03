@@ -1,0 +1,27 @@
+diff --git a/fuzzers/fuzzbench/src/lib.rs b/fuzzers/fuzzbench/src/lib.rs
+index e63325d8..5e00b8ed 100644
+--- a/fuzzers/fuzzbench/src/lib.rs
++++ b/fuzzers/fuzzbench/src/lib.rs
+@@ -322,13 +322,15 @@ fn fuzz(
+     // Setup a randomic Input2State stage
+     let i2s = StdMutationalStage::new(StdScheduledMutator::new(tuple_list!(I2SRandReplace::new())));
+ 
+-    // Setup a MOPT mutator
+-    let mutator = StdMOptMutator::new(
+-        &mut state,
+-        havoc_mutations().merge(tokens_mutations()),
+-        7,
+-        5,
+-    )?;
++    // // Setup a MOPT mutator
++    // let mutator = StdMOptMutator::new(
++    //     &mut state,
++    //     havoc_mutations().merge(tokens_mutations()),
++    //     7,
++    //     5,
++    // )?;
++    // Setup a mutational stage with a basic bytes mutator
++    let mutator = StdScheduledMutator::with_max_stack_pow(havoc_mutations().merge(tokens_mutations()), 6);
+ 
+     let mutation = StdMutationalStage::with_max_iterations(mutator, 1024);
+ 
