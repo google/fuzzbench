@@ -45,5 +45,5 @@ RUN git clone -b dev https://github.com/AFLplusplus/AFLplusplus /afl && \
 RUN cd /afl && \
     unset CFLAGS CXXFLAGS && \
     export CC=clang AFL_NO_X86=1 && \
-    PYTHON_INCLUDE=/ ASAN_BUILD=1 make && \
+    PYTHON_INCLUDE=/ make && \
     cp utils/aflpp_driver/libAFLDriver.a /
