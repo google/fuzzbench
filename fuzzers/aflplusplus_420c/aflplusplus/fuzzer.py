@@ -226,8 +226,6 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         utils.build_benchmark(env=new_env)
 
     shutil.copy('/afl/afl-fuzz', build_directory)
-    shutil.copy('/afl/model.bin', build_directory)
-    shutil.copy('/afl/libxgboost.so', build_directory)
     if os.path.exists('/afl/afl-qemu-trace'):
         shutil.copy('/afl/afl-qemu-trace', build_directory)
     if os.path.exists('/aflpp_qemu_driver_hook.so'):

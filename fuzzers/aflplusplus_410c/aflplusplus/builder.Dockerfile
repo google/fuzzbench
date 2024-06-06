@@ -35,17 +35,15 @@ RUN apt-get update && \
         libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
 # Download afl++.
-RUN git clone -b model https://github.com/AFLplusplus/AFLplusplus /afl && \
+RUN git clone -b debug https://github.com/AFLplusplus/AFLplusplus /afl && \
     cd /afl && \
-    git checkout 5a2688c21377ae402ab64f6eac134cfa38ff3022 || \
+    git checkout 8a641d0b1a6e8206fb25a01dfe0e34e94861eaeb || \
     true
-
-RUN cd /afl && git submodule init && git submodule update
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /afl && \
     unset CFLAGS CXXFLAGS && \
     export CC=clang AFL_NO_X86=1 && \
-    PYTHON_INCLUDE=/ make ASAN_BUILD=1 && \
+    PYTHON_INCLUDE=/ make && \
     cp utils/aflpp_driver/libAFLDriver.a /
