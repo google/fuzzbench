@@ -33,7 +33,7 @@ EXPERIMENT_REQUESTS = [{
     'experiment': datetime.date(2020, 6, 5),
     'fuzzers': ['honggfuzz', 'afl'],
     'description': 'Test experiment',
-    'oss_fuzz_corpus': True,
+    'oss-fuzz-corpus': True,
 }]
 
 
