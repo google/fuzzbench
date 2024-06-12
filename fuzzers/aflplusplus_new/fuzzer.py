@@ -49,10 +49,12 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     # For bug type benchmarks we have to instrument via native clang pcguard :(
     build_flags = os.environ['CFLAGS']
+
     if build_flags.find(
             'array-bounds'
     ) != -1 and 'qemu' not in build_modes and 'classic' not in build_modes:
-        build_modes[0] = 'native'
+        if 'gcc' not in build_modes:
+            build_modes[0] = 'native'
 
     # Instrumentation coverage modes:
     if 'lto' in build_modes:
@@ -78,6 +80,13 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     elif 'gcc' in build_modes:
         os.environ['CC'] = 'afl-gcc-fast'
         os.environ['CXX'] = 'afl-g++-fast'
+        if build_flags.find('array-bounds') != -1:
+            os.environ['CFLAGS'] = '-fsanitize=address -O1'
+            os.environ['CXXFLAGS'] = '-fsanitize=address -O1'
+        else:
+            os.environ['CFLAGS'] = ''
+            os.environ['CXXFLAGS'] = ''
+            os.environ['CPPFLAGS'] = ''
     else:
         os.environ['CC'] = '/afl/afl-clang-fast'
         os.environ['CXX'] = '/afl/afl-clang-fast++'
@@ -107,6 +116,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # Generate an extra dictionary.
     if 'dict2file' in build_modes or 'native' in build_modes:
         os.environ['AFL_LLVM_DICT2FILE'] = build_directory + '/afl++.dict'
+        os.environ['AFL_LLVM_DICT2FILE_NO_MAIN'] = '1'
     # Enable context sentitivity for LLVM mode (non LTO only)
     if 'ctx' in build_modes:
         os.environ['AFL_LLVM_CTX'] = '1'
@@ -204,15 +214,15 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         new_env['SYMCC_NO_SYMBOLIC_INPUT'] = '1'
         new_env['SYMCC_SILENT'] = '1'
 
-        # For CmpLog build, set the OUT and FUZZ_TARGET environment
-        # variable to point to the new CmpLog build directory.
+        # For symcc build, set the OUT and FUZZ_TARGET environment
+        # variable to point to the new symcc build directory.
         new_env['OUT'] = symcc_build_directory
         fuzz_target = os.getenv('FUZZ_TARGET')
         if fuzz_target:
             new_env['FUZZ_TARGET'] = os.path.join(symcc_build_directory,
                                                   os.path.basename(fuzz_target))
 
-        print('Re-building benchmark for CmpLog fuzzing target')
+        print('Re-building benchmark for symcc fuzzing target')
         utils.build_benchmark(env=new_env)
 
     shutil.copy('/afl/afl-fuzz', build_directory)
@@ -252,17 +262,21 @@ def fuzz(input_corpus,
         flags += ['-x', './afl++.dict']
 
     # Move the following to skip for upcoming _double tests:
-    if os.path.exists(cmplog_target_binary) and no_cmplog is not False:
+    if os.path.exists(cmplog_target_binary) and no_cmplog is False:
         flags += ['-c', cmplog_target_binary]
+
+    #os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
+    os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
+    os.environ['AFL_FAST_CAL'] = '1'
+    os.environ['AFL_NO_WARN_INSTABILITY'] = '1'
+    os.environ['AFL_NO_SYNC'] = '1'
 
     if not skip:
         os.environ['AFL_DISABLE_TRIM'] = '1'
-        # os.environ['AFL_FAST_CAL'] = '1'
         os.environ['AFL_CMPLOG_ONLY_NEW'] = '1'
         if 'ADDITIONAL_ARGS' in os.environ:
             flags += os.environ['ADDITIONAL_ARGS'].split(' ')
 
-    os.environ['AFL_DISABLE_RP'] = '1'
     afl_fuzzer.run_afl_fuzz(input_corpus,
                             output_corpus,
                             target_binary,
