@@ -1,0 +1,158 @@
+diff --git a/fuzzers/fuzzbench/src/lib.rs b/fuzzers/fuzzbench/src/lib.rs
+index e63325d8..adb2cb88 100644
+--- a/fuzzers/fuzzbench/src/lib.rs
++++ b/fuzzers/fuzzbench/src/lib.rs
+@@ -322,17 +322,13 @@ fn fuzz(
+     // Setup a randomic Input2State stage
+     let i2s = StdMutationalStage::new(StdScheduledMutator::new(tuple_list!(I2SRandReplace::new())));
+ 
+-    // Setup a MOPT mutator
+-    let mutator = StdMOptMutator::new(
+-        &mut state,
+-        havoc_mutations().merge(tokens_mutations()),
+-        7,
+-        5,
+-    )?;
++    // Setup a mutational stage with a basic bytes mutator
++    let mutator = StdScheduledMutator::with_max_stack_pow(havoc_mutations().merge(tokens_mutations()), 6);
+ 
+     let mutation = StdMutationalStage::with_max_iterations(mutator, 1024);
+ 
+-    let scheduler = PrescientProbabilitySamplingScheduler::new_with_backoff(backoff_factor);
++    // set max_depth to 1, so only direct neighbours are counted
++    let scheduler = PrescientProbabilitySamplingScheduler::new_with_backoff(backoff_factor, 1);
+ 
+     // A fuzzer with feedbacks and a corpus scheduler
+     let mut fuzzer = StdFuzzer::new(scheduler, feedback, objective);
+diff --git a/libafl/src/feedbacks/cfg_prescience.rs b/libafl/src/feedbacks/cfg_prescience.rs
+index 871cd858..bb4fc1b7 100644
+--- a/libafl/src/feedbacks/cfg_prescience.rs
++++ b/libafl/src/feedbacks/cfg_prescience.rs
+@@ -725,7 +725,8 @@ impl ControlFlowGraph {
+     pub fn get_all_neighbours_full_depth(
+         &mut self, 
+         input_coverage_map_indexes: &[usize],
+-        all_coverage_map_indexes: &HashSet<usize>
++        all_coverage_map_indexes: &HashSet<usize>,
++        max_depth: usize
+     ) -> Vec<Reachability> {
+ 
+         let mut dupes = vec![];
+@@ -752,6 +753,11 @@ impl ControlFlowGraph {
+ 
+         while let Some((depth, to_explore, direct_neighbour_predecessor)) = queue.pop_front() {
+ 
++            // Don't keep exploring past max depth
++            if depth >= max_depth {
++                continue;
++            }
++
+             debug_assert!(covered.contains(&to_explore), "to_explore: {to_explore}, covered: {:?}", covered);
+ 
+             if to_explore >= 1_000_000 {
+diff --git a/libafl/src/schedulers/prescient_weighted.rs b/libafl/src/schedulers/prescient_weighted.rs
+index 6761c534..8fd1e74b 100644
+--- a/libafl/src/schedulers/prescient_weighted.rs
++++ b/libafl/src/schedulers/prescient_weighted.rs
+@@ -23,16 +23,6 @@ use crate::{
+     state::{HasCorpus, HasRand, State, UsesState}, Error
+ };
+ 
+-/// Calculate Testcase probabilities using prescience
+-#[derive(Debug, Clone)]
+-pub struct PrescientProbabilitySamplingScheduler<S>
+-where
+-    S: UsesInput,
+-{
+-    backoff_factor: f64,
+-    phantom: PhantomData<S>,
+-}
+-
+ /// A state metadata holding a map of probability of corpus elements.
+ #[derive(Debug, Serialize, Deserialize)]
+ #[cfg_attr(
+@@ -85,6 +75,17 @@ struct ReachableBlocksResult {
+ }
+ 
+ 
++/// Calculate Testcase probabilities using prescience
++#[derive(Debug, Clone)]
++pub struct PrescientProbabilitySamplingScheduler<S>
++where
++    S: UsesInput,
++{
++    backoff_factor: f64,
++    max_cfg_depth: usize,
++    phantom: PhantomData<S>,
++}
++
+ impl<S> PrescientProbabilitySamplingScheduler<S>
+ where
+     S: HasCorpus + HasMetadata + HasNamedMetadata + HasRand,
+@@ -92,9 +93,10 @@ where
+ {
+     /// Creates a new [`struct@ProbabilitySamplingScheduler`]
+     #[must_use]
+-    pub fn new_with_backoff(backoff_factor: f64) -> Self {
++    pub fn new_with_backoff(backoff_factor: f64, max_cfg_depth: usize) -> Self {
+         Self {
+             backoff_factor,
++            max_cfg_depth,
+             phantom: PhantomData,
+         }
+     }
+@@ -144,7 +146,7 @@ where
+ 
+             let reachabilities = {
+                 let cfg_metadata = state.metadata_mut::<ControlFlowGraph>().unwrap();
+-                cfg_metadata.get_all_neighbours_full_depth(&covered_indexes, &covered_blocks)
++                cfg_metadata.get_all_neighbours_full_depth(&covered_indexes, &covered_blocks, self.max_cfg_depth)
+             };
+ 
+             if !last_recalc_corpus_ids.contains(&idx) {
+@@ -263,18 +265,18 @@ where
+ 
+             let reachabilities = {
+                 let cfg_metadata = state.metadata_mut::<ControlFlowGraph>().unwrap();
+-                cfg_metadata.get_all_neighbours_full_depth(&covered_indexes, &covered_blocks)
++                cfg_metadata.get_all_neighbours_full_depth(&covered_indexes, &covered_blocks, self.max_cfg_depth)
+             };
+ 
+             let tc = state.corpus().get(entry)?.borrow();
+             let idx_meta = tc.metadata::<MapIndexesMetadata>().unwrap();
+             for reachability in reachabilities {
+                 // Only keep this if it's the best depth we've seen for this edge
+-                if reachability.depth == reachable_blocks_result.least_depth_for_index[&reachability.index] {
++                if reachability.depth == 1 { // reachable_blocks_result.least_depth_for_index[&reachability.index] {
+                     let freq = reachable_blocks_result.frequency_for_reachability.get(&reachability);
+                     if freq.is_none() { println!("frequency is none for {:?}", reachability); }
+                     let rarity = 1f64 / *freq.unwrap() as f64;
+-                    let backoff_weighting = backoff_weighting_for_direct_neighbour.get(&reachability.direct_neighbour_ancestor_index);
++                    let backoff_weighting = Some(1f64); // backoff_weighting_for_direct_neighbour.get(&reachability.direct_neighbour_ancestor_index);
+                     if backoff_weighting.is_none() { println!("backoff_weighting is none for {:?}", reachability.direct_neighbour_ancestor_index); }
+                     neighbour_score += backoff_weighting.unwrap() * rarity * 1f64 / reachability.depth as f64;
+                     reachability_favored |= favored_filled.insert(reachability.index);
+@@ -417,12 +419,12 @@ where
+     }
+ }
+ 
+-impl<S> Default for PrescientProbabilitySamplingScheduler<S>
+-where
+-    S: HasCorpus + HasNamedMetadata + HasMetadata + HasRand,
+-    S::Input: HasLen,
+-{
+-    fn default() -> Self {
+-        Self::new_with_backoff(0.9999)
+-    }
+-}
+\ No newline at end of file
++// impl<S> Default for PrescientProbabilitySamplingScheduler<S>
++// where
++//     S: HasCorpus + HasNamedMetadata + HasMetadata + HasRand,
++//     S::Input: HasLen,
++// {
++//     fn default() -> Self {
++//         Self::new_with_backoff(0.9999, 999)
++//     }
++// }
+\ No newline at end of file
