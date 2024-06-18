@@ -1,0 +1,39 @@
+diff --git a/fuzzers/fuzzbench/src/lib.rs b/fuzzers/fuzzbench/src/lib.rs
+index 9b162a48..af4ff31f 100644
+--- a/fuzzers/fuzzbench/src/lib.rs
++++ b/fuzzers/fuzzbench/src/lib.rs
+@@ -29,9 +29,7 @@ use libafl::{
+         StdMOptMutator, StdScheduledMutator, Tokens,
+     },
+     observers::{CanTrack, HitcountsMapObserver, TimeObserver},
+-    schedulers::{
+-        powersched::PowerSchedule, IndexesLenTimeMinimizerScheduler, StdWeightedScheduler,
+-    },
++    schedulers::RandScheduler,
+     stages::{
+         calibrate::CalibrationStage, power::StdPowerMutationalStage, StdMutationalStage,
+         TracingStage,
+@@ -307,11 +305,8 @@ fn fuzz(
+ 
+     let power = StdPowerMutationalStage::new(mutator);
+ 
+-    // A minimization+queue policy to get testcasess from the corpus
+-    let scheduler = IndexesLenTimeMinimizerScheduler::new(
+-        &edges_observer,
+-        StdWeightedScheduler::with_schedule(&mut state, &edges_observer, Some(PowerSchedule::FAST)),
+-    );
++    // A random scheduler
++    let scheduler = RandScheduler::new();
+ 
+     // A fuzzer with feedbacks and a corpus scheduler
+     let mut fuzzer = StdFuzzer::new(scheduler, feedback, objective);
+diff --git a/libafl_bolts/build.rs b/libafl_bolts/build.rs
+index 5253398d..39acd4c6 100644
+--- a/libafl_bolts/build.rs
++++ b/libafl_bolts/build.rs
+@@ -1,3 +1,5 @@
++#![feature(error_in_core)]
++
+ #[rustversion::nightly]
+ fn nightly() {
+     println!("cargo:rustc-cfg=nightly");
