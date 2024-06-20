@@ -17,5 +17,5 @@ import collections
 SnapshotMeasureRequest = collections.namedtuple(
     'SnapshotMeasureRequest', ['fuzzer', 'benchmark', 'trial_id', 'cycle'])
 
-ReescheduleRequest = collections.namedtuple(
-    'ReescheduleRequest', ['fuzzer', 'benchmarck', 'trial_id', 'cycle'])
+RetryRequest = collections.namedtuple(
+    'RetryRequest', ['fuzzer', 'benchmarck', 'trial_id', 'cycle'])

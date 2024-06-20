@@ -44,7 +44,7 @@ from database import utils as db_utils
 from database import models
 from experiment.build import build_utils
 from experiment.measurer import coverage_utils
-from experiment.measurer import datatypes
+from experiment.measurer.datatypes import (RetryRequest, SnapshotMeasureRequest)
 from experiment.measurer import measure_worker
 from experiment.measurer import run_coverage
 from experiment.measurer import run_crashes
@@ -78,13 +78,8 @@ def measure_main(experiment_config):
     measurers_cpus = experiment_config['measurers_cpus']
     runners_cpus = experiment_config['runners_cpus']
     region_coverage = experiment_config['region_coverage']
-    local_experiment = experiment_utils.is_local_experiment()
-    if local_experiment:
-        measure_manager_loop(experiment, max_total_time, measurers_cpus,
-                             runners_cpus, region_coverage)
-    else:
-        measure_loop(experiment, max_total_time, measurers_cpus, runners_cpus,
-                     region_coverage)
+    measure_manager_loop(experiment, max_total_time, measurers_cpus,
+                         runners_cpus, region_coverage)
 
     # Clean up resources.
     gc.collect()
@@ -251,13 +246,12 @@ def _query_unmeasured_trials(experiment: str):
 
 
 def _get_unmeasured_first_snapshots(
-        experiment: str) -> List[datatypes.SnapshotMeasureRequest]:
+        experiment: str) -> List[SnapshotMeasureRequest]:
     """Returns a list of unmeasured SnapshotMeasureRequests that are the first
     snapshot for their trial. The trials are trials in |experiment|."""
     trials_without_snapshots = _query_unmeasured_trials(experiment)
     return [
-        datatypes.SnapshotMeasureRequest(trial.fuzzer, trial.benchmark,
-                                         trial.id, 0)
+        SnapshotMeasureRequest(trial.fuzzer, trial.benchmark, trial.id, 0)
         for trial in trials_without_snapshots
     ]
 
@@ -285,8 +279,7 @@ def _query_measured_latest_snapshots(experiment: str):
 
 
 def _get_unmeasured_next_snapshots(
-        experiment: str,
-        max_cycle: int) -> List[datatypes.SnapshotMeasureRequest]:
+        experiment: str, max_cycle: int) -> List[SnapshotMeasureRequest]:
     """Returns a list of the latest unmeasured SnapshotMeasureRequests of
     trials in |experiment| that have been measured at least once in
     |experiment|. |max_total_time| is used to determine if a trial has another
@@ -302,15 +295,16 @@ def _get_unmeasured_next_snapshots(
         if next_cycle > max_cycle:
             continue
 
-        snapshot_with_cycle = datatypes.SnapshotMeasureRequest(
-            snapshot.fuzzer, snapshot.benchmark, snapshot.trial_id, next_cycle)
+        snapshot_with_cycle = SnapshotMeasureRequest(snapshot.fuzzer,
+                                                     snapshot.benchmark,
+                                                     snapshot.trial_id,
+                                                     next_cycle)
         next_snapshots.append(snapshot_with_cycle)
     return next_snapshots
 
 
-def get_unmeasured_snapshots(
-        experiment: str,
-        max_cycle: int) -> List[datatypes.SnapshotMeasureRequest]:
+def get_unmeasured_snapshots(experiment: str,
+                             max_cycle: int) -> List[SnapshotMeasureRequest]:
     """Returns a list of SnapshotMeasureRequests that need to be measured
     (assuming they have been saved already)."""
     # Measure the first snapshot of every started trial without any measured
@@ -681,14 +675,15 @@ def initialize_logs():
 
 def consume_snapshots_from_response_queue(
         response_queue, queued_snapshots) -> List[models.Snapshot]:
-    """Consume response_queue, allows reeschedule objects to reescheduled, and
+    """Consume response_queue, allows retry objects to retried, and
     return all measured snapshots in a list."""
     measured_snapshots = []
     while True:
         try:
             response_object = response_queue.get_nowait()
-            if isinstance(response_object, datatypes.ReescheduleRequest):
-                # Need to reeschedule measurement task, remove from the set
+            if isinstance(response_object, RetryRequest):
+                # Need to retry measurement task, will remove identifier from
+                # the set so task can be retried in next loop iteration.
                 snapshot_identifier = (response_object.trial_id,
                                        response_object.cycle)
                 queued_snapshots.remove(snapshot_identifier)
@@ -715,31 +710,31 @@ def measure_manager_inner_loop(experiment: str, max_cycle: int, request_queue,
     unmeasured_snapshots = get_unmeasured_snapshots(experiment, max_cycle)
     logger.info('Retrieved %d unmeasured snapshots from measure manager',
                 len(unmeasured_snapshots))
-    # When there are no more snapshots left to be measured, should break loop
+    # When there are no more snapshots left to be measured, should break loop.
     if not unmeasured_snapshots:
         return False
 
     # Write measurements requests to request queue
     for unmeasured_snapshot in unmeasured_snapshots:
         # No need to insert fuzzer and benchmark info here as it's redundant
-        # (Can be retrieved through trial_id)
+        # (Can be retrieved through trial_id).
         unmeasured_snapshot_identifier = (unmeasured_snapshot.trial_id,
                                           unmeasured_snapshot.cycle)
         # Checking if snapshot already was queued so workers will not repeat
         # measurement for same snapshot
         if unmeasured_snapshot_identifier not in queued_snapshots:
             # If corpus does not exist, don't put in measurer workers request
-            # queue
+            # queue.
             request_queue.put(unmeasured_snapshot)
             queued_snapshots.add(unmeasured_snapshot_identifier)
 
-    # Read results from response queue
+    # Read results from response queue.
     measured_snapshots = consume_snapshots_from_response_queue(
         response_queue, queued_snapshots)
     logger.info('Retrieved %d measured snapshots from response queue',
                 len(measured_snapshots))
 
-    # Save measured snapshots to database
+    # Save measured snapshots to database.
     if measured_snapshots:
         db_utils.add_all(measured_snapshots)
 
@@ -751,24 +746,23 @@ def get_pool_args(measurers_cpus, runners_cpus):
     pool_args = ()
     if measurers_cpus is not None and runners_cpus is not None:
         local_experiment = experiment_utils.is_local_experiment()
-        if local_experiment:
-            cores_queue = multiprocessing.Queue()
-            logger.info('Scheduling measurers from core %d to %d.',
-                        runners_cpus, runners_cpus + measurers_cpus - 1)
-            for cpu in range(runners_cpus, runners_cpus + measurers_cpus):
-                cores_queue.put(cpu)
-            pool_args = (measurers_cpus, _process_init, (cores_queue,))
-        else:
-            pool_args = (measurers_cpus,)
+        if not local_experiment:
+            return (measurers_cpus,)
+        cores_queue = multiprocessing.Queue()
+        logger.info('Scheduling measurers from core %d to %d.', runners_cpus,
+                    runners_cpus + measurers_cpus - 1)
+        for cpu in range(runners_cpus, runners_cpus + measurers_cpus):
+            cores_queue.put(cpu)
+        pool_args = (measurers_cpus, _process_init, (cores_queue,))
     return pool_args
 
 
-# pylint: disable=too-many-locals
 def measure_manager_loop(experiment: str,
                          max_total_time: int,
                          measurers_cpus=None,
                          runners_cpus=None,
                          region_coverage=False):
+    # pylint: disable=too-many-locals
     """Measure manager loop. Creates request and response queues, request
     measurements tasks from workers, retrieve measurement results from response
     queue and writes measured snapshots in database."""
