@@ -31,11 +31,6 @@ class BaseMeasureWorker:
         self.request_queue = config['request_queue']
         self.response_queue = config['response_queue']
         self.region_coverage = config['region_coverage']
-        logs.initialize(default_extras={
-            'component': 'measurer',
-            'subcomponent': 'worker',
-        })
-        logger.info('Starting one measure worker loop')
 
     def get_task_from_request_queue(self):
         """"Get task from request queue"""
@@ -49,6 +44,11 @@ class BaseMeasureWorker:
     def measure_worker_loop(self):
         """Periodically retrieves request from request queue, measure it, and
         put result in response queue"""
+        logs.initialize(default_extras={
+            'component': 'measurer',
+            'subcomponent': 'worker',
+        })
+        logger.info('Starting one measure worker loop')
         while True:
             # 'SnapshotMeasureRequest', ['fuzzer', 'benchmark', 'trial_id',
             # 'cycle']
