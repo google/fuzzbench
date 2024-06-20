@@ -34,7 +34,7 @@ def local_measure_worker():
     return measure_worker.LocalMeasureWorker(config)
 
 
-def test_put_snapshot_in_response_queue(local_measure_worker): # pylint: disable=redefined-outer-name
+def test_put_snapshot_in_response_queue(local_measure_worker):  # pylint: disable=redefined-outer-name
     """Tests the scenario where measure_snapshot is not None, so snapshot is put
     in response_queue"""
     request = datatypes.SnapshotMeasureRequest('fuzzer', 'benchmark', 1, 0)
@@ -45,7 +45,7 @@ def test_put_snapshot_in_response_queue(local_measure_worker): # pylint: disable
     assert isinstance(response_queue.get(), Snapshot)
 
 
-def test_put_reeschedule_in_response_queue(local_measure_worker): # pylint: disable=redefined-outer-name
+def test_put_reeschedule_in_response_queue(local_measure_worker):  # pylint: disable=redefined-outer-name
     """Tests the scenario where measure_snapshot is None, so task needs to be
     reescheduled"""
     request = datatypes.SnapshotMeasureRequest('fuzzer', 'benchmark', 1, 0)

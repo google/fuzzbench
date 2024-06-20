@@ -13,7 +13,7 @@
 # limitations under the License.
 """Module for measurer workers logic."""
 import time
-from typing import Dict
+from typing import Dict, Optional
 from common import logs
 from database.models import Snapshot
 from experiment.measurer import datatypes
@@ -55,9 +55,8 @@ class BaseMeasureWorker:
             request = self.get_task_from_request_queue()
             logger.info(
                 'Measurer worker: Got request %s %s %d %d from request queue',
-                request.fuzzer, request.benchmark,
-                request.trial_id, request.cycle
-            )
+                request.fuzzer, request.benchmark, request.trial_id,
+                request.cycle)
             measured_snapshot = measure_manager.measure_snapshot_coverage(
                 request.fuzzer, request.benchmark, request.trial_id,
                 request.cycle, self.region_coverage)
@@ -68,20 +67,21 @@ class BaseMeasureWorker:
 class LocalMeasureWorker(BaseMeasureWorker):
     """Class that holds implementations of core methods for running a measure
     worker locally."""
+
     def get_task_from_request_queue(self) -> datatypes.SnapshotMeasureRequest:
         """Get item from request multiprocessing queue, block if necessary until
         an item is available"""
         request = self.request_queue.get(block=True)
         return request
 
-    def put_result_in_response_queue(self, measured_snapshot: Snapshot,
+    def put_result_in_response_queue(self,
+                                     measured_snapshot: Optional[Snapshot],
                                      request: datatypes.SnapshotMeasureRequest):
         if measured_snapshot:
             logger.info('Put measured snapshot in response_queue')
             self.response_queue.put(measured_snapshot)
         else:
-            reeschedule_request = datatypes.ReescheduleRequest(request.fuzzer,
-                                                     request.benchmark,
-                                                     request.trial_id,
-                                                     request.cycle)
+            reeschedule_request = datatypes.ReescheduleRequest(
+                request.fuzzer, request.benchmark, request.trial_id,
+                request.cycle)
             self.response_queue.put(reeschedule_request)

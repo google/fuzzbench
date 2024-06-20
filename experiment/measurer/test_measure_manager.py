@@ -430,11 +430,9 @@ def test_consume_reeschedule_type_from_response_queue():
     reescheduled in the future"""
     # Use normal queue here as multiprocessing queue gives flaky tests
     response_queue = queue.Queue()
-    TRIAL_ID = 1
-    CYCLE = 0
     reeschedule_request_object = datatypes.ReescheduleRequest(
-        'fuzzer','benchmark',TRIAL_ID, CYCLE)
-    snapshot_identifier = (TRIAL_ID, CYCLE)
+        'fuzzer', 'benchmark', TRIAL_NUM, CYCLE)
+    snapshot_identifier = (TRIAL_NUM, CYCLE)
     response_queue.put(reeschedule_request_object)
     queued_snapshots_set = set([snapshot_identifier])
     snapshots = measure_manager.consume_snapshots_from_response_queue(
@@ -449,11 +447,9 @@ def test_consume_snapshot_type_from_response_queue():
     function."""
     # Use normal queue here as multiprocessing queue gives flaky tests
     response_queue = queue.Queue()
-    TRIAL_ID = 1
-    CYCLE = 0
-    snapshot_identifier = (TRIAL_ID, CYCLE)
+    snapshot_identifier = (TRIAL_NUM, CYCLE)
     queued_snapshots_set = set([snapshot_identifier])
-    measured_snapshot = models.Snapshot(trial_id=TRIAL_ID)
+    measured_snapshot = models.Snapshot(trial_id=TRIAL_NUM)
     response_queue.put(measured_snapshot)
     assert response_queue.qsize() == 1
     snapshots = measure_manager.consume_snapshots_from_response_queue(
@@ -477,8 +473,7 @@ def test_measure_manager_inner_loop_break_condition(
 
 @mock.patch('experiment.measurer.measure_manager.get_unmeasured_snapshots')
 @mock.patch(
-    'experiment.measurer.measure_manager.consume_snapshots_from_response_queue'
-)
+    'experiment.measurer.measure_manager.consume_snapshots_from_response_queue')
 def test_measure_manager_inner_loop_writes_to_request_queue(
         mocked_consume_snapshots_from_response_queue,
         mocked_get_unmeasured_snapshots):
@@ -497,8 +492,7 @@ def test_measure_manager_inner_loop_writes_to_request_queue(
 
 @mock.patch('experiment.measurer.measure_manager.get_unmeasured_snapshots')
 @mock.patch(
-    'experiment.measurer.measure_manager.consume_snapshots_from_response_queue'
-)
+    'experiment.measurer.measure_manager.consume_snapshots_from_response_queue')
 @mock.patch('database.utils.add_all')
 def test_measure_manager_inner_loop_dont_write_to_db(
         mocked_add_all, mocked_consume_snapshots_from_response_queue,
@@ -518,8 +512,7 @@ def test_measure_manager_inner_loop_dont_write_to_db(
 
 @mock.patch('experiment.measurer.measure_manager.get_unmeasured_snapshots')
 @mock.patch(
-    'experiment.measurer.measure_manager.consume_snapshots_from_response_queue'
-)
+    'experiment.measurer.measure_manager.consume_snapshots_from_response_queue')
 @mock.patch('database.utils.add_all')
 def test_measure_manager_inner_loop_writes_to_db(
         mocked_add_all, mocked_consume_snapshots_from_response_queue,
@@ -532,9 +525,7 @@ def test_measure_manager_inner_loop_writes_to_db(
     request_queue = queue.Queue()
     response_queue = queue.Queue()
     snapshot_model = models.Snapshot(trial_id=1)
-    mocked_consume_snapshots_from_response_queue.return_value = [
-        snapshot_model
-    ]
+    mocked_consume_snapshots_from_response_queue.return_value = [snapshot_model]
     measure_manager.measure_manager_inner_loop('experiment', 1, request_queue,
                                                response_queue, set())
     mocked_add_all.assert_called_with([snapshot_model])
