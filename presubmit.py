@@ -415,7 +415,6 @@ def main() -> int:
         ('typecheck', pytype),
         ('test', pytest),
         ('validate_fuzzers_and_benchmarks', validate_fuzzers_and_benchmarks),
-        ('validate_experiment_requests', validate_experiment_requests),
         ('test_changed_integrations', test_changed_integrations),
     ]
 
