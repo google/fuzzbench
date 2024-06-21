@@ -31,13 +31,10 @@ import subprocess
 import sys
 from typing import List, Optional
 
-import yaml
-
 from common import benchmark_utils
 from common import fuzzer_utils
 from common import filesystem
 from common import logs
-from common import yaml_utils
 from src_analysis import change_utils
 from src_analysis import diff_utils
 
