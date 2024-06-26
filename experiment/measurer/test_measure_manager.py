@@ -24,9 +24,9 @@ from common import new_process
 from database import models
 from database import utils as db_utils
 from experiment.build import build_utils
-from experiment.measurer.datatypes import (RetryRequest, SnapshotMeasureRequest)
 from experiment.measurer import measure_manager
 from test_libs import utils as test_utils
+import experiment.measurer.datatypes as measurer_datatypes
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'test_data')
 
@@ -174,8 +174,8 @@ def test_measure_trial_coverage(mocked_measure_snapshot_coverage, mocked_queue,
     """Tests that measure_trial_coverage works as expected."""
     min_cycle = 1
     max_cycle = 10
-    measure_request = SnapshotMeasureRequest(FUZZER, BENCHMARK, TRIAL_NUM,
-                                             min_cycle)
+    measure_request = measurer_datatypes.SnapshotMeasureRequest(
+        FUZZER, BENCHMARK, TRIAL_NUM, min_cycle)
     measure_manager.measure_trial_coverage(measure_request, max_cycle,
                                            mocked_queue(), False)
     expected_calls = [
@@ -414,8 +414,8 @@ def test_path_exists_in_experiment_filestore(mocked_execute, environ):
 def test_consume_unmapped_type_from_response_queue():
     """Tests the scenario where an unmapped type is retrieved from the response
     queue. This scenario is not expected to happen, so in this case no snapshots
-    are returned"""
-    # Use normal queue here as multiprocessing queue gives flaky tests
+    are returned."""
+    # Use normal queue here as multiprocessing queue gives flaky tests.
     response_queue = queue.Queue()
     response_queue.put('unexpected string')
     snapshots = measure_manager.consume_snapshots_from_response_queue(
@@ -427,10 +427,11 @@ def test_consume_retry_type_from_response_queue():
     """Tests the scenario where a retry object is retrieved from the
     response queue. In this scenario, we want to remove the snapshot identifier
     from the queued_snapshots set, as this allows the measurement task to be
-    retried in the future"""
-    # Use normal queue here as multiprocessing queue gives flaky tests
+    retried in the future."""
+    # Use normal queue here as multiprocessing queue gives flaky tests.
     response_queue = queue.Queue()
-    retry_request_object = RetryRequest('fuzzer', 'benchmark', TRIAL_NUM, CYCLE)
+    retry_request_object = measurer_datatypes.SnapshotMeasureRequest(
+        'fuzzer', 'benchmark', TRIAL_NUM, CYCLE)
     snapshot_identifier = (TRIAL_NUM, CYCLE)
     response_queue.put(retry_request_object)
     queued_snapshots_set = set([snapshot_identifier])
@@ -444,7 +445,7 @@ def test_consume_snapshot_type_from_response_queue():
     """Tests the scenario where a measured snapshot is retrieved from the
     response queue. In this scenario, we want to return the snapshot in the
     function."""
-    # Use normal queue here as multiprocessing queue gives flaky tests
+    # Use normal queue here as multiprocessing queue gives flaky tests.
     response_queue = queue.Queue()
     snapshot_identifier = (TRIAL_NUM, CYCLE)
     queued_snapshots_set = set([snapshot_identifier])
@@ -460,8 +461,8 @@ def test_consume_snapshot_type_from_response_queue():
 def test_measure_manager_inner_loop_break_condition(
         mocked_get_unmeasured_snapshots):
     """Tests that the measure manager inner loop returns False when there's no
-    more snapshots left to be measured"""
-    # Empty list means no more snapshots left to be measured
+    more snapshots left to be measured."""
+    # Empty list means no more snapshots left to be measured.
     mocked_get_unmeasured_snapshots.return_value = []
     request_queue = queue.Queue()
     response_queue = queue.Queue()
@@ -477,9 +478,9 @@ def test_measure_manager_inner_loop_writes_to_request_queue(
         mocked_consume_snapshots_from_response_queue,
         mocked_get_unmeasured_snapshots):
     """Tests that the measure manager inner loop is writing measurement tasks to
-    request queue"""
+    request queue."""
     mocked_get_unmeasured_snapshots.return_value = [
-        SnapshotMeasureRequest('fuzzer', 'benchmark', 0, 0)
+        measurer_datatypes.SnapshotMeasureRequest('fuzzer', 'benchmark', 0, 0)
     ]
     mocked_consume_snapshots_from_response_queue.return_value = []
     request_queue = queue.Queue()
@@ -497,9 +498,9 @@ def test_measure_manager_inner_loop_dont_write_to_db(
         mocked_add_all, mocked_consume_snapshots_from_response_queue,
         mocked_get_unmeasured_snapshots):
     """Tests that the measure manager inner loop does not call add_all to write
-    to the database, when there are no measured snapshots to be written"""
+    to the database, when there are no measured snapshots to be written."""
     mocked_get_unmeasured_snapshots.return_value = [
-        SnapshotMeasureRequest('fuzzer', 'benchmark', 0, 0)
+        measurer_datatypes.SnapshotMeasureRequest('fuzzer', 'benchmark', 0, 0)
     ]
     request_queue = queue.Queue()
     response_queue = queue.Queue()
@@ -517,9 +518,9 @@ def test_measure_manager_inner_loop_writes_to_db(
         mocked_add_all, mocked_consume_snapshots_from_response_queue,
         mocked_get_unmeasured_snapshots):
     """Tests that the measure manager inner loop calls add_all to write
-    to the database, when there are measured snapshots to be written"""
+    to the database, when there are measured snapshots to be written."""
     mocked_get_unmeasured_snapshots.return_value = [
-        SnapshotMeasureRequest('fuzzer', 'benchmark', 0, 0)
+        measurer_datatypes.SnapshotMeasureRequest('fuzzer', 'benchmark', 0, 0)
     ]
     request_queue = queue.Queue()
     response_queue = queue.Queue()

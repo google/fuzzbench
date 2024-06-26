@@ -16,7 +16,7 @@ import time
 from typing import Dict, Optional
 from common import logs
 from database.models import Snapshot
-from experiment.measurer.datatypes import (RetryRequest, SnapshotMeasureRequest)
+import experiment.measurer.datatypes as measurer_datatypes
 from experiment.measurer import measure_manager
 
 MEASUREMENT_TIMEOUT = 1
@@ -68,19 +68,21 @@ class LocalMeasureWorker(BaseMeasureWorker):
     """Class that holds implementations of core methods for running a measure
     worker locally."""
 
-    def get_task_from_request_queue(self) -> SnapshotMeasureRequest:
+    def get_task_from_request_queue(
+            self) -> measurer_datatypes.SnapshotMeasureRequest:
         """Get item from request multiprocessing queue, block if necessary until
         an item is available"""
         request = self.request_queue.get(block=True)
         return request
 
-    def put_result_in_response_queue(self,
-                                     measured_snapshot: Optional[Snapshot],
-                                     request: SnapshotMeasureRequest):
+    def put_result_in_response_queue(
+            self, measured_snapshot: Optional[Snapshot],
+            request: measurer_datatypes.SnapshotMeasureRequest):
         if measured_snapshot:
             logger.info('Put measured snapshot in response_queue')
             self.response_queue.put(measured_snapshot)
         else:
-            retry_request = RetryRequest(request.fuzzer, request.benchmark,
-                                         request.trial_id, request.cycle)
+            retry_request = measurer_datatypes.SnapshotMeasureRequest(
+                request.fuzzer, request.benchmark, request.trial_id,
+                request.cycle)
             self.response_queue.put(retry_request)
