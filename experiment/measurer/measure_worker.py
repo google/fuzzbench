@@ -82,7 +82,7 @@ class LocalMeasureWorker(BaseMeasureWorker):
             logger.info('Put measured snapshot in response_queue')
             self.response_queue.put(measured_snapshot)
         else:
-            retry_request = measurer_datatypes.SnapshotMeasureRequest(
+            retry_request = measurer_datatypes.RetryRequest(
                 request.fuzzer, request.benchmark, request.trial_id,
                 request.cycle)
             self.response_queue.put(retry_request)

@@ -49,11 +49,9 @@ def test_put_snapshot_in_response_queue(local_measure_worker):  # pylint: disabl
 def test_put_retry_in_response_queue(local_measure_worker):  # pylint: disable=redefined-outer-name
     """Tests the scenario where measure_snapshot is None, so task needs to be
     retried"""
-    request = measurer_datatypes.SnapshotMeasureRequest('fuzzer', 'benchmark',
-                                                        1, 0)
+    request = measurer_datatypes.RetryRequest('fuzzer', 'benchmark', 1, 0)
     snapshot = None
     local_measure_worker.put_result_in_response_queue(snapshot, request)
     response_queue = local_measure_worker.response_queue
     assert response_queue.qsize() == 1
-    assert isinstance(response_queue.get(),
-                      measurer_datatypes.SnapshotMeasureRequest)
+    assert isinstance(response_queue.get(), measurer_datatypes.RetryRequest)

@@ -430,7 +430,7 @@ def test_consume_retry_type_from_response_queue():
     retried in the future."""
     # Use normal queue here as multiprocessing queue gives flaky tests.
     response_queue = queue.Queue()
-    retry_request_object = measurer_datatypes.SnapshotMeasureRequest(
+    retry_request_object = measurer_datatypes.RetryRequest(
         'fuzzer', 'benchmark', TRIAL_NUM, CYCLE)
     snapshot_identifier = (TRIAL_NUM, CYCLE)
     response_queue.put(retry_request_object)

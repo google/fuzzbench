@@ -680,8 +680,7 @@ def consume_snapshots_from_response_queue(
     while True:
         try:
             response_object = response_queue.get_nowait()
-            if isinstance(response_object,
-                          measurer_datatypes.SnapshotMeasureRequest):
+            if isinstance(response_object, measurer_datatypes.RetryRequest):
                 # Need to retry measurement task, will remove identifier from
                 # the set so task can be retried in next loop iteration.
                 snapshot_identifier = (response_object.trial_id,
