@@ -167,6 +167,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     # from writing AFL specific messages to stderr.
     os.environ['AFL_QUIET'] = '1'
     os.environ['AFL_MAP_SIZE'] = '2621440'
+    os.environ['AFL_DUMP_VULNERABILITY_COMPLEXITY'] = '1'
 
     src = os.getenv('SRC')
     work = os.getenv('WORK')
@@ -265,11 +266,13 @@ def fuzz(input_corpus,
     if os.path.exists(cmplog_target_binary) and no_cmplog is False:
         flags += ['-c', cmplog_target_binary]
 
+    flags += ['-P', '299']
+
     #os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
     os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
     os.environ['AFL_FAST_CAL'] = '1'
     os.environ['AFL_NO_WARN_INSTABILITY'] = '1'
-    os.environ['AFL_WEIGHT'] = '1'
+    os.environ['AFL_NO_SYNC'] = '1'
 
     if not skip:
         os.environ['AFL_DISABLE_TRIM'] = '1'

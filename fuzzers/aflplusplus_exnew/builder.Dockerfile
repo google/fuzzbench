@@ -35,9 +35,9 @@ RUN apt-get update && \
         libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
 # Download afl++.
-RUN git clone -b mut https://github.com/AFLplusplus/AFLplusplus /afl && \
+RUN git clone -b leopard https://github.com/AFLplusplus/AFLplusplus /afl && \
     cd /afl && \
-    git checkout bff5448d2581b6913ea536e01fac7e3878a540c0 || \
+    git checkout 3f065ea70a794c5965569894e53a80c01d60b9fb || \
     true
 
 # Build without Python support as we don't need it.
