@@ -52,11 +52,6 @@ def build_dfsan():
     new_env['UBSAN_OPTIONS'] = 'abort_on_error=0'
     new_env['AFL_QUIET'] = '1'
 
-#     cflags = ['']
-#     utils.append_flags('CFLAGS', cflags)
-#     utils.append_flags('CXXFLAGS', cflags)
-#     utils.append_flags('LDFLAGS', cflags)
-
     new_env['FUZZER_LIB'] = '/libAFLDriver.a'
 
     build_directory = new_env['OUT']
@@ -66,6 +61,8 @@ def build_dfsan():
 
     cfg_file = os.path.join(build_directory, 'aflpp_cfg.bin')
     new_env['AFL_LLVM_CFG_FILE'] = cfg_file
+    if os.path.isfile(cfg_file):
+        os.remove(cfg_file)
     Path(cfg_file).touch()
 
     src = os.getenv('SRC')
@@ -78,8 +75,9 @@ def build_dfsan():
         utils.build_benchmark(env=new_env)
     
     fuzz_target = os.getenv('FUZZ_TARGET')
-    exec_path = Path(dfsan_build_directory, fuzz_target)
-    exec_path.rename(dfsan_build_directory, fuzz_target + '_dfsan')
+    exec_path = os.path.join(dfsan_build_directory, fuzz_target)
+    new_path = os.path.join(dfsan_build_directory, fuzz_target + '_dfsan')
+    os.rename(exec_path, new_path)
     
 
 def build():
@@ -103,7 +101,10 @@ def build():
 
     os.environ['FUZZER_LIB'] = '/stub_rt.a'
     build_directory = os.environ['OUT']
-    cfg_file = build_directory + '/afl_cfg.bin'
+    cfg_file = os.path.join(build_directory, 'libafl_cfg.bin')
+    os.environ['AFL_LLVM_CFG_FILE'] = cfg_file
+    if os.path.isfile(cfg_file):
+        os.remove(cfg_file)
     Path(cfg_file).touch()
     utils.build_benchmark()
 
@@ -114,15 +115,26 @@ def fuzz(input_corpus, output_corpus, target_binary):
     command = [target_binary]
     if dictionary_path:
         command += (['-x', dictionary_path])
+
+    # Add the control flow graph file
     build_directory = os.environ['OUT']
-    cfg_file = build_directory + '/afl_cfg.bin'
+    cfg_file = os.path.join(build_directory, 'libafl_cfg.bin')
     if os.path.exists(cfg_file):
         command += (['-c', cfg_file])
     else:
         sys.exit(1)
+
+    # get the dfsan binary
+    dfsan_build_directory = os.path.join(build_directory, 'dfsan')
+    fuzz_target = os.getenv('FUZZ_TARGET')
+    dfsan_fuzz_target = os.path.join(dfsan_build_directory, fuzz_target + '_dfsan')
+    command += (['-d', dfsan_fuzz_target])
+
+    # Add the input and output corpus
     command += (['-o', output_corpus, '-i', input_corpus])
     fuzzer_env = os.environ.copy()
     fuzzer_env['LD_PRELOAD'] = '/usr/lib/x86_64-linux-gnu/libjemalloc.so.2'
     print(command)
     subprocess.check_call(command, cwd=os.environ['OUT'], env=fuzzer_env)
+
 
