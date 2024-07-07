@@ -31,7 +31,12 @@ RUN apt-get update && \
         apt-utils apt-transport-https ca-certificates joe curl && \
     PATH="/root/.cargo/bin/:$PATH" cargo install cargo-make
 
-COPY DGFuzz /dgfuzz
+
+# Download DGFuzz.
+RUN git clone https://github.com/DanBlackwell/DGFuzz /dgfuzz
+
+# Checkout a current commit
+RUN cd /dgfuzz && git pull && git checkout 5864c25 || true
 
 # Compile DGFuzz.
 RUN cd /dgfuzz && \
