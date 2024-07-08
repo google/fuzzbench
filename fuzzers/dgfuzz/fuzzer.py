@@ -17,7 +17,6 @@
 import os
 import sys
 import subprocess
-import yaml
 from pathlib import Path
 
 from fuzzers import utils
@@ -40,13 +39,14 @@ def prepare_fuzz_environment(input_corpus):
     # Create at least one non-empty seed to start.
     utils.create_seed_file_for_empty_corpus(input_corpus)
 
+
 def build_dfsan():
     """Build benchmark with dfsan."""
     new_env = os.environ.copy()
     new_env['CC'] = ('/dgfuzz/fuzzers/fuzzbench_dataflow_guided/afl-cc/'
-                        'afl-clang-dgfuzz')
+                     'afl-clang-dgfuzz')
     new_env['CXX'] = ('/dgfuzz/fuzzers/fuzzbench_dataflow_guided/afl-cc/'
-                         'afl-clang-dgfuzz++')
+                      'afl-clang-dgfuzz++')
 
     new_env['ASAN_OPTIONS'] = 'abort_on_error=0:allocator_may_return_null=1'
     new_env['UBSAN_OPTIONS'] = 'abort_on_error=0'
@@ -73,12 +73,12 @@ def build_dfsan():
         # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
         # twice in the same directory without this.
         utils.build_benchmark(env=new_env)
-    
+
     fuzz_target = os.getenv('FUZZ_TARGET')
     exec_path = os.path.join(dfsan_build_directory, fuzz_target)
     new_path = os.path.join(dfsan_build_directory, fuzz_target + '_dfsan')
     os.rename(exec_path, new_path)
-    
+
 
 def build():
     """Build benchmark."""
@@ -108,6 +108,7 @@ def build():
     Path(cfg_file).touch()
     utils.build_benchmark()
 
+
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     prepare_fuzz_environment(input_corpus)
@@ -127,7 +128,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # get the dfsan binary
     dfsan_build_directory = os.path.join(build_directory, 'dfsan')
     fuzz_target = os.getenv('FUZZ_TARGET')
-    dfsan_fuzz_target = os.path.join(dfsan_build_directory, fuzz_target + '_dfsan')
+    dfsan_fuzz_target = os.path.join(dfsan_build_directory,
+                                     fuzz_target + '_dfsan')
     command += (['-d', dfsan_fuzz_target])
 
     # Add the input and output corpus
@@ -136,5 +138,3 @@ def fuzz(input_corpus, output_corpus, target_binary):
     fuzzer_env['LD_PRELOAD'] = '/usr/lib/x86_64-linux-gnu/libjemalloc.so.2'
     print(command)
     subprocess.check_call(command, cwd=os.environ['OUT'], env=fuzzer_env)
-
-
