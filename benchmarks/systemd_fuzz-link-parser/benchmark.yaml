@@ -5,3 +5,4 @@ project: systemd
 unsupported_fuzzers:
   - centipede
   - wingfuzz
+  - dgfuzz

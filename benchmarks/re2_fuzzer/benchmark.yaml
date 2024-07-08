@@ -16,3 +16,5 @@ commit: b025c6a3ae05995660e3b882eb3277f4399ced1a
 commit_date: 2023-01-30T18:31:10+0000
 fuzz_target: fuzzer
 project: re2
+unsupported_fuzzers:
+  - dgfuzz

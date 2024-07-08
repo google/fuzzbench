@@ -16,3 +16,5 @@ commit: 8109a2cc2b27436962ac1cfe40ad0e8a0dca26c8
 commit_date: 2017-01-04T06:37:49+1100
 fuzz_target: convert_woff2ttf_fuzzer
 project: woff2
+unsupported_fuzzers:
+  -dgfuzz

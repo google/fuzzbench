@@ -21,3 +21,4 @@ unsupported_fuzzers:
   - cfctx_dataflow_svf
   - cfctx_dataflow_svf_llc
   - tortoisefuzz
+  - dgfuzz
