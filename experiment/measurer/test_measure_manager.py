@@ -411,19 +411,27 @@ def test_path_exists_in_experiment_filestore(mocked_execute, environ):
         expect_zero=False)
 
 
-def test_consume_unmapped_type_from_response_queue():
+@pytest.fixture
+def local_measure_manager():
+    """Fixture for instantiating a local measure manager object"""
+    local_measure_manager = measure_manager.LocalMeasureManager(
+        'experiment', False, None)
+    return local_measure_manager
+
+
+def test_consume_unmapped_type_from_response_queue(local_measure_manager):
     """Tests the scenario where an unmapped type is retrieved from the response
     queue. This scenario is not expected to happen, so in this case no snapshots
     are returned."""
     # Use normal queue here as multiprocessing queue gives flaky tests.
     response_queue = queue.Queue()
     response_queue.put('unexpected string')
-    snapshots = measure_manager.consume_snapshots_from_response_queue(
+    snapshots = local_measure_manager.consume_snapshots_from_response_queue(
         response_queue, set())
     assert not snapshots
 
 
-def test_consume_retry_type_from_response_queue():
+def test_consume_retry_type_from_response_queue(local_measure_manager):
     """Tests the scenario where a retry object is retrieved from the
     response queue. In this scenario, we want to remove the snapshot identifier
     from the queued_snapshots set, as this allows the measurement task to be
@@ -435,13 +443,13 @@ def test_consume_retry_type_from_response_queue():
     snapshot_identifier = (TRIAL_NUM, CYCLE)
     response_queue.put(retry_request_object)
     queued_snapshots_set = set([snapshot_identifier])
-    snapshots = measure_manager.consume_snapshots_from_response_queue(
+    snapshots = local_measure_manager.consume_snapshots_from_response_queue(
         response_queue, queued_snapshots_set)
     assert not snapshots
     assert len(queued_snapshots_set) == 0
 
 
-def test_consume_snapshot_type_from_response_queue():
+def test_consume_snapshot_type_from_response_queue(local_measure_manager):
     """Tests the scenario where a measured snapshot is retrieved from the
     response queue. In this scenario, we want to return the snapshot in the
     function."""
@@ -452,31 +460,32 @@ def test_consume_snapshot_type_from_response_queue():
     measured_snapshot = models.Snapshot(trial_id=TRIAL_NUM)
     response_queue.put(measured_snapshot)
     assert response_queue.qsize() == 1
-    snapshots = measure_manager.consume_snapshots_from_response_queue(
+    snapshots = local_measure_manager.consume_snapshots_from_response_queue(
         response_queue, queued_snapshots_set)
     assert len(snapshots) == 1
 
 
 @mock.patch('experiment.measurer.measure_manager.get_unmeasured_snapshots')
 def test_measure_manager_inner_loop_break_condition(
-        mocked_get_unmeasured_snapshots):
+        mocked_get_unmeasured_snapshots, local_measure_manager):
     """Tests that the measure manager inner loop returns False when there's no
     more snapshots left to be measured."""
     # Empty list means no more snapshots left to be measured.
     mocked_get_unmeasured_snapshots.return_value = []
     request_queue = queue.Queue()
     response_queue = queue.Queue()
-    continue_inner_loop = measure_manager.measure_manager_inner_loop(
-        'experiment', 1, request_queue, response_queue, set())
+    continue_inner_loop = local_measure_manager.measure_manager_inner_loop(
+        1, request_queue, response_queue, set())
     assert not continue_inner_loop
 
 
 @mock.patch('experiment.measurer.measure_manager.get_unmeasured_snapshots')
 @mock.patch(
-    'experiment.measurer.measure_manager.consume_snapshots_from_response_queue')
+    'experiment.measurer.measure_manager.BaseMeasureManager.consume_snapshots_from_response_queue'  # pylint: disable=line-too-long
+)
 def test_measure_manager_inner_loop_writes_to_request_queue(
         mocked_consume_snapshots_from_response_queue,
-        mocked_get_unmeasured_snapshots):
+        mocked_get_unmeasured_snapshots, local_measure_manager):
     """Tests that the measure manager inner loop is writing measurement tasks to
     request queue."""
     mocked_get_unmeasured_snapshots.return_value = [
@@ -485,18 +494,19 @@ def test_measure_manager_inner_loop_writes_to_request_queue(
     mocked_consume_snapshots_from_response_queue.return_value = []
     request_queue = queue.Queue()
     response_queue = queue.Queue()
-    measure_manager.measure_manager_inner_loop('experiment', 1, request_queue,
-                                               response_queue, set())
+    local_measure_manager.measure_manager_inner_loop(1, request_queue,
+                                                     response_queue, set())
     assert request_queue.qsize() == 1
 
 
 @mock.patch('experiment.measurer.measure_manager.get_unmeasured_snapshots')
 @mock.patch(
-    'experiment.measurer.measure_manager.consume_snapshots_from_response_queue')
+    'experiment.measurer.measure_manager.BaseMeasureManager.consume_snapshots_from_response_queue'  # pylint: disable=line-too-long
+)
 @mock.patch('database.utils.add_all')
 def test_measure_manager_inner_loop_dont_write_to_db(
         mocked_add_all, mocked_consume_snapshots_from_response_queue,
-        mocked_get_unmeasured_snapshots):
+        mocked_get_unmeasured_snapshots, local_measure_manager):
     """Tests that the measure manager inner loop does not call add_all to write
     to the database, when there are no measured snapshots to be written."""
     mocked_get_unmeasured_snapshots.return_value = [
@@ -505,18 +515,19 @@ def test_measure_manager_inner_loop_dont_write_to_db(
     request_queue = queue.Queue()
     response_queue = queue.Queue()
     mocked_consume_snapshots_from_response_queue.return_value = []
-    measure_manager.measure_manager_inner_loop('experiment', 1, request_queue,
-                                               response_queue, set())
+    local_measure_manager.measure_manager_inner_loop(1, request_queue,
+                                                     response_queue, set())
     mocked_add_all.not_called()
 
 
 @mock.patch('experiment.measurer.measure_manager.get_unmeasured_snapshots')
 @mock.patch(
-    'experiment.measurer.measure_manager.consume_snapshots_from_response_queue')
+    'experiment.measurer.measure_manager.BaseMeasureManager.consume_snapshots_from_response_queue'  # pylint: disable=line-too-long
+)
 @mock.patch('database.utils.add_all')
 def test_measure_manager_inner_loop_writes_to_db(
         mocked_add_all, mocked_consume_snapshots_from_response_queue,
-        mocked_get_unmeasured_snapshots):
+        mocked_get_unmeasured_snapshots, local_measure_manager):
     """Tests that the measure manager inner loop calls add_all to write
     to the database, when there are measured snapshots to be written."""
     mocked_get_unmeasured_snapshots.return_value = [
@@ -526,6 +537,15 @@ def test_measure_manager_inner_loop_writes_to_db(
     response_queue = queue.Queue()
     snapshot_model = models.Snapshot(trial_id=1)
     mocked_consume_snapshots_from_response_queue.return_value = [snapshot_model]
-    measure_manager.measure_manager_inner_loop('experiment', 1, request_queue,
-                                               response_queue, set())
+    local_measure_manager.measure_manager_inner_loop(1, request_queue,
+                                                     response_queue, set())
     mocked_add_all.assert_called_with([snapshot_model])
+
+
+def test_google_cloud_measure_manager_init_clients():
+    """Tests that when we instantiante a GoogleCloudMeasureManager object, its
+    publisher and subscriber clients are initialized"""
+    google_cloud_measure_manager = measure_manager.GoogleCloudMeasureManager(
+        'experiment', False, None)
+    assert google_cloud_measure_manager.publisher_client
+    assert google_cloud_measure_manager.subscriber_client
