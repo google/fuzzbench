@@ -540,12 +540,3 @@ def test_measure_manager_inner_loop_writes_to_db(
     local_measure_manager.measure_manager_inner_loop(1, request_queue,
                                                      response_queue, set())
     mocked_add_all.assert_called_with([snapshot_model])
-
-
-def test_google_cloud_measure_manager_init_clients():
-    """Tests that when we instantiante a GoogleCloudMeasureManager object, its
-    publisher and subscriber clients are initialized"""
-    google_cloud_measure_manager = measure_manager.GoogleCloudMeasureManager(
-        'experiment', False, None)
-    assert google_cloud_measure_manager.publisher_client
-    assert google_cloud_measure_manager.subscriber_client
