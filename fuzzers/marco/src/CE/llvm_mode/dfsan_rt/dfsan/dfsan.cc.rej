@@ -1,0 +1,30 @@
+--- llvm_mode/dfsan_rt/dfsan/dfsan.cc
++++ llvm_mode/dfsan_rt/dfsan/dfsan.cc
+@@ -1043,7 +1050,27 @@ __taint_trace_cmp(dfsan_label op1, dfsan_label op2, u32 size, u32 predicate,
+   z3::expr bv_c2 = __z3_context.bv_val((uint64_t)c2, size);
+   z3::expr result = get_cmd(bv_c1, bv_c2, predicate).simplify();
+ 
++#if CTX_FILTER
++		 uint64_t addc = (uint64_t)addr; 
++		 uint64_t ctx = __taint_trace_callstack; 
++     XXH64_state_t ctx_state;
++     XXH64_reset(&ctx_state,0);
++	  XXH64_update(&ctx_state, &addc, sizeof(addc));
++     XXH64_update(&ctx_state, &ctx, sizeof(ctx));
++     XXH64_update(&ctx_state, &order, sizeof(order));
++     //XXH64_update(&ctx_state, &r, sizeof(r));
++     uint64_t ctx_hash = XXH64_digest(&ctx_state);          // hash value of untaken branch
++     auto val = redis.get(std::to_string(ctx_hash));
++     if (val) {
++       return;
++     } else {
++       redis.set(std::to_string(ctx_hash), "explored");
++     }
++#endif
++
++
+ 	u8 r = get_const_result(c1,c2,predicate);
++
+   __solve_cond(temp, result, addr, __taint_trace_callstack,order,skip,op1,op2,r);
+ }
+ 

@@ -1,0 +1,2 @@
+[workspace]
+members = ["fuzzer", "runtime_fast", "common"]
