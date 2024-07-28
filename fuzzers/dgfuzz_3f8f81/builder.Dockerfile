@@ -36,7 +36,7 @@ RUN apt-get update && \
 RUN git clone https://github.com/DanBlackwell/DGFuzz /dgfuzz
 
 # Checkout a current commit
-RUN cd /dgfuzz && git pull && git checkout e57cbbb46765a5a58a66f017b2339da21c037cc7 || true
+RUN cd /dgfuzz && git pull && git checkout 3f8f819cd357ddbb2b793778de0246f2eb4335b2 || true
 
 # apply a patch (local testing only)
 # COPY ./patch /dgfuzz/patch
