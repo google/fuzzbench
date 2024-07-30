@@ -41,20 +41,22 @@ RUN if which rustup; then rustup self uninstall -y; fi && \
     rm /rustup.sh
 
 # Download libafl.
-RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
+RUN git clone https://github.com/tokatoka/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git pull && git checkout 512d1bc7ba8f78ee7e9f2f40ab6450a75df591ab || true
+RUN cd /libafl && git pull origin main && git checkout 9451db09bbf590bfc37ffb5a5bcf7169692d8add || true
 # Note that due a nightly bug it is currently fixed to a known version on top!
 
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
-    cd ./fuzzers/fuzzbench/fuzzbench_r30_last_10 && \
-    PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench --features no_link_main
+    ls fuzzers/fuzzbench
+    #git status && \
+    #cd ./fuzzers/fuzzbench/fuzzbench_r30_last_10 && \
+    #PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench --features no_link_main
 
 # Auxiliary weak references.
-RUN cd /libafl/fuzzers/fuzzbench/fuzzbench_r30_last_10 && \
-    clang -c stub_rt.c && \
-    ar r /stub_rt.a stub_rt.o
+# RUN cd /libafl/fuzzers/fuzzbench/fuzzbench_r30_last_10 && \
+#    clang -c stub_rt.c && \
+#    ar r /stub_rt.a stub_rt.o
