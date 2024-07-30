@@ -24,3 +24,8 @@ unsupported_fuzzers:
   - centipede
   - centipede_function_filter
   - dgfuzz
+  - dgfuzz_4aacb8
+  - dgfuzz_c286e5
+  - dgfuzz_3f8f81
+  - dgfuzz_0e010d
+  - dgfuzz_ab0800

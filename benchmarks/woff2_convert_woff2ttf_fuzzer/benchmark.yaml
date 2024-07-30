@@ -17,4 +17,9 @@ commit_date: 2017-01-04T06:37:49+1100
 fuzz_target: convert_woff2ttf_fuzzer
 project: woff2
 unsupported_fuzzers:
-  -dgfuzz
+  - dgfuzz
+  - dgfuzz_4aacb8
+  - dgfuzz_c286e5
+  - dgfuzz_3f8f81
+  - dgfuzz_0e010d
+  - dgfuzz_ab0800

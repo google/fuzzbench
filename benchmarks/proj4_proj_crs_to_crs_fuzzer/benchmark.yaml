@@ -18,3 +18,8 @@ fuzz_target: proj_crs_to_crs_fuzzer
 project: proj4
 unsupported_fuzzers:
   - dgfuzz
+  - dgfuzz_4aacb8
+  - dgfuzz_c286e5
+  - dgfuzz_3f8f81
+  - dgfuzz_0e010d
+  - dgfuzz_ab0800
