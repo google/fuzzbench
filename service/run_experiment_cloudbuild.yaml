@@ -27,3 +27,11 @@ availableSecrets:
   secretManager:
   - versionName: projects/fuzzbench/secrets/POSTGRES_PASSWORD/versions/1
     env: 'POSTGRES_PASSWORD'
+
+# Generate PR-experiment log content.
+- name: 'python:3.10.8'
+  entrypoint: 'python'
+  args:
+  - service/pr_experiment_log.py
+  env:
+  - 'PR_NUMBER=${_PR_NUMBER}'
