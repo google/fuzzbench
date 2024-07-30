@@ -104,8 +104,8 @@ class GoogleCloudMeasureWorker(BaseMeasureWorker):  # pylint: disable=too-many-i
         self.response_queue_topic_id = config['response_queue_topic_id']
         self.project_id = config['project_id']
         self.experiment = config['experiment']
-        self.request_queue_subscription = f"""request-queue-subscription-
-            {self.experiment}"""
+        self.request_queue_subscription = ('request-queue-subscription-'
+                                           f'{self.experiment}')
         self.publisher_client = pubsub_v1.PublisherClient()
         self.subscriber_client = pubsub_v1.SubscriberClient()
         self.subscription_path = self.subscriber_client.subscription_path(
@@ -119,7 +119,7 @@ class GoogleCloudMeasureWorker(BaseMeasureWorker):  # pylint: disable=too-many-i
             'name': self.subscription_path,
             'topic': topic_path
         })
-        logger.info(f'Subscription {subscription.name} created successfully.')
+        logger.info('Subscription %s created successfully.', subscription.name)
 
         return self.subscription_path
 

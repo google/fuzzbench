@@ -27,7 +27,7 @@ import sys
 import tempfile
 import tarfile
 import time
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 import queue
 import psutil
 
@@ -78,16 +78,13 @@ def measure_main(experiment_config):
     experiment = experiment_config['experiment']
     max_total_time = experiment_config['max_total_time']
     measurers_cpus = experiment_config['measurers_cpus']
-    region_coverage = experiment_config['region_coverage']
-    cloud_project = experiment_config['cloud_project']
-    local_experiment = experiment_config['local_experiment']
+    region_coverage = experiment_config.get('region_coverage', False)
+    cloud_project = experiment_config.get('cloud_project', '')
+    local_experiment = experiment_config.get('local_experiment', False)
 
-    measure_manager = LocalMeasureManager(experiment, region_coverage,
-                                          measurers_cpus)
-    if not local_experiment:
-        measure_manager = GoogleCloudMeasureManager(experiment, cloud_project,
-                                                    region_coverage,
-                                                    measurers_cpus)
+    measure_manager = get_measure_manager(local_experiment, experiment,
+                                          cloud_project, measurers_cpus,
+                                          region_coverage)
     measure_manager.measure_manager_loop(max_total_time)
 
     # Clean up resources.
@@ -704,12 +701,12 @@ class BaseMeasureManager:
     """Base class for measure manager. Encapsulates core methods that will be
     implemented for Local and Google Cloud measure managers."""
 
-    def __init__(self, experiment: str, region_coverage=False):
+    def __init__(self, experiment: str, region_coverage: bool):
         self.region_coverage = region_coverage
         self.experiment = experiment
 
     def initialize_queues(self):
-        """Initialize and return request and response queues, respectively."""
+        """Initialize and returns request and response queues, respectively."""
         raise NotImplementedError
 
     def start_workers(self, request_queue, response_queue):
@@ -822,8 +819,8 @@ class LocalMeasureManager(BaseMeasureManager):
 
     def __init__(self,
                  experiment: str,
-                 region_coverage=False,
-                 measurers_cpus=None):
+                 region_coverage: bool,
+                 measurers_cpus: Optional[int] = None):
         super().__init__(experiment, region_coverage)
         self.measurers_cpus = measurers_cpus
 
@@ -850,11 +847,12 @@ class LocalMeasureManager(BaseMeasureManager):
             # Since each worker is going to be in an infinite loop, we dont need
             # result return. Workers' life scope will end automatically when
             # there are no more snapshots left to measure.
-            logger.info('Starting measure worker loop for %d workers',
-                        self.measurers_cpus)
+            log_message = ('Starting measure worker loop for'
+                           f'{self.measurers_cpus}'
+                           'workers in local measure manager')
+            logger.info(log_message)
             for _ in range(self.measurers_cpus):
-                _result = pool.apply_async(
-                    local_measure_worker.measure_worker_loop)
+                pool.apply_async(local_measure_worker.measure_worker_loop)
 
     def get_result_from_response_queue(
             self, response_queue: multiprocessing.queues.Queue):
@@ -873,14 +871,14 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
     def __init__(self,
                  experiment: str,
                  cloud_project: str,
-                 region_coverage=False,
-                 measurers_cpus=None):
+                 region_coverage: bool,
+                 measurers_cpus: Optional[int] = None):
         super().__init__(experiment, region_coverage)
         self.project_id = cloud_project
         self.request_queue_topic_id = f'request-queue-topic-{self.experiment}'
         self.response_queue_topic_id = f'response-queue-topic-{self.experiment}'
-        self.response_queue_subscription_id = f"""response-queue-subscription-
-            {self.experiment}"""
+        self.response_queue_subscription_id = ('response-queue-subscription-'
+                                               f'{self.experiment}')
         self.subscriber_client = pubsub_v1.SubscriberClient()
         self.publisher_client = pubsub_v1.PublisherClient()
         self.subscription_path = self.subscriber_client.subscription_path(
@@ -905,7 +903,7 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
             'name': self.subscription_path,
             'topic': topic_path
         })
-        logger.info(f'Subscription {subscription.name} created successfully.')
+        logger.info('Subscription %s created successfully.', subscription.name)
 
         return self.subscription_path
 
@@ -930,11 +928,12 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
             # Since each worker is going to be in an infinite loop, we dont need
             # result return. Workers' life scope will end automatically when
             # there are no more snapshots left to measure.
-            logger.info('Starting measure worker loop for %d workers',
-                        self.measurers_cpus)
+            log_message = ('Starting measure worker loop for'
+                           f'{self.measurers_cpus}'
+                           'workers in google cloud measure manager')
+            logger.info(log_message)
             for _ in range(self.measurers_cpus):
-                _result = pool.apply_async(
-                    google_cloud_worker.measure_worker_loop)
+                pool.apply_async(google_cloud_worker.measure_worker_loop)
 
     def get_result_from_response_queue(self, response_queue: str):
 
@@ -945,19 +944,19 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
             },
             timeout=GET_FROM_PUB_SUB_QUEUE_TIMEOUT)
 
-        if response.received_messages:
-            message = response.received_messages[0]
-            ack_ids = [message.ack_id]
+        if not response.received_messages:
+            return None
 
-            # Acknowledge the received message to remove it from the queue.
-            self.subscriber_client.acknowledge(request={
-                'subscription': self.subscription_path,
-                'ack_ids': ack_ids
-            })
+        message = response.received_messages[0]
+        ack_ids = [message.ack_id]
 
-            return message.message.data
+        # Acknowledge the received message to remove it from the queue.
+        self.subscriber_client.acknowledge(request={
+            'subscription': self.subscription_path,
+            'ack_ids': ack_ids
+        })
 
-        return None
+        return message.message.data
 
     def _task_to_bytes(
             self, task: measurer_datatypes.SnapshotMeasureRequest) -> bytes:
@@ -986,6 +985,20 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
             logger.error(
                 'An error occurred when publishing task to request queue: %s.',
                 error)
+
+
+def get_measure_manager(local_experiment: bool, experiment: str,
+                        cloud_project: str, measurers_cpus: Optional[int],
+                        region_coverage: bool):
+    """Return a measure manager object created from the right class, depending
+    on whether the experiment is local or not(i.e. measure manager factory)."""
+    if local_experiment:
+        logger.info('local_experiment is True, using local measure manager.')
+        return LocalMeasureManager(experiment, region_coverage, measurers_cpus)
+    logger.info(
+        'local_experiment is False, using google cloud measure manager.')
+    return GoogleCloudMeasureManager(experiment, cloud_project, region_coverage,
+                                     measurers_cpus)
 
 
 def main():
