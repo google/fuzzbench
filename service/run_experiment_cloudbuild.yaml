@@ -1,8 +1,10 @@
 steps:
-- name: 'gcr.io/fuzzbench/experiment-runner'
-  args: []
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'python'
+  args:
+  - service/pr_experiment_log.py
   env:
-    - 'PULL_REQUEST_NUMBER=${_PR_NUMBER}'
+  - 'PR_NUMBER=${_PR_NUMBER}'
 - name: 'gcr.io/cloud-builders/docker'
   args:
     - build
@@ -17,15 +19,13 @@ steps:
     - .
   env:
     - 'DOCKER_BUILDKIT=1'
+- name: 'gcr.io/fuzzbench/experiment-runner'
+  args: []
+  env:
+    - 'PULL_REQUEST_NUMBER=${_PR_NUMBER}'
   secretEnv:
     - 'POSTGRES_PASSWORD'
   timeout: 1800s # 30 minutes
-- name: 'gcr.io/cloud-builders/docker'
-  entrypoint: 'python'
-  args:
-  - service/pr_experiment_log.py
-  env:
-  - 'PR_NUMBER=${_PR_NUMBER}'
 timeout: 1800s
 options:
   logging: CLOUD_LOGGING_ONLY
