@@ -1,0 +1,19 @@
+syntax = "proto2";
+
+package addconstr;
+
+// the example
+message Extracon {
+  required int32 id = 1;
+
+  message LabelTuple {
+    required int32 eid = 1;
+    required int32 edir = 2;
+  }
+
+  repeated LabelTuple labeltuples = 2;
+}
+
+message WholeTrace {
+  repeated Extracon extracon = 1;
+}

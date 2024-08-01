@@ -15,9 +15,8 @@
 #FROM gcr.io/fuzzbench/base-runner
 FROM gcr.io/fuzzbench/base-image
 
-RUN apt-get update 
-RUN apt-get -y install git cmake wget build-essential autoconf libtool python3-pip python3-setuptools  apt-transport-https libboost-all-dev lsb-release software-properties-common
-RUN apt-get install -y wget libc++abi-dev libc++-dev libunwind-dev
+RUN apt-get update && apt-get install -y git cmake wget build-essential autoconf libtool python3-pip python3-setuptools  apt-transport-https libboost-all-dev lsb-release software-properties-common  protobuf-compiler libprotobuf-dev
+RUN apt-get update && apt-get install -y wget libc++abi-dev libc++-dev libunwind-dev daemontools strace vim htop
 
 
 RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 12

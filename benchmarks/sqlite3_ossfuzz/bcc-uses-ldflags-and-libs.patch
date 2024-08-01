@@ -1,0 +1,36 @@
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -668,7 +668,7 @@ scrub$(TEXE):	$(TOP)/ext/misc/scrub.c sqlite3.lo
+ 		$(TOP)/ext/misc/scrub.c sqlite3.lo $(TLIBS)
+
+ srcck1$(BEXE):	$(TOP)/tool/srcck1.c
+-	$(BCC) -o srcck1$(BEXE) $(TOP)/tool/srcck1.c
++	$(BCC) -o srcck1$(BEXE) $(TOP)/tool/srcck1.c $(LDFLAGS) $(LIBS)
+
+ sourcetest:	srcck1$(BEXE) sqlite3.c
+ 	./srcck1 sqlite3.c
+@@ -780,13 +780,13 @@ sqlite3.lo:	sqlite3.c
+ # Rules to build the LEMON compiler generator
+ #
+ lemon$(BEXE):	$(TOP)/tool/lemon.c $(TOP)/tool/lempar.c
+-	$(BCC) -o $@ $(TOP)/tool/lemon.c
++	$(BCC) -o $@ $(TOP)/tool/lemon.c $(LDFLAGS) $(LIBS)
+ 	cp $(TOP)/tool/lempar.c .
+
+ # Rules to build the program that generates the source-id
+ #
+ mksourceid$(BEXE):	$(TOP)/tool/mksourceid.c
+-	$(BCC) -o $@ $(TOP)/tool/mksourceid.c
++	$(BCC) -o $@ $(TOP)/tool/mksourceid.c $(LDFLAGS) $(LIBS)
+
+ # Rules to build individual *.o files from generated *.c files. This
+ # applies to:
+@@ -1075,7 +1075,7 @@ sqlite3rc.h:	$(TOP)/src/sqlite3.rc $(TOP)/VERSION
+ 	echo '#endif' >>sqlite3rc.h
+
+ keywordhash.h:	$(TOP)/tool/mkkeywordhash.c
+-	$(BCC) -o mkkeywordhash$(BEXE) $(OPT_FEATURE_FLAGS) $(OPTS) $(TOP)/tool/mkkeywordhash.c
++	$(BCC) -o mkkeywordhash$(BEXE) $(OPT_FEATURE_FLAGS) $(OPTS) $(TOP)/tool/mkkeywordhash.c $(LDFLAGS) $(LIBS)
+ 	./mkkeywordhash$(BEXE) >keywordhash.h
+
+ # Source files that go into making shell.c

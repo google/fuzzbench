@@ -18,6 +18,7 @@ import glob
 import os
 import subprocess
 import threading
+import time
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
@@ -231,6 +232,10 @@ download/v3.9.1/protobuf-cpp-3.9.1.tar.gz'
     subprocess.check_call(command, cwd='/src/protobuf-3.9.1')
     command = ['ldconfig']
     subprocess.check_call(command)
+    subprocess.check_call(['cp', '/usr/local/lib/libprotobuf.so', os.environ['OUT']])
+    subprocess.check_call(['cp', '/usr/local/lib/libprotobuf.so.20', os.environ['OUT']])
+    subprocess.check_call(['cp', '/usr/local/lib/libprotobuf.so.20.0.1', os.environ['OUT']])
+
     for filename in glob.glob('/usr/lib/x86_64-linux-gnu/libprotobuf*'):
         os.remove(filename)
 
@@ -266,6 +271,11 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
         aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file')
 
     shutil.copy('/symsan/target/release/fastgen', os.environ['OUT'])
+
+    if is_benchmark('bloaty'):
+        subprocess.check_call(['patchelf', '--set-rpath', os.environ['OUT'], os.environ['OUT'] + '/fuzz_target'])
+        subprocess.check_call(['patchelf', '--set-rpath', os.environ['OUT'], os.environ['OUT'] + '/symsanfast/fuzz_target'])
+        subprocess.check_call(['patchelf', '--set-rpath', os.environ['OUT'], os.environ['OUT'] + '/symsantrack/fuzz_target'])
 
 
 def check_skip_det_compatible(additional_flags):
@@ -348,3 +358,4 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple(), skip=False):
         with subprocess.Popen(fastgen_restart_cmd, stdout=None,
                               stderr=None) as res:
             res.wait()
+        time.sleep(30)

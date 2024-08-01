@@ -26,7 +26,12 @@ RUN apt-get update -y && apt-get install -y \
     libxml2 \
     libarchive13 \
     libgss3 \
-    libgl1
+    libgl1 \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    rsync \
+    libdbus-1-dev
 
 # Install docker cli.
 RUN DOCKER_VERSION=18.09.7 && \

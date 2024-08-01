@@ -30,7 +30,22 @@ RUN apt-get update && \
     libffi-dev \
     libsqlite3-dev \
     libbz2-dev \
-    liblzma-dev
+    liblzma-dev \
+    autogen \
+    libtool \
+    shtool \
+    libfontconfig1-dev \
+    libdbus-1-dev
+
+# install most recent version of automake to make some targets happy
+RUN cd /tmp/ && \
+    curl -O http://gnu.mirror.constant.com/automake/automake-1.16.5.tar.xz && \
+    ls -al && \
+    tar -xvf automake-1.16.5.tar.xz > /dev/null && \
+    cd automake-1.16.5 && \
+    ./configure > /dev/null && \
+    make -j > /dev/null && \
+    make install > /dev/null
 
 RUN cd /tmp/ && \
     curl -O https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz && \

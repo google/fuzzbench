@@ -1,0 +1,222 @@
+### for test
+fun:dfsan_show_label_range=uninstrumented
+fun:dfsan_show_label_range=discard
+fun:dfsan_get_label_range=uninstrumented
+fun:dfsan_get_label_range=discard
+
+### RT
+# Trace-PC
+fun:__angora_trace_cmp=uninstrumented
+fun:__angora_trace_cmp=discard
+fun:__angora_trace_cmp_tt=uninstrumented
+fun:__angora_trace_cmp_tt=custom
+fun:__angora_trace_cmp_pin=uninstrumented
+fun:__angora_trace_switch=uninstrumented
+fun:__angora_trace_switch_tt=uninstrumented
+fun:__angora_trace_switch_tt=custom
+fun:__angora_trace_switch_pin=uninstrumented
+fun:__angora_trace_fn_tt=custom
+fun:__angora_trace_fn_tt=uninstrumented
+fun:__angora_trace_fn=uninstrumented
+fun:__angora_trace_fn_pin=uninstrumented
+fun:__angora_trace_exploit_addr=custom
+fun:__angora_trace_exploit_addr=uninstrumented
+fun:__angora_trace_exploit_val_tt=custom
+fun:__angora_trace_exploit_val_tt=uninstrumented
+fun:__angora_trace_exploit_val_pin=uninstrumented
+fun:__angora_trace_exploit_val=uninstrumented
+fun:__angora_update_tid=uninstrumented
+fun:__angora_update_tid=discard
+fun:__angora_enter_fn=uninstrumented
+fun:__angora_enter_fn=discard
+fun:__angora_leave_fn=uninstrumented
+fun:__angora_leave_fn=discard
+fun:__unfold_branch_fn=uninstrumented
+fun:__unfold_branch_fn=discard
+
+### Memory related
+# alloc
+fun:malloc=custom
+fun:calloc=custom
+fun:free=custom
+fun:realloc=custom
+fun:reallocarray=custom
+
+### IO read
+# open
+fun:open=custom
+fun:fopen=custom
+fun:fopen64=custom
+## freopen
+
+# close
+fun:close=custom
+fun:fclose=custom
+
+# map
+fun:mmap=uninstrumented
+fun:mmap=custom
+fun:munmap=uninstrumented
+fun:munmap=custom
+fun:mmap2=uninstrumented
+fun:mmap2=custom
+
+# input functions
+fun:fread=uninstrumented
+fun:fread=custom
+fun:fread_unlocked=uninstrumented
+fun:fread_unlocked=custom
+
+fun:fgetc=uninstrumented
+fun:fgetc=custom
+fun:fgetc_unlocked=uninstrumented
+fun:fgetc_unlocked=custom
+fun:fgets=uninstrumented
+fun:fgets=custom
+fun:fgets_unlocked=uninstrumented
+# fun:fgets_unlocked=custom
+
+fun:getline=uninstrumented
+fun:getline=custom
+fun:getdelim=uninstrumented
+fun:getdelim=custom
+fun:__getdelim=uninstrumented
+fun:__getdelim=custom
+
+# stat
+fun:stat=uninstrumented
+fun:stat=custom
+fun:fstat=uninstrumented
+fun:fstat=custom
+fun:lstat=uninstrumented
+fun:lstat=custom
+fun:__xstat=uninstrumented
+fun:__xstat=custom
+fun:__lxstat=custom
+fun:__fxstat=custom
+
+# getc may be implemented as a macro
+## some getc may be optimizted to __uflow ..
+# fun:getc=uninstrumented
+# fun:getc=custom
+fun:_IO_getc=uninstrumented
+fun:_IO_getc=custom
+# fun:getchar=uninstrumented
+# fun:getchar=custom
+
+# gets -> fgets?
+fun:gets=uninstrumented
+fun:gets=custom
+
+# TODO
+fun:fgetwc=uninstrumented
+# fun:fgetwc=custom
+fun:fgetwc_unlocked=uninstrumented
+# fun:fgetwc_unlocked=custom
+fun:fgetws=uninstrumented
+# fun:fgetws=custom
+fun:fgetws_unlocked=uninstrumented
+# fun:fgetws_unlocked=custom
+fun:getw=uninstrumented
+# fun:getw=custom
+fun:getwc=uninstrumented
+# fun:getwc=custom
+fun:getwc_unlocked=uninstrumented
+# fun:getwc_unlocked=custom
+fun:getwchar=uninstrumented
+# fun:getwchar=custom
+fun:getwchar_unlocked=uninstrumented
+# fun:getwchar_unlocked=custom
+
+## TODO: difficult..
+fun:scanf=uninstrumented
+# fun:scanf=custom
+# __iosc99_fscanf
+# fscanf
+fun:fnmatch=discard
+fun:regexec=discard
+
+fun:__strdup=custom
+fun:__strndup=custom
+fun:strcat=custom
+#fun:__mempcpy_chk=custom
+fun:strcoll=discard
+fun:rewind=discard
+# fun:asprintf=custom
+fun:vsprintf=discard
+fun:vsnprintf=discard
+fun:vasprintf=discard
+# fun:__sprintf_chk=discard
+# others IO, for evaluate who.c
+fun:getutxent=uninstrumented
+fun:getutxent=custom
+
+# TODO
+# strtoll_l
+
+# -lm math
+fun:ceil=functional
+fun:sqrtf=functional
+
+### glibc
+# fun:exit=uninstrumented
+fun:exit=discard
+fun:__freading=discard
+fun:__fpending=discard
+fun:error=discard
+fun:__ctype_tolower_loc=discard
+fun:dcgettext=discard
+fun:dcngettext=discard
+fun:setlocale=discard
+fun:bindtextdomain=discard
+fun:textdomain=discard
+fun:getopt_long=discard
+fun:utmpxname=discard
+fun:__sprintf_chk=discard
+fun:localtime=discard
+fun:strftime=discard
+fun:fchmod=discard
+fun:chmod=discard
+fun:fwrite_unlocked=discard
+fun:dprintf=discard
+fun:iswprint=discard
+fun:newlocale=discard
+fun:freelocale=discard
+fun:fcntl=discard
+fun:setvbuf=discard
+fun:regcomp=discard
+fun:regfree=discard
+fun:asctime_r=discard
+fun:_IO_putc=discard
+fun:vfprintf=discard
+fun:fseeko64=discard
+fun:opendir=discard
+fun:sbrk=discard
+fun:realpath=discard
+fun:mprotect=discard
+fun:mbrtowc=discard
+fun:wcwidth=discard
+fun:readdir=discard
+fun:getopt=discard
+fun:fseeko=discard
+fun:ctime=discard
+fun:signal=discard
+fun:usleep=discard
+fun:epoll_ctl=discard
+fun:epoll_wait=discard
+fun:epoll_create=discard
+fun:accept=discard
+fun:pthread_setname_np=discard
+fun:sigfillset=discard
+fun:sigprocmask=discard
+fun:sigaddset=discard
+fun:signalfd=discard
+fun:vsnprintf=discard
+fun:pthread_cond_broadcast=discard
+fun:pthread_cond_init=discard
+# FIXME: get fixed bytes
+fun:getrandom=uninstrumented
+fun:getrandom=discard
+
+fun:fcntl64=uninstrumented
+fun:fcntl64=discard

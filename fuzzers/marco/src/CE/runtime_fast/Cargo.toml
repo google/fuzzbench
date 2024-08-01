@@ -1,0 +1,19 @@
+[package]
+name = "runtime_fast"
+version = "1.2.2"
+authors = ["sp1npx <spinpx@gmail.com>"]
+edition = "2018"
+
+[lib]
+name="runtime_fast"
+crate-type = ["staticlib"] # "cdylib"
+
+[dependencies]
+libc = "0.2"
+lazy_static = "1.1"
+byteorder = "1.2"
+fastgen_common = { path = "../common" }
+ctor = "0.1.9"
+
+[build-dependencies]
+cc = "1.0"

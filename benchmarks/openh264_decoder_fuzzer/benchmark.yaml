@@ -3,6 +3,7 @@ commit_date: 2023-01-04T08:01:08+00:00
 fuzz_target: decoder_fuzzer
 project: openh264
 unsupported_fuzzers:
+  - symsan
   - aflcc
   - afl_qemu
   - aflplusplus_qemu

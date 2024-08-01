@@ -1,0 +1,9 @@
+[package]
+name = "fastgen_common"
+version = "1.2.2"
+authors = ["sp1npx <spinpx@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+bincode = "1.0"
+libc = "0.2"

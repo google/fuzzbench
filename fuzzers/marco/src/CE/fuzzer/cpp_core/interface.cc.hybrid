@@ -1,0 +1,1756 @@
+#include <unordered_map>
+#include <unordered_set>
+#include <stdio.h>
+#include "util.h"
+#include "ctpl.h"
+#include "union_table.h"
+#include "rgd_op.h"
+#include "queue.h"
+#include <z3++.h>
+#include <sys/types.h>
+#include <sys/shm.h>
+#include <iostream>
+#include <fstream>
+#include <fcntl.h>           /* For O_* constants */
+#include <sys/stat.h>        /* For mode constants */
+#include <semaphore.h>
+#include <stdlib.h>
+#include <math.h>
+#include <string.h>
+
+#define B_FLIPPED 0x1
+#define THREAD_POOL_SIZE 1
+#define XXH_STATIC_LINKING_ONLY   /* access advanced declarations */
+#define XXH_IMPLEMENTATION
+#include "xxhash.h"
+//global variables
+
+static std::atomic<uint64_t> fid;      // depth of the current branch
+static std::atomic<uint64_t> ce_count; // output file id
+int named_pipe_fd;
+std::ifstream pcsetpipe;
+
+bool SAVING_WHOLE;
+
+XXH32_hash_t call_stack_hash_;
+static uint32_t max_label_;
+uint32_t dump_tree_id_;
+
+static z3::context __z3_context;
+static z3::solver __z3_solver(__z3_context, "QF_BV");
+static const dfsan_label kInitializingLabel = -1;
+static uint32_t max_label_per_session = 0;
+sem_t * semagra;
+sem_t * semace;
+sem_t * semafzr;
+
+uint8_t BRC_MODE = 0;
+uint32_t total_symb_brc = 0;
+uint64_t total_time = 0;
+uint64_t total_solving_time = 0;
+uint64_t total_reload_time = 0;
+uint64_t total_rebuild_time = 0;
+uint64_t untaken_update_ifsat = 0; // carry the pathprefix of untaken branch, in case of sat nested solving, mark it;
+std::string input_file = "/outroot/tmp/cur_input_2";
+
+static dfsan_label_info *__union_table;
+
+struct RGDSolution {
+    std::unordered_map<uint32_t, uint8_t> sol;
+  //the intended branch for this solution
+    uint32_t fid;  //the seed
+    uint64_t addr;
+    uint64_t ctx;
+    uint32_t order;
+};
+
+moodycamel::ConcurrentQueue<RGDSolution> solution_queue;
+
+
+// dependencies
+struct dedup_hash {
+  std::size_t operator()(const std::tuple<uint64_t,uint64_t,uint64_t,uint32_t> &operand) const {
+    return std::hash<uint64_t>{}(std::get<0>(operand))^
+            std::hash<uint64_t>{}(std::get<1>(operand))^
+            std::hash<uint64_t>{}(std::get<2>(operand))^
+            std::hash<uint32_t>{}(std::get<3>(operand));
+  }
+};
+
+struct dedup_equal {
+  bool operator()(const std::tuple<uint64_t,uint64_t,uint64_t,uint32_t> &lhs, const std::tuple<uint64_t,uint64_t,uint64_t,uint32_t> &rhs) const {
+    return std::get<0>(lhs) == std::get<0>(rhs) &&
+          std::get<1>(lhs) == std::get<1>(rhs) &&
+          std::get<2>(lhs) == std::get<2>(rhs) &&
+          std::get<3>(lhs) == std::get<3>(rhs);
+  }
+};
+
+static std::unordered_set<std::tuple<uint64_t, uint64_t, uint64_t, uint32_t>, dedup_hash, dedup_equal> fmemcmp_dedup;
+
+static std::unordered_set<uint32_t> visited_;
+
+std::unordered_map<uint32_t,z3::expr> expr_cache;
+std::unordered_map<uint32_t,std::unordered_set<uint32_t>> deps_cache;
+
+// dependencies
+struct expr_hash {
+  std::size_t operator()(const z3::expr &expr) const {
+    return expr.hash();
+  }
+};
+struct expr_equal {
+  bool operator()(const z3::expr &lhs, const z3::expr &rhs) const {
+    return lhs.id() == rhs.id();
+  }
+};
+typedef std::unordered_set<z3::expr, expr_hash, expr_equal> expr_set_t;
+typedef struct {
+  expr_set_t expr_deps;
+  std::unordered_set<dfsan_label> input_deps;
+} branch_dep_t;
+static std::vector<branch_dep_t*> *__branch_deps;
+
+static inline dfsan_label_info* get_label_info(dfsan_label label) {
+  return &__union_table[label];
+}
+
+static inline branch_dep_t* get_branch_dep(size_t n) {
+  if (n >= __branch_deps->size()) {
+    __branch_deps->resize(n + 1);
+  }
+  return __branch_deps->at(n);
+}
+
+static inline void set_branch_dep(size_t n, branch_dep_t* dep) {
+  if (n >= __branch_deps->size()) {
+    __branch_deps->resize(n + 1);
+  }
+  __branch_deps->at(n) = dep;
+}
+
+static z3::expr get_cmd(z3::expr const &lhs, z3::expr const &rhs, uint32_t predicate) {
+  switch (predicate) {
+    case DFSAN_BVEQ:  return lhs == rhs;
+    case DFSAN_BVNEQ: return lhs != rhs;
+    case DFSAN_BVUGT: return z3::ugt(lhs, rhs);
+    case DFSAN_BVUGE: return z3::uge(lhs, rhs);
+    case DFSAN_BVULT: return z3::ult(lhs, rhs);
+    case DFSAN_BVULE: return z3::ule(lhs, rhs);
+    case DFSAN_BVSGT: return lhs > rhs;
+    case DFSAN_BVSGE: return lhs >= rhs;
+    case DFSAN_BVSLT: return lhs < rhs;
+    case DFSAN_BVSLE: return lhs <= rhs;
+    default:
+      printf("FATAL: unsupported predicate: %u\n", predicate);
+      // throw z3::exception("unsupported predicate");
+      break;
+  }
+  // should never reach here
+  //Die();
+}
+
+static inline z3::expr cache_expr(dfsan_label label, z3::expr const &e, std::unordered_set<uint32_t> &deps) {
+  //info->expr = new z3::expr(e);
+  //info->deps = new std::unordered_set<uint32_t>(deps);
+  if (label != 0)  {
+    expr_cache.insert({label,e});
+    deps_cache.insert({label,deps});
+  }
+  return e;
+}
+
+static z3::expr serialize(dfsan_label label, std::unordered_set<uint32_t> &deps) {
+  if (label < CONST_OFFSET || label == kInitializingLabel) {
+    // printf("WARNING: invalid label: %d\n", label);
+    throw z3::exception("invalid label");
+  }
+
+  if (label > max_label_per_session) {
+    // std::cout << "max_label_per_session updated from "
+    //           << max_label_per_session << " to "
+    //           << label << std::endl;
+    max_label_per_session = label;
+  }
+
+
+  dfsan_label_info *info = get_label_info(label);
+
+  if (info->depth > 500) {
+    // printf("WARNING: tree depth too large: %d\n", info->depth);
+    throw z3::exception("tree too deep");
+  }
+
+  auto itr_expr = expr_cache.find(label);
+  auto itr_deps = deps_cache.find(label);
+  if (label !=0 && itr_expr != expr_cache.end() && itr_deps != deps_cache.end() ) {
+    deps.insert(itr_deps->second.begin(), itr_deps->second.end());
+    return itr_expr->second;
+    }
+
+  // special ops
+  if (info->op == 0) {
+    // input
+    z3::symbol symbol = __z3_context.int_symbol(info->op1);
+    z3::sort sort = __z3_context.bv_sort(8);
+    info->tree_size = 1; // lazy init
+    deps.insert(info->op1);
+    // caching is not super helpful
+    return __z3_context.constant(symbol, sort);
+  } else if (info->op == DFSAN_LOAD) {
+    uint64_t offset = get_label_info(info->l1)->op1;
+    z3::symbol symbol = __z3_context.int_symbol(offset);
+    z3::sort sort = __z3_context.bv_sort(8);
+    z3::expr out = __z3_context.constant(symbol, sort);
+    deps.insert(offset);
+    for (uint32_t i = 1; i < info->l2; i++) {
+      symbol = __z3_context.int_symbol(offset + i);
+      out = z3::concat(__z3_context.constant(symbol, sort), out);
+      deps.insert(offset + i);
+    }
+    info->tree_size = 1; // lazy init
+    return cache_expr(label, out, deps);
+  } else if (info->op == DFSAN_ZEXT) {
+    z3::expr base = serialize(info->l1, deps);
+    if (base.is_bool()) // dirty hack since llvm lacks bool
+      base = z3::ite(base, __z3_context.bv_val(1, 1),
+          __z3_context.bv_val(0, 1));
+    uint32_t base_size = base.get_sort().bv_size();
+    info->tree_size = get_label_info(info->l1)->tree_size; // lazy init
+    return cache_expr(label, z3::zext(base, info->size - base_size), deps);
+  } else if (info->op == DFSAN_SEXT) {
+    z3::expr base = serialize(info->l1, deps);
+    if (base.is_bool()) // dirty hack since llvm lacks bool
+      base = z3::ite(base, __z3_context.bv_val(1, 1),
+          __z3_context.bv_val(0, 1));
+    uint32_t base_size = base.get_sort().bv_size();
+    info->tree_size = get_label_info(info->l1)->tree_size; // lazy init
+    return cache_expr(label, z3::sext(base, info->size - base_size), deps);
+  } else if (info->op == DFSAN_TRUNC) {
+    z3::expr base = serialize(info->l1, deps);
+    info->tree_size = get_label_info(info->l1)->tree_size; // lazy init
+    return cache_expr(label, base.extract(info->size - 1, 0), deps);
+  } else if (info->op == DFSAN_EXTRACT) {
+    z3::expr base = serialize(info->l1, deps);
+    info->tree_size = get_label_info(info->l1)->tree_size; // lazy init
+    return cache_expr(label, base.extract((info->op2 + info->size) - 1, info->op2), deps);
+  } else if (info->op == DFSAN_NOT) {
+    // if (info->l2 == 0 || info->size != 1) {
+    //   throw z3::exception("invalid Not operation");
+    // }
+    z3::expr e = serialize(info->l2, deps);
+    info->tree_size = get_label_info(info->l2)->tree_size; // lazy init
+    // if (!e.is_bool()) {
+    //   throw z3::exception("Only LNot should be recorded");
+    // }
+    return cache_expr(label, !e, deps);
+  } else if (info->op == DFSAN_NEG) {
+    // if (info->l2 == 0) {
+    //   throw z3::exception("invalid Neg predicate");
+    // }
+    z3::expr e = serialize(info->l2, deps);
+    info->tree_size = get_label_info(info->l2)->tree_size; // lazy init
+    return cache_expr(label, -e, deps);
+  }
+  // common ops
+  uint8_t size = info->size;
+  // size for concat is a bit complicated ...
+  if (info->op == DFSAN_CONCAT && info->l1 == 0) {
+    assert(info->l2 >= CONST_OFFSET);
+    size = info->size - get_label_info(info->l2)->size;
+  }
+  z3::expr op1 = __z3_context.bv_val((uint64_t)info->op1, size);
+  if (info->l1 >= CONST_OFFSET) {
+    op1 = serialize(info->l1, deps).simplify();
+    // op1 = serialize(info->l1, deps);
+  } else if (info->size == 1) {
+    op1 = __z3_context.bool_val(info->op1 == 1);
+  }
+  if (info->op == DFSAN_CONCAT && info->l2 == 0) {
+    assert(info->l1 >= CONST_OFFSET);
+    size = info->size - get_label_info(info->l1)->size;
+  }
+  z3::expr op2 = __z3_context.bv_val((uint64_t)info->op2, size);
+  if (info->l2 >= CONST_OFFSET) {
+    std::unordered_set<uint32_t> deps2;
+    op2 = serialize(info->l2, deps2).simplify();
+    // op2 = serialize(info->l2, deps2);
+    deps.insert(deps2.begin(),deps2.end());
+  } else if (info->size == 1) {
+    op2 = __z3_context.bool_val(info->op2 == 1); }
+  // update tree_size
+  info->tree_size = get_label_info(info->l1)->tree_size +
+    get_label_info(info->l2)->tree_size;
+
+  switch((info->op & 0xff)) {
+    // llvm doesn't distinguish between logical and bitwise and/or/xor
+    case DFSAN_AND:     return cache_expr(label, info->size != 1 ? (op1 & op2) : (op1 && op2), deps);
+    case DFSAN_OR:      return cache_expr(label, info->size != 1 ? (op1 | op2) : (op1 || op2), deps);
+    case DFSAN_XOR:     return cache_expr(label, op1 ^ op2, deps);
+    case DFSAN_SHL:     return cache_expr(label, z3::shl(op1, op2), deps);
+    case DFSAN_LSHR:    return cache_expr(label, z3::lshr(op1, op2), deps);
+    case DFSAN_ASHR:    return cache_expr(label, z3::ashr(op1, op2), deps);
+    case DFSAN_ADD:     return cache_expr(label, op1 + op2, deps);
+    case DFSAN_SUB:     return cache_expr(label, op1 - op2, deps);
+    case DFSAN_MUL:     return cache_expr(label, op1 * op2, deps);
+    case DFSAN_UDIV:    return cache_expr(label, z3::udiv(op1, op2), deps);
+    case DFSAN_SDIV:    return cache_expr(label, op1 / op2, deps);
+    case DFSAN_UREM:    return cache_expr(label, z3::urem(op1, op2), deps);
+    case DFSAN_SREM:    return cache_expr(label, z3::srem(op1, op2), deps);
+                  // relational
+    case DFSAN_ICMP:    return cache_expr(label, get_cmd(op1, op2, info->op >> 8), deps);
+                  // concat
+    case DFSAN_CONCAT:  return cache_expr(label, z3::concat(op2, op1), deps); // little endian
+    default:
+                  printf("FATAL: unsupported op: %u\n", info->op);
+                  // throw z3::exception("unsupported operator");
+                  break;
+  }
+  // should never reach here
+  //Die();
+}
+
+void init(bool saving_whole) {
+  SAVING_WHOLE = saving_whole;
+  __branch_deps = new std::vector<branch_dep_t*>(100000, nullptr);
+}
+
+void cleanup1();
+void cleanup2();
+int cleanup_deps();
+bool check_pp(uint64_t digest);
+void mark_pp(uint64_t digest);
+int deps_builder(std::string deps_file, int cur_label_loc);
+bool isPriviledgedBranch(uint64_t pc, bool taken, uint64_t ctx);
+void setPriviledgedBranch(int value, uint64_t pc, uint64_t ctx, bool taken);
+static void solve_cond(dfsan_label label, uint64_t pc, uint32_t direction,
+    std::unordered_map<uint32_t, uint8_t> &opt_sol,
+    std::unordered_map<uint32_t, uint8_t> &sol, bool try_solve, uint32_t inputid, uint32_t queueid);
+
+void generate_PC_set(const char *smt2str, uint32_t inputid, uint32_t outputid, int isNested, uint32_t queueid, uint64_t pc, uint32_t direction) {
+  std::cout << "Warning!!! generate_PC_set called!!!" << std::endl;
+  return;
+
+  // total_symb_brc += 1;
+  // return;
+
+  // write to named pipe for python to pickup
+  std::string record;
+  std::string my_str = std::string(smt2str);
+  // my_str.erase(remove(my_str.begin(), my_str.end(), '\n'), my_str.end());
+  if (isNested) {
+		record = std::to_string(pc) + "-" + std::to_string(call_stack_hash_) + "-" +  std::to_string(direction) + "@" + std::to_string(queueid) + "-" + std::to_string(inputid) + "-" + std::to_string(outputid) + "@" + my_str + "@@\n";
+	} else{
+    record = std::to_string(pc) + "-" + std::to_string(call_stack_hash_) + "-" +  std::to_string(direction) + "@" + std::to_string(queueid) + "-" + std::to_string(inputid) + "-" + std::to_string(outputid) + "opt@" + my_str + "@@\n";
+  }
+  // std::cout << record.c_str() << std::endl;
+  write(named_pipe_fd, record.c_str(), strlen(record.c_str()));
+  fsync(named_pipe_fd);
+
+  return;
+}
+
+
+static void generate_solution(z3::model &m, std::unordered_map<uint32_t, uint8_t> &solu) {
+  unsigned num_constants = m.num_consts();
+  for(unsigned i = 0; i< num_constants; i++) {
+    z3::func_decl decl = m.get_const_decl(i);
+    z3::expr e = m.get_const_interp(decl);
+    z3::symbol name = decl.name();
+    if(name.kind() == Z3_INT_SYMBOL) {
+      uint8_t value = (uint8_t)e.get_numeral_int();
+      solu[name.to_int()] = value;
+    }
+    if (name.kind() == Z3_STRING_SYMBOL) {
+      int index = std::stoi(name.str().substr(2)) / 10;
+      uint8_t value = (uint8_t)e.get_numeral_int();
+      solu[index] = value;
+    }
+  }
+}
+
+
+void solve_file(z3::context &ctx, z3::solver &solver, std::string inputfile, const char *smts) {
+    // uint64_t one_start = getTimeStamp();
+    std::cout << "inputfile: " << inputfile << std::endl;
+
+    std::unordered_map<uint32_t, uint8_t> sol;
+
+    solver.reset();
+    solver.set("timeout", 5000U);
+    solver.add(ctx.parse_string(smts));
+    z3::check_result res = solver.check();
+
+    if (res == z3::sat) {
+        z3::model m = solver.get_model();
+
+        sol.clear();
+        generate_solution(m, sol);
+        generate_input(sol, inputfile, "./fifo", ce_count+=1);
+        std::cout << "new file id: " << ce_count << std::endl;
+        return;
+    } else {
+        std::cout << "unsat??? something wrong!" << std::endl;
+    }
+
+    // total_solving_time += (getTimeStamp() - one_start);
+}
+
+
+int pcset_parse_gen(std::string deps_file, uint32_t cur_label_loc, std::string src_tscs, uint32_t label, uint32_t conc_dir) {
+  // generate pcset
+  z3::expr result = __z3_context.bool_val(conc_dir);
+  std::unordered_map<uint32_t, uint8_t> opt_sol;
+  std::unordered_map<uint32_t, uint8_t> sol;
+  // std::string tmp_opt_set;
+  int count_extra_expr = 0;
+
+  try {
+    std::unordered_set<dfsan_label> inputs;
+    z3::expr cond = serialize(label, inputs);
+
+    // assemble pcset
+    __z3_solver.reset();
+    __z3_solver.add(cond != result);
+    z3::check_result res = __z3_solver.check();
+    // check if opt set is sat
+    if (res == z3::sat) {
+      std::cout << "opt sat" << std::endl;
+      z3::model m_opt = __z3_solver.get_model();
+
+      // rebuild dependenct tree
+      uint64_t one_start = getTimeStamp();
+      int new_added = deps_builder(deps_file, cur_label_loc);
+      total_rebuild_time += (getTimeStamp() - one_start);
+
+      // collect additional input deps
+      std::vector<dfsan_label> worklist;
+      worklist.insert(worklist.begin(), inputs.begin(), inputs.end());
+      while (!worklist.empty()) {
+        auto off = worklist.back();
+        worklist.pop_back();
+
+        auto deps = get_branch_dep(off);
+        if (deps != nullptr) {
+          for (auto i : deps->input_deps) {
+            if (inputs.insert(i).second)
+              worklist.push_back(i);
+          }
+        }
+      }
+      std::cout << "extra input deps inputs size: " << inputs.size() << std::endl;
+
+      // __z3_solver.push();
+      expr_set_t added; // for dedup
+      for (auto off : inputs) {
+        auto deps = get_branch_dep(off);
+        if (deps != nullptr) {
+          for (auto &expr : deps->expr_deps) {
+            if (added.insert(expr).second) {
+              // printf("adding expr: %s\n", expr.to_string().c_str());
+              count_extra_expr += 1;
+              __z3_solver.add(expr);
+            }
+          }
+        }
+      }
+      std::cout << "count_extra_expr=" << count_extra_expr << std::endl;
+      res = __z3_solver.check();
+      // check if nested set is sat
+      if (res == z3::sat) {
+        mark_pp(untaken_update_ifsat);
+        z3::model m = __z3_solver.get_model();
+        sol.clear();
+        generate_solution(m, sol);
+        generate_input(sol, src_tscs, "./fifo", ce_count+=1);
+        std::cout << "(nested)new file id " << ce_count << std::endl;
+        return 1; // nested solving
+      } else {  // settle for optimistic solving
+        opt_sol.clear();
+        generate_solution(m_opt, opt_sol);
+        generate_input(opt_sol, src_tscs, "./fifo", ce_count+=1);
+        std::cout << "(opt)new file id " << ce_count << std::endl;
+        return 2; // optimistic sat
+      }
+    } else { // opt is unsat
+      mark_pp(untaken_update_ifsat);
+      return 0;
+    }
+  } catch (z3::exception e) {
+    printf("WARNING: solving error: %s\n", e.msg());
+    return 0;
+  }
+}
+
+int add_deps(uint32_t label, uint32_t conc_dir) {
+  int count_new = 0;
+  z3::expr result = __z3_context.bool_val(conc_dir);
+  std::unordered_set<dfsan_label> inputs;
+  z3::expr cond = serialize(label, inputs);
+
+  std::vector<dfsan_label> worklist;
+  worklist.insert(worklist.begin(), inputs.begin(), inputs.end());
+  while (!worklist.empty()) {
+    auto off = worklist.back();
+    worklist.pop_back();
+
+    auto deps = get_branch_dep(off);
+    if (deps != nullptr) {
+      for (auto i : deps->input_deps) {
+        if (inputs.insert(i).second)
+          worklist.push_back(i);
+      }
+    }
+  }
+
+  for (auto off : inputs) {
+    auto c = get_branch_dep(off);
+    if (c == nullptr) {
+      c = new branch_dep_t();
+      count_new += 1;
+      if (c == nullptr) {
+        printf("WARNING: out of memory\n");
+      } else {
+        set_branch_dep(off, c);
+        c->input_deps.insert(inputs.begin(), inputs.end());
+        c->expr_deps.insert(cond == result);
+      }
+    } else {
+        c->input_deps.insert(inputs.begin(), inputs.end());
+        c->expr_deps.insert(cond == result);
+    }
+  }
+  return count_new;
+}
+
+int deps_builder(std::string deps_file, int cur_label_loc) {
+  std::ifstream des_p;
+  des_p.open(deps_file.c_str());
+
+  std::string line;
+  std::string token;
+
+  int token_index = 0;
+  size_t pos = 0;
+
+  int cnt;
+  uint32_t label;
+  uint32_t direction;
+
+  int count_new = 0;
+
+  // only recover the dependencies ahead of the current branch
+  for (cnt = 0; cnt < cur_label_loc; cnt ++) {
+    if (std::getline(des_p, line)) {
+      token_index = 0;
+      while ((pos = line.find(",")) != std::string::npos) {
+        token = line.substr(0, pos);
+        switch (token_index) {
+            case 0: label = stoul(token); break;
+            case 1: direction = stoul(token); break;
+            default: break;
+        }
+        line.erase(0, pos + 1);
+        token_index++;
+      }
+      count_new += add_deps(label, direction);
+    }
+  }
+  des_p.close();
+  return count_new;
+}
+
+
+int gen_solve_pc(uint32_t queueid, uint32_t tree_id, uint32_t label, uint32_t conc_dir, uint32_t cur_label_loc) {
+  std::cout << "gen_solve_pc: " << queueid << " " << tree_id << " " << label << " " << conc_dir << " " << cur_label_loc << std::endl;
+  struct stat st;
+  size_t sread;
+  FILE *fp;
+  int res = 1;
+  uint64_t one_start = getTimeStamp();
+
+  // load the tree, queueid ignored for now;
+  std::string tree_idstr = std::to_string(tree_id % 1000000);
+  std::string tree_file = "./tree/id:" + std::string(6-tree_idstr.size(),'0') + tree_idstr;
+  std::string src_tscs = "./fifo/queue/id:" + std::string(6-tree_idstr.size(),'0') + tree_idstr;
+  std::string deps_file = "./deps/id:" + std::string(6-tree_idstr.size(),'0') + tree_idstr;
+
+  // std::cout << "before check tree file size" << std::endl;
+  // prep1: reinstate tree
+  stat(tree_file.c_str(), &st);
+  sread = st.st_size;
+
+  // std::cout << "before loading tree: sread=" << sread << std::endl;
+
+  // tree size -1 is max label_
+  max_label_ = sread / sizeof(dfsan_label_info) - 1; // 1st being 0
+
+  // std::cout << "before loading tree: max_label_=" << max_label_ << std::endl;
+
+  // if (label < max_label_) {
+  //   sread = (label + 1) * sizeof(dfsan_label_info);
+  //   // std::cout << "only read: sread=" << sread << std::endl;
+  //   max_label_ = label;
+  // }
+
+  fp = fopen(tree_file.c_str(), "rb");
+  fread(__union_table, sread, 1, fp);
+  fclose(fp);
+  // std::cout << "done loading tree: tree_id=" << tree_id
+  //           << " max_label_= " << max_label_
+  //           << " label=" << label << std::endl;
+
+
+  // prep2: reset the max label tracker; upper bound is new max_label_
+  max_label_per_session = 0; // the runtime serialization tracking of max label index
+
+  total_reload_time += (getTimeStamp() - one_start);
+
+  // prep3: build deps
+  // one_start = getTimeStamp();
+  // int added = deps_builder(deps_file, cur_label_loc);
+  // total_rebuild_time += (getTimeStamp() - one_start);
+
+  std::cout << "label's tree size: " << get_label_info(label)->tree_size << std::endl;
+  std::cout << "label's tree depth: " << get_label_info(label)->depth << std::endl;
+
+
+  // pcset collection & solve & generate output
+  res = pcset_parse_gen(deps_file, cur_label_loc, src_tscs, label, conc_dir);
+
+  // clean up after solving
+  cleanup1(); // reset the memory in union table
+  max_label_per_session = 0;
+  int dele = cleanup_deps();
+  // if (added != dele) {
+  //   std::cout << "added = " << added
+  //             << " dele = " << dele << std::endl;
+  // }
+  return res;
+}
+
+/*
+  2-steps:
+  1. update zombie record;
+  2. load new PC request;
+*/
+int generate_next_tscs(std::ifstream &pcsetpipe) {
+  std::string line;
+  std::string token;
+  size_t pos = 0;
+
+  // for mode differentiation
+  int line_type;
+  // for PC solving request
+  uint32_t queueid;
+  uint32_t tree_id;
+  uint32_t node_id;
+  uint32_t cur_label_loc;
+  // for whitelist
+  uint64_t addr;
+  int value;
+  uint64_t ctxh;
+  // for both
+  uint32_t conc_dir;
+
+  z3::context ctx;
+  z3::solver solver(ctx, "QF_BV");
+
+  while (1) {
+    if (std::getline(pcsetpipe, line)) {
+      int token_index = 0;
+      // std::cout << "line:" << line << std::endl;
+      while ((pos = line.find(",")) != std::string::npos) {
+          token = line.substr(0, pos);
+          switch (token_index) {
+              case 0: line_type = stoul(token); break;
+              case 1: if(line_type == 1) { queueid = stoul(token);}
+                      else { value = stoul(token); }
+                      break;
+              case 2: if(line_type == 1) { tree_id = stoul(token); }
+                      else { addr = stoull(token); }
+                      break;
+              case 3: if(line_type == 1) { node_id = stoul(token); }
+                      else { ctxh = stoull(token); }
+                      break;
+              case 4: conc_dir = stoul(token); break;
+              case 5: cur_label_loc = stoul(token); break;
+              case 6: untaken_update_ifsat = stoull(token); break;
+              default: break;
+          }
+          line.erase(0, pos + 1);
+          token_index++;
+      }
+      switch (line_type) {
+        case 0:
+
+          setPriviledgedBranch(value, addr, ctxh, conc_dir);
+          break;
+        case 1:
+          if (!BRC_MODE && !check_pp(untaken_update_ifsat)) {
+            std::cout << "dup pp, skip!" << std::endl;
+            return -1; // skip it, query next one!
+          }
+          return gen_solve_pc(queueid, tree_id, node_id, conc_dir, cur_label_loc);
+        case 2: return 0; // when pending tscs, only update whitelist,
+        default: break;
+      }
+    }
+  }
+}
+
+void generate_next_tscs_old(std::ifstream &pcsetpipe) {
+  std::string line;
+  std::string token;
+  std::string smts;
+  std::string source_file;
+
+  size_t pos = 0;
+
+  z3::context ctx;
+  z3::solver solver(ctx, "QF_BV");
+
+  while (1) {
+    if (std::getline(pcsetpipe, line)) {
+      int token_index = 0;
+      std::cout << "line " << line << std::endl;
+      while ((pos = line.find(",")) != std::string::npos) {
+          token = line.substr(0, pos);
+          switch (token_index) {
+              case 0: source_file = token; break;
+              case 1: smts = token; break;
+              default: break;
+          }
+          line.erase(0, pos + 1);
+          token_index++;
+      }
+      solve_file(ctx, solver, source_file, smts.c_str());
+      return;
+    }
+  }
+}
+
+#if 1
+const int pfxkMapSize  = 1<<27;
+uint8_t pfx_pp_map[pfxkMapSize];
+uint8_t node_map[pfxkMapSize];
+const int kMapSize = 1 << 16;
+uint8_t pp_map[kMapSize];
+uint8_t context_map_[kMapSize];
+uint8_t virgin_map_[kMapSize];
+uint8_t trace_map_[kMapSize];
+uint32_t prev_loc_ = 0;
+#endif
+
+bool check_pp(uint64_t digest) {
+  uint32_t hash = digest % (pfxkMapSize * CHAR_BIT);
+  uint32_t idx = hash / CHAR_BIT;
+  uint32_t mask = 1 << (hash % CHAR_BIT);
+  return (pfx_pp_map[idx] & mask) == 0;
+}
+
+void mark_pp(uint64_t digest) {
+  uint32_t hash = digest % (pfxkMapSize * CHAR_BIT);
+  uint32_t idx = hash / CHAR_BIT;
+  uint32_t mask = 1 << (hash % CHAR_BIT);
+  pfx_pp_map[idx] |= mask;
+}
+
+
+static void solve_gep(dfsan_label label, uint64_t pc, uint64_t r, bool try_solve, uint32_t inputid, uint32_t queueid) {
+
+  if (label == 0)
+    return;
+
+  std::unordered_map<uint32_t, uint8_t> opt_sol;
+  std::unordered_map<uint32_t, uint8_t> sol;
+
+  unsigned char size = get_label_info(label)->size;
+
+  try {
+    std::unordered_set<dfsan_label> inputs;
+    z3::expr index = serialize(label, inputs);
+    z3::expr result = __z3_context.bv_val((uint64_t)r, size);
+
+    // collect additional input deps
+    std::vector<dfsan_label> worklist;
+    worklist.insert(worklist.begin(), inputs.begin(), inputs.end());
+    while (!worklist.empty()) {
+      auto off = worklist.back();
+      worklist.pop_back();
+
+      auto deps = get_branch_dep(off);
+      if (deps != nullptr) {
+        for (auto i : deps->input_deps) {
+          if (inputs.insert(i).second)
+            worklist.push_back(i);
+        }
+      }
+    }
+
+    __z3_solver.reset();
+    __z3_solver.add(index > result);
+    z3::check_result res = __z3_solver.check();
+
+    //AOUT("\n%s\n", __z3_solver.to_smt2().c_str());
+    if (res == z3::sat) {
+      // z3::model m_opt = __z3_solver.get_model();
+      __z3_solver.push();
+
+      // 2. add constraints
+      expr_set_t added;
+      for (auto off : inputs) {
+        auto deps = get_branch_dep(off);
+        if (deps != nullptr) {
+          for (auto &expr : deps->expr_deps) {
+            if (added.insert(expr).second) {
+              __z3_solver.add(expr);
+            }
+          }
+        }
+      }
+      // save all nested PC; for prioritization
+      // generate_PC_set(__z3_solver.to_smt2().c_str(), inputid, fid, 1, queueid);
+      res = __z3_solver.check();
+      if (res == z3::sat) {
+        std::cout << "solve_gep pcset: > result " << r  << std::endl;
+        generate_PC_set(__z3_solver.to_smt2().c_str(), inputid, fid, 1, queueid, pc, r);
+        // z3::model m = __z3_solver.get_model();
+        // sol.clear();
+        // generate_solution(m, sol);
+        // generate_input(sol, input_file, "./ce_output", fid++);
+      } else {
+        __z3_solver.pop();
+        std::cout << "solve_gep pcset: > result " << r  << std::endl;
+        generate_PC_set(__z3_solver.to_smt2().c_str(), inputid, fid, 1, queueid, pc, r);
+        // opt_sol.clear();
+        // generate_solution(m_opt, opt_sol);
+        // generate_input(opt_sol, input_file, "./ce_output", fid++);
+      }
+      fid += 1;
+    }
+
+    {
+      __z3_solver.reset();
+      z3::expr zero_v = __z3_context.bv_val((uint64_t)0, size);
+      __z3_solver.add(index < zero_v);
+      z3::check_result res = __z3_solver.check();
+
+      //AOUT("\n%s\n", __z3_solver.to_smt2().c_str());
+      if (res == z3::sat) {
+        // z3::model m_opt = __z3_solver.get_model();
+        __z3_solver.push();
+
+        // 2. add constraints
+        expr_set_t added;
+        for (auto off : inputs) {
+          auto deps = get_branch_dep(off);
+          if (deps != nullptr) {
+            for (auto &expr : deps->expr_deps) {
+              if (added.insert(expr).second) {
+                __z3_solver.add(expr);
+              }
+            }
+          }
+        }
+
+        // generate_PC_set(__z3_solver.to_smt2().c_str(), inputid, fid, 1, queueid);
+        res = __z3_solver.check();
+        if (res == z3::sat) {
+          std::cout << "solve_gep pcset < 0" << std::endl;
+          generate_PC_set(__z3_solver.to_smt2().c_str(), inputid, fid, 1, queueid, pc, r);
+          // z3::model m = __z3_solver.get_model();
+          // sol.clear();
+          // generate_solution(m, sol);
+          // generate_input(sol, input_file, "./ce_output", fid++);
+        } else {
+          __z3_solver.pop();
+          std::cout << "solve_gep pcset < 0" << std::endl;
+          generate_PC_set(__z3_solver.to_smt2().c_str(), inputid, fid, 1, queueid, pc, r);
+          // opt_sol.clear();
+          // generate_solution(m_opt, opt_sol);
+          // generate_input(opt_sol, input_file, "./ce_output", fid++);
+        }
+        fid += 1;
+      }
+    }
+    for (int i=0; i<128;i++)
+    {
+      __z3_solver.reset();
+      z3::expr cur_v = __z3_context.bv_val((uint64_t)i, size);
+      __z3_solver.add(index == cur_v);
+      z3::check_result res = __z3_solver.check();
+
+      if (res == z3::sat) {
+        // z3::model m_opt = __z3_solver.get_model();
+        __z3_solver.push();
+
+        // 2. add constraints
+        expr_set_t added;
+        for (auto off : inputs) {
+          auto deps = get_branch_dep(off);
+          if (deps != nullptr) {
+            for (auto &expr : deps->expr_deps) {
+              if (added.insert(expr).second) {
+                __z3_solver.add(expr);
+              }
+            }
+          }
+        }
+        // generate_PC_set(__z3_solver.to_smt2().c_str(), inputid, fid, 1, queueid);
+        res = __z3_solver.check();
+        if (res == z3::sat) {
+          std::cout << "solve_gep pcset == i: " << i << std::endl;
+          generate_PC_set(__z3_solver.to_smt2().c_str(), inputid, fid, 1, queueid, pc, r);
+          // z3::model m = __z3_solver.get_model();
+          // sol.clear();
+          // generate_solution(m, sol);
+          // generate_input(sol, input_file, "./ce_output", fid++);
+        } else {
+          __z3_solver.pop();
+          std::cout << "solve_gep pcset == i: " << i << std::endl;
+          generate_PC_set(__z3_solver.to_smt2().c_str(), inputid, fid, 1, queueid, pc, r);
+          // opt_sol.clear();
+          // generate_solution(m_opt, opt_sol);
+          // generate_input(opt_sol, input_file, "./ce_output", fid++);
+        }
+        fid += 1;
+      }
+    }
+
+
+    // preserve
+    for (auto off : inputs) {
+      auto c = get_branch_dep(off);
+      if (c == nullptr) {
+        c = new branch_dep_t();
+        set_branch_dep(off, c);
+      }
+      if (c == nullptr) {
+        printf("WARNING: out of memory\n");
+      } else {
+        c->input_deps.insert(inputs.begin(), inputs.end());
+        c->expr_deps.insert(index == result);
+      }
+    }
+
+  } catch (z3::exception e) {
+    printf("WARNING: index solving error: %s\n", e.msg());
+    //printf("Expr is %s\n", __z3_solver.to_smt2().c_str());
+  }
+
+}
+
+// uniq_pcset=1: whilelisted; as top k% nodes
+static int update_graph(dfsan_label label, uint64_t pc, uint32_t tkdir,
+    bool try_solve, uint32_t inputid, uint32_t queueid, int uniq_pcset, std::unordered_map<uint32_t, uint8_t> &opt_sol,
+    std::unordered_map<uint32_t, uint8_t> &sol) {
+
+    // if concrete branch , skip
+    if (!label) return 0;
+    if ((get_label_info(label)->flags & B_FLIPPED)) return 0;
+
+    // update deps tree for possible runtime solving;
+    // TODO: optimize for initial seed !
+
+
+    // mark this one off for branch within this trace
+    get_label_info(label)->flags |= B_FLIPPED;
+
+    // proceed to update graph, pipe the record to python scheduler
+    std::string record;
+
+    // case 1. graph update w/ new PC; uniqPP but not onsite solving
+    if (try_solve && !uniq_pcset) {
+      add_deps(label, tkdir);
+      if (get_label_info(label)->tree_size > 50000) {
+        // std::cout << "tree too big skip it" << std::endl;
+        return 1;
+      }
+      if (get_label_info(label)->depth > 500) {
+        // std::cout << "tree too deep skip it" << std::endl;
+        return 1;
+      }
+      record = std::to_string(pc) \
+               + "-" + std::to_string(call_stack_hash_) \
+               + "-" + std::to_string(tkdir) \
+               + "-" + std::to_string(label) \
+               + "-" + std::to_string(inputid) \
+               + "@" \
+               + std::to_string(uniq_pcset) \
+               + "-" + std::to_string(queueid) \
+               + "-" + std::to_string(untaken_update_ifsat) \
+               + "-" + std::to_string(get_label_info(label)->depth) \
+               + "@@\n";
+    } else { // case 2. graph update w/o new PC:
+      if (uniq_pcset) { // case 2.1 uniqBRC, solve on site
+        solve_cond(label, pc, tkdir, opt_sol, sol, true, inputid, queueid);
+      } else {
+        add_deps(label, tkdir);
+      }
+      record = std::to_string(pc) \
+               + "-" + std::to_string(call_stack_hash_) \
+               + "-" + std::to_string(tkdir) \
+               + "-" + std::to_string(label) \
+               + "-" + std::to_string(inputid) \
+               + "@none@@\n";
+    }
+    write(named_pipe_fd, record.c_str(), strlen(record.c_str()));
+    fsync(named_pipe_fd);
+
+    return 0;
+}
+
+
+// addr, ctx, tkdir, qid, tscsid, label => pipe to scheduler
+static int update_graph_async(dfsan_label label, uint64_t pc, uint32_t tkdir,
+    bool try_solve, uint32_t inputid, uint32_t queueid, int uniq_pcset) {
+    // if concrete branch , skip
+    if (!label) return 0;
+    if ((get_label_info(label)->flags & B_FLIPPED)) return 0;
+
+    // mark this one off for branch within this trace
+    get_label_info(label)->flags |= B_FLIPPED;
+
+    // proceed to update graph, pipe the record to python scheduler
+    std::string record;
+
+    // if filtered by policy, or already picked it for this trace
+    if(!try_solve && uniq_pcset == 0) {
+      record = std::to_string(pc) \
+               + "-" + std::to_string(call_stack_hash_) \
+               + "-" + std::to_string(tkdir) \
+               + "-" + std::to_string(label) \
+               + "-" + std::to_string(inputid) \
+               + "@none@@\n";
+    } else {
+      if (get_label_info(label)->tree_size > 50000) {
+        // std::cout << "tree too big skip it" << std::endl;
+        return 1;
+      }
+      if (get_label_info(label)->depth > 500) {
+        // std::cout << "tree too deep skip it" << std::endl;
+        return 1;
+      }
+      record = std::to_string(pc) \
+               + "-" + std::to_string(call_stack_hash_) \
+               + "-" + std::to_string(tkdir) \
+               + "-" + std::to_string(label) \
+               + "-" + std::to_string(inputid) \
+               + "@" \
+               + std::to_string(uniq_pcset) \
+               + "-" + std::to_string(queueid) \
+               + "-" + std::to_string(untaken_update_ifsat) \
+               + "-" + std::to_string(get_label_info(label)->depth) \
+               + "@@\n";
+    }
+    write(named_pipe_fd, record.c_str(), strlen(record.c_str()));
+    fsync(named_pipe_fd);
+
+    return 0;
+}
+
+static void solve_cond(dfsan_label label, uint64_t pc, uint32_t direction,
+    std::unordered_map<uint32_t, uint8_t> &opt_sol,
+    std::unordered_map<uint32_t, uint8_t> &sol, bool try_solve, uint32_t inputid, uint32_t queueid) {
+
+  z3::expr result = __z3_context.bool_val(direction);
+
+  // if (!label)
+  //   return;
+
+  // if ((get_label_info(label)->flags & B_FLIPPED))
+  //   return;
+
+  try {
+    std::unordered_set<dfsan_label> inputs;
+    z3::expr cond = serialize(label, inputs);
+
+
+    if(try_solve) {
+      if (get_label_info(label)->tree_size > 50000) {
+        // don't bother?
+        throw z3::exception("formula too large");
+      }
+
+      // collect additional input deps
+      std::vector<dfsan_label> worklist;
+      worklist.insert(worklist.begin(), inputs.begin(), inputs.end());
+      while (!worklist.empty()) {
+        auto off = worklist.back();
+        worklist.pop_back();
+
+        auto deps = get_branch_dep(off);
+        if (deps != nullptr) {
+          for (auto i : deps->input_deps) {
+            if (inputs.insert(i).second)
+              worklist.push_back(i);
+          }
+        }
+      }
+
+      __z3_solver.reset();
+      __z3_solver.add(cond != result);
+
+      z3::check_result res = __z3_solver.check();
+      if (res == z3::sat) {
+        z3::model m_opt = __z3_solver.get_model();
+        __z3_solver.push();
+
+        // 2. add constraints
+        expr_set_t added;
+        for (auto off : inputs) {
+          //AOUT("adding offset %d\n", off);
+          auto deps = get_branch_dep(off);
+          if (deps != nullptr) {
+            for (auto &expr : deps->expr_deps) {
+              if (added.insert(expr).second) {
+                //AOUT("adding expr: %s\n", expr.to_string().c_str());
+                __z3_solver.add(expr);
+              }
+            }
+          }
+        }
+        // save all nested PC; for prioritization
+        res = __z3_solver.check();
+        if (res == z3::sat) { // nested solving is sat; no further trying/collecting PC
+          if (untaken_update_ifsat) {
+            mark_pp(untaken_update_ifsat);
+          }
+          z3::model m = __z3_solver.get_model();
+          sol.clear();
+          generate_solution(m, sol);
+
+          generate_input(sol, input_file, "./fifo", ce_count+=1);
+
+          // std::cout << "nested PC set:" << ce_count  << std::endl;
+          // << "\n" << __z3_solver.to_smt2().c_str()
+
+          // std::cout << "generate_input: nested online: " << ce_count << std::endl;
+        } else {              // nested solving unsat, save optimistic solving file
+          __z3_solver.pop();
+          opt_sol.clear();
+          generate_solution(m_opt, opt_sol);
+          // std::cout << "generate_input: opt online: " << ce_count << std::endl;
+          generate_input(opt_sol, input_file, "./fifo", ce_count+=1);
+          // std::cout << "opt PC set:" << ce_count  << std::endl;
+          // << "\n" << __z3_solver.to_smt2().c_str()
+        }
+        fid += 1;
+      }
+    } //end of try_solve
+    //nested branches
+    for (auto off : inputs) {
+      auto c = get_branch_dep(off);
+      if (c == nullptr) {
+        c = new branch_dep_t();
+        if (c == nullptr) {
+          printf("WARNING: out of memory\n");
+        } else {
+          set_branch_dep(off, c);
+          c->input_deps.insert(inputs.begin(), inputs.end());
+          c->expr_deps.insert(cond == result);
+        }
+      } else {
+          c->input_deps.insert(inputs.begin(), inputs.end());
+          c->expr_deps.insert(cond == result);
+      }
+    }
+    get_label_info(label)->flags |= B_FLIPPED;
+  } catch (z3::exception e) {
+    //printf("WARNING: solving error: %s @%p\n", e.msg(), addr);
+  }
+}
+
+
+
+
+
+
+// for bb pruning
+const int kBitmapSize = 65536;
+const int kStride = 8;
+uint16_t bitmap_[kBitmapSize];
+bool is_interesting_ = false ;
+
+// borrow from qsym code for bb pruning
+static bool isPowerOfTwo(uint16_t x) {
+    return (x & (x - 1)) == 0;
+}
+
+void computeHash(uint32_t ctx) { // call stack context hashing
+    XXH32_state_t state;
+    XXH32_reset(&state, 0);
+    XXH32_update(&state, &ctx, sizeof(ctx));
+    call_stack_hash_ = XXH32_digest(&state);
+}
+
+void updateBitmap(void *last_pc_, uint64_t ctx) {
+    // Lazy update the bitmap when symbolic operation is happened
+
+    XXH32_state_t state;
+    XXH32_reset(&state, 0);
+    XXH32_update(&state, &last_pc_, sizeof(last_pc_));
+    XXH32_update(&state, &ctx, sizeof(uint64_t));
+
+    uint32_t h = XXH32_digest(&state);
+    uint32_t index = h % kBitmapSize;
+
+    // Use strided exponential backoff, which is interesting if the strided
+    // bitmap meets exponential requirements. For example, {0, 1, 2, ..., 7}
+    // maps to 0, {8, ..., 15} maps to 1, and so on. {0, 1, 2, ..., 7} is
+    // interesting because it maps to 0, which is in the {0, 1, 2, 4, ...}.
+    // But {24, ... 31} is not, because it maps to 3.
+    is_interesting_ = isPowerOfTwo(bitmap_[index] / kStride);
+    bitmap_[index]++;
+}
+
+//check if we need to solve a branch given
+// labe: if 0 concreate
+// addr: branch address
+// output: true: solve the constraints false: don't solve the constraints
+bool bcount_filter(uint64_t addr, uint64_t ctx, uint64_t direction, uint32_t order) {
+  std::tuple<uint64_t,uint64_t, uint64_t, uint32_t> key{addr,ctx,direction,order};
+  if (fmemcmp_dedup.find(key) != fmemcmp_dedup.end()) {
+    return false;
+  } else {
+    fmemcmp_dedup.insert(key);
+    return true;
+  }
+}
+inline bool isPowerofTwoOrZero(uint32_t x) {
+  return ((x & (x - 1)) == 0);
+}
+
+XXH32_hash_t hashPc(uint64_t pc, bool taken) {
+  XXH32_state_t state;
+  XXH32_reset(&state, 0);
+  XXH32_update(&state, &pc, sizeof(pc));
+  XXH32_update(&state, &taken, sizeof(taken));
+  return XXH32_digest(&state) % kMapSize;
+}
+
+uint32_t getIndex(uint32_t h) {
+  return ((prev_loc_ >> 1) ^ h) % kMapSize;
+}
+
+bool isInterestingContext(uint32_t h, uint32_t bits) {
+  bool interesting = false;
+  if (!isPowerofTwoOrZero(bits))
+    return false;
+  for (auto it = visited_.begin();
+      it != visited_.end();
+      it++) {
+    uint32_t prev_h = *it;
+
+    // Calculate hash(prev_h || h)
+    XXH32_state_t state;
+    XXH32_reset(&state, 0);
+    XXH32_update(&state, &prev_h, sizeof(prev_h));
+    XXH32_update(&state, &h, sizeof(h));
+
+    uint32_t hash = XXH32_digest(&state) % (kMapSize * CHAR_BIT);
+    uint32_t idx = hash / CHAR_BIT;
+    uint32_t mask = 1 << (hash % CHAR_BIT);
+
+    if ((context_map_[idx] & mask) == 0) {
+      context_map_[idx] |= mask;
+      interesting = true;
+    }
+  }
+
+  if (bits == 0)
+    visited_.insert(h);
+
+  return interesting;
+}
+
+//roll in branch
+uint64_t roll_in_pp(uint32_t label, uint64_t addr, uint64_t direction,
+    XXH64_state_t* path_prefix) {
+
+  //address
+  XXH64_state_t tmp;
+  XXH64_reset(&tmp, 0);
+
+  // roll in pc first
+  XXH64_update(path_prefix, &addr, sizeof(addr));
+
+  // roll in: ifconcrete and direction;
+  uint8_t deter = 0;
+  if (label == 0)  {
+    deter = 1;
+    XXH64_update(path_prefix, &deter, sizeof(deter));
+    XXH64_update(path_prefix, &direction, sizeof(direction));
+    return 0;
+  }
+
+  // if this is a symbolic branch, validate if shall solve
+  uint64_t direction_sym = 1 - direction;
+
+  //digest
+  uint64_t taken_digest;
+  uint64_t untaken_digest;
+
+  // roll in branch state: ifsymbolic
+  XXH64_update(path_prefix, &deter, sizeof(deter));
+  XXH64_copyState(&tmp,path_prefix);
+
+  // for untaken branch, calculate the hash
+  XXH64_update(&tmp, &direction_sym, sizeof(direction_sym));
+  untaken_digest = XXH64_digest(&tmp);
+
+  // for taken branch, calculate the hash
+  XXH64_update(path_prefix, &direction, sizeof(direction));
+  taken_digest = XXH64_digest(path_prefix);
+
+  // mark the taken branch for visited
+  mark_pp(taken_digest);
+  // std::cout << "tk: " << taken_digest << " utk: " << untaken_digest << std::endl;
+  return untaken_digest;
+}
+
+
+
+bool isInterestingPathPrefix(uint64_t pc, bool taken, uint32_t label, XXH64_state_t* path_prefix) {
+  // reset value for every new query
+  untaken_update_ifsat = 0;
+  // acquire untaken_hash, mark the taken_hash
+  uint64_t untaken_digest = roll_in_pp(pc,label,taken,path_prefix);
+  // done rolling in the branch state and pc, if concrete, return false directly
+  if (!label) return false;
+  // if symbolic and untaken_hash is touched already, return false
+  if (!check_pp(untaken_digest)) return false;
+  // else it's fresh, solve it, return true
+  untaken_update_ifsat = untaken_digest;
+  return true;
+
+}
+
+bool isInterestingBranch(uint64_t pc, bool taken, uint64_t ctx) {
+
+  // here do the bb pruning:
+  updateBitmap((void *)pc, ctx);
+  if (!is_interesting_) return false; // if pruned, do't proceed anymore, treat this brc as concrete basically.
+
+  uint32_t h = hashPc(pc, taken);
+  uint32_t idx = getIndex(h);
+  bool new_context = isInterestingContext(h, virgin_map_[idx]);
+  bool ret = true;
+
+  virgin_map_[idx]++;
+
+  if ((virgin_map_[idx] | trace_map_[idx]) != trace_map_[idx]) {
+    uint32_t inv_h = hashPc(pc, !taken);
+    uint32_t inv_idx = getIndex(inv_h);
+
+    trace_map_[idx] |= virgin_map_[idx];
+
+    // mark the inverse case, because it's already covered by current testcase
+    virgin_map_[inv_idx]++;
+
+    trace_map_[inv_idx] |= virgin_map_[inv_idx];
+
+    virgin_map_[inv_idx]--;
+    ret = true;
+  }
+  else if (new_context) {
+    ret = true;
+  }
+  else
+    ret = false;
+
+  prev_loc_ = h;
+  return ret;
+}
+
+// check if the node is whitelisted to induce online solving
+bool isPriviledgedBranch(uint64_t pc, bool taken, uint64_t ctx) {
+  XXH32_state_t state;
+  XXH32_reset(&state, 0);
+  XXH32_update(&state, &pc, sizeof(pc));
+  XXH32_update(&state, &taken, sizeof(taken));
+  XXH32_update(&state, &ctx, sizeof(ctx));
+  uint32_t digest = XXH32_digest(&state);
+
+  uint32_t hash = digest % (pfxkMapSize * CHAR_BIT);
+  uint32_t idx = hash / CHAR_BIT;
+  uint32_t mask = 1 << (hash % CHAR_BIT);
+  // if ((node_map[idx] & mask) != 0) {
+  //   // std::cout << "online solve: " << "index=" << idx << ":" << std::hex <<  pc << "," << std::dec << ctx << "," << taken << std::endl;
+  //   return true; // whitelist record exist, return true
+  // } else {
+  //   // std::cout << "Not in whitelist " << "index=" << idx << ":" << std::hex << pc << "," << std::dec << ctx << "," << taken << std::endl;
+  //   return false;
+  // }
+  return (node_map[idx] & mask) != 0;
+}
+
+void setPriviledgedBranch(int value, uint64_t pc, uint64_t ctx, bool taken) {
+  XXH32_state_t state;
+  XXH32_reset(&state, 0);
+  XXH32_update(&state, &pc, sizeof(pc));
+  XXH32_update(&state, &taken, sizeof(taken));
+  XXH32_update(&state, &ctx, sizeof(ctx));
+  uint32_t digest = XXH32_digest(&state);
+
+  uint32_t hash = digest % (pfxkMapSize * CHAR_BIT);
+  uint32_t idx = hash / CHAR_BIT;
+  uint32_t mask = 1 << (hash % CHAR_BIT);
+  if (value) { // add a new whitelist entry, set bit to 1;
+    std::cout << "idx=" << idx << ": " << value << ","
+                      << pc << "," << ctx << "," << taken << "," << std::endl;
+    node_map[idx] |= mask;
+  } else {    //  unset the whitelist entry, set bit to 0.
+    std::cout << "idx=" << idx << ": " << value << ","
+                      << pc << "," << ctx << "," << taken << "," << std::endl;
+    node_map[idx] &= (~mask);
+  }
+}
+
+
+// dump the tree and flush the union table to get ready for the solving request
+void generate_tree_dump() {
+  std::string tree_idstr = std::to_string(dump_tree_id_ % 1000000);
+  std::string output_file = "./tree/id:" + std::string(6-tree_idstr.size(),'0') + tree_idstr;
+  size_t swrite;
+  FILE *fp;
+  if ((fp = fopen(output_file.c_str(), "wb")) == NULL) {
+    fprintf(stderr, "[generate_tree_dump]: cannot open file to write: %s\n", output_file.c_str());
+    return;
+  }
+
+  swrite = fwrite((void *)__union_table, sizeof(dfsan_label_info), max_label_+1, fp);
+  if (swrite != (max_label_+1)) {
+    fprintf(stderr, "[generate_tree_dump]: write error %d\n", swrite);
+  }
+  fclose(fp);
+}
+
+void handle_fmemcmp(uint8_t* data, uint64_t index, uint32_t size, uint32_t tid, uint64_t addr) {
+  std::unordered_map<uint32_t, uint8_t> rgd_solution;
+  for(uint32_t i=0;i<size;i++) {
+    //rgd_solution[(uint32_t)index+i] = (uint8_t) (data & 0xff);
+    rgd_solution[(uint32_t)index+i] = data[i];
+    //data = data >> 8 ;
+  }
+  if (SAVING_WHOLE) {
+    generate_input(rgd_solution, input_file, "./ce_output", fid++);
+  }
+  else {
+    RGDSolution sol = {rgd_solution, tid, addr, 0, 0};
+    solution_queue.enqueue(sol);
+  }
+}
+
+// clean up the union table
+void cleanup1() {
+  if (max_label_per_session > max_label_) {
+    std::cout << "warning! max_label_per_session > max_label_" << std::endl;
+  }
+  // in this trace, max_label_ is passed from the other end
+  for(int i = 0; i <= max_label_; i++) {
+    dfsan_label_info* info = get_label_info(i);
+    memset(info, 0, sizeof(dfsan_label_info));
+  }
+  // shmdt(__union_table);
+  max_label_ = 0;
+}
+
+void cleanup2() {
+  std::cout << "cleanup2(max_label_per_session): "
+          << " max_label_per_session=" << max_label_per_session
+          << " max_label_=" << max_label_ << std::endl;
+
+  // in this trace, max_label_ is passed from the other end
+  for(int i = 0; i <= max_label_per_session; i++) {
+    dfsan_label_info* info = get_label_info(i);
+    memset(info, 0, sizeof(dfsan_label_info));
+  }
+  // shmdt(__union_table);
+  max_label_per_session = 0;
+}
+
+int cleanup_deps() {
+  expr_cache.clear();
+  deps_cache.clear();
+  int count = 0;
+  for (int i = 0 ; i < __branch_deps->size(); i++) {
+    branch_dep_t* slot =  __branch_deps->at(i);
+    if (slot) {
+      count += 1;
+      delete slot;
+      __branch_deps->at(i) = nullptr;
+    }
+  }
+  return count;
+}
+
+uint32_t solve(int shmid, uint32_t pipeid, uint32_t brc_flip, std::ifstream &pcsetpipe) {
+
+  std::ifstream myfile;
+  myfile.open("/tmp/wp2");
+
+  __union_table = (dfsan_label_info*)shmat(shmid, nullptr, 0);
+  if (__union_table == (void*)(-1)) {
+    printf("error %s\n",strerror(errno));
+    return 0;
+  }
+
+  memset(virgin_map_, 0, kMapSize);
+  prev_loc_ = 0;
+  std::string line;
+  size_t pos = 0;
+  std::string token;
+  std::string delimiter = ",";
+  uint32_t maxlabel = 0;
+  uint32_t tid = 0;
+  uint32_t qid = 0;
+  uint32_t label = 0;
+  uint32_t direction = 0;
+  uint64_t addr = 0;
+  uint64_t ctx  = 0;
+  uint32_t order = 0;
+  //constratint type: conditional, gep, add_constraints
+  uint32_t cons_type = 0;
+
+  uint32_t filtered_count = 0;
+  //create global state for one session
+  XXH64_state_t path_prefix;
+  XXH64_reset(&path_prefix,0);
+  uint64_t acc_time = 0;
+  uint64_t one_start = getTimeStamp();
+  bool skip_rest = false;
+  while (std::getline(myfile, line))
+  {
+    int token_index = 0;
+    while ((pos = line.find(delimiter)) != std::string::npos) {
+      token = line.substr(0, pos);
+
+      switch (token_index) {
+        case 0: qid = stoul(token); break;  // queue id; for sage usage
+        case 1: label = stoul(token); break;  // index
+        case 2: direction  = stoul(token); break;
+        case 3: addr  = stoull(token); break;
+        case 4: ctx = stoull(token); break;
+        case 5: order = stoul(token); break;
+        case 6: cons_type = stoul(token); break;
+        case 7: // testcase id
+                tid = stoul(token);
+                dump_tree_id_ = tid;
+                break;
+        case 8: // the maximum entry count in the union table
+                max_label_ = stoull(token);
+                break;
+        default: break;
+      }
+      line.erase(0, pos + delimiter.length());
+      token_index++;
+    }
+    std::unordered_map<uint32_t, uint8_t> sol;
+    std::unordered_map<uint32_t, uint8_t> opt_sol;
+
+    computeHash(ctx); // get the call_stack_hash_ ready
+
+    if (skip_rest) continue;
+
+    if (cons_type == 0) {
+      bool try_solve = false;
+      int uniq_pcset = 0;
+      switch (brc_flip) {
+        case 0: // using qsym style branch filter
+          BRC_MODE = 1;
+          if (label) {
+            try_solve = isInterestingBranch(addr, direction, ctx);
+            if (try_solve) uniq_pcset = 1;
+          }
+          break;
+        case 1: // using pathprefix branch filter
+          BRC_MODE = 0;
+          try_solve = isInterestingPathPrefix(addr, direction, label, &path_prefix);
+          // if (isInterestingBranch(addr, direction, ctx)) uniq_pcset = 1;
+          if (tid < ce_count) {
+            // consume backlogs, no online gen
+            uniq_pcset = 0;
+          } else {
+            if (isPriviledgedBranch(addr, direction, call_stack_hash_) || isInterestingBranch(addr, direction, ctx)) { uniq_pcset = 1;}
+          }
+          break;
+      }
+      if (try_solve) {
+        filtered_count++;
+      }
+      update_graph(label, addr, direction, try_solve, tid, qid, uniq_pcset, sol, opt_sol);
+    }
+    // else if (cons_type == 2) {
+
+    //   if (std::getline(myfile,line)) {
+    //     uint32_t memcmp_datasize = label;
+    //     uint8_t data[1024];
+    //     int token_index = 0;
+    //     while ((pos = line.find(delimiter)) != std::string::npos) {
+    //       token = line.substr(0,pos);
+    //       data[token_index++] = stoul(token);
+    //       line.erase(0, pos + delimiter.length());
+    //     }
+    //     data[token_index++] = stoul(line);
+    //     bool try_solve = bcount_filter(addr, ctx, 0, order);
+    //     std::cout << "going for handle_fmemcmp branch" << std::endl;
+    //     if (try_solve)
+    //       handle_fmemcmp(data, direction, label, tid, addr);
+    //   } else {
+    //     break;
+    //   }
+    // }
+    // acc_time = getTimeStamp() - one_start; // time spent on one single seed
+    // if (acc_time > 30000000) skip_rest = true; // 30s timeout per seed
+  }
+  // end of one input
+  total_symb_brc += filtered_count;
+
+  fid = 0; // reset for next input seed
+  // at the end of each execution, dump tree and flush everything of the running seed
+  generate_tree_dump();
+
+  cleanup1(); // flush the union table of the running seed
+  cleanup_deps(); // flush the dependency tree
+
+  acc_time = getTimeStamp() - one_start; // current execution time, excluding
+
+  total_time += (getTimeStamp() - one_start);
+
+  if (skip_rest) std::cout << "timeout!" << std::endl;
+  std::cout << "total symb_brc count " << total_symb_brc
+            << "\ncur symb_brc count " << filtered_count
+            << "\ntotal (exec;no solving)cost  " << total_time / 1000  << "ms"
+            << "\ncur (exec;no solving)cost: " << acc_time / 1000  << "ms"
+            << "\ntotal reload time " << total_reload_time / 1000  << "ms"
+            << "\ntotal rebuild time " << total_rebuild_time / 1000  << "ms"
+            << ", ratio: " << 100.0 * total_rebuild_time / total_solving_time << "%"
+            << "\ntotal solving(reload included) time " << total_solving_time / 1000  << "ms"
+            << std::endl;
+  return tid;
+}
+
+extern "C" {
+  void init_core(bool saving_whole, uint32_t initial_count) {
+    init(saving_whole);
+    named_pipe_fd = open("/tmp/pcpipe", O_WRONLY);
+    pcsetpipe.open("/tmp/myfifo");
+
+    ce_count = initial_count - 1; // corpus top id!
+
+    printf("end semaphore\n");
+    printf("the length of union_table is %u\n", 0xC00000000/sizeof(dfsan_label_info));
+    __z3_solver.set("timeout", 1000U);
+    memset(pfx_pp_map, 0, pfxkMapSize);
+    memset(node_map, 0, pfxkMapSize);
+    memset(pp_map, 0, kMapSize);
+    memset(trace_map_, 0, kMapSize);
+    memset(context_map_, 0, kMapSize);
+    memset(bitmap_, 0, kBitmapSize * sizeof(uint16_t));
+  }
+
+  uint32_t run_solver(int shmid, uint32_t pipeid, uint32_t brc_flip) {
+    // reset for every new episode
+    max_label_ = 0;
+    uint32_t cur_in_id = solve(shmid, pipeid, brc_flip, pcsetpipe);
+
+    // make sure there's one seed generated at the end of this execution
+    uint64_t one_start;
+    int res;
+
+    std::cout << "cur_in_id=" << cur_in_id << ", ce_count=" << ce_count << std::endl;
+
+    // check if out of seed to continue CE
+    if (cur_in_id < ce_count) {
+      std::string endtoken = "ENDPDG@@\n";
+      write(named_pipe_fd, endtoken.c_str(), strlen(endtoken.c_str()));
+      fsync(named_pipe_fd);
+      generate_next_tscs(pcsetpipe); // TODO: only step 1 though
+      return 0;
+    }
+
+    // prompt scheduler to make choice
+    std::string endtoken = "ENDQUERY@@\n";
+    write(named_pipe_fd, endtoken.c_str(), strlen(endtoken.c_str()));
+    fsync(named_pipe_fd);
+
+    while (1) { // keep looping until scheduling is done
+      one_start = getTimeStamp();
+      res = generate_next_tscs(pcsetpipe); // TODO: load new zombie updates before tscs gen
+      total_solving_time += (getTimeStamp() - one_start);
+      if (res > 0) { // with outcome, CE will pick up new seed to run
+        // std::cout << "newout outcome" << std::endl;
+        shmdt(__union_table); // reset for next epi
+        break;
+      } else if (res == -1) {
+        endtoken = "ENDDUP@@\n";
+        write(named_pipe_fd, endtoken.c_str(), strlen(endtoken.c_str()));
+        fsync(named_pipe_fd);
+      } else {
+        // std::cout << "unsat outcome" << std::endl;
+        endtoken = "ENDUNSAT@@\n";
+        write(named_pipe_fd, endtoken.c_str(), strlen(endtoken.c_str()));
+        fsync(named_pipe_fd);
+        // std::cout << "done unsat msg" << std::endl;
+      }
+    }
+
+    return 0;
+  }
+
+  uint32_t run_solver_async(int shmid, uint32_t pipeid, uint32_t brc_flip) {
+    // reset for every new episode
+    max_label_ = 0;
+    uint32_t cur_in_id = solve(shmid, pipeid, brc_flip, pcsetpipe);
+    // make sure there's one seed generated at the end of this execution
+    uint64_t one_start;
+    int res;
+
+    std::string endtoken = "END@@\n";
+    write(named_pipe_fd, endtoken.c_str(), strlen(endtoken.c_str()));
+    fsync(named_pipe_fd);
+
+    std::cout << "cur_in_id=" << cur_in_id << ", ce_count=" << ce_count << std::endl;
+
+    if (cur_in_id < ce_count) return 0;
+
+    while (1) { // keep looping until scheduling is done
+      one_start = getTimeStamp();
+      res = generate_next_tscs(pcsetpipe);
+      total_solving_time += (getTimeStamp() - one_start);
+      if (res > 0) { // with outcome, CE will pick up new seed to run
+        // std::cout << "newout outcome" << std::endl;
+        shmdt(__union_table); // reset for next epi
+        break;
+      } else if (res == -1) {
+        endtoken = "ENDDUP@@\n";
+        write(named_pipe_fd, endtoken.c_str(), strlen(endtoken.c_str()));
+        fsync(named_pipe_fd);
+      } else {
+        // std::cout << "unsat outcome" << std::endl;
+        endtoken = "ENDUNSAT@@\n";
+        write(named_pipe_fd, endtoken.c_str(), strlen(endtoken.c_str()));
+        fsync(named_pipe_fd);
+        // std::cout << "done unsat msg" << std::endl;
+      }
+    }
+
+    return 0;
+  }
+
+  void wait_ce() {
+    sem_wait(semace);
+  }
+
+  void post_gra() {
+    sem_post(semagra);
+  }
+
+  void post_fzr() {
+    sem_post(semafzr);
+  }
+
+};
+

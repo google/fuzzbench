@@ -47,7 +47,8 @@ RUN apt-get update -y && \
     libglib2.0-0 \
     libxml2 \
     libarchive13 \
-    libgss3
+    libgss3 \
+    libdbus-1-dev
 
 # Set up the directory for the build artifacts.
 ENV OUT /out

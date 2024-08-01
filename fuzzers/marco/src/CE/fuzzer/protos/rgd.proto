@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package rgd;
+
+//-----------------------------------------------
+//interface between Fastgen and core search module
+//-----------------------------------------------
+
+//search task
+message SearchTask {
+  repeated Constraint constraints = 1;
+  uint32 fid = 2;
+  uint64 addr = 3;
+  uint64 ctx = 4;
+  uint32 order = 5;
+  uint64 direction = 6;
+  bool solve = 7;
+  uint32 inputid = 8;
+}
+
+//the constraint will be sent to c++ JIT/search engine
+//INVARIANT: (JIT engine can't handle logical and, logical or and logical not, so we handle the complexity before sending)
+//comparison could be one of the 10:
+//Equal, Distinct, Ugt, Uge, Ult, Ule, Sgt, Sge, Slt, Sle
+message Constraint {
+  AstNode node = 1;
+  NodeMeta meta = 2;
+  uint32 label = 3; //deduplication
+}
+
+message NodeMeta {
+  repeated Mapping map = 1;
+  repeated Arg args = 2;
+  repeated Input inputs = 3;
+  uint32 const_num = 4;
+}
+
+message Mapping {
+  uint32 k = 1;
+  uint32 v = 2;
+}
+
+message Arg {
+  bool isinput =  1;
+  uint64 v = 2;
+}
+
+message Input {
+  uint32 offset = 1;
+  uint32 iv = 2; //this should be u8, but protobuf does not support
+}
+
+message AstNode {
+  // operator
+  uint32 kind = 1;
+  // used by bool expr
+  uint32 boolvalue = 2;
+  // width of bitvector
+  uint32 bits = 3;
+  //for constant, it is value, for read, it is iv
+  string value = 4;
+  //for read, it is offset in the raw inputs
+  //for constant, it is offset in arg
+  //for extract, it is extract start offset
+  uint32 index = 5;
+  //hash caculated after arggument mapping
+  uint32 hash = 6;
+  repeated AstNode children = 7;
+  //for debug
+  string name = 9;
+  uint32 label = 10;
+}
+
+//-------------------------------------------------------
+//private for the Rust component,
+//for handling complexities of logical operators
+//and remapping the arguments
+//------------------------------------------------------
+
