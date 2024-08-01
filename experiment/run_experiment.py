@@ -74,6 +74,7 @@ def _set_default_config_values(config: Dict[str, Union[int, str, bool]],
     config['snapshot_period'] = config.get(
         'snapshot_period', experiment_utils.DEFAULT_SNAPSHOT_SECONDS)
     config['private'] = config.get('private', False)
+    config['micro_experiment'] = config.get('micro_experiment', False)
 
 
 def _validate_config_parameters(
@@ -187,6 +188,8 @@ def read_and_validate_experiment_config(config_filename: str) -> Dict:
             Requirement(False, int, False, ''),
         'runner_memory':
             Requirement(False, str, False, ''),
+        'micro_experiment':
+            Requirement(False, bool, False, ''),
     }
 
     all_params_valid = _validate_config_parameters(config, config_requirements)
@@ -378,8 +381,12 @@ def add_oss_fuzz_corpus(benchmark, oss_fuzz_corpora_dir):
     fuzz targets."""
     project = benchmark_utils.get_project(benchmark)
     fuzz_target = benchmark_utils.get_fuzz_target(benchmark)
+    oss_fuzz_corpus_target = benchmark_utils.get_oss_fuzz_corpus_target(
+        benchmark)
 
-    if not fuzz_target.startswith(project):
+    if oss_fuzz_corpus_target:
+        full_fuzz_target = oss_fuzz_corpus_target
+    elif not fuzz_target.startswith(project):
         full_fuzz_target = f'{project}_{fuzz_target}'
     else:
         full_fuzz_target = fuzz_target
@@ -618,6 +625,7 @@ def run_experiment_main(args=None):
 
     all_benchmarks = benchmark_utils.get_all_benchmarks()
     coverage_benchmarks = benchmark_utils.get_coverage_benchmarks()
+
     parser.add_argument('-b',
                         '--benchmarks',
                         help=('Benchmark names. '
@@ -735,6 +743,14 @@ def run_experiment_main(args=None):
         if args.oss_fuzz_corpus:
             parser.error('Cannot enable options "custom_seed_corpus_dir" and '
                          '"oss_fuzz_corpus" at the same time')
+
+    if benchmark_utils.are_benchmarks_mixed(args.benchmarks):
+        benchmark_types = ';'.join(
+            [f'{b}: {benchmark_utils.get_type(b)}' for b in args.benchmarks])
+        raise ValidationError(
+            'Selected benchmarks are a mix between coverage '
+            'and bug benchmarks. This is currently not supported.'
+            f'Selected benchmarks: {benchmark_types}')
 
     start_experiment(args.experiment_name,
                      args.experiment_config,

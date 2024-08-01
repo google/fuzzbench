@@ -19,7 +19,6 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
-
 - experiment: 2023-04-20-symcts-2
   description: Symcts
 
@@ -80,6 +79,75 @@
     - vorbis_decode_fuzzer
     - woff2_convert_woff2ttf_fuzzer
     - zlib_zlib_uncompress_fuzzer
+
+- experiment: 2023-06-12-aflpp
+  description: "Benchmark afl++ releases and newmutation"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_406
+    - aflplusplus_407
+    - aflplusplus_text
+
+- experiment: 2023-06-12-aflpp-bug
+  description: "Benchmark afl++ releases and newmutation - bug"
+  type: bug
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_406
+    - aflplusplus_407
+    - aflplusplus_text
+    - aflplusplus_exploit
+
+- experiment: 2023-06-09-aflpp
+  description: "Benchmark afl++ mutations"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_mutcomp
+    - aflplusplus_mutnew
+
+- experiment: 2023-05-17-aflpp-concolic
+  description: "Benchmark afl++ concolic"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_weighsplice
+    - aflplusplus_symqemu
+
+- experiment: 2023-05-06-afppff
+  description: "Benchmark fishfuzz"
+  type: bug
+  fuzzers:
+    - aflplusplus_ff_comp
+    - aflplusplus_fishfuzz
+  benchmarks:
+    - bloaty_fuzz_target_52948c
+    - libxml2_xml_e85b9b
+    - mbedtls_fuzz_dtlsclient_7c6b0e
+    - php_php-fuzz-parser_0dbedb
+
+- experiment: 2023-04-27-main
+  description: "Benchmark main fuzzers"
+  fuzzers:
+    - aflplusplus
+    - aflplusplusplus
+    - libafl
+    - honggfuzz
+    - entropic
+    - centipede
+    - afl
+
+- experiment: 2023-04-27-aflpp
+  description: "Analyse deduplication feature"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_nodedup
+
+- experiment: 2023-04-25-aflpp
+  description: "Ensure regression is fixed"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_bug
+    - aflplusplus_mega
+    - libafl
 
 - experiment: 2023-04-21-aflpp
   description: "Find regression"

@@ -1,0 +1,291 @@
+diff -ruN honggfuzz/cmdline.c honggfuzz-3a8f2ae-pastis/cmdline.c
+--- honggfuzz/cmdline.c	2022-06-23 17:27:05.000000000 -0300
++++ honggfuzz-3a8f2ae-pastis/cmdline.c	2023-01-13 16:48:23.617159827 -0300
+@@ -525,6 +525,8 @@
+         { { "export_feedback", no_argument, NULL, 0x10E }, "Export the coverage feedback structure as ./hfuzz-feedback" },
+         { { "const_feedback", required_argument, NULL, 0x112 }, "Use constant integer/string values from fuzzed programs to mangle input files via a dynamic dictionary (default: true)" },
+         { { "pin_thread_cpu", required_argument, NULL, 0x114 }, "Pin a single execution thread to this many consecutive CPUs (default: 0 = no CPU pinning)" },
++        { { "statsfile", required_argument, NULL, 0x115 }, "Stats file" },
++        { { "dynamic_input", required_argument, NULL, 0x116 }, "Path to a directory containing the dynamic file corpus" },
+ 
+ #if defined(_HF_ARCH_LINUX)
+         { { "linux_symbols_bl", required_argument, NULL, 0x504 }, "Symbols blocklist filter file (one entry per line)" },
+@@ -804,6 +806,12 @@
+                 hfuzz->arch_linux.disableRandomization = false;
+                 break;
+ #endif
++            case 0x115:
++                hfuzz->io.statsFileName = optarg;
++                break;
++            case 0x116:
++                hfuzz->io.dynamicInputDir = optarg;
++                break;
+             default:
+                 cmdlineHelp(argv[0], custom_opts);
+                 return false;
+diff -ruN honggfuzz/fuzz.c honggfuzz-3a8f2ae-pastis/fuzz.c
+--- honggfuzz/fuzz.c	2022-06-23 17:27:05.000000000 -0300
++++ honggfuzz-3a8f2ae-pastis/fuzz.c	2023-01-13 16:48:50.349198188 -0300
+@@ -229,6 +229,39 @@
+             softNewPC, softNewCmp, run->hwCnts.cpuInstrCnt, run->hwCnts.cpuBranchCnt,
+             run->hwCnts.bbCnt, softCurEdge, softCurPC, softCurCmp);
+ 
++        if (run->global->io.statsFileName) {
++            /* NOTE: Calculation of `tot_exec_per_sec` taken from
++             * the `display_display` function.
++             */
++            const time_t curr_sec = time(NULL);
++            const time_t elapsed_sec = curr_sec - run->global->timing.timeStart;
++            size_t curr_exec_cnt = ATOMIC_GET(run->global->cnts.mutationsCnt);
++            /*
++             * We increase the mutation counter unconditionally in threads, but if it's
++             * above hfuzz->mutationsMax we don't really execute the fuzzing loop.
++             * Therefore at the end of fuzzing, the mutation counter might be higher
++             * than hfuzz->mutationsMax
++             */
++            if (run->global->mutate.mutationsMax > 0 && curr_exec_cnt > run->global->mutate.mutationsMax) {
++                curr_exec_cnt = run->global->mutate.mutationsMax;
++            }
++            size_t tot_exec_per_sec = elapsed_sec ? (curr_exec_cnt / elapsed_sec) : 0;
++
++            dprintf(run->global->io.statsFileFd,
++                "%lu, %lu, %lu, %lu, "
++                "%" PRIu64 ", %" PRIu64 ", %" PRIu64 ", %" PRIu64 ", %" PRIu64 "\n",
++                curr_sec,                                       /* unix_time */
++                run->global->timing.lastCovUpdate,              /* last_cov_update */
++                curr_exec_cnt,                                  /* total_exec */
++                tot_exec_per_sec,                               /* exec_per_sec */
++                run->global->cnts.crashesCnt,                   /* crashes */
++                run->global->cnts.uniqueCrashesCnt,             /* unique_crashes */
++                run->global->cnts.timeoutedCnt,                 /* hangs */
++                run->global->feedback.hwCnts.softCntEdge,       /* edge_cov */
++                run->global->feedback.hwCnts.softCntPc          /* block_cov */
++            );
++        }
++
+         /* Update per-input coverage metrics */
+         run->dynfile->cov[0] = softCurEdge + softCurPC + run->hwCnts.bbCnt;
+         run->dynfile->cov[1] = softCurCmp;
+diff -ruN honggfuzz/honggfuzz.c honggfuzz-3a8f2ae-pastis/honggfuzz.c
+--- honggfuzz/honggfuzz.c	2022-06-23 17:27:05.000000000 -0300
++++ honggfuzz-3a8f2ae-pastis/honggfuzz.c	2023-01-13 16:49:10.965232496 -0300
+@@ -23,12 +23,14 @@
+  */
+ 
+ #include <errno.h>
++#include <fcntl.h>
+ #include <inttypes.h>
+ #include <signal.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <sys/resource.h>
++#include <sys/stat.h>
+ #include <sys/time.h>
+ #include <time.h>
+ #include <unistd.h>
+@@ -260,6 +262,12 @@
+     setupMainThreadTimer();
+ 
+     for (;;) {
++        /* Dynamic input queue. */
++        if (hfuzz->io.dynamicInputDir) {
++            LOG_D("Loading files from the dynamic input queue...");
++            input_enqueueDynamicInputs(hfuzz);
++        }
++
+         if (hfuzz->display.useScreen) {
+             if (ATOMIC_XCHG(clearWin, false)) {
+                 display_clear();
+@@ -399,6 +407,16 @@
+                 sizeof(cmpfeedback_t), hfuzz.io.workDir);
+         }
+     }
++    /* Stats file. */
++    if (hfuzz.io.statsFileName) {
++        hfuzz.io.statsFileFd = TEMP_FAILURE_RETRY(open(hfuzz.io.statsFileName, O_CREAT | O_RDWR | O_TRUNC, 0640));
++
++        if (hfuzz.io.statsFileFd == -1) {
++            PLOG_F("Couldn't open statsfile open('%s')", hfuzz.io.statsFileName);
++        } else {
++            dprintf(hfuzz.io.statsFileFd, "# unix_time, last_cov_update, total_exec, exec_per_sec, crashes, unique_crashes, hangs, edge_cov, block_cov\n");
++        }
++    }
+ 
+     setupRLimits();
+     setupSignalsPreThreads();
+@@ -433,6 +451,10 @@
+     if (hfuzz.socketFuzzer.enabled) {
+         cleanupSocketFuzzer();
+     }
++    /* Stats file. */
++    if (hfuzz.io.statsFileName) {
++        close(hfuzz.io.statsFileFd);
++    }
+ 
+     printSummary(&hfuzz);
+ 
+diff -ruN honggfuzz/honggfuzz.h honggfuzz-3a8f2ae-pastis/honggfuzz.h
+--- honggfuzz/honggfuzz.h	2022-06-23 17:27:05.000000000 -0300
++++ honggfuzz-3a8f2ae-pastis/honggfuzz.h	2023-01-13 16:49:18.817246608 -0300
+@@ -216,6 +216,9 @@
+         dynfile_t*  dynfileq2Current;
+         TAILQ_HEAD(dyns_t, _dynfile_t) dynfileq;
+         bool exportFeedback;
++        const char* statsFileName;
++        int statsFileFd;
++        const char* dynamicInputDir;
+     } io;
+     struct {
+         int                argc;
+diff -ruN honggfuzz/input.c honggfuzz-3a8f2ae-pastis/input.c
+--- honggfuzz/input.c	2022-06-23 17:27:05.000000000 -0300
++++ honggfuzz-3a8f2ae-pastis/input.c	2023-01-13 16:49:38.961285357 -0300
+@@ -31,6 +31,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
++#include <sys/mman.h>
+ #include <sys/queue.h>
+ #include <sys/stat.h>
+ #include <unistd.h>
+@@ -575,6 +576,128 @@
+     return true;
+ }
+ 
++/**
++ * NOTE: This function is based on `input_getNext`.
++ */
++bool input_dynamicQueueGetNext(char fname[PATH_MAX], DIR* dynamicDirPtr, char *dynamicWorkDir) {
++    static pthread_mutex_t input_mutex = PTHREAD_MUTEX_INITIALIZER;
++    MX_SCOPED_LOCK(&input_mutex);
++
++    for (;;) {
++        errno = 0;
++        struct dirent* entry = readdir(dynamicDirPtr);
++        if (entry == NULL && errno == EINTR) {
++            continue;
++        }
++        if (entry == NULL && errno != 0) {
++            PLOG_W("readdir_r('%s')", dynamicWorkDir);
++            return false;
++        }
++        if (entry == NULL) {
++            return false;
++        }
++        char path[PATH_MAX];
++        snprintf(path, PATH_MAX, "%s/%s", dynamicWorkDir, entry->d_name);
++        struct stat st;
++        if (stat(path, &st) == -1) {
++            LOG_W("Couldn't stat() the '%s' file", path);
++            continue;
++        }
++        if (!S_ISREG(st.st_mode)) {
++            LOG_D("'%s' is not a regular file, skipping", path);
++            continue;
++        }
++
++        snprintf(fname, PATH_MAX, "%s/%s", dynamicWorkDir, entry->d_name);
++        return true;
++    }
++}
++
++void input_enqueueDynamicInputs(honggfuzz_t* hfuzz) {
++    char dynamicWorkDir[PATH_MAX];
++
++    snprintf(dynamicWorkDir, sizeof(dynamicWorkDir), "%s", hfuzz->io.dynamicInputDir);
++
++    int dynamicDirFd = TEMP_FAILURE_RETRY(open(dynamicWorkDir, O_DIRECTORY | O_RDONLY | O_CLOEXEC));
++    if (dynamicDirFd == -1) {
++        PLOG_W("open('%s', O_DIRECTORY|O_RDONLY|O_CLOEXEC)", dynamicWorkDir);
++        return;
++    }
++
++    DIR* dynamicDirPtr;
++    if ((dynamicDirPtr = fdopendir(dynamicDirFd)) == NULL) {
++        PLOG_W("fdopendir(dir='%s', fd=%d)", dynamicWorkDir, dynamicDirFd);
++        close(dynamicDirFd);
++        return;
++    }
++
++    char dynamicInputFileName[PATH_MAX];
++    for (;;) {
++        if (!input_dynamicQueueGetNext(dynamicInputFileName, dynamicDirPtr, dynamicWorkDir)) {
++            break;
++        }
++
++        int dynamicFileFd;
++        if ((dynamicFileFd = open(dynamicInputFileName, O_RDWR)) == -1) {
++            PLOG_E("Error opening dynamic input file: %s", dynamicInputFileName);
++            continue;
++        }
++
++        /* Get file status. */
++        struct stat dynamicFileStat;
++        size_t dynamicFileSz;
++
++        if (fstat(dynamicFileFd, &dynamicFileStat) == -1) {
++            PLOG_E("Error getting file status: %s", dynamicInputFileName);
++            close(dynamicFileFd);
++            continue;
++        }
++
++        dynamicFileSz = dynamicFileStat.st_size;
++
++        uint8_t* dynamicFile = (uint8_t *) mmap(NULL, dynamicFileSz, PROT_READ | PROT_WRITE, MAP_SHARED, dynamicFileFd, 0);
++
++        if (dynamicFile == MAP_FAILED) {
++            PLOG_E("Error mapping dynamic input file: %s", dynamicInputFileName);
++            close(dynamicFileFd);
++            continue;
++        }
++
++        LOG_I("Loading dynamic input file: %s (%lu)", dynamicInputFileName, dynamicFileSz);
++
++        run_t tmp_run;
++        tmp_run.global = hfuzz;
++        dynfile_t tmp_dynfile = {
++            .size          = dynamicFileSz,
++            .cov           = {0xff, 0xff, 0xff, 0xff},
++            .idx           = 0,
++            .fd            = -1,
++            .timeExecUSecs = 1,
++            .path          = "",
++            .data          = dynamicFile,
++        };
++        tmp_run.timeStartedUSecs = util_timeNowUSecs() -1;
++        memcpy(tmp_dynfile.path, dynamicInputFileName, PATH_MAX);
++        tmp_run.dynfile = &tmp_dynfile;
++        input_addDynamicInput(&tmp_run);
++        //input_addDynamicInput(hfuzz, dynamicFile, dynamicFileSz, (uint64_t[4]){0xff, 0xff, 0xff, 0xff}, dynamicInputFileName);
++
++        /* Unmap input file. */
++        if (munmap((void *) dynamicFile, dynamicFileSz) == -1) {
++            PLOG_E("Error unmapping input file!");
++        }
++
++        /* Close input file. */
++        if (close(dynamicFileFd) == -1) {
++            PLOG_E("Error closing input file!");
++        }
++
++        /* Remove enqueued file from the directory. */
++        unlink(dynamicInputFileName);
++    }
++    closedir(dynamicDirPtr);
++}
++
+ const uint8_t* input_getRandomInputAsBuf(run_t* run, size_t* len) {
+     if (run->global->feedback.dynFileMethod == _HF_DYNFILE_NONE) {
+         LOG_W(
+diff -ruN honggfuzz/input.h honggfuzz-3a8f2ae-pastis/input.h
+--- honggfuzz/input.h	2022-06-23 17:27:05.000000000 -0300
++++ honggfuzz-3a8f2ae-pastis/input.h	2023-01-13 16:49:57.593324375 -0300
+@@ -49,5 +49,7 @@
+ extern bool           input_prepareExternalFile(run_t* run);
+ extern bool           input_postProcessFile(run_t* run, const char* cmd);
+ extern bool           input_prepareDynamicFileForMinimization(run_t* run);
++extern bool           input_dynamicQueueGetNext(char fname[PATH_MAX], DIR* dynamicDirPtr, char *dynamicWorkDir);
++extern void           input_enqueueDynamicInputs(honggfuzz_t* hfuzz);
+ 
+ #endif /* ifndef _HF_INPUT_H_ */

@@ -78,6 +78,9 @@ def test_build_all_measurers(mocked_build_utils, mocked_fs, mocked_time,
     """Tests that build_all_measurers works as intendend when build_measurer
     calls fail."""
     mocked_build_measurer.return_value = build_measurer_return_value
+    # Required cause logs uses the name of the build
+    # measurer function, so it cant be unset
+    mocked_build_measurer.__name__ = 'Mocked function'
     benchmarks = get_regular_benchmarks()
     result = builder.build_all_measurers(benchmarks)
     if build_measurer_return_value:

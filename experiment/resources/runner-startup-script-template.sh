@@ -42,6 +42,8 @@ docker run \
 -e BENCHMARK={{benchmark}} \
 -e EXPERIMENT={{experiment}} \
 -e TRIAL_ID={{trial_id}} \
+-e TRIAL_GROUP_NUM={{trial_group_num}} \
+-e MICRO_EXPERIMENT={{micro_experiment}} \
 -e MAX_TOTAL_TIME={{max_total_time}} \
 -e SNAPSHOT_PERIOD={{snapshot_period}} \
 -e NO_SEEDS={{no_seeds}} \

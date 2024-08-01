@@ -26,12 +26,12 @@ import sys
 
 # pytype: disable=import-error
 import github  # pylint: disable=import-error
-
 from experiment import run_experiment
 
 TRIGGER_COMMAND = '/gcbrun'
 RUN_EXPERIMENT_COMMAND_STR = f'{TRIGGER_COMMAND} run_experiment.py '
 SKIP_COMMAND_STR = f'{TRIGGER_COMMAND} skip'
+# A DUMMY COMMENT
 
 
 def get_comments(pull_request_number):
@@ -41,35 +41,41 @@ def get_comments(pull_request_number):
     repo = github_obj.get_repo('google/fuzzbench')
     pull = repo.get_pull(pull_request_number)
     pull_comments = list(pull.get_comments())
+    last_pull_comment = pull_comments[-1] if pull_comments else None
     issue = repo.get_issue(pull_request_number)
     issue_comments = list(issue.get_comments())
+    last_issue_comment = issue_comments[-1] if issue_comments else None
     # Github only returns comments if from the pull object when a pull request
     # is open. If it is a draft, it will only return comments from the issue
     # object.
-    return pull_comments + issue_comments
+    return last_pull_comment, last_issue_comment
 
 
-def get_latest_gcbrun_command(comments):
+def get_latest_gcbrun_command(comment):
     """Gets the last /gcbrun comment from comments."""
-    for comment in reversed(comments):
-        # This seems to get comments on code too.
-        body = comment.body
-        if body.startswith(SKIP_COMMAND_STR):
-            return None
-        if not body.startswith(RUN_EXPERIMENT_COMMAND_STR):
-            continue
-        if len(body) == len(RUN_EXPERIMENT_COMMAND_STR):
-            return None
-        return body[len(RUN_EXPERIMENT_COMMAND_STR):].strip().split(' ')
-    return None
+    # This seems to get comments on code too.
+    if comment is None:
+        return None
+    body = comment.body
+    if body.startswith(SKIP_COMMAND_STR):
+        return None
+    if not body.startswith(RUN_EXPERIMENT_COMMAND_STR):
+        return None
+    if len(body) == len(RUN_EXPERIMENT_COMMAND_STR):
+        return None
+    command = body[len(RUN_EXPERIMENT_COMMAND_STR):].strip().split(' ')
+    # Items that only contain space are redundant and will confuse
+    # `run_experiment_main()` in `experiment/run_experiment.py`
+    return [word for word in command if word.strip()]
 
 
 def exec_command_from_github(pull_request_number):
     """Executes the gcbrun command for run_experiment.py in the most recent
   command on |pull_request_number|."""
-    comments = get_comments(pull_request_number)
-    print(comments)
-    command = get_latest_gcbrun_command(comments)
+    pull_cmt, issue_cmt = get_comments(pull_request_number)
+    print(f'Pull comment: {pull_cmt}\nIssue comment: {issue_cmt}')
+    command = (get_latest_gcbrun_command(pull_cmt) or
+               get_latest_gcbrun_command(issue_cmt))
     if command is None:
         logging.info('Experiment not requested.')
         return None
