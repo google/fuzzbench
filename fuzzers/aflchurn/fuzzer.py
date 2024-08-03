@@ -31,8 +31,7 @@ def prepare_build_environment():
     os.environ['CXX'] = '/afl/afl-clang-fast++'
     os.environ['FUZZER_LIB'] = '/libAFL.a'
 
-    os.system('apt-get install -y python-software-properties \
-        software-properties-common && \
+    os.system('apt-get install -y software-properties-common && \
         add-apt-repository ppa:git-core/ppa -y && \
         apt-get update && \
         apt-get install git -y')

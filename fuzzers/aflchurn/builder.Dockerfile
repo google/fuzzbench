@@ -15,23 +15,13 @@
 ARG parent_image
 FROM $parent_image
 
-RUN apt-get install -y python-software-properties software-properties-common && \
-    add-apt-repository ppa:git-core/ppa -y && \
-    apt-get update && \
-    apt-get install git -y
-
 # Add and compile AFLChurn
 # Set AFL_NO_X86 to skip flaky tests.
-RUN git clone https://github.com/aflchurn/aflchurn.git /afl && \
+RUN git clone \
+        --depth 1 \
+        https://github.com/aflchurn/aflchurn.git /afl && \
     cd /afl && \
-    AFL_NO_X86=1 make && \
-    INITIAL_CXXFLAGS=$CXXFLAGS && \
-    INITIAL_CFLAGS=$CFLAGS && \
-    unset CFLAGS CXXFLAGS && \
-    cd llvm_mode && \
-    make && \
-    CXXFLAGS=$INITIAL_CXXFLAGS && \
-    CFLAGS=$INITIAL_CFLAGS
+    CFLAGS= CXXFLAGS= AFL_NO_X86=1 make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
 # clang -Wno-pointer-sign -c /afl/llvm_mode/afl-llvm-rt.o.c -I/afl && \

@@ -35,7 +35,7 @@ RUN apt-get update && \
         libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
 # Download afl++.
-RUN git clone -b dev https://github.com/Dammo3/AFLChurnPlusPlus /afl && \
+RUN git clone https://github.com/Dammo3/AFLChurnPlusPlus /afl && \
     cd /afl
 
 # Build without Python support as we don't need it.
