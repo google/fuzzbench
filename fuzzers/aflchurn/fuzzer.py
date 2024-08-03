@@ -13,7 +13,6 @@
 # limitations under the License.
 """Integration code for AFL fuzzer."""
 
-import json
 import os
 import shutil
 import subprocess
@@ -32,8 +31,8 @@ def prepare_build_environment():
     os.environ['CXX'] = '/afl/afl-clang-fast++'
     os.environ['FUZZER_LIB'] = '/libAFL.a'
 
-    os.system(
-        'apt-get install -y python-software-properties software-properties-common && \
+    os.system('apt-get install -y python-software-properties \
+        software-properties-common && \
         add-apt-repository ppa:git-core/ppa -y && \
         apt-get update && \
         apt-get install git -y')
@@ -115,4 +114,7 @@ def fuzz(input_corpus, output_corpus, target_binary, flags=tuple()):
     """Run afl-fuzz on target."""
     prepare_fuzz_environment(input_corpus)
 
-    run_afl_fuzz(input_corpus, output_corpus, target_binary, additional_flags=flags)
+    run_afl_fuzz(input_corpus,
+                 output_corpus,
+                 target_binary,
+                 additional_flags=flags)
