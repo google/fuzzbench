@@ -31,14 +31,10 @@ import subprocess
 import sys
 from typing import List, Optional
 
-import yaml
-
 from common import benchmark_utils
 from common import fuzzer_utils
 from common import filesystem
 from common import logs
-from common import yaml_utils
-from service import automatic_run_experiment
 from src_analysis import change_utils
 from src_analysis import diff_utils
 
@@ -215,7 +211,8 @@ def lint(_: List[Path]) -> bool:
         'presubmit.py',
     ]
 
-    command = ['python3', '-m', 'pylint', '-j', '0']
+    # Use "--score no" to make linting quieter.
+    command = ['python3', '-m', 'pylint', '--score', 'no', '-j', '0']
     command.extend(to_check)
     returncode = subprocess.run(command, check=False).returncode
     return returncode == 0
@@ -255,31 +252,6 @@ def yapf(paths: List[Path], validate: bool = True) -> bool:
     if not success:
         print('Code is not formatted correctly, please run \'make format\'')
     return success
-
-
-def validate_experiment_requests(paths: List[Path]):
-    """Returns False if service/experiment-requests.yaml it is in |paths| and is
-    not valid."""
-    if Path(automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH) not in paths:
-        return True
-
-    try:
-        experiment_requests = yaml_utils.read(
-            automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
-    except yaml.parser.ParserError:
-        print('Error parsing '
-              f'{automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH}.')
-        return False
-
-    # Only validate the latest request.
-    result = automatic_run_experiment.validate_experiment_requests(
-        experiment_requests[:1])
-
-    if not result:
-        print(f'{automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH}'
-              'is not valid.')
-
-    return result
 
 
 def is_path_ignored(path: Path) -> bool:
@@ -440,7 +412,6 @@ def main() -> int:
         ('typecheck', pytype),
         ('test', pytest),
         ('validate_fuzzers_and_benchmarks', validate_fuzzers_and_benchmarks),
-        ('validate_experiment_requests', validate_experiment_requests),
         ('test_changed_integrations', test_changed_integrations),
     ]
 

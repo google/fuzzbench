@@ -25,6 +25,6 @@ RUN apt-get update && apt-get install -y \
 RUN git clone --recursive -b development https://github.com/Mbed-TLS/mbedtls.git mbedtls
 
 RUN git clone --depth 1 https://github.com/google/boringssl.git boringssl
-RUN git clone --depth 1 https://github.com/openssl/openssl.git openssl
+RUN git clone --recursive https://github.com/openssl/openssl.git openssl
 WORKDIR mbedtls
 COPY build.sh $SRC/

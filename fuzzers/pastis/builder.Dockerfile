@@ -53,17 +53,17 @@ RUN apt-get update -y && \
 
 # Copy honggfuzz PASTIS patch.
 RUN mkdir /patches
-COPY patches/honggfuzz-b1e09be-pastis.patch /patches
+COPY patches/honggfuzz-3a8f2ae-pastis.patch /patches
 
-# Donwload honggfuzz oss-fuzz version (commit b1e09bec344728f52019ed78907236cabe1c6c8a)
+# Donwload honggfuzz oss-fuzz version (commit 3a8f2ae41604b6696e7bd5e5cdc0129ce49567c0)
 RUN git clone https://github.com/google/honggfuzz.git /honggfuzz && \
     cd /honggfuzz && \
-    git checkout b1e09bec344728f52019ed78907236cabe1c6c8a && \
+    git checkout 3a8f2ae41604b6696e7bd5e5cdc0129ce49567c0 && \
     cd ..
 
 # Apply PASTIS patch.
 RUN cd / && \
-    patch -s -p0 < /patches/honggfuzz-b1e09be-pastis.patch
+    patch -s -p0 < /patches/honggfuzz-3a8f2ae-pastis.patch
 
 # Set CFLAGS use honggfuzz's defaults except for -mnative which can build CPU
 # dependent code that may not work on the machines we actually fuzz on.

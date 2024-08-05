@@ -20,15 +20,13 @@ import inspect
 import sys
 import time
 
+from common import logs
+from common import utils
+
 
 def sleep(seconds):
     """Invoke time.sleep."""
     time.sleep(seconds)
-
-
-def get_delay(num_try, delay, backoff):
-    """Compute backoff delay."""
-    return delay * (backoff**(num_try - 1))
 
 
 def wrap(  # pylint: disable=too-many-arguments
@@ -37,11 +35,8 @@ def wrap(  # pylint: disable=too-many-arguments
         function,
         backoff=2,
         exception_type=Exception,
-        log_retries=True,
         retry_on_false=False):
     """Retry decorator for a function."""
-    # To avoid circular dependency.
-    from common import logs  # pylint:disable=import-outside-toplevel
 
     assert delay > 0
     assert backoff >= 1
@@ -60,11 +55,10 @@ def wrap(  # pylint: disable=too-many-arguments
 
             if (exception is None or
                     isinstance(exception, exception_type)) and num_try < tries:
-                if log_retries:
-                    logs.info('Retrying on %s failed with %s. Retrying again.',
-                              function_with_type,
-                              sys.exc_info()[1])
-                sleep(get_delay(num_try, delay, backoff))
+                logs.info('Retrying on %s failed with %s. Retrying again.',
+                          function_with_type,
+                          sys.exc_info()[1])
+                sleep(utils.get_retry_delay(num_try, delay, backoff))
                 return True
 
             logs.error('Retrying on %s failed with %s. Raise.',

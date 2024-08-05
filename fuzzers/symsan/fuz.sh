@@ -10,4 +10,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #!/bin/bash
-LD_PRELOAD="/out/lib/libprotobuf.so /out/lib/libz3.so.4.8.12.0" RUST_LOG=info /out/fastgen --sync_afl -i /out/seeds -o /out/corpus -t $1 -- $2 @@
+RUST_LOG=info /out/fastgen --sync_afl -i /out/seeds -o /out/corpus -t $1 -- $2 @@

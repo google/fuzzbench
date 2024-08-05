@@ -19,6 +19,277 @@
 # You can run "make presubmit" to do basic validation on this file.
 # Please add new experiment requests towards the top of this file.
 #
+
+- experiment: 2023-06-12-aflpp
+  description: "Benchmark afl++ releases and newmutation"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_406
+    - aflplusplus_407
+    - aflplusplus_text
+
+- experiment: 2023-06-12-aflpp-bug
+  description: "Benchmark afl++ releases and newmutation - bug"
+  type: bug
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_406
+    - aflplusplus_407
+    - aflplusplus_text
+    - aflplusplus_exploit
+
+- experiment: 2023-06-09-aflpp
+  description: "Benchmark afl++ mutations"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_mutcomp
+    - aflplusplus_mutnew
+
+- experiment: 2023-05-17-aflpp-concolic
+  description: "Benchmark afl++ concolic"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_weighsplice
+    - aflplusplus_symqemu
+
+- experiment: 2023-05-06-afppff
+  description: "Benchmark fishfuzz"
+  type: bug
+  fuzzers:
+    - aflplusplus_ff_comp
+    - aflplusplus_fishfuzz
+  benchmarks:
+    - bloaty_fuzz_target_52948c
+    - libxml2_xml_e85b9b
+    - mbedtls_fuzz_dtlsclient_7c6b0e
+    - php_php-fuzz-parser_0dbedb
+
+- experiment: 2023-04-27-main
+  description: "Benchmark main fuzzers"
+  fuzzers:
+    - aflplusplus
+    - aflplusplusplus
+    - libafl
+    - honggfuzz
+    - entropic
+    - centipede
+    - afl
+
+- experiment: 2023-04-27-aflpp
+  description: "Analyse deduplication feature"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_nodedup
+
+- experiment: 2023-04-25-aflpp
+  description: "Ensure regression is fixed"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_bug
+    - aflplusplus_mega
+    - libafl
+
+- experiment: 2023-04-21-aflpp
+  description: "Find regression"
+  fuzzers:
+    - aflplusplus_mega
+    - aflplusplus_314_0
+    - aflplusplus_314_1
+    - aflplusplus_314_2
+    - aflplusplus_314_3
+    - aflplusplus_314_4
+    - aflplusplus_314_5
+    - aflplusplus_314_6
+  benchmarks:
+    - bloaty_fuzz_target
+    - sqlite3_ossfuzz
+
+- experiment: 2023-04-15-alphaphuzz
+  description: "test variant"
+  fuzzers:
+    - aflplusplus_314
+    - aflplusplus_aflphuzz
+
+- experiment: 2023-04-13-aflpp
+  description: "Find regression"
+  fuzzers:
+    - aflplusplus_mega
+    - aflplusplus_314_0
+    - aflplusplus_314_1
+    - aflplusplus_314_2
+    - aflplusplus_314_3
+    - aflplusplus_314_4
+    - aflplusplus_314_5
+    - aflplusplus_314
+  benchmarks:
+    - bloaty_fuzz_target
+    - libxml2_xml
+    - sqlite3_ossfuzz
+
+- experiment: 2023-04-09-aflpp
+  description: "Test new mutation engine and -z option"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_mutsamehavoc
+    - aflplusplus_newqueuez
+    - aflplusplus_313
+    - aflplusplus_313_2
+    - aflplusplus_mega
+    - aflplusplus_314
+  benchmarks:
+    - bloaty_fuzz_target
+    - curl_curl_fuzzer_http
+    - freetype2_ftfuzzer
+    - lcms_cms_transform_fuzzer
+    - libpcap_fuzz_both
+    - libxml2_xml
+    - mbedtls_fuzz_dtlsclient
+    - openthread_ot-ip6-send-fuzzer
+    - proj4_proj_crs_to_crs_fuzzer
+    - sqlite3_ossfuzz
+    - stb_stbi_read_fuzzer
+    - woff2_convert_woff2ttf_fuzzer
+
+- experiment: 2023-04-05-aflpp
+  description: "Test new mutation engine"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_314
+    - aflplusplus_mutsamehavoc
+    - aflplusplus_mutnewhavoc
+    - aflplusplus_406
+    - aflplusplus_newqueue
+    - aflplusplus_newqueuez
+  benchmarks:
+    - bloaty_fuzz_target
+    - curl_curl_fuzzer_http
+    - freetype2_ftfuzzer
+    - lcms_cms_transform_fuzzer
+    - libpcap_fuzz_both
+    - libxml2_xml
+    - mbedtls_fuzz_dtlsclient
+    - openthread_ot-ip6-send-fuzzer
+    - proj4_proj_crs_to_crs_fuzzer
+    - sqlite3_ossfuzz
+    - stb_stbi_read_fuzzer
+    - woff2_convert_woff2ttf_fuzzer
+
+- experiment: 2023-03-25-aflpp-comp
+  description: "Tests main fuzzers"
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_313
+    - aflplusplus_314
+    - aflplusplus_400
+    - aflplusplus_401
+    - aflplusplus_402
+    - aflplusplus_403
+    - aflplusplus_404
+    - aflplusplus_405
+    - aflplusplus_406
+  benchmarks:
+    - bloaty_fuzz_target
+    - curl_curl_fuzzer_http
+    - freetype2_ftfuzzer
+    - lcms_cms_transform_fuzzer
+    - libpcap_fuzz_both
+    - libxml2_xml
+    - mbedtls_fuzz_dtlsclient
+    - openthread_ot-ip6-send-fuzzer
+    - proj4_proj_crs_to_crs_fuzzer
+    - sqlite3_ossfuzz
+    - stb_stbi_read_fuzzer
+    - woff2_convert_woff2ttf_fuzzer
+
+- experiment: 2023-03-24-main
+  description: "Tests main fuzzers"
+  fuzzers:
+    - aflplusplus
+    - libafl
+    - aflrustrust
+    - honggfuzz
+    - entropic
+    - libfuzzer
+    - centipede
+
+- experiment: 2023-03-23-various
+  description: "Tests darwin, pcg, ddfuzz"
+  fuzzers:
+    - afl
+    - darwin
+    - mopt
+    - aflplusplus
+    - aflplusplus_pge
+    - aflplusplus_pge10
+    - aflplusplus_pge100
+    - aflplusplus_ddfuzz
+    - aflplusplus_comp_pge
+    - aflplusplus_comp_dd
+
+- experiment: 2023-03-20-ecofuzz
+  description: "Test EcoFuzz."
+  fuzzers:
+    - afl
+    - aflfast
+    - ecofuzz
+
+- experiment: 2023-03-20-aflpp
+  description: "afl++ comparisons"
+  trials: 10
+  fuzzers:
+    - aflplusplus
+    - aflplusplus_405c
+    - aflplusplus_comp
+    - aflplusplus_haste
+    - hastefuzz
+  benchmarks:
+    - assimp_assimp_fuzzer
+    - bloaty_fuzz_target
+    - dropbear_fuzzer-postauth_nomaths
+    - freetype2_ftfuzzer
+    - lcms_cms_transform_fuzzer
+    - libpcap_fuzz_both
+    - libxml2_xml
+    - mbedtls_fuzz_dtlsclient
+    - openthread_ot-ip6-send-fuzzer
+    - proj4_proj_crs_to_crs_fuzzer
+    - sqlite3_ossfuzz
+    - stb_stbi_read_fuzzer
+    - systemd_fuzz-link-parser
+    - woff2_convert_woff2ttf_fuzzer
+
+- experiment: 2023-02-28-ecofuzz
+  description: "Test EcoFuzz."
+  fuzzers:
+    - afl
+    - aflfast
+    - ecofuzz
+
+- experiment: 2023-03-15-aflpp
+  description: "afl++ identify regressions."
+  trials: 10
+  fuzzers:
+    - aflplusplus_post_0
+    - aflplusplus_post_1
+    - aflplusplus_post_2
+    - aflplusplus_post_3
+    - aflplusplus_pre_0
+    - aflplusplus_pre_1
+    - aflplusplus_pre_2
+    - aflplusplus_pre_3
+    - aflplusplus_pre_4
+    - aflplusplus_pre_5
+
+- experiment: 2023-03-10-aflpp
+  description: "afl++ classify tests."
+  trials: 10
+  fuzzers:
+    - aflplusplus_base
+    - aflplusplus_explore
+    - aflplusplus_class_explore
+    - aflplusplus_class
+    - aflplusplus_onebug
+
 - experiment: 2023-02-27-aflpp-3
   description: "afl++ regression test (different one)."
   trials: 10
@@ -54,7 +325,7 @@
     - re2_fuzzer
     - sqlite3_ossfuzz
     - systemd_fuzz-link-parser
-    
+
 - experiment: 2023-02-27-learnperffuzz
   description: "Test quota."
   fuzzers:
