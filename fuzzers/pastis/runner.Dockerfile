@@ -26,14 +26,7 @@ RUN DEBIAN_FRONTEND="noninteractive" \
     apt-get install -y --no-install-suggests --no-install-recommends \
         libmagic-dev
 
-# Copy packages.
-COPY packages /packages
-COPY scripts/pastis-install-packages.sh /packages
-
-# Install PASTIS packages.
-RUN cd /packages && \
-    chmod +x /packages/pastis-install-packages.sh && \
-    /packages/pastis-install-packages.sh ./
+RUN pip install pastis-framework
 
 #
 # AFLplusplus

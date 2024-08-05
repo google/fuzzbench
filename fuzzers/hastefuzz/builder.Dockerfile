@@ -37,7 +37,7 @@ RUN apt-get update && \
 # Download hastefuzz.
 RUN git clone https://github.com/AAArdu/hastefuzz.git /hastefuzz && \
     cd /hastefuzz && \
-    git checkout 5a17712d3d5cce0597f67fcdde74552c433338f0
+    git checkout aab96098dbe291ef8874398bde1fed910faad6cd
 
 # Build hastefuzz without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.

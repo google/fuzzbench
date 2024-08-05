@@ -81,3 +81,22 @@ def test_validate_type_valid(benchmark_type):
 def test_get_default_type(_):
     """Tests that get_type returns the correct default value."""
     assert benchmark_utils.get_type('benchmark') == 'code'
+
+
+@pytest.mark.parametrize(
+    ('benchmarks'),
+    [['mbedtls_fuzz_dtlsclient_7c6b0e', 'mbedtls_fuzz_dtlsclient'],
+     ['bloaty_fuzz_target', 'bloaty_fuzz_target_52948c']])
+def test_are_benchmarks_mixed_valid(benchmarks):
+    """Tests that are_benchmarks_mixed returns True
+    for a list that have both bug and coverage benchmarks"""
+    assert benchmark_utils.are_benchmarks_mixed(benchmarks)
+
+
+@pytest.mark.parametrize(
+    ('benchmarks'),
+    [['mbedtls_fuzz_dtlsclient_7c6b0e'], ['mbedtls_fuzz_dtlsclient'], []])
+def test_are_benchmarks_mixed_invalid(benchmarks):
+    """Tests that are_benchmarks_mixed returns False
+    for a list that have only bug or only coverage benchmarks"""
+    assert not benchmark_utils.are_benchmarks_mixed(benchmarks)

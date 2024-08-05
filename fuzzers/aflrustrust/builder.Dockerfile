@@ -24,7 +24,7 @@ RUN apt-get update && \
 # Uninstall old Rust & Install the latest one.
 RUN if which rustup; then rustup self uninstall -y; fi && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
-    sh /rustup.sh --default-toolchain nightly -y && \
+    sh /rustup.sh --default-toolchain nightly-2023-09-21 -y && \
     rm /rustup.sh
 
 # Download afl++.
@@ -46,11 +46,11 @@ RUN cd /afl && \
 RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git checkout 8bffd28b4c357b315acb9cecd92cbf2b734a625a
+RUN cd /libafl && git checkout c103444396697af102dce2b936a00e93017057ba
 
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
     cd ./fuzzers/fuzzbench_forkserver && \
-    PATH="/root/.cargo/bin/:$PATH" cargo build --release
+    PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench
 

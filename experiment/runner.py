@@ -45,21 +45,6 @@ RETRY_DELAY = 3
 
 FUZZ_TARGET_DIR = os.getenv('OUT', '/out')
 
-# This is an optimization to sync corpora only when it is needed. These files
-# are temporary files generated during fuzzer runtime and are not related to
-# the actual corpora.
-EXCLUDE_PATHS = set([
-    # AFL excludes.
-    '.cur_input',
-    '.state',
-    'fuzz_bitmap',
-    'fuzzer_stats',
-    'plot_data',
-
-    # QSYM excludes.
-    'bitmap',
-])
-
 CORPUS_ELEMENT_BYTES_LIMIT = 1 * 1024 * 1024
 SEED_CORPUS_ARCHIVE_SUFFIX = '_seed_corpus.zip'
 
@@ -114,6 +99,18 @@ def get_clusterfuzz_seed_corpus_path(fuzz_target_path):
     seed_corpus_path = (fuzz_target_without_extension +
                         SEED_CORPUS_ARCHIVE_SUFFIX)
     return seed_corpus_path if os.path.exists(seed_corpus_path) else None
+
+
+def _unpack_random_corpus(corpus_directory):
+    shutil.rmtree(corpus_directory)
+
+    benchmark = environment.get('BENCHMARK')
+    trial_group_num = environment.get('TRIAL_GROUP_NUM', 0)
+    random_corpora_dir = experiment_utils.get_random_corpora_filestore_path()
+    random_corpora_sub_dir = f'trial-group-{int(trial_group_num)}'
+    random_corpus_dir = posixpath.join(random_corpora_dir, benchmark,
+                                       random_corpora_sub_dir)
+    filestore_utils.cp(random_corpus_dir, corpus_directory, recursive=True)
 
 
 def _copy_custom_seed_corpus(corpus_directory):
@@ -272,7 +269,9 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
             FUZZ_TARGET_DIR, fuzz_target_name)
         input_corpus = environment.get('SEED_CORPUS_DIR')
         os.makedirs(input_corpus, exist_ok=True)
-        if not environment.get('CUSTOM_SEED_CORPUS_DIR'):
+        if environment.get('MICRO_EXPERIMENT'):
+            _unpack_random_corpus(input_corpus)
+        elif not environment.get('CUSTOM_SEED_CORPUS_DIR'):
             _unpack_clusterfuzz_seed_corpus(target_binary, input_corpus)
         else:
             _copy_custom_seed_corpus(input_corpus)
@@ -451,28 +450,14 @@ def get_fuzzer_module(fuzzer):
 
 
 def get_corpus_elements(corpus_dir):
-    """Returns a list of absolute paths to corpus elements in |corpus_dir|.
-    Excludes certain elements."""
+    """Returns a list of absolute paths to corpus elements in |corpus_dir|."""
     corpus_dir = os.path.abspath(corpus_dir)
     corpus_elements = []
     for root, _, files in os.walk(corpus_dir):
         for filename in files:
             file_path = os.path.join(root, filename)
-            if _is_path_excluded(file_path):
-                continue
             corpus_elements.append(file_path)
     return corpus_elements
-
-
-def _is_path_excluded(path):
-    """Is any part of |path| in |EXCLUDE_PATHS|."""
-    path_parts = path.split(os.sep)
-    for part in path_parts:
-        if not part:
-            continue
-        if part in EXCLUDE_PATHS:
-            return True
-    return False
 
 
 def experiment_main():

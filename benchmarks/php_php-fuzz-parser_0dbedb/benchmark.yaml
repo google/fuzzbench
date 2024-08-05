@@ -4,6 +4,7 @@ commit_date: 2022-07-15T10:03:12+0000
 fuzz_target: php-fuzz-parser
 project: php
 type: bug
+oss_fuzz_corpus_target: php_php-fuzz-parser
 unsupported_fuzzers:
   - aflcc
   - afl_qemu
