@@ -1,0 +1,4 @@
+fuzz_target: fuzz_target
+max_len: 4096
+input_directory: /input-corpus
+expected_time: 60
