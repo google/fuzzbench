@@ -748,7 +748,7 @@ def run_experiment_main(args=None):
         benchmark_types = ';'.join(
             [f'{b}: {benchmark_utils.get_type(b)}' for b in args.benchmarks])
         raise ValidationError(
-            'Selected benchmarks are a mix between coverage '
+            'Selected benchmarks are a mix between coverage'
             'and bug benchmarks. This is currently not supported.'
             f'Selected benchmarks: {benchmark_types}')
 
