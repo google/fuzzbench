@@ -614,10 +614,18 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
     # Generate profdata and transform it into json form.
     snapshot_measurer.generate_coverage_information(cycle)
 
+    # Save profdata snapshot.
+    coverage_archive_dst = experiment_utils.get_coverage_archive_name(cycle)
+    if filestore_utils.cp(snapshot_measurer.cov_summary_file,
+                          coverage_archive_dst,
+                          expect_zero=False).retcode:
+        snapshot_logger.warning('Coverage not found for cycle: %d.', cycle)
+        return None
+
     # Run crashes again, parse stacktraces and generate crash signatures.
     crashes = snapshot_measurer.process_crashes(cycle)
 
-    # Get the coverage of the new corpus units.
+    # Get the coverage summary of the new corpus units.
     branches_covered = snapshot_measurer.get_current_coverage()
     fuzzer_stats_data = snapshot_measurer.get_fuzzer_stats(cycle)
     snapshot = models.Snapshot(time=this_time,
