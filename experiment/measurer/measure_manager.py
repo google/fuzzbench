@@ -616,7 +616,7 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
 
     # Save profdata snapshot.
     coverage_archive_dst = exp_path.filestore(
-        os.path.join(snapshot_measurer.trial_dir, 'corpus',
+        os.path.join(snapshot_measurer.trial_dir, 'coverage',
                      experiment_utils.get_coverage_archive_name(cycle)))
     if filestore_utils.cp(snapshot_measurer.cov_summary_file,
                           coverage_archive_dst,
