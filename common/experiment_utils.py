@@ -128,6 +128,7 @@ def get_corpus_archive_name(cycle: int) -> str:
     """Returns a corpus archive name given a cycle."""
     return get_cycle_filename('corpus-archive', cycle) + '.tar.gz'
 
+
 def get_coverage_archive_name(cycle: int) -> str:
     """Returns a corpus archive name given a cycle."""
     return get_cycle_filename('coverage-archive', cycle) + '.json'
