@@ -150,18 +150,11 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
     def generate_coverage_report(self):
         """Generates the coverage report and stores in bucket."""
         command = [
-            'llvm-cov',
-            'show',
-            '-format=html',
+            'llvm-cov', 'show', '-no-warn', '-format=html',
             f'-path-equivalence=/,{self.source_files_dir}',
-            f'-output-dir={self.report_dir}',
-            '-Xdemangler',
-            'c++filt',
-            '-Xdemangler',
-            '-n',
-            self.binary_file,
-            f'-instr-profile={self.merged_profdata_file}',
-            '-no-warn'
+            f'-output-dir={self.report_dir}', '-Xdemangler', 'c++filt',
+            '-Xdemangler', '-n', self.binary_file,
+            f'-instr-profile={self.merged_profdata_file}'
         ]
         result = new_process.execute(command, expect_zero=False)
         if result.retcode != 0:
@@ -265,15 +258,9 @@ def generate_json_summary(coverage_binary,
     """Generates the json summary file from |coverage_binary|
     and |profdata_file|."""
     command = [
-        'llvm-cov',
-        'export',
-        '-format=text',
-        '-num-threads=1',
-        '-region-coverage-gt=0',
-        '-skip-expansions',
-        coverage_binary,
-        f'-instr-profile={profdata_file}',
-        '-no-warn'
+        'llvm-cov', 'export', '-no-warn', '-format=text', '-num-threads=1',
+        '-region-coverage-gt=0', '-skip-expansions', coverage_binary,
+        f'-instr-profile={profdata_file}'
     ]
 
     if summary_only:
