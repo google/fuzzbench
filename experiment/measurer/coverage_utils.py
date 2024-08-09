@@ -161,6 +161,7 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             '-n',
             self.binary_file,
             f'-instr-profile={self.merged_profdata_file}',
+            '-no-warn'
         ]
         result = new_process.execute(command, expect_zero=False)
         if result.retcode != 0:
@@ -272,6 +273,7 @@ def generate_json_summary(coverage_binary,
         '-skip-expansions',
         coverage_binary,
         f'-instr-profile={profdata_file}',
+        '-no-warn'
     ]
 
     if summary_only:

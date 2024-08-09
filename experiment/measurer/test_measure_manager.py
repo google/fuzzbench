@@ -156,7 +156,8 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
         'llvm-cov', 'export', '-format=text', '-num-threads=1',
         '-region-coverage-gt=0', '-skip-expansions',
         '/work/coverage-binaries/benchmark-a/fuzz-target',
-        '-instr-profile=/reports/data.profdata'
+        '-instr-profile=/reports/data.profdata',
+        '-no-warn'
     ]
 
     assert (len(mocked_execute.call_args_list)) == 1
