@@ -46,11 +46,11 @@ RUN cd /afl && \
 RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git checkout c103444396697af102dce2b936a00e93017057ba
+RUN cd /libafl && git checkout 799c634fef047d3e98355fe1ad17c5226c901a57
 
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
-    cd ./fuzzers/fuzzbench_forkserver && \
+    cd ./fuzzers/fuzzbench/fuzzbench_forkserver && \
     PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench
 

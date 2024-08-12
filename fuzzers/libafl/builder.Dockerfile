@@ -44,17 +44,17 @@ RUN if which rustup; then rustup self uninstall -y; fi && \
 RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git pull && git checkout b4efb6151550a37f61a869acf2957a1b07894a93 || true
+RUN cd /libafl && git pull && git checkout 799c634fef047d3e98355fe1ad17c5226c901a57 || true
 # Note that due a nightly bug it is currently fixed to a known version on top!
 
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
-    cd ./fuzzers/fuzzbench && \
+    cd ./fuzzers/fuzzbench/fuzzbench && \
     PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench --features no_link_main
 
 # Auxiliary weak references.
-RUN cd /libafl/fuzzers/fuzzbench && \
+RUN cd /libafl/fuzzers/fuzzbench/fuzzbench && \
     clang -c stub_rt.c && \
     ar r /stub_rt.a stub_rt.o

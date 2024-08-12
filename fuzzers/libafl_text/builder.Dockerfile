@@ -39,14 +39,14 @@ RUN git clone \
         --branch vhtokens \
         https://github.com/AFLplusplus/libafl /libafl && \
         cd /libafl && \
-        git checkout 6c7f6566b0c8b3b82352c052a0672f46a2f7d1e9 || \
+        git checkout 799c634fef047d3e98355fe1ad17c5226c901a57 || \
         true
 
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
-    cd ./fuzzers/fuzzbench_text && \
+    cd ./fuzzers/fuzzbench/fuzzbench_text && \
     PATH="/root/.cargo/bin/:$PATH" cargo build --release
 
 # Auxiliary weak references.
