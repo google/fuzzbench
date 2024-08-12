@@ -109,7 +109,7 @@ class GoogleCloudMeasureWorker(BaseMeasureWorker):  # pylint: disable=too-many-i
             self.project_id, self.request_queue_topic_id)
         self.response_queue_topic_id = config['response_queue_topic_id']
         self.response_queue_topic_path = self.publisher_client.topic_path(
-            self.project_id, self.response_queue_topic_path)
+            self.project_id, self.response_queue_topic_id)
         self.experiment = config['experiment']
         self.request_queue_subscription = ('request-queue-subscription-'
                                            f'{self.experiment}')

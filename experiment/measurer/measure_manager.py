@@ -891,7 +891,7 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
             self.project_id, self.response_queue_subscription_id)
         self.measurers_cpus = measurers_cpus
 
-    def initialize_queues(self, manager) -> Tuple[str, str]:
+    def initialize_queues(self, manager) -> Tuple[Optional[str], Optional[str]]:
         try:
             request_queue_topic = self.publisher_client.create_topic(
                 request={'name': self.request_queue_topic_path})
