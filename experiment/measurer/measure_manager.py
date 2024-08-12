@@ -626,7 +626,8 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
 
     with gzip.open(str(coverage_archive_zipped), 'wb') as compressed:
         with open(snapshot_measurer.cov_summary_file, 'rb') as uncompressed:
-            compressed.write(uncompressed.read())
+            # avoid saving warnings so we can direct import with pandas
+            compressed.write(uncompressed.readlines()[-1])
 
     coverage_archive_dst = exp_path.filestore(coverage_archive_zipped)
     if filestore_utils.cp(coverage_archive_zipped,
