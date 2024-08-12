@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,17 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit: 8109a2cc2b27436962ac1cfe40ad0e8a0dca26c8
-commit_date: 2017-01-04T06:37:49+1100
-fuzz_target: convert_woff2ttf_fuzzer
-project: woff2
-unsupported_fuzzers:
-  - dgfuzz
-  - dgfuzz_4aacb8
-  - dgfuzz_c286e5
-  - dgfuzz_3f8f81
-  - dgfuzz_0e010d
-  - dgfuzz_ab0800
-  - dgfuzz_135c90
-  - dgfuzz_653cc9
-  - dgfuzz_d3c951
+FROM gcr.io/fuzzbench/base-image
+
+RUN apt install libjemalloc2
+
+# This makes interactive docker runs painless:
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/out"
+ENV AFL_MAP_SIZE=1310720
+ENV PATH="$PATH:/out"
+ENV AFL_SKIP_CPUFREQ=1
+ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1
+ENV AFL_TESTCACHE_SIZE=2

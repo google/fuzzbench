@@ -31,3 +31,4 @@ unsupported_fuzzers:
   - dgfuzz_ab0800
   - dgfuzz_135c90
   - dgfuzz_653cc9
+  - dgfuzz_d3c951
