@@ -31,6 +31,8 @@ from typing import List, Optional, Tuple
 import queue
 import psutil
 
+import google.api_core.exceptions
+
 from sqlalchemy import func
 from sqlalchemy import orm
 from google.cloud import pubsub_v1
@@ -876,7 +878,9 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
         super().__init__(experiment, region_coverage)
         self.project_id = cloud_project
         self.request_queue_topic_id = f'request-queue-topic-{self.experiment}'
+        self.request_queue_topic_path = None
         self.response_queue_topic_id = f'response-queue-topic-{self.experiment}'
+        self.response_queue_topic_path = None
         self.response_queue_subscription_id = ('response-queue-subscription-'
                                                f'{self.experiment}')
         self.subscriber_client = pubsub_v1.SubscriberClient()
@@ -886,34 +890,43 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
         self.measurers_cpus = measurers_cpus
 
     def initialize_queues(self, manager) -> Tuple[str, str]:
-        request_queue_topic_path = self.publisher_client.topic_path(
-            self.project_id, self.request_queue_topic_id)
-        request_queue_topic = self.publisher_client.create_topic(
-            request={'name': request_queue_topic_path})
-        response_queue_topic_path = self.subscriber_client.topic_path(
-            self.project_id, self.response_queue_topic_id)
-        response_queue_topic = self.publisher_client.create_topic(
-            request={'name': response_queue_topic_path})
-        return request_queue_topic.name, response_queue_topic.name
+        try:
+            self.request_queue_topic_path = self.publisher_client.topic_path(
+                self.project_id, self.request_queue_topic_id)
+            request_queue_topic = self.publisher_client.create_topic(
+                request={'name': self.request_queue_topic_path})
+            logger.info('Request queue topic created successfully: %s',
+                        request_queue_topic.name)
+
+            self.response_queue_topic_path = self.subscriber_client.topic_path(
+                self.project_id, self.response_queue_topic_id)
+            response_queue_topic = self.publisher_client.create_topic(
+                request={'name': self.response_queue_topic_path})
+            logger.info('Response queue topic created successfully: %s',
+                        response_queue_topic.name)
+
+            return request_queue_topic.name, response_queue_topic.name
+        except google.api_core.exceptions.GoogleAPICallError as error:
+            logger.error('Error while initializing queues: %s', error)
+            return None, None
 
     def _create_response_queue_subscription(self):
         """Creates a new Pub/Sub subscription for the response queue."""
-        topic_path = self.response_queue_topic_id
-        subscription = self.subscriber_client.create_subscription(request={
-            'name': self.subscription_path,
-            'topic': topic_path
-        })
-        logger.info('Subscription %s created successfully.', subscription.name)
-
-        return self.subscription_path
+        try:
+            subscription = self.subscriber_client.create_subscription(
+                request={
+                    'name': self.subscription_path,
+                    'topic': self.response_queue_topic_path
+                })
+            logger.info('Subscription %s created successfully.',
+                        subscription.name)
+            return subscription.name
+        except google.api_core.exceptions.GoogleAPICallError as error:
+            logger.error('Error creating subscription %s', error)
+            return None
 
     def start_workers(self, request_queue, response_queue, pool):
         self._create_response_queue_subscription()
-        if not self.measurers_cpus:
-            self.measurers_cpus = multiprocessing.cpu_count()
-            logger.info(
-                'Number of measurer CPUs not passed as argument. using %d',
-                self.measurers_cpus)
         config = {
             'request_queue_topic_id': self.request_queue_topic_id,
             'response_queue_topic_id': self.response_queue_topic_id,
