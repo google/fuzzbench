@@ -28,10 +28,7 @@ RUN if which rustup; then rustup self uninstall -y; fi && \
     rm /rustup.sh
 
 # Download afl++.
-RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl
-
-# Checkout a current commit
-RUN cd /afl && git checkout 8cdc48f73a17ddd557897f2098937a8ba3bfe184
+RUN git clone --branch stable https://github.com/AFLplusplus/AFLplusplus /afl
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
