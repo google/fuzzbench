@@ -15,6 +15,7 @@
 import time
 import json
 from typing import Dict, Optional
+import google.api_core.exceptions
 from google.cloud import pubsub_v1
 from common import logs
 from database.models import Snapshot
@@ -100,28 +101,37 @@ class GoogleCloudMeasureWorker(BaseMeasureWorker):  # pylint: disable=too-many-i
 
     def __init__(self, config: Dict):
         super().__init__(config)
-        self.request_queue_topic_id = config['request_queue_topic_id']
-        self.response_queue_topic_id = config['response_queue_topic_id']
+        self.publisher_client = pubsub_v1.PublisherClient()
+        self.subscriber_client = pubsub_v1.SubscriberClient()
         self.project_id = config['project_id']
+        self.request_queue_topic_id = config['request_queue_topic_id']
+        self.request_queue_topic_path = self.subscriber_client.topic_path(
+            self.project_id, self.request_queue_topic_id)
+        self.response_queue_topic_id = config['response_queue_topic_id']
+        self.response_queue_topic_path = self.publisher_client.topic_path(
+            self.project_id, self.response_queue_topic_path)
         self.experiment = config['experiment']
         self.request_queue_subscription = ('request-queue-subscription-'
                                            f'{self.experiment}')
-        self.publisher_client = pubsub_v1.PublisherClient()
-        self.subscriber_client = pubsub_v1.SubscriberClient()
         self.subscription_path = self.subscriber_client.subscription_path(
             self.project_id, self.request_queue_subscription)
         self._create_request_queue_subscription()
 
     def _create_request_queue_subscription(self):
         """Creates a new Pub/Sub subscription for the request queue."""
-        topic_path = self.response_queue_topic_id
-        subscription = self.subscriber_client.create_subscription(request={
-            'name': self.subscription_path,
-            'topic': topic_path
-        })
-        logger.info('Subscription %s created successfully.', subscription.name)
-
-        return self.subscription_path
+        try:
+            subscription = self.subscriber_client.create_subscription(
+                request={
+                    'name': self.subscription_path,
+                    'topic': self.request_queue_topic_path
+                })
+            logger.info('Subscription %s created successfully.',
+                        subscription.name)
+            return subscription.name
+        except google.api_core.exceptions.GoogleAPICallError as error:
+            logger.error('Error while creating request queue subscription: %s',
+                         error)
+            return None
 
     def get_task_from_request_queue(
             self) -> measurer_datatypes.SnapshotMeasureRequest:
