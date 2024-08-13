@@ -134,7 +134,8 @@ class GoogleCloudMeasureWorker(BaseMeasureWorker):  # pylint: disable=too-many-i
             subscription = self.subscriber_client.create_subscription(
                 request={
                     'name': self.subscription_path,
-                    'topic': self.request_queue_topic_path
+                    'topic': self.request_queue_topic_path,
+                    'enable_message_ordering': True,
                 })
             logger.info('Subscription %s created successfully.',
                         subscription.name)

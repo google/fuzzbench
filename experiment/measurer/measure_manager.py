@@ -985,9 +985,9 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
             # Convert message data to bytes
             message_as_bytes = self._task_to_bytes(task)
             # Build the Pub/Sub message object
-            future = self.publisher_client.publish(topic_path,
-                                                   message_as_bytes,
-                                                   ordering_key=task.cycle)
+            future = self.publisher_client.publish(topic=topic_path,
+                                                   data=message_as_bytes,
+                                                   ordering_key=str(task.cycle))
             message_id = future.result()  # Get the published message ID
             logger.info(
                 'Manager successfully published task with message ID %s to %s.',

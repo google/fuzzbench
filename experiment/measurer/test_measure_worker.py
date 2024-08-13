@@ -34,24 +34,34 @@ def local_measure_worker():
     return measure_worker.LocalMeasureWorker(config)
 
 
-def test_put_snapshot_in_response_queue(local_measure_worker):  # pylint: disable=redefined-outer-name
-    """Tests the scenario where measure_snapshot is not None, so snapshot is put
-    in response_queue"""
+def test_process_measured_snapshot_as_retry_request(local_measure_worker):  # pylint: disable=redefined-outer-name
+    """"Tests the scenario where measure_snapshot is None, so task needs to be
+    retried"""
+    request = measurer_datatypes.SnapshotMeasureRequest('fuzzer', 'benchmark',
+                                                        1, 0)
+    snapshot = None
+    result = local_measure_worker.process_measured_snapshot_result(
+        snapshot, request)
+    assert isinstance(result, measurer_datatypes.RetryRequest)
+
+
+def test_process_measured_snapshot_as_snapshot(local_measure_worker):  # pylint: disable=redefined-outer-name
+    """"Tests the scenario where measure_snapshot is not None, so snapshot is
+    returned"""
     request = measurer_datatypes.SnapshotMeasureRequest('fuzzer', 'benchmark',
                                                         1, 0)
     snapshot = Snapshot(trial_id=1)
-    local_measure_worker.put_result_in_response_queue(snapshot, request)
-    response_queue = local_measure_worker.response_queue
-    assert response_queue.qsize() == 1
-    assert isinstance(response_queue.get(), Snapshot)
+    result = local_measure_worker.process_measured_snapshot_result(
+        snapshot, request)
+    assert isinstance(result, Snapshot)
 
 
-def test_put_retry_in_response_queue(local_measure_worker):  # pylint: disable=redefined-outer-name
-    """Tests the scenario where measure_snapshot is None, so task needs to be
-    retried"""
-    request = measurer_datatypes.RetryRequest('fuzzer', 'benchmark', 1, 0)
-    snapshot = None
-    local_measure_worker.put_result_in_response_queue(snapshot, request)
-    response_queue = local_measure_worker.response_queue
-    assert response_queue.qsize() == 1
-    assert isinstance(response_queue.get(), measurer_datatypes.RetryRequest)
+def test_put_snapshot_in_response_queue(local_measure_worker):  # pylint: disable=redefined-outer-name
+    """Tests if result is being put in response queue as expected"""
+    request = measurer_datatypes.SnapshotMeasureRequest('fuzzer', 'benchmark',
+                                                        1, 0)
+    snapshot = Snapshot(trial_id=1)
+    result = local_measure_worker.process_measured_snapshot_result(
+        snapshot, request)
+    local_measure_worker.put_result_in_response_queue(result)
+    assert local_measure_worker.response_queue.qsize() == 1
