@@ -40,12 +40,19 @@ def fuzz(input_corpus, output_corpus, target_binary):
     run_fuzzer."""
     run_fuzzer(input_corpus, output_corpus, target_binary)
 
+def prepare_empty_corpus(input_corpus):
+    if os.path.exists(input_corpus):
+        shutil.rmtree(input_corpus)
+    os.makedirs(input_corpus)
+    with open(os.path.join(input_corpus, 'a'), 'wb') as f:
+        f.write(b'a')
+
 
 def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     """Run fuzzer."""
     if extra_flags is None:
         extra_flags = []
-
+    prepare_empty_corpus(input_corpus)
     # Seperate out corpus and crash directories as sub-directories of
     # |output_corpus| to avoid conflicts when corpus directory is reloaded.
     crashes_dir = os.path.join(output_corpus, 'crashes')
@@ -94,8 +101,8 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     if 'ADDITIONAL_ARGS' in os.environ:
         flags += os.environ['ADDITIONAL_ARGS'].split(' ')
     dictionary_path = utils.get_dictionary_path(target_binary)
-    if dictionary_path:
-        flags.append('-dict=' + dictionary_path)
+    #if dictionary_path:
+    #    flags.append('-dict=' + dictionary_path)
 
     command = [target_binary] + flags + [output_corpus, input_corpus]
     print('[run_fuzzer] Running command: ' + ' '.join(command))
