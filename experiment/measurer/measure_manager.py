@@ -877,7 +877,9 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
                  measurers_cpus: Optional[int] = None):
         super().__init__(experiment, region_coverage)
         self.subscriber_client = pubsub_v1.SubscriberClient()
-        self.publisher_client = pubsub_v1.PublisherClient()
+        self.publisher_client = pubsub_v1.PublisherClient(
+            publisher_options=pubsub_v1.types.PublisherOptions(
+                enable_message_ordering=True))
         self.project_id = cloud_project
         self.request_queue_topic_id = f'request-queue-topic-{self.experiment}'
         self.request_queue_topic_path = self.publisher_client.topic_path(
