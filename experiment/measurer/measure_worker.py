@@ -168,5 +168,5 @@ class GoogleCloudMeasureWorker(BaseMeasureWorker):  # pylint: disable=too-many-i
                 request.fuzzer, request.benchmark, request.trial_id,
                 request.cycle)
             retry_request_encoded = json.dumps(
-                retry_request.__dict__).encode('utf-8')
+                retry_request._asdict()).encode('utf-8')
             self.publisher_client.publish(topic_path, retry_request_encoded)

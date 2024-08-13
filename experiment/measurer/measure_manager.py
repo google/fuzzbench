@@ -971,7 +971,7 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
             self, task: measurer_datatypes.SnapshotMeasureRequest) -> bytes:
         """Takes a snapshot measure request task and transform it into bytes, so
         it can be published in a pub sub queue."""
-        task_as_dict = task.__dict__
+        task_as_dict = task._asdict()
         return json.dumps(task_as_dict).encode('utf-8')
 
     def put_task_in_request_queue(
