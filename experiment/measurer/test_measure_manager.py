@@ -16,7 +16,6 @@ import os
 import shutil
 from unittest import mock
 import queue
-
 import pytest
 
 from common import experiment_utils
@@ -413,10 +412,20 @@ def test_path_exists_in_experiment_filestore(mocked_execute, environ):
 
 @pytest.fixture
 def local_measure_manager():
-    """Fixture for instantiating a local measure manager object"""
+    """Fixture for instantiating a local measure manager object."""
     local_measure_manager = measure_manager.LocalMeasureManager(
         'experiment', False, None)
     return local_measure_manager
+
+
+@pytest.fixture
+@mock.patch('google.cloud.pubsub_v1.PublisherClient')
+@mock.patch('google.cloud.pubsub_v1.SubscriberClient')
+def gcloud_measure_manager(mock_subscriber, mock_publisher):
+    """Fixture for instantiating a google cloud measure manager object."""
+    gcloud_measure_manager = measure_manager.GoogleCloudMeasureManager(
+        'experiment', 'fuzzbench-test', False, None)
+    return gcloud_measure_manager
 
 
 def test_consume_unmapped_type_from_response_queue(local_measure_manager):
@@ -540,3 +549,90 @@ def test_measure_manager_inner_loop_writes_to_db(
     local_measure_manager.measure_manager_inner_loop(1, request_queue,
                                                      response_queue, set())
     mocked_add_all.assert_called_with([snapshot_model])
+
+
+def test_gcloud_measure_manager_get_result_from_response_queue_not_acknowledge(
+        gcloud_measure_manager):
+    """Tests that the subscriber client does not acknowledge any received
+    message when response received messages is an empty list after calling
+    subscriber client pull method"""
+    pull_return_value = mock.MagicMock()
+    pull_return_value.received_messages = []
+    gcloud_measure_manager.subscriber_client.pull.return_value = pull_return_value  # pylint: disable=line-too-long
+    gcloud_measure_manager.get_result_from_response_queue('')
+    assert not gcloud_measure_manager.subscriber_client.acknowledge.called
+
+
+def test_gcloud_measure_manager_get_result_from_response_queue_acknowledge(
+        gcloud_measure_manager):
+    """Tests that the subscriber client acknowledge received messages when
+    response received messages is not an empty list after calling subscriber
+    client pull method"""
+    pull_return = mock.MagicMock()
+    received_message = mock.MagicMock()
+    received_message.ack_id = 0
+
+    # Since we are simulating getting an object from the queue, this object will
+    # come serialized in bytes format
+    unserialized_data = measurer_datatypes.RetryRequest('fuzzer', 'benchmark',
+                                                        1748392, 0)
+    serialized_data = measurer_datatypes.from_retry_request_to_bytes(
+        unserialized_data)
+    received_message.message.data = serialized_data
+
+    # Mocking the pull method to return the serialized message
+    pull_return.received_messages = [received_message]
+    gcloud_measure_manager.subscriber_client.pull.return_value = pull_return
+
+    gcloud_measure_manager.get_result_from_response_queue('')
+    gcloud_measure_manager.subscriber_client.acknowledge.assert_called_once()
+
+
+def test_gcloud_measure_manager_get_retry_request_from_response_queue(
+        gcloud_measure_manager):
+    """Tests that the subscriber client returns a retry request from the
+    response queue, when the pull method gets a serialized retry request from
+    the queue, with the retry attribute set to True."""
+    pull_return = mock.MagicMock()
+    received_message = mock.MagicMock()
+    received_message.ack_id = 0
+
+    # Since we are simulating getting an object from the queue, this object will
+    # come serialized in bytes format
+    unserialized_data = measurer_datatypes.RetryRequest('fuzzer', 'benchmark',
+                                                        1748392, 0)
+    serialized_data = measurer_datatypes.from_retry_request_to_bytes(
+        unserialized_data)
+    received_message.message.data = serialized_data
+    received_message.message.attributes = {'retry': True}
+
+    # Mocking the pull method to return the serialized message
+    pull_return.received_messages = [received_message]
+    gcloud_measure_manager.subscriber_client.pull.return_value = pull_return
+
+    result = gcloud_measure_manager.get_result_from_response_queue('')
+    assert isinstance(result, measurer_datatypes.RetryRequest)
+
+
+def test_gcloud_measure_manager_get_snapshot_from_response_queue(
+        gcloud_measure_manager):
+    """Tests that the subscriber client returns a measured snapshot from the
+    response queue, when the pull method gets a serialized measured snapshot
+    from the queue, with the retry attribute set to False."""
+    pull_return = mock.MagicMock()
+    received_message = mock.MagicMock()
+    received_message.ack_id = 0
+
+    # Since we are simulating getting an object from the queue, this object will
+    # come serialized in bytes format
+    unserialized_data = models.Snapshot(trial_id=1)
+    serialized_data = unserialized_data.to_bytes()
+    received_message.message.data = serialized_data
+    received_message.message.attributes = {'retry': False}
+
+    # Mocking the pull method to return the serialized message
+    pull_return.received_messages = [received_message]
+    gcloud_measure_manager.subscriber_client.pull.return_value = pull_return
+
+    result = gcloud_measure_manager.get_result_from_response_queue('')
+    assert isinstance(result, models.Snapshot)

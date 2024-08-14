@@ -967,31 +967,28 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
             'ack_ids': ack_ids
         })
 
-        return message.message.data
-
-    def _task_to_bytes(
-            self, task: measurer_datatypes.SnapshotMeasureRequest) -> bytes:
-        """Takes a snapshot measure request task and transform it into bytes, so
-        it can be published in a pub sub queue."""
-        task_as_dict = task._asdict()
-        return json.dumps(task_as_dict).encode('utf-8')
+        unserialized_result = message.message.data
+        serialized_result = json.loads(unserialized_result)
+        if message.message.attributes.get('retry'):
+            return measurer_datatypes.from_dict_to_snapshot_retry_request(
+                serialized_result)
+        return models.Snapshot(**serialized_result)
 
     def put_task_in_request_queue(
             self, task: measurer_datatypes.SnapshotMeasureRequest,
             request_queue: str):
-        topic_path = self.publisher_client.topic_path(self.project_id,
-                                                      request_queue)
         try:
             # Convert message data to bytes
-            message_as_bytes = self._task_to_bytes(task)
+            message_as_bytes = measurer_datatypes.from_snapshot_measure_request_to_bytes( # pylint: disable=line-too-long
+                task)
             # Build the Pub/Sub message object
-            future = self.publisher_client.publish(topic=topic_path,
+            future = self.publisher_client.publish(topic=request_queue,
                                                    data=message_as_bytes,
                                                    ordering_key=str(task.cycle))
             message_id = future.result()  # Get the published message ID
             logger.info(
                 'Manager successfully published task with message ID %s to %s.',
-                message_id, topic_path)
+                message_id, request_queue)
         except Exception as error:  # pylint: disable=broad-except
             logger.error(
                 'An error occurred when publishing task to request queue: %s.',

@@ -47,7 +47,8 @@ class BaseMeasureWorker:
         raise NotImplementedError
 
     def put_result_in_response_queue(
-            self, result: Union[measurer_datatypes.RetryRequest, Snapshot]):
+            self, result: Union[measurer_datatypes.RetryRequest, Snapshot,
+                                bytes], retry: bool):
         """Save measurement result in response queue, for the measure manager to
         retrieve"""
         raise NotImplementedError
@@ -71,9 +72,9 @@ class BaseMeasureWorker:
             measured_snapshot = measure_manager.measure_snapshot_coverage(
                 request.fuzzer, request.benchmark, request.trial_id,
                 request.cycle, self.region_coverage)
-            result = self.process_measured_snapshot_result(
+            result, retry = self.process_measured_snapshot_result(
                 measured_snapshot, request)
-            self.put_result_in_response_queue(result)
+            self.put_result_in_response_queue(result, retry)
             time.sleep(MEASUREMENT_TIMEOUT)
 
 
@@ -95,14 +96,14 @@ class LocalMeasureWorker(BaseMeasureWorker):
 
     def process_measured_snapshot_result(self, measured_snapshot, request):
         if measured_snapshot:
-            return measured_snapshot
+            return measured_snapshot, False
         retry_request = measurer_datatypes.RetryRequest(request.fuzzer,
                                                         request.benchmark,
                                                         request.trial_id,
                                                         request.cycle)
-        return retry_request
+        return retry_request, True
 
-    def put_result_in_response_queue(self, result):
+    def put_result_in_response_queue(self, result, retry):
         self.response_queue.put(result)
 
 
@@ -165,25 +166,30 @@ class GoogleCloudMeasureWorker(BaseMeasureWorker):  # pylint: disable=too-many-i
                     'ack_ids': ack_ids
                 })
 
-                return message.message.data
+                # Needs to deserialize data from bytes to SnapshotMeasureRequest
+                serialized_data = json.loads(message.message.data)
+                return measurer_datatypes.from_dict_to_snapshot_measure_request(
+                    serialized_data)
 
     def process_measured_snapshot_result(self, measured_snapshot, request):
         if measured_snapshot:
             measured_snapshot_serialized = json.dumps(
-                measured_snapshot.__dict__).encode('utf-8')
-            return measured_snapshot_serialized
+                measured_snapshot.as_dict()).encode('utf-8')
+            return measured_snapshot_serialized, False
 
-        retry_request = measurer_datatypes.SnapshotMeasureRequest(
-            request.fuzzer, request.benchmark, request.trial_id, request.cycle)
+        retry_request = measurer_datatypes.RetryRequest(request.fuzzer,
+                                                        request.benchmark,
+                                                        request.trial_id,
+                                                        request.cycle)
         retry_request_encoded = json.dumps(
             retry_request._asdict()).encode('utf-8')
-        return retry_request_encoded
+        return retry_request_encoded, True
 
-    def put_result_in_response_queue(self, result):
-        topic_path = self.publisher_client.topic_path(
-            self.project_id, self.response_queue_topic_id)
+    def put_result_in_response_queue(self, result, retry):
         try:
-            self.publisher_client.publish(topic_path, result)
+            self.publisher_client.publish(topic=self.response_queue_topic_path,
+                                          data=result,
+                                          attrs={'retry': retry})
             logger.info('Result published successfully in response queue.')
         except google.api_core.exceptions.GoogleAPICallError as error:
             logger.error('Error when publishing result in response queue %s.',
