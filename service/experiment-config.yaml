@@ -2,8 +2,8 @@
 # Unless you are a fuzzbench maintainer running this service, this
 # will not work with your setup.
 
-trials: 20
-max_total_time: 82800  # 23 hours, the default time for preemptible experiments.
+trials: 2
+max_total_time: 1800  # 30 min to show two timestamps
 cloud_project: fuzzbench
 docker_registry: gcr.io/fuzzbench
 cloud_compute_zone: us-central1-c
