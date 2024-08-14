@@ -16,10 +16,12 @@ import pytest
 
 from database import models
 
+
 @pytest.fixture()
 def snapshot():
     """Simple pytest fixture to return a model snapshot."""
     return models.Snapshot(trial_id=1)
+
 
 def assert_dicts_equal_ignoring_order(dict1, dict2):
     """Helping function to check if two dictionaries have the same keys, and
@@ -28,17 +30,22 @@ def assert_dicts_equal_ignoring_order(dict1, dict2):
     for key in dict1:
         assert dict1[key] == dict2[key]
 
+
 def test_snapshot_to_bytes(snapshot):  # pylint: disable=redefined-outer-name
     """Tests if a snapshot model is being successfully converted to bytes
     format."""
     snapshot_as_bytes = snapshot.to_bytes()
     assert isinstance(snapshot_as_bytes, bytes)
 
+
 def test_snapshot_as_dict(snapshot):  # pylint: disable=redefined-outer-name
     """Tests if a snapshot model is being successfully converted to a
     dictionary."""
     snapshot_as_dict = snapshot.as_dict()
-    expected_dict = {'edges_covered': None, 'fuzzer_stats': None, 'time': None,
-                     'trial_id': 1}
+    expected_dict = {
+        'edges_covered': None,
+        'fuzzer_stats': None,
+        'time': None,
+        'trial_id': 1
+    }
     assert_dicts_equal_ignoring_order(snapshot_as_dict, expected_dict)
-    
