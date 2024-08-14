@@ -1,0 +1,23 @@
+commit: 045aeac1dd01df12dec7b1ef8191b3193cf4273c
+commit_date: 2023-01-04T08:01:08+00:00
+fuzz_target: decoder_fuzzer
+project: openh264
+unsupported_fuzzers:
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - aflplusplus_qemu_tracepc
+  - aflplusplus_frida
+  - honggfuzz_qemu
+  - klee
+  - lafintel
+  - weizz_qemu
+  - aflplusplus_cmplog_double
+  - symcc_aflplusplus_single
+  - eclipser_aflplusplus
+  - aflplusplus_qemu_double
+  - fuzzolic_aflplusplus_z3
+  - symqemu_aflplusplus
+  - fuzzolic_aflplusplus_fuzzy
+  - fuzzolic_aflplusplus_z3dict
+  - tortoisefuzz
