@@ -979,7 +979,7 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
             request_queue: str):
         try:
             # Convert message data to bytes
-            message_as_bytes = measurer_datatypes.from_snapshot_measure_request_to_bytes( # pylint: disable=line-too-long
+            message_as_bytes = measurer_datatypes.from_snapshot_measure_request_to_bytes(  # pylint: disable=line-too-long
                 task)
             # Build the Pub/Sub message object
             future = self.publisher_client.publish(topic=request_queue,
