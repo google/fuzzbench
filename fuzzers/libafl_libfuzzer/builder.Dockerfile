@@ -34,7 +34,7 @@ RUN if which rustup; then rustup self uninstall -y; fi && \
 # Download libafl.
 RUN git clone https://github.com/AFLplusplus/libafl /libafl && \
     cd /libafl && \
-    git checkout 799c634fef047d3e98355fe1ad17c5226c901a57 && \
+    git checkout f3433767bea0cc3d7ee3b4c08be138e61d20c468 && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
     cd ./libafl_libfuzzer_runtime && \
