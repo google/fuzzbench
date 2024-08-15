@@ -14,6 +14,7 @@
 """Module for measurer workers logic."""
 import time
 import json
+import os
 from typing import Dict, Union, Optional
 import google.api_core.exceptions
 from google.cloud import pubsub_v1
@@ -53,9 +54,19 @@ class BaseMeasureWorker:
         retrieve"""
         raise NotImplementedError
 
+    def _write_pid_to_fs(self):
+        """Debugging method"""
+        pid = os.getpid()
+        with open('worker-pid.txt', 'w+', encoding='utf-8') as pid_file:
+            pid_file.write(str(pid))
+
     def measure_worker_loop(self):
         """Periodically retrieves request from request queue, measure it, and
         put result in response queue"""
+        # Write pid to file system to check if worker process is being started
+        # correctly. Only for debug purposes, will be removed later
+        self._write_pid_to_fs()
+
         logs.initialize(default_extras={
             'component': 'measurer',
             'subcomponent': 'worker',

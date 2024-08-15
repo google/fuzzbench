@@ -98,7 +98,9 @@ def test_put_snapshot_in_response_queue(local_measure_worker):  # pylint: disabl
 
 def test_get_task_from_request_queue_gcloud_worker_calls_acknowledge(
         gcloud_measure_worker):  # pylint: disable=redefined-outer-name
-    """a"""
+    """Tests that the method get_task_from_request_queue from
+    GoogleCloudMeasureWorker worker is calling acknowledge after pulling a
+    message from the queue."""
     pull_return = mock.MagicMock()
     received_message = mock.MagicMock()
     received_message.ack_id = 0
@@ -120,7 +122,10 @@ def test_get_task_from_request_queue_gcloud_worker_calls_acknowledge(
 
 
 def test_get_task_from_request_queue_gcloud_worker(gcloud_measure_worker):  # pylint: disable=redefined-outer-name
-    """a"""
+    """Tests that the method get_task_from_request_queue from
+    GoogleCloudMeasureWorker worker is properly returning a snapshot measure
+    request, meaning it is successfully unserializing the message from the
+    queue."""
     pull_return = mock.MagicMock()
     received_message = mock.MagicMock()
     received_message.ack_id = 0

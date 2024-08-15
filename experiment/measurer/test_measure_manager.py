@@ -15,6 +15,7 @@
 import os
 import shutil
 from unittest import mock
+import multiprocessing
 import queue
 import pytest
 
@@ -636,3 +637,18 @@ def test_gcloud_measure_manager_get_snapshot_from_response_queue(
 
     result = gcloud_measure_manager.get_result_from_response_queue('')
     assert isinstance(result, models.Snapshot)
+
+
+@mock.patch('experiment.measurer.measure_worker.GoogleCloudMeasureWorker')
+def test_gcloud_measure_manager_start_workers(mock_gcloud_measure_worker,
+                                              gcloud_measure_manager):
+    """Tests that the start workers method is calling the measure worker loop
+    method, a number of times equal to the number of measurers CPUs."""
+    cpus_available = multiprocessing.cpu_count()
+    gcloud_measure_manager.measurers_cpus = cpus_available
+    with mock.patch('multiprocessing.pool.Pool.apply_async') as pool:
+        gcloud_measure_manager.start_workers('request-queue-topic',
+                                             'response-queue-topic', pool)
+        assert pool.apply_async.call_count == cpus_available
+        pool.apply_async.assert_called_with(
+            mock_gcloud_measure_worker().measure_worker_loop)
