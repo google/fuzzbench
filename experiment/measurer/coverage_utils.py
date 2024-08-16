@@ -276,6 +276,8 @@ def generate_json_summary(coverage_binary,
 
     if summary_only:
         command.append('-summary-only')
+    # Ensure the directory exists, creating it if necessary
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
     with open(output_file, 'w', encoding='utf-8') as dst_file:
         result = new_process.execute(command,

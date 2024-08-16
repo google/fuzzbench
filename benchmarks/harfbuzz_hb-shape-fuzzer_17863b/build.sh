@@ -25,8 +25,8 @@ python3.8 -m pip install ninja meson==0.56.0
 
 # Disable:
 # 1. UBSan vptr since target built with -fno-rtti.
-export CFLAGS="$CFLAGS -fno-sanitize=vptr -DHB_NO_VISIBILITY"
-export CXXFLAGS="$CXXFLAGS -fno-sanitize=vptr -DHB_NO_VISIBILITY"
+export CFLAGS="$CFLAGS -fno-sanitize=vptr -DHB_NO_VISIBILITY -DHB_NO_PRAGMA_GCC_DIAGNOSTIC -Wno-cast-function-type-strict -Wno-incompatible-function-pointer-types-strict"
+export CXXFLAGS="$CXXFLAGS -fno-sanitize=vptr -DHB_NO_VISIBILITY -DHB_NO_PRAGMA_GCC_DIAGNOSTIC -Wno-cast-function-type-strict -Wno-incompatible-function-pointer-types-strict"
 
 # setup
 build=$WORK/build
