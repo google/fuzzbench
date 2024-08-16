@@ -440,6 +440,23 @@ def test_consume_unmapped_type_from_response_queue(local_measure_manager):
         response_queue, set())
     assert not snapshots
 
+def test_consume_none_from_response_queue(local_measure_manager):
+    """Tests the scenario where None is retrieved from the response queue.
+    Should expect to raise queue.Empty exception, break loop early, and return
+    no snapshots."""
+    response_queue = queue.Queue()
+    response_queue.put(None)
+    # Mock get method keeping its functionality, to assert it was only called
+    # once later.
+    local_measure_manager.get_result_from_response_queue = mock.MagicMock(
+        wraps=local_measure_manager.get_result_from_response_queue)
+    snapshots = local_measure_manager.consume_snapshots_from_response_queue(
+        response_queue, set())
+    # Get result should only be called once since its gonna raise queue.Empty
+    # exception in the first call
+    local_measure_manager.get_result_from_response_queue.assert_called_once()
+    # Should return an empty list
+    assert not snapshots
 
 def test_consume_retry_type_from_response_queue(local_measure_manager):
     """Tests the scenario where a retry object is retrieved from the

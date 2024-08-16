@@ -746,6 +746,9 @@ class BaseMeasureManager:
                                 response_object.trial_id, response_object.cycle)
                 elif isinstance(response_object, models.Snapshot):
                     measured_snapshots.append(response_object)
+                elif response_object is None:
+                    logger.error('Result is None. Response queue is empty.')
+                    raise queue.Empty()
                 else:
                     logger.error('Type of response object not mapped! %s',
                                  type(response_object))
