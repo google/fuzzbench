@@ -67,10 +67,14 @@ class BaseMeasureWorker:
         # correctly. Only for debug purposes, will be removed later
         self._write_pid_to_fs()
 
-        logs.initialize(default_extras={
-            'component': 'measurer',
-            'subcomponent': 'worker',
-        })
+        try:
+            logs.initialize(default_extras={
+                'component': 'measurer',
+                'subcomponent': 'worker',
+            })
+        except Exception as error:  # pylint: disable=broad-except
+            logger.error('Error while initializing logs: %s', error)
+
         logger.info('Starting one measure worker loop')
         while True:
             # 'SnapshotMeasureRequest', ['fuzzer', 'benchmark', 'trial_id',
