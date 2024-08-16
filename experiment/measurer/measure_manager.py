@@ -62,7 +62,6 @@ FAIL_WAIT_SECONDS = 30
 SNAPSHOT_QUEUE_GET_TIMEOUT = 1
 SNAPSHOTS_BATCH_SAVE_SIZE = 100
 MEASUREMENT_LOOP_WAIT = 10
-GET_FROM_PUB_SUB_QUEUE_TIMEOUT = 5
 
 
 def exists_in_experiment_filestore(path: pathlib.Path) -> bool:
@@ -948,12 +947,14 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
 
     def get_result_from_response_queue(self, response_queue: str):
 
-        response = self.subscriber_client.pull(
-            request={
+        try:
+            response = self.subscriber_client.pull(request={
                 'subscription': self.subscription_path,
                 'max_messages': 1
-            },
-            timeout=GET_FROM_PUB_SUB_QUEUE_TIMEOUT)
+            })
+        except google.api_core.exceptions.GoogleAPICallError as error:
+            logger.error('Error when calling pubsub API: %s', error)
+            return None
 
         if not response.received_messages:
             return None

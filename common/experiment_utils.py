@@ -104,7 +104,8 @@ def get_oss_fuzz_corpora_unarchived_path():
 
 
 def get_random_corpora_filestore_path():
-    """Returns path containing seed corpora for the target fuzzing experiment."""  # pylint: disable=line-too-long
+    """Returns path containing seed corpora for the target fuzzing
+    experiment."""
     return posixpath.join(get_experiment_filestore_path(), 'random_corpora')
 
 

@@ -18,13 +18,13 @@ import os
 from typing import Dict, Union, Optional
 import google.api_core.exceptions
 from google.cloud import pubsub_v1
+import google.api
 from common import logs
 from database.models import Snapshot
 import experiment.measurer.datatypes as measurer_datatypes
 from experiment.measurer import measure_manager
 
 MEASUREMENT_TIMEOUT = 1
-GET_FROM_PUB_SUB_QUEUE_TIMEOUT = 3
 logger = logs.Logger()  # pylint: disable=invalid-name
 
 
@@ -160,27 +160,30 @@ class GoogleCloudMeasureWorker(BaseMeasureWorker):  # pylint: disable=too-many-i
     def get_task_from_request_queue(
             self) -> measurer_datatypes.SnapshotMeasureRequest:
         while True:
-            response = self.subscriber_client.pull(
-                request={
+            try:
+                response = self.subscriber_client.pull(request={
                     'subscription': self.subscription_path,
                     'max_messages': 1
-                },
-                timeout=GET_FROM_PUB_SUB_QUEUE_TIMEOUT)
-
-            if response.received_messages:
-                message = response.received_messages[0]
-                ack_ids = [message.ack_id]
-
-                # Acknowledge the received message to remove it from the queue.
-                self.subscriber_client.acknowledge(request={
-                    'subscription': self.subscription_path,
-                    'ack_ids': ack_ids
                 })
 
-                # Needs to deserialize data from bytes to SnapshotMeasureRequest
-                serialized_data = json.loads(message.message.data)
-                return measurer_datatypes.from_dict_to_snapshot_measure_request(
-                    serialized_data)
+                if response.received_messages:
+                    message = response.received_messages[0]
+                    ack_ids = [message.ack_id]
+
+                    # Acknowledge the received message to remove it from the
+                    # queue.
+                    self.subscriber_client.acknowledge(request={
+                        'subscription': self.subscription_path,
+                        'ack_ids': ack_ids
+                    })
+
+                    # Needs to deserialize data from bytes to
+                    # SnapshotMeasureRequest
+                    serialized_data = json.loads(message.message.data)
+                    return measurer_datatypes.from_dict_to_snapshot_measure_request(  # pylint: disable=line-too-long
+                        serialized_data)
+            except google.api_core.exceptions.GoogleAPICallError as error:
+                logger.error('Error when calling pubsub API: %s', error)
 
     def process_measured_snapshot_result(self, measured_snapshot, request):
         if measured_snapshot:
