@@ -299,7 +299,7 @@ def get_git_hash(allow_uncommitted_changes):
 
 
 def _filter_incompatible_benchmarks(config: dict,
-                                    benchmarks: list[str]) -> list[str]:
+                                    benchmarks: List[str]) -> List[str]:
     """Removes benchmarks that are incompatible with build/run environment."""
     if config['local_experiment']:
         return benchmarks
