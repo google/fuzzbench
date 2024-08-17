@@ -66,7 +66,7 @@ local_experiment: true
 
 Pick the benchmarks you want to use from the `benchmarks/` directory.
 
-For example: `freetype2-2017` and `bloaty_fuzz_target`.
+For example: `freetype2_ftfuzzer` and `bloaty_fuzz_target`.
 
 ## Fuzzers
 
@@ -80,7 +80,7 @@ Now that everything is ready, execute `run_experiment.py`:
 ```bash
 PYTHONPATH=. python3 experiment/run_experiment.py \
 --experiment-config experiment-config.yaml \
---benchmarks freetype2-2017 bloaty_fuzz_target \
+--benchmarks freetype2_ftfuzzer bloaty_fuzz_target \
 --experiment-name $EXPERIMENT_NAME \
 --fuzzers afl libfuzzer
 ```
