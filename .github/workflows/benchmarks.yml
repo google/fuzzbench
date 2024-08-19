@@ -33,7 +33,7 @@ jobs:
           - libxslt_xpath
           - mbedtls_fuzz_dtlsclient
           - mbedtls_fuzz_dtlsclient_7c6b0e
-          - mruby_mruby_fuzzer
+          - mruby_mruby_fuzzer_8c8bbd
           - openh264_decoder_fuzzer
           - openssl_x509
           - openthread_ot-ip6-send-fuzzer
