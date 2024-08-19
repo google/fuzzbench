@@ -32,14 +32,14 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
 # Download libafl
 RUN git clone https://github.com/AFLplusplus/libafl_fuzzbench /libafl_fuzzbench && \
     cd /libafl_fuzzbench && \
-    git checkout 7c1b2aad1c458cca7ce50097e53db07ec7d7fdbe && \
+    git checkout b7fc9fd143daff0190fd623ed3a8b9fbc64cc00c && \
     git submodule update --init
 
 # Compile libafl
 RUN cd /libafl_fuzzbench/ && unset CFLAGS && unset CXXFLAGS && \
     export CC=clang && export CXX=clang++ && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
-    PATH="/root/.cargo/bin:$PATH" cargo build --release
+    PATH="/root/.cargo/bin:$PATH" cargo build --release -p grimoire
 
 RUN wget https://gist.githubusercontent.com/andreafioraldi/e5f60d68c98b31665a274207cfd05541/raw/4da351a321f1408df566a9cf2ce7cde6eeab3904/empty_fuzzer_lib.c -O /empty_fuzzer_lib.c && \
     clang -c /empty_fuzzer_lib.c && \
