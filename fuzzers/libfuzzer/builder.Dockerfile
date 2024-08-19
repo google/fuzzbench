@@ -17,7 +17,7 @@ FROM $parent_image
 
 # Install dependencies.
 RUN apt-get update && \
-    apt-get remove -y llvm-10 && \
+    apt-get remove -y llvm-* clang-* && \
     apt-get install -y \
         build-essential \
         lsb-release wget software-properties-common gnupg && \
