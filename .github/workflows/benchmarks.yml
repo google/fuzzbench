@@ -36,6 +36,7 @@ jobs:
           - openh264_decoder_fuzzer
           - openssl_x509
           - openthread_ot-ip6-send-fuzzer
+          - pcre2_pcre2_fuzzer
           - php_php-fuzz-parser_0dbedb
           - proj4_proj_crs_to_crs_fuzzer
           - re2_fuzzer
