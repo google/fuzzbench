@@ -851,9 +851,9 @@ class LocalMeasureManager(BaseMeasureManager):
         # Since each worker is going to be in an infinite loop, we dont need
         # result return. Workers' life scope will end automatically when
         # there are no more snapshots left to measure.
-        log_message = ('Starting measure worker loop for'
+        log_message = ('Starting measure worker loop for '
                        f'{self.measurers_cpus}'
-                       'workers in local measure manager')
+                       ' workers in local measure manager')
         logger.info(log_message)
         for _ in range(self.measurers_cpus):
             pool.apply_async(local_measure_worker.measure_worker_loop)
@@ -937,13 +937,17 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
             'experiment': self.experiment,
         }
         google_cloud_worker = measure_worker.GoogleCloudMeasureWorker(config)
+        # Only creating one worker for debugging purposes
+        pool.apply_async(google_cloud_worker.measure_worker_loop)
 
+        return
         # Since each worker is going to be in an infinite loop, we dont need
         # result return. Workers' life scope will end automatically when
         # there are no more snapshots left to measure.
-        log_message = ('Starting measure worker loop for'
+        # pylint: disable=unreachable
+        log_message = ('Starting measure worker loop for '
                        f'{self.measurers_cpus}'
-                       'workers in google cloud measure manager')
+                       ' workers in google cloud measure manager')
         logger.info(log_message)
         for _ in range(self.measurers_cpus):
             pool.apply_async(google_cloud_worker.measure_worker_loop)

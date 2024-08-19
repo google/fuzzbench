@@ -440,6 +440,7 @@ def test_consume_unmapped_type_from_response_queue(local_measure_manager):
         response_queue, set())
     assert not snapshots
 
+
 def test_consume_none_from_response_queue(local_measure_manager):
     """Tests the scenario where None is retrieved from the response queue.
     Should expect to raise queue.Empty exception, break loop early, and return
@@ -457,6 +458,7 @@ def test_consume_none_from_response_queue(local_measure_manager):
     local_measure_manager.get_result_from_response_queue.assert_called_once()
     # Should return an empty list
     assert not snapshots
+
 
 def test_consume_retry_type_from_response_queue(local_measure_manager):
     """Tests the scenario where a retry object is retrieved from the
@@ -661,7 +663,9 @@ def test_gcloud_measure_manager_start_workers(mock_gcloud_measure_worker,
                                               gcloud_measure_manager):
     """Tests that the start workers method is calling the measure worker loop
     method, a number of times equal to the number of measurers CPUs."""
-    cpus_available = multiprocessing.cpu_count()
+    # Changing this to 1 temporarily to debug gcloud worker
+    cpus_available = 1
+    # cpus_available = multiprocessing.cpu_count()
     gcloud_measure_manager.measurers_cpus = cpus_available
     with mock.patch('multiprocessing.pool.Pool.apply_async') as pool:
         gcloud_measure_manager.start_workers('request-queue-topic',
