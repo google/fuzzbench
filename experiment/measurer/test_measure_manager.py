@@ -15,7 +15,6 @@
 import os
 import shutil
 from unittest import mock
-import multiprocessing
 import queue
 import pytest
 
