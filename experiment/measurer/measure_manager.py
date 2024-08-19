@@ -937,10 +937,7 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
             'experiment': self.experiment,
         }
         google_cloud_worker = measure_worker.GoogleCloudMeasureWorker(config)
-        # Only creating one worker for debugging purposes
-        pool.apply_async(google_cloud_worker.measure_worker_loop)
 
-        return
         # Since each worker is going to be in an infinite loop, we dont need
         # result return. Workers' life scope will end automatically when
         # there are no more snapshots left to measure.

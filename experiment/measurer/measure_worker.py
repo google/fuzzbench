@@ -80,16 +80,19 @@ class BaseMeasureWorker:
             # 'SnapshotMeasureRequest', ['fuzzer', 'benchmark', 'trial_id',
             # 'cycle']
             request = self.get_task_from_request_queue()
-            logger.info(
-                'Measurer worker: Got request %s %s %d %d from request queue',
-                request.fuzzer, request.benchmark, request.trial_id,
-                request.cycle)
-            measured_snapshot = measure_manager.measure_snapshot_coverage(
-                request.fuzzer, request.benchmark, request.trial_id,
-                request.cycle, self.region_coverage)
-            result, retry = self.process_measured_snapshot_result(
-                measured_snapshot, request)
-            self.put_result_in_response_queue(result, retry)
+            if request:
+                logger.info(
+                    'Measurer worker: Got request %s %s %d %d from request queue',  # pylint: disable=line-too-long
+                    request.fuzzer,
+                    request.benchmark,
+                    request.trial_id,
+                    request.cycle)
+                measured_snapshot = measure_manager.measure_snapshot_coverage(
+                    request.fuzzer, request.benchmark, request.trial_id,
+                    request.cycle, self.region_coverage)
+                result, retry = self.process_measured_snapshot_result(
+                    measured_snapshot, request)
+                self.put_result_in_response_queue(result, retry)
             time.sleep(MEASUREMENT_TIMEOUT)
 
 
@@ -162,32 +165,34 @@ class GoogleCloudMeasureWorker(BaseMeasureWorker):  # pylint: disable=too-many-i
             return None
 
     def get_task_from_request_queue(
-            self) -> measurer_datatypes.SnapshotMeasureRequest:
-        while True:
-            try:
-                response = self.subscriber_client.pull(request={
-                    'subscription': self.subscription_path,
-                    'max_messages': 1
-                })
+            self) -> Optional[measurer_datatypes.SnapshotMeasureRequest]:
+        try:
+            response = self.subscriber_client.pull(request={
+                'subscription': self.subscription_path,
+                'max_messages': 1
+            })
+        except google.api_core.exceptions.GoogleAPICallError as error:
+            logger.error('Error when calling pubsub API: %s', error)
+            return None
 
-                if response.received_messages:
-                    message = response.received_messages[0]
-                    ack_ids = [message.ack_id]
+        if not response.received_messages:
+            return None
 
-                    # Acknowledge the received message to remove it from the
-                    # queue.
-                    self.subscriber_client.acknowledge(request={
-                        'subscription': self.subscription_path,
-                        'ack_ids': ack_ids
-                    })
+        message = response.received_messages[0]
+        ack_ids = [message.ack_id]
 
-                    # Needs to deserialize data from bytes to
-                    # SnapshotMeasureRequest
-                    serialized_data = json.loads(message.message.data)
-                    return measurer_datatypes.from_dict_to_snapshot_measure_request(  # pylint: disable=line-too-long
-                        serialized_data)
-            except google.api_core.exceptions.GoogleAPICallError as error:
-                logger.error('Error when calling pubsub API: %s', error)
+        # Acknowledge the received message to remove it from the
+        # queue.
+        self.subscriber_client.acknowledge(request={
+            'subscription': self.subscription_path,
+            'ack_ids': ack_ids
+        })
+
+        # Needs to deserialize data from bytes to
+        # SnapshotMeasureRequest
+        serialized_data = json.loads(message.message.data)
+        return measurer_datatypes.from_dict_to_snapshot_measure_request(  # pylint: disable=line-too-long
+            serialized_data)
 
     def process_measured_snapshot_result(self, measured_snapshot, request):
         if measured_snapshot:

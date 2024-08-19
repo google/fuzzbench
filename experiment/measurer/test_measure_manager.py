@@ -15,6 +15,7 @@
 import os
 import shutil
 from unittest import mock
+import multiprocessing
 import queue
 import pytest
 
@@ -662,9 +663,7 @@ def test_gcloud_measure_manager_start_workers(mock_gcloud_measure_worker,
                                               gcloud_measure_manager):
     """Tests that the start workers method is calling the measure worker loop
     method, a number of times equal to the number of measurers CPUs."""
-    # Changing this to 1 temporarily to debug gcloud worker
-    cpus_available = 1
-    # cpus_available = multiprocessing.cpu_count()
+    cpus_available = multiprocessing.cpu_count()
     gcloud_measure_manager.measurers_cpus = cpus_available
     with mock.patch('multiprocessing.pool.Pool.apply_async') as pool:
         gcloud_measure_manager.start_workers('request-queue-topic',
