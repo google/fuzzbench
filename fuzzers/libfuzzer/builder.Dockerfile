@@ -15,12 +15,21 @@
 ARG parent_image
 FROM $parent_image
 
+# Install dependencies.
+RUN apt-get update && \
+    apt-get remove -y llvm-10 && \
+    apt-get install -y \
+        build-essential \
+        lsb-release wget software-properties-common gnupg && \
+    wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 18
+
 RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
     cd /llvm-project && \
-    git checkout 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff && \
-    cd compiler-rt/lib/fuzzer && \
+    git checkout 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff
+
+RUN cd /llvm-project/compiler-rt/lib/fuzzer && \
     (for f in *.cpp; do \
-      clang++ -stdlib=libc++ -fPIC -O2 -std=c++11 $f -c & \
+      clang++ -stdlib=libc++ -fPIC -O2 -std=c++17 $f -c & \
     done && wait) && \
     ar r libFuzzer.a *.o && \
     cp libFuzzer.a /usr/lib
