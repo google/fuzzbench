@@ -1,4 +1,4 @@
 allowed_benchmarks:
   - quickjs_eval-2020-01-05
   - php_php-fuzz-execute
-  - mruby_mruby_fuzzer
+  - mruby_mruby_fuzzer_8c8bbd
