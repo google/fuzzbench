@@ -16,7 +16,7 @@
 
 import os
 import subprocess
-import shutil
+
 from fuzzers import utils
 
 
@@ -40,10 +40,10 @@ def prepare_fuzz_environment(input_corpus):
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
-    os.environ[
-        'CC'] = '/libafl/fuzzers/fuzzbench/target/release-fuzzbench/libafl_cc'
-    os.environ[
-        'CXX'] = '/libafl/fuzzers/fuzzbench/target/release-fuzzbench/libafl_cxx'
+    os.environ['CC'] = ('/libafl/fuzzers/fuzzbench/fuzzbench'
+                        '/target/release-fuzzbench/libafl_cc')
+    os.environ['CXX'] = ('/libafl/fuzzers/fuzzbench/fuzzbench'
+                         '/target/release-fuzzbench/libafl_cxx')
 
     os.environ['ASAN_OPTIONS'] = 'abort_on_error=0:allocator_may_return_null=1'
     os.environ['UBSAN_OPTIONS'] = 'abort_on_error=0'
@@ -57,22 +57,14 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
     os.environ['FUZZER_LIB'] = '/stub_rt.a'
     utils.build_benchmark()
 
-def prepare_empty_corpus(input_corpus):
-    if os.path.exists(input_corpus):
-        shutil.rmtree(input_corpus)
-    os.makedirs(input_corpus)
-    with open(os.path.join(input_corpus, 'a'), 'wb') as f:
-        f.write(b'a')
-
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     prepare_fuzz_environment(input_corpus)
-    prepare_empty_corpus(input_corpus)
     dictionary_path = utils.get_dictionary_path(target_binary)
     command = [target_binary]
-    #if dictionary_path:
-    #    command += (['-x', dictionary_path])
+    # if dictionary_path:
+    #     command += (['-x', dictionary_path])
     command += (['-o', output_corpus, '-i', input_corpus])
     fuzzer_env = os.environ.copy()
     fuzzer_env['LD_PRELOAD'] = '/usr/lib/x86_64-linux-gnu/libjemalloc.so.2'
