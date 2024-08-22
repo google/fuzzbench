@@ -959,9 +959,13 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
             worker_subscription_path, worker_request_queue_topic_path)
 
         for _ in range(self.measurers_cpus):
-            google_cloud_worker = measure_worker.GoogleCloudMeasureWorker(
-                config)
-            pool.apply_async(google_cloud_worker.measure_worker_loop)
+
+            def start_measure_workers_and_start_loop():
+                google_cloud_worker = measure_worker.GoogleCloudMeasureWorker(
+                    config)
+                google_cloud_worker.measure_worker_loop()
+
+            pool.apply_async(start_measure_workers_and_start_loop)
 
     def get_result_from_response_queue(self, response_queue: str):
 

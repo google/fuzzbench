@@ -672,5 +672,3 @@ def test_gcloud_measure_manager_start_workers(_mock_subscriber, _mock_publisher,
         gcloud_measure_manager.start_workers('request-queue-topic',
                                              'response-queue-topic', pool)
         assert pool.apply_async.call_count == cpus_available
-        pool.apply_async.assert_called_with(
-            mock_gcloud_measure_worker().measure_worker_loop)
