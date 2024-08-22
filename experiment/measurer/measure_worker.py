@@ -145,15 +145,16 @@ class GoogleCloudMeasureWorker(BaseMeasureWorker):  # pylint: disable=too-many-i
                                            f'{self.experiment}')
         self.subscription_path = self.subscriber_client.subscription_path(
             self.project_id, self.request_queue_subscription)
-        self._create_request_queue_subscription()
 
-    def _create_request_queue_subscription(self):
+    @staticmethod
+    def create_request_queue_subscription(subscription_path,
+                                          request_queue_topic_path):
         """Creates a new Pub/Sub subscription for the request queue."""
         try:
-            subscription = self.subscriber_client.create_subscription(
+            subscription = pubsub_v1.SubscriberClient().create_subscription(
                 request={
-                    'name': self.subscription_path,
-                    'topic': self.request_queue_topic_path,
+                    'name': subscription_path,
+                    'topic': request_queue_topic_path,
                     'enable_message_ordering': True,
                 })
             logger.info('Subscription %s created successfully.',

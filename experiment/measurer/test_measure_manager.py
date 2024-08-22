@@ -659,7 +659,10 @@ def test_gcloud_measure_manager_get_snapshot_from_response_queue(
 
 
 @mock.patch('experiment.measurer.measure_worker.GoogleCloudMeasureWorker')
-def test_gcloud_measure_manager_start_workers(mock_gcloud_measure_worker,
+@mock.patch('google.cloud.pubsub_v1.PublisherClient')
+@mock.patch('google.cloud.pubsub_v1.SubscriberClient')
+def test_gcloud_measure_manager_start_workers(_mock_subscriber, _mock_publisher,
+                                              mock_gcloud_measure_worker,
                                               gcloud_measure_manager):
     """Tests that the start workers method is calling the measure worker loop
     method, a number of times equal to the number of measurers CPUs."""

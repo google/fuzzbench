@@ -915,7 +915,7 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
     def _create_response_queue_subscription(self):
         """Creates a new Pub/Sub subscription for the response queue."""
         try:
-            subscription = self.subscriber_client.create_subscription(
+            subscription = pubsub_v1.SubscriberClient().create_subscription(
                 request={
                     'name': self.subscription_path,
                     'topic': self.response_queue_topic_path
@@ -929,14 +929,6 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
 
     def start_workers(self, request_queue, response_queue, pool):
         self._create_response_queue_subscription()
-        config = {
-            'request_queue_topic_id': self.request_queue_topic_id,
-            'response_queue_topic_id': self.response_queue_topic_id,
-            'region_coverage': self.region_coverage,
-            'project_id': self.project_id,
-            'experiment': self.experiment,
-        }
-        google_cloud_worker = measure_worker.GoogleCloudMeasureWorker(config)
 
         # Since each worker is going to be in an infinite loop, we dont need
         # result return. Workers' life scope will end automatically when
@@ -946,7 +938,29 @@ class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many
                        f'{self.measurers_cpus}'
                        ' workers in google cloud measure manager')
         logger.info(log_message)
+
+        config = {
+            'request_queue_topic_id': self.request_queue_topic_id,
+            'response_queue_topic_id': self.response_queue_topic_id,
+            'region_coverage': self.region_coverage,
+            'project_id': self.project_id,
+            'experiment': self.experiment,
+        }
+
+        # Create the worker request queue subscription once, before starting all
+        # workers
+        worker_request_queue_subscription = ('request-queue-subscription-'
+                                             f'{self.experiment}')
+        worker_subscription_path = self.subscriber_client.subscription_path(
+            self.project_id, worker_request_queue_subscription)
+        worker_request_queue_topic_path = self.subscriber_client.topic_path(
+            self.project_id, self.request_queue_topic_id)
+        measure_worker.GoogleCloudMeasureWorker.create_request_queue_subscription(  # pylint: disable=line-too-long
+            worker_subscription_path, worker_request_queue_topic_path)
+
         for _ in range(self.measurers_cpus):
+            google_cloud_worker = measure_worker.GoogleCloudMeasureWorker(
+                config)
             pool.apply_async(google_cloud_worker.measure_worker_loop)
 
     def get_result_from_response_queue(self, response_queue: str):
