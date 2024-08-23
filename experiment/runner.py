@@ -180,7 +180,8 @@ def run_fuzzer(max_total_time, log_filename):
     target_binary = fuzzer_utils.get_fuzz_target_binary(FUZZ_TARGET_DIR,
                                                         fuzz_target_name)
     if not target_binary:
-        logs.error('Fuzz target binary not found.')
+        logs.error(f'Fuzz target binary {fuzz_target_name} not found under '
+                   f'{FUZZ_TARGET_DIR}')
         return
 
     if max_total_time is None:

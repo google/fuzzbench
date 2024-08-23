@@ -83,7 +83,11 @@ def get_fuzz_target_binary(search_directory: str,
     if os.path.exists(default_fuzz_target_binary):
         return default_fuzz_target_binary
 
+    logs.info('Searching for possible fuzz target in search directory: '
+              f'{search_directory}')
     for root, _, files in os.walk(search_directory):
+        logs.info(f'Searching for possible fuzz target under subdir {root}: '
+                  f'{files}')
         if root == 'uninstrumented':
             continue
         for filename in files:
