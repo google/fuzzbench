@@ -177,6 +177,8 @@ def run_fuzzer(max_total_time, log_filename):
     input_corpus = environment.get('SEED_CORPUS_DIR')
     output_corpus = os.environ['OUTPUT_CORPUS_DIR']
     fuzz_target_name = environment.get('FUZZ_TARGET')
+    logs.info('all ENV VAR '
+              f'{[f"{key}: {value}" for key, value in os.environ.items()]}')
     target_binary = fuzzer_utils.get_fuzz_target_binary(FUZZ_TARGET_DIR,
                                                         fuzz_target_name)
     if not target_binary:
