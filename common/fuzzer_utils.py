@@ -72,6 +72,12 @@ class FuzzerDirectory:
 def get_fuzz_target_binary(search_directory: str,
                            fuzz_target_name: str) -> Optional[str]:
     """Return target binary path."""
+    logs.info(f'Searching for fuzz target binary named {fuzz_target_name} under'
+              f' directory {search_directory}')
+    logs.info(f'Search diretory {os.path.abspath(search_directory)} exists: '
+              f'{os.path.exists(os.path.abspath(search_directory))}')
+    logs.info(f'list Search diretory {search_directory}: '
+              f'{os.listdir(search_directory)}')
     if fuzz_target_name:
         fuzz_target_binary = os.path.join(search_directory, fuzz_target_name)
         if os.path.exists(fuzz_target_binary):
