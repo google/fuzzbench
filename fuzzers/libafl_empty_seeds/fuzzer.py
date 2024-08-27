@@ -37,6 +37,13 @@ def prepare_fuzz_environment(input_corpus):
     # Create at least one non-empty seed to start.
     utils.create_seed_file_for_empty_corpus(input_corpus)
 
+def prepare_empty_corpus(input_corpus):
+    if os.path.exists(input_corpus):
+        shutil.rmtree(input_corpus)
+    os.makedirs(input_corpus)
+    with open(os.path.join(input_corpus, 'a'), 'wb') as f:
+        f.write(b'a')
+
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
@@ -61,6 +68,7 @@ def build():  # pylint: disable=too-many-branches,too-many-statements
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     prepare_fuzz_environment(input_corpus)
+    prepare_empty_corpus(input_corpus)
     dictionary_path = utils.get_dictionary_path(target_binary)
     command = [target_binary]
     # if dictionary_path:
