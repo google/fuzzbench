@@ -1,0 +1,13 @@
+diff --git a/fuzzers/fuzzbench_dataflow_guided/src/lib.rs b/fuzzers/fuzzbench_dataflow_guided/src/lib.rs
+index 4b40192d..db00760a 100644
+--- a/fuzzers/fuzzbench_dataflow_guided/src/lib.rs
++++ b/fuzzers/fuzzbench_dataflow_guided/src/lib.rs
+@@ -351,7 +351,7 @@ fn fuzz(
+     let mutation = StdMutationalStage::with_max_iterations(mutator, 128);
+ 
+     let scheduler = PrescientProbabilitySamplingScheduler::
+-        new_with_backoff_and_max_prescient_depth(backoff_factor, 3);
++        new_with_backoff_and_max_prescient_depth(backoff_factor, 1);
+ 
+     // A fuzzer with feedbacks and a corpus scheduler
+     let mut fuzzer = StdFuzzer::new(scheduler, feedback, objective);
