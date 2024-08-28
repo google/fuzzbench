@@ -16,6 +16,7 @@
 
 import os
 import subprocess
+import shutil
 
 from fuzzers import utils
 
