@@ -234,6 +234,7 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         shutil.copy('/afl/afl-frida-trace.so', build_directory)
         shutil.copy('/get_frida_entry.sh', build_directory)
 
+
 def prepare_empty_corpus(input_corpus):
     if os.path.exists(input_corpus):
         shutil.rmtree(input_corpus)
