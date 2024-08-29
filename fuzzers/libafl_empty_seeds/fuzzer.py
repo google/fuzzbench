@@ -16,6 +16,7 @@
 
 import os
 import subprocess
+import shutil
 
 from fuzzers import utils
 
@@ -36,6 +37,7 @@ def prepare_fuzz_environment(input_corpus):
                                    'symbolize=0:symbolize_inline_frames=0'
     # Create at least one non-empty seed to start.
     utils.create_seed_file_for_empty_corpus(input_corpus)
+
 
 def prepare_empty_corpus(input_corpus):
     if os.path.exists(input_corpus):

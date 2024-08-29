@@ -40,6 +40,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     run_fuzzer."""
     run_fuzzer(input_corpus, output_corpus, target_binary)
 
+
 def prepare_empty_corpus(input_corpus):
     if os.path.exists(input_corpus):
         shutil.rmtree(input_corpus)
