@@ -92,6 +92,7 @@ def check_skip_det_compatible(additional_flags):
         return False
     return True
 
+
 def prepare_empty_corpus(input_corpus):
     if os.path.exists(input_corpus):
         shutil.rmtree(input_corpus)

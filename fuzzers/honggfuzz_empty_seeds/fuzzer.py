@@ -42,6 +42,7 @@ def prepare_empty_corpus(input_corpus):
     with open(os.path.join(input_corpus, 'a'), 'wb') as f:
         f.write(b'a')
 
+
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
 
