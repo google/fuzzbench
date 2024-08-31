@@ -1,5 +1,5 @@
 # 6326353730863104
-commit: 288BAFA952B1D515E10BDF8C8F0ADDE3ACBBE4BE
+commit: 82d7a151db3f504fee705bcd0ded2fa0d64eafb2
 commit_date: 2022-06-10T20:01:24+0000
 fuzz_target: fuzz-network-parser
 project: systemd
