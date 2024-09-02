@@ -28,4 +28,11 @@ RUN git clone https://github.com/mm2/Little-CMS.git
 RUN wget -qO $OUT/cms_transform_fuzzer.dict \
     https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/icc.dict
 COPY cms_transform_fuzzer.cc build.sh $SRC/
+# Download the seeds tarball from your GitHub repository
+RUN wget https://raw.githubusercontent.com/ardier/fuzzbench/minimized-subsumed-mutants-benchmark-with-seeds/benchmarks/lcms_cms_transform_fuzzer_all_seeds/seeds.tar.gz -O /tmp/seeds.tar.gz
+
+# Extract the seeds tarball to the /opt/seeds directory
+RUN mkdir -p /opt/seeds && \
+    tar -xzvf /tmp/seeds.tar.gz -C /opt/seeds
 ADD seeds /opt/seeds
+
