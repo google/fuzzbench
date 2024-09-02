@@ -34,5 +34,5 @@ RUN wget https://raw.githubusercontent.com/ardier/fuzzbench/minimized-subsumed-m
 # Extract the seeds tarball to the /opt/seeds directory
 RUN mkdir -p /opt/seeds && \
     tar -xzvf /tmp/seeds.tar.gz -C /opt/seeds
-ADD seeds /opt/seeds
+# ADD seeds /opt/seeds
 
