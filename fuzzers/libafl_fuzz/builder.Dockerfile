@@ -43,7 +43,7 @@ RUN cd /afl && \
     cp utils/aflpp_driver/libAFLDriver.a /
 
 # Download libafl.
-RUN git clone https://github.com/R9295/LibAFL /libafl
+RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 
 # Checkout a current commit
 RUN cd /libafl && git pull && \
