@@ -226,6 +226,10 @@ def get_trial_ids(experiment: str, fuzzer: str, benchmark: str):
 
 def merge_profdata_files(src_files, dst_file):
     """Uses llvm-profdata to merge |src_files| to |dst_files|."""
+    if src_files:
+        logger.info('llvm-profdata src files are: %s', src_files)
+    else:
+        logger.error('llvm-profdata has no src files: %s', src_files)
     command = ['llvm-profdata', 'merge', '-sparse']
     command.extend(src_files)
     command.extend(['-o', dst_file])

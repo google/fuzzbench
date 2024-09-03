@@ -436,11 +436,22 @@ class SnapshotMeasurer(coverage_utils.TrialCoverage):  # pylint: disable=too-man
 
     def generate_profdata(self, cycle: int):
         """Generate .profdata file from .profraw file."""
+        self.logger.info('Listing all files under %s to find profraw files: %s',
+                         self.coverage_dir, os.listdir(self.coverage_dir))
+        candiates = {
+            f: os.path.getsize(f)
+            for f in glob.glob(self.profraw_file_pattern.replace('%m', '*'))
+        }
+        self.logger.info('Candidate profraw files are: %s', candiates)
         files_to_merge = self.get_profraw_files()
         if os.path.isfile(self.profdata_file):
             # If coverage profdata exists, then merge it with
             # existing available data.
             files_to_merge += [self.profdata_file]
+            self.logger.info('profdata_file does exist: %s', self.profdata_file)
+        else:
+            self.logger.warning('profdata_file does not exist: %s',
+                                self.profdata_file)
 
         result = coverage_utils.merge_profdata_files(files_to_merge,
                                                      self.profdata_file)
