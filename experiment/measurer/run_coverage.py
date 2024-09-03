@@ -44,6 +44,7 @@ def do_coverage_run(  # pylint: disable=too-many-locals
     """Does a coverage run of |coverage_binary| on |new_units_dir|. Writes
     the result to |profraw_file_pattern|."""
     with tempfile.TemporaryDirectory() as merge_dir:
+        logger.info("coverage binary exists?: %s", os.path.exists(os.path.abspath(coverage_binary)))
         command = [
             coverage_binary, '-merge=1', '-dump_coverage=1',
             f'-artifact_prefix={crashes_dir}/', f'-timeout={UNIT_TIMEOUT}',
