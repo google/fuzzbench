@@ -61,6 +61,8 @@ def do_coverage_run(  # pylint: disable=too-many-locals
                                      expect_zero=False,
                                      kill_children=True,
                                      timeout=MAX_TOTAL_TIME)
+        
+        logger.info("coverage dir after coverage run %s", os.listdir(coverage_binary_dir))
 
     if result.retcode != 0:
         logger.error('Coverage run failed.',
