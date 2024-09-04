@@ -66,7 +66,7 @@ def build_dfsan():
         os.remove(cfg_file)
     Path(cfg_file).touch()
     new_env['AFL_LLVM_MODULE_OFFSETS_FILE'] = os.path.join(
-            build_directory, 'module_cfg_offsets.txt')
+        build_directory, 'module_cfg_offsets.txt')
 
     src = os.getenv('SRC')
     work = os.getenv('WORK')
@@ -110,7 +110,7 @@ def build():
         os.remove(cfg_file)
     Path(cfg_file).touch()
     os.environ['AFL_LLVM_MODULE_OFFSETS_FILE'] = os.path.join(
-            build_directory, 'module_cfg_offsets.txt')
+        build_directory, 'module_cfg_offsets.txt')
     utils.build_benchmark()
 
 

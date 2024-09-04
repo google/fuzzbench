@@ -39,8 +39,8 @@ RUN git clone https://github.com/DanBlackwell/DGFuzz /dgfuzz
 RUN cd /dgfuzz && git pull && git checkout 83ca1ee1b0ce42ab60bf21f6703a5ea15004b96b || true
 
 # apply a patch (local testing only)
-# COPY ./patch /dgfuzz/patch
-# RUN cd /dgfuzz && git apply ./patch
+COPY ./patch /dgfuzz/patch
+RUN cd /dgfuzz && git apply ./patch
 
 # Compile DGFuzz.
 RUN cd /dgfuzz && \

@@ -60,10 +60,14 @@ def build_dfsan():
     new_env['OUT'] = dfsan_build_directory
 
     cfg_file = os.path.join(build_directory, 'aflpp_cfg.bin')
-    new_env['AFL_LLVM_CFG_FILE'] = cfg_file
     if os.path.isfile(cfg_file):
         os.remove(cfg_file)
     Path(cfg_file).touch()
+    new_env['AFL_LLVM_CFG_FILE'] = cfg_file
+
+    new_env['AFL_LLVM_FIRST_BUILD'] = '1'
+    new_env['AFL_LLVM_MODULE_OFFSETS_FILE'] = os.path.join(
+        build_directory, 'module_cfg_offsets.txt')
 
     src = os.getenv('SRC')
     work = os.getenv('WORK')
@@ -83,30 +87,42 @@ def build_dfsan():
 def build():
     """Build benchmark."""
 
-    # first build it with DFSan enabled
-    build_dfsan()
+    src = os.getenv('SRC')
+    work = os.getenv('WORK')
 
-    os.environ['CC'] = ('/dgfuzz/fuzzers/fuzzbench_dataflow_guided/target/'
-                        'release-fuzzbench/libafl_cc')
-    os.environ['CXX'] = ('/dgfuzz/fuzzers/fuzzbench_dataflow_guided/target/'
-                         'release-fuzzbench/libafl_cxx')
+    with utils.restore_directory(src), utils.restore_directory(work):
+        # first build it with DFSan enabled
+        build_dfsan()
 
-    os.environ['ASAN_OPTIONS'] = 'abort_on_error=0:allocator_may_return_null=1'
-    os.environ['UBSAN_OPTIONS'] = 'abort_on_error=0'
+    with utils.restore_directory(src), utils.restore_directory(work):
+        # Restore SRC to its initial state so we can build again without any
+        # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
+        # twice in the same directory without this.
+        os.environ['CC'] = ('/dgfuzz/fuzzers/fuzzbench_dataflow_guided/target/'
+                            'release-fuzzbench/libafl_cc')
+        os.environ['CXX'] = ('/dgfuzz/fuzzers/fuzzbench_dataflow_guided/target/'
+                             'release-fuzzbench/libafl_cxx')
 
-    cflags = ['--libafl']
-    utils.append_flags('CFLAGS', cflags)
-    utils.append_flags('CXXFLAGS', cflags)
-    utils.append_flags('LDFLAGS', cflags)
+        os.environ[
+            'ASAN_OPTIONS'] = 'abort_on_error=0:allocator_may_return_null=1'
+        os.environ['UBSAN_OPTIONS'] = 'abort_on_error=0'
 
-    os.environ['FUZZER_LIB'] = '/stub_rt.a'
-    build_directory = os.environ['OUT']
-    cfg_file = os.path.join(build_directory, 'libafl_cfg.bin')
-    os.environ['AFL_LLVM_CFG_FILE'] = cfg_file
-    if os.path.isfile(cfg_file):
-        os.remove(cfg_file)
-    Path(cfg_file).touch()
-    utils.build_benchmark()
+        cflags = ['--libafl']
+        utils.append_flags('CFLAGS', cflags)
+        utils.append_flags('CXXFLAGS', cflags)
+        utils.append_flags('LDFLAGS', cflags)
+
+        os.environ['FUZZER_LIB'] = '/stub_rt.a'
+        build_directory = os.environ['OUT']
+        cfg_file = os.path.join(build_directory, 'libafl_cfg.bin')
+        os.environ['AFL_LLVM_CFG_FILE'] = cfg_file
+        if os.path.isfile(cfg_file):
+            os.remove(cfg_file)
+        Path(cfg_file).touch()
+
+        os.environ['AFL_LLVM_MODULE_OFFSETS_FILE'] = os.path.join(
+            build_directory, 'module_cfg_offsets.txt')
+        utils.build_benchmark()
 
 
 def fuzz(input_corpus, output_corpus, target_binary):

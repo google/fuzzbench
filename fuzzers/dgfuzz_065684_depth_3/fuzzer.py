@@ -50,6 +50,7 @@ def build_dfsan():
 
     new_env['ASAN_OPTIONS'] = 'abort_on_error=0:allocator_may_return_null=1'
     new_env['UBSAN_OPTIONS'] = 'abort_on_error=0'
+    new_env['DFSAN_OPTIONS'] = 'strict_data_dependencies=0'
     new_env['AFL_QUIET'] = '1'
 
     new_env['FUZZER_LIB'] = '/libAFLDriver.a'
@@ -66,8 +67,7 @@ def build_dfsan():
         os.remove(cfg_file)
     Path(cfg_file).touch()
 
-    mod_offsets_file = os.path.join(
-            build_directory, 'module_cfg_offsets.txt')
+    mod_offsets_file = os.path.join(build_directory, 'module_cfg_offsets.txt')
     new_env['AFL_LLVM_MODULE_OFFSETS_FILE'] = mod_offsets_file
     Path(mod_offsets_file).touch()
     os.chmod(mod_offsets_file, 0o666)
@@ -114,7 +114,7 @@ def build():
         os.remove(cfg_file)
     Path(cfg_file).touch()
     os.environ['AFL_LLVM_MODULE_OFFSETS_FILE'] = os.path.join(
-            build_directory, 'module_cfg_offsets.txt')
+        build_directory, 'module_cfg_offsets.txt')
     utils.build_benchmark()
 
 
