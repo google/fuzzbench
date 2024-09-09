@@ -25,7 +25,8 @@ from fuzzers.libafl import fuzzer as libafl_fuzzer
 def build():
     """Build benchmark."""
     # Build the target with AFL++
-    aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file')
+    #aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file')
+    aflplusplus_fuzzer.build('tracepc', 'dict2file')
 
     # Copy to fuzzer to OUT
     build_directory = os.environ['OUT']
@@ -58,11 +59,12 @@ def fuzz(input_corpus, output_corpus, target_binary):
             dictionary_path = './afl++.dict'
 
     # Run the fuzzer
-    command = ['./libafl-fuzz', '-c', cmplog_target_binary]
+    #command = ['./libafl-fuzz', '-c', cmplog_target_binary]
+    command = ['./libafl-fuzz']
     if dictionary_path:
         command += (['-x', dictionary_path])
     command += (['-o', output_corpus, '-i', input_corpus, target_binary])
     #command += (['-t', '1000'])
     print(command)
-    env = {'AFL_CORES': '0', 'AFL_IGNORE_TIMEOUT': '1', 'AFL_CMPLOG_ONLY_NEW': '1'}
+    env = {'AFL_CORES': '0', 'AFL_IGNORE_TIMEOUT': '1', 'AFL_CMPLOG_ONLY_NEW': '1', 'AFL_MAP_SIZE': '2621440'}
     subprocess.check_call(command, cwd=os.environ['OUT'], env=env)
