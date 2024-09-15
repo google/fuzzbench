@@ -1,0 +1,5 @@
+# 4601636403675136
+commit: cbbc5cc3ab19003937bd97ebcea811961eb42736
+fuzz_target: av1_dec_fuzzer
+project: libaom
+type: bug

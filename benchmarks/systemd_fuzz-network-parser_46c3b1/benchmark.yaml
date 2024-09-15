@@ -1,0 +1,9 @@
+# 6326353730863104
+commit: 46c3b1ff887e096f89cb1eae9b2567c5dd4272d3
+commit_date: 2022-06-10T20:01:24+0000
+fuzz_target: fuzz-network-parser
+project: systemd
+type: bug
+unsupported_fuzzers:
+  - centipede
+  - wingfuzz
