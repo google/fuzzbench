@@ -1,0 +1,13 @@
+diff --git a/runtime/qsym_backend/Runtime.cpp b/runtime/qsym_backend/Runtime.cpp
+index d381183..54965d6 100644
+--- a/runtime/qsym_backend/Runtime.cpp
++++ b/runtime/qsym_backend/Runtime.cpp
+@@ -233,7 +233,7 @@ void __dtor_runtime(void) {
+ 
+         std::cerr << "Done going through the counters\n";
+   }
+-    exit(0);
++    //exit(0);
+ }
+ 
+ 

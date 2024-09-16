@@ -19,7 +19,8 @@ RUN apt-get update -y &&  \
     apt-get -y install wget python3-dev python3-setuptools apt-transport-https \
     libboost-all-dev texinfo libz3-dev \
     build-essential automake flex bison libglib2.0-dev libpixman-1-dev libgtk-3-dev ninja-build libnl-genl-3-dev \
-    lsb-release software-properties-common autoconf curl zlib1g-dev cmake protobuf-compiler libprotobuf-dev
+    lsb-release software-properties-common autoconf curl zlib1g-dev cmake protobuf-compiler libprotobuf-dev \
+    daemontools patchelf
 
 RUN if [ -x "$(command -v rustc)" ]; then rustup self uninstall -y; fi
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
@@ -43,7 +44,7 @@ RUN git clone https://github.com/chenju2k6/symsan /symsan
 
 RUN apt-get install -y libc++abi-12-dev libc++-12-dev libunwind-dev
 
-RUN cd /symsan && git checkout jigsaw && \
+RUN cd /symsan && git checkout unified_frontend && \
     unset CFLAGS && \
     unset CXXFLAGS && \
     mkdir build && \
@@ -57,3 +58,6 @@ RUN cd /symsan && git checkout jigsaw && \
 COPY libfuzz-harness-proxy.c /
 RUN KO_DONT_OPTIMIZE=1 USE_TRACK=1 KO_CC=clang-12 KO_USE_FASTGEN=1 /symsan/build/bin/ko-clang -c /libfuzz-harness-proxy.c -o /libfuzzer-harness.o
 RUN KO_DONT_OPTIMIZE=1 KO_CC=clang-12 /symsan/build/bin/ko-clang -c /libfuzz-harness-proxy.c -o /libfuzzer-harness-fast.o
+
+COPY run_with_multilog.sh /out/run_with_multilog.sh
+RUN chmod +x /out/run_with_multilog.sh

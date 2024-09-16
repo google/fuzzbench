@@ -437,9 +437,18 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
         # exception from uploading a file that changes in size. Files can change
         # in size because the log file containing the fuzzer's output is in this
         # directory and can be written to by the fuzzer at any time.
+        logs.debug('Copying results directory %s.', str(self.results_dir))
+        start_time = time.time()
         results_copy = filesystem.make_dir_copy(self.results_dir)
-        filestore_utils.rsync(
-            results_copy, posixpath.join(self.gcs_sync_dir, RESULTS_DIRNAME))
+        logs.debug('Finished copying results directory in %d seconds.',
+                   time.time() - start_time)
+
+        out_path = posixpath.join(self.gcs_sync_dir, RESULTS_DIRNAME)
+        logs.debug('Rsyncing results directory to %s.', out_path)
+        start_time = time.time()
+        filestore_utils.rsync(results_copy, out_path)
+        logs.debug('Finished rsyncing results directory in %d seconds.',
+                   time.time() - start_time)
 
 
 def get_fuzzer_module(fuzzer):

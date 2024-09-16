@@ -14,6 +14,7 @@
 ''' Uses the SymCC-AFL hybrid from SymCC. '''
 
 import os
+import re
 import time
 import shutil
 import threading
@@ -22,6 +23,48 @@ import subprocess
 from fuzzers import utils
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers.aflplusplus import fuzzer as aflplusplus_fuzzer
+
+LDD_REGEX_NAMED = re.compile(r'\s*(.*) => (.*) \(0x.*\)')
+LDD_REGEX_UNNAMED = re.compile(r'\s/(.*) \(0x.*\)')
+
+
+def copy_with_deps(binary, out_bin):
+    if os.path.isdir(out_bin):
+        out_dir = out_bin
+        out_bin = os.path.join(out_bin, os.path.basename(binary))
+    else:
+        out_dir = os.path.dirname(out_bin)
+
+    libraries = subprocess.check_output(['ldd', binary]).decode('utf-8')
+    to_copy = [(os.path.basename(out_bin), binary)]
+    for line in libraries.splitlines():
+        if m := LDD_REGEX_NAMED.match(line):
+            lib_path = m.group(2)
+            lib_name = m.group(1)
+        elif m := LDD_REGEX_UNNAMED.match(line):
+            lib_path = m.group(1)
+            lib_name = None
+        else:
+            continue
+
+        if not os.path.exists(lib_path):
+            continue
+
+        lib_path = os.path.realpath(lib_path)
+        to_copy.append((lib_name, lib_path))
+
+    print(f'Copying {to_copy} to {out_dir}')
+
+    for name, path in to_copy:
+        path = os.path.realpath(path)
+        print(f'Copying {path} to {out_dir}')
+        shutil.copy(path, os.path.join(out_dir, os.path.basename(path)))
+        # create a symlink in out_dir mapping {name} to the copied file
+        if name is not None and not os.path.exists(os.path.join(out_dir, name)):
+            target_name = os.path.basename(path)
+            new_name = os.path.join(out_dir, name)
+            if target_name != name:
+                os.symlink(target_name, new_name)
 
 
 def get_symcc_build_dir(target_directory):
@@ -44,7 +87,7 @@ def build():
         # Restore SRC to its initial state so we can build again without any
         # trouble. For some OSS-Fuzz projects, build_benchmark cannot be run
         # twice in the same directory without this.
-        aflplusplus_fuzzer.build('tracepc')
+        aflplusplus_fuzzer.build('tracepc', 'dict2file', 'cmplog')
 
     print('Step 2: Completed AFL build')
     # Copy over AFL artifacts needed by SymCC.
@@ -79,13 +122,14 @@ def build():
     utils.build_benchmark(env=new_env)
 
     # Copy over symcc artifacts and symbolic libc++.
-    shutil.copy(
+    copy_with_deps(
         '/symcc/build//SymRuntime-prefix/src/SymRuntime-build/libSymRuntime.so',
         symcc_build_dir)
-    shutil.copy('/usr/lib/libz3.so', os.path.join(symcc_build_dir, 'libz3.so'))
-    shutil.copy('/libcxx_native_build/lib/libc++.so.1', symcc_build_dir)
-    shutil.copy('/libcxx_native_build/lib/libc++abi.so.1', symcc_build_dir)
-    shutil.copy('/rust/bin/symcc_fuzzing_helper', symcc_build_dir)
+    copy_with_deps('/usr/lib/libz3.so', os.path.join(symcc_build_dir, 'libz3.so'))
+    copy_with_deps('/usr/lib/libz3.so', os.path.join(symcc_build_dir, 'libz3.so.4'))
+    copy_with_deps('/libcxx_native_build/lib/libc++.so.1', symcc_build_dir)
+    copy_with_deps('/libcxx_native_build/lib/libc++abi.so.1', symcc_build_dir)
+    copy_with_deps('/rust/bin/symcc_fuzzing_helper', symcc_build_dir)
 
 
 def launch_afl_thread(input_corpus, output_corpus, target_binary,
@@ -103,21 +147,27 @@ def fuzz(input_corpus, output_corpus, target_binary):
     Launches a master and a secondary instance of AFL, as well as
     the symcc helper.
     """
-    target_binary_dir = os.path.dirname(target_binary)
-    symcc_workdir = get_symcc_build_dir(target_binary_dir)
+
     target_binary_name = os.path.basename(target_binary)
+    target_binary_dir = os.path.dirname(target_binary)
+
+    cmplog_target_binary = os.path.join(target_binary_dir, 'cmplog', target_binary_name)
+    symcc_workdir = get_symcc_build_dir(target_binary_dir)
     symcc_target_binary = os.path.join(symcc_workdir, target_binary_name)
 
     os.environ['AFL_DISABLE_TRIM'] = '1'
+
+    flags_cmplog = ['-c', cmplog_target_binary]
+    flags_dict = ['-x', './afl++.dict'] if os.path.exists('./afl++.dict') else []
 
     # Start a master and secondary instance of AFL.
     # We need both because of the way SymCC works.
     print('[run_fuzzer] Running AFL for SymCC')
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
-    launch_afl_thread(input_corpus, output_corpus, target_binary, ['-S', 'afl'])
+    launch_afl_thread(input_corpus, output_corpus, target_binary, ['-S', 'afl'] + flags_cmplog + flags_dict)
     time.sleep(5)
     launch_afl_thread(input_corpus, output_corpus, target_binary,
-                      ['-S', 'afl-secondary'])
+                      ['-S', 'afl-secondary'] + flags_cmplog + flags_dict)
     time.sleep(5)
 
     # Start an instance of SymCC.

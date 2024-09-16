@@ -1,0 +1,5 @@
+#ifndef CONFIG_H_
+#define CONFIG_H_
+#define MAX_NUM_MINIMAL_OPTIMA_ROUND 32
+#define MAX_EXEC_TIMES 2000
+#endif

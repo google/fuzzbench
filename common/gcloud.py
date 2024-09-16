@@ -131,7 +131,7 @@ def run_local_instance(startup_script: Optional[str] = None) -> bool:
     |startup_script| in the background."""
     command = ['/bin/bash', startup_script]
     # pylint: disable=consider-using-with
-    subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     return True
 
 
