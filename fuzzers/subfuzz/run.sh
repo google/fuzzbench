@@ -62,11 +62,11 @@ fuzz_time=$((86400 / $dir_count))
 
 
 
-fuzz_time=60
+# fuzz_time=60
 
-# if [ "$fuzz_time" -lt 60 ]; then
-#   fuzz_time=60
-# fi
+if [ "$fuzz_time" -lt 60 ]; then
+  fuzz_time=60
+fi
 
 echo $fuzz_time
 
