@@ -58,6 +58,9 @@ done
 # -V to control the fuzzing time (second)
 dir_count=$(find "$input" -mindepth 1 -maxdepth 1 -type d | wc -l)
 echo $dir_count
+if [ "$dir_count" -lt 1 ]; then
+  dir_count=1
+fi
 fuzz_time=$((86400 / $dir_count))
 
 
