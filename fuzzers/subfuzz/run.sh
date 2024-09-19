@@ -61,10 +61,8 @@ echo $dir_count
 if [ "$dir_count" -lt 1 ]; then
   dir_count=1
 fi
-fuzz_time=$((86400 / $dir_count))
 
-
-
+totalTime=79200
 # fuzz_time=60
 
 if [ "$fuzz_time" -lt 60 ]; then
@@ -79,8 +77,20 @@ find "$input" -mindepth 1 -maxdepth 1 -type d | while read -r subdir; do
   # echo ./afl-fuzz -i $subdir -o tmp -V $fuzz_time -c $cmp_program -m $memory_limit -- $program_to_run $program_args
   # ./afl-fuzz -i $subdir -o tmp -V $fuzz_time -c $cmp_program -m $memory_limit -- $program_to_run $program_args
 
+  start=$(date +%s)
+  fuzz_time=$(($totalTime / $dir_count))
   echo ./afl-fuzz -i $subdir -o tmp -V $fuzz_time ${remaining_command[*]}
   ./afl-fuzz -i $subdir -o tmp -V $fuzz_time ${remaining_command[*]}
+  end=$(date +%s)
+  runtime=$((end - start))
+
+  echo "runtime:" $runtime
+
+  totalTime=$((totalTime - runtime))
+  dir_count=$((dir_count - 1))
+
+  echo "updated totalTime:" $totalTime
+  echo "updated dir_count:" $dir_count
 
   # merge the current outputs into the global output
   if [ -d "$output/default" ]; then
@@ -116,5 +126,7 @@ find "$input" -mindepth 1 -maxdepth 1 -type d | while read -r subdir; do
   rm -r -f tmp
 
 done
+
+sleep 86400
 
 # collect the finial results periodically
