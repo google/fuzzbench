@@ -16,3 +16,13 @@ commit: a7482d3775f2e346f3680363dd2d641add3e68b2
 commit_date: 2023-02-06T16:46:19+0000
 fuzz_target: proj_crs_to_crs_fuzzer
 project: proj4
+unsupported_fuzzers:
+  - dgfuzz
+  - dgfuzz_4aacb8
+  - dgfuzz_c286e5
+  - dgfuzz_3f8f81
+  - dgfuzz_0e010d
+  - dgfuzz_ab0800
+  - dgfuzz_135c90
+  - dgfuzz_653cc9
+  - dgfuzz_d3c951

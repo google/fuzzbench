@@ -1,0 +1,22 @@
+diff --git a/fuzzers/fuzzbench_dataflow_guided/src/lib.rs b/fuzzers/fuzzbench_dataflow_guided/src/lib.rs
+index 7d9a8d53..fe12c713 100644
+--- a/fuzzers/fuzzbench_dataflow_guided/src/lib.rs
++++ b/fuzzers/fuzzbench_dataflow_guided/src/lib.rs
+@@ -29,7 +29,7 @@ use libafl::{
+         StdScheduledMutator, Tokens,
+     },
+     observers::{CanTrack, HitcountsMapObserver, TimeObserver},
+-    schedulers::prescient_weighted::PrescientProbabilitySamplingScheduler,
++    schedulers::{prescient_weighted::PrescientProbabilitySamplingScheduler, RandScheduler},
+     stages::{calibrate::CalibrationStage, StdMutationalStage, TracingStage},
+     state::{HasCorpus, StdState},
+     Error, HasMetadata,
+@@ -350,7 +350,7 @@ fn fuzz(
+ 
+     let mutation = StdMutationalStage::with_max_iterations(mutator, 128);
+ 
+-    let scheduler = PrescientProbabilitySamplingScheduler::new_with_backoff(backoff_factor);
++    let scheduler = RandScheduler::new(); // PrescientProbabilitySamplingScheduler::new_with_backoff(backoff_factor);
+ 
+     // A fuzzer with feedbacks and a corpus scheduler
+     let mut fuzzer = StdFuzzer::new(scheduler, feedback, objective);

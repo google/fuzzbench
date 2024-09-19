@@ -63,6 +63,12 @@ def do_coverage_run(  # pylint: disable=too-many-locals
                                      timeout=MAX_TOTAL_TIME)
 
     if result.retcode != 0:
+        logger.info('Coverage run failed.',
+                    extras={
+                        'coverage_binary': coverage_binary,
+                        'output': result.output[-new_process.LOG_LIMIT_FIELD:],
+                        'retcode': result.retcode,
+                    })
         logger.error('Coverage run failed.',
                      extras={
                          'coverage_binary': coverage_binary,
