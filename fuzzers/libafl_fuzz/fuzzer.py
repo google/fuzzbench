@@ -37,10 +37,10 @@ def build():
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     # Calculate CmpLog binary path from the instrumented target binary.
-    target_binary_directory = os.path.dirname(target_binary)
-    cmplog_target_binary_directory = \
-        aflplusplus_fuzzer.get_cmplog_build_directory(target_binary_directory)
-    target_binary_name = os.path.basename(target_binary)
+    #target_binary_directory = os.path.dirname(target_binary)
+    #cmplog_target_binary_directory = \
+    #    aflplusplus_fuzzer.get_cmplog_build_directory(target_binary_directory)
+    #target_binary_name = os.path.basename(target_binary)
     #cmplog_target_binary = os.path.join(cmplog_target_binary_directory,
     #                                    target_binary_name)
 
