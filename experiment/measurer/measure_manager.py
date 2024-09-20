@@ -16,6 +16,7 @@
 import collections
 import gc
 import glob
+import gzip
 import multiprocessing
 import json
 import os
@@ -614,10 +615,33 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
     # Generate profdata and transform it into json form.
     snapshot_measurer.generate_coverage_information(cycle)
 
+    # Compress and save the exported profdata snapshot.
+    coverage_archive_zipped = os.path.join(
+        snapshot_measurer.trial_dir, 'coverage',
+        experiment_utils.get_coverage_archive_name(cycle) + '.gz')
+
+    coverage_archive_dir = os.path.dirname(coverage_archive_zipped)
+    if not os.path.exists(coverage_archive_dir):
+        os.makedirs(coverage_archive_dir)
+
+    with gzip.open(str(coverage_archive_zipped), 'wb') as compressed:
+        with open(snapshot_measurer.cov_summary_file, 'rb') as uncompressed:
+            # avoid saving warnings so we can direct import with pandas
+            compressed.write(uncompressed.readlines()[-1])
+
+    coverage_archive_dst = exp_path.filestore(coverage_archive_zipped)
+    if filestore_utils.cp(coverage_archive_zipped,
+                          coverage_archive_dst,
+                          expect_zero=False).retcode:
+        snapshot_logger.warning('Coverage not found for cycle: %d.', cycle)
+        return None
+
+    os.remove(coverage_archive_zipped)  # no reason to keep this around
+
     # Run crashes again, parse stacktraces and generate crash signatures.
     crashes = snapshot_measurer.process_crashes(cycle)
 
-    # Get the coverage of the new corpus units.
+    # Get the coverage summary of the new corpus units.
     branches_covered = snapshot_measurer.get_current_coverage()
     fuzzer_stats_data = snapshot_measurer.get_fuzzer_stats(cycle)
     snapshot = models.Snapshot(time=this_time,
