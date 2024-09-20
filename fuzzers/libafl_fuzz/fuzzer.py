@@ -66,5 +66,10 @@ def fuzz(input_corpus, output_corpus, target_binary):
     command += (['-o', output_corpus, '-i', input_corpus, target_binary])
     #command += (['-t', '1000'])
     print(command)
-    env = {'AFL_CORES': '0', 'AFL_IGNORE_TIMEOUT': '1', 'AFL_CMPLOG_ONLY_NEW': '1', 'AFL_MAP_SIZE': '2621440'}
+    env = {
+        'AFL_CORES': '0',
+        'AFL_IGNORE_TIMEOUT': '1',
+        'AFL_CMPLOG_ONLY_NEW': '1',
+        'AFL_MAP_SIZE': '2621440'
+    }
     subprocess.check_call(command, cwd=os.environ['OUT'], env=env)
