@@ -41,8 +41,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
     cmplog_target_binary_directory = \
         aflplusplus_fuzzer.get_cmplog_build_directory(target_binary_directory)
     target_binary_name = os.path.basename(target_binary)
-    cmplog_target_binary = os.path.join(cmplog_target_binary_directory,
-                                        target_binary_name)
+    #cmplog_target_binary = os.path.join(cmplog_target_binary_directory,
+    #                                    target_binary_name)
 
     # Setup env vars
     libafl_fuzzer.prepare_fuzz_environment(input_corpus)
