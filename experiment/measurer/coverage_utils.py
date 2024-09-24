@@ -283,7 +283,7 @@ def generate_json_summary(coverage_binary,
                                      expect_zero=False)
     return result
 
-
+# Test
 def extract_covered_branches_from_summary_json(summary_json_file):
     """Returns the covered branches given a coverage summary json file."""
     covered_branches = []
