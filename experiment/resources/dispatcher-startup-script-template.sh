@@ -32,4 +32,4 @@ docker run --rm \
   -e PRIVATE={{private}} \
   --cap-add=SYS_PTRACE --cap-add=SYS_NICE \
   -v /var/run/docker.sock:/var/run/docker.sock --name=dispatcher-container \
-  {{docker_registry}}/dispatcher-image /work/startup-dispatcher.sh &> /tmp/dispatcher.log
+  {{docker_registry}}/dispatcher-image/progressive-pubsub-measurer /work/startup-dispatcher.sh &> /tmp/dispatcher.log
