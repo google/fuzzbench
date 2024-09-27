@@ -133,7 +133,9 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
 
         result = merge_profdata_files(files_to_merge, self.merged_profdata_file)
         if result.retcode != 0:
-            logger.error('Profdata files merging failed.')
+            logger.error(
+                f'Profdata files merging failed for (fuzzer, benchmark): '
+                f'({self.fuzzer}, {self.benchmark}).')
 
     def generate_coverage_summary_json(self):
         """Generates the coverage summary json from merged profdata file."""
@@ -224,6 +226,10 @@ def get_trial_ids(experiment: str, fuzzer: str, benchmark: str):
 
 def merge_profdata_files(src_files, dst_file):
     """Uses llvm-profdata to merge |src_files| to |dst_files|."""
+    if src_files:
+        logger.info('llvm-profdata src files are: %s', src_files)
+    else:
+        logger.error('llvm-profdata has no src files: %s', src_files)
     command = ['llvm-profdata', 'merge', '-sparse']
     command.extend(src_files)
     command.extend(['-o', dst_file])

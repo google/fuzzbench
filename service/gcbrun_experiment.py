@@ -20,6 +20,7 @@ which will run an experiment."""
 import logging
 import os
 import sys
+# dummy
 
 # pytype: disable=import-error
 import github  # pylint: disable=import-error
@@ -28,7 +29,7 @@ from experiment import run_experiment
 TRIGGER_COMMAND = '/gcbrun'
 RUN_EXPERIMENT_COMMAND_STR = f'{TRIGGER_COMMAND} run_experiment.py '
 SKIP_COMMAND_STR = f'{TRIGGER_COMMAND} skip'
-# A DUMMY COMMENT
+# A DuMMY COMMENT
 
 
 def get_comments(pull_request_number):

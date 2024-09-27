@@ -41,8 +41,6 @@ RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 RUN cd /libafl && git pull && git checkout f856092f3d393056b010fcae3b086769377cba18 || true
 # Note that due a nightly bug it is currently fixed to a known version on top!
 
-RUN ls /libafl/fuzzers
-
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
