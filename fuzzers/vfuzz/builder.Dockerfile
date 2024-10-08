@@ -35,7 +35,7 @@ RUN apt-get update && \
         libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
 # Download afl++.
-RUN git clone -b dev https://github.com/SecRookieee/vfuzz /afl && \
+RUN git clone https://github.com/SecRookieee/vfuzz /afl && \
     cd /afl && \
     git checkout 56889b64266a30c054f92f511b016d50fd6bbf39 || \
     true
