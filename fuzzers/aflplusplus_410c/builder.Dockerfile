@@ -35,11 +35,13 @@ RUN apt-get update && \
         libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
 # Download afl++.
-RUN git clone -b dev https://github.com/AFLplusplus/AFLplusplus /afl && \
+RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl && \
     cd /afl && \
-    git checkout ab5f95e17ac7d957e26f5c1789a8624a238ac0e0
+    git checkout 775861ea94d00672c9e868db329073afd699b994 || \
+    true
 
 # Build without Python support as we don't need it.
+# Set AFL_NO_X86 to skip flaky tests.
 RUN cd /afl && \
     unset CFLAGS CXXFLAGS && \
     export CC=clang AFL_NO_X86=1 && \
