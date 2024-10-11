@@ -37,7 +37,7 @@ RUN apt-get update && \
 # Download afl++.
 RUN git clone https://github.com/KFuzzing/KFuzz /afl && \
     cd /afl && \
-    git checkout 2d985379cd41b33d243f19a7d2a293457ba08189 || \
+    git checkout b178cd53a10a86662599f16d6fe65ffb8a0e31c5 || \
     true
 
 # Build without Python support as we don't need it.
