@@ -1,4 +1,4 @@
-# Copyright 2018 Google Inc.
+# Copyright 2020 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,16 +15,21 @@
 ################################################################################
 
 FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
-RUN apt-get update && apt-get install -y make cmake
-RUN apt-get update && apt-get install -y \
-    python-all-dev \
-    python3-all-dev \
-    python3-pip  && \
-    ln -s /usr/local/bin/pip3 /usr/local/bin/pip
 
-RUN git clone --recursive -b development https://github.com/Mbed-TLS/mbedtls.git mbedtls
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update && \
+    apt-get install -y -q --no-install-recommends \
+        bison \
+        build-essential \
+        cmake \
+        flex \
+        libboost-all-dev \
+        ninja-build \
+        python3
 
-RUN git clone --depth 1 https://github.com/google/boringssl.git boringssl
-RUN git clone --depth 1 https://github.com/openssl/openssl.git openssl
-WORKDIR mbedtls
-COPY build.sh $SRC/
+RUN git clone \
+        --recurse-submodules \
+        https://github.com/apache/arrow.git \
+        $SRC/arrow
+
+COPY build.sh thrift.patch $SRC/
