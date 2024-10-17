@@ -45,7 +45,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
 
     # If nothing was set this is the default:
     if not build_modes:
-        build_modes = ['tracepc', 'cmplog', 'dict2file']
+        build_modes = ['tracepc', 'dict2file']
+        #build_modes = ['tracepc', 'cmplog', 'dict2file']
 
     # For bug type benchmarks we have to instrument via native clang pcguard :(
     build_flags = os.environ['CFLAGS']
@@ -55,6 +56,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     ) != -1 and 'qemu' not in build_modes and 'classic' not in build_modes:
         if 'gcc' not in build_modes:
             build_modes[0] = 'native'
+
+    os.environ['AFL_LLVM_VALUEPROFILE'] = '1'
 
     # Instrumentation coverage modes:
     if 'lto' in build_modes:
@@ -264,6 +267,8 @@ def fuzz(input_corpus,
     # Move the following to skip for upcoming _double tests:
     if os.path.exists(cmplog_target_binary) and no_cmplog is False:
         flags += ['-c', cmplog_target_binary]
+
+    flags += ['-k', '1']
 
     #os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
     os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
