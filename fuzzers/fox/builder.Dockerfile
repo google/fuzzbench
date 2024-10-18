@@ -32,13 +32,33 @@ RUN apt-get update && \
         # for QEMU mode
         ninja-build \
         gcc-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-plugin-dev \
-        libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
+        libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev \
+        lsb-release \
+        software-properties-common \
+        gnupg
 
-# Download afl++.
+RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 15
+RUN apt install llvm-15
+
+RUN for llvmbin in $(find $(dirname $(which llvm-link-15)) | grep -- '-15$'); do \
+      ln -s "$llvmbin" /usr/local/bin/$(basename "$llvmbin" | rev | cut -d'-' -f2- | rev); \
+    done && \
+    which llvm-link llvm-dis
+
+RUN curl -L https://go.dev/dl/go1.23.2.linux-amd64.tar.gz | \
+    tar -C /usr/local -xz
+
+ENV PATH="$PATH:/usr/local/go/bin:/root/go/bin"
+
+RUN go install github.com/SRI-CSL/gllvm/cmd/...@v1.3.1
+
+# Download FOX.
 RUN git clone -b dev https://github.com/FOX-Fuzz/FOX /afl && \
     cd /afl && \
     git checkout 5265de4e3762c9424127d7278ac55c42dada82ce || \
     true
+
+COPY --chmod=755 second_stage.sh /second_stage.sh
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.

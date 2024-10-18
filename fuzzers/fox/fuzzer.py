@@ -16,6 +16,7 @@
 
 import os
 import shutil
+import subprocess
 
 from fuzzers.afl import fuzzer as afl_fuzzer
 from fuzzers import utils
@@ -39,6 +40,10 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     build_modes = list(args)
     if 'BUILD_MODES' in os.environ:
         build_modes = os.environ['BUILD_MODES'].split(',')
+
+    # FOX builds with gclang for whole program bitcode
+    os.environ['AFL_CC'] = 'gclang'
+    os.environ['AFL_CXX'] = 'gclang++'
 
     # Placeholder comment.
     build_directory = os.environ['OUT']
@@ -225,6 +230,8 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
         print('Re-building benchmark for symcc fuzzing target')
         utils.build_benchmark(env=new_env)
 
+    subprocess.check_call(['/second_stage.sh'], cwd=build_directory)
+
     shutil.copy('/afl/afl-fuzz', build_directory)
     if os.path.exists('/afl/afl-qemu-trace'):
         shutil.copy('/afl/afl-qemu-trace', build_directory)
@@ -233,6 +240,49 @@ def build(*args):  # pylint: disable=too-many-branches,too-many-statements
     if os.path.exists('/get_frida_entry.sh'):
         shutil.copy('/afl/afl-frida-trace.so', build_directory)
         shutil.copy('/get_frida_entry.sh', build_directory)
+
+
+def run_afl_fuzz(input_corpus,
+                 output_corpus,
+                 target_binary,
+                 additional_flags=None,
+                 hide_output=False):
+    """Run afl-fuzz."""
+    # Spawn the afl fuzzing process.
+    print('[run_afl_fuzz] Running target with afl-fuzz')
+    command = [
+        './afl-fuzz',
+        '-i',
+        input_corpus,
+        '-o',
+        output_corpus,
+        # Use no memory limit as ASAN doesn't play nicely with one.
+        '-m',
+        'none',
+        '-t',
+        '1000+',  # Use same default 1 sec timeout, but add '+' to skip hangs.
+    ]
+    # Use '-d' to skip deterministic mode, as long as it it compatible with
+    # additional flags.
+    if not additional_flags or check_skip_det_compatible(additional_flags):
+        command.append('-d')
+    if additional_flags:
+        command.extend(additional_flags)
+    dictionary_path = utils.get_dictionary_path(target_binary)
+    if dictionary_path:
+        command.extend(['-x', dictionary_path])
+    # FOX-specific flags
+    command.extend(['-k', '-p', 'wd_scheduler'])
+    command += [
+        '--',
+        target_binary,
+        # Pass INT_MAX to afl the maximize the number of persistent loops it
+        # performs.
+        '2147483647'
+    ]
+    print('[run_afl_fuzz] Running command: ' + ' '.join(command))
+    output_stream = subprocess.DEVNULL if hide_output else None
+    subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
 
 
 # pylint: disable=too-many-arguments
@@ -276,7 +326,7 @@ def fuzz(input_corpus,
         if 'ADDITIONAL_ARGS' in os.environ:
             flags += os.environ['ADDITIONAL_ARGS'].split(' ')
 
-    afl_fuzzer.run_afl_fuzz(input_corpus,
-                            output_corpus,
-                            target_binary,
-                            additional_flags=flags)
+    run_afl_fuzz(input_corpus,
+                 output_corpus,
+                 target_binary,
+                 additional_flags=flags)
