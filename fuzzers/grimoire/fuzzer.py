@@ -41,18 +41,6 @@ def prepare_fuzz_environment(input_corpus):
 
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
-    benchmark_name = os.environ['BENCHMARK'].lower()
-    if 'php' in benchmark_name:
-        copy_file = '/libafl_fuzzbench/grammars/php_nautilus.json'
-    elif 'ruby' in benchmark_name:
-        copy_file = '/libafl_fuzzbench/grammars/ruby_nautilus.json'
-    elif 'js' in benchmark_name or 'javascript' in benchmark_name:
-        copy_file = '/libafl_fuzzbench/grammars/js_nautilus.json'
-    else:
-        raise RuntimeError('Unsupported benchmark, unavailable grammar')
-    dest = os.path.join(os.environ['OUT'], 'grammar.json')
-    shutil.copy(copy_file, dest)
-
     os.environ['CC'] = '/libafl_fuzzbench/target/release/grimoire_cc'
     os.environ['CXX'] = '/libafl_fuzzbench/target/release/grimoire_cxx'
 
@@ -74,9 +62,8 @@ def fuzz(input_corpus, output_corpus, target_binary):
     command = [target_binary]
     if dictionary_path:
         command += (['-x', dictionary_path])
-    grammar = os.path.join(os.environ['OUT'], 'grammar.json')
     out = os.path.join(os.environ['OUT'], 'out')
     os.mkdir(out)
-    command += (['-r', output_corpus, '-o', out, '-g', grammar])
+    command += (['-i', input_corpus, '-r', output_corpus, '-o', out])
     print(command)
     subprocess.check_call(command, cwd=os.environ['OUT'])
