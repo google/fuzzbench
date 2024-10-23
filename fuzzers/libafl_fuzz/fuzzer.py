@@ -30,7 +30,7 @@ def build():
 
     # Copy to fuzzer to OUT
     build_directory = os.environ['OUT']
-    fuzzer = '/libafl/fuzzers/others/libafl-fuzz/target/release/libafl-fuzz'
+    fuzzer = '/libafl/fuzzers/forkserver/libafl-fuzz/target/release/libafl-fuzz'
     shutil.copy(fuzzer, build_directory)
 
 

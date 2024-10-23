@@ -47,10 +47,10 @@ RUN git clone https://github.com/R9295/LibAFL /libafl
 
 # Checkout a current commit
 RUN cd /libafl && git pull && \
-    git checkout libafl-fuzz/seed-recurse
+    git checkout libafl-fuzz/frida-mode-separate
 
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
-    cd ./fuzzers/others/libafl-fuzz && \
+    cd ./fuzzers/forkserver/libafl-fuzz && \
     PATH="/root/.cargo/bin/:$PATH" cargo build --profile release
