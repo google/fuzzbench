@@ -155,7 +155,9 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
     def _relevant_column(self):
         """Returns the name of the column that will be used as the basis of
         the analysis (e.g., 'edges_covered', or 'bugs_covered')."""
-        return 'edges_covered' if self.type == 'code' else 'bugs_covered'
+        return 'edges_covered' if self.type == 'code' else [
+            'bugs_covered', 'bugs_earliest'
+        ]
 
     @property
     @functools.lru_cache()
@@ -179,8 +181,8 @@ class ExperimentResults:  # pylint: disable=too-many-instance-attributes
 
         # Add rows for Median and Mean values
         nrows, _ = pivot.shape
-        pivot.loc['FuzzerMedian'] = pivot.iloc[0:nrows].median()
-        pivot.loc['FuzzerMean'] = pivot.iloc[0:nrows].mean()
+        pivot.loc['FuzzerMedian'] = pivot.fillna(0).iloc[0:nrows].median()
+        pivot.loc['FuzzerMean'] = pivot.fillna(0).iloc[0:nrows].mean()
         # Sort fuzzers left to right by FuzzerMean
         pivot = pivot.sort_values(by='FuzzerMean', axis=1, ascending=False)
 
