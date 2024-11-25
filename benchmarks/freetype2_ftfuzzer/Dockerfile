@@ -14,9 +14,10 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
+FROM gcr.io/oss-fuzz-base/base-builder
 
-RUN apt-get update &&  \
+# Install necessary dependencies
+RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y \
     make \
@@ -24,8 +25,14 @@ RUN apt-get update &&  \
     libtool \
     wget
 
-RUN git clone git://git.sv.nongnu.org/freetype/freetype2.git
-RUN git clone https://github.com/unicode-org/text-rendering-tests.git TRT
-RUN wget https://github.com/libarchive/libarchive/releases/download/v3.4.3/libarchive-3.4.3.tar.xz
+# Clone necessary repositories
+RUN git clone git://git.sv.nongnu.org/freetype/freetype2.git $SRC/freetype2
+RUN git clone https://github.com/unicode-org/text-rendering-tests.git $SRC/TRT
+RUN wget https://github.com/libarchive/libarchive/releases/download/v3.4.3/libarchive-3.4.3.tar.xz -P $SRC/
+RUN wget https://raw.githubusercontent.com/ardier/fuzzbench/minimized-subsumed-mutants-benchmark-with-seeds/benchmarks/freetype2_ftfuzzer_libafl/seeds.tar -O $SRC/seeds.tar && \
+    mkdir -p $SRC/seeds && \
+    tar -xvf $SRC/seeds.tar -C $SRC/seeds
 
+# Copy all files into $SRC directory
 COPY * $SRC/
+

@@ -13,11 +13,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cd Little-CMS
-./autogen.sh
-./configure
-make -j $(nproc)
+mkdir $OUT/seeds
+# TRT/fonts is the full seed folder, but they're too big
+cp TRT/fonts/TestKERNOne.otf $OUT/seeds/
+cp TRT/fonts/TestGLYFOne.ttf $OUT/seeds/
+cp seeds/*  $OUT/seeds/
 
-$CXX $CXXFLAGS $SRC/cms_transform_fuzzer.cc -I include/ src/.libs/liblcms2.a \
-    $FUZZER_LIB -o $OUT/cms_transform_fuzzer
-cp -r /opt/seeds $OUT/
+tar xf libarchive-3.4.3.tar.xz
+
+cd libarchive-3.4.3
+./configure --disable-shared
+make clean
+make -j $(nproc)
+make install
+cd ..
+
+cd freetype2
+./autogen.sh
+./configure --with-harfbuzz=no --with-bzip2=no --with-png=no --without-zlib
+make clean
+make all -j $(nproc)
+
+$CXX $CXXFLAGS -std=c++11 -I include -I . src/tools/ftfuzzer/ftfuzzer.cc \
+    objs/.libs/libfreetype.a $FUZZER_LIB -L /usr/local/lib -larchive \
+    -o $OUT/ftfuzzer
