@@ -20,6 +20,13 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2024-11-26-afl-mutants
+  description: "Benchmark afl with freetype2"
+  fuzzers:
+    - afl
+  benchmarks:
+    - freetype2_ftfuzzer_libafl
+
 - experiment: 2023-06-12-aflpp
   description: "Benchmark afl++ releases and newmutation"
   fuzzers:
