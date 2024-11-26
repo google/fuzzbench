@@ -47,8 +47,13 @@ class BenchmarkResults:
     def _prefix_with_benchmark(self, filename):
         return self.name + '_' + filename
 
-    def _get_full_path(self, filename):
-        return os.path.join(self._output_directory, filename)
+    def get_full_plot_path(self, filename):
+        """Returns the full path of the plot stored at |filename|."""
+        return os.path.join(self._output_directory, 'plots', filename)
+
+    def _get_experiment_filestore_path(self, fuzzer_name, benchmark_name):
+        return coverage_data_utils.get_coverage_report_filestore_path(
+            fuzzer_name, benchmark_name, self._benchmark_df)
 
     def get_coverage_report_path(self, fuzzer_name, benchmark_name):
         """Returns the filestore name of the |fuzzer_name|."""
@@ -187,7 +192,7 @@ class BenchmarkResults:
         """Generic Mann Whitney U test plot."""
         plot_filename = self._prefix_with_benchmark(filename)
         self._plotter.write_heatmap_plot(p_values,
-                                         self._get_full_path(plot_filename))
+                                         self.get_full_plot_path(plot_filename))
         return plot_filename
 
     @property
@@ -205,8 +210,8 @@ class BenchmarkResults:
     def _vargha_delaney_plot(self, filename, a12_values):
         """Generic Vargha Delany A12 measure plot."""
         plot_filename = self._prefix_with_benchmark(filename)
-        self._plotter.write_a12_heatmap_plot(a12_values,
-                                             self._get_full_path(plot_filename))
+        self._plotter.write_a12_heatmap_plot(
+            a12_values, self.get_full_plot_path(plot_filename))
         return plot_filename
 
     @property
@@ -239,7 +244,7 @@ class BenchmarkResults:
         """ANOVA/Student T posthoc test plot."""
         plot_filename = self._prefix_with_benchmark('anova_student_plot.svg')
         self._plotter.write_heatmap_plot(self.anova_posthoc_p_values['student'],
-                                         self._get_full_path(plot_filename))
+                                         self.get_full_plot_path(plot_filename))
         return plot_filename
 
     @property
@@ -247,7 +252,7 @@ class BenchmarkResults:
         """ANOVA/Turkey posthoc test plot."""
         plot_filename = self._prefix_with_benchmark('anova_turkey_plot.svg')
         self._plotter.write_heatmap_plot(self.anova_posthoc_p_values['turkey'],
-                                         self._get_full_path(plot_filename))
+                                         self.get_full_plot_path(plot_filename))
         return plot_filename
 
     @property
@@ -269,7 +274,7 @@ class BenchmarkResults:
         plot_filename = self._prefix_with_benchmark('kruskal_conover_plot.svg')
         self._plotter.write_heatmap_plot(
             self.kruskal_posthoc_p_values['conover'],
-            self._get_full_path(plot_filename))
+            self.get_full_plot_path(plot_filename))
         return plot_filename
 
     @property
@@ -279,7 +284,7 @@ class BenchmarkResults:
             'kruskal_mann_whitney_plot.svg')
         self._plotter.write_heatmap_plot(
             self.kruskal_posthoc_p_values['mann_whitney'],
-            self._get_full_path(plot_filename),
+            self.get_full_plot_path(plot_filename),
             symmetric=True)
         return plot_filename
 
@@ -289,7 +294,7 @@ class BenchmarkResults:
         plot_filename = self._prefix_with_benchmark('kruskal_wilcoxon_plot.svg')
         self._plotter.write_heatmap_plot(
             self.kruskal_posthoc_p_values['wilcoxon'],
-            self._get_full_path(plot_filename))
+            self.get_full_plot_path(plot_filename))
         return plot_filename
 
     @property
@@ -297,7 +302,7 @@ class BenchmarkResults:
         """Kruskal/Dunn posthoc test plot."""
         plot_filename = self._prefix_with_benchmark('kruskal_dunn_plot.svg')
         self._plotter.write_heatmap_plot(self.kruskal_posthoc_p_values['dunn'],
-                                         self._get_full_path(plot_filename))
+                                         self.get_full_plot_path(plot_filename))
         return plot_filename
 
     @property
@@ -306,7 +311,7 @@ class BenchmarkResults:
         plot_filename = self._prefix_with_benchmark('kruskal_nemenyi_plot.svg')
         self._plotter.write_heatmap_plot(
             self.kruskal_posthoc_p_values['nemenyi'],
-            self._get_full_path(plot_filename))
+            self.get_full_plot_path(plot_filename))
         return plot_filename
 
     def _coverage_growth_plot(self, filename, bugs=False, logscale=False):
@@ -314,7 +319,7 @@ class BenchmarkResults:
         plot_filename = self._prefix_with_benchmark(filename)
         self._plotter.write_coverage_growth_plot(
             self._benchmark_df,
-            self._get_full_path(plot_filename),
+            self.get_full_plot_path(plot_filename),
             wide=True,
             logscale=logscale,
             bugs=bugs)
@@ -335,7 +340,7 @@ class BenchmarkResults:
         """Violin plot."""
         plot_filename = self._prefix_with_benchmark(filename)
         self._plotter.write_violin_plot(self._benchmark_snapshot_df,
-                                        self._get_full_path(plot_filename),
+                                        self.get_full_plot_path(plot_filename),
                                         bugs=bugs)
         return plot_filename
 
@@ -353,7 +358,7 @@ class BenchmarkResults:
         """Generic internal boxplot."""
         plot_filename = self._prefix_with_benchmark(filename)
         self._plotter.write_box_plot(self._benchmark_snapshot_df,
-                                     self._get_full_path(plot_filename),
+                                     self.get_full_plot_path(plot_filename),
                                      bugs=bugs)
         return plot_filename
 
@@ -372,7 +377,7 @@ class BenchmarkResults:
         """Distribution plot."""
         plot_filename = self._prefix_with_benchmark('distribution.svg')
         self._plotter.write_distribution_plot(
-            self._benchmark_snapshot_df, self._get_full_path(plot_filename))
+            self._benchmark_snapshot_df, self.get_full_plot_path(plot_filename))
         return plot_filename
 
     @property
@@ -380,7 +385,7 @@ class BenchmarkResults:
         """Ranking plot."""
         plot_filename = self._prefix_with_benchmark('ranking.svg')
         self._plotter.write_ranking_plot(self._benchmark_snapshot_df,
-                                         self._get_full_path(plot_filename))
+                                         self.get_full_plot_path(plot_filename))
         return plot_filename
 
     @property
@@ -389,8 +394,8 @@ class BenchmarkResults:
         better_than_table = data_utils.create_better_than_table(
             self._benchmark_snapshot_df)
         plot_filename = self._prefix_with_benchmark('better_than.svg')
-        self._plotter.write_better_than_plot(better_than_table,
-                                             self._get_full_path(plot_filename))
+        self._plotter.write_better_than_plot(
+            better_than_table, self.get_full_plot_path(plot_filename))
         return plot_filename
 
     @property
@@ -400,7 +405,8 @@ class BenchmarkResults:
         unique_branch_cov_df_combined = self.unique_branch_cov_df.merge(
             self._benchmark_aggregated_coverage_df, on='fuzzer')
         self._plotter.write_unique_coverage_ranking_plot(
-            unique_branch_cov_df_combined, self._get_full_path(plot_filename))
+            unique_branch_cov_df_combined,
+            self.get_full_plot_path(plot_filename))
         return plot_filename
 
     @property
@@ -419,7 +425,7 @@ class BenchmarkResults:
             'pairwise_unique_coverage_plot.svg')
         self._plotter.write_pairwise_unique_coverage_heatmap_plot(
             self.pairwise_unique_coverage_table,
-            self._get_full_path(plot_filename))
+            self.get_full_plot_path(plot_filename))
         return plot_filename
 
     @property
