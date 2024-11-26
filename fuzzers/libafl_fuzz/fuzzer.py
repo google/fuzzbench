@@ -25,8 +25,7 @@ from fuzzers.libafl import fuzzer as libafl_fuzzer
 def build():
     """Build benchmark."""
     # Build the target with AFL++
-    #aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file')
-    aflplusplus_fuzzer.build('tracepc', 'dict2file')
+    aflplusplus_fuzzer.build('tracepc', 'cmplog', 'dict2file')
 
     # Copy to fuzzer to OUT
     build_directory = os.environ['OUT']
@@ -37,12 +36,12 @@ def build():
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run fuzzer."""
     # Calculate CmpLog binary path from the instrumented target binary.
-    #target_binary_directory = os.path.dirname(target_binary)
-    #cmplog_target_binary_directory = \
-    #    aflplusplus_fuzzer.get_cmplog_build_directory(target_binary_directory)
-    #target_binary_name = os.path.basename(target_binary)
-    #cmplog_target_binary = os.path.join(cmplog_target_binary_directory,
-    #                                    target_binary_name)
+    target_binary_directory = os.path.dirname(target_binary)
+    cmplog_target_binary_directory = \
+        aflplusplus_fuzzer.get_cmplog_build_directory(target_binary_directory)
+    target_binary_name = os.path.basename(target_binary)
+    cmplog_target_binary = os.path.join(cmplog_target_binary_directory,
+                                        target_binary_name)
 
     # Setup env vars
     libafl_fuzzer.prepare_fuzz_environment(input_corpus)
@@ -59,17 +58,16 @@ def fuzz(input_corpus, output_corpus, target_binary):
             dictionary_path = './afl++.dict'
 
     # Run the fuzzer
-    #command = ['./libafl-fuzz', '-c', cmplog_target_binary]
-    command = ['./libafl-fuzz']
+    command = ['./libafl-fuzz', '-c', cmplog_target_binary]
     if dictionary_path:
         command += (['-x', dictionary_path])
     command += (['-o', output_corpus, '-i', input_corpus, target_binary])
-    #command += (['-t', '1000'])
+    command += (['-t', '1000'])
     print(command)
     env = {
         'AFL_CORES': '0',
         'AFL_IGNORE_TIMEOUT': '1',
-        'AFL_CMPLOG_ONLY_NEW': '1',
-        'AFL_MAP_SIZE': '2621440'
+        'AFL_MAP_SIZE': '2621440',
+        'AFL_CMPLOG_ONLY_NEW': '1'
     }
     subprocess.check_call(command, cwd=os.environ['OUT'], env=env)

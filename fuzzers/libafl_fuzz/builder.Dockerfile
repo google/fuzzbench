@@ -24,14 +24,14 @@ RUN apt-get update && \
 # Uninstall old Rust & Install the latest one.
 RUN if which rustup; then rustup self uninstall -y; fi && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
-    sh /rustup.sh --default-toolchain nightly-2024-07-04 -y && \
+    sh /rustup.sh --default-toolchain nightly-2024-11-25 -y && \
     rm /rustup.sh
 
 # Download afl++.
 RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl
 
 # Checkout a current commit
-RUN cd /afl && git pull && git checkout ab5f95e17ac7d957e26f5c1789a8624a238ac0e0
+RUN cd /afl && git pull && git checkout 5777ceaf23f48ae4ceae60e4f3a79263802633c6
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
@@ -43,14 +43,14 @@ RUN cd /afl && \
     cp utils/aflpp_driver/libAFLDriver.a /
 
 # Download libafl.
-RUN git clone https://github.com/R9295/LibAFL /libafl
+RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git pull && \
-    git checkout libafl-fuzz/frida-mode-separate
+RUN cd /libafl && git pull
 
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
     cd ./fuzzers/forkserver/libafl-fuzz && \
-    PATH="/root/.cargo/bin/:$PATH" cargo build --profile release
+    PATH="/root/.cargo/bin/:$PATH" cargo build --profile release --features fuzzbench
+
