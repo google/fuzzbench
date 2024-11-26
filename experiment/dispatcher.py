@@ -24,7 +24,6 @@ import threading
 import time
 from typing import List
 
-from common import random_corpus_fuzzing_utils
 from common import experiment_path as exp_path
 from common import experiment_utils
 from common import logs
@@ -90,7 +89,7 @@ def _initialize_trials_in_db(trials: List[models.Trial]):
     db_utils.bulk_save(trials)
 
 
-class Experiment:  # pylint: disable=too-many-instance-attributes
+class Experiment:
     """Class representing an experiment."""
 
     def __init__(self, experiment_config_filepath: str):
@@ -102,7 +101,6 @@ class Experiment:  # pylint: disable=too-many-instance-attributes
         self.experiment_name = self.config['experiment']
         self.git_hash = self.config['git_hash']
         self.preemptible = self.config.get('preemptible_runners')
-        self.micro_experiment = self.config.get('micro_experiment')
 
 
 def build_images_for_trials(fuzzers: List[str], benchmarks: List[str],
@@ -125,8 +123,7 @@ def build_images_for_trials(fuzzers: List[str], benchmarks: List[str],
             models.Trial(fuzzer=fuzzer,
                          experiment=experiment_name,
                          benchmark=benchmark,
-                         preemptible=preemptible,
-                         trial_group_num=trial) for trial in range(num_trials)
+                         preemptible=preemptible) for _ in range(num_trials)
         ]
         trials.extend(fuzzer_benchmark_trials)
     return trials
@@ -152,10 +149,6 @@ def dispatcher_main():
                                      experiment.num_trials,
                                      experiment.preemptible)
     _initialize_trials_in_db(trials)
-
-    if experiment.micro_experiment:
-        random_corpus_fuzzing_utils.initialize_random_corpus_fuzzing(
-            experiment.benchmarks, experiment.num_trials)
 
     create_work_subdirs(['experiment-folders', 'measurement-folders'])
 
