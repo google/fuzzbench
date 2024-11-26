@@ -20,6 +20,16 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+
+- experiment: 2023-02-01-Cryptoaflpp
+  description: "New Mutation Based on Fiestel"
+  fuzzers:
+    - aflplusplus
+    - honggfuzz
+    - libfuzzer
+
+
+
 - experiment: 2023-06-12-aflpp
   description: "Benchmark afl++ releases and newmutation"
   fuzzers:
