@@ -206,6 +206,7 @@ def run_afl_fuzz(input_corpus, output_corpus, target_binary, hide_output=False):
             '1000+',  # Use same default 1 sec timeout, but add '+' to skip hangs.
             "-x", 
             "/out/keyval.dict",
+            "-x",
             dictionary_path 
         ]
             
@@ -224,6 +225,13 @@ def run_afl_fuzz(input_corpus, output_corpus, target_binary, hide_output=False):
             "-x", 
             "/out/keyval.dict" 
         ]
+    command += [
+        '--',
+        target_binary,
+        # Pass INT_MAX to afl the maximize the number of persistent loops it
+        # performs.
+        '2147483647'
+    ]
         
     print("[run_afl_fuzz] Running command: " + " ".join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
