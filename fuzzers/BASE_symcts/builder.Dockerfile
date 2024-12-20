@@ -32,13 +32,15 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
 
 ENV PATH="/root/.cargo/bin:${PATH}"
 RUN echo PATH="$PATH:/root/.cargo/bin" >> ~/.bashrc
-RUN rustup default nightly-2022-09-18
+# RUN rustup default nightly-2023-10-30
+RUN rustup default nightly-2023-10-30-x86_64-unknown-linux-gnu
 
 # Install LLVM
 RUN cd /tmp/ &&                          \
     wget https://apt.llvm.org/llvm.sh && \
     chmod +x llvm.sh &&                  \
-    ./llvm.sh 12
+    ./llvm.sh 12 &&                      \
+    ./llvm.sh 15
 
 RUN update-alternatives \
     --install  /usr/lib/llvm              llvm             /usr/lib/llvm-12  20        \
@@ -119,15 +121,16 @@ RUN mkdir -p /z3/include /z3/lib && \
 
 ENV LIBRARY_PATH="/z3/lib/:$LIBRARY_PATH"
 
+RUN echo 17
 RUN git clone https://github.com/Lukas-Dresel/symcc.git /symcc && \
     cd /symcc && \
     git submodule init && \
     git submodule update
 
-RUN mkdir /symcc/build_simple && \
-    cd /symcc/build_simple && \
-    cmake -DCMAKE_BUILD_TYPE=Release -DZ3_TRUST_SYSTEM_VERSION=ON ../ && \
-    make -j$(nproc)
+# RUN mkdir -p /symcc/build_simple && \
+#     cd /symcc/build_simple && \
+#     cmake -DCMAKE_BUILD_TYPE=Release -DZ3_TRUST_SYSTEM_VERSION=ON ../ && \
+#     make -j$(nproc) || (find /symcc/build_simple/SymRuntime-prefix/src/SymRuntime-build/; exit 1)
 
 RUN mkdir /symcc/build_qsym && \
     cd /symcc/build_qsym && \
@@ -149,11 +152,16 @@ RUN mkdir -p /libs_symcc
 ENV PATH="/usr/lib/llvm-12/bin/:$PATH"
 
 # Building MCTSSE
-RUN ls -l && echo rerun=1
-RUN git clone -b main --depth 1 --recurse-submodules https://github.com/Lukas-Dresel/mctsse/ /mctsse
-RUN git clone --depth 1 https://github.com/Lukas-Dresel/z3jit.git /mctsse/implementation/z3jit
+
+COPY id_rsa /root/.ssh/id_rsa
+RUN echo "Host github.com\n\tStrictHostKeyChecking no\nUser git\nIdentityFile /root/.ssh/id_rsa\n" >> /root/.ssh/config
+
+RUN ls -l && echo rerun=2
+RUN git clone -b main --depth 1 --recurse-submodules git@github.com:shellphish-support-syndicate/mctsse/ /mctsse
+RUN git clone --depth 1 https://github.com/Lukas-Dresel/z3jit.git /mctsse/repos/z3jit
 RUN git clone -b feat/symcts https://github.com/Lukas-Dresel/LibAFL /mctsse/repos/LibAFL
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/runtime && \
+    cargo update home@0.5.11 --precise 0.5.9 && \
     cargo build --release && \
     cp /mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/libSymRuntime.so /libs_symcc/
 
@@ -189,28 +197,27 @@ RUN git clone --depth=1 https://github.com/madler/zlib /zlib/ && cd /zlib && \
     make -j$(nproc) && \
     cp libz.a /libs_symcc/libz.a
 
-RUN git clone --depth=1 https://github.com/Lukas-Dresel/symqemu "/symqemu"
-
 # build SymQEMU
-RUN cd "/symqemu" && \
-    mkdir -p build && \
-    export SYMCC_RUNTIME_DIR=/mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/ && \
-    cd /symqemu/build && \
-    ../configure                                                  \
-      --static                                                    \
-      --audio-drv-list=                                           \
-      --disable-bluez                                             \
-      --disable-sdl                                               \
-      --disable-gtk                                               \
-      --disable-vte                                               \
-      --disable-opengl                                            \
-      --disable-virglrenderer                                     \
-      --disable-werror                                            \
-      --target-list=x86_64-linux-user                             \
-      --enable-capstone=git                                       \
-      --symcc-source="/symcc/"                                    \
-      --symcc-runtime-dir="/mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/" && \
-    make -j$(nproc) && cp /symqemu/build/x86_64-linux-user/symqemu-x86_64 /out/
+# RUN git clone --depth=1 https://github.com/Lukas-Dresel/symqemu "/symqemu" && \
+#     cd "/symqemu" && \
+#     mkdir -p build && \
+#     export SYMCC_RUNTIME_DIR=/mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/ && \
+#     cd /symqemu/build && \
+#     ../configure                                                  \
+#       --static                                                    \
+#       --audio-drv-list=                                           \
+#       --disable-bluez                                             \
+#       --disable-sdl                                               \
+#       --disable-gtk                                               \
+#       --disable-vte                                               \
+#       --disable-opengl                                            \
+#       --disable-virglrenderer                                     \
+#       --disable-werror                                            \
+#       --target-list=x86_64-linux-user                             \
+#       --enable-capstone=git                                       \
+#       --symcc-source="/symcc/"                                    \
+#       --symcc-runtime-dir="/mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/" && \
+#     make -j$(nproc) && cp /symqemu/build/x86_64-linux-user/symqemu-x86_64 /out/
 
 
 RUN git clone --depth 1 https://github.com/Lukas-Dresel/symcc_libc_preload /mctsse/repos/symcc_libc_preload
@@ -218,7 +225,10 @@ RUN cd /mctsse/repos/symcc_libc_preload && \
     make CC=/symcc/build/symcc libc_symcc_preload.a && \
     cp /mctsse/repos/symcc_libc_preload/libc_symcc_preload.a /libs_symcc/
 
-RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
+RUN sudo apt-get install libpolly-15-dev -y
+RUN export LLVM_CONFIG=$(which llvm-config-15) && \
+    cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
+    cargo update home@0.5.11 --precise 0.5.9 && \
     cargo build --release --no-default-features --features=default_fuzzbench && \
     cp ./target/release/symcts /out/symcts/symcts
 
