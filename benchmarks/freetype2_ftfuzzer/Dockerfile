@@ -30,10 +30,10 @@ RUN git clone https://github.com/unicode-org/text-rendering-tests.git TRT
 RUN wget https://github.com/libarchive/libarchive/releases/download/v3.4.3/libarchive-3.4.3.tar.xz
 
 
-RUN wget https://raw.githubusercontent.com/ardier/fuzzbench/ardier_0011/benchmarks/freetype2_ftfuzzer/seeds.tar -O $SRC/seeds.tar && \
+RUN wget https://raw.githubusercontent.com/ardier/fuzzbench/ardier_0011/benchmarks/freetype2_ftfuzzer/seeds.tar.gz -O $SRC/seeds.tar.gz && \
     mkdir -p $SRC/seeds && \
-    tar -xvf $SRC/seeds.tar -C $SRC/seeds && \
-    rm $SRC/seeds.tar
+    tar -xvf $SRC/seeds.tar.gz -C $SRC/seeds && \
+    rm $SRC/seeds.tar.gz
 
-COPY seeds/ $SRC/seeds
+# COPY seeds/ $SRC/seeds
 COPY * $SRC/
