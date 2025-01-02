@@ -102,10 +102,10 @@ RUN cd /afl-base/ && \
 # COPY src/afl_driver.cpp /afl/afl_driver.cpp
 RUN cd /afl-lukas/ && \
     unset CFLAGS CXXFLAGS && \
-    export CC=clang AFL_NO_X86=1 && \
-    (LLVM_CONFIG=llvm-config-12 make -j$(nproc) -k NO_NYX=1 NO_PYTHON=1 source-only || true ) && \
-    (LLVM_CONFIG=llvm-config-12 make install -k || true) && \
-    (cd utils/aflpp_driver && LLVM_CONFIG=llvm-config-12 make && cp libAFLDriver.a /libAFLDriver-lukas.a)
+    export CC=clang-15 CXX=clang++-15 AFL_NO_X86=1 && \
+    (LLVM_CONFIG=llvm-config-15 make -j$(nproc) -k NO_NYX=1 NO_PYTHON=1 source-only || true ) && \
+    (LLVM_CONFIG=llvm-config-15 make install -k || true) && \
+    (cd utils/aflpp_driver && LLVM_CONFIG=llvm-config-15 make && cp libAFLDriver.a /libAFLDriver-lukas.a)
 
 
 ENV CFLAGS=""
