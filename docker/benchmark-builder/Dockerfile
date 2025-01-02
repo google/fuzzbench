@@ -54,9 +54,10 @@ COPY --from=base-image /usr/local/lib/python3.10 /usr/local/lib/python3.10
 COPY --from=base-image /usr/local/include/python3.10 /usr/local/include/python3.10
 COPY --from=base-image /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 
-RUN apt-get update && apt install -y python3-pyqt5
+# RUN apt-get update && apt install -y python3-pyqt5
+RUN apt-get purge -y python3-yaml
 COPY ./requirements.txt /tmp
-RUN pip3 install -U pip && pip3 install -r /tmp/requirements.txt
+RUN python3 -m pip install -U pip && python3 -m pip install -r /tmp/requirements.txt
 
 # Copy the entire fuzzers directory tree to allow for module dependencies.
 COPY fuzzers $SRC/fuzzers
