@@ -167,8 +167,8 @@ RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/runtime && \
 
 
 # Build libcxx with the SymCC compiler so we can instrument C++ code.
-RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.git /llvm_source
-RUN mkdir /libcxx_native_install && mkdir /libcxx_native_build && \
+RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.git /llvm_source && \
+    mkdir /libcxx_native_install && mkdir /libcxx_native_build && \
     cd /libcxx_native_install && \
     export SYMCC_REGULAR_LIBCXX="" && \
     export SYMCC_NO_SYMBOLIC_INPUT=yes && \
@@ -185,7 +185,8 @@ RUN mkdir /libcxx_native_install && mkdir /libcxx_native_build && \
       -DHAVE_STEADY_CLOCK=1 && \
     ninja distribution && \
     ninja install-distribution && \
-    unset SYMCC_REGULAR_LIBCXX SYMCC_NO_SYMBOLIC_INPUT
+    unset SYMCC_REGULAR_LIBCXX SYMCC_NO_SYMBOLIC_INPUT && \
+    rm -rf /llvm_source
 
 
 # we have to build zlib instrumented because of all the callbacks being passed back and forth because SymCC does not
@@ -226,23 +227,54 @@ RUN cd /mctsse/repos/symcc_libc_preload && \
     cp /mctsse/repos/symcc_libc_preload/libc_symcc_preload.a /libs_symcc/
 
 RUN sudo apt-get install libpolly-15-dev -y
+
+RUN cd /mctsse/ && \
+    git fetch origin feat/usenix-ablations && \
+    git branch feat/usenix-ablations FETCH_HEAD && \
+    git remote -v && \
+    git branch -la && \
+    git checkout feat/usenix-ablations && \
+    echo 3
+
 RUN export LLVM_CONFIG=$(which llvm-config-15) && \
     cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     cargo update home@0.5.11 --precise 0.5.9 && \
-    cargo build --release --no-default-features --features=default_fuzzbench && \
+    cargo build --release  --bin symcts --no-default-features --features=default_fuzzbench && \
     cp ./target/release/symcts /out/symcts/symcts
 
-# RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
-#     cargo build --release --no-default-features --features=default_fuzzbench --features=quicksampler_solving,quicksampler_path_sensitive_solving && \
-#     cp ./target/release/symcts /out/symcts/symcts-sampling
+RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
+    cargo build --release  --bin symcts --no-default-features --features=default_fuzzbench --features=scheduling_symcc && \
+    cp ./target/release/symcts /out/symcts/symcts-ablation-scheduling-symcc
 
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
-    cargo build --release --no-default-features --features=default_fuzzbench --features=sync_from_other_fuzzers &&    \
-    cp ./target/release/symcts /out/symcts/symcts-from_other
+    cargo build --release  --bin symcts --no-default-features --features=default_fuzzbench --features=coverage_single_level && \
+    cp ./target/release/symcts /out/symcts/symcts-ablation-coverage-edge-coverage
 
-# RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
-#     cargo build --release --no-default-features --features=default_fuzzbench --features=quicksampler_solving,quicksampler_path_sensitive_solving,sync_from_other_fuzzers &&    \
-#     cp ./target/release/symcts /out/symcts/symcts-sampling-from_other
+RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
+    cargo build --release  --bin symcts --no-default-features --features=default_fuzzbench --features=mutation_full_solve_first && \
+    cp ./target/release/symcts /out/symcts/symcts-ablation-mutation-full-solve-first
+
+# no sync_only_when_stuck enabled, always sync from the fuzzer immediately
+RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
+    cargo build --release  --bin symcts --no-default-features --features=baseline,mutations_default,coverage_default,scheduling_default,sync_from_other_fuzzers && \
+    cp ./target/release/symcts /out/symcts/symcts-ablation-sync-always-sync
+
+# mimic symcc closely, edge-coverage, full-solve-first, sync when not stuck
+RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
+    cargo build --release  --bin symcts --no-default-features --features=baseline,mutations_default,coverage_default,scheduling_default,sync_from_other_fuzzers,mutation_full_solve_first,coverage_single_level,scheduling_symcc && \
+    cp ./target/release/symcts /out/symcts/symcts-ablation-symcts-as-symcc
+
+RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
+    cargo build --release  --bin symcts --no-default-features --features=default_fuzzbench,resource_tracking && \
+    cp ./target/release/symcts /out/symcts/symcts-ablation-resource-tracking
+
+RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
+    cargo build --release  --bin symcts --no-default-features --features=default_fuzzbench,resource_tracking,resource_tracking_per_branch && \
+    cp ./target/release/symcts /out/symcts/symcts-ablation-resource-tracking-per-branch
+
+# build all the other binaries with default features
+RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
+    cargo build --release --no-default-features --features=default_fuzzbench
 
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     /symcc/build/symcc -I/afl-lukas/include -c /afl-lukas/utils/aflpp_driver/aflpp_driver.c -o /libfuzzer-main.o /libs_symcc/libc_symcc_preload.a /libs_symcc/libz.a

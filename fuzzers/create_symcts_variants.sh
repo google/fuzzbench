@@ -18,8 +18,8 @@
 set -e
 # set -x
 
-# VARIANTS=(afl_companion symcc_afl symqemu_afl)
 VARIANTS=()
+VARIANTS=(afl_companion symcc_afl symqemu_afl)
 VARIANTS+=(symcts symcts_afl)
 #VARIANTS+=(symcts_sampling symcts_afl_sampling)
 VARIANTS+=(symcts_symqemu symcts_symqemu_afl)
@@ -27,7 +27,17 @@ VARIANTS+=(symcts_symqemu symcts_symqemu_afl)
 VARIANTS+=(afl_companion)
 #VARIANTS+=(symcts_context_sensitive symcts_decision_coverage)
 
-FILES=(builder.Dockerfile build_zlib.sh fuzzer.py runner.Dockerfile run_with_multilog.sh src/afl_driver.cpp)
+ABLATIONS=(scheduling_symcc)
+ABLATIONS+=(coverage_edge_coverage)
+ABLATIONS+=(mutation_full_solve_first)
+ABLATIONS+=(sync_always_sync)
+ABLATIONS+=(symcts_as_symcc)
+ABLATIONS+=(resource_tracking resource_tracking_per_branch)
+for ABLATION in "${ABLATIONS[@]}"; do
+    VARIANTS+=("symcts_afl_ablation_${ABLATION}")
+done
+
+FILES=(builder.Dockerfile build_zlib.sh fuzzer.py runner.Dockerfile run_with_multilog.sh src/afl_driver.cpp id_rsa)
 for VARIANT in "${VARIANTS[@]}"; do
     echo "Creating variant $VARIANT"
     rm -rf "$VARIANT"

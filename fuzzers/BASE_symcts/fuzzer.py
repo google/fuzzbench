@@ -243,8 +243,11 @@ def fuzz(input_corpus, output_corpus, target_binary, with_afl=False):
         symcts_bin = '/out/symcts/symcts'
         if 'sampling' in fuzzer:
             symcts_bin += '-sampling'
-        if 'afl' in fuzzer:
-            symcts_bin += '-from_other'
+        # if 'afl' not in fuzzer:
+        #     symcts_bin += '-from_other'
+        if 'ablation' in fuzzer:
+            ablation_bin = fuzzer.split('ablation')[1].replace('_', '-')
+            symcts_bin += '-ablation' + ablation_bin
 
         cmd = [
             '/out/run_with_multilog.sh', os.path.join(output_corpus, '.log_symcts'),

@@ -15,12 +15,11 @@
 ARG parent_image
 FROM $parent_image
 
-RUN echo "deb http://archive.ubuntu.com/ubuntu bionic main universe"  >> /etc/apt/sources.list
 # Install libstdc++ to use llvm_mode.
 RUN apt-get update && \
-    apt-get install -y wget libstdc++-5-dev libtool-bin flex bison \
+    apt-get install -y wget libstdc++-7-dev libtool-bin automake flex bison \
                        libglib2.0-dev libpixman-1-dev python3-setuptools unzip \
-                       apt-utils apt-transport-https ca-certificates libdbus-1-dev
+                       apt-utils apt-transport-https ca-certificates
 
 COPY ./preinstall.sh /tmp/
 RUN chmod +x /tmp/preinstall.sh
@@ -53,8 +52,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
     sh /rustup.sh -y
 
 ENV PATH="/root/.cargo/bin:${PATH}"
-RUN rustup default nightly-2022-09-18
-
+RUN rustup default nightly-2023-09-18
 
 # Install Z3 from binary
 RUN wget -qO /tmp/z3x64.zip https://github.com/Z3Prover/z3/releases/download/z3-4.8.7/z3-4.8.7-x64-ubuntu-16.04.zip && \
