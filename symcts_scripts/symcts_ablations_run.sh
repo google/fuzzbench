@@ -16,7 +16,7 @@
 # limitations under the License.
 
 FUZZERS=(symcc_aflplusplus symcts_afl)
-#FUZZERS+=(aflplusplus libafl)
+# FUZZERS+=(aflplusplus libafl)
 FUZZERS+=(
     # symcts_afl_ablation_scheduling_symcc
     # symcts_afl_ablation_coverage_edge_coverage

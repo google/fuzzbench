@@ -74,7 +74,7 @@ RUN update-alternatives \
 # RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl && \
 #     cd /afl && git checkout 149366507da1ff8e3e8c4962f3abc6c8fd78b222
 
-RUN echo "rerun=24"
+RUN echo "rerun=25"
 RUN git clone https://github.com/Lukas-Dresel/AFLplusplus/ /afl-lukas && \
     cd /afl-lukas && git checkout fixed/symcts-4d
 
@@ -263,6 +263,8 @@ RUN cd /mctsse/ && \
     git branch -la && \
     git checkout feat/usenix-ablations && \
     echo 5
+
+
 
 RUN export LLVM_CONFIG=$(which llvm-config-15) && \
     cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
