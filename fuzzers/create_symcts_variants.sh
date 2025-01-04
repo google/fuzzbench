@@ -37,7 +37,7 @@ for ABLATION in "${ABLATIONS[@]}"; do
     VARIANTS+=("symcts_afl_ablation_${ABLATION}")
 done
 
-FILES=(builder.Dockerfile build_zlib.sh fuzzer.py runner.Dockerfile run_with_multilog.sh src/afl_driver.cpp id_rsa .gitignore)
+FILES=(builder.Dockerfile build_zlib.sh fuzzer.py runner.Dockerfile run_with_multilog.sh src/afl_driver.cpp id_rsa .gitignore fuzzer_Cargo.lock runtime_Cargo.lock)
 for VARIANT in "${VARIANTS[@]}"; do
     echo "Creating variant $VARIANT"
     rm -rf "$VARIANT"
