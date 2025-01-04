@@ -77,10 +77,10 @@ RUN update-alternatives \
 
 RUN echo "rerun=24"
 RUN git clone https://github.com/Lukas-Dresel/AFLplusplus/ /afl-lukas && \
-    cd /afl-lukas && git checkout feat/larger_counters
+    cd /afl-lukas && git checkout fixed/symcts-4d
 
 
-RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl-base/
+RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl-base/ && cd /afl-base && git checkout 8e1df8e53d359f2858168a276c46d1113d4102f2
 
 
 # Prepare output dirs
@@ -102,10 +102,10 @@ RUN cd /afl-base/ && \
 # COPY src/afl_driver.cpp /afl/afl_driver.cpp
 RUN cd /afl-lukas/ && \
     unset CFLAGS CXXFLAGS && \
-    export CC=clang-15 CXX=clang++-15 AFL_NO_X86=1 && \
-    (LLVM_CONFIG=llvm-config-15 make -j$(nproc) -k NO_NYX=1 NO_PYTHON=1 source-only || true ) && \
-    (LLVM_CONFIG=llvm-config-15 make install -k || true) && \
-    (cd utils/aflpp_driver && LLVM_CONFIG=llvm-config-15 make && cp libAFLDriver.a /libAFLDriver-lukas.a)
+    export CC=clang CXX=clang++ AFL_NO_X86=1 && \
+    (LLVM_CONFIG=llvm-config make -j$(nproc) -k NO_NYX=1 NO_PYTHON=1 source-only || true ) && \
+    (LLVM_CONFIG=llvm-config make install -k || true) && \
+    (cd utils/aflpp_driver && LLVM_CONFIG=llvm-config make && cp libAFLDriver.a /libAFLDriver-lukas.a)
 
 
 ENV CFLAGS=""

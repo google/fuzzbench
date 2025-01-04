@@ -16,7 +16,7 @@
 # limitations under the License.
 
 FUZZERS=(symcc_aflplusplus symcts_afl)
-FUZZERS+=(aflplusplus libafl)
+#FUZZERS+=(aflplusplus libafl)
 FUZZERS+=(
     # symcts_afl_ablation_scheduling_symcc
     # symcts_afl_ablation_coverage_edge_coverage
@@ -26,16 +26,20 @@ FUZZERS+=(
 )
 
 TARGETS=(
-    bloaty_fuzz_target
+#    bloaty_fuzz_target
     libxml2_xml
-    sqlite3_ossfuzz
-    openh264_decoder_fuzzer
-    stb_stbi_read_fuzzer
+#    sqlite3_ossfuzz
+#    openh264_decoder_fuzzer
+#    stb_stbi_read_fuzzer
 )
 
 # 2 runs * 7 fuzzers * 5 benchmarks = 70 runs
 
 EXPERIMENT_NAME="symcts-abl-$(date +%Y%m%d-%H%M%S)"
+
+REPORT_DIR="/nvme/lukas/fuzzbench/symcts_ablations/report-data/$EXPERIMENT_NAME"
+mkdir -p "$REPORT_DIR"
+cp fuzzers/symcts_afl/builder.Dockerfile "$REPORT_DIR"
 
 # --benchmarks libpng-1.2.56
 # libpcap_fuzz_both vorbis-2017-12-11 woff2-2016-05-06 zlib_zlib_uncompress_fuzzer
