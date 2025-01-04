@@ -32,8 +32,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
 
 ENV PATH="/root/.cargo/bin:${PATH}"
 RUN echo PATH="$PATH:/root/.cargo/bin" >> ~/.bashrc
-# RUN rustup default nightly-2023-10-30
-RUN rustup default nightly-2023-10-30-x86_64-unknown-linux-gnu
+RUN rustup default nightly-2022-09-18
 
 # Install LLVM
 RUN cd /tmp/ &&                          \
@@ -77,10 +76,10 @@ RUN update-alternatives \
 
 RUN echo "rerun=24"
 RUN git clone https://github.com/Lukas-Dresel/AFLplusplus/ /afl-lukas && \
-    cd /afl-lukas && git checkout feat/larger_counters
+    cd /afl-lukas && git checkout fixed/symcts-4d
 
 
-RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl-base/
+RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl-base/ && cd /afl-base/ && git checkout 8e1df8e53d359f2858168a276c46d1113d4102f2
 
 
 # Prepare output dirs
@@ -102,10 +101,10 @@ RUN cd /afl-base/ && \
 # COPY src/afl_driver.cpp /afl/afl_driver.cpp
 RUN cd /afl-lukas/ && \
     unset CFLAGS CXXFLAGS && \
-    export CC=clang-15 CXX=clang++-15 AFL_NO_X86=1 && \
-    (LLVM_CONFIG=llvm-config-15 make -j$(nproc) -k NO_NYX=1 NO_PYTHON=1 source-only || true ) && \
-    (LLVM_CONFIG=llvm-config-15 make install -k || true) && \
-    (cd utils/aflpp_driver && LLVM_CONFIG=llvm-config-15 make && cp libAFLDriver.a /libAFLDriver-lukas.a)
+    export CC=clang CXX=clang++ AFL_NO_X86=1 && \
+    (LLVM_CONFIG=llvm-config-12 make -j$(nproc) -k NO_NYX=1 NO_PYTHON=1 source-only || true ) && \
+    (LLVM_CONFIG=llvm-config-12 make install -k || true) && \
+    (cd utils/aflpp_driver && LLVM_CONFIG=llvm-config-12 make && cp libAFLDriver.a /libAFLDriver-lukas.a)
 
 
 ENV CFLAGS=""
@@ -121,16 +120,16 @@ RUN mkdir -p /z3/include /z3/lib && \
 
 ENV LIBRARY_PATH="/z3/lib/:$LIBRARY_PATH"
 
-RUN echo 17
 RUN git clone https://github.com/Lukas-Dresel/symcc.git /symcc && \
     cd /symcc && \
+    git checkout fixed/symcts-4d && \
     git submodule init && \
     git submodule update
 
-# RUN mkdir -p /symcc/build_simple && \
-#     cd /symcc/build_simple && \
-#     cmake -DCMAKE_BUILD_TYPE=Release -DZ3_TRUST_SYSTEM_VERSION=ON ../ && \
-#     make -j$(nproc) || (find /symcc/build_simple/SymRuntime-prefix/src/SymRuntime-build/; exit 1)
+RUN mkdir /symcc/build_simple && \
+    cd /symcc/build_simple && \
+    cmake -DCMAKE_BUILD_TYPE=Release -DZ3_TRUST_SYSTEM_VERSION=ON ../ && \
+    make -j$(nproc)
 
 RUN mkdir /symcc/build_qsym && \
     cd /symcc/build_qsym && \
@@ -151,24 +150,49 @@ RUN mkdir -p /libs_symcc
 
 ENV PATH="/usr/lib/llvm-12/bin/:$PATH"
 
-# Building MCTSSE
-
 COPY id_rsa /root/.ssh/id_rsa
-RUN echo "Host github.com\n\tStrictHostKeyChecking no\nUser git\nIdentityFile /root/.ssh/id_rsa\n" >> /root/.ssh/config
+RUN echo 'Host github.com\n\tStrictHostKeyChecking no\nIdentityFile ~/.ssh/id_rsa\n' >> /root/.ssh/config
 
-RUN ls -l && echo rerun=2
-RUN git clone -b main --depth 1 --recurse-submodules git@github.com:shellphish-support-syndicate/mctsse/ /mctsse
-RUN git clone --depth 1 https://github.com/Lukas-Dresel/z3jit.git /mctsse/repos/z3jit
-RUN git clone -b feat/symcts https://github.com/Lukas-Dresel/LibAFL /mctsse/repos/LibAFL
+# Building MCTSSE
+RUN ls -l && echo rerun=4
+RUN git clone -b fixed/symcts-4d --recurse-submodules git@github.com:shellphish-support-syndicate/mctsse/ /mctsse
+RUN git clone -b fixed/symcts-4d --depth 1 https://github.com/Lukas-Dresel/z3jit.git /mctsse/implementation/z3jit
+RUN git clone -b fixed/symcts-4d https://github.com/Lukas-Dresel/LibAFL /mctsse/repos/LibAFL
+
+#RUN rustup install nightly-2023-06-01 && rustup default nightly-2023-06-01
+RUN cd /mctsse/repos/LibAFL/libafl/ && \
+    git checkout fixed/symcts-4d && \
+    git pull && \
+    git fetch --all && \
+    echo 3 && \
+    git checkout fixed/symcts-4d
+COPY runtime_Cargo.lock /mctsse/implementation/libfuzzer_stb_image_symcts/runtime/Cargo.lock
+COPY fuzzer_Cargo.lock /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer/Cargo.lock
+RUN cd /mctsse/ && \
+    git pull && git fetch --all && \
+    cd /mctsse/implementation/libfuzzer_stb_image_symcts/runtime && \
+    set -x && \
+    echo "runtime reconfigured" && \
+    cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
+    echo "fuzzer reconfigured"
+
+#cargo update -p which --precise 4.4.0 && \
+
+RUN apt-get install -y libpolly-15-dev
+
+# RUN which llvm-config && which llvm-config-12 && which llvm-config-15 && exit 1
+
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/runtime && \
-    cargo update home@0.5.11 --precise 0.5.9 && \
     cargo build --release && \
     cp /mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/libSymRuntime.so /libs_symcc/
+RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
+    rm -rf /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer/src/bin/cov_over_time.rs && \
+    cargo build --release
 
 
 # Build libcxx with the SymCC compiler so we can instrument C++ code.
-RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.git /llvm_source && \
-    mkdir /libcxx_native_install && mkdir /libcxx_native_build && \
+RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.git /llvm_source
+RUN mkdir /libcxx_native_install && mkdir /libcxx_native_build && \
     cd /libcxx_native_install && \
     export SYMCC_REGULAR_LIBCXX="" && \
     export SYMCC_NO_SYMBOLIC_INPUT=yes && \
@@ -185,8 +209,12 @@ RUN git clone -b llvmorg-12.0.0 --depth 1 https://github.com/llvm/llvm-project.g
       -DHAVE_STEADY_CLOCK=1 && \
     ninja distribution && \
     ninja install-distribution && \
-    unset SYMCC_REGULAR_LIBCXX SYMCC_NO_SYMBOLIC_INPUT && \
-    rm -rf /llvm_source
+    unset SYMCC_REGULAR_LIBCXX SYMCC_NO_SYMBOLIC_INPUT
+
+RUN echo rerun=1 && \
+    cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
+    git stash && git pull && git fetch --all && git stash pop && \
+    cargo build --release
 
 
 # we have to build zlib instrumented because of all the callbacks being passed back and forth because SymCC does not
@@ -198,9 +226,10 @@ RUN git clone --depth=1 https://github.com/madler/zlib /zlib/ && cd /zlib && \
     make -j$(nproc) && \
     cp libz.a /libs_symcc/libz.a
 
-# build SymQEMU
-# RUN git clone --depth=1 https://github.com/Lukas-Dresel/symqemu "/symqemu" && \
-#     cd "/symqemu" && \
+# RUN git clone --depth=1 https://github.com/Lukas-Dresel/symqemu "/symqemu"
+
+# # build SymQEMU
+# RUN cd "/symqemu" && \
 #     mkdir -p build && \
 #     export SYMCC_RUNTIME_DIR=/mctsse/implementation/libfuzzer_stb_image_symcts/runtime/target/release/ && \
 #     cd /symqemu/build && \
@@ -225,8 +254,6 @@ RUN git clone --depth 1 https://github.com/Lukas-Dresel/symcc_libc_preload /mcts
 RUN cd /mctsse/repos/symcc_libc_preload && \
     make CC=/symcc/build/symcc libc_symcc_preload.a && \
     cp /mctsse/repos/symcc_libc_preload/libc_symcc_preload.a /libs_symcc/
-
-RUN sudo apt-get install libpolly-15-dev -y
 
 RUN cd /mctsse/ && \
     git fetch origin feat/usenix-ablations && \
