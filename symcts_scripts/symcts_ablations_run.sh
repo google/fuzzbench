@@ -37,7 +37,7 @@ TARGETS=(
 
 EXPERIMENT_NAME="symcts-abl-$(date +%Y%m%d-%H%M%S)"
 
-REPORT_DIR="/nvme/lukas/fuzzbench/symcts_ablations/report-data/$EXPERIMENT_NAME"
+REPORT_DIR="/nvme/lukas/fuzzbench/symcts_ablations/report-data/experimental/$EXPERIMENT_NAME"
 mkdir -p "$REPORT_DIR"
 cp fuzzers/symcts_afl/builder.Dockerfile "$REPORT_DIR"
 
