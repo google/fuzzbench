@@ -256,16 +256,16 @@ RUN cd /mctsse/repos/symcc_libc_preload && \
     cp /mctsse/repos/symcc_libc_preload/libc_symcc_preload.a /libs_symcc/
 
 RUN cd /mctsse/ && \
+    git fetch --all && \
     git fetch origin feat/usenix-ablations && \
     git branch feat/usenix-ablations FETCH_HEAD && \
     git remote -v && \
     git branch -la && \
     git checkout feat/usenix-ablations && \
-    echo 3
+    echo 5
 
 RUN export LLVM_CONFIG=$(which llvm-config-15) && \
     cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
-    cargo update home@0.5.11 --precise 0.5.9 && \
     cargo build --release  --bin symcts --no-default-features --features=default_fuzzbench && \
     cp ./target/release/symcts /out/symcts/symcts
 
