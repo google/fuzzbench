@@ -164,7 +164,7 @@ def fuzz(input_corpus, output_corpus, target_binary):
     # We need both because of the way SymCC works.
     print('[run_fuzzer] Running AFL for SymCC')
     afl_fuzzer.prepare_fuzz_environment(input_corpus)
-    # launch_afl_thread(input_corpus, output_corpus, target_binary, ['-S', 'afl'] + flags_cmplog + flags_dict)
+    launch_afl_thread(input_corpus, output_corpus, target_binary, ['-S', 'afl'] + flags_cmplog + flags_dict)
     time.sleep(5)
     launch_afl_thread(input_corpus, output_corpus, target_binary, ['-S', 'afl-secondary'] + flags_cmplog + flags_dict)
     time.sleep(5)
