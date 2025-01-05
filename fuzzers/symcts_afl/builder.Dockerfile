@@ -272,10 +272,6 @@ RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     cargo build --release  --bin symcts --no-default-features --features=default_fuzzbench --features=scheduling_symcc && \
     cp ./target/release/symcts /out/symcts/symcts-ablation-scheduling-symcc
 
-    RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
-    cargo build --release  --bin symcts --no-default-features --features=baseline,mutations_default,coverage_default,scheduling_uniform_random,scheduling_weight_function_sampling_counts,sync_default,resource_tracking_default && \
-    cp ./target/release/symcts /out/symcts/symcts-ablation-scheduling-uniform-random
-
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     cargo build --release  --bin symcts --no-default-features --features=default_fuzzbench --features=coverage_single_level && \
     cp ./target/release/symcts /out/symcts/symcts-ablation-coverage-edge-coverage
@@ -302,6 +298,9 @@ RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     cargo build --release  --bin symcts --no-default-features --features=default_fuzzbench,resource_tracking,resource_tracking_per_branch && \
     cp ./target/release/symcts /out/symcts/symcts-ablation-resource-tracking-per-branch
 
+RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
+    cargo build --release  --bin symcts --no-default-features --features=baseline,mutations_default,coverage_default,scheduling_uniform_random,scheduling_weight_function_sampling_counts,sync_default,resource_tracking_default && \
+    cp ./target/release/symcts /out/symcts/symcts-ablation-scheduling-uniform-random
 
 
 # build all the other binaries with default features
