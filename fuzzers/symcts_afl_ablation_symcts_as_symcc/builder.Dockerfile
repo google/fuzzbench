@@ -262,13 +262,8 @@ RUN cd /mctsse/ && \
     git remote -v && \
     git branch -la && \
     git checkout feat/usenix-ablations && \
-    echo 8
-
-
-
-
-
-RUN export LLVM_CONFIG=$(which llvm-config-15) && \
+    echo 11 && \
+    export LLVM_CONFIG=$(which llvm-config-15) && \
     cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     cargo build --release  --bin symcts --no-default-features --features=default_fuzzbench && \
     cp ./target/release/symcts /out/symcts/symcts
