@@ -262,7 +262,9 @@ RUN cd /mctsse/ && \
     git remote -v && \
     git branch -la && \
     git checkout feat/usenix-ablations && \
-    echo 5
+    echo 8
+
+
 
 
 
@@ -301,6 +303,8 @@ RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     cargo build --release  --bin symcts --no-default-features --features=default_fuzzbench,resource_tracking,resource_tracking_per_branch && \
     cp ./target/release/symcts /out/symcts/symcts-ablation-resource-tracking-per-branch
 
+
+
 # build all the other binaries with default features
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     cargo build --release --no-default-features --features=default_fuzzbench
@@ -308,8 +312,7 @@ RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
 RUN cd /mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer && \
     /symcc/build/symcc -I/afl-lukas/include -c /afl-lukas/utils/aflpp_driver/aflpp_driver.c -o /libfuzzer-main.o /libs_symcc/libc_symcc_preload.a /libs_symcc/libz.a
 
-# RUN rm -rf /usr/local/lib/libc++experimental.a /usr/local/lib/libc++abi.a /usr/local/lib/libc++.a && \
-#     ln -s /usr/lib/llvm-10/lib/libc++abi.so.1 /usr/lib/llvm-10/lib/libc++abi.so
+
 
 # Compile vanilla (uninstrumented) afl driver
 RUN clang $CXXFLAGS -c -fPIC -I/afl-lukas/include \
