@@ -18,19 +18,19 @@
 FUZZERS=(symcc_aflplusplus symcts_afl)
 # FUZZERS+=(aflplusplus libafl)
 FUZZERS+=(
-    # symcts_afl_ablation_scheduling_symcc
-    # symcts_afl_ablation_coverage_edge_coverage
-    # symcts_afl_ablation_mutation_full_solve_first
-    # symcts_afl_ablation_sync_always_sync
-    # symcts_afl_ablation_symcts_as_symcc
+    symcts_afl_ablation_scheduling_symcc
+    symcts_afl_ablation_scheduling_uniform_random
+    symcts_afl_ablation_coverage_edge_coverage
+    symcts_afl_ablation_mutation_full_solve_first
+    symcts_afl_ablation_sync_always_sync
 )
 
 TARGETS=(
-#    bloaty_fuzz_target
+    bloaty_fuzz_target
     libxml2_xml
-#    sqlite3_ossfuzz
-#    openh264_decoder_fuzzer
-#    stb_stbi_read_fuzzer
+    sqlite3_ossfuzz
+    openh264_decoder_fuzzer
+    stb_stbi_read_fuzzer
 )
 
 # 2 runs * 7 fuzzers * 5 benchmarks = 70 runs
