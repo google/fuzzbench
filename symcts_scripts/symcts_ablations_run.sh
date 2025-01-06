@@ -40,6 +40,12 @@ EXPERIMENT_NAME="symcts-abl-$(date +%Y%m%d-%H%M%S)"
 REPORT_DIR="/nvme/lukas/fuzzbench/symcts_ablations/report-data/experimental/$EXPERIMENT_NAME"
 mkdir -p "$REPORT_DIR"
 cp fuzzers/symcts_afl/builder.Dockerfile "$REPORT_DIR"
+echo "$COMMENT" > "$REPORT_DIR/comment.txt"
+git rev-parse HEAD > "$REPORT_DIR/git-rev.txt"
+git show > "$REPORT_DIR/git-show.txt"
+git diff > "$REPORT_DIR/git-diff.txt"
+rsync --exclude=.venv -ravz ./ "$REPORT_DIR/fuzzbench_source"
+echo "Log dir: $REPORT_DIR"
 
 # --benchmarks libpng-1.2.56
 # libpcap_fuzz_both vorbis-2017-12-11 woff2-2016-05-06 zlib_zlib_uncompress_fuzzer

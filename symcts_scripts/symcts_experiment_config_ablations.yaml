@@ -10,7 +10,7 @@ trials: 2
 # 15 mins = 15 * 60 = 600
 max_total_time: 86400 # 1 hour
 
-snapshot_period: 900 # 15 mins
+snapshot_period: 300 # 15 mins
 
 # The location of the docker registry.
 # FIXME: Support custom docker registry.
