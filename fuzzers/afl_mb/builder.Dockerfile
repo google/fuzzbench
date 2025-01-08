@@ -18,7 +18,7 @@ FROM $parent_image
 # Download and compile AFL v2.57b.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone --depth 1 \
-    https://github.com/MagicHavoc/Havoc-Study/tree/main/fuzzers/Havoc_DMA
+    https://github.com/MagicHavoc/Havoc-Study
 RUN mv Havoc_DMA/fuzzers/Havoc_DMA /afl
 RUN cd /afl && \
     CFLAGS= CXXFLAGS= AFL_NO_X86=1 make
