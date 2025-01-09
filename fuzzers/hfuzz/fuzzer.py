@@ -603,7 +603,7 @@ def build():
     # if os.path.exists("/hfuzz3/gen_graph.py"):
     #     shutil.copy("/hfuzz3/gen_graph.py", os.path.join(os.environ["OUT"], "gen_graph.py"))
     if os.path.exists("/hfuzz3/afl-fuzz"):
-        shutil.copy("/hfuzz3/afl-fuzz", os.path.join(os.environ["OUT"], "hfuzz3_fuzzer"))
+        # shutil.copy("/hfuzz3/afl-fuzz", os.path.join(os.environ["OUT"], "hfuzz3_fuzzer"))
         shutil.copy("/hfuzz3/afl-fuzz", os.path.join(os.environ["OUT"], "hfuzz3_4.30c_hybrid_start"))
 
 
