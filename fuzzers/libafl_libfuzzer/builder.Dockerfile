@@ -28,15 +28,15 @@ RUN apt-get update && \
 # Uninstall old Rust & Install the latest one.
 RUN if which rustup; then rustup self uninstall -y; fi && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /rustup.sh && \
-    sh /rustup.sh --default-toolchain nightly-2023-08-23 -y && \
+    sh /rustup.sh --default-toolchain nightly-2024-08-12 -y && \
     rm /rustup.sh
 
 # Download libafl.
 RUN git clone https://github.com/AFLplusplus/libafl /libafl && \
     cd /libafl && \
-    git checkout defe9084aed5a80ac32fe9a1f3ff00baf97738c6 && \
+    git checkout f3433767bea0cc3d7ee3b4c08be138e61d20c468 && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
-    cd ./libafl_libfuzzer/libafl_libfuzzer_runtime && \
+    cd ./libafl_libfuzzer_runtime && \
     env -i CXX=$CXX CC=$CC PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench && \
     cp ./target/release-fuzzbench/libafl_libfuzzer_runtime.a /usr/lib/libFuzzer.a

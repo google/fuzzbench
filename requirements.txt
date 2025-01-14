@@ -21,7 +21,7 @@ redis==4.3.4
 rq==1.11.1
 scikit-posthocs==0.7.0
 scipy==1.9.2
-seaborn==0.12.0
+seaborn==0.13.2
 sqlalchemy==1.4.41
 protobuf==3.20.3
 

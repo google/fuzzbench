@@ -31,14 +31,10 @@ import subprocess
 import sys
 from typing import List, Optional
 
-import yaml
-
 from common import benchmark_utils
 from common import fuzzer_utils
 from common import filesystem
 from common import logs
-from common import yaml_utils
-from service import automatic_run_experiment
 from src_analysis import change_utils
 from src_analysis import diff_utils
 
@@ -258,31 +254,6 @@ def yapf(paths: List[Path], validate: bool = True) -> bool:
     return success
 
 
-def validate_experiment_requests(paths: List[Path]):
-    """Returns False if service/experiment-requests.yaml it is in |paths| and is
-    not valid."""
-    if Path(automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH) not in paths:
-        return True
-
-    try:
-        experiment_requests = yaml_utils.read(
-            automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH)
-    except yaml.parser.ParserError:
-        print('Error parsing '
-              f'{automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH}.')
-        return False
-
-    # Only validate the latest request.
-    result = automatic_run_experiment.validate_experiment_requests(
-        experiment_requests[:1])
-
-    if not result:
-        print(f'{automatic_run_experiment.REQUESTED_EXPERIMENTS_PATH}'
-              'is not valid.')
-
-    return result
-
-
 def is_path_ignored(path: Path) -> bool:
     """Returns True if |path| is a subpath of an ignored directory or is a
     third_party directory."""
@@ -441,7 +412,6 @@ def main() -> int:
         ('typecheck', pytype),
         ('test', pytest),
         ('validate_fuzzers_and_benchmarks', validate_fuzzers_and_benchmarks),
-        ('validate_experiment_requests', validate_experiment_requests),
         ('test_changed_integrations', test_changed_integrations),
     ]
 

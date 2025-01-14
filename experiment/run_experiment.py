@@ -298,6 +298,18 @@ def get_git_hash(allow_uncommitted_changes):
         return ''
 
 
+def _filter_incompatible_benchmarks(config: dict,
+                                    benchmarks: List[str]) -> List[str]:
+    """Removes benchmarks that are incompatible with build/run environment."""
+    if config['local_experiment']:
+        return benchmarks
+    if 'openh264_decoder_fuzzer' in benchmarks:
+        benchmarks.remove('openh264_decoder_fuzzer')
+    if 'stb_stbi_read_fuzzer' in benchmarks:
+        benchmarks.remove('stb_stbi_read_fuzzer')
+    return benchmarks
+
+
 def start_experiment(  # pylint: disable=too-many-arguments
         experiment_name: str,
         config_filename: str,
@@ -322,7 +334,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
 
     config = read_and_validate_experiment_config(config_filename)
     config['fuzzers'] = fuzzers
-    config['benchmarks'] = benchmarks
+    config['benchmarks'] = _filter_incompatible_benchmarks(config, benchmarks)
     config['experiment'] = experiment_name
     config['git_hash'] = get_git_hash(allow_uncommitted_changes)
     config['no_seeds'] = no_seeds
@@ -748,7 +760,7 @@ def run_experiment_main(args=None):
         benchmark_types = ';'.join(
             [f'{b}: {benchmark_utils.get_type(b)}' for b in args.benchmarks])
         raise ValidationError(
-            'Selected benchmarks are a mix between coverage'
+            'Selected benchmarks are a mix between coverage '
             'and bug benchmarks. This is currently not supported.'
             f'Selected benchmarks: {benchmark_types}')
 
