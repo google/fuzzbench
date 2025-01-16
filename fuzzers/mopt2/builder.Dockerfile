@@ -18,7 +18,7 @@ FROM $parent_image
 # Set AFL_NO_X86 to skip flaky tests.
 RUN git clone https://github.com/vanhauser-THC/MOpt /afl && \
     cd /afl && \
-    git checkout 63ce2d71134d80327b28ee2a80cae4ecbe374f54 && \
+    git checkout a2e23d151bed60e1912e74670f71dec695c988c7 && \
     cd MOpt && AFL_NO_X86=1 make && \
     cp afl-fuzz ..
 
