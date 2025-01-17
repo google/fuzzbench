@@ -75,7 +75,7 @@ def get_hfuzz2_build_directory(target_directory):
 
 def get_vanilla_build_directory(target_directory):
     """Return path to vanilla build directory."""
-    return os.path.join(target_directory, "vanilla")
+    return target_directory
 
 
 def get_cmplog_build_directory(target_directory):
