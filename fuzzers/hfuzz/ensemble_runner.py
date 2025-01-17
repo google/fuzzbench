@@ -445,14 +445,8 @@ class HFuzz2Fuzzer(AFLFuzzer):
     def build_command(self):
         """Build the command for running the HFuzz2 fuzzer."""
         if self.cmplog_target_binary:
-            # 如果有 cmplog_target_binary，则像 cmplog 一样加上 -c 参数
-            self.command = [
-                HFUZZ2_FUZZ_BIN_NAME,
-                '-c',
-                self.cmplog_target_binary
-            ]
+            self.command = [HFUZZ2_FUZZ_BIN_NAME]
         else:
-            # 否则普通运行
             self.command = [HFUZZ2_FUZZ_BIN_NAME]
         self.add_common_args()
 
