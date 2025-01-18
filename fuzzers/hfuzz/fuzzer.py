@@ -327,10 +327,10 @@ def build_vanilla_binary():
             if old_lib is not None:
                 os.environ["FUZZER_LIB"] = old_lib
 
-    if (not is_build_failed) and fuzz_target:
-        built_bin = os.path.join(vanilla_dir, os.path.basename(fuzz_target))
-        if os.path.exists(built_bin):
-            shutil.copy(built_bin, os.path.join(out_dir, os.path.basename(fuzz_target)))
+    # if (not is_build_failed) and fuzz_target:
+    #     built_bin = os.path.join(vanilla_dir, os.path.basename(fuzz_target))
+    #     if os.path.exists(built_bin):
+    #         shutil.copy(built_bin, os.path.join(out_dir, os.path.basename(fuzz_target)))
 
     return (not is_build_failed)
 
