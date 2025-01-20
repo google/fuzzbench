@@ -1,0 +1,4 @@
+commit: d5b74d5cccd0601ef4f88b19ea9f32740fcb10ba
+commit_date: 2024-07-01 15:34:53+00:00
+fuzz_target: libarchive_fuzzer
+project: libarchive
