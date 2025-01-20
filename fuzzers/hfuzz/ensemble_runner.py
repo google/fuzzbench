@@ -52,9 +52,9 @@ HFUZZ2_FUZZ_BIN_NAME = "./hfuzz2_4.30c_hybrid_start"
 # Timeout strategies (in seconds)
 TMOUT_CMPLOG = 60 * 60    # 90 minutes
 TIMEOUT_HFUZZ3 = 60 * 60 
-TMOUT_HFUZZ1 = 8 * 60 * 60      # 120 minutes
+TMOUT_HFUZZ1 = 4 * 60 * 60      # 120 minutes
 TMOUT_HFUZZ2 = 60 * 60   # 120 minutes
-TIMEOUT_LIBAFL = 60 * 60       # 1 minute
+TIMEOUT_LIBAFL = 4 * 60 * 60       # 1 minute
 
 
 def time_s():
