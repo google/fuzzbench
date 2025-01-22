@@ -53,7 +53,7 @@ def run_afl_fuzz(input_corpus,
     # Use '-d' to skip deterministic mode, as long as it it compatible with
     # additional flags.
     if not additional_flags or check_skip_det_compatible(additional_flags):
-        command.append('-d')
+        command.append('-z')
     if additional_flags:
         command.extend(additional_flags)
     dictionary_path = utils.get_dictionary_path(target_binary)
@@ -422,6 +422,8 @@ def fuzz(input_corpus, output_corpus, target_binary, *args, **kwargs):
     INITIAL_FUZZING_TIME = str(INITIAL_FUZZING_TIME) + 's'
 
     # write a txt to corpus folder. TODO
+    from datetime import datetime
+    start = datetime.now()
     with open(os.path.join(output_corpus, 'README.txt'), 'w') as f:
         f.write('''Kraken is an ensemble fuzzer. So it stores seeds in three places:
 - /out/corpus/all_corpus
@@ -442,6 +444,7 @@ def fuzz(input_corpus, output_corpus, target_binary, *args, **kwargs):
     p1.wait()
     p2.wait()
     
+    print(datetime.now()-start)
     print("Starting corpus minimization...")
     cmin_collected_dir = os.path.join(output_corpus,'all_corpus')
     os.makedirs(cmin_collected_dir, exist_ok=True)
@@ -470,6 +473,8 @@ def fuzz(input_corpus, output_corpus, target_binary, *args, **kwargs):
     os.makedirs(libafl_corpus_dir, exist_ok=True)
 
     # rerun two fuzzers.
+    print(datetime.now()-start)
+    print("Rerun two fuzzers...")
     p1 = fuzz_aflpp(input_corpus, aflpp_corpus_dir, aflpp_binary, skip_calibration=True, *args, **kwargs)
     p2 = fuzz_libafl(input_corpus, libafl_corpus_dir, libafl_binary, *args, **kwargs)
     # wait infinately
