@@ -40,14 +40,28 @@ def build():
 
     utils.build_benchmark()
 
-    subprocess.run('cat cfg.txt | grep "BasicBlock: " | wc -l > bbnum.txt', shell=True, check=True)
+    subprocess.run('cat cfg.txt | grep "BasicBlock: " | wc -l > bbnum.txt',
+                   shell=True,
+                   check=True)
     print(f"/out/{os.getenv('FUZZ_TARGET')}")
-    result = subprocess.run(["bash", '/path-afl/fuzzing_support/filterCFGandCallmap.sh', f"/out/{os.getenv('FUZZ_TARGET')}"], check=False, capture_output=True, text=True)
+    result = subprocess.run([
+        "bash", '/path-afl/fuzzing_support/filterCFGandCallmap.sh',
+        f"/out/{os.getenv('FUZZ_TARGET')}"
+    ],
+                            check=False,
+                            capture_output=True,
+                            text=True)
     print(result.stdout)
     print(result.stderr)
     ...
-    subprocess.run('cat cfg_filtered.txt | grep \"Function: \" | nl -v 0 | awk \'{print $1, $3, $4, $5, $6, $7, $8, $9}\' > function_list.txt', shell=True, check=True)
-    subprocess.run('g++ -I/path-afl/fuzzing_support /path-afl/fuzzing_support/convert.cpp -o convert', shell=True, check=True)
+    subprocess.run(
+        'cat cfg_filtered.txt | grep \"Function: \" | nl -v 0 | awk \'{print $1, $3, $4, $5, $6, $7, $8, $9}\' > function_list.txt',
+        shell=True,
+        check=True)
+    subprocess.run(
+        'g++ -I/path-afl/fuzzing_support /path-afl/fuzzing_support/convert.cpp -o convert',
+        shell=True,
+        check=True)
     subprocess.run('./convert', shell=True, check=True)
 
     print('[post_build] Copying afl-fuzz to $OUT directory')
@@ -74,6 +88,7 @@ def build():
         print(f"An error occurred: {e}")
         assert False
 
+
 def prepare_fuzz_environment(input_corpus):
     """Prepare to fuzz with AFL or another AFL-based fuzzer."""
     # Tell AFL to not use its terminal UI so we get usable logs.
@@ -91,10 +106,12 @@ def prepare_fuzz_environment(input_corpus):
     # Shuffle the queue
     os.environ['AFL_SHUFFLE_QUEUE'] = '1'
     os.environ['CFG_BIN_FILE'] = './top.bin'
-    os.environ['LD_LIBRARY_PATH'] = f'./lib:{os.getcwd()}:{os.environ["LD_LIBRARY_PATH"]}'
+    os.environ[
+        'LD_LIBRARY_PATH'] = f'./lib:{os.getcwd()}:{os.environ["LD_LIBRARY_PATH"]}'
 
     # AFL needs at least one non-empty seed to start.
     utils.create_seed_file_for_empty_corpus(input_corpus)
+
 
 def run_afl_fuzz(input_corpus,
                  output_corpus,
@@ -129,6 +146,7 @@ def run_afl_fuzz(input_corpus,
     print('[run_afl_fuzz] Running command: ' + ' '.join(command))
     output_stream = subprocess.DEVNULL if hide_output else None
     subprocess.check_call(command, stdout=output_stream, stderr=output_stream)
+
 
 def fuzz(input_corpus, output_corpus, target_binary):
     """Run afl-fuzz on target."""

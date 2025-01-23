@@ -2,7 +2,7 @@ import sys
 import re
 
 # 检查是否传入了足够的参数（至少需要三个参数加上脚本名称）
-assert(len(sys.argv) == 4)
+assert (len(sys.argv) == 4)
 # 打印第一个、第二个和第三个参数
 # python3 filterCFG.py cfg.txt PUT_decomp.txt cfg_filtered.txt
 print(f"参数1: {sys.argv[1]}")
@@ -18,7 +18,7 @@ print(f"参数3: {sys.argv[3]}")
 # 3.扫描一遍之前的字典，把所有 bool = true 的 CFG字符串列表 dump 到 cfg_filtered.txt 里
 
 # 1.先把整个 cfg.txt 读入内存，按照 {key="第一个基本块的块号", value=[bool: false, "CFG字符串列表"]} 来储存
-justEnterFunction = False # 这个flag用来识别每个函数的第一个基本块 entrypoing
+justEnterFunction = False  # 这个flag用来识别每个函数的第一个基本块 entrypoing
 with open(sys.argv[1], 'r', encoding='utf-8') as file:
     wholeCFG = {}
     singleCFG = []
@@ -35,7 +35,7 @@ with open(sys.argv[1], 'r', encoding='utf-8') as file:
         else:
             if justEnterFunction:
                 match = re.search(r'BasicBlock: (\d+)', line)
-                assert(match)
+                assert (match)
                 justEnterFunction = False
                 firstBBID = int(match.group(1))
             else:
@@ -51,19 +51,20 @@ wholeCFG[firstBBID] = [False, singleCFG]
 #     1.如果函数中没有对 path_inject_eachbb 的调用，那说明不是 PUT 源码，下一个函数
 #     2.如果有，那么看第一个 path_inject_eachbb 的参数，随后使用这个参数索引到之前的字典
 #       把字典 value 里对应的 false 设置为 true，随后继续下一个函数，直到扫描完整个反汇编文件
-justEnterFunction = False # 这个flag用来识别是否在一个函数内
+justEnterFunction = False  # 这个flag用来识别是否在一个函数内
 with open(sys.argv[2], 'r', encoding='utf-8') as file:
     for line in file:
         # 使用 strip() 去除每行末尾的换行符
         line = line.strip()
         funcNameMatch = re.match(r'^[0-9a-fA-F]+ <[^>]+>:', line)
         if funcNameMatch:
-            # if justEnterFunction: 
-                # 若此时 justEnterFunction = True，说明上一个函数中不包含 callq path_inject_eachbb，不做处理直接skip
-                # 若此时 justEnterFunction = False，说明上一个函数中包含 callq path_inject_eachbb 已被找到，不做处理直接skip
+            # if justEnterFunction:
+            # 若此时 justEnterFunction = True，说明上一个函数中不包含 callq path_inject_eachbb，不做处理直接skip
+            # 若此时 justEnterFunction = False，说明上一个函数中包含 callq path_inject_eachbb 已被找到，不做处理直接skip
             justEnterFunction = True
         elif justEnterFunction:
-            path_inject_match = re.search(r'call?\s+[0-9a-fA-F]+\s+<path_inject_eachbb>', line)
+            path_inject_match = re.search(
+                r'call?\s+[0-9a-fA-F]+\s+<path_inject_eachbb>', line)
             if path_inject_match:
                 # 到这里已经找到这个函数的第一个 callq path_inject_eachbb 了，除了重置 justEnterFunction，
                 # 还要对 step1 里得到的字典做相应的处理
@@ -72,9 +73,10 @@ with open(sys.argv[2], 'r', encoding='utf-8') as file:
                 #     2. mov    $0x3208,%edi
                 print('matched!')
                 xor_match = re.search(r'xor\s+%edi,%edi', previousline)
-                mov_match = re.search(r'mov\s+\$(0x[0-9a-fA-F]+),%edi', previousline)
-                assert(xor_match or mov_match)
-                assert(not (xor_match and mov_match))
+                mov_match = re.search(r'mov\s+\$(0x[0-9a-fA-F]+),%edi',
+                                      previousline)
+                assert (xor_match or mov_match)
+                assert (not (xor_match and mov_match))
                 if xor_match:
                     # 如果 previousline = xor 汇编指令，path_inject_eachbb 的参数是 0
                     arg = 0
@@ -107,13 +109,6 @@ with open(sys.argv[3], "w") as file:
                 file.write(line + "\n")
     file.close()
 
-
 # xor    %esi,%esi
 #   2038f6:       bf 08 32 00 00          mov    $0x3208,%edi
 #   2038fb:       e8 a0 e4 e0 00          callq  1011da0 <path_inject_eachbb>
-
-
-
-
-
-

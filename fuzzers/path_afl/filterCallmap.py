@@ -2,7 +2,7 @@ import sys
 import re
 
 # 检查是否传入了足够的参数（至少需要三个参数加上脚本名称）
-assert(len(sys.argv) == 4)
+assert (len(sys.argv) == 4)
 # 打印第一个、第二个和第三个参数
 # python3 filterCallmap.py cfg_filtered.txt callmap.txt callmap_filtered.txt
 # print(f"参数1: {sys.argv[1]}")
@@ -37,4 +37,3 @@ with open(sys.argv[2], 'r', encoding='utf-8') as file:
         bbid = int(bbid_match.group(1))
         if bbid in bbdict:
             written_file.write(line + "\n")
-
