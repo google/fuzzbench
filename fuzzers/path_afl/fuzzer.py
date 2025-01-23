@@ -1,5 +1,3 @@
-# Copyright 2020 Google LLC
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -53,7 +51,6 @@ def build():
                             text=True)
     print(result.stdout)
     print(result.stderr)
-    ...
     subprocess.run(
         'cat cfg_filtered.txt | grep \"Function: \" | nl -v 0 | awk \'{print $1, $3, $4, $5, $6, $7, $8, $9}\' > function_list.txt',
         shell=True,
