@@ -420,6 +420,9 @@ def fuzz(input_corpus, output_corpus, target_binary, *args, **kwargs):
     INITIAL_FUZZING_TIME = 60 * 60 * 10 # 10 hours
     # INITIAL_FUZZING_TIME = 7
     INITIAL_FUZZING_TIME = str(INITIAL_FUZZING_TIME) + 's'
+    
+    SECOND_FUZZING_TIME = 60 * 60 * 9 # 9 hours
+    SECOND_FUZZING_TIME = str(SECOND_FUZZING_TIME) + 's'
 
     # write a txt to corpus folder. TODO
     from datetime import datetime
@@ -472,10 +475,21 @@ def fuzz(input_corpus, output_corpus, target_binary, *args, **kwargs):
     shutil.rmtree(libafl_corpus_dir, ignore_errors=True)
     os.makedirs(libafl_corpus_dir, exist_ok=True)
 
+    additional_flags = ['-p', 'mmopt']
+
     # rerun two fuzzers.
     print(datetime.now()-start)
     print("Rerun two fuzzers...")
-    p1 = fuzz_aflpp(input_corpus, aflpp_corpus_dir, aflpp_binary, skip_calibration=True, *args, **kwargs)
+    p1 = fuzz_aflpp(input_corpus, aflpp_corpus_dir, aflpp_binary, flags=additional_flags, timeout=SECOND_FUZZING_TIME, skip_calibration=True, *args, **kwargs)
+    p2 = fuzz_libafl(input_corpus, libafl_corpus_dir, libafl_binary, timeout=SECOND_FUZZING_TIME, *args, **kwargs)
+    p1.wait()
+    p2.wait()
+
+    additional_flags = ['-p', 'rare']
+
+    print(datetime.now()-start)
+    print("Starting Fuzzing 3rd under different config...")
+    p1 = fuzz_aflpp(input_corpus, aflpp_corpus_dir, aflpp_binary, flags=additional_flags, skip_calibration=True, *args, **kwargs)
     p2 = fuzz_libafl(input_corpus, libafl_corpus_dir, libafl_binary, *args, **kwargs)
     # wait infinately
     p1.wait()
