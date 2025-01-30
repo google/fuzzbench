@@ -85,7 +85,7 @@ RUN rm -rf /usr/local/share/clang
 RUN git clone -b fx-no-tail-opt1 https://github.com/fEst1ck/path-cov.git /path-cov
 
 RUN cd /path-cov && \
-	git checkout bb900e89e14766ebd9d4af27cae0862bdb37de9b && \
+	git checkout ae6df67fee70abcada256f9519932237143ff8b6 && \
 	cargo build --release
 
 RUN git clone -b fixversion https://github.com/path-cov-fuzzer/newpathAFLplusplus.git /path-afl
