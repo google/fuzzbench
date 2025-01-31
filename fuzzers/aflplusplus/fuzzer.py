@@ -241,7 +241,7 @@ def fuzz(input_corpus,
          target_binary,
          flags=tuple(),
          skip=False,
-         no_cmplog=False):  # pylint: disable=too-many-arguments
+         no_cmplog=True):  # pylint: disable=too-many-arguments
     """Run fuzzer."""
     # Calculate CmpLog binary path from the instrumented target binary.
     target_binary_directory = os.path.dirname(target_binary)
