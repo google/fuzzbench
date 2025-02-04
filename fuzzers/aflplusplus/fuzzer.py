@@ -262,8 +262,8 @@ def fuzz(input_corpus,
         flags += ['-x', './afl++.dict']
 
     # Move the following to skip for upcoming _double tests:
-    if os.path.exists(cmplog_target_binary) and no_cmplog is False:
-        flags += ['-c', cmplog_target_binary]
+    # if os.path.exists(cmplog_target_binary) and no_cmplog is False:
+    #     flags += ['-c', cmplog_target_binary]
 
     #os.environ['AFL_IGNORE_TIMEOUTS'] = '1'
     os.environ['AFL_IGNORE_UNKNOWN_ENVS'] = '1'
