@@ -58,7 +58,10 @@ jobs:
         sudo swapoff -a
         sudo rm -f /swapfile
         sudo apt clean
-        docker rmi $(docker images -a -q)
+        images=$(docker images -a -q)
+        if [ -n "$images" ]; then
+          docker rmi $images
+        fi
         df -h
 
     - name: Setup Python environment
