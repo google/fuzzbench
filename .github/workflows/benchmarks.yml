@@ -1,7 +1,7 @@
 name: Fuzzers+Benchmarks
 on:
   pull_request:
-    paths:d
+    paths:
       - 'docker/**'  # Base image changes.
       - 'fuzzers/**' # Changes to fuzzers themselves.
       - 'benchmarks/**'  # Changes to benchmarks.
