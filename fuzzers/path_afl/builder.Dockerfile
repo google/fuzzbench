@@ -96,7 +96,7 @@ RUN cd /path-afl && \
 	which clang-17 && \
 	which clang && \
 	clang --version && \
-	clang++ -stdlib=libstdc++ -c hashcompare.cpp && \
+	clang++ -stdlib=libc++ -c hashcompare.cpp && \
 	ar rcs libhashcompare.a hashcompare.o && \
 	cp /path-cov/target/release/libpath_reduction.so .
 
@@ -108,7 +108,7 @@ RUN cd /path-afl && \
 	export AFL_NO_X86=1 && \
 	unset CFLAGS CXXFLAGS && \
 	PYTHON_INCLUDE=/ && \
-	LLVM_CONFIG=llvm-config-17 LD_LIBRARY_PATH="/path-afl" CFLAGS="-I/path-afl/fuzzing_support" LDFLAGS="-L/path-afl -lcrypto -lhashcompare -lstdc++ -lpath_reduction" make
+	LLVM_CONFIG=llvm-config-17 LD_LIBRARY_PATH="/path-afl" CFLAGS="-I/path-afl/fuzzing_support" LDFLAGS="-L/path-afl -lcrypto -lhashcompare -lc++ -lpath_reduction" make
 # RUN	export CC=clang && \
 # 	export CXX=clang++ && \
 # 	export AFL_NO_X86=1 && \
@@ -120,6 +120,8 @@ RUN apt install g++
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /path-afl && cp utils/aflpp_driver/libAFLDriver.a /
+
+RUN cp /path-afl/hashcompare.o /
 
 RUN cp /usr/lib/x86_64-linux-gnu/libpython3.8.so.1.0 /
 
