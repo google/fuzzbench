@@ -88,7 +88,9 @@ RUN cd /path-cov && \
 	git checkout ae6df67fee70abcada256f9519932237143ff8b6 && \
 	cargo build --release
 
-RUN git clone -b fixversion https://github.com/path-cov-fuzzer/newpathAFLplusplus.git /path-afl
+RUN echo 42
+
+RUN git clone -b driver-clear-pool https://github.com/path-cov-fuzzer/newpathAFLplusplus.git /path-afl
 
 # RUN clang++-17 -v -E -x c++ - < /dev/null && eixt 1
 
