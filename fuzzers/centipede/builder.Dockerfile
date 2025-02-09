@@ -15,6 +15,7 @@
 ARG parent_image
 FROM $parent_image
 
+ENV USE_BAZEL_VERSION=7.4.0
 ENV CENTIPEDE_SRC=/src/centipede
 
 # Remove the Centipede from OSS-Fuzz base-builder and rebuild centipede.
