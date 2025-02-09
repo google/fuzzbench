@@ -120,6 +120,7 @@ def run_afl_fuzz(
     print("[run_afl_fuzz] Running target with afl-fuzz")
     command = [
         "./afl-fuzz",
+        "-Z",
         "-i",
         input_corpus,
         "-o",
