@@ -32,7 +32,7 @@ def prepare_build_environment():
     os.environ["CFGFILE"] = os.path.join(current_directory, "cfg.txt")
     os.environ["FUZZER"] = "/path-afl"
     os.environ["AFL_LLVM_CALLER"] = "1"
-    os.environ["FUZZER_LIB"] = "/libAFLDriver.a /hashcompare.o"
+    os.environ["FUZZER_LIB"] = "/libAFLDriver.a"
 
 
 def build():

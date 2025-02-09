@@ -88,8 +88,6 @@ RUN cd /path-cov && \
 	git checkout bb900e89e14766ebd9d4af27cae0862bdb37de9b && \
 	cargo build --release
 
-RUN echo 42
-
 RUN git clone -b edge-priority https://github.com/path-cov-fuzzer/newpathAFLplusplus.git /path-afl
 
 # RUN clang++-17 -v -E -x c++ - < /dev/null && eixt 1
@@ -122,8 +120,6 @@ RUN apt install g++
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
 RUN cd /path-afl && cp utils/aflpp_driver/libAFLDriver.a /
-
-RUN cp /path-afl/hashcompare.o /
 
 RUN cp /usr/lib/x86_64-linux-gnu/libpython3.8.so.1.0 /
 
