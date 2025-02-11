@@ -17,6 +17,7 @@ mkdir $OUT/seeds
 # TRT/fonts is the full seed folder, but they're too big
 cp TRT/fonts/TestKERNOne.otf $OUT/seeds/
 cp TRT/fonts/TestGLYFOne.ttf $OUT/seeds/
+cp seeds/*  $OUT/seeds/
 
 tar xf libarchive-3.4.3.tar.xz
 
