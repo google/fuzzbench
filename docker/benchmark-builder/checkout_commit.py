@@ -83,7 +83,7 @@ def main():
 
     commit = sys.argv[1]
     src_dir = sys.argv[2]
-    if not commit:
+    if commit == 'NO_COMMIT':
         print('No commit provided, skip.')
         return 0
 
@@ -99,10 +99,11 @@ def main():
             except subprocess.CalledProcessError:
                 continue
             if checkout_success:
+                print('Checkout successful.')
                 return 0
     print('Checkout unsuccessful.')
     return 1
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
