@@ -1,8 +1,8 @@
-# 5089511469613056
-commit: 0dbedb3dbdb27bd3acde65e448ff7bdf2260e620
-commit_date: 2022-07-15T10:03:12+0000
-fuzz_target: php-fuzz-parser
-project: php
+# 4546146634170368
+commit: e8eb74793bce4fab381cc40f1c60f9572a99fb94
+commit_date : 2022-06-01T23:38:41+0000
+fuzz_target: aspell_fuzzer
+project: aspell
 type: bug
 unsupported_fuzzers:
   - aflcc
@@ -39,10 +39,6 @@ unsupported_fuzzers:
   - cfctx_params_512kb
   - cfctx_params_768kb
   - cfctx_full
-  - symcc_afl
-  - symcc_afl_single
-  - symcc_aflplusplus
-  - symcc_aflplusplus_single
   - aflplusplus_cmplog_double
   - symcc_aflplusplus_single
   - eclipser_aflplusplus
@@ -51,3 +47,4 @@ unsupported_fuzzers:
   - symqemu_aflplusplus
   - fuzzolic_aflplusplus_fuzzy
   - fuzzolic_aflplusplus_z3dict
+  - tortoisefuzz

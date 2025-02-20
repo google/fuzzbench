@@ -1,0 +1,5 @@
+# 4515118433566720
+commit: 4D451FE437195025CB933C69670AACF4F92968B3
+fuzz_target: assimp_fuzzer
+project: assimp
+type: bug
