@@ -88,7 +88,10 @@ RUN cd /path-cov && \
 	git checkout bb900e89e14766ebd9d4af27cae0862bdb37de9b && \
 	cargo build --release
 
-RUN git clone -b edge-priority https://github.com/path-cov-fuzzer/newpathAFLplusplus.git /path-afl
+RUN git clone https://github.com/path-cov-fuzzer/newpathAFLplusplus.git /path-afl
+
+RUN cd /path-afl && \
+	git checkout 8634aeacb16de6cbab20f4b6f4ef23368fc1ae25
 
 # RUN clang++-17 -v -E -x c++ - < /dev/null && eixt 1
 
