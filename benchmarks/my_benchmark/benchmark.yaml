@@ -1,0 +1,6 @@
+fuzzers:
+  - name: afl
+  - name: aflplusplus
+  - name: honggfuzz
+  - name: libfuzzer
+  - name: my_custom_fuzzer
