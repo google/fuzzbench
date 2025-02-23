@@ -36,6 +36,7 @@ def create_trial_data(  # pylint: disable=too-many-arguments
         'time': t,
         'edges_covered': reached_coverage,
         'bugs_covered': 0,
+        'bugs_earliest': 0,
         'crash_key': None,
         'experiment_filestore': experiment_filestore
     } for t in range(cycles)])
@@ -285,7 +286,7 @@ def test_benchmark_rank_by_mean():
     snapshot_df = data_utils.get_benchmark_snapshot(benchmark_df)
     ranking = data_utils.benchmark_rank_by_mean(snapshot_df)
 
-    expected_ranking = pd.Series(index=['afl', 'libfuzzer'], data=[1100, 700])
+    expected_ranking = pd.Series(index=['afl', 'libfuzzer'], data=[1100., 700.])
     assert ranking.equals(expected_ranking)
 
 
@@ -295,7 +296,7 @@ def test_benchmark_rank_by_median():
     snapshot_df = data_utils.get_benchmark_snapshot(benchmark_df)
     ranking = data_utils.benchmark_rank_by_median(snapshot_df)
 
-    expected_ranking = pd.Series(index=['afl', 'libfuzzer'], data=[1100, 700])
+    expected_ranking = pd.Series(index=['afl', 'libfuzzer'], data=[1100., 700.])
     assert ranking.equals(expected_ranking)
 
 
@@ -332,22 +333,22 @@ def test_experiment_pivot_table():
         {
             'benchmark': 'libpng_libpng_read_fuzzer',
             'fuzzer': 'afl',
-            'median':  150
+            'median':  150.
         },
         {
             'benchmark': 'libpng_libpng_read_fuzzer',
             'fuzzer': 'libfuzzer',
-            'median':  250
+            'median':  250.
         },
         {
             'benchmark': 'libxml',
             'fuzzer': 'afl',
-            'median': 1100
+            'median': 1100.
         },
         {
             'benchmark': 'libxml',
             'fuzzer': 'libfuzzer',
-            'median':  700
+            'median':  700.
         },
     ])
     # yapf: enable
@@ -391,7 +392,7 @@ def test_experiment_rank_by_average_normalized_score():
 
     expected_ranking = pd.Series(index=['libfuzzer', 'afl'],
                                  data=[81.81, 80.00])
-    pd_test.assert_series_equal(ranking,
+    pd_test.assert_series_equal(ranking.squeeze(),
                                 expected_ranking,
                                 check_names=False,
                                 rtol=10**-3)

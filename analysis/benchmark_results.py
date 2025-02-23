@@ -71,7 +71,9 @@ class BenchmarkResults:
     def _relevant_column(self):
         """Returns the name of the column that will be used as the basis of
         the analysis (e.g., 'edges_covered', or 'bugs_covered')."""
-        return 'edges_covered' if self.type == 'code' else 'bugs_covered'
+        return 'edges_covered' if self.type == 'code' else [
+            'bugs_covered', 'bugs_earliest'
+        ]
 
     @functools.cached_property
     def _benchmark_df(self):
