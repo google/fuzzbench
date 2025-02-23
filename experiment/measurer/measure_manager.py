@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# pylint: disable=too-many-lines
 """Module for measuring snapshots from trial runners."""
 
 import collections
@@ -18,6 +19,7 @@ import gc
 import glob
 import gzip
 import multiprocessing
+import multiprocessing.queues
 import json
 import os
 import pathlib
@@ -26,13 +28,15 @@ import sys
 import tempfile
 import tarfile
 import time
-from typing import List
+from typing import List, Optional, Tuple
 import queue
 import psutil
 
+import google.api_core.exceptions
+
 from sqlalchemy import func
 from sqlalchemy import orm
-
+from google.cloud import pubsub_v1
 from common import benchmark_utils
 from common import experiment_utils
 from common import experiment_path as exp_path
@@ -76,9 +80,14 @@ def measure_main(experiment_config):
     experiment = experiment_config['experiment']
     max_total_time = experiment_config['max_total_time']
     measurers_cpus = experiment_config['measurers_cpus']
-    region_coverage = experiment_config['region_coverage']
-    measure_manager_loop(experiment, max_total_time, measurers_cpus,
-                         region_coverage)
+    region_coverage = experiment_config.get('region_coverage', False)
+    cloud_project = experiment_config.get('cloud_project', '')
+    local_experiment = experiment_config.get('local_experiment', False)
+
+    measure_manager = get_measure_manager(local_experiment, experiment,
+                                          cloud_project, measurers_cpus,
+                                          region_coverage)
+    measure_manager.measure_manager_loop(max_total_time)
 
     # Clean up resources.
     gc.collect()
@@ -696,72 +705,6 @@ def initialize_logs():
     })
 
 
-def consume_snapshots_from_response_queue(
-        response_queue, queued_snapshots) -> List[models.Snapshot]:
-    """Consume response_queue, allows retry objects to retried, and
-    return all measured snapshots in a list."""
-    measured_snapshots = []
-    while True:
-        try:
-            response_object = response_queue.get_nowait()
-            if isinstance(response_object, measurer_datatypes.RetryRequest):
-                # Need to retry measurement task, will remove identifier from
-                # the set so task can be retried in next loop iteration.
-                snapshot_identifier = (response_object.trial_id,
-                                       response_object.cycle)
-                queued_snapshots.remove(snapshot_identifier)
-                logger.info('Reescheduling task for trial %s and cycle %s',
-                            response_object.trial_id, response_object.cycle)
-            elif isinstance(response_object, models.Snapshot):
-                measured_snapshots.append(response_object)
-            else:
-                logger.error('Type of response object not mapped! %s',
-                             type(response_object))
-        except queue.Empty:
-            break
-    return measured_snapshots
-
-
-def measure_manager_inner_loop(experiment: str, max_cycle: int, request_queue,
-                               response_queue, queued_snapshots):
-    """Reads from database to determine which snapshots needs measuring. Write
-    measurements tasks to request queue, get results from response queue, and
-    write measured snapshots to database. Returns False if there's no more
-    snapshots left to be measured"""
-    initialize_logs()
-    # Read database to determine which snapshots needs measuring.
-    unmeasured_snapshots = get_unmeasured_snapshots(experiment, max_cycle)
-    logger.info('Retrieved %d unmeasured snapshots from measure manager',
-                len(unmeasured_snapshots))
-    # When there are no more snapshots left to be measured, should break loop.
-    if not unmeasured_snapshots:
-        return False
-
-    # Write measurements requests to request queue
-    for unmeasured_snapshot in unmeasured_snapshots:
-        # No need to insert fuzzer and benchmark info here as it's redundant
-        # (Can be retrieved through trial_id).
-        unmeasured_snapshot_identifier = (unmeasured_snapshot.trial_id,
-                                          unmeasured_snapshot.cycle)
-        # Checking if snapshot already was queued so workers will not repeat
-        # measurement for same snapshot
-        if unmeasured_snapshot_identifier not in queued_snapshots:
-            request_queue.put(unmeasured_snapshot)
-            queued_snapshots.add(unmeasured_snapshot_identifier)
-
-    # Read results from response queue.
-    measured_snapshots = consume_snapshots_from_response_queue(
-        response_queue, queued_snapshots)
-    logger.info('Retrieved %d measured snapshots from response queue',
-                len(measured_snapshots))
-
-    # Save measured snapshots to database.
-    if measured_snapshots:
-        db_utils.add_all(measured_snapshots)
-
-    return True
-
-
 def get_pool_args(measurers_cpus, runners_cpus):
     """Return pool args based on measurer cpus and runner cpus arguments."""
     if measurers_cpus is None or runners_cpus is None:
@@ -779,49 +722,338 @@ def get_pool_args(measurers_cpus, runners_cpus):
     return (measurers_cpus, _process_init, (cores_queue,))
 
 
-def measure_manager_loop(experiment: str,
-                         max_total_time: int,
-                         measurers_cpus=None,
-                         region_coverage=False):  # pylint: disable=too-many-locals
-    """Measure manager loop. Creates request and response queues, request
-    measurements tasks from workers, retrieve measurement results from response
-    queue and writes measured snapshots in database."""
-    logger.info('Starting measure manager loop.')
-    if not measurers_cpus:
-        measurers_cpus = multiprocessing.cpu_count()
-        logger.info('Number of measurer CPUs not passed as argument. using %d',
-                    measurers_cpus)
-    with multiprocessing.Pool() as pool, multiprocessing.Manager() as manager:
-        logger.info('Setting up coverage binaries')
-        set_up_coverage_binaries(pool, experiment)
-        request_queue = manager.Queue()
-        response_queue = manager.Queue()
+class BaseMeasureManager:
+    """Base class for measure manager. Encapsulates core methods that will be
+    implemented for Local and Google Cloud measure managers."""
 
+    def __init__(self, experiment: str, region_coverage: bool):
+        self.region_coverage = region_coverage
+        self.experiment = experiment
+        self.measurers_cpus = None
+
+    def initialize_queues(self, manager):
+        """Initialize and returns request and response queues, respectively."""
+        raise NotImplementedError
+
+    def start_workers(self, request_queue, response_queue, pool):
+        """Initialize measure workers."""
+        raise NotImplementedError
+
+    def put_task_in_request_queue(self, task, request_queue):
+        """Put task in request queue. The request queue can be a pub sub queue
+        or a multiprocessing in-memory queue, depending on the
+        implementation."""
+        raise NotImplementedError
+
+    def get_result_from_response_queue(self, response_queue):
+        """Get result from request queue. Can be a pub sub queue or a
+        multiprocessing in-memory queue, depending on the implementation."""
+        raise NotImplementedError
+
+    def consume_snapshots_from_response_queue(
+            self, response_queue, queued_snapshots) -> List[models.Snapshot]:
+        """Consume response_queue, allows retry objects to retried, and
+        return all measured snapshots in a list."""
+        measured_snapshots = []
+        while True:
+            try:
+                response_object = self.get_result_from_response_queue(
+                    response_queue)
+                if isinstance(response_object, measurer_datatypes.RetryRequest):
+                    # Need to retry measurement task, will remove identifier
+                    # from the set so task can be retried in next loop
+                    # iteration.
+                    snapshot_identifier = (response_object.trial_id,
+                                           response_object.cycle)
+                    queued_snapshots.remove(snapshot_identifier)
+                    logger.info('Reescheduling task for trial %s and cycle %s',
+                                response_object.trial_id, response_object.cycle)
+                elif isinstance(response_object, models.Snapshot):
+                    measured_snapshots.append(response_object)
+                elif response_object is None:
+                    logger.error('Result is None. Response queue is empty.')
+                    raise queue.Empty()
+                else:
+                    logger.error('Type of response object not mapped! %s',
+                                 type(response_object))
+            except queue.Empty:
+                break
+        return measured_snapshots
+
+    def measure_manager_inner_loop(self, max_cycle: int, request_queue,
+                                   response_queue, queued_snapshots):
+        """Reads from database to determine which snapshots needs measuring.
+        Write measurements tasks to request queue, get results from response
+        queue, and write measured snapshots to database. Returns False if
+        there's no more snapshots left to be measured."""
+        initialize_logs()
+        # Read database to determine which snapshots needs measuring.
+        unmeasured_snapshots = get_unmeasured_snapshots(self.experiment,
+                                                        max_cycle)
+        logger.info('Retrieved %d unmeasured snapshots from measure manager.',
+                    len(unmeasured_snapshots))
+        # When there are no more snapshots left to be measured, should break
+        # loop.
+        if not unmeasured_snapshots:
+            return False
+
+        # Write measurements requests to request queue
+        for unmeasured_snapshot in unmeasured_snapshots:
+            # No need to insert fuzzer and benchmark info here as it's redundant
+            # (Can be retrieved through trial_id).
+            unmeasured_snapshot_identifier = (unmeasured_snapshot.trial_id,
+                                              unmeasured_snapshot.cycle)
+            # Checking if snapshot already was queued so workers will not repeat
+            # measurement for same snapshot
+            if unmeasured_snapshot_identifier not in queued_snapshots:
+                self.put_task_in_request_queue(unmeasured_snapshot,
+                                               request_queue)
+                queued_snapshots.add(unmeasured_snapshot_identifier)
+
+        # Read results from response queue.
+        measured_snapshots = self.consume_snapshots_from_response_queue(
+            response_queue, queued_snapshots)
+        logger.info('Retrieved %d measured snapshots from response queue.',
+                    len(measured_snapshots))
+
+        # Save measured snapshots to database.
+        if measured_snapshots:
+            db_utils.add_all(measured_snapshots)
+
+        return True
+
+    def measure_manager_loop(self, max_total_time: int):
+        """Measure manager loop. Creates request and response queues, request
+        measurements tasks from workers, retrieve measurement results from
+        response queue and writes measured snapshots in database."""
+        logger.info('Starting measure manager loop.')
+        if not self.measurers_cpus:
+            self.measurers_cpus = multiprocessing.cpu_count()
+            logger.info(
+                'Number of measurer CPUs not passed as argument. using %d',
+                self.measurers_cpus)
+        with multiprocessing.Pool(processes=self.measurers_cpus) as pool, multiprocessing.Manager() as manager:  # pylint: disable=line-too-long
+            set_up_coverage_binaries(pool, self.experiment)
+            (request_queue, response_queue) = self.initialize_queues(manager)
+            self.start_workers(request_queue, response_queue, pool)
+            max_cycle = _time_to_cycle(max_total_time)
+            queued_snapshots = set()
+            while not scheduler.all_trials_ended(self.experiment):
+                continue_inner_loop = self.measure_manager_inner_loop(
+                    max_cycle, request_queue, response_queue, queued_snapshots)
+                if not continue_inner_loop:
+                    break
+                time.sleep(MEASUREMENT_LOOP_WAIT)
+        logger.info('All trials ended. Ending measure manager loop')
+
+
+class LocalMeasureManager(BaseMeasureManager):
+    """Class that holds implementations of core methods for running a measure
+    worker locally."""
+
+    def __init__(self,
+                 experiment: str,
+                 region_coverage: bool,
+                 measurers_cpus: Optional[int] = None):
+        super().__init__(experiment, region_coverage)
+        self.measurers_cpus = measurers_cpus
+
+    def initialize_queues(
+        self, manager
+    ) -> Tuple[multiprocessing.queues.Queue, multiprocessing.queues.Queue]:
+        return (manager.Queue(), manager.Queue())
+
+    def start_workers(self, request_queue: multiprocessing.queues.Queue,
+                      response_queue: multiprocessing.queues.Queue, pool):
         config = {
             'request_queue': request_queue,
             'response_queue': response_queue,
-            'region_coverage': region_coverage,
+            'region_coverage': self.region_coverage,
         }
         local_measure_worker = measure_worker.LocalMeasureWorker(config)
 
         # Since each worker is going to be in an infinite loop, we dont need
-        # result return. Workers' life scope will end automatically when there
-        # are no more snapshots left to measure.
-        logger.info('Starting measure worker loop for %d workers',
-                    measurers_cpus)
-        for _ in range(measurers_cpus):
-            _result = pool.apply_async(local_measure_worker.measure_worker_loop)
+        # result return. Workers' life scope will end automatically when
+        # there are no more snapshots left to measure.
+        log_message = ('Starting measure worker loop for '
+                       f'{self.measurers_cpus}'
+                       ' workers in local measure manager')
+        logger.info(log_message)
+        for _ in range(self.measurers_cpus):
+            pool.apply_async(local_measure_worker.measure_worker_loop)
 
-        max_cycle = _time_to_cycle(max_total_time)
-        queued_snapshots = set()
-        while not scheduler.all_trials_ended(experiment):
-            continue_inner_loop = measure_manager_inner_loop(
-                experiment, max_cycle, request_queue, response_queue,
-                queued_snapshots)
-            if not continue_inner_loop:
-                break
-            time.sleep(MEASUREMENT_LOOP_WAIT)
-        logger.info('All trials ended. Ending measure manager loop')
+    def get_result_from_response_queue(
+            self, response_queue: multiprocessing.queues.Queue):
+        return response_queue.get_nowait()
+
+    def put_task_in_request_queue(
+            self, task: measurer_datatypes.SnapshotMeasureRequest,
+            request_queue: multiprocessing.queues.Queue):
+        request_queue.put_nowait(task)
+
+
+class GoogleCloudMeasureManager(BaseMeasureManager):  # pylint: disable=too-many-instance-attributes
+    """Measurer manager implementation that subscribe and publishes from a
+    Google Cloud Pub/Sub Queue, instead of multiprocessing queue."""
+
+    def __init__(self,
+                 experiment: str,
+                 cloud_project: str,
+                 region_coverage: bool,
+                 measurers_cpus: Optional[int] = None):
+        super().__init__(experiment, region_coverage)
+        self.subscriber_client = pubsub_v1.SubscriberClient()
+        self.publisher_client = pubsub_v1.PublisherClient(
+            publisher_options=pubsub_v1.types.PublisherOptions(
+                enable_message_ordering=True))
+        self.project_id = cloud_project
+        self.request_queue_topic_id = f'request-queue-topic-{self.experiment}'
+        self.request_queue_topic_path = self.publisher_client.topic_path(
+            self.project_id, self.request_queue_topic_id)
+        self.response_queue_topic_id = f'response-queue-topic-{self.experiment}'
+        self.response_queue_topic_path = self.subscriber_client.topic_path(
+            self.project_id, self.response_queue_topic_id)
+        self.response_queue_subscription_id = ('response-queue-subscription-'
+                                               f'{self.experiment}')
+        self.subscription_path = self.subscriber_client.subscription_path(
+            self.project_id, self.response_queue_subscription_id)
+        self.measurers_cpus = measurers_cpus
+
+    def initialize_queues(self, manager) -> Tuple[Optional[str], Optional[str]]:
+        try:
+            request_queue_topic = self.publisher_client.create_topic(
+                request={'name': self.request_queue_topic_path})
+            logger.info('Request queue topic created successfully: %s',
+                        request_queue_topic.name)
+
+            response_queue_topic = self.publisher_client.create_topic(
+                request={'name': self.response_queue_topic_path})
+            logger.info('Response queue topic created successfully: %s',
+                        response_queue_topic.name)
+
+            return request_queue_topic.name, response_queue_topic.name
+        except google.api_core.exceptions.GoogleAPICallError as error:
+            logger.error('Error while initializing queues: %s', error)
+            return None, None
+
+    def _create_response_queue_subscription(self):
+        """Creates a new Pub/Sub subscription for the response queue."""
+        try:
+            subscription = pubsub_v1.SubscriberClient().create_subscription(
+                request={
+                    'name': self.subscription_path,
+                    'topic': self.response_queue_topic_path
+                })
+            logger.info('Subscription %s created successfully.',
+                        subscription.name)
+            return subscription.name
+        except google.api_core.exceptions.GoogleAPICallError as error:
+            logger.error('Error creating subscription %s', error)
+            return None
+
+    def start_workers(self, request_queue, response_queue, pool):
+        self._create_response_queue_subscription()
+
+        # Since each worker is going to be in an infinite loop, we dont need
+        # result return. Workers' life scope will end automatically when
+        # there are no more snapshots left to measure.
+        # pylint: disable=unreachable
+        log_message = ('Starting measure worker loop for '
+                       f'{self.measurers_cpus}'
+                       ' workers in google cloud measure manager')
+        logger.info(log_message)
+
+        config = {
+            'request_queue_topic_id': self.request_queue_topic_id,
+            'response_queue_topic_id': self.response_queue_topic_id,
+            'region_coverage': self.region_coverage,
+            'project_id': self.project_id,
+            'experiment': self.experiment,
+        }
+
+        # Create the worker request queue subscription once, before starting all
+        # workers
+        worker_request_queue_subscription = ('request-queue-subscription-'
+                                             f'{self.experiment}')
+        worker_subscription_path = self.subscriber_client.subscription_path(
+            self.project_id, worker_request_queue_subscription)
+        worker_request_queue_topic_path = self.subscriber_client.topic_path(
+            self.project_id, self.request_queue_topic_id)
+        measure_worker.GoogleCloudMeasureWorker.create_request_queue_subscription(  # pylint: disable=line-too-long
+            worker_subscription_path, worker_request_queue_topic_path)
+
+        for _ in range(self.measurers_cpus):
+
+            def start_measure_workers_and_start_loop():
+                google_cloud_worker = measure_worker.GoogleCloudMeasureWorker(
+                    config)
+                google_cloud_worker.measure_worker_loop()
+
+            pool.apply_async(start_measure_workers_and_start_loop)
+
+    def get_result_from_response_queue(self, response_queue: str):
+
+        try:
+            response = self.subscriber_client.pull(request={
+                'subscription': self.subscription_path,
+                'max_messages': 1
+            })
+        except google.api_core.exceptions.GoogleAPICallError as error:
+            logger.error('Error when calling pubsub API: %s', error)
+            return None
+
+        if not response.received_messages:
+            return None
+
+        message = response.received_messages[0]
+        ack_ids = [message.ack_id]
+
+        # Acknowledge the received message to remove it from the queue.
+        self.subscriber_client.acknowledge(request={
+            'subscription': self.subscription_path,
+            'ack_ids': ack_ids
+        })
+
+        unserialized_result = message.message.data
+        serialized_result = json.loads(unserialized_result)
+        if message.message.attributes.get('retry'):
+            return measurer_datatypes.from_dict_to_snapshot_retry_request(
+                serialized_result)
+        return models.Snapshot(**serialized_result)
+
+    def put_task_in_request_queue(
+            self, task: measurer_datatypes.SnapshotMeasureRequest,
+            request_queue: str):
+        try:
+            # Convert message data to bytes
+            message_as_bytes = measurer_datatypes.from_snapshot_measure_request_to_bytes(  # pylint: disable=line-too-long
+                task)
+            # Build the Pub/Sub message object
+            future = self.publisher_client.publish(topic=request_queue,
+                                                   data=message_as_bytes,
+                                                   ordering_key=str(task.cycle))
+            message_id = future.result()  # Get the published message ID
+            logger.info(
+                'Manager successfully published task with message ID %s to %s.',
+                message_id, request_queue)
+        except Exception as error:  # pylint: disable=broad-except
+            logger.error(
+                'An error occurred when publishing task to request queue: %s.',
+                error)
+
+
+def get_measure_manager(local_experiment: bool, experiment: str,
+                        cloud_project: str, measurers_cpus: Optional[int],
+                        region_coverage: bool):
+    """Return a measure manager object created from the right class, depending
+    on whether the experiment is local or not(i.e. measure manager factory)."""
+    if local_experiment:
+        logger.info('local_experiment is True, using local measure manager.')
+        return LocalMeasureManager(experiment, region_coverage, measurers_cpus)
+    logger.info(
+        'local_experiment is False, using google cloud measure manager.')
+    return GoogleCloudMeasureManager(experiment, cloud_project, region_coverage,
+                                     measurers_cpus)
 
 
 def main():
