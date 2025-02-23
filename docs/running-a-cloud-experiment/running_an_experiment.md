@@ -132,6 +132,18 @@ a while until they first appear since a lot must happen before there is data to
 generate report. Once they are available, you should be able to view them at:
 `https://storage.googleapis.com/$REPORT_BUCKET_NAME/$EXPERIMENT_NAME/index.html`
 
+# Troubleshooting
+
+## Stopping a running experiment
+
+You can stop an experiment that's already underway by running the `stop-experiment.py` script:
+
+```shell-session
+$ PYTHONPATH=. python3 experiment/stop_experiment.py <experiment-name> <experiment-config.yaml>
+```
+
+This will destroy the gcp instance that was spawned to launch the experiment.
+
 # Advanced usage
 
 ## Fuzzer configuration files
