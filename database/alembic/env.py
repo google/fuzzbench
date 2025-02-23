@@ -15,6 +15,7 @@
 
 from logging.config import fileConfig
 import os
+import urllib.parse
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -27,9 +28,9 @@ config = context.config
 
 DATABASE_URL = (
     'postgresql+psycopg2://postgres:{password}@127.0.0.1:5432'.format(
-        password=os.environ['POSTGRES_PASSWORD']))
+        password=urllib.parse.quote_plus(os.environ['POSTGRES_PASSWORD'])))
 
-config.set_main_option('sqlalchemy.url', DATABASE_URL)
+config.set_main_option('sqlalchemy.url', DATABASE_URL.replace('%', '%%'))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
