@@ -20,6 +20,30 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-08-03-fafuzz
+  description: "fafuzz experiment"
+  fuzzers:
+    - fafuzz
+    - afl
+    - aflplusplus_407
+    - mopt
+    - aflpp_fa
+  benchmarks:
+    - bloaty_fuzz_target
+    - curl_curl_fuzzer_http
+    - freetype2_ftfuzzer
+    - harfbuzz_hb-shape-fuzzer
+    - jsoncpp_jsoncpp_fuzzer
+    - libjpeg-turbo_libjpeg_turbo_fuzzer
+    - mbedtls_fuzz_dtlsclient
+    - openssl_x509
+    - systemd_fuzz-link-parser
+    - vorbis_decode_fuzzer
+    - zlib_zlib_uncompress_fuzzer
+    - re2_fuzzer
+    - sqlite3_ossfuzz
+    - woff2_convert_woff2ttf_fuzzer
+
 - experiment: 2023-06-12-aflpp
   description: "Benchmark afl++ releases and newmutation"
   fuzzers:
