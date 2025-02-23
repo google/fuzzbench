@@ -27,18 +27,9 @@ from typing import Dict, List, Optional, Union
 
 import jinja2
 import yaml
-
-from common import benchmark_utils
-from common import experiment_utils
-from common import filestore_utils
-from common import filesystem
-from common import fuzzer_utils
-from common import gcloud
-from common import gsutil
-from common import logs
-from common import new_process
-from common import utils
-from common import yaml_utils
+from common import (benchmark_utils, experiment_utils, filestore_utils,
+                    filesystem, fuzzer_utils, gcloud, gsutil, logs, new_process,
+                    utils, yaml_utils)
 
 BENCHMARKS_DIR = os.path.join(utils.ROOT_DIR, 'benchmarks')
 FUZZERS_DIR = os.path.join(utils.ROOT_DIR, 'fuzzers')
@@ -324,7 +315,8 @@ def start_experiment(  # pylint: disable=too-many-arguments
         measurers_cpus: Optional[int] = None,
         runners_cpus: Optional[int] = None,
         region_coverage: bool = False,
-        custom_seed_corpus_dir: Optional[str] = None):
+        custom_seed_corpus_dir: Optional[str] = None,
+        merge_with_nonprivate: bool = True):
     """Start a fuzzer benchmarking experiment."""
     if not allow_uncommitted_changes:
         check_no_uncommitted_changes()
@@ -359,6 +351,7 @@ def start_experiment(  # pylint: disable=too-many-arguments
     if config['custom_seed_corpus_dir']:
         validate_custom_seed_corpus(config['custom_seed_corpus_dir'],
                                     benchmarks)
+    config['merge_with_nonprivate'] = merge_with_nonprivate
 
     return start_experiment_from_full_config(config)
 
@@ -719,6 +712,12 @@ def run_experiment_main(args=None):
         required=False,
         default=False,
         action='store_true')
+    parser.add_argument('-nm',
+                        '--no-merge-with-nonprivate',
+                        help='Do not merge past public experiment results',
+                        required=False,
+                        default=False,
+                        action='store_true')
     args = parser.parse_args(args)
     fuzzers = args.fuzzers or all_fuzzers
 
@@ -742,8 +741,9 @@ def run_experiment_main(args=None):
                      f'{measurers_cpus}) you need to specify the runners cpus '
                      'argument too.')
 
-    if (runners_cpus if runners_cpus else 0) + (measurers_cpus if measurers_cpus
-                                                else 0) > os.cpu_count():
+    cpu_count = os.cpu_count()
+    if cpu_count and (runners_cpus if runners_cpus else 0) + (
+            measurers_cpus if measurers_cpus else 0) > cpu_count:
         parser.error(f'The sum of runners ({runners_cpus}) and measurers cpus '
                      f'({measurers_cpus}) is greater than the available cpu '
                      f'cores (os.cpu_count()).')
@@ -777,7 +777,8 @@ def run_experiment_main(args=None):
                      measurers_cpus=measurers_cpus,
                      runners_cpus=runners_cpus,
                      region_coverage=args.region_coverage,
-                     custom_seed_corpus_dir=args.custom_seed_corpus_dir)
+                     custom_seed_corpus_dir=args.custom_seed_corpus_dir,
+                     merge_with_nonprivate=not args.no_merge_with_nonprivate)
     return 0
 
 
