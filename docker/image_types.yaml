@@ -76,7 +76,7 @@
     - 'base-image'
   dockerfile: 'docker/benchmark-builder/Dockerfile'
   context: '.'
-  tag: 'builders/{fuzzer}/{benchmark}'
+  tag: 'builders/{fuzzer}/{benchmark}-debug'
   type: 'builder'
 
 '{fuzzer}-{benchmark}-builder':
