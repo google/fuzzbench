@@ -814,12 +814,15 @@ def measure_manager_loop(experiment: str,
 
         max_cycle = _time_to_cycle(max_total_time)
         queued_snapshots = set()
-        while not scheduler.all_trials_ended(experiment):
+        while True:
             continue_inner_loop = measure_manager_inner_loop(
                 experiment, max_cycle, request_queue, response_queue,
                 queued_snapshots)
             if not continue_inner_loop:
-                break
+                logger.info("Zuka: measure inner loop returned False and that's why it was breaking out")
+                # break
+            if scheduler.all_trials_ended(experiment):
+                logger.info("Zuka: all trials ended")
             time.sleep(MEASUREMENT_LOOP_WAIT)
         logger.info('All trials ended. Ending measure manager loop')
 
