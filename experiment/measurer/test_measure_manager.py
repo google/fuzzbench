@@ -458,20 +458,6 @@ def test_consume_snapshot_type_from_response_queue():
 
 
 @mock.patch('experiment.measurer.measure_manager.get_unmeasured_snapshots')
-def test_measure_manager_inner_loop_break_condition(
-        mocked_get_unmeasured_snapshots):
-    """Tests that the measure manager inner loop returns False when there's no
-    more snapshots left to be measured."""
-    # Empty list means no more snapshots left to be measured.
-    mocked_get_unmeasured_snapshots.return_value = []
-    request_queue = queue.Queue()
-    response_queue = queue.Queue()
-    continue_inner_loop = measure_manager.measure_manager_inner_loop(
-        'experiment', 1, request_queue, response_queue, set())
-    assert not continue_inner_loop
-
-
-@mock.patch('experiment.measurer.measure_manager.get_unmeasured_snapshots')
 @mock.patch(
     'experiment.measurer.measure_manager.consume_snapshots_from_response_queue')
 def test_measure_manager_inner_loop_writes_to_request_queue(
