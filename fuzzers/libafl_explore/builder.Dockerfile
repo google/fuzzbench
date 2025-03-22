@@ -38,17 +38,17 @@ RUN wget https://gist.githubusercontent.com/tokatoka/26f4ba95991c6e3313999997633
 RUN git clone https://github.com/zukatsinadze/LibAFL /libafl
 
 # Checkout a current commit
-RUN cd /libafl && git pull && git checkout 462f87c2ce6d10dbcc4520431a0af781b306f80b  || true
+RUN cd /libafl && git pull && git checkout 462f87c2ce6d10dbcc4520431a0af781b306f80b || true
 # Note that due a nightly bug it is currently fixed to a known version on top!
 
 # Compile libafl.
 RUN cd /libafl && \
     unset CFLAGS CXXFLAGS && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
-    cd ./fuzzers/fuzzbench/fuzzbench_default && \
+    cd ./fuzzers/fuzzbench/fuzzbench_explore && \
     PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench --features no_link_main
 
 # Auxiliary weak references.
-RUN cd /libafl/fuzzers/fuzzbench/fuzzbench_default && \
+RUN cd /libafl/fuzzers/fuzzbench/fuzzbench_explore && \
     clang -c stub_rt.c && \
     ar r /stub_rt.a stub_rt.o

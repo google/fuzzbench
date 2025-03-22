@@ -74,5 +74,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
     command += ["-o", output_corpus, "-i", input_corpus]
     fuzzer_env = os.environ.copy()
     fuzzer_env["LD_PRELOAD"] = "/usr/lib/x86_64-linux-gnu/libjemalloc.so.2"
+    fuzzer_env["FUZZSHARK_TARGET"] = "tcp"
     print(command)
     subprocess.check_call(command, cwd=os.environ["OUT"], env=fuzzer_env)

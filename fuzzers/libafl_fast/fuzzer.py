@@ -45,11 +45,10 @@ def prepare_fuzz_environment(input_corpus):
 def build():  # pylint: disable=too-many-branches,too-many-statements
     """Build benchmark."""
     os.environ["CC"] = (
-        "/libafl/fuzzers/fuzzbench/fuzzbench_valprof/target/release-fuzzbench/libafl_cc"
+        "/libafl/fuzzers/fuzzbench/fuzzbench_fast/target/release-fuzzbench/libafl_cc"
     )
     os.environ["CXX"] = (
-        "/libafl/fuzzers/fuzzbench/fuzzbench_valprof"
-        "/target/release-fuzzbench/libafl_cxx"
+        "/libafl/fuzzers/fuzzbench/fuzzbench_fast/target/release-fuzzbench/libafl_cxx"
     )
 
     os.environ["ASAN_OPTIONS"] = "abort_on_error=0:allocator_may_return_null=1"
@@ -75,5 +74,6 @@ def fuzz(input_corpus, output_corpus, target_binary):
     command += ["-o", output_corpus, "-i", input_corpus]
     fuzzer_env = os.environ.copy()
     fuzzer_env["LD_PRELOAD"] = "/usr/lib/x86_64-linux-gnu/libjemalloc.so.2"
+    fuzzer_env["FUZZSHARK_TARGET"] = "tcp"
     print(command)
     subprocess.check_call(command, cwd=os.environ["OUT"], env=fuzzer_env)
