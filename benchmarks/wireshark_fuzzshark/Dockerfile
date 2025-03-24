@@ -1,4 +1,4 @@
-# Copyright 2018 Google Inc.
+# Copyright 2017 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,18 +14,14 @@
 #
 ################################################################################
 
-FROM gcr.io/oss-fuzz-base/base-builder@sha256:87ca1e9e19235e731fac8de8d1892ebe8d55caf18e7aa131346fc582a2034fdd
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:fb1a9a49752c9e504687448d1f1a048ec1e062e2e40f7e8a23e86b63ff3dad7c
 
-RUN apt-get update && \
-    apt-get install -y \
-        libstdc++-9-dev libstdc++-9-dev:i386 nasm subversion \
-        gnupg lsb-release software-properties-common pkg-config \
-        python3-pip libgtk-3-dev unzip pax-utils file cpio ninja-build cmake \
-        libgcrypt20-dev libc-ares-dev libpcre2-dev flex inotify-tools \
-        libboost-dev 
+RUN apt-get update && apt-get install -y ninja-build cmake \
+                       flex libc-ares-dev \
+                       libglib2.0-dev libgcrypt20-dev
 
-RUN git clone \
-        https://gitlab.com/wireshark/wireshark
+RUN git clone --depth=1 https://gitlab.com/wireshark/wireshark.git
+RUN git clone --depth=1 https://bitbucket.org/jwzawadzki/wireshark-fuzzdb.git
 
 WORKDIR wireshark
 COPY build.sh $SRC/

@@ -1,5 +1,5 @@
 #!/bin/bash -eu
-# Copyright 2018 Google Inc.
+# Copyright 2017 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,15 +15,33 @@
 #
 ################################################################################
 
+WIRESHARK_BUILD_PATH="$WORK/build"
+mkdir -p "$WIRESHARK_BUILD_PATH"
 
-mkdir seeds
-find . -name "*.pcap" -exec cp {} seeds \;
-cp -r seeds $OUT/
+# Prepare Samples directory
+export SAMPLES_DIR="$WORK/samples"
+mkdir -p "$SAMPLES_DIR"
+cp -a $SRC/wireshark-fuzzdb/samples/* "$SAMPLES_DIR"
 
-mkdir build 
-cd build
+# Make sure we build fuzzshark.
+CMAKE_DEFINES="-DBUILD_fuzzshark=ON"
 
-cmake -G Ninja .. \
+# compile static version of libs
+# XXX, with static wireshark linking each fuzzer binary is ~346 MB (just libwireshark.a is 761 MB).
+# XXX, wireshark is not ready for including static plugins into binaries.
+CMAKE_DEFINES="$CMAKE_DEFINES -DENABLE_STATIC=ON -DENABLE_PLUGINS=OFF"
+
+# disable optional dependencies
+CMAKE_DEFINES="$CMAKE_DEFINES -DENABLE_PCAP=OFF -DENABLE_GNUTLS=OFF"
+
+# There is no need to manually disable programs via BUILD_xxx=OFF since the
+# all-fuzzers targets builds the minimum required binaries. However we do have
+# to disable the Qt GUI and sharkd or else the cmake step will fail.
+CMAKE_DEFINES="$CMAKE_DEFINES -DBUILD_wireshark=OFF -DBUILD_logray=OFF -DBUILD_sharkd=OFF"
+
+cd "$WIRESHARK_BUILD_PATH"
+
+cmake -G Ninja \
     -DENABLE_STATIC=ON \
     -DOSS_FUZZ=ON \
     -DINSTRUMENT_DISSECTORS_ONLY=ON \
@@ -51,9 +69,14 @@ cmake -G Ninja .. \
     -DENABLE_ILBC=OFF \
     -DENABLE_LIBXML2=OFF \
     -DENABLE_OPUS=OFF \
-    -DENABLE_SINSP=OFF
+    -DENABLE_SINSP=OFF $SRC/wireshark/
+
+# cmake -GNinja \
+#       -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX \
+#       -DCMAKE_C_FLAGS="-Wno-error=fortify-source -Wno-error=missing-field-initializers $CFLAGS" -DCMAKE_CXX_FLAGS="-Wno-error=fortify-source -Wno-error=missing-field-initializers $CXXFLAGS" \
+#       -DDISABLE_WERROR=ON -DOSS_FUZZ=ON $CMAKE_DEFINES $SRC/wireshark/
 
 ninja fuzzshark
-cp run/fuzzshark $OUT/fuzzshark
-export FUZZSHARK_TARGET="tcp"
 
+
+$SRC/wireshark/tools/oss-fuzzshark/build.sh all
