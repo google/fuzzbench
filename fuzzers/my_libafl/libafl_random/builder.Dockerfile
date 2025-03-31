@@ -21,6 +21,7 @@ RUN if which rustup; then rustup self uninstall -y; fi && \
     sh /rustup.sh --default-toolchain nightly-2024-08-12 -y && \
     rm /rustup.sh
 
+
 # Install dependencies.
 RUN apt-get update && \
     apt-get remove -y llvm-10 && \
@@ -34,21 +35,23 @@ RUN apt-get update && \
 
 RUN wget https://gist.githubusercontent.com/tokatoka/26f4ba95991c6e33139999976332aa8e/raw/698ac2087d58ce5c7a6ad59adce58dbfdc32bd46/createAliases.sh && chmod u+x ./createAliases.sh && ./createAliases.sh 
 
-# Download libafl.
-RUN git clone https://github.com/zukatsinadze/LibAFL /libafl
 
-# Checkout a current commit
-RUN cd /libafl && git pull && git checkout f856092f3d393056b010fcae3b086769377cba18 || true
-# Note that due a nightly bug it is currently fixed to a known version on top!
 
-# Compile libafl.
-RUN cd /libafl && \
-    unset CFLAGS CXXFLAGS && \
+# Download libafl
+RUN git clone https://github.com/zukatsinadze/libafl_fuzzbench /libafl_fuzzbench && \
+    cd /libafl_fuzzbench && \
+    git checkout 605ce5df98d0ad816074578a28a161edde74c74c  && \
+    git submodule update --init
+
+# Compile libafl
+RUN cd /libafl_fuzzbench/ && unset CFLAGS && unset CXXFLAGS && \
+    export CC=clang && export CXX=clang++ && \
     export LIBAFL_EDGES_MAP_SIZE=2621440 && \
-    cd ./fuzzers/fuzzbench/fuzzbench && \
-    PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench --features no_link_main
+    PATH="/root/.cargo/bin/:$PATH"  cargo build --release --features no_link_main
 
 # Auxiliary weak references.
-RUN cd /libafl/fuzzers/fuzzbench/fuzzbench && \
+RUN cd /libafl_fuzzbench && \
     clang -c stub_rt.c && \
     ar r /stub_rt.a stub_rt.o
+
+

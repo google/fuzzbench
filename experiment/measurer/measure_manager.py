@@ -818,8 +818,8 @@ def measure_manager_loop(experiment: str,
             continue_inner_loop = measure_manager_inner_loop(
                 experiment, max_cycle, request_queue, response_queue,
                 queued_snapshots)
-            if not continue_inner_loop:
-                break
+            # if not continue_inner_loop:
+            #     break
             time.sleep(MEASUREMENT_LOOP_WAIT)
         logger.info('All trials ended. Ending measure manager loop')
 
