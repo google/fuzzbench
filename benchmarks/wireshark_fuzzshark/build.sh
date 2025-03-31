@@ -78,5 +78,7 @@ cmake -G Ninja \
 
 ninja fuzzshark
 
+mkdir -p $OUT/seeds
+find $SRC -name "*.pcap" -exec cp {} $OUT/seeds \;
 
 $SRC/wireshark/tools/oss-fuzzshark/build.sh all
