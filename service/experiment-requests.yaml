@@ -20,6 +20,22 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2025-04-29-myfuzz
+  description: "Benchmark main fuzzers for comparison"
+  type: bug
+  fuzzers:
+    - aflplusplus
+    - aflplusplus-qemu
+    - aflplusplus_frida
+    - libafl
+    - honggfuzz
+    - centipede
+    - afl
+    - aflfast
+    - aflplusplus_um_random
+    - aflplusplus_um_prioritize
+    - aflplusplus_um_parallel
+
 - experiment: 2023-06-12-aflpp
   description: "Benchmark afl++ releases and newmutation"
   fuzzers:
