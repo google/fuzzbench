@@ -20,6 +20,12 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2025-05-20-frameshift
+  description: "Benchmark LibAFL and AFL++ with FrameShift"
+  fuzzers:
+    - aflplusplus_frameshift
+    - libafl_frameshift
+
 - experiment: 2023-06-12-aflpp
   description: "Benchmark afl++ releases and newmutation"
   fuzzers:
