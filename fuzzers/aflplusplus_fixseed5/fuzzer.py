@@ -258,7 +258,7 @@ def fuzz(input_corpus,
 
     flags = list(flags)
 
-    flags += ['-s', '0']
+    flags += ['-s', '0', '-Z']
 
     if os.path.exists('./afl++.dict'):
         flags += ['-x', './afl++.dict']
