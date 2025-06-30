@@ -286,6 +286,7 @@ def main():
                     from_cached_data=args.from_cached_data,
                     end_time=args.end_time,
                     merge_with_clobber=args.merge_with_clobber,
+                    merge_with_clobber_nonprivate=args.merge_with_clobber_nonprivate,
                     coverage_report=args.coverage_report)
 
 
