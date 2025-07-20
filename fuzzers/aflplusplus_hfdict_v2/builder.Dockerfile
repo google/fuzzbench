@@ -37,7 +37,7 @@ RUN apt-get update && \
 # Download afl++.
 RUN git clone -b hfdict-v2 https://github.com/am009/AFLplusplus-log /afl && \
     cd /afl && \
-    git checkout 55581928b0d57ac13fb0938f8dfc3b7786afb3e8 || \
+    git checkout 3c8b9ca16d9ef06ca84e91e6f4acd03085005d17 || \
     true
 
 # Build without Python support as we don't need it.
