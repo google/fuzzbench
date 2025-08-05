@@ -308,6 +308,9 @@ you are adding): add an experiment request to
 [service/experiment-requests.yaml](https://github.com/google/fuzzbench/blob/master/service/experiment-requests.yaml).
 `service/experiment-requests.yaml` explains how to do this.
 
+For detailed instructions on submitting experiments via pull requests, refer to the [Submitting Experiments via Pull Requests](../running-a-cloud-experiment/running_an_experiment.md) section in the Running an Experiment documentation.
+
+
 At the end of the experiment, FuzzBench will generate a report comparing your
 fuzzer to the latest versions of other fuzzers, so you only need to include
 fuzzers that you've modified in a meaningful way (i.e. fuzzers whose results are
