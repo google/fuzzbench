@@ -26,7 +26,17 @@ RUN apt-get update -y && apt-get install -y \
     libxml2 \
     libarchive13 \
     libgss3 \
-    libgl1
+    libgl1 \
+    lsb-release \
+    wget \
+    software-properties-common \
+    gnupg
+
+ENV LLVM_VERSION=19
+
+RUN wget https://apt.llvm.org/llvm.sh && \
+    chmod +x llvm.sh && \
+    ./llvm.sh ${LLVM_VERSION} all
 
 # Install docker cli.
 RUN DOCKER_VERSION=18.09.7 && \

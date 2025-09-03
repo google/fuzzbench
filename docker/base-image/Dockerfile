@@ -30,7 +30,17 @@ RUN apt-get update && \
     libffi-dev \
     libsqlite3-dev \
     libbz2-dev \
-    liblzma-dev
+    liblzma-dev \
+    lsb-release \
+    wget \
+    software-properties-common \
+    gnupg
+
+ENV LLVM_VERSION=19
+
+RUN wget https://apt.llvm.org/llvm.sh && \
+    chmod +x llvm.sh && \
+    ./llvm.sh ${LLVM_VERSION} all
 
 RUN cd /tmp/ && \
     curl -O https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz && \
