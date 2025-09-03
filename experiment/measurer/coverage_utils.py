@@ -150,8 +150,9 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
     def generate_coverage_report(self):
         """Generates the coverage report and stores in bucket."""
         command = [
-            'llvm-cov',
+            'llvm-cov-19',
             'show',
+            '-show-mcdc-summary',
             '-format=html',
             f'-path-equivalence=/,{self.source_files_dir}',
             f'-output-dir={self.report_dir}',
@@ -167,7 +168,6 @@ class CoverageReporter:  # pylint: disable=too-many-instance-attributes
             logger.error('Coverage report generation failed for '
                          f'fuzzer: {self.fuzzer},benchmark: {self.benchmark}.')
             return
-
         src_dir = self.report_dir
         dst_dir = exp_path.filestore(self.report_dir)
         filestore_utils.cp(src_dir, dst_dir, recursive=True, parallel=True)
@@ -224,7 +224,7 @@ def get_trial_ids(experiment: str, fuzzer: str, benchmark: str):
 
 def merge_profdata_files(src_files, dst_file):
     """Uses llvm-profdata to merge |src_files| to |dst_files|."""
-    command = ['llvm-profdata', 'merge', '-sparse']
+    command = ['llvm-profdata-19', 'merge', '-sparse']
     command.extend(src_files)
     command.extend(['-o', dst_file])
     result = new_process.execute(command, expect_zero=False)
@@ -264,7 +264,7 @@ def generate_json_summary(coverage_binary,
     """Generates the json summary file from |coverage_binary|
     and |profdata_file|."""
     command = [
-        'llvm-cov',
+        'llvm-cov-19',
         'export',
         '-format=text',
         '-num-threads=1',
