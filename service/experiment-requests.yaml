@@ -20,6 +20,22 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2025-10-11-fuzz36-bug
+  description: ""
+  type: bug
+  fuzzers:
+    - honggfuzz 
+    - afl 
+    - aflfast 
+    - aflplusplus 
+    - aflsmart  
+    - fairfuzz 
+    - mopt 
+    - eclipser 
+    - darwin 
+    - libfuzzer 
+
+
 - experiment: 2023-06-12-aflpp
   description: "Benchmark afl++ releases and newmutation"
   fuzzers:
