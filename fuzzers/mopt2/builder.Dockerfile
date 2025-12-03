@@ -16,9 +16,9 @@ ARG parent_image
 FROM $parent_image
 
 # Set AFL_NO_X86 to skip flaky tests.
-RUN git clone https://github.com/puppet-meteor/MOpt-AFL /afl && \
+RUN git clone https://github.com/vanhauser-THC/MOpt /afl && \
     cd /afl && \
-    git checkout a9a5dc5c0c291c1cdb09b2b7b27d7cbf1db7ce7b && \
+    git checkout a2e23d151bed60e1912e74670f71dec695c988c7 && \
     cd MOpt && AFL_NO_X86=1 make && \
     cp afl-fuzz ..
 

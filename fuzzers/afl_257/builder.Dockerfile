@@ -15,17 +15,19 @@
 ARG parent_image
 FROM $parent_image
 
+# Download and compile AFL v2.57b.
 # Set AFL_NO_X86 to skip flaky tests.
-RUN git clone https://github.com/puppet-meteor/MOpt-AFL /afl && \
+RUN git clone \
+        --depth 1 \
+        --branch v2.57b \
+        https://github.com/google/AFL.git /afl && \
     cd /afl && \
-    git checkout a9a5dc5c0c291c1cdb09b2b7b27d7cbf1db7ce7b && \
-    cd MOpt && AFL_NO_X86=1 make && \
-    cp afl-fuzz ..
+    CFLAGS= CXXFLAGS= AFL_NO_X86=1 make
 
 # Use afl_driver.cpp from LLVM as our fuzzing library.
 RUN apt-get update && \
-    apt-get install wget -y && cd /afl/MOpt && \
-    wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/MOpt/afl_driver.cpp && \
-    clang -Wno-pointer-sign -c -o /afl/MOpt/afl-llvm-rt.o /afl/MOpt/llvm_mode/afl-llvm-rt.o.c -I/afl/MOpt && \
-    clang++ -stdlib=libc++ -std=c++11 -O2 -c -o /afl/MOpt/afl_driver.o /afl/MOpt/afl_driver.cpp && \
+    apt-get install wget -y && \
+    wget https://raw.githubusercontent.com/llvm/llvm-project/5feb80e748924606531ba28c97fe65145c65372e/compiler-rt/lib/fuzzer/afl/afl_driver.cpp -O /afl/afl_driver.cpp && \
+    clang -Wno-pointer-sign -c /afl/llvm_mode/afl-llvm-rt.o.c -I/afl && \
+    clang++ -stdlib=libc++ -std=c++11 -O2 -c /afl/afl_driver.cpp && \
     ar r /libAFL.a *.o

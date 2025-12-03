@@ -34,21 +34,20 @@ RUN apt-get update && \
 
 RUN wget https://gist.githubusercontent.com/tokatoka/26f4ba95991c6e33139999976332aa8e/raw/698ac2087d58ce5c7a6ad59adce58dbfdc32bd46/createAliases.sh && chmod u+x ./createAliases.sh && ./createAliases.sh 
 
-# Download libafl.
-RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
 
-# Checkout a current commit
-RUN cd /libafl && git pull && git checkout 71ed5c722720d081f206dfd0f549dc988742068e || true
-# Note that due a nightly bug it is currently fixed to a known version on top!
+# Download libafl
+RUN git clone https://github.com/AFLplusplus/libafl_fuzzbench /libafl_fuzzbench && \
+    cd /libafl_fuzzbench && \
+    git checkout 876f383339a78415b402ddba0829bf2448be202a && \
+    git submodule update --init
 
-# Compile libafl.
-RUN cd /libafl && \
-    unset CFLAGS CXXFLAGS && \
-    export LIBAFL_EDGES_MAP_SIZE=2621440 && \
-    cd ./fuzzers/fuzzbench/fuzzbench && \
-    PATH="/root/.cargo/bin/:$PATH" cargo build --profile release-fuzzbench --features no_link_main
+# Compile libafl
+RUN cd /libafl_fuzzbench/ && unset CFLAGS && unset CXXFLAGS && \
+    export CC=clang && export CXX=clang++ && \
+    export LIBAFL_EDGES_MAP_SIZE=65536 && \
+    PATH="/root/.cargo/bin/:$PATH"  cargo build --release --features no_link_main
 
 # Auxiliary weak references.
-RUN cd /libafl/fuzzers/fuzzbench/fuzzbench && \
+RUN cd /libafl_fuzzbench && \
     clang -c stub_rt.c && \
     ar r /stub_rt.a stub_rt.o
