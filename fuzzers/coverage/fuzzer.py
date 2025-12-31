@@ -14,6 +14,7 @@
 """Integration code for clang source-based coverage builds."""
 
 import os
+import subprocess
 
 from fuzzers import utils
 
@@ -21,13 +22,21 @@ from fuzzers import utils
 def build():
     """Build benchmark."""
     cflags = [
-        '-fprofile-instr-generate', '-fcoverage-mapping', '-gline-tables-only'
+        '-fprofile-instr-generate', '-fcoverage-mapping', '-gline-tables-only', '-fcoverage-mcdc'
     ]
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
-    os.environ['CC'] = 'clang'
-    os.environ['CXX'] = 'clang++'
+    os.environ['CC'] = 'clang-19'
+    os.environ['CXX'] = 'clang++-19'
     os.environ['FUZZER_LIB'] = '/usr/lib/libFuzzer.a'
 
     utils.build_benchmark()
+
+def fuzz(input_corpus, output_corpus, target_binary):
+    """Run fuzzer. Wrapper that uses the defaults when calling
+    run_fuzzer."""
+    
+    command = [target_binary, input_corpus]
+    print('[run_fuzzer] Running command: ' + ' '.join(command))
+    subprocess.check_call(command)
