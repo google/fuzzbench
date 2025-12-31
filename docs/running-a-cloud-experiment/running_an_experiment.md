@@ -40,6 +40,15 @@ FuzzBench.
 
 # run_experiment.py
 
+The `run_experiment.py` script is the core script used to start experiments in FuzzBench. It is also the script that the parameters passed to `gcbrun` are fed into. This script creates a dispatcher instance on Google Compute Engine which runs the experiment, including:
+
+1. Building desired fuzzer-benchmark combinations.
+1. Starting instances to run fuzzing trials with the fuzzer-benchmark builds and stopping them when they are done.
+1. Measuring the coverage from these trials.
+1. Generating reports based on these measurements.
+
+The rest of this page will assume all commands are run from the root of FuzzBench.
+
 ## Experiment configuration file
 
 You need to create an experiment configuration yaml file.
@@ -163,3 +172,59 @@ env:
 
 Currently values in `env` are only set before running the fuzzer, not before
 building the benchmarks or the fuzzer itself.
+
+# Submitting Experiments via Pull Requests
+This section complements the existing instructions for running experiments locally or on your own cloud infrastructure, providing additional guidance for contributing experiments via pull requests.
+When contributing an experiment through a GitHub Pull Request (PR), note that the workflow and naming rules may differ from running experiments on your own infrastructure.
+
+## Maintainer Workflow
+
+FuzzBench maintainers may run your experiment manually using an internal tool (`/gcbrun`) instead of the `run_experiment.py` script you’d use on your own project. For example:
+
+```bash
+/gcbrun run_experiment.py -a \
+  --experiment-config /opt/fuzzbench/service/experiment-config.yaml \
+  --experiment-name 2025-01-22-freetype2-mts \
+  --fuzzers afl aflplusplus libfuzzer \
+  --benchmarks freetype2_ftfuzzer
+```
+
+Therefore, you **should** provide all needed artifacts (e.g., benchmarks, seed corpora) in the PR.
+
+## Experiment Name Requirements
+
+Your experiment name **must**:
+
+- Use only lowercase letters (`a-z`), numbers (`0–9`), and hyphens (`-`).
+- Be ≤ 30 characters long.
+- Avoid underscores (`_`).
+
+Invalid:
+```bash
+2025-01-22-freetype2_ftfuzzer-mutants 
+```
+
+Valid:
+```bash
+2025-01-22-freetype2-mts
+```
+
+If the name is invalid, maintainers will rename it before running.
+
+## Seeds and Custom Inputs
+
+If your experiment relies on a custom seed corpus:
+
+- Place it in a `.tar.gz` file.
+- Link to it in your PR (GitHub repo, GCS URL, etc.).
+- Make sure your benchmark supports loading it correctly.
+
+## Logs and Debugging
+
+- Fuzzer output logs are available. As outlined above.
+- **Cloud logs are not publicly accessible**.
+- To debug deeper issues, you can:
+  - Log directly to `stdout`/`stderr` in your benchmark or fuzzer script.
+  - Include lightweight instrumentation in the fuzzer (e.g., seed counts, coverage summaries).
+
+
