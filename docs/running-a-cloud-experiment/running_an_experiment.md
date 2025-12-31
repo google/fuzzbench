@@ -227,8 +227,4 @@ If your experiment relies on a custom seed corpus:
   - Log directly to `stdout`/`stderr` in your benchmark or fuzzer script.
   - Include lightweight instrumentation in the fuzzer (e.g., seed counts, coverage summaries).
 
-## Configuration Files For Cloud Experiments
-
-Fuzzer configuration files (e.g., `--fuzzer-configs`) are still supported for **offline/local experiments**. However, these have been deprecated for Google Cloud-based experiments run by the FuzzBench service. For cloud experiments, provide configuration parameters via your benchmark or fuzzer scripts directly.
-
 
