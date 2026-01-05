@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """SQLAlchemy Database Models."""
+import json
 import sqlalchemy
 from sqlalchemy.ext import declarative
 from sqlalchemy import Boolean
@@ -78,6 +79,20 @@ class Snapshot(Base):
         backref='snapshot',
         primaryjoin=
         'and_(Snapshot.time==Crash.time, Snapshot.trial_id==Crash.trial_id)')
+
+    def as_dict(self):
+        """Transform the object into a dictionary. This util method is necessary
+        because __dict__ returns a _sa_instance_state internal SQLAlchemy
+        attribute that is not serializable"""
+        return {
+            column.name: getattr(self, column.name)
+            for column in self.__table__.columns
+        }
+
+    def to_bytes(self):
+        """Transform the object into bytes format. This method is helpful to be
+        able to publish a snapshot object in a pubsub queue."""
+        return json.dumps(self.as_dict()).encode('utf-8')
 
 
 class Crash(Base):
