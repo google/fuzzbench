@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utility functions for data (frame) transformations."""
+import numpy as np
 import pandas as pd
 from clusterfuzz.stacktraces.crash_comparer import CrashComparer
 
@@ -57,7 +58,7 @@ def drop_uninteresting_columns(experiment_df):
     """Returns table with only interesting columns."""
     columns_to_keep = [
         'benchmark', 'fuzzer', 'trial_id', 'time', 'edges_covered',
-        'bugs_covered', 'experiment', 'experiment_filestore'
+        'bugs_covered', 'bugs_earliest', 'experiment', 'experiment_filestore'
     ]
     # Remove extra columns, keep interesting ones.
     experiment_df = experiment_df[columns_to_keep]
@@ -141,7 +142,10 @@ def is_unique_crash(crash_group):
         crash_state = ':'.join(str(crash).split(':')[1:])
         is_unique = True
         for unique_crash in unique_crashes:
-            if CrashComparer(crash_state, unique_crash).is_similar():
+            comparer = CrashComparer(crash_state, unique_crash)
+            comparer.compare_threshold = 0
+            comparer.SAME_FRAMES_THRESHOLD = 0
+            if comparer.is_similar():
                 is_unique = False
                 break
         unique_crashes.add(crash_state)
@@ -162,10 +166,16 @@ def add_bugs_covered_column(experiment_df):
     df['firsts'] = (
         df.groupby(grouping2, group_keys=False).apply(is_unique_crash) &
         ~df.crash_key.isna())
+    # The number of bugs covered.
     df['bugs_cumsum'] = df.groupby(grouping2)['firsts'].transform('cumsum')
     df['bugs_covered'] = (
         df.groupby(grouping3)['bugs_cumsum'].transform('max').astype(int))
-    new_df = df.drop(columns=['bugs_cumsum', 'firsts'])
+    # The time spent to find the bug.
+    df['bugs_time'] = np.where(
+        df['firsts'], df['time'],
+        environment.get('MAX_TOTAL_TIME', df['time'].max()))
+    df['bugs_earliest'] = df.groupby(grouping2)['bugs_time'].transform('min')
+    new_df = df.drop(columns=['bugs_cumsum', 'firsts', 'bugs_time'])
     return new_df
 
 
@@ -260,8 +270,11 @@ def benchmark_rank_by_mean(benchmark_snapshot_df, key='edges_covered'):
     logger.debug('Mean: %s',
                  benchmark_snapshot_df.groupby('fuzzer')[key].mean())
     benchmark_snapshot_df = benchmark_snapshot_df.fillna(0)
-    means = benchmark_snapshot_df.groupby('fuzzer')[key].mean().astype(int)
+    means = benchmark_snapshot_df.groupby('fuzzer')[key].mean()
     means.rename('mean cov', inplace=True)
+    if 'bugs_earliest' in means:
+        return means.sort_values(['bugs_covered', 'bugs_earliest'],
+                                 ascending=[False, True])
     return means.sort_values(ascending=False)
 
 
@@ -271,7 +284,11 @@ def benchmark_rank_by_median(benchmark_snapshot_df, key='edges_covered'):
     logger.debug('Median: %s',
                  benchmark_snapshot_df.groupby('fuzzer')[key].median())
     benchmark_snapshot_df = benchmark_snapshot_df.fillna(0)
-    medians = benchmark_snapshot_df.groupby('fuzzer')[key].median().astype(int)
+    medians = benchmark_snapshot_df.groupby('fuzzer')[key].median()
+    if 'bugs_covered' in medians:
+        medians['bugs_covered'].rename('median cov', inplace=True)
+        return medians.sort_values(['bugs_covered', 'bugs_earliest'],
+                                   ascending=[False, True])
     medians.rename('median cov', inplace=True)
     return medians.sort_values(ascending=False)
 
@@ -361,6 +378,16 @@ def experiment_rank_by_average_rank(experiment_pivot_df):
     fuzzers per benchmark, then takes the average rank across benchmarks
     (smaller is better).
     """
+    if 'bugs_covered' in experiment_pivot_df:
+        bugs_mean = experiment_pivot_df['bugs_covered'].fillna(0).rank(
+            'columns', method='min', ascending=False).mean()
+        time_max = experiment_pivot_df['bugs_earliest'].max().max()
+        time_mean = experiment_pivot_df['bugs_earliest'].fillna(time_max).rank(
+            'columns', method='min', ascending=True).mean()
+        combined_df = pd.concat([bugs_mean, time_mean], axis=1)
+        ranking = combined_df.sort_values([0, 1], ascending=True)
+        return ranking[0].rename('average rank')
+
     # Rank fuzzers in each benchmark block.
     pivot_ranked = experiment_pivot_df.fillna(0).rank('columns',
                                                       method='min',
@@ -385,13 +412,32 @@ def experiment_rank_by_num_firsts(experiment_pivot_df):
 def experiment_rank_by_average_normalized_score(experiment_pivot_df):
     """Creates experiment level ranking by taking the average of normalized per
     benchmark scores from 0 to 100, where 100 is the highest reach coverage."""
-    # Normalize coverage values.
-    benchmark_maximum = experiment_pivot_df.fillna(0).max(axis='columns')
-    normalized_score = experiment_pivot_df.fillna(0).div(benchmark_maximum,
-                                                         axis='index').mul(100)
 
-    average_score = normalized_score.mean().sort_values(ascending=False)
-    return average_score.rename('average normalized score')
+    bug_based = 'bugs_earliest' in experiment_pivot_df
+    # Sperate bug finding time.
+    if bug_based:
+        bugs_earliest = experiment_pivot_df['bugs_earliest'].fillna(
+            experiment_pivot_df['bugs_earliest'].max())
+        experiment_pivot_df = experiment_pivot_df['bugs_covered']
+
+    benchmark_maximum = experiment_pivot_df.fillna(0).max(axis='columns')
+    normalized_score = experiment_pivot_df.div(benchmark_maximum,
+                                               axis='index').fillna(0).mul(100)
+    average_score = normalized_score.mean()
+
+    if bug_based:
+        average_earliest = bugs_earliest.mean()
+        average_earliest = average_earliest - average_earliest.min()
+        score_earliest = pd.concat([average_score, average_earliest], axis=1)
+        ranking = score_earliest.sort_values([0, 1], ascending=[False, True])
+    else:
+        ranking = average_score.sort_values(ascending=False).to_frame()
+
+    return ranking.rename(
+        columns={
+            0: 'average normalized score',
+            1: 'average extra time to find bugs (seconds)'
+        })
 
 
 def experiment_level_ranking(experiment_snapshots_df,
