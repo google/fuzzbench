@@ -83,6 +83,7 @@ def exec_command_from_github(pull_request_number):
 def main():
     """Entrypoint for GitHub CI into run_experiment.py"""
     logging.basicConfig(level=logging.INFO)
+    logging.info('gcbrun_experiment.py running')
     pull_request_number = int(os.environ['PULL_REQUEST_NUMBER'])
     result = exec_command_from_github(pull_request_number)
     print('result', result)
