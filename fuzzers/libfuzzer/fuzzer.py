@@ -53,6 +53,11 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     os.makedirs(crashes_dir)
     os.makedirs(output_corpus)
 
+    if 'ASAN_OPTIONS' in os.environ:
+        os.environ['ASAN_OPTIONS'] += ':detect_container_overflow=0'
+    else:
+        os.environ['ASAN_OPTIONS'] = 'detect_container_overflow=0'
+
     # Enable symbolization if needed.
     # Note: if the flags are like `symbolize=0:..:symbolize=1` then
     # only symbolize=1 is respected.
