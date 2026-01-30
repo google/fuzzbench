@@ -1,0 +1,11 @@
+# 4575106269839360
+commit: 2D5F85874BF3C9C4841C08D18E97E0FE16BAE19F
+commit_date: 2022-09-16T16:52:35+0000
+fuzz_target: magic_fuzzer
+project: file
+type: bug
+unsupported_fuzzers:
+  - aflcc
+  - klee
+  - lafintel
+  - honggfuzz

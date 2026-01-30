@@ -1,0 +1,27 @@
+
+commit: 9cd001d3bb41e4a24e4fbaea95855110fbf3068a
+commit_date: 2022-12-07T16:22:50+0000
+fuzz_target: grk_decompress_fuzzer
+project: grok
+type: bug
+unsupported_fuzzers:
+  - centipede
+  - aflcc
+  - afl_qemu
+  - aflplusplus_qemu
+  - aflplusplus_qemu_tracepc
+  - aflplusplus_frida
+  - honggfuzz_qemu
+  - klee
+  - lafintel
+  - weizz_qemu
+  - cfctx_dataflow_seadsa
+  - cfctx_dataflow_seadsa_llc
+  - aflplusplus_cmplog_double
+  - symcc_aflplusplus_single
+  - eclipser_aflplusplus
+  - aflplusplus_qemu_double
+  - fuzzolic_aflplusplus_z3
+  - symqemu_aflplusplus
+  - fuzzolic_aflplusplus_fuzzy
+  - fuzzolic_aflplusplus_z3dict

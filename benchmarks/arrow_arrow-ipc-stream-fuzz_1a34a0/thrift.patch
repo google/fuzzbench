@@ -1,0 +1,22 @@
+diff --git a/cpp/cmake_modules/ThirdpartyToolchain.cmake b/cpp/cmake_modules/ThirdpartyToolchain.cmake
+index 9c062f86a..5d04ef92c 100644
+--- a/cpp/cmake_modules/ThirdpartyToolchain.cmake
++++ b/cpp/cmake_modules/ThirdpartyToolchain.cmake
+@@ -39,7 +39,7 @@ endif()
+ # ----------------------------------------------------------------------
+ # We should not use the Apache dist server for build dependencies
+ 
+-set(APACHE_MIRROR "")
++set(APACHE_MIRROR "https://archive.apache.org")
+ 
+ macro(get_apache_mirror)
+   if(APACHE_MIRROR STREQUAL "")
+@@ -1129,7 +1129,7 @@ macro(build_thrift)
+     get_apache_mirror()
+     set(
+       THRIFT_SOURCE_URL
+-      "${APACHE_MIRROR}/thrift/${ARROW_THRIFT_BUILD_VERSION}/thrift-${ARROW_THRIFT_BUILD_VERSION}.tar.gz"
++      "${APACHE_MIRROR}/dist/thrift/${ARROW_THRIFT_BUILD_VERSION}/thrift-${ARROW_THRIFT_BUILD_VERSION}.tar.gz"
+       )
+   endif()
+ 
