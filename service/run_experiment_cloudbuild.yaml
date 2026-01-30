@@ -1,5 +1,11 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'python3'
+  args:
+  - service/pr_experiment_log.py
+  env:
+  - 'PR_NUMBER=${_PR_NUMBER}'
+- name: 'gcr.io/cloud-builders/docker'
   args:
     - build
     - -t
