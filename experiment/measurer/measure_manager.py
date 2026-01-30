@@ -733,9 +733,8 @@ def measure_manager_inner_loop(experiment: str, max_cycle: int, request_queue,
     unmeasured_snapshots = get_unmeasured_snapshots(experiment, max_cycle)
     logger.info('Retrieved %d unmeasured snapshots from measure manager',
                 len(unmeasured_snapshots))
-    # When there are no more snapshots left to be measured, should break loop.
     if not unmeasured_snapshots:
-        return False
+        return
 
     # Write measurements requests to request queue
     for unmeasured_snapshot in unmeasured_snapshots:
@@ -758,8 +757,6 @@ def measure_manager_inner_loop(experiment: str, max_cycle: int, request_queue,
     # Save measured snapshots to database.
     if measured_snapshots:
         db_utils.add_all(measured_snapshots)
-
-    return True
 
 
 def get_pool_args(measurers_cpus, runners_cpus):
@@ -815,11 +812,8 @@ def measure_manager_loop(experiment: str,
         max_cycle = _time_to_cycle(max_total_time)
         queued_snapshots = set()
         while not scheduler.all_trials_ended(experiment):
-            continue_inner_loop = measure_manager_inner_loop(
-                experiment, max_cycle, request_queue, response_queue,
-                queued_snapshots)
-            if not continue_inner_loop:
-                break
+            measure_manager_inner_loop(experiment, max_cycle, request_queue,
+                                       response_queue, queued_snapshots)
             time.sleep(MEASUREMENT_LOOP_WAIT)
         logger.info('All trials ended. Ending measure manager loop')
 
