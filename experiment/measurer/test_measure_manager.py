@@ -103,7 +103,7 @@ def test_generate_profdata_create(mocked_execute, experiment, fs):
     snapshot_measurer.generate_profdata(CYCLE)
 
     expected = [
-        'llvm-profdata', 'merge', '-sparse', '/work/reports/data-123.profraw',
+        'llvm-profdata-19', 'merge', '-sparse', '/work/reports/data-123.profraw',
         '-o', '/work/reports/data.profdata'
     ]
 
@@ -126,7 +126,7 @@ def test_generate_profdata_merge(mocked_execute, experiment, fs):
     snapshot_measurer.generate_profdata(CYCLE)
 
     expected = [
-        'llvm-profdata', 'merge', '-sparse', '/work/reports/data-123.profraw',
+        'llvm-profdata-19', 'merge', '-sparse', '/work/reports/data-123.profraw',
         '/work/reports/data.profdata', '-o', '/work/reports/data.profdata'
     ]
 
@@ -153,7 +153,7 @@ def test_generate_summary(mocked_get_coverage_binary, mocked_execute,
     snapshot_measurer.generate_summary(CYCLE)
 
     expected = [
-        'llvm-cov', 'export', '-format=text', '-num-threads=1',
+        'llvm-cov-19', 'export', '-format=text', '-num-threads=1',
         '-region-coverage-gt=0', '-skip-expansions',
         '/work/coverage-binaries/benchmark-a/fuzz-target',
         '-instr-profile=/reports/data.profdata'

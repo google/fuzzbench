@@ -47,7 +47,17 @@ RUN apt-get update -y && \
     libglib2.0-0 \
     libxml2 \
     libarchive13 \
-    libgss3
+    libgss3 \
+    lsb-release \
+    wget \
+    software-properties-common \
+    gnupg
+
+ENV LLVM_VERSION=19
+
+RUN wget https://apt.llvm.org/llvm.sh && \
+    chmod +x llvm.sh && \
+    ./llvm.sh ${LLVM_VERSION} all
 
 # Set up the directory for the build artifacts.
 ENV OUT /out

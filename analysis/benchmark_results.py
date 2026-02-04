@@ -52,8 +52,7 @@ class BenchmarkResults:
 
     def get_coverage_report_path(self, fuzzer_name, benchmark_name):
         """Returns the filestore name of the |fuzzer_name|."""
-        filestore_path = coverage_data_utils.get_coverage_report_filestore_path(
-            fuzzer_name, benchmark_name, self._benchmark_df)
+        filestore_path = coverage_data_utils.get_coverage_report_filestore_path(fuzzer_name, benchmark_name, self._benchmark_df)        
         return filestore_utils.get_user_facing_path(filestore_path)
 
     @property

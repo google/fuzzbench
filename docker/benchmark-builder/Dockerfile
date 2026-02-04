@@ -36,7 +36,17 @@ RUN apt-get update && \
     xz-utils \
     zlib1g-dev \
     libssl-dev \
-    libffi-dev
+    libffi-dev \
+    lsb-release \
+    wget \
+    software-properties-common \
+    gnupg
+
+ENV LLVM_VERSION=19
+
+RUN wget https://apt.llvm.org/llvm.sh && \
+    chmod +x llvm.sh && \
+    ./llvm.sh ${LLVM_VERSION} all
 
 RUN rm -rf /usr/local/bin/python3.8* /usr/local/bin/pip3 /usr/local/lib/python3.8 \
     /usr/local/include/python3.8 /usr/local/lib/python3.8/site-packages
