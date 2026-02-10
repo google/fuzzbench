@@ -106,7 +106,7 @@ def test_keyword_args(use_gsutil):  # pylint: disable=unused-argument
     with mock.patch('common.new_process.execute') as mocked_execute:
         filestore_utils.rm(GCS_DIR_2, recursive=True, parallel=True)
         mocked_execute.assert_called_with(
-            ['gsutil', '-m', 'rm', '-r', GCS_DIR_2],, expect_zero=True)
+            ['gsutil', '-m', 'rm', '-r', GCS_DIR_2], expect_zero=True)
 
     with mock.patch('common.new_process.execute') as mocked_execute:
         mocked_execute.return_value = new_process.ProcessResult(0, '', '')
