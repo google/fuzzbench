@@ -26,7 +26,7 @@ def test_gsutil_command():
     arguments = ['hello']
     with test_utils.mock_popen_ctx_mgr() as mocked_popen:
         gsutil.gsutil_command(arguments)
-    assert mocked_popen.commands == [['gcloud', 'storage'] + arguments]
+    assert mocked_popen.commands == [['gsutil']  + arguments]
 
 
 @pytest.mark.parametrize(('must_exist'), [True, False])
@@ -35,7 +35,7 @@ def test_ls_must_exist(must_exist):
     must_exist is specified."""
     with mock.patch('common.new_process.execute') as mocked_execute:
         gsutil.ls('gs://hello', must_exist=must_exist)
-        mocked_execute.assert_called_with(['gcloud', 'storage', 'ls', 'gs://hello'],
+        mocked_execute.assert_called_with(['gsutil', 'ls', 'gs://hello'],
                                           expect_zero=must_exist)
 
 
@@ -50,7 +50,7 @@ class TestGsutilRsync:
                 'common.gsutil.gsutil_command') as mocked_gsutil_command:
             gsutil.rsync(self.SRC, self.DST)
         mocked_gsutil_command.assert_called_with(
-            ['rsync', '--delete-unmatched-destination-objects', '--recursive', '/src', 'gs://dst'], parallel=False)
+            ['rsync', '-d', '-r', '/src', 'gs://dst'], parallel=False)
 
     def test_gsutil_options(self):
         """Tests that rsync works as intended when supplied a gsutil_options
@@ -70,8 +70,8 @@ class TestGsutilRsync:
             gsutil.rsync(self.SRC, self.DST, options=[flag])
         assert flag in mocked_gsutil_command.call_args_list[0][0][0]
 
-    @pytest.mark.parametrize(('kwarg_for_rsync', 'flag'), [('delete', '--delete-unmatched-destination-objects'),
-                                                           ('recursive', '--recursive')])
+    @pytest.mark.parametrize(('kwarg_for_rsync', 'flag'), [('delete', '-d'),
+                                                           ('recursive', '-r')])
     def test_no_flag(self, kwarg_for_rsync, flag):
         """Tests that rsync works as intended when caller specifies not
         to use specific flags."""

@@ -400,14 +400,14 @@ def test_measure_loop_loop_until_end(mocked_measure_all_trials, _, __, ___,
 
 @mock.patch('common.new_process.execute')
 def test_path_exists_in_experiment_filestore(mocked_execute, environ):
-    """Tests that remote_dir_exists calls gcloud storage properly."""
+    """Tests that remote_dir_exists calls gsutil properly."""
     work_dir = '/work'
     os.environ['WORK'] = work_dir
     os.environ['EXPERIMENT_FILESTORE'] = 'gs://cloud-bucket'
     os.environ['EXPERIMENT'] = 'example-experiment'
     measure_manager.exists_in_experiment_filestore(work_dir)
     mocked_execute.assert_called_with(
-        ['gcloud', 'storage', 'ls', 'gs://cloud-bucket/example-experiment'],
+        ['gsutil', 'ls', 'gs://cloud-bucket/example-experiment'],
         expect_zero=False)
 
 

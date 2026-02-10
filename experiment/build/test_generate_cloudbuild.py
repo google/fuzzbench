@@ -247,9 +247,9 @@ def test_generate_cloudbuild_spec_build_benchmark_coverage(experiment):
             ]
         }, {
             'name':
-                'gcr.io/cloud-builders/gcloud',
+                'gcr.io/cloud-builders/gsutil',
             'args': [
-                'storage', 'cp', '/workspace/out/coverage-build-zlib.tar.gz',
+                '-m', 'cp', '/workspace/out/coverage-build-zlib.tar.gz',
                 'gs://experiment-data/test-experiment/coverage-binaries/'
             ]
         }],

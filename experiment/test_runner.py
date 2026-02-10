@@ -200,7 +200,7 @@ def test_save_corpus_archive(_, trial_runner, fs):
     with test_utils.mock_popen_ctx_mgr() as mocked_popen:
         trial_runner.save_corpus_archive(archive_name)
         assert mocked_popen.commands == [[
-            'gcloud', 'storage', 'cp', archive_name,
+            'gsutil', 'cp', archive_name,
             posixpath.join(
                 'gs://bucket/experiment-name/experiment-folders/'
                 'benchmark-1-fuzzer_a/trial-1/corpus', archive_name)
@@ -226,14 +226,13 @@ def test_do_sync_unchanged(mocked_debug, trial_runner, fuzzer_module):
         trial_runner.do_sync()
         assert mocked_popen.commands == [
             [
-                'gcloud', 'storage', 'cp', '/corpus-archives/corpus-archive-1337.tar.gz',
+                'gsutil', 'cp', '/corpus-archives/corpus-archive-1337.tar.gz',
                 ('gs://bucket/experiment-name/experiment-folders/'
                  'benchmark-1-fuzzer_a/trial-1/corpus/'
                  'corpus-archive-1337.tar.gz')
             ],
             [
-                'gcloud', 'storage', 'rsync', '--delete-unmatched-destination-objects',
-                '--recursive', '/results-copy',
+                'gsutil', 'rsync', '-d', '-r', '/results-copy',
                 ('gs://bucket/experiment-name/experiment-folders/'
                  'benchmark-1-fuzzer_a/trial-1/results')
             ]
@@ -252,15 +251,14 @@ def test_do_sync_changed(mocked_execute, fs, trial_runner, fuzzer_module):
     trial_runner.do_sync()
     assert mocked_execute.call_args_list == [
         mock.call([
-            'gcloud', 'storage', 'cp', '/corpus-archives/corpus-archive-1337.tar.gz',
+            'gsutil', 'cp', '/corpus-archives/corpus-archive-1337.tar.gz',
             ('gs://bucket/experiment-name/experiment-folders/'
              'benchmark-1-fuzzer_a/trial-1/corpus/'
              'corpus-archive-1337.tar.gz')
         ],
                   expect_zero=True),
         mock.call([
-            'gcloud', 'storage', 'rsync', '--delete-unmatched-destination-objects',
-            '--recursive', '/results-copy',
+            'gsutil', 'rsync', '-d', '-r', '/results-copy',
             ('gs://bucket/experiment-name/experiment-folders/'
              'benchmark-1-fuzzer_a/trial-1/results')
         ],

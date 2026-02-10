@@ -26,8 +26,8 @@ Provides a web interface for browsing and downloading the experiment data.
 We use gsutil for obtaining this data. Follow [these instructions to install
 gsutil](https://cloud.google.com/storage/docs/gsutil_install#install).
 
-With gsutil you can do `gsutil ls gs://fuzzbench-data/$EXPERIMENT_NAME/` to list
-files in cloud storage directories for your project and you can use `gsutil cp`
+With gcloud storage you can do `gcloud storage ls gs://fuzzbench-data/$EXPERIMENT_NAME/` to list
+files in cloud storage directories for your project and you can use `gcloud storage cp`
 to copy them.
 
 ## Data layout
