@@ -103,9 +103,9 @@ def get_coverage_steps(benchmark: str):
             '.tar.gz * /src /work'
         ]
     }]
-    step = {'name': 'gcr.io/cloud-builders/gsutil'}
+    step = {'name': 'gcr.io/cloud-builders/gcloud'}
     step['args'] = [
-        '-m', 'cp', '/workspace/out/coverage-build-' + benchmark + '.tar.gz',
+        'storage', 'cp', '/workspace/out/coverage-build-' + benchmark + '.tar.gz',
         coverage_binaries_dir + '/'
     ]
     steps.append(step)

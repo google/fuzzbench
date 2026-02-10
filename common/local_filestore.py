@@ -26,7 +26,7 @@ def cp(  # pylint: disable=invalid-name
         expect_zero=True,
         parallel=False):  # pylint: disable=unused-argument
     """Executes "cp" command from |source| to |destination|."""
-    # Create intermediate folders for `cp` command to behave like `gsutil.cp`.
+    # Create intermediate folders for `cp` command to behave like `gcloud storage cp`.
     filesystem.create_directory(os.path.dirname(destination))
 
     command = ['cp']
@@ -39,7 +39,7 @@ def cp(  # pylint: disable=invalid-name
 def ls(path, must_exist=True):  # pylint: disable=invalid-name
     """Executes "ls" command for |path|. If |must_exist| is True then it can
     raise subprocess.CalledProcessError."""
-    # Add '-1' (i.e., number one) to behave like `gsutil.ls` (i.e., one filename
+    # Add '-1' (i.e., number one) to behave like `gcloud storage ls` (i.e., one filename
     # per line).
     command = ['ls', '-1', path]
     process_result = new_process.execute(command, expect_zero=must_exist)
@@ -72,11 +72,11 @@ def rsync(  # pylint: disable=too-many-arguments
         parallel=False):  # pylint: disable=unused-argument
     """Does local_filestore rsync from |source| to |destination| using useful
     defaults that can be overriden."""
-    # Add check to behave like `gsutil.rsync`.
+    # Add check to behave like `gcloud storage rsync`.
     assert os.path.isdir(source), 'filestore_utils.rsync: source should be dir.'
 
     # Create intermediate folders for `rsync` command to behave like
-    # `gsutil.rsync`.
+    # `gcloud storage rsync`.
     filesystem.create_directory(destination)
 
     command = ['rsync']
@@ -86,7 +86,7 @@ def rsync(  # pylint: disable=too-many-arguments
         command.append('-r')
     if options is not None:
         command.extend(options)
-    # Add '/' at the end of `source` to behave like `gsutil.rsync`.
+    # Add '/' at the end of `source` to behave like `gcloud storage rsync`.
     if source[-1] != '/':
         source = source + '/'
     command.extend([source, destination])

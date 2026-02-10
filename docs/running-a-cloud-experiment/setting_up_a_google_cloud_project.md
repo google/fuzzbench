@@ -107,10 +107,10 @@ At this point you can kill the `cloud_sql_proxy` process.
 ```bash
 # Bucket for storing experiment artifacts such as corpora, coverage binaries,
 # crashes etc.
-gsutil mb gs://$DATA_BUCKET_NAME
+gcloud storage buckets create gs://$DATA_BUCKET_NAME
 
 # Bucket for storing HTML reports.
-gsutil mb gs://$REPORT_BUCKET_NAME
+gcloud storage buckets create gs://$REPORT_BUCKET_NAME
 ```
 
 You can pick any (globally unique) names you'd like for `$DATA_BUCKET_NAME` and
@@ -119,7 +119,7 @@ You can pick any (globally unique) names you'd like for `$DATA_BUCKET_NAME` and
 * Make the report bucket public so it can be viewed from your browser:
 
 ```bash
-gsutil iam ch allUsers:objectViewer gs://$REPORT_BUCKET_NAME
+gcloud storage buckets add-iam-policy-binding gs://$REPORT_BUCKET_NAME --member=allUsers --role=objectViewer
 ```
 
 ## Dispatcher image and container registry setup

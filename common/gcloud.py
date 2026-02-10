@@ -121,7 +121,7 @@ def delete_instances(instance_names: List[str], zone: str, **kwargs) -> bool:
 
 
 def set_default_project(cloud_project: str):
-    """Set default project for future gcloud and gsutil commands."""
+    """Set default project for future gcloud commands."""
     return new_process.execute(
         ['gcloud', 'config', 'set', 'project', cloud_project])
 
