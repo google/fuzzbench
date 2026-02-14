@@ -1,0 +1,100 @@
+diff --git a/compiler-rt/lib/fuzzer/FuzzerFork.cpp b/compiler-rt/lib/fuzzer/FuzzerFork.cpp
+index 84725d2..4e1a506 100644
+--- a/compiler-rt/lib/fuzzer/FuzzerFork.cpp
++++ b/compiler-rt/lib/fuzzer/FuzzerFork.cpp
+@@ -26,6 +26,8 @@
+ #include <queue>
+ #include <sstream>
+ #include <thread>
++#include <sys/stat.h>
++#include <iostream>
+ 
+ namespace fuzzer {
+ 
+@@ -70,6 +72,8 @@ struct FuzzJob {
+   std::string SeedListPath;
+   std::string CFPath;
+   size_t      JobId;
++  bool        Executing = false;
++  Vector<std::string> CopiedSeeds;
+ 
+   int         DftTimeInSeconds = 0;
+ 
+@@ -124,7 +128,6 @@ struct GlobalEnv {
+     Cmd.addFlag("reload", "0");  // working in an isolated dir, no reload.
+     Cmd.addFlag("print_final_stats", "1");
+     Cmd.addFlag("print_funcs", "0");  // no need to spend time symbolizing.
+-    Cmd.addFlag("max_total_time", std::to_string(std::min((size_t)300, JobId)));
+     Cmd.addFlag("stop_file", StopFile());
+     if (!DataFlowBinary.empty()) {
+       Cmd.addFlag("data_flow_trace", DFTDir);
+@@ -133,11 +136,10 @@ struct GlobalEnv {
+     }
+     auto Job = new FuzzJob;
+     std::string Seeds;
+-    if (size_t CorpusSubsetSize =
+-            std::min(Files.size(), (size_t)sqrt(Files.size() + 2))) {
++    if (size_t CorpusSubsetSize = Files.size()) {
+       auto Time1 = std::chrono::system_clock::now();
+       for (size_t i = 0; i < CorpusSubsetSize; i++) {
+-        auto &SF = Files[Rand->SkewTowardsLast(Files.size())];
++        auto &SF = Files[i];
+         Seeds += (Seeds.empty() ? "" : ",") + SF;
+         CollectDFT(SF);
+       }
+@@ -213,11 +215,20 @@ struct GlobalEnv {
+     Set<uint32_t> NewFeatures, NewCov;
+     CrashResistantMerge(Args, {}, MergeCandidates, &FilesToAdd, Features,
+                         &NewFeatures, Cov, &NewCov, Job->CFPath, false);
++    RemoveFile(Job->CFPath);
+     for (auto &Path : FilesToAdd) {
+-      auto U = FileToVector(Path);
+-      auto NewPath = DirPlusFile(MainCorpusDir, Hash(U));
+-      WriteToFile(U, NewPath);
+-      Files.push_back(NewPath);
++      // Only merge files that have not been merged already.
++      if (std::find(Job->CopiedSeeds.begin(), Job->CopiedSeeds.end(), Path) == Job->CopiedSeeds.end()) {
++        // NOT THREAD SAFE: Fast check whether file still exists.
++        struct stat buffer;
++        if (stat (Path.c_str(), &buffer) == 0) {
++          auto U = FileToVector(Path);
++          auto NewPath = DirPlusFile(MainCorpusDir, Hash(U));
++          WriteToFile(U, NewPath);
++          Files.push_back(NewPath);
++          Job->CopiedSeeds.push_back(Path);
++        }
++      }
+     }
+     Features.insert(NewFeatures.begin(), NewFeatures.end());
+     Cov.insert(NewCov.begin(), NewCov.end());
+@@ -271,10 +282,19 @@ struct JobQueue {
+   }
+ };
+ 
+-void WorkerThread(JobQueue *FuzzQ, JobQueue *MergeQ) {
++void WorkerThread(GlobalEnv *Env, JobQueue *FuzzQ, JobQueue *MergeQ) {
+   while (auto Job = FuzzQ->Pop()) {
+-    // Printf("WorkerThread: job %p\n", Job);
++    Job->Executing = true;
++    int Sleep_ms = 5 * 60 * 1000;
++    std::thread([=]() {
++      std::this_thread::sleep_for(std::chrono::milliseconds(Sleep_ms / 5));
++      while (Job->Executing) {
++        Env->RunOneMergeJob(Job);
++        std::this_thread::sleep_for(std::chrono::milliseconds(Sleep_ms));
++      }
++    }).detach();
+     Job->ExitCode = ExecuteCommand(Job->Cmd);
++    Job->Executing = false;
+     MergeQ->Push(Job);
+   }
+ }
+@@ -335,7 +355,7 @@ void FuzzWithFork(Random &Rand, const FuzzingOptions &Options,
+   size_t JobId = 1;
+   Vector<std::thread> Threads;
+   for (int t = 0; t < NumJobs; t++) {
+-    Threads.push_back(std::thread(WorkerThread, &FuzzQ, &MergeQ));
++    Threads.push_back(std::thread(WorkerThread, &Env, &FuzzQ, &MergeQ));
+     FuzzQ.Push(Env.CreateNewJob(JobId++));
+   }
+ 
