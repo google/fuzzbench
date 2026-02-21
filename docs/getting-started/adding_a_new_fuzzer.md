@@ -208,7 +208,7 @@ original's integration. For example, FairFuzz's
 [fuzzer.py](https://github.com/google/fuzzbench/blob/master/fuzzers/fairfuzz/fuzzer.py)
 imports AFL's `build` and `fuzz` functions and calls them from its own.
 And its [builder.Dockerfile](https://github.com/google/fuzzbench/blob/master/fuzzers/fairfuzz/builder.Dockerfile)
-is essentially a copy of AFL's [builder.Dockerfile](https://github.com/google/fuzzbench/blob/master/fuzzers/AFL/builder.Dockerfile)
+is essentially a copy of AFL's [builder.Dockerfile](https://github.com/google/fuzzbench/blob/master/fuzzers/afl/builder.Dockerfile)
 that simply clones FairFuzz from a different source (Dockerfile functionality
 should be copied to be reused, inheriting using `FROM` can't be used for this
 purpose).
