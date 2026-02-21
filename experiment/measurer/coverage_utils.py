@@ -305,8 +305,8 @@ def extract_covered_branches_from_summary_json(summary_json_file):
         file_index = 6
         for function_data in functions_data:
             for branch in function_data['branches']:
-                if branch[hit_true_index] != 0 or branch[
-                        hit_false_index] != 0 and branch[
+                if (branch[hit_true_index] != 0 or branch[
+                        hit_false_index] != 0) and branch[
                             type_index] == branch_region_type:
                     covered_branches.append(branch[:hit_true_index] +
                                             branch[file_index:])
