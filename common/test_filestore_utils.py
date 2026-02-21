@@ -144,8 +144,8 @@ def test_is_gcs_filestore_path(filestore_path, expected_result):
     [('gs://filestore', 'https://storage.googleapis.com/filestore'),
      ('/filestore', '/filestore'),
      ('C:\\Windows\\filestore', 'C:\\Windows\\filestore')])
-def test_get_user_accessible_path(filestore_path, expected_result):
-    """Tests that get_user_accessible_path returns the correct result for
+def test_get_user_facing_path(filestore_path, expected_result):
+    """Tests that get_user_facing_path returns the correct result for
     different filestore paths."""
     assert filestore_utils.get_user_facing_path(
         filestore_path) == expected_result

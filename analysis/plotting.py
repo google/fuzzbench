@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Plotting functions."""
+import os
 
 import numpy as np
 import Orange
@@ -94,7 +95,7 @@ class Plotter:
         'X', ',', '.'
     ]
 
-    def __init__(self, fuzzers, quick=False, logscale=False):
+    def __init__(self, fuzzers, quick=False, logscale=False, cache=True):
         """Instantiates plotter with list of |fuzzers|. If |quick| is True,
         creates plots faster but, with less detail.
         """
@@ -109,6 +110,7 @@ class Plotter:
 
         self._quick = quick
         self._logscale = logscale
+        self._cache = cache
 
     def _write_plot_to_image(self,
                              plot_function,
@@ -120,6 +122,10 @@ class Plotter:
 
         If |wide|, then the image size will be twice as wide as normal.
         """
+        if self._cache and os.path.exists(image_path):
+            # Don't plot again if the image already exists and we are supposed
+            # to cache.
+            return
         width = 6.4
         height = 4.8
         figsize = (2 * width, height) if wide else (width, height)
