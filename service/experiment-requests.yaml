@@ -20,6 +20,22 @@
 # Please add new experiment requests towards the top of this file.
 #
 
+- experiment: 2023-08-04-sfuzz
+  description: "sfuzz experiment (compare against core fuzzers)"
+  fuzzers:
+    - afl
+    - aflfast
+    - aflplusplus
+    - aflsmart
+    - entropic
+    - eclipser
+    - fairfuzz
+    - honggfuzz
+    - lafintel
+    - libfuzzer
+    - mopt
+    - sfuzz
+
 - experiment: 2023-06-12-aflpp
   description: "Benchmark afl++ releases and newmutation"
   fuzzers:
