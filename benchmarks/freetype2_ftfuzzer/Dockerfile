@@ -25,7 +25,13 @@ RUN apt-get update &&  \
     wget
 
 RUN git clone git://git.sv.nongnu.org/freetype/freetype2.git
-RUN git clone https://github.com/unicode-org/text-rendering-tests.git TRT
+
 RUN wget https://github.com/libarchive/libarchive/releases/download/v3.4.3/libarchive-3.4.3.tar.xz
+
+RUN wget https://raw.githubusercontent.com/ardier/fuzzbench/minimized-subsumed-mutants-benchmark-with-seeds/benchmarks/freetype2_ftfuzzer_libafl/seeds.tar -O $SRC/seeds.tar && \
+    mkdir -p $SRC/seeds && \
+    tar -xvf $SRC/seeds.tar -C $SRC/seeds && \
+    rm $SRC/seeds.tar
+
 
 COPY * $SRC/
