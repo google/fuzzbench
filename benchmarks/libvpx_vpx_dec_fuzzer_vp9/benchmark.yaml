@@ -1,0 +1,4 @@
+commit: 9f9b7e9ba2eb9d01640a9e69a3d655866265cf7f
+commit_date: 2024-10-23 18:24:57+00:00
+fuzz_target: vpx_dec_fuzzer_vp9
+project: libvpx
