@@ -60,7 +60,7 @@ COPY benchmarks/$benchmark/benchmark.yaml /
 RUN mkdir /opt/fuzzbench/
 COPY docker/benchmark-builder/checkout_commit.py /opt/fuzzbench/
 RUN export CHECKOUT_COMMIT=$(cat /benchmark.yaml | tr -d ' ' | grep 'commit:' | cut -d ':' -f2) && \
-    python3 -u /opt/fuzzbench/checkout_commit.py $CHECKOUT_COMMIT $SRC
+    python3 -u /opt/fuzzbench/checkout_commit.py ${CHECKOUT_COMMIT:-'NO_COMMIT'} $SRC
 
 COPY docker/benchmark-builder/fuzzer_build /usr/bin/fuzzer_build
 RUN echo "Run fuzzer_build to build the target" && if [ -z "$debug_builder" ] ; then fuzzer_build; fi
