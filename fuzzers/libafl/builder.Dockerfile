@@ -35,7 +35,7 @@ RUN apt-get update && \
 RUN wget https://gist.githubusercontent.com/tokatoka/26f4ba95991c6e33139999976332aa8e/raw/698ac2087d58ce5c7a6ad59adce58dbfdc32bd46/createAliases.sh && chmod u+x ./createAliases.sh && ./createAliases.sh 
 
 # Download libafl.
-RUN git clone https://github.com/AFLplusplus/LibAFL /libafl
+RUN git clone https://github.com/zukatsinadze/LibAFL /libafl
 
 # Checkout a current commit
 RUN cd /libafl && git pull && git checkout f856092f3d393056b010fcae3b086769377cba18 || true
