@@ -1,3 +1,17 @@
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 ARG parent_image
 FROM $parent_image
 
@@ -25,10 +39,10 @@ RUN apt-get update && \
         libstdc++-$(gcc --version|head -n1|sed 's/\..*//'|sed 's/.* //')-dev
 
 # Download afl++.
-RUN git clone https://github.com/AFLplusplus/AFLplusplus /afl
+RUN git clone https://github.com/AFLplusplus/AFLplusplus.git /afl
 
-# Checkout a current commit
-RUN cd /afl && git checkout 35f09e11a4373b0fb42c690d23127c144f72f73c
+# Checkout v4.09c.
+RUN cd /afl && git checkout -b v4.09c v4.09c
 
 # Build without Python support as we don't need it.
 # Set AFL_NO_X86 to skip flaky tests.
@@ -51,25 +65,13 @@ RUN apt-get update -y && \
     libblocksruntime-dev \
     liblzma-dev
 
-# Copy honggfuzz PASTIS patch.
-RUN mkdir /patches
-COPY patches/honggfuzz-3a8f2ae-pastis.patch /patches
-
-# Donwload honggfuzz oss-fuzz version (commit 3a8f2ae41604b6696e7bd5e5cdc0129ce49567c0)
-RUN git clone https://github.com/google/honggfuzz.git /honggfuzz && \
-    cd /honggfuzz && \
-    git checkout 3a8f2ae41604b6696e7bd5e5cdc0129ce49567c0 && \
-    cd ..
-
-# Apply PASTIS patch.
-RUN cd / && \
-    patch -s -p0 < /patches/honggfuzz-3a8f2ae-pastis.patch
-
 # Set CFLAGS use honggfuzz's defaults except for -mnative which can build CPU
 # dependent code that may not work on the machines we actually fuzz on.
 # Create an empty object file which will become the FUZZER_LIB lib (since
 # honggfuzz doesn't need this when hfuzz-clang(++) is used).
-RUN cd /honggfuzz && \
+RUN git clone https://github.com/google/honggfuzz.git /honggfuzz && \
+    cd /honggfuzz && \
+    git checkout oss-fuzz && \
     CFLAGS="-O3 -funroll-loops" make && \
     touch empty_lib.c && \
     cc -c -o empty_lib.o empty_lib.c
