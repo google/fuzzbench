@@ -66,5 +66,5 @@ def do_coverage_run(  # pylint: disable=too-many-locals
         logger.error('Coverage run failed.',
                      extras={
                          'coverage_binary': coverage_binary,
-                         'output': result.output[-new_process.LOG_LIMIT_FIELD:],
+                         'output': result.output[-new_process.LOG_LIMIT_FIELD:] if result.output else 'None',
                      })
