@@ -553,7 +553,7 @@ class LocalDispatcher(BaseDispatcher):
             'rsync -r '
             '"${EXPERIMENT_FILESTORE}/${EXPERIMENT}/input/" ${WORK} && '
             'mkdir ${WORK}/src && '
-            'tar -xvzf ${WORK}/src.tar.gz -C ${WORK}/src && '
+            'tar -xzf ${WORK}/src.tar.gz -C ${WORK}/src && '
             'PYTHONPATH=${WORK}/src python3 '
             '${WORK}/src/experiment/dispatcher.py || '
             '/bin/bash'  # Open shell if experiment fails.
