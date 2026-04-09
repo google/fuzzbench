@@ -60,4 +60,8 @@ docker run \
 --shm-size=2g \
 --cap-add SYS_NICE --cap-add SYS_PTRACE \
 --security-opt seccomp=unconfined \
+--security-opt apparmor=unconfined \
+--security-opt label=disable \
+--security-opt systempaths=unconfined \
+--ipc=host \
 {{docker_image_url}} 2>&1 | tee /tmp/runner-log-{{trial_id}}.txt

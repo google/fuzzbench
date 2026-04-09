@@ -45,15 +45,25 @@ stop-end-to-end-test:
 include docker/generated.mk
 
 SHELL := /bin/bash
+export PATH := /opt/python/3.10.8/bin:$(PATH)
+PYTHON_BIN ?= python3.10
 VENV_ACTIVATE := .venv/bin/activate
+VENV_READY := .venv/.requirements.installed
 
-${VENV_ACTIVATE}: requirements.txt
-	python3.10 -m venv .venv || python3 -m venv .venv
+${VENV_READY}: requirements.txt
+	command -v ${PYTHON_BIN} >/dev/null || { \
+		echo "FuzzBench requires Python 3.10.8. Install python3.10 and rerun."; \
+		exit 1; \
+	}
+	${PYTHON_BIN} -m venv --clear .venv
 	source ${VENV_ACTIVATE} && python3 -m pip install --upgrade pip setuptools && python3 -m pip install -r requirements.txt
+	touch ${VENV_READY}
 
-install-dependencies: ${VENV_ACTIVATE}
+${VENV_ACTIVATE}: ${VENV_READY}
 
-docker/generated.mk: docker/generate_makefile.py docker/image_types.yaml fuzzers benchmarks ${VENV_ACTIVATE}
+install-dependencies: ${VENV_READY}
+
+docker/generated.mk: docker/generate_makefile.py docker/image_types.yaml fuzzers benchmarks ${VENV_READY}
 	source ${VENV_ACTIVATE} && PYTHONPATH=. python3 $< $@
 
 presubmit: install-dependencies

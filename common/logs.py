@@ -20,9 +20,14 @@ import sys
 import time
 import traceback
 
-import google.cloud.logging
-from google.cloud.logging_v2.handlers.handlers import CloudLoggingHandler
-from google.cloud import error_reporting
+try:
+    import google.cloud.logging
+    from google.cloud.logging_v2.handlers.handlers import CloudLoggingHandler
+    from google.cloud import error_reporting
+except ImportError:
+    google = None
+    CloudLoggingHandler = None
+    error_reporting = None
 
 # Disable this check since we have a bunch of non-constant globals in this file.
 # pylint: disable=invalid-name
@@ -44,6 +49,8 @@ BACKOFF = 2
 def _initialize_cloud_clients():
     """Initialize clients for Google Cloud Logging and Error reporting."""
     assert not utils.is_local()
+    if google is None or CloudLoggingHandler is None or error_reporting is None:
+        raise ImportError('Google Cloud logging dependencies are not installed.')
     global _log_client
     if _log_client:
         return

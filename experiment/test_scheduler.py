@@ -132,6 +132,10 @@ docker run \\
 --shm-size=2g \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
 --security-opt seccomp=unconfined \\
+--security-opt apparmor=unconfined \\
+--security-opt label=disable \\
+--security-opt systempaths=unconfined \\
+--ipc=host \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log-9.txt'''
     with mock.patch('common.benchmark_utils.get_fuzz_target',
                     return_value=expected_target):
@@ -177,6 +181,10 @@ docker run \\
 --shm-size=2g \\
 --cap-add SYS_NICE --cap-add SYS_PTRACE \\
 --security-opt seccomp=unconfined \\
+--security-opt apparmor=unconfined \\
+--security-opt label=disable \\
+--security-opt systempaths=unconfined \\
+--ipc=host \\
 {docker_image_url} 2>&1 | tee /tmp/runner-log-9.txt'''
     _test_create_trial_instance(benchmark, expected_image, expected_target,
                                 expected_startup_script,

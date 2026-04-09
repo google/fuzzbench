@@ -72,6 +72,11 @@ def test_get_rules_for_runner_image():
 \t--shm-size=2g \\\n\
 \t--cap-add SYS_NICE \\\n\
 \t--cap-add SYS_PTRACE \\\n\
+\t--security-opt seccomp=unconfined \\\n\
+\t--security-opt apparmor=unconfined \\\n\
+\t--security-opt label=disable \\\n\
+\t--security-opt systempaths=unconfined \\\n\
+\t--ipc=host \\\n\
 \t-e FUZZ_OUTSIDE_EXPERIMENT=1 \\\n\
 \t-e FORCE_LOCAL=1 \\\n\
 \t-e TRIAL_ID=1 \\\n\
@@ -85,6 +90,11 @@ def test_get_rules_for_runner_image():
 \t--shm-size=2g \\\n\
 \t--cap-add SYS_NICE \\\n\
 \t--cap-add SYS_PTRACE \\\n\
+\t--security-opt seccomp=unconfined \\\n\
+\t--security-opt apparmor=unconfined \\\n\
+\t--security-opt label=disable \\\n\
+\t--security-opt systempaths=unconfined \\\n\
+\t--ipc=host \\\n\
 \t-e FUZZ_OUTSIDE_EXPERIMENT=1 \\\n\
 \t-e FORCE_LOCAL=1 \\\n\
 \t-e TRIAL_ID=1 \\\n\
@@ -99,6 +109,11 @@ def test_get_rules_for_runner_image():
 \t--shm-size=2g \\\n\
 \t--cap-add SYS_NICE \\\n\
 \t--cap-add SYS_PTRACE \\\n\
+\t--security-opt seccomp=unconfined \\\n\
+\t--security-opt apparmor=unconfined \\\n\
+\t--security-opt label=disable \\\n\
+\t--security-opt systempaths=unconfined \\\n\
+\t--ipc=host \\\n\
 \t-e FUZZ_OUTSIDE_EXPERIMENT=1 \\\n\
 \t-e FORCE_LOCAL=1 \\\n\
 \t-e TRIAL_ID=1 \\\n\
@@ -114,6 +129,11 @@ def test_get_rules_for_runner_image():
 \t--shm-size=2g \\\n\
 \t--cap-add SYS_NICE \\\n\
 \t--cap-add SYS_PTRACE \\\n\
+\t--security-opt seccomp=unconfined \\\n\
+\t--security-opt apparmor=unconfined \\\n\
+\t--security-opt label=disable \\\n\
+\t--security-opt systempaths=unconfined \\\n\
+\t--ipc=host \\\n\
 \t-e FUZZ_OUTSIDE_EXPERIMENT=1 \\\n\
 \t-e FORCE_LOCAL=1 \\\n\
 \t-e TRIAL_ID=1 \\\n\

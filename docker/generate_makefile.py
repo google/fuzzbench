@@ -14,6 +14,7 @@
 """Simple generator for local Makefile rules."""
 
 import os
+import subprocess
 import sys
 
 from common import yaml_utils
@@ -23,6 +24,18 @@ from experiment.build import docker_images
 
 BASE_TAG = 'gcr.io/fuzzbench'
 BENCHMARK_DIR = benchmark_utils.BENCHMARKS_DIR
+
+
+def _supports_buildkit():
+    """Returns True when the local Docker installation supports BuildKit."""
+    try:
+        completed = subprocess.run(['docker', 'buildx', 'version'],
+                                   check=False,
+                                   stdout=subprocess.DEVNULL,
+                                   stderr=subprocess.DEVNULL)
+    except OSError:
+        return False
+    return completed.returncode == 0
 
 
 def _get_benchmark_fuzz_target(benchmarks):
@@ -61,6 +74,11 @@ def _get_makefile_run_template(image):
 \t--shm-size=2g \\\n\
 \t--cap-add SYS_NICE \\\n\
 \t--cap-add SYS_PTRACE \\\n\
+\t--security-opt seccomp=unconfined \\\n\
+\t--security-opt apparmor=unconfined \\\n\
+\t--security-opt label=disable \\\n\
+\t--security-opt systempaths=unconfined \\\n\
+\t--ipc=host \\\n\
 \t-e FUZZ_OUTSIDE_EXPERIMENT=1 \\\n\
 \t-e FORCE_LOCAL=1 \\\n\
 \t-e TRIAL_ID=1 \\\n\
@@ -155,7 +173,9 @@ def generate_makefile():
     benchmarks = benchmark_utils.get_all_benchmarks()
     buildable_images = docker_images.get_images_to_build(fuzzers, benchmarks)
 
-    makefile = 'export DOCKER_BUILDKIT := 1\n\n'
+    makefile = ''
+    if _supports_buildkit():
+        makefile += 'export DOCKER_BUILDKIT := 1\n\n'
 
     # Print oss-fuzz benchmarks property variables.
     makefile += _get_benchmark_fuzz_target(benchmarks)
