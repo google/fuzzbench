@@ -27,6 +27,8 @@ import threading
 import time
 import zipfile
 
+from pathlib import Path
+
 from common import benchmark_config
 from common import environment
 from common import experiment_utils
@@ -280,8 +282,15 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
 
         _clean_seed_corpus(input_corpus)
         # Ensure seeds are in output corpus.
-        os.rmdir(self.output_corpus)
-        shutil.copytree(input_corpus, self.output_corpus)
+        output_corpus = Path(self.output_corpus)
+        if output_corpus.exists():
+            assert output_corpus.is_dir() and \
+                len(list(output_corpus.iterdir())) == 0, \
+                    f"Output corpus dir {output_corpus} must not contain any files!"
+
+        seed_dir = output_corpus / 'fuzzbench_seeds'
+        seed_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(input_corpus, seed_dir, dirs_exist_ok=True)
 
     def conduct_trial(self):
         """Conduct the benchmarking trial."""

@@ -31,6 +31,12 @@ RUN git clone https://gitlab.com/libtiff/libtiff.git PROJ/libtiff && \
 WORKDIR PROJ
 
 COPY third_party/build.sh $SRC/
+
+# Avoid build failures due to unstable https://git.savannah.gnu.org/
+COPY third_party/config.sub $SRC/
+COPY third_party/config.guess $SRC/
+COPY third_party/autogen.sh.patch $SRC/
+
 # This is to fix Fuzz Introspector build by using LLVM old pass manager
 # re https://github.com/ossf/fuzz-introspector/issues/305
 ENV OLD_LLVMPASS 1

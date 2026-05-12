@@ -30,10 +30,11 @@ RUN git clone \
         https://github.com/madler/zlib.git
 
 RUN git clone \
-        https://github.com/glennrp/libpng.git
-RUN cp libpng/contrib/oss-fuzz/build.sh $SRC
+        https://github.com/pnggroup/libpng.git $SRC/libpng && \
+    git -C $SRC/libpng checkout cd0ea2a7f53b603d3d9b5b891c779c430047b39a
+RUN cp $SRC/libpng/contrib/oss-fuzz/build.sh $SRC
 
-WORKDIR libpng
+WORKDIR $SRC/libpng
 
 RUN wget --no-check-certificate -qO $OUT/libpng_read_fuzzer.dict \
     https://raw.githubusercontent.com/google/fuzzing/master/dictionaries/png.dict

@@ -44,7 +44,15 @@ cd ..
 
 # build libtiff.a
 cd libtiff
+
+# Don't try to download from unstable https://git.savannah.gnu.org/
+git apply $SRC/autogen.sh.patch
 ./autogen.sh
+
+# Use static config files, as we should do anyway
+cp $SRC/config.sub config/config.sub
+cp $SRC/config.guess config/config.guess
+
 ./configure --disable-shared --prefix=$SRC/install
 make -j$(nproc)
 make install

@@ -624,6 +624,10 @@ def measure_snapshot_coverage(  # pylint: disable=too-many-locals
     if not os.path.exists(coverage_archive_dir):
         os.makedirs(coverage_archive_dir)
 
+    if not os.path.exists(snapshot_measurer.cov_summary_file):
+        snapshot_logger.warning('Coverage summary json not found for cycle: %d.', cycle)
+        return None
+
     with gzip.open(str(coverage_archive_zipped), 'wb') as compressed:
         with open(snapshot_measurer.cov_summary_file, 'rb') as uncompressed:
             # avoid saving warnings so we can direct import with pandas
