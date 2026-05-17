@@ -23,6 +23,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import tempfile
 import threading
 import time
 import zipfile
@@ -392,9 +393,10 @@ class TrialRunner:  # pylint: disable=too-many-instance-attributes
                     last_modified_time = stat_info.st_mtime
                     if last_modified_time <= self.last_archive_time:
                         continue  # We've saved this file already.
-                    new_archive_time = max(new_archive_time, last_modified_time)
                     arcname = os.path.relpath(file_path, self.output_corpus)
-                    tar.add(file_path, arcname=arcname)
+                    if _add_corpus_file_to_archive(tar, file_path, arcname):
+                        new_archive_time = max(new_archive_time,
+                                               last_modified_time)
                 except (FileNotFoundError, OSError):
                     # We will get these errors if files or directories are being
                     # deleted from |directory| as we archive it. Don't bother
@@ -449,6 +451,26 @@ def get_fuzzer_module(fuzzer):
     fuzzer_module_name = f'fuzzers.{fuzzer}.fuzzer'
     fuzzer_module = importlib.import_module(fuzzer_module_name)
     return fuzzer_module
+
+
+def _add_corpus_file_to_archive(tar, file_path, arcname):
+    """Add |file_path| to |tar| without writing a truncated tar member."""
+    tarinfo = tar.gettarinfo(file_path, arcname=arcname)
+    if tarinfo is None:
+        return False
+
+    if not tarinfo.isreg():
+        tar.addfile(tarinfo)
+        return True
+
+    with tempfile.SpooledTemporaryFile(
+            max_size=CORPUS_ELEMENT_BYTES_LIMIT) as staged_file:
+        with open(file_path, 'rb') as file_handle:
+            shutil.copyfileobj(file_handle, staged_file)
+        tarinfo.size = staged_file.tell()
+        staged_file.seek(0)
+        tar.addfile(tarinfo, staged_file)
+    return True
 
 
 def get_corpus_elements(corpus_dir):
